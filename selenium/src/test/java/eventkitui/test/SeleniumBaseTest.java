@@ -1,7 +1,7 @@
 package eventkitui.test;
 
 import eventkitui.test.page.navpanel.AdminLoginPage;
-import eventkitui.test.page.navpanel.Dashboard;
+import eventkitui.test.page.navpanel.dashboard.Dashboard;
 import eventkitui.test.page.GxLoginPage;
 import eventkitui.test.page.MainPage;
 import eventkitui.test.util.Utils;

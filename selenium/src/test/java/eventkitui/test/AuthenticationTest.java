@@ -4,21 +4,12 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
 import eventkitui.test.page.*;
-import eventkitui.test.page.navpanel.Dashboard;
-import eventkitui.test.page.navpanel.NavigationPanel;
-import eventkitui.test.util.Info;
-import eventkitui.test.util.Info.Importance;
 import eventkitui.test.util.Utils;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
-import org.junit.Test;
 import org.junit.rules.TestName;
-import org.openqa.selenium.Cookie;
-import org.openqa.selenium.NoSuchElementException;
 import org.openqa.selenium.WebDriver;
-import org.openqa.selenium.support.ui.ExpectedConditions;
-import org.openqa.selenium.support.ui.WebDriverWait;
 
 
 /**

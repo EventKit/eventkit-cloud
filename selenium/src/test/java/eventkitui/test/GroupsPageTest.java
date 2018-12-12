@@ -44,6 +44,8 @@ public class GroupsPageTest extends SeleniumBaseTest {
     @Test
     public void clickableSortMenu() {
         groupsPage.getUserSort().click();
+        // Waits again due to the spinner getting popped here.
+        groupsPage.waitUntilLoaded();
         wait.until(ExpectedConditions.elementToBeClickable(groupsPage.getSortByNewest()));
         assertTrue(groupsPage.getSortByNewest().isEnabled());
     }

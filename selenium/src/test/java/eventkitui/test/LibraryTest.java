@@ -92,4 +92,25 @@ public class LibraryTest extends SeleniumBaseTest {
         }
     }
 
+    // Tests calendar and databinding to fields (from date, to date).
+    @Test
+    public void testCalendar() {
+        libraryPage.getHideShowFiltersButton().click();
+        libraryPage.getFiltersPanel().waitUntilLoaded();
+        libraryPage.getFiltersPanel().getFromDateField().click();
+        wait.until(ExpectedConditions.elementToBeClickable(libraryPage.getFiltersPanel().getCalender()));
+        assertTrue(libraryPage.getFiltersPanel().getCalender().isDisplayed());
+        final String fromDateTextSelection = libraryPage.getFiltersPanel().getToday().getText();
+        libraryPage.getFiltersPanel().getToday().click();
+        String dayAsText = libraryPage.getFiltersPanel().getFromDateField().getAttribute("value").substring(libraryPage.getFiltersPanel().getFromDateField().getAttribute("value").length() - 2);
+        assertTrue(dayAsText.equalsIgnoreCase(fromDateTextSelection));
+        libraryPage.getFiltersPanel().getToDateField().click();
+        wait.until(ExpectedConditions.elementToBeClickable(libraryPage.getFiltersPanel().getCalender()));
+        assertTrue(libraryPage.getFiltersPanel().getCalender().isDisplayed());
+        final String toDateTextSelection = libraryPage.getFiltersPanel().getToday().getText();
+        libraryPage.getFiltersPanel().getToday().click();
+        dayAsText = libraryPage.getFiltersPanel().getToDateField().getAttribute("value").substring(libraryPage.getFiltersPanel().getToDateField().getAttribute("value").length() - 2);
+        assertTrue(dayAsText.equalsIgnoreCase(toDateTextSelection));
+    }
+
 }

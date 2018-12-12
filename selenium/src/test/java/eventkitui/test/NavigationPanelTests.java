@@ -1,6 +1,7 @@
 package eventkitui.test;
 
 import eventkitui.test.page.navpanel.*;
+import eventkitui.test.page.navpanel.dashboard.Dashboard;
 import eventkitui.test.page.navpanel.datapack.CreationPage;
 import eventkitui.test.page.navpanel.groups.GroupsPage;
 import eventkitui.test.page.navpanel.library.LibraryPage;

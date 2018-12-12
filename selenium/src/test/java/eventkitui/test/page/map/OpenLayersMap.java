@@ -26,7 +26,7 @@ public class OpenLayersMap extends LoadablePage {
     @FindBy(className = "rbt-input-main") private WebElement searchField;
     @FindBy(className = "qa-SearchAOIButton-button") private WebElement searchButton;
     @FindBy(className = "qa-TypeaheadMenuItem-name") private WebElement searchResult;
-    @FindBy(xpath = "//div[contains(@class, 'qa-loading-body')]") private WebElement loadingSpinner;
+    By loadingSpinner = By.xpath("//div[contains(@class, 'qa-loading-body')]");
 
     public WebElement getCanvas() {
         return canvas;
@@ -78,17 +78,8 @@ public class OpenLayersMap extends LoadablePage {
      * Instead we will grab a reference to the loading spinner icon and wait for it to no longer be drawn.
      */
     public void waitUntilLoaded() {
-        while(true) {
-            try {
-                loadingSpinner.click();
-            }
-            catch (StaleElementReferenceException seleniumException) {
-                continue;
-            }
-            catch (NoSuchElementException noSuchElement) {
-                break;
-            }
-        }
+        final WebDriverWait wait = new WebDriverWait(driver, 30);
+        wait.until(ExpectedConditions.invisibilityOfElementLocated(loadingSpinner));
     }
 
     /**

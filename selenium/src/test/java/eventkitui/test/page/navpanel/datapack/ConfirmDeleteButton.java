@@ -7,11 +7,9 @@ import org.openqa.selenium.support.FindBy;
 
 public class ConfirmDeleteButton extends LoadablePage {
 
-    public WebElement getConfirmDeleteButton() {
-        return confirmDeleteButton;
-    }
-    // TODO - This should be in its own confirmation page, putting this in here for now to get my test working.
     @FindBy(xpath = "//button[contains(@class, 'qa-ConfirmDialog-Button-ConfirmButton')]") private WebElement confirmDeleteButton;
+    @FindBy(xpath = "//button[contains(@class, 'qa-ConfirmDialog-Button-CancelButton')]") private WebElement cancelButton;
+
     public ConfirmDeleteButton(WebDriver driver, long timeout) {
         super(driver, timeout);
     }
@@ -20,4 +18,10 @@ public class ConfirmDeleteButton extends LoadablePage {
     public WebElement loadedElement() {
         return confirmDeleteButton;
     }
+
+    public WebElement getConfirmDeleteButton() {
+        return confirmDeleteButton;
+    }
+
+    public WebElement getCancelButton() { return cancelButton; }
 }
