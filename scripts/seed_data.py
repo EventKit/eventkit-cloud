@@ -23,11 +23,12 @@ def main():
                         help='The project name, will be the same for all datapacks (not based on file).')
     parser.add_argument('--limit', type=int, default=0,
                         help='The project name, will be the same for all datapacks (not based on file).')
-
+    parser.add_argument('--start', type=int, default=0,
+                        help='The index (0-based) of the first geojson feature to use to create a datapack')
     args = parser.parse_args()
     user = os.getenv('EVENTKIT_USER')
     if not user:
-        getpass.getpass("EventKit Username:")
+        user = getpass.getpass("EventKit Username:")
     password = os.getenv('EVENTKIT_PASS')
     if not password:
         password = getpass.getpass("EventKit Password:")
@@ -45,11 +46,13 @@ def main():
         geojson_data = json.load(geojson_file)
 
     count = args.limit or len(geojson_data['features'])
-    index = 0
+    index = args.start
+
     while count or (index > len(geojson_data['features'])):
         feature = geojson_data['features'][index]
         index += 1
         name = feature['properties'].get(args.name)
+
         description = feature['properties'].get(args.description) or "Created using the seed_data script."
         project = feature['properties'].get(args.project) or "seed"
         if name in [run['job']['name'] for run in client.get_runs(search_term=name)]:

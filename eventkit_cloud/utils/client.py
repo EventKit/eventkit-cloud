@@ -222,6 +222,41 @@ def convert_seconds_to_hms(seconds):
     return str(timedelta(seconds=seconds))
 
 
+def parse_byte_size(size, desired_unit='b'):
+    """
+    :param size: A string ("size unit")
+    :param desired_unit: The desired output unit e.g. MB
+    :return: sizeInBytes
+    """
+    if size:
+        try:
+            val, unit = size.split(' ')
+            return float(val) * (parse_size_unit(unit) / parse_size_unit(desired_unit))
+        except ValueError:
+            return None
+
+
+def parse_size_unit(unit):
+    """
+    :param unit: A string ("MB", "GB", "KB")
+    :return: Number of bytes per specified unit e.g. GB=1e9
+    """
+    ul = unit.lower()
+
+    if ul == 'b':
+        return 1
+    if ul == 'kb':
+        return 1e3
+    if ul == 'mb':
+        return 1e6
+    if ul == 'gb':
+        return 1e9
+    if ul == 'tb':
+        return 1e12
+
+    raise ValueError('{} is an unknown unit'.format(unit))
+
+
 def reproject(geom, from_srs, to_srs):
     from osgeo import osr
     source = osr.SpatialReference()

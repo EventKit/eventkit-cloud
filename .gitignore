@@ -110,6 +110,7 @@ screenshots/*
 !screenshots/baseline
 
 conda/repo
+venv/
 *_jb_*
 
 #mkdocs staticfiles
