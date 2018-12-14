@@ -2,6 +2,7 @@ package eventkitui.test.page;
 
 import eventkitui.test.page.core.PageObject;
 import eventkitui.test.page.navpanel.NavigationPanel;
+import eventkitui.test.page.notifications.NotificationsPanel;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.support.FindBy;
@@ -25,6 +26,17 @@ public class TopPanel extends PageObject {
     public NavigationPanel openNavigationPanel() {
         menuButton.click();
         return new NavigationPanel(driver, 10);
+    }
+
+    /**
+     * Opens the notifications panel
+     * @return {@link NotificationsPanel} new notifications panel
+     */
+    public NotificationsPanel openNotificationPanel() {
+        notificationsButton.click();
+        NotificationsPanel notificationsPanel = new NotificationsPanel(driver, 10);
+        notificationsPanel.waitUntilLoaded();
+        return notificationsPanel;
     }
 
 }

@@ -8,6 +8,7 @@ import eventkitui.test.util.Utils;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
+import org.junit.Test;
 import org.junit.rules.TestName;
 import org.openqa.selenium.TimeoutException;
 import org.openqa.selenium.WebDriver;
@@ -67,4 +68,5 @@ public class SeleniumBaseTest {
     public void tearDown() throws Exception {
         driver.quit();
     }
+
 }

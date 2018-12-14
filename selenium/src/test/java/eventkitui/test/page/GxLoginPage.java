@@ -44,8 +44,6 @@ public class GxLoginPage extends PageObject {
         submitButton.click();
         wait.until(ExpectedConditions.elementToBeClickable(notificationToContinue));
         notificationToContinue.click();
-        // Wait until the redirect has succeeded back to Beachfront's page
-//        wait.until(ExpectedConditions.elementToBeClickable(mainPage.getPageHeaderTitle()));
         return mainPage != null ?mainPage : new MainPage(driver);
     }
 

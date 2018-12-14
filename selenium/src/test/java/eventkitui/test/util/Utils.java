@@ -74,5 +74,28 @@ public class Utils {
         return navigationPanel;
     }
 
+    /**
+     * Given a tourString, parses out the two numbers that make up how many views exist in the tour.
+     * i.e. the "tour page" feature opens a window with a next button with a display like "Next 1/5"
+     * This method will return a int[] = {1, 5}
+     * @param tourString - Label from the next button on the tour feature window.
+     * @return int[] of two numbers representing the indexes of the tour page.
+     */
+    public static int[] parseTourLabel(final String tourString) {
+        if (tourString.equalsIgnoreCase("Done")) {
+            return null;
+        }
+        else {
+            final String[] parts = tourString.split("/");
+            final String[] parts2 = parts[0].split(" ");
+
+            final int[] twoNumbers = new int[2];
+
+            twoNumbers[0] = Integer.parseInt(parts2[1]);
+            twoNumbers[1] = Integer.parseInt(parts[1]);
+
+            return twoNumbers;
+        }
+    }
 
 }

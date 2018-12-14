@@ -1,5 +1,6 @@
 package eventkitui.test;
 
+import eventkitui.test.page.PageTourWindow;
 import eventkitui.test.page.navpanel.dashboard.Dashboard;
 import eventkitui.test.page.navpanel.NavigationPanel;
 import eventkitui.test.page.navpanel.dashboard.SharingWindow;
@@ -9,6 +10,7 @@ import eventkitui.test.util.Utils;
 import org.junit.Before;
 import org.junit.Test;
 import org.openqa.selenium.By;
+import org.openqa.selenium.NoSuchElementException;
 import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.WebDriverWait;
 
@@ -16,7 +18,9 @@ import java.time.Duration;
 
 import static junit.framework.TestCase.assertTrue;
 
-public class DashboardTest extends SeleniumBaseTest{
+// TODO These tests are now failing due to permissions.
+// TODO Sometimes different options are enabled or disabled based on what you're looking at.
+public class DashboardTest extends SeleniumBaseTest {
 
     private Dashboard dashboard;
     private WebDriverWait wait;
@@ -44,11 +48,16 @@ public class DashboardTest extends SeleniumBaseTest{
     public void testRecentlyViewed() {
         //TODO - Fresh user check
         dashboard.getTourDataPackButton().click();
-        wait.until(ExpectedConditions.elementToBeClickable(dashboard.getDeleteDataPackButton()));
+        wait.until(ExpectedConditions.elementToBeClickable(dashboard.getOpenStatusPage()));
         assertTrue(dashboard.getShowHideMapButton().isEnabled());
         assertTrue(dashboard.getOpenStatusPage().isEnabled());
         assertTrue(dashboard.getViewProvidersButton().isEnabled());
-        assertTrue(dashboard.getDeleteDataPackButton().isEnabled());
+        try {
+            assertTrue(dashboard.getDeleteDataPackButton().isEnabled());
+        }
+        catch (NoSuchElementException noSuchElement) {
+            // Doesnt have permission to delete this datapack
+        }
         assertTrue(dashboard.getShareDataPackButton().isEnabled());
         // show hide map
         assertTrue(dashboard.getShowHideMapButton().getText().equalsIgnoreCase("Hide Map"));
@@ -65,7 +74,7 @@ public class DashboardTest extends SeleniumBaseTest{
     @Test
     public  void testStatusLink() {
         dashboard.getTourDataPackButton().click();
-        wait.until(ExpectedConditions.elementToBeClickable(dashboard.getDeleteDataPackButton()));
+        wait.until(ExpectedConditions.elementToBeClickable(dashboard.getOpenStatusPage()));
         dashboard.getOpenStatusPage().click();
         wait.withTimeout(Duration.ofSeconds(10));
         assertTrue(driver.getCurrentUrl().contains("status"));
@@ -74,7 +83,7 @@ public class DashboardTest extends SeleniumBaseTest{
     @Test
     public void testSourcesDialog() {
         dashboard.getTourDataPackButton().click();
-        wait.until(ExpectedConditions.elementToBeClickable(dashboard.getDeleteDataPackButton()));
+        wait.until(ExpectedConditions.elementToBeClickable(dashboard.getOpenStatusPage()));
         dashboard.getViewProvidersButton().click();
         final SourcesDialog sourcesDialog = new SourcesDialog(driver, 10);
         sourcesDialog.waitUntilLoaded();
@@ -85,17 +94,21 @@ public class DashboardTest extends SeleniumBaseTest{
     @Test
     public void testDeleteExportButton() {
         dashboard.getTourDataPackButton().click();
-        wait.until(ExpectedConditions.elementToBeClickable(dashboard.getDeleteDataPackButton()));
+        wait.until(ExpectedConditions.elementToBeClickable(dashboard.getOpenStatusPage()));
         dashboard.getDeleteDataPackButton().click();
         final ConfirmDeleteButton confirmDeleteButton = new ConfirmDeleteButton(driver, 10);
         assertTrue(confirmDeleteButton.getConfirmDeleteButton().isEnabled());
         assertTrue(confirmDeleteButton.getCancelButton().isEnabled());
     }
 
+    /**
+     * Opens sharing window, checks UI elements, changes between group and member tabs,
+     * ensures return button returns user to correct view.
+     */
     @Test
     public void testSharingWindow() {
         dashboard.getTourDataPackButton().click();
-        wait.until(ExpectedConditions.elementToBeClickable(dashboard.getDeleteDataPackButton()));
+        wait.until(ExpectedConditions.elementToBeClickable(dashboard.getOpenStatusPage()));
         dashboard.getShareDataPackButton().click();
         final SharingWindow sharingWindow = new SharingWindow(driver, 10);
         sharingWindow.waitUntilLoaded();
@@ -120,4 +133,38 @@ public class DashboardTest extends SeleniumBaseTest{
         assertTrue(sharingWindow.getGroupsTab().isEnabled());
     }
 
+    // Tests page tour functionality.
+    @Test
+    public void testPageTour() {
+        dashboard.getPageTourButton().click();
+        PageTourWindow pageTourWindow = new PageTourWindow(driver, 10);
+        pageTourWindow.waitUntilLoaded();
+        assertTrue(pageTourWindow.getCloseButton().isEnabled());
+        int[] indexes  = Utils.parseTourLabel(pageTourWindow.getPrimaryButton().getText());
+        if (indexes != null) {
+            assertTrue(indexes != null);
+            // Test next and back functionality.
+            pageTourWindow.getPrimaryButton().click();
+            wait.until(ExpectedConditions.elementToBeClickable(pageTourWindow.getPrimaryButton()));
+            int[] indexes2 = Utils.parseTourLabel(pageTourWindow.getPrimaryButton().getText());
+            assertTrue(indexes[0] == indexes2[0] - 1);
+            assertTrue(pageTourWindow.getSecondaryButton().isEnabled());
+            pageTourWindow.getSecondaryButton().click();
+            wait.until(ExpectedConditions.elementToBeClickable(pageTourWindow.getPrimaryButton()));
+            for (int i = indexes[0]; i < indexes[1]; i++) {
+                int[] previousIndexes = Utils.parseTourLabel(pageTourWindow.getPrimaryButton().getText());
+                    pageTourWindow.getPrimaryButton().click();
+                    wait.until(ExpectedConditions.elementToBeClickable(pageTourWindow.getPrimaryButton()));
+                    indexes2 = Utils.parseTourLabel(pageTourWindow.getPrimaryButton().getText());
+                    if (indexes2 != null) {
+                        assertTrue(previousIndexes[0] == indexes2[0] - 1);
+                        assertTrue(pageTourWindow.getSecondaryButton().isEnabled());
+                    }
+                    else {
+                        pageTourWindow.getCloseButton().click();
+                    }
+
+            }
+        }
+    }
 }

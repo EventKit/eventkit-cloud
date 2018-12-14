@@ -3,6 +3,7 @@ package eventkitui.test;
 import eventkitui.test.page.navpanel.AccountPage;
 import eventkitui.test.page.navpanel.NavigationPanel;
 import eventkitui.test.util.Utils;
+import org.apache.tools.ant.types.resources.comparators.Content;
 import org.junit.Before;
 import org.junit.Test;
 import org.openqa.selenium.support.ui.ExpectedConditions;
