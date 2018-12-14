@@ -101,7 +101,7 @@ class Command(BaseCommand):
 
     @staticmethod
     def run_post_1_1_migrations():
-        apps = ['jobs', 'tasks']
+        apps = ['jobs', 'tasks', 'core', 'auth']
         for app in apps:
             root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
             migration_dir = os.path.join(root, app, 'migrations')
