@@ -9,7 +9,6 @@ from django.contrib import admin
 from eventkit_cloud.ui import urls as ui_urls
 from eventkit_cloud.auth import urls as auth_urls
 from eventkit_cloud.api import urls as api_urls
-from eventkit_cloud.api.urls import router
 from eventkit_cloud.tasks import urls as task_urls
 
 from django.urls import include, re_path

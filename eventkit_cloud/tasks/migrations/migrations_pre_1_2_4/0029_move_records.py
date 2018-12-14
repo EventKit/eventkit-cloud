@@ -51,39 +51,9 @@ def move_export_tasks_to_run_hook(apps, *args):
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('tasks', '0027_auto_20180625_1519'),
+        ('tasks', '0028_alter_finalize_run_hook'),
     ]
 
     operations = [
-        migrations.AlterField(
-            model_name='finalizerunhooktaskrecord',
-            name='result',
-            field=models.OneToOneField(blank=True, null=True, on_delete=models.deletion.SET_NULL,
-                                       related_name='finalize_task', to='tasks.FileProducingTaskResult'),
-        ),
-        migrations.AlterField(
-            model_name='finalizerunhooktaskrecord',
-            name='run',
-            field=models.ForeignKey(null=True, on_delete=models.deletion.CASCADE, to='tasks.ExportRun'),
-        ),
         migrations.RunPython(move_run_hook_to_export_tasks, reverse_code=move_export_tasks_to_run_hook),
-        migrations.RemoveField(
-            model_name='finalizerunhooktaskrecord',
-            name='cancel_user',
-        ),
-        migrations.RemoveField(
-            model_name='finalizerunhooktaskrecord',
-            name='result',
-        ),
-        migrations.RemoveField(
-            model_name='finalizerunhooktaskrecord',
-            name='run',
-        ),
-        migrations.DeleteModel(
-            name='FinalizeRunHookTaskRecord',
-        ),
-        migrations.RemoveField(
-            model_name='exportrun',
-            name='downloadable',
-        ),
     ]
