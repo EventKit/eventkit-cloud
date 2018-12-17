@@ -4,6 +4,7 @@ import eventkitui.test.page.navpanel.AdminLoginPage;
 import eventkitui.test.page.navpanel.dashboard.Dashboard;
 import eventkitui.test.page.GxLoginPage;
 import eventkitui.test.page.MainPage;
+import eventkitui.test.util.FirstTimeLogin;
 import eventkitui.test.util.Utils;
 import org.junit.After;
 import org.junit.Before;
@@ -22,7 +23,7 @@ public class SeleniumBaseTest {
 
     // Login through gxportal or admin backend
     // TODO change to env variable if we're going to keep this.
-    private final boolean adminLogin = false;
+    private final boolean adminLogin = true;
 
     @Rule
     public TestName name = new TestName();
@@ -32,8 +33,6 @@ public class SeleniumBaseTest {
 
     @Before
     public void setUp() throws Exception {
-        //TODO - A step will need to be created to accept the license for the test user, in the event this is a new instance
-        //TODO - or the license was wiped. For now I've gone in and manually accepted the license for this user.
         driver = Utils.getChromeRemoteDriver();
         mainPage = new MainPage(driver);
         driver.get(BASE_URL);
@@ -53,6 +52,10 @@ public class SeleniumBaseTest {
                 throw new RuntimeException("Something went wrong, see screenshot.");
             }
         }
+        mainPage.getTopPanel().waitUntilLoaded();
+        // Does first time checks, will set stuff up if user has never logged in before.
+        FirstTimeLogin firstTimeLogin = new FirstTimeLogin(driver, mainPage);
+        firstTimeLogin.firstTimeSeleniumUserSetup();
         Dashboard defaultDashboard = new Dashboard(driver);
         // Logging in can take a long time depending on the load on the server it seems.
         // Dashboard is default upon login

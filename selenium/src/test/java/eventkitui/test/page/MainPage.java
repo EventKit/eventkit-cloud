@@ -55,22 +55,4 @@ public class MainPage extends PageObject {
         return this.topPanel;
     }
 
-    /**
-     * Gets the Text of the Consent Banner
-     *
-     * @return Consent banner text
-     */
-    public String getConsentBannerText() {
-        return consentBanner.getText();
-    }
-
-    /**
-     * Gets the API Key cookie, used for local authentication token storage.
-     *
-     * @return The API Key cookie
-     */
-    public Cookie getApiKeyCookie() {
-        return driver.manage().getCookieNamed(cookieName);
-    }
-
 }

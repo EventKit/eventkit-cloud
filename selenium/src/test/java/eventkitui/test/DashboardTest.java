@@ -35,18 +35,22 @@ public class DashboardTest extends SeleniumBaseTest {
 
     @Test
     public void selectNotificationtBullets() {
-        //TODO - Fresh user check
         dashboard.getNotificationCardMenu().click();
         wait.until(ExpectedConditions.elementToBeClickable(dashboard.getViewNotification()));
         assertTrue(dashboard.getViewNotification().isEnabled());
         assertTrue(dashboard.getRemoveNotification().isEnabled());
-        assertTrue(dashboard.getMarkNotificationRead().isEnabled());
+        // Read or unread depending on state
+        try {
+            assertTrue(dashboard.getMarkNotificationRead().isEnabled());
+        }
+        catch (NoSuchElementException noSuchElement) {
+            assertTrue(dashboard.getMarkNotificationUnread().isEnabled());
+        }
         Utils.takeScreenshot(driver);
     }
 
     @Test
     public void testRecentlyViewed() {
-        //TODO - Fresh user check
         dashboard.getTourDataPackButton().click();
         wait.until(ExpectedConditions.elementToBeClickable(dashboard.getOpenStatusPage()));
         assertTrue(dashboard.getShowHideMapButton().isEnabled());
@@ -58,7 +62,12 @@ public class DashboardTest extends SeleniumBaseTest {
         catch (NoSuchElementException noSuchElement) {
             // Doesnt have permission to delete this datapack
         }
-        assertTrue(dashboard.getShareDataPackButton().isEnabled());
+        try {
+            assertTrue(dashboard.getShareDataPackButton().isEnabled());
+        }
+        catch (NoSuchElementException noSuchElement) {
+            // Doesn't have permission to share this datapack, element will not appear.
+        }
         // show hide map
         assertTrue(dashboard.getShowHideMapButton().getText().equalsIgnoreCase("Hide Map"));
         dashboard.getShowHideMapButton().click();
@@ -67,7 +76,7 @@ public class DashboardTest extends SeleniumBaseTest {
         wait.until(ExpectedConditions.invisibilityOfElementLocated(blockingItem));
         wait.until(ExpectedConditions.elementToBeClickable(dashboard.getTourDataPackButton()));
         dashboard.getTourDataPackButton().click();
-        wait.until(ExpectedConditions.elementToBeClickable(dashboard.getDeleteDataPackButton()));
+        wait.until(ExpectedConditions.elementToBeClickable(dashboard.getOpenStatusPage()));
         assertTrue(dashboard.getShowHideMapButton().getText().equalsIgnoreCase("Show Map"));
     }
 
@@ -88,17 +97,21 @@ public class DashboardTest extends SeleniumBaseTest {
         final SourcesDialog sourcesDialog = new SourcesDialog(driver, 10);
         sourcesDialog.waitUntilLoaded();
         assertTrue(sourcesDialog.getCloseButton().isEnabled());
-        assertTrue(sourcesDialog.getSourceTitle().isEnabled());
     }
 
     @Test
     public void testDeleteExportButton() {
-        dashboard.getTourDataPackButton().click();
+        dashboard.getMyDataPackOptionsButton().click();
         wait.until(ExpectedConditions.elementToBeClickable(dashboard.getOpenStatusPage()));
-        dashboard.getDeleteDataPackButton().click();
-        final ConfirmDeleteButton confirmDeleteButton = new ConfirmDeleteButton(driver, 10);
-        assertTrue(confirmDeleteButton.getConfirmDeleteButton().isEnabled());
-        assertTrue(confirmDeleteButton.getCancelButton().isEnabled());
+        try {
+            dashboard.getDeleteDataPackButton().click();
+            final ConfirmDeleteButton confirmDeleteButton = new ConfirmDeleteButton(driver, 10);
+            assertTrue(confirmDeleteButton.getConfirmDeleteButton().isEnabled());
+            assertTrue(confirmDeleteButton.getCancelButton().isEnabled());
+        }
+        catch (NoSuchElementException noSuchElement) {
+            System.out.println("Delete is not enabled for selected element.");
+        }
     }
 
     /**
@@ -107,8 +120,9 @@ public class DashboardTest extends SeleniumBaseTest {
      */
     @Test
     public void testSharingWindow() {
-        dashboard.getTourDataPackButton().click();
+        dashboard.getMyDataPackOptionsButton().click();
         wait.until(ExpectedConditions.elementToBeClickable(dashboard.getOpenStatusPage()));
+        dashboard.getShareDataPackButton().isDisplayed();
         dashboard.getShareDataPackButton().click();
         final SharingWindow sharingWindow = new SharingWindow(driver, 10);
         sharingWindow.waitUntilLoaded();
@@ -153,18 +167,30 @@ public class DashboardTest extends SeleniumBaseTest {
             wait.until(ExpectedConditions.elementToBeClickable(pageTourWindow.getPrimaryButton()));
             for (int i = indexes[0]; i < indexes[1]; i++) {
                 int[] previousIndexes = Utils.parseTourLabel(pageTourWindow.getPrimaryButton().getText());
-                    pageTourWindow.getPrimaryButton().click();
-                    wait.until(ExpectedConditions.elementToBeClickable(pageTourWindow.getPrimaryButton()));
-                    indexes2 = Utils.parseTourLabel(pageTourWindow.getPrimaryButton().getText());
-                    if (indexes2 != null) {
-                        assertTrue(previousIndexes[0] == indexes2[0] - 1);
-                        assertTrue(pageTourWindow.getSecondaryButton().isEnabled());
-                    }
-                    else {
-                        pageTourWindow.getCloseButton().click();
-                    }
-
+                pageTourWindow.getPrimaryButton().click();
+                wait.until(ExpectedConditions.elementToBeClickable(pageTourWindow.getPrimaryButton()));
+                indexes2 = Utils.parseTourLabel(pageTourWindow.getPrimaryButton().getText());
+                if (indexes2 != null) {
+                    assertTrue(previousIndexes[0] == indexes2[0] - 1);
+                    assertTrue(pageTourWindow.getSecondaryButton().isEnabled());
+                }
+                else {
+                    pageTourWindow.getCloseButton().click();
+                }
             }
         }
+    }
+
+    @Test
+    public void testMyDataPackButton() {
+        try {
+            assertTrue(dashboard.getMyDataPackOptionsButton().isEnabled());
+        }
+        catch (NoSuchElementException noSuchElement) {
+            System.out.println("No such element found, no datapacks belong to this user.");
+        }
+        dashboard.getMyDataPackOptionsButton().click();
+        wait.until(ExpectedConditions.elementToBeClickable(dashboard.getShareDataPackButton()));
+
     }
 }

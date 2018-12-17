@@ -1,37 +1,75 @@
-package eventkitui.test;
+package eventkitui.test.util;
 
+import eventkitui.test.page.MainPage;
+import eventkitui.test.page.core.PageObject;
 import eventkitui.test.page.map.AreaOfInterestWindow;
 import eventkitui.test.page.map.BufferAoiWindow;
 import eventkitui.test.page.map.OpenLayersMap;
 import eventkitui.test.page.navpanel.NavigationPanel;
-import eventkitui.test.page.navpanel.datapack.*;
-import eventkitui.test.util.Utils;
-import org.junit.Test;
+import eventkitui.test.page.navpanel.datapack.CreationDetails;
+import eventkitui.test.page.navpanel.datapack.CreationPage;
+import eventkitui.test.page.navpanel.datapack.PreviewCreationPage;
+import eventkitui.test.page.navpanel.datapack.StatusAndDownload;
+import eventkitui.test.page.notifications.NotificationsPanel;
 import org.openqa.selenium.NoSuchElementException;
 import org.openqa.selenium.TimeoutException;
+import org.openqa.selenium.WebDriver;
+import org.openqa.selenium.WebElement;
+import org.openqa.selenium.support.FindBy;
 import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.WebDriverWait;
 
-import java.util.logging.Logger;
+import java.time.Duration;
 
 import static junit.framework.TestCase.assertTrue;
 
 /**
- * Tests UI components for creating data packs.
+ * This class will handle the special cases of first time user login.
+ * Will accept some licenses and create an initial datapack to get some notifications etc. in the system to test.
  */
-public class DatapackTest extends SeleniumBaseTest {
+public class FirstTimeLogin extends PageObject {
+    // This element appearing on login tells us we should accept the licenses.
+    @FindBy(xpath = "//div[contains(@class, 'qa-Warning-text')]") private WebElement warningBanner;
+    @FindBy(xpath = "//span[contains(@class, 'qa-LicenseInfo-Checkbox')]") private WebElement acceptAllCheckbox;
+    @FindBy(xpath = "//button[contains(@class, 'qa-SaveButton-Button-SaveChanges')]") private WebElement saveChangesButton;
 
-    private final Logger logger = Logger.getLogger(this.getClass().getName());
+    private WebDriverWait wait;
+    private WebDriver driver;
+    private MainPage mainPage;
 
-    // Large test, will zoom to aoi, draw bounding box, create data pack
-    // TODO - Cleanup, more assertions
-    @Test
-    public void createDataPackTest() {
-        Utils.takeScreenshot(driver);
-        final NavigationPanel navigationPanel = Utils.openNavigationPanel(driver, mainPage);
-        navigationPanel.waitUntilLoaded();
-        final CreationPage creationPage = navigationPanel.openCreateDataPack();
-        creationPage.waitUntilLoaded();
+    public FirstTimeLogin(final WebDriver driver, MainPage mainPage) {
+        super(driver);
+        this.driver = driver;
+        this.mainPage = mainPage;
+        this.wait = new WebDriverWait(driver, 10);
+    }
+
+    /**
+     * Checks if the license warning is displayed. If so, we must accept the license and create some datapacks for first time use.
+     */
+    public void firstTimeSeleniumUserSetup() {
+        try {
+            warningBanner.isEnabled();
+            acceptLicenses();
+            NavigationPanel navigationPanel = mainPage.getTopPanel().openNavigationPanel();
+            navigationPanel.waitUntilLoaded();
+            CreationPage creationPage = navigationPanel.openCreateDataPack();
+            creationPage.waitUntilLoaded();
+            createFirstDataPack(creationPage);
+
+        }
+        catch (NoSuchElementException noSuchElementException) {
+            // Page didn't load, license must already by accepted.
+        }
+    }
+
+    public void acceptLicenses() {
+        acceptAllCheckbox.click();
+        wait.withTimeout(Duration.ofSeconds(5));
+        saveChangesButton.click();
+    }
+
+    public void createFirstDataPack(CreationPage creationPage) {
         final OpenLayersMap map = creationPage.getOpenLayersMap();
         // Zoom to Washington, D.C. via search field
         map.getSearchField().sendKeys("Washington, D.C.");
@@ -67,8 +105,8 @@ public class DatapackTest extends SeleniumBaseTest {
         final CreationDetails details = new CreationDetails(driver, 10);
         details.waitUntilLoaded();
         assertTrue(details.getNameField().isDisplayed());
-        details.getNameField().sendKeys("Selenium DataPack");
-        details.getDescriptionField().sendKeys("Selenium description");
+        details.getNameField().sendKeys("Selenium First Login DataPack");
+        details.getDescriptionField().sendKeys("Selenium datapack, created for test user.");
         details.getProjectField().sendKeys("Selenium project");
         details.getOpenStreetMapDataThemesCheckBox().click();
         details.getOpenStreetMapTilesCheckBox().click();
@@ -85,14 +123,8 @@ public class DatapackTest extends SeleniumBaseTest {
             longWait.until(ExpectedConditions.elementToBeClickable(statusAndDownload.getDownloadZipButton()));
         }
         catch (NoSuchElementException | TimeoutException noSuchElement) {
-            System.out.println("Test failed. This test can sometimes be considered an integration test as it actually waits for data to get churned. This test failure may not be an indication of failure on part of the UI but instead may be the system itself failing to complete jobs for some reason.");
-            throw noSuchElement;
+            System.out.println("Datapack is stalled or still processing. Notifications and such should appear anyway.");
         }
-        assertTrue(statusAndDownload.getDownloadZipButton().isDisplayed());
-        // Cleanup
-        statusAndDownload.getDeleteExport().click();
-        final ConfirmDeleteButton confirmDeleteButton = new ConfirmDeleteButton(driver, 10);
-        confirmDeleteButton.waitUntilLoaded();
-        confirmDeleteButton.getConfirmDeleteButton().click();
     }
+
 }

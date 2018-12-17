@@ -1,5 +1,6 @@
 package eventkitui.test.page;
 
+import eventkitui.test.page.core.LoadablePage;
 import eventkitui.test.page.core.PageObject;
 import eventkitui.test.page.navpanel.NavigationPanel;
 import eventkitui.test.page.notifications.NotificationsPanel;
@@ -10,13 +11,13 @@ import org.openqa.selenium.support.FindBy;
 /**
  * Top panel stretches across eventkit and is always available.
  */
-public class TopPanel extends PageObject {
+public class TopPanel extends LoadablePage {
 
     @FindBy(xpath = "//button[contains(@class, 'qa-Application-AppBar-MenuButton')]")	    private WebElement menuButton;
     @FindBy(xpath = "//button[contains(@class, 'qa-Application-AppBar-Notifications')]")	private WebElement notificationsButton;
 
     public TopPanel(WebDriver driver) {
-        super(driver);
+        super(driver, 10);
     }
 
     /**
@@ -39,4 +40,8 @@ public class TopPanel extends PageObject {
         return notificationsPanel;
     }
 
+    @Override
+    public WebElement loadedElement() {
+        return menuButton;
+    }
 }

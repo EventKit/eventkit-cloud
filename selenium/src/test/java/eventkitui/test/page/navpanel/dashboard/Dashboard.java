@@ -18,6 +18,8 @@ public class Dashboard extends ContentPage {
     @FindBy(xpath="//button[contains (@class, 'qa-NotificationMenu-IconMenu')]") private WebElement notificationCardMenu;
     @FindBy(xpath = "//li[contains (@class, 'qa-NotificationMenu-MenuItem-View')]") private WebElement viewNotification;
     @FindBy(xpath = "//li[contains (@class, 'qa-NotificationMenu-MenuItem-MarkAsRead')]") private WebElement markNotificationRead;
+    @FindBy(xpath = "//li[contains (@class, 'qa-NotificationMenu-MenuItem-MarkAsUnread')]") private WebElement markNotificationUnread;
+
     @FindBy(xpath = "//li[contains (@class, 'qa-NotificationMenu-MenuItem-Remove')]") private WebElement removeNotification;
 
     // Appears on a datapack card.
@@ -31,6 +33,9 @@ public class Dashboard extends ContentPage {
     @FindBy(className = "qa-BaseDialog-div") private WebElement dialogElement;
     // Not a good way to determine if the canvas will actually disappear since selenium would just pickup the canvas from another card. Probably best to check the text of the hide/show button
     @FindBy(xpath="//div[contains (@class, 'qa-DataPackGridItem-CardMedia')]/div/div/canvas") private WebElement dataPackCanvas;
+
+    // The following elements belong to the my datapack section. This will always ensure we have the proper permissions to test share and delete functionality.
+    @FindBy(xpath = "//div[contains(@id, 'DashboardSectionMy DataPacks')]/div/div[contains(@class, 'react-swipeable-view-container')]/div/ul/div/div/div/div/div/span/div/button") private WebElement myDataPackOptionsButton;
 
     public Dashboard(WebDriver driver) {
         super(driver, 10);
@@ -81,6 +86,8 @@ public class Dashboard extends ContentPage {
         return shareDataPackButton;
     }
 
+    public WebElement getMarkNotificationUnread() { return markNotificationUnread; }
+
     public WebElement getFinalElement() {
         return finalElement;
     }
@@ -92,5 +99,7 @@ public class Dashboard extends ContentPage {
     public WebElement getDialogElement() {
         return dialogElement;
     }
+
+    public WebElement getMyDataPackOptionsButton() { return myDataPackOptionsButton; }
 
 }

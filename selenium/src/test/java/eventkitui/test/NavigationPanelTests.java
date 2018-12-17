@@ -28,6 +28,7 @@ public class NavigationPanelTests extends SeleniumBaseTest{
         dashboard.waitUntilLoaded();
         assertTrue(dashboard.getHeader().isDisplayed());
         assertTrue(dashboard.getHeader().getText().contains("Dashboard"));
+        assertTrue(driver.getCurrentUrl().contains("dashboard"));
     }
 
     @Test
@@ -37,6 +38,7 @@ public class NavigationPanelTests extends SeleniumBaseTest{
         libraryPage.waitUntilLoaded();
         assertTrue(libraryPage.getHeader().isDisplayed());
         assertTrue(libraryPage.getHeader().getText().contains("DataPack Library"));
+        assertTrue(driver.getCurrentUrl().contains("exports"));
     }
 
     @Test
@@ -46,6 +48,7 @@ public class NavigationPanelTests extends SeleniumBaseTest{
         creationPage.waitUntilLoaded();
         assertTrue(creationPage.getHeader().isDisplayed());
         assertTrue(creationPage.getHeader().getText().contains("Create DataPack"));
+        assertTrue(driver.getCurrentUrl().contains("create"));
     }
 
     @Test
@@ -55,6 +58,7 @@ public class NavigationPanelTests extends SeleniumBaseTest{
         accountPage.waitUntilLoaded();
         assertTrue(accountPage.getHeader().isDisplayed());
         assertTrue(accountPage.getHeader().getText().contains("Account"));
+        assertTrue(driver.getCurrentUrl().contains("account"));
     }
 
     @Test
@@ -64,6 +68,7 @@ public class NavigationPanelTests extends SeleniumBaseTest{
         groupsPage.waitUntilLoaded();
         assertTrue(groupsPage.getHeader().isDisplayed());
         assertTrue(groupsPage.getHeader().getText().contains("Members and Groups"));
+        assertTrue(driver.getCurrentUrl().contains("groups"));
     }
 
     @Test

@@ -7,6 +7,7 @@ import eventkitui.test.page.navpanel.groups.NewGroupPage;
 import eventkitui.test.util.Utils;
 import org.junit.Before;
 import org.junit.Test;
+import org.openqa.selenium.By;
 import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.WebDriverWait;
 
@@ -26,6 +27,9 @@ public class GroupsPageTest extends SeleniumBaseTest {
         groupsPage = navigationPanel.openMembersAndGroups();
         groupsPage.waitUntilLoaded();
         wait = new WebDriverWait(driver, 10);
+        // Take care of loading bar.
+        By by = new By.ByXPath("//div[contains(@class, 'qa-loading-body')]");
+        wait.until(ExpectedConditions.invisibilityOfElementLocated(by));
     }
 
     @Test
