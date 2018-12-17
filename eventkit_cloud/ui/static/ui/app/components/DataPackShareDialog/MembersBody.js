@@ -62,6 +62,7 @@ export class MembersBody extends Component {
             page: this.state.page,
             exclude_self: 'true',
             ordering: this.state.memberOrder,
+            search: this.state.search,
             ...params,
         }, append);
         this.setState({ loading: false });
@@ -349,7 +350,13 @@ export class MembersBody extends Component {
                     textContainerStyle={{ justifyContent: 'flex-end' }}
                 />
                 {!this.state.loading && (
-                    <Button onClick={this.loadMore} variant="text" color="primary" fullWidth>
+                    <Button
+                        onClick={this.loadMore}
+                        variant="text"
+                        color="primary"
+                        fullWidth
+                        disabled={!this.props.nextPage}
+                    >
                         Load More
                     </Button>
                 )}
@@ -405,6 +412,7 @@ MembersBody.defaultProps = {
 MembersBody.propTypes = {
     public: PropTypes.bool.isRequired,
     getUsers: PropTypes.func.isRequired,
+    nextPage: PropTypes.bool.isRequired,
     userCount: PropTypes.number.isRequired,
     users: PropTypes.arrayOf(PropTypes.shape({
         user: PropTypes.shape({
@@ -437,6 +445,7 @@ MembersBody.propTypes = {
 const mapStateToProps = state => (
     {
         users: state.users.users,
+        nextPage: state.users.nextPage,
         userCount: state.users.total - 1,
     }
 );

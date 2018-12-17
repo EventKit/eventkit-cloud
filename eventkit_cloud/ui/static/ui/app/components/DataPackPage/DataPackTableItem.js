@@ -13,7 +13,6 @@ import NavigationCheck from '@material-ui/icons/Check';
 import Star from '@material-ui/icons/Star';
 import NotificationSync from '@material-ui/icons/Sync';
 import moment from 'moment';
-import { userIsDataPackAdmin } from '../../utils/generic';
 import IconMenu from '../common/IconMenu';
 import DeleteDataPackDialog from '../Dialog/DeleteDataPackDialog';
 import ProviderDialog from '../Dialog/ProviderDialog';
@@ -158,8 +157,6 @@ export class DataPackTableItem extends Component {
             },
         };
 
-        const adminPermissions = userIsDataPackAdmin(this.props.user.data.user, this.props.run.job.permissions, this.props.groups);
-
         return (
             <TableRow className="qa-DataPackTableItem-TableRow">
                 <TableCell
@@ -234,7 +231,7 @@ export class DataPackTableItem extends Component {
                         >
                             View Data Sources
                         </MenuItem>
-                        {adminPermissions ?
+                        {this.props.run.job.relationship === 'ADMIN' ?
                             <MenuItem
                                 key="delete"
                                 className="qa-DataPackTableItem-MenuItem-deleteExport"
@@ -245,7 +242,7 @@ export class DataPackTableItem extends Component {
                             </MenuItem>
                             : null
                         }
-                        {adminPermissions ?
+                        {this.props.run.job.relationship === 'ADMIN' ?
                             <MenuItem
                                 key="share"
                                 className="qa-DataPackTableItem-MenuItem-share"
@@ -294,8 +291,6 @@ DataPackTableItem.propTypes = {
     onRunDelete: PropTypes.func.isRequired,
     onRunShare: PropTypes.func.isRequired,
     providers: PropTypes.arrayOf(PropTypes.object).isRequired,
-    users: PropTypes.arrayOf(PropTypes.object).isRequired,
-    groups: PropTypes.arrayOf(PropTypes.object).isRequired,
     theme: PropTypes.object.isRequired,
 };
 

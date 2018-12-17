@@ -209,8 +209,6 @@ export class DataPackPage extends React.Component {
             loadLessDisabled: this.props.runIds.length <= this.pageSize,
             loadMoreDisabled: !this.props.runsMeta.nextPage,
             providers: this.props.providers,
-            users: this.props.users,
-            groups: this.props.groups,
         };
         switch (view) {
             case 'list':
@@ -625,8 +623,6 @@ export class DataPackPage extends React.Component {
                         onFilterClear={this.handleFilterClear}
                         open={this.state.open}
                         providers={this.props.providers}
-                        groups={this.props.groups}
-                        members={this.props.users}
                     />
 
                     {this.state.pageLoading ?
@@ -687,13 +683,6 @@ DataPackPage.propTypes = {
     setOrder: PropTypes.func.isRequired,
     setView: PropTypes.func.isRequired,
     providers: PropTypes.arrayOf(PropTypes.object).isRequired,
-    groups: PropTypes.arrayOf(PropTypes.shape({
-        id: PropTypes.number,
-        name: PropTypes.string,
-        members: PropTypes.arrayOf(PropTypes.string),
-        administrators: PropTypes.arrayOf(PropTypes.string),
-    })).isRequired,
-    users: PropTypes.arrayOf(PropTypes.object).isRequired,
     updateDataCartPermissions: PropTypes.func.isRequired,
     updatePermissions: PropTypes.shape({
         updating: PropTypes.bool,
@@ -726,8 +715,6 @@ function mapStateToProps(state) {
         providers: state.providers,
         importGeom: state.importGeom,
         geocode: state.geocode,
-        groups: state.groups.groups,
-        users: state.users.users,
         updatePermissions: state.updatePermission,
     };
 }

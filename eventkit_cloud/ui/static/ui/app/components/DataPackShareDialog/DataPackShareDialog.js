@@ -14,12 +14,15 @@ export class DataPackShareDialog extends Component {
     constructor(props) {
         super(props);
         this.handleSave = this.handleSave.bind(this);
-        this.handleGroupUpdate = this.handleGroupUpdate.bind(this);
         this.handleUserCheck = this.handleUserCheck.bind(this);
+        this.handleGroupCheck = this.handleGroupCheck.bind(this);
         this.handleAdminCheck = this.handleAdminCheck.bind(this);
+        this.handleAdminGroupCheck = this.handleAdminGroupCheck.bind(this);
         this.handleCurrentCheck = this.handleCurrentCheck.bind(this);
         this.handlePublicCheck = this.handlePublicCheck.bind(this);
+        this.handleGroupCheckAll = this.handleGroupCheckAll.bind(this);
         this.handleUncheckAll = this.handleUncheckAll.bind(this);
+        this.handleGroupUncheckAll = this.handleGroupUncheckAll.bind(this);
         this.showShareInfo = this.showShareInfo.bind(this);
         this.hideShareInfo = this.hideShareInfo.bind(this);
         this.showPublicWarning = this.showPublicWarning.bind(this);
@@ -45,10 +48,20 @@ export class DataPackShareDialog extends Component {
     }
 
     handleSave() {
-        if (this.permissions.isShared()) {
+        if (this.permissions.isPrivate()) {
+            if (this.permissions.getMemberCount() || this.permissions.getGroupCount()) {
+                this.permissions.makeShared();
+            }
+        } else if (this.permissions.isShared()) {
             if (!this.permissions.getMemberCount() && !this.permissions.getGroupCount()) {
                 this.permissions.makePrivate();
             }
+        } else if (this.props.warnPublic) {
+            if (!this.state.showPublicWarning) {
+                this.setState({ showPublicWarning: true });
+                return;
+            }
+            this.setState({ showPublicWarning: false });
         }
 
         if (this.permissions.getUserPermissions()) {
@@ -56,11 +69,6 @@ export class DataPackShareDialog extends Component {
         }
 
         this.props.onSave(this.permissions.getPermissions());
-    }
-
-    handleGroupUpdate(groups) {
-        this.permissions.setGroups(groups);
-        this.setState({ permissions: this.permissions.getPermissions() });
     }
 
     handleUserCheck(username) {
@@ -75,11 +83,29 @@ export class DataPackShareDialog extends Component {
         this.setState({ permissions: this.permissions.getPermissions() });
     }
 
+    handleGroupCheck(groupname) {
+        if (this.permissions.groupHasPermissions(groupname)) {
+            this.permissions.removeGroupPermissions(groupname);
+        } else {
+            this.permissions.setGroupPermission(groupname, Levels.READ);
+        }
+        this.setState({ permissions: this.permissions.getPermissions() });
+    }
+
     handleAdminCheck(username) {
         if (this.permissions.userHasPermission(username, Levels.ADMIN)) {
             this.permissions.setMemberPermission(username, Levels.READ);
         } else {
             this.permissions.setMemberPermission(username, Levels.ADMIN);
+        }
+        this.setState({ permissions: this.permissions.getPermissions() });
+    }
+
+    handleAdminGroupCheck(groupname) {
+        if (this.permissions.groupHasPermissions(groupname, Levels.ADMIN)) {
+            this.permissions.setGroupPermission(groupname, Levels.READ);
+        } else {
+            this.permissions.setGroupPermission(groupname, Levels.ADMIN);
         }
         this.setState({ permissions: this.permissions.getPermissions() });
     }
@@ -99,11 +125,26 @@ export class DataPackShareDialog extends Component {
         this.setState({ permissions: this.permissions.getPermissions() });
     }
 
+    handleGroupCheckAll() {
+        this.props.groups.forEach((group) => {
+            const { name } = group;
+            if (!this.permissions.groupHasPermissions(name)) {
+                this.permissions.setGroupPermission(name, Levels.READ);
+            }
+        });
+        this.setState({ permissions: this.permissions.getPermissions() });
+    }
+
     handleUncheckAll() {
         this.permissions.setMembers({});
         if (this.permissions.isPublic()) {
             this.permissions.makeShared();
         }
+        this.setState({ permissions: this.permissions.getPermissions() });
+    }
+
+    handleGroupUncheckAll() {
+        this.permissions.setGroups({});
         this.setState({ permissions: this.permissions.getPermissions() });
     }
 
@@ -181,41 +222,7 @@ export class DataPackShareDialog extends Component {
             );
         }
 
-        let body = null;
-        if (this.state.view === 'groups') {
-            body = (
-                <GroupsBody
-                    groups={this.props.groups}
-                    members={this.props.users}
-                    selectedGroups={this.state.permissions.groups}
-                    groupsText={this.props.groupsText}
-                    onGroupsUpdate={this.handleGroupUpdate}
-                    canUpdateAdmin={this.props.canUpdateAdmin}
-                    handleShowShareInfo={this.showShareInfo}
-                />
-            );
-        } else {
-            body = (
-                <MembersBody
-                    public={this.state.permissions.value === 'PUBLIC'}
-                    selectedMembers={this.state.permissions.members}
-                    membersText={this.props.membersText}
-                    onMemberCheck={this.handleUserCheck}
-                    onAdminCheck={this.handleAdminCheck}
-                    onCheckCurrent={this.handleCurrentCheck}
-                    onCheckAll={this.handlePublicCheck}
-                    onUncheckAll={this.handleUncheckAll}
-                    canUpdateAdmin={this.props.canUpdateAdmin}
-                    handleShowShareInfo={this.showShareInfo}
-                />
-            );
-        }
-
-        let groupCount = Object.keys(this.permissions.getGroups()).length;
-        if (groupCount === this.props.groups.length && this.props.groups.length !== 0) {
-            groupCount = 'ALL';
-        }
-
+        const groupCount = Object.keys(this.permissions.getGroups()).length;
         let memberCount = Object.keys(this.permissions.getMembers()).length;
         if (this.permissions.isPublic()) {
             memberCount = 'ALL';
@@ -262,39 +269,61 @@ export class DataPackShareDialog extends Component {
                         />
                     </div>
                 </div>
-                {body}
-                {this.state.showPublicWarning ?
-                    <BaseDialog
-                        show
-                        onClose={this.hidePublicWarning}
-                        title="SHARE WITH ALL MEMBERS"
-                        overlayStyle={{ zIndex: 1501 }}
-                        actions={[
-                            <Button
-                                style={{ margin: '0px' }}
-                                variant="contained"
-                                color="primary"
-                                onClick={this.handleSave}
-                            >
-                                SHARE
-                            </Button>,
-                            <Button
-                                style={{ margin: '0px', float: 'left' }}
-                                variant="text"
-                                color="primary"
-                                label="CONTINUE EDITING"
-                                onClick={this.hidePublicWarning}
-                            >
-                                CONTINUE EDITING
-                            </Button>,
-                        ]}
-                    >
-                        Sharing with all members will make this DataPack visible to everyone with an EventKit account.
-                        Are you sure you want to share it with everyone?
-                    </BaseDialog>
+                {this.state.view === 'groups' ?
+                    <GroupsBody
+                        selectedGroups={this.state.permissions.groups}
+                        groupsText={this.props.groupsText}
+                        onGroupCheck={this.handleGroupCheck}
+                        onAdminCheck={this.handleAdminGroupCheck}
+                        onCheckAll={this.handleGroupCheckAll}
+                        onUncheckAll={this.handleGroupUncheckAll}
+                        canUpdateAdmin={this.props.canUpdateAdmin}
+                        handleShowShareInfo={this.showShareInfo}
+                    />
                     :
-                    null
+                    <MembersBody
+                        public={this.state.permissions.value === 'PUBLIC'}
+                        selectedMembers={this.state.permissions.members}
+                        membersText={this.props.membersText}
+                        onMemberCheck={this.handleUserCheck}
+                        onAdminCheck={this.handleAdminCheck}
+                        onCheckCurrent={this.handleCurrentCheck}
+                        onCheckAll={this.handlePublicCheck}
+                        onUncheckAll={this.handleUncheckAll}
+                        canUpdateAdmin={this.props.canUpdateAdmin}
+                        handleShowShareInfo={this.showShareInfo}
+                    />
                 }
+                <BaseDialog
+                    show={this.state.showPublicWarning}
+                    onClose={this.hidePublicWarning}
+                    title="SHARE WITH ALL MEMBERS"
+                    overlayStyle={{ zIndex: 1501 }}
+                    actions={[
+                        <Button
+                            style={{ margin: '0px' }}
+                            variant="contained"
+                            color="primary"
+                            onClick={this.handleSave}
+                            key="save"
+                        >
+                            SHARE
+                        </Button>,
+                        <Button
+                            style={{ margin: '0px', float: 'left' }}
+                            variant="text"
+                            color="primary"
+                            label="CONTINUE EDITING"
+                            onClick={this.hidePublicWarning}
+                            key="edit"
+                        >
+                            CONTINUE EDITING
+                        </Button>,
+                    ]}
+                >
+                    Sharing with all members will make this DataPack visible to everyone with an EventKit account.
+                    Are you sure you want to share it with everyone?
+                </BaseDialog>
             </ShareBaseDialog>
         );
     }

@@ -99,7 +99,7 @@ export class GroupsHeaderRow extends Component {
         // assume no groups are checked by default
         let checkIcon = icons.unchecked;
 
-        if (this.props.groupCount === this.props.selectedCount) {
+        if (this.props.groupCount === this.props.selectedCount && this.props.groupCount !== 0) {
             checkIcon = icons.checked;
         } else if (this.props.selectedCount) {
             checkIcon = icons.indeterminate;
@@ -147,7 +147,7 @@ export class GroupsHeaderRow extends Component {
                                     onClick={this.handleGroupChange}
                                     style={{
                                         marginRight: '10px',
-                                        color: this.props.activeOrder.includes('group') ? colors.primary : colors.text_primary,
+                                        color: this.props.activeOrder.includes('name') ? colors.primary : colors.text_primary,
                                     }}
                                     disableTouchRipple
                                 >

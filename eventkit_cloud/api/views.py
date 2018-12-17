@@ -7,6 +7,7 @@ from datetime import datetime, timedelta, date
 from dateutil import parser
 from django.conf import settings
 from django.contrib.auth.models import User, Group
+from django.contrib.contenttypes.models import ContentType
 from django.contrib.gis.geos import GEOSException, GEOSGeometry
 from django.db import transaction
 from django.db.models import Q, Prefetch
@@ -32,7 +33,7 @@ from eventkit_cloud.api.serializers import (
     ExportFormatSerializer, ExportRunSerializer,
     ExportTaskRecordSerializer, JobSerializer, RegionMaskSerializer, DataProviderTaskRecordSerializer,
     RegionSerializer, ListJobSerializer, ProviderTaskSerializer, DataProviderSerializer, LicenseSerializer,
-    UserDataSerializer, GroupSerializer, UserJobActivitySerializer, NotificationSerializer
+    UserDataSerializer, GroupSerializer, UserJobActivitySerializer, NotificationSerializer, GroupUserSerializer
 )
 from eventkit_cloud.api.validators import validate_bbox_params, validate_search_bbox
 from eventkit_cloud.core.helpers import sendnotification, NotificationVerb, NotificationLevel
@@ -1254,7 +1255,15 @@ class UserDataViewSet(viewsets.GenericViewSet):
         response['Total-Users'] = total
         return response
 
-    @list_route(methods=['post', 'get'])
+    def retrieve(self, request, username=None):
+        """
+        GET a user by username
+        """
+        queryset = self.get_queryset().get(username=username)
+        serializer = self.get_serializer(queryset, context={'request': request})
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+    @action(detail=False, methods=['post', 'get'])
     def members(self, request, *args, **kwargs):
         """
         Member list from list of group ids
@@ -1280,13 +1289,25 @@ class UserDataViewSet(viewsets.GenericViewSet):
 
         return Response(payload, status=status.HTTP_200_OK)
 
-    def retrieve(self, request, username=None):
+    @action(detail=True, methods=['get'])
+    def job_permissions(self, request, username=None):
         """
-        GET a user by username
+        Get user's permission level for a specific job
+
+        Example: /api/users/job_permissions/admin_user?uid=job-uid-123
+
+        Response: { 'permission': USERS_PERMISSION_LEVEL }
+        where USERS_PERMISSION_LEVEL is either READ, ADMIN, or None
         """
-        queryset = self.get_queryset().get(username=username)
-        serializer = self.get_serializer(queryset, context={'request': request})
-        return Response(serializer.data, status=status.HTTP_200_OK)
+        user = User.objects.get(username=username)
+        uid = request.query_params.get('uid', None)
+
+        if not user or not uid:
+            return Response(status=status.HTTP_400_BAD_REQUEST)
+
+        permission = JobPermission.get_user_permissions(user, uid)
+
+        return Response({ 'permission': permission }, status=status.HTTP_200_OK)
 
 
 class UserJobActivityViewSet(mixins.CreateModelMixin,
@@ -1621,6 +1642,20 @@ class GroupViewSet(viewsets.ModelViewSet):
                 for perm in perms: perm.delete()
 
         return Response("OK", status=status.HTTP_200_OK)
+
+
+    @action(detail=True, methods=['get'])
+    def users(self, request, id=None, *args, **kwargs):
+        try:
+            group = Group.objects.get(id=id)
+        except Group.DoesNotExist:
+            return Response(status=status.HTTP_404_NOT_FOUND)
+
+        serializer = GroupUserSerializer(group, context={'request': request})
+        return Response(data=serializer.data, status=status.HTTP_200_OK)
+
+
+
 
 
 class NotificationViewSet(viewsets.ModelViewSet):

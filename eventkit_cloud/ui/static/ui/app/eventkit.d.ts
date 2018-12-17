@@ -9,7 +9,7 @@ declare namespace Eventkit {
     namespace Permissions {
         type Visibility = 'PUBLIC' | 'PRIVATE' | 'SHARED';
 
-        type Level = 'ADMIN' | 'READ';
+        type Level = 'ADMIN' | 'READ' | '';
 
         interface Members {
             [username: string]: Level;
@@ -75,6 +75,7 @@ declare namespace Eventkit {
         featured: boolean;
         formats: string[];
         created_at: string;
+        relationship: Permissions.Level
         permissions: {
             value: string;
             users: { [s: string]: string };

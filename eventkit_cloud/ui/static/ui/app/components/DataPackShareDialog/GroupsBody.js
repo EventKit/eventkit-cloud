@@ -4,6 +4,7 @@ import { connect } from 'react-redux';
 import { withTheme } from '@material-ui/core/styles';
 import CircularProgress from '@material-ui/core/CircularProgress';
 import ButtonBase from '@material-ui/core/ButtonBase';
+import Button from '@material-ui/core/Button';
 import InfoIcon from '@material-ui/icons/InfoOutlined';
 import CustomTextField from '../CustomTextField';
 import GroupRow from './GroupRow';
@@ -23,6 +24,7 @@ export class GroupsBody extends Component {
         this.handleAdminMouseOut = this.handleAdminMouseOut.bind(this);
         this.handleScroll = this.handleScroll.bind(this);
         this.handleSearchInput = this.handleSearchInput.bind(this);
+        this.handleSearchKeyDown = this.handleSearchKeyDown.bind(this);
         this.reverseGroupOrder = this.reverseGroupOrder.bind(this);
         this.reverseSharedOrder = this.reverseSharedOrder.bind(this);
         this.loadMore = this.loadMore.bind(this);
@@ -54,6 +56,7 @@ export class GroupsBody extends Component {
         await this.props.getGroups({
             page: this.state.page,
             ordering: this.state.groupOrder,
+            search: this.state.search,
             ...params,
         }, append);
         this.setState({ loading: false });
@@ -65,58 +68,19 @@ export class GroupsBody extends Component {
     }
 
     handleUncheckAll() {
-        if (this.state.search) {
-            const groups = [...this.props.groups];
-            const shownGroupNames = this.searchGroups(groups, this.state.search).map(g => g.name);
-            const selectedGroups = { ...this.props.selectedGroups };
-            shownGroupNames.forEach((name) => {
-                selectedGroups[name] = null;
-                delete selectedGroups[name];
-            });
-            this.props.onGroupsUpdate(selectedGroups);
-        } else {
-            this.props.onGroupsUpdate({});
-        }
+        this.props.onUncheckAll();
     }
 
     handleCheckAll() {
-        if (this.state.search) {
-            const groups = this.searchGroups(this.props.groups, this.state.search);
-            const selectedGroups = { ...this.props.selectedGroups };
-            groups.forEach((group) => { selectedGroups[group.name] = 'READ'; });
-            this.props.onGroupsUpdate(selectedGroups);
-        } else {
-            const selectedGroups = {};
-            this.props.groups.forEach((group) => { selectedGroups[group.name] = 'READ'; });
-            this.props.onGroupsUpdate(selectedGroups);
-        }
+        this.props.onCheckAll();
     }
 
     handleCheck(group) {
-        const permissions = this.props.selectedGroups[group.name];
-        const newSelection = { ...this.props.selectedGroups };
-        if (permissions) {
-            // we need to remove from the selection
-            newSelection[group.name] = null;
-            delete newSelection[group.name];
-        } else {
-            // we need to add to the selection
-            newSelection[group.name] = 'READ';
-        }
-        this.props.onGroupsUpdate(newSelection);
+        this.props.onGroupCheck(group.name);
     }
 
     handleAdminCheck(group) {
-        const permissions = this.props.selectedGroups[group.name];
-        const newSelection = { ...this.props.selectedGroups };
-        if (permissions && permissions === 'ADMIN') {
-            // we need to demote the group from admin status
-            newSelection[group.name] = 'READ';
-        } else {
-            // we need to make the group an admin
-            newSelection[group.name] = 'ADMIN';
-        }
-        this.props.onGroupsUpdate(newSelection);
+        this.props.onAdminCheck(group.name);
     }
 
     handleAdminMouseOver(target, admin) {
@@ -133,42 +97,37 @@ export class GroupsBody extends Component {
         }
     }
 
+    // check if user hits enter then make group search
+    async handleSearchKeyDown(event) {
+        if (event.key === 'Enter') {
+            const text = event.target.value || '';
+            if (text) {
+                this.setState({ page: 1 });
+                this.getGroups({
+                    page: 1,
+                    search: text,
+                }, false);
+            }
+        }
+    }
+
+    // commit text to search state, if search is empty make a getGroups request
     handleSearchInput(e) {
-        this.setState({ search: e.target.value });
+        if (this.state.search && !e.target.value) {
+            this.getGroups({ page: 1, search: e.target.value }, false);
+            this.setState({ search: e.target.value, page: 1 });
+        } else {
+            this.setState({ search: e.target.value });
+        }
     }
 
     reverseGroupOrder(v) {
-        this.setState({ groupOrder: v, activeOrder: v });
+        this.getGroups({ page: 1, ordering: v }, false);
+        this.setState({ groupOrder: v, activeOrder: v, page: 1 });
     }
 
     reverseSharedOrder(v) {
         this.setState({ sharedOrder: v, activeOrder: v });
-    }
-
-    searchGroups(groups, search) {
-        const SEARCH = search.toUpperCase();
-        return groups.filter(group => group.name.toUpperCase().includes(SEARCH));
-    }
-
-    sortByGroup(groups, descending) {
-        if (descending === true) {
-            groups.sort((a, b) => {
-                const A = a.name.toUpperCase();
-                const B = b.name.toUpperCase();
-                if (A < B) return -1;
-                if (A > B) return 1;
-                return 0;
-            });
-        } else {
-            groups.sort((a, b) => {
-                const A = a.name.toUpperCase();
-                const B = b.name.toUpperCase();
-                if (A > B) return -1;
-                if (A < B) return 1;
-                return 0;
-            });
-        }
-        return groups;
     }
 
     sortByShared(groups, selectedGroups, descending) {
@@ -264,10 +223,6 @@ export class GroupsBody extends Component {
         };
 
         let { groups } = this.props;
-        if (this.state.search) {
-            groups = this.searchGroups(groups, this.state.search);
-        }
-
         if (this.state.activeOrder.includes('shared')) {
             if (this.state.activeOrder.includes('admin')) {
                 groups = this.sortByAdmin([...groups], this.props.selectedGroups, !this.state.sharedOrder.includes('-admin'));
@@ -276,9 +231,8 @@ export class GroupsBody extends Component {
             }
         }
 
-        const selectedGroups = groups.filter(group => group.name in this.props.selectedGroups);
-        const selectedCount = selectedGroups.length;
-        const adminCount = selectedGroups.filter(group => this.props.selectedGroups[group.name] === 'ADMIN').length;
+        const selectedCount = Object.keys(this.props.selectedGroups).length;
+        const adminCount = Object.keys(this.props.groups).filter(group => this.props.selectedGroups[group] === 'ADMIN').length;
 
         let shareInfo = null;
         if (this.props.canUpdateAdmin) {
@@ -311,6 +265,7 @@ export class GroupsBody extends Component {
                         maxLength={50}
                         placeholder="Search"
                         onChange={this.handleSearchInput}
+                        onKeyDown={this.handleSearchKeyDown}
                         value={this.state.search}
                         InputProps={{ style: { paddingLeft: '16px', lineHeight: '36px', fontSize: '14px' }, disableUnderline: true }}
                         style={styles.textField}
@@ -339,7 +294,6 @@ export class GroupsBody extends Component {
                             <GroupRow
                                 key={group.name}
                                 group={group}
-                                members={this.props.users}
                                 selected={!!selected}
                                 admin={admin}
                                 showAdmin={this.props.canUpdateAdmin}
@@ -367,6 +321,17 @@ export class GroupsBody extends Component {
                         'Share administrative rights with group administrators'
                     }
                 />
+                {!this.state.loading && (
+                    <Button
+                        onClick={this.loadMore}
+                        variant="text"
+                        color="primary"
+                        fullWidth
+                        disabled={!this.props.nextPage}
+                    >
+                        Load More
+                    </Button>
+                )}
             </div>
         );
     }
@@ -380,23 +345,12 @@ GroupsBody.defaultProps = {
 
 GroupsBody.propTypes = {
     getGroups: PropTypes.func.isRequired,
+    nextPage: PropTypes.bool.isRequired,
     groups: PropTypes.arrayOf(PropTypes.shape({
         id: PropTypes.number,
         name: PropTypes.string,
         members: PropTypes.arrayOf(PropTypes.string),
         administrators: PropTypes.arrayOf(PropTypes.string),
-    })).isRequired,
-    users: PropTypes.arrayOf(PropTypes.shape({
-        user: PropTypes.shape({
-            username: PropTypes.string,
-            first_name: PropTypes.string,
-            last_name: PropTypes.string,
-            email: PropTypes.string,
-            date_joined: PropTypes.string,
-            last_login: PropTypes.string,
-        }),
-        accepted_licenses: PropTypes.object,
-        groups: PropTypes.arrayOf(PropTypes.number),
     })).isRequired,
     selectedGroups: PropTypes.objectOf(PropTypes.string).isRequired,
     groupsText: PropTypes.oneOfType([
@@ -404,7 +358,10 @@ GroupsBody.propTypes = {
         PropTypes.arrayOf(PropTypes.node),
         PropTypes.string,
     ]),
-    onGroupsUpdate: PropTypes.func.isRequired,
+    onUncheckAll: PropTypes.func.isRequired,
+    onCheckAll: PropTypes.func.isRequired,
+    onGroupCheck: PropTypes.func.isRequired,
+    onAdminCheck: PropTypes.func.isRequired,
     canUpdateAdmin: PropTypes.bool,
     handleShowShareInfo: PropTypes.func,
     theme: PropTypes.object.isRequired,
@@ -413,7 +370,7 @@ GroupsBody.propTypes = {
 const mapStateToProps = state => (
     {
         groups: state.groups.groups,
-        users: state.users.users,
+        nextPage: state.groups.nextPage,
     }
 );
 

@@ -16,8 +16,6 @@ interface Props {
         members: { [member: string]: string };
     };
     handlePermissionsChange: (permissions: {}) => void;
-    members: Eventkit.User[];
-    groups: Eventkit.Group[];
     adminPermissions: boolean;
     user: Eventkit.User;
     theme: Eventkit.Theme;
@@ -43,8 +41,6 @@ export class PermissionsData extends React.Component<Props, State> {
         let groupText = '';
         if (count === 0) {
             groupText = 'No Groups';
-        } else if (count === this.props.groups.length) {
-            groupText = 'All Groups';
         } else if (count === 1) {
             groupText = '1 Group';
         } else {
@@ -55,10 +51,10 @@ export class PermissionsData extends React.Component<Props, State> {
 
     private getMembersText(count: number) {
         let memberText = '';
-        if (count === 0) {
-            memberText = 'No Members';
-        } else if (count === this.props.members.length) {
+        if (this.props.permissions.value === 'PUBLIC') {
             memberText = 'All Members';
+        } else if (count === 0) {
+            memberText = 'No Members';
         } else if (count === 1) {
             memberText = '1 Member';
         } else {

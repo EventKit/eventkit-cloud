@@ -17,7 +17,6 @@ import DeleteDataPackDialog from '../Dialog/DeleteDataPackDialog';
 import ProviderDialog from '../Dialog/ProviderDialog';
 import FeaturedFlag from './FeaturedFlag';
 import DataPackShareDialog from '../DataPackShareDialog/DataPackShareDialog';
-import { userIsDataPackAdmin } from '../../utils/generic';
 import { makeFullRunSelector } from '../../selectors/runSelector';
 
 export class DataPackListItem extends Component {
@@ -155,12 +154,6 @@ export class DataPackListItem extends Component {
             },
         };
 
-        const adminPermission = userIsDataPackAdmin(
-            this.props.user.data.user,
-            this.props.run.job.permissions,
-            this.props.groups,
-        );
-
         const cardTitleStyle = (this.props.run.job.featured) ? styles.cardTitleFeatured : styles.cardTitle;
         const onMouseEnter = this.props.onHoverStart ? () => { this.props.onHoverStart(this.props.run.uid); } : null;
         const onMouseLeave = this.props.onHoverEnd ? () => { this.props.onHoverEnd(this.props.run.uid); } : null;
@@ -200,7 +193,9 @@ export class DataPackListItem extends Component {
                                         </Link>
                                     </div>
                                 </div>
-                                <IconMenu className="qa-DataPackListItem-IconMenu tour-datapack-options">
+                                <IconMenu
+                                    className="qa-DataPackListItem-IconMenu tour-datapack-options"
+                                >
                                     <MenuItem
                                         key="link"
                                         className="qa-DataPackListItem-MenuItem-statusDownloadLink"
@@ -218,7 +213,7 @@ export class DataPackListItem extends Component {
                                         View Data Sources
                                     </MenuItem>
 
-                                    {adminPermission ?
+                                    {this.props.run.job.relationship === 'ADMIN' ?
                                         <MenuItem
                                             key="delete"
                                             className="qa-DataPackListItem-MenuItem-deleteExport"
@@ -229,7 +224,7 @@ export class DataPackListItem extends Component {
                                         </MenuItem>
                                         : null
                                     }
-                                    {adminPermission ?
+                                    {this.props.run.job.relationship === 'ADMIN' ?
                                         <MenuItem
                                             key="share"
                                             className="qa-DataPackListItem-MenuItem-share"
@@ -323,8 +318,6 @@ DataPackListItem.propTypes = {
     onHoverEnd: PropTypes.func,
     onClick: PropTypes.func,
     backgroundColor: PropTypes.string,
-    users: PropTypes.arrayOf(PropTypes.object).isRequired,
-    groups: PropTypes.arrayOf(PropTypes.object).isRequired,
     style: PropTypes.object,
     theme: PropTypes.object.isRequired,
 };
