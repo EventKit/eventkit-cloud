@@ -18,8 +18,6 @@ import java.time.Duration;
 
 import static junit.framework.TestCase.assertTrue;
 
-// TODO These tests are now failing due to permissions.
-// TODO Sometimes different options are enabled or disabled based on what you're looking at.
 public class DashboardTest extends SeleniumBaseTest {
 
     private Dashboard dashboard;
@@ -34,7 +32,7 @@ public class DashboardTest extends SeleniumBaseTest {
     }
 
     @Test
-    public void selectNotificationtBullets() {
+    public void selectNotificationBullets() {
         dashboard.getNotificationCardMenu().click();
         wait.until(ExpectedConditions.elementToBeClickable(dashboard.getViewNotification()));
         assertTrue(dashboard.getViewNotification().isEnabled());

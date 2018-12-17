@@ -1,13 +1,10 @@
 package eventkitui.test.page.notifications;
 
 import eventkitui.test.page.core.LoadablePage;
-import eventkitui.test.page.core.PageObject;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.support.FindBy;
 
-// TODO - This page can display differently depending on how large the browser is sized.
-// TODO - Some buttons get condensed into a more options menu button when the browser window is reduced in size. Handle this if necessary.
 public class NotificationsPage extends LoadablePage {
     @FindBy(xpath = "//td[contains(@class, 'qa-NotificationsTableItem-TableCell-Content')]") private WebElement notificationCell;
     // May not always be clickable if there are no more to show

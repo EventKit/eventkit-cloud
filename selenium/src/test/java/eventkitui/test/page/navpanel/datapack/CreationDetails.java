@@ -13,7 +13,7 @@ public class CreationDetails extends LoadablePage {
     @FindBy(id = "Name") private WebElement nameField;
     @FindBy(id = "Description") private WebElement descriptionField;
     @FindBy(id = "Project") private WebElement projectField;
-    // TODO There are others that we should test for clickability, these are guarunteed to be there and will start with them.
+    // TODO There are others that we should test for clickability, these are guaranteed to be there and we will start with them.
     @FindBy(name = "OpenStreetMap Data (Themes)") private WebElement openStreetMapDataThemesCheckBox;
     @FindBy(name = "OpenStreetMap Tiles") private WebElement openStreetMapTilesCheckBox;
 
