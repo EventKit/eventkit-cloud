@@ -5,6 +5,7 @@ import requests
 from datetime import timedelta
 import statistics
 import json
+import re
 
 logger = logging.getLogger(__name__)
 
@@ -209,8 +210,14 @@ def parse_duration(duration):
     :return:
     """
     if duration:
-        hours, minutes, seconds = duration.split(':')
-        return float(((int(hours) * 60) + (int(minutes) * 60) + float(seconds)))
+        # Based off https://stackoverflow.com/questions/4628122/how-to-construct-a-timedelta-object-from-a-simple-string
+        timedelta_regex = re.compile(
+            r'^((?P<days>[\.\d]+?)\sday[s]?\,\s*)?((?P<hours>[\.\d]+?):)?((?P<minutes>[\.\d]+?):)?((?P<seconds>[\.\d]+?))?$')
+
+        parts = timedelta_regex.match(duration)
+        if parts is not None:
+            time_params = {name: float(param) for name, param in parts.groupdict().items() if param}
+            return timedelta(**time_params).seconds
 
 
 def convert_seconds_to_hms(seconds):

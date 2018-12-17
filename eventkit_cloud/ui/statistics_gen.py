@@ -4,11 +4,13 @@ from django.core.cache import cache
 from eventkit_cloud.jobs.models import DataProvider
 from eventkit_cloud.tasks.models import ExportTaskRecord, ExportRun
 
+import logging
 import datetime
 import json
 import math
 import statistics
 
+logger = logging.getLogger(__name__)
 _dbg_geom_cache_misses = 0
 MAX_SAMPLES_PER_TARGET = 2000
 DEFAULT_CACHE_EXPIRATION = 86400  # expire in a day
@@ -211,11 +213,12 @@ def has_tiles(export_task_record_name):
     return export_task_record_name not in ['Area of Interest (.geojson)', 'Project File (.zip)']
 
 
-def compute_statistics(export_task_records, get_group, tile_grid=get_default_tile_grid()):
+def compute_statistics(export_task_records, get_group, tile_grid=get_default_tile_grid(), filename=None):
     """
     :param export_task_records: ExporTaskRecords is a list of all export tasks
     :param get_group: Function to generate a group id given a DataExportProviderTask
     :param tile_grid: Calculate statistics for each tile in the tile grid
+    :param filename: Serializes the intermediate data-sample data so it can be shared btw different deployments
     :return: A dict with statistics including area, duration, and package size per sq. kilometer
     """
 
@@ -240,15 +243,13 @@ def compute_statistics(export_task_records, get_group, tile_grid=get_default_til
     all_stats = {}
     default_stats = {'duration': [], 'area': [], 'size': []}
 
-    print('[{}] - Prefetching geometry data from all Jobs'.format(datetime.datetime.now()))
+    logger.debug('Prefetching geometry data from all Jobs')
     prefetch_geometry_cache(geom_cache)
 
-    print('[{}] - Beginning collection of statistics for {} ExportTaskRecords'.format(datetime.datetime.now(),
-                                                                                      total_count))
+    logger.info('Beginning collection of statistics for %d ExportTaskRecords', total_count)
     for etr in export_task_records:
         if processed_count % 100 == 0:
-            print('[{} - Processed {} of {} using {} completed]'.format(datetime.datetime.now(), processed_count,
-                                                                        total_count, export_task_count))
+            logger.info('Processed %d of %d using %d completed', processed_count, total_count, export_task_count)
         processed_count += 1
 
         if etr.status != "SUCCESS" \
@@ -285,8 +286,14 @@ def compute_statistics(export_task_records, get_group, tile_grid=get_default_til
         group_stats['size'] += [accessors['size'](etr, area)]  # Roll-up into provider_task level
         run_stats['size'] += [accessors['size'](etr, area)]  # Roll-up into global level
 
-    print('[{}] - Computing statistics across {} completed ExportTaskRecords (geom_cache_misses={})'
-          .format(datetime.datetime.now(), export_task_count, _dbg_geom_cache_misses))
+    logger.info('Computing statistics across %d completed ExportTaskRecords (geom_cache_misses=%d)',
+                export_task_count, _dbg_geom_cache_misses)
+
+    if filename is not None:
+        all_stats['timestamp'] = datetime.datetime.now()
+        with open(filename, 'w') as os:
+            json.dump(all_stats, os)
+
     totals = {
         'run_count': len(processed_runs),
         'data_provider_task_count': len(processed_dptr),
@@ -294,6 +301,9 @@ def compute_statistics(export_task_records, get_group, tile_grid=get_default_til
     }
 
     for group_name in all_stats:
+        if group_name in ['timestamp']:
+            continue
+
         totals[group_name] = get_summary_stats(all_stats[group_name])
         tile_count = 0
 
@@ -314,7 +324,7 @@ def compute_statistics(export_task_records, get_group, tile_grid=get_default_til
                 totals[group_name][task_name] = get_summary_stats(all_stats[group_name][task_name])
 
         totals[group_name]['tile_count'] = tile_count
-        print('Generated statistics for {} tiles for group {}'.format(tile_count, group_name))
+        logger.info('Generated statistics for %d tiles for group %s', tile_count, group_name)
 
     return totals
 
@@ -479,15 +489,15 @@ def estimate_size(bbox, group_name, grouping='provider_name', tile_grid=get_defa
     all_stats = get_statistics(grouping=grouping)
     req_area = get_area_bbox(bbox)
     method = {
-        'stat': 'ci_99',
+        'stat': 'mean',
     }
 
     # We'll use the upper bound of the 99% confidence interval... can change this based on desired risk profile
     # (i.e. overall accuracy vs. not under-estimating)
     def get_sz_per_km(o):
-        if 'ci_99' in o['size']:  # Can missing if for instance only 1 data point was found at o's granularity
-            return o['size']['ci_99'][1]
-        # return o['size']['max']
+        # if 'ci_99' in o['size']:  # Can missing if for instance only 1 data point was found at o's granularity
+        #     return o['size']['ci_99'][1]
+        return o['size']['mean']
 
     if all_stats:
         group_stats = all_stats.get(group_name)

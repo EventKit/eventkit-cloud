@@ -46,6 +46,7 @@ from eventkit_cloud.tasks.models import ExportRun, ExportTaskRecord, DataProvide
 from eventkit_cloud.tasks.task_factory import create_run, get_invalid_licenses, InvalidLicense, Error
 from eventkit_cloud.utils.gdalutils import get_area
 from eventkit_cloud.utils.provider_check import perform_provider_check
+from eventkit_cloud.ui.data_estimator import get_size_estimate_slug
 
 # Get an instance of a logger
 logger = logging.getLogger(__name__)
@@ -1723,6 +1724,37 @@ class NotificationViewSet(viewsets.ModelViewSet):
                 qs.mark_all_as_unread()
 
         return Response({"success": True}, status=status.HTTP_200_OK)
+
+
+class EstimatorView(views.APIView):
+    """
+     Api components for computing size estimates for providers within a specified bounding box
+    """
+    @action(detail=False, methods=['get'])
+    def get(self, request, *args, **kwargs):
+        """
+         Args:
+             slugs: Comma separated list of slugs for provider slugs (e.g. 'osm,dg_foundation_geoint')
+             bbox: Bounding box as w,s,e,n (e.g. '-130,-45,-100,10)
+
+         Returns:
+            [{ "slug" : $slug_1, "size": $estimate_1, "unit": "mb"}, ...] or error
+        """
+        payload = []
+
+        bbox = request.query_params.get('bbox', None).split(',')  # w, s, e, n
+        bbox = list(map(lambda a: float(a), bbox))
+
+        logger.info(bbox)
+        if request.query_params.get('slugs', None):
+            for slug in request.query_params.get('slugs').split(','):
+                payload += [{
+                    'slug': slug,
+                    'size': get_size_estimate_slug(slug, bbox)[0],
+                    'unit': 'mb'
+                }]
+
+        return Response(payload, status=status.HTTP_200_OK)
 
 
 def get_models(model_list, model_object, model_index):
