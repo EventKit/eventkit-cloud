@@ -4,11 +4,7 @@ node {
 
   stage('Setup') {
     deleteDir()
-    if(env.USE_GIT_CREDS.toBoolean()) {
-      git url: "${env.GIT_URL}", branch: "master", credentialsId: "${env.GITLAB_CREDS}"
-    } else {
-      git url: "${env.GIT_URL}", branch: "master"
-    }
+    git url: "${env.GIT_URL}", branch: "master"
   }
 
   // Parameterized
