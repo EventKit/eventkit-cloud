@@ -36,7 +36,7 @@ describe('Permissions class', () => {
         permissions.setUsername('admin');
         permissions.extractCurrentUser();
         expect(permissions.getUserPermissions()).toEqual({ admin: utils.Levels.ADMIN });
-    })
+    });
 
     it('isPublic should return true or false for the permission value', () => {
         expect(permissions.isPublic()).toBe(false);

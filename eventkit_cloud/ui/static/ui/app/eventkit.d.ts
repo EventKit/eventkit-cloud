@@ -75,7 +75,7 @@ declare namespace Eventkit {
         featured: boolean;
         formats: string[];
         created_at: string;
-        relationship: Permissions.Level
+        relationship: Permissions.Level;
         permissions: {
             value: string;
             users: { [s: string]: string };

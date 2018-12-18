@@ -6,7 +6,6 @@ import MockAdapter from 'axios-mock-adapter';
 import Card from '@material-ui/core/Card';
 import CardHeader from '@material-ui/core/CardHeader';
 import CardContent from '@material-ui/core/CardContent';
-import GroupMemberRow from '../../components/DataPackShareDialog/GroupMemberRow';
 import { GroupRow } from '../../components/DataPackShareDialog/GroupRow';
 
 describe('GroupRow component', () => {
