@@ -76,9 +76,7 @@ END
     stage("Run unit tests"){
         try{
             postStatus(getPendingStatus("Running the unit tests..."))
-            retry(5) {
-                sh "timeout 10m docker-compose run --rm -T  eventkit manage.py test -v=2 --noinput eventkit_cloud"
-            }
+            sh "docker-compose run --rm -T  eventkit manage.py test -v=2 --noinput eventkit_cloud"
             sh "docker-compose run --rm -T  webpack npm test"
             postStatus(getSuccessStatus("All tests passed!"))
             sh "docker-compose down"
