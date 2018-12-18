@@ -2,11 +2,6 @@ node {
   def root = pwd()
   def mvn = tool 'M3'
 
-  stage('Setup') {
-    deleteDir()
-    git url: "${env.GIT_URL}", branch: "selenium"
-  }
-
   // Parameterized
   def eventkitUrl = "${env.EVENTKIT_URL}"
   def containerId = null
@@ -25,6 +20,11 @@ node {
       }
     }
   }
+
+    stage('Setup') {
+      deleteDir()
+      git url: "${env.GIT_URL}", branch: "selenium"
+    }
 
   // Run the Tests
   stage("Test") {
