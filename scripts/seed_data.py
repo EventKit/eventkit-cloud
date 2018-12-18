@@ -54,10 +54,14 @@ def main():
     with open(args.file, 'rb') as geojson_file:
         geojson_data = json.load(geojson_file)
 
-    count = args.limit or len(geojson_data['features'])
-    index = 0
+    count = args.limit or len(geojson_data['features'])  # number of jobs to submit
+    index = 0  # current feature
+    # Stop when count gets to zero (user gets desired number of jobs)
+    # or we run our of features to create jobs for.
     while count or (index > len(geojson_data['features'])):
         feature = geojson_data['features'][index]
+        # Iterate index independently of the count because we might skip some jobs which would iterate the
+        # features but not change the number of jobs submitted.
         index += 1
         name = feature['properties'].get(args.name)
         description = feature['properties'].get(args.description) or "Created using the seed_data script."
