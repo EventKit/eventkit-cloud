@@ -84,7 +84,7 @@ export class DataPackShareDialog extends Component {
     }
 
     handleGroupCheck(groupname) {
-        if (this.permissions.groupHasPermissions(groupname)) {
+        if (this.permissions.groupHasPermission(groupname)) {
             this.permissions.removeGroupPermissions(groupname);
         } else {
             this.permissions.setGroupPermission(groupname, Levels.READ);
@@ -102,7 +102,7 @@ export class DataPackShareDialog extends Component {
     }
 
     handleAdminGroupCheck(groupname) {
-        if (this.permissions.groupHasPermissions(groupname, Levels.ADMIN)) {
+        if (this.permissions.groupHasPermission(groupname, Levels.ADMIN)) {
             this.permissions.setGroupPermission(groupname, Levels.READ);
         } else {
             this.permissions.setGroupPermission(groupname, Levels.ADMIN);
@@ -128,7 +128,7 @@ export class DataPackShareDialog extends Component {
     handleGroupCheckAll() {
         this.props.groups.forEach((group) => {
             const { name } = group;
-            if (!this.permissions.groupHasPermissions(name)) {
+            if (!this.permissions.groupHasPermission(name)) {
                 this.permissions.setGroupPermission(name, Levels.READ);
             }
         });

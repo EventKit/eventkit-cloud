@@ -109,11 +109,11 @@ describe('GroupsHeaderRow component', () => {
 
     it('handleGroupChange should call onGroupClick with the opposite group order', () => {
         const props = getProps();
-        props.activeOrder = 'group';
-        props.groupOrder = 'group';
+        props.activeOrder = 'name';
+        props.groupOrder = 'name';
         props.onGroupClick = sinon.spy();
         const wrapper = getWrapper(props);
-        const expected = '-group';
+        const expected = '-name';
         wrapper.instance().handleGroupChange();
         expect(props.onGroupClick.calledOnce).toBe(true);
         expect(props.onGroupClick.calledWith(expected)).toBe(true);

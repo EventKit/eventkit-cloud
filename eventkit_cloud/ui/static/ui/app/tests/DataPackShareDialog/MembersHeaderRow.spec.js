@@ -132,11 +132,11 @@ describe('MembersHeaderRow component', () => {
 
     it('handleMemberChange should call onMemberClick with the opposite member order', () => {
         const props = getProps();
-        props.activeOrder = 'member';
-        props.memberOrder = 'member';
+        props.activeOrder = 'username';
+        props.memberOrder = 'username';
         props.onMemberClick = sinon.spy();
         const wrapper = getWrapper(props);
-        const expected = '-member';
+        const expected = '-username';
         wrapper.instance().handleMemberChange();
         expect(props.onMemberClick.calledOnce).toBe(true);
         expect(props.onMemberClick.calledWith(expected)).toBe(true);

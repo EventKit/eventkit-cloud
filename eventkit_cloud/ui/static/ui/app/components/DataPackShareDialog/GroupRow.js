@@ -85,12 +85,6 @@ export class GroupRow extends Component {
         };
     }
 
-    componentDidMount() {
-        if (this.state.expanded) {
-            this.loadMembers();
-        }
-    }
-
     onAdminMouseOver() {
         if (this.props.selected) {
             this.props.handleAdminMouseOver(this.tooltip, this.props.admin);
@@ -115,7 +109,7 @@ export class GroupRow extends Component {
             });
             return response.data.members;
         } catch (e) {
-            console.debug(e);
+            console.warn(e);
             return [];
         }
     }

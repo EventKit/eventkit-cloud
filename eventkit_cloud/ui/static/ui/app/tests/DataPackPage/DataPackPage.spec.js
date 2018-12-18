@@ -118,8 +118,6 @@ describe('DataPackPage component', () => {
                 groups: [2, 3],
             },
         ],
-        getGroups: () => {},
-        getUsers: () => {},
         updateDataCartPermissions: () => {},
         updatePermissions: {
             updating: false,
@@ -269,8 +267,6 @@ describe('DataPackPage component', () => {
 
     it('componentDidMount should make data requests and setInterval', () => {
         const props = getProps();
-        props.getGroups = sinon.spy();
-        props.getUsers = sinon.spy();
         props.getProviders = sinon.spy();
         props.resetGeoJSONFile = sinon.spy();
         const mountSpy = sinon.spy(DataPackPage.prototype, 'componentDidMount');
@@ -278,8 +274,6 @@ describe('DataPackPage component', () => {
         const intervalStub = sinon.stub(global, 'setInterval');
         const wrapper = getWrapper(props);
         expect(mountSpy.calledOnce).toBe(true);
-        expect(props.getGroups.calledOnce).toBe(true);
-        expect(props.getUsers.calledOnce).toBe(true);
         expect(props.getProviders.calledOnce).toBe(true);
         expect(requestStub.calledOnce).toBe(true);
         expect(intervalStub.calledWith(wrapper.instance().autoRunRequest, 10000)).toBe(true);
@@ -673,8 +667,6 @@ describe('DataPackPage component', () => {
             loadMoreDisabled: !props.runsMeta.nextPage,
             providers: testProviders,
             openShare: wrapper.instance().handleShareOpen,
-            users: props.users,
-            groups: props.groups,
         };
 
         expect(wrapper.instance().getView('list')).toEqual(

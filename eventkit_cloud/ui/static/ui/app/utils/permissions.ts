@@ -166,7 +166,7 @@ export class Permissions {
         });
 
         groupnames.forEach((group) => {
-            if (!this.groupHasPermissions(group)) {
+            if (!this.groupHasPermission(group)) {
                 this.setGroupPermission(group, Levels.READ);
             }
         });
@@ -179,7 +179,7 @@ export class Permissions {
         this.permissions = newPermissions;
     }
 
-    public groupHasPermissions(groupname: string, level?: Eventkit.Permissions.Level): boolean {
+    public groupHasPermission(groupname: string, level?: Eventkit.Permissions.Level): boolean {
         if (level) {
             return this.permissions.groups[groupname] === level;
         }
@@ -187,7 +187,7 @@ export class Permissions {
     }
 
     public groupsHavePermissions(groupnames: string[]): boolean {
-        return groupnames.every(groupname => this.groupHasPermissions(groupname));
+        return groupnames.every(groupname => this.groupHasPermission(groupname));
     }
 
     public userHasPermission(username: string, level?: Eventkit.Permissions.Level): boolean {
