@@ -71,7 +71,9 @@ public class DashboardTest extends SeleniumBaseTest {
         dashboard.getShowHideMapButton().click();
         // This item blocks clicking while loading, wait for it to disappear.
         By blockingItem = By.xpath("//li[contains (@class, 'qa-DataPackGridItem-MenuItem-share')]");
+        By blockingItem2 = By.xpath("//li[contains (@class, 'qa-DataPackGridItem-MenuItem-showHideMap')]");
         wait.until(ExpectedConditions.invisibilityOfElementLocated(blockingItem));
+        wait.until(ExpectedConditions.invisibilityOfElementLocated(blockingItem2));
         wait.until(ExpectedConditions.elementToBeClickable(dashboard.getTourDataPackButton()));
         dashboard.getTourDataPackButton().click();
         wait.until(ExpectedConditions.elementToBeClickable(dashboard.getOpenStatusPage()));

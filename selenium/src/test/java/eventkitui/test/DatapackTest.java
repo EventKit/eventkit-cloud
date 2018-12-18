@@ -27,7 +27,6 @@ public class DatapackTest extends SeleniumBaseTest {
     // TODO - Cleanup, more assertions
     @Test
     public void createDataPackTest() {
-        Utils.takeScreenshot(driver);
         final NavigationPanel navigationPanel = Utils.openNavigationPanel(driver, mainPage);
         navigationPanel.waitUntilLoaded();
         final CreationPage creationPage = navigationPanel.openCreateDataPack();
