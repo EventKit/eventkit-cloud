@@ -12,7 +12,7 @@ node {
   }
 
   // Parameterized
-  def eventkitUrl = "https://eventkit.geointservices.io/login?next=/dashboard"
+  def eventkitUrl = "${env.EVENTKIT_URL}"
   def containerId = null
 
   stage("Selenium Grid") {
