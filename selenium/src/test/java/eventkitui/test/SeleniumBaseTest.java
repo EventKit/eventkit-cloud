@@ -67,12 +67,4 @@ public class SeleniumBaseTest {
     public void tearDown() throws Exception {
         driver.quit();
     }
-
-    private boolean parseLocalLoginFlag(final String local) {
-        if(local == null || !local.equalsIgnoreCase("true")) {
-            return false;
-        }
-        return true;
-    }
-
 }
