@@ -33,9 +33,8 @@ node {
         "ek_username=${ek_username}",
         "ek_password=${ek_password}"
       ]) {
-        dir("${root}") {
+        dir("selenium") {
           try {
-            cd selenium
             sh "mvn clean test"
           } finally {
             // Cleanup
