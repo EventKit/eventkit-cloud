@@ -28,9 +28,6 @@ node {
 
   // Run the Tests
   stage("Test") {
-    withCredentials([
-      [$class: 'UsernamePasswordMultiBinding', credentialsId: "${env.GX_TEST_USER}", usernameVariable: "ek_username", passwordVariable: "ek_password"]
-    ]) {
       withEnv([
         "ek_url=${eventkitUrl}",
         "ek_username=${ek_username}",
@@ -45,6 +42,5 @@ node {
           }
         }
       }
-    }
   }
 }
