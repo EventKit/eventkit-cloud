@@ -35,7 +35,7 @@ node {
       ]) {
         dir("selenium") {
           try {
-            sh "mvn clean test"
+            sh "pwd; la -l; mvn clean test"
           } finally {
             // Cleanup
             sh "docker kill ${containerId}"
