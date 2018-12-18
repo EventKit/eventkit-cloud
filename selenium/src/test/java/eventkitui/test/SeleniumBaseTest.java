@@ -21,10 +21,6 @@ public class SeleniumBaseTest {
     protected final String USERNAME = System.getenv("ek_username");
     protected final String PASSWORD = System.getenv("ek_password");
 
-    // Login through gxportal or admin backend
-    // TODO change to env variable if we're going to keep this.
-    private final boolean adminLogin = true;
-
     @Rule
     public TestName name = new TestName();
 
@@ -38,7 +34,7 @@ public class SeleniumBaseTest {
         driver.get(BASE_URL);
         WebDriverWait wait = new WebDriverWait(driver, 120);
         // Login via admin portal or gxlogin. Likely will remove admin portal after test account is unlocked?
-        if(adminLogin) {
+        if(BASE_URL.contains("admin")) {
             AdminLoginPage adminLoginPage = new AdminLoginPage(driver, 10);
             adminLoginPage.waitUntilLoaded();
             adminLoginPage.login(USERNAME, PASSWORD);
@@ -70,6 +66,13 @@ public class SeleniumBaseTest {
     @After
     public void tearDown() throws Exception {
         driver.quit();
+    }
+
+    private boolean parseLocalLoginFlag(final String local) {
+        if(local == null || !local.equalsIgnoreCase("true")) {
+            return false;
+        }
+        return true;
     }
 
 }
