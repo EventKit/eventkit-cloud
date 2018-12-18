@@ -38,9 +38,11 @@ with open('docker-compose.yml', 'r') as yaml_file:
 for service in data.get('services'):
     if data['services'][service].get('volumes'):
         data['services'][service].pop('volumes')
+        data['services'][service]['volumes'] = ['./eventkit_cloud:/var/lib/eventkit/eventkit_cloud',
+                                                './manage.py:/var/lib/eventkit/manage.py',
+                                                './scripts:/var/lib/eventkit/scripts']
 with open('docker-compose.yml', 'w') as outfile:
     yaml.dump(data, outfile, default_flow_style=False)
-
 END
 """
         sh "cat docker-compose.yml"
