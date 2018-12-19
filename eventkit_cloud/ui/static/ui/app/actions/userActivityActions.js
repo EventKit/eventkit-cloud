@@ -26,6 +26,7 @@ export function viewedJob(jobuid) {
 
 export function getViewedJobs(args = {}) {
     const params = {
+        slim: 'true',
         activity: 'viewed',
         page_size: args.pageSize || 12,
     };

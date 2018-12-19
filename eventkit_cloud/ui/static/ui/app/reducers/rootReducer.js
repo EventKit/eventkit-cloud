@@ -11,7 +11,7 @@ import {
     rerunExportReducer,
 } from './datacartReducer';
 import { drawerMenuReducer, stepperReducer } from './uiReducer';
-import { getProvidersReducer } from './providerReducer';
+import { getProvidersReducer, providerTasksReducer } from './providerReducer';
 import { getFormatsReducer } from './formatReducer';
 import { geocodeReducer } from './geocodeReducer';
 import {
@@ -50,6 +50,7 @@ const reducer = combineReducers({
     users: usersReducer,
     notifications: notificationsReducer,
     exports: runsReducer,
+    providerTasks: providerTasksReducer,
 });
 
 const rootReducer = (rootState, action) => {

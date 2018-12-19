@@ -1296,7 +1296,7 @@ class TestUserJobActivityViewSet(APITestCase):
         self.assertEqual(len(viewed_jobs), prev_viewed_jobs_count + 1)
 
         # Make sure the first returned viewed job matches what we just viewed.
-        self.assertEqual(viewed_jobs[0]['job']['uid'], str(job.uid))
+        self.assertEqual(viewed_jobs[0]['last_export_run']['job']['uid'], str(job.uid))
         self.assertEqual(viewed_jobs[0]['type'], UserJobActivity.VIEWED)
 
     def test_create_viewed_consecutive(self):
@@ -1341,11 +1341,11 @@ class TestUserJobActivityViewSet(APITestCase):
         viewed_jobs = response.json()
         job_a_count = 0
         for viewed_job in viewed_jobs:
-            if viewed_job['job']['uid'] == str(job_a.uid):
+            if viewed_job['last_export_run']['job']['uid'] == str(job_a.uid):
                 job_a_count += 1
 
         self.assertEqual(job_a_count, 1)
-        self.assertEqual(viewed_jobs[-1]['job']['uid'], str(job_a.uid))
+        self.assertEqual(viewed_jobs[-1]['last_export_run']['job']['uid'], str(job_a.uid))
 
     def create_job(self, name):
         extents = (-3.9, 16.1, 7.0, 27.6)

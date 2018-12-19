@@ -40,6 +40,10 @@ interface State {
 }
 
 const jss = (theme: any) => createStyles({
+    insetColumn: {
+        width: '44px',
+        padding: '0px',
+    },
     sizeColumnn: {
         width: '80px',
         paddingRight: '0px',
@@ -387,7 +391,7 @@ export class ProviderRow extends React.Component<Props, State> {
                                 className="qa-ProviderRow-TableRow-task"
                                 key={task.uid}
                             >
-                                <TableCell />
+                                <TableCell classes={{ root: classes.insetColumn }} />
                                 <TableCell
                                     className="qa-ProviderRow-TableCell-taskLinks"
                                     classes={{ root: classes.taskLinkColumn}}
@@ -407,8 +411,8 @@ export class ProviderRow extends React.Component<Props, State> {
                                 >
                                     {this.getTaskStatus(task)}
                                 </TableCell>
-                                <TableCell />
-                                <TableCell />
+                                <TableCell classes={{ root: classes.menuColumn }} />
+                                <TableCell classes={{ root: classes.arrowColumn }} />
                             </TableRow>
                         ))}
                     </TableBody>
