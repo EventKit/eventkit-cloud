@@ -11,6 +11,21 @@ export const verbs = {
     removedAsGroupAdmin: 'removed_as_group_admin',
 };
 
+export const requiresActorDetails = [
+    verbs.runStarted,
+    verbs.runCanceled,
+    verbs.runCompleted,
+    verbs.runDeleted,
+    verbs.runFailed,
+];
+
+export const requiresActionObjDetails = [
+    verbs.addedToGroup,
+    verbs.removedFromGroup,
+    verbs.setAsGroupAdmin,
+    verbs.removedAsGroupAdmin,
+];
+
 export function getNotificationViewPath(notification) {
     const verb = notification.verb.toLowerCase();
     switch (verb) {
