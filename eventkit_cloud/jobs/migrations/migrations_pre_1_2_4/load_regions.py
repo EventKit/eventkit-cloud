@@ -76,7 +76,7 @@ class Migration(migrations.Migration):
         del ds
 
     dependencies = [
-        ('jobs', 'install_region_mask'),
+        ('jobs', 'install_default_group'),
     ]
 
     operations = [
