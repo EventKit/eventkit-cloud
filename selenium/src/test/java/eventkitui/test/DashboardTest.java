@@ -44,7 +44,6 @@ public class DashboardTest extends SeleniumBaseTest {
         catch (NoSuchElementException noSuchElement) {
             assertTrue(dashboard.getMarkNotificationUnread().isEnabled());
         }
-        Utils.takeScreenshot(driver);
     }
 
     @Test

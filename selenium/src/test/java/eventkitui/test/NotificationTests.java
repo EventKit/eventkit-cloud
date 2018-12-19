@@ -34,24 +34,30 @@ public class NotificationTests extends SeleniumBaseTest {
 
     @Test
     public void testMoreOptions() {
-        notificationsPanel.getMoreOptionsButton().click();
-        wait.until(ExpectedConditions.elementToBeClickable(notificationsPanel.getRemove()));
-        assertTrue(notificationsPanel.getViewButton().isEnabled());
-
         try {
-            assertTrue(notificationsPanel.getMarkAsRead().isEnabled());
-        }
-        catch (NoSuchElementException noSuchElementException) {
-            // Mark as read can change to mark as unread
+            // Upon initial load, cards don't always appear. Loading bar is not named or identifiable, just wait.
+            wait.withTimeout(Duration.ofSeconds(10));
+            notificationsPanel.getMoreOptionsButton().click();
+            wait.until(ExpectedConditions.elementToBeClickable(notificationsPanel.getRemove()));
+            assertTrue(notificationsPanel.getViewButton().isEnabled());
+
             try {
-                assertTrue(notificationsPanel.getMarkAsUnread().isEnabled());
+                assertTrue(notificationsPanel.getMarkAsRead().isEnabled());
+            } catch (NoSuchElementException noSuchElementException) {
+                // Mark as read can change to mark as unread
+                try {
+                    assertTrue(notificationsPanel.getMarkAsUnread().isEnabled());
+                } catch (NoSuchElementException stillNoElement) {
+                    stillNoElement.printStackTrace();
+                    assertTrue(false); // fail test.
+                }
             }
-            catch (NoSuchElementException stillNoElement) {
-                stillNoElement.printStackTrace();
-                assertTrue(false); // fail test.
-            }
+            assertTrue(notificationsPanel.getRemove().isEnabled());
         }
-        assertTrue(notificationsPanel.getRemove().isEnabled());
+        catch (NoSuchElementException noSuchElement) {
+            Utils.takeScreenshot(driver);
+            throw noSuchElement;
+        }
     }
 
     // This page has a variety of different states that we must account for.
@@ -63,7 +69,6 @@ public class NotificationTests extends SeleniumBaseTest {
         NotificationsPage notificationsPage = new NotificationsPage(driver, 10);
         notificationsPage.waitUntilLoaded();
         assertTrue(driver.getCurrentUrl().contains("notifications"));
-        Utils.takeScreenshot(driver);
         // If the screen is too small, some buttons are condensed into the notificationIconMenu
         try {
             notificationsPage.getNotificationIconMenu().click();

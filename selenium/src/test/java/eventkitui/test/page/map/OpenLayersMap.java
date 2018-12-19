@@ -15,6 +15,8 @@ import java.awt.geom.Point2D;
  */
 public class OpenLayersMap extends LoadablePage {
 
+    private Actions actions;
+
     @FindBy(className = "ol-viewport")						private WebElement viewport;
     @FindBy(className = "ol-unselectable")					private WebElement canvas;
     @FindBy(className = "ol-mouse-position")				private WebElement mouseoverCoordinates;
@@ -26,6 +28,11 @@ public class OpenLayersMap extends LoadablePage {
     @FindBy(className = "rbt-input-main") private WebElement searchField;
     @FindBy(className = "qa-SearchAOIButton-button") private WebElement searchButton;
     @FindBy(className = "qa-TypeaheadMenuItem-name") private WebElement searchResult;
+
+
+
+    @FindBy(className = "qa-ImportButton-button") private WebElement importButton;
+    @FindBy(className = "qa-MapViewButton-button") private WebElement currentViewButton;
     By loadingSpinner = By.xpath("//div[contains(@class, 'qa-loading-body')]");
 
     public WebElement getCanvas() {
@@ -60,7 +67,13 @@ public class OpenLayersMap extends LoadablePage {
         return actions;
     }
 
-    private Actions actions;
+    public WebElement getImportButton() {
+        return importButton;
+    }
+
+    public WebElement getCurrentViewButton() {
+        return currentViewButton;
+    }
 
     public OpenLayersMap(WebDriver driver, long timeout) {
         super(driver, timeout);
