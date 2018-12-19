@@ -2,14 +2,14 @@
 import logging
 # -*- coding: utf-8 -*-
 from collections import OrderedDict
-from datetime import datetime, timedelta, date
+from datetime import datetime, timedelta
 
 from dateutil import parser
 from django.conf import settings
 from django.contrib.auth.models import User, Group
 from django.contrib.gis.geos import GEOSException, GEOSGeometry
 from django.db import transaction
-from django.db.models import Q, Prefetch
+from django.db.models import Q
 from django_filters.rest_framework import DjangoFilterBackend
 from django.utils.translation import ugettext as _
 from notifications.models import Notification
@@ -46,7 +46,7 @@ from eventkit_cloud.tasks.models import ExportRun, ExportTaskRecord, DataProvide
 from eventkit_cloud.tasks.task_factory import create_run, get_invalid_licenses, InvalidLicense, Error
 from eventkit_cloud.utils.gdalutils import get_area
 from eventkit_cloud.utils.provider_check import perform_provider_check
-from eventkit_cloud.ui.data_estimator import get_size_estimate_slug
+from eventkit_cloud.utils.stats.size_estimator import get_size_estimate_slug
 
 # Get an instance of a logger
 logger = logging.getLogger(__name__)
@@ -1734,24 +1734,25 @@ class EstimatorView(views.APIView):
     def get(self, request, *args, **kwargs):
         """
          Args:
-             slugs: Comma separated list of slugs for provider slugs (e.g. 'osm,dg_foundation_geoint')
+             slugs: Comma separated list of slugs for provider slugs (e.g. 'osm,some_wms1')
              bbox: Bounding box as w,s,e,n (e.g. '-130,-45,-100,10)
-
+             srs: EPSG code for the bbox srs (default=4326)
          Returns:
             [{ "slug" : $slug_1, "size": $estimate_1, "unit": "mb"}, ...] or error
         """
         payload = []
+        logger.info(request.query_params)
 
         bbox = request.query_params.get('bbox', None).split(',')  # w, s, e, n
         bbox = list(map(lambda a: float(a), bbox))
+        srs = request.query_params.get('srs', '4326')
 
-        logger.info(bbox)
         if request.query_params.get('slugs', None):
             for slug in request.query_params.get('slugs').split(','):
                 payload += [{
                     'slug': slug,
-                    'size': get_size_estimate_slug(slug, bbox)[0],
-                    'unit': 'mb'
+                    'size': get_size_estimate_slug(slug, bbox, srs)[0],
+                    'unit': 'MB'
                 }]
 
         return Response(payload, status=status.HTTP_200_OK)
