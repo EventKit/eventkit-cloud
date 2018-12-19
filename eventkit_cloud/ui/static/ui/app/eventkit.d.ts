@@ -72,7 +72,7 @@ declare namespace Eventkit {
         user: string;
         status: string;
         job: Job;
-        provider_tasks: ProviderTask[];
+        provider_tasks: string[];
         zipfile_url: string;
         expiration: string;
         deleted: boolean;

@@ -67,6 +67,7 @@ describe('userActivityActions', () => {
             expect(actions.getViewedJobs({ pageSize }).params).toEqual({
                 page_size: pageSize,
                 activity: 'viewed',
+                slim: 'true',
             });
         });
 

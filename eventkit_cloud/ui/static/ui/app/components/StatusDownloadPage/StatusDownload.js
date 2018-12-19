@@ -52,15 +52,7 @@ export class StatusDownload extends React.Component {
     }
 
     componentDidMount() {
-        this.props.getDatacartDetails(this.props.router.params.jobuid);
-        this.props.viewedJob(this.props.router.params.jobuid);
-        this.props.getProviders();
-        this.props.getUsers({ exclude_self: true, disable_page: true });
-        this.props.getGroups();
-        this.startTimer();
-
-        const steps = joyride.StatusAndDownload;
-        this.joyrideAddSteps(steps);
+        this.onMount();
     }
 
     shouldComponentUpdate(p) {
@@ -148,6 +140,18 @@ export class StatusDownload extends React.Component {
         this.timer = null;
         window.clearTimeout(this.timeout);
         this.timeout = null;
+    }
+
+    async onMount() {
+        this.props.getDatacartDetails(this.props.router.params.jobuid);
+        this.props.viewedJob(this.props.router.params.jobuid);
+        this.props.getProviders();
+        this.props.getUsers({ exclude_self: true, disable_page: true });
+        this.props.getGroups();
+        this.startTimer();
+
+        const steps = joyride.StatusAndDownload;
+        this.joyrideAddSteps(steps);
     }
 
     getMarginPadding() {
@@ -488,27 +492,27 @@ const makeMapStateToProps = () => {
 
 function mapDispatchToProps(dispatch) {
     return {
-        getDatacartDetails: (jobuid) => {
-            dispatch(getDatacartDetails(jobuid));
-        },
-        clearDataCartDetails: () => {
-            dispatch(clearDataCartDetails());
-        },
-        deleteRun: (jobuid) => {
-            dispatch(deleteRun(jobuid));
-        },
-        rerunExport: (jobuid) => {
-            dispatch(rerunExport(jobuid));
-        },
-        updateExpirationDate: (uid, expiration) => {
-            dispatch(updateExpiration(uid, expiration));
-        },
-        updateDataCartPermissions: (uid, permissions) => {
-            dispatch(updateDataCartPermissions(uid, permissions));
-        },
-        clearReRunInfo: () => {
-            dispatch(clearReRunInfo());
-        },
+        getDatacartDetails: jobuid => (
+            dispatch(getDatacartDetails(jobuid))
+        ),
+        clearDataCartDetails: () => (
+            dispatch(clearDataCartDetails())
+        ),
+        deleteRun: jobuid => (
+            dispatch(deleteRun(jobuid))
+        ),
+        rerunExport: jobuid => (
+            dispatch(rerunExport(jobuid))
+        ),
+        updateExpirationDate: (uid, expiration) => (
+            dispatch(updateExpiration(uid, expiration))
+        ),
+        updateDataCartPermissions: (uid, permissions) => (
+            dispatch(updateDataCartPermissions(uid, permissions))
+        ),
+        clearReRunInfo: () => (
+            dispatch(clearReRunInfo())
+        ),
         cloneExport: (cartDetails, providerArray) => {
             const featureCollection = {
                 type: 'FeatureCollection',
@@ -532,21 +536,21 @@ function mapDispatchToProps(dispatch) {
             }));
             browserHistory.push('/create');
         },
-        cancelProviderTask: (providerUid) => {
-            dispatch(cancelProviderTask(providerUid));
-        },
-        getProviders: () => {
-            dispatch(getProviders());
-        },
-        viewedJob: (jobuid) => {
-            dispatch(viewedJob(jobuid));
-        },
-        getUsers: (params) => {
-            dispatch(getUsers(params));
-        },
-        getGroups: () => {
-            dispatch(getGroups());
-        },
+        cancelProviderTask: providerUid => (
+            dispatch(cancelProviderTask(providerUid))
+        ),
+        getProviders: () => (
+            dispatch(getProviders())
+        ),
+        viewedJob: jobuid => (
+            dispatch(viewedJob(jobuid))
+        ),
+        getUsers: params => (
+            dispatch(getUsers(params))
+        ),
+        getGroups: () => (
+            dispatch(getGroups())
+        ),
     };
 }
 

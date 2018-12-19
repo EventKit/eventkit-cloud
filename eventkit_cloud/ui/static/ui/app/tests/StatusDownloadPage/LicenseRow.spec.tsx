@@ -1,5 +1,5 @@
-import React from 'react';
-import sinon from 'sinon';
+import * as React from 'react';
+import * as sinon from 'sinon';
 import { createShallow } from '@material-ui/core/test-utils';
 import TableRow from '@material-ui/core/TableRow';
 import TableCell from '@material-ui/core/TableCell';
@@ -16,7 +16,8 @@ describe('LicenseRow component', () => {
     const getProps = () => ({
         name: 'test name',
         text: 'test text',
-        ...global.eventkit_test_props,
+        classes: {},
+        ...(global as any).eventkit_test_props,
     });
 
     const getWrapper = props => shallow(<LicenseRow {...props} />);
@@ -29,16 +30,6 @@ describe('LicenseRow component', () => {
         expect(wrapper.find(BaseDialog)).toHaveLength(1);
         expect(wrapper.find('i')).toHaveLength(1);
         expect(wrapper.find('i').text()).toEqual('Use of this data is governed by\u00a0test name');
-    });
-
-    it('getTableCellWidth should return the pixel string for table width based on window width', () => {
-        const props = getProps();
-        props.width = 'sm';
-        const wrapper = getWrapper(props);
-        expect(wrapper.instance().getTableCellWidth()).toEqual('80px');
-
-        wrapper.setProps({ width: 'md' });
-        expect(wrapper.instance().getTableCellWidth()).toEqual('120px');
     });
 
     it('setLicenseOpen should set license dialog to open', () => {
