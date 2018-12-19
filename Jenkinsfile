@@ -45,8 +45,6 @@ with open('docker-compose.yml', 'w') as outfile:
     yaml.dump(data, outfile, default_flow_style=False)
 END
 """
-        sh "cat docker-compose.yml"
-        sh "chown 880:8800 -R ."
     }
 
     stage("Build"){
