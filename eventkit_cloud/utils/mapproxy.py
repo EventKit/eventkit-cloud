@@ -11,15 +11,19 @@ from mapproxy.config.config import load_config, load_default_config
 from mapproxy.config.loader import ProxyConfiguration, ConfigurationError, validate_references
 from mapproxy.seed import seeder
 from mapproxy.seed.config import SeedingConfiguration
-from mapproxy.seed.seeder import seed
-from mapproxy.seed.util import ProgressLog, exp_backoff, ProgressStore
+from mapproxy.seed.util import ProgressLog, exp_backoff, timestamp, ProgressStore
+
 import os
 import sqlite3
+import time
+import datetime
 
 from eventkit_cloud.utils import auth_requests
 from eventkit_cloud.utils.geopackage import get_tile_table_names, set_gpkg_contents_bounds, \
     get_table_tile_matrix_information, get_zoom_levels_table, remove_empty_zoom_levels
 from eventkit_cloud.utils.gdalutils import retry
+from eventkit_cloud.utils.stats.eta_estimator import ETA
+
 
 logger = logging.getLogger(__name__)
 
@@ -38,10 +42,52 @@ class CustomLogger(ProgressLog):
         from eventkit_cloud.tasks.export_tasks import update_progress
         if self.task_uid:
             if self.log_step_counter == 0:
-                update_progress(self.task_uid, progress=progress.progress * 100)
+                update_progress(self.task_uid, progress=progress.progress * 100,
+                                estimated_finish=progress.eta.eta_datetime())
                 self.log_step_counter = self.log_step_step
             self.log_step_counter -= 1
-        super(CustomLogger, self).log_step(progress)
+
+        # Old version of super.log_step that includes ETA string
+        # https://github.com/mapproxy/mapproxy/commit/93bc53a01318cd63facdb4ee13968caa847a5c17
+        if not self.verbose:
+            return
+        if (self._laststep + .5) < time.time():
+            # log progress at most every 500ms
+            self.out.write('[%s] %6.2f%%\t%-20s ETA: %s\r' % (
+                timestamp(), progress.progress*100, progress.progress_str,
+                progress.eta
+            ))
+            self.out.flush()
+            self._laststep = time.time()
+
+
+class CustomSeedProgress(seeder.SeedProgress):
+    """
+    https://github.com/mapproxy/mapproxy/commit/93bc53a01318cd63facdb4ee13968caa847a5c17
+    """
+    def __init__(self, old_progress_identifier=None):
+        super(CustomSeedProgress, self).__init__(old_progress_identifier)
+        self.eta = ETA()
+
+    def step_forward(self, subtiles=1):
+        super(CustomSeedProgress, self).step_forward(subtiles)
+        self.eta.update(self.progress)
+
+
+# We need a reference to the original mapproxy seeder.seed_task implementation
+old_seed_task = seeder.seed_task
+
+
+def custom_seed_task(task, concurrency=2, dry_run=False, skip_geoms_for_last_levels=0, progress_logger=None,
+                     seed_progress=None):
+    # Inject our CustomSeedProgress in place of seed_progress provided
+    if seed_progress:
+        seed_progress = CustomSeedProgress(old_progress_identifier=seed_progress.old_level_progresses)
+    old_seed_task(task, concurrency, dry_run, skip_geoms_for_last_levels, progress_logger, seed_progress)
+
+
+logger.info("Monkey patching mapproxy.seed.seed_task with eventkit_cloud.utils.mapproxy.custom_seed_task")
+seeder.seed_task = custom_seed_task
 
 
 def get_custom_exp_backoff(max_repeat=None):
@@ -53,6 +99,7 @@ def get_custom_exp_backoff(max_repeat=None):
 
     return custom_exp_backoff
 
+
 # This is a bug in mapproxy, https://github.com/mapproxy/mapproxy/issues/387
 def load_tile_metadata(self, tile):
     if not self.supports_timestamp:
@@ -61,7 +108,6 @@ def load_tile_metadata(self, tile):
         tile.timestamp = -1
     else:
         self.load_tile(tile)
-
 
 
 class MapproxyGeopackage(object):
@@ -134,7 +180,7 @@ class MapproxyGeopackage(object):
         load_config(mapproxy_config, config_dict=conf_dict)
 
         # Create a configuration object
-        mapproxy_configuration = ProxyConfiguration(mapproxy_config, seed=seed, renderd=None)
+        mapproxy_configuration = ProxyConfiguration(mapproxy_config, seed=seeder.seed, renderd=None)
 
         # # As of Mapproxy 1.9.x, datasource files covering a small area cause a bbox error.
         if self.bbox:
