@@ -40,22 +40,22 @@ for service in data.get('services'):
         data['services'][service].pop('volumes')
 with open('docker-compose.yml', 'w') as outfile:
     yaml.dump(data, outfile, default_flow_style=False)
-
 END
 """
-        sh "cat docker-compose.yml"
     }
 
     stage("Build"){
         try{
             postStatus(getPendingStatus("Building the docker containers..."))
             sh "docker-compose down || exit 0"
+            sh "docker system prune -f"
             sh "cd conda && docker-compose up --build && cd .."
             sh "docker-compose build --no-cache"
             // Exit 0 provided for when setup has already ran on a previous build.
             // This could hide errors at this step but they will show up again during the tests.
-            sh "docker-compose run --rm -T eventkit manage.py runinitial setup || exit 0"
-            sh "docker-compose up --force-recreate -d"
+            // No use bringing up containers if integration tests aren't configured.
+            // sh "docker-compose run --rm -T eventkit manage.py runinitial setup || exit 0"
+            // sh "docker-compose up --force-recreate -d"
         }catch(Exception e) {
            handleErrors("Failed to build the docker containers.")
         }
@@ -74,9 +74,7 @@ END
     stage("Run unit tests"){
         try{
             postStatus(getPendingStatus("Running the unit tests..."))
-            retry(5) {
-                sh "timeout 10m docker-compose run --rm -T  eventkit manage.py test -v=2 --noinput eventkit_cloud"
-            }
+            sh "docker-compose run --rm -T  eventkit manage.py test -v=2 --noinput eventkit_cloud"
             sh "docker-compose run --rm -T  webpack npm test"
             postStatus(getSuccessStatus("All tests passed!"))
             sh "docker-compose down"
