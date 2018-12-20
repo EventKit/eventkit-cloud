@@ -107,8 +107,6 @@ export class FilterDrawer extends Component {
                     <PermissionFilter
                         onChange={this.handlePermissionsChange}
                         permissions={this.state.permissions}
-                        groups={this.props.groups}
-                        members={this.props.members}
                     />
                     <StatusFilter
                         onChange={this.handleStatusChange}
@@ -138,24 +136,6 @@ FilterDrawer.propTypes = {
     onFilterClear: PropTypes.func.isRequired,
     open: PropTypes.bool.isRequired,
     providers: PropTypes.arrayOf(PropTypes.object).isRequired,
-    groups: PropTypes.arrayOf(PropTypes.shape({
-        id: PropTypes.number,
-        name: PropTypes.string,
-        members: PropTypes.arrayOf(PropTypes.string),
-        administrators: PropTypes.arrayOf(PropTypes.string),
-    })).isRequired,
-    members: PropTypes.arrayOf(PropTypes.shape({
-        user: PropTypes.shape({
-            username: PropTypes.string,
-            first_name: PropTypes.string,
-            last_name: PropTypes.string,
-            email: PropTypes.string,
-            date_joined: PropTypes.string,
-            last_login: PropTypes.string,
-        }),
-        accepted_licenses: PropTypes.object,
-        groups: PropTypes.arrayOf(PropTypes.number),
-    })).isRequired,
 };
 
 export default FilterDrawer;

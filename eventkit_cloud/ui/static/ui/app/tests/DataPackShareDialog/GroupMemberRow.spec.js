@@ -6,15 +6,12 @@ describe('GroupMemberRow component', () => {
     const getProps = () => (
         {
             member: {
-                user: {
-                    username: 'user_one',
-                    first_name: 'user',
-                    last_name: 'one',
-                    email: 'user.one@email.com',
-                },
-                groups: [1, 2],
+                username: 'user_one',
+                first_name: 'user',
+                last_name: 'one',
+                email: 'user.one@email.com',
+                permission: 'READ',
             },
-            isGroupAdmin: false,
             ...global.eventkit_test_props,
         }
     );
@@ -33,7 +30,7 @@ describe('GroupMemberRow component', () => {
 
     it('should diplay "(Group Admin)"', () => {
         const props = getProps();
-        props.isGroupAdmin = true;
+        props.member.permission = 'ADMIN';
         const wrapper = getWrapper(props);
         expect(wrapper.find('.qa-GroupMemberRow-name').text()).toEqual('user one (Group Admin)');
     });

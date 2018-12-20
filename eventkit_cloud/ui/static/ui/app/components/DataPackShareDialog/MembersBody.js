@@ -1,12 +1,17 @@
 import PropTypes from 'prop-types';
 import React, { Component } from 'react';
+import { connect } from 'react-redux';
 import { withTheme } from '@material-ui/core/styles';
 import ButtonBase from '@material-ui/core/ButtonBase';
+import Button from '@material-ui/core/Button';
+import CircularProgress from '@material-ui/core/CircularProgress';
 import InfoIcon from '@material-ui/icons/InfoOutlined';
 import CustomTextField from '../CustomTextField';
+import BaseDialog from '../Dialog/BaseDialog';
 import MembersHeaderRow from './MembersHeaderRow';
 import MemberRow from './MemberRow';
 import MembersBodyTooltip from './ShareBodyTooltip';
+import { getUsers } from '../../actions/usersActions';
 
 
 export class MembersBody extends Component {
@@ -20,141 +25,137 @@ export class MembersBody extends Component {
         this.handleAdminMouseOut = this.handleAdminMouseOut.bind(this);
         this.handleScroll = this.handleScroll.bind(this);
         this.handleSearchInput = this.handleSearchInput.bind(this);
+        this.handleSearchKeyDown = this.handleSearchKeyDown.bind(this);
         this.reverseMemberOrder = this.reverseMemberOrder.bind(this);
         this.reverseSharedOrder = this.reverseSharedOrder.bind(this);
+        this.handlePageCheckAll = this.handlePageCheckAll.bind(this);
+        this.handleSystemCheckAll = this.handleSystemCheckAll.bind(this);
+        this.closeConfirm = this.closeConfirm.bind(this);
+        this.loadMore = this.loadMore.bind(this);
         this.state = {
             search: '',
-            memberOrder: 'member',
+            memberOrder: 'username',
             sharedOrder: 'shared',
-            activeOrder: 'member',
+            activeOrder: 'username',
             tooltip: {
                 target: null,
                 admin: false,
             },
+            page: 1,
+            checkAllConfirm: false,
+            loading: false,
         };
     }
 
     componentDidMount() {
         window.addEventListener('wheel', this.handleScroll);
+        this.getUsers({ page: this.state.page }, false);
     }
 
     componentWillUnmount() {
         window.removeEventListener('wheel', this.handleScroll);
     }
 
+    async getUsers(params = {}, append = true) {
+        this.setState({ loading: true });
+        await this.props.getUsers({
+            page: this.state.page,
+            exclude_self: 'true',
+            ordering: this.state.memberOrder,
+            search: this.state.search,
+            ...params,
+        }, append);
+        this.setState({ loading: false });
+    }
+
+    loadMore() {
+        this.getUsers({ page: this.state.page + 1 });
+        this.setState({ page: this.state.page + 1 });
+    }
+
+    closeConfirm() {
+        this.setState({ checkAllConfirm: false });
+    }
+
     handleUncheckAll() {
-        if (this.state.search) {
-            const members = [...this.props.members];
-            const shownUsernames = this.searchMembers(members, this.state.search).map(m => m.user.username);
-            const selectedMembers = { ...this.props.selectedMembers };
-            shownUsernames.forEach((name) => {
-                selectedMembers[name] = null;
-                delete selectedMembers[name];
-            });
-            this.props.onMembersUpdate(selectedMembers);
-        } else {
-            this.props.onMembersUpdate({});
-        }
+        this.props.onUncheckAll();
     }
 
+    // open dialog to give user option to select visible members or all members in system
     handleCheckAll() {
-        if (this.state.search) {
-            const members = this.searchMembers(this.props.members, this.state.search);
-            const selectedMembers = { ...this.props.selectedMembers };
-            members.forEach((m) => { selectedMembers[m.user.username] = 'READ'; });
-            this.props.onMembersUpdate(selectedMembers);
-        } else {
-            const selectedMembers = {};
-            this.props.members.forEach((m) => { selectedMembers[m.user.username] = 'READ'; });
-            this.props.onMembersUpdate(selectedMembers);
-        }
+        this.setState({ checkAllConfirm: true });
     }
 
-    handleCheck(member) {
-        const permission = this.props.selectedMembers[member.user.username];
-        if (permission) {
-            // we need to remove from the selection
-            const selectedMembers = { ...this.props.selectedMembers };
-            selectedMembers[member.user.username] = null;
-            delete selectedMembers[member.user.username];
-            this.props.onMembersUpdate(selectedMembers);
-        } else {
-            // we need to add to the selection
-            const selectedMembers = { ...this.props.selectedMembers };
-            selectedMembers[member.user.username] = 'READ';
-            this.props.onMembersUpdate(selectedMembers);
-        }
+    // called if user chooses to select only visible members (SHARED)
+    handlePageCheckAll() {
+        this.closeConfirm();
+        this.props.onCheckCurrent();
     }
 
-    handleAdminCheck(member) {
-        const permission = this.props.selectedMembers[member.user.username];
-        if (permission && permission === 'ADMIN') {
-            // we need to demote this member from admin status
-            const selectedMembers = { ...this.props.selectedMembers };
-            selectedMembers[member.user.username] = 'READ';
-            this.props.onMembersUpdate(selectedMembers);
-        } else {
-            // we need to make this member an admin
-            const selectedMembers = { ...this.props.selectedMembers };
-            selectedMembers[member.user.username] = 'ADMIN';
-            this.props.onMembersUpdate(selectedMembers);
-        }
+    // called if user chooses to select ALL members in system (PUBLIC)
+    handleSystemCheckAll() {
+        this.closeConfirm();
+        this.props.onCheckAll();
     }
 
+    // called for selecting or unselecting a individual member
+    handleCheck(user) {
+        this.props.onMemberCheck(user.user.username);
+    }
+
+    // called for selecting or unselecting admin permissions for a member
+    handleAdminCheck(user) {
+        this.props.onAdminCheck(user.user.username);
+    }
+
+    // show the admin button tooltip
     handleAdminMouseOver(target, admin) {
         this.setState({ tooltip: { target, admin } });
     }
 
+    // hide the admin button tooltip
     handleAdminMouseOut() {
         this.setState({ tooltip: { target: null, admin: false } });
     }
 
+    // if user scrolls up we hide any existing tooltip
     handleScroll() {
         if (this.state.tooltip.target !== null) {
             this.handleAdminMouseOut();
         }
     }
 
+    // check if user hits enter then make user search
+    async handleSearchKeyDown(event) {
+        if (event.key === 'Enter') {
+            const text = event.target.value || '';
+            if (text) {
+                this.setState({ page: 1 });
+                this.getUsers({
+                    page: 1,
+                    search: text,
+                }, false);
+            }
+        }
+    }
+
+    // commit text to search state, if search is empty make a getUser request
     handleSearchInput(e) {
-        this.setState({ search: e.target.value });
+        if (this.state.search && !e.target.value) {
+            this.getUsers({ page: 1 }, false);
+            this.setState({ search: e.target.value, page: 1 });
+        } else {
+            this.setState({ search: e.target.value });
+        }
     }
 
     reverseMemberOrder(v) {
-        this.setState({ memberOrder: v, activeOrder: v });
+        this.getUsers({ page: 1, ordering: v }, false);
+        this.setState({ memberOrder: v, activeOrder: v, page: 1 });
     }
 
     reverseSharedOrder(v) {
         this.setState({ sharedOrder: v, activeOrder: v });
-    }
-
-    searchMembers(members, search) {
-        const SEARCH = search.toUpperCase();
-        return members.filter((member) => {
-            if (member.user.username.toUpperCase().includes(SEARCH)) return true;
-            if (member.user.email.toUpperCase().includes(SEARCH)) return true;
-            return false;
-        });
-    }
-
-    sortByMember(members, descending) {
-        if (descending === true) {
-            members.sort((a, b) => {
-                const A = a.user.username.toUpperCase();
-                const B = b.user.username.toUpperCase();
-                if (A < B) return -1;
-                if (A > B) return 1;
-                return 0;
-            });
-        } else {
-            members.sort((a, b) => {
-                const A = a.user.username.toUpperCase();
-                const B = b.user.username.toUpperCase();
-                if (A > B) return -1;
-                if (A < B) return 1;
-                return 0;
-            });
-        }
-        return members;
     }
 
     sortByShared(members, selectedMembers, descending) {
@@ -249,27 +250,22 @@ export class MembersBody extends Component {
             },
         };
 
-        let { members } = this.props;
-        if (this.state.search) {
-            members = this.searchMembers(members, this.state.search);
-        }
-
-        if (this.state.activeOrder.includes('member')) {
-            members = this.sortByMember([...members], !this.state.memberOrder.includes('-'));
-        } else if (this.state.activeOrder.includes('shared')) {
+        let { users } = this.props;
+        if (this.state.activeOrder.includes('shared')) {
             if (this.state.activeOrder.includes('admin')) {
-                members = this.sortByAdmin([...members], this.props.selectedMembers, !this.state.sharedOrder.includes('-admin'));
+                users = this.sortByAdmin([...users], this.props.selectedMembers, !this.state.sharedOrder.includes('-admin'));
             } else {
-                members = this.sortByShared([...members], this.props.selectedMembers, !this.state.sharedOrder.includes('-'));
+                users = this.sortByShared([...users], this.props.selectedMembers, !this.state.sharedOrder.includes('-'));
             }
         }
 
-        const selectedMembers = members.filter(m => m.user.username in this.props.selectedMembers);
-        const selectedCount = selectedMembers.length;
-        const adminCount = selectedMembers.filter(m => this.props.selectedMembers[m.user.username] === 'ADMIN').length;
+        const visibleCount = users.filter(m => m.user.username in this.props.selectedMembers).length;
+        const selectedCount = Object.keys(this.props.selectedMembers).length;
+        const adminCount = Object.keys(this.props.selectedMembers).filter(m => this.props.selectedMembers[m] === 'ADMIN').length;
 
         let shareInfo = null;
         if (this.props.canUpdateAdmin) {
+            const total = this.props.public ? this.props.userCount : selectedCount;
             shareInfo = (
                 <div style={styles.shareInfo} className="qa-MembersBody-shareInfo">
                     <ButtonBase
@@ -281,22 +277,9 @@ export class MembersBody extends Component {
                         Sharing Rights
                     </ButtonBase>
                     <span style={styles.shareInfoText} className="qa-MembersBody-shareInfo-text">
-                        Shared: {selectedCount - adminCount} Members plus {adminCount} Admins
+                        Shared: {total - adminCount} Members plus {adminCount} Admins
                     </span>
                 </div>
-            );
-        }
-
-        let tooltip = null;
-        if (this.state.tooltip.target !== null) {
-            tooltip = (
-                <MembersBodyTooltip
-                    className="qa-MembersBody-MembersBodyTooltip"
-                    target={this.state.tooltip.target}
-                    body={this.body}
-                    text={this.state.tooltip.admin ? 'Remove administrative rights from member' : 'Share administrative rights with member'}
-                    textContainerStyle={{ justifyContent: 'flex-end' }}
-                />
             );
         }
 
@@ -312,6 +295,7 @@ export class MembersBody extends Component {
                         maxLength={50}
                         placeholder="Search"
                         onChange={this.handleSearchInput}
+                        onKeyDown={this.handleSearchKeyDown}
                         value={this.state.search}
                         style={styles.textField}
                         InputProps={{ style: { paddingLeft: '16px', lineHeight: '36px', fontSize: '14px' }, disableUnderline: true }}
@@ -320,8 +304,9 @@ export class MembersBody extends Component {
                     {shareInfo}
                     <MembersHeaderRow
                         className="qa-MembersBody-MembersHeaderRow"
-                        memberCount={members.length}
-                        selectedCount={selectedCount}
+                        public={this.props.public}
+                        memberCount={users.length}
+                        selectedCount={visibleCount}
                         onMemberClick={this.reverseMemberOrder}
                         onSharedClick={this.reverseSharedOrder}
                         activeOrder={this.state.activeOrder}
@@ -332,25 +317,87 @@ export class MembersBody extends Component {
                         canUpdateAdmin={this.props.canUpdateAdmin}
                     />
                 </div>
-                {members.map((member) => {
-                    const selected = this.props.selectedMembers[member.user.username];
-                    const admin = selected === 'ADMIN';
-                    return (
-                        <MemberRow
-                            key={member.user.username}
-                            showAdmin={this.props.canUpdateAdmin}
-                            member={member}
-                            selected={!!selected}
-                            admin={admin}
-                            handleCheck={this.handleCheck}
-                            handleAdminCheck={this.handleAdminCheck}
-                            handleAdminMouseOut={this.handleAdminMouseOut}
-                            handleAdminMouseOver={this.handleAdminMouseOver}
-                            className="qa-MembersBody-MemberRow"
-                        />
-                    );
-                })}
-                {tooltip}
+                {!this.state.loading ?
+                    users.map((member) => {
+                        const selected = this.props.selectedMembers[member.user.username] || this.props.public;
+                        const admin = this.props.selectedMembers[member.user.username] === 'ADMIN';
+                        return (
+                            <MemberRow
+                                key={member.user.username}
+                                showAdmin={this.props.canUpdateAdmin}
+                                member={member}
+                                selected={!!selected}
+                                admin={admin}
+                                handleCheck={this.handleCheck}
+                                handleAdminCheck={this.handleAdminCheck}
+                                handleAdminMouseOut={this.handleAdminMouseOut}
+                                handleAdminMouseOver={this.handleAdminMouseOver}
+                                className="qa-MembersBody-MemberRow"
+                            />
+                        );
+                    })
+                    :
+                    <div style={{ display: 'flex', justifyContent: 'center', margin: '50px auto' }}>
+                        <CircularProgress />
+                    </div>
+                }
+                <MembersBodyTooltip
+                    className="qa-MembersBody-MembersBodyTooltip"
+                    open={Boolean(this.state.tooltip.target)}
+                    target={this.state.tooltip.target}
+                    body={this.body}
+                    text={this.state.tooltip.admin ? 'Remove administrative rights from member' : 'Share administrative rights with member'}
+                    textContainerStyle={{ justifyContent: 'flex-end' }}
+                />
+                {!this.state.loading && (
+                    <Button
+                        onClick={this.loadMore}
+                        variant="text"
+                        color="primary"
+                        fullWidth
+                        disabled={!this.props.nextPage}
+                    >
+                        Load More
+                    </Button>
+                )}
+                <BaseDialog
+                    show={this.state.checkAllConfirm}
+                    onClose={this.closeConfirm}
+                    title="SHARE WITH ALL MEMBERS"
+                    overlayStyle={{ zIndex: 1501 }}
+                    actions={[
+                        <Button
+                            variant="contained"
+                            color="primary"
+                            onClick={this.closeConfirm}
+                            key="cancel"
+                        >
+                            Cancel
+                        </Button>,
+                    ]}
+                >
+                    <p>
+                        By selecting all, you can select just the currently displayed members
+                            or you can select all members in the system.
+                    </p>
+                    <Button
+                        variant="text"
+                        color="primary"
+                        fullWidth
+                        onClick={this.handlePageCheckAll}
+                    >
+                        SELECT ONLY VISIBLE MEMBERS
+                    </Button>
+                    <Button
+                        variant="text"
+                        color="primary"
+                        label="CONTINUE EDITING"
+                        fullWidth
+                        onClick={this.handleSystemCheckAll}
+                    >
+                        SELECT ALL MEMBERS IN SYSTEM
+                    </Button>
+                </BaseDialog>
             </div>
         );
     }
@@ -363,7 +410,11 @@ MembersBody.defaultProps = {
 };
 
 MembersBody.propTypes = {
-    members: PropTypes.arrayOf(PropTypes.shape({
+    public: PropTypes.bool.isRequired,
+    getUsers: PropTypes.func.isRequired,
+    nextPage: PropTypes.bool.isRequired,
+    userCount: PropTypes.number.isRequired,
+    users: PropTypes.arrayOf(PropTypes.shape({
         user: PropTypes.shape({
             username: PropTypes.string,
             first_name: PropTypes.string,
@@ -381,10 +432,30 @@ MembersBody.propTypes = {
         PropTypes.arrayOf(PropTypes.node),
         PropTypes.string,
     ]),
-    onMembersUpdate: PropTypes.func.isRequired,
+    onMemberCheck: PropTypes.func.isRequired,
+    onAdminCheck: PropTypes.func.isRequired,
+    onCheckCurrent: PropTypes.func.isRequired,
+    onCheckAll: PropTypes.func.isRequired,
+    onUncheckAll: PropTypes.func.isRequired,
     canUpdateAdmin: PropTypes.bool,
     handleShowShareInfo: PropTypes.func,
     theme: PropTypes.object.isRequired,
 };
 
-export default withTheme()(MembersBody);
+const mapStateToProps = state => (
+    {
+        users: state.users.users,
+        nextPage: state.users.nextPage,
+        userCount: state.users.total - 1,
+    }
+);
+
+const mapDispatchToProps = dispatch => (
+    {
+        getUsers: (params, append) => (
+            dispatch(getUsers(params, append))
+        ),
+    }
+);
+
+export default withTheme()(connect(mapStateToProps, mapDispatchToProps)(MembersBody));

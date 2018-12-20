@@ -95,7 +95,7 @@ describe('PermissionsFilter component', () => {
         wrapper.setProps(nextProps);
         wrapper.update();
         button = wrapper.find('.qa-PermissionsFilter-MembersAndGroups-button');
-        expect(button.html()).toContain('All Members / All Groups');
+        expect(button.html()).toContain('2 Members / 2 Groups');
 
         nextProps = { ...nextProps };
         nextProps.permissions.groups = { 1: '', 2: '', 3: '' };
@@ -160,8 +160,6 @@ describe('PermissionsFilter component', () => {
             groups: {},
             members: {},
         };
-        props.groups.forEach((group) => { expected.groups[group.name] = 'READ'; });
-        props.members.forEach((member) => { expected.members[member.user.username] = 'READ'; });
         props.onChange = sinon.spy();
         const wrapper = getWrapper(props);
         wrapper.instance().handleSelection({ target: { value: 'PUBLIC' } });

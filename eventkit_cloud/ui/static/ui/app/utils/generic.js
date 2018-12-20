@@ -23,26 +23,6 @@ export function getHeaderPageInfo(response) {
     return { nextPage, range };
 }
 
-export function userIsDataPackAdmin(user, permissions, groups) {
-    const { username } = user;
-    if (permissions.members[username] === 'ADMIN') {
-        return true;
-    }
-    const groupPermissions = Object.keys(permissions.groups);
-    return groupPermissions.some((groupName) => {
-        if (permissions.groups[groupName] === 'ADMIN') {
-            const adminGroup = groups.find(g => g.name === groupName);
-            if (adminGroup) {
-                if (adminGroup.administrators.includes(username)) {
-                    return true;
-                }
-                return false;
-            }
-        }
-        return false;
-    });
-}
-
 export function isMgrsString(c) {
     const coord = c.replace(/\s+/g, '');
     const MGRS = /^(\d{1,2})([C-HJ-NP-X])\s*([A-HJ-NP-Z])([A-HJ-NP-V])\s*(\d{1,5}\s*\d{1,5})$/i;

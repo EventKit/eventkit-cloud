@@ -6,6 +6,26 @@ declare namespace Eventkit {
         text: string;
     }
 
+    namespace Permissions {
+        type Visibility = 'PUBLIC' | 'PRIVATE' | 'SHARED';
+
+        type Level = 'ADMIN' | 'READ' | '';
+
+        interface Members {
+            [username: string]: Level;
+        }
+
+        interface Groups {
+            [groupname: string]: Level;
+        }
+    }
+
+    interface Permissions {
+        value: Permissions.Visibility;
+        members: Permissions.Members;
+        groups: Permissions.Groups;
+    }
+
     interface Task {
         uid: string;
         url: string;
@@ -55,6 +75,7 @@ declare namespace Eventkit {
         featured: boolean;
         formats: string[];
         created_at: string;
+        relationship: Permissions.Level;
         permissions: {
             value: string;
             users: { [s: string]: string };

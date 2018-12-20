@@ -223,6 +223,7 @@ class SimpleJobSerializer(serializers.Serializer):
     featured = serializers.BooleanField()
     formats = serializers.SerializerMethodField()
     permissions = serializers.SerializerMethodField(read_only=True)
+    relationship = serializers.SerializerMethodField(read_only=True)
 
     @staticmethod
     def get_uid(obj):
@@ -262,6 +263,12 @@ class SimpleJobSerializer(serializers.Serializer):
         permissions = JobPermission.jobpermissions(obj)
         permissions['value'] = obj.visibility
         return permissions
+
+    def get_relationship(self, obj):
+        request = self.context['request']
+        user = request.user
+        return JobPermission.get_user_permissions(user, obj.uid)
+
 
     @staticmethod
     def get_formats(obj):
@@ -386,17 +393,16 @@ class GroupSerializer(serializers.ModelSerializer):
         fields = ('id', 'name', 'members', 'administrators')
 
     @staticmethod
-    def get_members(instance):
-        user_ids = [permission.user.id for permission in GroupPermission.objects.filter(group=instance).filter(
-            permission=GroupPermissionLevel.MEMBER.value)]
-        return [user.username for user in User.objects.filter(id__in=user_ids).all()]
+    def get_group_permissions(instance):
+        return GroupPermission.objects.filter(group=instance).prefetch_related('user', 'group')
 
-    @staticmethod
-    def get_administrators(instance):
-        user_ids = [permission.user.id for permission in GroupPermission.objects.filter(group=instance).filter(
-            permission=GroupPermissionLevel.ADMIN.value)]
-        return [user.username for user in User.objects.filter(id__in=user_ids).all()]
-        return []
+    def get_members(self, instance):
+        qs = self.get_group_permissions(instance).filter(permission=GroupPermissionLevel.MEMBER.value)
+        return [permission.user.username for permission in qs]
+
+    def get_administrators(self, instance):
+        qs = self.get_group_permissions(instance).filter(permission=GroupPermissionLevel.ADMIN.value)
+        return [permission.user.username for permission in qs]
 
     @staticmethod
     def get_identification(instance):
@@ -404,6 +410,41 @@ class GroupSerializer(serializers.ModelSerializer):
             return instance.oauth.identification
         else:
             return None
+
+class GroupUserSerializer(serializers.ModelSerializer):
+    members = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Group
+        fields = ('name', 'members')
+
+    def get_members(self, instance):
+        request = self.context['request']
+        limit = 1000
+        if request.query_params.get('limit'):
+            limit = int(request.query_params.get('limit'))
+        gp_admins = GroupPermission.objects.filter(group=instance)\
+            .filter(permission=GroupPermissionLevel.ADMIN.value)[:limit]
+        admins = [gp.user for gp in gp_admins]
+        members = []
+        gp_members = GroupPermission.objects.filter(group=instance)\
+            .filter(permission=GroupPermissionLevel.MEMBER.value).exclude(user__in=admins)[:limit - gp_admins.count()]
+        for gp in gp_members:
+            if gp.user not in admins:
+                members.append(gp.user)
+
+        return [self.user_representation(user, GroupPermissionLevel.ADMIN.value) for user in admins]\
+               + [self.user_representation(user, GroupPermissionLevel.MEMBER.value) for user in members]
+
+    @staticmethod
+    def user_representation(user, permission_lvl):
+        return dict(
+            username=user.username,
+            last_name=user.last_name,
+            first_name=user.first_name,
+            email=user.email,
+            permission=permission_lvl,
+        )
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -618,6 +659,7 @@ class ListJobSerializer(serializers.Serializer):
     visibility = serializers.CharField()
     featured = serializers.BooleanField()
     permissions = serializers.SerializerMethodField(read_only=True)
+    relationship = serializers.SerializerMethodField(read_only=True)
 
     @staticmethod
     def get_uid(obj):
@@ -656,6 +698,11 @@ class ListJobSerializer(serializers.Serializer):
     def get_owner(obj):
         return obj.user.username
 
+    def get_relationship(self, obj):
+        request = self.context['request']
+        user = request.user
+        return JobPermission.get_user_permissions(user, obj.uid)
+
     @staticmethod
     def get_permissions(obj):
         permissions = JobPermission.jobpermissions(obj)
@@ -692,6 +739,7 @@ class JobSerializer(serializers.Serializer):
     updated_at = serializers.DateTimeField(read_only=True)
     owner = serializers.SerializerMethodField(read_only=True)
     permissions = serializers.SerializerMethodField(read_only=True)
+    relationship = serializers.SerializerMethodField(read_only=True)
     exports = serializers.SerializerMethodField()
     preset = serializers.PrimaryKeyRelatedField(queryset=DatamodelPreset.objects.all(), required=False)
     published = serializers.BooleanField(required=False)
@@ -797,6 +845,11 @@ class JobSerializer(serializers.Serializer):
     def get_owner(obj):
         """Return the username for the owner of this export."""
         return obj.user.username
+
+    def get_relationship(self, obj):
+        request = self.context['request']
+        user = request.user
+        return JobPermission.get_user_permissions(user, obj.uid)
 
     @staticmethod
     def get_permissions(obj):

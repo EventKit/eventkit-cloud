@@ -155,8 +155,6 @@ export class DataPackList extends Component {
                                     onRunDelete={this.props.onRunDelete}
                                     onRunShare={this.props.onRunShare}
                                     providers={this.props.providers}
-                                    users={this.props.users}
-                                    groups={this.props.groups}
                                 />
                             ))}
                             {load}
@@ -299,8 +297,6 @@ export class DataPackList extends Component {
                                         onRunDelete={this.props.onRunDelete}
                                         onRunShare={this.props.onRunShare}
                                         providers={this.props.providers}
-                                        users={this.props.users}
-                                        groups={this.props.groups}
                                     />
                                 ))}
                             </TableBody>
@@ -326,13 +322,6 @@ DataPackList.propTypes = {
     handleLoadMore: PropTypes.func.isRequired,
     loadLessDisabled: PropTypes.bool.isRequired,
     loadMoreDisabled: PropTypes.bool.isRequired,
-    users: PropTypes.arrayOf(PropTypes.object).isRequired,
-    groups: PropTypes.arrayOf(PropTypes.shape({
-        id: PropTypes.number,
-        name: PropTypes.string,
-        members: PropTypes.arrayOf(PropTypes.string),
-        administrators: PropTypes.arrayOf(PropTypes.string),
-    })).isRequired,
     theme: PropTypes.object.isRequired,
     width: PropTypes.string.isRequired,
 };

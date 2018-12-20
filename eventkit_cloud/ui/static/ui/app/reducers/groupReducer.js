@@ -2,6 +2,9 @@ import { types } from '../actions/groupActions';
 
 export const initialState = {
     groups: [],
+    total: 0,
+    range: '',
+    nextPage: false,
     cancelSource: null,
     fetching: null,
     fetched: null,
@@ -29,7 +32,10 @@ export function userGroupsReducer(state = initialState, action) {
                 ...state,
                 fetching: false,
                 fetched: true,
-                groups: action.groups,
+                groups: action.append ? [...state.groups, ...action.groups] : action.groups,
+                total: action.total,
+                range: action.range,
+                nextPage: action.nextPage,
                 error: null,
                 cancelSource: null,
             };
@@ -41,6 +47,9 @@ export function userGroupsReducer(state = initialState, action) {
                 groups: [],
                 error: action.error,
                 cancelSource: null,
+                total: 0,
+                range: '',
+                nextPage: false,
             };
 
         case types.DELETING_GROUP:

@@ -1,6 +1,8 @@
 import PropTypes from 'prop-types';
 import React, { Component } from 'react';
-import { withTheme } from '@material-ui/core/styles';
+import axios from 'axios';
+import { withStyles, withTheme } from '@material-ui/core/styles';
+import CircularProgress from '@material-ui/core/CircularProgress';
 import Card from '@material-ui/core/Card';
 import CardHeader from '@material-ui/core/CardHeader';
 import CardContent from '@material-ui/core/CardContent';
@@ -13,6 +15,57 @@ import Eye from '@material-ui/icons/RemoveRedEye';
 import AdminShare from '../icons/AdminShareIcon';
 import GroupMemberRow from './GroupMemberRow';
 
+const jss = theme => ({
+    noData: {
+        height: '25px',
+        display: 'flex',
+        justifyContent: 'center',
+    },
+    card: {
+        backgroundColor: theme.eventkit.colors.secondary,
+        margin: '0px 10px 10px',
+        boxShadow: 'none',
+    },
+    groupText: {
+        flex: '1 1 auto',
+        color: theme.eventkit.colors.black,
+        fontSize: '16px',
+        fontWeight: 'bold',
+        marginRight: '10px',
+        lineHeight: '28px',
+        wordBreak: 'break-word',
+    },
+    groupIcons: {
+        display: 'flex',
+        flex: '1 1 auto',
+        alignItems: 'center',
+        flexDirection: 'row-reverse',
+    },
+    expandIcon: {
+        marginLeft: '15px',
+        cursor: 'pointer',
+    },
+    checkIcon: {
+        width: '28px',
+        height: '28px',
+        cursor: 'pointer',
+    },
+    cardText: {
+        backgroundColor: theme.eventkit.colors.white,
+        color: theme.eventkit.colors.text_primary,
+        padding: '10px 16px 0px',
+    },
+    viewContainer: {
+        lineHeight: '20px',
+        paddingTop: '10px',
+        fontSize: '14px',
+    },
+    viewIcon: {
+        height: '20px',
+        verticalAlign: 'text-top',
+    },
+});
+
 export class GroupRow extends Component {
     constructor(props) {
         super(props);
@@ -20,10 +73,15 @@ export class GroupRow extends Component {
         this.handleCheck = this.props.handleCheck.bind(this, this.props.group);
         this.handleAdminCheck = this.handleAdminCheck.bind(this);
         this.onKeyDown = this.onKeyDown.bind(this);
+        this.getMembers = this.getMembers.bind(this);
+        this.loadMembers = this.loadMembers.bind(this);
         this.onAdminMouseOut = this.onAdminMouseOut.bind(this);
         this.onAdminMouseOver = this.onAdminMouseOver.bind(this);
         this.state = {
             expanded: false,
+            loadingMembers: false,
+            members: [],
+            membersFetched: false,
         };
     }
 
@@ -42,20 +100,24 @@ export class GroupRow extends Component {
         if (key === 13) this.handleAdminCheck();
     }
 
-    getGroupMembers(group, members) {
-        const groupMembers = [];
-        group.members.forEach((groupMember) => {
-            const member = members.find(propmember => propmember.user.username === groupMember);
-            if (member) groupMembers.push(member);
-        });
-        groupMembers.sort((a, b) => {
-            const aAdmin = group.administrators.includes(a.user.username);
-            const bAdmin = group.administrators.includes(b.user.username);
-            if (!aAdmin && bAdmin) return 1;
-            if (aAdmin && !bAdmin) return -1;
-            return 0;
-        });
-        return groupMembers;
+    async getMembers() {
+        try {
+            const response = await axios({
+                url: `/api/groups/${this.props.group.id}/users`,
+                method: 'GET',
+                params: { limit: 4 },
+            });
+            return response.data.members;
+        } catch (e) {
+            console.warn(e);
+            return [];
+        }
+    }
+
+    async loadMembers() {
+        this.setState({ loadingMembers: true });
+        const members = await this.getMembers();
+        this.setState({ loadingMembers: false, members, membersFetched: true });
     }
 
     handleAdminCheck() {
@@ -65,138 +127,99 @@ export class GroupRow extends Component {
     }
 
     toggleExpanded() {
+        if (!this.state.membersFetched && !this.state.expanded) {
+            this.loadMembers();
+        }
         this.setState({ expanded: !this.state.expanded });
     }
 
     render() {
+        const { classes } = this.props;
         const { colors } = this.props.theme.eventkit;
-        const styles = {
-            card: {
-                backgroundColor: colors.secondary,
-                margin: '0px 10px 10px',
-                boxShadow: 'none',
-            },
-            groupText: {
-                flex: '1 1 auto',
-                color: colors.black,
-                fontSize: '16px',
-                fontWeight: 'bold',
-                marginRight: '10px',
-                lineHeight: '28px',
-                wordBreak: 'break-word',
-            },
-            groupIcons: {
-                display: 'flex',
-                flex: '1 1 auto',
-                alignItems: 'center',
-                flexDirection: 'row-reverse',
-            },
-            expandIcon: {
-                marginLeft: '15px',
-                cursor: 'pointer',
-            },
-            checkIcon: {
-                width: '28px',
-                height: '28px',
-                cursor: 'pointer',
-            },
-            adminCheckIcon: {
-                width: '28px',
-                height: '28px',
-                cursor: 'pointer',
-                marginRight: '15px',
-            },
-            cardText: {
-                backgroundColor: colors.white,
-                color: colors.text_primary,
-                padding: '10px 16px 0px',
-            },
-        };
 
         // Assume group is not selected by default
-        let groupIcon = <CheckBoxOutline style={styles.checkIcon} onClick={this.handleCheck} color="primary" />;
+        let groupIcon = <CheckBoxOutline className={classes.checkIcon} onClick={this.handleCheck} color="primary" />;
 
         // Check if group is selected
         if (this.props.selected) {
-            groupIcon = <CheckBox style={styles.checkIcon} onClick={this.handleCheck} color="primary" />;
+            groupIcon = <CheckBox className={classes.checkIcon} onClick={this.handleCheck} color="primary" />;
         }
 
-        let adminButton = null;
+        const adminStyle = {
+            width: '28px',
+            height: '28px',
+            cursor: 'pointer',
+            marginRight: '15px',
+        };
         if (this.props.showAdmin) {
-            styles.adminCheckIcon.color = colors.text_primary;
+            adminStyle.color = colors.text_primary;
             if (!this.props.selected) {
-                styles.adminCheckIcon.opacity = 0.15;
-                styles.adminCheckIcon.cursor = 'default';
+                adminStyle.opacity = 0.15;
+                adminStyle.cursor = 'default';
             } else if (!this.props.admin) {
-                styles.adminCheckIcon.opacity = 0.55;
+                adminStyle.opacity = 0.55;
             } else {
-                styles.adminCheckIcon.color = colors.primary;
+                adminStyle.color = colors.primary;
             }
-
-            adminButton = (
-                <div ref={(input) => { this.tooltip = input; }} style={{ display: 'flex', alignItems: 'center' }}>
-                    <AdminShare
-                        className="qa-GroupRow-AdminShare"
-                        onClick={this.handleAdminCheck}
-                        onMouseOver={this.onAdminMouseOver}
-                        onMouseOut={this.onAdminMouseOut}
-                        onFocus={this.onAdminMouseOver}
-                        onBlur={this.onAdminMouseOut}
-                        style={styles.adminCheckIcon}
-                    />
-                </div>
-            );
         }
-
-        const groupMembers = this.getGroupMembers(this.props.group, this.props.members);
-        const firstFour = groupMembers.splice(0, 4);
 
         return (
             <Card
                 key={this.props.group.name}
-                style={styles.card}
+                classes={{ root: classes.card }}
                 className="qa-GroupRow-Card"
             >
                 <CardHeader
                     className="qa-GroupRow-CardHeader"
                     title={
                         <div style={{ display: 'flex', alignItems: 'center', fontSize: '15px' }}>
-                            <div style={styles.groupText} className="qa-GroupRow-CardHeader-text">
+                            <div className={`qa-GroupRow-CardHeader-text ${classes.groupText}`}>
                                 {this.props.group.name}
                             </div>
-                            <div style={styles.groupIcons} className="qa-GroupRow-CardHeader-icons">
+                            <div className={`qa-GroupRow-CardHeader-icons ${classes.groupIcons}`}>
                                 {this.state.expanded ?
-                                    <ArrowUp style={styles.expandIcon} onClick={this.toggleExpanded} color="primary" />
+                                    <ArrowUp className={classes.expandIcon} onClick={this.toggleExpanded} color="primary" />
                                     :
-                                    <ArrowDown style={styles.expandIcon} onClick={this.toggleExpanded} color="primary" />
+                                    <ArrowDown className={classes.expandIcon} onClick={this.toggleExpanded} color="primary" />
                                 }
                                 {groupIcon}
-                                {adminButton}
+                                {this.props.showAdmin && (
+                                    <div ref={(input) => { this.tooltip = input; }} style={{ display: 'flex', alignItems: 'center' }}>
+                                        <AdminShare
+                                            className="qa-GroupRow-AdminShare"
+                                            onClick={this.handleAdminCheck}
+                                            onMouseOver={this.onAdminMouseOver}
+                                            onMouseOut={this.onAdminMouseOut}
+                                            onFocus={this.onAdminMouseOver}
+                                            onBlur={this.onAdminMouseOut}
+                                            onKeyDown={this.onKeyDown}
+                                            style={adminStyle}
+                                        />
+                                    </div>
+                                )}
                             </div>
                         </div>
                     }
                     style={{ padding: '12px' }}
                 />
                 <Collapse in={this.state.expanded}>
-                    <CardContent style={styles.cardText}>
-                        {firstFour.map((member) => {
-                            const isAdmin = this.props.group.administrators.includes(member.user.username);
-                            return (
-                                <GroupMemberRow
-                                    key={member.user.username}
-                                    member={member}
-                                    isGroupAdmin={isAdmin}
-                                />
-                            );
-                        })}
-                        {groupMembers.length ?
-                            <div style={{ lineHeight: '20px', paddingTop: '10px', fontSize: '14px' }} className="qa-GroupRow-viewMore">
-                                <Eye style={{ height: '20px', verticalAlign: 'text-top' }} color="primary" />
+                    <CardContent className={classes.cardText}>
+                        {this.state.members.map(member => (
+                            <GroupMemberRow
+                                key={member.username}
+                                member={member}
+                            />
+                        ))}
+                        {this.state.members.length === 4 ?
+                            <div className={`qa-GroupRow-viewMore ${classes.viewContainer}`}>
+                                <Eye className={classes.viewIcon} color="primary" />
                                 <a href={`/groups?groups=${this.props.group.id}`}>View all on Members and Groups Page</a>
                             </div>
                             :
                             null
                         }
+                        {this.state.loadingMembers && <div className={classes.noData}><CircularProgress size={20} /></div>}
+                        {this.state.membersFetched && !this.state.members.length && <div className={classes.noData}>No Members</div>}
                     </CardContent>
                 </Collapse>
             </Card>
@@ -219,18 +242,6 @@ GroupRow.propTypes = {
         members: PropTypes.arrayOf(PropTypes.string),
         administrators: PropTypes.arrayOf(PropTypes.string),
     }).isRequired,
-    members: PropTypes.arrayOf(PropTypes.shape({
-        user: PropTypes.shape({
-            username: PropTypes.string,
-            first_name: PropTypes.string,
-            last_name: PropTypes.string,
-            email: PropTypes.string,
-            date_joined: PropTypes.string,
-            last_login: PropTypes.string,
-        }),
-        accepted_licenses: PropTypes.object,
-        groups: PropTypes.arrayOf(PropTypes.number),
-    })).isRequired,
     selected: PropTypes.bool.isRequired,
     handleCheck: PropTypes.func.isRequired,
     handleAdminCheck: PropTypes.func,
@@ -239,6 +250,7 @@ GroupRow.propTypes = {
     showAdmin: PropTypes.bool,
     admin: PropTypes.bool,
     theme: PropTypes.object.isRequired,
+    classes: PropTypes.object.isRequired,
 };
 
-export default withTheme()(GroupRow);
+export default withTheme()(withStyles(jss)(GroupRow));

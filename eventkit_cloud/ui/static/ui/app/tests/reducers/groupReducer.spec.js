@@ -35,12 +35,18 @@ describe('userGroupsReducer', () => {
             {
                 type: types.FETCHED_GROUPS,
                 groups,
+                total: 12,
+                range: '1-12',
+                nextPage: true,
             },
         )).toEqual({
             ...state,
             fetching: false,
             fetched: true,
             groups,
+            total: 12,
+            range: '1-12',
+            nextPage: true,
         });
     });
 

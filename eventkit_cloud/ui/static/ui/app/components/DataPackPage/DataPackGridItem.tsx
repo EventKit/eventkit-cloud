@@ -35,7 +35,6 @@ import DeleteDataPackDialog from '../Dialog/DeleteDataPackDialog';
 import FeaturedFlag from './FeaturedFlag';
 import ol3mapCss from '../../styles/ol3map.css';
 import DataPackShareDialog from '../DataPackShareDialog/DataPackShareDialog';
-import { userIsDataPackAdmin } from '../../utils/generic';
 import { makeFullRunSelector } from '../../selectors/runSelector';
 import ProviderDialog from '../Dialog/ProviderDialog';
 
@@ -121,9 +120,6 @@ interface OwnProps {
     gridName: string;
     index: number;
     showFeaturedFlag: boolean;
-    adminPermission: boolean;
-    users: Eventkit.User[];
-    groups: Eventkit.Group[];
     style: object | undefined;
     theme: Eventkit.Theme;
     runId: string;
@@ -364,12 +360,6 @@ export class DataPackGridItem extends React.Component<Props, State> {
             status = <AlertError style={styles.errorIcon} />;
         }
 
-        const adminPermission = userIsDataPackAdmin(
-            this.props.userData.user,
-            this.props.run.job.permissions,
-            this.props.groups,
-        );
-
         return (
             <div style={styles.gridItem} key={this.props.run.uid}>
                 <Card
@@ -397,7 +387,10 @@ export class DataPackGridItem extends React.Component<Props, State> {
                                         {this.props.run.job.name}
                                     </Link>
                                 </div>
-                                <IconMenu className="qa-DataPackGridItem-IconMenu tour-datapack-options" style={styles.iconMenu}>
+                                <IconMenu
+                                    className="qa-DataPackGridItem-IconMenu tour-datapack-options"
+                                    style={styles.iconMenu}
+                                >
                                     <MenuItem
                                         key="map"
                                         className="qa-DataPackGridItem-MenuItem-showHideMap"
@@ -422,7 +415,7 @@ export class DataPackGridItem extends React.Component<Props, State> {
                                     >
                                         View Data Sources
                                     </MenuItem>
-                                    {adminPermission ?
+                                    {this.props.run.job.relationship === 'ADMIN' ?
                                         <MenuItem
                                             key="delete"
                                             className="qa-DataPackGridItem-MenuItem-delete"
@@ -433,7 +426,7 @@ export class DataPackGridItem extends React.Component<Props, State> {
                                         </MenuItem>
                                         : null
                                     }
-                                    {adminPermission ?
+                                    {this.props.run.job.relationship === 'ADMIN' ?
                                         <MenuItem
                                             key="share"
                                             className="qa-DataPackGridItem-MenuItem-share"
@@ -509,8 +502,6 @@ export class DataPackGridItem extends React.Component<Props, State> {
                         onClose={this.handleShareClose}
                         onSave={this.handleShareSave}
                         user={this.props.userData}
-                        groups={this.props.groups}
-                        members={this.props.users}
                         permissions={this.props.run.job.permissions}
                         groupsText="You may share view and edit rights with groups exclusively.
                             Group sharing is managed separately from member sharing."

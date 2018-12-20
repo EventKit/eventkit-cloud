@@ -24,8 +24,6 @@ import { getRuns, deleteRun } from '../../actions/datapackActions';
 import { getProviders } from '../../actions/providerActions';
 import { getGeocode } from '../../actions/geocodeActions';
 import { processGeoJSONFile, resetGeoJSONFile } from '../../actions/fileActions';
-import { getGroups } from '../../actions/groupActions';
-import { getUsers } from '../../actions/usersActions';
 import { updateDataCartPermissions } from '../../actions/datacartActions';
 import { setPageOrder, setPageView } from '../../actions/uiActions';
 import { flattenFeatureCollection } from '../../utils/mapUtils';
@@ -91,8 +89,6 @@ export class DataPackPage extends React.Component {
     }
 
     componentDidMount() {
-        this.props.getGroups();
-        this.props.getUsers({ exclude_self: true, disable_page: true });
         this.props.getProviders();
         this.makeRunRequest();
         this.fetch = setInterval(this.autoRunRequest, 10000);
@@ -213,8 +209,6 @@ export class DataPackPage extends React.Component {
             loadLessDisabled: this.props.runIds.length <= this.pageSize,
             loadMoreDisabled: !this.props.runsMeta.nextPage,
             providers: this.props.providers,
-            users: this.props.users,
-            groups: this.props.groups,
         };
         switch (view) {
             case 'list':
@@ -629,8 +623,6 @@ export class DataPackPage extends React.Component {
                         onFilterClear={this.handleFilterClear}
                         open={this.state.open}
                         providers={this.props.providers}
-                        groups={this.props.groups}
-                        members={this.props.users}
                     />
 
                     {this.state.pageLoading ?
@@ -691,15 +683,6 @@ DataPackPage.propTypes = {
     setOrder: PropTypes.func.isRequired,
     setView: PropTypes.func.isRequired,
     providers: PropTypes.arrayOf(PropTypes.object).isRequired,
-    groups: PropTypes.arrayOf(PropTypes.shape({
-        id: PropTypes.number,
-        name: PropTypes.string,
-        members: PropTypes.arrayOf(PropTypes.string),
-        administrators: PropTypes.arrayOf(PropTypes.string),
-    })).isRequired,
-    users: PropTypes.arrayOf(PropTypes.object).isRequired,
-    getGroups: PropTypes.func.isRequired,
-    getUsers: PropTypes.func.isRequired,
     updateDataCartPermissions: PropTypes.func.isRequired,
     updatePermissions: PropTypes.shape({
         updating: PropTypes.bool,
@@ -732,8 +715,6 @@ function mapStateToProps(state) {
         providers: state.providers,
         importGeom: state.importGeom,
         geocode: state.geocode,
-        groups: state.groups.groups,
-        users: state.users.users,
         updatePermissions: state.updatePermission,
     };
 }
@@ -763,12 +744,6 @@ function mapDispatchToProps(dispatch) {
         },
         setView: (view) => {
             dispatch(setPageView(view));
-        },
-        getGroups: () => {
-            dispatch(getGroups());
-        },
-        getUsers: (params) => {
-            dispatch(getUsers(params));
         },
         updateDataCartPermissions: (uid, permissions) => {
             dispatch(updateDataCartPermissions(uid, permissions));

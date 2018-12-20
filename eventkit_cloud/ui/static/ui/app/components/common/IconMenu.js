@@ -16,11 +16,13 @@ export class IconMenu extends Component {
 
     handleOpen(e) {
         e.stopPropagation();
+        this.props.onOpen();
         this.setState({ anchor: e.currentTarget });
     }
 
     handleClose(e) {
         if (e) e.stopPropagation();
+        this.props.onClose();
         this.setState({ anchor: null });
     }
 
@@ -93,6 +95,8 @@ IconMenu.defaultProps = {
     disabled: false,
     color: undefined,
     className: undefined,
+    onOpen: () => {},
+    onClose: () => {},
 };
 
 IconMenu.propTypes = {
@@ -116,6 +120,8 @@ IconMenu.propTypes = {
     disabled: PropTypes.bool,
     color: PropTypes.string,
     className: PropTypes.string,
+    onOpen: PropTypes.func,
+    onClose: PropTypes.func,
 };
 
 export default IconMenu;

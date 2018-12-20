@@ -262,10 +262,6 @@ describe('DashboardPage component', () => {
             refreshSpy.restore();
         });
 
-        it('requests groups', () => {
-            expect(instance.props.getGroups.callCount).toBe(2);
-        });
-
         it('requests providers', () => {
             expect(instance.props.getProviders.callCount).toBe(2);
         });

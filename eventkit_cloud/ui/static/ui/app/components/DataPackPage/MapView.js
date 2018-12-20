@@ -925,8 +925,6 @@ export class MapView extends Component {
                                     onClick={this.handleClick}
                                     backgroundColor={this.state.selectedFeature === id ? colors.selected_primary : null}
                                     providers={this.props.providers}
-                                    users={this.props.users}
-                                    groups={this.props.groups}
                                 />
                             ))}
                         </GridList>
@@ -1047,13 +1045,6 @@ MapView.propTypes = {
     processGeoJSONFile: PropTypes.func.isRequired,
     resetGeoJSONFile: PropTypes.func.isRequired,
     onMapFilter: PropTypes.func.isRequired,
-    users: PropTypes.arrayOf(PropTypes.object).isRequired,
-    groups: PropTypes.arrayOf(PropTypes.shape({
-        id: PropTypes.number,
-        name: PropTypes.string,
-        members: PropTypes.arrayOf(PropTypes.string),
-        administrators: PropTypes.arrayOf(PropTypes.string),
-    })).isRequired,
     theme: PropTypes.object.isRequired,
     width: PropTypes.string.isRequired,
 };
