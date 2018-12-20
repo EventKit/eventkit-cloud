@@ -37,7 +37,7 @@ public class DatapackTest extends SeleniumBaseTest {
     }
 
     // Large test, will zoom to aoi, draw bounding box, create data pack and check UI elements as it goes through.
-//    @Test
+    @Test
     public void createDataPackTest() {
         // UI assertions
         assertTrue(map.getDrawBoxButton().isEnabled());
@@ -58,6 +58,9 @@ public class DatapackTest extends SeleniumBaseTest {
         final AreaOfInterestWindow aoiWindow = new AreaOfInterestWindow(driver, 5);
         aoiWindow.waitUntilLoaded();
         // UI assertions
+        if(aoiWindow.isWarningDisplayed(driver)) {
+            aoiWindow.getCloseWarningPopup().click();
+        }
         assertTrue(aoiWindow.getBufferButton().isEnabled());
         // This will open the buffer input window
         aoiWindow.getBufferButton().click();
@@ -66,7 +69,7 @@ public class DatapackTest extends SeleniumBaseTest {
         assertTrue(bufferAoiWindow.getBufferField().isEnabled());
         assertTrue(bufferAoiWindow.getUpdateButton().isEnabled());
         assertTrue(bufferAoiWindow.getCloseButton().isEnabled());
-        bufferAoiWindow.getBufferField().sendKeys(String.valueOf(10));
+        bufferAoiWindow.getBufferField().sendKeys(String.valueOf(200));
         bufferAoiWindow.getUpdateButton().click();
         aoiWindow.getZoomToButton().click();
         // Closes aoi window
@@ -87,12 +90,10 @@ public class DatapackTest extends SeleniumBaseTest {
         assertTrue(details.getDescriptionField().isEnabled());
         assertTrue(details.getProjectField().isEnabled());
         assertTrue(details.getOpenStreetMapDataThemesCheckBox().isEnabled());
-        assertTrue(details.getOpenStreetMapTilesCheckBox().isEnabled());
         details.getNameField().sendKeys("Selenium DataPack");
         details.getDescriptionField().sendKeys("Selenium description");
         details.getProjectField().sendKeys("Selenium project");
         details.getOpenStreetMapDataThemesCheckBox().click();
-        details.getOpenStreetMapTilesCheckBox().click();
         details.getNextButton().click();
         // Finish, allow to finish and delete.
         final PreviewCreationPage previewCreationPage = new PreviewCreationPage(driver, 10);

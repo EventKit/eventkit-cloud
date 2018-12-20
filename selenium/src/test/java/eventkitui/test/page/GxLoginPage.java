@@ -33,7 +33,6 @@ public class GxLoginPage extends PageObject {
      * @param password
      *            The password
      * @param mainPage
-     *            The Main page for OAuth redirection. Will re-use if provided a {@link Dashboard}.
      */
     public MainPage loginDisadvantaged(String username, String password, MainPage mainPage) {
         WebDriverWait wait = new WebDriverWait(driver, 3);

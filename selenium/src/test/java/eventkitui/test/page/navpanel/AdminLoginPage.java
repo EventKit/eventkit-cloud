@@ -22,7 +22,6 @@ public class AdminLoginPage extends LoadablePage {
         super(driver, timeout);
     }
 
-
     public void login(final String username, final String password) {
         usernameField.sendKeys(username);
         passwordField.sendKeys(password);

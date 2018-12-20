@@ -20,7 +20,5 @@ services:
     command: mvn clean test
   selenium-standalone-chrome:
     image: selenium/standalone-chrome:3.141.59
-    volumes:
-      - /dev/shm:/dev/shm
     expose:
       - 4444

@@ -1,5 +1,6 @@
 package eventkitui.test;
 
+import eventkitui.test.page.LocalLoginPage;
 import eventkitui.test.page.navpanel.AdminLoginPage;
 import eventkitui.test.page.navpanel.dashboard.Dashboard;
 import eventkitui.test.page.GxLoginPage;
@@ -15,6 +16,8 @@ import org.openqa.selenium.TimeoutException;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.WebDriverWait;
+
+import javax.print.attribute.standard.OutputDeviceAssigned;
 
 public class SeleniumBaseTest {
     protected final String BASE_URL = System.getenv("ek_url");
@@ -33,21 +36,24 @@ public class SeleniumBaseTest {
         mainPage = new MainPage(driver);
         driver.get(BASE_URL);
         WebDriverWait wait = new WebDriverWait(driver, 120);
-        // Login via admin portal or gxlogin. Likely will remove admin portal after test account is unlocked?
-        if(BASE_URL.contains("admin")) {
-            AdminLoginPage adminLoginPage = new AdminLoginPage(driver, 10);
-            adminLoginPage.waitUntilLoaded();
-            adminLoginPage.login(USERNAME, PASSWORD);
-        } else {
+        LocalLoginPage localLoginPage = new LocalLoginPage(driver, 20);
+        // will attempt local login first then gx login.
+        try {
+            localLoginPage.waitUntilLoaded();
+            localLoginPage.login(USERNAME, PASSWORD);
+        }
+        catch (final Exception exception) {
+            // try other login method
             try {
                 GxLoginPage gxLoginPage = mainPage.beginLogin();
                 mainPage = gxLoginPage.loginDisadvantaged(USERNAME, PASSWORD, mainPage);
             }
-            catch(final Exception exception) {
+            catch(final Exception exception2) {
                 Utils.takeScreenshot(driver);
                 throw new RuntimeException("Something went wrong, see screenshot.");
             }
         }
+
         mainPage.getTopPanel().waitUntilLoaded();
         // Does first time checks, will set stuff up if user has never logged in before.
         FirstTimeLogin firstTimeLogin = new FirstTimeLogin(driver, mainPage);

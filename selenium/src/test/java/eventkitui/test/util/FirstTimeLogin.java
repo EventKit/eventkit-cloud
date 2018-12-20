@@ -32,6 +32,7 @@ public class FirstTimeLogin extends PageObject {
     @FindBy(xpath = "//div[contains(@class, 'qa-Warning-text')]") private WebElement warningBanner;
     @FindBy(xpath = "//span[contains(@class, 'qa-LicenseInfo-Checkbox')]") private WebElement acceptAllCheckbox;
     @FindBy(xpath = "//button[contains(@class, 'qa-SaveButton-Button-SaveChanges')]") private WebElement saveChangesButton;
+    @FindBy(xpath = "//div[contains(@class, 'qa-DashboardSection-Notifications-NoData')]") private WebElement noDataBanner;
 
     private WebDriverWait wait;
     private WebDriver driver;
@@ -48,18 +49,26 @@ public class FirstTimeLogin extends PageObject {
      * Checks if the license warning is displayed. If so, we must accept the license and create some datapacks for first time use.
      */
     public void firstTimeSeleniumUserSetup() {
+        // licenses
         try {
             warningBanner.isEnabled();
             acceptLicenses();
+        }
+        catch (NoSuchElementException noSuchElementException) {
+            // Page didn't load, license must already by accepted or none appeared.
+        }
+        // generate notifications and such
+        try {
+            wait.until(ExpectedConditions.elementToBeClickable(noDataBanner));
             NavigationPanel navigationPanel = mainPage.getTopPanel().openNavigationPanel();
             navigationPanel.waitUntilLoaded();
             CreationPage creationPage = navigationPanel.openCreateDataPack();
             creationPage.waitUntilLoaded();
             createFirstDataPack(creationPage);
-
+            navigationPanel.openDashboard().waitUntilLoaded();
         }
-        catch (NoSuchElementException noSuchElementException) {
-            // Page didn't load, license must already by accepted.
+        catch (NoSuchElementException | TimeoutException noSuchElement) {
+            // Move on, data already in system.
         }
     }
 
@@ -84,6 +93,9 @@ public class FirstTimeLogin extends PageObject {
         final AreaOfInterestWindow aoiWindow = new AreaOfInterestWindow(driver, 5);
         aoiWindow.waitUntilLoaded();
         // This will open the buffer input window
+        if(aoiWindow.isWarningDisplayed(driver)) {
+            aoiWindow.getCloseWarningPopup().click();
+        }
         aoiWindow.getBufferButton().click();
         final BufferAoiWindow bufferAoiWindow = new BufferAoiWindow(driver, 5);
         bufferAoiWindow.waitUntilLoaded();
@@ -109,7 +121,6 @@ public class FirstTimeLogin extends PageObject {
         details.getDescriptionField().sendKeys("Selenium datapack, created for test user.");
         details.getProjectField().sendKeys("Selenium project");
         details.getOpenStreetMapDataThemesCheckBox().click();
-        details.getOpenStreetMapTilesCheckBox().click();
         details.getNextButton().click();
         // Finish, allow to finish and delete.
         final PreviewCreationPage previewCreationPage = new PreviewCreationPage(driver, 10);

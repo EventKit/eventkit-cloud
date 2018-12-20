@@ -33,6 +33,8 @@ public class DashboardTest extends SeleniumBaseTest {
 
     @Test
     public void selectNotificationBullets() {
+        // Cards sometimes take a moment to render.
+        wait.until(ExpectedConditions.elementToBeClickable(dashboard.getNotificationCardMenu()));
         dashboard.getNotificationCardMenu().click();
         wait.until(ExpectedConditions.elementToBeClickable(dashboard.getViewNotification()));
         assertTrue(dashboard.getViewNotification().isEnabled());

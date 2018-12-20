@@ -23,6 +23,7 @@ public class MainPage extends PageObject {
     private TopPanel        topPanel;
     private NavigationPanel navigationPanel;
 
+
     public MainPage(WebDriver driver) {
         super(driver);
         topPanel        = new TopPanel(driver);
