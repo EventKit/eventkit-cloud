@@ -22,7 +22,8 @@ public class NotificationTests extends SeleniumBaseTest {
     @Before
     public void openNavigationPanel() {
         notificationsPanel = mainPage.getTopPanel().openNotificationPanel();
-        wait = new WebDriverWait(driver, 10);
+        wait = new WebDriverWait(driver, 20);
+        wait.until(ExpectedConditions.invisibilityOfElementLocated(notificationsPanel.getNotificationsProgressBar()));
     }
 
     @Test
@@ -37,7 +38,12 @@ public class NotificationTests extends SeleniumBaseTest {
         try {
             // Upon initial load, cards don't always appear. Loading bar is not named or identifiable, just wait.
             wait.withTimeout(Duration.ofSeconds(10));
-            notificationsPanel.getMoreOptionsButton().click();
+            try {
+                notificationsPanel.getMoreOptionsButton().click();
+            }
+            catch (NoSuchElementException nosuch) {
+                Utils.takeScreenshot(driver);
+            }
             wait.until(ExpectedConditions.elementToBeClickable(notificationsPanel.getRemove()));
             assertTrue(notificationsPanel.getViewButton().isEnabled());
 
