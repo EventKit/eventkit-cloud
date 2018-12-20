@@ -1,6 +1,7 @@
 package eventkitui.test.page.notifications;
 
 import eventkitui.test.page.core.LoadablePage;
+import org.openqa.selenium.By;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.support.FindBy;
@@ -18,6 +19,9 @@ public class NotificationsPanel extends LoadablePage {
     @FindBy(xpath = "//li[contains(@class, 'qa-NotificationMenu-MenuItem-MarkAsRead')]") private WebElement markAsRead;
     @FindBy(xpath = "//li[contains(@class, 'qa-NotificationMenu-MenuItem-MarkAsUnread')]") private WebElement markAsUnread;
     @FindBy(xpath = "//li[contains(@class, 'qa-NotificationMenu-MenuItem-Remove')]") private WebElement remove;
+
+    // Notifications area has its own progress bar that varies wildly in load time.
+    private By notificationsProgressBar = By.xpath("//div[contains(@role, 'progressbar')]");
 
     public NotificationsPanel(WebDriver driver, long timeout) {
         super(driver, timeout);
@@ -59,4 +63,6 @@ public class NotificationsPanel extends LoadablePage {
     public WebElement getRemove() {
         return remove;
     }
+
+    public By getNotificationsProgressBar() { return notificationsProgressBar; }
 }

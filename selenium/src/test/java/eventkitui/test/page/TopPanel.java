@@ -17,7 +17,7 @@ public class TopPanel extends LoadablePage {
     @FindBy(xpath = "//button[contains(@class, 'qa-Application-AppBar-Notifications')]")	private WebElement notificationsButton;
 
     public TopPanel(WebDriver driver) {
-        super(driver, 10);
+        super(driver, 20);
     }
 
     /**
@@ -26,7 +26,7 @@ public class TopPanel extends LoadablePage {
      */
     public NavigationPanel openNavigationPanel() {
         menuButton.click();
-        return new NavigationPanel(driver, 10);
+        return new NavigationPanel(driver, 15);
     }
 
     /**
