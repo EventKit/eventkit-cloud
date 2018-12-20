@@ -312,5 +312,12 @@ declare namespace Eventkit {
                 viewedJobs: Eventkit.Run[];
             };
         }
+
+        interface Licenses {
+            fetching: boolean;
+            fetched: boolean;
+            licenses: License[];
+            error: any;
+        }
     }
 }

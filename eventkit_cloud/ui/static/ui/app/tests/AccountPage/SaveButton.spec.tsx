@@ -1,16 +1,16 @@
-import React from 'react';
+import * as React from 'react';
 import { mount } from 'enzyme';
-import sinon from 'sinon';
+import * as sinon from 'sinon';
 import NavigationCheck from '@material-ui/icons/Check';
 import Button from '@material-ui/core/Button';
 import SaveButton from '../../components/AccountPage/SaveButton';
 
 describe('SaveButton component', () => {
     const getProps = () => ({
-        ...global.eventkit_test_props,
+        ...(global as any).eventkit_test_props,
         saved: false,
         saveDisabled: true,
-        handleSubmit: () => {},
+        handleSubmit: sinon.spy(),
     });
 
     const getMountedWrapper = props => mount(<SaveButton {...props} />);

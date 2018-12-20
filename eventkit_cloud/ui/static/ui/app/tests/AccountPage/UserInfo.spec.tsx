@@ -1,11 +1,11 @@
-import React from 'react';
+import * as React from 'react';
 import { shallow } from 'enzyme';
 import { UserInfo } from '../../components/AccountPage/UserInfo';
 import UserInfoTableRow from '../../components/AccountPage/UserInfoTableRow';
 
 describe('UserInfo component', () => {
     const getProps = () => ({
-        ...global.eventkit_test_props,
+        ...(global as any).eventkit_test_props,
         user: {
             username: 'admin',
             first_name: 'first',

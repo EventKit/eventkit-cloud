@@ -1,6 +1,6 @@
-import React from 'react';
+import * as React from 'react';
 import { mount } from 'enzyme';
-import Warning from '../../components/AccountPage/Warning';
+import { Warning } from '../../components/AccountPage/Warning';
 
 describe('Warning component', () => {
     it('should display a div with the passed in text', () => {

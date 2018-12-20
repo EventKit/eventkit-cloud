@@ -1,6 +1,5 @@
-import PropTypes from 'prop-types';
-import React, { Component } from 'react';
-import { withTheme } from '@material-ui/core/styles';
+import * as React from 'react';
+import { withTheme, Theme } from '@material-ui/core/styles';
 import Checkbox from '@material-ui/core/Checkbox';
 import Card from '@material-ui/core/Card';
 import CardHeader from '@material-ui/core/CardHeader';
@@ -10,14 +9,26 @@ import IconButton from '@material-ui/core/IconButton';
 import ExpandMoreIcon from '@material-ui/icons/ExpandMore';
 import CustomScrollbar from '../CustomScrollbar';
 
-export class UserLicense extends Component {
+export interface Props {
+    license: Eventkit.License;
+    checked: boolean;
+    onCheck: (slug: string, checked: boolean) => void;
+    disabled: boolean;
+    theme: Eventkit.Theme & Theme;
+}
+
+export interface State {
+    expanded: boolean;
+}
+
+export class UserLicense extends React.Component<Props, State> {
     constructor(props) {
         super(props);
         this.handleToggle = this.handleToggle.bind(this);
         this.state = { expanded: false };
     }
 
-    handleToggle() {
+    private handleToggle() {
         this.setState(state => ({ expanded: !state.expanded }));
     }
 
@@ -43,7 +54,7 @@ export class UserLicense extends Component {
             expand: {
                 width: '24px',
                 height: '24px',
-                float: 'right',
+                float: 'right' as 'right',
                 transform: 'rotate(0deg)',
                 transition: 'transform 150ms cubic-bezier(0.4, 0, 0.2, 1) 0ms',
             },
@@ -101,17 +112,5 @@ export class UserLicense extends Component {
         );
     }
 }
-
-UserLicense.propTypes = {
-    license: PropTypes.shape({
-        slug: PropTypes.string,
-        name: PropTypes.string,
-        text: PropTypes.string,
-    }).isRequired,
-    checked: PropTypes.bool.isRequired,
-    onCheck: PropTypes.func.isRequired,
-    disabled: PropTypes.bool.isRequired,
-    theme: PropTypes.object.isRequired,
-};
 
 export default withTheme()(UserLicense);
