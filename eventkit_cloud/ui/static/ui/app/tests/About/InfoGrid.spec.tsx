@@ -1,20 +1,18 @@
-import React from 'react';
+import * as React from 'react';
 import { mount } from 'enzyme';
 import GridList from '@material-ui/core/GridList';
 import GridTile from '@material-ui/core/GridListTile';
-import { InfoGrid } from '../../components/About/InfoGrid';
+import { InfoGrid, Props } from '../../components/About/InfoGrid';
 
 describe('InfoGrid component', () => {
-    const getProps = () => (
-        {
-            ...global.eventkit_test_props,
-            title: 'Test Header',
-            items: [
-                { title: 'item 1', body: 'body 1' },
-                { title: 'item 2', body: 'body 2' },
-            ],
-        }
-    );
+    const getProps = (): Props => ({
+        ...(global as any).eventkit_test_props,
+        title: 'Test Header',
+        items: [
+            { title: 'item 1', body: 'body 1' },
+            { title: 'item 2', body: 'body 2' },
+        ],
+    });
 
     const getWrapper = props => (
         mount(<InfoGrid {...props} />)

@@ -1,15 +1,13 @@
-import React from 'react';
+import * as React from 'react';
 import { mount } from 'enzyme';
-import { InfoParagraph } from '../../components/About/InfoParagraph';
+import { InfoParagraph, Props } from '../../components/About/InfoParagraph';
 
 describe('InfoParagraph component', () => {
-    const getProps = () => (
-        {
-            ...global.eventkit_test_props,
-            title: 'Test Header',
-            body: 'Test Body',
-        }
-    );
+    const getProps = (): Props => ({
+        ...(global as any).eventkit_test_props,
+        title: 'Test Header',
+        body: 'Test Body',
+    });
 
     const getWrapper = props => (
         mount(<InfoParagraph {...props} />)

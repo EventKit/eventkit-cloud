@@ -1,17 +1,26 @@
-import PropTypes from 'prop-types';
-import React, { Component } from 'react';
+import * as React from 'react';
 import GridList from '@material-ui/core/GridList';
 import GridTile from '@material-ui/core/GridListTile';
 
-export class InfoGrid extends Component {
+export interface Props {
+    title: any;
+    items: Array<{
+        title: string;
+        body: string;
+    }>;
+    titleStyle?: object;
+    itemStyle?: object;
+}
+
+export class InfoGrid extends React.Component<Props, {}> {
     render() {
         const styles = {
             title: {
-                textAlign: 'center',
+                textAlign: 'center' as 'center',
                 ...this.props.titleStyle,
             },
             item: {
-                wordWrap: 'break-word',
+                wordWrap: 'break-word' as 'break-word',
                 ...this.props.itemStyle,
             },
         };
@@ -19,7 +28,7 @@ export class InfoGrid extends Component {
         return (
             <div>
                 <h3 style={styles.title}><strong>{this.props.title}</strong></h3>
-                <GridList cellHeight="auto" padding={12}>
+                <GridList cellHeight="auto" spacing={12}>
                     {this.props.items.map(item => (
                         <GridTile
                             key={item.title}
@@ -34,24 +43,5 @@ export class InfoGrid extends Component {
         );
     }
 }
-
-InfoGrid.defaultProps = {
-    titleStyle: {},
-    itemStyle: {},
-};
-
-InfoGrid.propTypes = {
-    title: PropTypes.oneOfType([
-        PropTypes.string,
-        PropTypes.node,
-        PropTypes.arrayOf(PropTypes.node),
-    ]).isRequired,
-    items: PropTypes.arrayOf(PropTypes.shape({
-        title: PropTypes.string,
-        body: PropTypes.string,
-    })).isRequired,
-    titleStyle: PropTypes.object,
-    itemStyle: PropTypes.object,
-};
 
 export default InfoGrid;
