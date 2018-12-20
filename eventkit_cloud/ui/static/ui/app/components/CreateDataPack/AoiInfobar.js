@@ -268,12 +268,10 @@ export class AoiInfobar extends Component {
         const noArea = !allHaveArea(this.props.aoiInfo.geojson);
         const originalArea = getSqKmString(this.props.aoiInfo.originalGeojson);
         const totalArea = getSqKmString(this.props.aoiInfo.geojson);
-        const { maxVectorAoiSqKm, maxRasterAoiSqKm } = this.props;
-        const max = Math.max(maxVectorAoiSqKm, maxRasterAoiSqKm);
+        const { max } = this.props.limits;
         const area = getSqKm(this.props.aoiInfo.geojson);
-        const over = max && max < area;
-        const vectorOver = area > maxVectorAoiSqKm;
-        const rasterOver = area > maxRasterAoiSqKm;
+        const overAll = max && max < area;
+        const overSome = max && this.props.limits.sizes.some(size => size < area);
 
         const bufferAlert = (
             <AlertCallout
@@ -294,7 +292,7 @@ export class AoiInfobar extends Component {
                 title="Your AOI is too large!"
                 body={
                     <p>
-                        The max size allowed for the AOI is {numeral(maxVectorAoiSqKm).format('0,0')} sq km and yours is {totalArea}.
+                        The max size allowed for the AOI is {numeral(max).format('0,0')} sq km and yours is {totalArea}.
                         Please reduce the size of your polygon and/or buffer.
                     </p>
                 }
@@ -302,39 +300,25 @@ export class AoiInfobar extends Component {
             />
         );
 
-        const rasterAlert = (
+        const overSomeAlert = (
             <AlertCallout
-                className="qa-AoiInfobar-alert-raster"
+                className="qa-AoiInfobar-alert-overSome"
                 onClose={this.closeAlert}
                 orientation="top"
-                title="Your AOI is too large for raster data."
+                title="Your AOI is too large for some of the data sources."
                 body={
                     <p>
-                        The maximum AOI size for raster sources is {numeral(maxRasterAoiSqKm).format('0,0')} sq km
-                         and your current AOI is {totalArea}.
-                         If you plan to include raster data in your DataPack you need to reduce the size of your polygon and/or buffer.
+                        The current AOI size of  {totalArea}, exceeds the limit set for at least one data source.
+                         If you plan to include all available data sources for this area in your DataPack you,
+                          need to reduce the size of your polygon and/or buffer
+                           to {numeral(this.props.limits.sizes[0]).format('0,0')} sq km.
+                            Specifics for each Data Provider are on the next page.
                     </p>
                 }
                 style={{ ...styles.alertCalloutTop, color: colors.black }}
             />
         );
 
-        const vectorAlert = (
-            <AlertCallout
-                className="qa-AoiInfobar-alert-vector"
-                onClose={this.closeAlert}
-                orientation="top"
-                title="Your AOI is too large for vector data."
-                body={
-                    <p>
-                        The maximum AOI size for vector sources is {numeral(maxVectorAoiSqKm).format('0,0')} sq km
-                         and your current AOI is {totalArea}.
-                         If you plan to include vector data in your DataPack you need to reduce the size of your polygon and/or buffer.
-                    </p>
-                }
-                style={{ ...styles.alertCalloutTop, color: colors.black }}
-            />
-        );
 
         let bufferWarning = null;
         let sizeWarning = null;
@@ -353,7 +337,7 @@ export class AoiInfobar extends Component {
                     }
                 </div>
             );
-        } else if (over) {
+        } else if (overAll) {
             sizeWarning = (
                 <div style={{ position: 'relative', display: 'inline-block', marginLeft: '10px' }}>
                     <AlertWarning
@@ -368,7 +352,7 @@ export class AoiInfobar extends Component {
                     }
                 </div>
             );
-        } else if (vectorOver) {
+        } else if (overSome) {
             sizeWarning = (
                 <div style={{ position: 'relative', display: 'inline-block', marginLeft: '10px' }}>
                     <AlertWarning
@@ -377,22 +361,7 @@ export class AoiInfobar extends Component {
                         onClick={this.showAlert}
                     />
                     {this.state.showAlert ?
-                        vectorAlert
-                        :
-                        null
-                    }
-                </div>
-            );
-        } else if (rasterOver) {
-            sizeWarning = (
-                <div style={{ position: 'relative', display: 'inline-block', marginLeft: '10px' }}>
-                    <AlertWarning
-                        className="qa-AoiInfobar-alert-icon"
-                        style={{ ...styles.alert, fill: colors.over }}
-                        onClick={this.showAlert}
-                    />
-                    {this.state.showAlert ?
-                        rasterAlert
+                        overSomeAlert
                         :
                         null
                     }
@@ -411,10 +380,7 @@ export class AoiInfobar extends Component {
                                 </div>
                                 <div className="qa-AoiInfobar-maxSize" style={styles.maxSize}>
                                     <div style={{ paddingRight: '5px' }}>
-                                        {maxVectorAoiSqKm ? `Vector: ${numeral(maxVectorAoiSqKm).format('0,0')} sq km max;` : null}
-                                    </div>
-                                    <div style={{ paddingRight: '5px' }}>
-                                        {maxRasterAoiSqKm ? `Raster: ${numeral(maxRasterAoiSqKm).format('0,0')} sq km max;` : null}
+                                        {max ? `${numeral(max).format('0,0')} sq km max;` : null}
                                     </div>
                                 </div>
                             </div>
@@ -429,7 +395,7 @@ export class AoiInfobar extends Component {
                                     </div>
                                     <Divider style={{ marginTop: '10px', marginBottom: '10px' }} />
                                     <div>
-                                        <strong style={{ color: over ? colors.warning : 'initial' }}>
+                                        <strong style={{ color: overAll ? colors.warning : 'initial' }}>
                                             {totalArea}
                                         </strong>
                                     </div>
@@ -469,7 +435,7 @@ export class AoiInfobar extends Component {
                                     </div>
                                     <Divider style={{ marginTop: '10px', marginBottom: '10px' }} />
                                     <div style={{ position: 'relative' }}>
-                                        <strong style={{ color: over ? colors.warning : 'initial' }}>
+                                        <strong style={{ color: overAll ? colors.warning : 'initial' }}>
                                              TOTAL AOI
                                         </strong>
                                         {sizeWarning}
@@ -485,12 +451,11 @@ export class AoiInfobar extends Component {
     }
 }
 
-AoiInfobar.defaultProps = {
-    maxVectorAoiSqKm: null,
-    maxRasterAoiSqKm: null,
-};
-
 AoiInfobar.propTypes = {
+    limits: PropTypes.shape({
+        max: PropTypes.number,
+        sizes: PropTypes.array,
+    }).isRequired,
     aoiInfo: PropTypes.shape({
         geojson: PropTypes.object,
         originalGeojson: PropTypes.object,
@@ -501,8 +466,6 @@ AoiInfobar.propTypes = {
         buffer: PropTypes.number,
     }).isRequired,
     showRevert: PropTypes.bool.isRequired,
-    maxVectorAoiSqKm: PropTypes.number,
-    maxRasterAoiSqKm: PropTypes.number,
     onRevertClick: PropTypes.func.isRequired,
     clickZoomToSelection: PropTypes.func.isRequired,
     handleBufferClick: PropTypes.func.isRequired,

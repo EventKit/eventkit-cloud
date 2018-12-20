@@ -741,9 +741,7 @@ export class ExportAOI extends Component {
 
     shouldEnableNext(geojson) {
         const area = allHaveArea(geojson);
-        const vectorMax = this.context.config.MAX_VECTOR_AOI_SQ_KM;
-        const rasterMax = this.context.config.MAX_RASTER_AOI_SQ_KM;
-        const max = Math.max(vectorMax, rasterMax);
+        const { max } = this.props.limits;
         if (!max || !area) return area;
         return getSqKm(geojson) <= max;
     }
@@ -926,8 +924,7 @@ export class ExportAOI extends Component {
                         onRevertClick={this.openResetDialog}
                         clickZoomToSelection={this.handleZoomToSelection}
                         handleBufferClick={this.openBufferDialog}
-                        maxVectorAoiSqKm={this.context.config.MAX_VECTOR_AOI_SQ_KM}
-                        maxRasterAoiSqKm={this.context.config.MAX_RASTER_AOI_SQ_KM}
+                        limits={this.props.limits}
                     />
                     <SearchAOIToolbar
                         handleSearch={this.checkForSearchUpdate}
@@ -956,8 +953,7 @@ export class ExportAOI extends Component {
                     <BufferDialog
                         show={this.state.showBuffer}
                         aoi={aoi}
-                        maxVectorAoiSqKm={this.context.config.MAX_VECTOR_AOI_SQ_KM}
-                        maxRasterAoiSqKm={this.context.config.MAX_RASTER_AOI_SQ_KM}
+                        limits={this.props.limits}
                         value={this.props.aoiInfo.buffer}
                         valid={this.state.validBuffer}
                         handleBufferClick={this.handleBufferClick}
@@ -1000,6 +996,10 @@ ExportAOI.propTypes = {
         description: PropTypes.string,
         selectionType: PropTypes.string,
         buffer: PropTypes.number,
+    }).isRequired,
+    limits: PropTypes.shape({
+        max: PropTypes.number,
+        sizes: PropTypes.array,
     }).isRequired,
     importGeom: PropTypes.object.isRequired,
     drawer: PropTypes.string.isRequired,

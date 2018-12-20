@@ -28,6 +28,7 @@ import PageLoading from '../common/PageLoading';
 export class BreadcrumbStepper extends React.Component {
     constructor() {
         super();
+        this.getProviders = this.getProviders.bind(this);
         this.getStepLabel = this.getStepLabel.bind(this);
         this.handleNext = this.handleNext.bind(this);
         this.handleSubmit = this.handleSubmit.bind(this);
@@ -47,17 +48,21 @@ export class BreadcrumbStepper extends React.Component {
             loading: false,
             showLeaveWarningDialog: false,
             modified: false,
+            limits: {
+                max: 0,
+                sizes: [],
+            },
         };
         this.leaveRoute = null;
     }
 
-    componentDidMount() {
+    async componentDidMount() {
         // Clone will mount the stepper and we don't want it disabled
         // if there's information in the exportInfo props
         if (this.props.exportInfo.exportName === '') {
             this.props.setNextDisabled();
         }
-        this.props.getProviders();
+        this.getProviders();
         this.props.getFormats();
 
         const route = this.props.routes[this.props.routes.length - 1];
@@ -86,6 +91,24 @@ export class BreadcrumbStepper extends React.Component {
         this.props.clearAoiInfo();
         this.props.clearExportInfo();
         this.props.clearJobInfo();
+    }
+
+    async getProviders() {
+        await this.props.getProviders();
+        let max = 0;
+        const sizes = [];
+        this.props.providers.forEach((provider) => {
+            const providerMax = parseFloat(provider.max_selection);
+            sizes.push(providerMax);
+            if (providerMax > max) {
+                max = providerMax;
+            }
+        });
+        const limits = {
+            max,
+            sizes: sizes.sort((a, b) => a - b),
+        };
+        this.setState({ limits });
     }
 
     getErrorMessage(title, detail, ix) {
@@ -148,6 +171,7 @@ export class BreadcrumbStepper extends React.Component {
             case 0:
                 return (
                     <ExportAOI
+                        limits={this.state.limits}
                         walkthroughClicked={this.props.walkthroughClicked}
                         onWalkthroughReset={this.props.onWalkthroughReset}
                     />
@@ -173,6 +197,7 @@ export class BreadcrumbStepper extends React.Component {
             default:
                 return (
                     <ExportAOI
+                        limits={this.state.limits}
                         walkthroughClicked={this.props.walkthroughClicked}
                         onWalkthroughReset={this.props.onWalkthroughReset}
                     />
@@ -358,7 +383,6 @@ export class BreadcrumbStepper extends React.Component {
 
     render() {
         const { colors } = this.props.theme.eventkit;
-
         let message = [];
         if (this.state.error) {
             const responseError = { ...this.state.error };
@@ -455,9 +479,9 @@ function mapDispatchToProps(dispatch) {
         submitJob: (data) => {
             dispatch(submitJob(data));
         },
-        getProviders: () => {
-            dispatch(getProviders());
-        },
+        getProviders: () => (
+            dispatch(getProviders())
+        ),
         setNextDisabled: () => {
             dispatch(stepperNextDisabled());
         },
