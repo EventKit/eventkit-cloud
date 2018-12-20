@@ -1,0 +1,26 @@
+version: '3'
+services:
+  selenium:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    working_dir: /root/
+    depends_on:
+      - selenium-standalone-chrome
+    links:
+      - selenium-standalone-chrome
+    volumes:
+      - ./:/root/
+    environment:
+      ek_username:
+      ek_password:
+      ek_url:
+      SELENIUM_HOST: selenium-standalone-chrome
+      SELENIUM_PORT: 4444
+    command: mvn clean test
+  selenium-standalone-chrome:
+    image: selenium/standalone-chrome:3.141.59
+    volumes:
+      - /dev/shm:/dev/shm
+    expose:
+      - 4444

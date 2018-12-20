@@ -23,7 +23,13 @@ public class Utils {
      * @return The Remote Chrome Driver.
      */
     public static WebDriver getChromeRemoteDriver() throws MalformedURLException {
-        String gridUrl = "http://localhost:4444/wd/hub";
+        String gridHost = (System.getenv("SELENIUM_HOST") != null)
+                ? System.getenv("SELENIUM_HOST")
+                : "localhost";
+        String gridPort = (System.getenv("SELENIUM_PORT") != null)
+                ? System.getenv("SELENIUM_PORT")
+                : "4444";
+        String gridUrl = String.format("http://%s:%s/wd/hub", gridHost, gridPort);
         ChromeOptions options = new ChromeOptions();
         options.addArguments("--ignore-certificate-errors");
         options.setCapability("acceptInsecureCerts", true);
