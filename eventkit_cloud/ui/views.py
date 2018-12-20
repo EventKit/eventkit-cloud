@@ -16,7 +16,6 @@ from django.views.decorators.http import require_http_methods
 from rest_framework.renderers import JSONRenderer
 
 from eventkit_cloud.api.serializers import UserDataSerializer
-# from eventkit_cloud.utils.stats import get_size_estimate
 from eventkit_cloud.ui.helpers import file_to_geojson, set_session_user_last_active_at, is_mgrs, is_lat_lon
 from eventkit_cloud.utils.geocoding.coordinate_converter import CoordinateConverter
 from eventkit_cloud.utils.geocoding.geocode import Geocode

@@ -145,6 +145,7 @@ class DataProviderTaskRecord(UIDMixin, TimeStampedModelMixin, TimeTrackingModelM
     run = models.ForeignKey(ExportRun, related_name='provider_tasks', on_delete=models.CASCADE)
     status = models.CharField(blank=True, max_length=20, db_index=True)
     display = models.BooleanField(default=False)
+    estimated_size = models.FloatField(null=True, blank=True)
 
     class Meta:
         ordering = ['name']
