@@ -34,15 +34,14 @@ node {
 def removeVolumes() {
     sh """
     python - << END
-    import yaml
+import yaml
 
-    data = {}
-    with open('environment-dev.yml', 'r') as yaml_file:
+data = {}
+with open('environment-dev.yml', 'r') as yaml_file:
     data = yaml.load(yaml_file)
 
-    with open('environment-dev.yml', 'w') as outfile:
+with open('environment-dev.yml', 'w') as outfile:
     yaml.dump(data, outfile, default_flow_style=False)
-
 END
     """
 }
