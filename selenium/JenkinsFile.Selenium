@@ -37,10 +37,10 @@ def removeVolumes() {
 import yaml
 
 data = {}
-with open('environment-dev.yml', 'r') as yaml_file:
+with open('docker-compose.yml', 'r') as yaml_file:
     data = yaml.load(yaml_file)
 
-with open('environment-dev.yml', 'w') as outfile:
+with open('docker-compose.yml', 'w') as outfile:
     yaml.dump(data, outfile, default_flow_style=False)
 END
     """
