@@ -10,7 +10,4 @@ COPY --chown=root ./ /var/lib/eventkit/selenium
 
 ENV JAVA_HOME=/usr/lib/jvm/java-8-openjdk-amd64
 
-RUN ls
-RUN pwd
-
 CMD ['mvn', 'clean', 'test']

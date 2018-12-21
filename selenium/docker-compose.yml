@@ -4,7 +4,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    working_dir: /root/
+    working_dir: /var/lib/eventkit/selenium
     depends_on:
       - selenium-standalone-chrome
     links:
