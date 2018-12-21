@@ -6,10 +6,11 @@ WORKDIR /var/lib/eventkit/selenium
 
 RUN apt-get update && apt-get install -y maven openjdk-8-jdk-headless && apt-get clean
 
-USER seluser
-
-COPY --chown=seluser ./ /var/lib/eventkit/selenium
+COPY --chown=root ./ /var/lib/eventkit/selenium
 
 ENV JAVA_HOME=/usr/lib/jvm/java-8-openjdk-amd64
+
+RUN ls
+RUN pwd
 
 CMD ['mvn', 'clean', 'test']
