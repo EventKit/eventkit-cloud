@@ -1,7 +1,6 @@
-import PropTypes from 'prop-types';
-import React, { Component } from 'react';
+import * as React from 'react';
 import { connect } from 'react-redux';
-import { withTheme } from '@material-ui/core/styles';
+import { withTheme, Theme } from '@material-ui/core/styles';
 import Joyride from 'react-joyride';
 import Help from '@material-ui/icons/Help';
 import ButtonBase from '@material-ui/core/ButtonBase';
@@ -15,8 +14,25 @@ import CustomScrollbar from '../CustomScrollbar';
 import { DrawerTimeout } from '../../actions/uiActions';
 import { joyride } from '../../joyride.config';
 
+export interface Props {
+    user: Eventkit.Store.User;
+    licenses: Eventkit.Store.Licenses;
+    getLicenses: () => void;
+    patchUser: (licenses, username) => void;
+    drawer: string;
+    openDrawer: () => void;
+    theme: Eventkit.Theme & Theme;
+}
 
-export class Account extends Component {
+export interface State {
+    acceptedLicenses: { [slug: string]: boolean };
+    showSavedMessage: boolean;
+    steps: any[];
+    isRunning: boolean;
+}
+
+export class Account extends React.Component<Props, State> {
+    private joyride;
     constructor(props) {
         super(props);
         this.handleCheck = this.handleCheck.bind(this);
@@ -51,13 +67,13 @@ export class Account extends Component {
         }
     }
 
-    handleCheck(slug, checked) {
+    private handleCheck(slug, checked) {
         const licenses = this.state.acceptedLicenses;
         licenses[slug] = checked;
         this.setState({ acceptedLicenses: licenses });
     }
 
-    handleAll(event, checked) {
+    private handleAll(event, checked) {
         const licenses = { ...this.state.acceptedLicenses };
         // for(const license in licenses) {
         Object.keys(licenses).forEach((license) => {
@@ -71,18 +87,18 @@ export class Account extends Component {
         this.setState({ acceptedLicenses: licenses });
     }
 
-    handleSubmit() {
+    private handleSubmit() {
         this.props.patchUser(this.state.acceptedLicenses, this.props.user.data.user.username);
     }
 
-    joyrideAddSteps(steps) {
+    private joyrideAddSteps(steps) {
         let newSteps = steps;
 
         if (!Array.isArray(newSteps)) {
             newSteps = [newSteps];
         }
 
-        if (!newSteps.length) return;
+        if (!newSteps.length) { return; }
 
         this.setState((currentState) => {
             const nextState = { ...currentState };
@@ -91,7 +107,7 @@ export class Account extends Component {
         });
     }
 
-    callback(data) {
+    private callback(data) {
         if (data.action === 'close' || data.action === 'skip' || data.type === 'finished') {
             this.setState({ isRunning: false });
             this.joyride.reset(true);
@@ -109,7 +125,7 @@ export class Account extends Component {
         }
     }
 
-    handleJoyride() {
+    private handleJoyride() {
         if (this.state.isRunning === true) {
             this.setState({ isRunning: false });
             this.joyride.reset(true);
@@ -137,7 +153,7 @@ export class Account extends Component {
                 height: 'calc(100vh - 130px)',
                 width: '100%',
                 margin: 'auto',
-                overflowY: 'hidden',
+                overflowY: 'hidden' as 'hidden',
             },
             bodyContent: {
                 padding: '30px 34px',
@@ -191,10 +207,15 @@ export class Account extends Component {
                     showSkipButton
                     showStepsProgress
                     locale={{
+                        // @ts-ignore
                         back: (<span>Back</span>),
+                        // @ts-ignore
                         close: (<span>Close</span>),
+                        // @ts-ignore
                         last: (<span>Done</span>),
+                        // @ts-ignore
                         next: (<span>Next</span>),
+                        // @ts-ignore
                         skip: (<span>Skip</span>),
                     }}
                     run={isRunning}
@@ -240,16 +261,6 @@ export class Account extends Component {
         );
     }
 }
-
-Account.propTypes = {
-    user: PropTypes.object.isRequired,
-    licenses: PropTypes.object.isRequired,
-    getLicenses: PropTypes.func.isRequired,
-    patchUser: PropTypes.func.isRequired,
-    drawer: PropTypes.string.isRequired,
-    openDrawer: PropTypes.func.isRequired,
-    theme: PropTypes.object.isRequired,
-};
 
 function mapStateToProps(state) {
     return {

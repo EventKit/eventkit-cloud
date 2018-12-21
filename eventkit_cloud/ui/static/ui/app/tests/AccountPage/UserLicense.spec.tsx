@@ -1,6 +1,6 @@
-import React from 'react';
+import * as React from 'react';
 import { mount } from 'enzyme';
-import sinon from 'sinon';
+import * as sinon from 'sinon';
 import CheckBox from '@material-ui/core/Checkbox';
 import Card from '@material-ui/core/Card';
 import CardHeader from '@material-ui/core/CardHeader';
@@ -11,10 +11,10 @@ import UserLicense from '../../components/AccountPage/UserLicense';
 
 describe('User License component', () => {
     const getProps = () => ({
-        ...global.eventkit_test_props,
+        ...(global as any).eventkit_test_props,
         license: { slug: 'test-license', name: 'license name', text: 'license text' },
         checked: false,
-        onCheck: () => {},
+        onCheck: sinon.spy(),
         disabled: false,
     });
 

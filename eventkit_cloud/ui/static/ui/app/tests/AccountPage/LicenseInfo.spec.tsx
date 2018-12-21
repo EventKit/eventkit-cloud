@@ -1,15 +1,15 @@
-import React from 'react';
+import * as React from 'react';
+import * as sinon from 'sinon';
 import { shallow } from 'enzyme';
 import Checkbox from '@material-ui/core/Checkbox';
-import { LicenseInfo } from '../../components/AccountPage/LicenseInfo';
+import { LicenseInfo, Props } from '../../components/AccountPage/LicenseInfo';
 import Warning from '../../components/AccountPage/Warning';
 import UserLicense from '../../components/AccountPage/UserLicense';
 
-
 describe('LicenseInfo component', () => {
-    const getProps = () => (
+    const getProps = (): Props => (
         {
-            ...global.eventkit_test_props,
+            ...(global as any).eventkit_test_props,
             user: { data: { accepted_licenses: { test1: false, test2: false } } },
             licenses: {
                 licenses: [
@@ -18,18 +18,21 @@ describe('LicenseInfo component', () => {
                 ],
             },
             acceptedLicenses: { test1: false, test2: false },
-            onLicenseCheck: () => {},
-            onAllCheck: () => {},
+            onLicenseCheck: sinon.spy(),
+            onAllCheck: sinon.spy(),
         }
     );
 
-    const getWrapper = props => (
-        shallow(<LicenseInfo {...props} />)
-    );
+    let props;
+    let wrapper;
+    const setup = (customProps = {}) => {
+        props = { ...getProps(), ...customProps };
+        wrapper = shallow(<LicenseInfo {...props} />);
+    };
+
+    beforeEach(setup);
 
     it('should render a title, subtitle, all checkboxes, two UserLicenses, and the agreement warning', () => {
-        const props = getProps();
-        const wrapper = getWrapper(props);
         expect(wrapper.find('h4')).toHaveLength(1);
         expect(wrapper.find('h4').text()).toEqual('Licenses and Terms of Use');
         expect(wrapper.find('div').at(1).text())
@@ -42,10 +45,10 @@ describe('LicenseInfo component', () => {
     });
 
     it('one of the UserLicenses should be checked and disabled', () => {
-        const props = getProps();
-        props.user.data.accepted_licenses.test1 = true;
-        props.acceptedLicenses.test1 = true;
-        const wrapper = getWrapper(props);
+        const nextProps = getProps();
+        nextProps.user.data.accepted_licenses.test1 = true;
+        nextProps.acceptedLicenses.test1 = true;
+        wrapper.setProps(nextProps);
         const userOne = wrapper.find(UserLicense).at(0).shallow();
         const userTwo = wrapper.find(UserLicense).at(1).shallow();
         expect(userOne.props().checked).toBe(true);
@@ -55,9 +58,9 @@ describe('LicenseInfo component', () => {
     });
 
     it('one of the UserLicenses should be checked but not disabled', () => {
-        const props = getProps();
-        props.acceptedLicenses.test1 = true;
-        const wrapper = getWrapper(props);
+        const nextProps = getProps();
+        nextProps.acceptedLicenses.test1 = true;
+        wrapper.setProps(nextProps);
         const userOne = wrapper.find(UserLicense).at(0).shallow();
         const userTwo = wrapper.find(UserLicense).at(1).shallow();
         expect(userOne.props().checked).toBe(true);
@@ -67,10 +70,10 @@ describe('LicenseInfo component', () => {
     });
 
     it('should have all checkboxes checked but not disabled', () => {
-        const props = getProps();
-        props.acceptedLicenses.test1 = true;
-        props.acceptedLicenses.test2 = true;
-        const wrapper = getWrapper(props);
+        const nextProps = getProps();
+        nextProps.acceptedLicenses.test1 = true;
+        nextProps.acceptedLicenses.test2 = true;
+        wrapper.setProps(nextProps);
         const userOne = wrapper.find(UserLicense).at(0).shallow();
         const userTwo = wrapper.find(UserLicense).at(1).shallow();
         expect(wrapper.find(Checkbox).props().checked).toBe(true);
@@ -82,12 +85,12 @@ describe('LicenseInfo component', () => {
     });
 
     it('should have all checkboxes checked and disabled and not show the usage warning', () => {
-        const props = getProps();
-        props.acceptedLicenses.test1 = true;
-        props.acceptedLicenses.test2 = true;
-        props.user.data.accepted_licenses.test1 = true;
-        props.user.data.accepted_licenses.test2 = true;
-        const wrapper = getWrapper(props);
+        const nextProps = getProps();
+        nextProps.acceptedLicenses.test1 = true;
+        nextProps.acceptedLicenses.test2 = true;
+        nextProps.user.data.accepted_licenses.test1 = true;
+        nextProps.user.data.accepted_licenses.test2 = true;
+        wrapper.setProps(nextProps);
         const userOne = wrapper.find(UserLicense).at(0).shallow();
         const userTwo = wrapper.find(UserLicense).at(1).shallow();
         expect(wrapper.find(Warning)).toHaveLength(0);
@@ -100,18 +103,18 @@ describe('LicenseInfo component', () => {
     });
 
     it('allTrue should return false', () => {
-        const props = getProps();
-        props.acceptedLicenses.test1 = true;
-        props.acceptedLicenses.tes2 = false;
-        const wrapper = getWrapper(props);
-        expect(wrapper.instance().allTrue(props.acceptedLicenses)).toBe(false);
+        const nextProps = getProps();
+        nextProps.acceptedLicenses.test1 = true;
+        nextProps.acceptedLicenses.tes2 = false;
+        wrapper.setProps(nextProps);
+        expect(wrapper.instance().allTrue(nextProps.acceptedLicenses)).toBe(false);
     });
 
     it('allTrue should return true', () => {
-        const props = getProps();
-        props.acceptedLicenses.test1 = true;
-        props.acceptedLicenses.test2 = true;
-        const wrapper = getWrapper(props);
-        expect(wrapper.instance().allTrue(props.acceptedLicenses)).toBe(true);
+        const nextProps = getProps();
+        nextProps.acceptedLicenses.test1 = true;
+        nextProps.acceptedLicenses.test2 = true;
+        wrapper.setProps(nextProps);
+        expect(wrapper.instance().allTrue(nextProps.acceptedLicenses)).toBe(true);
     });
 });
