@@ -1,7 +1,6 @@
-/* eslint prefer-destructuring: 0 */
-import React from 'react';
+import * as React from 'react';
 import { shallow } from 'enzyme';
-import sinon from 'sinon';
+import * as sinon from 'sinon';
 import { browserHistory } from 'react-router';
 import PageLoading from '../../components/common/PageLoading';
 import { DashboardPage } from '../../components/DashboardPage/DashboardPage';
@@ -117,7 +116,7 @@ describe('DashboardPage component', () => {
             getGroups: sinon.spy(),
             getProviders: sinon.spy(),
             getNotifications: sinon.spy(),
-            ...global.eventkit_test_props,
+            ...(global as any).eventkit_test_props,
         };
     }
 
@@ -130,7 +129,7 @@ describe('DashboardPage component', () => {
         instance = wrapper.instance();
 
         instance.joyride = {
-            reset: () => {},
+            reset: sinon.spy(),
         };
     }
 

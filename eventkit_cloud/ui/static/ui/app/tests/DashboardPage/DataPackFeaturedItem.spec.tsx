@@ -1,9 +1,8 @@
-/* eslint function-paren-newline: 0 */
-import React from 'react';
+import * as  React from 'react';
 import { Link } from 'react-router';
-import sinon from 'sinon';
+import * as sinon from 'sinon';
 import { shallow } from 'enzyme';
-import moment from 'moment';
+import * as moment from 'moment';
 import CardHeader from '@material-ui/core/CardHeader';
 import CardContent from '@material-ui/core/CardContent';
 import { DataPackFeaturedItem } from '../../components/DashboardPage/DataPackFeaturedItem';
@@ -27,7 +26,8 @@ describe('DataPackFeaturedItem component', () => {
             },
             gridName: 'test',
             index: 0,
-            ...global.eventkit_test_props,
+            classes: {},
+            ...(global as any).eventkit_test_props,
         };
     }
 
@@ -36,7 +36,9 @@ describe('DataPackFeaturedItem component', () => {
             ...defaultProps(),
             ...propsOverride,
         };
-        wrapper = shallow(<DataPackFeaturedItem {...props} />);
+        wrapper = shallow(<DataPackFeaturedItem {...props} />, {
+            context: { config: { BASEMAP_URL: 'some url' } },
+        });
         instance = wrapper.instance();
     }
 
@@ -45,11 +47,7 @@ describe('DataPackFeaturedItem component', () => {
     }
 
     beforeAll(() => {
-        DataPackFeaturedItem.prototype.initMap = sinon.spy();
-    });
-
-    afterAll(() => {
-        DataPackFeaturedItem.prototype.initMap.restore();
+        sinon.stub(DataPackFeaturedItem.prototype, 'initMap');
     });
 
     beforeEach(setup);
