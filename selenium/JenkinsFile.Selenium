@@ -34,7 +34,7 @@ node {
 def removeVolumes() {
     sh """
     python - << END
-import yaml
+    import yaml
 
     data = {}
     with open('environment-dev.yml', 'r') as yaml_file:
