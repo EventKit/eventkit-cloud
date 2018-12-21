@@ -98,6 +98,9 @@ export class BreadcrumbStepper extends React.Component {
         let max = 0;
         const sizes = [];
         this.props.providers.forEach((provider) => {
+            if (!provider.display) {
+                return;
+            }
             const providerMax = parseFloat(provider.max_selection);
             sizes.push(providerMax);
             if (providerMax > max) {
