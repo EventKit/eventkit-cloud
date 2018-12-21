@@ -1,15 +1,28 @@
-import PropTypes from 'prop-types';
-import React from 'react';
-import { withTheme } from '@material-ui/core/styles';
+import * as React from 'react';
+import { withTheme, Theme } from '@material-ui/core/styles';
 import Button from '@material-ui/core/Button';
 import KeyboardArrowDown from '@material-ui/icons/KeyboardArrowDown';
 import KeyboardArrowUp from '@material-ui/icons/KeyboardArrowUp';
 
-export class LoadButtons extends React.Component {
+export interface Props {
+    style: object;
+    range: string;
+    handleLoadLess: () => void;
+    handleLoadMore: () => void;
+    loadLessDisabled: boolean;
+    loadMoreDisabled: boolean;
+    theme: Eventkit.Theme & Theme;
+}
+
+export interface State {
+    width: string | number;
+}
+
+export class LoadButtons extends React.Component<Props, State> {
+    private self = React.createRef<HTMLDivElement>();
     constructor(props) {
         super(props);
         this.setWidth = this.setWidth.bind(this);
-        this.self = React.createRef();
         this.state = {
             width: '100vw',
         };
@@ -23,7 +36,7 @@ export class LoadButtons extends React.Component {
         this.setWidth();
     }
 
-    setWidth() {
+    private setWidth() {
         const width = this.self.current.clientWidth;
         if (width !== this.state.width) {
             this.setState({ width });
@@ -36,9 +49,9 @@ export class LoadButtons extends React.Component {
         const range = this.props.range ? this.props.range.split('/') : null;
         const inlineStyles = {
             container: {
-                textAlign: 'center',
+                textAlign: 'center' as 'center',
                 margin: '0px 10px',
-                position: 'relative',
+                position: 'relative' as 'relative',
                 ...this.props.style,
             },
             range: this.state.width < 768 ?
@@ -50,7 +63,7 @@ export class LoadButtons extends React.Component {
                 :
                 {
                     display: 'inline-block',
-                    position: 'absolute',
+                    position: 'absolute' as 'absolute',
                     color: colors.text_primary,
                     lineHeight: '36px',
                     right: '10px',
@@ -95,21 +108,5 @@ export class LoadButtons extends React.Component {
         );
     }
 }
-
-LoadButtons.propTypes = {
-    style: PropTypes.object,
-    range: PropTypes.string.isRequired,
-    handleLoadLess: PropTypes.func,
-    handleLoadMore: PropTypes.func.isRequired,
-    loadLessDisabled: PropTypes.bool,
-    loadMoreDisabled: PropTypes.bool.isRequired,
-    theme: PropTypes.object.isRequired,
-};
-
-LoadButtons.defaultProps = {
-    style: {},
-    handleLoadLess: undefined,
-    loadLessDisabled: false,
-};
 
 export default withTheme()(LoadButtons);

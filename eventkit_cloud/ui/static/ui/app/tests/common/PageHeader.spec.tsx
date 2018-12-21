@@ -1,4 +1,4 @@
-import React from 'react';
+import * as React from 'react';
 import { shallow } from 'enzyme';
 import { PageHeader } from '../../components/common/PageHeader';
 
@@ -6,7 +6,7 @@ describe('PageHeader component', () => {
     const props = {
         title: 'test title',
         children: <div>test children</div>,
-        ...global.eventkit_test_props,
+        ...(global as any).eventkit_test_props,
     };
 
     it('should render', () => {

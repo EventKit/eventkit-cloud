@@ -1,4 +1,4 @@
-import React from 'react';
+import * as React from 'react';
 import { mount } from 'enzyme';
 import Collapse from '@material-ui/core/Collapse';
 import IconButton from '@material-ui/core/IconButton';
@@ -6,17 +6,14 @@ import List from '@material-ui/core/List';
 import ListItem from '@material-ui/core/ListItem';
 import { DropDownListItem } from '../../components/common/DropDownListItem';
 
-
 describe('DropDownListItem component', () => {
     let wrapper;
 
-    const defaultProps = () => (
-        {
-            title: 'test title',
-            children: <span className="test-child">hello</span>,
-            ...global.eventkit_test_props,
-        }
-    );
+    const defaultProps = () => ({
+        title: 'test title',
+        children: <span className="test-child">hello</span>,
+        ...(global as any).eventkit_test_props,
+    });
 
     const setup = (propsOverride = {}) => {
         const props = {

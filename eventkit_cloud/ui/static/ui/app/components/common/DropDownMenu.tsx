@@ -1,11 +1,35 @@
-import PropTypes from 'prop-types';
-import React from 'react';
+import * as React from 'react';
 import Button from '@material-ui/core/Button';
 import Menu from '@material-ui/core/Menu';
 import ArrowDropDown from '@material-ui/icons/ArrowDropDown';
+import { PopoverOrigin } from '@material-ui/core/Popover';
 
-export class DropDownMenu extends React.Component {
-    constructor(props) {
+export interface Props {
+    className?: string;
+    children: any;
+    value: any;
+    anchorOrigin?: {
+        vertical: PopoverOrigin['vertical'];
+        horizontal: PopoverOrigin['horizontal'];
+    };
+    transformOrigin?: {
+        vertical: PopoverOrigin['vertical'];
+        horizontal: PopoverOrigin['horizontal'];
+    };
+    MenuListProps?: object;
+    style?: object;
+    underlineStyle?: object;
+}
+
+export interface ChildProps {
+    onClick: (...args: any) => any;
+}
+
+export interface State {
+    anchor: null | HTMLElement;
+}
+export class DropDownMenu extends React.Component<Props, State> {
+    constructor(props: Props) {
         super(props);
         this.handleOpen = this.handleOpen.bind(this);
         this.handleClose = this.handleClose.bind(this);
@@ -14,11 +38,11 @@ export class DropDownMenu extends React.Component {
         };
     }
 
-    handleOpen(e) {
+    private handleOpen(e: React.MouseEvent<HTMLElement>) {
         this.setState({ anchor: e.currentTarget });
     }
 
-    handleClose() {
+    private handleClose() {
         this.setState({ anchor: null });
     }
 
@@ -31,7 +55,7 @@ export class DropDownMenu extends React.Component {
             },
             underline: {
                 borderTop: '1px solid #4598bf',
-                position: 'absolute',
+                position: 'absolute' as 'absolute',
                 bottom: '1px',
                 left: 5,
                 right: 5,
@@ -67,13 +91,13 @@ export class DropDownMenu extends React.Component {
                     anchorOrigin={this.props.anchorOrigin}
                     transformOrigin={this.props.transformOrigin}
                 >
-                    {this.props.children.map((child) => {
+                    {this.props.children.map((child: React.ReactElement<ChildProps>) => {
                         // we need to add in our handle close function for every child onClick
                         if (!React.isValidElement(child)) { return null; }
 
                         return React.cloneElement(child, {
                             ...child.props,
-                            onClick: (...args) => {
+                            onClick: (...args: any) => {
                                 this.handleClose();
                                 child.props.onClick(args);
                             },
@@ -84,42 +108,5 @@ export class DropDownMenu extends React.Component {
         );
     }
 }
-
-DropDownMenu.defaultProps = {
-    anchorOrigin: {
-        vertical: 'top',
-        horizontal: 'left',
-    },
-    transformOrigin: {
-        vertical: 'top',
-        horizontal: 'left',
-    },
-    MenuListProps: {},
-    style: {},
-    underlineStyle: {},
-};
-
-DropDownMenu.propTypes = {
-    children: PropTypes.oneOfType([
-        PropTypes.string,
-        PropTypes.node,
-        PropTypes.arrayOf(PropTypes.node),
-    ]).isRequired,
-    value: PropTypes.oneOfType([
-        PropTypes.string,
-        PropTypes.node,
-    ]).isRequired,
-    anchorOrigin: PropTypes.shape({
-        vertical: PropTypes.string,
-        horizontal: PropTypes.string,
-    }),
-    transformOrigin: PropTypes.shape({
-        vertical: PropTypes.string,
-        horizontal: PropTypes.string,
-    }),
-    MenuListProps: PropTypes.object,
-    style: PropTypes.object,
-    underlineStyle: PropTypes.object,
-};
 
 export default DropDownMenu;
