@@ -20,6 +20,7 @@ node {
       ]) {
         dir("${root}/selenium") {
           try {
+            removeVolumes()
             sh "docker-compose up"
           } finally {
             // Cleanup
@@ -28,4 +29,21 @@ node {
         }
       }
   }
+}
+
+def removeVolumes() {
+    sh """
+    python - << END
+    import yaml
+
+    data = {}
+    with open('environment-dev.yml', 'r') as yaml_file:
+    data = yaml.load(yaml_file)
+    data['channels'] = ['$CONDA_REPO']
+
+    with open('environment-dev.yml', 'w') as outfile:
+    yaml.dump(data, outfile, default_flow_style=False)
+
+    END
+    """
 }
