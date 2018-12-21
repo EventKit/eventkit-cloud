@@ -8,7 +8,7 @@ node {
 
     stage('Setup') {
       deleteDir()
-      git url: "${env.GIT_URL}", branch: "master"
+      git url: "${env.GIT_URL}", branch: "selenium"
     }
 
   // Run the Tests
