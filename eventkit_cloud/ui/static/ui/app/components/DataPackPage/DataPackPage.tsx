@@ -1,7 +1,6 @@
-import PropTypes from 'prop-types';
-import React from 'react';
+import * as React from 'react';
 import { connect } from 'react-redux';
-import { withTheme } from '@material-ui/core/styles';
+import { withTheme, Theme } from '@material-ui/core/styles';
 import withWidth, { isWidthUp } from '@material-ui/core/withWidth';
 import { browserHistory } from 'react-router';
 import Joyride from 'react-joyride';
@@ -28,9 +27,74 @@ import { updateDataCartPermissions } from '../../actions/datacartActions';
 import { setPageOrder, setPageView } from '../../actions/uiActions';
 import { flattenFeatureCollection } from '../../utils/mapUtils';
 import { joyride } from '../../joyride.config';
+import { Breakpoint } from '@material-ui/core/styles/createBreakpoints';
 
-export class DataPackPage extends React.Component {
-    constructor(props, context) {
+interface Props {
+    runIds: string[];
+    runsFetched: boolean;
+    runsFetching: boolean;
+    runsMeta: {
+        range: string;
+        nextPage: boolean;
+        order: string;
+        view: string;
+    };
+    featuredIds: string[];
+    user: Eventkit.Store.User;
+    getRuns: () => void;
+    deleteRun: () => void;
+    getProviders: () => void;
+    runDeletion: object;
+    drawer: string;
+    importGeom: object;
+    geocode: object;
+    getGeocode: () => void;
+    processGeoJSONFile: () => void;
+    resetGeoJSONFile: () => void;
+    setOrder: () => void;
+    setView: () => void;
+    providers: Eventkit.Provider[];
+    updateDataCartPermissions: () => void;
+    updatePermissions: {
+        updating: boolean;
+        updated: boolean;
+        error: any;
+    };
+    location: {
+        query: {
+            search: string;
+            collection: string;
+            order: string;
+            view: string;
+            page_size: string;
+        };
+    };
+    theme: Eventkit.Theme & Theme;
+    width: Breakpoint;
+}
+
+interface State {
+    open: boolean;
+    permissions: Eventkit.Permissions;
+    minDate: null | string;
+    maxDate: null | string;
+    status: {
+        completed: boolean;
+        submitted: boolean;
+        incomplete: boolean;
+    };
+    providers: any;
+    pageLoading: boolean;
+    loading: boolean;
+    geojson_geometry: null | GeoJSON.Geometry;
+    steps: object[];
+    isRunning: boolean;
+}
+
+export class DataPackPage extends React.Component<Props, State> {
+    private pageSize: number;
+    private defaultQuery;
+    constructor(props: Props, context) {
         super(props);
         this.getViewRef = this.getViewRef.bind(this);
         this.handleToggle = this.handleToggle.bind(this);

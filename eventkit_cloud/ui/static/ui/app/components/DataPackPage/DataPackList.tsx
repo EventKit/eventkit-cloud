@@ -1,6 +1,5 @@
-import PropTypes from 'prop-types';
-import React, { Component } from 'react';
-import { withTheme } from '@material-ui/core/styles';
+import * as React from 'react';
+import { withTheme, Theme } from '@material-ui/core/styles';
 import withWidth, { isWidthUp } from '@material-ui/core/withWidth';
 import Table from '@material-ui/core/Table';
 import TableBody from '@material-ui/core/TableBody';
@@ -14,9 +13,28 @@ import DataPackTableItem from './DataPackTableItem';
 import LoadButtons from '../common/LoadButtons';
 import CustomScrollbar from '../CustomScrollbar';
 import withRef from '../../utils/withRef';
+import { Breakpoint } from '@material-ui/core/styles/createBreakpoints';
 
-export class DataPackList extends Component {
-    constructor(props) {
+export interface Props {
+    runIds: string[];
+    user: Eventkit.Store.User;
+    onRunDelete: () => void;
+    onRunShare: () => void;
+    onSort: (order: string) => void;
+    order: string;
+    providers: Eventkit.Provider[];
+    range: string;
+    handleLoadLess: () => void;
+    handleLoadMore: () => void;
+    loadLessDisabled: boolean;
+    loadMoreDisabled: boolean;
+    theme: Eventkit.Theme & Theme;
+    width: Breakpoint;
+}
+
+export class DataPackList extends React.Component<Props, {}> {
+    private scrollbar: CustomScrollbar;
+    constructor(props: Props) {
         super(props);
         this.handleOrder = this.handleOrder.bind(this);
         this.getIcon = this.getIcon.bind(this);
@@ -25,7 +43,7 @@ export class DataPackList extends Component {
     }
 
     // If it is a 'reversed' order the arrow should be up, otherwise it should be down
-    getIcon(order) {
+    private getIcon(order: Props['order']) {
         const style = { verticalAlign: 'middle', marginBottom: '2px', fill: this.props.theme.eventkit.colors.primary };
         const icon = this.props.order === order ?
             <NavigationArrowDropUp className="qa-DataPackList-NavigationArrowDropUp" style={style} />
@@ -34,19 +52,19 @@ export class DataPackList extends Component {
         return icon;
     }
 
-    getHeaderStyle(isActive) {
-        return isActive ? { color: this.props.theme.eventkit.colors.black, fontWeight: 'bold' } : { color: 'inherit' };
+    private getHeaderStyle(isActive: boolean) {
+        return isActive ? { color: this.props.theme.eventkit.colors.black, fontWeight: 'bold' as 'bold' } : { color: 'inherit' };
     }
 
-    getScrollbar() {
+    private getScrollbar() {
         return this.scrollbar;
     }
 
-    isSameOrderType(unknown, known) {
+    private isSameOrderType(unknown: Props['order'], known: Props['order']) {
         return unknown.replace(/-/, '') === known.replace(/-/, '');
     }
 
-    handleOrder(order) {
+    private handleOrder(order: Props['order']) {
         let newOrder = '';
         if (this.isSameOrderType(this.props.order, order)) {
             newOrder = this.props.order.charAt(0) === '-' ? this.props.order.substring(1) : `-${this.props.order}`;
@@ -63,7 +81,7 @@ export class DataPackList extends Component {
         const styles = {
             root: {
                 display: 'flex',
-                flexWrap: 'wrap',
+                flexWrap: 'wrap' as 'wrap',
                 justifyContent: 'space-around',
                 marginLeft: spacing,
                 marginRight: spacing,
@@ -73,7 +91,7 @@ export class DataPackList extends Component {
                 backgroundColor: colors.white,
                 borderBottom: `1px solid ${colors.secondary}`,
                 fontSize: '12px',
-                tableLayout: 'fixed',
+                tableLayout: 'fixed' as 'fixed',
             },
             clickable: {
                 cursor: 'pointer',
@@ -83,40 +101,40 @@ export class DataPackList extends Component {
             },
             nameColumn: {
                 padding: '0px 0px 0px 10px',
-                textAlign: 'left',
+                textAlign: 'left' as 'left',
                 height: 'inherit',
             },
             eventColumn: {
                 padding: '0px 0px 0px 10px',
-                textAlign: 'left',
+                textAlign: 'left' as 'left',
                 height: 'inherit',
             },
             dateColumn: {
                 width: '98px',
                 padding: '0px 0px 0px 10px',
-                textAlign: 'left',
+                textAlign: 'left' as 'left',
                 height: 'inherit',
             },
             statusColumn: {
                 width: '70px',
                 padding: '0px 0px 0px 10px',
-                textAlign: 'center',
+                textAlign: 'center' as 'center',
                 height: 'inherit',
             },
             permissionsColumn: {
                 width: '102px',
                 padding: '0px 0px 0px 10px',
-                textAlign: 'center',
+                textAlign: 'center' as 'center',
                 height: 'inherit',
             },
             ownerColumn: {
                 padding: '0px 0px 0px 10px',
-                textAlign: 'left',
+                textAlign: 'left' as 'left',
                 height: 'inherit',
             },
             featuredColum: {
                 padding: '0px 0px 0px 10px',
-                textAlign: 'left',
+                textAlign: 'left' as 'left',
                 height: 'inherit',
                 width: '82px',
             },
@@ -309,25 +327,4 @@ export class DataPackList extends Component {
     }
 }
 
-DataPackList.propTypes = {
-    runIds: PropTypes.arrayOf(PropTypes.string).isRequired,
-    user: PropTypes.object.isRequired,
-    onRunDelete: PropTypes.func.isRequired,
-    onRunShare: PropTypes.func.isRequired,
-    onSort: PropTypes.func.isRequired,
-    order: PropTypes.string.isRequired,
-    providers: PropTypes.arrayOf(PropTypes.object).isRequired,
-    range: PropTypes.string.isRequired,
-    handleLoadLess: PropTypes.func.isRequired,
-    handleLoadMore: PropTypes.func.isRequired,
-    loadLessDisabled: PropTypes.bool.isRequired,
-    loadMoreDisabled: PropTypes.bool.isRequired,
-    theme: PropTypes.object.isRequired,
-    width: PropTypes.string.isRequired,
-};
-
-export default
-@withWidth()
-@withTheme()
-@withRef()
-class Default extends DataPackList {}
+export default withWidth()(withTheme()(withRef()(DataPackList)));

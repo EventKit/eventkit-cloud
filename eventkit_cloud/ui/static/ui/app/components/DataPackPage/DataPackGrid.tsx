@@ -1,13 +1,30 @@
-import PropTypes from 'prop-types';
-import React, { Component } from 'react';
+import * as React from 'react';
 import withWidth, { isWidthUp } from '@material-ui/core/withWidth';
 import GridList from '@material-ui/core/GridList';
 import DataPackGridItem from './DataPackGridItem';
 import CustomScrollbar from '../CustomScrollbar';
 import LoadButtons from '../common/LoadButtons';
 import withRef from '../../utils/withRef';
+import { Breakpoint } from '@material-ui/core/styles/createBreakpoints';
 
-export class DataPackGrid extends Component {
+export interface Props {
+    runIds: string[];
+    user: Eventkit.Store.User;
+    onRunDelete: () => void;
+    onRunShare: () => void;
+    providers: Eventkit.Provider[];
+    range: string;
+    handleLoadLess: () => void;
+    handleLoadMore: () => void;
+    loadLessDisabled: boolean;
+    loadMoreDisabled: boolean;
+    name: string;
+    width: Breakpoint;
+}
+
+export class DataPackGrid extends React.Component<Props, {}> {
+    private scrollbar: CustomScrollbar;
+
     getColumns() {
         if (!isWidthUp('md', this.props.width)) {
             return 2;
@@ -26,7 +43,7 @@ export class DataPackGrid extends Component {
         const styles = {
             root: {
                 display: 'flex',
-                flexWrap: 'wrap',
+                flexWrap: 'wrap' as 'wrap',
                 justifyContent: 'space-around',
                 marginLeft: spacing,
                 marginRight: spacing,
@@ -81,22 +98,4 @@ export class DataPackGrid extends Component {
     }
 }
 
-DataPackGrid.propTypes = {
-    runIds: PropTypes.arrayOf(PropTypes.string).isRequired,
-    user: PropTypes.object.isRequired,
-    onRunDelete: PropTypes.func.isRequired,
-    onRunShare: PropTypes.func.isRequired,
-    providers: PropTypes.arrayOf(PropTypes.object).isRequired,
-    range: PropTypes.string.isRequired,
-    handleLoadLess: PropTypes.func.isRequired,
-    handleLoadMore: PropTypes.func.isRequired,
-    loadLessDisabled: PropTypes.bool.isRequired,
-    loadMoreDisabled: PropTypes.bool.isRequired,
-    name: PropTypes.string.isRequired,
-    width: PropTypes.string.isRequired,
-};
-
-export default
-@withWidth()
-@withRef()
-class Default extends DataPackGrid {}
+export default withWidth()(withRef()(DataPackGrid));

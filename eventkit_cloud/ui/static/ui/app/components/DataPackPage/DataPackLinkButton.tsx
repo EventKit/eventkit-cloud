@@ -1,9 +1,12 @@
-import PropTypes from 'prop-types';
-import React from 'react';
-import { withTheme } from '@material-ui/core/styles';
+import * as React from 'react';
+import { withTheme, Theme } from '@material-ui/core/styles';
 import Button from '@material-ui/core/Button';
 
-export class DataPackLinkButton extends React.Component {
+export interface Props {
+    theme: Eventkit.Theme & Theme;
+}
+
+export class DataPackLinkButton extends React.Component<Props, {}> {
     render() {
         const { colors } = this.props.theme.eventkit;
 
@@ -35,9 +38,5 @@ export class DataPackLinkButton extends React.Component {
         );
     }
 }
-
-DataPackLinkButton.propTypes = {
-    theme: PropTypes.object.isRequired,
-};
 
 export default withTheme()(DataPackLinkButton);

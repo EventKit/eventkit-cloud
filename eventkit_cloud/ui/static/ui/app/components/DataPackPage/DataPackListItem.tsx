@@ -1,7 +1,6 @@
-import PropTypes from 'prop-types';
-import React, { Component } from 'react';
+import * as React from 'react';
 import { connect } from 'react-redux';
-import { withTheme } from '@material-ui/core/styles';
+import { withTheme, Theme } from '@material-ui/core/styles';
 import moment from 'moment';
 import { Link, browserHistory } from 'react-router';
 import Card from '@material-ui/core/Card';
@@ -19,8 +18,28 @@ import FeaturedFlag from './FeaturedFlag';
 import DataPackShareDialog from '../DataPackShareDialog/DataPackShareDialog';
 import { makeFullRunSelector } from '../../selectors/runSelector';
 
-export class DataPackListItem extends Component {
-    constructor(props) {
+export interface Props {
+    run: Eventkit.Run;
+    user: Eventkit.Store.User;
+    onRunDelete: (uid: string) => void;
+    onRunShare: (uid: string, permissions: object) => void;
+    providers: Eventkit.Provider[];
+    onHoverStart?: (uid: string) => void;
+    onHoverEnd?: (uid: string) => void;
+    onClick?: (uid: string) => void;
+    backgroundColor?: string;
+    style?: object;
+    theme: Eventkit.Theme & Theme;
+}
+
+export interface State {
+    providerDialogOpen: boolean;
+    deleteDialogOpen: boolean;
+    shareDialogOpen: boolean;
+}
+
+export class DataPackListItem extends React.Component<Props, State> {
+    constructor(props: Props) {
         super(props);
         this.handleProviderOpen = this.handleProviderOpen.bind(this);
         this.handleProviderClose = this.handleProviderClose.bind(this);
@@ -37,38 +56,38 @@ export class DataPackListItem extends Component {
         };
     }
 
-    handleProviderClose() {
+    private handleProviderClose() {
         this.setState({ providerDialogOpen: false });
     }
 
-    handleProviderOpen() {
+    private handleProviderOpen() {
         this.setState({
             providerDialogOpen: true,
         });
     }
 
-    showDeleteDialog() {
+    private showDeleteDialog() {
         this.setState({ deleteDialogOpen: true });
     }
 
-    hideDeleteDialog() {
+    private hideDeleteDialog() {
         this.setState({ deleteDialogOpen: false });
     }
 
-    handleDelete() {
+    private handleDelete() {
         this.hideDeleteDialog();
         this.props.onRunDelete(this.props.run.uid);
     }
 
-    handleShareOpen() {
+    private handleShareOpen() {
         this.setState({ shareDialogOpen: true });
     }
 
-    handleShareClose() {
+    private handleShareClose() {
         this.setState({ shareDialogOpen: false });
     }
 
-    handleShareSave(perms) {
+    private handleShareSave(perms) {
         this.handleShareClose();
         const permissions = { ...perms };
         this.props.onRunShare(this.props.run.job.uid, permissions);
@@ -80,7 +99,7 @@ export class DataPackListItem extends Component {
 
         const styles = {
             gridItem: {
-                position: 'relative',
+                position: 'relative' as 'relative',
                 ...this.props.style,
             },
             card: {
@@ -88,56 +107,56 @@ export class DataPackListItem extends Component {
                 borderRadius: '0px',
                 borderTop: `${colors.grey} 1px solid`,
                 paddingBottom: '0px',
-                position: 'relative',
+                position: 'relative' as 'relative',
             },
             cardTitle: {
-                wordWrap: 'break-word',
+                wordWrap: 'break-word' as 'break-word',
                 display: 'block',
                 padding: '8px 15px 15px',
             },
             cardTitleFeatured: {
-                wordWrap: 'break-word',
+                wordWrap: 'break-word' as 'break-word',
                 padding: '15px',
             },
             completeIcon: {
                 height: '18px',
-                float: 'right',
+                float: 'right' as 'right',
                 color: colors.success,
-                opacity: '0.6',
+                opacity: 0.6,
             },
             errorIcon: {
                 height: '18px',
-                float: 'right',
+                float: 'right' as 'right',
                 color: colors.warning,
-                opacity: '0.6',
+                opacity: 0.6,
             },
             runningIcon: {
                 height: '18px',
-                float: 'right',
+                float: 'right' as 'right',
                 color: colors.running,
             },
             unpublishedIcon: {
                 height: '18px',
-                float: 'right',
+                float: 'right' as 'right',
                 color: colors.grey,
                 marginRight: '5px',
             },
             publishedIcon: {
                 height: '18px',
-                float: 'right',
+                float: 'right' as 'right',
                 color: colors.grey,
                 marginRight: '5px',
             },
             ownerLabel: {
-                float: 'right',
+                float: 'right' as 'right',
                 color: colors.grey,
             },
             eventText: {
                 height: '18px',
                 lineHeight: '18px',
-                overflow: 'hidden',
+                overflow: 'hidden' as 'hidden',
                 textOverflow: 'ellipsis',
-                whiteSpace: 'nowrap',
+                whiteSpace: 'nowrap' as 'nowrap',
             },
             title: {
                 display: 'inline-block',
@@ -150,7 +169,7 @@ export class DataPackListItem extends Component {
             titleLink: {
                 overflow: 'hidden',
                 textOverflow: 'ellipsis',
-                whiteSpace: 'nowrap',
+                whiteSpace: 'nowrap' as 'nowrap',
             },
         };
 
@@ -299,28 +318,6 @@ export class DataPackListItem extends Component {
         );
     }
 }
-
-DataPackListItem.defaultProps = {
-    onHoverStart: undefined,
-    onHoverEnd: undefined,
-    onClick: undefined,
-    backgroundColor: undefined,
-    style: {},
-};
-
-DataPackListItem.propTypes = {
-    run: PropTypes.object.isRequired,
-    user: PropTypes.object.isRequired,
-    onRunDelete: PropTypes.func.isRequired,
-    onRunShare: PropTypes.func.isRequired,
-    providers: PropTypes.arrayOf(PropTypes.object).isRequired,
-    onHoverStart: PropTypes.func,
-    onHoverEnd: PropTypes.func,
-    onClick: PropTypes.func,
-    backgroundColor: PropTypes.string,
-    style: PropTypes.object,
-    theme: PropTypes.object.isRequired,
-};
 
 const makeMapStateToProps = () => {
     const getFullRun = makeFullRunSelector();

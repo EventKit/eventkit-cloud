@@ -1,16 +1,22 @@
-import PropTypes from 'prop-types';
-import React from 'react';
-import { withTheme } from '@material-ui/core/styles';
+import * as React from 'react';
+import { withTheme, Theme } from '@material-ui/core/styles';
 import withWidth, { isWidthUp } from '@material-ui/core/withWidth';
 import Button from '@material-ui/core/Button';
+import { Breakpoint } from '@material-ui/core/styles/createBreakpoints';
 
-export class DataPackFilterButton extends React.Component {
+export interface Props {
+    handleToggle: () => void;
+    active: boolean;
+    theme: Eventkit.Theme & Theme;
+    width: Breakpoint;
+}
+export class DataPackFilterButton extends React.Component<Props, {}> {
     render() {
         const { colors } = this.props.theme.eventkit;
 
         const styles = {
             button: {
-                float: 'right',
+                float: 'right' as 'right',
                 height: '30px',
                 lineHeight: '15px',
                 minWidth: 'none',
@@ -33,16 +39,4 @@ export class DataPackFilterButton extends React.Component {
     }
 }
 
-
-DataPackFilterButton.propTypes = {
-    handleToggle: PropTypes.func.isRequired,
-    active: PropTypes.bool.isRequired,
-    theme: PropTypes.object.isRequired,
-    width: PropTypes.string.isRequired,
-};
-
-
-export default
-@withWidth()
-@withTheme()
-class Default extends DataPackFilterButton {}
+export default withWidth()(withTheme()(DataPackFilterButton));

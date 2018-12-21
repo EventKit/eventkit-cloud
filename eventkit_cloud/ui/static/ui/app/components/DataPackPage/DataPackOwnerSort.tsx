@@ -1,20 +1,25 @@
-import PropTypes from 'prop-types';
-import React from 'react';
+import * as React from 'react';
 import MenuItem from '@material-ui/core/MenuItem';
 import DropDownMenu from '../common/DropDownMenu';
 
-export class DataPackOwnerSort extends React.Component {
-    constructor(props) {
+export interface Props {
+    value: string;
+    handleChange: (value: string) => void;
+    owner: string;
+}
+
+export class DataPackOwnerSort extends React.Component<Props, {}> {
+    constructor(props: Props) {
         super(props);
         this.handleAll = this.handleAll.bind(this);
         this.handleOwner = this.handleOwner.bind(this);
     }
 
-    handleAll() {
+    private handleAll() {
         this.props.handleChange('all');
     }
 
-    handleOwner() {
+    private handleOwner() {
         this.props.handleChange(this.props.owner);
     }
 
@@ -60,12 +65,5 @@ export class DataPackOwnerSort extends React.Component {
         );
     }
 }
-
-
-DataPackOwnerSort.propTypes = {
-    value: PropTypes.string.isRequired,
-    handleChange: PropTypes.func.isRequired,
-    owner: PropTypes.string.isRequired,
-};
 
 export default DataPackOwnerSort;
