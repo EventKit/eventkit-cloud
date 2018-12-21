@@ -134,7 +134,7 @@ public class GroupsPageTest extends SeleniumBaseTest {
             wait.until(ExpectedConditions.elementToBeClickable(groupsPage.getUserOptions()));
             groupsPage.getUserOptions().click();
             groupsPage.getAddToNewGroupButton().click();
-            NewGroupPage newGroupPage = new NewGroupPage(driver, 10);
+            NewGroupPage newGroupPage = new NewGroupPage(driver, 20);
             newGroupPage.waitUntilLoaded();
             assertTrue(newGroupPage.getCancelButton().isEnabled());
             assertTrue(!newGroupPage.getSaveButton().isEnabled());

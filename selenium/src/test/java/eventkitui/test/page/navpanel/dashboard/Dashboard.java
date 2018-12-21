@@ -35,7 +35,7 @@ public class Dashboard extends ContentPage {
     @FindBy(xpath = "//div[contains(@id, 'DashboardSectionMy DataPacks')]/div/div[contains(@class, 'react-swipeable-view-container')]/div/ul/div/div/div/div/div/span/div/button") private WebElement myDataPackOptionsButton;
 
     public Dashboard(WebDriver driver) {
-        super(driver, 10);
+        super(driver, 20);
     }
 
     @Override

@@ -57,7 +57,8 @@ public class FirstTimeLogin extends PageObject {
         catch (NoSuchElementException noSuchElementException) {
             // Page didn't load, license must already by accepted or none appeared.
         }
-        // generate notifications and such
+        // No data banner initially appears then goes away. Give time for notifications to load.
+        wait.withTimeout(Duration.ofSeconds(10));
         try {
             wait.until(ExpectedConditions.elementToBeClickable(noDataBanner));
             NavigationPanel navigationPanel = mainPage.getTopPanel().openNavigationPanel();

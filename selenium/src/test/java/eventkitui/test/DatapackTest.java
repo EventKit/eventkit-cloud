@@ -46,10 +46,11 @@ public class DatapackTest extends SeleniumBaseTest {
         // Zoom to Washington, D.C. via search field
         map.getSearchField().sendKeys("Washington, D.C.");
         // Clicking search result will open aoi window, search result can take some time
-        WebDriverWait wait = new WebDriverWait(driver, 20);
+        WebDriverWait wait = new WebDriverWait(driver, 30);
         try {
             wait.until(ExpectedConditions.elementToBeClickable(map.getSearchResult()));
         } catch (TimeoutException timeout) {
+            System.out.println("Search results did not load in allotted time.");
             Utils.takeScreenshot(driver);
             throw timeout;
         }
