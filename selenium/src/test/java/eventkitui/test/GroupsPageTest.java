@@ -12,6 +12,7 @@ import org.openqa.selenium.support.FindBy;
 import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.WebDriverWait;
 
+import javax.rmi.CORBA.Util;
 import java.util.Random;
 
 import static junit.framework.TestCase.assertTrue;
@@ -86,10 +87,12 @@ public class GroupsPageTest extends SeleniumBaseTest {
         renameGroupPage.waitUntilLoaded();
         assertTrue(renameGroupPage.getCancelButton().isEnabled());
         assertTrue(!renameGroupPage.getSaveButton().isEnabled());
-        renameGroupPage.getRenameField().sendKeys("Renamed Group");
-        assertTrue(renameGroupPage.getRenameField().getAttribute("value").equalsIgnoreCase("Renamed Group"));
+        final String renamedName = "Rename:" + random.nextLong();
+        renameGroupPage.getRenameField().sendKeys(renamedName);
+        assertTrue(renameGroupPage.getRenameField().getAttribute("value").equalsIgnoreCase(renamedName));
+        Utils.takeScreenshot(driver);
         renameGroupPage.getSaveButton().click();
-        wait.until(ExpectedConditions.elementToBeClickable(groupsPage.getGroupOptions()));
+        wait.until(ExpectedConditions.refreshed(ExpectedConditions.elementToBeClickable(groupsPage.getGroupOptions())));
         wait.until(ExpectedConditions.invisibilityOfElementLocated(loadingBar));
         groupsPage.getGroupOptions().click();
         wait.until(ExpectedConditions.elementToBeClickable(groupsPage.getDeleteGroupButton()));

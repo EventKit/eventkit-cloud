@@ -45,8 +45,8 @@ public class DatapackTest extends SeleniumBaseTest {
         assertTrue(map.getSearchButton().isEnabled());
         // Zoom to Washington, D.C. via search field
         map.getSearchField().sendKeys("Washington, D.C.");
-        // Clicking search result will open aoi window
-        WebDriverWait wait = new WebDriverWait(driver, 5);
+        // Clicking search result will open aoi window, search result can take some time
+        WebDriverWait wait = new WebDriverWait(driver, 20);
         try {
             wait.until(ExpectedConditions.elementToBeClickable(map.getSearchResult()));
         } catch (TimeoutException timeout) {

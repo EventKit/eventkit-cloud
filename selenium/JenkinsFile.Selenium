@@ -6,21 +6,6 @@ node {
   def eventkitUrl = "${env.EVENTKIT_URL}"
   def containerId = null
 
-  stage("Selenium Grid") {
-    dir("${root}/selenium") {
-      git url: "https://github.com/SeleniumHQ/docker-selenium", branch: "master"
-      // Check if it wasn't previously cleaned up
-      def existingContainerId = sh(script: """docker ps | grep \"selenium/standalone-chrome\" | awk '{print \$1}'""", returnStdout: true)
-      if (existingContainerId?.trim()) {
-        sh "docker kill ${existingContainerId}"
-      }
-      // Create instance
-      dir("${root}/docker-selenium/StandaloneChrome") {
-        containerId = sh(script: "docker run -d -p 4444:4444 -v /dev/shm:/dev/shm selenium/standalone-chrome | tail -n 1", returnStdout: true)
-      }
-    }
-  }
-
     stage('Setup') {
       deleteDir()
       git url: "${env.GIT_URL}", branch: "master"
@@ -35,10 +20,10 @@ node {
       ]) {
         dir("${root}/selenium") {
           try {
-            sh "pwd; ls; mvn clean test"
+            sh "docker-compose up"
           } finally {
             // Cleanup
-            sh "docker kill ${containerId}"
+            sh "docker-compose down"
           }
         }
       }
