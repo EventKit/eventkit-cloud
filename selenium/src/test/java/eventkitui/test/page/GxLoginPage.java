@@ -35,7 +35,7 @@ public class GxLoginPage extends PageObject {
      * @param mainPage
      */
     public MainPage loginDisadvantaged(String username, String password, MainPage mainPage) {
-        WebDriverWait wait = new WebDriverWait(driver, 3);
+        WebDriverWait wait = new WebDriverWait(driver, 20);
         wait.until(ExpectedConditions.elementToBeClickable(disadvantagedLink));
         disadvantagedLink.click();
         userField.sendKeys(username);
