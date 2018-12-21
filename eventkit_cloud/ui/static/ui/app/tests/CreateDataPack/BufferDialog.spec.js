@@ -8,18 +8,20 @@ import AlertCallout from '../../components/CreateDataPack/AlertCallout';
 import { BufferDialog } from '../../components/CreateDataPack/BufferDialog';
 
 describe('AlertCallout component', () => {
-    const getProps = () => (
-        {
-            show: true,
-            value: 0,
-            valid: true,
-            handleBufferClick: () => {},
-            handleBufferChange: () => {},
-            closeBufferDialog: () => {},
-            aoi: {},
-            ...global.eventkit_test_props,
-        }
-    );
+    const getProps = () => ({
+        show: true,
+        value: 0,
+        valid: true,
+        handleBufferClick: () => {},
+        handleBufferChange: () => {},
+        closeBufferDialog: () => {},
+        aoi: {},
+        limits: {
+            max: 10,
+            sizes: [5, 10],
+        },
+        ...global.eventkit_test_props,
+    });
 
     const getWrapper = props => (
         shallow(<BufferDialog {...props} />)
@@ -50,14 +52,14 @@ describe('AlertCallout component', () => {
 
     it('should render a warning if the area exceeds the aoi limit', () => {
         const props = getProps();
-        props.maxVectorAoiSqKm = -200;
+        props.limits.max = -200;
         const wrapper = getWrapper(props);
         expect(wrapper.find('.qa-BufferDialog-warning')).toHaveLength(1);
     });
 
     it('should render the alert popup', () => {
         const props = getProps();
-        props.maxVectorAoiSqKm = -200;
+        props.limits.max = -200;
         const wrapper = getWrapper(props);
         expect(wrapper.find(AlertCallout)).toHaveLength(0);
         wrapper.setState({ showAlert: true });

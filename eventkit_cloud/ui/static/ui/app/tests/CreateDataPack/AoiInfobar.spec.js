@@ -12,24 +12,26 @@ import AlertCallout from '../../components/CreateDataPack/AlertCallout';
 import { AoiInfobar } from '../../components/CreateDataPack/AoiInfobar';
 
 describe('AoiInfobar component', () => {
-    const getProps = () => (
-        {
-            aoiInfo: {
-                geojson: {},
-                originalGeojson: {},
-                geomType: null,
-                title: null,
-                description: null,
-                buffer: 0,
-            },
-            showAlert: false,
-            showRevert: false,
-            onRevertClick: () => {},
-            clickZoomToSelection: () => {},
-            handleBufferClick: () => {},
-            ...global.eventkit_test_props,
-        }
-    );
+    const getProps = () => ({
+        aoiInfo: {
+            geojson: {},
+            originalGeojson: {},
+            geomType: null,
+            title: null,
+            description: null,
+            buffer: 0,
+        },
+        showAlert: false,
+        showRevert: false,
+        onRevertClick: () => {},
+        clickZoomToSelection: () => {},
+        handleBufferClick: () => {},
+        limits: {
+            max: 10,
+            sizes: [5, 10],
+        },
+        ...global.eventkit_test_props,
+    });
 
     const getWrapper = props => (
         shallow(<AoiInfobar {...props} />)
@@ -120,7 +122,7 @@ describe('AoiInfobar component', () => {
         props.aoiInfo.description = 'fake description';
         props.aoiInfo.geomType = 'Polygon';
         props.aoiInfo.title = 'fake title';
-        props.maxVectorAoiSqKm = 0.0000000001;
+        props.limits.max = 0.0000000001;
         const showSpy = sinon.spy(AoiInfobar.prototype, 'showAlert');
         const wrapper = getWrapper(props);
         expect(wrapper.find('.qa-AoiInfobar-alert-icon')).toHaveLength(1);
@@ -204,7 +206,7 @@ describe('AoiInfobar component', () => {
         props.aoiInfo.description = 'fake description';
         props.aoiInfo.geomType = 'Polygon';
         props.aoiInfo.title = 'fake title';
-        props.maxVectorAoiSqKm = 500;
+        props.limits.max = 500;
         const wrapper = getWrapper(props);
         expect(wrapper.find(AlertCallout)).toHaveLength(1);
     });

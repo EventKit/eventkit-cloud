@@ -152,8 +152,6 @@ export class Application extends React.Component<Props, State> {
             BASEMAP_COPYRIGHT: PropTypes.string,
             BASEMAP_URL: PropTypes.string,
             LOGIN_DISCLAIMER: PropTypes.string,
-            MAX_VECTOR_AOI_SQ_KM: PropTypes.number,
-            MAX_RASTER_AOI_SQ_KM: PropTypes.number,
             MAX_DATAPACK_EXPIRATION_DAYS: PropTypes.string,
             USER_GROUPS_PAGE_SIZE: PropTypes.string,
             DATAPACK_PAGE_SIZE: PropTypes.string,
