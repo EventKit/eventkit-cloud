@@ -16,7 +16,6 @@ from mapproxy.seed.util import ProgressLog, exp_backoff, timestamp, ProgressStor
 import os
 import sqlite3
 import time
-import datetime
 
 from eventkit_cloud.utils import auth_requests
 from eventkit_cloud.utils.geopackage import get_tile_table_names, set_gpkg_contents_bounds, \
@@ -31,19 +30,20 @@ logger = logging.getLogger(__name__)
 class CustomLogger(ProgressLog):
 
     def __init__(self, task_uid=None, *args, **kwargs):
-
         self.task_uid = task_uid
         super(CustomLogger, self).__init__(*args, **kwargs)
         # Log mapproxy status but allow a setting to reduce database writes.
         self.log_step_step = 1
         self.log_step_counter = self.log_step_step
+        self.eta = ETA(task_uid=task_uid)
 
     def log_step(self, progress):
         from eventkit_cloud.tasks.export_tasks import update_progress
+        self.eta.update(progress.progress)
+
         if self.task_uid:
             if self.log_step_counter == 0:
-                update_progress(self.task_uid, progress=progress.progress * 100,
-                                estimated_finish=progress.eta.eta_datetime())
+                update_progress(self.task_uid, progress=progress.progress * 100, eta=self.eta)
                 self.log_step_counter = self.log_step_step
             self.log_step_counter -= 1
 
@@ -55,39 +55,10 @@ class CustomLogger(ProgressLog):
             # log progress at most every 500ms
             self.out.write('[%s] %6.2f%%\t%-20s ETA: %s\r' % (
                 timestamp(), progress.progress*100, progress.progress_str,
-                progress.eta
+                self.eta
             ))
             self.out.flush()
             self._laststep = time.time()
-
-
-class CustomSeedProgress(seeder.SeedProgress):
-    """
-    https://github.com/mapproxy/mapproxy/commit/93bc53a01318cd63facdb4ee13968caa847a5c17
-    """
-    def __init__(self, old_progress_identifier=None):
-        super(CustomSeedProgress, self).__init__(old_progress_identifier)
-        self.eta = ETA()
-
-    def step_forward(self, subtiles=1):
-        super(CustomSeedProgress, self).step_forward(subtiles)
-        self.eta.update(self.progress)
-
-
-# We need a reference to the original mapproxy seeder.seed_task implementation
-old_seed_task = seeder.seed_task
-
-
-def custom_seed_task(task, concurrency=2, dry_run=False, skip_geoms_for_last_levels=0, progress_logger=None,
-                     seed_progress=None):
-    # Inject our CustomSeedProgress in place of seed_progress provided
-    if seed_progress:
-        seed_progress = CustomSeedProgress(old_progress_identifier=seed_progress.old_level_progresses)
-    old_seed_task(task, concurrency, dry_run, skip_geoms_for_last_levels, progress_logger, seed_progress)
-
-
-logger.info("Monkey patching mapproxy.seed.seed_task with eventkit_cloud.utils.mapproxy.custom_seed_task")
-seeder.seed_task = custom_seed_task
 
 
 def get_custom_exp_backoff(max_repeat=None):
@@ -185,7 +156,7 @@ class MapproxyGeopackage(object):
         # # As of Mapproxy 1.9.x, datasource files covering a small area cause a bbox error.
         if self.bbox:
             if isclose(self.bbox[0], self.bbox[2], rel_tol=0.001) or isclose(self.bbox[0], self.bbox[2], rel_tol=0.001):
-                logger.warn('Using bbox instead of selection, because the area is too small')
+                logger.warning('Using bbox instead of selection, because the area is too small')
                 self.selection = None
 
         seed_dict = get_seed_template(bbox=self.bbox, level_from=self.level_from, level_to=self.level_to,

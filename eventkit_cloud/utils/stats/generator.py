@@ -9,6 +9,7 @@ from eventkit_cloud.utils.client import parse_duration
 from eventkit_cloud.utils.stats.geomutils import prefetch_geometry_cache, lookup_cache_geometry,\
     get_area_bbox, get_bbox_intersect
 
+from threading import Lock
 import logging
 import datetime
 import json
@@ -19,6 +20,7 @@ logger = logging.getLogger(__name__)
 _dbg_geom_cache_misses = 0
 MAX_SAMPLES_PER_TARGET = 2000
 DEFAULT_CACHE_EXPIRATION = 86400  # expire in a day
+COMPUTATION_LOCK = Lock()
 
 
 def get_statistics(grouping='provider_name', force=False):
@@ -27,22 +29,24 @@ def get_statistics(grouping='provider_name', force=False):
     :param grouping: see group_providers_by
     :return: The statistics object
     """
-    cache_key = "DATA_STATISTICS_BY_{}".format(grouping)
-    if not force:
-        # TODO: Do we need a mutex?  May end up running multiple computes
-        stats = cache.get(cache_key)
-        if stats:
-            return json.loads(stats)
+    with COMPUTATION_LOCK:
+        cache_key = "DATA_STATISTICS_BY_{}".format(grouping)
+        if not force:
+            stats = cache.get(cache_key)
+            if stats:
+                return json.loads(stats)
 
-    # TODO Order by time descending
-    etr = ExportTaskRecord.objects\
-        .filter(result__isnull=False) \
-        .select_related("result") \
-        .all()
+        # Order by time descending to ensure more recent samples are collected first
+        etr = ExportTaskRecord.objects\
+            .filter(result__isnull=False) \
+            .order_by('-finished_at') \
+            .select_related("result") \
+            .all()
 
-    grouper = group_providers_by(grouping)
-    stats = compute_statistics(etr, grouper)
-    cache.set(cache_key, json.dumps(stats), timeout=DEFAULT_CACHE_EXPIRATION)
+        grouper = group_providers_by(grouping)
+        stats = compute_statistics(etr, grouper)
+        cache.set(cache_key, json.dumps(stats), timeout=DEFAULT_CACHE_EXPIRATION)
+
     return stats
 
 
@@ -126,6 +130,7 @@ def compute_statistics(export_task_records, get_group, tile_grid=get_default_til
     processed_count = 0
     total_count = export_task_records.count()
     all_stats = {}
+    default_stat = {'duration': [], 'area': [], 'size': [], 'mpp': []}
 
     logger.debug('Prefetching geometry data from all Jobs')
     prefetch_geometry_cache(geom_cache)
@@ -151,9 +156,9 @@ def compute_statistics(export_task_records, get_group, tile_grid=get_default_til
         area = gce['area']
 
         group_name = get_group(dptr)
-        global_stats = get_child_entry(all_stats, 'GLOBAL', {'duration': [], 'area': [], 'size': [], 'mpp': []})
-        group_stats = get_child_entry(all_stats, group_name, {'duration': [], 'area': [], 'size': [], 'mpp': []})
-        task_stats = get_child_entry(group_stats, etr.name, {'duration': [], 'area': [], 'size': []})
+        global_stats = get_child_entry(all_stats, 'GLOBAL', default_stat)
+        group_stats = get_child_entry(all_stats, group_name, default_stat)
+        task_stats = get_child_entry(group_stats, etr.name, default_stat)
 
         if has_tiles(etr.name):
             affected_tile_stats = get_tile_stats(group_stats, tile_grid, gce['bbox'], True, tid_cache, run.id)
@@ -178,8 +183,14 @@ def compute_statistics(export_task_records, get_group, tile_grid=get_default_til
             try:
                 provider = DataProvider.objects.get(name=dptr.name)
                 mpp = compute_mpp(provider, gce['bbox'], etr.result.size)
-                group_stats['mpp'] += [mpp]
-                global_stats['mpp'] += [mpp]
+                if len(group_stats['mpp']) < MAX_SAMPLES_PER_TARGET:
+                    group_stats['mpp'] += [mpp]
+                if len(global_stats['mpp']) < MAX_SAMPLES_PER_TARGET:
+                    global_stats['mpp'] += [mpp]
+                for ts in affected_tile_stats:
+                    if len(ts['mpp']) < MAX_SAMPLES_PER_TARGET:
+                        ts['mpp'] += [mpp]
+
             except ObjectDoesNotExist:
                 pass
 
@@ -203,7 +214,7 @@ def compute_statistics(export_task_records, get_group, tile_grid=get_default_til
         if group_name in ['timestamp']:
             continue
 
-        totals[group_name] = get_summary_stats(all_stats[group_name], fields=('area', 'duration', 'size', 'mpp'))
+        totals[group_name] = get_summary_stats(all_stats[group_name], ('area', 'duration', 'size', 'mpp'))
         tile_count = 0
 
         for task_name in all_stats[group_name]:
@@ -216,11 +227,12 @@ def compute_statistics(export_task_records, get_group, tile_grid=get_default_til
                 total_ys = {}
                 totals[group_name][task_name] = total_ys
                 for xz_s in y_s:
-                    total_ys[xz_s] = get_summary_stats(y_s[xz_s])
+                    total_ys[xz_s] = get_summary_stats(y_s[xz_s], ('area', 'duration', 'size', 'mpp'))
                     total_ys[xz_s]['tile_coord'] = y_s[xz_s]['tile_coord']
                     tile_count += 1
             else:
-                totals[group_name][task_name] = get_summary_stats(all_stats[group_name][task_name])
+                totals[group_name][task_name] = get_summary_stats(all_stats[group_name][task_name],
+                                                                  ('area', 'duration', 'size'))
 
         totals[group_name]['tile_count'] = tile_count
         logger.info('Generated statistics for %d tiles for group %s', tile_count, group_name)
@@ -294,7 +306,7 @@ def get_tile_stat(parent, tile_coord, create_if_absent=False):
 
     if y_id in parent:
         # Currently we only cache 1 z-level so we will only use 2-level map not 3...
-        default_val = {'duration': [], 'size': [], 'tile_coord': tile_coord} if create_if_absent else None
+        default_val = {'duration': [], 'size': [], 'mpp': [], 'tile_coord': tile_coord} if create_if_absent else None
         xz_s = get_child_entry(y_s, "{}_{}".format(x, z), default_val)
 
     return xz_s
@@ -346,8 +358,7 @@ def get_total_num_pixels(tile_grid, bbox, srs='4326', with_clipping=True):
                           the bbox excluded.  False will use all pixels from tiles that intersect the bbox
     :return: Total number of pixels
     """
-    req_srs = mapproxy_srs.SRS(srs)
-    grid_bbox = mapproxy_grid.grid_bbox(bbox, mapproxy_srs.SRS(4326), req_srs)
+    grid_bbox = mapproxy_grid.grid_bbox(bbox, mapproxy_srs.SRS(srs), tile_grid.srs)
 
     # Determine all affected tiles across all provider levels
     total_pixels = 0
@@ -367,12 +378,13 @@ def get_total_num_pixels(tile_grid, bbox, srs='4326', with_clipping=True):
                 tile_num_px = (get_area_bbox(i) / get_area_bbox(tile_bbox)) * px_per_tile
                 total_pixels += tile_num_px
         else:
-            total_pixels = px_per_tile * len(tile_coords)
+            num_tiles = result[1][0]*result[1][1]  # xdim * ydim
+            total_pixels += px_per_tile * num_tiles
 
     return total_pixels
 
 
-def get_summary_stats(input_item, fields=('area', 'duration', 'size')):
+def get_summary_stats(input_item, fields):
     """
     Computes all statistics at a particular granularity defined by the input_item across each
     of the fields of interest (e.g. 'areas', 'times', 'sizes').  input_item could represent
@@ -433,24 +445,114 @@ def get_provider_grid(provider):
     return mapproxy_grid.tile_grid_for_epsg('EPSG:4326', tile_size=(256, 256), res=res)
 
 
-def find_first(targets, field, statistic_name, default_value):
+def query(group_name, field, statistic_name, bbox, bbox_srs, gap_fill_thresh=0.1, default_value=None,
+          custom_stats=None, grouping='provider_name'):
     """
-    Returns the value for the specified field & statistic on the first target holding a value
-    :param targets: List of targets (e.g. [group_stats, global_stats])
-    :param field: The field being searched (e.g. size, mpp)
-    :param statistic_name: The statistic being searched (e.g. mean, min, max)
-    :param default_value: A default value if no targets hold the desired value
-    :return: (statistic_value, found_target, index_of_target_in_targets) or (default_value, None, -1)
+    Finds the highest resolution of the requested statistic:
+        1. Within group and bbox region (leveraging tile grid)
+        2. Within group
+        3. Global
+        4. Default value
+
+    :param group_name: Must match grouping semantics (e.g. grouping='provider_type' then group_name in wms, osm, ...)
+    :param field: The field to query (e.g. size, mpp, duration)
+    :param statistic_name: The name of the statistic (e.g. mean, ci_90, ..)
+    :param bbox: The bounding box defining the region to estimate
+    :param bbox_srs: The srs of bbox
+    :param gap_fill_thresh: If bbox has less that this % overlap with tile-level statistics then fill-gaps using group
+                            level or global level size/sq.km, otherwise gap-fill using the mean of observed tile-level
+                            stats
+    :param default_value: A default value to return if no statistics exist
+    :param custom_stats: Use custom statistics dictionary rather than cached (see get_statistics or compute_statistics)
+    :param grouping: iff custom_stats is None, defines which stat grouping to use (must match group_name semantics)
+    :return: (Highest resolution of statistic, object w/ metadata about how it was generated incl. resolution)
     """
-    for i in range(0, len(targets)):
-        target = targets[i]
-        if target is None:
-            continue
+    if custom_stats is not None:
+        all_stats = custom_stats
+    else:
+        all_stats = get_statistics(grouping=grouping)
 
-        if field in target and statistic_name in target[field]:
-            return target[field][statistic_name], target, i
+    method = {
+        'stat': statistic_name,
+    }
 
-    return default_value, None, -1
+    def get_single_value(o):
+        fld = o.get(field)
+        if fld:
+            return fld.get(statistic_name)
+
+    def get_upper_ci_value(o):
+        fld = o.get(field)
+        if fld and fld.get(statistic_name):  # Can be missing (e.g. 1 data sample)
+            return fld[statistic_name][1]  # Get the upper bound
+
+    get_value = get_upper_ci_value if statistic_name.startswith('ci_') else get_single_value
+
+    if all_stats:
+        group_stats = all_stats.get(group_name)
+        if group_stats:
+            # TODO tile_grid params should be serialized on all_stats object
+            # We have some statistics specific to this group (e.g. osm, wms, etc)
+            tile_grid = get_default_tile_grid()
+            req_bbox = mapproxy_grid.grid_bbox(bbox, mapproxy_srs.SRS(bbox_srs), tile_grid.srs)
+            req_area = get_area_bbox(req_bbox)
+
+            affected_tiles = get_tile_stats(group_stats, tile_grid, req_bbox)
+
+            if affected_tiles and len(affected_tiles) > 0:
+                # We have some stats specific to this group, at tiles within the user-defined region
+                # We want to weight tile-specific statistics based on its % overlap with the bbox
+                # (e.g. tile1 accounts for 50% of bbox area, its stats should be weighted at 50%
+                total_weight = 0
+                values = []
+                stat_value = 0
+
+                for tile_stat in affected_tiles:
+                    t_val = get_value(tile_stat)
+                    if t_val is not None:
+                        tile_coord = tile_stat['tile_coord']
+                        inter = get_bbox_intersect(req_bbox, tile_grid.tile_bbox(tile_coord, True))
+                        weight = get_area_bbox(inter) / req_area
+
+                        stat_value += weight * t_val
+                        values += [t_val]
+                        total_weight += weight
+
+                if total_weight > 1.0:
+                    # Shouldn't happen since tile-grid is disjoint...
+                    stat_value /= total_weight
+                elif total_weight < gap_fill_thresh:
+                    # If the overlap was very minor than gap fill using the group-wide stats
+                    stat_value += (1.0 - total_weight) * get_value(group_stats)
+                else:
+                    # Otherwise, gap fill using the average from the tiles we did see
+                    stat_value += (1.0 - total_weight) * statistics.mean(values)
+
+                if total_weight > 0:
+                    method['group'] = '{}_tiles'.format(group_name)
+                    method['tiles'] = {
+                        'count': len(affected_tiles),
+                        'total_weight': 100 * total_weight,
+                        'gap_fill': group_name if total_weight < gap_fill_thresh else 'tile_mean'
+                    }
+                else:
+                    # It's possible that none of the tiles had the stat we were looking for in which case gap_fill
+                    # is essentially the same as using the group-level statistic
+                    method['group'] = group_name
+            else:
+                # No overlapping tiles, use group specific stats
+                method['group'] = group_name
+                stat_value = get_value(group_stats)
+        else:
+            # No group-specific data, use statistics computed across all groups (i.e. every completed job)
+            method['group'] = 'GLOBAL'
+            stat_value = get_value(all_stats['GLOBAL'])
+    else:
+        # No statistics... use default
+        method['group'] = 'None'
+        stat_value = default_value
+
+    return stat_value, method
 
 
 def is_valid_result(result):

@@ -73,7 +73,7 @@ class Overpass(object):
         """Get the overpass query used for this extract."""
         return self.query
 
-    def run_query(self, user_details=None, subtask_percentage=100):
+    def run_query(self, user_details=None, subtask_percentage=100, subtask_start=0, eta=None):
         """
         Run the overpass query.
         subtask_percentage is the percentage of the task referenced by self.task_uid this method takes up.
@@ -93,34 +93,64 @@ class Overpass(object):
         logger.debug(q)
         logger.debug('Query started at: %s'.format(datetime.now()))
         try:
+            update_progress(self.task_uid, progress=0, subtask_percentage=subtask_percentage,
+                            subtask_start=subtask_start, eta=eta,
+                            msg='Querying provider data')
+
+            # TODO: Can we do a HEAD request to determine the size of the request prior to running the actual query?
             req = auth_requests.post(self.url, slug=self.slug, data=q, stream=True, verify=self.verify_ssl)
 
-            # Since the request takes a while, jump progress to an arbitrary 50 percent...
-            update_progress(self.task_uid, progress=50, subtask_percentage=subtask_percentage)
             try:
-                size = int(req.headers.get('content-length'))
+                total_size = int(req.headers.get('content-length'))
             except (ValueError, TypeError):
                 if req.content:
-                    size = len(req.content)
+                    total_size = len(req.content)
                 else:
                     raise Exception("Overpass Query failed to return any data")
-            inflated_size = size * 2
+
+            # Since the request takes a while, jump progress to a very high percent...
+            # 85/15 split is essentially the speed of the network against the speed of the local fs
+            update_progress(self.task_uid, progress=85,
+                            subtask_percentage=subtask_percentage,
+                            subtask_start=subtask_start,
+                            eta=eta,
+                            msg='Downloading data from provider: 0 of {:.2f} MB(s)'.format(total_size/float(1e6)))
+
             CHUNK = 1024 * 1024 * 2  # 2MB chunks
+            update_interval = 1024 * 1024 * 250  # Every 250 MB
+
+            written_size = 0
+            last_update = 0
+
             from audit_logging.file_logging import logging_open
             with logging_open(self.raw_osm, 'wb', user_details=user_details) as fd:
                 for chunk in req.iter_content(CHUNK):
                     fd.write(chunk)
-                    size += CHUNK
-                    # removing this call to update_progress for now because every time update_progress is called,
+                    written_size += CHUNK
+
+                    # Limit the number of calls to update_progress because every time update_progress is called,
                     # the ExportTask model is updated, causing django_audit_logging to update the audit way to much
                     # (via the post_save hook). In the future, we might try still using update progress just as much
                     # but update the model less to make the audit log less spammed, or making audit_logging only log
                     # certain model changes rather than logging absolutely everything.
-                    ## Because progress is already at 50, we need to make this part start at 50 percent
-                    #update_progress(
-                    #    self.task_uid, progress=(float(size) / float(inflated_size)) * 100,
-                    #    subtask_percentage=subtask_percentage
-                    #)
+                    last_update += CHUNK
+                    if last_update > update_interval:
+                        # Because progress is already at 50, we need to make this part start at 50 percent
+                        last_update = 0
+                        progress = 50.0 + (float(written_size) / float(total_size) * 50.0)
+                        update_progress(self.task_uid, progress=progress,
+                                        subtask_percentage=subtask_percentage,
+                                        subtask_start=subtask_start,
+                                        eta=eta,
+                                        msg='Downloading data from provider: {:.2f} of {:.2f} MB(s)'.format(
+                                                written_size/float(1e6), total_size/float(1e6)))
+
+            # Done w/ this subtask
+            update_progress(self.task_uid, progress=100,
+                            subtask_percentage=subtask_percentage,
+                            subtask_start=subtask_start,
+                            eta=eta,
+                            msg='Completed downloading data from provider')
         except exceptions.RequestException as e:
             logger.error('Overpass query threw: {0}'.format(e))
             raise exceptions.RequestException(e)

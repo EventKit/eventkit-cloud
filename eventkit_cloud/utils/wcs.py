@@ -23,7 +23,7 @@ class WCSConverter(object):
     """
 
     def __init__(self, config=None, out=None, bbox=None, service_url=None, layer=None, debug=None, name=None,
-                 task_uid=None, fmt=None, slug=None, user_details=None):
+                 task_uid=None, fmt=None, slug=None, user_details=None, eta=None):
         """
         Initialize the WCStoGPKG utility.
         :param slug: An identifier slug for the provider task record.
@@ -33,6 +33,7 @@ class WCSConverter(object):
         :param layer: The specific coverage to request.
         :param debug: Boolean to enable debugging.
         :param name: A name for the service.
+        :param eta: ETA estimator
         :param task_uid:
         """
         self.config = yaml.load(config) if config is not None else None

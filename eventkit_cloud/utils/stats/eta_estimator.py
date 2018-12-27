@@ -2,47 +2,34 @@ import time
 import datetime
 
 
-def get_eta_estimate(data_provider_task):
-    # try:
-    #     provider = DataProvider.objects.select_related("export_provider_type").get(slug=data_provider_task.slug)
-    # except ObjectDoesNotExist:
-    #     raise ValueError("Provider slug '{}' is not valid".format(data_provider_task.slug))
-    provider = data_provider_task
-
-    if supports_mapproxy(provider):
-        return get_mapproxy_eta_estimate(data_provider_task)
-    else:
-        return get_default_eta_estimate(data_provider_task)
-
-
-def supports_mapproxy(provider):
-    """
-    :param provider: The DataProvider to test
-    :return: True if the DataProvider exports a tilegrid of raster data
-    """
-    type_name = provider.export_provider_type.type_name
-    return type_name == 'wms' or type_name == 'wmts' or type_name == 'tms' or "arcgis-raster"
-
-
-def get_mapproxy_eta_estimate(data_provider_task):
-    # TODO: How do we listen to the Seeder's Progress??
-    return 0
-
-
-def get_default_eta_estimate(data_provider_task):
-    return 0
-
-
 class ETA(object):
-    def __init__(self):
-        self.last_tick_start = time.time()
+    """
+    Generates an estimate time for completion of an abstract task based on the rate of progress. As update is called
+    this class will track how fast a task is progressing and then extrapolate to determine a completion time. This
+    assumes that progression is smoothly defined and that the rate of progress is also smooth.
+
+    Based on mapproxy implementation for ETA
+    """
+    def __init__(self, task_uid=None, start_time=time.time(), debug_os=None):
+        self.task_uid = task_uid
+        self.start_time = start_time
+        self.last_tick_start = start_time
         self.progress = 0.0
         self.ticks = 10000
         self.tick_duration_sums = 0.0
         self.tick_duration_divisor = 0.0
         self.tick_count = 0
+        self.debug_os = debug_os
 
-    def update(self, progress):
+        if self.debug_os is not None:
+            self.debug_os.write('task_uid, progress, elapsed_time(sec), timestamp, est_finish,'
+                                'timestamp_utc, est_finish_utc, message\n')
+
+    def update(self, progress, dbg_msg=''):
+        """
+        :param progress: A percentage in decimal [0.0-1.0]
+        :param dbg_msg: Text written to the "message" column of the debug csv, iff debug_os != None
+        """
         self.progress = progress
         missing_ticks = (self.progress * self.ticks) - self.tick_count
         if missing_ticks:
@@ -62,7 +49,18 @@ class ETA(object):
 
             self.last_tick_start = time.time()
 
+        if self.debug_os is not None:
+            curr_time = time.time()
+            self.debug_os.write('{}, {}, {}, {}, {}, {}, {}, {}\n'.format(
+                                self.task_uid, self.progress, self.elapsed_time(current_time=curr_time),
+                                curr_time, self.eta(),
+                                datetime.datetime.fromtimestamp(curr_time, datetime.timezone.utc), self.eta_datetime(),
+                                dbg_msg))
+
     def eta_string(self):
+        """
+        :return: String representation (e.g. 2018-12-21-21:23:31-UTC)
+        """
         timestamp = self.eta()
         if timestamp is None:
             return 'N/A'
@@ -73,9 +71,15 @@ class ETA(object):
             return 'N/A'
 
     def eta_datetime(self):
+        """
+        :return: ETA represented as a datetime object
+        """
         return datetime.datetime.fromtimestamp(self.eta(), datetime.timezone.utc)
 
     def eta(self):
+        """
+        :return: ETA represented as float defined by Python's time module
+        """
         if not self.tick_count:
             return
 
@@ -84,5 +88,14 @@ class ETA(object):
 
         return self.last_tick_start + (avg_tick_duration * remaining_ticks)
 
+    def elapsed_time(self, current_time=time.time()):
+        """
+        :return: The amount of time that has passed since the ETA starting time in seconds
+        """
+        return current_time - self.start_time
+
     def __str__(self):
+        """
+        :return: See eta_string
+        """
         return self.eta_string()

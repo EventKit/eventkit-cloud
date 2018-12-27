@@ -37,6 +37,7 @@ from eventkit_cloud.utils import (
     overpass, pbf, s3, mapproxy, wcs, geopackage, gdalutils
 )
 from eventkit_cloud.utils.ogr import OGR
+from eventkit_cloud.utils.stats.eta_estimator import ETA
 
 
 BLACKLISTED_ZIP_EXTS = ['.ini', '.om5', '.osm', '.lck', '.pyc']
@@ -358,11 +359,14 @@ class FormatTask(ExportTask):
 @gdalutils.retry
 def osm_data_collection_pipeline(
         export_task_record_uid, stage_dir, job_name='no_job_name_specified', url=None, slug=None,
-        bbox=None, user_details=None, config=None):
+        bbox=None, user_details=None, config=None, eta=None):
     """
     Collects data from OSM & produces a thematic gpkg as a subtask of the task referenced by export_provider_task_id.
     bbox expected format is an iterable of the form [ long0, lat0, long1, lat1 ]
     """
+    # Reasonable subtask_percentages we're determined by profiling code sections on a developer workstation
+    # TODO: Biggest impact to improving ETA estimates reqs higher fidelity tracking of run_query and clip_dataset
+
     # --- Overpass Query
     op = overpass.Overpass(
         bbox=bbox, stage_dir=stage_dir, slug=slug, url=url,
@@ -370,7 +374,7 @@ def osm_data_collection_pipeline(
         raw_data_filename='{}_query.osm'.format(job_name)
     )
 
-    osm_data_filename = op.run_query(user_details=user_details, subtask_percentage=20)  # run the query
+    osm_data_filename = op.run_query(user_details=user_details, subtask_percentage=65, eta=eta)  # run the query
 
     # --- Convert Overpass result to PBF
     osm_filename = os.path.join(stage_dir, osm_data_filename)
@@ -385,13 +389,16 @@ def osm_data_collection_pipeline(
         raise RuntimeError("The configuration field is required for OSM data providers")
 
     feature_selection = FeatureSelection.example(config)
-    update_progress(export_task_record_uid, progress=25)
+
+    update_progress(export_task_record_uid, progress=67, eta=eta, msg='Converting data to Geopackage')
     geom = Polygon.from_bbox(bbox)
     g = geopackage.Geopackage(pbf_filepath, geopackage_filepath, stage_dir, feature_selection, geom,
                    export_task_record_uid=export_task_record_uid)
-    g.run()
-    update_progress(export_task_record_uid, progress=75)
-    # --- Add the Land Boundaries polygon layer
+    g.run(subtask_start=77, subtask_percentage=8, eta=eta)  # 77% to 85%
+
+    # --- Add the Land Boundaries polygon layer, this accounts for the majority of the time
+    update_progress(export_task_record_uid, 85.5, eta=eta, msg='Clipping data in Geopackage')
+
     database = settings.DATABASES['feature_data']
     in_dataset = 'PG:"dbname={name} host={host} user={user} password={password} port={port}"'.format(
         host=database['HOST'],
@@ -399,13 +406,12 @@ def osm_data_collection_pipeline(
         password=database['PASSWORD'].replace('$', '\$'),
         port=database['PORT'],
         name=database['NAME'])
-    update_progress(export_task_record_uid, progress=95)
     gdalutils.clip_dataset(boundary=bbox, in_dataset=in_dataset, out_dataset=geopackage_filepath, table="land_polygons",
                            fmt='gpkg')
 
     ret_geopackage_filepath = g.results[0].parts[0]
     assert (ret_geopackage_filepath == geopackage_filepath)
-    update_progress(export_task_record_uid, progress=100)
+    update_progress(export_task_record_uid, progress=100, eta=eta, msg="Completed OSM data collection pipeline")
 
     return geopackage_filepath
 
@@ -422,29 +428,39 @@ def osm_data_collection_task(
     from eventkit_cloud.tasks.models import ExportRun
 
     logger.debug("enter run for {0}".format(self.name))
+    debug_os = None
 
-    result = result or {}
-    run = ExportRun.objects.get(uid=run_uid)
+    try:
+        # Uncomment debug_os to generate a simple CSV of the progress log that can be used to evaluate the accuracy
+        # of ETA estimates
+        debug_os = open("{}_progress_log.csv".format(task_uid), 'w')
+        eta = ETA(task_uid=task_uid, debug_os=debug_os)
 
-    if user_details is None:
-        user_details = {'username': 'username not set in osm_data_collection_task'}
+        result = result or {}
+        run = ExportRun.objects.get(uid=run_uid)
 
-    gpkg_filepath = osm_data_collection_pipeline(
-        task_uid, stage_dir, slug=provider_slug, job_name=job_name, bbox=bbox, user_details=user_details,
-        url=overpass_url, config=config
-    )
+        if user_details is None:
+            user_details = {'username': 'username not set in osm_data_collection_task'}
 
-    selection = parse_result(result, 'selection')
-    if selection:
-        logger.debug("Calling clip_dataset with boundary={}, in_dataset={}".format(selection, gpkg_filepath))
-        gpkg_filepath = gdalutils.clip_dataset(boundary=selection, in_dataset=gpkg_filepath, fmt=None)
+        gpkg_filepath = osm_data_collection_pipeline(
+            task_uid, stage_dir, slug=provider_slug, job_name=job_name, bbox=bbox, user_details=user_details,
+            url=overpass_url, config=config, eta=eta
+        )
 
-    result['result'] = gpkg_filepath
-    result['geopackage'] = gpkg_filepath
+        selection = parse_result(result, 'selection')
+        if selection:
+            logger.debug("Calling clip_dataset with boundary={}, in_dataset={}".format(selection, gpkg_filepath))
+            gpkg_filepath = gdalutils.clip_dataset(boundary=selection, in_dataset=gpkg_filepath, fmt=None)
 
-    result = add_metadata_task(result=result, job_uid=run.job.uid, provider_slug=provider_slug)
+        result['result'] = gpkg_filepath
+        result['geopackage'] = gpkg_filepath
 
-    logger.debug("exit run for {0}".format(self.name))
+        result = add_metadata_task(result=result, job_uid=run.job.uid, provider_slug=provider_slug)
+
+        logger.debug("exit run for {0}".format(self.name))
+    finally:
+        if debug_os:
+            debug_os.close()
 
     return result
 
@@ -708,11 +724,12 @@ def wcs_export_task(self, result=None, layer=None, config=None, run_uid=None, ta
     result = result or {}
     out = os.path.join(stage_dir, '{0}.tif'.format(job_name))
 
+    eta = ETA(task_uid=task_uid)
     task = ExportTaskRecord.objects.get(uid=task_uid)
     try:
         wcs_conv = wcs.WCSConverter(config=config, out=out, bbox=bbox, service_url=service_url, layer=layer, debug=True,
                                     name=name, task_uid=task_uid, fmt="gtiff", slug=task.export_provider_task.slug,
-                                    user_details=user_details)
+                                    user_details=user_details, eta=eta)
         out = wcs_conv.convert()
         result['result'] = out
         result['geotiff'] = out
@@ -802,6 +819,7 @@ def mapproxy_export_task(self, result=None, layer=None, config=None, run_uid=Non
     result = result or {}
     run = ExportRun.objects.get(uid=run_uid)
     task = ExportTaskRecord.objects.get(uid=task_uid)
+    # ETA estimator will be initialized by the eventkit_cloud.utils.mapproxy.CustomLogger
 
     selection = parse_result(result, 'selection')
 
@@ -1337,12 +1355,18 @@ def kill_task(result=None, task_pid=None, celery_uid=None, *args, **kwargs):
     return result
 
 
-def update_progress(task_uid, progress=None, subtask_percentage=100.0, estimated_finish=None):
+def update_progress(task_uid, progress=None, subtask_percentage=100.0, subtask_start=0,
+                    estimated_finish=None, eta=None, msg=None):
     """
     Updates the progress of the ExportTaskRecord from the given task_uid.
     :param task_uid: A uid to reference the ExportTaskRecord.
-    :param subtask_percentage: is the percentage of the task referenced by task_uid the caller takes up.
-    :return: A function which can be called to update the progress on an ExportTaskRecord.
+    :param progress: The percent of completion for the task or subtask [0-100]
+    :param subtask_percentage: is the percentage of the task referenced by task_uid the caller takes up. [0-100]
+    :param subtask_start: is the beginning of where this subtask's percentage block beings [0-100]
+                          (e.g. when subtask_percentage=0.0 the absolute_progress=subtask_start)
+    :param estimated_finish: The datetime of when the entire task is expected to finish, overrides eta estimator
+    :param eta: The ETA estimator for this task will be used to automatically determine estimated_finish
+    :param msg: Message describing the current activity of the task
     """
 
     from django.db import connection
@@ -1351,12 +1375,12 @@ def update_progress(task_uid, progress=None, subtask_percentage=100.0, estimated
     if task_uid is None:
         return
 
-    if not estimated_finish and not progress:
+    if not progress and not estimated_finish:
         return
 
-    absolute_progress = progress * (subtask_percentage / 100.0)
-    if absolute_progress > 100:
-        absolute_progress = 100
+    if progress is not None:
+        subtask_progress = min(progress, 100.0)
+        absolute_progress = min(subtask_start + subtask_progress * (subtask_percentage / 100.0), 100.0)
 
     # We need to close the existing connection because the logger could be using a forked process which
     # will be invalid and throw an error.
@@ -1365,9 +1389,16 @@ def update_progress(task_uid, progress=None, subtask_percentage=100.0, estimated
     if absolute_progress:
         set_cache_value(uid=task_uid, attribute="progress",
                         model_name='ExportTaskRecord', value=absolute_progress)
+        if eta is not None:
+            eta.update(absolute_progress/100.0, dbg_msg=msg)  # convert to [0-1.0]
+
     if estimated_finish:
         set_cache_value(uid=task_uid, attribute="estimated_finish",
                         model_name='ExportTaskRecord', value=estimated_finish)
+    elif eta is not None:
+        # Use the updated ETA estimator to determine an estimated_finish
+        set_cache_value(uid=task_uid, attribute="estimated_finish",
+                        model_name='ExportTaskRecord', value=eta.eta_datetime())
 
 
 def parse_result(task_result, key=''):
