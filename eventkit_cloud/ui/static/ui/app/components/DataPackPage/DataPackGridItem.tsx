@@ -23,7 +23,7 @@ import View from 'ol/view';
 import interaction from 'ol/interaction';
 import VectorSource from 'ol/source/vector';
 import XYZ from 'ol/source/xyz';
-import GeoJSON from 'ol/format/geojson';
+import GeoJSONFormat from 'ol/format/geojson';
 import VectorLayer from 'ol/layer/vector';
 import Tile from 'ol/layer/tile';
 import Attribution from 'ol/control/attribution';
@@ -239,7 +239,7 @@ export class DataPackGridItem extends React.Component<Props, State> {
 
         const source = new VectorSource({ wrapX: true });
 
-        const geojson = new GeoJSON();
+        const geojson = new GeoJSONFormat();
         const feature = geojson.readFeature(this.props.run.job.extent, {
             featureProjection: 'EPSG:3857',
             dataProjection: 'EPSG:4326',

@@ -1,9 +1,10 @@
+import * as PropTypes from 'prop-types';
 import * as React from 'react';
 import { connect } from 'react-redux';
 import { withTheme, Theme } from '@material-ui/core/styles';
 import withWidth, { isWidthUp } from '@material-ui/core/withWidth';
 import { browserHistory } from 'react-router';
-import Joyride from 'react-joyride';
+import * as Joyride from 'react-joyride';
 import Help from '@material-ui/icons/Help';
 import Toolbar from '@material-ui/core/Toolbar';
 import ButtonBase from '@material-ui/core/ButtonBase';
@@ -41,18 +42,23 @@ interface Props {
     };
     featuredIds: string[];
     user: Eventkit.Store.User;
-    getRuns: () => void;
+    getRuns: (args: object) => void;
     deleteRun: () => void;
     getProviders: () => void;
-    runDeletion: object;
+    runDeletion: {
+        deleted: boolean;
+        deleting: boolean;
+    };
     drawer: string;
-    importGeom: object;
+    importGeom: {
+        processing: boolean;
+    };
     geocode: object;
     getGeocode: () => void;
-    processGeoJSONFile: () => void;
+    processGeoJSONFile: (file: File) => void;
     resetGeoJSONFile: () => void;
-    setOrder: () => void;
-    setView: () => void;
+    setOrder: (order: string) => void;
+    setView: (view: string) => void;
     providers: Eventkit.Provider[];
     updateDataCartPermissions: () => void;
     updatePermissions: {
@@ -87,13 +93,22 @@ interface State {
     pageLoading: boolean;
     loading: boolean;
     geojson_geometry: null | GeoJSON.Geometry;
-    steps: object[];
+    steps: any[];
     isRunning: boolean;
 }
 
 export class DataPackPage extends React.Component<Props, State> {
     private pageSize: number;
     private defaultQuery;
+    private fetch: number;
+    private view: any;
+    private joyride: Joyride.default;
+
+    static contextTypes = {
+        config: PropTypes.shape({
+            DATAPACK_PAGE_SIZE: PropTypes.string,
+        }),
+    };
     constructor(props: Props, context) {
         super(props);
         this.getViewRef = this.getViewRef.bind(this);
@@ -117,7 +132,7 @@ export class DataPackPage extends React.Component<Props, State> {
         this.state = {
             open: isWidthUp('xl', props.width),
             permissions: {
-                value: '',
+                value: '' as Eventkit.Permissions.Visibility,
                 groups: {},
                 members: {},
             },
@@ -155,7 +170,7 @@ export class DataPackPage extends React.Component<Props, State> {
     componentDidMount() {
         this.props.getProviders();
         this.makeRunRequest();
-        this.fetch = setInterval(this.autoRunRequest, 10000);
+        this.fetch = window.setInterval(this.autoRunRequest, 10000);
         // make sure no geojson upload is in the state
         this.props.resetGeoJSONFile();
         browserHistory.listen((location) => {
@@ -166,7 +181,7 @@ export class DataPackPage extends React.Component<Props, State> {
         });
     }
 
-    shouldComponentUpdate(p, s) {
+    shouldComponentUpdate(p: Props, s: State) {
         if (p.runsFetching !== this.props.runsFetching) {
             if (s.loading !== this.state.loading ||
                 this.state.loading ||
@@ -179,7 +194,7 @@ export class DataPackPage extends React.Component<Props, State> {
         return true;
     }
 
-    componentDidUpdate(prevProps) {
+    componentDidUpdate(prevProps: Props) {
         if (prevProps.runsFetched === null && this.props.runsFetched) {
             if (this.state.pageLoading) {
                 this.setState({ pageLoading: false });
@@ -227,7 +242,7 @@ export class DataPackPage extends React.Component<Props, State> {
     }
 
     componentWillUnmount() {
-        clearInterval(this.fetch);
+        window.clearInterval(this.fetch);
         // save view and order to redux state so it can be set next time the page is visited
         if (this.props.runsMeta.order !== this.props.location.query.order) {
             this.props.setOrder(this.props.location.query.order);
@@ -237,19 +252,19 @@ export class DataPackPage extends React.Component<Props, State> {
         }
     }
 
-    onSearch(searchText) {
+    private onSearch(searchText: string) {
         this.updateLocationQuery({ search: searchText });
     }
 
-    getViewRef(instance) {
+    private getViewRef(instance: HTMLElement) {
         this.view = instance;
     }
 
-    getCurrentLocation() {
+    private getCurrentLocation() {
         return this.props.location;
     }
 
-    getJoyRideSteps() {
+    private getJoyRideSteps(): any[] {
         switch (this.props.location.query.view) {
             case 'map':
                 return joyride.DataPackPage.map;
@@ -261,7 +276,7 @@ export class DataPackPage extends React.Component<Props, State> {
         }
     }
 
-    getView(view) {
+    private getView(view: string) {
         const commonProps = {
             runIds: this.props.runIds,
             user: this.props.user,
@@ -309,11 +324,11 @@ export class DataPackPage extends React.Component<Props, State> {
         }
     }
 
-    isPageLoading() {
+    private isPageLoading() {
         return this.props.runsFetched === null;
     }
 
-    updateLocationQuery(query) {
+    private updateLocationQuery(query: any) {
         browserHistory.push({
             ...this.props.location,
             query: {
@@ -323,7 +338,7 @@ export class DataPackPage extends React.Component<Props, State> {
         });
     }
 
-    checkForEmptySearch(searchText) {
+    private checkForEmptySearch(searchText: string) {
         if (searchText === '' && this.props.location.query.search) {
             const query = { ...this.props.location.query };
             query.search = undefined;
@@ -331,17 +346,17 @@ export class DataPackPage extends React.Component<Props, State> {
         }
     }
 
-    handleSortChange(value) {
+    private handleSortChange(value: string) {
         this.updateLocationQuery({ order: value });
     }
 
-    autoRunRequest() {
+    private autoRunRequest() {
         // Call make run request and pass true to indicate this is an auto run request
         // The auto run request will not have the power to cancel any current requests
         this.makeRunRequest(true);
     }
 
-    makeRunRequest(isAuto = false) {
+    private makeRunRequest(isAuto = false) {
         return this.props.getRuns({
             page_size: Number(this.props.location.query.page_size),
             ordering: this.props.location.query.order,
@@ -357,21 +372,21 @@ export class DataPackPage extends React.Component<Props, State> {
         });
     }
 
-    handleOwnerFilter(value) {
+    private handleOwnerFilter(value: string) {
         this.updateLocationQuery({ collection: value });
     }
 
-    handleFilterApply(state) {
+    private handleFilterApply(state: State) {
         this.setState({ ...this.state, ...state, loading: true }, this.makeRunRequest);
         if (!isWidthUp('xl', this.props.width)) {
             this.setState({ open: false });
         }
     }
 
-    handleFilterClear() {
+    private handleFilterClear() {
         this.setState({
             permissions: {
-                value: '',
+                value: '' as Eventkit.Permissions.Visibility,
                 groups: {},
                 members: {},
             },
@@ -390,7 +405,7 @@ export class DataPackPage extends React.Component<Props, State> {
         }
     }
 
-    handleSpatialFilter(geojson) {
+    private handleSpatialFilter(geojson: GeoJSON.FeatureCollection) {
         let geom = null;
         if (geojson) {
             geom = flattenFeatureCollection(geojson).features[0].geometry;
@@ -398,7 +413,7 @@ export class DataPackPage extends React.Component<Props, State> {
         this.setState({ geojson_geometry: geom, loading: true }, this.makeRunRequest);
     }
 
-    changeView(view) {
+    private changeView(view: string) {
         const sharedViewOrders = ['started_at', '-started_at', 'job__name', '-job__name', '-job__featured', 'job__featured'];
         if (sharedViewOrders.indexOf(this.props.location.query.order) < 0) {
             this.updateLocationQuery({ view, order: '-started_at' });
@@ -407,11 +422,11 @@ export class DataPackPage extends React.Component<Props, State> {
         }
     }
 
-    handleToggle() {
+    private handleToggle() {
         this.setState({ open: !this.state.open });
     }
 
-    loadMore() {
+    private loadMore() {
         if (this.props.runsMeta.nextPage) {
             this.updateLocationQuery({
                 page_size: Number(this.props.location.query.page_size) + this.pageSize,
@@ -419,7 +434,7 @@ export class DataPackPage extends React.Component<Props, State> {
         }
     }
 
-    loadLess() {
+    private loadLess() {
         if (Number(this.props.location.query.page_size) > this.pageSize) {
             this.updateLocationQuery({
                 page_size: Number(this.props.location.query.page_size) - this.pageSize,
@@ -427,19 +442,21 @@ export class DataPackPage extends React.Component<Props, State> {
         }
     }
 
-    joyrideAddSteps(steps) {
+    private joyrideAddSteps(steps: object[]) {
         let newSteps = steps;
 
         if (!Array.isArray(newSteps)) {
             newSteps = [newSteps];
         }
 
-        if (!newSteps.length) return;
+        if (!newSteps.length) {
+            return;
+        }
 
         this.setState({ steps: newSteps });
     }
 
-    callback(data) {
+    private callback(data: any) {
         if (data.action === 'close' || data.action === 'skip' || data.type === 'finished') {
             // This explicitly stops the tour (otherwise it displays a "beacon" to resume the tour)
             this.setState({ isRunning: false, steps: [] });
@@ -467,7 +484,7 @@ export class DataPackPage extends React.Component<Props, State> {
         }
     }
 
-    handleJoyride() {
+    private handleJoyride() {
         const { colors } = this.props.theme.eventkit;
 
         if (this.state.isRunning === true) {
@@ -548,7 +565,7 @@ export class DataPackPage extends React.Component<Props, State> {
                 backgroundRepeat: 'repeat repeat',
                 marginRight: this.state.open && isWidthUp('xl', this.props.width) ? '250px' : '0px',
                 marginTop: isWidthUp('sm', this.props.width) ? '10px' : '2px',
-                position: 'relative',
+                position: 'relative' as 'relative',
             },
             pageTitle: {
                 fontSize: '18px',
@@ -583,7 +600,7 @@ export class DataPackPage extends React.Component<Props, State> {
                 :
                 {
                     display: 'inline-block',
-                    position: 'absolute',
+                    position: 'absolute' as 'absolute',
                     color: colors.text_primary,
                     lineHeight: '36px',
                     right: '10px',
@@ -605,7 +622,7 @@ export class DataPackPage extends React.Component<Props, State> {
                 marginBottom: '5px',
             },
             loadingContainer: {
-                position: 'absolute',
+                position: 'absolute' as 'absolute',
                 width: '100%',
                 height: '100%',
                 zIndex: 100,
@@ -624,19 +641,24 @@ export class DataPackPage extends React.Component<Props, State> {
 
         return (
             <div style={styles.backgroundStyle}>
-                <Joyride
+                <Joyride.default
                     callback={this.callback}
                     ref={(instance) => { this.joyride = instance; }}
-                    steps={steps}
+                    steps={steps as Joyride.Step[]}
                     autoStart
                     type="continuous"
                     showSkipButton
                     showStepsProgress
                     locale={{
+                        // @ts-ignore
                         back: (<span>Back</span>),
+                        // @ts-ignore
                         close: (<span>Close</span>),
+                        // @ts-ignore
                         last: (<span>Done</span>),
+                        // @ts-ignore
                         next: (<span>Next</span>),
+                        // @ts-ignore
                         skip: (<span>Skip</span>),
                     }}
                     run={isRunning}
@@ -711,61 +733,6 @@ export class DataPackPage extends React.Component<Props, State> {
     }
 }
 
-DataPackPage.contextTypes = {
-    config: PropTypes.shape({
-        DATAPACK_PAGE_SIZE: PropTypes.string,
-    }),
-};
-
-DataPackPage.defaultProps = {
-    runsFetched: false,
-    runsFetching: false,
-};
-
-DataPackPage.propTypes = {
-    runIds: PropTypes.arrayOf(PropTypes.string).isRequired,
-    runsFetched: PropTypes.bool,
-    runsFetching: PropTypes.bool,
-    runsMeta: PropTypes.shape({
-        range: PropTypes.string,
-        nextPage: PropTypes.bool,
-        order: PropTypes.string,
-        view: PropTypes.string,
-    }).isRequired,
-    featuredIds: PropTypes.arrayOf(PropTypes.string).isRequired,
-    user: PropTypes.object.isRequired,
-    getRuns: PropTypes.func.isRequired,
-    deleteRun: PropTypes.func.isRequired,
-    getProviders: PropTypes.func.isRequired,
-    runDeletion: PropTypes.object.isRequired,
-    drawer: PropTypes.string.isRequired,
-    importGeom: PropTypes.object.isRequired,
-    geocode: PropTypes.object.isRequired,
-    getGeocode: PropTypes.func.isRequired,
-    processGeoJSONFile: PropTypes.func.isRequired,
-    resetGeoJSONFile: PropTypes.func.isRequired,
-    setOrder: PropTypes.func.isRequired,
-    setView: PropTypes.func.isRequired,
-    providers: PropTypes.arrayOf(PropTypes.object).isRequired,
-    updateDataCartPermissions: PropTypes.func.isRequired,
-    updatePermissions: PropTypes.shape({
-        updating: PropTypes.bool,
-        updated: PropTypes.bool,
-        error: PropTypes.array,
-    }).isRequired,
-    location: PropTypes.shape({
-        query: PropTypes.shape({
-            search: PropTypes.string,
-            collection: PropTypes.string,
-            order: PropTypes.string,
-            view: PropTypes.string,
-            page_size: PropTypes.string,
-        }),
-    }).isRequired,
-    theme: PropTypes.object.isRequired,
-    width: PropTypes.string.isRequired,
-};
-
 function mapStateToProps(state) {
     return {
         runIds: state.exports.orderedIds,
@@ -785,38 +752,34 @@ function mapStateToProps(state) {
 
 function mapDispatchToProps(dispatch) {
     return {
-        getRuns: args => (
+        getRuns: (args: any) => (
             dispatch(getRuns(args))
         ),
-        deleteRun: (uid) => {
+        deleteRun: (uid: string) => {
             dispatch(deleteRun(uid));
         },
         getProviders: () => {
             dispatch(getProviders());
         },
-        getGeocode: (query) => {
+        getGeocode: (query: object) => {
             dispatch(getGeocode(query));
         },
-        processGeoJSONFile: (file) => {
+        processGeoJSONFile: (file: File) => {
             dispatch(processGeoJSONFile(file));
         },
         resetGeoJSONFile: () => {
             dispatch(resetGeoJSONFile());
         },
-        setOrder: (order) => {
+        setOrder: (order: string) => {
             dispatch(setPageOrder(order));
         },
-        setView: (view) => {
+        setView: (view: string) => {
             dispatch(setPageView(view));
         },
-        updateDataCartPermissions: (uid, permissions) => {
+        updateDataCartPermissions: (uid: string, permissions: Eventkit.Permissions) => {
             dispatch(updateDataCartPermissions(uid, permissions));
         },
     };
 }
 
-export default
-@withWidth()
-@withTheme()
-@connect(mapStateToProps, mapDispatchToProps)
-class Default extends DataPackPage {}
+export default withWidth()(withTheme()(connect(mapStateToProps, mapDispatchToProps)(DataPackPage)));

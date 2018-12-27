@@ -16,6 +16,7 @@ import withRef from '../../utils/withRef';
 import { Breakpoint } from '@material-ui/core/styles/createBreakpoints';
 
 export interface Props {
+    customRef?: any;
     runIds: string[];
     user: Eventkit.Store.User;
     onRunDelete: () => void;

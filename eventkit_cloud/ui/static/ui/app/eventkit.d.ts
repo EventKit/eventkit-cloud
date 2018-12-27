@@ -76,11 +76,7 @@ declare namespace Eventkit {
         formats: string[];
         created_at: string;
         relationship: Permissions.Level;
-        permissions: {
-            value: string;
-            users: { [s: string]: string };
-            groups: { [s: string]: string };
-        };
+        permissions: Permissions;
     }
 
     interface Run {

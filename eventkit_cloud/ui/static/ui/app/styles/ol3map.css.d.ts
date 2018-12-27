@@ -1,4 +1,5 @@
 export const olScaleLine: string;
+export const olScaleLineLargeMap: string;
 export const olZoom: string;
 export const olZoomSlider: string;
 export const olControlTopLeft: string;
