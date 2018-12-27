@@ -1,9 +1,9 @@
-import React from 'react';
+import * as React from 'react';
 import { mount } from 'enzyme';
 import { UserInfoTableRow } from '../../components/AccountPage/UserInfoTableRow';
 
 describe('UserInfoTableRow component', () => {
-    const props = { title: 'test title', data: 'test data', ...global.eventkit_test_props };
+    const props = { title: 'test title', data: 'test data', ...(global as any).eventkit_test_props };
     it('should render a table row with title and data cells', () => {
         const wrapper = mount(<UserInfoTableRow {...props} />);
         expect(wrapper.find('tr')).toHaveLength(1);

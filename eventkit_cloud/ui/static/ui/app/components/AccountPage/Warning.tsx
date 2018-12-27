@@ -1,7 +1,11 @@
-import PropTypes from 'prop-types';
-import React, { Component } from 'react';
+import * as React from 'react';
 
-export class Warning extends Component {
+export interface Props {
+    className?: string;
+    text: any;
+}
+
+export class Warning extends React.Component<Props, {}> {
     render() {
         const bodyStyle = {
             backgroundColor: '#f8e6dd',
@@ -9,7 +13,7 @@ export class Warning extends Component {
             margin: '5px 0px',
             lineHeight: '25px',
             padding: '16px',
-            textAlign: 'center',
+            textAlign: 'center' as 'center',
         };
 
         return (
@@ -19,12 +23,5 @@ export class Warning extends Component {
         );
     }
 }
-
-Warning.propTypes = {
-    text: PropTypes.oneOfType([
-        PropTypes.string,
-        PropTypes.node,
-    ]).isRequired,
-};
 
 export default Warning;
