@@ -7,7 +7,6 @@ from string import Template
 
 from django.conf import settings
 from requests import exceptions
-
 from . import auth_requests
 
 logger = logging.getLogger(__name__)
@@ -82,13 +81,14 @@ class Overpass(object):
         Return:
             the path to the overpass extract
         """
+        from eventkit_cloud.tasks.export_tasks import update_progress
+        from audit_logging.file_logging import logging_open
 
         # This is just to make it easier to trace when user_details haven't been sent
         if user_details is None:
             user_details = {'username': 'unknown-run_query'}
 
-        from eventkit_cloud.tasks.export_tasks import update_progress
-
+        req = None
         q = self.get_query()
         logger.debug(q)
         logger.debug('Query started at: %s'.format(datetime.now()))
@@ -97,7 +97,6 @@ class Overpass(object):
                             subtask_start=subtask_start, eta=eta,
                             msg='Querying provider data')
 
-            # TODO: Can we do a HEAD request to determine the size of the request prior to running the actual query?
             req = auth_requests.post(self.url, slug=self.slug, data=q, stream=True, verify=self.verify_ssl)
 
             try:
@@ -109,7 +108,6 @@ class Overpass(object):
                     raise Exception("Overpass Query failed to return any data")
 
             # Since the request takes a while, jump progress to a very high percent...
-            # 85/15 split is essentially the speed of the network against the speed of the local fs
             update_progress(self.task_uid, progress=85,
                             subtask_percentage=subtask_percentage,
                             subtask_start=subtask_start,
@@ -121,8 +119,6 @@ class Overpass(object):
 
             written_size = 0
             last_update = 0
-
-            from audit_logging.file_logging import logging_open
             with logging_open(self.raw_osm, 'wb', user_details=user_details) as fd:
                 for chunk in req.iter_content(CHUNK):
                     fd.write(chunk)
@@ -154,6 +150,9 @@ class Overpass(object):
         except exceptions.RequestException as e:
             logger.error('Overpass query threw: {0}'.format(e))
             raise exceptions.RequestException(e)
+        finally:
+            if req:
+                req.close()
 
         logger.debug('Query finished at %s'.format(datetime.now()))
         logger.debug('Wrote overpass query results to: %s'.format(self.raw_osm))

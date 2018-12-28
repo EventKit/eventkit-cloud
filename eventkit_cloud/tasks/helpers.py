@@ -12,8 +12,6 @@ from django.db.models import Q
 from enum import Enum
 from numpy import linspace
 
-from eventkit_cloud.tasks import logger
-from eventkit_cloud.ui.helpers import logger
 from eventkit_cloud.utils import auth_requests
 from eventkit_cloud.utils.gdalutils import get_band_statistics
 import pickle
