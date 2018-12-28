@@ -15,6 +15,7 @@ import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.WebDriverWait;
 
 import java.time.Duration;
+import java.util.Random;
 
 import static junit.framework.TestCase.assertTrue;
 
@@ -91,7 +92,8 @@ public class DatapackTest extends SeleniumBaseTest {
         assertTrue(details.getDescriptionField().isEnabled());
         assertTrue(details.getProjectField().isEnabled());
         assertTrue(details.getOpenStreetMapDataThemesCheckBox().isEnabled());
-        details.getNameField().sendKeys("Selenium DataPack");
+        Random random = new Random();
+        details.getNameField().sendKeys("Selenium DataPack" + random.nextLong());
         details.getDescriptionField().sendKeys("Selenium description");
         details.getProjectField().sendKeys("Selenium project");
         details.getOpenStreetMapDataThemesCheckBox().click();

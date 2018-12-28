@@ -21,7 +21,7 @@ node {
         dir("${root}/selenium") {
           try {
             removeVolumes()
-            sh "docker-compose up"
+            sh "docker-compose up --abort-on-container-exit"
           } finally {
             // Cleanup
             sh "docker-compose down"
