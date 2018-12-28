@@ -51,12 +51,6 @@ export class PermissionsFilter extends Component {
                 groups: {},
                 members: {},
             };
-            this.props.groups.forEach((group) => {
-                permissions.groups[group.name] = 'READ';
-            });
-            this.props.members.forEach((member) => {
-                permissions.members[member.user.username] = 'READ';
-            });
             this.props.onChange({ ...permissions });
         } else {
             // If the selection IS PRIVATE we can just make the update
@@ -116,8 +110,6 @@ export class PermissionsFilter extends Component {
             let groupText = '';
             if (groupCount === 0) {
                 groupText = 'No Groups';
-            } else if (groupCount === this.props.groups.length) {
-                groupText = 'All Groups';
             } else if (groupCount === 1) {
                 groupText = '1 Group';
             } else {
@@ -125,10 +117,10 @@ export class PermissionsFilter extends Component {
             }
 
             let memberText = '';
-            if (memberCount === 0) {
-                memberText = 'No Members';
-            } else if (memberCount === this.props.members.length) {
+            if (permissions.value === 'PUBLIC') {
                 memberText = 'All Members';
+            } else if (memberCount === 0) {
+                memberText = 'No Members';
             } else if (memberCount === 1) {
                 memberText = '1 Member';
             } else {
@@ -193,8 +185,6 @@ export class PermissionsFilter extends Component {
                     show={this.state.open}
                     onClose={this.handleClose}
                     onSave={this.handleSave}
-                    groups={this.props.groups}
-                    members={this.props.members}
                     permissions={this.props.permissions}
                     groupsText="You may filter DataPacks by shared groups exclusively.
                      Group filtering is managed seperately from member filtering."
@@ -215,24 +205,6 @@ PermissionsFilter.propTypes = {
         members: PropTypes.objectOf(PropTypes.string),
     }).isRequired,
     onChange: PropTypes.func.isRequired,
-    groups: PropTypes.arrayOf(PropTypes.shape({
-        id: PropTypes.number,
-        name: PropTypes.string,
-        members: PropTypes.arrayOf(PropTypes.string),
-        administrators: PropTypes.arrayOf(PropTypes.string),
-    })).isRequired,
-    members: PropTypes.arrayOf(PropTypes.shape({
-        user: PropTypes.shape({
-            username: PropTypes.string,
-            first_name: PropTypes.string,
-            last_name: PropTypes.string,
-            email: PropTypes.string,
-            date_joined: PropTypes.string,
-            last_login: PropTypes.string,
-        }),
-        accepted_licenses: PropTypes.object,
-        groups: PropTypes.arrayOf(PropTypes.number),
-    })).isRequired,
     theme: PropTypes.object.isRequired,
 };
 

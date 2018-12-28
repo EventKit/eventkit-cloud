@@ -107,10 +107,6 @@ A value to warn users that the datapack will not include any datasets.
 Exceeding this as a selection will prevent the user from proceeding. 
 <pre>JOB_MAX_EXTENT=10000</pre>
 Where 10000 is an integer representing sq km.
-##### Warning Extent
-A value to warn users that the datapack may not be able to include all datasets. 
-<pre>JOB_MAX_RASTER_EXTENT=1000</pre>
-Where 10000 is an integer representing sq km. 
 
 #### Data Authentication
 
@@ -255,10 +251,6 @@ See "Map Settings".
 #### DataPack Expiration
 Set a limit for keeping DataPacks in the system.
 <pre>MAX_DATAPACK_EXPIRATION_DAYS='30'</pre>
-#### Max Vector AOI:
-See "JOB_MAX_EXTENT".
-#### Max Raster AOI
-See "JOB_MAX_RASTER_EXTENT".
 #### DataPack Page Size
 The default number of DataPacks to be displayed in the DataPack Library
 <pre>DATAPACK_PAGE_SIZE='10'</pre>

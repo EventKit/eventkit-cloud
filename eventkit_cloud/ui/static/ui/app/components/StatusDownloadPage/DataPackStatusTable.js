@@ -38,8 +38,6 @@ export class DataPackStatusTable extends Component {
                     data={
                         <PermissionsData
                             user={this.props.user}
-                            members={this.props.members}
-                            groups={this.props.groups}
                             permissions={this.props.permissions}
                             adminPermissions={this.props.adminPermissions}
                             handlePermissionsChange={this.props.handlePermissionsChange}
@@ -77,21 +75,6 @@ DataPackStatusTable.propTypes = {
     handlePermissionsChange: PropTypes.func.isRequired,
     statusColor: PropTypes.string,
     statusFontColor: PropTypes.string,
-    members: PropTypes.arrayOf(PropTypes.shape({
-        user: PropTypes.shape({
-            username: PropTypes.string,
-            first_name: PropTypes.string,
-            last_name: PropTypes.string,
-            email: PropTypes.string,
-        }),
-        groups: PropTypes.arrayOf(PropTypes.number),
-    })).isRequired,
-    groups: PropTypes.arrayOf(PropTypes.shape({
-        id: PropTypes.number,
-        name: PropTypes.string,
-        members: PropTypes.arrayOf(PropTypes.string),
-        administrators: PropTypes.arrayOf(PropTypes.string),
-    })).isRequired,
     adminPermissions: PropTypes.bool,
     user: PropTypes.shape({
         user: PropTypes.object,

@@ -84,7 +84,7 @@ describe('PermissionsData component', () => {
         };
         wrapper.setProps(nextProps);
         button = wrapper.find(ButtonBase);
-        expect(button.html()).toContain('All Members / All Groups');
+        expect(button.html()).toContain('2 Members / 2 Groups');
 
         nextProps = getProps();
         nextProps.permissions = {

@@ -7,6 +7,7 @@ from datetime import datetime, timedelta
 from dateutil import parser
 from django.conf import settings
 from django.contrib.auth.models import User, Group
+from django.contrib.contenttypes.models import ContentType
 from django.contrib.gis.geos import GEOSException, GEOSGeometry
 from django.db import transaction
 from django.db.models import Q
@@ -32,7 +33,7 @@ from eventkit_cloud.api.serializers import (
     ExportFormatSerializer, ExportRunSerializer,
     ExportTaskRecordSerializer, JobSerializer, RegionMaskSerializer, DataProviderTaskRecordSerializer,
     RegionSerializer, ListJobSerializer, ProviderTaskSerializer, DataProviderSerializer, LicenseSerializer,
-    UserDataSerializer, GroupSerializer, UserJobActivitySerializer, NotificationSerializer
+    UserDataSerializer, GroupSerializer, UserJobActivitySerializer, NotificationSerializer, GroupUserSerializer
 )
 from eventkit_cloud.api.validators import validate_bbox_params, validate_search_bbox
 from eventkit_cloud.core.helpers import sendnotification, NotificationVerb, NotificationLevel
@@ -837,8 +838,14 @@ class ExportRunViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         _, job_ids = JobPermission.userjobs(self.request.user, "READ")
-        return prefetch_export_runs((ExportRun.objects.filter(
-            (Q(job_id__in=job_ids) | Q(job__visibility=VisibilityState.PUBLIC.value)))))
+        if self.request.query_params.get('slim'):
+            return ExportRun.objects.filter(
+                (Q(job_id__in=job_ids) | Q(job__visibility=VisibilityState.PUBLIC.value))
+            )
+        else:
+            return prefetch_export_runs((ExportRun.objects.filter(
+                (Q(job_id__in=job_ids) | Q(job__visibility=VisibilityState.PUBLIC.value))
+            )))
 
     def retrieve(self, request, uid=None, *args, **kwargs):
         """
@@ -1226,7 +1233,7 @@ class UserDataViewSet(viewsets.GenericViewSet):
         * return: A list of all users.
         """
         queryset = self.get_queryset()
-        total = len(queryset)
+        total = queryset.count()
         filtered_queryset = self.filter_queryset(queryset)
         if request.query_params.get('exclude_self'):
             filtered_queryset = filtered_queryset.exclude(username=request.user.username)
@@ -1249,7 +1256,15 @@ class UserDataViewSet(viewsets.GenericViewSet):
         response['Total-Users'] = total
         return response
 
-    @list_route(methods=['post', 'get'])
+    def retrieve(self, request, username=None):
+        """
+        GET a user by username
+        """
+        queryset = self.get_queryset().get(username=username)
+        serializer = self.get_serializer(queryset, context={'request': request})
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+    @action(detail=False, methods=['post', 'get'])
     def members(self, request, *args, **kwargs):
         """
         Member list from list of group ids
@@ -1270,18 +1285,30 @@ class UserDataViewSet(viewsets.GenericViewSet):
 
         users = User.objects.filter(username__in=targetnames).all()
         for u in users:
-            serializer = UserDataSerializer(u)
+            serializer = self.get_serializer(u, context={'request': request})
             payload.append(serializer.data)
 
         return Response(payload, status=status.HTTP_200_OK)
 
-    def retrieve(self, request, username=None):
+    @action(detail=True, methods=['get'])
+    def job_permissions(self, request, username=None):
         """
-        GET a user by username
+        Get user's permission level for a specific job
+
+        Example: /api/users/job_permissions/admin_user?uid=job-uid-123
+
+        Response: { 'permission': USERS_PERMISSION_LEVEL }
+        where USERS_PERMISSION_LEVEL is either READ, ADMIN, or None
         """
-        queryset = self.get_queryset().get(username=username)
-        serializer = UserDataSerializer(queryset)
-        return Response(serializer.data, status=status.HTTP_200_OK)
+        user = User.objects.get(username=username)
+        uid = request.query_params.get('uid', None)
+
+        if not user or not uid:
+            return Response(status=status.HTTP_400_BAD_REQUEST)
+
+        permission = JobPermission.get_user_permissions(user, uid)
+
+        return Response({ 'permission': permission }, status=status.HTTP_200_OK)
 
 
 class UserJobActivityViewSet(mixins.CreateModelMixin,
@@ -1297,6 +1324,16 @@ class UserJobActivityViewSet(mixins.CreateModelMixin,
 
     def get_queryset(self):
         activity_type = self.request.query_params.get('activity', '').lower()
+
+        if self.request.query_params.get('slim'):
+            activities = UserJobActivity.objects.select_related('job', 'user')
+        else:
+            activities = UserJobActivity.objects.select_related('job', 'user').prefetch_related(
+                'job__provider_tasks__provider',
+                'job__provider_tasks__formats',
+                'job__last_export_run__provider_tasks__tasks__result',
+                'job__last_export_run__provider_tasks__tasks__exceptions')
+
         if activity_type == 'viewed':
             ids = UserJobActivity.objects.filter(
                 user=self.request.user,
@@ -1305,18 +1342,9 @@ class UserJobActivityViewSet(mixins.CreateModelMixin,
                 job__last_export_run__deleted=False,
             ).distinct('job').values_list('id', flat=True)
 
-            result = UserJobActivity.objects.select_related('job', 'user').prefetch_related(
-                'job__provider_tasks__provider',
-                'job__provider_tasks__formats',
-                'job__last_export_run__provider_tasks__tasks__result',
-                'job__last_export_run__provider_tasks__tasks__exceptions').filter(id__in=ids).order_by('-created_at')
-            return result
+            return activities.filter(id__in=ids).order_by('-created_at')
         else:
-            return UserJobActivity.objects.select_related('job', 'user').prefetch_related(
-                'job__provider_tasks__provider',
-                'job__provider_tasks__formats',
-                'job__last_export_run__provider_tasks__tasks__result',
-                'job__last_export_run__provider_tasks__tasks__exceptions').filter(
+            return activities.filter(
                 user=self.request.user).order_by('-created_at')
 
 
@@ -1368,6 +1396,7 @@ class GroupViewSet(viewsets.ModelViewSet):
     """
     serializer_class = GroupSerializer
     permission_classes = (permissions.IsAuthenticated,)
+    pagination_class = LinkHeaderPagination
     parser_classes = (JSONParser,)
     filter_class = GroupFilter
     filter_backends = (filters.SearchFilter, filters.OrderingFilter)
@@ -1413,9 +1442,23 @@ class GroupViewSet(viewsets.ModelViewSet):
             ]
 
         """
-        queryset = self.filter_queryset(self.get_queryset())
-        serializer = GroupSerializer(queryset, many=True)
-        return Response(serializer.data, status=status.HTTP_200_OK)
+
+        queryset = self.get_queryset()
+        total = queryset.count()
+        filtered_queryset = self.filter_queryset(queryset)
+
+        page = None
+        if not request.query_params.get('disable_page'):
+            page = self.paginate_queryset(filtered_queryset)
+        if page is not None:
+            serializer = self.get_serializer(page, many=True, context={'request': request})
+            response = self.get_paginated_response(serializer.data)
+        else:
+            serializer = self.get_serializer(filtered_queryset, many=True, context={'request': request})
+            response = Response(serializer.data, status=status.HTTP_200_OK)
+
+        response['Total-Groups'] = total
+        return response
 
     @transaction.atomic
     def create(self, request, *args, **kwargs):
@@ -1600,6 +1643,20 @@ class GroupViewSet(viewsets.ModelViewSet):
                 for perm in perms: perm.delete()
 
         return Response("OK", status=status.HTTP_200_OK)
+
+
+    @action(detail=True, methods=['get'])
+    def users(self, request, id=None, *args, **kwargs):
+        try:
+            group = Group.objects.get(id=id)
+        except Group.DoesNotExist:
+            return Response(status=status.HTTP_404_NOT_FOUND)
+
+        serializer = GroupUserSerializer(group, context={'request': request})
+        return Response(data=serializer.data, status=status.HTTP_200_OK)
+
+
+
 
 
 class NotificationViewSet(viewsets.ModelViewSet):

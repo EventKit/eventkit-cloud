@@ -71,7 +71,7 @@ def view_export(request, uuid=None):  # NOQA
 def auth(request):
     if (request.method == 'GET') and request.user.is_authenticated:
         # If the user is already authenticated we want to return the user data (required for oauth).
-        return HttpResponse(JSONRenderer().render(UserDataSerializer(request.user).data),
+        return HttpResponse(JSONRenderer().render(UserDataSerializer(request.user, context={'request': request}).data),
                             content_type="application/json",
                             status=200)
     elif getattr(settings, "LDAP_SERVER_URI", getattr(settings, "DJANGO_MODEL_LOGIN")):
@@ -86,7 +86,7 @@ def auth(request):
             else:
                 login(request, user_data)
                 set_session_user_last_active_at(request)
-                return HttpResponse(JSONRenderer().render(UserDataSerializer(user_data).data),
+                return HttpResponse(JSONRenderer().render(UserDataSerializer(user_data, context={'request': request}).data),
                                     content_type="application/json",
                                     status=200)
         if request.method == 'GET':

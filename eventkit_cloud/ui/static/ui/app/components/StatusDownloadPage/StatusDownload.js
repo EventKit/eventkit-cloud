@@ -24,8 +24,6 @@ import {
 import { updateExpiration, getDatacartDetails, clearDataCartDetails, deleteRun } from '../../actions/datapackActions';
 import { getProviders, cancelProviderTask } from '../../actions/providerActions';
 import { viewedJob } from '../../actions/userActivityActions';
-import { getUsers } from '../../actions/usersActions';
-import { getGroups } from '../../actions/groupActions';
 import CustomScrollbar from '../../components/CustomScrollbar';
 import BaseDialog from '../../components/Dialog/BaseDialog';
 import { joyride } from '../../joyride.config';
@@ -52,15 +50,7 @@ export class StatusDownload extends React.Component {
     }
 
     componentDidMount() {
-        this.props.getDatacartDetails(this.props.router.params.jobuid);
-        this.props.viewedJob(this.props.router.params.jobuid);
-        this.props.getProviders();
-        this.props.getUsers({ exclude_self: true, disable_page: true });
-        this.props.getGroups();
-        this.startTimer();
-
-        const steps = joyride.StatusAndDownload;
-        this.joyrideAddSteps(steps);
+        this.onMount();
     }
 
     shouldComponentUpdate(p) {
@@ -148,6 +138,16 @@ export class StatusDownload extends React.Component {
         this.timer = null;
         window.clearTimeout(this.timeout);
         this.timeout = null;
+    }
+
+    async onMount() {
+        this.props.getDatacartDetails(this.props.router.params.jobuid);
+        this.props.viewedJob(this.props.router.params.jobuid);
+        this.props.getProviders();
+        this.startTimer();
+
+        const steps = joyride.StatusAndDownload;
+        this.joyrideAddSteps(steps);
     }
 
     getMarginPadding() {
@@ -338,8 +338,6 @@ export class StatusDownload extends React.Component {
                     providers={this.props.providers}
                     maxResetExpirationDays={this.context.config.MAX_DATAPACK_EXPIRATION_DAYS}
                     user={this.props.user}
-                    members={this.props.users}
-                    groups={this.props.groups}
                 />
             );
         });
@@ -449,15 +447,6 @@ StatusDownload.propTypes = {
     getProviders: PropTypes.func.isRequired,
     providers: PropTypes.arrayOf(PropTypes.object).isRequired,
     user: PropTypes.object.isRequired,
-    users: PropTypes.arrayOf(PropTypes.object).isRequired,
-    groups: PropTypes.arrayOf(PropTypes.shape({
-        id: PropTypes.number,
-        name: PropTypes.string,
-        members: PropTypes.arrayOf(PropTypes.string),
-        administrators: PropTypes.arrayOf(PropTypes.string),
-    })).isRequired,
-    getUsers: PropTypes.func.isRequired,
-    getGroups: PropTypes.func.isRequired,
     router: PropTypes.object.isRequired,
     location: PropTypes.object.isRequired,
     viewedJob: PropTypes.func.isRequired,
@@ -478,8 +467,6 @@ const makeMapStateToProps = () => {
             cancelProviderTask: state.cancelProviderTask,
             providers: state.providers,
             user: state.user,
-            users: state.users.users,
-            groups: state.groups.groups,
             runs: getDatacart(state, props),
         }
     );
@@ -488,27 +475,27 @@ const makeMapStateToProps = () => {
 
 function mapDispatchToProps(dispatch) {
     return {
-        getDatacartDetails: (jobuid) => {
-            dispatch(getDatacartDetails(jobuid));
-        },
-        clearDataCartDetails: () => {
-            dispatch(clearDataCartDetails());
-        },
-        deleteRun: (jobuid) => {
-            dispatch(deleteRun(jobuid));
-        },
-        rerunExport: (jobuid) => {
-            dispatch(rerunExport(jobuid));
-        },
-        updateExpirationDate: (uid, expiration) => {
-            dispatch(updateExpiration(uid, expiration));
-        },
-        updateDataCartPermissions: (uid, permissions) => {
-            dispatch(updateDataCartPermissions(uid, permissions));
-        },
-        clearReRunInfo: () => {
-            dispatch(clearReRunInfo());
-        },
+        getDatacartDetails: jobuid => (
+            dispatch(getDatacartDetails(jobuid))
+        ),
+        clearDataCartDetails: () => (
+            dispatch(clearDataCartDetails())
+        ),
+        deleteRun: jobuid => (
+            dispatch(deleteRun(jobuid))
+        ),
+        rerunExport: jobuid => (
+            dispatch(rerunExport(jobuid))
+        ),
+        updateExpirationDate: (uid, expiration) => (
+            dispatch(updateExpiration(uid, expiration))
+        ),
+        updateDataCartPermissions: (uid, permissions) => (
+            dispatch(updateDataCartPermissions(uid, permissions))
+        ),
+        clearReRunInfo: () => (
+            dispatch(clearReRunInfo())
+        ),
         cloneExport: (cartDetails, providerArray) => {
             const featureCollection = {
                 type: 'FeatureCollection',
@@ -532,21 +519,15 @@ function mapDispatchToProps(dispatch) {
             }));
             browserHistory.push('/create');
         },
-        cancelProviderTask: (providerUid) => {
-            dispatch(cancelProviderTask(providerUid));
-        },
-        getProviders: () => {
-            dispatch(getProviders());
-        },
-        viewedJob: (jobuid) => {
-            dispatch(viewedJob(jobuid));
-        },
-        getUsers: (params) => {
-            dispatch(getUsers(params));
-        },
-        getGroups: () => {
-            dispatch(getGroups());
-        },
+        cancelProviderTask: providerUid => (
+            dispatch(cancelProviderTask(providerUid))
+        ),
+        getProviders: () => (
+            dispatch(getProviders())
+        ),
+        viewedJob: jobuid => (
+            dispatch(viewedJob(jobuid))
+        ),
     };
 }
 

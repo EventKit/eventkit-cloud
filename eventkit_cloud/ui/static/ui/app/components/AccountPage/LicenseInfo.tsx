@@ -1,5 +1,4 @@
-import PropTypes from 'prop-types';
-import React, { Component } from 'react';
+import * as React from 'react';
 import Checkbox from '@material-ui/core/Checkbox';
 import Warning from './Warning';
 import UserLicense from './UserLicense';
@@ -8,8 +7,16 @@ const USAGE_STATEMENT = (
     <strong>You must agree to all license agreements and/or terms of use!</strong>
 );
 
-export class LicenseInfo extends Component {
-    allTrue(acceptedLicenses) {
+export interface Props {
+    user: Eventkit.Store.User;
+    licenses: Eventkit.Store.Licenses;
+    acceptedLicenses: { [slug: string]: boolean };
+    onLicenseCheck: (slug: string, checked: boolean) => void;
+    onAllCheck: (e: any, checked: boolean) => void;
+}
+
+export class LicenseInfo extends React.Component<Props, {}> {
+    private allTrue(acceptedLicenses) {
         return Object.keys(acceptedLicenses).every(l => acceptedLicenses[l]);
     }
 
@@ -63,13 +70,5 @@ export class LicenseInfo extends Component {
         );
     }
 }
-
-LicenseInfo.propTypes = {
-    user: PropTypes.object.isRequired,
-    licenses: PropTypes.object.isRequired,
-    acceptedLicenses: PropTypes.object.isRequired,
-    onLicenseCheck: PropTypes.func.isRequired,
-    onAllCheck: PropTypes.func.isRequired,
-};
 
 export default LicenseInfo;

@@ -122,12 +122,9 @@ describe('DataPackListItem component', () => {
         const wrapper = getWrapper(props);
         const stateSpy = sinon.spy(wrapper.instance(), 'setState');
         expect(stateSpy.called).toBe(false);
-        wrapper.instance().handleProviderOpen(props.run.provider_tasks);
+        wrapper.instance().handleProviderOpen();
         expect(stateSpy.calledOnce).toBe(true);
         expect(stateSpy.calledWithExactly({
-            providerDescs: {
-                'OpenStreetMap Data (Themes)': 'OpenStreetMap vector data.',
-            },
             providerDialogOpen: true,
         })).toBe(true);
         stateSpy.restore();

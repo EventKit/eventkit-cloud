@@ -64,8 +64,6 @@ export class DataPackGrid extends Component {
                                 providers={this.props.providers}
                                 gridName={this.props.name}
                                 index={index}
-                                users={this.props.users}
-                                groups={this.props.groups}
                                 showFeaturedFlag
                             />
                         ))}
@@ -94,13 +92,6 @@ DataPackGrid.propTypes = {
     handleLoadMore: PropTypes.func.isRequired,
     loadLessDisabled: PropTypes.bool.isRequired,
     loadMoreDisabled: PropTypes.bool.isRequired,
-    users: PropTypes.arrayOf(PropTypes.object).isRequired,
-    groups: PropTypes.arrayOf(PropTypes.shape({
-        id: PropTypes.number,
-        name: PropTypes.string,
-        members: PropTypes.arrayOf(PropTypes.string),
-        administrators: PropTypes.arrayOf(PropTypes.string),
-    })).isRequired,
     name: PropTypes.string.isRequired,
     width: PropTypes.string.isRequired,
 };

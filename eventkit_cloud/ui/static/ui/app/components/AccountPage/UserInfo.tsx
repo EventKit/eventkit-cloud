@@ -1,16 +1,20 @@
-import PropTypes from 'prop-types';
-import React, { Component } from 'react';
-import moment from 'moment';
+import * as React from 'react';
+import * as moment from 'moment';
 import UserInfoTableRow from './UserInfoTableRow';
 
-export class UserInfo extends Component {
+export interface Props {
+    user: Eventkit.User['user'];
+    updateLink: string;
+}
+
+export class UserInfo extends React.Component<Props, {}> {
     render() {
         const styles = {
             table: {
                 width: '100%',
                 margin: '10px -5px -5px',
                 borderSpacing: '5px',
-                borderCollapse: 'separate',
+                borderCollapse: 'separate' as 'separate',
             },
         };
 
@@ -41,14 +45,5 @@ export class UserInfo extends Component {
         );
     }
 }
-
-UserInfo.defaultProps = {
-    updateLink: '',
-};
-
-UserInfo.propTypes = {
-    user: PropTypes.object.isRequired,
-    updateLink: PropTypes.string,
-};
 
 export default UserInfo;

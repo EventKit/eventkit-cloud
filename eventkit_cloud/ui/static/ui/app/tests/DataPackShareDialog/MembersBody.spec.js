@@ -7,81 +7,76 @@ import MemberRow from '../../components/DataPackShareDialog/MemberRow';
 import MembersBodyTooltip from '../../components/DataPackShareDialog/ShareBodyTooltip';
 import { MembersBody } from '../../components/DataPackShareDialog/MembersBody';
 
-describe('GroupBody component', () => {
-    const getProps = () => (
-        {
-            members: [
-                {
-                    user: {
-                        username: 'user_one',
-                        first_name: 'user',
-                        last_name: 'one',
-                        email: 'user.one@email.com',
-                    },
-                    groups: [1],
+describe('MembersBody component', () => {
+    const getProps = () => ({
+        public: false,
+        getUsers: sinon.spy(),
+        nextPage: false,
+        userCount: 2,
+        users: [
+            {
+                user: {
+                    username: 'user_one',
+                    first_name: 'user',
+                    last_name: 'one',
+                    email: 'user.one@email.com',
                 },
-                {
-                    user: {
-                        username: 'user_two',
-                        first_name: 'user',
-                        last_name: 'two',
-                        email: 'user.two@email.com',
-                    },
-                    groups: [1, 2],
+                groups: [1],
+            },
+            {
+                user: {
+                    username: 'user_two',
+                    first_name: 'user',
+                    last_name: 'two',
+                    email: 'user.two@email.com',
                 },
-            ],
-            selectedMembers: {},
-            membersText: 'Test text',
-            onMembersUpdate: () => {},
-            canUpdateAdmin: false,
-            handleShowShareInfo: () => {},
-            ...global.eventkit_test_props,
-        }
-    );
+                groups: [1, 2],
+            },
+        ],
+        selectedMembers: {},
+        membersText: 'Test text',
+        onMemberCheck: sinon.spy(),
+        onAdminCheck: sinon.spy(),
+        onCheckCurrent: sinon.spy(),
+        onCheckAll: sinon.spy(),
+        onUncheckAll: sinon.spy(),
+        canUpdateAdmin: false,
+        handleShowShareInfo: () => {},
+        ...global.eventkit_test_props,
+    });
 
-    const getWrapper = props => (
-        shallow(<MembersBody {...props} />)
-    );
+    let props;
+    let wrapper;
+
+    const setup = (customProps = {}, options = { disableLifecycleMethods: true }) => {
+        props = { ...getProps(), ...customProps };
+        wrapper = shallow(<MembersBody {...props} />, options);
+    };
+
+    beforeEach(setup);
 
     it('should render the basic components', () => {
-        const props = getProps();
-        const wrapper = getWrapper(props);
+        setup(props);
         expect(wrapper.find('.qa-MembersBody-membersText')).toHaveLength(1);
         expect(wrapper.find('.qa-MembersBody-membersText').text()).toEqual(props.membersText);
         expect(wrapper.find(CustomTextField)).toHaveLength(1);
         expect(wrapper.find(MembersHeaderRow)).toHaveLength(1);
-        expect(wrapper.find(MemberRow)).toHaveLength(props.members.length);
-    });
-
-    it('should sort members by name', () => {
-        const props = getProps();
-        const sortSpy = sinon.spy(MembersBody.prototype, 'sortByMember');
-        getWrapper(props);
-        expect(sortSpy.calledOnce).toBe(true);
-        sortSpy.restore();
+        expect(wrapper.find(MemberRow)).toHaveLength(props.users.length);
     });
 
     it('should sort members by admin-share', () => {
-        const props = getProps();
-        const sortSpy = sinon.spy(MembersBody.prototype, 'sortByAdmin');
-        const wrapper = getWrapper(props);
+        const sortSpy = sinon.spy(wrapper.instance(), 'sortByAdmin');
         wrapper.setState({ activeOrder: 'admin-shared' });
         expect(sortSpy.calledOnce).toBe(true);
-        sortSpy.restore();
     });
 
     it('should sort members by shared', () => {
-        const props = getProps();
-        const sortSpy = sinon.spy(MembersBody.prototype, 'sortByShared');
-        const wrapper = getWrapper(props);
+        const sortSpy = sinon.spy(wrapper.instance(), 'sortByShared');
         wrapper.setState({ activeOrder: 'shared' });
         expect(sortSpy.calledOnce).toBe(true);
-        sortSpy.restore();
     });
 
     it('should show shareInfo', () => {
-        const props = getProps();
-        const wrapper = getWrapper(props);
         expect(wrapper.find('.qa-MembersBody-shareInfo')).toHaveLength(0);
         const nextProps = getProps();
         nextProps.canUpdateAdmin = true;
@@ -90,9 +85,7 @@ describe('GroupBody component', () => {
     });
 
     it('should render a tooltip', () => {
-        const props = getProps();
         const stub = sinon.stub(MembersBodyTooltip.prototype, 'render').returns(null);
-        const wrapper = getWrapper(props);
         wrapper.setState({ tooltip: { target: {}, admin: true } });
         expect(wrapper.find(MembersBodyTooltip)).toHaveLength(1);
         wrapper.unmount();
@@ -100,17 +93,14 @@ describe('GroupBody component', () => {
     });
 
     it('componentDidMount should add event listener', () => {
-        const props = getProps();
         const addStub = sinon.stub(global.window, 'addEventListener');
-        const wrapper = getWrapper(props);
+        wrapper.instance().componentDidMount();
         expect(addStub.called).toBe(true);
         expect(addStub.calledWith('wheel', wrapper.instance().handleScroll)).toBe(true);
         addStub.restore();
     });
 
     it('componentWillUnmount should remove event listener', () => {
-        const props = getProps();
-        const wrapper = getWrapper(props);
         const removeStub = sinon.stub(global.window, 'removeEventListener');
         const fnc = wrapper.instance().handleScroll;
         wrapper.unmount();
@@ -119,94 +109,85 @@ describe('GroupBody component', () => {
         removeStub.restore();
     });
 
-    it('handleUncheckAll should call onMembersUpdate with empty object', () => {
-        const props = getProps();
-        props.onMembersUpdate = sinon.spy();
-        const wrapper = getWrapper(props);
+    it('getUsers should set loading states and call props.getUsers', async () => {
+        const getStub = sinon.stub().returns(new Promise(resolve => resolve()));
+        setup({ getUsers: getStub });
+        const stateStub = sinon.stub(wrapper.instance(), 'setState');
+        const params = {
+            page: 1,
+            exclude_self: 'true',
+            ordering: wrapper.state('memberOrder'),
+            search: wrapper.state('search'),
+        };
+        await wrapper.instance().getUsers({}, false);
+        expect(stateStub.calledTwice).toBe(true);
+        expect(stateStub.calledWith({ loading: true })).toBe(true);
+        expect(stateStub.calledWith({ loading: false })).toBe(true);
+        expect(props.getUsers.calledOnce).toBe(true);
+        expect(props.getUsers.calledWith(params, false)).toBe(true);
+    });
+
+    it('loadMore should call getUsers and setState with incremented page number', () => {
+        const getStub = sinon.stub(wrapper.instance(), 'getUsers');
+        const stateStub = sinon.stub(wrapper.instance(), 'setState');
+        const page = wrapper.state('page');
+        wrapper.instance().loadMore();
+        expect(getStub.calledOnce).toBe(true);
+        expect(getStub.calledWith({ page: page + 1 })).toBe(true);
+        expect(stateStub.calledOnce).toBe(true);
+        expect(stateStub.calledWith({ page: page + 1 })).toBe(true);
+    });
+
+    it('closeConfirm should set checkAllConfirm to false', () => {
+        const stateStub = sinon.stub(wrapper.instance(), 'setState');
+        wrapper.instance().closeConfirm();
+        expect(stateStub.calledOnce).toBe(true);
+        expect(stateStub.calledWith({ checkAllConfirm: false }));
+    });
+
+    it('handleUncheckAll should call onUncheckAll', () => {
         wrapper.instance().handleUncheckAll();
-        expect(props.onMembersUpdate.calledOnce).toBe(true);
-        expect(props.onMembersUpdate.calledWith({})).toBe(true);
+        expect(props.onUncheckAll.calledOnce).toBe(true);
     });
 
-    it('handleUncheckAll should only uncheck from searched members', () => {
-        const props = getProps();
-        props.selectedMembers = { user_one: 'READ', user_two: 'READ' };
-        props.onMembersUpdate = sinon.spy();
-        const wrapper = getWrapper(props);
-        wrapper.setState({ search: 'one' });
-        wrapper.instance().handleUncheckAll();
-        expect(props.onMembersUpdate.calledOnce).toBe(true);
-        expect(props.onMembersUpdate.calledWith({ user_two: 'READ' })).toBe(true);
-    });
-
-    it('handleCheckAll should call onMembersUpdate with all members selected', () => {
-        const props = getProps();
-        props.onMembersUpdate = sinon.spy();
-        const wrapper = getWrapper(props);
-        const expected = { user_one: 'READ', user_two: 'READ' };
+    it('handleCheckAll setState with checkAllConfirm true', () => {
+        const stateStub = sinon.stub(wrapper.instance(), 'setState');
         wrapper.instance().handleCheckAll();
-        expect(props.onMembersUpdate.calledOnce).toBe(true);
-        expect(props.onMembersUpdate.calledWith(expected)).toBe(true);
+        expect(stateStub.calledOnce).toBe(true);
+        expect(stateStub.calledWith({ checkAllConfirm: true })).toBe(true);
     });
 
-    it('handleCheckAll should call onMembersUpdate with all searched members', () => {
-        const props = getProps();
-        props.onMembersUpdate = sinon.spy();
-        const wrapper = getWrapper(props);
-        wrapper.setState({ search: 'one' });
-        const expected = { user_one: 'READ' };
-        wrapper.instance().handleCheckAll();
-        expect(props.onMembersUpdate.calledOnce).toBe(true);
-        expect(props.onMembersUpdate.calledWith(expected)).toBe(true);
+    it('handlePageCheckAll should call closeConfirm and onCheckCurrent', () => {
+        const closeStub = sinon.stub(wrapper.instance(), 'closeConfirm');
+        wrapper.instance().handlePageCheckAll();
+        expect(closeStub.calledOnce).toBe(true);
+        expect(props.onCheckCurrent.calledOnce).toBe(true);
     });
 
-    it('handleCheck should call onMembersUpdate with the target member removed', () => {
-        const props = getProps();
-        props.selectedMembers = { user_one: 'READ', user_two: 'READ' };
-        props.onMembersUpdate = sinon.spy();
-        const wrapper = getWrapper(props);
-        const expected = { user_two: 'READ' };
-        wrapper.instance().handleCheck(props.members[0]);
-        expect(props.onMembersUpdate.calledOnce).toBe(true);
-        expect(props.onMembersUpdate.calledWith(expected)).toBe(true);
+    it('handleSystemCheckAll should call closeConfirm and onCheckAll', () => {
+        const closeStub = sinon.stub(wrapper.instance(), 'closeConfirm');
+        wrapper.instance().handleSystemCheckAll();
+        expect(closeStub.calledOnce).toBe(true);
+        expect(props.onCheckAll.calledOnce).toBe(true);
     });
 
-    it('handleCheck should call onMembersUpdate with the target member added', () => {
-        const props = getProps();
-        props.selectedMembers = {};
-        props.onMembersUpdate = sinon.spy();
-        const wrapper = getWrapper(props);
-        const expected = { user_one: 'READ' };
-        wrapper.instance().handleCheck(props.members[0]);
-        expect(props.onMembersUpdate.calledOnce).toBe(true);
-        expect(props.onMembersUpdate.calledWith(expected)).toBe(true);
+    it('handleCheck should call onMemberCheck with the target username', () => {
+        const username = 'test-user';
+        const user = { user: { username } };
+        wrapper.instance().handleCheck(user);
+        expect(props.onMemberCheck.calledOnce).toBe(true);
+        expect(props.onMemberCheck.calledWith(username)).toBe(true);
     });
 
-    it('handleAdminCheck should demote ADMIN to READ and call onMembersUpdate', () => {
-        const props = getProps();
-        props.selectedMembers = { user_one: 'ADMIN', user_two: 'ADMIN' };
-        props.onMembersUpdate = sinon.spy();
-        const wrapper = getWrapper(props);
-        const expected = { user_one: 'READ', user_two: 'ADMIN' };
-        wrapper.instance().handleAdminCheck(props.members[0]);
-        expect(props.onMembersUpdate.calledOnce).toBe(true);
-        expect(props.onMembersUpdate.calledWith(expected)).toBe(true);
-    });
-
-    it('handleAdminCheck should make group an ADMIN and call onMembersUpdate', () => {
-        const props = getProps();
-        props.selectedMembers = { user_one: 'READ', user_two: 'READ' };
-        props.onMembersUpdate = sinon.spy();
-        const wrapper = getWrapper(props);
-        const expected = { user_one: 'ADMIN', user_two: 'READ' };
-        wrapper.instance().handleAdminCheck(props.members[0]);
-        expect(props.onMembersUpdate.calledOnce).toBe(true);
-        expect(props.onMembersUpdate.calledWith(expected)).toBe(true);
+    it('handleAdminCheck call onAdminCheck with target username', () => {
+        const username = 'test-user';
+        const user = { user: { username } };
+        wrapper.instance().handleAdminCheck(user);
+        expect(props.onAdminCheck.calledOnce).toBe(true);
+        expect(props.onAdminCheck.calledWith(username)).toBe(true);
     });
 
     it('handleAdminMouseOver should setState with tooltip', () => {
-        const props = getProps();
-        const wrapper = getWrapper(props);
         const stateStub = sinon.stub(wrapper.instance(), 'setState');
         const target = { key: 'value' };
         const admin = true;
@@ -217,8 +198,6 @@ describe('GroupBody component', () => {
     });
 
     it('handleAdminMouseOut should clear the tooltip state', () => {
-        const props = getProps();
-        const wrapper = getWrapper(props);
         const stateStub = sinon.stub(wrapper.instance(), 'setState');
         wrapper.instance().handleAdminMouseOut();
         expect(stateStub.calledOnce).toBe(true);
@@ -227,8 +206,6 @@ describe('GroupBody component', () => {
     });
 
     it('handleScroll should call handleAdminMouseOut if there is a tooltip', () => {
-        const props = getProps();
-        const wrapper = getWrapper(props);
         const mouseStub = sinon.stub(wrapper.instance(), 'handleAdminMouseOut');
         wrapper.instance().render = sinon.stub().returns(null);
         wrapper.setState({ tooltip: { target: {}, admin: true } });
@@ -237,9 +214,19 @@ describe('GroupBody component', () => {
         mouseStub.restore();
     });
 
+    it('handleSearchInput should call getUsers and update page state', () => {
+        const stateStub = sinon.stub(wrapper.instance(), 'setState');
+        const getStub = sinon.stub(wrapper.instance(), 'getUsers');
+        const e = { target: { value: 'search text' }, key: 'Enter' };
+        wrapper.instance().handleSearchKeyDown(e);
+        expect(stateStub.calledOnce).toBe(true);
+        expect(stateStub.calledWith({ page: 1 }));
+        expect(getStub.calledOnce).toBe(true);
+        expect(getStub.calledWith({ page: 1, search: 'search text' })).toBe(true);
+    });
+
+
     it('handleSearchInput should set state with target value', () => {
-        const props = getProps();
-        const wrapper = getWrapper(props);
         const stateStub = sinon.stub(wrapper.instance(), 'setState');
         const e = { target: { value: 'search text' } };
         wrapper.instance().handleSearchInput(e);
@@ -248,20 +235,28 @@ describe('GroupBody component', () => {
         stateStub.restore();
     });
 
-    it('reverseMemberOrder should update memberOrder and activeOrder', () => {
-        const props = getProps();
-        const wrapper = getWrapper(props);
+    it('handleSearchInput should call getUsers and update search state', () => {
+        wrapper.setState({ search: 'searchy search' });
         const stateStub = sinon.stub(wrapper.instance(), 'setState');
+        const getStub = sinon.stub(wrapper.instance(), 'getUsers');
+        const e = { target: { value: '' } };
+        wrapper.instance().handleSearchInput(e);
+        expect(stateStub.calledOnce).toBe(true);
+        expect(stateStub.calledWith({ search: '', page: 1 }));
+        expect(getStub.calledOnce).toBe(true);
+    });
+
+    it('reverseMemberOrder should call getUsers and update order state', () => {
+        const stateStub = sinon.stub(wrapper.instance(), 'setState');
+        const getStub = sinon.stub(wrapper.instance(), 'getUsers');
         const v = 'newValue';
         wrapper.instance().reverseMemberOrder(v);
         expect(stateStub.calledOnce).toBe(true);
-        expect(stateStub.calledWith({ memberOrder: v, activeOrder: v })).toBe(true);
-        stateStub.restore();
+        expect(stateStub.calledWith({ memberOrder: v, activeOrder: v, page: 1 })).toBe(true);
+        expect(getStub.calledOnce).toBe(true);
     });
 
     it('reverseSharedOrder should update shareOrder and activeOrder', () => {
-        const props = getProps();
-        const wrapper = getWrapper(props);
         const stateStub = sinon.stub(wrapper.instance(), 'setState');
         const v = 'newValue';
         wrapper.instance().reverseSharedOrder(v);
@@ -269,107 +264,51 @@ describe('GroupBody component', () => {
         expect(stateStub.calledWith({ sharedOrder: v, activeOrder: v }));
     });
 
-    it('searchMembers should filter by member username and email', () => {
-        const props = getProps();
-        const wrapper = getWrapper(props);
-        const members = [...props.members];
-        const expected = [members[1]];
-        const search = 'two';
-        const ret = wrapper.instance().searchMembers(members, search);
-        expect(ret).toEqual(expected);
-    });
-
-    it('sortByMember should sort by name A-Z', () => {
-        const props = getProps();
-        const wrapper = getWrapper(props);
-        const members = [...props.members];
-        const expected = [...props.members];
-        const ret = wrapper.instance().sortByMember(members, true);
-        expect(ret).toEqual(expected);
-    });
-
-    it('sortByMember should sort by name Z-A', () => {
-        const props = getProps();
-        const wrapper = getWrapper(props);
-        const members = [...props.members];
-        const expected = [...props.members].reverse();
-        const ret = wrapper.instance().sortByMember(members, false);
-        expect(ret).toEqual(expected);
-    });
-
-    it('sortByMember should not change the order', () => {
-        const props = getProps();
-        const wrapper = getWrapper(props);
-        const members = [
-            { user: { username: 'one', other_key: 'one' } },
-            { user: { username: 'one', other_key: 'two' } },
-            { user: { username: 'one', other_key: 'three' } },
-        ];
-        const expected = [...members];
-        const ret = wrapper.instance().sortByMember(members, false);
-        expect(ret).toEqual(expected);
-
-        const ret2 = wrapper.instance().sortByMember(members, true);
-        expect(ret2).toEqual(expected);
-    });
-
     it('sortByShared should sort by selected', () => {
-        const props = getProps();
-        const wrapper = getWrapper(props);
-        const members = [...props.members];
-        const expected = [...props.members];
+        const users = [...props.users];
+        const expected = [...props.users];
         const selected = { user_one: 'READ' };
-        const ret = wrapper.instance().sortByShared(members, selected, true);
+        const ret = wrapper.instance().sortByShared(users, selected, true);
         expect(ret).toEqual(expected);
     });
 
     it('sortByShared should sort by not selected', () => {
-        const props = getProps();
-        const wrapper = getWrapper(props);
-        const members = [...props.members];
-        const expected = [...props.members].reverse();
+        const users = [...props.users];
+        const expected = [...props.users].reverse();
         const selected = { user_one: 'READ' };
-        const ret = wrapper.instance().sortByShared(members, selected, false);
+        const ret = wrapper.instance().sortByShared(users, selected, false);
         expect(ret).toEqual(expected);
     });
 
     it('sortByShared should not change the order', () => {
-        const props = getProps();
-        const wrapper = getWrapper(props);
-        const members = [...props.members];
-        const expected = [...props.members];
+        const users = [...props.users];
+        const expected = [...props.users];
         const selected = { user_one: 'READ', user_two: 'READ' };
-        const ret = wrapper.instance().sortByShared(members, selected, false);
+        const ret = wrapper.instance().sortByShared(users, selected, false);
         expect(ret).toEqual(expected);
     });
 
     it('sortByAdmin should sort by admin status', () => {
-        const props = getProps();
-        const wrapper = getWrapper(props);
-        const members = [...props.members];
-        const expected = [...props.members];
+        const users = [...props.users];
+        const expected = [...props.users];
         const selected = { user_one: 'ADMIN', user_two: 'READ' };
-        const ret = wrapper.instance().sortByAdmin(members, selected, true);
+        const ret = wrapper.instance().sortByAdmin(users, selected, true);
         expect(ret).toEqual(expected);
     });
 
     it('sortByAdmin should sort by no admin status', () => {
-        const props = getProps();
-        const wrapper = getWrapper(props);
-        const members = [...props.members];
-        const expected = [...props.members].reverse();
+        const users = [...props.users];
+        const expected = [...props.users].reverse();
         const selected = { user_one: 'ADMIN', user_two: 'READ' };
-        const ret = wrapper.instance().sortByAdmin(members, selected, false);
+        const ret = wrapper.instance().sortByAdmin(users, selected, false);
         expect(ret).toEqual(expected);
     });
 
     it('sortByAdmin should not modify the order', () => {
-        const props = getProps();
-        const wrapper = getWrapper(props);
-        const members = [...props.members];
-        const expected = [...props.members];
+        const users = [...props.users];
+        const expected = [...props.users];
         const selected = { user_one: 'ADMIN', user_two: 'ADMIN' };
-        const ret = wrapper.instance().sortByAdmin(members, selected, false);
+        const ret = wrapper.instance().sortByAdmin(users, selected, false);
         expect(ret).toEqual(expected);
     });
 });

@@ -6,6 +6,26 @@ declare namespace Eventkit {
         text: string;
     }
 
+    namespace Permissions {
+        type Visibility = 'PUBLIC' | 'PRIVATE' | 'SHARED';
+
+        type Level = 'ADMIN' | 'READ' | '';
+
+        interface Members {
+            [username: string]: Level;
+        }
+
+        interface Groups {
+            [groupname: string]: Level;
+        }
+    }
+
+    interface Permissions {
+        value: Permissions.Visibility;
+        members: Permissions.Members;
+        groups: Permissions.Groups;
+    }
+
     interface Task {
         uid: string;
         url: string;
@@ -55,6 +75,7 @@ declare namespace Eventkit {
         featured: boolean;
         formats: string[];
         created_at: string;
+        relationship: Permissions.Level;
         permissions: {
             value: string;
             users: { [s: string]: string };
@@ -72,7 +93,7 @@ declare namespace Eventkit {
         user: string;
         status: string;
         job: Job;
-        provider_tasks: ProviderTask[];
+        provider_tasks: string[];
         zipfile_url: string;
         expiration: string;
         deleted: boolean;
@@ -290,6 +311,13 @@ declare namespace Eventkit {
                 error: any;
                 viewedJobs: Eventkit.Run[];
             };
+        }
+
+        interface Licenses {
+            fetching: boolean;
+            fetched: boolean;
+            licenses: License[];
+            error: any;
         }
     }
 }

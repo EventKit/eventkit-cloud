@@ -83,7 +83,7 @@ class UserFilter(django_filters.FilterSet):
 
     class Meta:
         model = User
-        fields = ["min_date", "max_date", "started_at"]
+        fields = ["username", "min_date", "max_date", "started_at"]
 
     @staticmethod
     def group_filter(queryset, fieldname, value):

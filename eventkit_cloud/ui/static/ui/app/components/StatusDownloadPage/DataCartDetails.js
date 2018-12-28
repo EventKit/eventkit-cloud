@@ -7,7 +7,6 @@ import CustomTableRow from '../CustomTableRow';
 import DataPackStatusTable from './DataPackStatusTable';
 import DataPackOptions from './DataPackOptions';
 import DataPackGeneralTable from './DataPackGeneralTable';
-import { userIsDataPackAdmin } from '../../utils/generic';
 import { DataCartInfoTable } from './DataCartInfoTable';
 import DataPackAoiInfo from './DataPackAoiInfo';
 
@@ -66,7 +65,6 @@ export class DataCartDetails extends Component {
         let statusFontColor = colors.text_primary;
 
         if (this.props.cartDetails.status === 'COMPLETED') {
-            // statusBackgroundColor = 'rgba(188,223,187, 0.4)';
             statusBackgroundColor = `${colors.success}33`;
             statusFontColor = colors.success;
         } else if (this.props.cartDetails.status === 'SUBMITTED') {
@@ -76,12 +74,6 @@ export class DataCartDetails extends Component {
             statusBackgroundColor = `${colors.warning}33`;
             statusFontColor = colors.warning;
         }
-
-        const adminUser = userIsDataPackAdmin(
-            this.props.user.data.user,
-            this.props.cartDetails.job.permissions,
-            this.props.groups,
-        );
 
         return (
             <div>
@@ -111,9 +103,7 @@ export class DataCartDetails extends Component {
                         updatingPermission={this.props.updatingPermission}
                         statusColor={statusBackgroundColor}
                         statusFontColor={statusFontColor}
-                        members={this.props.members}
-                        groups={this.props.groups}
-                        adminPermissions={adminUser}
+                        adminPermissions={this.props.cartDetails.job.relationship === 'ADMIN'}
                     />
                 </div>
                 <div style={styles.container} className="qa-DataCartDetails-div-downloadOptionsContainer" id="DownloadOptions">
@@ -133,7 +123,7 @@ export class DataCartDetails extends Component {
                         onClone={this.props.onClone}
                         onDelete={this.props.onRunDelete}
                         dataPack={this.props.cartDetails}
-                        adminPermissions={adminUser}
+                        adminPermissions={this.props.cartDetails.job.relationship === 'ADMIN'}
                     />
                 </div>
                 <div style={styles.container} className="qa-DataCartDetails-div-generalInfoContainer" id="GeneralInfo">
@@ -186,6 +176,7 @@ DataCartDetails.propTypes = {
                 groups: PropTypes.objectOf(PropTypes.string),
                 members: PropTypes.objectOf(PropTypes.string),
             }),
+            relationship: PropTypes.string,
             extent: PropTypes.object,
         }),
         provider_tasks: PropTypes.arrayOf(PropTypes.object),
@@ -209,24 +200,6 @@ DataCartDetails.propTypes = {
     maxResetExpirationDays: PropTypes.string.isRequired,
     providers: PropTypes.arrayOf(PropTypes.object).isRequired,
     user: PropTypes.object.isRequired,
-    members: PropTypes.arrayOf(PropTypes.shape({
-        user: PropTypes.shape({
-            username: PropTypes.string,
-            first_name: PropTypes.string,
-            last_name: PropTypes.string,
-            email: PropTypes.string,
-            date_joined: PropTypes.string,
-            last_login: PropTypes.string,
-        }),
-        groups: PropTypes.arrayOf(PropTypes.number),
-        accepted_licenses: PropTypes.object,
-    })).isRequired,
-    groups: PropTypes.arrayOf(PropTypes.shape({
-        id: PropTypes.number,
-        name: PropTypes.string,
-        members: PropTypes.arrayOf(PropTypes.string),
-        administrators: PropTypes.arrayOf(PropTypes.string),
-    })).isRequired,
     theme: PropTypes.object.isRequired,
 };
 

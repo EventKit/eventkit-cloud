@@ -46,10 +46,10 @@ export class MembersHeaderRow extends Component {
     }
 
     handleMemberChange() {
-        if (!this.props.activeOrder.includes('member')) {
+        if (!this.props.activeOrder.includes('username')) {
             this.props.onMemberClick(this.props.memberOrder);
         } else {
-            const v = this.props.memberOrder === 'member' ? '-member' : 'member';
+            const v = this.props.memberOrder === 'username' ? '-username' : 'username';
             this.props.onMemberClick(v);
         }
     }
@@ -103,7 +103,7 @@ export class MembersHeaderRow extends Component {
         // assume no users are checked by default
         let checkIcon = icons.unchecked;
 
-        if (this.props.memberCount === this.props.selectedCount) {
+        if (this.props.public || (this.props.memberCount === this.props.selectedCount && this.props.memberCount !== 0)) {
             checkIcon = icons.checked;
         } else if (this.props.selectedCount) {
             checkIcon = icons.indeterminate;
@@ -111,9 +111,11 @@ export class MembersHeaderRow extends Component {
 
         let countText = '';
         if (!isWidthUp('sm', this.props.width)) {
-            countText = `(${this.props.selectedCount}/${this.props.memberCount})`;
+            countText = this.props.public ?
+                '(ALL)' : `(${this.props.selectedCount}/${this.props.memberCount})`;
         } else {
-            countText = `Shared with ${this.props.selectedCount} of ${this.props.memberCount}`;
+            countText = this.props.public ?
+                'Shared with ALL' : `Shared with ${this.props.selectedCount} of ${this.props.memberCount}`;
         }
 
         const LABELS = {
@@ -156,10 +158,10 @@ export class MembersHeaderRow extends Component {
                                 <ButtonBase
                                     onClick={this.handleMemberChange}
                                     disableTouchRipple
-                                    style={{ color: this.props.activeOrder.includes('member') ? colors.primary : colors.text_primary }}
+                                    style={{ color: this.props.activeOrder.includes('username') ? colors.primary : colors.text_primary }}
                                 >
                                     MEMBER
-                                    {this.props.memberOrder === 'member' ?
+                                    {this.props.memberOrder === 'username' ?
                                         <ArrowDown style={{ height: '28px', verticalAlign: 'bottom' }} />
                                         :
                                         <ArrowUp style={{ height: '28px', verticalAlign: 'bottom' }} />
@@ -172,7 +174,7 @@ export class MembersHeaderRow extends Component {
                                     onClick={this.handleClick}
                                     style={{
                                         marginRight: '10px',
-                                        color: !this.props.activeOrder.includes('member') ?
+                                        color: !this.props.activeOrder.includes('username') ?
                                             colors.primary : colors.text_primary,
                                     }}
                                     disableTouchRipple
@@ -233,11 +235,12 @@ MembersHeaderRow.defaultProps = {
 };
 
 MembersHeaderRow.propTypes = {
+    public: PropTypes.bool.isRequired,
     memberCount: PropTypes.number.isRequired,
     selectedCount: PropTypes.number.isRequired,
     onMemberClick: PropTypes.func.isRequired,
     onSharedClick: PropTypes.func.isRequired,
-    memberOrder: PropTypes.oneOf(['member', '-member']).isRequired,
+    memberOrder: PropTypes.oneOf(['username', '-username']).isRequired,
     sharedOrder: PropTypes.oneOf([
         'shared',
         '-shared',
@@ -245,8 +248,8 @@ MembersHeaderRow.propTypes = {
         '-admin-shared',
     ]).isRequired,
     activeOrder: PropTypes.oneOf([
-        'member',
-        '-member',
+        'username',
+        '-username',
         'shared',
         '-shared',
         'admin-shared',

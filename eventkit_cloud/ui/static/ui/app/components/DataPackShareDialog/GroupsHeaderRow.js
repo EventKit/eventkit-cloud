@@ -45,10 +45,10 @@ export class GroupsHeaderRow extends Component {
     }
 
     handleGroupChange() {
-        if (!this.props.activeOrder.includes('group')) {
+        if (!this.props.activeOrder.includes('name')) {
             this.props.onGroupClick(this.props.groupOrder);
         } else {
-            const v = this.props.groupOrder === 'group' ? '-group' : 'group';
+            const v = this.props.groupOrder === 'name' ? '-name' : 'name';
             this.props.onGroupClick(v);
         }
     }
@@ -99,7 +99,7 @@ export class GroupsHeaderRow extends Component {
         // assume no groups are checked by default
         let checkIcon = icons.unchecked;
 
-        if (this.props.groupCount === this.props.selectedCount) {
+        if (this.props.groupCount === this.props.selectedCount && this.props.groupCount !== 0) {
             checkIcon = icons.checked;
         } else if (this.props.selectedCount) {
             checkIcon = icons.indeterminate;
@@ -147,12 +147,12 @@ export class GroupsHeaderRow extends Component {
                                     onClick={this.handleGroupChange}
                                     style={{
                                         marginRight: '10px',
-                                        color: this.props.activeOrder.includes('group') ? colors.primary : colors.text_primary,
+                                        color: this.props.activeOrder.includes('name') ? colors.primary : colors.text_primary,
                                     }}
                                     disableTouchRipple
                                 >
                                     GROUP
-                                    {this.props.groupOrder === 'group' ?
+                                    {this.props.groupOrder === 'name' ?
                                         <ArrowDown style={{ height: '28px', verticalAlign: 'bottom' }} />
                                         :
                                         <ArrowUp style={{ height: '28px', verticalAlign: 'bottom' }} />
@@ -229,7 +229,7 @@ GroupsHeaderRow.propTypes = {
     selectedCount: PropTypes.number.isRequired,
     onGroupClick: PropTypes.func.isRequired,
     onSharedClick: PropTypes.func.isRequired,
-    groupOrder: PropTypes.oneOf(['group', '-group']).isRequired,
+    groupOrder: PropTypes.oneOf(['name', '-name']).isRequired,
     sharedOrder: PropTypes.oneOf([
         'shared',
         '-shared',
@@ -237,8 +237,8 @@ GroupsHeaderRow.propTypes = {
         '-admin-shared',
     ]).isRequired,
     activeOrder: PropTypes.oneOf([
-        'group',
-        '-group',
+        'name',
+        '-name',
         'shared',
         '-shared',
         'admin-shared',

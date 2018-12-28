@@ -7,6 +7,7 @@ import GroupsBody from '../../components/DataPackShareDialog/GroupsBody';
 import MembersBody from '../../components/DataPackShareDialog/MembersBody';
 import ShareInfoBody from '../../components/DataPackShareDialog/ShareInfoBody';
 import { DataPackShareDialog } from '../../components/DataPackShareDialog/DataPackShareDialog';
+import { Permissions, Levels } from '../../utils/permissions';
 
 describe('DataPackPage component', () => {
     let shallow;
@@ -15,11 +16,17 @@ describe('DataPackPage component', () => {
         shallow = createShallow();
     });
 
+    const getPermissions = () => ({
+        value: 'PRIVATE',
+        members: {},
+        groups: {},
+    });
+
     const getProps = () => (
         {
-            show: false,
-            onClose: () => {},
-            onSave: () => {},
+            show: true,
+            onClose: sinon.spy(),
+            onSave: sinon.spy(),
             groups: [
                 {
                     id: 1,
@@ -38,7 +45,7 @@ describe('DataPackPage component', () => {
                     administrators: ['user_three'],
                 },
             ],
-            members: [
+            users: [
                 {
                     user: {
                         username: 'user_one',
@@ -67,11 +74,7 @@ describe('DataPackPage component', () => {
                     groups: [1],
                 },
             ],
-            permissions: {
-                value: 'PRIVATE',
-                groups: {},
-                members: {},
-            },
+            permissions: getPermissions(),
             user: {
                 user: { username: 'admin' },
                 groups: [],
@@ -80,263 +83,348 @@ describe('DataPackPage component', () => {
         }
     );
 
-    const getWrapper = props => (
-        shallow(<DataPackShareDialog {...props} />)
-    );
+    let props;
+    let wrapper;
+    let instance;
+
+    const setup = (params = {}, options = {}) => {
+        props = { ...getProps(), ...params };
+        wrapper = shallow(<DataPackShareDialog {...props} />, options);
+        instance = wrapper.instance();
+    };
+
+    beforeEach(setup);
+
+    it('should render null if not open', () => {
+        setup({ show: false });
+        expect(wrapper.get(0)).toBe(null);
+    });
 
     it('should render all the basic components', () => {
-        const props = getProps();
-        const wrapper = getWrapper(props);
-        expect(wrapper.find(ShareBaseDialog)).toHaveLength(1);
-        wrapper.setProps({ ...props, show: true });
         const header = shallow(wrapper.find(ShareBaseDialog).props().children[0]);
         expect(header.find(Button)).toHaveLength(2);
         expect(wrapper.find(GroupsBody)).toHaveLength(1);
     });
 
     it('should display the ShareInfoBody', () => {
-        const props = getProps();
-        const wrapper = getWrapper(props);
         wrapper.setState({ showShareInfo: true });
         expect(wrapper.find(ShareInfoBody)).toHaveLength(1);
     });
 
     it('should display the MembersBody', () => {
-        const props = getProps();
-        const wrapper = getWrapper(props);
         wrapper.setState({ view: 'members' });
         expect(wrapper.find(MembersBody)).toHaveLength(1);
     });
 
     it('should display the selected count on the header buttons', () => {
-        const props = getProps();
-        props.permissions.groups = {};
-        props.permissions.members = {};
-        const wrapper = getWrapper(props);
         const header = shallow(wrapper.find(ShareBaseDialog).props().children[0]);
         expect(header.find('.qa-DataPackShareDialog-Button-groups').html()).toContain('GROUPS (0)');
         expect(header.find('.qa-DataPackShareDialog-Button-members').html()).toContain('MEMBERS (0)');
     });
 
-    it('should display "ALL" as the selected count on the header buttons', () => {
-        const props = getProps();
-        props.user.groups = [1, 2, 3];
-        props.permissions.groups = { group_one: '', group_two: '', group_three: '' };
-        props.permissions.members = { user_one: '', user_two: '', user_three: '' };
-        const wrapper = getWrapper(props);
+    it('should display numbers as the selected count on the header buttons', () => {
+        const p = getProps();
+        p.user.groups = [1, 2, 3];
+        p.permissions.groups = { group_one: '', group_two: '', group_three: '' };
+        p.permissions.members = { user_one: '', user_two: '', user_three: '' };
+        setup(p);
         const header = shallow(wrapper.find(ShareBaseDialog).props().children[0]);
-        expect(header.find('.qa-DataPackShareDialog-Button-groups').html()).toContain('GROUPS (ALL)');
-        expect(header.find('.qa-DataPackShareDialog-Button-members').html()).toContain('MEMBERS (ALL)');
+        expect(header.find('.qa-DataPackShareDialog-Button-groups').html()).toContain('GROUPS (3)');
+        expect(header.find('.qa-DataPackShareDialog-Button-members').html()).toContain('MEMBERS (3)');
     });
 
-    it('getAdjustedPermissions should move the user out of the members list', () => {
-        const props = getProps();
-        const user = {
-            user: {
-                username: 'user_one',
-            },
+    it('componentDidUpdate should configure permissions and update state', () => {
+        const permissions = getPermissions();
+        permissions.members = {
+            [props.user.user.username]: Levels.ADMIN,
+            user_one: Levels.READ,
+            user_two: Levels.READ,
         };
-        props.user = user;
-        const permissions = {
-            value: 'SHARED',
-            groups: {},
-            members: {
-                user_one: 'ADMIN',
-                user_two: 'READ',
-            },
-        };
-        const wrapper = getWrapper(props);
-        const expected = {
-            value: 'SHARED',
-            groups: {},
-            members: { user_two: 'READ' },
-            user: 'ADMIN',
-        };
-        const ret = wrapper.instance().getAdjustedPermissions(permissions);
-        expect(ret).toEqual(expected);
+        setup({ show: false });
+        const updateSpy = sinon.spy(instance, 'componentDidUpdate');
+        const stateStub = sinon.stub(instance, 'setState');
+        wrapper.setProps({ permissions, show: true });
+        expect(updateSpy.calledOnce).toBe(true);
+        expect(stateStub.calledOnce).toBe(true);
     });
 
-    it('getAdjustedPermissions should add all members to a public permission set', () => {
-        const props = getProps();
-        const wrapper = getWrapper(props);
-        const permissions = {
-            value: 'PUBLIC',
-            groups: {},
-            members: { user_one: 'ADMIN' },
-        };
-        const expected = {
-            value: 'PUBLIC',
-            groups: {},
-            members: {
-                user_one: 'ADMIN',
-                user_two: 'READ',
-                user_three: 'READ',
-            },
-        };
-        const ret = wrapper.instance().getAdjustedPermissions(permissions);
-        expect(ret).toEqual(expected);
-    });
-
-    it('handleSave should call props.onSave', () => {
-        const props = getProps();
-        props.onSave = sinon.spy();
-        const wrapper = getWrapper(props);
-        wrapper.instance().handleSave();
+    it('handleSave do nothing but call props.onSave with permissions', () => {
+        const permissions = new Permissions(getPermissions());
+        instance.handleSave();
         expect(props.onSave.calledOnce).toBe(true);
-        expect(props.onSave.calledWith(props.permissions)).toBe(true);
+        expect(props.onSave.calledWith(permissions.getPermissions())).toBe(true);
     });
 
-    it('handleSave should set value to public and add admin user back in', () => {
-        const props = getProps();
-        props.onSave = sinon.spy();
-        const wrapper = getWrapper(props);
-        const permissions = {
-            value: 'SHARED',
-            groups: {},
-            members: {
-                user_one: 'READ',
-                user_two: 'READ',
-                user_three: 'READ',
-            },
-            user: 'ADMIN',
-        };
-        wrapper.setState({ permissions });
-        const expected = {
-            value: 'PUBLIC',
-            groups: permissions.groups,
-            members: { ...permissions.members, admin: 'ADMIN' },
-        };
-        wrapper.instance().handleSave();
+    it('handleSave should make set permissions to shared before calling onSave', () => {
+        const members = { user_one: 'READ', user_two: 'READ' };
+        const expected = { value: 'SHARED', members, groups: {} };
+        expect(instance.permissions.isPrivate()).toBe(true);
+        instance.permissions.setMembers(members);
+        instance.handleSave();
         expect(props.onSave.calledOnce).toBe(true);
         expect(props.onSave.calledWith(expected)).toBe(true);
     });
 
-    it('handleGroupUpdate should setState', () => {
-        const props = getProps();
-        const wrapper = getWrapper(props);
-        const stateStub = sinon.stub(wrapper.instance(), 'setState');
-        const groups = {
-            group_one: 'READ',
-            group_two: 'ADMIN',
-        };
-        wrapper.instance().handleGroupUpdate(groups);
+    it('handleSave should set permissions to private before calling onSave', () => {
+        instance.permissions.makeShared();
+        const expected = getPermissions();
+        expect(instance.permissions.isShared()).toBe(true);
+        instance.handleSave();
+        expect(props.onSave.calledOnce).toBe(true);
+        expect(props.onSave.calledWith(expected)).toBe(true);
+    });
+
+    it('handleSave should show publicWarning and not call onSave', () => {
+        setup({ warnPublic: true });
+        const stateStub = sinon.stub(instance, 'setState');
+        instance.permissions.makePublic();
+        instance.handleSave();
         expect(stateStub.calledOnce).toBe(true);
-        expect(stateStub.calledWith({ permissions: { ...props.permissions, groups } })).toBe(true);
-        stateStub.restore();
+        expect(stateStub.calledWith({ showPublicWarning: true })).toBe(true);
+        expect(props.onSave.callCount).toEqual(0);
     });
 
-    it('handleMemberUpdate should setState', () => {
-        const props = getProps();
-        const wrapper = getWrapper(props);
-        const stateStub = sinon.stub(wrapper.instance(), 'setState');
-        const members = {
-            user_one: 'ADMIN',
-            user_two: 'ADMIN',
-        };
-        wrapper.instance().handleMemberUpdate(members);
+    it('handleSave should hide publicWarning and call onSave', () => {
+        setup({ warnPublic: true });
+        instance.permissions.makePublic();
+        wrapper.setState({ showPublicWarning: true });
+        const stateStub = sinon.stub(instance, 'setState');
+        instance.handleSave();
         expect(stateStub.calledOnce).toBe(true);
-        expect(stateStub.calledWith({ permissions: { ...props.permissions, members } })).toBe(true);
-        stateStub.restore();
+        expect(stateStub.calledWith({ showPublicWarning: false }));
+        expect(props.onSave.calledOnce).toBe(true);
     });
 
-    it('handleMemberUpdate should call showPublicWarning', () => {
-        const props = getProps();
-        props.warnPublic = true;
-        const wrapper = getWrapper(props);
-        const showStub = sinon.stub(wrapper.instance(), 'showPublicWarning');
-        const members = {
-            user_one: 'READ',
-            user_two: 'READ',
-            user_three: 'READ',
+    it('handleSave should re-add the current user to the permissions', () => {
+        const permissions = {
+            value: 'SHARED',
+            members: {
+                admin: Levels.ADMIN,
+                user_one: Levels.READ,
+            },
+            groups: {},
         };
-        wrapper.instance().handleMemberUpdate(members);
-        expect(showStub.calledOnce).toBe(true);
-        showStub.restore();
+        setup({ permissions });
+        instance.permissions.setUsername('admin');
+        instance.permissions.extractCurrentUser();
+        expect(instance.permissions.getMembers()).toEqual({ user_one: Levels.READ });
+        instance.handleSave();
+        expect(props.onSave.calledOnce).toBe(true);
+        expect(props.onSave.calledWith(permissions)).toBe(true);
     });
 
-    it('handleMemberUpdate should not call showPublicWarning when selected state length is the same as new length', () => {
-        const props = getProps();
-        props.warnPublic = true;
-        const wrapper = getWrapper(props);
-        const showStub = sinon.stub(wrapper.instance(), 'showPublicWarning');
-        const members = {
-            user_one: 'READ',
-            user_two: 'READ',
-            user_three: 'READ',
+    it('handleUserCheck should set permissions to shared and give user read permission then setState', () => {
+        instance.permissions.makePublic();
+        const stateStub = sinon.stub(instance, 'setState');
+        instance.handleUserCheck('user_one');
+        const expected = {
+            value: 'SHARED',
+            members: { user_one: Levels.READ },
+            groups: {},
         };
-        wrapper.setState({ permissions: { ...wrapper.state().permissions, members } });
-        wrapper.instance().handleMemberUpdate(members);
-        expect(showStub.called).toBe(false);
-        showStub.restore();
+        expect(stateStub.calledOnce).toBe(true);
+        expect(stateStub.calledWith({ permissions: expected })).toBe(true);
+    });
+
+    it('handleUserCheck should remove user permission', () => {
+        instance.permissions.setMemberPermission('user_one', Levels.READ);
+        expect(instance.permissions.getMembers()).toEqual({ user_one: Levels.READ });
+        const stateStub = sinon.stub(instance, 'setState');
+        instance.handleUserCheck('user_one');
+        expect(stateStub.calledOnce).toBe(true);
+        expect(stateStub.calledWith({ permissions: getPermissions() })).toBe(true);
+    });
+
+    it('handleGroupCheck should give group read permission then setState', () => {
+        const stateStub = sinon.stub(instance, 'setState');
+        instance.handleGroupCheck('group_one');
+        const expected = {
+            value: 'PRIVATE',
+            groups: { group_one: Levels.READ },
+            members: {},
+        };
+        expect(stateStub.calledOnce).toBe(true);
+        expect(stateStub.calledWith({ permissions: expected })).toBe(true);
+    });
+
+    it('handleGroupCheck should remove group permission', () => {
+        instance.permissions.setGroupPermission('group_one', Levels.READ);
+        expect(instance.permissions.getGroups()).toEqual({ group_one: Levels.READ });
+        const stateStub = sinon.stub(instance, 'setState');
+        instance.handleGroupCheck('group_one');
+        expect(stateStub.calledOnce).toBe(true);
+        expect(stateStub.calledWith({ permissions: getPermissions() })).toBe(true);
+    });
+
+    //
+    it('handleAdminCheck should give user ADMIN permission then setState', () => {
+        const stateStub = sinon.stub(instance, 'setState');
+        instance.handleAdminCheck('user_one');
+        const expected = {
+            value: 'PRIVATE',
+            members: { user_one: Levels.ADMIN },
+            groups: {},
+        };
+        expect(stateStub.calledOnce).toBe(true);
+        expect(stateStub.calledWith({ permissions: expected })).toBe(true);
+    });
+
+    it('handleAdminCheck should remove user ADMIN permission', () => {
+        instance.permissions.setMemberPermission('user_one', Levels.ADMIN);
+        expect(instance.permissions.getMembers()).toEqual({ user_one: Levels.ADMIN });
+        const stateStub = sinon.stub(instance, 'setState');
+        instance.handleAdminCheck('user_one');
+        const expected = {
+            value: 'PRIVATE',
+            members: { user_one: Levels.READ },
+            groups: {},
+        };
+        expect(stateStub.calledOnce).toBe(true);
+        expect(stateStub.calledWith({ permissions: expected })).toBe(true);
+    });
+
+    it('handleAdminGroupCheck should give group ADMIN permission then setState', () => {
+        const stateStub = sinon.stub(instance, 'setState');
+        instance.handleAdminGroupCheck('group_one');
+        const expected = {
+            value: 'PRIVATE',
+            groups: { group_one: Levels.ADMIN },
+            members: {},
+        };
+        expect(stateStub.calledOnce).toBe(true);
+        expect(stateStub.calledWith({ permissions: expected })).toBe(true);
+    });
+
+    it('handleAdminGroupCheck should remove group ADMIN permission', () => {
+        instance.permissions.setGroupPermission('group_one', Levels.ADMIN);
+        expect(instance.permissions.getGroups()).toEqual({ group_one: Levels.ADMIN });
+        const stateStub = sinon.stub(instance, 'setState');
+        instance.handleAdminGroupCheck('group_one');
+        const expected = {
+            value: 'PRIVATE',
+            groups: { group_one: Levels.READ },
+            members: {},
+        };
+        expect(stateStub.calledOnce).toBe(true);
+        expect(stateStub.calledWith({ permissions: expected })).toBe(true);
+    });
+
+    it('handleCurrentCheck should give all users permissions and update state', () => {
+        const stateStub = sinon.stub(instance, 'setState');
+        const members = {};
+        props.users.forEach((user) => { members[user.user.username] = Levels.READ; });
+        const expected = {
+            value: 'PRIVATE',
+            members,
+            groups: {},
+        };
+        instance.handleCurrentCheck();
+        expect(stateStub.calledOnce).toBe(true);
+        expect(stateStub.calledWith({ permissions: expected })).toBe(true);
+    });
+
+    it('handlePublicCheck should set permissions to public and update state', () => {
+        const stateStub = sinon.stub(instance, 'setState');
+        expect(instance.permissions.isPublic()).toBe(false);
+        instance.handlePublicCheck();
+        const expected = {
+            value: 'PUBLIC',
+            members: {},
+            groups: {},
+        };
+        expect(stateStub.calledOnce).toBe(true);
+        expect(stateStub.calledWith({ permissions: expected })).toBe(true);
+    });
+
+    it('handleGroupCheckAll should add all groups to permissions and update state', () => {
+        const stateStub = sinon.stub(instance, 'setState');
+        const groups = {};
+        props.groups.forEach((group) => { groups[group.name] = Levels.READ; });
+        const expected = {
+            value: 'PRIVATE',
+            members: {},
+            groups,
+        };
+        instance.handleGroupCheckAll();
+        expect(stateStub.calledOnce).toBe(true);
+        expect(stateStub.calledWith({ permissions: expected })).toBe(true);
+    });
+
+    it('handleUnCheckAll should clear members and makeShare then update state', () => {
+        const stateStub = sinon.stub(instance, 'setState');
+        instance.permissions.makePublic();
+        instance.handleUncheckAll();
+        const expected = {
+            value: 'SHARED',
+            members: {},
+            groups: {},
+        };
+        expect(stateStub.calledOnce).toBe(true);
+        expect(stateStub.calledWith({ permissions: expected })).toBe(true);
+    });
+
+    it('handleGroupUncheckAll should clear group permissions', () => {
+        const stateStub = sinon.stub(instance, 'setState');
+        instance.permissions.setGroups({ group_one: Levels.READ });
+        expect(instance.permissions.getGroupCount()).toEqual(1);
+        instance.handleGroupUncheckAll();
+        expect(stateStub.calledOnce).toBe(true);
+        expect(stateStub.calledWith({ permissions: getPermissions() })).toBe(true);
     });
 
     it('showShareInfo should set show to true', () => {
-        const props = getProps();
-        const wrapper = getWrapper(props);
-        const stateStub = sinon.stub(wrapper.instance(), 'setState');
-        wrapper.instance().showShareInfo();
+        const stateStub = sinon.stub(instance, 'setState');
+        instance.showShareInfo();
         expect(stateStub.calledOnce).toBe(true);
         expect(stateStub.calledWith({ showShareInfo: true })).toBe(true);
         stateStub.restore();
     });
 
     it('hideShareInfo should set show to false', () => {
-        const props = getProps();
-        const wrapper = getWrapper(props);
-        const stateStub = sinon.stub(wrapper.instance(), 'setState');
-        wrapper.instance().hideShareInfo();
+        const stateStub = sinon.stub(instance, 'setState');
+        instance.hideShareInfo();
         expect(stateStub.calledOnce).toBe(true);
         expect(stateStub.calledWith({ showShareInfo: false })).toBe(true);
         stateStub.restore();
     });
 
     it('showPublicWarning should set show to true', () => {
-        const props = getProps();
-        const wrapper = getWrapper(props);
-        const stateStub = sinon.stub(wrapper.instance(), 'setState');
-        wrapper.instance().showPublicWarning();
+        const stateStub = sinon.stub(instance, 'setState');
+        instance.showPublicWarning();
         expect(stateStub.calledOnce).toBe(true);
         expect(stateStub.calledWith({ showPublicWarning: true })).toBe(true);
         stateStub.restore();
     });
 
     it('hidePublicWarning should set show to false', () => {
-        const props = getProps();
-        const wrapper = getWrapper(props);
-        const stateStub = sinon.stub(wrapper.instance(), 'setState');
-        wrapper.instance().hidePublicWarning();
+        const stateStub = sinon.stub(instance, 'setState');
+        instance.hidePublicWarning();
         expect(stateStub.calledOnce).toBe(true);
         expect(stateStub.calledWith({ showPublicWarning: false })).toBe(true);
         stateStub.restore();
     });
 
     it('toggleView should set passed in view', () => {
-        const props = getProps();
-        const wrapper = getWrapper(props);
-        const stateStub = sinon.stub(wrapper.instance(), 'setState');
-        wrapper.instance().toggleView('members');
+        const stateStub = sinon.stub(instance, 'setState');
+        instance.toggleView('members');
         expect(stateStub.calledOnce).toBe(true);
         expect(stateStub.calledWith({ view: 'members' }));
         stateStub.restore();
     });
 
     it('toggleView should set opposite view', () => {
-        const props = getProps();
-        const wrapper = getWrapper(props);
         expect(wrapper.state().view).toEqual('groups');
-        const stateStub = sinon.stub(wrapper.instance(), 'setState');
-        wrapper.instance().toggleView();
+        const stateStub = sinon.stub(instance, 'setState');
+        instance.toggleView();
         expect(stateStub.calledOnce).toBe(true);
         expect(stateStub.calledWith({ view: 'members' })).toBe(true);
         stateStub.restore();
     });
 
     it('toggleView should set opposite view', () => {
-        const props = getProps();
-        const wrapper = getWrapper(props);
         wrapper.setState({ view: 'members' });
-        const stateStub = sinon.stub(wrapper.instance(), 'setState');
-        wrapper.instance().toggleView();
+        const stateStub = sinon.stub(instance, 'setState');
+        instance.toggleView();
         expect(stateStub.calledOnce).toBe(true);
         expect(stateStub.calledWith({ view: 'groups' })).toBe(true);
         stateStub.restore();

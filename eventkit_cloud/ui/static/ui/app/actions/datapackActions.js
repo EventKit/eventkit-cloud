@@ -27,8 +27,9 @@ export function getDatacartDetails(jobuid) {
             types.DATACART_DETAILS_RECEIVED,
             types.DATACART_DETAILS_ERROR,
         ],
-        url: `/api/runs?job_uid=${jobuid}`,
+        url: '/api/runs',
         method: 'GET',
+        params: { job_uid: jobuid },
         onSuccess: (response) => {
             // get the list of runs (DataPacks) that are associated with the job UID.
             // We take only the first one for now since multiples are currently disabled.
@@ -81,7 +82,7 @@ export function getRuns(args = {}) {
         });
     }
     const providers = (args.providers) ? Object.keys(args.providers) : [];
-    const params = {};
+    const params = { slim: 'true' };
     params.page_size = args.page_size;
     if (args.ordering) {
         params.ordering = args.ordering.includes('featured') ?
@@ -158,7 +159,7 @@ export function getRuns(args = {}) {
 }
 
 export function getFeaturedRuns(args) {
-    const params = {};
+    const params = { slim: 'true' };
     params.page_size = args.pageSize;
     params.featured = true;
     return {

@@ -3,6 +3,10 @@ import React, { Component } from 'react';
 
 export class ShareBodyTooltip extends Component {
     render() {
+        if (!this.props.open) {
+            return null;
+        }
+
         const targetPosition = this.props.target.getBoundingClientRect();
         const bodyPosition = this.props.body.getBoundingClientRect();
 
@@ -92,6 +96,8 @@ export class ShareBodyTooltip extends Component {
 }
 
 ShareBodyTooltip.defaultProps = {
+    target: null,
+    body: null,
     arrowStyle: {},
     arrowContainerStyle: {},
     arrowSilhouetteStyle: {},
@@ -100,9 +106,10 @@ ShareBodyTooltip.defaultProps = {
 };
 
 ShareBodyTooltip.propTypes = {
+    open: PropTypes.bool.isRequired,
+    target: PropTypes.object,
+    body: PropTypes.object,
     text: PropTypes.string.isRequired,
-    target: PropTypes.object.isRequired,
-    body: PropTypes.object.isRequired,
     arrowStyle: PropTypes.object,
     arrowContainerStyle: PropTypes.object,
     arrowSilhouetteStyle: PropTypes.object,

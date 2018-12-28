@@ -12,14 +12,11 @@ import Lock from '@material-ui/icons/LockOutlined';
 import NotificationSync from '@material-ui/icons/Sync';
 import NavigationCheck from '@material-ui/icons/Check';
 import AlertError from '@material-ui/icons/Error';
-import List from '@material-ui/core/List';
 import IconMenu from '../common/IconMenu';
-import DropDownListItem from '../common/DropDownListItem';
-import BaseDialog from '../Dialog/BaseDialog';
 import DeleteDataPackDialog from '../Dialog/DeleteDataPackDialog';
+import ProviderDialog from '../Dialog/ProviderDialog';
 import FeaturedFlag from './FeaturedFlag';
 import DataPackShareDialog from '../DataPackShareDialog/DataPackShareDialog';
-import { userIsDataPackAdmin } from '../../utils/generic';
 import { makeFullRunSelector } from '../../selectors/runSelector';
 
 export class DataPackListItem extends Component {
@@ -34,7 +31,6 @@ export class DataPackListItem extends Component {
         this.handleShareClose = this.handleShareClose.bind(this);
         this.handleShareSave = this.handleShareSave.bind(this);
         this.state = {
-            providerDescs: {},
             providerDialogOpen: false,
             deleteDialogOpen: false,
             shareDialogOpen: false,
@@ -45,14 +41,8 @@ export class DataPackListItem extends Component {
         this.setState({ providerDialogOpen: false });
     }
 
-    handleProviderOpen(runProviders) {
-        const providerDesc = {};
-        runProviders.forEach((runProvider) => {
-            const a = this.props.providers.find(x => x.slug === runProvider.slug);
-            providerDesc[a.name] = a.service_description;
-        });
+    handleProviderOpen() {
         this.setState({
-            providerDescs: providerDesc,
             providerDialogOpen: true,
         });
     }
@@ -86,8 +76,6 @@ export class DataPackListItem extends Component {
 
     render() {
         const { colors } = this.props.theme.eventkit;
-
-        const runProviders = this.props.run.provider_tasks.filter(provider => provider.display);
         const subtitleFontSize = 12;
 
         const styles = {
@@ -166,12 +154,6 @@ export class DataPackListItem extends Component {
             },
         };
 
-        const adminPermission = userIsDataPackAdmin(
-            this.props.user.data.user,
-            this.props.run.job.permissions,
-            this.props.groups,
-        );
-
         const cardTitleStyle = (this.props.run.job.featured) ? styles.cardTitleFeatured : styles.cardTitle;
         const onMouseEnter = this.props.onHoverStart ? () => { this.props.onHoverStart(this.props.run.uid); } : null;
         const onMouseLeave = this.props.onHoverEnd ? () => { this.props.onHoverEnd(this.props.run.uid); } : null;
@@ -211,7 +193,9 @@ export class DataPackListItem extends Component {
                                         </Link>
                                     </div>
                                 </div>
-                                <IconMenu className="qa-DataPackListItem-IconMenu tour-datapack-options">
+                                <IconMenu
+                                    className="qa-DataPackListItem-IconMenu tour-datapack-options"
+                                >
                                     <MenuItem
                                         key="link"
                                         className="qa-DataPackListItem-MenuItem-statusDownloadLink"
@@ -224,12 +208,12 @@ export class DataPackListItem extends Component {
                                         key="sources"
                                         className="qa-DataPackListItem-MenuItem-viewDataSources"
                                         style={{ fontSize: subtitleFontSize }}
-                                        onClick={() => this.handleProviderOpen(runProviders)}
+                                        onClick={this.handleProviderOpen}
                                     >
                                         View Data Sources
                                     </MenuItem>
 
-                                    {adminPermission ?
+                                    {this.props.run.job.relationship === 'ADMIN' ?
                                         <MenuItem
                                             key="delete"
                                             className="qa-DataPackListItem-MenuItem-deleteExport"
@@ -240,7 +224,7 @@ export class DataPackListItem extends Component {
                                         </MenuItem>
                                         : null
                                     }
-                                    {adminPermission ?
+                                    {this.props.run.job.relationship === 'ADMIN' ?
                                         <MenuItem
                                             key="share"
                                             className="qa-DataPackListItem-MenuItem-share"
@@ -252,24 +236,12 @@ export class DataPackListItem extends Component {
                                         : null
                                     }
                                 </IconMenu>
-                                <BaseDialog
-                                    className="qa-DataPackListItem-BaseDialog"
-                                    show={this.state.providerDialogOpen}
-                                    title="DATA SOURCES"
+                                <ProviderDialog
+                                    open={this.state.providerDialogOpen}
+                                    uids={this.props.run.provider_tasks}
+                                    providers={this.props.providers}
                                     onClose={this.handleProviderClose}
-                                >
-                                    <List>
-                                        {Object.entries(this.state.providerDescs).map(([key, value], ix) => (
-                                            <DropDownListItem
-                                                title={key}
-                                                key={key}
-                                                alt={ix % 2 !== 0}
-                                            >
-                                                {value}
-                                            </DropDownListItem>
-                                        ))}
-                                    </List>
-                                </BaseDialog>
+                                />
                                 <DeleteDataPackDialog
                                     className="qa-DataPackListItem-DeleteDialog"
                                     show={this.state.deleteDialogOpen}
@@ -314,8 +286,6 @@ export class DataPackListItem extends Component {
                         onClose={this.handleShareClose}
                         onSave={this.handleShareSave}
                         user={this.props.user.data}
-                        groups={this.props.groups}
-                        members={this.props.users}
                         permissions={this.props.run.job.permissions}
                         groupsText="You may share view and edit rights with groups exclusively.
                             Group sharing is managed separately from member sharing."
@@ -348,8 +318,6 @@ DataPackListItem.propTypes = {
     onHoverEnd: PropTypes.func,
     onClick: PropTypes.func,
     backgroundColor: PropTypes.string,
-    users: PropTypes.arrayOf(PropTypes.object).isRequired,
-    groups: PropTypes.arrayOf(PropTypes.object).isRequired,
     style: PropTypes.object,
     theme: PropTypes.object.isRequired,
 };

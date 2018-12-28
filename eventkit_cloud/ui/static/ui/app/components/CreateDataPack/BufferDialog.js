@@ -142,7 +142,7 @@ export class BufferDialog extends Component {
         }
 
         let over = false;
-        const maxAoi = this.props.maxVectorAoiSqKm;
+        const maxAoi = this.props.limits.max;
         const totalArea = getSqKmString(this.props.aoi);
         const size = getSqKm(this.props.aoi);
         if (maxAoi && maxAoi < size) {
@@ -259,11 +259,11 @@ export class BufferDialog extends Component {
     }
 }
 
-BufferDialog.defaultProps = {
-    maxVectorAoiSqKm: null,
-};
-
 BufferDialog.propTypes = {
+    limits: PropTypes.shape({
+        max: PropTypes.number,
+        sizes: PropTypes.array,
+    }).isRequired,
     show: PropTypes.bool.isRequired,
     value: PropTypes.number.isRequired,
     valid: PropTypes.bool.isRequired,
@@ -271,7 +271,6 @@ BufferDialog.propTypes = {
     handleBufferChange: PropTypes.func.isRequired,
     closeBufferDialog: PropTypes.func.isRequired,
     aoi: PropTypes.object.isRequired,
-    maxVectorAoiSqKm: PropTypes.number,
     theme: PropTypes.object.isRequired,
 };
 

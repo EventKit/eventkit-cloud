@@ -1,10 +1,16 @@
-import PropTypes from 'prop-types';
-import React, { Component } from 'react';
-import { withTheme } from '@material-ui/core/styles';
+import * as React from 'react';
+import { withTheme, Theme } from '@material-ui/core/styles';
 import NavigationCheck from '@material-ui/icons/Check';
 import Button from '@material-ui/core/Button';
 
-export class SaveButton extends Component {
+interface Props {
+    saved: boolean;
+    saveDisabled: boolean;
+    handleSubmit: () => void;
+    theme: Eventkit.Theme & Theme;
+}
+
+export class SaveButton extends React.Component<Props, {}> {
     render() {
         const { colors } = this.props.theme.eventkit;
         const styles = {
@@ -13,6 +19,8 @@ export class SaveButton extends Component {
                 width: '200px',
                 boxShadow: 'none',
                 padding: '0px 5px',
+                color: undefined,
+                backgroundColor: undefined,
             },
         };
 
@@ -52,17 +60,5 @@ export class SaveButton extends Component {
         );
     }
 }
-
-SaveButton.defaultProps = {
-    saved: false,
-    saveDisabled: false,
-};
-
-SaveButton.propTypes = {
-    saved: PropTypes.bool,
-    saveDisabled: PropTypes.bool,
-    handleSubmit: PropTypes.func.isRequired,
-    theme: PropTypes.object.isRequired,
-};
 
 export default withTheme()(SaveButton);

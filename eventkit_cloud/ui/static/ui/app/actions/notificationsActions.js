@@ -25,6 +25,7 @@ export const types = {
 export function getNotifications(args = {}) {
     const params = {
         page_size: args.pageSize || 12,
+        slim: 'true',
     };
 
     return {

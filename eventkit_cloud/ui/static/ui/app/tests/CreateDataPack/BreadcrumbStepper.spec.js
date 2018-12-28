@@ -242,6 +242,7 @@ describe('BreadcrumbStepper component', () => {
 
         let content = wrapper.instance().getStepContent(0);
         expect(content).toEqual(<ExportAOI
+            limits={wrapper.state('limits')}
             onWalkthroughReset={props.onWalkthroughReset}
             walkthroughClicked={props.walkthroughClicked}
         />);
@@ -266,6 +267,7 @@ describe('BreadcrumbStepper component', () => {
 
         content = wrapper.instance().getStepContent(3);
         expect(content).toEqual(<ExportAOI
+            limits={wrapper.state('limits')}
             onWalkthroughReset={props.onWalkthroughReset}
             walkthroughClicked={props.walkthroughClicked}
         />);
