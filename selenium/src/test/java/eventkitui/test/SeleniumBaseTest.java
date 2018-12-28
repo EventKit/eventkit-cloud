@@ -1,5 +1,6 @@
 package eventkitui.test;
 
+import eventkitui.test.page.BackdoorLoginPage;
 import eventkitui.test.page.LocalLoginPage;
 import eventkitui.test.page.navpanel.AdminLoginPage;
 import eventkitui.test.page.navpanel.dashboard.Dashboard;
@@ -43,14 +44,22 @@ public class SeleniumBaseTest {
             localLoginPage.login(USERNAME, PASSWORD);
         }
         catch (final Exception exception) {
-            // try other login method
+            // try other login methods
             try {
-                GxLoginPage gxLoginPage = mainPage.beginLogin();
-                mainPage = gxLoginPage.loginDisadvantaged(USERNAME, PASSWORD, mainPage);
+                BackdoorLoginPage backdoorLoginPage =  new BackdoorLoginPage(driver, 10);
+                backdoorLoginPage.waitUntilLoaded();
+                backdoorLoginPage.login(USERNAME, PASSWORD);
             }
-            catch(final Exception exception2) {
-                Utils.takeScreenshot(driver);
-                throw new RuntimeException("Something went wrong, see screenshot.");
+            catch (final Exception loginException) {
+                // finally try gxlogin.
+                try {
+                    GxLoginPage gxLoginPage = mainPage.beginLogin();
+                    mainPage = gxLoginPage.loginDisadvantaged(USERNAME, PASSWORD, mainPage);
+                }
+                catch(final Exception exception2) {
+                    Utils.takeScreenshot(driver);
+                    throw new RuntimeException("Something went wrong, see screenshot.");
+                }
             }
         }
 
