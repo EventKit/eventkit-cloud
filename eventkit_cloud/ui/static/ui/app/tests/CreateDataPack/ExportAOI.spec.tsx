@@ -102,14 +102,6 @@ describe('ExportAOI component', () => {
 
     beforeEach(setup);
 
-    // beforeEach(() => {
-    //     sinon.stub(ExportAOI.prototype, 'updateZoomLevel');
-    // });
-
-    // afterEach(() => {
-    //     ExportAOI.prototype.updateZoomLevel.restore();
-    // });
-
     it('should render the basic elements', () => {
         expect(wrapper.find('#map')).toHaveLength(1);
         expect(wrapper.find(AoiInfobar)).toHaveLength(1);

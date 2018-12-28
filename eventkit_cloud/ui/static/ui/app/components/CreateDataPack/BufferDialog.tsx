@@ -177,7 +177,6 @@ export class BufferDialog extends React.Component<Props, State> {
                 >
                     <AlertWarning
                         onClick={this.showAlert}
-                        // style={styles.warning}
                         className={classes.warning}
                     />
                     {this.state.showAlert ?
@@ -191,7 +190,6 @@ export class BufferDialog extends React.Component<Props, State> {
                                     Please reduce the size of your buffer and/or polygon
                                 </p>
                             }
-                            // style={styles.callOut}
                             className={classes.callOut}
                         />
                         :
@@ -252,7 +250,6 @@ export class BufferDialog extends React.Component<Props, State> {
                                         <td className={classes.tableData} style={{ borderLeft: '1px solid #ccc' }} >
                                             <Slider
                                                 className={classes.slider}
-                                                // style={styles.slider}
                                                 step={10}
                                                 max={10000}
                                                 min={0}
