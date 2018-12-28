@@ -3,10 +3,8 @@ package eventkitui.test.util;
 import eventkitui.test.page.MainPage;
 import eventkitui.test.page.navpanel.NavigationPanel;
 import org.apache.commons.io.FileUtils;
-import org.openqa.selenium.NoSuchElementException;
-import org.openqa.selenium.OutputType;
-import org.openqa.selenium.TakesScreenshot;
-import org.openqa.selenium.WebDriver;
+import org.apache.commons.lang3.SystemUtils;
+import org.openqa.selenium.*;
 import org.openqa.selenium.chrome.ChromeOptions;
 import org.openqa.selenium.remote.RemoteWebDriver;
 
@@ -52,7 +50,7 @@ public class Utils {
         File scrFile = ((TakesScreenshot) driver).getScreenshotAs(OutputType.FILE);
         try {
             Random random = new Random();
-            String fileName = "C:/temp/ektest" + random.nextLong() + ".png";
+            String fileName = SystemUtils.IS_OS_WINDOWS ? "C:/temp/ektest" + random.nextLong() + ".png" : "/tmp/ektest" + random.nextLong() + ".png";
             FileUtils.copyFile(scrFile, new File(fileName));
             System.out.println(fileName);
         } catch (IOException exception) {
@@ -101,6 +99,16 @@ public class Utils {
             twoNumbers[1] = Integer.parseInt(parts[1]);
 
             return twoNumbers;
+        }
+    }
+
+    public static boolean checkIfDisplayed(final WebElement webElement) {
+        try {
+            webElement.isDisplayed();
+            return true;
+        }
+        catch (NoSuchElementException noSuchElement) {
+            return false;
         }
     }
 

@@ -6,6 +6,7 @@ import eventkitui.test.page.navpanel.library.LibraryPage;
 import eventkitui.test.util.Utils;
 import org.junit.Before;
 import org.junit.Test;
+import org.openqa.selenium.TimeoutException;
 import org.openqa.selenium.interactions.Actions;
 import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.WebDriverWait;

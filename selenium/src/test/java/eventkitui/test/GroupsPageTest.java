@@ -90,7 +90,6 @@ public class GroupsPageTest extends SeleniumBaseTest {
         final String renamedName = "Rename:" + random.nextLong();
         renameGroupPage.getRenameField().sendKeys(renamedName);
         assertTrue(renameGroupPage.getRenameField().getAttribute("value").equalsIgnoreCase(renamedName));
-        Utils.takeScreenshot(driver);
         renameGroupPage.getSaveButton().click();
         wait.until(ExpectedConditions.refreshed(ExpectedConditions.elementToBeClickable(groupsPage.getGroupOptions())));
         wait.until(ExpectedConditions.invisibilityOfElementLocated(loadingBar));
