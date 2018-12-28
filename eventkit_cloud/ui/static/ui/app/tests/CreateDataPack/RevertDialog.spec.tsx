@@ -12,28 +12,32 @@ import { RevertDialog } from '../../components/CreateDataPack/RevertDialog';
 import IrregularPolygon from '../../components/icons/IrregularPolygon';
 
 describe('AlertCallout component', () => {
-    const getProps = () => (
-        {
-            show: true,
-            onRevertClick: sinon.spy(),
-            onReverClose: sinon.spy(),
-            aoiInfo: {
-                geojson: { type: 'FeatureCollection', features: [] },
-                geomType: 'Polygon',
-                description: 'Box',
-                title: 'Box',
-            },
-            ...(global as any).eventkit_test_props,
-        }
-    );
+    const getProps = () => ({
+        show: true,
+        onRevertClick: sinon.spy(),
+        onRevertClose: sinon.spy(),
+        aoiInfo: {
+            geojson: { type: 'FeatureCollection', features: [] },
+            geomType: 'Polygon',
+            description: 'Box',
+            title: 'Box',
+        },
+        ...(global as any).eventkit_test_props,
+        classes: {},
+    });
 
-    const getWrapper = props => (
-        mount(<RevertDialog {...props} />)
-    );
+    let props;
+    let wrapper;
+    let instance;
+    const setup = (overrides = {}) => {
+        props = { ...getProps(), ...overrides };
+        wrapper = mount(<RevertDialog {...props} />);
+        instance = wrapper.instance();
+    };
+
+    beforeEach(setup);
 
     it('should render the basic elements', () => {
-        const props = getProps();
-        const wrapper = getWrapper(props);
         expect(wrapper.find('.qa-RevertDialog-background')).toHaveLength(1);
         expect(wrapper.find('.qa-RevertDialog-dialog')).toHaveLength(1);
         expect(wrapper.find('.qa-RevertDialog-header')).toHaveLength(1);
@@ -47,83 +51,58 @@ describe('AlertCallout component', () => {
     });
 
     it('should not render anything if show is false', () => {
-        const props = getProps();
-        props.show = false;
-        const wrapper = getWrapper(props);
+        wrapper.setProps({ show: false });
         expect(wrapper.find('.qa-RevertDialog-dialog').hostNodes()).toHaveLength(0);
         expect(wrapper.find('.qa-RevertDialog-background').hostNodes()).toHaveLength(0);
     });
 
     it('Close buttons should call onRevertClose', () => {
-        const props = getProps();
-        props.onRevertClose = sinon.spy();
-        const wrapper = getWrapper(props);
         wrapper.find(Button).first().simulate('click');
         expect(props.onRevertClose.calledOnce).toBe(true);
     });
 
     it('Revert button should call onRevertClick', () => {
-        const props = getProps();
-        props.onRevertClick = sinon.spy();
-        const wrapper = getWrapper(props);
         wrapper.find(Button).last().find('button').simulate('click');
         expect(props.onRevertClick.calledOnce).toBe(true);
     });
 
     it('Clear icon should call onRevertClose on click', () => {
-        const props = getProps();
-        props.onRevertClose = sinon.spy();
-        const wrapper = getWrapper(props);
         wrapper.find(Clear).simulate('click');
         expect(props.onRevertClose.calledOnce).toBe(true);
     });
 
     it('getIcon should return ImageCropSquare', () => {
-        const props = getProps();
-        const wrapper = getWrapper(props);
-        const icon = wrapper.instance().getIcon('Polygon', 'Box');
+        const icon = instance.getIcon('Polygon', 'Box');
         expect(icon.type).toEqual(ImageCropSquare);
     });
 
     it('getIcon should return Extent', () => {
-        const props = getProps();
-        const wrapper = getWrapper(props);
-        const icon = wrapper.instance().getIcon('Polygon', 'Map View');
+        const icon = instance.getIcon('Polygon', 'Map View');
         expect(icon.type).toEqual(Extent);
     });
 
     it('getIcon should return ActionRoom', () => {
-        const props = getProps();
-        const wrapper = getWrapper(props);
-        const icon = wrapper.instance().getIcon('Point', '');
+        const icon = instance.getIcon('Point', '');
         expect(icon.type).toEqual(ActionRoom);
     });
 
     it('getIcon should return Line', () => {
-        const props = getProps();
-        const wrapper = getWrapper(props);
-        const icon = wrapper.instance().getIcon('Line', '');
+        const icon = instance.getIcon('Line', '');
         expect(icon.type).toEqual(Line);
     });
 
     it('getIcon should return img tag', () => {
-        const props = getProps();
-        const wrapper = getWrapper(props);
-        const icon = wrapper.instance().getIcon('Polygon', '');
+        const icon = instance.getIcon('Polygon', '');
         expect(icon.type).toEqual(IrregularPolygon);
     });
 
     it('getIcon should return img tag', () => {
-        const props = getProps();
-        const wrapper = getWrapper(props);
-        const icon = wrapper.instance().getIcon('Collection', '');
+        const icon = instance.getIcon('Collection', '');
         expect(icon.type).toEqual(IrregularPolygon);
     });
 
     it('getIcon should return AlertWarning', () => {
-        const props = getProps();
-        const wrapper = getWrapper(props);
-        const icon = wrapper.instance().getIcon('', '');
+        const icon = instance.getIcon('', '');
         expect(icon.type).toEqual(AlertWarning);
     });
 });

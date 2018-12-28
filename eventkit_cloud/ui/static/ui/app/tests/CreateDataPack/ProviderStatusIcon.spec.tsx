@@ -7,21 +7,18 @@ import ActionDone from '@material-ui/icons/Done';
 import CircularProgress from '@material-ui/core/CircularProgress';
 import { ProviderStatusIcon } from '../../components/CreateDataPack/ProviderStatusIcon';
 
-
 describe('ProviderStatusIcon component', () => {
     let wrapper;
     let instance;
 
-    const defaultProps = () => (
-        {
-            availability: {
-                status: '',
-                type: '',
-                message: '',
-            },
-            ...(global as any).eventkit_test_props,
-        }
-    );
+    const defaultProps = () => ({
+        availability: {
+            status: '',
+            type: '',
+            message: '',
+        },
+        ...(global as any).eventkit_test_props,
+    });
 
     const setup = (propsOverride = {}) => {
         const props = {
