@@ -1,5 +1,5 @@
-import React from 'react';
-import sinon from 'sinon';
+import * as React from 'react';
+import * as sinon from 'sinon';
 import { shallow } from 'enzyme';
 import AlertWarning from '@material-ui/icons/Warning';
 import AlertError from '@material-ui/icons/Error';
@@ -19,7 +19,7 @@ describe('ProviderStatusIcon component', () => {
                 type: '',
                 message: '',
             },
-            ...global.eventkit_test_props,
+            ...(global as any).eventkit_test_props,
         }
     );
 

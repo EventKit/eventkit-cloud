@@ -1,7 +1,6 @@
-import PropTypes from 'prop-types';
-import React, { Component } from 'react';
-import { withTheme } from '@material-ui/core/styles';
-import numeral from 'numeral';
+import * as React from 'react';
+import { withTheme, Theme, withStyles, createStyles } from '@material-ui/core/styles';
+import * as numeral from 'numeral';
 import Button from '@material-ui/core/Button';
 import TextField from '@material-ui/core/TextField';
 import Slider from '@material-ui/lab/Slider';
@@ -10,8 +9,109 @@ import Clear from '@material-ui/icons/Clear';
 import AlertCallout from './AlertCallout';
 import { getSqKm, getSqKmString } from '../../utils/generic';
 
-export class BufferDialog extends Component {
-    constructor(props) {
+const jss = (theme: Eventkit.Theme & Theme) => createStyles({
+    background: {
+        position: 'absolute',
+        zIndex: 999,
+        width: '100%',
+        height: '100%',
+        top: 0,
+        left: 0,
+    },
+    dialog: {
+        zIndex: 1000,
+        position: 'absolute',
+        bottom: '40px',
+        left: '50%',
+        transform: 'translateX(-50%)',
+        backgroundColor: theme.eventkit.colors.white,
+        width: '70%',
+        minWidth: '355px',
+        maxWidth: '550px',
+        borderRadius: '2px',
+        outline: '1px solid rgba(0, 0, 0, 0.1)',
+    },
+    header: {
+        margin: '0px',
+        padding: '15px 15px 10px',
+        fontSize: '16px',
+        lineHeight: '32px',
+    },
+    body: {
+        color: theme.eventkit.colors.text_primary,
+        padding: '0px 15px',
+        boxSizing: 'border-box',
+    },
+    footnote: {
+        padding: '15px 15px 10px',
+        textAlign: 'right',
+        color: theme.eventkit.colors.text_primary,
+    },
+    footer: {
+        boxSizing: 'border-box',
+        padding: '0px 15px 15px',
+        width: '100%',
+        textAlign: 'right',
+    },
+    tableData: {
+        width: '50%',
+        height: '22px',
+    },
+    textField: {
+        width: '65px',
+        height: '24px',
+        fontWeight: 'normal',
+    },
+    clear: {
+        float: 'right',
+        fill: theme.eventkit.colors.primary,
+        cursor: 'pointer',
+    },
+    warning: {
+        height: '20px',
+        width: '20px',
+        fill: theme.eventkit.colors.warning,
+        verticalAlign: 'middle',
+        cursor: 'pointer',
+    },
+    callOut: {
+        bottom: '40px',
+        left: '50%',
+        transform: 'translateX(-50%)',
+        width: '220px',
+        color: theme.eventkit.colors.warning,
+        textAlign: 'left',
+    },
+    slider: {
+        position: 'absolute',
+        width: '100%',
+        bottom: 0,
+        padding: '21px 0px',
+    },
+});
+
+export interface Props {
+    limits: {
+        max: number;
+        sizes: number[];
+    };
+    show: boolean;
+    value: number;
+    valid: boolean;
+    handleBufferClick: () => void;
+    handleBufferChange: (value: number | string) => void;
+    closeBufferDialog: () => void;
+    aoi: object;
+    theme: Eventkit.Theme & Theme;
+    classes: { [className: string]: string };
+}
+
+export interface State {
+    showAlert: boolean;
+}
+
+export class BufferDialog extends React.Component<Props, State> {
+    constructor(props: Props) {
         super(props);
         this.showAlert = this.showAlert.bind(this);
         this.closeAlert = this.closeAlert.bind(this);
@@ -20,98 +120,17 @@ export class BufferDialog extends Component {
         };
     }
 
-    showAlert() {
+    private showAlert() {
         this.setState({ showAlert: true });
     }
 
-    closeAlert() {
+    private closeAlert() {
         this.setState({ showAlert: false });
     }
 
     render() {
+        const { classes } = this.props;
         const { colors } = this.props.theme.eventkit;
-
-        const styles = {
-            background: {
-                position: 'absolute',
-                zIndex: 999,
-                width: '100%',
-                height: '100%',
-                top: 0,
-                left: 0,
-            },
-            dialog: {
-                zIndex: 1000,
-                position: 'absolute',
-                bottom: '40px',
-                left: '50%',
-                transform: 'translateX(-50%)',
-                backgroundColor: colors.white,
-                width: '70%',
-                minWidth: '355px',
-                maxWidth: '550px',
-                borderRadius: '2px',
-                outline: '1px solid rgba(0, 0, 0, 0.1)',
-            },
-            header: {
-                margin: '0px',
-                padding: '15px 15px 10px',
-                fontSize: '16px',
-                lineHeight: '32px',
-            },
-            body: {
-                color: colors.text_primary,
-                padding: '0px 15px',
-                boxSizing: 'border-box',
-            },
-            footnote: {
-                padding: '15px 15px 10px',
-                textAlign: 'right',
-                color: colors.text_primary,
-            },
-            footer: {
-                boxSizing: 'border-box',
-                padding: '0px 15px 15px',
-                width: '100%',
-                textAlign: 'right',
-            },
-            tableData: {
-                width: '50%',
-                height: '22px',
-            },
-            textField: {
-                width: '65px',
-                height: '24px',
-                fontWeight: 'normal',
-                color: this.props.valid ? colors.grey : colors.warning,
-            },
-            clear: {
-                float: 'right',
-                fill: colors.primary,
-                cursor: 'pointer',
-            },
-            warning: {
-                height: '20px',
-                width: '20px',
-                fill: colors.warning,
-                verticalAlign: 'middle',
-                cursor: 'pointer',
-            },
-            callOut: {
-                bottom: '40px',
-                left: '50%',
-                transform: 'translateX(-50%)',
-                width: '220px',
-                color: colors.warning,
-                textAlign: 'left',
-            },
-            slider: {
-                position: 'absolute',
-                width: '100%',
-                bottom: 0,
-                padding: '21px 0px',
-            },
-        };
 
         const bufferActions = [
             <Button
@@ -158,7 +177,8 @@ export class BufferDialog extends Component {
                 >
                     <AlertWarning
                         onClick={this.showAlert}
-                        style={styles.warning}
+                        // style={styles.warning}
+                        className={classes.warning}
                     />
                     {this.state.showAlert ?
                         <AlertCallout
@@ -171,7 +191,8 @@ export class BufferDialog extends Component {
                                     Please reduce the size of your buffer and/or polygon
                                 </p>
                             }
-                            style={styles.callOut}
+                            // style={styles.callOut}
+                            className={classes.callOut}
                         />
                         :
                         null
@@ -182,9 +203,9 @@ export class BufferDialog extends Component {
 
         return (
             <div>
-                <div className="qa-BufferDialog-background" style={styles.background} />
-                <div className="qa-BufferDialog-main" style={styles.dialog}>
-                    <div className="qa-BufferDialog-header" style={styles.header}>
+                <div className={`qa-BufferDialog-background ${classes.background}`} />
+                <div className={`qa-BufferDialog-main ${classes.dialog}`}>
+                    <div className={`qa-BufferDialog-header ${classes.header}`}>
                         <strong>
                             <div style={{ display: 'inline-block' }}>
                                 <span>
@@ -192,16 +213,17 @@ export class BufferDialog extends Component {
                                 </span>
                             </div>
                         </strong>
-                        <Clear style={styles.clear} onClick={this.props.closeBufferDialog} />
+                        <Clear className={classes.clear} onClick={this.props.closeBufferDialog} />
                     </div>
-                    <div className="qa-BufferDialog-body" style={styles.body}>
+                    <div className={`qa-BufferDialog-body ${classes.body}`}>
                         <div style={{ paddingBottom: '10px', display: 'flex' }}>
                             <TextField
+                                className={classes.textField}
                                 type="number"
                                 name="buffer-value"
                                 value={this.props.value}
                                 onChange={e => this.props.handleBufferChange(e.target.value)}
-                                style={styles.textField}
+                                style={{ color: this.props.valid ? colors.grey : colors.warning }}
                                 InputProps={{ style: { fontSize: '14px', lineHeight: '24px' } }}
                                 // MUI uses the case of the i to distinguish between Input component and input html element
                                 // eslint-disable-next-line react/jsx-no-duplicate-props
@@ -227,9 +249,10 @@ export class BufferDialog extends Component {
                                 </thead>
                                 <tbody>
                                     <tr>
-                                        <td style={{ ...styles.tableData, borderLeft: '1px solid #ccc' }} >
+                                        <td className={classes.tableData} style={{ borderLeft: '1px solid #ccc' }} >
                                             <Slider
-                                                style={styles.slider}
+                                                className={classes.slider}
+                                                // style={styles.slider}
                                                 step={10}
                                                 max={10000}
                                                 min={0}
@@ -237,20 +260,20 @@ export class BufferDialog extends Component {
                                                 onChange={(e, value) => this.props.handleBufferChange(value)}
                                             />
                                         </td>
-                                        <td style={{ ...styles.tableData, borderRight: '1px solid #ccc' }} />
+                                        <td className={classes.tableData} style={{ borderRight: '1px solid #ccc' }} />
                                     </tr>
                                     <tr>
-                                        <td style={{ ...styles.tableData, borderLeft: '1px solid #ccc' }} />
-                                        <td style={{ ...styles.tableData, borderRight: '1px solid #ccc' }} />
+                                        <td className={classes.tableData} style={{ borderLeft: '1px solid #ccc' }} />
+                                        <td className={classes.tableData} style={{ borderRight: '1px solid #ccc' }} />
                                     </tr>
                                 </tbody>
                             </table>
                         </div>
                     </div>
-                    <div className="qa-BufferDialog-footnote" style={styles.footnote}>
+                    <div className={`qa-BufferDialog-footnote ${classes.footnote}`}>
                         Once updated, you must <strong>&apos;Revert&apos; to set again.</strong>
                     </div>
-                    <div className="qa-BufferDialog-footer" style={styles.footer}>
+                    <div className={`qa-BufferDialog-footer ${classes.footer}`}>
                         {bufferActions}
                     </div>
                 </div>
@@ -259,19 +282,4 @@ export class BufferDialog extends Component {
     }
 }
 
-BufferDialog.propTypes = {
-    limits: PropTypes.shape({
-        max: PropTypes.number,
-        sizes: PropTypes.array,
-    }).isRequired,
-    show: PropTypes.bool.isRequired,
-    value: PropTypes.number.isRequired,
-    valid: PropTypes.bool.isRequired,
-    handleBufferClick: PropTypes.func.isRequired,
-    handleBufferChange: PropTypes.func.isRequired,
-    closeBufferDialog: PropTypes.func.isRequired,
-    aoi: PropTypes.object.isRequired,
-    theme: PropTypes.object.isRequired,
-};
-
-export default withTheme()(BufferDialog);
+export default withTheme()(withStyles(jss)(BufferDialog));

@@ -4,6 +4,7 @@ import Clear from '@material-ui/icons/Clear';
 import css from '../../styles/popup.css';
 
 export interface Props {
+    className?: string;
     title?: string;
     body?: any;
     orientation: 'top' | 'bottom' | 'top-left' | 'top-right' | 'right-bottom' | 'left-bottom';
@@ -26,7 +27,7 @@ export class AlertCallout extends React.Component<Props, {}> {
 
         return (
             <div
-                className={`${css.callout} ${css[this.props.orientation]} qa-AlertCallout`}
+                className={`${css.callout} ${css[this.props.orientation]} qa-AlertCallout ${this.props.className}`}
                 style={this.props.style}
             >
                 <div

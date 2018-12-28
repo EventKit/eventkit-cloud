@@ -1,5 +1,5 @@
-import React from 'react';
-import sinon from 'sinon';
+import * as React from 'react';
+import * as sinon from 'sinon';
 import { mount } from 'enzyme';
 import Button from '@material-ui/core/Button';
 import Clear from '@material-ui/icons/Clear';
@@ -15,15 +15,15 @@ describe('AlertCallout component', () => {
     const getProps = () => (
         {
             show: true,
-            onRevertClick: () => {},
-            onReverClose: () => {},
+            onRevertClick: sinon.spy(),
+            onReverClose: sinon.spy(),
             aoiInfo: {
                 geojson: { type: 'FeatureCollection', features: [] },
                 geomType: 'Polygon',
                 description: 'Box',
                 title: 'Box',
             },
-            ...global.eventkit_test_props,
+            ...(global as any).eventkit_test_props,
         }
     );
 

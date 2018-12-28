@@ -1,18 +1,18 @@
-import PropTypes from 'prop-types';
-import React, { Component } from 'react';
-import { withTheme } from '@material-ui/core/styles';
+import * as PropTypes from 'prop-types';
+import * as React from 'react';
+import { withTheme, Theme } from '@material-ui/core/styles';
 import withWidth, { isWidthUp } from '@material-ui/core/withWidth';
 import { connect } from 'react-redux';
 import axios from 'axios';
-import debounce from 'lodash/debounce';
-import Joyride from 'react-joyride';
+import * as debounce from 'lodash/debounce';
+import Joyride, { Step } from 'react-joyride';
 
 import Map from 'ol/map';
 import View from 'ol/view';
 import proj from 'ol/proj';
 import extent from 'ol/extent';
 import VectorSource from 'ol/source/vector';
-import GeoJSON from 'ol/format/geojson';
+import GeoJSONFormat from 'ol/format/geojson';
 import Feature from 'ol/feature';
 import Point from 'ol/geom/point';
 import Polygon from 'ol/geom/polygon';
@@ -52,12 +52,74 @@ import { getSqKm } from '../../utils/generic';
 import ZoomLevelLabel from '../MapTools/ZoomLevelLabel';
 import globe from '../../../images/globe-americas.svg';
 import { joyride } from '../../joyride.config';
+import { Breakpoint } from '@material-ui/core/styles/createBreakpoints';
 
 export const WGS84 = 'EPSG:4326';
 export const WEB_MERCATOR = 'EPSG:3857';
 
-export class ExportAOI extends Component {
-    constructor(props) {
+export interface Props {
+    aoiInfo: Eventkit.Store.AoiInfo;
+    limits: {
+        max: number;
+        sizes: number[];
+    };
+    importGeom: Eventkit.Store.ImportGeom;
+    drawer: string;
+    geocode: object;
+    updateAoiInfo: (args: any) => void;
+    clearAoiInfo: () => void;
+    setNextDisabled: () => void;
+    setNextEnabled: () => void;
+    getGeocode: () => void;
+    processGeoJSONFile: () => void;
+    resetGeoJSONFile: () => void;
+    clearExportInfo: () => void;
+    walkthroughClicked: boolean;
+    onWalkthroughReset: () => void;
+    theme: Eventkit.Theme & Theme;
+    width: Breakpoint;
+}
+
+export interface State {
+    toolbarIcons: {
+        box: string;
+        free: string;
+        mapView: string;
+        import: string;
+        search: string;
+    };
+    showImportModal: boolean;
+    showInvalidDrawWarning: boolean;
+    showBuffer: boolean;
+    validBuffer: boolean;
+    mode: string;
+    steps: Step[];
+    stepIndex: number;
+    isRunning: boolean;
+    fakeData: boolean;
+    showReset: boolean;
+    zoomLevel: number;
+}
+
+export class ExportAOI extends React.Component<Props, State> {
+    static contextTypes = {
+        config: PropTypes.object,
+    };
+
+    private bufferFunction: () => void;
+    private drawLayer;
+    private map;
+    private drawBoxInteraction;
+    private drawFreeInteraction;
+    private markerLayer;
+    private bufferLayer;
+    private pointer;
+    private feature;
+    private coordinate;
+    private bufferFeatures;
+    private bounceBack: boolean;
+    private joyride: Joyride;
+    constructor(props: Props) {
         super(props);
         this.setButtonSelected = this.setButtonSelected.bind(this);
         this.setAllButtonsDefault = this.setAllButtonsDefault.bind(this);
@@ -88,7 +150,7 @@ export class ExportAOI extends Component {
         this.resetAoi = this.resetAoi.bind(this);
         this.updateZoomLevel = this.updateZoomLevel.bind(this);
         this.shouldEnableNext = this.shouldEnableNext.bind(this);
-        this.bufferFunction = () => {};
+        this.bufferFunction = () => { /* do nothing */ };
         this.state = {
             toolbarIcons: {
                 box: 'DEFAULT',
@@ -115,14 +177,14 @@ export class ExportAOI extends Component {
         // set up debounce functions for user text input
         this.bufferFunction = debounce((val) => {
             const valid = this.handleBufferChange(val);
-            if (valid !== this.state.valid) {
+            if (valid !== this.state.validBuffer) {
                 this.setState({ validBuffer: valid });
             }
         }, 10);
 
         this.initializeOpenLayers();
         if (Object.keys(this.props.aoiInfo.geojson).length !== 0) {
-            const reader = new GeoJSON();
+            const reader = new GeoJSONFormat();
             const features = reader.readFeatures(this.props.aoiInfo.geojson, {
                 dataProjection: WGS84,
                 featureProjection: WEB_MERCATOR,
@@ -136,11 +198,11 @@ export class ExportAOI extends Component {
             this.setButtonSelected(this.props.aoiInfo.selectionType);
         }
 
-        const steps = joyride.ExportAOI;
+        const steps = joyride.ExportAOI as any[];
         this.joyrideAddSteps(steps);
     }
 
-    componentDidUpdate(prevProps) {
+    componentDidUpdate(prevProps: Props) {
         if (this.props.importGeom.processed && !prevProps.importGeom.processed) {
             this.handleGeoJSONUpload(this.props.importGeom);
         }
@@ -153,7 +215,7 @@ export class ExportAOI extends Component {
         this.map.updateSize();
     }
 
-    setButtonSelected(iconName) {
+    private setButtonSelected(iconName: string) {
         const icons = { ...this.state.toolbarIcons };
         Object.keys(icons).forEach((key) => {
             if (key === iconName) {
@@ -165,7 +227,7 @@ export class ExportAOI extends Component {
         this.setState({ toolbarIcons: icons });
     }
 
-    setAllButtonsDefault() {
+    private setAllButtonsDefault() {
         const icons = { ...this.state.toolbarIcons };
         Object.keys(icons).forEach((key) => {
             icons[key] = 'DEFAULT';
@@ -173,14 +235,14 @@ export class ExportAOI extends Component {
         this.setState({ toolbarIcons: icons });
     }
 
-    setMapView() {
+    private setMapView() {
         clearDraw(this.drawLayer);
         const ext = this.map.getView().calculateExtent(this.map.getSize());
         const geom = Polygon.fromExtent(ext);
         const coords = geom.getCoordinates();
         const unwrappedCoords = unwrapCoordinates(coords, this.map.getView().getProjection());
         geom.setCoordinates(unwrappedCoords);
-        const geojson = createGeoJSON(geom);
+        const geojson = createGeoJSON(geom) as GeoJSON.FeatureCollection;
         const bboxFeature = new Feature({
             geometry: geom,
         });
@@ -202,7 +264,7 @@ export class ExportAOI extends Component {
         }
     }
 
-    toggleImportModal(show) {
+    private toggleImportModal(show: boolean) {
         if (show !== undefined) {
             this.setState({ showImportModal: show });
         } else {
@@ -210,7 +272,7 @@ export class ExportAOI extends Component {
         }
     }
 
-    showInvalidDrawWarning(show) {
+    private showInvalidDrawWarning(show: boolean) {
         if (show !== undefined) {
             this.setState({ showInvalidDrawWarning: show });
         } else {
@@ -218,7 +280,7 @@ export class ExportAOI extends Component {
         }
     }
 
-    handleCancel() {
+    private handleCancel() {
         this.showInvalidDrawWarning(false);
         if (this.state.mode !== MODE_NORMAL) {
             this.updateMode(MODE_NORMAL);
@@ -228,12 +290,12 @@ export class ExportAOI extends Component {
         this.props.setNextDisabled();
     }
 
-    handleResetMap() {
+    private handleResetMap() {
         const worldExtent = proj.transformExtent([-180, -90, 180, 90], WGS84, WEB_MERCATOR);
         this.map.getView().fit(worldExtent, this.map.getSize());
     }
 
-    checkForSearchUpdate(result) {
+    private checkForSearchUpdate(result: GeoJSON.Feature) {
         if (result.geometry.type === 'Point' && !(result.bbox || result.properties.bbox)) {
             return axios.get('/geocode', {
                 params: {
@@ -248,13 +310,13 @@ export class ExportAOI extends Component {
         return this.handleSearch(result);
     }
 
-    handleSearch(result) {
+    private handleSearch(result: GeoJSON.Feature & GeoJSON.GeoJsonProperties) {
         clearDraw(this.drawLayer);
         this.showInvalidDrawWarning(false);
-        const searchFeature = (new GeoJSON()).readFeature(result);
+        const searchFeature = (new GeoJSONFormat()).readFeature(result);
         searchFeature.getGeometry().transform(WGS84, WEB_MERCATOR);
         this.drawLayer.getSource().addFeature(searchFeature);
-        const geojson = {
+        const geojson: GeoJSON.FeatureCollection = {
             type: 'FeatureCollection',
             features: [
                 result,
@@ -283,10 +345,10 @@ export class ExportAOI extends Component {
         return true;
     }
 
-    handleGeoJSONUpload(importGeom) {
+    private handleGeoJSONUpload(importGeom: Eventkit.Store.ImportGeom) {
         const { featureCollection, filename } = importGeom;
         clearDraw(this.drawLayer);
-        const reader = new GeoJSON();
+        const reader = new GeoJSONFormat();
         const features = reader.readFeatures(featureCollection, {
             dataProjection: WGS84,
             featureProjection: WEB_MERCATOR,
@@ -311,7 +373,7 @@ export class ExportAOI extends Component {
         }
     }
 
-    updateMode(mode) {
+    private updateMode(mode: string) {
         // make sure interactions are deactivated
         this.drawBoxInteraction.setActive(false);
         this.drawFreeInteraction.setActive(false);
@@ -331,13 +393,13 @@ export class ExportAOI extends Component {
         this.setState({ mode });
     }
 
-    handleDrawEnd(event) {
+    private handleDrawEnd(event: any) {
         // get the drawn bounding box
         const geometry = event.feature.getGeometry();
         const coords = geometry.getCoordinates();
         const unwrappedCoords = unwrapCoordinates(coords, this.map.getView().getProjection());
         geometry.setCoordinates(unwrappedCoords);
-        const geojson = createGeoJSON(geometry);
+        const geojson = createGeoJSON(geometry) as GeoJSON.FeatureCollection;
         // Since this is a controlled draw we make the assumption
         // that there is only one feature in the collection
         const { bbox } = geojson.features[0];
@@ -385,11 +447,11 @@ export class ExportAOI extends Component {
         }
     }
 
-    handleDrawStart() {
+    private handleDrawStart() {
         clearDraw(this.drawLayer);
     }
 
-    initializeOpenLayers() {
+    private initializeOpenLayers() {
         this.drawLayer = generateDrawLayer();
         this.markerLayer = generateDrawLayer();
         this.bufferLayer = generateDrawLayer();
@@ -421,8 +483,8 @@ export class ExportAOI extends Component {
         const img = document.createElement('img');
         img.src = globe;
         img.alt = 'globe';
-        img.height = '16';
-        img.width = '16';
+        img.height = 16;
+        img.width = 16;
         this.map = new Map({
             controls: [
                 new ScaleLine({
@@ -490,21 +552,21 @@ export class ExportAOI extends Component {
         this.map.getView().on('change:resolution', this.updateZoomLevel);
     }
 
-    updateZoomLevel() {
+    private updateZoomLevel() {
         const lvl = Math.floor(this.map.getView().getZoom());
         if (lvl !== this.state.zoomLevel) {
             this.setState({ zoomLevel: lvl });
         }
     }
 
-    upEvent() {
+    private upEvent() {
         const upFeature = this.feature;
         if (upFeature) {
             const geom = upFeature.getGeometry();
             const coords = geom.getCoordinates();
             const unwrappedCoords = unwrapCoordinates(coords, this.map.getView().getProjection());
             geom.setCoordinates(unwrappedCoords);
-            const geo = new GeoJSON();
+            const geo = new GeoJSONFormat();
             const geojson = geo.writeFeaturesObject(this.drawLayer.getSource().getFeatures(), {
                 dataProjection: WGS84,
                 featureProjection: WEB_MERCATOR,
@@ -533,7 +595,7 @@ export class ExportAOI extends Component {
         return false;
     }
 
-    dragEvent(evt) {
+    private dragEvent(evt: any) {
         const dragFeature = this.feature;
         let coords = dragFeature.getGeometry().getCoordinates()[0];
         // create new coordinates for the feature based on new drag coordinate
@@ -571,7 +633,7 @@ export class ExportAOI extends Component {
         return true;
     }
 
-    moveEvent(evt) {
+    private moveEvent(evt: any) {
         const { map } = evt;
         const { pixel } = evt;
         if (this.markerLayer.getSource().getFeatures().length > 0) {
@@ -580,13 +642,13 @@ export class ExportAOI extends Component {
         const opts = { layerFilter: layer => (layer === this.drawLayer) };
         if (map.hasFeatureAtPixel(pixel, opts)) {
             const mapFeatures = map.getFeaturesAtPixel(pixel, opts);
-            for (let i = 0; i < mapFeatures.length; i += 1) {
-                const geomType = mapFeatures[i].getGeometry().getType();
+            for (const feature of mapFeatures) {
+                const geomType = feature.getGeometry().getType();
                 if (geomType === 'Polygon' || geomType === 'MultiPolygon') {
                     if (isViewOutsideValidExtent(this.map.getView())) {
                         goToValidExtent(this.map.getView());
                     }
-                    const coords = isVertex(pixel, mapFeatures[i], 10, map);
+                    const coords = isVertex(pixel, feature, 10, map);
                     if (coords) {
                         this.markerLayer.getSource().addFeature(new Feature({
                             geometry: new Point(coords),
@@ -598,18 +660,18 @@ export class ExportAOI extends Component {
         }
     }
 
-    downEvent(evt) {
+    private downEvent(evt: any) {
         const { map } = evt;
         const { pixel } = evt;
         const opts = { layerFilter: layer => (layer === this.drawLayer) };
         if (map.hasFeatureAtPixel(pixel, opts)) {
             const mapFeatures = map.getFeaturesAtPixel(pixel, opts);
-            for (let i = 0; i < mapFeatures.length; i += 1) {
-                const geomType = mapFeatures[i].getGeometry().getType();
+            for (const feature of mapFeatures) {
+                const geomType = feature.getGeometry().getType();
                 if (geomType === 'Polygon' || geomType === 'MultiPolygon') {
-                    const vertex = isVertex(pixel, mapFeatures[i], 10, map);
+                    const vertex = isVertex(pixel, feature, 10, map);
                     if (vertex) {
-                        this.feature = mapFeatures[i];
+                        this.feature = feature;
                         this.coordinate = vertex;
                         return true;
                     }
@@ -619,8 +681,8 @@ export class ExportAOI extends Component {
         return false;
     }
 
-    handleZoomToSelection() {
-        const reader = new GeoJSON();
+    private handleZoomToSelection() {
+        const reader = new GeoJSONFormat();
         const features = reader.readFeatures(this.props.aoiInfo.geojson, {
             dataProjection: 'EPSG:4326',
             featureProjection: 'EPSG:3857',
@@ -635,12 +697,12 @@ export class ExportAOI extends Component {
         }
     }
 
-    bufferMapFeature() {
+    private bufferMapFeature() {
         const { bufferFeatures } = this;
         if (!bufferFeatures) {
             return false;
         }
-        const reader = new GeoJSON();
+        const reader = new GeoJSONFormat();
         const newFeatures = reader.readFeatures(bufferFeatures, {
             dataProjection: 'EPSG:4326',
             featureProjection: 'EPSG:3857',
@@ -661,13 +723,13 @@ export class ExportAOI extends Component {
         return true;
     }
 
-    handleBufferClick() {
+    private handleBufferClick() {
         this.bufferMapFeature();
         this.setState({ showBuffer: false, validBuffer: true });
         this.bufferFeatures = null;
     }
 
-    openBufferDialog() {
+    private openBufferDialog() {
         // this still executes the call to setState immediately
         // but it gives you the option to await the state change to be complete
         return new Promise(async (resolve) => {
@@ -676,14 +738,14 @@ export class ExportAOI extends Component {
         });
     }
 
-    closeBufferDialog() {
+    private closeBufferDialog() {
         this.setState({ showBuffer: false, validBuffer: true });
         this.bufferFeatures = null;
         this.props.updateAoiInfo({ ...this.props.aoiInfo, buffer: 0 });
         clearDraw(this.bufferLayer);
     }
 
-    handleBufferChange(value) {
+    private handleBufferChange(value: string) {
         const buffer = Number(value);
         if (buffer <= 10000 && buffer >= 0) {
             this.props.updateAoiInfo({ ...this.props.aoiInfo, buffer });
@@ -691,7 +753,7 @@ export class ExportAOI extends Component {
             if (Object.keys(geojson).length === 0) {
                 return false;
             }
-            const reader = new GeoJSON();
+            const reader = new GeoJSONFormat();
             const bufferedFeatureCollection = bufferGeojson(geojson, buffer, true);
             this.bufferFeatures = { ...bufferedFeatureCollection };
             const newFeatures = reader.readFeatures(bufferedFeatureCollection, {
@@ -708,18 +770,18 @@ export class ExportAOI extends Component {
         return this.state.validBuffer;
     }
 
-    openResetDialog() {
+    private openResetDialog() {
         this.setState({ showReset: true });
     }
 
-    closeResetDialog() {
+    private closeResetDialog() {
         this.setState({ showReset: false });
     }
 
-    resetAoi() {
+    private resetAoi() {
         const { originalGeojson } = this.props.aoiInfo;
 
-        const reader = new GeoJSON();
+        const reader = new GeoJSONFormat();
         const newFeatures = reader.readFeatures(originalGeojson, {
             dataProjection: 'EPSG:4326',
             featureProjection: 'EPSG:3857',
@@ -739,30 +801,34 @@ export class ExportAOI extends Component {
         }
     }
 
-    shouldEnableNext(geojson) {
+    private shouldEnableNext(geojson: GeoJSON.FeatureCollection) {
         const area = allHaveArea(geojson);
         const { max } = this.props.limits;
-        if (!max || !area) return area;
+        if (!max || !area) {
+            return area;
+        }
         return getSqKm(geojson) <= max;
     }
 
-    joyrideAddSteps(steps) {
+    private joyrideAddSteps(steps: Step[]) {
         let newSteps = steps;
 
         if (!Array.isArray(newSteps)) {
             newSteps = [newSteps];
         }
 
-        if (!newSteps.length) return;
+        if (!newSteps.length) {
+            return;
+        }
 
-        this.setState((currentState) => {
+        this.setState((currentState: State) => {
             const nextState = { ...currentState };
             nextState.steps = nextState.steps.concat(newSteps);
             return nextState;
         });
     }
 
-    async callback(data) {
+    async callback(data: any) {
         const {
             action,
             index,
@@ -779,7 +845,9 @@ export class ExportAOI extends Component {
             return;
         }
 
-        if (!action) return;
+        if (!action) {
+            return;
+        }
 
         if (action === 'close' || action === 'skip' || type === 'finished') {
             if (this.state.fakeData === true) {
@@ -844,7 +912,7 @@ export class ExportAOI extends Component {
         }
     }
 
-    drawFakeBbox() {
+    private drawFakeBbox() {
         //  generate fake coordinates and have the map zoom to them.
         clearDraw(this.drawLayer);
         const coords = [
@@ -861,7 +929,7 @@ export class ExportAOI extends Component {
         const feature = new Feature({
             geometry: polygon,
         });
-        const geojson = createGeoJSON(polygon);
+        const geojson = createGeoJSON(polygon) as GeoJSON.FeatureCollection;
         this.drawLayer.getSource().addFeature(feature);
         this.props.updateAoiInfo({
             ...this.props.aoiInfo,
@@ -882,6 +950,7 @@ export class ExportAOI extends Component {
         const { steps, isRunning } = this.state;
 
         const mapStyle = {
+            left: undefined,
             right: '0px',
             backgroundImage: `url(${theme.eventkit.images.topo_light})`,
         };
@@ -909,11 +978,11 @@ export class ExportAOI extends Component {
                     showSkipButton
                     showStepsProgress
                     locale={{
-                        back: (<span>Back</span>),
-                        close: (<span>Close</span>),
-                        last: (<span>Done</span>),
-                        next: (<span>Next</span>),
-                        skip: (<span>Skip</span>),
+                        back: (<span>Back</span>) as any,
+                        close: (<span>Close</span>) as any,
+                        last: (<span>Done</span>) as any,
+                        next: (<span>Next</span>) as any,
+                        skip: (<span>Skip</span>) as any,
                     }}
                     run={isRunning}
                 />
@@ -983,41 +1052,6 @@ export class ExportAOI extends Component {
     }
 }
 
-ExportAOI.contextTypes = {
-    config: PropTypes.object,
-};
-
-ExportAOI.propTypes = {
-    aoiInfo: PropTypes.shape({
-        geojson: PropTypes.object,
-        originalGeojson: PropTypes.object,
-        geomType: PropTypes.string,
-        title: PropTypes.string,
-        description: PropTypes.string,
-        selectionType: PropTypes.string,
-        buffer: PropTypes.number,
-    }).isRequired,
-    limits: PropTypes.shape({
-        max: PropTypes.number,
-        sizes: PropTypes.array,
-    }).isRequired,
-    importGeom: PropTypes.object.isRequired,
-    drawer: PropTypes.string.isRequired,
-    geocode: PropTypes.object.isRequired,
-    updateAoiInfo: PropTypes.func.isRequired,
-    clearAoiInfo: PropTypes.func.isRequired,
-    setNextDisabled: PropTypes.func.isRequired,
-    setNextEnabled: PropTypes.func.isRequired,
-    getGeocode: PropTypes.func.isRequired,
-    processGeoJSONFile: PropTypes.func.isRequired,
-    resetGeoJSONFile: PropTypes.func.isRequired,
-    clearExportInfo: PropTypes.func.isRequired,
-    walkthroughClicked: PropTypes.bool.isRequired,
-    onWalkthroughReset: PropTypes.func.isRequired,
-    theme: PropTypes.object.isRequired,
-    width: PropTypes.string.isRequired,
-};
-
 function mapStateToProps(state) {
     return {
         aoiInfo: state.aoiInfo,
@@ -1056,8 +1090,4 @@ function mapDispatchToProps(dispatch) {
     };
 }
 
-export default
-@withWidth()
-@withTheme()
-@connect(mapStateToProps, mapDispatchToProps)
-class Default extends ExportAOI {}
+export default withWidth()(withTheme()(connect(mapStateToProps, mapDispatchToProps)(ExportAOI)));

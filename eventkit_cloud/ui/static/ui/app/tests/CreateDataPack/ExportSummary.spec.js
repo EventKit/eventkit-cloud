@@ -1,5 +1,5 @@
-import React from 'react';
-import sinon from 'sinon';
+import * as React from 'react';
+import * as sinon from 'sinon';
 import PropTypes from 'prop-types';
 import raf from 'raf';
 import Joyride from 'react-joyride';
@@ -56,8 +56,8 @@ describe('Export Summary Component', () => {
             },
         ],
         walkthroughClicked: false,
-        onWalkthroughReset: () => {},
-        ...global.eventkit_test_props,
+        onWalkthroughReset: sinon.spy(),
+        ...(global as any).eventkit_test_props,
     });
 
     const getWrapper = (props) => {
