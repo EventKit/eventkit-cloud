@@ -137,8 +137,8 @@ def compute_statistics(export_task_records, get_group, tile_grid=get_default_til
 
     logger.info('Beginning collection of statistics for %d ExportTaskRecords', total_count)
     for etr in export_task_records:
-        if processed_count % 100 == 0:
-            logger.info('Processed %d of %d using %d completed', processed_count, total_count, export_task_count)
+        if processed_count % 500 == 0:
+            logger.debug('Processed %d of %d using %d completed', processed_count, total_count, export_task_count)
         processed_count += 1
 
         if etr.status != "SUCCESS" \
