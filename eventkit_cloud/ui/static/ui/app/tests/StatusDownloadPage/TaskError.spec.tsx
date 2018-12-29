@@ -1,5 +1,5 @@
-import React from 'react';
-import sinon from 'sinon';
+import * as React from 'react';
+import * as sinon from 'sinon';
 import { createShallow } from '@material-ui/core/test-utils';
 import Divider from '@material-ui/core/Divider';
 import Warning from '@material-ui/icons/Warning';
@@ -13,46 +13,48 @@ describe('TaskError component', () => {
         shallow = createShallow();
     });
 
-    const getProps = () => (
-        {
-            task: {
-                uid: '1975da4d-9580-4fa8-8a4b-c1ef6e2f7553',
-                url: 'http://cloud.eventkit.test/api/tasks/1975da4d-9580-4fa8-8a4b-c1ef6e2f7553',
-                name: 'OSM Data (.gpkg)',
-                status: 'CANCELED',
-                progress: 0,
-                estimated_finish: null,
-                started_at: null,
-                finished_at: null,
-                duration: null,
-                result: null,
-                errors: [
-                    {
-                        exception: 'OpenStreetMap Data (Themes) was canceled by admin.',
-                    },
-                ],
-                display: true,
-            },
-            ...global.eventkit_test_props,
-        }
-    );
+    const getProps = () => ({
+        task: {
+            uid: '1975da4d-9580-4fa8-8a4b-c1ef6e2f7553',
+            url: 'http://cloud.eventkit.test/api/tasks/1975da4d-9580-4fa8-8a4b-c1ef6e2f7553',
+            name: 'OSM Data (.gpkg)',
+            status: 'CANCELED',
+            progress: 0,
+            estimated_finish: null,
+            started_at: null,
+            finished_at: null,
+            duration: null,
+            result: null,
+            errors: [
+                {
+                    exception: 'OpenStreetMap Data (Themes) was canceled by admin.',
+                },
+            ],
+            display: true,
+        },
+        ...(global as any).eventkit_test_props,
+    });
 
+    let props;
+    let wrapper;
+    let instance;
+    const setup = (overrides = {}, options = {}) => {
+        props = { ...getProps(), ...overrides };
+        wrapper = shallow(<TaskError {...props} />, {
+            ...options,
+        });
+        instance = wrapper.instance();
+    };
 
-    const getWrapper = props => (
-        shallow(<TaskError {...props} />)
-    );
+    beforeEach(setup);
 
     it('should render UI elements', () => {
-        const props = getProps();
-        const wrapper = getWrapper(props);
         expect(wrapper.find('.qa-TaskError-error-text').text()).toEqual('ERROR');
         expect(wrapper.find(BaseDialog)).toHaveLength(1);
     });
 
     it('handleTaskErrorOpen should set task error dialog to open', () => {
-        const props = getProps();
-        const stateSpy = sinon.spy(TaskError.prototype, 'setState');
-        const wrapper = shallow(<TaskError {...props} />);
+        const stateSpy = sinon.spy(instance, 'setState');
         expect(stateSpy.called).toBe(false);
         wrapper.instance().handleTaskErrorOpen();
         expect(stateSpy.calledOnce).toBe(true);
@@ -65,9 +67,7 @@ describe('TaskError component', () => {
     });
 
     it('handleTaskErrorClose should set task error dialog to close', () => {
-        const props = getProps();
-        const stateSpy = sinon.spy(TaskError.prototype, 'setState');
-        const wrapper = shallow(<TaskError {...props} />);
+        const stateSpy = sinon.spy(instance, 'setState');
         expect(stateSpy.called).toBe(false);
         wrapper.instance().handleTaskErrorClose();
         expect(stateSpy.calledOnce).toBe(true);
@@ -76,15 +76,11 @@ describe('TaskError component', () => {
     });
 
     it('should call handleTaskErrorOpen when the error link is clicked. ', () => {
-        const props = getProps();
-        const stateSpy = sinon.spy(TaskError.prototype, 'setState');
-        const errorSpy = sinon.spy(TaskError.prototype, 'handleTaskErrorOpen');
-        const wrapper = getWrapper(props);
+        const errorSpy = sinon.stub(TaskError.prototype, 'handleTaskErrorOpen');
+        setup();
         expect(errorSpy.notCalled).toBe(true);
         wrapper.find('.qa-TaskError-error-text').simulate('click');
         expect(errorSpy.calledOnce).toBe(true);
-        expect(stateSpy.calledWith({ taskErrorDialogOpen: true })).toBe(true);
-        stateSpy.restore();
         errorSpy.restore();
     });
 });

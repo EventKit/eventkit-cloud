@@ -1,9 +1,17 @@
-import PropTypes from 'prop-types';
-import React, { Component } from 'react';
-import moment from 'moment';
+import * as React from 'react';
+import * as moment from 'moment';
 import CustomTableRow from '../CustomTableRow';
 
-export class DataCartInfoTable extends Component {
+export interface Props {
+    dataPack: {
+        uid: string;
+        user: string;
+        started_at: string;
+        finished_at: string;
+    };
+}
+
+export class DataCartInfoTable extends React.Component<Props, {}> {
     render() {
         return (
             <div>
@@ -29,14 +37,5 @@ export class DataCartInfoTable extends Component {
         );
     }
 }
-
-DataCartInfoTable.propTypes = {
-    dataPack: PropTypes.shape({
-        uid: PropTypes.string,
-        user: PropTypes.string,
-        started_at: PropTypes.string,
-        finished_at: PropTypes.string,
-    }).isRequired,
-};
 
 export default DataCartInfoTable;

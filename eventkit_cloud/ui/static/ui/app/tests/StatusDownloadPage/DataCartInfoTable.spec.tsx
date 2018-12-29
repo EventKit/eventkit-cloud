@@ -1,4 +1,4 @@
-import React from 'react';
+import * as React from 'react';
 import { createShallow } from '@material-ui/core/test-utils';
 import CustomTableRow from '../../components/CustomTableRow';
 import { DataCartInfoTable } from '../../components/StatusDownloadPage/DataCartInfoTable';
@@ -13,7 +13,7 @@ describe('DataCartInfoTable component', () => {
             started_at: '2017-03-24T15:52:35.637258Z',
             finished_at: '2017-03-24T15:52:35.637258Z',
         },
-        ...global.eventkit_test_props,
+        ...(global as any).eventkit_test_props,
     };
 
     const wrapper = shallow(<DataCartInfoTable {...props} />);

@@ -1,12 +1,20 @@
-import PropTypes from 'prop-types';
-import React, { Component } from 'react';
-import { withTheme } from '@material-ui/core/styles';
+import * as React from 'react';
+import { withTheme, Theme } from '@material-ui/core/styles';
 import Divider from '@material-ui/core/Divider';
 import Warning from '@material-ui/icons/Warning';
 import BaseDialog from '../Dialog/BaseDialog';
 
-export class TaskError extends Component {
-    constructor(props) {
+export interface Props {
+    task: Eventkit.Task;
+    theme: Eventkit.Theme & Theme;
+}
+
+export interface State {
+    taskErrorDialogOpen: boolean;
+}
+
+export class TaskError extends React.Component<Props, State> {
+    constructor(props: Props) {
         super(props);
         this.handleTaskErrorClose = this.handleTaskErrorClose.bind(this);
         this.handleTaskErrorOpen = this.handleTaskErrorOpen.bind(this);
@@ -15,11 +23,11 @@ export class TaskError extends Component {
         };
     }
 
-    handleTaskErrorOpen() {
+    private handleTaskErrorOpen() {
         this.setState({ taskErrorDialogOpen: true });
     }
 
-    handleTaskErrorClose() {
+    private handleTaskErrorClose() {
         this.setState({ taskErrorDialogOpen: false });
     }
 
@@ -93,10 +101,4 @@ export class TaskError extends Component {
     }
 }
 
-TaskError.propTypes = {
-    task: PropTypes.object.isRequired,
-    theme: PropTypes.object.isRequired,
-};
-
 export default withTheme()(TaskError);
-

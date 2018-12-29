@@ -1,3 +1,4 @@
+type Omit<T, K extends keyof T> = Pick<T, Exclude<keyof T, K>>;
 
 declare namespace Eventkit {
     interface License {
@@ -43,7 +44,9 @@ declare namespace Eventkit {
             url: string;
             deleted: boolean;
         };
-        errors: Error[];
+        errors: Array<{
+            exception: string;
+        }>;
         display: boolean;
     }
 
@@ -51,6 +54,7 @@ declare namespace Eventkit {
         uid: string;
         url: string;
         name: string;
+        description: string;
         started_at: string;
         finished_at: string;
         duration: string;
@@ -76,11 +80,7 @@ declare namespace Eventkit {
         formats: string[];
         created_at: string;
         relationship: Permissions.Level;
-        permissions: {
-            value: string;
-            users: { [s: string]: string };
-            groups: { [s: string]: string };
-        };
+        permissions: Permissions;
     }
 
     interface Run {
@@ -97,6 +97,10 @@ declare namespace Eventkit {
         zipfile_url: string;
         expiration: string;
         deleted: boolean;
+    }
+
+    interface FullRun extends Omit<Run, 'provider_tasks'> {
+        provider_tasks: ProviderTask[];
     }
 
     interface UserJobActivity {
@@ -217,7 +221,18 @@ declare namespace Eventkit {
             error: any;
         }
 
+        interface ReRun {
+            fetched: boolean;
+            error: any;
+        }
+
         interface UpdatePermissions {
+            updated: boolean;
+            updating: boolean;
+            error: any;
+        }
+
+        interface UpdateExpiration {
             updated: boolean;
             updating: boolean;
             error: any;

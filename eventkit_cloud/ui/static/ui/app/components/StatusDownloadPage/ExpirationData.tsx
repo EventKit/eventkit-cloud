@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { withTheme } from '@material-ui/core/styles';
+import { withTheme, Theme } from '@material-ui/core/styles';
 import Popover from '@material-ui/core/Popover';
 import Edit from '@material-ui/icons/Edit';
 import * as moment from 'moment';
@@ -10,18 +10,18 @@ interface Props {
     expiration: string;
     minDate: Date;
     maxDate: Date;
-    handleExpirationChange: (date: typeof Date) => void;
+    handleExpirationChange: (date: Date) => void;
     adminPermissions: boolean;
     user: Eventkit.User;
-    theme: Eventkit.Theme;
+    theme: Eventkit.Theme & Theme;
 }
 
 interface State {
-    anchor: any;
+    anchor: null | HTMLElement;
 }
 
 export class ExpirationData extends React.Component<Props, State> {
-    constructor(props) {
+    constructor(props: Props) {
         super(props);
         this.handleClick = this.handleClick.bind(this);
         this.handleClose = this.handleClose.bind(this);
@@ -31,16 +31,16 @@ export class ExpirationData extends React.Component<Props, State> {
         };
     }
 
-    handleDayClick(date) {
+    private handleDayClick(date: Date) {
         this.handleClose();
         this.props.handleExpirationChange(date);
     }
 
-    handleClick(e) {
+    private handleClick(e: React.MouseEvent<any>) {
         this.setState({ anchor: e.currentTarget });
     }
 
-    handleClose() {
+    private handleClose() {
         this.setState({ anchor: null });
     }
 

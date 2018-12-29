@@ -1,7 +1,6 @@
-import PropTypes from 'prop-types';
-import React, { Component } from 'react';
-import { withTheme } from '@material-ui/core/styles';
-import moment from 'moment';
+import * as React from 'react';
+import { withTheme, Theme } from '@material-ui/core/styles';
+import * as moment from 'moment';
 import DataPackDetails from './DataPackDetails';
 import CustomTableRow from '../CustomTableRow';
 import DataPackStatusTable from './DataPackStatusTable';
@@ -10,8 +9,33 @@ import DataPackGeneralTable from './DataPackGeneralTable';
 import { DataCartInfoTable } from './DataCartInfoTable';
 import DataPackAoiInfo from './DataPackAoiInfo';
 
-export class DataCartDetails extends Component {
-    constructor(props) {
+export interface Props {
+    cartDetails: Eventkit.FullRun;
+    onRunDelete: (uid: string) => void;
+    onRunRerun: (uid: string) => void;
+    onUpdateExpiration: (uid: string, date: Date) => void;
+    onUpdateDataCartPermissions: (uid: string, perms: Eventkit.Permissions) => void;
+    updatingExpiration: boolean;
+    updatingPermission: boolean;
+    onClone: (data: Eventkit.FullRun, providers: Eventkit.Provider[]) => void;
+    onProviderCancel: (uid: string) => void;
+    maxResetExpirationDays: string;
+    providers: Eventkit.Provider[];
+    user: Eventkit.Store.User;
+    theme: Eventkit.Theme & Theme;
+}
+
+export interface State {
+    minDate: null | Date;
+    maxDate: null | Date;
+}
+
+export class DataCartDetails extends React.Component<Props, State> {
+    static defaultProps = {
+        updatingExpiration: false,
+        updatingPermission: false,
+    };
+    constructor(props: Props) {
         super(props);
         this.setDates = this.setDates.bind(this);
         this.handleExpirationChange = this.handleExpirationChange.bind(this);
@@ -26,7 +50,7 @@ export class DataCartDetails extends Component {
         this.setDates();
     }
 
-    setDates() {
+    private setDates() {
         const minDate = new Date();
         const maxDays = this.props.maxResetExpirationDays;
         const d = new Date();
@@ -36,11 +60,11 @@ export class DataCartDetails extends Component {
         this.setState({ minDate, maxDate });
     }
 
-    handlePermissionsChange(permissions) {
+    private handlePermissionsChange(permissions: Eventkit.Permissions) {
         this.props.onUpdateDataCartPermissions(this.props.cartDetails.job.uid, permissions);
     }
 
-    handleExpirationChange(date) {
+    private handleExpirationChange(date: Date) {
         this.props.onUpdateExpiration(this.props.cartDetails.uid, date);
     }
 
@@ -56,7 +80,7 @@ export class DataCartDetails extends Component {
                 fontSize: '16px',
                 alignContent: 'flex-start',
                 color: colors.black,
-                fontWeight: 'bold',
+                fontWeight: 'bold' as 'bold',
                 marginBottom: '5px',
             },
         };
@@ -99,8 +123,6 @@ export class DataCartDetails extends Component {
                         maxDate={this.state.maxDate}
                         handleExpirationChange={this.handleExpirationChange}
                         handlePermissionsChange={this.handlePermissionsChange}
-                        updatingExpiration={this.props.updatingExpiration}
-                        updatingPermission={this.props.updatingPermission}
                         statusColor={statusBackgroundColor}
                         statusFontColor={statusFontColor}
                         adminPermissions={this.props.cartDetails.job.relationship === 'ADMIN'}
@@ -153,54 +175,5 @@ export class DataCartDetails extends Component {
         );
     }
 }
-
-DataCartDetails.defaultProps = {
-    updatingExpiration: false,
-    updatingPermission: false,
-};
-
-DataCartDetails.propTypes = {
-    cartDetails: PropTypes.shape({
-        uid: PropTypes.string,
-        status: PropTypes.string,
-        user: PropTypes.string,
-        job: PropTypes.shape({
-            uid: PropTypes.string,
-            name: PropTypes.string,
-            permissions: PropTypes.shape({
-                value: PropTypes.oneOf([
-                    'PUBLIC',
-                    'PRIVATE',
-                    'SHARED',
-                ]),
-                groups: PropTypes.objectOf(PropTypes.string),
-                members: PropTypes.objectOf(PropTypes.string),
-            }),
-            relationship: PropTypes.string,
-            extent: PropTypes.object,
-        }),
-        provider_tasks: PropTypes.arrayOf(PropTypes.object),
-        created_at: PropTypes.string,
-        finished_at: PropTypes.string,
-        updated_at: PropTypes.string,
-        duration: PropTypes.string,
-        expiration: PropTypes.string,
-        url: PropTypes.string,
-        zipfile_url: PropTypes.string,
-        deleted: PropTypes.bool,
-    }).isRequired,
-    onRunDelete: PropTypes.func.isRequired,
-    onRunRerun: PropTypes.func.isRequired,
-    onUpdateExpiration: PropTypes.func.isRequired,
-    onUpdateDataCartPermissions: PropTypes.func.isRequired,
-    updatingExpiration: PropTypes.bool,
-    updatingPermission: PropTypes.bool,
-    onClone: PropTypes.func.isRequired,
-    onProviderCancel: PropTypes.func.isRequired,
-    maxResetExpirationDays: PropTypes.string.isRequired,
-    providers: PropTypes.arrayOf(PropTypes.object).isRequired,
-    user: PropTypes.object.isRequired,
-    theme: PropTypes.object.isRequired,
-};
 
 export default withTheme()(DataCartDetails);

@@ -1,12 +1,20 @@
-import PropTypes from 'prop-types';
-import React, { Component } from 'react';
-import { withTheme } from '@material-ui/core/styles';
+import * as React from 'react';
+import { withTheme, Theme } from '@material-ui/core/styles';
 import Divider from '@material-ui/core/Divider';
 import Warning from '@material-ui/icons/Warning';
 import BaseDialog from '../Dialog/BaseDialog';
 
-export class ProviderError extends Component {
-    constructor(props) {
+export interface Props {
+    provider: Eventkit.ProviderTask;
+    theme: Eventkit.Theme & Theme;
+}
+
+export interface State {
+    providerErrorDialogOpen: boolean;
+}
+
+export class ProviderError extends React.Component<Props, State> {
+    constructor(props: Props) {
         super(props);
         this.handleProviderErrorOpen = this.handleProviderErrorOpen.bind(this);
         this.handleProviderErrorClose = this.handleProviderErrorClose.bind(this);
@@ -15,11 +23,11 @@ export class ProviderError extends Component {
         };
     }
 
-    handleProviderErrorOpen() {
+    private handleProviderErrorOpen() {
         this.setState({ providerErrorDialogOpen: true });
     }
 
-    handleProviderErrorClose() {
+    private handleProviderErrorClose() {
         this.setState({ providerErrorDialogOpen: false });
     }
 
@@ -33,7 +41,7 @@ export class ProviderError extends Component {
                 borderLeftWidth: '10px',
                 color: colors.warning,
                 cursor: 'pointer',
-                fontWeight: 'bold',
+                fontWeight: 'bold' as 'bold',
             },
             warning: {
                 marginLeft: '10px',
@@ -114,10 +122,5 @@ export class ProviderError extends Component {
         );
     }
 }
-
-ProviderError.propTypes = {
-    provider: PropTypes.object.isRequired,
-    theme: PropTypes.object.isRequired,
-};
 
 export default withTheme()(ProviderError);

@@ -1,11 +1,28 @@
-import PropTypes from 'prop-types';
-import React, { Component } from 'react';
+import * as React from 'react';
 import Button from '@material-ui/core/Button';
 import BaseDialog from '../Dialog/BaseDialog';
 import DeleteDataPackDialog from '../Dialog/DeleteDataPackDialog';
 
-export class DataPackOptions extends Component {
-    constructor(props) {
+export interface Props {
+    adminPermissions: boolean;
+    onRerun: (uid: string) => void;
+    onClone: (data: Eventkit.FullRun, providers: Eventkit.Provider[]) => void;
+    onDelete: (uid: string) => void;
+    dataPack: Eventkit.FullRun;
+}
+
+export interface State {
+    showDeleteDialog: boolean;
+    showRerunDialog: boolean;
+    showCloneDialog: boolean;
+}
+
+export class DataPackOptions extends React.Component<Props, State> {
+    static defaultProps = {
+        adminPermissions: false,
+    };
+
+    constructor(props: Props) {
         super(props);
         this.handleDeleteOpen = this.handleDeleteOpen.bind(this);
         this.handleDeleteClose = this.handleDeleteClose.bind(this);
@@ -23,40 +40,41 @@ export class DataPackOptions extends Component {
         };
     }
 
-    handleDeleteOpen() {
+    private handleDeleteOpen() {
         this.setState({ showDeleteDialog: true });
     }
 
-    handleDeleteClose() {
+    private handleDeleteClose() {
         this.setState({ showDeleteDialog: false });
     }
 
-    handleRerunOpen() {
+    private handleRerunOpen() {
         this.setState({ showRerunDialog: true });
     }
 
-    handleRerunClose() {
+    private handleRerunClose() {
         this.setState({ showRerunDialog: false });
     }
-    handleCloneOpen() {
+
+    private handleCloneOpen() {
         this.setState({ showCloneDialog: true });
     }
 
-    handleCloneClose() {
+    private handleCloneClose() {
         this.setState({ showCloneDialog: false });
     }
 
-    handleDelete() {
+    private handleDelete() {
         this.props.onDelete(this.props.dataPack.uid);
         this.setState({ showDeleteDialog: false });
     }
 
-    handleRerun() {
+    private handleRerun() {
         this.props.onRerun(this.props.dataPack.job.uid);
         this.setState({ showRerunDialog: false });
     }
 
-    handleClone() {
+    private handleClone() {
         const providerArray = [];
         this.props.dataPack.provider_tasks.forEach((provider) => {
             if (provider.display === true) {
@@ -170,23 +188,5 @@ export class DataPackOptions extends Component {
         );
     }
 }
-
-DataPackOptions.defaultProps = {
-    adminPermissions: false,
-};
-
-DataPackOptions.propTypes = {
-    adminPermissions: PropTypes.bool,
-    onRerun: PropTypes.func.isRequired,
-    onClone: PropTypes.func.isRequired,
-    onDelete: PropTypes.func.isRequired,
-    dataPack: PropTypes.shape({
-        uid: PropTypes.string,
-        job: PropTypes.shape({
-            uid: PropTypes.string,
-        }),
-        provider_tasks: PropTypes.arrayOf(PropTypes.object),
-    }).isRequired,
-};
 
 export default DataPackOptions;

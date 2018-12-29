@@ -1,10 +1,10 @@
-import PropTypes from 'prop-types';
-import React from 'react';
+import * as PropTypes from 'prop-types';
+import * as React from 'react';
 import { connect } from 'react-redux';
-import { withTheme } from '@material-ui/core/styles';
+import { withTheme, Theme } from '@material-ui/core/styles';
 import withWidth, { isWidthUp } from '@material-ui/core/withWidth';
-import { browserHistory } from 'react-router';
-import Joyride from 'react-joyride';
+import { browserHistory, RouteComponentProps } from 'react-router';
+import Joyride, { Step } from 'react-joyride';
 import Help from '@material-ui/icons/Help';
 import Paper from '@material-ui/core/Paper';
 import ButtonBase from '@material-ui/core/ButtonBase';
@@ -24,13 +24,56 @@ import {
 import { updateExpiration, getDatacartDetails, clearDataCartDetails, deleteRun } from '../../actions/datapackActions';
 import { getProviders, cancelProviderTask } from '../../actions/providerActions';
 import { viewedJob } from '../../actions/userActivityActions';
-import CustomScrollbar from '../../components/CustomScrollbar';
-import BaseDialog from '../../components/Dialog/BaseDialog';
+import CustomScrollbar from '../CustomScrollbar';
+import BaseDialog from '../Dialog/BaseDialog';
 import { joyride } from '../../joyride.config';
 import { makeDatacartSelector } from '../../selectors/runSelector';
+import { Location } from 'history';
+import { Breakpoint } from '@material-ui/core/styles/createBreakpoints';
 
-export class StatusDownload extends React.Component {
-    constructor(props) {
+export interface Props {
+    runs: Eventkit.FullRun[];
+    runIds: string[];
+    detailsFetched: boolean;
+    getDatacartDetails: (uid: string) => void;
+    clearDataCartDetails: () => void;
+    deleteRun: (uid: string) => void;
+    runDeletion: Eventkit.Store.RunDeletion;
+    rerunExport: () => void;
+    exportReRun: Eventkit.Store.ReRun;
+    updateExpirationDate: (uid: string, date: Date) => void;
+    updateDataCartPermissions: (uid: string, perms: Eventkit.Permissions) => void;
+    permissionState: Eventkit.Store.UpdatePermissions;
+    expirationState: Eventkit.Store.UpdateExpiration;
+    cloneExport: (data: Eventkit.FullRun, providers: Eventkit.Provider[]) => void;
+    cancelProviderTask: (uid: string) => void;
+    getProviders: () => void;
+    providers: Eventkit.Provider[];
+    user: Eventkit.Store.User;
+    router: RouteComponentProps<any, any>;
+    location: Location;
+    viewedJob: (uid: string) => void;
+    theme: Eventkit.Theme & Theme;
+    width: Breakpoint;
+}
+
+export interface State {
+    isLoading: boolean;
+    error: any;
+    steps: Step[];
+    isRunning: boolean;
+}
+
+export class StatusDownload extends React.Component<Props, State> {
+    static contextTypes = {
+        config: PropTypes.object,
+    };
+
+    private timeout: number;
+    private timer: number;
+    private joyride: Joyride;
+    private scrollbar;
+    constructor(props: Props) {
         super(props);
         this.callback = this.callback.bind(this);
         this.getInitialState = this.getInitialState.bind(this);
@@ -53,7 +96,7 @@ export class StatusDownload extends React.Component {
         this.onMount();
     }
 
-    shouldComponentUpdate(p) {
+    shouldComponentUpdate(p: Props) {
         if (p.detailsFetched !== this.props.detailsFetched) {
             if (p.runs !== this.props.runs || this.state.isLoading) {
                 return true;
@@ -64,7 +107,7 @@ export class StatusDownload extends React.Component {
         return true;
     }
 
-    componentDidUpdate(prevProps) {
+    componentDidUpdate(prevProps: Props) {
         if (this.props.runDeletion.deleted && !prevProps.runDeletion.deleted) {
             browserHistory.push('/exports');
         }
@@ -140,24 +183,24 @@ export class StatusDownload extends React.Component {
         this.timeout = null;
     }
 
-    async onMount() {
+    private async onMount() {
         this.props.getDatacartDetails(this.props.router.params.jobuid);
         this.props.viewedJob(this.props.router.params.jobuid);
         this.props.getProviders();
         this.startTimer();
 
-        const steps = joyride.StatusAndDownload;
+        const steps = joyride.StatusAndDownload as any[];
         this.joyrideAddSteps(steps);
     }
 
-    getMarginPadding() {
+    private getMarginPadding() {
         if (!isWidthUp('md', this.props.width)) {
             return '0px';
         }
         return '30px';
     }
 
-    getErrorMessage() {
+    private getErrorMessage() {
         if (!this.state.error) {
             return null;
         }
@@ -179,42 +222,40 @@ export class StatusDownload extends React.Component {
         return messages;
     }
 
-    handleWalkthroughClick() {
+    private handleWalkthroughClick() {
         this.setState({ isRunning: true });
     }
 
-    handleClone(cartDetails, providerArray) {
-        this.props.cloneExport(cartDetails, providerArray);
-    }
-
-    startTimer() {
+    private startTimer() {
         window.clearInterval(this.timer);
         this.timer = window.setInterval(() => {
             this.props.getDatacartDetails(this.props.router.params.jobuid);
         }, 5000);
     }
 
-    clearError() {
+    private clearError() {
         this.setState({ error: null });
     }
 
-    joyrideAddSteps(steps) {
+    private joyrideAddSteps(steps: Step[]) {
         let newSteps = steps;
 
         if (!Array.isArray(newSteps)) {
             newSteps = [newSteps];
         }
 
-        if (!newSteps.length) return;
+        if (!newSteps.length) {
+            return;
+        }
 
-        this.setState((currentState) => {
+        this.setState((currentState: State) => {
             const nextState = { ...currentState };
             nextState.steps = nextState.steps.concat(newSteps);
             return nextState;
         });
     }
 
-    callback(data) {
+    private callback(data: any) {
         const { action, type, step } = data;
         if (action === 'close' || action === 'skip' || type === 'finished') {
             this.setState({ isRunning: false });
@@ -238,7 +279,7 @@ export class StatusDownload extends React.Component {
                 height: 'calc(100vh - 95px)',
                 width: '100%',
                 margin: 'auto',
-                overflowY: 'hidden',
+                overflowY: 'hidden' as 'hidden',
                 backgroundImage: `url(${images.topo_dark})`,
                 backgroundRepeat: 'repeat repeat',
             },
@@ -252,7 +293,7 @@ export class StatusDownload extends React.Component {
             },
             heading: {
                 fontSize: '18px',
-                fontWeight: 'bold',
+                fontWeight: 'bold' as 'bold',
                 color: colors.black,
                 alignContent: 'flex-start',
                 paddingBottom: '5px',
@@ -331,7 +372,6 @@ export class StatusDownload extends React.Component {
                     onUpdateDataCartPermissions={this.props.updateDataCartPermissions}
                     updatingExpiration={this.props.expirationState.updating}
                     updatingPermission={this.props.permissionState.updating}
-                    permissionState={this.props.permissionState}
                     onRunRerun={this.props.rerunExport}
                     onClone={this.props.cloneExport}
                     onProviderCancel={this.props.cancelProviderTask}
@@ -380,11 +420,11 @@ export class StatusDownload extends React.Component {
                             showSkipButton
                             showStepsProgress
                             locale={{
-                                back: (<span>Back</span>),
-                                close: (<span>Close</span>),
-                                last: (<span>Done</span>),
-                                next: (<span>Next</span>),
-                                skip: (<span>Skip</span>),
+                                back: (<span>Back</span>) as any,
+                                close: (<span>Close</span>) as any,
+                                last: (<span>Done</span>) as any,
+                                next: (<span>Next</span>) as any,
+                                skip: (<span>Skip</span>) as any,
                             }}
                             run={isRunning}
                         />
@@ -416,47 +456,9 @@ export class StatusDownload extends React.Component {
     }
 }
 
-StatusDownload.contextTypes = {
-    config: PropTypes.object,
-};
-
-StatusDownload.propTypes = {
-    runs: PropTypes.arrayOf(PropTypes.object).isRequired,
-    runIds: PropTypes.arrayOf(PropTypes.string).isRequired,
-    detailsFetched: PropTypes.bool.isRequired,
-    getDatacartDetails: PropTypes.func.isRequired,
-    clearDataCartDetails: PropTypes.func.isRequired,
-    deleteRun: PropTypes.func.isRequired,
-    runDeletion: PropTypes.object.isRequired,
-    rerunExport: PropTypes.func.isRequired,
-    exportReRun: PropTypes.object.isRequired,
-    updateExpirationDate: PropTypes.func.isRequired,
-    updateDataCartPermissions: PropTypes.func.isRequired,
-    permissionState: PropTypes.shape({
-        updating: PropTypes.bool,
-        updated: PropTypes.bool,
-        error: PropTypes.array,
-    }).isRequired,
-    expirationState: PropTypes.shape({
-        updating: PropTypes.bool,
-        updated: PropTypes.bool,
-        error: PropTypes.array,
-    }).isRequired,
-    cloneExport: PropTypes.func.isRequired,
-    cancelProviderTask: PropTypes.func.isRequired,
-    getProviders: PropTypes.func.isRequired,
-    providers: PropTypes.arrayOf(PropTypes.object).isRequired,
-    user: PropTypes.object.isRequired,
-    router: PropTypes.object.isRequired,
-    location: PropTypes.object.isRequired,
-    viewedJob: PropTypes.func.isRequired,
-    theme: PropTypes.object.isRequired,
-    width: PropTypes.string.isRequired,
-};
-
 const makeMapStateToProps = () => {
     const getDatacart = makeDatacartSelector();
-    const mapStateToProps = (state, props) => (
+    const mapStateToProps = (state) => (
         {
             runIds: state.datacartDetails.ids,
             detailsFetched: state.datacartDetails.status.fetched,
@@ -467,7 +469,7 @@ const makeMapStateToProps = () => {
             cancelProviderTask: state.cancelProviderTask,
             providers: state.providers,
             user: state.user,
-            runs: getDatacart(state, props),
+            runs: getDatacart(state),
         }
     );
     return mapStateToProps;
@@ -496,7 +498,7 @@ function mapDispatchToProps(dispatch) {
         clearReRunInfo: () => (
             dispatch(clearReRunInfo())
         ),
-        cloneExport: (cartDetails, providerArray) => {
+        cloneExport: (cartDetails: Eventkit.FullRun, providerArray: Eventkit.Provider[]) => {
             const featureCollection = {
                 type: 'FeatureCollection',
                 features: [cartDetails.job.extent],
@@ -531,9 +533,4 @@ function mapDispatchToProps(dispatch) {
     };
 }
 
-
-export default
-@withWidth()
-@withTheme()
-@connect(makeMapStateToProps, mapDispatchToProps)
-class Default extends StatusDownload {}
+export default withWidth()(withTheme()(connect(makeMapStateToProps, mapDispatchToProps)(StatusDownload)));

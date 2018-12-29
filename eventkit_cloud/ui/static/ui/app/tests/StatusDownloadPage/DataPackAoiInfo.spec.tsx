@@ -1,34 +1,28 @@
-import React from 'react';
-import sinon from 'sinon';
+import * as React from 'react';
+import * as sinon from 'sinon';
 import { createShallow } from '@material-ui/core/test-utils';
-import PropTypes from 'prop-types';
-import raf from 'raf';
 import View from 'ol/view';
 import GeoJSON from 'ol/format/geojson';
 import Feature from 'ol/feature';
 import { DataPackAoiInfo } from '../../components/StatusDownloadPage/DataPackAoiInfo';
 
-// this polyfills requestAnimationFrame in the test browser, required for ol3
-raf.polyfill();
-
 describe('DataPackAoiInfo component', () => {
     let shallow;
 
-    const didMount = DataPackAoiInfo.prototype.componentDidMount;
-
+    let mount;
     beforeAll(() => {
         shallow = createShallow();
-        DataPackAoiInfo.prototype.componentDidMount = sinon.spy();
+        mount = sinon.stub(DataPackAoiInfo.prototype, 'componentDidMount');
     });
 
     afterAll(() => {
-        DataPackAoiInfo.prototype.componentDidMount = didMount;
+        mount.restore();
     });
 
     const getProps = () => (
         {
             extent: { type: 'FeatureCollection', features: [] },
-            ...global.eventkit_test_props,
+            ...(global as any).eventkit_test_props,
         }
     );
 
@@ -39,9 +33,6 @@ describe('DataPackAoiInfo component', () => {
                     BASEMAP_URL: 'http://my-osm-tile-service/{z}/{x}/{y}.png',
                     BASEMAP_COPYRIGHT: 'my copyright',
                 },
-            },
-            childContextTypes: {
-                muiTheme: PropTypes.object,
             },
         })
     );
@@ -55,11 +46,11 @@ describe('DataPackAoiInfo component', () => {
     it('should call initializeOpenLayers set on shallow', () => {
         const props = getProps();
         const initStub = sinon.stub(DataPackAoiInfo.prototype, 'initializeOpenLayers');
-        DataPackAoiInfo.prototype.componentDidMount = didMount;
+        mount.restore();
         getWrapper(props);
         expect(initStub.calledOnce).toBe(true);
         initStub.restore();
-        DataPackAoiInfo.prototype.componentDidMount = sinon.spy();
+        mount = sinon.stub(DataPackAoiInfo.prototype, 'componentDidMount');
     });
 
     it('initializeOpenLayers should construct a map and add it to the DOM', () => {

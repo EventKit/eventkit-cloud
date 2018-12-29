@@ -1,12 +1,24 @@
-import PropTypes from 'prop-types';
-import React, { Component } from 'react';
-import { withTheme } from '@material-ui/core/styles';
+import * as React from 'react';
+import { withTheme, Theme } from '@material-ui/core/styles';
 import Info from '@material-ui/icons/Info';
 import CustomTableRow from '../CustomTableRow';
 import BaseDialog from '../Dialog/BaseDialog';
 
-export class DataPackGeneralTable extends Component {
-    constructor(props) {
+export interface Props {
+    dataPack: Eventkit.FullRun;
+    providers: Eventkit.Provider[];
+    theme: Eventkit.Theme & Theme;
+}
+
+export interface State {
+    providerName: string;
+    providerDescription: string;
+    providerDialogOpen: boolean;
+    projectionsDialogOpen: boolean;
+}
+
+export class DataPackGeneralTable extends React.Component<Props, State> {
+    constructor(props: Props) {
         super(props);
         this.handleProviderOpen = this.handleProviderOpen.bind(this);
         this.handleProviderClose = this.handleProviderClose.bind(this);
@@ -20,22 +32,22 @@ export class DataPackGeneralTable extends Component {
         };
     }
 
-    handleProviderClose() {
+    private handleProviderClose() {
         this.setState({ providerDialogOpen: false });
     }
 
-    handleProviderOpen(runProviders) {
+    private handleProviderOpen(runProviders: Eventkit.ProviderTask) {
         const propsProvider = this.props.providers.find(x => x.slug === runProviders.slug);
         const providerDescription = propsProvider.service_description.toString();
         const providerName = propsProvider.name.toString();
         this.setState({ providerDescription, providerName, providerDialogOpen: true });
     }
 
-    handleProjectionsClose() {
+    private handleProjectionsClose() {
         this.setState({ projectionsDialogOpen: false });
     }
 
-    handleProjectionsOpen() {
+    private handleProjectionsOpen() {
         this.setState({ projectionsDialogOpen: true });
     }
 
@@ -131,18 +143,5 @@ export class DataPackGeneralTable extends Component {
         );
     }
 }
-
-DataPackGeneralTable.propTypes = {
-    dataPack: PropTypes.shape({
-        job: PropTypes.shape({
-            description: PropTypes.string,
-            event: PropTypes.string,
-            formats: PropTypes.arrayOf(PropTypes.string),
-        }),
-        provider_tasks: PropTypes.arrayOf(PropTypes.object),
-    }).isRequired,
-    providers: PropTypes.arrayOf(PropTypes.object).isRequired,
-    theme: PropTypes.object.isRequired,
-};
 
 export default withTheme()(DataPackGeneralTable);
