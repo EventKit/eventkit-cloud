@@ -1,8 +1,13 @@
-import PropTypes from 'prop-types';
-import React, { Component } from 'react';
+import * as React from 'react';
 import BaseDialog from '../../Dialog/BaseDialog';
 
-export class MemberInfoDialog extends Component {
+export interface Props {
+    className?: string;
+    show: boolean;
+    onClose: () => void;
+}
+
+export class MemberInfoDialog extends React.Component<Props, {}> {
     render() {
         if (!this.props.show) {
             return null;
@@ -34,10 +39,5 @@ export class MemberInfoDialog extends Component {
         );
     }
 }
-
-MemberInfoDialog.propTypes = {
-    show: PropTypes.bool.isRequired,
-    onClose: PropTypes.func.isRequired,
-};
 
 export default MemberInfoDialog;

@@ -1,4 +1,5 @@
-import React from 'react';
+import * as React from 'react';
+import * as sinon from 'sinon';
 import { createShallow } from '@material-ui/core/test-utils';
 import BaseDialog from '../../components/Dialog/BaseDialog';
 import CustomTextField from '../../components/CustomTextField';
@@ -13,14 +14,13 @@ describe('LeaveGroupDialog component', () => {
 
     const props = {
         show: true,
-        onInputChange: () => {},
-        onClose: () => {},
-        onSave: () => {},
+        onInputChange: sinon.spy(),
+        onClose: sinon.spy(),
+        onSave: sinon.spy(),
         value: '',
         valid: true,
-        ...global.eventkit_test_props,
+        ...(global as any).eventkit_test_props,
     };
-
 
     it('should render a BaseDialog with text field', () => {
         const wrapper = shallow(<RenameGroupDialog {...props} />);

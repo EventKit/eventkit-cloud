@@ -1,7 +1,8 @@
-import React from 'react';
+import * as React from 'react';
+import * as sinon from 'sinon';
 import { createShallow } from '@material-ui/core/test-utils';
 import BaseDialog from '../../components/Dialog/BaseDialog';
-import { LeaveGroupDialog } from '../../components/UserGroupsPage/Dialogs/LeaveGroupDialog';
+import { DeleteGroupDialog } from '../../components/UserGroupsPage/Dialogs/DeleteGroupDialog';
 
 describe('LeaveGroupDialog component', () => {
     let shallow;
@@ -12,16 +13,16 @@ describe('LeaveGroupDialog component', () => {
 
     const props = {
         show: true,
-        onClose: () => {},
-        onLeave: () => {},
+        onClose: sinon.spy(),
+        onDelete: sinon.spy(),
         groupName: 'Test Group',
-        ...global.eventkit_test_props,
+        ...(global as any).eventkit_test_props,
     };
 
     it('should render a BaseDialog with message', () => {
-        const wrapper = shallow(<LeaveGroupDialog {...props} />);
+        const wrapper = shallow(<DeleteGroupDialog {...props} />);
         expect(wrapper.find(BaseDialog)).toHaveLength(1);
         expect(wrapper.find(BaseDialog).props().children)
-            .toEqual("I'd like to opt out of all shared rights for the 'Test Group' group.");
+            .toEqual("Are you sure you'd like to delete 'Test Group'?");
     });
 });

@@ -1,6 +1,5 @@
-import PropTypes from 'prop-types';
-import React, { Component } from 'react';
-import { withTheme } from '@material-ui/core/styles';
+import * as React from 'react';
+import { withTheme, Theme } from '@material-ui/core/styles';
 import MenuItem from '@material-ui/core/MenuItem';
 import Person from '@material-ui/icons/Person';
 import Sort from '@material-ui/icons/Sort';
@@ -10,8 +9,39 @@ import Unchecked from '@material-ui/icons/CheckBoxOutlineBlank';
 import IconMenu from '../common/IconMenu';
 import ConfirmDialog from '../Dialog/ConfirmDialog';
 
-export class UserHeader extends Component {
-    constructor(props) {
+export interface Props {
+    className?: string;
+    selected: boolean;
+    onSelect: (selected: boolean) => void;
+    orderingValue: string;
+    handleOrderingChange: (order: string) => void;
+    handleAddUsers: (users: Eventkit.User[]) => void;
+    handleRemoveUsers: (users: Eventkit.User[]) => void;
+    handleAdminRights: (users: Eventkit.User[]) => void;
+    selectedUsers: Eventkit.User[];
+    selectedGroup: Eventkit.Group;
+    handleNewGroup: (users: Eventkit.User[]) => void;
+    showRemoveButton: boolean;
+    showAdminButton: boolean;
+    theme: Eventkit.Theme & Theme;
+}
+
+export interface State {
+    showAdminConfirm: boolean;
+}
+
+export class UserHeader extends React.Component<Props, State> {
+    static defaultProps = {
+        handleRemoveUsers: () => { console.warn('No remove users handler supplied'); },
+        handleAdminRights: () => { console.warn('No admin rights handler supplied'); },
+        selectedGroup: null,
+        showRemoveButton: false,
+        showAdminButton: false,
+    };
+
+    private select: () => void;
+    private deselect: () => void;
+    constructor(props: Props) {
         super(props);
         this.handleAddUsersClick = this.handleAddUsersClick.bind(this);
         this.handleNewGroupClick = this.handleNewGroupClick.bind(this);
@@ -26,27 +56,27 @@ export class UserHeader extends Component {
         };
     }
 
-    handleAddUsersClick() {
+    private handleAddUsersClick() {
         this.props.handleAddUsers(this.props.selectedUsers);
     }
 
-    handleNewGroupClick() {
+    private handleNewGroupClick() {
         this.props.handleNewGroup(this.props.selectedUsers);
     }
 
-    handleRemoveUsersClick() {
+    private handleRemoveUsersClick() {
         this.props.handleRemoveUsers(this.props.selectedUsers);
     }
 
-    handleOpenAdminConfirm() {
+    private handleOpenAdminConfirm() {
         this.setState({ showAdminConfirm: true });
     }
 
-    handleCloseAdminConfirm() {
+    private handleCloseAdminConfirm() {
         this.setState({ showAdminConfirm: false });
     }
 
-    handleConfirmAdminAction() {
+    private handleConfirmAdminAction() {
         this.handleCloseAdminConfirm();
         this.props.handleAdminRights(this.props.selectedUsers);
     }
@@ -122,12 +152,13 @@ export class UserHeader extends Component {
                 style={styles.header}
                 className="qa-UserHeader"
             >
-                <div style={{
-                    display: 'flex',
-                    flex: '0 0 auto',
-                    paddingLeft: '24px',
-                    alignItems: 'center',
-                }}
+                <div
+                    style={{
+                        display: 'flex',
+                        flex: '0 0 auto',
+                        paddingLeft: '24px',
+                        alignItems: 'center',
+                    }}
                 >
                     {checkbox}
                 </div>
@@ -255,34 +286,5 @@ export class UserHeader extends Component {
         );
     }
 }
-
-UserHeader.defaultProps = {
-    handleRemoveUsers: () => { console.warn('No remove users handler supplied'); },
-    handleAdminRights: () => { console.warn('No admin rights handler supplied'); },
-    selectedGroup: null,
-    showRemoveButton: false,
-    showAdminButton: false,
-};
-
-UserHeader.propTypes = {
-    selected: PropTypes.bool.isRequired,
-    onSelect: PropTypes.func.isRequired,
-    orderingValue: PropTypes.string.isRequired,
-    handleOrderingChange: PropTypes.func.isRequired,
-    handleAddUsers: PropTypes.func.isRequired,
-    handleRemoveUsers: PropTypes.func,
-    handleAdminRights: PropTypes.func,
-    selectedUsers: PropTypes.arrayOf(PropTypes.object).isRequired,
-    selectedGroup: PropTypes.shape({
-        id: PropTypes.number,
-        name: PropTypes.string,
-        members: PropTypes.arrayOf(PropTypes.string),
-        administrators: PropTypes.arrayOf(PropTypes.string),
-    }),
-    handleNewGroup: PropTypes.func.isRequired,
-    showRemoveButton: PropTypes.bool,
-    showAdminButton: PropTypes.bool,
-    theme: PropTypes.object.isRequired,
-};
 
 export default withTheme()(UserHeader);

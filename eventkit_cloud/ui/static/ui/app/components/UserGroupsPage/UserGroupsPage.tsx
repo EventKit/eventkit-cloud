@@ -1,10 +1,10 @@
-import PropTypes from 'prop-types';
-import React, { Component } from 'react';
+import * as PropTypes from 'prop-types';
+import * as React from 'react';
 import { connect } from 'react-redux';
-import { withTheme } from '@material-ui/core/styles';
+import { withTheme, Theme, withStyles, createStyles } from '@material-ui/core/styles';
 import withWidth, { isWidthDown } from '@material-ui/core/withWidth';
 import { browserHistory } from 'react-router';
-import Joyride from 'react-joyride';
+import Joyride, { Step } from 'react-joyride';
 import Help from '@material-ui/icons/Help';
 import Button from '@material-ui/core/Button';
 import ButtonBase from '@material-ui/core/ButtonBase';
@@ -32,58 +32,212 @@ import { getGroups, deleteGroup, createGroup, updateGroup } from '../../actions/
 import { getUsers } from '../../actions/usersActions';
 import { DrawerTimeout } from '../../actions/uiActions';
 import { joyride } from '../../joyride.config';
+import { Breakpoint } from '@material-ui/core/styles/createBreakpoints';
+import { Location } from 'history';
 
-export class UserGroupsPage extends Component {
-    constructor(props, context) {
+const jss = (theme: Eventkit.Theme & Theme) => createStyles({
+    header: {
+        backgroundColor: theme.eventkit.colors.background,
+        color: theme.eventkit.colors.white,
+        fontSize: '14px',
+        padding: '0px 24px',
+        flexWrap: 'wrap-reverse',
+    },
+    headerTitle: {
+        fontSize: '18px',
+        lineHeight: '35px',
+        height: '35px',
+        overflow: 'visible',
+    },
+    button: {
+        margin: '0px 0px 0px 10px',
+        minWidth: '50px',
+        height: '35px',
+        borderRadius: '0px',
+        width: '150px',
+    },
+    label: {
+        fontSize: '12px',
+        paddingLeft: '0px',
+        paddingRight: '0px',
+        lineHeight: '35px',
+    },
+    drawerButton: {
+        fontSize: '12px',
+        color: theme.eventkit.colors.primary,
+        padding: '0px 10px',
+        margin: '0px -10px 0px 5px',
+        display: 'none',
+        [theme.breakpoints.down('sm')]: {
+            display: 'inline-block',
+        },
+    },
+    newGroupIcon: {
+        color: theme.eventkit.colors.white,
+        height: '35px',
+        width: '18px',
+        verticalAlign: 'bottom',
+        marginRight: '5px',
+    },
+    body: {
+        height: 'calc(100vh - 130px)',
+        width: 'calc(100% - 250px)',
+        [theme.breakpoints.down('sm')]: {
+            width: '100%',
+        }
+    },
+    groups: {
+        display: 'flex',
+        flexDirection: 'column',
+        height: '100%',
+        justifyContent: 'space-between',
+    },
+    fixedHeader: {
+        paddingTop: 15,
+        backgroundColor: theme.eventkit.colors.white,
+        maxWidth: '1000px',
+        margin: 'auto',
+        position: 'relative',
+        zIndex: 4,
+        boxShadow: '0px 0px 2px 2px rgba(0, 0, 0, 0.1)',
+    },
+    loadingContainer: {
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        width: '100%',
+        height: '100%',
+        zIndex: 1400,
+    },
+    memberTitle: {
+        display: 'flex',
+        flexWrap: 'wrap',
+        margin: '0px 24px 10px',
+        lineHeight: '30px',
+    },
+    memberText: {
+        fontWeight: 700,
+        fontSize: '17px',
+        flex: '0 0 auto',
+        marginRight: '10px',
+        height: '24px',
+        lineHeight: '24px',
+    },
+    container: {
+        height: '36px',
+        width: 'calc(100% - 48px)',
+        backgroundColor: theme.eventkit.colors.secondary,
+        lineHeight: '36px',
+        margin: '0px 24px 10px',
+    },
+    hint: {
+        color: theme.eventkit.colors.text_primary,
+        height: '36px',
+        lineHeight: 'inherit',
+        bottom: '0px',
+        paddingLeft: '10px',
+    },
+    ownUser: {
+        position: 'sticky',
+        top: 0,
+        left: 0,
+        zIndex: 3,
+        backgroundColor: theme.eventkit.colors.white,
+        boxShadow: '0px 0px 2px 2px rgba(0, 0, 0, 0.1)',
+    },
+    errorIcon: {
+        marginRight: '10px',
+        fill: theme.eventkit.colors.warning,
+        verticalAlign: 'bottom',
+    },
+    tourButton: {
+        color: theme.eventkit.colors.primary,
+        cursor: 'pointer',
+        display: 'inline-block',
+    },
+    tourIcon: {
+        color: theme.eventkit.colors.primary,
+        cursor: 'pointer',
+        height: '35px',
+        width: '18px',
+        verticalAlign: 'middle',
+    },
+    tourText: {
+        marginLeft: '5px',
+        display: 'inline-block',
+        [theme.breakpoints.down('sm')]: {
+            display: 'none',
+        },
+    },
+    input: {
+        color: theme.eventkit.colors.black,
+        height: '36px',
+        paddingLeft: '10px',
+        fontSize: '16px',
+    },
+    createButton: {
+        height: '35px',
+        lineHeight: '35px',
+        marginLeft: '10px',
+        fontSize: '12px',
+        display: 'inline-block',
+        [theme.breakpoints.only('xs')]: {
+            display: 'none',
+        },
+    },
+});
+
+export interface Props {
+    user: Eventkit.User['user'];
+    groups: Eventkit.Store.Groups;
+    users: Eventkit.Store.Users;
+    getGroups: (args: any) => void;
+    deleteGroup: (id: string | number) => void;
+    createGroup: (name: string, usernames: string[]) => void;
+    updateGroup: (id: string | number, args: any) => void;
+    getUsers: (args: any) => void;
+    location: Location;
+    theme: Eventkit.Theme & Theme;
+    width: Breakpoint;
+    classes: { [className: string]: string };
+}
+
+export interface State {
+    drawerOpen: boolean;
+    selectedUsers: Eventkit.User[];
+    search: string;
+    showAddUsers: boolean;
+    showCreate: boolean;
+    showLeave: boolean;
+    showDelete: boolean;
+    showRename: boolean;
+    targetGroup: Eventkit.Group;
+    createInput: string;
+    createUsers: Eventkit.User[];
+    addUsers: Eventkit.User[];
+    renameInput: string;
+    errors: Array<{ detail: string; }>;
+    showAdministratorInfo: boolean;
+    showMemberInfo: boolean;
+    showOtherInfo: boolean;
+    steps: Step[];
+    stepIndex: number;
+    isRunning: boolean;
+}
+
+export class UserGroupsPage extends React.Component<Props, State> {
+    static contextTypes = {
+        config: PropTypes.shape({
+            USER_GROUPS_PAGE_SIZE: PropTypes.string,
+        }),
+    };
+
+    private pageSize: number;
+    private joyride: Joyride;
+    private scrollbar;
+    constructor(props: Props, context) {
         super(props);
-        this.getQueryGroup = this.getQueryGroup.bind(this);
-        this.getGroupTitle = this.getGroupTitle.bind(this);
-        this.makeUserRequest = this.makeUserRequest.bind(this);
-        this.toggleDrawer = this.toggleDrawer.bind(this);
-        this.handleSelectAll = this.handleSelectAll.bind(this);
-        this.handleSearchKeyDown = this.handleSearchKeyDown.bind(this);
-        this.handleSearchChange = this.handleSearchChange.bind(this);
-        this.handleOrderingChange = this.handleOrderingChange.bind(this);
-        this.handleLoadLess = this.handleLoadLess.bind(this);
-        this.handleLoadMore = this.handleLoadMore.bind(this);
-        this.handleCreateOpen = this.handleCreateOpen.bind(this);
-        this.handleCreateClose = this.handleCreateClose.bind(this);
-        this.handleCreateInput = this.handleCreateInput.bind(this);
-        this.handleCreateSave = this.handleCreateSave.bind(this);
-        this.handleRenameOpen = this.handleRenameOpen.bind(this);
-        this.handleRenameClose = this.handleRenameClose.bind(this);
-        this.handleRenameInput = this.handleRenameInput.bind(this);
-        this.handleRenameSave = this.handleRenameSave.bind(this);
-        this.handleNewGroup = this.handleNewGroup.bind(this);
-        this.handleAddUsers = this.handleAddUsers.bind(this);
-        this.handleLeaveGroupClick = this.handleLeaveGroupClick.bind(this);
-        this.handleDeleteGroupClick = this.handleDeleteGroupClick.bind(this);
-        this.handleLeaveOpen = this.handleLeaveOpen.bind(this);
-        this.handleLeaveClose = this.handleLeaveClose.bind(this);
-        this.handleLeaveClick = this.handleLeaveClick.bind(this);
-        this.handleDeleteOpen = this.handleDeleteOpen.bind(this);
-        this.handleDeleteClose = this.handleDeleteClose.bind(this);
-        this.handleDeleteClick = this.handleDeleteClick.bind(this);
-        this.handleDrawerSelectionChange = this.handleDrawerSelectionChange.bind(this);
-        this.handleMakeAdmin = this.handleMakeAdmin.bind(this);
-        this.handleDemoteAdmin = this.handleDemoteAdmin.bind(this);
-        this.handleRemoveUser = this.handleRemoveUser.bind(this);
-        this.handleBatchRemoveUser = this.handleBatchRemoveUser.bind(this);
-        this.handleBatchAdminRights = this.handleBatchAdminRights.bind(this);
-        this.handleAddUsersSave = this.handleAddUsersSave.bind(this);
-        this.handleUserSelect = this.handleUserSelect.bind(this);
-        this.showAddUsersDialog = this.showAddUsersDialog.bind(this);
-        this.hideAddUsersDialog = this.hideAddUsersDialog.bind(this);
-        this.showErrorDialog = this.showErrorDialog.bind(this);
-        this.hideErrorDialog = this.hideErrorDialog.bind(this);
-        this.callback = this.callback.bind(this);
-        this.showAdministratorInfoDialog = this.showAdministratorInfoDialog.bind(this);
-        this.hideAdministratorInfoDialog = this.hideAdministratorInfoDialog.bind(this);
-        this.showMemberInfoDialog = this.showMemberInfoDialog.bind(this);
-        this.hideMemberInfoDialog = this.hideMemberInfoDialog.bind(this);
-        this.showOtherInfoDialog = this.showOtherInfoDialog.bind(this);
-        this.hideOtherInfoDialog = this.hideOtherInfoDialog.bind(this);
-        this.handleJoyride = this.handleJoyride.bind(this);
+        this.bindMethods();
         this.pageSize = Number(context.config.USER_GROUPS_PAGE_SIZE);
         this.state = {
             drawerOpen: !(isWidthDown('sm', this.props.width)),
@@ -139,11 +293,11 @@ export class UserGroupsPage extends Component {
         // make api request for users/groups
         this.makeUserRequest();
         this.props.getGroups({ disable_page: true });
-        const steps = joyride.UserGroupsPage;
+        const steps = joyride.UserGroupsPage as any[];
         this.joyrideAddSteps(steps);
     }
 
-    componentDidUpdate(prevProps) {
+    componentDidUpdate(prevProps: Props) {
         let changedQuery = false;
         if (Object.keys(this.props.location.query).length
                 !== Object.keys(prevProps.location.query).length) {
@@ -210,7 +364,7 @@ export class UserGroupsPage extends Component {
         }
     }
 
-    getQueryGroup(targetGroups = null) {
+    private getQueryGroup(targetGroups = null) {
         const groups = targetGroups || this.props.groups.groups;
         const id = this.props.location.query.groups;
         if (id) {
@@ -219,16 +373,18 @@ export class UserGroupsPage extends Component {
         return null;
     }
 
-    getGroupTitle(group) {
+    private getGroupTitle(group: Eventkit.Group) {
         const selection = this.props.location.query.groups || 'all';
-        if (selection === 'all') return 'All Members';
+        if (selection === 'all') {
+            return 'All Members';
+        }
         if (!group) {
             return 'No Members Matching Group Found';
         }
         return `${group.name} Members`;
     }
 
-    makeUserRequest(options = { groups: null, ordering: null, search: null }) {
+    private makeUserRequest(options = { groups: null, ordering: null, search: null }) {
         const params = { ...this.props.location.query };
 
         if (options.search === undefined && params.search) {
@@ -263,7 +419,7 @@ export class UserGroupsPage extends Component {
         this.props.getUsers(params);
     }
 
-    toggleDrawer() {
+    private toggleDrawer() {
         // this still executes the call to setState immediately
         // but it gives you the option to await the state change and the 450ms
         // that it takes for the drawer transition to complete
@@ -277,7 +433,7 @@ export class UserGroupsPage extends Component {
         });
     }
 
-    handleSelectAll(selected) {
+    private handleSelectAll(selected: boolean) {
         if (selected) {
             // if all are selected we need to set selected state with all
             this.setState({
@@ -292,7 +448,7 @@ export class UserGroupsPage extends Component {
         }
     }
 
-    handleUserSelect(user) {
+    private handleUserSelect(user: Eventkit.User) {
         const selected = [...this.state.selectedUsers];
         const ix = selected.findIndex(u => u.user.username === user.user.username);
         if (ix > -1) {
@@ -303,9 +459,9 @@ export class UserGroupsPage extends Component {
         this.setState({ selectedUsers: selected });
     }
 
-    handleSearchKeyDown(event) {
+    private handleSearchKeyDown(event: React.KeyboardEvent<HTMLInputElement>) {
         if (event.key === 'Enter') {
-            const text = event.target.value || '';
+            const text = (event.target as HTMLInputElement).value || '';
             if (text) {
                 const query = { ...this.props.location.query };
                 query.search = text;
@@ -315,7 +471,7 @@ export class UserGroupsPage extends Component {
         }
     }
 
-    handleSearchChange(event) {
+    private handleSearchChange(event: React.ChangeEvent<HTMLInputElement>) {
         const text = event.target.value || '';
         // always update state since that is what will show in the searchbar
         this.setState({ search: text });
@@ -330,92 +486,92 @@ export class UserGroupsPage extends Component {
         }
     }
 
-    handleOrderingChange(value) {
+    private handleOrderingChange(value: string) {
         const query = { ...this.props.location.query };
         query.ordering = value;
         browserHistory.push({ ...this.props.location, query });
     }
 
-    handleLoadMore() {
+    private handleLoadMore() {
         const query = { ...this.props.location.query };
         query.page_size = Number(query.page_size) + this.pageSize;
         browserHistory.push({ ...this.props.location, query });
     }
 
-    handleLoadLess() {
+    private handleLoadLess() {
         const query = { ...this.props.location.query };
         query.page_size = Number(query.page_size) - this.pageSize;
         browserHistory.push({ ...this.props.location, query });
     }
 
-    handleCreateOpen() {
+    private handleCreateOpen() {
         this.setState({ showCreate: true });
     }
 
-    handleCreateClose() {
+    private handleCreateClose() {
         this.setState({ showCreate: false, createInput: '' });
     }
 
-    handleCreateInput(e) {
+    private handleCreateInput(e: React.ChangeEvent<HTMLInputElement>) {
         this.setState({ createInput: e.target.value });
     }
 
-    handleCreateSave() {
+    private handleCreateSave() {
         const users = this.state.createUsers.map(user => user.user.username);
         this.props.createGroup(this.state.createInput, users);
         this.handleCreateClose();
     }
 
-    handleRenameOpen(group) {
+    private handleRenameOpen(group: Eventkit.Group) {
         this.setState({ showRename: true, targetGroup: group });
     }
 
-    handleRenameClose() {
+    private handleRenameClose() {
         this.setState({ showRename: false, renameInput: '', targetGroup: null });
     }
 
-    handleRenameInput(e) {
+    private handleRenameInput(e: React.ChangeEvent<HTMLInputElement>) {
         this.setState({ renameInput: e.target.value });
     }
 
-    handleRenameSave() {
+    private handleRenameSave() {
         this.props.updateGroup(this.state.targetGroup.id, { name: this.state.renameInput });
         this.handleRenameClose();
     }
 
-    handleNewGroup(users) {
+    private handleNewGroup(users: Eventkit.User[]) {
         if (users.length) {
             this.setState({ createUsers: users });
         }
         this.handleCreateOpen();
     }
 
-    handleAddUsers(users) {
+    private handleAddUsers(users: Eventkit.User[]) {
         if (users.length) {
             this.setState({ addUsers: users });
             this.showAddUsersDialog();
         }
     }
 
-    handleLeaveGroupClick(group) {
+    private handleLeaveGroupClick(group: Eventkit.Group) {
         this.setState({ targetGroup: group });
         this.handleLeaveOpen();
     }
 
-    handleDeleteGroupClick(group) {
+    private handleDeleteGroupClick(group: Eventkit.Group) {
         this.setState({ targetGroup: group });
         this.handleDeleteOpen();
     }
 
-    handleLeaveOpen() {
+    private handleLeaveOpen() {
         this.setState({ showLeave: true });
     }
 
-    handleLeaveClose() {
+    private handleLeaveClose() {
         this.setState({ showLeave: false });
     }
 
-    handleLeaveClick() {
+    private handleLeaveClick() {
         // if the user is an admin we want to remove them from admins and users
         // if the user is not an admin the api will ignore the options and just remove the user
         const administrators = this.state.targetGroup.administrators
@@ -427,20 +583,20 @@ export class UserGroupsPage extends Component {
         this.handleLeaveClose();
     }
 
-    handleDeleteOpen() {
+    private handleDeleteOpen() {
         this.setState({ showDelete: true });
     }
 
-    handleDeleteClose() {
+    private handleDeleteClose() {
         this.setState({ showDelete: false });
     }
 
-    handleDeleteClick() {
+    private handleDeleteClick() {
         this.props.deleteGroup(this.state.targetGroup.id);
         this.handleDeleteClose();
     }
 
-    handleDrawerSelectionChange(value) {
+    private handleDrawerSelectionChange(value: string) {
         const query = { ...this.props.location.query };
         if (value === 'all') {
             query.groups = null;
@@ -456,7 +612,7 @@ export class UserGroupsPage extends Component {
         browserHistory.push({ ...this.props.location, query });
     }
 
-    handleMakeAdmin(user) {
+    private handleMakeAdmin(user: Eventkit.User) {
         const group = this.getQueryGroup();
         if (!group) {
             return;
@@ -465,7 +621,7 @@ export class UserGroupsPage extends Component {
         this.props.updateGroup(group.id, { administrators });
     }
 
-    handleDemoteAdmin(user) {
+    private handleDemoteAdmin(user: Eventkit.User) {
         const group = this.getQueryGroup();
         if (!group) {
             return;
@@ -475,7 +631,7 @@ export class UserGroupsPage extends Component {
         this.props.updateGroup(group.id, { administrators });
     }
 
-    handleRemoveUser(user) {
+    private handleRemoveUser(user: Eventkit.User) {
         const group = this.getQueryGroup();
         if (!group) {
             return;
@@ -487,7 +643,7 @@ export class UserGroupsPage extends Component {
         this.props.updateGroup(group.id, { administrators, members });
     }
 
-    handleBatchRemoveUser(users) {
+    private handleBatchRemoveUser(users: Eventkit.User[]) {
         const group = this.getQueryGroup();
         if (!group) {
             return;
@@ -503,7 +659,7 @@ export class UserGroupsPage extends Component {
         });
     }
 
-    handleBatchAdminRights(users) {
+    private handleBatchAdminRights(users: Eventkit.User[]) {
         const group = this.getQueryGroup();
         if (!group) {
             return;
@@ -520,7 +676,7 @@ export class UserGroupsPage extends Component {
         this.props.updateGroup(group.id, { administrators });
     }
 
-    handleAddUsersSave(groups, users) {
+    private handleAddUsersSave(groups: Eventkit.Group[], users: Eventkit.User[]) {
         this.hideAddUsersDialog();
         const usernames = users.map(user => user.user.username);
         groups.forEach((group) => {
@@ -529,55 +685,57 @@ export class UserGroupsPage extends Component {
         });
     }
 
-    showAddUsersDialog() {
+    private showAddUsersDialog() {
         this.setState({ showAddUsers: true });
     }
 
-    hideAddUsersDialog() {
+    private hideAddUsersDialog() {
         this.setState({ showAddUsers: false });
     }
 
-    showErrorDialog(message) {
+    private showErrorDialog(message: any) {
         const { errors } = message;
         this.setState({ errors });
     }
 
-    hideErrorDialog() {
+    private hideErrorDialog() {
         this.setState({ errors: [] });
     }
 
-    showAdministratorInfoDialog() {
+    private showAdministratorInfoDialog() {
         this.setState({ showAdministratorInfo: true });
     }
 
-    hideAdministratorInfoDialog() {
+    private hideAdministratorInfoDialog() {
         this.setState({ showAdministratorInfo: false });
     }
 
-    showMemberInfoDialog() {
+    private showMemberInfoDialog() {
         this.setState({ showMemberInfo: true });
     }
 
-    hideMemberInfoDialog() {
+    private hideMemberInfoDialog() {
         this.setState({ showMemberInfo: false });
     }
 
-    showOtherInfoDialog() {
+    private showOtherInfoDialog() {
         this.setState({ showOtherInfo: true });
     }
 
-    hideOtherInfoDialog() {
+    private hideOtherInfoDialog() {
         this.setState({ showOtherInfo: false });
     }
 
-    joyrideAddSteps(steps) {
+    private joyrideAddSteps(steps: Step[]) {
         let newSteps = steps;
 
         if (!Array.isArray(newSteps)) {
             newSteps = [newSteps];
         }
 
-        if (!newSteps.length) return;
+        if (!newSteps.length) {
+            return;
+        }
 
         if (isWidthDown('xs', this.props.width)) {
             const ix = newSteps.findIndex(step => (
@@ -589,14 +747,14 @@ export class UserGroupsPage extends Component {
             }
         }
 
-        this.setState((currentState) => {
+        this.setState((currentState: State) => {
             const nextState = { ...currentState };
             nextState.steps = nextState.steps.concat(newSteps);
             return nextState;
         });
     }
 
-    async callback(data) {
+    private async callback(data: any) {
         const {
             action,
             index,
@@ -604,7 +762,9 @@ export class UserGroupsPage extends Component {
             step,
         } = data;
 
-        if (!action) return;
+        if (!action) {
+            return;
+        }
 
         if (action === 'close' || action === 'skip' || type === 'finished') {
             const fakeIx = this.props.users.users.findIndex(u => u.user.fake);
@@ -618,19 +778,27 @@ export class UserGroupsPage extends Component {
                 // because the next step will render immediately after (before the drawer is fully open)
                 // we need to wait till the drawer is open and then update the placement of the step items
                 await this.toggleDrawer();
+                // @ts-ignore
                 this.joyride.calcPlacement();
             } else if (step.selector === '.qa-GroupsDrawer-groupsHeading') {
                 if (type === 'step:before') {
                     this.scrollbar.scrollToTop();
                     const users = this.props.users.users.filter(u => u.user.username !== this.props.user.username);
                     if (users.length === 0) {
-                        const fakeUser = {
+                        const fakeUser: Eventkit.User = {
                             user: {
                                 fake: true,
                                 username: 'Example User',
                                 email: 'example_user@example.com',
+                                first_name: undefined,
+                                last_name: undefined,
+                                last_login: undefined,
+                                date_joined: undefined,
+                                commonname: undefined,
+                                identification: undefined,
                             },
                             groups: [],
+                            accepted_licenses: undefined,
                         };
                         this.props.users.users.push(fakeUser);
                     }
@@ -643,6 +811,7 @@ export class UserGroupsPage extends Component {
                 // because the next step will render immidiately after (before the drawer is fully open)
                 // we need to wait till the drawer is open and then update the placement of the step items
                 await this.toggleDrawer();
+                // @ts-ignore
                 this.joyride.calcPlacement();
             }
 
@@ -652,7 +821,7 @@ export class UserGroupsPage extends Component {
         }
     }
 
-    handleJoyride() {
+    private handleJoyride() {
         if (this.state.drawerOpen && isWidthDown('sm', this.props.width)) {
             this.toggleDrawer();
         }
@@ -666,154 +835,19 @@ export class UserGroupsPage extends Component {
 
     render() {
         const { colors } = this.props.theme.eventkit;
+        const { classes } = this.props;
         const { steps, isRunning } = this.state;
         const smallViewport = isWidthDown('sm', this.props.width);
-        const xsmallViewport = isWidthDown('xs', this.props.width);
-        const bodyWidth = !smallViewport ? 'calc(100% - 250px)' : '100%';
-        const bodyHeight = 'calc(100vh - 130px)';
-        const styles = {
-            header: {
-                backgroundColor: colors.background,
-                color: colors.white,
-                fontSize: '14px',
-                padding: '0px 24px',
-                flexWrap: 'wrap-reverse',
-            },
-            headerTitle: {
-                fontSize: '18px',
-                lineHeight: '35px',
-                height: '35px',
-                overflow: 'visible',
-            },
-            button: {
-                margin: '0px 0px 0px 10px',
-                minWidth: '50px',
-                height: '35px',
-                borderRadius: '0px',
-                width: '150px',
-            },
-            label: {
-                fontSize: '12px',
-                paddingLeft: '0px',
-                paddingRight: '0px',
-                lineHeight: '35px',
-            },
-            drawerButton: {
-                fontSize: '12px',
-                color: colors.primary,
-                padding: '0px 10px',
-                margin: '0px -10px 0px 5px',
-            },
-            newGroupIcon: {
-                color: colors.white,
-                height: '35px',
-                width: '18px',
-                verticalAlign: 'bottom',
-                marginRight: '5px',
-            },
-            body: {
-                height: bodyHeight,
-                width: bodyWidth,
-            },
-            groups: {
-                display: 'flex',
-                flexDirection: 'column',
-                height: '100%',
-                justifyContent: 'space-between',
-            },
-            fixedHeader: {
-                paddingTop: 15,
-                backgroundColor: colors.white,
-                maxWidth: '1000px',
-                margin: 'auto',
-                position: 'relative',
-                zIndex: 4,
-                boxShadow: '0px 0px 2px 2px rgba(0, 0, 0, 0.1)',
-            },
-            loadingContainer: {
-                position: 'absolute',
-                top: 0,
-                left: 0,
-                width: '100%',
-                height: '100%',
-                zIndex: 1400,
-            },
-            memberTitle: {
-                display: 'flex',
-                flexWrap: 'wrap',
-                margin: '0px 24px 10px',
-                lineHeight: '30px',
-            },
-            memberText: {
-                fontWeight: 700,
-                fontSize: '17px',
-                flex: '0 0 auto',
-                marginRight: '10px',
-                height: '24px',
-                lineHeight: '24px',
-            },
-            container: {
-                height: '36px',
-                width: 'calc(100% - 48px)',
-                backgroundColor: colors.secondary,
-                lineHeight: '36px',
-                margin: '0px 24px 10px',
-            },
-            hint: {
-                color: colors.text_primary,
-                height: '36px',
-                lineHeight: 'inherit',
-                bottom: '0px',
-                paddingLeft: '10px',
-            },
-            ownUser: {
-                position: 'sticky',
-                top: 0,
-                left: 0,
-                zIndex: 3,
-                backgroundColor: colors.white,
-                boxShadow: '0px 0px 2px 2px rgba(0, 0, 0, 0.1)',
-            },
-            errorIcon: {
-                marginRight: '10px',
-                fill: colors.warning,
-                verticalAlign: 'bottom',
-            },
-            tourButton: {
-                color: colors.primary,
-                cursor: 'pointer',
-                display: 'inline-block',
-            },
-            tourIcon: {
-                color: colors.primary,
-                cursor: 'pointer',
-                height: '35px',
-                width: '18px',
-                verticalAlign: 'middle',
-            },
-            input: {
-                color: colors.black,
-                height: '36px',
-                paddingLeft: '10px',
-                fontSize: '16px',
-            },
-            createButton: {
-                height: '35px',
-                lineHeight: '35px',
-                marginLeft: '10px',
-                fontSize: '12px',
-            },
-        };
 
         const tourButton = (
             <ButtonBase
                 onClick={this.handleJoyride}
-                style={styles.tourButton}
+                className={classes.tourButton}
             >
                 <Help
-                    style={styles.tourIcon}
+                    className={classes.tourIcon}
                 />
-                {smallViewport ? '' : <span style={{ marginLeft: '5px' }}>Page Tour</span>}
+                <span className={classes.tourText}>Page Tour</span>
             </ButtonBase>
         );
 
@@ -885,8 +919,12 @@ export class UserGroupsPage extends Component {
             users.sort((a, b) => {
                 const aIsAdmin = queryGroup.administrators.includes(a.user.username);
                 const bIsAdmin = queryGroup.administrators.includes(b.user.username);
-                if (aIsAdmin && !bIsAdmin) return -1;
-                if (bIsAdmin && !aIsAdmin) return 1;
+                if (aIsAdmin && !bIsAdmin) {
+                    return -1;
+                }
+                if (bIsAdmin && !aIsAdmin) {
+                    return 1;
+                }
                 return 0;
             });
         }
@@ -909,11 +947,11 @@ export class UserGroupsPage extends Component {
                     showSkipButton
                     showStepsProgress
                     locale={{
-                        back: (<span>Back</span>),
-                        close: (<span>Close</span>),
-                        last: (<span>Done</span>),
-                        next: (<span>Next</span>),
-                        skip: (<span>Skip</span>),
+                        back: (<span>Back</span>) as any,
+                        close: (<span>Close</span>) as any,
+                        last: (<span>Done</span>) as any,
+                        next: (<span>Next</span>) as any,
+                        skip: (<span>Skip</span>) as any,
                     }}
                     run={isRunning}
                 />
@@ -923,53 +961,41 @@ export class UserGroupsPage extends Component {
                         className="qa-UserGroupsPage-AppBar"
                     >
                         {tourButton}
-                        {!xsmallViewport ?
-                            <Button
-                                variant="contained"
-                                color="primary"
-                                style={styles.createButton}
-                                onClick={this.handleCreateOpen}
-                                className="qa-UserGroupsPage-Button-create"
-                            >
-                                <AddCircle style={styles.newGroupIcon} />
-                                New Group
-                            </Button>
-                            :
-                            null
-                        }
+                        <Button
+                            variant="contained"
+                            color="primary"
+                            onClick={this.handleCreateOpen}
+                            className={`qa-UserGroupsPage-Button-create ${classes.createButton}`}
+                        >
+                            <AddCircle className={classes.newGroupIcon} />
+                            New Group
+                        </Button>
 
-                        {smallViewport ?
-                            <ButtonBase
-                                onClick={this.toggleDrawer}
-                                style={styles.drawerButton}
-                                className="qa-UserGroupsPage-drawerButton"
-                            >
-                                {`${this.state.drawerOpen ? 'HIDE' : 'SHOW'} PAGE MENU`}
-                            </ButtonBase>
-                            :
-                            null
-                        }
+                        <ButtonBase
+                            onClick={this.toggleDrawer}
+                            className={`qa-UserGroupsPage-drawerButton ${classes.drawerButton}`}
+                        >
+                            {`${this.state.drawerOpen ? 'HIDE' : 'SHOW'} PAGE MENU`}
+                        </ButtonBase>
                     </PageHeader>
                 }
-                <div style={styles.body}>
+                <div className={classes.body}>
                     <div
-                        style={styles.fixedHeader}
-                        className="qa-UserGroupsPage-fixedHeader"
+                        className={`qa-UserGroupsPage-fixedHeader ${classes.fixedHeader}`}
                     >
-                        <div style={styles.memberTitle} className="qa-UserGroupsPage-title">
-                            <div style={styles.memberText}>
+                        <div className={`qa-UserGroupsPage-title ${classes.memberTitle}`}>
+                            <div className={classes.memberText}>
                                 {this.getGroupTitle(queryGroup)}
                             </div>
                         </div>
                         <TextField
-                            style={styles.container}
                             type="text"
                             placeholder="Search Users"
                             value={this.state.search}
-                            InputProps={{ style: styles.input }}
+                            InputProps={{ className: classes.input }}
                             onChange={this.handleSearchChange}
                             onKeyDown={this.handleSearchKeyDown}
-                            className="qa-UserGroupsPage-search"
+                            className={`qa-UserGroupsPage-search ${classes.container}`}
                         />
                         <UserHeader
                             selected={this.state.selectedUsers.length === users.length}
@@ -994,9 +1020,9 @@ export class UserGroupsPage extends Component {
                             className="qa-UserGroupsPage-CustomScrollbar"
                             ref={(instance) => { this.scrollbar = instance; }}
                         >
-                            <div style={styles.groups}>
+                            <div className={classes.groups}>
                                 <div>
-                                    <div style={styles.ownUser}>
+                                    <div className={classes.ownUser}>
                                         {ownUser}
                                     </div>
                                     {users.map(user => (
@@ -1005,7 +1031,6 @@ export class UserGroupsPage extends Component {
                                             selected={selectedUsernames.indexOf(user.user.username) > -1}
                                             onSelect={this.handleUserSelect}
                                             user={user}
-                                            groups={ownedGroups}
                                             handleNewGroup={this.handleNewGroup}
                                             handleAddUser={this.handleAddUsers}
                                             handleMakeAdmin={this.handleMakeAdmin}
@@ -1097,7 +1122,7 @@ export class UserGroupsPage extends Component {
                 { this.props.groups.fetching || this.props.users.fetching
                 || this.props.groups.creating || this.props.groups.deleting
                 || this.props.groups.updating ?
-                    <div style={styles.loadingContainer}>
+                    <div className={classes.loadingContainer}>
                         <PageLoading background="transparent" partial />
                     </div>
                     :
@@ -1112,8 +1137,7 @@ export class UserGroupsPage extends Component {
                     {this.state.errors.map(error => (
                         <div className="qa-UserGroupsPage-error" key={error.detail}>
                             <Warning
-                                className="qa-UserGroupsPage-errorIcon"
-                                style={styles.errorIcon}
+                                className={`qa-UserGroupsPage-errorIcon ${classes.errorIcon}`}
                             />
                             {error.detail}
                         </div>
@@ -1137,76 +1161,58 @@ export class UserGroupsPage extends Component {
             </div>
         );
     }
+
+    private bindMethods() {
+        this.getQueryGroup = this.getQueryGroup.bind(this);
+        this.getGroupTitle = this.getGroupTitle.bind(this);
+        this.makeUserRequest = this.makeUserRequest.bind(this);
+        this.toggleDrawer = this.toggleDrawer.bind(this);
+        this.handleSelectAll = this.handleSelectAll.bind(this);
+        this.handleSearchKeyDown = this.handleSearchKeyDown.bind(this);
+        this.handleSearchChange = this.handleSearchChange.bind(this);
+        this.handleOrderingChange = this.handleOrderingChange.bind(this);
+        this.handleLoadLess = this.handleLoadLess.bind(this);
+        this.handleLoadMore = this.handleLoadMore.bind(this);
+        this.handleCreateOpen = this.handleCreateOpen.bind(this);
+        this.handleCreateClose = this.handleCreateClose.bind(this);
+        this.handleCreateInput = this.handleCreateInput.bind(this);
+        this.handleCreateSave = this.handleCreateSave.bind(this);
+        this.handleRenameOpen = this.handleRenameOpen.bind(this);
+        this.handleRenameClose = this.handleRenameClose.bind(this);
+        this.handleRenameInput = this.handleRenameInput.bind(this);
+        this.handleRenameSave = this.handleRenameSave.bind(this);
+        this.handleNewGroup = this.handleNewGroup.bind(this);
+        this.handleAddUsers = this.handleAddUsers.bind(this);
+        this.handleLeaveGroupClick = this.handleLeaveGroupClick.bind(this);
+        this.handleDeleteGroupClick = this.handleDeleteGroupClick.bind(this);
+        this.handleLeaveOpen = this.handleLeaveOpen.bind(this);
+        this.handleLeaveClose = this.handleLeaveClose.bind(this);
+        this.handleLeaveClick = this.handleLeaveClick.bind(this);
+        this.handleDeleteOpen = this.handleDeleteOpen.bind(this);
+        this.handleDeleteClose = this.handleDeleteClose.bind(this);
+        this.handleDeleteClick = this.handleDeleteClick.bind(this);
+        this.handleDrawerSelectionChange = this.handleDrawerSelectionChange.bind(this);
+        this.handleMakeAdmin = this.handleMakeAdmin.bind(this);
+        this.handleDemoteAdmin = this.handleDemoteAdmin.bind(this);
+        this.handleRemoveUser = this.handleRemoveUser.bind(this);
+        this.handleBatchRemoveUser = this.handleBatchRemoveUser.bind(this);
+        this.handleBatchAdminRights = this.handleBatchAdminRights.bind(this);
+        this.handleAddUsersSave = this.handleAddUsersSave.bind(this);
+        this.handleUserSelect = this.handleUserSelect.bind(this);
+        this.showAddUsersDialog = this.showAddUsersDialog.bind(this);
+        this.hideAddUsersDialog = this.hideAddUsersDialog.bind(this);
+        this.showErrorDialog = this.showErrorDialog.bind(this);
+        this.hideErrorDialog = this.hideErrorDialog.bind(this);
+        this.callback = this.callback.bind(this);
+        this.showAdministratorInfoDialog = this.showAdministratorInfoDialog.bind(this);
+        this.hideAdministratorInfoDialog = this.hideAdministratorInfoDialog.bind(this);
+        this.showMemberInfoDialog = this.showMemberInfoDialog.bind(this);
+        this.hideMemberInfoDialog = this.hideMemberInfoDialog.bind(this);
+        this.showOtherInfoDialog = this.showOtherInfoDialog.bind(this);
+        this.hideOtherInfoDialog = this.hideOtherInfoDialog.bind(this);
+        this.handleJoyride = this.handleJoyride.bind(this);
+    }
 }
-
-UserGroupsPage.contextTypes = {
-    config: PropTypes.shape({
-        USER_GROUPS_PAGE_SIZE: PropTypes.string,
-    }),
-};
-
-UserGroupsPage.propTypes = {
-    user: PropTypes.shape({
-        username: PropTypes.string,
-        first_name: PropTypes.string,
-        last_name: PropTypes.string,
-        email: PropTypes.string,
-        last_login: PropTypes.string,
-        date_joined: PropTypes.string,
-    }).isRequired,
-    groups: PropTypes.shape({
-        groups: PropTypes.arrayOf(PropTypes.shape({
-            id: PropTypes.number,
-            name: PropTypes.string,
-            members: PropTypes.arrayOf(PropTypes.string),
-            administrators: PropTypes.arrayOf(PropTypes.string),
-        })),
-        cancelSource: PropTypes.object,
-        fetching: PropTypes.bool,
-        fetched: PropTypes.bool,
-        creating: PropTypes.bool,
-        created: PropTypes.bool,
-        deleting: PropTypes.bool,
-        deleted: PropTypes.bool,
-        updating: PropTypes.bool,
-        updated: PropTypes.bool,
-        error: PropTypes.shape({
-            errors: PropTypes.arrayOf(PropTypes.shape({
-                status: PropTypes.number,
-                detail: PropTypes.string,
-                title: PropTypes.string,
-            })),
-        }),
-    }).isRequired,
-    users: PropTypes.shape({
-        users: PropTypes.arrayOf(PropTypes.shape({
-            user: PropTypes.shape({
-                username: PropTypes.string,
-                first_name: PropTypes.string,
-                last_name: PropTypes.string,
-                email: PropTypes.string,
-                last_login: PropTypes.string,
-                date_joined: PropTypes.string,
-            }),
-            groups: PropTypes.arrayOf(PropTypes.number),
-            accepted_licenses: PropTypes.object,
-        })),
-        fetching: PropTypes.bool,
-        fetched: PropTypes.bool,
-        error: PropTypes.string,
-        total: PropTypes.number,
-        nextPage: PropTypes.bool,
-        range: PropTypes.string,
-    }).isRequired,
-    getGroups: PropTypes.func.isRequired,
-    deleteGroup: PropTypes.func.isRequired,
-    createGroup: PropTypes.func.isRequired,
-    updateGroup: PropTypes.func.isRequired,
-    getUsers: PropTypes.func.isRequired,
-    location: PropTypes.object.isRequired,
-    theme: PropTypes.object.isRequired,
-    width: PropTypes.string.isRequired,
-};
 
 function mapStateToProps(state) {
     return {
@@ -1240,8 +1246,4 @@ function mapDispatchToProps(dispatch) {
     };
 }
 
-export default
-@withWidth()
-@withTheme()
-@connect(mapStateToProps, mapDispatchToProps)
-class Default extends UserGroupsPage {}
+export default withWidth()(withTheme()(withStyles(jss)(connect(mapStateToProps, mapDispatchToProps)(UserGroupsPage))));

@@ -1,10 +1,18 @@
-import PropTypes from 'prop-types';
-import React, { Component } from 'react';
+import * as React from 'react';
 import Button from '@material-ui/core/Button';
 import BaseDialog from '../../Dialog/BaseDialog';
 import CustomTextField from '../../CustomTextField';
 
-export class CreateGroupDialog extends Component {
+export interface Props {
+    className?: string;
+    show: boolean;
+    onInputChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+    onClose: () => void;
+    onSave: () => void;
+    value: string;
+}
+
+export class CreateGroupDialog extends React.Component<Props, {}> {
     render() {
         const createActions = [
             <Button
@@ -50,13 +58,5 @@ export class CreateGroupDialog extends Component {
         );
     }
 }
-
-CreateGroupDialog.propTypes = {
-    show: PropTypes.bool.isRequired,
-    onInputChange: PropTypes.func.isRequired,
-    onClose: PropTypes.func.isRequired,
-    onSave: PropTypes.func.isRequired,
-    value: PropTypes.string.isRequired,
-};
 
 export default CreateGroupDialog;

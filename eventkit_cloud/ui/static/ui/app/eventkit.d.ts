@@ -128,17 +128,20 @@ declare namespace Eventkit {
         export_provider_type: number;
     }
 
+    interface UserData {
+        username: string;
+        first_name: string;
+        last_name: string;
+        email: string;
+        last_login: string;
+        date_joined: string;
+        identification: string;
+        commonname: string;
+        fake?: boolean; // Used for adding fake users during page tours.
+    }
+
     interface User {
-        user: {
-            username: string;
-            first_name: string;
-            last_name: string;
-            email: string;
-            last_login: string;
-            date_joined: string;
-            identification: string;
-            commonname: string;
-        };
+        user: UserData;
         accepted_licenses: { [s: string]: boolean};
         groups: number[];
     }
@@ -284,6 +287,8 @@ declare namespace Eventkit {
             new: number;
             total: number;
             ungrouped: number;
+            range: string;
+            nextPage: boolean;
             users: Eventkit.User[];
         }
 

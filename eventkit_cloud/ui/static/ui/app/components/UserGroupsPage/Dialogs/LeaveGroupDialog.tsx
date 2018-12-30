@@ -1,10 +1,18 @@
-import PropTypes from 'prop-types';
-import React, { Component } from 'react';
-import { withTheme } from '@material-ui/core/styles';
+import * as React from 'react';
+import { withTheme, Theme } from '@material-ui/core/styles';
 import Button from '@material-ui/core/Button';
 import BaseDialog from '../../Dialog/BaseDialog';
 
-export class LeaveGroupDialog extends Component {
+export interface Props {
+    className?: string;
+    show: boolean;
+    onClose: () => void;
+    onLeave: () => void;
+    groupName: string;
+    theme: Eventkit.Theme & Theme;
+}
+
+export class LeaveGroupDialog extends React.Component<Props, {}> {
     render() {
         const { colors } = this.props.theme.eventkit;
 
@@ -42,13 +50,5 @@ export class LeaveGroupDialog extends Component {
         );
     }
 }
-
-LeaveGroupDialog.propTypes = {
-    show: PropTypes.bool.isRequired,
-    onClose: PropTypes.func.isRequired,
-    onLeave: PropTypes.func.isRequired,
-    groupName: PropTypes.string.isRequired,
-    theme: PropTypes.object.isRequired,
-};
 
 export default withTheme()(LeaveGroupDialog);

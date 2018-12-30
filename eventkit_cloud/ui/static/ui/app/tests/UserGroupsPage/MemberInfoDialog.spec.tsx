@@ -1,4 +1,5 @@
-import React from 'react';
+import * as React from 'react';
+import * as sinon from 'sinon';
 import { createShallow } from '@material-ui/core/test-utils';
 import BaseDialog from '../../components/Dialog/BaseDialog';
 import { MemberInfoDialog } from '../../components/UserGroupsPage/Dialogs/MemberInfoDialog';
@@ -12,8 +13,8 @@ describe('MemberInfoDialog component', () => {
 
     const props = {
         show: true,
-        onClose: () => {},
-        ...global.eventkit_test_props,
+        onClose: sinon.spy(),
+        ...(global as any).eventkit_test_props,
     };
 
     it('should render a BaseDialog with a body', () => {
