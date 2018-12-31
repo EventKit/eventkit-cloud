@@ -1,10 +1,10 @@
-import PropTypes from 'prop-types';
-import React from 'react';
-import { withTheme } from '@material-ui/core/styles';
+import * as PropTypes from 'prop-types';
+import * as React from 'react';
+import { withTheme, Theme, withStyles, createStyles } from '@material-ui/core/styles';
 import { connect } from 'react-redux';
 import axios from 'axios';
 import cookie from 'react-cookie';
-import Joyride from 'react-joyride';
+import Joyride, { Step } from 'react-joyride';
 import List from '@material-ui/core/List';
 import Paper from '@material-ui/core/Paper';
 import Popover from '@material-ui/core/Popover';
@@ -14,7 +14,7 @@ import ActionCheckCircle from '@material-ui/icons/CheckCircle';
 import Info from '@material-ui/icons/Info';
 import NavigationRefresh from '@material-ui/icons/Refresh';
 import CustomScrollbar from '../common/CustomScrollbar';
-import DataProvider from './DataProvider';
+import DataProvider, { ProviderData } from './DataProvider';
 import MapCard from '../common/MapCard';
 import { updateExportInfo } from '../../actions/datacartActions';
 import { stepperNextDisabled, stepperNextEnabled } from '../../actions/uiActions';
@@ -24,9 +24,117 @@ import CustomTableRow from '../common/CustomTableRow';
 import { joyride } from '../../joyride.config';
 import { getSqKmString } from '../../utils/generic';
 
+const jss = (theme: Eventkit.Theme & Theme) => createStyles({
+    underlineStyle: {
+        width: 'calc(100% - 10px)',
+        left: '5px',
+    },
+    window: {
+        height: 'calc(100vh - 180px)',
+    },
+    root: {
+        width: '100%',
+        height: 'calc(100vh - 180px)',
+        backgroundImage: `url(${theme.eventkit.images.topo_light})`,
+        backgroundRepeat: 'repeat repeat',
+        justifyContent: 'space-around',
+        display: 'flex',
+        flexWrap: 'wrap',
+    },
+    form: {
+        margin: '0 auto',
+        width: '90%',
+        height: 'calc(100vh - 180px)',
+    },
+    paper: {
+        margin: '0px auto',
+        padding: '20px',
+        marginTop: '30px',
+        marginBottom: '30px',
+        width: '100%',
+        maxWidth: '700px',
+    },
+    heading: {
+        fontSize: '18px',
+        fontWeight: 'bold',
+        paddingBottom: '10px',
+        display: 'flex',
+        flexWrap: 'wrap',
+        lineHeight: '25px',
+    },
+    textField: {
+        marginTop: '15px',
+        backgroundColor: theme.eventkit.colors.secondary,
+    },
+    input: {
+        fontSize: '16px',
+        paddingLeft: '5px',
+        paddingRight: '50px',
+    },
+    listHeading: {
+        fontSize: '16px',
+        fontWeight: 300,
+        display: 'flex',
+        padding: '0px 10px',
+    },
+    refreshIcon: {
+        height: '22px',
+        marginLeft: '5px',
+        cursor: 'pointer',
+        verticalAlign: 'bottom',
+    },
+    sectionBottom: {
+        paddingBottom: '30px',
+    },
+    projections: {
+        padding: '0px 10px',
+        display: 'flex',
+        lineHeight: '24px',
+    },
+    infoIcon: {
+        height: '24px',
+        width: '24px',
+        cursor: 'pointer',
+    },
+    editAoi: {
+        fontSize: '15px',
+        fontWeight: 'normal',
+        verticalAlign: 'top',
+        cursor: 'pointer',
+        color: theme.eventkit.colors.primary,
+    },
+});
 
-export class ExportInfo extends React.Component {
-    constructor(props) {
+export interface Props {
+    geojson: GeoJSON.FeatureCollection;
+    exportInfo: Eventkit.Store.ExportInfo;
+    providers: Eventkit.Provider[];
+    nextEnabled: boolean;
+    handlePrev: () => void;
+    updateExportInfo: (args: any) => void;
+    setNextDisabled: () => void;
+    setNextEnabled: () => void;
+    walkthroughClicked: boolean;
+    onWalkthroughReset: () => void;
+    theme: Eventkit.Theme & Theme;
+    classes: { [className: string]: string };
+}
+
+export interface State {
+    projectionsDialogOpen: boolean;
+    steps: Step[];
+    isRunning: boolean;
+    providers: ProviderData[];
+    refreshPopover: null | HTMLElement;
+}
+
+export class ExportInfo extends React.Component<Props, State> {
+    static contextTypes = {
+        config: PropTypes.object,
+    };
+
+    private joyride;
+    constructor(props: Props) {
         super(props);
         this.state = {
             projectionsDialogOpen: false,
@@ -75,11 +183,11 @@ export class ExportInfo extends React.Component {
             this.checkProviders(this.state.providers);
         }
 
-        const steps = joyride.ExportInfo;
+        const steps = joyride.ExportInfo as any[];
         this.joyrideAddSteps(steps);
     }
 
-    componentDidUpdate(prevProps) {
+    componentDidUpdate(prevProps: Props) {
         // if currently in walkthrough, we want to be able to show the green forward button, so ignore these statements
         if (!this.props.walkthroughClicked) {
         // if required fields are fulfilled enable next
@@ -104,7 +212,7 @@ export class ExportInfo extends React.Component {
         }
     }
 
-    onNameChange(e) {
+    private onNameChange(e: React.ChangeEvent<HTMLInputElement>) {
         // It feels a little weird to write every single change to redux
         // but the TextField (v0.18.7) does not size vertically to the defaultValue prop, only the value prop.
         // If we use value we cannot debounce the input because the user should see it as they type.
@@ -114,7 +222,7 @@ export class ExportInfo extends React.Component {
         });
     }
 
-    onDescriptionChange(e) {
+    private onDescriptionChange(e: React.ChangeEvent<HTMLInputElement>) {
         // It feels a little weird to write every single change to redux
         // but the TextField (v0.18.7) does not size vertically to the defaultValue prop, only the value prop.
         // If we use value we cannot debounce the input because the user should see it as they type.
@@ -124,7 +232,7 @@ export class ExportInfo extends React.Component {
         });
     }
 
-    onProjectChange(e) {
+    private onProjectChange(e: React.ChangeEvent<HTMLInputElement>) {
         // It feels a little weird to write every single change to redux
         // but the TextField (v0.18.7) does not size vertically to the defaultValue prop, only the value prop.
         // If we use value we cannot debounce the input because the user should see it as they type.
@@ -134,7 +242,7 @@ export class ExportInfo extends React.Component {
         });
     }
 
-    onChangeCheck(e) {
+    private onChangeCheck(e: React.ChangeEvent<HTMLInputElement>) {
         // current array of providers
         const providers = [...this.props.exportInfo.providers];
         const propsProviders = this.props.providers;
@@ -142,17 +250,17 @@ export class ExportInfo extends React.Component {
         // check if the check box is checked or unchecked
         if (e.target.checked) {
             // add the provider to the array
-            for (let i = 0; i < propsProviders.length; i += 1) {
-                if (propsProviders[i].name === e.target.name) {
-                    providers.push(propsProviders[i]);
+            for (const provider of propsProviders) {
+                if (provider.name === e.target.name) {
+                    providers.push(provider);
                     break;
                 }
             }
         } else {
             // or remove the value from the unchecked checkbox from the array
             index = providers.map(x => x.name).indexOf(e.target.name);
-            for (let i = 0; i < propsProviders.length; i += 1) {
-                if (propsProviders[i].name === e.target.name) {
+            for (const provider of propsProviders) {
+                if (provider.name === e.target.name) {
                     providers.splice(index, 1);
                 }
             }
@@ -165,10 +273,10 @@ export class ExportInfo extends React.Component {
         });
     }
 
-    onRefresh() {
+    private onRefresh() {
         // make a copy of providers and set availability to empty json
         const providers = this.state.providers.map(provider => (
-            { ...provider, availability: {} }
+            { ...provider, availability: { slug: undefined, type: undefined, status: undefined, message: undefined } }
         ));
         // update state with the new copy of providers
         this.setState({ providers });
@@ -179,9 +287,9 @@ export class ExportInfo extends React.Component {
         });
     }
 
-    getAvailability(provider, data) {
+    private getAvailability(provider: Eventkit.Provider, data: any) {
         // make a copy of the provider to edit
-        const newProvider = { ...provider };
+        const newProvider = { ...provider } as ProviderData;
 
         const csrfmiddlewaretoken = cookie.load('csrftoken');
         return axios({
@@ -195,6 +303,7 @@ export class ExportInfo extends React.Component {
             return newProvider;
         }).catch(() => {
             newProvider.availability = {
+                slug: undefined,
                 status: 'WARN',
                 type: 'CHECK_FAILURE',
                 message: "An error occurred while checking this provider's availability.",
@@ -204,7 +313,7 @@ export class ExportInfo extends React.Component {
         });
     }
 
-    async checkAvailability(provider) {
+    async checkAvailability(provider: ProviderData) {
         const data = { geojson: this.props.geojson };
         const newProvider = await this.getAvailability(provider, data);
         this.setState((prevState) => {
@@ -215,30 +324,32 @@ export class ExportInfo extends React.Component {
         });
     }
 
-    checkProviders(providers) {
+    private checkProviders(providers: ProviderData[]) {
         providers.forEach((provider) => {
-            if (provider.display === false) return;
+            if (provider.display === false) {
+                return;
+            }
             this.checkAvailability(provider);
         });
     }
 
-    handleProjectionsClose() {
+    private handleProjectionsClose() {
         this.setState({ projectionsDialogOpen: false });
     }
 
-    handleProjectionsOpen() {
+    private handleProjectionsOpen() {
         this.setState({ projectionsDialogOpen: true });
     }
 
-    handlePopoverOpen(e) {
+    private handlePopoverOpen(e: React.MouseEvent<any>) {
         this.setState({ refreshPopover: e.currentTarget });
     }
 
-    handlePopoverClose() {
+    private handlePopoverClose() {
         this.setState({ refreshPopover: null });
     }
 
-    hasRequiredFields(exportInfo) {
+    private hasRequiredFields(exportInfo: Eventkit.Store.ExportInfo) {
         // if the required fields are populated return true, else return false
         return exportInfo.exportName
             && exportInfo.datapackDescription
@@ -246,13 +357,15 @@ export class ExportInfo extends React.Component {
             && exportInfo.providers.length > 0;
     }
 
-    hasDisallowedSelection(exportInfo) {
+    private hasDisallowedSelection(exportInfo: Eventkit.Store.ExportInfo) {
         // if any unacceptable providers are selected return true, else return false
         return exportInfo.providers.some((provider) => {
             // short-circuiting means that this shouldn't be called until provider.availability
             // is populated, but if it's not, return false
             const providerState = this.state.providers.find(p => p.slug === provider.slug);
-            if (!providerState) return false;
+            if (!providerState) {
+                return false;
+            }
             const { availability } = providerState;
             if (availability && availability.status) {
                 return availability.status.toUpperCase() === 'FATAL';
@@ -261,9 +374,11 @@ export class ExportInfo extends React.Component {
         });
     }
 
-    joyrideAddSteps(steps) {
+    private joyrideAddSteps(steps: Step[]) {
         const newSteps = steps;
-        if (!newSteps.length) return;
+        if (!newSteps.length) {
+            return;
+        }
 
         this.setState((currentState) => {
             const nextState = { ...currentState };
@@ -272,7 +387,7 @@ export class ExportInfo extends React.Component {
         });
     }
 
-    callback(data) {
+    private callback(data: any) {
         const { action, step, type } = data;
         this.props.setNextDisabled();
         if (action === 'close' || action === 'skip' || type === 'finished') {
@@ -291,96 +406,14 @@ export class ExportInfo extends React.Component {
         }
     }
 
-
     render() {
-        const { theme } = this.props;
+        const { classes } = this.props;
         const { steps, isRunning } = this.state;
-
-        const style = {
-            underlineStyle: {
-                width: 'calc(100% - 10px)',
-                left: '5px',
-            },
-            window: {
-                height: 'calc(100vh - 180px)',
-            },
-            root: {
-                width: '100%',
-                height: 'calc(100vh - 180px)',
-                backgroundImage: `url(${theme.eventkit.images.topo_light})`,
-                backgroundRepeat: 'repeat repeat',
-                justifyContent: 'space-around',
-                display: 'flex',
-                flexWrap: 'wrap',
-            },
-            form: {
-                margin: '0 auto',
-                width: '90%',
-                height: 'calc(100vh - 180px)',
-            },
-            paper: {
-                margin: '0px auto',
-                padding: '20px',
-                marginTop: '30px',
-                marginBottom: '30px',
-                width: '100%',
-                maxWidth: '700px',
-            },
-            heading: {
-                fontSize: '18px',
-                fontWeight: 'bold',
-                paddingBottom: '10px',
-                display: 'flex',
-                flexWrap: 'wrap',
-                lineHeight: '25px',
-            },
-            textField: {
-                marginTop: '15px',
-                backgroundColor: theme.eventkit.colors.secondary,
-            },
-            input: {
-                fontSize: '16px',
-                paddingLeft: '5px',
-                paddingRight: '50px',
-            },
-            listHeading: {
-                fontSize: '16px',
-                fontWeight: 300,
-                display: 'flex',
-                padding: '0px 10px',
-            },
-            refreshIcon: {
-                height: '22px',
-                marginLeft: '5px',
-                cursor: 'pointer',
-                verticalAlign: 'bottom',
-            },
-            sectionBottom: {
-                paddingBottom: '30px',
-            },
-            projections: {
-                padding: '0px 10px',
-                display: 'flex',
-                lineHeight: '24px',
-            },
-            infoIcon: {
-                height: '24px',
-                width: '24px',
-                cursor: 'pointer',
-            },
-            editAoi: {
-                fontSize: '15px',
-                fontWeight: 'normal',
-                verticalAlign: 'top',
-                cursor: 'pointer',
-                color: theme.eventkit.colors.primary,
-            },
-        };
 
         const providers = this.state.providers.filter(provider => (provider.display !== false));
 
         return (
-            <div id="root" className="qa-ExportInfo-root" style={style.root}>
+            <div id="root" className={`qa-ExportInfo-root ${classes.root}`} >
                 <Joyride
                     callback={this.callback}
                     ref={this.joyride}
@@ -390,73 +423,68 @@ export class ExportInfo extends React.Component {
                     showSkipButton
                     showStepsProgress
                     locale={{
-                        back: (<span>Back</span>),
-                        close: (<span>Close</span>),
-                        last: (<span>Done</span>),
-                        next: (<span>Next</span>),
-                        skip: (<span>Skip</span>),
+                        back: (<span>Back</span>) as any,
+                        close: (<span>Close</span>) as any,
+                        last: (<span>Done</span>) as any,
+                        next: (<span>Next</span>) as any,
+                        skip: (<span>Skip</span>) as any,
                     }}
                     run={isRunning}
                 />
                 <CustomScrollbar>
-                    <form id="form" onSubmit={this.onSubmit} style={style.form} className="qa-ExportInfo-form">
+                    <form id="form" className={`qa-ExportInfo-form ${classes.form}`}>
                         <Paper
                             id="paper"
-                            className="qa-ExportInfo-Paper"
-                            style={style.paper}
+                            className={`qa-ExportInfo-Paper ${classes.paper}`}
                             elevation={2}
                         >
                             <div className="qa-ExportInfo-general-info" id="GeneralInfo">
                                 <div
                                     id="mainHeading"
-                                    className="qa-ExportInfo-mainHeading"
-                                    style={style.heading}
+                                    className={`qa-ExportInfo-mainHeading ${classes.heading}`}
                                 >
                                     Enter General Information
                                 </div>
                                 <div style={{ marginBottom: '30px' }}>
                                     <CustomTextField
-                                        className="qa-ExportInfo-input-name"
+                                        className={`qa-ExportInfo-input-name ${classes.textField}`}
                                         id="Name"
                                         name="exportName"
                                         onChange={this.onNameChange}
                                         defaultValue={this.props.exportInfo.exportName}
                                         placeholder="Datapack Name"
-                                        style={style.textField}
-                                        InputProps={{ style: style.input }}
+                                        InputProps={{ className: classes.input }}
                                         fullWidth
                                         maxLength={100}
                                     />
                                     <CustomTextField
-                                        className="qa-ExportInfo-input-description"
+                                        className={`qa-ExportInfo-input-description ${classes.textField}`}
                                         id="Description"
                                         name="datapackDescription"
                                         onChange={this.onDescriptionChange}
                                         defaultValue={this.props.exportInfo.datapackDescription}
                                         placeholder="Description"
                                         multiline
-                                        style={style.textField}
                                         inputProps={{ style: { fontSize: '16px', lineHeight: '20px' } }}
                                         fullWidth
                                         maxLength={250}
                                         // eslint-disable-next-line react/jsx-no-duplicate-props
-                                        InputProps={{ style: { ...style.input, lineHeight: '21px' } }}
+                                        InputProps={{ className: classes.input, style: { lineHeight: '21px' } }}
                                     />
                                     <CustomTextField
-                                        className="qa-ExportInfo-input-project"
+                                        className={`qa-ExportInfo-input-project ${classes.textField}`}
                                         id="Project"
                                         name="projectName"
                                         onChange={this.onProjectChange}
                                         defaultValue={this.props.exportInfo.projectName}
                                         placeholder="Project Name"
-                                        style={style.textField}
-                                        InputProps={{ style: style.input }}
+                                        InputProps={{ className: classes.input }}
                                         fullWidth
                                         maxLength={100}
                                     />
                                 </div>
                             </div>
-                            <div style={style.heading}>
+                            <div className={classes.heading}>
                                 <div id="layersHeader" className="qa-ExportInfo-layersHeader" style={{ marginRight: '5px' }}>
                                     Select Data Sources
                                 </div>
@@ -464,8 +492,8 @@ export class ExportInfo extends React.Component {
                                     (You must choose <strong>at least one</strong>)
                                 </div>
                             </div>
-                            <div style={style.sectionBottom}>
-                                <div className="qa-ExportInfo-ListHeader" style={style.listHeading}>
+                            <div className={classes.sectionBottom}>
+                                <div className={`qa-ExportInfo-ListHeader ${classes.listHeading}`}>
                                     <div
                                         className="qa-ExportInfo-ListHeaderItem"
                                         style={{ flex: '1 1 auto' }}
@@ -478,7 +506,7 @@ export class ExportInfo extends React.Component {
                                     >
                                         <span>AVAILABILITY</span>
                                         <NavigationRefresh
-                                            style={style.refreshIcon}
+                                            className={classes.refreshIcon}
                                             onMouseEnter={this.handlePopoverOpen}
                                             onMouseLeave={this.handlePopoverClose}
                                             onClick={this.onRefresh}
@@ -530,13 +558,12 @@ export class ExportInfo extends React.Component {
 
                             <div
                                 id="projectionHeader"
-                                className="qa-ExportInfo-projectionHeader"
-                                style={style.heading}
+                                className={`qa-ExportInfo-projectionHeader ${classes.heading}`}
                             >
                                 Select Projection
                             </div>
-                            <div style={style.sectionBottom}>
-                                <div id="Projections" className="qa-ExportInfo-projections" style={style.projections}>
+                            <div className={classes.sectionBottom}>
+                                <div id="Projections" className={`qa-ExportInfo-projections ${classes.projections}`}>
                                     <Checkbox
                                         className="qa-ExportInfo-CheckBox-projection"
                                         name="EPSG:4326"
@@ -549,9 +576,8 @@ export class ExportInfo extends React.Component {
                                         EPSG:4326 - World Geodetic System 1984 (WGS84)
                                     </span>
                                     <Info
-                                        className="qa-ExportInfo-Info-projection"
+                                        className={`qa-ExportInfo-Info-projection ${classes.infoIcon}`}
                                         onClick={this.handleProjectionsOpen}
-                                        style={style.infoIcon}
                                         color="primary"
                                     />
                                     <BaseDialog
@@ -571,10 +597,10 @@ export class ExportInfo extends React.Component {
                                     </BaseDialog>
                                 </div>
                             </div>
-                            <div id="aoiHeader" className="qa-ExportInfo-AoiHeader" style={style.heading}>
+                            <div id="aoiHeader" className={`qa-ExportInfo-AoiHeader ${classes.heading}`}>
                                 Area of Interest (AOI)
                             </div>
-                            <div style={style.sectionBottom}>
+                            <div className={classes.sectionBottom}>
                                 <CustomTableRow
                                     className="qa-ExportInfo-area"
                                     title="Area"
@@ -589,7 +615,7 @@ export class ExportInfo extends React.Component {
                                             tabIndex={0}
                                             onClick={this.props.handlePrev}
                                             onKeyPress={this.props.handlePrev}
-                                            style={style.editAoi}
+                                            className={classes.editAoi}
                                         >
                                             Edit
                                         </span>
@@ -627,25 +653,7 @@ function mapDispatchToProps(dispatch) {
     };
 }
 
-ExportInfo.contextTypes = {
-    config: PropTypes.object,
-};
-
-ExportInfo.propTypes = {
-    geojson: PropTypes.object.isRequired,
-    exportInfo: PropTypes.object.isRequired,
-    providers: PropTypes.arrayOf(PropTypes.object).isRequired,
-    nextEnabled: PropTypes.bool.isRequired,
-    handlePrev: PropTypes.func.isRequired,
-    updateExportInfo: PropTypes.func.isRequired,
-    setNextDisabled: PropTypes.func.isRequired,
-    setNextEnabled: PropTypes.func.isRequired,
-    walkthroughClicked: PropTypes.bool.isRequired,
-    onWalkthroughReset: PropTypes.func.isRequired,
-    theme: PropTypes.object.isRequired,
-};
-
-export default withTheme()(connect(
+export default withTheme()(withStyles(jss)(connect(
     mapStateToProps,
     mapDispatchToProps,
-)(ExportInfo));
+)(ExportInfo)));

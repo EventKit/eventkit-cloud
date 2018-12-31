@@ -1,13 +1,24 @@
-import PropTypes from 'prop-types';
-import React from 'react';
-import { withTheme } from '@material-ui/core/styles';
+import * as React from 'react';
+import { withTheme, Theme } from '@material-ui/core/styles';
 import Help from '@material-ui/icons/Help';
 import ButtonBase from '@material-ui/core/ButtonBase';
 import PageHeader from '../common/PageHeader';
 import BreadcrumbStepper from './BreadcrumbStepper';
+import { InjectedRouter, PlainRoute } from 'react-router';
 
-export class CreateExport extends React.Component {
-    constructor(props) {
+export interface Props {
+    children: any;
+    router: InjectedRouter;
+    routes: PlainRoute[];
+    theme: Eventkit.Theme & Theme;
+}
+
+export interface State {
+    walkthroughClicked: boolean;
+}
+
+export class CreateExport extends React.Component<Props, State> {
+    constructor(props: Props) {
         super(props);
         this.handleWalkthroughReset = this.handleWalkthroughReset.bind(this);
         this.handleWalkthroughClick = this.handleWalkthroughClick.bind(this);
@@ -16,11 +27,11 @@ export class CreateExport extends React.Component {
         };
     }
 
-    handleWalkthroughReset() {
+    private handleWalkthroughReset() {
         this.setState({ walkthroughClicked: false });
     }
 
-    handleWalkthroughClick() {
+    private handleWalkthroughClick() {
         this.setState({ walkthroughClicked: true });
     }
 
@@ -74,20 +85,5 @@ export class CreateExport extends React.Component {
         );
     }
 }
-
-CreateExport.defaultProps = {
-    children: null,
-};
-
-CreateExport.propTypes = {
-    children: PropTypes.oneOf([
-        PropTypes.arrayOf(PropTypes.node),
-        PropTypes.node,
-        PropTypes.string,
-    ]),
-    router: PropTypes.object.isRequired,
-    routes: PropTypes.arrayOf(PropTypes.object).isRequired,
-    theme: PropTypes.object.isRequired,
-};
 
 export default withTheme()(CreateExport);

@@ -1,5 +1,5 @@
-import React from 'react';
-import sinon from 'sinon';
+import * as React from 'react';
+import * as sinon from 'sinon';
 import { mount, shallow } from 'enzyme';
 import { browserHistory } from 'react-router';
 import Warning from '@material-ui/icons/Warning';
@@ -88,34 +88,41 @@ describe('BreadcrumbStepper component', () => {
             formats: ['gpkg'],
         },
         router: {
-            push: () => {},
-            setRouteLeaveHook: () => {},
+            push: sinon.spy(),
+            setRouteLeaveHook: sinon.spy(),
         },
         routes: [],
         formats,
         walkthroughClicked: false,
-        createExportRequest: () => {},
-        submitJob: () => {},
-        getProviders: () => {},
-        setNextDisabled: () => {},
-        setNextEnabled: () => {},
-        setExportInfoDone: () => {},
-        clearAoiInfo: () => {},
-        clearExportInfo: () => {},
-        onWalkthroughReset: () => {},
-        clearJobInfo: () => {},
-        getNotifications: () => {},
-        getNotificationsUnreadCount: () => {},
-        getFormats: () => {},
-        ...global.eventkit_test_props,
+        createExportRequest: sinon.spy(),
+        submitJob: sinon.spy(),
+        getProviders: sinon.spy(),
+        setNextDisabled: sinon.spy(),
+        setNextEnabled: sinon.spy(),
+        setExportInfoDone: sinon.spy(),
+        clearAoiInfo: sinon.spy(),
+        clearExportInfo: sinon.spy(),
+        onWalkthroughReset: sinon.spy(),
+        clearJobInfo: sinon.spy(),
+        getNotifications: sinon.spy(),
+        getNotificationsUnreadCount: sinon.spy(),
+        getFormats: sinon.spy(),
+        ...(global as any).eventkit_test_props,
     });
-    const getWrapper = props => (
-        shallow(<BreadcrumbStepper {...props} />)
-    );
+
+    let props;
+    let wrapper;
+    let instance;
+
+    const setup = (overrides = {}) => {
+        props = { ...getProps(), ...overrides };
+        wrapper = shallow(<BreadcrumbStepper {...props} />);
+        instance = wrapper.instance();
+    };
+
+    beforeEach(setup);
 
     it('should render step 1 with disabled next arrow by default', () => {
-        const props = getProps();
-        const wrapper = getWrapper(props);
         expect(wrapper.find(NavigationArrowBack)).toHaveLength(1);
         expect(wrapper.find(ExportAOI)).toHaveLength(1);
         expect(wrapper.childAt(0).childAt(0).childAt(0).text()).toEqual('STEP 1 OF 3:  Define Area of Interest');
@@ -125,17 +132,13 @@ describe('BreadcrumbStepper component', () => {
     });
 
     it('should render a loading icon', () => {
-        const props = getProps();
-        const wrapper = getWrapper(props);
         expect(wrapper.find(PageLoading)).toHaveLength(0);
         wrapper.setState({ loading: true });
         expect(wrapper.find(PageLoading)).toHaveLength(1);
     });
 
     it('render should call getErrorMessage twice', () => {
-        const props = getProps();
         const getMessageSpy = sinon.spy(BreadcrumbStepper.prototype, 'getErrorMessage');
-        const wrapper = getWrapper(props);
         expect(getMessageSpy.called).toBe(false);
         const nextProps = { ...getProps() };
         nextProps.jobError = {
@@ -149,24 +152,14 @@ describe('BreadcrumbStepper component', () => {
     });
 
     it('componentDidMount should set nextDisabled and get providers and formats', () => {
-        const props = getProps();
-        const mountSpy = sinon.spy(BreadcrumbStepper.prototype, 'componentDidMount');
-        props.exportInfo.exportName = '';
-        props.getProviders = sinon.spy();
-        props.getFormats = sinon.spy();
-        props.setNextDisabled = sinon.spy();
-        getWrapper(props);
-        expect(mountSpy.calledOnce).toBe(true);
+        setup({ exportInfo: { ...props.exportInfo, exportName: '' }});
         expect(props.setNextDisabled.calledOnce).toBe(true);
         expect(props.getProviders.calledOnce).toBe(true);
         expect(props.getFormats.calledOnce).toBe(true);
-        mountSpy.restore();
     });
 
     it('componentDidUpdate should push to status page and clearJobInfo', () => {
-        const props = getProps();
         const pushStub = sinon.stub(browserHistory, 'push');
-        const wrapper = getWrapper(props);
         const nextProps = { ...getProps() };
         nextProps.jobuid = '123';
         nextProps.jobFetched = true;
@@ -179,11 +172,9 @@ describe('BreadcrumbStepper component', () => {
     });
 
     it('componentDidUpdate should show job error', () => {
-        const props = getProps();
-        props.jobError = null;
         const hideStub = sinon.stub(BreadcrumbStepper.prototype, 'hideLoading');
         const showErrorStub = sinon.stub(BreadcrumbStepper.prototype, 'showError');
-        const wrapper = getWrapper(props);
+        setup({ jobError: null });
         const nextProps = { ...getProps() };
         const error = { errors: ['one', 'two'] };
         nextProps.jobError = error;
@@ -196,11 +187,6 @@ describe('BreadcrumbStepper component', () => {
     });
 
     it('componentWillUnmount should clear out redux states', () => {
-        const props = getProps();
-        props.clearAoiInfo = sinon.spy();
-        props.clearExportInfo = sinon.spy();
-        props.clearJobInfo = sinon.spy();
-        const wrapper = getWrapper(props);
         wrapper.unmount();
         expect(props.clearAoiInfo.calledOnce).toBe(true);
         expect(props.clearExportInfo.calledOnce).toBe(true);
@@ -208,8 +194,6 @@ describe('BreadcrumbStepper component', () => {
     });
 
     it('getErrorMessage should return formated title and detail', () => {
-        const props = getProps();
-        const wrapper = getWrapper(props);
         const message = mount(wrapper.instance().getErrorMessage('test title', 'test detail'));
         expect(message.find('.BreadcrumbStepper-error-container')).toHaveLength(1);
         expect(message.find('.BreadcrumbStepper-error-title')).toHaveLength(1);
@@ -220,9 +204,6 @@ describe('BreadcrumbStepper component', () => {
     });
 
     it('getStepLabel should return the correct label for each stepIndex', () => {
-        const props = getProps();
-        const wrapper = getWrapper(props);
-
         let elem = mount(wrapper.instance().getStepLabel(0));
         expect(elem.text()).toEqual('STEP 1 OF 3:  Define Area of Interest');
 
@@ -237,9 +218,6 @@ describe('BreadcrumbStepper component', () => {
     });
 
     it('getStepContent should return the correct content for each stepIndex', () => {
-        const props = getProps();
-        const wrapper = getWrapper(props);
-
         let content = wrapper.instance().getStepContent(0);
         expect(content).toEqual(<ExportAOI
             limits={wrapper.state('limits')}
@@ -252,8 +230,6 @@ describe('BreadcrumbStepper component', () => {
             <ExportInfo
                 onWalkthroughReset={props.onWalkthroughReset}
                 walkthroughClicked={props.walkthroughClicked}
-                providers={props.providers}
-                formats={props.formats}
                 handlePrev={wrapper.instance().handlePrev}
             />
         ));
@@ -262,7 +238,6 @@ describe('BreadcrumbStepper component', () => {
         expect(content).toEqual(<ExportSummary
             onWalkthroughReset={props.onWalkthroughReset}
             walkthroughClicked={props.walkthroughClicked}
-            allFormats={props.formats}
         />);
 
         content = wrapper.instance().getStepContent(3);
@@ -274,9 +249,6 @@ describe('BreadcrumbStepper component', () => {
     });
 
     it('getButtonContent should return the correct content for each stepIndex', () => {
-        const props = getProps();
-        const wrapper = getWrapper(props);
-
         let content = mount(wrapper.instance().getButtonContent(0));
         expect(content.find(Button)).toHaveLength(1);
         expect(content.find(NavigationArrowForward)).toHaveLength(1);
@@ -294,9 +266,6 @@ describe('BreadcrumbStepper component', () => {
     });
 
     it('getPreviousButtonContent should return the correct content for each stepIndex', () => {
-        const props = getProps();
-        const wrapper = getWrapper(props);
-
         let content = mount(wrapper.instance().getPreviousButtonContent(0));
         expect(content.find(NavigationArrowBack)).toHaveLength(1);
 
@@ -313,24 +282,19 @@ describe('BreadcrumbStepper component', () => {
 
     it('submitDatapack should showLoading then wait and call handleSubmit', () => {
         jest.useFakeTimers();
-        const props = getProps();
-        const loadingStub = sinon.stub(BreadcrumbStepper.prototype, 'showLoading');
-        const handleStub = sinon.stub(BreadcrumbStepper.prototype, 'handleSubmit');
-        const wrapper = getWrapper(props);
+        const loadingStub = sinon.stub(instance, 'showLoading');
+        const handleStub = sinon.stub(instance, 'handleSubmit');
         wrapper.instance().submitDatapack();
         jest.runAllTimers();
         expect(loadingStub.calledOnce).toBe(true);
         expect(handleStub.calledOnce).toBe(true);
-        loadingStub.restore();
-        handleStub.restore();
     });
 
     it('handleSubmit should submit a job with the correct data', () => {
-        const props = getProps();
-        props.exportInfo.exportName = 'test name';
-        props.exportInfo.datapackDescription = 'test description';
-        props.exportInfo.projectName = 'test event';
-        props.submitJob = sinon.spy();
+        const exportInfo = { ...props.exportInfo };
+        exportInfo.exportName = 'test name';
+        exportInfo.datapackDescription = 'test description';
+        exportInfo.projectName = 'test event';
         const expectedProps = {
             name: 'test name',
             description: 'test description',
@@ -347,7 +311,7 @@ describe('BreadcrumbStepper component', () => {
         const handleSpy = sinon.spy(BreadcrumbStepper.prototype, 'handleSubmit');
         const flattenStub = sinon.stub(utils, 'flattenFeatureCollection')
             .callsFake(fc => (fc));
-        const wrapper = getWrapper(props);
+        setup({ exportInfo });
         wrapper.instance().handleSubmit();
         expect(handleSpy.calledOnce).toBe(true);
         expect(props.submitJob.calledOnce).toBe(true);
@@ -356,9 +320,7 @@ describe('BreadcrumbStepper component', () => {
     });
 
     it('handleNext should increment the stepIndex', () => {
-        const props = getProps();
-        const stateSpy = sinon.spy(BreadcrumbStepper.prototype, 'setState');
-        const wrapper = getWrapper(props);
+        const stateSpy = sinon.spy(instance, 'setState');
         expect(stateSpy.called).toBe(false);
         wrapper.instance().handleNext();
         expect(stateSpy.calledOnce).toBe(true);
@@ -366,9 +328,7 @@ describe('BreadcrumbStepper component', () => {
     });
 
     it('handlePrev should decrement the stepIndex only when index is > 0', () => {
-        const props = getProps();
-        const stateSpy = sinon.spy(BreadcrumbStepper.prototype, 'setState');
-        const wrapper = getWrapper(props);
+        const stateSpy = sinon.spy(instance, 'setState');
         expect(stateSpy.called).toBe(false);
         wrapper.instance().handlePrev();
         expect(stateSpy.called).toBe(false);
@@ -380,10 +340,7 @@ describe('BreadcrumbStepper component', () => {
     });
 
     it('showError should setState and clear job info', () => {
-        const props = getProps();
-        props.clearJobInfo = sinon.spy();
-        const stateStub = sinon.stub(BreadcrumbStepper.prototype, 'setState');
-        const wrapper = getWrapper(props);
+        const stateStub = sinon.stub(instance, 'setState');
         const error = { message: 'oh no' };
         wrapper.instance().showError(error);
         expect(stateStub.calledOnce).toBe(true);
@@ -393,9 +350,7 @@ describe('BreadcrumbStepper component', () => {
     });
 
     it('hideError should setState', () => {
-        const props = getProps();
-        const stateStub = sinon.stub(BreadcrumbStepper.prototype, 'setState');
-        const wrapper = getWrapper(props);
+        const stateStub = sinon.stub(instance, 'setState');
         wrapper.instance().hideError();
         expect(stateStub.calledOnce).toBe(true);
         expect(stateStub.calledWith({ showError: false })).toBe(true);
@@ -403,9 +358,7 @@ describe('BreadcrumbStepper component', () => {
     });
 
     it('showLoading should set loading to true', () => {
-        const props = getProps();
-        const stateSpy = sinon.spy(BreadcrumbStepper.prototype, 'setState');
-        const wrapper = getWrapper(props);
+        const stateSpy = sinon.spy(instance, 'setState');
         wrapper.instance().showLoading();
         expect(stateSpy.calledOnce).toBe(true);
         expect(stateSpy.calledWith({ loading: true })).toBe(true);
@@ -413,9 +366,7 @@ describe('BreadcrumbStepper component', () => {
     });
 
     it('hideLoading should set loading to false', () => {
-        const props = getProps();
-        const stateSpy = sinon.spy(BreadcrumbStepper.prototype, 'setState');
-        const wrapper = getWrapper(props);
+        const stateSpy = sinon.spy(instance, 'setState');
         wrapper.instance().hideLoading();
         expect(stateSpy.calledOnce).toBe(true);
         expect(stateSpy.calledWith({ loading: false })).toBe(true);
@@ -423,7 +374,6 @@ describe('BreadcrumbStepper component', () => {
     });
 
     it('should set the modified flag when aoiInfo or exportInfo changes', () => {
-        const wrapper = getWrapper(getProps());
         expect(wrapper.state().modified).toBe(false);
         wrapper.setProps({ aoiInfo: {} });
         expect(wrapper.state().modified).toBe(true);
@@ -433,8 +383,6 @@ describe('BreadcrumbStepper component', () => {
     });
 
     it('should set leave route and show leave warning dialog when navigating away with changes', () => {
-        const wrapper = getWrapper(getProps());
-        const instance = wrapper.instance();
         wrapper.setState({ modified: true });
         instance.routeLeaveHook({ pathname: '/someRoute' });
         expect(instance.leaveRoute).toBe('/someRoute');
@@ -442,16 +390,12 @@ describe('BreadcrumbStepper component', () => {
     });
 
     it('should set modified flag to "false" when submitting a datapack', () => {
-        const wrapper = getWrapper(getProps());
-        const instance = wrapper.instance();
         wrapper.setState({ modified: true });
         instance.submitDatapack();
         expect(wrapper.state().modified).toBe(false);
     });
 
     it('should hide leave warning dialog when clicking cancel', () => {
-        const wrapper = getWrapper(getProps());
-        const instance = wrapper.instance();
         wrapper.setState({ showLeaveWarningDialog: true });
         instance.leaveRoute = '/someRoute';
         instance.handleLeaveWarningDialogCancel();
@@ -460,8 +404,6 @@ describe('BreadcrumbStepper component', () => {
     });
 
     it('should push the leave route when clicking confirm in leave warning dialog', () => {
-        const wrapper = getWrapper(getProps());
-        const instance = wrapper.instance();
         instance.props.router.push = sinon.spy();
         instance.leaveRoute = '/someRoute';
         instance.handleLeaveWarningDialogConfirm();

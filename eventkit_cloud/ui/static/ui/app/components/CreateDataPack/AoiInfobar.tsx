@@ -1,8 +1,8 @@
-import PropTypes from 'prop-types';
-import React, { Component } from 'react';
-import { withTheme } from '@material-ui/core/styles';
-import withWidth, { isWidthDown } from '@material-ui/core/withWidth';
-import numeral from 'numeral';
+import * as React from 'react';
+import { Theme, withStyles, createStyles } from '@material-ui/core/styles';
+import withWidth from '@material-ui/core/withWidth';
+import { Breakpoint } from '@material-ui/core/styles/createBreakpoints';
+import * as numeral from 'numeral';
 import Button from '@material-ui/core/Button';
 import Divider from '@material-ui/core/Divider';
 import IconButton from '@material-ui/core/IconButton';
@@ -21,9 +21,166 @@ import IrregularPolygon from '../icons/IrregularPolygon';
 import { getSqKm, getSqKmString } from '../../utils/generic';
 import { allHaveArea } from '../../utils/mapUtils';
 
+const jss = (theme: Eventkit.Theme & Theme) => createStyles({
+    wrapper: {
+        zIndex: 2,
+        position: 'absolute',
+        width: '100%',
+        bottom: '40px',
+        display: 'flex',
+        justifyContent: 'center',
+        pointerEvents: 'none',
+        [theme.breakpoints.only('xs')]: {
+            justifyContent: 'start',
+        },
+    },
+    infobar: {
+        backgroundColor: theme.eventkit.colors.white,
+        display: 'flex',
+        margin: '0px 10px',
+        pointerEvents: 'auto',
+        [theme.breakpoints.only('xs')]: {
+            margin: '0px 70px 0px 10px',
+        },
+    },
+    body: {
+        flex: '0 1 auto',
+        padding: '15px',
+    },
+    sidebar: {
+        flex: '0 0 auto',
+        flexWrap: 'wrap',
+        padding: '15px',
+        display: 'block',
+        backgroundColor: theme.eventkit.colors.selected_primary,
+        [theme.breakpoints.down('sm')]: {
+            display: 'none',
+        },
+    },
+    mobileSidebar: {
+        flex: '0 0 auto',
+        flexWrap: 'wrap',
+        padding: '15px 15px 15px 5px',
+        display: 'none',
+        [theme.breakpoints.down('sm')]: {
+            display: 'block',
+        },
+    },
+    topbar: {
+        display: 'flex',
+        flexWrap: 'wrap',
+        justifyContent: 'space-between',
+        width: '100%',
+        padding: '10px 10px 5px',
+    },
+    titleBar: {
+        flex: '1 0 auto',
+        flexWrap: 'wrap',
+        width: '100%',
+        paddingBottom: '10px',
+    },
+    title: {
+        width: '100%',
+    },
+    content: {
+        display: 'flex',
+        flex: '1 0 auto',
+    },
+    maxSize: {
+        fontSize: '12px',
+        color: theme.eventkit.colors.grey,
+        display: 'flex',
+        flexWrap: 'wrap',
+    },
+    areaColumn: {
+        display: 'flex',
+        flex: '0 0 auto',
+        flexWrap: 'wrap',
+        flexDirection: 'column',
+        justifyContent: 'flex-end',
+    },
+    geomColumn: {
+        display: 'flex',
+        flex: '1 1 auto',
+        flexWrap: 'wrap',
+        flexDirection: 'column',
+        justifyContent: 'flex-end',
+        paddingLeft: '15px',
+    },
+    alert: {
+        height: '20px',
+        width: '20px',
+        fill: theme.eventkit.colors.warning,
+        verticalAlign: 'middle',
+        cursor: 'pointer',
+    },
+    alertCalloutTop: {
+        bottom: '40px',
+        left: '50%',
+        transform: 'translateX(-50%)',
+        width: '220px',
+        color: theme.eventkit.colors.warning,
+    },
+    button: {
+        fontSize: '10px',
+        background: 'none',
+        border: 'none',
+        color: theme.eventkit.colors.primary,
+        outline: 'none',
+        padding: '0px',
+    },
+    searchIcon: {
+        height: '20px',
+        width: '20px',
+        fill: theme.eventkit.colors.primary,
+        verticalAlign: 'middle',
+    },
+    bufferButton: {
+        height: '30px',
+        minHeight: '30px',
+        lineHeight: '30px',
+        fontWeight: 600,
+        textTransform: 'none',
+        padding: '0px 10px',
+    },
+    menuItem: {
+        fontSize: '12px',
+        lineHeight: '30px',
+        minHeight: '30px',
+        padding: '0px 16px',
+    },
+});
 
-export class AoiInfobar extends Component {
-    constructor(props) {
+export interface Props {
+    limits: {
+        max: number;
+        sizes: number[];
+    };
+    aoiInfo: {
+        geojson: GeoJSON.FeatureCollection;
+        originalGeojson: GeoJSON.FeatureCollection;
+        geomType: string;
+        title: string;
+        description: string;
+        selectionType: string;
+        buffer: number;
+    };
+    showRevert: boolean;
+    onRevertClick: () => void;
+    clickZoomToSelection: () => void;
+    handleBufferClick: () => void;
+    theme: Eventkit.Theme & Theme;
+    width: Breakpoint;
+    classes: { [className: string]: string };
+}
+
+export interface State {
+    showAlert: boolean;
+    menuAnchor: null | HTMLElement;
+}
+
+export class AoiInfobar extends React.Component<Props, State> {
+    constructor(props: Props) {
         super(props);
         this.showAlert = this.showAlert.bind(this);
         this.closeAlert = this.closeAlert.bind(this);
@@ -35,7 +192,7 @@ export class AoiInfobar extends Component {
         };
     }
 
-    getIcon(geomType, source) {
+    private getIcon(geomType: string, source: string) {
         const type = geomType.toUpperCase();
         const iconStyle = {
             width: '30px',
@@ -55,215 +212,31 @@ export class AoiInfobar extends Component {
         return <AlertWarning style={iconStyle} className="qa-AoiInfobar-icon-no-selection" color="primary" />;
     }
 
-    handleMenuClose() {
+    private handleMenuClose() {
         this.setState({ menuAnchor: null });
     }
 
-    handleMenuOpen(e) {
+    private handleMenuOpen(e: React.MouseEvent<HTMLElement>) {
         this.setState({ menuAnchor: e.currentTarget });
     }
 
-    showAlert() {
+    private showAlert() {
         this.setState({ showAlert: true });
     }
 
-    closeAlert() {
+    private closeAlert() {
         this.setState({ showAlert: false });
     }
 
     render() {
         const { colors } = this.props.theme.eventkit;
-        const { width } = this.props;
-
-        const styles = {
-            wrapper: {
-                zIndex: 2,
-                position: 'absolute',
-                width: '100%',
-                bottom: '40px',
-                display: 'flex',
-                justifyContent: (window.innerHeight < 737 && isWidthDown('xs', width)) ? 'start' : 'center',
-                pointerEvents: 'none',
-            },
-            infobar: {
-                backgroundColor: colors.white,
-                display: 'flex',
-                margin: (window.innerHeight < 737 && isWidthDown('xs', width)) ? '0 70px 0 10px' : '0 10px',
-                pointerEvents: 'auto',
-            },
-            body: {
-                flex: '0 1 auto',
-                padding: '15px',
-            },
-            sidebar: {
-                flex: '0 0 auto',
-                flexWrap: 'wrap',
-                padding: '15px',
-                backgroundColor: colors.selected_primary,
-            },
-            mobileSidebar: {
-                flex: '0 0 auto',
-                flexWrap: 'wrap',
-                padding: '15px 15px 15px 5px',
-            },
-            topbar: {
-                display: 'flex',
-                flexWrap: 'wrap',
-                justifyContent: 'space-between',
-                width: '100%',
-                padding: '10px 10px 5px',
-            },
-            titleBar: {
-                flex: '1 0 auto',
-                flexWrap: 'wrap',
-                width: '100%',
-                paddingBottom: '10px',
-            },
-            title: {
-                width: '100%',
-            },
-            content: {
-                display: 'flex',
-                flex: '1 0 auto',
-            },
-            maxSize: {
-                fontSize: '12px',
-                color: colors.grey,
-                display: 'flex',
-                flexWrap: 'wrap',
-            },
-            areaColumn: {
-                display: 'flex',
-                flex: '0 0 auto',
-                flexWrap: 'wrap',
-                flexDirection: 'column',
-                justifyContent: 'flex-end',
-            },
-            geomColumn: {
-                display: 'flex',
-                flex: '1 1 auto',
-                flexWrap: 'wrap',
-                flexDirection: 'column',
-                justifyContent: 'flex-end',
-                paddingLeft: '15px',
-            },
-            alert: {
-                height: '20px',
-                width: '20px',
-                fill: colors.warning,
-                verticalAlign: 'middle',
-                cursor: 'pointer',
-            },
-            alertCalloutTop: {
-                bottom: '40px',
-                left: '50%',
-                transform: 'translateX(-50%)',
-                width: '220px',
-                color: colors.warning,
-            },
-            button: {
-                fontSize: '10px',
-                background: 'none',
-                border: 'none',
-                color: colors.primary,
-                outline: 'none',
-                padding: '0px',
-            },
-            searchIcon: {
-                height: '20px',
-                width: '20px',
-                fill: colors.primary,
-                verticalAlign: 'middle',
-            },
-            bufferButton: {
-                height: '30px',
-                minHeight: '30px',
-                lineHeight: '30px',
-                fontWeight: 600,
-                textTransform: 'none',
-                padding: '0px 10px',
-            },
-            menuItem: {
-                fontSize: '12px',
-                lineHeight: '30px',
-                minHeight: '30px',
-                padding: '0px 16px',
-            },
-        };
+        const { classes } = this.props;
 
         if (Object.keys(this.props.aoiInfo.geojson).length === 0) {
             return null;
         }
 
         const geometryIcon = this.getIcon(this.props.aoiInfo.geomType, this.props.aoiInfo.description);
-
-        const fullSidebar = (
-            <div style={styles.sidebar} className="qa-AoiInfobar-sidebar">
-                <div style={{ width: '100%', padding: '5px 0px' }}>
-                    <button
-                        className="qa-AoiInfobar-button-zoom"
-                        style={styles.button}
-                        onClick={this.props.clickZoomToSelection}
-                    >
-                        <ActionZoomIn
-                            style={styles.searchIcon}
-                            className="qa-AoiInfobar-ActionZoomIn"
-                        /> ZOOM TO
-                    </button>
-                </div>
-                {this.props.showRevert ?
-                    <div style={{ width: '100%', padding: '5px 0px' }}>
-                        <button
-                            className="qa-AoiInfobar-button-revert"
-                            style={styles.button}
-                            onClick={this.props.onRevertClick}
-                        >
-                            <ActionRestore
-                                style={styles.searchIcon}
-                                className="qa-AoiInfobar-ActionRestore"
-                            /> REVERT
-                        </button>
-                    </div>
-                    :
-                    null
-                }
-            </div>
-        );
-
-        const mobileSidebar = (
-            <div style={styles.mobileSidebar} className="qa-AoiInfobar-sidebar-mobile">
-                <IconButton
-                    color="primary"
-                    onClick={this.handleMenuOpen}
-                >
-                    <MoreVertIcon />
-                </IconButton>
-                <Menu
-                    id="infobar-menu"
-                    anchorEl={this.state.menuAnchor}
-                    open={Boolean(this.state.menuAnchor)}
-                    onClose={this.handleMenuClose}
-                >
-                    <MenuItem
-                        onClick={this.props.clickZoomToSelection}
-                        style={styles.menuItem}
-                    >
-                        ZOOM TO
-                    </MenuItem>
-                    <MenuItem
-                        onClick={this.props.onRevertClick}
-                        style={{
-                            ...styles.menuItem,
-                            ...(!this.props.showRevert ? { pointerEvents: 'none', cursor: 'default', color: colors.grey } : {}),
-                        }}
-                    >
-                        REVERT
-                    </MenuItem>
-                </Menu>
-            </div>
-        );
-
-        const sidebar = isWidthDown('sm', width) ? mobileSidebar : fullSidebar;
 
         const noArea = !allHaveArea(this.props.aoiInfo.geojson);
         const originalArea = getSqKmString(this.props.aoiInfo.originalGeojson);
@@ -275,18 +248,17 @@ export class AoiInfobar extends Component {
 
         const bufferAlert = (
             <AlertCallout
-                className="qa-AoiInfobar-alert-buffer"
+                className={`qa-AoiInfobar-alert-buffer ${classes.alertCalloutTop}`}
                 onClose={this.closeAlert}
                 orientation="top"
                 title="There must be a buffer."
                 body={<p>Please add a buffer before moving forward.</p>}
-                style={styles.alertCalloutTop}
             />
         );
 
         const overAreaAlert = (
             <AlertCallout
-                className="qa-AoiInfobar-alert-oversized"
+                className={`qa-AoiInfobar-alert-oversized ${classes.alertCalloutTop}`}
                 onClose={this.closeAlert}
                 orientation="top"
                 title="Your AOI is too large!"
@@ -296,13 +268,12 @@ export class AoiInfobar extends Component {
                         Please reduce the size of your polygon and/or buffer.
                     </p>
                 }
-                style={styles.alertCalloutTop}
             />
         );
 
         const overSomeAlert = (
             <AlertCallout
-                className="qa-AoiInfobar-alert-overSome"
+                className={`qa-AoiInfobar-alert-overSome ${classes.alertCalloutTop}`}
                 onClose={this.closeAlert}
                 orientation="top"
                 title="Your AOI is too large for some of the data sources."
@@ -315,10 +286,9 @@ export class AoiInfobar extends Component {
                             Specifics for each Data Provider are on the next page.
                     </p>
                 }
-                style={{ ...styles.alertCalloutTop, color: colors.black }}
+                style={{ color: colors.black }}
             />
         );
-
 
         let bufferWarning = null;
         let sizeWarning = null;
@@ -326,8 +296,7 @@ export class AoiInfobar extends Component {
             bufferWarning = (
                 <div style={{ position: 'relative', display: 'inline-block', marginLeft: '10px' }}>
                     <AlertWarning
-                        className="qa-AoiInfobar-alert-icon"
-                        style={styles.alert}
+                        className={`qa-AoiInfobar-alert-icon ${classes.alert}`}
                         onClick={this.showAlert}
                     />
                     {this.state.showAlert ?
@@ -341,8 +310,7 @@ export class AoiInfobar extends Component {
             sizeWarning = (
                 <div style={{ position: 'relative', display: 'inline-block', marginLeft: '10px' }}>
                     <AlertWarning
-                        className="qa-AoiInfobar-alert-icon"
-                        style={styles.alert}
+                        className={`qa-AoiInfobar-alert-icon ${classes.alert}`}
                         onClick={this.showAlert}
                     />
                     {this.state.showAlert ?
@@ -356,8 +324,8 @@ export class AoiInfobar extends Component {
             sizeWarning = (
                 <div style={{ position: 'relative', display: 'inline-block', marginLeft: '10px' }}>
                     <AlertWarning
-                        className="qa-AoiInfobar-alert-icon"
-                        style={{ ...styles.alert, fill: colors.over }}
+                        className={`qa-AoiInfobar-alert-icon ${classes.alert}`}
+                        style={{ fill: colors.over }}
                         onClick={this.showAlert}
                     />
                     {this.state.showAlert ?
@@ -371,21 +339,21 @@ export class AoiInfobar extends Component {
 
         return (
             <div className="qa-AoiInfobar">
-                <div style={styles.wrapper}>
-                    <div style={styles.infobar} className="qa-AoiInfobar-body">
-                        <div style={styles.body}>
-                            <div style={styles.titleBar}>
-                                <div className="qa-AoiInfobar-title" style={styles.title}>
+                <div className={classes.wrapper}>
+                    <div className={`qa-AoiInfobar-body ${classes.infobar}`}>
+                        <div className={classes.body}>
+                            <div className={classes.titleBar}>
+                                <div className={`qa-AoiInfobar-title ${classes.title}`}>
                                     <strong>AREA OF INTEREST (AOI)</strong>
                                 </div>
-                                <div className="qa-AoiInfobar-maxSize" style={styles.maxSize}>
+                                <div className={`qa-AoiInfobar-maxSize ${classes.maxSize}`}>
                                     <div style={{ paddingRight: '5px' }}>
                                         {max ? `${numeral(max).format('0,0')} sq km max;` : null}
                                     </div>
                                 </div>
                             </div>
-                            <div style={styles.content} className="qa-AoiInfobar-content">
-                                <div style={styles.areaColumn} className="qa-AoiInfobar-areaColumn">
+                            <div className={`qa-AoiInfobar-content ${classes.content}`}>
+                                <div className={`qa-AoiInfobar-areaColumn ${classes.areaColumn}`}>
                                     <div style={{ flex: '1 1 auto' }}><strong>{originalArea}</strong></div>
                                     <div style={{ lineHeight: '30px', marginTop: '5px' }}>
                                         <strong>
@@ -400,7 +368,7 @@ export class AoiInfobar extends Component {
                                         </strong>
                                     </div>
                                 </div>
-                                <div style={styles.geomColumn} className="qa-AoiInfobar-geomColumn">
+                                <div className={`qa-AoiInfobar-geomColumn ${classes.geomColumn}`}>
                                     <div className="qa-AoiInfobar-info" style={{ display: 'flex' }}>
                                         <div style={{ paddingRight: '5px' }}>
                                             {geometryIcon}
@@ -421,11 +389,10 @@ export class AoiInfobar extends Component {
                                     </div>
                                     <div className="qa-AoiInfobar-buffer" style={{ marginTop: '5px' }}>
                                         <Button
-                                            className="qa-AoiInfobar-buffer-button"
+                                            className={`qa-AoiInfobar-buffer-button ${classes.bufferButton}`}
                                             onClick={this.props.handleBufferClick}
                                             variant="contained"
                                             color="primary"
-                                            style={styles.bufferButton}
                                             disabled={!!this.props.aoiInfo.buffer}
 
                                         >
@@ -443,7 +410,62 @@ export class AoiInfobar extends Component {
                                 </div>
                             </div>
                         </div>
-                        {sidebar}
+                        <div className={`qa-AoiInfobar-sidebar ${classes.sidebar}`}>
+                            <div style={{ width: '100%', padding: '5px 0px' }}>
+                                <button
+                                    className={`qa-AoiInfobar-button-zoom ${classes.button}`}
+                                    onClick={this.props.clickZoomToSelection}
+                                >
+                                    <ActionZoomIn
+                                        className={`qa-AoiInfobar-ActionZoomIn ${classes.searchIcon}`}
+                                    /> ZOOM TO
+                                </button>
+                            </div>
+                            {this.props.showRevert ?
+                                <div style={{ width: '100%', padding: '5px 0px' }}>
+                                    <button
+                                        className={`qa-AoiInfobar-button-revert ${classes.button}`}
+                                        onClick={this.props.onRevertClick}
+                                    >
+                                        <ActionRestore
+                                            className={`qa-AoiInfobar-ActionRestore ${classes.searchIcon}`}
+                                        /> REVERT
+                                    </button>
+                                </div>
+                                :
+                                null
+                            }
+                        </div>
+                        <div className={`qa-AoiInfobar-sidebar-mobile ${classes.mobileSidebar}`}>
+                            <IconButton
+                                color="primary"
+                                onClick={this.handleMenuOpen}
+                            >
+                                <MoreVertIcon />
+                            </IconButton>
+                            <Menu
+                                id="infobar-menu"
+                                anchorEl={this.state.menuAnchor}
+                                open={Boolean(this.state.menuAnchor)}
+                                onClose={this.handleMenuClose}
+                            >
+                                <MenuItem
+                                    onClick={this.props.clickZoomToSelection}
+                                    className={classes.menuItem}
+                                >
+                                    ZOOM TO
+                                </MenuItem>
+                                <MenuItem
+                                    onClick={this.props.onRevertClick}
+                                    className={classes.menuItem}
+                                    style={{
+                                        ...(!this.props.showRevert ? { pointerEvents: 'none', cursor: 'default', color: colors.grey } : {}),
+                                    }}
+                                >
+                                    REVERT
+                                </MenuItem>
+                            </Menu>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -451,29 +473,4 @@ export class AoiInfobar extends Component {
     }
 }
 
-AoiInfobar.propTypes = {
-    limits: PropTypes.shape({
-        max: PropTypes.number,
-        sizes: PropTypes.array,
-    }).isRequired,
-    aoiInfo: PropTypes.shape({
-        geojson: PropTypes.object,
-        originalGeojson: PropTypes.object,
-        geomType: PropTypes.string,
-        title: PropTypes.string,
-        description: PropTypes.string,
-        selectionType: PropTypes.string,
-        buffer: PropTypes.number,
-    }).isRequired,
-    showRevert: PropTypes.bool.isRequired,
-    onRevertClick: PropTypes.func.isRequired,
-    clickZoomToSelection: PropTypes.func.isRequired,
-    handleBufferClick: PropTypes.func.isRequired,
-    theme: PropTypes.object.isRequired,
-    width: PropTypes.string.isRequired,
-};
-
-export default
-@withWidth()
-@withTheme()
-class Default extends AoiInfobar {}
+export default withWidth()(withStyles(jss, { withTheme: true })(AoiInfobar));

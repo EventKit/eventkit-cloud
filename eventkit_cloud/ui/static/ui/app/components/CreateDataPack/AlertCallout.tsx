@@ -1,10 +1,19 @@
-import PropTypes from 'prop-types';
-import React, { Component } from 'react';
-import { withTheme } from '@material-ui/core/styles';
+import * as React from 'react';
+import { withTheme, Theme } from '@material-ui/core/styles';
 import Clear from '@material-ui/icons/Clear';
 import css from '../../styles/popup.css';
 
-export class AlertCallout extends Component {
+export interface Props {
+    className?: string;
+    title?: string;
+    body?: any;
+    orientation: 'top' | 'bottom' | 'top-left' | 'top-right' | 'right-bottom' | 'left-bottom';
+    style?: object;
+    onClose: () => void;
+    theme: Eventkit.Theme & Theme;
+}
+
+export class AlertCallout extends React.Component<Props, {}> {
     render() {
         const styles = {
             clear: {
@@ -18,7 +27,7 @@ export class AlertCallout extends Component {
 
         return (
             <div
-                className={`${css.callout} ${css[this.props.orientation]} qa-AlertCallout`}
+                className={`${css.callout} ${css[this.props.orientation]} qa-AlertCallout ${this.props.className}`}
                 style={this.props.style}
             >
                 <div
@@ -39,30 +48,5 @@ export class AlertCallout extends Component {
         );
     }
 }
-AlertCallout.defaultProps = {
-    title: '',
-    body: null,
-    style: {},
-};
-
-AlertCallout.propTypes = {
-    title: PropTypes.string,
-    body: PropTypes.oneOfType([
-        PropTypes.string,
-        PropTypes.node,
-        PropTypes.arrayOf(PropTypes.node),
-    ]),
-    orientation: PropTypes.oneOf([
-        'top',
-        'bottom',
-        'top-left',
-        'top-right',
-        'right-bottom',
-        'left-bottom',
-    ]).isRequired,
-    style: PropTypes.object,
-    onClose: PropTypes.func.isRequired,
-    theme: PropTypes.object.isRequired,
-};
 
 export default withTheme()(AlertCallout);

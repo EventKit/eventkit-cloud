@@ -1,9 +1,8 @@
-import PropTypes from 'prop-types';
-import React from 'react';
-import { browserHistory } from 'react-router';
+import * as React from 'react';
+import { browserHistory, InjectedRouter, PlainRoute } from 'react-router';
 import { connect } from 'react-redux';
-import { withTheme } from '@material-ui/core/styles';
-import isEqual from 'lodash/isEqual';
+import { withTheme, Theme } from '@material-ui/core/styles';
+import * as isEqual from 'lodash/isEqual';
 import Divider from '@material-ui/core/Divider';
 import Warning from '@material-ui/icons/Warning';
 import Button from '@material-ui/core/Button';
@@ -24,10 +23,67 @@ import { getNotifications, getNotificationsUnreadCount } from '../../actions/not
 import BaseDialog from '../Dialog/BaseDialog';
 import ConfirmDialog from '../Dialog/ConfirmDialog';
 import PageLoading from '../common/PageLoading';
+import { Location } from 'history';
 
-export class BreadcrumbStepper extends React.Component {
-    constructor() {
-        super();
+export interface JobData {
+    name: string;
+    description: string;
+    event: string;
+    include_zipfile: boolean;
+    provider_tasks: Eventkit.ProviderTask[];
+    selection: GeoJSON.FeatureCollection;
+    original_selection: GeoJSON.FeatureCollection;
+    tags: [];
+}
+
+export interface Props {
+    aoiInfo: Eventkit.Store.AoiInfo;
+    providers: Eventkit.Provider[];
+    stepperNextEnabled: boolean;
+    exportInfo: Eventkit.Store.ExportInfo;
+    submitJob: (data: JobData) => void;
+    getProviders: () => void;
+    setNextDisabled: () => void;
+    clearAoiInfo: () => void;
+    clearExportInfo: () => void;
+    clearJobInfo: () => void;
+    jobFetched: boolean;
+    jobError: object;
+    jobuid: string;
+    formats: object[];
+    getFormats: () => void;
+    walkthroughClicked: boolean;
+    onWalkthroughReset: () => void;
+    router: InjectedRouter;
+    routes: PlainRoute[];
+    getNotifications: () => void;
+    getNotificationsUnreadCount: () => void;
+    theme: Eventkit.Theme & Theme;
+}
+
+export interface State {
+    stepIndex: number;
+    showError: boolean;
+    error: any;
+    loading: boolean;
+    showLeaveWarningDialog: boolean;
+    modified: boolean;
+    limits: {
+        max: number;
+        sizes: number[];
+    };
+}
+
+export class BreadcrumbStepper extends React.Component<Props, State> {
+    private leaveRoute: null | string;
+
+    static defaultProps = {
+        jobError: undefined,
+        jobFetched: null,
+    };
+
+    constructor(props: Props) {
+        super(props);
         this.getProviders = this.getProviders.bind(this);
         this.getStepLabel = this.getStepLabel.bind(this);
         this.handleNext = this.handleNext.bind(this);
@@ -93,7 +149,7 @@ export class BreadcrumbStepper extends React.Component {
         this.props.clearJobInfo();
     }
 
-    async getProviders() {
+    private async getProviders() {
         await this.props.getProviders();
         let max = 0;
         const sizes = [];
@@ -114,7 +170,7 @@ export class BreadcrumbStepper extends React.Component {
         this.setState({ limits });
     }
 
-    getErrorMessage(title, detail, ix) {
+    private getErrorMessage(title: string, detail: string, ix: number) {
         return (
             <div className="BreadcrumbStepper-error-container" key={`${title}-${detail}`}>
                 { ix > 0 ? <Divider style={{ marginBottom: '10px' }} /> : null }
@@ -131,7 +187,7 @@ export class BreadcrumbStepper extends React.Component {
         );
     }
 
-    getStepLabel(stepIndex) {
+    private getStepLabel(stepIndex: number) {
         const labelStyle = {
             color: this.props.theme.eventkit.colors.white,
             height: '50px',
@@ -169,7 +225,7 @@ export class BreadcrumbStepper extends React.Component {
         }
     }
 
-    getStepContent(stepIndex) {
+    private getStepContent(stepIndex: number) {
         switch (stepIndex) {
             case 0:
                 return (
@@ -182,8 +238,6 @@ export class BreadcrumbStepper extends React.Component {
             case 1:
                 return (
                     <ExportInfo
-                        providers={this.props.providers}
-                        formats={this.props.formats}
                         handlePrev={this.handlePrev}
                         walkthroughClicked={this.props.walkthroughClicked}
                         onWalkthroughReset={this.props.onWalkthroughReset}
@@ -192,7 +246,6 @@ export class BreadcrumbStepper extends React.Component {
             case 2:
                 return (
                     <ExportSummary
-                        allFormats={this.props.formats}
                         walkthroughClicked={this.props.walkthroughClicked}
                         onWalkthroughReset={this.props.onWalkthroughReset}
                     />
@@ -208,11 +261,11 @@ export class BreadcrumbStepper extends React.Component {
         }
     }
 
-    getPreviousButtonContent(stepIndex) {
+    private getPreviousButtonContent(stepIndex: number) {
         const styles = {
             arrowBack: {
                 fill: stepIndex === 0 ? this.props.theme.eventkit.colors.secondary_dark : this.props.theme.eventkit.colors.primary,
-                opacity: stepIndex === 0 ? '0.3' : '1',
+                opacity: stepIndex === 0 ? 0.3 : 1,
                 cursor: stepIndex === 0 ? 'default' : 'pointer',
                 verticalAlign: 'middle',
                 marginRight: '10px',
@@ -251,7 +304,7 @@ export class BreadcrumbStepper extends React.Component {
         }
     }
 
-    getButtonContent(stepIndex) {
+    private getButtonContent(stepIndex: number) {
         const btnStyle = {
             marginRight: '12px',
             verticalAlign: 'middle',
@@ -298,7 +351,7 @@ export class BreadcrumbStepper extends React.Component {
         }
     }
 
-    routeLeaveHook(info) {
+    private routeLeaveHook(info: Location) {
         // Show warning dialog if we try to navigate away with changes.
         if (!this.state.modified || this.leaveRoute) {
             // No changes to lose, or we confirmed we want to leave.
@@ -311,7 +364,7 @@ export class BreadcrumbStepper extends React.Component {
         return false;
     }
 
-    submitDatapack() {
+    private submitDatapack() {
         this.setState({ modified: false });
         this.showLoading();
         // wait a moment before calling handleSubmit because
@@ -320,7 +373,7 @@ export class BreadcrumbStepper extends React.Component {
         window.setTimeout(this.handleSubmit, 100);
     }
 
-    handleSubmit() {
+    private handleSubmit() {
         const providerTasks = [];
         const providers = [...this.props.exportInfo.providers];
 
@@ -333,7 +386,7 @@ export class BreadcrumbStepper extends React.Component {
 
         const selection = flattenFeatureCollection(this.props.aoiInfo.geojson);
 
-        const data = {
+        const data: JobData = {
             name: this.props.exportInfo.exportName,
             description: this.props.exportInfo.datapackDescription,
             event: this.props.exportInfo.projectName,
@@ -346,41 +399,41 @@ export class BreadcrumbStepper extends React.Component {
         this.props.submitJob(data);
     }
 
-    handleNext() {
+    private handleNext() {
         const { stepIndex } = this.state;
         this.setState({ stepIndex: stepIndex + 1 });
     }
 
-    handlePrev() {
+    private handlePrev() {
         const { stepIndex } = this.state;
         if (stepIndex > 0) {
             this.setState({ stepIndex: stepIndex - 1 });
         }
     }
 
-    showError(error) {
+    private showError(error: any) {
         this.setState({ showError: true, error });
         this.props.clearJobInfo();
     }
 
-    hideError() {
+    private hideError() {
         this.setState({ showError: false });
     }
 
-    showLoading() {
+    private showLoading() {
         this.setState({ loading: true });
     }
 
-    hideLoading() {
+    private hideLoading() {
         this.setState({ loading: false });
     }
 
-    handleLeaveWarningDialogCancel() {
+    private handleLeaveWarningDialogCancel() {
         this.setState({ showLeaveWarningDialog: false });
         this.leaveRoute = null;
     }
 
-    handleLeaveWarningDialogConfirm() {
+    private handleLeaveWarningDialogConfirm() {
         this.props.router.push(this.leaveRoute);
     }
 
@@ -394,7 +447,7 @@ export class BreadcrumbStepper extends React.Component {
                 this.getErrorMessage(error.title, error.detail, ix)
             ));
             if (!message.length) {
-                message.push(this.getErrorMessage('Error', 'An unknown error has occured'));
+                message.push(this.getErrorMessage('Error', 'An unknown error has occured', 0));
             }
         }
 
@@ -434,36 +487,6 @@ export class BreadcrumbStepper extends React.Component {
         );
     }
 }
-
-BreadcrumbStepper.defaultProps = {
-    jobError: undefined,
-    jobFetched: null,
-};
-
-BreadcrumbStepper.propTypes = {
-    aoiInfo: PropTypes.object.isRequired,
-    providers: PropTypes.arrayOf(PropTypes.object).isRequired,
-    stepperNextEnabled: PropTypes.bool.isRequired,
-    exportInfo: PropTypes.object.isRequired,
-    submitJob: PropTypes.func.isRequired,
-    getProviders: PropTypes.func.isRequired,
-    setNextDisabled: PropTypes.func.isRequired,
-    clearAoiInfo: PropTypes.func.isRequired,
-    clearExportInfo: PropTypes.func.isRequired,
-    clearJobInfo: PropTypes.func.isRequired,
-    jobFetched: PropTypes.bool,
-    jobError: PropTypes.object,
-    jobuid: PropTypes.string.isRequired,
-    formats: PropTypes.arrayOf(PropTypes.object).isRequired,
-    getFormats: PropTypes.func.isRequired,
-    walkthroughClicked: PropTypes.bool.isRequired,
-    onWalkthroughReset: PropTypes.func.isRequired,
-    router: PropTypes.object.isRequired,
-    routes: PropTypes.arrayOf(PropTypes.object).isRequired,
-    getNotifications: PropTypes.func.isRequired,
-    getNotificationsUnreadCount: PropTypes.func.isRequired,
-    theme: PropTypes.object.isRequired,
-};
 
 function mapStateToProps(state) {
     return {

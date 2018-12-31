@@ -1,19 +1,17 @@
-import React from 'react';
-import sinon from 'sinon';
+import * as React from 'react';
+import * as sinon from 'sinon';
 import { mount } from 'enzyme';
 import Clear from '@material-ui/icons/Clear';
 import { AlertCallout } from '../../components/CreateDataPack/AlertCallout';
 
 describe('AlertCallout component', () => {
-    const getProps = () => (
-        {
-            style: {},
-            onClose: () => {},
-            title: 'test title',
-            body: 'test body',
-            ...global.eventkit_test_props,
-        }
-    );
+    const getProps = () => ({
+        style: {},
+        onClose: sinon.spy(),
+        title: 'test title',
+        body: 'test body',
+        ...(global as any).eventkit_test_props,
+    });
 
     const getWrapper = props => (
         mount(<AlertCallout {...props} />)
