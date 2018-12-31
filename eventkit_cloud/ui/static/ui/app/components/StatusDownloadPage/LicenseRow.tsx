@@ -6,7 +6,7 @@ import TableRow from '@material-ui/core/TableRow';
 import TableCell from '@material-ui/core/TableCell';
 import BaseDialog from '../Dialog/BaseDialog';
 
-const jss = (theme: any) => createStyles({
+const jss = (theme: Eventkit.Theme & Theme) => createStyles({
     insetColumn: {
         width: '44px',
         padding: '0px',
@@ -65,11 +65,11 @@ export class LicenseRow extends React.Component<Props, State> {
         };
     }
 
-    setLicenseOpen() {
+    private setLicenseOpen() {
         this.setState({ licenseDialogOpen: true });
     }
 
-    handleLicenseClose() {
+    private handleLicenseClose() {
         this.setState({ licenseDialogOpen: false });
     }
 

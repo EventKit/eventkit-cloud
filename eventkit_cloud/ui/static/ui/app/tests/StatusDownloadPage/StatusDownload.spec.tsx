@@ -1,5 +1,5 @@
-import React from 'react';
-import sinon from 'sinon';
+import * as React from 'react';
+import * as sinon from 'sinon';
 import { createShallow } from '@material-ui/core/test-utils';
 import { browserHistory } from 'react-router';
 import Joyride from 'react-joyride';
@@ -89,103 +89,79 @@ describe('StatusDownload component', () => {
 
     const location = {};
 
-    const getProps = () => (
-        {
-            runs: [],
-            runIds: [],
-            detailsFetched: null,
-            runDeletion: {
-                deleting: false,
-                deleted: false,
-                error: null,
-            },
-            exportReRun: {
-                fetching: false,
-                fetched: false,
-                data: [],
-                error: null,
-            },
-            permissionState: {
-                updating: false,
-                updated: false,
-                error: null,
-            },
-            expirationState: {
-                updating: false,
-                updated: false,
-                error: null,
-            },
-            providers,
-            user: {
-                data: {
-                    user: {
-                        username: 'admin',
-                    },
+    const getProps = () => ({
+        runs: [],
+        runIds: [],
+        detailsFetched: null,
+        runDeletion: {
+            deleting: false,
+            deleted: false,
+            error: null,
+        },
+        exportReRun: {
+            fetching: false,
+            fetched: false,
+            data: [],
+            error: null,
+        },
+        permissionState: {
+            updating: false,
+            updated: false,
+            error: null,
+        },
+        expirationState: {
+            updating: false,
+            updated: false,
+            error: null,
+        },
+        providers,
+        user: {
+            data: {
+                user: {
+                    username: 'admin',
                 },
             },
-            users: {
-                fetched: false,
-                fetching: false,
-                users: [],
-                error: null,
+        },
+        router: {
+            params: {
+                jobuid: '123456789',
             },
-            groups: {
-                fetched: false,
-                fetching: false,
-                groups: [],
-                error: null,
-            },
-            router: {
-                params: {
-                    jobuid: '123456789',
-                },
-            },
-            location,
-            getDatacartDetails: () => {},
-            clearDataCartDetails: () => {},
-            deleteRun: () => {},
-            rerunExport: () => {},
-            clearReRunInfo: () => {},
-            updateExpirationDate: () => {},
-            updateDataCartPermissions: () => {},
-            cloneExport: () => {},
-            cancelProviderTask: () => {},
-            getProviders: () => {},
-            viewedJob: () => {},
-            getUsers: () => {},
-            getGroups: () => {},
-            ...global.eventkit_test_props,
-        }
-    );
+        },
+        location,
+        getDatacartDetails: sinon.spy(),
+        clearDataCartDetails: sinon.spy(),
+        deleteRun: sinon.spy(),
+        rerunExport: sinon.spy(),
+        clearReRunInfo: sinon.spy(),
+        updateExpirationDate: sinon.spy(),
+        updateDataCartPermissions: sinon.spy(),
+        cloneExport: sinon.spy(),
+        cancelProviderTask: sinon.spy(),
+        getProviders: sinon.spy(),
+        viewedJob: sinon.spy(),
+        ...(global as any).eventkit_test_props,
+    });
 
-    const getWrapper = props => (
-        shallow(<StatusDownload {...props} />, {
+    let props;
+    let wrapper;
+    let instance;
+    const setup = (overrides = {}, options = {}) => {
+        props = { ...getProps(), ...overrides };
+        wrapper = shallow(<StatusDownload {...props} />, {
             context: { config },
-        })
-    );
+            ...options,
+        });
+        instance = wrapper.instance();
+    };
 
-    const didMount = StatusDownload.prototype.componentDidMount;
-
-    beforeAll(() => {
-        StatusDownload.prototype.componentDidMount = sinon.spy();
-        DataPackAoiInfo.prototype.render = sinon.spy(() => null);
-        DataPackAoiInfo.prototype.initializeOpenLayers = sinon.spy();
-    });
-
-    afterAll(() => {
-        StatusDownload.prototype.componentDidMount = didMount;
-        DataPackAoiInfo.prototype.render.restore();
-        DataPackAoiInfo.prototype.initializeOpenLayers.restore();
-    });
+    beforeEach(setup);
 
     it('should have the correct initial state', () => {
-        const wrapper = getWrapper(getProps());
+        setup({}, { disableLifecycleMethods: true });
         expect(wrapper.state()).toEqual(wrapper.instance().getInitialState());
     });
 
     it('should render all the basic components', () => {
-        const props = getProps();
-        const wrapper = getWrapper(props);
         expect(wrapper.find('form')).toHaveLength(1);
         expect(wrapper.find(Paper)).toHaveLength(1);
         expect(wrapper.find(CustomScrollbar)).toHaveLength(1);
@@ -200,15 +176,11 @@ describe('StatusDownload component', () => {
     });
 
     it('should render a loading icon if data has not been received yet', () => {
-        const props = getProps();
-        const wrapper = getWrapper(props);
         expect(wrapper.find(PageLoading)).toHaveLength(1);
         expect(wrapper.state().isLoading).toBe(true);
     });
 
     it('should render the no datapack message', () => {
-        const props = getProps();
-        const wrapper = getWrapper(props);
         const nextProps = getProps();
         nextProps.detailsFetched = true;
         wrapper.setProps(nextProps);
@@ -217,8 +189,6 @@ describe('StatusDownload component', () => {
     });
 
     it('should display the circular progress if deleting', () => {
-        const props = getProps();
-        const wrapper = getWrapper(props);
         let nextProps = getProps();
         nextProps.detailsFetched = true;
         nextProps.runs = [{ ...exampleRun }];
@@ -233,13 +203,9 @@ describe('StatusDownload component', () => {
     });
 
     it('should call getDatacartDetails, getProviders, joyrideAddSteps and startTimer when shallowed', () => {
-        StatusDownload.prototype.componentDidMount = didMount;
-        const props = getProps();
-        props.getDatacartDetails = sinon.spy();
-        props.getProviders = sinon.spy();
         const timerStub = sinon.stub(StatusDownload.prototype, 'startTimer');
         const joyrideSpy = sinon.spy(StatusDownload.prototype, 'joyrideAddSteps');
-        getWrapper(props);
+        setup();
         expect(props.getDatacartDetails.calledOnce).toBe(true);
         expect(props.getDatacartDetails.calledWith('123456789')).toBe(true);
         expect(props.getProviders.calledOnce).toBe(true);
@@ -251,20 +217,16 @@ describe('StatusDownload component', () => {
     });
 
     it('componentDidUpdate should call browserHistory push if a run has been deleted', () => {
-        const props = getProps();
-        const wrapper = getWrapper(props);
-        browserHistory.push = sinon.spy();
+        const pushStub = sinon.stub(browserHistory, 'push');
         const nextProps = getProps();
         nextProps.runDeletion.deleted = true;
         wrapper.setProps(nextProps);
-        expect(browserHistory.push.calledOnce).toBe(true);
-        expect(browserHistory.push.calledWith('/exports')).toBe(true);
+        expect(pushStub.calledOnce).toBe(true);
+        expect(pushStub.calledWith('/exports')).toBe(true);
     });
 
     it('componentDidUpdate should set error state on export rerun error', () => {
-        const props = getProps();
-        const stateStub = sinon.stub(StatusDownload.prototype, 'setState');
-        const wrapper = getWrapper(props);
+        const stateStub = sinon.stub(instance, 'setState');
         const nextProps = getProps();
         const error = [{ detail: 'this is an error' }];
         nextProps.exportReRun.error = error;
@@ -274,13 +236,11 @@ describe('StatusDownload component', () => {
     });
 
     it('componentDidUpdate should handle reRun of datacartDetails', () => {
-        const props = getProps();
-        const timerStub = sinon.stub(StatusDownload.prototype, 'startTimer');
+        const timerStub = sinon.stub(instance, 'startTimer');
         const nextProps = getProps();
         nextProps.getDatacartDetails = sinon.spy();
         nextProps.exportReRun.fetched = true;
         nextProps.exportReRun.data = [{ ...exampleRun }];
-        const wrapper = getWrapper(props);
         wrapper.setProps(nextProps);
         expect(nextProps.getDatacartDetails.calledOnce).toBe(true);
         expect(timerStub.calledOnce).toBe(true);
@@ -288,8 +248,6 @@ describe('StatusDownload component', () => {
     });
 
     it('componentDidUpdate should handle expiration update', () => {
-        const props = getProps();
-        const wrapper = getWrapper(props);
         const nextProps = getProps();
         nextProps.getDatacartDetails = sinon.spy();
         nextProps.expirationState.updated = true;
@@ -299,8 +257,6 @@ describe('StatusDownload component', () => {
     });
 
     it('componentDidUpdate should handle permission update', () => {
-        const props = getProps();
-        const wrapper = getWrapper(props);
         const nextProps = getProps();
         nextProps.getDatacartDetails = sinon.spy();
         nextProps.permissionState.updated = true;
@@ -311,12 +267,10 @@ describe('StatusDownload component', () => {
 
     it('componentDidUpdate should handle fetched datacartDetails and set isLoading false', () => {
         jest.useFakeTimers();
-        const props = getProps();
-        const stateStub = sinon.stub(StatusDownload.prototype, 'setState');
-        const clearStub = sinon.stub(global.window, 'clearInterval');
-        const wrapper = getWrapper(props);
+        const stateStub = sinon.stub(instance, 'setState');
+        const clearStub = sinon.stub(window, 'clearInterval');
         const { timer } = wrapper.instance();
-        const setStub = sinon.stub(global.window, 'setTimeout');
+        const setStub = sinon.stub(window, 'setTimeout');
         setStub.onFirstCall().callsFake(callback => callback());
         const nextProps = getProps();
         nextProps.getDatacartDetails = sinon.spy();
@@ -337,9 +291,7 @@ describe('StatusDownload component', () => {
 
     it('componentDidUpdate should handle fetched datacartDetails and not clear interval zipfile_url is null', () => {
         jest.useFakeTimers();
-        const props = getProps();
-        const clearStub = sinon.stub(global.window, 'clearInterval');
-        const wrapper = getWrapper(props);
+        const clearStub = sinon.stub(window, 'clearInterval');
         const nextProps = getProps();
         nextProps.detailsFetched = true;
         nextProps.runs = [{ ...exampleRun }];
@@ -361,8 +313,6 @@ describe('StatusDownload component', () => {
                 isFixed: true,
             },
         ];
-        const props = getProps();
-        const wrapper = getWrapper(props);
         const stateSpy = sinon.stub(wrapper.instance(), 'setState');
         wrapper.instance().joyrideAddSteps(steps);
         expect(stateSpy.calledOnce).toBe(true);
@@ -383,8 +333,6 @@ describe('StatusDownload component', () => {
             },
             type: 'step:before',
         };
-        const props = getProps();
-        const wrapper = getWrapper(props);
         wrapper.instance().joyride = { reset: sinon.spy() };
         const stateSpy = sinon.stub(wrapper.instance(), 'setState');
         wrapper.instance().callback(callbackData);
@@ -395,9 +343,7 @@ describe('StatusDownload component', () => {
 
     it('componentDidUpdate should handle fetched datacartDetails and not clear interval when tasks are not completed', () => {
         jest.useFakeTimers();
-        const props = getProps();
-        const clearStub = sinon.stub(global.window, 'clearInterval');
-        const wrapper = getWrapper(props);
+        const clearStub = sinon.stub(window, 'clearInterval');
         const nextProps = getProps();
         nextProps.detailsFetched = true;
         nextProps.runs = [{ ...exampleRun }];
@@ -409,15 +355,11 @@ describe('StatusDownload component', () => {
         clearStub.restore();
     });
 
-
     it('componentWillUnmount should clear cart details and timers', () => {
-        const props = getProps();
-        props.clearDataCartDetails = sinon.spy();
-        const wrapper = getWrapper(props);
         const { timer } = wrapper.instance();
         const { timeout } = wrapper.instance();
-        const timerStub = sinon.spy(global.window, 'clearInterval');
-        const timeoutStub = sinon.stub(global.window, 'clearTimeout');
+        const timerStub = sinon.spy((global as any).window, 'clearInterval');
+        const timeoutStub = sinon.stub((global as any).window, 'clearTimeout');
         wrapper.unmount();
         expect(timerStub.called).toBe(true);
         expect(timerStub.calledWith(timer)).toBe(true);
@@ -429,9 +371,7 @@ describe('StatusDownload component', () => {
     });
 
     it('getMarginPadding should return 0px if window size is <= 767', () => {
-        const props = getProps();
-        props.width = 'xs';
-        const wrapper = getWrapper(props);
+        wrapper.setProps({ width: 'xs' });
         let padding = wrapper.instance().getMarginPadding();
         expect(padding).toEqual('0px');
         wrapper.setProps({ width: 'lg' });
@@ -440,15 +380,11 @@ describe('StatusDownload component', () => {
     });
 
     it('getErrorMessage should return null if no error in state', () => {
-        const props = getProps();
-        const wrapper = getWrapper(props);
         expect(wrapper.state().error).toBe(null);
         expect(wrapper.instance().getErrorMessage()).toBe(null);
     });
 
     it('getErrorMessage should return an array of error messages', () => {
-        const props = getProps();
-        const wrapper = getWrapper(props);
         const error = [{ detail: 'one' }, { detail: 'two' }];
         wrapper.setState({ error });
         wrapper.instance().forceUpdate();
@@ -457,50 +393,26 @@ describe('StatusDownload component', () => {
         expect(ret).toHaveLength(2);
     });
 
-    it('handleClone should call props.cloneExport', () => {
-        const props = getProps();
-        props.cloneExport = sinon.spy();
-        const wrapper = getWrapper(props);
-        const cart = { uid: '123' };
-        const p = ['1', '2'];
-        wrapper.instance().handleClone(cart, p);
-        expect(props.cloneExport.calledOnce).toBe(true);
-        expect(props.cloneExport.calledWith(cart, p));
-    });
-
     it('startTimer should create a timer interval', () => {
         const setIntMock = sinon.spy(callback => callback());
-        const props = getProps();
-        props.getDatacartDetails = sinon.spy();
-        const wrapper = getWrapper(props);
-        global.window.setInterval = setIntMock;
+        window.setInterval = setIntMock;
         wrapper.instance().startTimer();
         expect(setIntMock.calledOnce).toBe(true);
         expect(props.getDatacartDetails.calledOnce).toBe(true);
     });
 
     it('clearError should set error state to null', () => {
-        const props = getProps();
-        const stateStub = sinon.stub(StatusDownload.prototype, 'setState');
-        const wrapper = getWrapper(props);
+        const stateStub = sinon.stub(instance, 'setState');
         wrapper.instance().clearError();
         expect(stateStub.calledWith({ error: null })).toBe(true);
         stateStub.restore();
     });
 
     it('should refresh the entire component when location changes', () => {
-        StatusDownload.prototype.componentDidMount = didMount;
-        const componentDidMountSpy = sinon.spy(StatusDownload.prototype, 'componentDidMount');
-        const componentWillUnmountSpy = sinon.spy(StatusDownload.prototype, 'componentWillUnmount');
-        const setStateSpy = sinon.spy(StatusDownload.prototype, 'setState');
-        const wrapper = getWrapper(getProps());
-        expect(componentDidMountSpy.callCount).toBe(1);
-        expect(componentWillUnmountSpy.callCount).toBe(0);
+        const setStateSpy = sinon.spy(instance, 'setState');
         wrapper.setProps({
             location: { pathname: '/new/path' },
         });
-        expect(componentDidMountSpy.callCount).toBe(2);
-        expect(componentWillUnmountSpy.callCount).toBe(1);
         expect(setStateSpy.calledWith(wrapper.instance().getInitialState())).toBe(true);
     });
 });

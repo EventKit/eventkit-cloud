@@ -1,11 +1,33 @@
-import PropTypes from 'prop-types';
-import React, { Component } from 'react';
+import * as React from 'react';
 import { withTheme } from '@material-ui/core/styles';
 import CustomTableRow from '../CustomTableRow';
 import PermissionsData from './PermissionsData';
 import ExpirationData from './ExpirationData';
 
-export class DataPackStatusTable extends Component {
+export interface Props {
+    className?: string;
+    status: string;
+    expiration: string;
+    permissions: Eventkit.Permissions;
+    minDate: Date;
+    maxDate: Date;
+    handleExpirationChange: (date: Date) => void;
+    handlePermissionsChange: (permissions: Eventkit.Permissions) => void;
+    statusColor: string;
+    statusFontColor: string;
+    adminPermissions: boolean;
+    user: Eventkit.User;
+}
+
+export class DataPackStatusTable extends React.Component<Props, {}> {
+    static defaultProps = {
+        minDate: null,
+        maxDate: null,
+        statusColor: null,
+        statusFontColor: null,
+        adminPermissions: false,
+    };
+
     render() {
         return (
             <div>
@@ -48,38 +70,5 @@ export class DataPackStatusTable extends Component {
         );
     }
 }
-
-DataPackStatusTable.defaultProps = {
-    minDate: null,
-    maxDate: null,
-    statusColor: null,
-    statusFontColor: null,
-    adminPermissions: false,
-};
-
-DataPackStatusTable.propTypes = {
-    status: PropTypes.string.isRequired,
-    expiration: PropTypes.string.isRequired,
-    permissions: PropTypes.shape({
-        value: PropTypes.oneOf([
-            'PUBLIC',
-            'PRIVATE',
-            'SHARED',
-        ]),
-        groups: PropTypes.objectOf(PropTypes.string),
-        members: PropTypes.objectOf(PropTypes.string),
-    }).isRequired,
-    minDate: PropTypes.instanceOf(Date),
-    maxDate: PropTypes.instanceOf(Date),
-    handleExpirationChange: PropTypes.func.isRequired,
-    handlePermissionsChange: PropTypes.func.isRequired,
-    statusColor: PropTypes.string,
-    statusFontColor: PropTypes.string,
-    adminPermissions: PropTypes.bool,
-    user: PropTypes.shape({
-        user: PropTypes.object,
-        groups: PropTypes.arrayOf(PropTypes.number),
-    }).isRequired,
-};
 
 export default withTheme()(DataPackStatusTable);

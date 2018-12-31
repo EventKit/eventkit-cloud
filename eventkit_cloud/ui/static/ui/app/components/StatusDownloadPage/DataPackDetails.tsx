@@ -1,6 +1,5 @@
-import PropTypes from 'prop-types';
-import React, { Component } from 'react';
-import { withStyles } from '@material-ui/core/styles';
+import * as React from 'react';
+import { withTheme, withStyles, Theme } from '@material-ui/core/styles';
 import withWidth, { isWidthUp } from '@material-ui/core/withWidth';
 import Table from '@material-ui/core/Table';
 import TableBody from '@material-ui/core/TableBody';
@@ -11,12 +10,13 @@ import Info from '@material-ui/icons/Info';
 import CloudDownload from '@material-ui/icons/CloudDownload';
 import ProviderRow from './ProviderRow';
 import BaseDialog from '../Dialog/BaseDialog';
+import { Breakpoint } from '@material-ui/core/styles/createBreakpoints';
 
-const jss = theme => ({
-    root: {
+const jss = (theme: Eventkit.Theme & Theme) => ({
+    btn: {
         backgroundColor: theme.eventkit.colors.selected_primary,
         color: theme.eventkit.colors.primary,
-        fontWeight: 'bold',
+        fontWeight: 'bold' as 'bold',
         '&:hover': {
             backgroundColor: theme.eventkit.colors.selected_primary_dark,
             color: theme.eventkit.colors.primary,
@@ -28,8 +28,23 @@ const jss = theme => ({
     },
 });
 
-export class DataPackDetails extends Component {
-    constructor(props) {
+export interface Props {
+    providerTasks: Eventkit.ProviderTask[];
+    onProviderCancel: (uid: string) => void;
+    providers: Eventkit.Provider[];
+    zipFileProp: string;
+    classes: { [className: string]: string };
+    theme: Eventkit.Theme & Theme;
+    width: Breakpoint;
+}
+
+export interface State {
+    infoOpen: boolean;
+    selectedProviders: { [slug: string]: boolean };
+}
+
+export class DataPackDetails extends React.Component<Props, State> {
+    constructor(props: Props) {
         super(props);
         this.handleInfoOpen = this.handleInfoOpen.bind(this);
         this.handleInfoClose = this.handleInfoClose.bind(this);
@@ -43,7 +58,7 @@ export class DataPackDetails extends Component {
         this.onMount();
     }
 
-    onMount() {
+    private onMount() {
         const selectedProviders = {};
         this.props.providerTasks.forEach((provider) => {
             if (provider.display === true) {
@@ -53,7 +68,7 @@ export class DataPackDetails extends Component {
         this.setState({ selectedProviders });
     }
 
-    getCloudDownloadIcon() {
+    private getCloudDownloadIcon() {
         const { colors } = this.props.theme.eventkit;
         if (!this.props.zipFileProp) {
             return (
@@ -71,7 +86,7 @@ export class DataPackDetails extends Component {
         );
     }
 
-    getTextFontSize() {
+    private getTextFontSize() {
         const { width } = this.props;
         if (!isWidthUp('sm', width)) {
             return '10px';
@@ -85,29 +100,29 @@ export class DataPackDetails extends Component {
         return '14px';
     }
 
-    getTableCellWidth() {
+    private getTableCellWidth() {
         if (!isWidthUp('md', this.props.width)) {
             return '80px';
         }
         return '120px';
     }
 
-    getToggleCellWidth() {
+    private getToggleCellWidth() {
         return '86px';
     }
 
-    isZipFileCompleted() {
+    private isZipFileCompleted() {
         if (!this.props.zipFileProp) {
             return false;
         }
         return true;
     }
 
-    handleInfoOpen() {
+    private handleInfoOpen() {
         this.setState({ infoOpen: true });
     }
 
-    handleInfoClose() {
+    private handleInfoClose() {
         this.setState({ infoOpen: false });
     }
 
@@ -123,7 +138,7 @@ export class DataPackDetails extends Component {
         const styles = {
             subHeading: {
                 fontSize: '16px',
-                fontWeight: 'bold',
+                fontWeight: 'bold' as 'bold',
                 color: colors.black,
                 alignContent: 'flex-start',
                 paddingBottom: '5px',
@@ -132,13 +147,13 @@ export class DataPackDetails extends Component {
                 paddingRight: '12px',
                 paddingLeft: '0px',
                 fontSize: textFontSize,
-                whiteSpace: 'normal',
+                whiteSpace: 'normal' as 'normal',
             },
             genericColumn: {
                 paddingRight: '0px',
                 paddingLeft: '0px',
                 width: tableCellWidth,
-                textAlign: 'center',
+                textAlign: 'center' as 'center',
                 fontSize: textFontSize,
             },
             info: {
@@ -175,7 +190,7 @@ export class DataPackDetails extends Component {
                                     href={this.props.zipFileProp}
                                     variant="contained"
                                     className="qa-DataPackDetails-Button-zipButton"
-                                    classes={{ root: classes.root }}
+                                    classes={{ root: classes.btn }}
                                     disabled={!this.isZipFileCompleted()}
                                     style={{ fontSize: textFontSize, lineHeight: 'initial' }}
                                 >
@@ -229,9 +244,7 @@ export class DataPackDetails extends Component {
                         <ProviderRow
                             backgroundColor={ix % 2 === 0 ? colors.secondary : colors.white}
                             key={provider.uid}
-                            onSelectionToggle={this.onSelectionToggle}
                             onProviderCancel={this.props.onProviderCancel}
-                            updateSelectionNumber={this.updateSelectionNumber}
                             provider={provider}
                             selectedProviders={this.state.selectedProviders}
                             providers={this.props.providers}
@@ -243,21 +256,4 @@ export class DataPackDetails extends Component {
     }
 }
 
-DataPackDetails.defaultProps = {
-    zipFileProp: null,
-};
-
-DataPackDetails.propTypes = {
-    providerTasks: PropTypes.arrayOf(PropTypes.object).isRequired,
-    onProviderCancel: PropTypes.func.isRequired,
-    providers: PropTypes.arrayOf(PropTypes.object).isRequired,
-    zipFileProp: PropTypes.string,
-    classes: PropTypes.object.isRequired,
-    theme: PropTypes.object.isRequired,
-    width: PropTypes.string.isRequired,
-};
-
-export default
-@withWidth()
-@withStyles(jss, { withTheme: true })
-class Default extends DataPackDetails {}
+export default withWidth()(withTheme()(withStyles(jss)(DataPackDetails)));

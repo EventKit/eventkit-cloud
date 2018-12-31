@@ -17,7 +17,7 @@ describe('LicenseRow component', () => {
         name: 'test name',
         text: 'test text',
         classes: {},
-        ...(global as any).eventkit_test_props,
+        ...((global as any) as any).eventkit_test_props,
     });
 
     const getWrapper = props => shallow(<LicenseRow {...props} />);

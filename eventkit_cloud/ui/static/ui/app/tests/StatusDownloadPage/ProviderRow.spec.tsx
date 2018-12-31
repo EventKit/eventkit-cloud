@@ -79,26 +79,24 @@ describe('ProviderRow component', () => {
         },
     ];
 
-    const getProps = () => (
-        {
-            provider: {
-                name: 'OpenStreetMap Data (Themes)',
-                status: 'COMPLETED',
-                tasks,
-                uid: '123',
-                url: 'http://cloud.eventkit.test/api/provider_tasks/123',
-                display: true,
-                slug: 'osm',
-            },
-            selectedProviders,
-            providers,
-            backgroundColor: 'white',
-            onSelectionToggle: sinon.spy(),
-            onProviderCancel: sinon.spy(),
-            classes: {},
-            ...(global as any).eventkit_test_props,
-        }
-    );
+    const getProps = () => ({
+        provider: {
+            name: 'OpenStreetMap Data (Themes)',
+            status: 'COMPLETED',
+            tasks,
+            uid: '123',
+            url: 'http://cloud.eventkit.test/api/provider_tasks/123',
+            display: true,
+            slug: 'osm',
+        },
+        selectedProviders,
+        providers,
+        backgroundColor: 'white',
+        onSelectionToggle: sinon.spy(),
+        onProviderCancel: sinon.spy(),
+        classes: {},
+        ...(global as any).eventkit_test_props,
+    });
 
     const getWrapper = props => (
         shallow(<ProviderRow {...props} />)

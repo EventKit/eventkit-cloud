@@ -1,5 +1,5 @@
-import PropTypes from 'prop-types';
-import React, { Component } from 'react';
+import * as PropTypes from 'prop-types';
+import * as React from 'react';
 import Map from 'ol/map';
 import View from 'ol/view';
 import interaction from 'ol/interaction';
@@ -15,9 +15,17 @@ import CustomTableRow from '../CustomTableRow';
 import { getSqKmString } from '../../utils/generic';
 import ol3mapCss from '../../styles/ol3map.css';
 
+export interface Props {
+    extent: object;
+}
 
-export class DataPackAoiInfo extends Component {
-    constructor(props) {
+export class DataPackAoiInfo extends React.Component<Props, {}> {
+    static contextTypes = {
+        config: PropTypes.object,
+    };
+
+    private map;
+    constructor(props: Props) {
         super(props);
         this.initializeOpenLayers = this.initializeOpenLayers.bind(this);
     }
@@ -26,7 +34,7 @@ export class DataPackAoiInfo extends Component {
         this.initializeOpenLayers();
     }
 
-    initializeOpenLayers() {
+    private initializeOpenLayers() {
         const base = new Tile({
             source: new XYZ({
                 url: this.context.config.BASEMAP_URL,
@@ -94,13 +102,5 @@ export class DataPackAoiInfo extends Component {
         );
     }
 }
-
-DataPackAoiInfo.contextTypes = {
-    config: PropTypes.object,
-};
-
-DataPackAoiInfo.propTypes = {
-    extent: PropTypes.object.isRequired,
-};
 
 export default DataPackAoiInfo;

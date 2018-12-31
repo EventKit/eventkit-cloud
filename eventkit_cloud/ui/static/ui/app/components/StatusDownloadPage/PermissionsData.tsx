@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { withTheme } from '@material-ui/core/styles';
+import { withTheme, Theme } from '@material-ui/core/styles';
 import MenuItem from '@material-ui/core/MenuItem';
 import ButtonBase from '@material-ui/core/ButtonBase';
 import SocialGroup from '@material-ui/icons/Group';
@@ -10,15 +10,11 @@ import DropDownMenu from '../common/DropDownMenu';
 import DataPackShareDialog from '../DataPackShareDialog/DataPackShareDialog';
 
 interface Props {
-    permissions: {
-        value: 'PUBLIC' | 'PRIVATE' | 'SHARED';
-        groups: { [group: string]: string; };
-        members: { [member: string]: string };
-    };
-    handlePermissionsChange: (permissions: {}) => void;
+    permissions: Eventkit.Permissions;
+    handlePermissionsChange: (permissions: Eventkit.Permissions) => void;
     adminPermissions: boolean;
     user: Eventkit.User;
-    theme: Eventkit.Theme;
+    theme: Eventkit.Theme & Theme;
 }
 
 interface State {
@@ -26,7 +22,7 @@ interface State {
 }
 
 export class PermissionsData extends React.Component<Props, State> {
-    constructor(props) {
+    constructor(props: Props) {
         super(props);
         this.handleShareDialogOpen = this.handleShareDialogOpen.bind(this);
         this.handleShareDialogClose = this.handleShareDialogClose.bind(this);
@@ -71,12 +67,12 @@ export class PermissionsData extends React.Component<Props, State> {
         this.setState({ shareDialogOpen: false });
     }
 
-    private handleShareDialogSave(permissions) {
+    private handleShareDialogSave(permissions: Eventkit.Permissions) {
         this.props.handlePermissionsChange({ ...permissions });
         this.handleShareDialogClose();
     }
 
-    private handleDropDownChange(value) {
+    private handleDropDownChange(value: Eventkit.Permissions['value']) {
         // update the value in permissions
         // if new value is private, remove all but the logged in user
         const permissions = { ...this.props.permissions, value };

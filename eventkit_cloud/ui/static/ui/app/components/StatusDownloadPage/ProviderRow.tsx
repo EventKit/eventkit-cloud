@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { withTheme, withStyles, createStyles, Theme } from '@material-ui/core/styles';
-import withWidth, { isWidthUp } from '@material-ui/core/withWidth';
+import withWidth from '@material-ui/core/withWidth';
 import Table from '@material-ui/core/Table';
 import TableBody from '@material-ui/core/TableBody';
 import TableHead from '@material-ui/core/TableHead';
@@ -19,27 +19,28 @@ import TaskError from './TaskError';
 import ProviderError from './ProviderError';
 import BaseDialog from '../Dialog/BaseDialog';
 import LicenseRow from './LicenseRow';
+import { Breakpoint } from '@material-ui/core/styles/createBreakpoints';
 
 interface Props {
     provider: Eventkit.ProviderTask;
-    selectedProviders: { [uid: string]: Eventkit.ProviderTask };
+    selectedProviders: { [uid: string]: boolean };
     onProviderCancel: (uid: string) => void;
-    providers: Eventkit.ProviderTask[];
+    providers: Eventkit.Provider[];
     backgroundColor: string;
-    theme: any;
-    width: any;
+    theme: Eventkit.Theme & Theme;
+    width: Breakpoint;
     classes: { [className: string]: string };
 }
 
 interface State {
     openTable: boolean;
-    selectedRows: {[uid: string]: Eventkit.ProviderTask };
+    selectedRows: {[uid: string]: boolean };
     fileSize: string;
     providerDesc: string;
     providerDialogOpen: boolean;
 }
 
-const jss = (theme: any) => createStyles({
+const jss = (theme: Eventkit.Theme & Theme) => createStyles({
     insetColumn: {
         width: '44px',
         padding: '0px',
@@ -125,7 +126,7 @@ const jss = (theme: any) => createStyles({
 });
 
 export class ProviderRow extends React.Component<Props, State> {
-    constructor(props) {
+    constructor(props: Props) {
         super(props);
         this.handleSingleDownload = this.handleSingleDownload.bind(this);
         this.handleToggle = this.handleToggle.bind(this);
@@ -159,7 +160,7 @@ export class ProviderRow extends React.Component<Props, State> {
         }
     }
 
-    getFileSize(tasks: Eventkit.Task[]): string {
+    private getFileSize(tasks: Eventkit.Task[]): string {
         let fileSize = 0.000;
         tasks.forEach((task) => {
             if (task.result != null) {
@@ -178,7 +179,7 @@ export class ProviderRow extends React.Component<Props, State> {
         return fileSize.toFixed(3);
     }
 
-    getTaskStatus(task: Eventkit.Task) {
+    private getTaskStatus(task: Eventkit.Task) {
         const { colors } = this.props.theme.eventkit;
         switch (task.status) {
             case 'SUCCESS':
@@ -215,7 +216,7 @@ export class ProviderRow extends React.Component<Props, State> {
         }
     }
 
-    getProviderStatus(provider: Eventkit.ProviderTask) {
+    private getProviderStatus(provider: Eventkit.ProviderTask) {
         const { colors } = this.props.theme.eventkit;
 
         switch (provider.status) {
@@ -260,7 +261,7 @@ export class ProviderRow extends React.Component<Props, State> {
         }
     }
 
-    getTaskLink(task: Eventkit.Task) {
+    private getTaskLink(task: Eventkit.Task) {
         const { colors } = this.props.theme.eventkit;
 
         if (!Object.prototype.hasOwnProperty.call(task.result, 'url')) {
@@ -287,7 +288,7 @@ export class ProviderRow extends React.Component<Props, State> {
         );
     }
 
-    getTaskDownloadIcon(task: Eventkit.Task) {
+    private getTaskDownloadIcon(task: Eventkit.Task) {
         const { colors } = this.props.theme.eventkit;
 
         if (!Object.prototype.hasOwnProperty.call(task.result, 'url')) {
@@ -318,19 +319,19 @@ export class ProviderRow extends React.Component<Props, State> {
         );
     }
 
-    handleToggle() {
+    private handleToggle() {
         this.setState({ openTable: !this.state.openTable });
     }
 
-    handleSingleDownload(url: string) {
+    private handleSingleDownload(url: string) {
         window.open(url, '_blank');
     }
 
-    handleProviderClose() {
+    private handleProviderClose() {
         this.setState({ providerDialogOpen: false });
     }
 
-    handleProviderOpen() {
+    private handleProviderOpen() {
         const { provider } = this.props;
         const propsProvider = this.props.providers.find(x => x.slug === provider.slug);
         const providerDesc = propsProvider.service_description;

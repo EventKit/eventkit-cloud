@@ -1,5 +1,5 @@
-import React from 'react';
-import sinon from 'sinon';
+import * as React from 'react';
+import * as sinon from 'sinon';
 import { createShallow } from '@material-ui/core/test-utils';
 import Table from '@material-ui/core/Table';
 import TableRow from '@material-ui/core/TableRow';
@@ -75,16 +75,23 @@ describe('DataPackDetails component', () => {
         providerTasks,
         providers,
         zipFileProp: null,
-        onProviderCancel: () => {},
+        onProviderCancel: sinon.spy(),
         classes: { root: {} },
-        ...global.eventkit_test_props,
+        ...(global as any).eventkit_test_props,
     });
 
-    const getWrapper = props => shallow(<DataPackDetails {...props} />);
+    let props;
+    let wrapper;
+    let instance;
+    const setup = (overrides = {}) => {
+        props = { ...getProps(), ...overrides };
+        wrapper = shallow(<DataPackDetails {...props} />);
+        instance = wrapper.instance();
+    };
+
+    beforeEach(setup);
 
     it('should render elements', () => {
-        const props = getProps();
-        const wrapper = getWrapper(props);
         expect(wrapper.find('div').at(1).text()).toEqual('Download Options');
         expect(wrapper.find(Table)).toHaveLength(1);
         const table = wrapper.find(Table).dive();
@@ -101,54 +108,45 @@ describe('DataPackDetails component', () => {
     });
 
     it('getTextFontSize should return the font string for table text based on window width', () => {
-        const props = getProps();
-        props.width = 'xs';
-        const wrapper = getWrapper(props);
-        expect(wrapper.instance().getTextFontSize()).toEqual('10px');
+        wrapper.setProps({ width: 'xs' });
+        expect(instance.getTextFontSize()).toEqual('10px');
 
         wrapper.setProps({ width: 'sm' });
-        expect(wrapper.instance().getTextFontSize()).toEqual('11px');
+        expect(instance.getTextFontSize()).toEqual('11px');
 
         wrapper.setProps({ width: 'md' });
-        expect(wrapper.instance().getTextFontSize()).toEqual('12px');
+        expect(instance.getTextFontSize()).toEqual('12px');
 
         wrapper.setProps({ width: 'lg' });
-        expect(wrapper.instance().getTextFontSize()).toEqual('13px');
+        expect(instance.getTextFontSize()).toEqual('13px');
 
         wrapper.setProps({ width: 'xl' });
-        expect(wrapper.instance().getTextFontSize()).toEqual('14px');
+        expect(instance.getTextFontSize()).toEqual('14px');
     });
 
     it('getTableCellWidth should return the pixel string for table width based on window width', () => {
-        const props = getProps();
-        props.width = 'sm';
-        const wrapper = getWrapper(props);
-
-        expect(wrapper.instance().getTableCellWidth()).toEqual('80px');
+        wrapper.setProps({ width: 'sm' });
+        expect(instance.getTableCellWidth()).toEqual('80px');
 
         wrapper.setProps({ width: 'md' });
-        expect(wrapper.instance().getTableCellWidth()).toEqual('120px');
+        expect(instance.getTableCellWidth()).toEqual('120px');
     });
 
     it('isZipFileCompleted should return true or false', () => {
-        const props = getProps();
-        const wrapper = getWrapper(props);
         props.zipFileProp = null;
-        wrapper.instance().isZipFileCompleted();
-        expect(wrapper.instance().isZipFileCompleted()).toEqual(false);
+        instance.isZipFileCompleted();
+        expect(instance.isZipFileCompleted()).toEqual(false);
         const nextProps = { ...props };
         nextProps.zipFileProp = 'TESTING.zip';
         wrapper.setProps(nextProps);
-        wrapper.instance().isZipFileCompleted();
-        expect(wrapper.instance().isZipFileCompleted()).toEqual(true);
+        instance.isZipFileCompleted();
+        expect(instance.isZipFileCompleted()).toEqual(true);
     });
 
     it('getCloudDownloadIcon should be called with correct data', () => {
-        const props = getProps();
-        const wrapper = getWrapper(props);
         props.zipFileProp = null;
-        wrapper.instance().getCloudDownloadIcon();
-        expect(wrapper.instance().getCloudDownloadIcon()).toEqual((
+        instance.getCloudDownloadIcon();
+        expect(instance.getCloudDownloadIcon()).toEqual((
             <CloudDownload
                 className="qa-DataPackDetails-CloudDownload-disabled"
                 style={{ fill: '#808080', marginRight: '5px', verticalAlign: 'middle' }}
@@ -157,8 +155,8 @@ describe('DataPackDetails component', () => {
         const nextProps = { ...props };
         nextProps.zipFileProp = 'TESTING.zip';
         wrapper.setProps(nextProps);
-        wrapper.instance().getCloudDownloadIcon();
-        expect(wrapper.instance().getCloudDownloadIcon()).toEqual((
+        instance.getCloudDownloadIcon();
+        expect(instance.getCloudDownloadIcon()).toEqual((
             <CloudDownload
                 className="qa-DataPackDetails-CloudDownload-enabled"
                 style={{ fill: '#4598bf', marginRight: '5px', verticalAlign: 'middle' }}
@@ -167,19 +165,15 @@ describe('DataPackDetails component', () => {
     });
 
     it('handleInfoOpen should set infoOpen true', () => {
-        const props = getProps();
-        const wrapper = getWrapper(props);
-        const stateStub = sinon.stub(wrapper.instance(), 'setState');
-        wrapper.instance().handleInfoOpen();
+        const stateStub = sinon.stub(instance, 'setState');
+        instance.handleInfoOpen();
         expect(stateStub.calledOnce).toBe(true);
         expect(stateStub.calledWith({ infoOpen: true })).toBe(true);
     });
 
     it('handleInfoClose should set infoOpen false', () => {
-        const props = getProps();
-        const wrapper = getWrapper(props);
-        const stateStub = sinon.stub(wrapper.instance(), 'setState');
-        wrapper.instance().handleInfoClose();
+        const stateStub = sinon.stub(instance, 'setState');
+        instance.handleInfoClose();
         expect(stateStub.calledOnce).toBe(true);
         expect(stateStub.calledWith({ infoOpen: false })).toBe(true);
     });

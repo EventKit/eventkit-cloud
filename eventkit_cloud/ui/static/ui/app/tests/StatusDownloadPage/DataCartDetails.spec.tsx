@@ -1,7 +1,7 @@
-import React from 'react';
-import sinon from 'sinon';
+import * as React from 'react';
+import * as sinon from 'sinon';
 import { createShallow } from '@material-ui/core/test-utils';
-import moment from 'moment';
+import * as moment from 'moment';
 import DataPackDetails from '../../components/StatusDownloadPage/DataPackDetails';
 import DataPackStatusTable from '../../components/StatusDownloadPage/DataPackStatusTable';
 import DataPackOptions from '../../components/StatusDownloadPage/DataPackOptions';
@@ -88,26 +88,31 @@ describe('DataCartDetails component', () => {
             providers,
             maxResetExpirationDays: '30',
             zipFileProp: null,
-            onUpdateExpiration: () => {},
-            onUpdateDataCartPermissions: () => {},
-            onRunDelete: () => {},
-            onRunRerun: () => {},
-            onClone: () => {},
-            onProviderCancel: () => {},
+            onUpdateExpiration: sinon.spy(),
+            onUpdateDataCartPermissions: sinon.spy(),
+            onRunDelete: sinon.spy(),
+            onRunRerun: sinon.spy(),
+            onClone: sinon.spy(),
+            onProviderCancel: sinon.spy(),
             user: { data: { user: { username: 'admin' } } },
             members: [],
             groups: [],
-            ...global.eventkit_test_props,
+            ...(global as any).eventkit_test_props,
         }
     );
 
-    const getWrapper = props => (
-        shallow(<DataCartDetails {...props} />)
-    );
+    let props;
+    let wrapper;
+    let instance;
+    const setup = (overrides = {}) => {
+        props = { ...getProps(), ...overrides };
+        wrapper = shallow(<DataCartDetails {...props} />);
+        instance = wrapper.instance();
+    };
+
+    beforeEach(setup);
 
     it('should render elements', () => {
-        const props = getProps();
-        const wrapper = getWrapper(props);
         expect(wrapper.find('.qa-DataCartDetails-div-name')).toHaveLength(1);
         expect(wrapper.find('.qa-DataCartDetails-div-status')).toHaveLength(1);
         expect(wrapper.find(DataPackStatusTable)).toHaveLength(1);
@@ -122,9 +127,8 @@ describe('DataCartDetails component', () => {
     });
 
     it('should change the status colors based on cart status', () => {
-        const props = getProps();
         props.cartDetails.status = 'COMPLETED';
-        const wrapper = getWrapper(props);
+        wrapper.setProps({ cartDetails: { ...props.cartDetails, status: 'COMPLETED' }});
         expect(wrapper.find(DataPackStatusTable).props().statusColor).toEqual('#55ba6333');
         expect(wrapper.find(DataPackStatusTable).props().statusFontColor).toEqual('#55ba63');
 
@@ -141,18 +145,15 @@ describe('DataCartDetails component', () => {
         expect(wrapper.find(DataPackStatusTable).props().statusFontColor).toEqual('#ce4427');
     });
 
-    it('should call setMaxDate set on shallow', () => {
-        const props = getProps();
+    it('should call setMaxDate set on mount', () => {
         const dateStub = sinon.stub(DataCartDetails.prototype, 'setDates');
-        getWrapper(props);
+        setup();
         expect(dateStub.calledOnce).toBe(true);
         dateStub.restore();
     });
 
     it('setMaxDate should set the min and max dates', () => {
-        const props = getProps();
-        const wrapper = getWrapper(props);
-        const stateStub = sinon.stub(wrapper.instance(), 'setState');
+        const stateStub = sinon.stub(instance, 'setState');
         const minDate = new Date();
         const clock = sinon.useFakeTimers(minDate.getTime());
         const today = new Date();
@@ -160,31 +161,25 @@ describe('DataCartDetails component', () => {
         m.add(props.maxResetExpirationDays, 'days');
         const maxDate = m.toDate();
         expect(stateStub.called).toBe(false);
-        wrapper.instance().setDates();
+        instance.setDates();
         expect(stateStub.calledOnce).toBe(true);
         expect(stateStub.calledWith({ minDate, maxDate })).toBe(true);
         clock.restore();
     });
 
     it('handlePermissionsChange should call onUpdateDataCartPermissions', () => {
-        const props = getProps();
-        props.onUpdateDataCartPermissions = sinon.spy();
-        const wrapper = getWrapper(props);
         const permissions = {
             value: 'PUBLIC',
             groups: {},
             members: {},
         };
-        wrapper.instance().handlePermissionsChange(permissions);
+        instance.handlePermissionsChange(permissions);
         expect(props.onUpdateDataCartPermissions.calledOnce).toBe(true);
         expect(props.onUpdateDataCartPermissions.calledWith(props.cartDetails.job.uid, permissions)).toBe(true);
     });
 
     it('handleExpirationChange should call onUpdateExpiration', () => {
-        const props = getProps();
-        props.onUpdateExpiration = sinon.spy();
-        const wrapper = getWrapper(props);
-        wrapper.instance().handleExpirationChange('today');
+        instance.handleExpirationChange('today');
         expect(props.onUpdateExpiration.calledOnce).toBe(true);
         expect(props.onUpdateExpiration.calledWith(props.cartDetails.uid, 'today')).toBe(true);
     });
