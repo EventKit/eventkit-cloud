@@ -8,7 +8,7 @@ import { about } from '../../about.config';
 
 const COMPONENT_MAPPING = { InfoParagraph, ThreeStepInfo, InfoGrid };
 
-interface Props {
+export interface Props {
     context: {
         config: {
             VERSION: string,
@@ -17,7 +17,7 @@ interface Props {
     };
 }
 
-interface State {
+export interface State {
     pageInfo: object[];
 }
 

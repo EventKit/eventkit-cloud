@@ -1,3 +1,4 @@
+type Omit<T, K extends keyof T> = Pick<T, Exclude<keyof T, K>>;
 
 declare namespace Eventkit {
     interface License {
@@ -43,7 +44,9 @@ declare namespace Eventkit {
             url: string;
             deleted: boolean;
         };
-        errors: Error[];
+        errors: Array<{
+            exception: string;
+        }>;
         display: boolean;
     }
 
@@ -51,6 +54,7 @@ declare namespace Eventkit {
         uid: string;
         url: string;
         name: string;
+        description: string;
         started_at: string;
         finished_at: string;
         duration: string;
@@ -95,6 +99,10 @@ declare namespace Eventkit {
         deleted: boolean;
     }
 
+    interface FullRun extends Omit<Run, 'provider_tasks'> {
+        provider_tasks: ProviderTask[];
+    }
+
     interface UserJobActivity {
         job: Job;
         last_export_run: Run;
@@ -133,7 +141,8 @@ declare namespace Eventkit {
         date_joined: string;
         identification: string;
         commonname: string;
-        permission?: string;
+        permission?: string; // Certain API responses will include user permission level for a given target.
+        fake?: boolean; // Used for adding fake users during page tours.
     }
 
     interface User {
@@ -216,7 +225,18 @@ declare namespace Eventkit {
             error: any;
         }
 
+        interface ReRun {
+            fetched: boolean;
+            error: any;
+        }
+
         interface UpdatePermissions {
+            updated: boolean;
+            updating: boolean;
+            error: any;
+        }
+
+        interface UpdateExpiration {
             updated: boolean;
             updating: boolean;
             error: any;
@@ -283,6 +303,8 @@ declare namespace Eventkit {
             new: number;
             total: number;
             ungrouped: number;
+            range: string;
+            nextPage: boolean;
             users: Eventkit.User[];
         }
 
@@ -316,6 +338,33 @@ declare namespace Eventkit {
             fetching: boolean;
             fetched: boolean;
             licenses: License[];
+            error: any;
+        }
+
+        interface ExportInfo {
+            areaStr: string;
+            datapackDescription: string;
+            exportName: string;
+            formats: string[];
+            projectName: string;
+            providers: Provider[];
+        }
+
+        interface AoiInfo {
+            buffer: number;
+            description: string;
+            geojson: GeoJSON.FeatureCollection;
+            geomType: string;
+            originalGeojson: GeoJSON.FeatureCollection;
+            selectionType: string;
+            title: string;
+        }
+
+        interface ImportGeom {
+            processed: boolean;
+            processing: boolean;
+            filename: string;
+            featureCollection: GeoJSON.FeatureCollection;
             error: any;
         }
     }
