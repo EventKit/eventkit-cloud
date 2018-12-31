@@ -1,6 +1,5 @@
-import PropTypes from 'prop-types';
-import React, { Component } from 'react';
-import { withTheme } from '@material-ui/core/styles';
+import * as React from 'react';
+import { withTheme, Theme, withStyles, createStyles } from '@material-ui/core/styles';
 import MenuItem from '@material-ui/core/MenuItem';
 import Person from '@material-ui/icons/Person';
 import ArrowDown from '@material-ui/icons/ArrowDropDown';
@@ -8,86 +7,114 @@ import Checked from '@material-ui/icons/CheckBox';
 import Unchecked from '@material-ui/icons/CheckBoxOutlineBlank';
 import IconMenu from '../common/IconMenu';
 
-export class UserRow extends Component {
-    constructor(props) {
+const jss = (theme: Eventkit.Theme & Theme) => createStyles({
+    row: {
+        color: theme.eventkit.colors.text_primary,
+        fontSize: '14px',
+        whiteSpace: 'normal',
+        display: 'flex',
+        backgroundColor: theme.eventkit.colors.white,
+        borderTop: `1px solid ${theme.eventkit.colors.backdrop}`,
+        '&:hover': {
+            backgroundColor: theme.eventkit.colors.selected_primary,
+        },
+    },
+    info: {
+        flexBasis: '100%',
+        flexWrap: 'wrap',
+        wordBreak: 'break-word',
+    },
+    checkboxContainer: {
+        display: 'flex',
+        flex: '0 0 auto',
+        paddingLeft: '24px',
+        alignItems: 'center',
+    },
+    adminContainer: {
+        display: 'flex',
+        margin: '0px 30px 0px 20px',
+        alignItems: 'center',
+    },
+    admin: {
+        backgroundColor: theme.eventkit.colors.primary,
+        color: theme.eventkit.colors.white,
+        padding: '4px 11px',
+        fontSize: '11px',
+        cursor: 'pointer',
+    },
+    menuItem: {
+        fontSize: '14px',
+        overflow: 'hidden',
+        color: theme.eventkit.colors.text_primary,
+    },
+    warning: {
+        color: theme.eventkit.colors.warning,
+    },
+});
+
+export interface Props {
+    className?: string;
+    selected: boolean;
+    onSelect: (user: Eventkit.User) => void;
+    user: Eventkit.User;
+    handleNewGroup: (users: Eventkit.User[]) => void;
+    handleAddUser: (users: Eventkit.User[]) => void;
+    handleMakeAdmin: (user: Eventkit.User) => void;
+    handleDemoteAdmin: (user: Eventkit.User) => void;
+    handleRemoveUser: (user: Eventkit.User) => void;
+    isAdmin: boolean;
+    showAdminButton: boolean;
+    showAdminLabel: boolean;
+    showRemoveButton: boolean;
+    theme: Eventkit.Theme & Theme;
+    classes: { [className: string]: string };
+}
+
+export class UserRow extends React.Component<Props, {}> {
+    static defaultProps = {
+        handleMakeAdmin: () => { console.warn('Make admin function not provided'); },
+        handleDemoteAdmin: () => { console.warn('Demote admin function not provided'); },
+        handleRemoveUser: () => { console.warn('Remove user function not provided'); },
+        isAdmin: false,
+        showAdminButton: false,
+        showAdminLabel: false,
+        showRemoveButton: false,
+        style: {},
+    };
+
+    private onSelect: () => void;
+    constructor(props: Props) {
         super(props);
-        this.handleMouseOver = this.handleMouseOver.bind(this);
-        this.handleMouseOut = this.handleMouseOut.bind(this);
         this.handleAddUserClick = this.handleAddUserClick.bind(this);
         this.handleNewGroupClick = this.handleNewGroupClick.bind(this);
         this.handleMakeAdminClick = this.handleMakeAdminClick.bind(this);
         this.handleDemoteAdminClick = this.handleDemoteAdminClick.bind(this);
         this.handleRemoveUserClick = this.handleRemoveUserClick.bind(this);
         this.onSelect = this.props.onSelect.bind(this, this.props.user);
-        this.state = {
-            hovered: false,
-        };
     }
 
-    handleMouseOver() {
-        this.setState({ hovered: true });
-    }
-
-    handleMouseOut() {
-        this.setState({ hovered: false });
-    }
-
-    handleAddUserClick() {
+    private handleAddUserClick() {
         this.props.handleAddUser([this.props.user]);
     }
 
-    handleNewGroupClick() {
+    private handleNewGroupClick() {
         this.props.handleNewGroup([this.props.user]);
     }
 
-    handleMakeAdminClick() {
+    private handleMakeAdminClick() {
         this.props.handleMakeAdmin(this.props.user);
     }
 
-    handleDemoteAdminClick() {
+    private handleDemoteAdminClick() {
         this.props.handleDemoteAdmin(this.props.user);
     }
 
-    handleRemoveUserClick() {
+    private handleRemoveUserClick() {
         this.props.handleRemoveUser(this.props.user);
     }
 
     render() {
-        const { colors } = this.props.theme.eventkit;
-
-        const styles = {
-            row: {
-                ...this.props.style,
-                color: colors.text_primary,
-                fontSize: '14px',
-                whiteSpace: 'normal',
-                display: 'flex',
-                backgroundColor: this.state.hovered ? colors.selected_primary : colors.white,
-                borderTop: `1px solid ${colors.backdrop}`,
-            },
-            info: {
-                flexBasis: '100%',
-                flexWrap: 'wrap',
-                wordBreak: 'break-word',
-            },
-            adminContainer: {
-                display: 'flex',
-                margin: '0px 30px 0px 20px',
-                alignItems: 'center',
-            },
-            admin: {
-                backgroundColor: colors.primary,
-                color: colors.white,
-                padding: '4px 11px',
-                fontSize: '11px',
-                cursor: 'pointer',
-            },
-            menuItem: {
-                fontSize: '14px',
-                overflow: 'hidden',
-                color: colors.text_primary,
-            },
-        };
+        const { classes } = this.props;
 
         let adminButton = null;
         if (this.props.showAdminButton) {
@@ -101,9 +128,8 @@ export class UserRow extends Component {
             adminButton = (
                 <MenuItem
                     key="makeAdminMenuItem"
-                    style={styles.menuItem}
                     onClick={adminFunction}
-                    className="qa-UserRow-MenuItem-makeAdmin"
+                    className={`qa-UserRow-MenuItem-makeAdmin ${classes.menuItem}`}
                 >
                     {adminButtonText}
                 </MenuItem>
@@ -115,9 +141,8 @@ export class UserRow extends Component {
             removeButton = (
                 <MenuItem
                     key="remove"
-                    style={{ ...styles.menuItem, color: colors.warning }}
                     onClick={this.handleRemoveUserClick}
-                    className="qa-UserRow-MenuItem-remove"
+                    className={`qa-UserRow-MenuItem-remove ${classes.menuItem} ${classes.warning}`}
                 >
                     Remove User
                 </MenuItem>
@@ -133,7 +158,7 @@ export class UserRow extends Component {
         let adminLabel = null;
         if (this.props.showAdminLabel && this.props.isAdmin) {
             adminLabel = (
-                <div style={styles.adminContainer}>
+                <div className={classes.adminContainer}>
                         ADMIN
                 </div>
             );
@@ -146,28 +171,17 @@ export class UserRow extends Component {
 
         return (
             <div
-                style={styles.row}
-                className="qa-UserRow"
-                onMouseOver={this.handleMouseOver}
-                onMouseOut={this.handleMouseOut}
-                onFocus={this.handleMouseOver}
-                onBlur={this.handleMouseOut}
+                className={`qa-UserRow ${classes.row}`}
             >
-                <div style={{
-                    display: 'flex',
-                    flex: '0 0 auto',
-                    paddingLeft: '24px',
-                    alignItems: 'center',
-                }}
-                >
+                <div className={classes.checkboxContainer}>
                     {checkbox}
                 </div>
                 <div style={{ display: 'flex', flex: '1 1 auto', padding: '8px 24px' }}>
                     <div style={{ display: 'flex', flexWrap: 'wrap', flex: '1 1 auto' }}>
-                        <div className="qa-UserRow-name" style={styles.info}>
+                        <div className={`qa-UserRow-name ${classes.info}`}>
                             <strong>{name}</strong>
                         </div>
-                        <div className="qa-UserRow-email" style={styles.info}>
+                        <div className={`qa-UserRow-email ${classes.info}`}>
                             {email}
                         </div>
                     </div>
@@ -185,17 +199,15 @@ export class UserRow extends Component {
                     >
                         <MenuItem
                             key="edit"
-                            style={styles.menuItem}
                             onClick={this.handleAddUserClick}
-                            className="qa-UserRow-MenuItem-editGroups"
+                            className={`qa-UserRow-MenuItem-editGroups ${classes.menuItem}`}
                         >
                             Add to Existing Group
                         </MenuItem>
                         <MenuItem
                             key="new"
-                            style={styles.menuItem}
                             onClick={this.handleNewGroupClick}
-                            className="qa-UserRow-MenuItem-newGroup"
+                            className={`qa-UserRow-MenuItem-newGroup ${classes.menuItem}`}
                         >
                             Add to New Group
                         </MenuItem>
@@ -208,40 +220,4 @@ export class UserRow extends Component {
     }
 }
 
-UserRow.defaultProps = {
-    handleMakeAdmin: () => { console.warn('Make admin function not provided'); },
-    handleDemoteAdmin: () => { console.warn('Demote admin function not provided'); },
-    handleRemoveUser: () => { console.warn('Remove user function not provided'); },
-    isAdmin: false,
-    showAdminButton: false,
-    showAdminLabel: false,
-    showRemoveButton: false,
-    style: {},
-};
-
-UserRow.propTypes = {
-    selected: PropTypes.bool.isRequired,
-    onSelect: PropTypes.func.isRequired,
-    user: PropTypes.shape({
-        user: PropTypes.shape({
-            first_name: PropTypes.string,
-            last_name: PropTypes.string,
-            email: PropTypes.string,
-            username: PropTypes.string,
-        }),
-        groups: PropTypes.arrayOf(PropTypes.number),
-    }).isRequired,
-    handleNewGroup: PropTypes.func.isRequired,
-    handleAddUser: PropTypes.func.isRequired,
-    handleMakeAdmin: PropTypes.func,
-    handleDemoteAdmin: PropTypes.func,
-    handleRemoveUser: PropTypes.func,
-    isAdmin: PropTypes.bool,
-    showAdminButton: PropTypes.bool,
-    showAdminLabel: PropTypes.bool,
-    showRemoveButton: PropTypes.bool,
-    style: PropTypes.object,
-    theme: PropTypes.object.isRequired,
-};
-
-export default withTheme()(UserRow);
+export default withTheme()(withStyles(jss)(UserRow));

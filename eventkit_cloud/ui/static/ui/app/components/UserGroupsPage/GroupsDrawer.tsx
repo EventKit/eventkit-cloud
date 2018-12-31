@@ -1,6 +1,5 @@
-import PropTypes from 'prop-types';
-import React, { Component } from 'react';
-import { withTheme } from '@material-ui/core/styles';
+import * as React from 'react';
+import { withTheme, Theme, withStyles, createStyles } from '@material-ui/core/styles';
 import Drawer from '@material-ui/core/Drawer';
 import MenuList from '@material-ui/core/MenuList';
 import MenuItem from '@material-ui/core/MenuItem';
@@ -11,66 +10,94 @@ import AddCircleIcon from '@material-ui/icons/AddCircle';
 import IconMenu from '../common/IconMenu';
 import CustomScrollbar from '../CustomScrollbar';
 
+const jss = (theme: Eventkit.Theme & Theme) => createStyles({
+    drawer: {
+        backgroundColor: theme.eventkit.colors.white,
+        top: '130px',
+        height: 'calc(100vh - 130px)',
+        overflow: 'visible',
+        width: '250px',
+    },
+    item: {
+        height: '32px',
+        lineHeight: '32px',
+        padding: '0px 20px',
+        fontSize: '15px',
+        color: theme.eventkit.colors.primary,
+    },
+    heading: {
+        padding: '10px 20px 5px',
+        display: 'block',
+        fontSize: '18px',
+    },
+    subHeading: {
+        padding: '10px 20px 5px',
+        color: theme.eventkit.colors.text_primary,
+        display: 'block',
+    },
+    newGroupIcon: {
+        fill: theme.eventkit.colors.primary,
+        height: '24px',
+        width: '17px',
+        marginRight: '5px',
+        verticalAlign: 'bottom',
+        cursor: 'pointer',
+    },
+    newGroupBtn: {
+        fontSize: '13px',
+        color: theme.eventkit.colors.primary,
+        float: 'right',
+        lineHeight: '24px',
+        padding: '0px 10px',
+    },
+    groupName: {
+        textOverflow: 'ellipsis',
+        overflow: 'hidden',
+        flex: '0 1 auto',
+        paddingRight: '5px',
+    },
+    infoIcon: {
+        fill: theme.eventkit.colors.primary,
+        height: '20px',
+        width: '17px',
+        marginLeft: '10px',
+        verticalAlign: 'text-top',
+        cursor: 'pointer',
+    },
+    itemWarn: {
+        color: theme.eventkit.colors.warning,
+        opacity: 0.7,
+        fontSize: '14px',
+    },
+    itemRename: {
+        color: theme.eventkit.colors.text_primary,
+        fontSize: '14px',
+    },
+});
 
-export class GroupsDrawer extends Component {
+export interface Props {
+    className?: string;
+    selectedValue: number | string;
+    onSelectionChange: (value: string | number) => void;
+    open: boolean;
+    ownedGroups: Eventkit.Group[];
+    sharedGroups: Eventkit.Group[];
+    otherGroups: Eventkit.Group[];
+    usersCount: number;
+    onNewGroupClick: () => void;
+    onAdministratorInfoClick: () => void;
+    onMemberInfoClick: () => void;
+    onOtherInfoClick: () => void;
+    onLeaveGroupClick: (group: Eventkit.Group) => void;
+    onDeleteGroupClick: (group: Eventkit.Group) => void;
+    onRenameGroupClick: (group: Eventkit.Group) => void;
+    theme: Eventkit.Theme & Theme;
+    classes: { [className: string]: string };
+}
+
+export class GroupsDrawer extends React.Component<Props, {}> {
     render() {
-        const { colors } = this.props.theme.eventkit;
-
-        const styles = {
-            drawer: {
-                backgroundColor: colors.white,
-                top: '130px',
-                height: 'calc(100vh - 130px)',
-                overflow: 'visible',
-                width: '250px',
-            },
-            item: {
-                height: '32px',
-                lineHeight: '32px',
-                padding: '0px 20px',
-                fontSize: '15px',
-                color: colors.primary,
-            },
-            heading: {
-                padding: '10px 20px 5px',
-                display: 'block',
-                fontSize: '18px',
-            },
-            subHeading: {
-                padding: '10px 20px 5px',
-                color: colors.text_primary,
-                display: 'block',
-            },
-            newGroupIcon: {
-                fill: colors.primary,
-                height: '24px',
-                width: '17px',
-                marginRight: '5px',
-                verticalAlign: 'bottom',
-                cursor: 'pointer',
-            },
-            newGroupBtn: {
-                fontSize: '13px',
-                color: colors.primary,
-                float: 'right',
-                lineHeight: '24px',
-                padding: '0px 10px',
-            },
-            groupName: {
-                textOverflow: 'ellipsis',
-                overflow: 'hidden',
-                flex: '0 1 auto',
-                paddingRight: '5px',
-            },
-            infoIcon: {
-                fill: colors.primary,
-                height: '20px',
-                width: '17px',
-                marginLeft: '10px',
-                verticalAlign: 'text-top',
-                cursor: 'pointer',
-            },
-        };
+        const { classes } = this.props;
 
         return (
             <Drawer
@@ -78,22 +105,19 @@ export class GroupsDrawer extends Component {
                 anchor="right"
                 open={this.props.open}
                 className="qa-GroupsDrawer-Drawer"
-                PaperProps={{ style: styles.drawer }}
+                classes={{ paper: classes.drawer }}
             >
                 <MenuList
-                    width={250}
                     className="qa-GroupsDrawer-MenuList"
                     style={{ padding: '16px 0px' }}
                 >
                     <span
-                        style={styles.heading}
-                        className="qa-GroupsDrawer-membersHeading"
+                        className={`qa-GroupsDrawer-membersHeading ${classes.heading}`}
                     >
                         <strong>MEMBERS</strong>
                     </span>
                     <MenuItem
-                        style={styles.item}
-                        className="qa-GroupsDrawer-allMembers"
+                        className={`qa-GroupsDrawer-allMembers ${classes.item}`}
                         value="all"
                         onClick={() => this.props.onSelectionChange('all')}
                         selected={this.props.selectedValue === 'all'}
@@ -105,18 +129,15 @@ export class GroupsDrawer extends Component {
                 <Divider className="qa-GroupsDrawer-Divider" />
 
                 <span
-                    style={styles.heading}
-                    className="qa-GroupsDrawer-membersHeading"
+                    className={`qa-GroupsDrawer-membersHeading ${classes.heading}`}
                 >
                     <strong>GROUPS</strong>
                     <ButtonBase
-                        style={styles.newGroupBtn}
                         onClick={this.props.onNewGroupClick}
-                        className="qa-GroupsDrawer-addGroup"
+                        className={`qa-GroupsDrawer-addGroup ${classes.newGroupBtn}`}
                     >
                         <AddCircleIcon
-                            style={styles.newGroupIcon}
-                            className="qa-GroupsDrawer-newGroupIcon"
+                            className={`qa-GroupsDrawer-newGroupIcon ${classes.newGroupIcon}`}
                         />
                         <strong>NEW GROUP</strong>
                     </ButtonBase>
@@ -124,18 +145,15 @@ export class GroupsDrawer extends Component {
 
                 <CustomScrollbar className="qa-GroupsDrawer-CustomScrollbar" style={{ height: 'calc(100% - 145px)' }} >
                     <MenuList
-                        width={250}
                         className="qa-GroupsDrawer-MenuList"
                     >
                         <span
-                            style={styles.subHeading}
-                            className="qa-GroupsDrawer-groupsHeading"
+                            className={`qa-GroupsDrawer-groupsHeading ${classes.subHeading}`}
                         >
                             <strong>ADMINISTRATOR</strong>
                             <InfoIcon
-                                style={styles.infoIcon}
                                 onClick={this.props.onAdministratorInfoClick}
-                                className="qa-GroupsDrawer-infoIcon"
+                                className={`qa-GroupsDrawer-infoIcon ${classes.infoIcon}`}
                             />
                         </span>
                         {this.props.ownedGroups.map(group => (
@@ -144,11 +162,10 @@ export class GroupsDrawer extends Component {
                                 value={group.id}
                                 onClick={() => this.props.onSelectionChange(group.id)}
                                 selected={this.props.selectedValue === group.id}
-                                style={styles.item}
-                                className="qa-GroupsDrawer-groupItem"
+                                className={`qa-GroupsDrawer-groupItem ${classes.item}`}
                             >
                                 <div style={{ display: 'flex', flex: '1 1 auto', maxWidth: 250 - 40 - 32 }}>
-                                    <div style={styles.groupName}>
+                                    <div className={classes.groupName}>
                                         {group.name}
                                     </div>
                                     <div style={{ flex: '0 0 auto' }}>
@@ -161,24 +178,21 @@ export class GroupsDrawer extends Component {
                                 >
                                     <MenuItem
                                         key="rename"
-                                        className="qa-GroupsDrawer-group-rename"
-                                        style={{ color: colors.text_primary, fontSize: '14px' }}
+                                        className={`qa-GroupsDrawer-group-rename ${classes.itemRename}`}
                                         onClick={() => { this.props.onRenameGroupClick(group); }}
                                     >
                                         Change Group Name
                                     </MenuItem>
                                     <MenuItem
                                         key="leave"
-                                        className="qa-GroupsDrawer-group-leave"
-                                        style={{ color: colors.warning, opacity: '0.7', fontSize: '14px' }}
+                                        className={`qa-GroupsDrawer-group-leave ${classes.itemWarn}`}
                                         onClick={() => { this.props.onLeaveGroupClick(group); }}
                                     >
                                         Leave Group
                                     </MenuItem>
                                     <MenuItem
                                         key="delete"
-                                        className="qa-GroupsDrawer-group-delete"
-                                        style={{ color: colors.warning, opacity: '0.7', fontSize: '14px' }}
+                                        className={`qa-GroupsDrawer-group-delete ${classes.itemWarn}`}
                                         onClick={() => { this.props.onDeleteGroupClick(group); }}
                                     >
                                         Delete Group
@@ -188,14 +202,12 @@ export class GroupsDrawer extends Component {
                         ))}
 
                         <span
-                            style={styles.subHeading}
-                            className="qa-GroupsDrawer-sharedGroupsHeading"
+                            className={`qa-GroupsDrawer-sharedGroupsHeading ${classes.subHeading}`}
                         >
                             <strong>MEMBER ONLY</strong>
                             <InfoIcon
-                                style={styles.infoIcon}
                                 onClick={this.props.onMemberInfoClick}
-                                className="qa-GroupsDrawer-infoIcon"
+                                className={`qa-GroupsDrawer-infoIcon ${classes.infoIcon}`}
                             />
                         </span>
                         {this.props.sharedGroups.map(group => (
@@ -204,11 +216,10 @@ export class GroupsDrawer extends Component {
                                 value={group.id}
                                 onClick={() => this.props.onSelectionChange(group.id)}
                                 selected={this.props.selectedValue === group.id}
-                                style={styles.item}
-                                className="qa-GroupsDrawer-sharedGroupItem"
+                                className={`qa-GroupsDrawer-sharedGroupItem ${classes.item}`}
                             >
                                 <div style={{ display: 'flex', flex: '1 1 auto', maxWidth: 250 - 40 - 32 }}>
-                                    <div style={styles.groupName}>
+                                    <div className={classes.groupName}>
                                         {group.name}
                                     </div>
                                     <div style={{ flex: '0 0 auto' }}>
@@ -222,8 +233,7 @@ export class GroupsDrawer extends Component {
                                     [
                                     <MenuItem
                                         key="leave"
-                                        className="qa-GroupsDrawer-group-leave"
-                                        style={{ color: colors.warning, opacity: '0.7', fontSize: '14px' }}
+                                        className={`qa-GroupsDrawer-group-leave ${classes.itemWarn}`}
                                         onClick={() => { this.props.onLeaveGroupClick(group); }}
                                     >
                                         Leave Group
@@ -234,14 +244,12 @@ export class GroupsDrawer extends Component {
                         ))}
 
                         <span
-                            style={styles.subHeading}
-                            className="qa-GroupsDrawer-allGroupsHeading"
+                            className={`qa-GroupsDrawer-allGroupsHeading ${classes.subHeading}`}
                         >
                             <strong>ALL OTHERS</strong>
                             <InfoIcon
-                                style={styles.infoIcon}
                                 onClick={this.props.onOtherInfoClick}
-                                className="qa-GroupsDrawer-infoIcon"
+                                className={`qa-GroupsDrawer-infoIcon ${classes.infoIcon}`}
                             />
                         </span>
                         {this.props.otherGroups.map(group => (
@@ -250,11 +258,10 @@ export class GroupsDrawer extends Component {
                                 value={group.id}
                                 onClick={() => this.props.onSelectionChange(group.id)}
                                 selected={this.props.selectedValue === group.id}
-                                style={styles.item}
-                                className="qa-GroupsDrawer-otherGroupItem"
+                                className={`qa-GroupsDrawer-otherGroupItem ${classes.item}`}
                             >
                                 <div style={{ display: 'flex', maxWidth: 250 - 40 - 32 }}>
-                                    <div style={styles.groupName}>
+                                    <div className={classes.groupName}>
                                         {group.name}
                                     </div>
                                     <div style={{ flex: '0 0 auto' }}>
@@ -270,40 +277,4 @@ export class GroupsDrawer extends Component {
     }
 }
 
-GroupsDrawer.propTypes = {
-    selectedValue: PropTypes.oneOfType([
-        PropTypes.number,
-        PropTypes.string,
-    ]).isRequired,
-    onSelectionChange: PropTypes.func.isRequired,
-    open: PropTypes.bool.isRequired,
-    ownedGroups: PropTypes.arrayOf(PropTypes.shape({
-        id: PropTypes.number,
-        name: PropTypes.string,
-        members: PropTypes.arrayOf(PropTypes.string),
-        administrators: PropTypes.arrayOf(PropTypes.string),
-    })).isRequired,
-    sharedGroups: PropTypes.arrayOf(PropTypes.shape({
-        id: PropTypes.number,
-        name: PropTypes.string,
-        members: PropTypes.arrayOf(PropTypes.string),
-        administrators: PropTypes.arrayOf(PropTypes.string),
-    })).isRequired,
-    otherGroups: PropTypes.arrayOf(PropTypes.shape({
-        id: PropTypes.number,
-        name: PropTypes.string,
-        members: PropTypes.arrayOf(PropTypes.string),
-        administrators: PropTypes.arrayOf(PropTypes.string),
-    })).isRequired,
-    usersCount: PropTypes.number.isRequired,
-    onNewGroupClick: PropTypes.func.isRequired,
-    onAdministratorInfoClick: PropTypes.func.isRequired,
-    onMemberInfoClick: PropTypes.func.isRequired,
-    onOtherInfoClick: PropTypes.func.isRequired,
-    onLeaveGroupClick: PropTypes.func.isRequired,
-    onDeleteGroupClick: PropTypes.func.isRequired,
-    onRenameGroupClick: PropTypes.func.isRequired,
-    theme: PropTypes.object.isRequired,
-};
-
-export default withTheme()(GroupsDrawer);
+export default withTheme()(withStyles(jss)(GroupsDrawer));

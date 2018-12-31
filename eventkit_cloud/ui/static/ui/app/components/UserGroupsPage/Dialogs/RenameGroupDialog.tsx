@@ -1,11 +1,21 @@
-import PropTypes from 'prop-types';
-import React, { Component } from 'react';
-import { withTheme } from '@material-ui/core/styles';
+import * as React from 'react';
+import { withTheme, Theme } from '@material-ui/core/styles';
 import Button from '@material-ui/core/Button';
 import BaseDialog from '../../Dialog/BaseDialog';
 import CustomTextField from '../../CustomTextField';
 
-export class RenameGroupDialog extends Component {
+export interface Props {
+    className: string;
+    show: boolean;
+    onInputChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+    onClose: () => void;
+    onSave: () => void;
+    value: string;
+    valid: boolean;
+    theme: Eventkit.Theme & Theme;
+}
+
+export class RenameGroupDialog extends React.Component<Props, {}> {
     render() {
         const { colors } = this.props.theme.eventkit;
 
@@ -57,15 +67,5 @@ export class RenameGroupDialog extends Component {
         );
     }
 }
-
-RenameGroupDialog.propTypes = {
-    show: PropTypes.bool.isRequired,
-    onInputChange: PropTypes.func.isRequired,
-    onClose: PropTypes.func.isRequired,
-    onSave: PropTypes.func.isRequired,
-    value: PropTypes.string.isRequired,
-    valid: PropTypes.bool.isRequired,
-    theme: PropTypes.object.isRequired,
-};
 
 export default withTheme()(RenameGroupDialog);

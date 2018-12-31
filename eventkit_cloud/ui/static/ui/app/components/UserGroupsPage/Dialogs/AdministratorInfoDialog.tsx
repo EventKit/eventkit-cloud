@@ -1,8 +1,13 @@
-import PropTypes from 'prop-types';
-import React, { Component } from 'react';
+import * as React from 'react';
 import BaseDialog from '../../Dialog/BaseDialog';
 
-export class AdministratorInfoDialog extends Component {
+export interface Props {
+    className: string;
+    show: boolean;
+    onClose: () => void;
+}
+
+export class AdministratorInfoDialog extends React.Component<Props, {}> {
     render() {
         if (!this.props.show) {
             return null;
@@ -37,10 +42,5 @@ export class AdministratorInfoDialog extends Component {
         );
     }
 }
-
-AdministratorInfoDialog.propTypes = {
-    show: PropTypes.bool.isRequired,
-    onClose: PropTypes.func.isRequired,
-};
 
 export default AdministratorInfoDialog;
