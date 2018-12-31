@@ -27,6 +27,8 @@ def main():
                         help='The project name, will be the same for all datapacks (not based on file).')
     parser.add_argument('--limit', type=int, default=0,
                         help='The project name, will be the same for all datapacks (not based on file).')
+    parser.add_argument('--start', type=int, default=0,
+                        help='The index (0-based) of the first geojson feature to use to create a datapack')
     parser.add_argument('--verify', default='true',
                         help='True to enable ssl verification, false to disable ssl verification')
 
@@ -55,15 +57,16 @@ def main():
         geojson_data = json.load(geojson_file)
 
     count = args.limit or len(geojson_data['features'])  # number of jobs to submit
-    index = 0  # current feature
+    index = args.start  # current feature
     # Stop when count gets to zero (user gets desired number of jobs)
-    # or we run our of features to create jobs for.
+    # or we run out of features to create jobs for.
     while count or (index > len(geojson_data['features'])):
         feature = geojson_data['features'][index]
         # Iterate index independently of the count because we might skip some jobs which would iterate the
         # features but not change the number of jobs submitted.
         index += 1
         name = feature['properties'].get(args.name)
+
         description = feature['properties'].get(args.description) or "Created using the seed_data script."
         project = feature['properties'].get(args.project) or "seed"
         if name in [run['job']['name'] for run in client.get_runs(search_term=name)]:

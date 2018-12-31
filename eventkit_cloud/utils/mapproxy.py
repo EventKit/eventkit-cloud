@@ -11,15 +11,18 @@ from mapproxy.config.config import load_config, load_default_config
 from mapproxy.config.loader import ProxyConfiguration, ConfigurationError, validate_references
 from mapproxy.seed import seeder
 from mapproxy.seed.config import SeedingConfiguration
-from mapproxy.seed.seeder import seed
-from mapproxy.seed.util import ProgressLog, exp_backoff, ProgressStore
+from mapproxy.seed.util import ProgressLog, exp_backoff, timestamp, ProgressStore
+
 import os
 import sqlite3
+import time
 
 from eventkit_cloud.utils import auth_requests
 from eventkit_cloud.utils.geopackage import get_tile_table_names, set_gpkg_contents_bounds, \
     get_table_tile_matrix_information, get_zoom_levels_table, remove_empty_zoom_levels
 from eventkit_cloud.utils.gdalutils import retry
+from eventkit_cloud.utils.stats.eta_estimator import ETA
+
 
 logger = logging.getLogger(__name__)
 
@@ -27,21 +30,37 @@ logger = logging.getLogger(__name__)
 class CustomLogger(ProgressLog):
 
     def __init__(self, task_uid=None, *args, **kwargs):
-
         self.task_uid = task_uid
         super(CustomLogger, self).__init__(*args, **kwargs)
         # Log mapproxy status but allow a setting to reduce database writes.
         self.log_step_step = 1
         self.log_step_counter = self.log_step_step
+        self.eta = ETA(task_uid=task_uid)
 
     def log_step(self, progress):
         from eventkit_cloud.tasks.export_tasks import update_progress
+        self.eta.update(progress.progress)  # This may also get called by update_progress but because update_progress
+                                            # is rate-limited; we also do it here to get more data points for making
+                                            # better eta estimates
+
         if self.task_uid:
             if self.log_step_counter == 0:
-                update_progress(self.task_uid, progress=progress.progress * 100)
+                update_progress(self.task_uid, progress=progress.progress * 100, eta=self.eta)
                 self.log_step_counter = self.log_step_step
             self.log_step_counter -= 1
-        super(CustomLogger, self).log_step(progress)
+
+        # Old version of super.log_step that includes ETA string
+        # https://github.com/mapproxy/mapproxy/commit/93bc53a01318cd63facdb4ee13968caa847a5c17
+        if not self.verbose:
+            return
+        if (self._laststep + .5) < time.time():
+            # log progress at most every 500ms
+            self.out.write('[%s] %6.2f%%\t%-20s ETA: %s\r' % (
+                timestamp(), progress.progress*100, progress.progress_str,
+                self.eta
+            ))
+            self.out.flush()
+            self._laststep = time.time()
 
 
 def get_custom_exp_backoff(max_repeat=None):
@@ -53,6 +72,7 @@ def get_custom_exp_backoff(max_repeat=None):
 
     return custom_exp_backoff
 
+
 # This is a bug in mapproxy, https://github.com/mapproxy/mapproxy/issues/387
 def load_tile_metadata(self, tile):
     if not self.supports_timestamp:
@@ -61,7 +81,6 @@ def load_tile_metadata(self, tile):
         tile.timestamp = -1
     else:
         self.load_tile(tile)
-
 
 
 class MapproxyGeopackage(object):
@@ -134,12 +153,12 @@ class MapproxyGeopackage(object):
         load_config(mapproxy_config, config_dict=conf_dict)
 
         # Create a configuration object
-        mapproxy_configuration = ProxyConfiguration(mapproxy_config, seed=seed, renderd=None)
+        mapproxy_configuration = ProxyConfiguration(mapproxy_config, seed=seeder.seed, renderd=None)
 
         # # As of Mapproxy 1.9.x, datasource files covering a small area cause a bbox error.
         if self.bbox:
             if isclose(self.bbox[0], self.bbox[2], rel_tol=0.001) or isclose(self.bbox[0], self.bbox[2], rel_tol=0.001):
-                logger.warn('Using bbox instead of selection, because the area is too small')
+                logger.warning('Using bbox instead of selection, because the area is too small')
                 self.selection = None
 
         seed_dict = get_seed_template(bbox=self.bbox, level_from=self.level_from, level_to=self.level_to,

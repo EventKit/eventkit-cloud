@@ -193,7 +193,8 @@ class DataProviderTaskRecordSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = DataProviderTaskRecord
-        fields = ('uid', 'url', 'name', 'started_at', 'finished_at', 'duration', 'tasks', 'status', 'display', 'slug')
+        fields = ('uid', 'url', 'name', 'started_at', 'finished_at', 'duration',
+                  'tasks', 'status', 'display', 'slug', 'estimated_size')
 
 
 class DataProviderListSerializer(serializers.BaseSerializer):

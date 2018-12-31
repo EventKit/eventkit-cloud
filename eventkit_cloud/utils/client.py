@@ -5,6 +5,7 @@ import requests
 from datetime import timedelta
 import statistics
 import json
+import re
 
 logger = logging.getLogger(__name__)
 
@@ -209,8 +210,14 @@ def parse_duration(duration):
     :return:
     """
     if duration:
-        hours, minutes, seconds = duration.split(':')
-        return float(((int(hours) * 60) + (int(minutes) * 60) + float(seconds)))
+        # Based off https://stackoverflow.com/questions/4628122/how-to-construct-a-timedelta-object-from-a-simple-string
+        timedelta_regex = re.compile(
+            r'^((?P<days>[\.\d]+?)\sday[s]?\,\s*)?((?P<hours>[\.\d]+?):)?((?P<minutes>[\.\d]+?):)?((?P<seconds>[\.\d]+?))?$')
+
+        parts = timedelta_regex.match(duration)
+        if parts is not None:
+            time_params = {name: float(param) for name, param in parts.groupdict().items() if param}
+            return timedelta(**time_params).seconds
 
 
 def convert_seconds_to_hms(seconds):
@@ -220,6 +227,41 @@ def convert_seconds_to_hms(seconds):
     :return: String "hours:minutes:seconds"
     """
     return str(timedelta(seconds=seconds))
+
+
+def parse_byte_size(size, desired_unit='b'):
+    """
+    :param size: A string ("size unit" -- e.g. "256 MB")
+    :param desired_unit: The desired output unit e.g. MB
+    :return: sizeInBytes
+    """
+    if size:
+        try:
+            val, unit = size.split(' ')
+            return float(val) * (parse_size_unit(unit) / parse_size_unit(desired_unit))
+        except ValueError:
+            return None
+
+
+def parse_size_unit(unit):
+    """
+    :param unit: A string ("MB", "GB", "KB")
+    :return: Number of bytes per specified unit e.g. GB=1e9
+    """
+    ul = unit.lower()
+
+    if ul == 'b':
+        return 1
+    if ul == 'kb':
+        return 1e3
+    if ul == 'mb':
+        return 1e6
+    if ul == 'gb':
+        return 1e9
+    if ul == 'tb':
+        return 1e12
+
+    raise ValueError('{} is an unknown unit'.format(unit))
 
 
 def reproject(geom, from_srs, to_srs):

@@ -3,13 +3,13 @@ import importlib
 import logging
 
 from celery import chain  # required for tests
-from django.conf import settings
 from django.db import DatabaseError
 
 from eventkit_cloud.jobs.models import DataProviderTask
 from eventkit_cloud.tasks import TaskStates
 from eventkit_cloud.tasks.helpers import normalize_name
 from eventkit_cloud.tasks.models import ExportTaskRecord, DataProviderTaskRecord
+from eventkit_cloud.utils.stats.size_estimator import get_size_estimate
 
 logger = logging.getLogger(__name__)
 
@@ -80,13 +80,15 @@ class TaskChainBuilder(object):
             if export_tasks.get('gpkg'):
                 export_tasks.pop('gpkg')
 
+        est_sz, meta = get_size_estimate(provider_task.provider, run.job.extents)
 
         # run the tasks
         data_provider_task_record = DataProviderTaskRecord.objects.create(run=run,
                                                                           name=provider_task.provider.name,
                                                                           slug=provider_task.provider.slug,
                                                                           status=TaskStates.PENDING.value,
-                                                                          display=True)
+                                                                          display=True,
+                                                                          estimated_size=est_sz)
 
         for format, task in export_tasks.items():
             export_task = create_export_task_record(
