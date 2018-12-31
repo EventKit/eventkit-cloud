@@ -6,7 +6,7 @@ import ShareBaseDialog from '../../components/DataPackShareDialog/ShareBaseDialo
 import GroupsBody from '../../components/DataPackShareDialog/GroupsBody';
 import MembersBody from '../../components/DataPackShareDialog/MembersBody';
 import ShareInfoBody from '../../components/DataPackShareDialog/ShareInfoBody';
-import { DataPackShareDialog } from '../../components/DataPackShareDialog/DataPackShareDialog';
+import { DataPackShareDialog, Props } from '../../components/DataPackShareDialog/DataPackShareDialog';
 import { Permissions, Levels } from '../../utils/permissions';
 
 describe('DataPackPage component', () => {
@@ -16,7 +16,7 @@ describe('DataPackPage component', () => {
         shallow = createShallow();
     });
 
-    const getPermissions = () => ({
+    const getPermissions = (): Props['permissions'] => ({
         value: 'PRIVATE',
         members: {},
         groups: {},
