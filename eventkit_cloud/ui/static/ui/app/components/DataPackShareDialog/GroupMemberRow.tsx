@@ -1,7 +1,10 @@
-import PropTypes from 'prop-types';
-import React, { Component } from 'react';
+import * as React from 'react';
 
-export class GroupMemberRow extends Component {
+export interface Props {
+    member: Eventkit.UserData;
+}
+
+export class GroupMemberRow extends React.Component<Props, {}> {
     render() {
         let name = this.props.member.username;
         if (this.props.member.first_name && this.props.member.last_name) {
@@ -27,15 +30,5 @@ export class GroupMemberRow extends Component {
         );
     }
 }
-
-GroupMemberRow.propTypes = {
-    member: PropTypes.shape({
-        username: PropTypes.string,
-        first_name: PropTypes.string,
-        last_name: PropTypes.string,
-        email: PropTypes.string,
-        permission: PropTypes.string,
-    }).isRequired,
-};
 
 export default GroupMemberRow;

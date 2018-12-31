@@ -1,17 +1,15 @@
-import React from 'react';
+import * as React from 'react';
+import * as sinon from 'sinon';
 import { shallow } from 'enzyme';
 import ButtonBase from '@material-ui/core/ButtonBase';
 import { ShareInfoBody } from '../../components/DataPackShareDialog/ShareInfoBody';
 
-
 describe('MembersHeaderRow component', () => {
-    const getProps = () => (
-        {
-            view: 'groups',
-            onReturn: () => {},
-            ...global.eventkit_test_props,
-        }
-    );
+    const getProps = () => ({
+        view: 'groups',
+        onReturn: sinon.spy(),
+        ...(global as any).eventkit_test_props,
+    });
 
     const getWrapper = props => (
         shallow(<ShareInfoBody {...props} />)

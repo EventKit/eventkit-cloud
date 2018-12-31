@@ -1,6 +1,6 @@
-import PropTypes from 'prop-types';
-import React, { Component } from 'react';
-import { withTheme } from '@material-ui/core/styles';
+import * as React from 'react';
+import { withTheme, Theme } from '@material-ui/core/styles';
+import withWidth, { isWidthUp } from '@material-ui/core/withWidth';
 import Card from '@material-ui/core/Card';
 import CardHeader from '@material-ui/core/CardHeader';
 import Menu from '@material-ui/core/Menu';
@@ -11,20 +11,49 @@ import ArrowDown from '@material-ui/icons/ArrowDropDown';
 import ArrowUp from '@material-ui/icons/ArrowDropUp';
 import ButtonBase from '@material-ui/core/ButtonBase';
 import IndeterminateIcon from '../icons/IndeterminateIcon';
+import { Breakpoint } from '@material-ui/core/styles/createBreakpoints';
 
-export class GroupsHeaderRow extends Component {
-    constructor(props) {
+export type MemberOrder = 'username' | '-username';
+export type SharedOrder = 'shared' | '-shared' | 'admin-shared' | '-admin-shared';
+
+export interface Props {
+    className?: string;
+    public: boolean;
+    memberCount: number;
+    selectedCount: number;
+    onMemberClick: (order: MemberOrder) => void;
+    onSharedClick: (order: SharedOrder) => void;
+    memberOrder: MemberOrder;
+    sharedOrder: SharedOrder;
+    activeOrder: MemberOrder | SharedOrder;
+    handleCheckAll: () => void;
+    handleUncheckAll: () => void;
+    canUpdateAdmin: boolean;
+    theme: Eventkit.Theme & Theme;
+    width: Breakpoint;
+}
+
+export interface State {
+    anchor: null | HTMLElement;
+}
+
+export class MembersHeaderRow extends React.Component<Props, State> {
+    static defaultProps = {
+        canUpdateAdmin: false,
+    };
+
+    constructor(props: Props) {
         super(props);
         this.handleClick = this.handleClick.bind(this);
         this.handleClose = this.handleClose.bind(this);
         this.handleChange = this.handleChange.bind(this);
-        this.handleGroupChange = this.handleGroupChange.bind(this);
+        this.handleMemberChange = this.handleMemberChange.bind(this);
         this.state = {
             anchor: null,
         };
     }
 
-    handleClick(e) {
+    private handleClick(e: React.MouseEvent<HTMLElement>) {
         if (this.props.canUpdateAdmin) {
             this.setState({ anchor: e.currentTarget });
         } else if (!this.props.activeOrder.includes('shared')) {
@@ -35,21 +64,21 @@ export class GroupsHeaderRow extends Component {
         }
     }
 
-    handleClose() {
+    private handleClose() {
         this.setState({ anchor: null });
     }
 
-    handleChange(v) {
+    private handleChange(v: SharedOrder) {
         this.props.onSharedClick(v);
         this.handleClose();
     }
 
-    handleGroupChange() {
-        if (!this.props.activeOrder.includes('name')) {
-            this.props.onGroupClick(this.props.groupOrder);
+    private handleMemberChange() {
+        if (!this.props.activeOrder.includes('username')) {
+            this.props.onMemberClick(this.props.memberOrder);
         } else {
-            const v = this.props.groupOrder === 'name' ? '-name' : 'name';
-            this.props.onGroupClick(v);
+            const v = this.props.memberOrder === 'username' ? '-username' : 'username';
+            this.props.onMemberClick(v);
         }
     }
 
@@ -60,6 +89,9 @@ export class GroupsHeaderRow extends Component {
             card: {
                 boxShadow: 'none',
                 color: colors.text_primary,
+                borderBottom: `1px solid ${colors.secondary_dark}`,
+                marginBottom: '6px',
+                borderRadius: '0px',
             },
             cardHeader: {
                 display: 'flex',
@@ -67,19 +99,19 @@ export class GroupsHeaderRow extends Component {
                 color: colors.text_primary,
                 lineHeight: '28px',
             },
-            group: {
-                flex: '1 1 auto',
+            member: {
+                flex: '0 0 auto',
+                marginRight: '5px',
             },
             share: {
                 display: 'flex',
+                flex: '0 0 auto',
+                alignItems: 'center',
             },
             check: {
-                position: 'relative',
-                display: 'inline-block',
+                flex: '0 0 auto',
                 width: '28px',
                 height: '28px',
-                float: 'right',
-                marginRight: '39px',
                 cursor: 'pointer',
                 color: colors.primary,
             },
@@ -96,13 +128,22 @@ export class GroupsHeaderRow extends Component {
             indeterminate: <IndeterminateIcon style={styles.check} onClick={this.props.handleUncheckAll} />,
         };
 
-        // assume no groups are checked by default
+        // assume no users are checked by default
         let checkIcon = icons.unchecked;
 
-        if (this.props.groupCount === this.props.selectedCount && this.props.groupCount !== 0) {
+        if (this.props.public || (this.props.memberCount === this.props.selectedCount && this.props.memberCount !== 0)) {
             checkIcon = icons.checked;
         } else if (this.props.selectedCount) {
             checkIcon = icons.indeterminate;
+        }
+
+        let countText = '';
+        if (!isWidthUp('sm', this.props.width)) {
+            countText = this.props.public ?
+                '(ALL)' : `(${this.props.selectedCount}/${this.props.memberCount})`;
+        } else {
+            countText = this.props.public ?
+                'Shared with ALL' : `Shared with ${this.props.selectedCount} of ${this.props.memberCount}`;
         }
 
         const LABELS = {
@@ -115,14 +156,14 @@ export class GroupsHeaderRow extends Component {
         let sharedSort = null;
         if (this.props.canUpdateAdmin) {
             sharedSort = (
-                <div className="qa-GroupsHeaderRow-sortLabel">
+                <div className="qa-MembersHeaderRow-sortLabel">
                     <ArrowDown style={{ height: '28px', verticalAlign: 'bottom' }} />
                     {LABELS[this.props.sharedOrder]}
                 </div>
             );
         } else {
             sharedSort = (
-                <div className="qa-GroupsHeaderRow-sortLabel">
+                <div className="qa-MembersHeaderRow-sortLabel">
                     {this.props.sharedOrder === 'shared' ?
                         <ArrowDown style={{ height: '28px', verticalAlign: 'bottom' }} />
                         :
@@ -136,35 +177,32 @@ export class GroupsHeaderRow extends Component {
         return (
             <Card
                 style={styles.card}
-                className="qa-GroupsHeaderRow-Card"
+                className="qa-MembersHeaderRow-Card"
             >
                 <CardHeader
-                    className="qa-GroupsHeaderRow-CardHeader"
                     title={
                         <div style={styles.cardHeader}>
-                            <div style={styles.group} className="qa-GroupsHeaderRow-CardHeader-text">
+                            <div style={styles.member} className="qa-MembersHeaderRow-CardHeader-text">
                                 <ButtonBase
-                                    onClick={this.handleGroupChange}
-                                    style={{
-                                        marginRight: '10px',
-                                        color: this.props.activeOrder.includes('name') ? colors.primary : colors.text_primary,
-                                    }}
+                                    onClick={this.handleMemberChange}
                                     disableTouchRipple
+                                    style={{ color: this.props.activeOrder.includes('username') ? colors.primary : colors.text_primary }}
                                 >
-                                    GROUP
-                                    {this.props.groupOrder === 'name' ?
+                                    MEMBER
+                                    {this.props.memberOrder === 'username' ?
                                         <ArrowDown style={{ height: '28px', verticalAlign: 'bottom' }} />
                                         :
                                         <ArrowUp style={{ height: '28px', verticalAlign: 'bottom' }} />
                                     }
                                 </ButtonBase>
                             </div>
-                            <div style={styles.share} className="qa-GroupsHeaderRow-CardHeader-icons">
+                            <div style={{ flex: '1 1 auto' }} className="qa-MembersHeaderRow-countText">{countText}</div>
+                            <div style={styles.share} className="qa-MembersHeaderRow-CardHeader-icons">
                                 <ButtonBase
                                     onClick={this.handleClick}
                                     style={{
                                         marginRight: '10px',
-                                        color: !this.props.activeOrder.includes('group') ?
+                                        color: !this.props.activeOrder.includes('username') ?
                                             colors.primary : colors.text_primary,
                                     }}
                                     disableTouchRipple
@@ -174,7 +212,7 @@ export class GroupsHeaderRow extends Component {
                                 {checkIcon}
                             </div>
                             <Menu
-                                className="qa-GroupsHeaderRow-Menu-sort"
+                                className="qa-MembersHeaderRow-Menu-sort"
                                 onClose={this.handleClose}
                                 open={Boolean(this.state.anchor)}
                                 anchorEl={this.state.anchor}
@@ -213,41 +251,11 @@ export class GroupsHeaderRow extends Component {
                             </Menu>
                         </div>
                     }
-                    style={{ padding: '12px' }}
+                    style={{ padding: '12px 6px' }}
                 />
             </Card>
         );
     }
 }
 
-GroupsHeaderRow.defaultProps = {
-    canUpdateAdmin: false,
-};
-
-GroupsHeaderRow.propTypes = {
-    groupCount: PropTypes.number.isRequired,
-    selectedCount: PropTypes.number.isRequired,
-    onGroupClick: PropTypes.func.isRequired,
-    onSharedClick: PropTypes.func.isRequired,
-    groupOrder: PropTypes.oneOf(['name', '-name']).isRequired,
-    sharedOrder: PropTypes.oneOf([
-        'shared',
-        '-shared',
-        'admin-shared',
-        '-admin-shared',
-    ]).isRequired,
-    activeOrder: PropTypes.oneOf([
-        'name',
-        '-name',
-        'shared',
-        '-shared',
-        'admin-shared',
-        '-admin-shared',
-    ]).isRequired,
-    handleCheckAll: PropTypes.func.isRequired,
-    handleUncheckAll: PropTypes.func.isRequired,
-    canUpdateAdmin: PropTypes.bool,
-    theme: PropTypes.object.isRequired,
-};
-
-export default withTheme()(GroupsHeaderRow);
+export default withWidth()(withTheme()(MembersHeaderRow));

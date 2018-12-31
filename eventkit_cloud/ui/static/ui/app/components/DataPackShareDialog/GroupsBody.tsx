@@ -1,20 +1,53 @@
-import PropTypes from 'prop-types';
-import React, { Component } from 'react';
+import * as React from 'react';
 import { connect } from 'react-redux';
-import { withTheme } from '@material-ui/core/styles';
+import { withTheme, Theme } from '@material-ui/core/styles';
 import CircularProgress from '@material-ui/core/CircularProgress';
 import ButtonBase from '@material-ui/core/ButtonBase';
 import Button from '@material-ui/core/Button';
 import InfoIcon from '@material-ui/icons/InfoOutlined';
 import CustomTextField from '../CustomTextField';
 import GroupRow from './GroupRow';
-import GroupsHeaderRow from './GroupsHeaderRow';
+import GroupsHeaderRow, { GroupOrder, SharedOrder } from './GroupsHeaderRow';
 import GroupBodyTooltip from './ShareBodyTooltip';
 import { getGroups } from '../../actions/groupActions';
 
+export interface Props {
+    getGroups: (args: any, append: boolean) => void;
+    nextPage: boolean;
+    groups: Eventkit.Group[];
+    selectedGroups: Eventkit.Permissions['groups'];
+    groupsText: any;
+    onUncheckAll: () => void;
+    onCheckAll: () => void;
+    onGroupCheck: (name: string) => void;
+    onAdminCheck: (name: string) => void;
+    canUpdateAdmin: boolean;
+    handleShowShareInfo: () => void;
+    theme: Eventkit.Theme & Theme;
+}
 
-export class GroupsBody extends Component {
-    constructor(props) {
+export interface State {
+    search: string;
+    groupOrder: GroupOrder;
+    sharedOrder: SharedOrder;
+    activeOrder: GroupOrder | SharedOrder;
+    tooltip: {
+        target: null | HTMLElement;
+        admin: boolean;
+    };
+    page: number;
+    loading: boolean;
+}
+
+export class GroupsBody extends React.Component<Props, State> {
+    static defaultProps = {
+        groupsText: '',
+        canUpdateAdmin: false,
+        handleShowShareInfo: () => { /* do nothing */},
+    };
+
+    private body: HTMLElement;
+    constructor(props: Props) {
         super(props);
         this.handleUncheckAll = this.handleUncheckAll.bind(this);
         this.handleCheckAll = this.handleCheckAll.bind(this);
@@ -51,7 +84,7 @@ export class GroupsBody extends Component {
         window.removeEventListener('wheel', this.handleScroll);
     }
 
-    async getGroups(params = {}, append = true) {
+    private async getGroups(params = {}, append = true) {
         this.setState({ loading: true });
         await this.props.getGroups({
             page: this.state.page,
@@ -62,45 +95,45 @@ export class GroupsBody extends Component {
         this.setState({ loading: false });
     }
 
-    loadMore() {
+    private loadMore() {
         this.getGroups({ page: this.state.page + 1 });
         this.setState({ page: this.state.page + 1 });
     }
 
-    handleUncheckAll() {
+    private handleUncheckAll() {
         this.props.onUncheckAll();
     }
 
-    handleCheckAll() {
+    private handleCheckAll() {
         this.props.onCheckAll();
     }
 
-    handleCheck(group) {
+    private handleCheck(group: Eventkit.Group) {
         this.props.onGroupCheck(group.name);
     }
 
-    handleAdminCheck(group) {
+    private handleAdminCheck(group: Eventkit.Group) {
         this.props.onAdminCheck(group.name);
     }
 
-    handleAdminMouseOver(target, admin) {
+    private handleAdminMouseOver(target: HTMLElement, admin: boolean) {
         this.setState({ tooltip: { target, admin } });
     }
 
-    handleAdminMouseOut() {
+    private handleAdminMouseOut() {
         this.setState({ tooltip: { target: null, admin: false } });
     }
 
-    handleScroll() {
+    private handleScroll() {
         if (this.state.tooltip.target !== null) {
             this.handleAdminMouseOut();
         }
     }
 
     // check if user hits enter then make group search
-    async handleSearchKeyDown(event) {
+    private async handleSearchKeyDown(event: React.KeyboardEvent<HTMLInputElement>) {
         if (event.key === 'Enter') {
-            const text = event.target.value || '';
+            const text = (event.target as HTMLInputElement).value || '';
             if (text) {
                 this.setState({ page: 1 });
                 this.getGroups({
@@ -112,7 +145,7 @@ export class GroupsBody extends Component {
     }
 
     // commit text to search state, if search is empty make a getGroups request
-    handleSearchInput(e) {
+    private handleSearchInput(e: React.ChangeEvent<HTMLInputElement>) {
         if (this.state.search && !e.target.value) {
             this.getGroups({ page: 1, search: e.target.value }, false);
             this.setState({ search: e.target.value, page: 1 });
@@ -121,51 +154,67 @@ export class GroupsBody extends Component {
         }
     }
 
-    reverseGroupOrder(v) {
+    private reverseGroupOrder(v: GroupOrder) {
         this.getGroups({ page: 1, ordering: v }, false);
         this.setState({ groupOrder: v, activeOrder: v, page: 1 });
     }
 
-    reverseSharedOrder(v) {
+    private reverseSharedOrder(v: SharedOrder) {
         this.setState({ sharedOrder: v, activeOrder: v });
     }
 
-    sortByShared(groups, selectedGroups, descending) {
+    private sortByShared(groups: Eventkit.Group[], selectedGroups: Eventkit.Permissions['groups'], descending: boolean) {
         if (descending === true) {
             groups.sort((a, b) => {
                 const aSelected = a.name in selectedGroups;
                 const bSelected = b.name in selectedGroups;
-                if (aSelected && !bSelected) return -1;
-                if (!aSelected && bSelected) return 1;
+                if (aSelected && !bSelected) {
+                    return -1;
+                }
+                if (!aSelected && bSelected) {
+                    return 1;
+                }
                 return 0;
             });
         } else {
             groups.sort((a, b) => {
                 const aSelected = a.name in selectedGroups;
                 const bSelected = b.name in selectedGroups;
-                if (!aSelected && bSelected) return -1;
-                if (aSelected && !bSelected) return 1;
+                if (!aSelected && bSelected) {
+                    return -1;
+                }
+                if (aSelected && !bSelected) {
+                    return 1;
+                }
                 return 0;
             });
         }
         return groups;
     }
 
-    sortByAdmin(groups, selectedGroups, descending) {
+    private sortByAdmin(groups: Eventkit.Group[], selectedGroups: Eventkit.Permissions['groups'], descending: boolean) {
         if (descending === true) {
             groups.sort((a, b) => {
                 const aAdmin = selectedGroups[a.name] === 'ADMIN';
                 const bAdmin = selectedGroups[b.name] === 'ADMIN';
-                if (aAdmin && !bAdmin) return -1;
-                if (!aAdmin && bAdmin) return 1;
+                if (aAdmin && !bAdmin) {
+                    return -1;
+                }
+                if (!aAdmin && bAdmin) {
+                    return 1;
+                }
                 return 0;
             });
         } else {
             groups.sort((a, b) => {
                 const aAdmin = selectedGroups[a.name] === 'ADMIN';
                 const bAdmin = selectedGroups[b.name] === 'ADMIN';
-                if (!aAdmin && bAdmin) return -1;
-                if (aAdmin && !bAdmin) return 1;
+                if (!aAdmin && bAdmin) {
+                    return -1;
+                }
+                if (aAdmin && !bAdmin) {
+                    return 1;
+                }
                 return 0;
             });
         }
@@ -177,7 +226,7 @@ export class GroupsBody extends Component {
 
         const styles = {
             fixedHeader: {
-                position: 'sticky',
+                position: 'sticky' as 'sticky',
                 top: 38,
                 left: 0,
                 backgroundColor: colors.white,
@@ -200,7 +249,7 @@ export class GroupsBody extends Component {
             },
             shareInfo: {
                 display: 'flex',
-                flexWrap: 'wrap',
+                flexWrap: 'wrap' as 'wrap',
                 padding: '10px 0px',
                 lineHeight: '20px',
             },
@@ -218,7 +267,7 @@ export class GroupsBody extends Component {
             shareInfoText: {
                 fontSize: '13px',
                 flex: '1 0 auto',
-                textAlign: 'right',
+                textAlign: 'right' as 'right',
             },
         };
 
@@ -336,36 +385,6 @@ export class GroupsBody extends Component {
         );
     }
 }
-
-GroupsBody.defaultProps = {
-    groupsText: '',
-    canUpdateAdmin: false,
-    handleShowShareInfo: () => {},
-};
-
-GroupsBody.propTypes = {
-    getGroups: PropTypes.func.isRequired,
-    nextPage: PropTypes.bool.isRequired,
-    groups: PropTypes.arrayOf(PropTypes.shape({
-        id: PropTypes.number,
-        name: PropTypes.string,
-        members: PropTypes.arrayOf(PropTypes.string),
-        administrators: PropTypes.arrayOf(PropTypes.string),
-    })).isRequired,
-    selectedGroups: PropTypes.objectOf(PropTypes.string).isRequired,
-    groupsText: PropTypes.oneOfType([
-        PropTypes.node,
-        PropTypes.arrayOf(PropTypes.node),
-        PropTypes.string,
-    ]),
-    onUncheckAll: PropTypes.func.isRequired,
-    onCheckAll: PropTypes.func.isRequired,
-    onGroupCheck: PropTypes.func.isRequired,
-    onAdminCheck: PropTypes.func.isRequired,
-    canUpdateAdmin: PropTypes.bool,
-    handleShowShareInfo: PropTypes.func,
-    theme: PropTypes.object.isRequired,
-};
 
 const mapStateToProps = state => (
     {

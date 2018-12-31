@@ -1,9 +1,14 @@
-import PropTypes from 'prop-types';
-import React, { Component } from 'react';
-import { withTheme } from '@material-ui/core/styles';
+import * as React from 'react';
+import { withTheme, Theme } from '@material-ui/core/styles';
 import ButtonBase from '@material-ui/core/ButtonBase';
 
-export class ShareInfoBody extends Component {
+export interface Props {
+    view: 'groups' | 'members';
+    onReturn: () => void;
+    theme: Eventkit.Theme & Theme;
+}
+
+export class ShareInfoBody extends React.Component<Props, {}> {
     render() {
         const { colors } = this.props.theme.eventkit;
 
@@ -13,7 +18,7 @@ export class ShareInfoBody extends Component {
                 width: '100%',
                 top: 0,
                 zIndex: 20,
-                position: 'absolute',
+                position: 'absolute' as 'absolute',
                 border: `1px solid ${colors.secondary_dark}`,
                 backgroundColor: colors.white,
             },
@@ -106,14 +111,5 @@ export class ShareInfoBody extends Component {
         );
     }
 }
-
-ShareInfoBody.propTypes = {
-    view: PropTypes.oneOf([
-        'groups',
-        'members',
-    ]).isRequired,
-    onReturn: PropTypes.func.isRequired,
-    theme: PropTypes.object.isRequired,
-};
 
 export default withTheme()(ShareInfoBody);

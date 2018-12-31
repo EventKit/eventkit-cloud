@@ -1,6 +1,5 @@
-import PropTypes from 'prop-types';
-import React, { Component } from 'react';
-import { withTheme } from '@material-ui/core/styles';
+import * as React from 'react';
+import { withTheme, Theme } from '@material-ui/core/styles';
 import withWidth, { isWidthDown } from '@material-ui/core/withWidth';
 import Button from '@material-ui/core/Button';
 import Dialog from '@material-ui/core/Dialog';
@@ -9,8 +8,27 @@ import DialogActions from '@material-ui/core/DialogActions';
 import DialogContent from '@material-ui/core/DialogContent';
 import Clear from '@material-ui/icons/Clear';
 import CustomScrollbar from '../CustomScrollbar';
+import { Breakpoint } from '@material-ui/core/styles/createBreakpoints';
 
-export class ShareBaseDialog extends Component {
+export interface Props {
+    className?: string;
+    show: boolean;
+    onClose: () => void;
+    handleSave: () => void;
+    title: string | HTMLElement;
+    children: any;
+    submitButtonLabel: string;
+    theme: Eventkit.Theme & Theme;
+    width: Breakpoint;
+}
+
+export class ShareBaseDialog extends React.Component<Props, {}> {
+    static defaultProps = {
+        title: 'SHARE',
+        children: undefined,
+        submitButtonLabel: 'SAVE',
+    };
+
     render() {
         if (!this.props.show) {
             return null;
@@ -38,14 +56,14 @@ export class ShareBaseDialog extends Component {
                 padding: '0px 24px',
                 fontSize: '16px',
                 color: colors.text_primary,
-                position: 'relative',
+                position: 'relative' as 'relative',
             },
             actions: {
                 margin: '20px 24px 24px',
                 justifyContent: 'space-between',
             },
             clear: {
-                float: 'right',
+                float: 'right' as 'right',
                 cursor: 'pointer',
             },
         };
@@ -103,30 +121,4 @@ export class ShareBaseDialog extends Component {
     }
 }
 
-ShareBaseDialog.defaultProps = {
-    title: 'SHARE',
-    children: [],
-    submitButtonLabel: 'SAVE',
-};
-
-ShareBaseDialog.propTypes = {
-    show: PropTypes.bool.isRequired,
-    onClose: PropTypes.func.isRequired,
-    handleSave: PropTypes.func.isRequired,
-    title: PropTypes.oneOfType([
-        PropTypes.node,
-        PropTypes.string,
-    ]),
-    children: PropTypes.oneOfType([
-        PropTypes.arrayOf(PropTypes.node),
-        PropTypes.node,
-    ]),
-    submitButtonLabel: PropTypes.string,
-    theme: PropTypes.object.isRequired,
-    width: PropTypes.string.isRequired,
-};
-
-export default
-@withWidth()
-@withTheme()
-class Default extends ShareBaseDialog {}
+export default withWidth()(withTheme()(ShareBaseDialog));

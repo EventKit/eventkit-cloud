@@ -1,7 +1,6 @@
-import PropTypes from 'prop-types';
 import { connect } from 'react-redux';
-import React, { Component } from 'react';
-import { withTheme } from '@material-ui/core/styles';
+import * as React from 'react';
+import { withTheme, Theme } from '@material-ui/core/styles';
 import Button from '@material-ui/core/Button';
 import ShareBaseDialog from './ShareBaseDialog';
 import GroupsBody from './GroupsBody';
@@ -10,8 +9,43 @@ import ShareInfoBody from './ShareInfoBody';
 import BaseDialog from '../Dialog/BaseDialog';
 import { Permissions, Levels } from '../../utils/permissions';
 
-export class DataPackShareDialog extends Component {
-    constructor(props) {
+export interface Props {
+    show: boolean;
+    onClose: () => void;
+    onSave: (perms: Eventkit.Permissions) => void;
+    user: Eventkit.User;
+    groups: Eventkit.Group[];
+    users: Eventkit.User[];
+    permissions: Eventkit.Permissions;
+    groupsText: any;
+    membersText: any;
+    canUpdateAdmin: boolean;
+    submitButtonLabel: string;
+    title: any;
+    warnPublic: boolean;
+    theme: Eventkit.Theme & Theme;
+}
+
+export interface State {
+    view: 'groups' | 'members';
+    permissions: Eventkit.Permissions;
+    showShareInfo: boolean;
+    showPublicWarning: boolean;
+}
+
+export class DataPackShareDialog extends React.Component<Props, State> {
+    static defaultProps = {
+        submitButtonLabel: 'SAVE',
+        title: 'SHARE',
+        groupsText: '',
+        membersText: '',
+        canUpdateAdmin: false,
+        user: null,
+        warnPublic: false,
+    };
+
+    private permissions: Permissions;
+    constructor(props: Props) {
         super(props);
         this.handleSave = this.handleSave.bind(this);
         this.handleUserCheck = this.handleUserCheck.bind(this);
@@ -38,7 +72,7 @@ export class DataPackShareDialog extends Component {
         };
     }
 
-    componentDidUpdate(prevProps) {
+    componentDidUpdate(prevProps: Props) {
         if (!prevProps.show && this.props.show) {
             this.permissions.setPermissions(this.props.permissions);
             this.permissions.setUsername(this.props.user ? this.props.user.user.username : undefined);
@@ -47,7 +81,7 @@ export class DataPackShareDialog extends Component {
         }
     }
 
-    handleSave() {
+    private handleSave() {
         if (this.permissions.isPrivate()) {
             if (this.permissions.getMemberCount() || this.permissions.getGroupCount()) {
                 this.permissions.makeShared();
@@ -71,7 +105,7 @@ export class DataPackShareDialog extends Component {
         this.props.onSave(this.permissions.getPermissions());
     }
 
-    handleUserCheck(username) {
+    private handleUserCheck(username: string) {
         if (this.permissions.isPublic()) {
             this.permissions.makeShared();
         }
@@ -83,7 +117,7 @@ export class DataPackShareDialog extends Component {
         this.setState({ permissions: this.permissions.getPermissions() });
     }
 
-    handleGroupCheck(groupname) {
+    private handleGroupCheck(groupname: string) {
         if (this.permissions.groupHasPermission(groupname)) {
             this.permissions.removeGroupPermissions(groupname);
         } else {
@@ -92,7 +126,7 @@ export class DataPackShareDialog extends Component {
         this.setState({ permissions: this.permissions.getPermissions() });
     }
 
-    handleAdminCheck(username) {
+    private handleAdminCheck(username: string) {
         if (this.permissions.userHasPermission(username, Levels.ADMIN)) {
             this.permissions.setMemberPermission(username, Levels.READ);
         } else {
@@ -101,7 +135,7 @@ export class DataPackShareDialog extends Component {
         this.setState({ permissions: this.permissions.getPermissions() });
     }
 
-    handleAdminGroupCheck(groupname) {
+    private handleAdminGroupCheck(groupname: string) {
         if (this.permissions.groupHasPermission(groupname, Levels.ADMIN)) {
             this.permissions.setGroupPermission(groupname, Levels.READ);
         } else {
@@ -110,7 +144,7 @@ export class DataPackShareDialog extends Component {
         this.setState({ permissions: this.permissions.getPermissions() });
     }
 
-    handleCurrentCheck() {
+    private handleCurrentCheck() {
         this.props.users.forEach((user) => {
             const { username } = user.user;
             if (!this.permissions.userHasPermission(username)) {
@@ -120,12 +154,12 @@ export class DataPackShareDialog extends Component {
         this.setState({ permissions: this.permissions.getPermissions() });
     }
 
-    handlePublicCheck() {
+    private handlePublicCheck() {
         this.permissions.makePublic();
         this.setState({ permissions: this.permissions.getPermissions() });
     }
 
-    handleGroupCheckAll() {
+    private handleGroupCheckAll() {
         this.props.groups.forEach((group) => {
             const { name } = group;
             if (!this.permissions.groupHasPermission(name)) {
@@ -135,7 +169,7 @@ export class DataPackShareDialog extends Component {
         this.setState({ permissions: this.permissions.getPermissions() });
     }
 
-    handleUncheckAll() {
+    private handleUncheckAll() {
         this.permissions.setMembers({});
         if (this.permissions.isPublic()) {
             this.permissions.makeShared();
@@ -143,28 +177,28 @@ export class DataPackShareDialog extends Component {
         this.setState({ permissions: this.permissions.getPermissions() });
     }
 
-    handleGroupUncheckAll() {
+    private handleGroupUncheckAll() {
         this.permissions.setGroups({});
         this.setState({ permissions: this.permissions.getPermissions() });
     }
 
-    showShareInfo() {
+    private showShareInfo() {
         this.setState({ showShareInfo: true });
     }
 
-    hideShareInfo() {
+    private hideShareInfo() {
         this.setState({ showShareInfo: false });
     }
 
-    showPublicWarning() {
+    private showPublicWarning() {
         this.setState({ showPublicWarning: true });
     }
 
-    hidePublicWarning() {
+    private hidePublicWarning() {
         this.setState({ showPublicWarning: false });
     }
 
-    toggleView() {
+    private toggleView() {
         if (this.state.view === 'groups') {
             this.setState({ view: 'members' });
         } else {
@@ -181,7 +215,7 @@ export class DataPackShareDialog extends Component {
 
         const styles = {
             fixedHeader: {
-                position: 'sticky',
+                position: 'sticky' as 'sticky',
                 top: 0,
                 left: 0,
                 backgroundColor: colors.white,
@@ -222,8 +256,8 @@ export class DataPackShareDialog extends Component {
             );
         }
 
-        const groupCount = Object.keys(this.permissions.getGroups()).length;
-        let memberCount = Object.keys(this.permissions.getMembers()).length;
+        const groupCount: number = Object.keys(this.permissions.getGroups()).length;
+        let memberCount: number | string = Object.keys(this.permissions.getMembers()).length;
         if (this.permissions.isPublic()) {
             memberCount = 'ALL';
         }
@@ -313,7 +347,6 @@ export class DataPackShareDialog extends Component {
                             style={{ margin: '0px', float: 'left' }}
                             variant="text"
                             color="primary"
-                            label="CONTINUE EDITING"
                             onClick={this.hidePublicWarning}
                             key="edit"
                         >
@@ -329,66 +362,6 @@ export class DataPackShareDialog extends Component {
     }
 }
 
-DataPackShareDialog.defaultProps = {
-    submitButtonLabel: 'SAVE',
-    title: 'SHARE',
-    groupsText: '',
-    membersText: '',
-    canUpdateAdmin: false,
-    user: null,
-    warnPublic: false,
-};
-
-DataPackShareDialog.propTypes = {
-    show: PropTypes.bool.isRequired,
-    onClose: PropTypes.func.isRequired,
-    onSave: PropTypes.func.isRequired,
-    user: PropTypes.shape({
-        user: PropTypes.object,
-        groups: PropTypes.arrayOf(PropTypes.number),
-    }),
-    groups: PropTypes.arrayOf(PropTypes.shape({
-        id: PropTypes.number,
-        name: PropTypes.string,
-        members: PropTypes.arrayOf(PropTypes.string),
-        administrators: PropTypes.arrayOf(PropTypes.string),
-    })).isRequired,
-    users: PropTypes.arrayOf(PropTypes.shape({
-        user: PropTypes.shape({
-            username: PropTypes.string,
-            first_name: PropTypes.string,
-            last_name: PropTypes.string,
-            email: PropTypes.string,
-            date_joined: PropTypes.string,
-            last_login: PropTypes.string,
-        }),
-        accepted_licenses: PropTypes.object,
-        groups: PropTypes.arrayOf(PropTypes.number),
-    })).isRequired,
-    permissions: PropTypes.shape({
-        groups: PropTypes.objectOf(PropTypes.string),
-        members: PropTypes.objectOf(PropTypes.string),
-    }).isRequired,
-    groupsText: PropTypes.oneOfType([
-        PropTypes.node,
-        PropTypes.arrayOf(PropTypes.node),
-        PropTypes.string,
-    ]),
-    membersText: PropTypes.oneOfType([
-        PropTypes.node,
-        PropTypes.arrayOf(PropTypes.node),
-        PropTypes.string,
-    ]),
-    canUpdateAdmin: PropTypes.bool,
-    submitButtonLabel: PropTypes.string,
-    title: PropTypes.oneOfType([
-        PropTypes.node,
-        PropTypes.string,
-    ]),
-    warnPublic: PropTypes.bool,
-    theme: PropTypes.object.isRequired,
-};
-
 const mapStateToProps = state => (
     {
         groups: state.groups.groups,
@@ -397,4 +370,4 @@ const mapStateToProps = state => (
     }
 );
 
-export default withTheme()(connect(mapStateToProps, undefined)(DataPackShareDialog));
+export default withTheme()(connect(mapStateToProps)(DataPackShareDialog));

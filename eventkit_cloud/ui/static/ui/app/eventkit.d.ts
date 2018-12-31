@@ -141,6 +141,7 @@ declare namespace Eventkit {
         date_joined: string;
         identification: string;
         commonname: string;
+        permission?: string; // Certain API responses will include user permission level for a given target.
         fake?: boolean; // Used for adding fake users during page tours.
     }
 
