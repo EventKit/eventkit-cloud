@@ -1,8 +1,16 @@
-import PropTypes from 'prop-types';
-import React, { Component } from 'react';
-import { withTheme } from '@material-ui/core/styles';
+import * as React from 'react';
+import { withTheme, Theme } from '@material-ui/core/styles';
 
-export class ThreeStepInfo extends Component {
+export interface Props {
+    steps: Array<{
+        img: string;
+        caption: string;
+    }>;
+    tableStyle?: object;
+    theme: Eventkit.Theme & Theme;
+}
+
+export class ThreeStepInfo extends React.Component<Props, {}> {
     render() {
         const { theme } = this.props;
         const styles = {
@@ -14,7 +22,7 @@ export class ThreeStepInfo extends Component {
                 width: '95%',
             },
             table: {
-                borderCollapse: 'collapse',
+                borderCollapse: 'collapse' as 'collapse',
                 marginBottom: '30px',
                 fontSize: '14px',
                 ...this.props.tableStyle,
@@ -65,18 +73,5 @@ export class ThreeStepInfo extends Component {
         );
     }
 }
-
-ThreeStepInfo.defaultProps = {
-    tableStyle: {},
-};
-
-ThreeStepInfo.propTypes = {
-    steps: PropTypes.arrayOf(PropTypes.shape({
-        img: PropTypes.obj,
-        caption: PropTypes.string,
-    })).isRequired,
-    tableStyle: PropTypes.object,
-    theme: PropTypes.object.isRequired,
-};
 
 export default withTheme()(ThreeStepInfo);

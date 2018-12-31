@@ -1,11 +1,17 @@
-import PropTypes from 'prop-types';
-import React, { Component } from 'react';
+import * as React from 'react';
 
-export class InfoParagraph extends Component {
+export interface Props {
+    title: any;
+    body: any;
+    titleStyle?: object;
+    bodyStyle?: object;
+}
+
+export class InfoParagraph extends React.Component<Props, {}> {
     render() {
         const styles = {
             title: {
-                textAlign: 'center',
+                textAlign: 'center' as 'center',
                 ...this.props.titleStyle,
             },
             body: {
@@ -28,25 +34,5 @@ export class InfoParagraph extends Component {
         );
     }
 }
-
-InfoParagraph.defaultProps = {
-    titleStyle: {},
-    bodyStyle: {},
-};
-
-InfoParagraph.propTypes = {
-    title: PropTypes.oneOfType([
-        PropTypes.string,
-        PropTypes.node,
-        PropTypes.arrayOf(PropTypes.node),
-    ]).isRequired,
-    body: PropTypes.oneOfType([
-        PropTypes.string,
-        PropTypes.node,
-        PropTypes.arrayOf(PropTypes.node),
-    ]).isRequired,
-    titleStyle: PropTypes.object,
-    bodyStyle: PropTypes.object,
-};
 
 export default InfoParagraph;
