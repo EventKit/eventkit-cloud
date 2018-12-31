@@ -1,14 +1,13 @@
-/* eslint react/no-array-index-key: 0 */
-import PropTypes from 'prop-types';
-import React from 'react';
-import { withStyles, withTheme } from '@material-ui/core/styles';
+import * as React from 'react';
+import { withStyles, withTheme, createStyles, Theme } from '@material-ui/core/styles';
 import withWidth, { isWidthUp } from '@material-ui/core/withWidth';
 import GridList from '@material-ui/core/GridList';
 import Tab from '@material-ui/core/Tab';
 import Tabs from '@material-ui/core/Tabs';
 import SwipeableViews from 'react-swipeable-views';
+import { Breakpoint } from '@material-ui/core/styles/createBreakpoints';
 
-const jss = theme => ({
+const jss = (theme: Theme & Eventkit.Theme) => createStyles({
     tabsRoot: {
         height: '16px',
         minHeight: '16px',
@@ -26,7 +25,7 @@ const jss = theme => ({
         transition: 'border 0.25s',
         minWidth: '16px',
         minHeight: '16px',
-        opacity: '1',
+        opacity: 1,
     },
     tabSelected: {
         border: `8px solid ${theme.eventkit.colors.primary}`,
@@ -34,12 +33,48 @@ const jss = theme => ({
     tabDisabled: {
         backgroundColor: theme.eventkit.colors.secondary_dark,
         border: `3px solid ${theme.eventkit.colors.grey}`,
-        opacity: '0.5',
+        opacity: 0.5,
     },
 });
 
-export class DashboardSection extends React.Component {
-    constructor(props) {
+export interface Props {
+    className?: string;
+    style?: object;
+    title: string;
+    name: string;
+    columns: number;
+    onViewAll?: () => void;
+    noDataElement?: React.ReactElement<any>;
+    cellHeight?: number;
+    gridPadding?: number;
+    rows?: number;
+    rowMajor?: boolean;
+    children: any;
+    classes: { [name: string]: string };
+    theme: Eventkit.Theme & Theme;
+    width: Breakpoint;
+}
+
+export interface State {
+    pageIndex: number;
+}
+
+export class DashboardSection extends React.Component<Props, State> {
+    static defaultProps = {
+        style: {},
+        onViewAll: undefined,
+        noDataElement: undefined,
+        cellHeight: undefined,
+        gridPadding: 2,
+        rows: 1,
+        rowMajor: true,
+        children: undefined,
+        classes: {},
+    };
+
+    private maxPages: number;
+
+    constructor(props: Props) {
         super(props);
         this.handlePageChange = this.handlePageChange.bind(this);
         this.getPages = this.getPages.bind(this);
@@ -49,7 +84,7 @@ export class DashboardSection extends React.Component {
         this.maxPages = 3;
     }
 
-    getPages() {
+    private getPages() {
         const itemsPerPage = this.props.columns * this.props.rows;
         // Group children into pages, each of length maxPages.
         const children = React.Children.toArray(this.props.children);
@@ -64,7 +99,7 @@ export class DashboardSection extends React.Component {
         return pages;
     }
 
-    handlePageChange(e, pageIndex) {
+    handlePageChange(_, pageIndex: number) {
         this.setState({
             pageIndex,
         });
@@ -88,9 +123,9 @@ export class DashboardSection extends React.Component {
                 paddingLeft: md ? `${spacing + halfGridPadding}px` : '12px',
                 paddingRight: md ? `${spacing + halfGridPadding + scrollbarWidth}px` : '12px',
                 fontSize: md ? '22px' : '18px',
-                fontWeight: 'bold',
+                fontWeight: 'bold' as 'bold',
                 letterSpacing: '0.6px',
-                textTransform: 'uppercase',
+                textTransform: 'uppercase' as 'uppercase',
                 display: 'flex',
                 alignItems: 'center',
                 color: colors.white,
@@ -115,7 +150,7 @@ export class DashboardSection extends React.Component {
             },
             viewAll: {
                 color: colors.primary,
-                textTransform: 'uppercase',
+                textTransform: 'uppercase' as 'uppercase',
                 fontSize: md ? '14px' : '12px',
                 cursor: 'pointer',
                 marginLeft: '18px',
@@ -268,41 +303,4 @@ export class DashboardSection extends React.Component {
     }
 }
 
-DashboardSection.propTypes = {
-    style: PropTypes.object,
-    title: PropTypes.string.isRequired,
-    name: PropTypes.string.isRequired,
-    columns: PropTypes.number.isRequired,
-    onViewAll: PropTypes.func,
-    noDataElement: PropTypes.element,
-    cellHeight: PropTypes.number,
-    gridPadding: PropTypes.number,
-    rows: PropTypes.number,
-    rowMajor: PropTypes.bool,
-    children: PropTypes.oneOfType([
-        PropTypes.arrayOf(PropTypes.node),
-        PropTypes.node,
-        PropTypes.string,
-    ]),
-    classes: PropTypes.object,
-    theme: PropTypes.object.isRequired,
-    width: PropTypes.string.isRequired,
-};
-
-DashboardSection.defaultProps = {
-    style: {},
-    onViewAll: undefined,
-    noDataElement: undefined,
-    cellHeight: undefined,
-    gridPadding: 2,
-    rows: 1,
-    rowMajor: true,
-    children: undefined,
-    classes: {},
-};
-
-export default
-@withWidth()
-@withTheme()
-@withStyles(jss)
-class Default extends DashboardSection {}
+export default withWidth()(withTheme()(withStyles(jss)(DashboardSection)));
