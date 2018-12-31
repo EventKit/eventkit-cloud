@@ -53,48 +53,48 @@ describe('ExportAOI component', () => {
         }],
     };
 
-    const getProps = () => (
-        {
-            aoiInfo: {
-                geojson: {},
-                originalGeojson: {},
-                geomType: null,
-                title: null,
-                description: null,
-                selectionType: null,
-            },
-            importGeom: {
-                processing: false,
-                processed: false,
-                featureCollection: {},
-                error: null,
-            },
-            drawer: 'open',
-            geocode: {
-                fetching: false,
-                fetched: false,
-                data: [],
-                error: null,
-            },
-            walkthroughClicked: false,
-            onWalkthroughReset: () => {},
-            updateAoiInfo: () => {},
-            clearAoiInfo: () => {},
-            clearExportInfo: () => {},
-            setNextDisabled: () => {},
-            setNextEnabled: () => {},
-            getGeocode: () => {},
-            processGeoJSONFile: () => {},
-            resetGeoJSONFile: () => {},
-            ...global.eventkit_test_props,
-        }
-    );
+    const getProps = () => ({
+        aoiInfo: {
+            geojson: {},
+            originalGeojson: {},
+            geomType: null,
+            title: null,
+            description: null,
+            selectionType: null,
+        },
+        importGeom: {
+            processing: false,
+            processed: false,
+            featureCollection: {},
+            error: null,
+        },
+        drawer: 'open',
+        geocode: {
+            fetching: false,
+            fetched: false,
+            data: [],
+            error: null,
+        },
+        walkthroughClicked: false,
+        onWalkthroughReset: () => {},
+        updateAoiInfo: () => {},
+        clearAoiInfo: () => {},
+        clearExportInfo: () => {},
+        setNextDisabled: () => {},
+        setNextEnabled: () => {},
+        getGeocode: () => {},
+        processGeoJSONFile: () => {},
+        resetGeoJSONFile: () => {},
+        limits: {
+            max: 100000,
+            sizes: [5, 10, 100000],
+        },
+        ...global.eventkit_test_props,
+    });
 
     const getWrapper = (props) => {
         const config = {
             BASEMAP_URL: 'http://my-osm-tile-service/{z}/{x}/{y}.png',
-            MAX_VECTOR_AOI_SQ_KM: 20000,
-            MAX_RASTER_AOI_SQ_KM: 10000,
         };
         return shallow(<ExportAOI {...props} />, {
             context: { config },
@@ -167,7 +167,6 @@ describe('ExportAOI component', () => {
         props.aoiInfo.selectionType = 'fake type';
         props.aoiInfo.description = 'fake';
         props.aoiInfo.geomType = 'Polygon';
-        const mountSpy = sinon.spy(ExportAOI.prototype, 'componentDidMount');
         const initSpy = sinon.spy(ExportAOI.prototype, 'initializeOpenLayers');
         const readSpy = sinon.spy(GeoJSON.prototype, 'readFeatures');
         const addSpy = sinon.spy(VectorSource.prototype, 'addFeatures');
@@ -176,7 +175,6 @@ describe('ExportAOI component', () => {
         props.setNextEnabled = sinon.spy();
         const setSpy = sinon.spy(ExportAOI.prototype, 'setButtonSelected');
         getWrapper(props);
-        expect(mountSpy.calledOnce).toBe(true);
         expect(initSpy.calledOnce).toBe(true);
         expect(readSpy.called).toBe(true);
         expect(readSpy.calledWith(props.aoiInfo.geojson, {
@@ -189,7 +187,6 @@ describe('ExportAOI component', () => {
         expect(props.setNextEnabled.calledOnce).toBe(true);
         expect(setSpy.calledOnce).toBe(true);
         expect(setSpy.calledWith('fake type')).toBe(true);
-        mountSpy.restore();
         initSpy.restore();
         readSpy.restore();
         addSpy.restore();

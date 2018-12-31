@@ -76,11 +76,7 @@ declare namespace Eventkit {
         formats: string[];
         created_at: string;
         relationship: Permissions.Level;
-        permissions: {
-            value: string;
-            users: { [s: string]: string };
-            groups: { [s: string]: string };
-        };
+        permissions: Permissions;
     }
 
     interface Run {
@@ -311,6 +307,13 @@ declare namespace Eventkit {
                 error: any;
                 viewedJobs: Eventkit.Run[];
             };
+        }
+
+        interface Licenses {
+            fetching: boolean;
+            fetched: boolean;
+            licenses: License[];
+            error: any;
         }
     }
 }

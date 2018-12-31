@@ -456,7 +456,6 @@ export class DashboardPage extends React.Component<Props, State> {
                                 columns={this.getNotificationsColumns()}
                                 rows={this.getNotificationsRows()}
                                 gridPadding={this.getGridPadding()}
-                                providers={this.props.providers}
                                 onViewAll={this.handleNotificationsViewAll}
                                 noDataElement={
                                     <Paper
@@ -484,7 +483,6 @@ export class DashboardPage extends React.Component<Props, State> {
                                 name="RecentlyViewed"
                                 columns={this.getGridColumns()}
                                 gridPadding={this.getGridPadding()}
-                                providers={this.props.providers}
                                 noDataElement={
                                     <Paper
                                         className="qa-DashboardSection-RecentlyViewed-NoData"
@@ -530,7 +528,6 @@ export class DashboardPage extends React.Component<Props, State> {
                                     columns={this.getGridWideColumns()}
                                     gridPadding={this.getGridPadding()}
                                     cellHeight={this.state.width !== 'xs' ? 335 : 435}
-                                    providers={this.props.providers}
                                     onViewAll={this.handleFeaturedViewAll}
                                 >
                                     {this.props.featuredIds.map((id, index) => (
@@ -553,7 +550,6 @@ export class DashboardPage extends React.Component<Props, State> {
                                 name="MyDataPacks"
                                 columns={this.getGridColumns()}
                                 gridPadding={this.getGridPadding()}
-                                providers={this.props.providers}
                                 onViewAll={this.handleMyDataPacksViewAll}
                                 noDataElement={
                                     <Paper
