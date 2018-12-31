@@ -1,0 +1,48 @@
+node {
+  def root = pwd()
+  def mvn = tool 'M3'
+
+  // Parameterized
+  def eventkitUrl = "${env.EVENTKIT_URL}"
+  def containerId = null
+
+    stage('Setup') {
+      deleteDir()
+      git url: "${env.GIT_URL}", branch: "master"
+    }
+
+  // Run the Tests
+  stage("Test") {
+      withEnv([
+        "ek_url=${eventkitUrl}",
+        "ek_username=${ek_username}",
+        "ek_password=${ek_password}"
+      ]) {
+        dir("${root}/selenium") {
+          try {
+            removeVolumes()
+            sh "docker-compose up --abort-on-container-exit"
+          } finally {
+            // Cleanup
+            sh "docker-compose down"
+          }
+        }
+      }
+  }
+}
+
+def removeVolumes() {
+    sh """
+    python - << END
+import yaml
+data = {}
+with open('docker-compose.yml', 'r') as yaml_file:
+    data = yaml.load(yaml_file)
+for service in data.get('services'):
+    if data['services'][service].get('volumes'):
+        data['services'][service].pop('volumes')
+with open('docker-compose.yml', 'w') as outfile:
+    yaml.dump(data, outfile, default_flow_style=False)
+END
+    """
+}
