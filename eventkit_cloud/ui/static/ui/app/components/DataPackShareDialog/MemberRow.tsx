@@ -1,14 +1,36 @@
-import PropTypes from 'prop-types';
-import React, { Component } from 'react';
-import { withTheme } from '@material-ui/core/styles';
+import * as React from 'react';
+import { withTheme, Theme } from '@material-ui/core/styles';
 import Card from '@material-ui/core/Card';
 import CardHeader from '@material-ui/core/CardHeader';
 import CheckBoxOutline from '@material-ui/icons/CheckBoxOutlineBlank';
 import CheckBox from '@material-ui/icons/CheckBox';
 import AdminShare from '../icons/AdminShareIcon';
 
-export class MemberRow extends Component {
-    constructor(props) {
+export interface Props {
+    className?: string;
+    member: Eventkit.User;
+    selected: boolean;
+    admin: boolean;
+    showAdmin: boolean;
+    handleCheck: (user: Eventkit.User) => void;
+    handleAdminCheck: (user: Eventkit.User) => void;
+    handleAdminMouseOut: () => void;
+    handleAdminMouseOver: (tooltip: HTMLElement, admin: boolean) => void;
+    theme: Eventkit.Theme & Theme;
+}
+
+export class MemberRow extends React.Component<Props, {}> {
+    static defaultProps = {
+        showAdmin: false,
+        admin: false,
+        handleAdminCheck: () => { /* do nothing */ },
+        handleAdminMouseOver: () => { /* do nothing */ },
+        handleAdminMouseOut: () => { /* do nothing */ },
+    };
+
+    private handleCheck: () => void;
+    private tooltip: HTMLElement;
+    constructor(props: Props) {
         super(props);
         this.handleCheck = this.props.handleCheck.bind(this, this.props.member);
         this.handleAdminCheck = this.handleAdminCheck.bind(this);
@@ -17,23 +39,24 @@ export class MemberRow extends Component {
         this.onAdminMouseOver = this.onAdminMouseOver.bind(this);
     }
 
-    onAdminMouseOver() {
+    private onAdminMouseOver() {
         if (this.props.selected) {
             this.props.handleAdminMouseOver(this.tooltip, this.props.admin);
         }
     }
 
-    onAdminMouseOut() {
+    private onAdminMouseOut() {
         this.props.handleAdminMouseOut();
     }
 
-
-    onKeyDown(e) {
+    private onKeyDown(e: React.KeyboardEvent<HTMLElement>) {
         const key = e.which || e.keyCode;
-        if (key === 13) this.handleAdminCheck();
+        if (key === 13) {
+            this.handleAdminCheck();
+        }
     }
 
-    handleAdminCheck() {
+    private handleAdminCheck() {
         if (this.props.showAdmin && this.props.selected) {
             this.props.handleAdminCheck(this.props.member);
         }
@@ -69,6 +92,8 @@ export class MemberRow extends Component {
                 height: '28px',
                 cursor: 'pointer',
                 marginRight: '15px',
+                color: undefined,
+                opacity: undefined,
             },
             cardText: {
                 backgroundColor: colors.white,
@@ -147,36 +172,5 @@ export class MemberRow extends Component {
         );
     }
 }
-
-MemberRow.defaultProps = {
-    showAdmin: false,
-    admin: false,
-    handleAdminCheck: () => {},
-    handleAdminMouseOver: () => {},
-    handleAdminMouseOut: () => {},
-};
-
-MemberRow.propTypes = {
-    member: PropTypes.shape({
-        user: PropTypes.shape({
-            username: PropTypes.string,
-            first_name: PropTypes.string,
-            last_name: PropTypes.string,
-            email: PropTypes.string,
-            date_joined: PropTypes.string,
-            last_login: PropTypes.string,
-        }),
-        accepted_licenses: PropTypes.object,
-        groups: PropTypes.arrayOf(PropTypes.number),
-    }).isRequired,
-    selected: PropTypes.bool.isRequired,
-    admin: PropTypes.bool,
-    showAdmin: PropTypes.bool,
-    handleCheck: PropTypes.func.isRequired,
-    handleAdminCheck: PropTypes.func,
-    handleAdminMouseOut: PropTypes.func,
-    handleAdminMouseOver: PropTypes.func,
-    theme: PropTypes.object.isRequired,
-};
 
 export default withTheme()(MemberRow);

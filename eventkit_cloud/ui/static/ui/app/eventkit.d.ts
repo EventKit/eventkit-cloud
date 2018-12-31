@@ -76,11 +76,7 @@ declare namespace Eventkit {
         formats: string[];
         created_at: string;
         relationship: Permissions.Level;
-        permissions: {
-            value: string;
-            users: { [s: string]: string };
-            groups: { [s: string]: string };
-        };
+        permissions: Permissions;
     }
 
     interface Run {
@@ -128,17 +124,20 @@ declare namespace Eventkit {
         export_provider_type: number;
     }
 
+    interface UserData {
+        username: string;
+        first_name: string;
+        last_name: string;
+        email: string;
+        last_login: string;
+        date_joined: string;
+        identification: string;
+        commonname: string;
+        permission?: string;
+    }
+
     interface User {
-        user: {
-            username: string;
-            first_name: string;
-            last_name: string;
-            email: string;
-            last_login: string;
-            date_joined: string;
-            identification: string;
-            commonname: string;
-        };
+        user: UserData;
         accepted_licenses: { [s: string]: boolean};
         groups: number[];
     }

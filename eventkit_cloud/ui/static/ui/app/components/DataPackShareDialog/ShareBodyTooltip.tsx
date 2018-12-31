@@ -1,7 +1,29 @@
-import PropTypes from 'prop-types';
-import React, { Component } from 'react';
+import * as React from 'react';
 
-export class ShareBodyTooltip extends Component {
+export interface Props {
+    className?: string;
+    open: boolean;
+    target: HTMLElement;
+    body: HTMLElement;
+    text: string;
+    arrowStyle: object;
+    arrowContainerStyle: object;
+    arrowSilhouetteStyle: object;
+    textContainerStyle: object;
+    textStyle: object;
+}
+
+export class ShareBodyTooltip extends React.Component<Props, {}> {
+    static defaultProps = {
+        target: null,
+        body: null,
+        arrowStyle: {},
+        arrowContainerStyle: {},
+        arrowSilhouetteStyle: {},
+        textContainerStyle: {},
+        textStyle: {},
+    };
+
     render() {
         if (!this.props.open) {
             return null;
@@ -12,21 +34,21 @@ export class ShareBodyTooltip extends Component {
 
         const styles = {
             arrowContainer: {
-                position: 'absolute',
+                position: 'absolute' as 'absolute',
                 width: '30px',
                 height: '20px',
                 left: targetPosition.left - bodyPosition.left,
                 top: ((targetPosition.top - bodyPosition.top) - targetPosition.height),
                 fontSize: '12px',
                 opacity: 1,
-                pointerEvents: 'auto',
+                pointerEvents: 'auto' as 'auto',
                 cursor: 'default',
-                whiteSpace: 'normal',
+                whiteSpace: 'normal' as 'normal',
                 zIndex: 9001,
                 ...this.props.arrowContainerStyle,
             },
             arrow: {
-                position: 'absolute',
+                position: 'absolute' as 'absolute',
                 width: 0,
                 height: 0,
                 left: -1,
@@ -37,7 +59,7 @@ export class ShareBodyTooltip extends Component {
                 ...this.props.arrowStyle,
             },
             arrowSilhouette: {
-                position: 'absolute',
+                position: 'absolute' as 'absolute',
                 width: 0,
                 height: 0,
                 left: -2,
@@ -47,7 +69,7 @@ export class ShareBodyTooltip extends Component {
                 ...this.props.arrowSilhouetteStyle,
             },
             textContainer: {
-                position: 'absolute',
+                position: 'absolute' as 'absolute',
                 left: 30,
                 right: 30,
                 bottom: (bodyPosition.height - (targetPosition.top - bodyPosition.top)) + 27,
@@ -60,7 +82,7 @@ export class ShareBodyTooltip extends Component {
                 background: 'white',
                 border: '1px solid rgba(0, 0, 0, 0.2)',
                 padding: '15px 45px',
-                textAlign: 'center',
+                textAlign: 'center' as 'center',
                 fontSize: '14px',
                 fontWeight: 700,
                 ...this.props.textStyle,
@@ -94,27 +116,5 @@ export class ShareBodyTooltip extends Component {
         );
     }
 }
-
-ShareBodyTooltip.defaultProps = {
-    target: null,
-    body: null,
-    arrowStyle: {},
-    arrowContainerStyle: {},
-    arrowSilhouetteStyle: {},
-    textContainerStyle: {},
-    textStyle: {},
-};
-
-ShareBodyTooltip.propTypes = {
-    open: PropTypes.bool.isRequired,
-    target: PropTypes.object,
-    body: PropTypes.object,
-    text: PropTypes.string.isRequired,
-    arrowStyle: PropTypes.object,
-    arrowContainerStyle: PropTypes.object,
-    arrowSilhouetteStyle: PropTypes.object,
-    textContainerStyle: PropTypes.object,
-    textStyle: PropTypes.object,
-};
 
 export default ShareBodyTooltip;

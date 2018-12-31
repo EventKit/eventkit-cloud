@@ -1,7 +1,6 @@
-import PropTypes from 'prop-types';
-import React, { Component } from 'react';
+import * as React from 'react';
 import axios from 'axios';
-import { withStyles, withTheme } from '@material-ui/core/styles';
+import { withStyles, withTheme, createStyles, Theme } from '@material-ui/core/styles';
 import CircularProgress from '@material-ui/core/CircularProgress';
 import Card from '@material-ui/core/Card';
 import CardHeader from '@material-ui/core/CardHeader';
@@ -15,7 +14,7 @@ import Eye from '@material-ui/icons/RemoveRedEye';
 import AdminShare from '../icons/AdminShareIcon';
 import GroupMemberRow from './GroupMemberRow';
 
-const jss = theme => ({
+const jss = (theme: Eventkit.Theme & Theme) => createStyles({
     noData: {
         height: '25px',
         display: 'flex',
@@ -66,8 +65,39 @@ const jss = theme => ({
     },
 });
 
-export class GroupRow extends Component {
-    constructor(props) {
+export interface Props {
+    className?: string;
+    group: Eventkit.Group;
+    selected: boolean;
+    handleCheck: (group: Eventkit.Group) => void;
+    handleAdminCheck: (group: Eventkit.Group) => void;
+    handleAdminMouseOut: () => void;
+    handleAdminMouseOver: (tooltip: HTMLElement, admin: boolean) => void;
+    showAdmin: boolean;
+    admin: boolean;
+    theme: Eventkit.Theme & Theme;
+    classes: { [className: string]: string };
+}
+
+export interface State {
+    expanded: boolean;
+    loadingMembers: boolean;
+    members: Eventkit.UserData[];
+    membersFetched: boolean;
+}
+
+export class GroupRow extends React.Component<Props, State> {
+    static defaultProps = {
+        admin: false,
+        showAdmin: false,
+        handleAdminCheck: () => { /* do nothing */ },
+        handleAdminMouseOver: () => { /* do nothing */ },
+        handleAdminMouseOut: () => { /* do nothing */ },
+    };
+
+    private handleCheck: () => void;
+    private tooltip: HTMLElement;
+    constructor(props: Props) {
         super(props);
         this.toggleExpanded = this.toggleExpanded.bind(this);
         this.handleCheck = this.props.handleCheck.bind(this, this.props.group);
@@ -85,22 +115,24 @@ export class GroupRow extends Component {
         };
     }
 
-    onAdminMouseOver() {
+    private onAdminMouseOver() {
         if (this.props.selected) {
             this.props.handleAdminMouseOver(this.tooltip, this.props.admin);
         }
     }
 
-    onAdminMouseOut() {
+    private onAdminMouseOut() {
         this.props.handleAdminMouseOut();
     }
 
-    onKeyDown(e) {
+    private onKeyDown(e: React.KeyboardEvent<HTMLElement>) {
         const key = e.which || e.keyCode;
-        if (key === 13) this.handleAdminCheck();
+        if (key === 13) {
+            this.handleAdminCheck();
+        }
     }
 
-    async getMembers() {
+    private async getMembers() {
         try {
             const response = await axios({
                 url: `/api/groups/${this.props.group.id}/users`,
@@ -114,19 +146,19 @@ export class GroupRow extends Component {
         }
     }
 
-    async loadMembers() {
+    private async loadMembers() {
         this.setState({ loadingMembers: true });
         const members = await this.getMembers();
         this.setState({ loadingMembers: false, members, membersFetched: true });
     }
 
-    handleAdminCheck() {
+    private handleAdminCheck() {
         if (this.props.showAdmin && this.props.selected) {
             this.props.handleAdminCheck(this.props.group);
         }
     }
 
-    toggleExpanded() {
+    private toggleExpanded() {
         if (!this.state.membersFetched && !this.state.expanded) {
             this.loadMembers();
         }
@@ -150,6 +182,8 @@ export class GroupRow extends Component {
             height: '28px',
             cursor: 'pointer',
             marginRight: '15px',
+            color: undefined,
+            opacity: undefined,
         };
         if (this.props.showAdmin) {
             adminStyle.color = colors.text_primary;
@@ -226,31 +260,5 @@ export class GroupRow extends Component {
         );
     }
 }
-
-GroupRow.defaultProps = {
-    admin: false,
-    showAdmin: false,
-    handleAdminCheck: () => {},
-    handleAdminMouseOver: () => {},
-    handleAdminMouseOut: () => {},
-};
-
-GroupRow.propTypes = {
-    group: PropTypes.shape({
-        id: PropTypes.number,
-        name: PropTypes.string,
-        members: PropTypes.arrayOf(PropTypes.string),
-        administrators: PropTypes.arrayOf(PropTypes.string),
-    }).isRequired,
-    selected: PropTypes.bool.isRequired,
-    handleCheck: PropTypes.func.isRequired,
-    handleAdminCheck: PropTypes.func,
-    handleAdminMouseOut: PropTypes.func,
-    handleAdminMouseOver: PropTypes.func,
-    showAdmin: PropTypes.bool,
-    admin: PropTypes.bool,
-    theme: PropTypes.object.isRequired,
-    classes: PropTypes.object.isRequired,
-};
 
 export default withTheme()(withStyles(jss)(GroupRow));

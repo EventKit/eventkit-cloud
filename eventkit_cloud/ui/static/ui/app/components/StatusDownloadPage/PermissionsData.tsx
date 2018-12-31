@@ -10,11 +10,7 @@ import DropDownMenu from '../common/DropDownMenu';
 import DataPackShareDialog from '../DataPackShareDialog/DataPackShareDialog';
 
 interface Props {
-    permissions: {
-        value: 'PUBLIC' | 'PRIVATE' | 'SHARED';
-        groups: { [group: string]: string; };
-        members: { [member: string]: string };
-    };
+    permissions: Eventkit.Permissions;
     handlePermissionsChange: (permissions: {}) => void;
     adminPermissions: boolean;
     user: Eventkit.User;
