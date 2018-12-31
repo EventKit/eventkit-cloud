@@ -285,7 +285,6 @@ class TestGdalUtils(TestCase):
             nonlocal step
             self.assertEqual(progress, step * 10.0)
             step += 1
-            print(progress)
 
         script_file = "{}/files/mock_gdal_progress.sh".format(
             os.path.dirname(os.path.abspath(__file__)).replace("\\", "/"))
