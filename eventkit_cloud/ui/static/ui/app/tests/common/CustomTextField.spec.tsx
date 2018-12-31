@@ -1,8 +1,8 @@
-import React from 'react';
+import * as React from 'react';
 import { createShallow } from '@material-ui/core/test-utils';
-import sinon from 'sinon';
+import * as sinon from 'sinon';
 import TextField from '@material-ui/core/TextField';
-import { CustomTextField } from '../components/common/CustomTextField';
+import { CustomTextField } from '../../components/common/CustomTextField';
 
 describe('CustomTextField component', () => {
     let shallow;
@@ -11,7 +11,7 @@ describe('CustomTextField component', () => {
         shallow = createShallow();
     });
 
-    const props = { ...global.eventkit_test_props };
+    const props = { ...(global as any).eventkit_test_props };
 
     const getWrapper = propz => (
         shallow(<CustomTextField {...propz} />)

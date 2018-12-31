@@ -1,18 +1,25 @@
-import React from 'react';
+import * as React from 'react';
 import { mount } from 'enzyme';
-import sinon from 'sinon';
-import { Scrollbars } from 'react-custom-scrollbars';
-import CustomScrollbar from '../components/common/CustomScrollbar';
+import * as sinon from 'sinon';
+import Scrollbars from 'react-custom-scrollbars';
+import CustomScrollbar from '../../components/common/CustomScrollbar';
 
 describe('Custom Scrollbar component', () => {
+    let wrapper;
+    let instance;
+
+    beforeEach(() => {
+        wrapper = mount(<CustomScrollbar />);
+        instance = wrapper.instance();
+    });
+
     it('should render a react-custom-scrollbar component with custom vertical thumb', () => {
-        const wrapper = mount(<CustomScrollbar />);
         expect(wrapper.find(Scrollbars)).toHaveLength(1);
         expect(wrapper.find(Scrollbars).props().renderThumbVertical)
-            .toEqual(wrapper.instance().renderThumb);
-        const thumb = mount(wrapper.instance().renderThumb({}, {}));
+            .toEqual(instance.renderThumb);
+        const thumb = mount(instance.renderThumb({}, {}));
         expect(thumb.find('div')).toHaveLength(1);
-        expect(thumb.props().style).toEqual({
+        expect((thumb.props() as any).style).toEqual({
             backgroundColor: '#8A898B',
             opacity: '0.7',
             borderRadius: '5px',
@@ -21,29 +28,26 @@ describe('Custom Scrollbar component', () => {
     });
 
     it('scrollToTop should call scrollToTop on the scrollbar', () => {
-        const wrapper = mount(<CustomScrollbar />);
         const scrollSpy = sinon.spy();
         const scrollbar = { scrollToTop: scrollSpy };
-        wrapper.instance().scrollbar = scrollbar;
-        wrapper.instance().scrollToTop();
+        instance.scrollbar = scrollbar;
+        instance.scrollToTop();
         expect(scrollSpy.calledOnce).toBe(true);
     });
 
     it('scrollToBottom should call scrollToBottom on the scrollbar', () => {
-        const wrapper = mount(<CustomScrollbar />);
         const scrollSpy = sinon.spy();
         const scrollbar = { scrollToBottom: scrollSpy };
-        wrapper.instance().scrollbar = scrollbar;
-        wrapper.instance().scrollToBottom();
+        instance.scrollbar = scrollbar;
+        instance.scrollToBottom();
         expect(scrollSpy.calledOnce).toBe(true);
     });
 
     it('scrollToMiddle should call scrollTop with scrollHeight / 4', () => {
-        const wrapper = mount(<CustomScrollbar />);
         const scrollSpy = sinon.spy();
         const scrollbar = { scrollTop: scrollSpy, getScrollHeight: () => (12) };
-        wrapper.instance().scrollbar = scrollbar;
-        wrapper.instance().scrollToMiddle();
+        instance.scrollbar = scrollbar;
+        instance.scrollToMiddle();
         expect(scrollSpy.calledOnce).toBe(true);
         expect(scrollSpy.calledWith(3)).toBe(true);
     });

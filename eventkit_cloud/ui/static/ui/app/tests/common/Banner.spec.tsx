@@ -1,7 +1,6 @@
-import PropTypes from 'prop-types';
-import React from 'react';
+import * as React from 'react';
 import { mount } from 'enzyme';
-import Banner from '../components/common/Banner';
+import Banner from '../../components/common/Banner';
 
 describe('Banner component', () => {
     it('should render a div with string and style from context', () => {
@@ -13,9 +12,6 @@ describe('Banner component', () => {
                     BANNER_BACKGROUND_COLOR: 'green',
                 },
             },
-            childContextTypes: {
-                context: PropTypes.object,
-            },
         });
         expect(wrapper.find('div')).toHaveLength(1);
         expect(wrapper.find('div').text()).toEqual('test banner');
@@ -26,7 +22,6 @@ describe('Banner component', () => {
     it('should render div with empty string and default style when no config', () => {
         const wrapper = mount(<Banner />, {
             context: { config: {} },
-            childContextTypes: { context: PropTypes.object },
         });
         expect(wrapper.find('div')).toHaveLength(1);
         expect(wrapper.find('div').text()).toEqual('');

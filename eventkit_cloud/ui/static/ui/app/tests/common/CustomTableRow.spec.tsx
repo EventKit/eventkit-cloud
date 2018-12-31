@@ -1,6 +1,6 @@
-import React from 'react';
+import * as React from 'react';
 import { createShallow } from '@material-ui/core/test-utils';
-import { CustomTableRow } from '../components/common/CustomTableRow';
+import { CustomTableRow } from '../../components/common/CustomTableRow';
 
 describe('CustomTextField component', () => {
     let shallow;
@@ -12,7 +12,7 @@ describe('CustomTextField component', () => {
     const props = {
         title: 'test title',
         data: 'test data',
-        ...global.eventkit_test_props,
+        ...(global as any).eventkit_test_props,
     };
 
     const getWrapper = prop => (
