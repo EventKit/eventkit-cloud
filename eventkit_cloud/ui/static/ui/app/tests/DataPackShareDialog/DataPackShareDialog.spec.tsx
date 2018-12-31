@@ -1,5 +1,5 @@
-import React from 'react';
-import sinon from 'sinon';
+import * as React from 'react';
+import * as sinon from 'sinon';
 import { createShallow } from '@material-ui/core/test-utils';
 import Button from '@material-ui/core/Button';
 import ShareBaseDialog from '../../components/DataPackShareDialog/ShareBaseDialog';
@@ -22,66 +22,64 @@ describe('DataPackPage component', () => {
         groups: {},
     });
 
-    const getProps = () => (
-        {
-            show: true,
-            onClose: sinon.spy(),
-            onSave: sinon.spy(),
-            groups: [
-                {
-                    id: 1,
-                    name: 'group_one',
-                    members: ['user_one', 'user_two', 'user_three'],
-                    administrators: ['user_one'],
-                }, {
-                    id: 2,
-                    name: 'group_two',
-                    members: ['user_one', 'user_two'],
-                    administrators: ['user_one'],
-                }, {
-                    id: 3,
-                    name: 'group_three',
-                    members: ['user_one', 'user_two'],
-                    administrators: ['user_three'],
-                },
-            ],
-            users: [
-                {
-                    user: {
-                        username: 'user_one',
-                        firt_name: 'user',
-                        last_name: 'one',
-                        email: 'user_one@email.com',
-                    },
-                    groups: [1, 2, 3],
-                },
-                {
-                    user: {
-                        username: 'user_two',
-                        first_name: 'user',
-                        last_name: 'two',
-                        email: 'user_two@email.com',
-                    },
-                    groups: [1, 2, 3],
-                },
-                {
-                    user: {
-                        username: 'user_three',
-                        first_name: 'user',
-                        last_name: 'three',
-                        email: 'user_three@email.com',
-                    },
-                    groups: [1],
-                },
-            ],
-            permissions: getPermissions(),
-            user: {
-                user: { username: 'admin' },
-                groups: [],
+    const getProps = () => ({
+        show: true,
+        onClose: sinon.spy(),
+        onSave: sinon.spy(),
+        groups: [
+            {
+                id: 1,
+                name: 'group_one',
+                members: ['user_one', 'user_two', 'user_three'],
+                administrators: ['user_one'],
+            }, {
+                id: 2,
+                name: 'group_two',
+                members: ['user_one', 'user_two'],
+                administrators: ['user_one'],
+            }, {
+                id: 3,
+                name: 'group_three',
+                members: ['user_one', 'user_two'],
+                administrators: ['user_three'],
             },
-            ...global.eventkit_test_props,
-        }
-    );
+        ],
+        users: [
+            {
+                user: {
+                    username: 'user_one',
+                    firt_name: 'user',
+                    last_name: 'one',
+                    email: 'user_one@email.com',
+                },
+                groups: [1, 2, 3],
+            },
+            {
+                user: {
+                    username: 'user_two',
+                    first_name: 'user',
+                    last_name: 'two',
+                    email: 'user_two@email.com',
+                },
+                groups: [1, 2, 3],
+            },
+            {
+                user: {
+                    username: 'user_three',
+                    first_name: 'user',
+                    last_name: 'three',
+                    email: 'user_three@email.com',
+                },
+                groups: [1],
+            },
+        ],
+        permissions: getPermissions(),
+        user: {
+            user: { username: 'admin' },
+            groups: [],
+        },
+        ...(global as any).eventkit_test_props,
+    });
 
     let props;
     let wrapper;

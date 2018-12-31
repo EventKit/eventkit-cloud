@@ -1,5 +1,5 @@
-import React from 'react';
-import sinon from 'sinon';
+import * as React from 'react';
+import * as sinon from 'sinon';
 import { createShallow } from '@material-ui/core/test-utils';
 import CustomTextField from '../../components/CustomTextField';
 import GroupRow from '../../components/DataPackShareDialog/GroupRow';
@@ -14,35 +14,33 @@ describe('GroupBody component', () => {
         shallow = createShallow();
     });
 
-    const getProps = () => (
-        {
-            groups: [
-                {
-                    id: 1,
-                    name: 'group_one',
-                    members: ['user_one', 'user_two'],
-                    administrators: ['user_one'],
-                },
-                {
-                    id: 2,
-                    name: 'group_two',
-                    members: ['user_two'],
-                    administrators: ['user_two'],
-                },
-            ],
-            nextPage: false,
-            getGroups: sinon.spy(),
-            selectedGroups: {},
-            groupsText: 'Test text',
-            onUncheckAll: sinon.spy(),
-            onCheckAll: sinon.spy(),
-            onGroupCheck: sinon.spy(),
-            onAdminCheck: sinon.spy(),
-            canUpdateAdmin: false,
-            handleShowShareInfo: () => {},
-            ...global.eventkit_test_props,
-        }
-    );
+    const getProps = () => ({
+        groups: [
+            {
+                id: 1,
+                name: 'group_one',
+                members: ['user_one', 'user_two'],
+                administrators: ['user_one'],
+            },
+            {
+                id: 2,
+                name: 'group_two',
+                members: ['user_two'],
+                administrators: ['user_two'],
+            },
+        ],
+        nextPage: false,
+        getGroups: sinon.spy(),
+        selectedGroups: {},
+        groupsText: 'Test text',
+        onUncheckAll: sinon.spy(),
+        onCheckAll: sinon.spy(),
+        onGroupCheck: sinon.spy(),
+        onAdminCheck: sinon.spy(),
+        canUpdateAdmin: false,
+        handleShowShareInfo: sinon.spy(),
+        ...(global as any).eventkit_test_props,
+    });
 
     let props;
     let wrapper;
@@ -91,7 +89,7 @@ describe('GroupBody component', () => {
     });
 
     it('componentDidMount should add event listener', () => {
-        const addStub = sinon.stub(global.window, 'addEventListener');
+        const addStub = sinon.stub((global as any).window, 'addEventListener');
         wrapper.instance().componentDidMount();
         expect(addStub.called).toBe(true);
         expect(addStub.calledWith('wheel', wrapper.instance().handleScroll)).toBe(true);
@@ -99,7 +97,7 @@ describe('GroupBody component', () => {
     });
 
     it('componentWillUnmount should remove event listener', () => {
-        const removeStub = sinon.stub(global.window, 'removeEventListener');
+        const removeStub = sinon.stub((global as any).window, 'removeEventListener');
         const fnc = wrapper.instance().handleScroll;
         wrapper.unmount();
         expect(removeStub.called).toBe(true);

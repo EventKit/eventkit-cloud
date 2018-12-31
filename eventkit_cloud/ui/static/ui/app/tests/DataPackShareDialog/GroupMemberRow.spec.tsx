@@ -1,20 +1,18 @@
-import React from 'react';
+import * as React from 'react';
 import { shallow } from 'enzyme';
 import { GroupMemberRow } from '../../components/DataPackShareDialog/GroupMemberRow';
 
 describe('GroupMemberRow component', () => {
-    const getProps = () => (
-        {
-            member: {
-                username: 'user_one',
-                first_name: 'user',
-                last_name: 'one',
-                email: 'user.one@email.com',
-                permission: 'READ',
-            },
-            ...global.eventkit_test_props,
-        }
-    );
+    const getProps = () => ({
+        member: {
+            username: 'user_one',
+            first_name: 'user',
+            last_name: 'one',
+            email: 'user.one@email.com',
+            permission: 'READ',
+        },
+        ...(global as any).eventkit_test_props,
+    });
 
     const getWrapper = props => (
         shallow(<GroupMemberRow {...props} />)

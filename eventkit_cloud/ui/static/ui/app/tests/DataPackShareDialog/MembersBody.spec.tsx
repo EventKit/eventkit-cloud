@@ -1,5 +1,5 @@
-import React from 'react';
-import sinon from 'sinon';
+import * as React from 'react';
+import * as sinon from 'sinon';
 import { shallow } from 'enzyme';
 import CustomTextField from '../../components/CustomTextField';
 import MembersHeaderRow from '../../components/DataPackShareDialog/MembersHeaderRow';
@@ -41,8 +41,8 @@ describe('MembersBody component', () => {
         onCheckAll: sinon.spy(),
         onUncheckAll: sinon.spy(),
         canUpdateAdmin: false,
-        handleShowShareInfo: () => {},
-        ...global.eventkit_test_props,
+        handleShowShareInfo: sinon.spy(),
+        ...(global as any).eventkit_test_props,
     });
 
     let props;
@@ -93,7 +93,7 @@ describe('MembersBody component', () => {
     });
 
     it('componentDidMount should add event listener', () => {
-        const addStub = sinon.stub(global.window, 'addEventListener');
+        const addStub = sinon.stub((global as any).window, 'addEventListener');
         wrapper.instance().componentDidMount();
         expect(addStub.called).toBe(true);
         expect(addStub.calledWith('wheel', wrapper.instance().handleScroll)).toBe(true);
@@ -101,7 +101,7 @@ describe('MembersBody component', () => {
     });
 
     it('componentWillUnmount should remove event listener', () => {
-        const removeStub = sinon.stub(global.window, 'removeEventListener');
+        const removeStub = sinon.stub((global as any).window, 'removeEventListener');
         const fnc = wrapper.instance().handleScroll;
         wrapper.unmount();
         expect(removeStub.called).toBe(true);
@@ -224,7 +224,6 @@ describe('MembersBody component', () => {
         expect(getStub.calledOnce).toBe(true);
         expect(getStub.calledWith({ page: 1, search: 'search text' })).toBe(true);
     });
-
 
     it('handleSearchInput should set state with target value', () => {
         const stateStub = sinon.stub(wrapper.instance(), 'setState');

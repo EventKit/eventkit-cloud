@@ -1,5 +1,5 @@
-import React from 'react';
-import sinon from 'sinon';
+import * as React from 'react';
+import * as sinon from 'sinon';
 import { createShallow } from '@material-ui/core/test-utils';
 import Card from '@material-ui/core/Card';
 import CardHeader from '@material-ui/core/CardHeader';
@@ -15,104 +15,88 @@ describe('MembersHeaderRow component', () => {
         shallow = createShallow();
     });
 
-    const getProps = () => (
-        {
-            memberCount: 2,
-            selectedCount: 0,
-            onMemberClick: () => {},
-            onSharedClick: () => {},
-            memberOrder: 'member',
-            sharedOrder: 'shared',
-            activeOrder: 'member',
-            handleCheckAll: () => {},
-            handleUncheckAll: () => {},
-            canUpdateAdmin: false,
-            ...global.eventkit_test_props,
-        }
-    );
+    const getProps = () => ({
+        memberCount: 2,
+        selectedCount: 0,
+        onMemberClick: sinon.spy(),
+        onSharedClick: sinon.spy(),
+        memberOrder: 'member',
+        sharedOrder: 'shared',
+        activeOrder: 'member',
+        handleCheckAll: sinon.spy(),
+        handleUncheckAll: sinon.spy(),
+        canUpdateAdmin: false,
+        ...(global as any).eventkit_test_props,
+    });
 
-    const getWrapper = props => (
-        shallow(<MembersHeaderRow {...props} />)
-    );
+    let props;
+    let wrapper;
+    let instance;
+
+    const setup = (params = {}, options = {}) => {
+        props = { ...getProps(), ...params };
+        wrapper = shallow(<MembersHeaderRow {...props} />, options);
+        instance = wrapper.instance();
+    };
+
+    beforeEach(setup);
 
     it('should render the basic components', () => {
-        const props = getProps();
-        const wrapper = getWrapper(props);
         expect(wrapper.find(Card)).toHaveLength(1);
         expect(wrapper.find(CardHeader)).toHaveLength(1);
         expect(wrapper.find(CardHeader).shallow().dive().find(ButtonBase)).toHaveLength(2);
     });
 
     it('should render the checked icon', () => {
-        const props = getProps();
-        props.selectedCount = props.memberCount;
-        const wrapper = getWrapper(props);
+        wrapper.setProps({ selectedCount: props.memberCount });
         expect(wrapper.find(CardHeader).shallow().dive().find(CheckBox)).toHaveLength(1);
     });
 
     it('should render the indeterminate icon', () => {
-        const props = getProps();
-        props.selectedCount = 1;
-        const wrapper = getWrapper(props);
+        wrapper.setProps({ selectedCount: 1 });
         expect(wrapper.find(CardHeader).shallow().dive().find(IndeterminateIcon)).toHaveLength(1);
     });
 
     it('should render the condensed count text on small screens', () => {
-        const props = getProps();
-        props.width = 'xs';
-        const wrapper = getWrapper(props);
+        wrapper.setProps({ width: 'xs' });
         expect(wrapper.find(CardHeader).shallow().dive().find('.qa-MembersHeaderRow-countText')).toHaveLength(1);
         expect(wrapper.find(CardHeader).shallow().dive().find('.qa-MembersHeaderRow-countText')
             .text()).toEqual('(0/2)');
     });
 
     it('handleClick should setState to open popover', () => {
-        const props = getProps();
-        props.canUpdateAdmin = true;
-        const wrapper = getWrapper(props);
-        const stateStub = sinon.stub(wrapper.instance(), 'setState');
+        wrapper.setProps({ canUpdateAdmin: true });
+        const stateStub = sinon.stub(instance, 'setState');
         const e = { currentTarget: {} };
-        wrapper.instance().handleClick(e);
+        instance.handleClick(e);
         expect(stateStub.calledOnce).toBe(true);
         expect(stateStub.calledWith({ anchor: e.currentTarget })).toBe(true);
         stateStub.restore();
     });
 
     it('handleClick should call onSharedClick with the sharedOrder', () => {
-        const props = getProps();
-        props.onSharedClick = sinon.spy();
-        const wrapper = getWrapper(props);
-        wrapper.instance().handleClick();
+        instance.handleClick();
         expect(props.onSharedClick.calledOnce).toBe(true);
         expect(props.onSharedClick.calledWith(props.sharedOrder)).toBe(true);
     });
 
     it('handleClick should call onSharedClick with the oposite shared order', () => {
-        const props = getProps();
-        props.activeOrder = 'shared';
-        props.sharedOrder = 'shared';
-        props.onSharedClick = sinon.spy();
-        const wrapper = getWrapper(props);
-        wrapper.instance().handleClick();
+        wrapper.setProps({ activeOrder: 'shared', sharedOrder: 'shared' });
+        instance.handleClick();
         expect(props.onSharedClick.calledOnce).toBe(true);
         expect(props.onSharedClick.calledWith('-shared')).toBe(true);
     });
 
     it('handleClose should set anchor to null', () => {
-        const props = getProps();
-        const wrapper = getWrapper(props);
-        const stateStub = sinon.stub(wrapper.instance(), 'setState');
-        wrapper.instance().handleClose();
+        const stateStub = sinon.stub(instance, 'setState');
+        instance.handleClose();
         expect(stateStub.calledOnce).toBe(true);
         expect(stateStub.calledWith({ anchor: null })).toBe(true);
     });
 
     it('handleChange should call onSharedCLick and handleClose', () => {
-        const props = getProps();
-        props.onSharedClick = sinon.spy();
-        const wrapper = getWrapper(props);
-        const closeStub = sinon.stub(wrapper.instance(), 'handleClose');
-        wrapper.instance().handleChange('value');
+        const closeStub = sinon.stub(instance, 'handleClose');
+        instance.handleChange('value');
         expect(props.onSharedClick.calledOnce).toBe(true);
         expect(props.onSharedClick.calledWith('value')).toBe(true);
         expect(closeStub.calledOnce).toBe(true);
@@ -120,24 +104,16 @@ describe('MembersHeaderRow component', () => {
     });
 
     it('handleMemberChange should call onMemberClick with the memberOrder', () => {
-        const props = getProps();
-        props.activeOrder = 'shared';
-        props.memberOrder = 'member';
-        props.onMemberClick = sinon.spy();
-        const wrapper = getWrapper(props);
-        wrapper.instance().handleMemberChange();
+        wrapper.setProps({ activeOrder: 'shared', memberOrder: 'member' });
+        instance.handleMemberChange();
         expect(props.onMemberClick.calledOnce).toBe(true);
         expect(props.onMemberClick.calledWith(props.memberOrder)).toBe(true);
     });
 
     it('handleMemberChange should call onMemberClick with the opposite member order', () => {
-        const props = getProps();
-        props.activeOrder = 'username';
-        props.memberOrder = 'username';
-        props.onMemberClick = sinon.spy();
-        const wrapper = getWrapper(props);
+        wrapper.setProps({ activeOrder: 'username', memberOrder: 'username' });
         const expected = '-username';
-        wrapper.instance().handleMemberChange();
+        instance.handleMemberChange();
         expect(props.onMemberClick.calledOnce).toBe(true);
         expect(props.onMemberClick.calledWith(expected)).toBe(true);
     });
