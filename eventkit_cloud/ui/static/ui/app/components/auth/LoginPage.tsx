@@ -1,12 +1,25 @@
-import PropTypes from 'prop-types';
-import React from 'react';
-import { withTheme } from '@material-ui/core/styles';
+import * as PropTypes from 'prop-types';
+import * as React from 'react';
+import { withTheme, Theme } from '@material-ui/core/styles';
 import withWidth, { isWidthDown } from '@material-ui/core/withWidth';
+import { Breakpoint } from '@material-ui/core/styles/createBreakpoints';
 import Paper from '@material-ui/core/Paper';
 import LoginForm from '../../containers/loginContainer';
 import CustomScrollbar from '../CustomScrollbar';
 
-export class LoginPage extends React.Component {
+interface Props {
+    theme: Eventkit.Theme & Theme;
+    width: Breakpoint;
+}
+
+export class LoginPage extends React.Component<Props, {}> {
+    static contextTypes = {
+        config: PropTypes.shape({
+            VERSION: PropTypes.string,
+            LOGIN_DISCLAIMER: PropTypes.string,
+        }),
+    };
+
     render() {
         const { colors, images } = this.props.theme.eventkit;
 
@@ -26,10 +39,10 @@ export class LoginPage extends React.Component {
                 width: '100%',
             },
             container: {
-                position: 'relative',
+                position: 'relative' as 'relative',
                 display: 'flex',
                 justifyContent: 'center',
-                flexWrap: 'wrap',
+                flexWrap: 'wrap' as 'wrap',
                 minHeight: '100%',
             },
             paperContainer: {
@@ -42,17 +55,17 @@ export class LoginPage extends React.Component {
                 color: colors.white,
                 fontSize: '16px',
                 marginBottom: '5px',
-                textAlign: 'center',
+                textAlign: 'center' as 'center',
             },
             footerText: {
                 color: colors.grey,
                 padding: '5px 10px 5px',
                 opacity: 0.5,
                 fontSize: '9px',
-                textAlign: 'right',
+                textAlign: 'right' as 'right',
             },
             desktopFooter: {
-                position: 'absolute',
+                position: 'absolute' as 'absolute',
                 bottom: '0px',
                 right: '0px',
             },
@@ -116,16 +129,4 @@ export class LoginPage extends React.Component {
     }
 }
 
-LoginPage.propTypes = {
-    theme: PropTypes.object.isRequired,
-    width: PropTypes.string.isRequired,
-};
-
-LoginPage.contextTypes = {
-    config: PropTypes.object,
-};
-
-export default
-@withWidth()
-@withTheme()
-class Default extends LoginPage {}
+export default withWidth()(withTheme()(LoginPage));
