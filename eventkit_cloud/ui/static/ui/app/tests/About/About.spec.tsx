@@ -1,6 +1,6 @@
-import React from 'react';
+import * as React from 'react';
 import { shallow } from 'enzyme';
-import { About } from '../../components/About/About';
+import { About, Props } from '../../components/About/About';
 import { about } from '../../about.config';
 import PageHeader from '../../components/common/PageHeader';
 import InfoParagraph from '../../components/About/InfoParagraph';
@@ -8,16 +8,15 @@ import ThreeStepInfo from '../../components/About/ThreeStepInfo';
 import InfoGrid from '../../components/About/InfoGrid';
 import CustomScrollbar from '../../components/common/CustomScrollbar';
 
-
 describe('About component', () => {
-    const getProps = () => ({
+    const getProps = (): Props => ({
         context: {
             config: {
                 VERSION: '',
                 CONTACT_URL: '',
             },
         },
-        ...global.eventkit_test_props,
+        ...(global as any).eventkit_test_props,
     });
     const getWrapper = props => (
         shallow(<About {...props} />)

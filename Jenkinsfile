@@ -28,20 +28,7 @@ END
     stage("Remove volumes"){
     // have to remove the volumes from docker because they mount stuff in jenkins
 
-        sh """
-python - << END
-import yaml
-
-data = {}
-with open('docker-compose.yml', 'r') as yaml_file:
-    data = yaml.load(yaml_file)
-for service in data.get('services'):
-    if data['services'][service].get('volumes'):
-        data['services'][service].pop('volumes')
-with open('docker-compose.yml', 'w') as outfile:
-    yaml.dump(data, outfile, default_flow_style=False)
-END
-"""
+        removeVolumes()
     }
 
     stage("Build"){
@@ -143,3 +130,18 @@ def handleErrors(message){
     error(message)
 }
 
+def removeVolumes() {
+    sh """
+    python - << END
+import yaml
+data = {}
+with open('docker-compose.yml', 'r') as yaml_file:
+    data = yaml.load(yaml_file)
+for service in data.get('services'):
+    if data['services'][service].get('volumes'):
+        data['services'][service].pop('volumes')
+with open('docker-compose.yml', 'w') as outfile:
+    yaml.dump(data, outfile, default_flow_style=False)
+END
+    """
+}
