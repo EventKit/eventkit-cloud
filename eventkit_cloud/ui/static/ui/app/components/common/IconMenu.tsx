@@ -1,11 +1,41 @@
-import PropTypes from 'prop-types';
-import React, { Component } from 'react';
+import * as React from 'react';
 import IconButton from '@material-ui/core/IconButton';
 import Menu from '@material-ui/core/Menu';
 import NavigationMoreVert from '@material-ui/icons/MoreVert';
+import { PopoverOrigin } from '@material-ui/core/Popover';
+import { PropTypes } from '@material-ui/core';
 
-export class IconMenu extends Component {
-    constructor(props) {
+export interface Props {
+    className?: string;
+    children: any;
+    anchorOrigin?: {
+        vertical: PopoverOrigin['vertical'];
+        horizontal: PopoverOrigin['horizontal'];
+    };
+    transformOrigin?: {
+        vertical: PopoverOrigin['vertical'];
+        horizontal: PopoverOrigin['horizontal'];
+    };
+    MenuListProps?: object;
+    menuStyle?: object;
+    style?: object;
+    icon?: React.ReactElement<any>;
+    disabled?: boolean;
+    color?: PropTypes.Color;
+    onOpen?: () => void;
+    onClose?: () => void;
+}
+
+export interface ChildProps {
+    onClick: (...args: any) => any;
+}
+
+export interface State {
+    anchor: null | HTMLElement;
+}
+
+export class IconMenu extends React.Component<Props, State> {
+    constructor(props: Props) {
         super(props);
         this.handleOpen = this.handleOpen.bind(this);
         this.handleClose = this.handleClose.bind(this);
@@ -14,15 +44,21 @@ export class IconMenu extends Component {
         };
     }
 
-    handleOpen(e) {
+    private handleOpen(e: React.MouseEvent<HTMLElement>) {
         e.stopPropagation();
-        this.props.onOpen();
+        if (this.props.onOpen) {
+            this.props.onOpen();
+        }
         this.setState({ anchor: e.currentTarget });
     }
 
-    handleClose(e) {
-        if (e) e.stopPropagation();
-        this.props.onClose();
+    private handleClose(e?: React.MouseEvent<HTMLElement>) {
+        if (e) {
+            e.stopPropagation();
+        }
+        if (this.props.onClose) {
+            this.props.onClose();
+        }
         this.setState({ anchor: null });
     }
 
@@ -66,14 +102,14 @@ export class IconMenu extends Component {
                 }}
                 style={this.props.menuStyle}
             >
-                {this.props.children.map((child) => {
+                {this.props.children.map((child: React.ReactElement<ChildProps>) => {
                     // we need to add in our handle close function for every child onClick
 
                     if (!React.isValidElement(child)) { return null; }
 
                     return React.cloneElement(child, {
                         ...child.props,
-                        onClick: (e, ...args) => {
+                        onClick: (e: React.MouseEvent<HTMLElement>, ...args: any) => {
                             e.stopPropagation();
                             this.handleClose();
                             child.props.onClick(e, ...args);
@@ -84,44 +120,5 @@ export class IconMenu extends Component {
         ]);
     }
 }
-
-IconMenu.defaultProps = {
-    anchorOrigin: {},
-    transformOrigin: {},
-    MenuListProps: {},
-    menuStyle: {},
-    style: {},
-    icon: undefined,
-    disabled: false,
-    color: undefined,
-    className: undefined,
-    onOpen: () => {},
-    onClose: () => {},
-};
-
-IconMenu.propTypes = {
-    children: PropTypes.oneOfType([
-        PropTypes.string,
-        PropTypes.node,
-        PropTypes.arrayOf(PropTypes.node),
-    ]).isRequired,
-    anchorOrigin: PropTypes.shape({
-        vertical: PropTypes.string,
-        horizontal: PropTypes.string,
-    }),
-    transformOrigin: PropTypes.shape({
-        vertical: PropTypes.string,
-        horizontal: PropTypes.string,
-    }),
-    MenuListProps: PropTypes.object,
-    menuStyle: PropTypes.object,
-    style: PropTypes.object,
-    icon: PropTypes.node,
-    disabled: PropTypes.bool,
-    color: PropTypes.string,
-    className: PropTypes.string,
-    onOpen: PropTypes.func,
-    onClose: PropTypes.func,
-};
 
 export default IconMenu;

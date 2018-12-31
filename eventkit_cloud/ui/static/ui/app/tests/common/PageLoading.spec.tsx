@@ -1,4 +1,4 @@
-import React from 'react';
+import * as React from 'react';
 import { createShallow } from '@material-ui/core/test-utils';
 import CircularProgress from '@material-ui/core/CircularProgress';
 import { PageLoading } from '../../components/common/PageLoading';
@@ -13,7 +13,7 @@ describe('Loading component', () => {
         },
         background: '',
         partial: false,
-        ...global.eventkit_test_props,
+        ...(global as any).eventkit_test_props,
     };
 
     it('should render the progress component', () => {
@@ -44,20 +44,20 @@ describe('Loading component', () => {
         props.background = 'solid';
         const wrapper = shallow(<PageLoading {...props} />);
         expect(wrapper.find('div').props().style.backgroundColor)
-            .toEqual(global.eventkit_test_props.theme.eventkit.colors.background);
+            .toEqual((global as any).eventkit_test_props.theme.eventkit.colors.background);
     });
 
     it('should use transparent background', () => {
         props.background = 'transparent';
         const wrapper = shallow(<PageLoading {...props} />);
         expect(wrapper.find('div').props().style.backgroundColor)
-            .toEqual(global.eventkit_test_props.theme.eventkit.colors.backdrop);
+            .toEqual((global as any).eventkit_test_props.theme.eventkit.colors.backdrop);
     });
 
     it('should use pattern background', () => {
         props.background = 'pattern';
         const wrapper = shallow(<PageLoading {...props} />);
         expect(wrapper.find('div').props().style.backgroundImage)
-            .toEqual(`url(${global.eventkit_test_props.theme.eventkit.images.topo_dark})`);
+            .toEqual(`url(${(global as any).eventkit_test_props.theme.eventkit.images.topo_dark})`);
     });
 });

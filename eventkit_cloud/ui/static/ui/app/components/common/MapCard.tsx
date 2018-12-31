@@ -1,6 +1,6 @@
-import PropTypes from 'prop-types';
-import React from 'react';
-import { withTheme } from '@material-ui/core/styles';
+import * as PropTypes from 'prop-types';
+import * as React from 'react';
+import { withTheme, Theme } from '@material-ui/core/styles';
 import Map from 'ol/map';
 import View from 'ol/view';
 import interaction from 'ol/interaction';
@@ -20,8 +20,24 @@ import ExpandLess from '@material-ui/icons/ExpandLess';
 import ExpandMore from '@material-ui/icons/ExpandMore';
 import ol3mapCss from '../../styles/ol3map.css';
 
-export class MapCard extends React.Component {
-    constructor(props) {
+export interface Props {
+    children: any;
+    geojson: object;
+    theme: Eventkit.Theme & Theme;
+}
+
+export interface State {
+    open: boolean;
+}
+
+export class MapCard extends React.Component<Props, State> {
+    private map: any;
+
+    static contextTypes = {
+        config: PropTypes.object,
+    };
+
+    constructor(props: Props) {
         super(props);
         this.handleExpand = this.handleExpand.bind(this);
         this.state = {
@@ -29,8 +45,7 @@ export class MapCard extends React.Component {
         };
     }
 
-
-    componentDidUpdate(prevProps, prevState) {
+    componentDidUpdate(prevProps: Props, prevState: State) {
         // if the user expaned the AOI section mount the map
         if (prevState.open !== this.state.open) {
             if (this.state.open) {
@@ -42,11 +57,11 @@ export class MapCard extends React.Component {
         }
     }
 
-    handleExpand() {
+    private handleExpand() {
         this.setState(state => ({ open: !state.open }));
     }
 
-    initializeOpenLayers() {
+    private initializeOpenLayers() {
         const base = new Tile({
             source: new XYZ({
                 url: this.context.config.BASEMAP_URL,
@@ -119,7 +134,6 @@ export class MapCard extends React.Component {
             },
         };
 
-
         return (
             <Card
                 id="Map"
@@ -155,19 +169,5 @@ export class MapCard extends React.Component {
         );
     }
 }
-
-MapCard.contextTypes = {
-    config: PropTypes.object,
-};
-
-MapCard.propTypes = {
-    children: PropTypes.oneOfType([
-        PropTypes.node,
-        PropTypes.string,
-        PropTypes.arrayOf(PropTypes.node),
-    ]).isRequired,
-    geojson: PropTypes.object.isRequired,
-    theme: PropTypes.object.isRequired,
-};
 
 export default withTheme()(MapCard);
