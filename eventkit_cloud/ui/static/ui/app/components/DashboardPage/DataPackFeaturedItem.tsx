@@ -40,29 +40,30 @@ const jss = (theme: Eventkit.Theme & Theme) => createStyles({
     },
     map: {
         flex: '67',
-        maxWidth: '',
-        maxHeight: '67%',
         boxSizing: 'border-box',
         backgroundColor: 'none',
         order: 2,
         [theme.breakpoints.up('md')]: {
             maxWidth: '67%',
-            maxHeight: '',
             order: 1,
+        },
+        [theme.breakpoints.down('sm')]: {
+            maxHeight: '67%',
         },
     },
     info: {
         flex: '33',
         maxWidth: '100%',
-        maxHeight: '33%',
         boxSizing: 'border-box',
         padding: '12px 16px 14px',
         order: 1,
         [theme.breakpoints.up('md')]: {
             maxWidth: '33%',
-            maxHeight: '',
             padding: '17px 24px 20px',
             order: 2,
+        },
+        [theme.breakpoints.down('sm')]: {
+            maxHeight: '33%',
         },
     },
     cardHeader: {
@@ -91,14 +92,15 @@ const jss = (theme: Eventkit.Theme & Theme) => createStyles({
         wordWrap: 'break-word',
     },
     cardSubtitle: {
-        display: 'none',
         fontSize: '10px',
         fontWeight: 'normal',
         color: theme.eventkit.colors.text_primary,
         marginBottom: '16px',
         [theme.breakpoints.up('md')]: {
-            display: '',
             fontSize: '12px',
+        },
+        [theme.breakpoints.down('sm')]: {
+            display: 'none',
         },
     },
     cardTextContainer: {
@@ -252,9 +254,10 @@ export class DataPackFeaturedItem extends React.Component<Props, {}> {
         return (
             <Card
                 className={classes.card}
+                style={{ height: this.props.height }}
                 key={this.props.run.uid}
             >
-                <div className={classes.content}>
+                <div className={classes.content} style={{ height: this.props.height }}>
                     <div
                         id={this.getMapId()}
                         className={classes.map}
