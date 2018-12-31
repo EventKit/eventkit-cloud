@@ -1,5 +1,5 @@
-import React from 'react';
-import sinon from 'sinon';
+import * as React from 'react';
+import * as sinon from 'sinon';
 import { shallow } from 'enzyme';
 import AlertWarning from '@material-ui/icons/Warning';
 import ImageCropSquare from '@material-ui/icons/CropSquare';
@@ -23,19 +23,27 @@ describe('AoiInfobar component', () => {
         },
         showAlert: false,
         showRevert: false,
-        onRevertClick: () => {},
-        clickZoomToSelection: () => {},
-        handleBufferClick: () => {},
+        onRevertClick: sinon.spy(),
+        clickZoomToSelection: sinon.spy(),
+        handleBufferClick: sinon.spy(),
         limits: {
             max: 10,
             sizes: [5, 10],
         },
-        ...global.eventkit_test_props,
+        ...(global as any).eventkit_test_props,
+        classes: {},
     });
 
-    const getWrapper = props => (
-        shallow(<AoiInfobar {...props} />)
-    );
+    let props;
+    let wrapper;
+    let instance;
+    const setup = (overrides = {}) => {
+        props = { ...getProps(), ...overrides };
+        wrapper = shallow(<AoiInfobar {...props} />);
+        instance = wrapper.instance();
+    };
+
+    beforeEach(setup);
 
     const geojson = {
         type: 'FeatureCollection',
@@ -57,18 +65,18 @@ describe('AoiInfobar component', () => {
     };
 
     it('should not display the infobar by default', () => {
-        const props = getProps();
-        const wrapper = getWrapper(props);
         expect(wrapper.find('.qa-AoiInfobar')).toHaveLength(0);
     });
 
     it('should show aoiInfo', () => {
-        const props = getProps();
-        props.aoiInfo.geojson = geojson;
-        props.aoiInfo.description = 'fake description';
-        props.aoiInfo.geomType = 'Polygon';
-        props.aoiInfo.title = 'fake title';
-        const wrapper = getWrapper(props);
+        const aoiInfo = {
+            ...props.aoiInfo,
+            geojson,
+            description: 'fake description',
+            geomType: 'Polygon',
+            title: 'fake title',
+        };
+        setup({ aoiInfo });
         expect(wrapper.find('.qa-AoiInfobar')).toHaveLength(1);
         expect(wrapper.find('.qa-AoiInfobar-title').text()).toEqual('AREA OF INTEREST (AOI)');
         expect(wrapper.find('.qa-AoiInfobar-button-zoom')).toHaveLength(1);
@@ -80,51 +88,54 @@ describe('AoiInfobar component', () => {
     });
 
     it('clicking on zoom button should call clickZoomToSelection', () => {
-        const props = getProps();
-        props.clickZoomToSelection = sinon.spy();
-        props.aoiInfo.geojson = geojson;
-        props.aoiInfo.description = 'fake description';
-        props.aoiInfo.geomType = 'Polygon';
-        props.aoiInfo.title = '0 sq km fake title';
-        const wrapper = getWrapper(props);
+        const aoiInfo = {
+            ...props.aoiInfo,
+            geojson,
+            description: 'fake description',
+            geomType: 'Polygon',
+            title: '0 sq km fake title',
+        };
+        setup({ aoiInfo });
         wrapper.find('.qa-AoiInfobar-button-zoom').simulate('click');
         expect(props.clickZoomToSelection.calledOnce).toEqual(true);
     });
 
     it('clicking on revert button should call onRevertClick', () => {
-        const props = getProps();
-        props.aoiInfo.geojson = geojson;
-        props.aoiInfo.description = 'fake description';
-        props.aoiInfo.geomType = 'Polygon';
-        props.aoiInfo.title = '0 sq km fake title';
-        props.showRevert = true;
-        props.onRevertClick = sinon.spy();
-        const wrapper = getWrapper(props);
+        const aoiInfo = {
+            ...props.aoiInfo,
+            geojson,
+            description: 'fake description',
+            geomType: 'Polygon',
+            title: '0 sq km fake title',
+        };
+        setup({ aoiInfo, showRevert: true });
         wrapper.find('.qa-AoiInfobar-button-revert').simulate('click');
         expect(props.onRevertClick.calledOnce).toBe(true);
     });
 
     it('clicking on buffer button should call handleBufferClick', () => {
-        const props = getProps();
-        props.aoiInfo.geojson = geojson;
-        props.aoiInfo.description = 'fake description';
-        props.aoiInfo.geomType = 'Polygon';
-        props.aoiInfo.title = 'fake title';
-        props.handleBufferClick = sinon.spy();
-        const wrapper = getWrapper(props);
+        const aoiInfo = {
+            ...props.aoiInfo,
+            geojson,
+            description: 'fake description',
+            geomType: 'Polygon',
+            title: 'fake title',
+        };
+        setup({ aoiInfo });
         wrapper.find('.qa-AoiInfobar-buffer-button').shallow().simulate('click');
         expect(props.handleBufferClick.calledOnce).toBe(true);
     });
 
     it('should show an alert icon which calls showAlert on click', () => {
-        const props = getProps();
-        props.aoiInfo.geojson = geojson;
-        props.aoiInfo.description = 'fake description';
-        props.aoiInfo.geomType = 'Polygon';
-        props.aoiInfo.title = 'fake title';
-        props.limits.max = 0.0000000001;
         const showSpy = sinon.spy(AoiInfobar.prototype, 'showAlert');
-        const wrapper = getWrapper(props);
+        const aoiInfo = {
+            ...props.aoiInfo,
+            geojson,
+            description: 'fake description',
+            geomType: 'Polygon',
+            title: 'fake title',
+        };
+        setup({ aoiInfo, limits: { ...props.limits, max: 0.0000000001 } });
         expect(wrapper.find('.qa-AoiInfobar-alert-icon')).toHaveLength(1);
         wrapper.find('.qa-AoiInfobar-alert-icon').simulate('click');
         expect(showSpy.calledOnce).toBe(true);
@@ -132,82 +143,63 @@ describe('AoiInfobar component', () => {
     });
 
     it('getIcon should return ImageCropSquare', () => {
-        const props = getProps();
-        const wrapper = getWrapper(props);
-        const icon = wrapper.instance().getIcon('Polygon', 'Box');
+        const icon = instance.getIcon('Polygon', 'Box');
         expect(icon.type).toBe(ImageCropSquare);
     });
 
     it('getIcon should return Extent', () => {
-        const props = getProps();
-        const wrapper = getWrapper(props);
-        const icon = wrapper.instance().getIcon('Polygon', 'Map View');
+        const icon = instance.getIcon('Polygon', 'Map View');
         expect(icon.type).toBe(Extent);
     });
 
     it('getIcon should return ActionRoom', () => {
-        const props = getProps();
-        const wrapper = getWrapper(props);
-        const icon = wrapper.instance().getIcon('Point', '');
+        const icon = instance.getIcon('Point', '');
         expect(icon.type).toBe(ActionRoom);
     });
 
     it('getIcon should return Line', () => {
-        const props = getProps();
-        const wrapper = getWrapper(props);
-        const icon = wrapper.instance().getIcon('Line', '');
+        const icon = instance.getIcon('Line', '');
         expect(icon.type).toBe(Line);
     });
 
     it('getIcon should return IrregularPolygon', () => {
-        const props = getProps();
-        const wrapper = getWrapper(props);
-        const icon = wrapper.instance().getIcon('Polygon', '');
+        const icon = instance.getIcon('Polygon', '');
         expect(icon.type).toBe(IrregularPolygon);
     });
 
     it('getIcon should return IrregularPolygon', () => {
-        const props = getProps();
-        const wrapper = getWrapper(props);
-        const icon = wrapper.instance().getIcon('Collection', '');
+        const icon = instance.getIcon('Collection', '');
         expect(icon.type).toBe(IrregularPolygon);
     });
 
     it('getIcon should return AlertWarning', () => {
-        const props = getProps();
-        const wrapper = getWrapper(props);
-        const icon = wrapper.instance().getIcon('', '');
+        const icon = instance.getIcon('', '');
         expect(icon.type).toEqual(AlertWarning);
     });
 
     it('showAlert should set show to true', () => {
-        const props = getProps();
-        const stateSpy = sinon.spy(AoiInfobar.prototype, 'setState');
-        const wrapper = getWrapper(props);
-        wrapper.instance().showAlert();
+        const stateSpy = sinon.spy(instance, 'setState');
+        instance.showAlert();
         expect(stateSpy.calledOnce).toBe(true);
         expect(stateSpy.calledWith({ showAlert: true })).toBe(true);
-        stateSpy.restore();
     });
 
     it('closeAlert should set show to false', () => {
-        const props = getProps();
-        const stateSpy = sinon.spy(AoiInfobar.prototype, 'setState');
-        const wrapper = getWrapper(props);
-        wrapper.instance().closeAlert();
+        const stateSpy = sinon.spy(instance, 'setState');
+        instance.closeAlert();
         expect(stateSpy.calledOnce).toBe(true);
         expect(stateSpy.calledWith({ showAlert: false })).toBe(true);
-        stateSpy.restore();
     });
 
     it('AlertCallout should show when alert state is true', () => {
-        const props = getProps();
-        props.aoiInfo.geojson = geojson;
-        props.aoiInfo.description = 'fake description';
-        props.aoiInfo.geomType = 'Polygon';
-        props.aoiInfo.title = 'fake title';
-        props.limits.max = 500;
-        const wrapper = getWrapper(props);
+        const aoiInfo = {
+            ...props.aoiInfo,
+            geojson,
+            description: 'fake description',
+            geomType: 'Polygon',
+            title: 'fake title',
+        };
+        setup({ aoiInfo, limits: { ...props.limits, max: 500 } });
         expect(wrapper.find(AlertCallout)).toHaveLength(1);
     });
 });

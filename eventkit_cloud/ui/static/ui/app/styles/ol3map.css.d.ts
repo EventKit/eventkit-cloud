@@ -1,3 +1,4 @@
+export const map: string;
 export const olScaleLine: string;
 export const olScaleLineLargeMap: string;
 export const olZoom: string;

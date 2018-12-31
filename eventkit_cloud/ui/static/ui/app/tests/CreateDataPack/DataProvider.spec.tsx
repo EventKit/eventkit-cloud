@@ -1,33 +1,30 @@
-import React from 'react';
-import sinon from 'sinon';
+import * as React from 'react';
+import * as sinon from 'sinon';
 import { shallow } from 'enzyme';
 import { DataProvider } from '../../components/CreateDataPack/DataProvider';
-
 
 describe('DataProvider component', () => {
     let wrapper;
     let instance;
 
-    const defaultProps = () => (
-        {
-            provider: {
-                uid: '123',
-                name: 'test provider',
-                max_selection: '10000',
-                service_description: 'test description',
-                license: {
-                    text: 'test license text',
-                    name: 'test license',
-                },
-                availability: {},
+    const defaultProps = () => ({
+        provider: {
+            uid: '123',
+            name: 'test provider',
+            max_selection: '10000',
+            service_description: 'test description',
+            license: {
+                text: 'test license text',
+                name: 'test license',
             },
-            checked: false,
-            onChange: sinon.spy(),
-            alt: false,
-            classes: {},
-            ...global.eventkit_test_props,
-        }
-    );
+            availability: {},
+        },
+        checked: false,
+        onChange: sinon.spy(),
+        alt: false,
+        classes: {},
+        ...(global as any).eventkit_test_props,
+    });
 
     const setup = (propsOverride = {}) => {
         const props = {

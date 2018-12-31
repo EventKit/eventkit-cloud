@@ -1,5 +1,5 @@
-import React from 'react';
-import sinon from 'sinon';
+import * as React from 'react';
+import * as sinon from 'sinon';
 import { shallow } from 'enzyme';
 import AlertWarning from '@material-ui/icons/Warning';
 import AlertError from '@material-ui/icons/Error';
@@ -7,21 +7,18 @@ import ActionDone from '@material-ui/icons/Done';
 import CircularProgress from '@material-ui/core/CircularProgress';
 import { ProviderStatusIcon } from '../../components/CreateDataPack/ProviderStatusIcon';
 
-
 describe('ProviderStatusIcon component', () => {
     let wrapper;
     let instance;
 
-    const defaultProps = () => (
-        {
-            availability: {
-                status: '',
-                type: '',
-                message: '',
-            },
-            ...global.eventkit_test_props,
-        }
-    );
+    const defaultProps = () => ({
+        availability: {
+            status: '',
+            type: '',
+            message: '',
+        },
+        ...(global as any).eventkit_test_props,
+    });
 
     const setup = (propsOverride = {}) => {
         const props = {

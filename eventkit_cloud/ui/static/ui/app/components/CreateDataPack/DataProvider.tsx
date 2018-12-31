@@ -57,26 +57,21 @@ const jss = (theme: Theme & Eventkit.Theme) => createStyles({
     },
 });
 
-interface Props {
-    provider: {
-        uid: string;
-        name: string;
-        max_selection: string;
-        service_description: string;
-        license: {
-            text: string;
-            name: string;
-        };
-        availability: {
-            status: string;
-            type: string;
-            message: string;
-        };
+export interface ProviderData extends Eventkit.Provider {
+    availability?: {
+        slug: string;
+        status: string;
+        type: string;
+        message: string;
     };
+}
+
+interface Props {
+    provider: ProviderData;
     checked: boolean;
-    onChange: (event) => void;
+    onChange: (event: React.ChangeEvent<HTMLInputElement>) => void;
     alt: boolean;
-    theme: Eventkit.Theme;
+    theme: Eventkit.Theme & Theme;
     classes: {
         container: string;
         listItem: string;
@@ -96,7 +91,7 @@ interface State {
 }
 
 export class DataProvider extends React.Component<Props, State> {
-    constructor(props) {
+    constructor(props: Props) {
         super(props);
         this.handleLicenseOpen = this.handleLicenseOpen.bind(this);
         this.handleLicenseClose = this.handleLicenseClose.bind(this);
@@ -107,15 +102,15 @@ export class DataProvider extends React.Component<Props, State> {
         };
     }
 
-    handleLicenseOpen() {
+    private handleLicenseOpen() {
         this.setState({ licenseDialogOpen: true });
     }
 
-    handleLicenseClose() {
+    private handleLicenseClose() {
         this.setState({ licenseDialogOpen: false });
     }
 
-    handleExpand() {
+    private handleExpand() {
         this.setState(state => ({ open: !state.open }));
     }
 

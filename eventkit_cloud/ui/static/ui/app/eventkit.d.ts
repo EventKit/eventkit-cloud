@@ -315,5 +315,32 @@ declare namespace Eventkit {
             licenses: License[];
             error: any;
         }
+
+        interface ExportInfo {
+            areaStr: string;
+            datapackDescription: string;
+            exportName: string;
+            formats: string[];
+            projectName: string;
+            providers: Provider[];
+        }
+
+        interface AoiInfo {
+            buffer: number;
+            description: string;
+            geojson: GeoJSON.FeatureCollection;
+            geomType: string;
+            originalGeojson: GeoJSON.FeatureCollection;
+            selectionType: string;
+            title: string;
+        }
+
+        interface ImportGeom {
+            processed: boolean;
+            processing: boolean;
+            filename: string;
+            featureCollection: GeoJSON.FeatureCollection;
+            error: any;
+        }
     }
 }

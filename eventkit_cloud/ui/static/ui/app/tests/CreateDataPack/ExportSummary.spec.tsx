@@ -1,17 +1,11 @@
-import React from 'react';
-import sinon from 'sinon';
-import PropTypes from 'prop-types';
-import raf from 'raf';
+import * as React from 'react';
+import * as sinon from 'sinon';
 import Joyride from 'react-joyride';
 import { shallow } from 'enzyme';
 import MapCard from '../../components/common/MapCard';
 import { ExportSummary } from '../../components/CreateDataPack/ExportSummary';
 import CustomScrollbar from '../../components/CustomScrollbar';
 import CustomTableRow from '../../components/CustomTableRow';
-
-
-// this polyfills requestAnimationFrame in the test browser, required for ol3
-raf.polyfill();
 
 describe('Export Summary Component', () => {
     const getProps = () => ({
@@ -56,23 +50,26 @@ describe('Export Summary Component', () => {
             },
         ],
         walkthroughClicked: false,
-        onWalkthroughReset: () => {},
-        ...global.eventkit_test_props,
+        onWalkthroughReset: sinon.spy(),
+        ...(global as any).eventkit_test_props,
+        classes: {},
     });
 
-    const getWrapper = (props) => {
+    let props;
+    let wrapper;
+    let instance;
+    const setup = (overrides = {}) => {
         const config = { BASEMAP_URL: 'http://my-osm-tile-service/{z}/{x}/{y}.png' };
-        return shallow(<ExportSummary {...props} />, {
+        props = { ...getProps(), ...overrides };
+        wrapper = shallow(<ExportSummary {...props} />, {
             context: { config },
-            childContextTypes: {
-                config: PropTypes.object,
-            },
         });
+        instance = wrapper.instance();
     };
 
+    beforeEach(setup);
+
     it('should render the basic components', () => {
-        const props = getProps();
-        const wrapper = getWrapper(props);
         expect(wrapper.find(CustomScrollbar)).toHaveLength(1);
         expect(wrapper.find(CustomTableRow)).toHaveLength(5);
         expect(wrapper.find('#form')).toHaveLength(1);
@@ -87,13 +84,9 @@ describe('Export Summary Component', () => {
     });
 
     it('componentDidMount should setJoyRideSteps', () => {
-        const props = getProps();
-        const mountSpy = sinon.spy(ExportSummary.prototype, 'componentDidMount');
         const joyrideSpy = sinon.stub(ExportSummary.prototype, 'joyrideAddSteps');
-        getWrapper(props);
-        expect(mountSpy.calledOnce).toBe(true);
+        setup();
         expect(joyrideSpy.calledOnce).toBe(true);
-        mountSpy.restore();
         joyrideSpy.restore();
     });
 
@@ -105,11 +98,9 @@ describe('Export Summary Component', () => {
             position: 'bottom',
             style: {},
         }];
-        const props = getProps();
-        const wrapper = getWrapper(props);
-        const stateSpy = sinon.stub(wrapper.instance(), 'setState');
+        const stateSpy = sinon.stub(instance, 'setState');
         wrapper.update();
-        wrapper.instance().joyrideAddSteps(steps);
+        instance.joyrideAddSteps(steps);
         expect(stateSpy.calledOnce).toBe(true);
         expect(stateSpy.calledWith({ steps }));
         stateSpy.restore();
@@ -128,11 +119,9 @@ describe('Export Summary Component', () => {
             },
             type: 'step:before',
         };
-        const props = getProps();
-        const wrapper = getWrapper(props);
-        wrapper.instance().joyride = { reset: sinon.spy() };
-        const stateSpy = sinon.stub(wrapper.instance(), 'setState');
-        wrapper.instance().callback(callbackData);
+        instance.joyride = { reset: sinon.spy() };
+        const stateSpy = sinon.stub(instance, 'setState');
+        instance.callback(callbackData);
         expect(stateSpy.calledWith({ isRunning: false }));
         stateSpy.restore();
     });

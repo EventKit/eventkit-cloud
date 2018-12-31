@@ -1,10 +1,8 @@
-import React from 'react';
-import sinon from 'sinon';
+import * as React from 'react';
+import * as sinon from 'sinon';
 import axios from 'axios';
-import PropTypes from 'prop-types';
-import raf from 'raf';
 import { shallow } from 'enzyme';
-import MockAdapter from 'axios-mock-adapter';
+import * as  MockAdapter from 'axios-mock-adapter';
 import List from '@material-ui/core/List';
 import Paper from '@material-ui/core/Paper';
 import Checkbox from '@material-ui/core/Checkbox';
@@ -16,9 +14,6 @@ import { ExportInfo } from '../../components/CreateDataPack/ExportInfo';
 import CustomScrollbar from '../../components/CustomScrollbar';
 import TextField from '../../components/CustomTextField';
 import * as utils from '../../utils/generic';
-
-// this polyfills requestAnimationFrame in the test browser, required for ol3
-raf.polyfill();
 
 const formats = [
     {
@@ -67,28 +62,31 @@ describe('ExportInfo component', () => {
             formats,
             nextEnabled: true,
             walkthroughClicked: false,
-            onWalkthroughReset: () => {},
-            handlePrev: () => {},
-            updateExportInfo: () => {},
-            setNextDisabled: () => {},
-            setNextEnabled: () => {},
-            ...global.eventkit_test_props,
+            onWalkthroughReset: sinon.spy(),
+            handlePrev: sinon.spy(),
+            updateExportInfo: sinon.spy(),
+            setNextDisabled: sinon.spy(),
+            setNextEnabled: sinon.spy(),
+            ...(global as any).eventkit_test_props,
+            classes: {},
         }
     );
 
-    const getWrapper = (props) => {
+    let props;
+    let wrapper;
+    let instance;
+    const setup = (overrides = {}) => {
         const config = { BASEMAP_URL: 'http://my-osm-tile-service/{z}/{x}/{y}.png' };
-        return shallow(<ExportInfo {...props} />, {
+        props = { ...getProps(), ...overrides };
+        wrapper = shallow(<ExportInfo {...props} />, {
             context: { config },
-            childContextTypes: {
-                config: PropTypes.object,
-            },
         });
+        instance = wrapper.instance();
     };
 
+    beforeEach(setup);
+
     it('should render a form', () => {
-        const props = getProps();
-        const wrapper = getWrapper(props);
         expect(wrapper.find('#root')).toHaveLength(1);
         expect(wrapper.find(CustomScrollbar)).toHaveLength(1);
         expect(wrapper.find('#form')).toHaveLength(1);
@@ -110,15 +108,10 @@ describe('ExportInfo component', () => {
 
     it('componentDidMount should setNextDisabled, setArea, and add joyride steps', () => {
         const expectedString = '12,393 sq km';
-        const props = getProps();
-        props.updateExportInfo = sinon.spy();
-        props.setNextDisabled = sinon.spy();
-        const mountSpy = sinon.spy(ExportInfo.prototype, 'componentDidMount');
         const areaSpy = sinon.spy(utils, 'getSqKmString');
         const hasFieldsSpy = sinon.spy(ExportInfo.prototype, 'hasRequiredFields');
         const joyrideSpy = sinon.spy(ExportInfo.prototype, 'joyrideAddSteps');
-        getWrapper(props);
-        expect(mountSpy.calledOnce).toBe(true);
+        setup();
         expect(hasFieldsSpy.called).toBe(true);
         expect(hasFieldsSpy.calledWith(props.exportInfo)).toBe(true);
         expect(joyrideSpy.calledOnce).toBe(true);
@@ -128,15 +121,12 @@ describe('ExportInfo component', () => {
             areaStr: expectedString,
         })).toBe(true);
         expect(props.updateExportInfo.called).toBe(true);
-        mountSpy.restore();
         areaSpy.restore();
         hasFieldsSpy.restore();
         joyrideSpy.restore();
     });
 
     it('componentDidUpdate should setNextEnabled', () => {
-        const props = getProps();
-        const wrapper = getWrapper(props);
         const nextProps = getProps();
         nextProps.setNextEnabled = sinon.spy();
         nextProps.exportInfo.exportName = 'name';
@@ -149,8 +139,6 @@ describe('ExportInfo component', () => {
     });
 
     it('componentDidUpdate should setNextDisabled', () => {
-        const props = getProps();
-        const wrapper = getWrapper(props);
         const nextProps = getProps();
         nextProps.setNextDisabled = sinon.spy();
         nextProps.nextEnabled = true;
@@ -159,11 +147,9 @@ describe('ExportInfo component', () => {
     });
 
     it('componentDidUpdate should reset joyride and set running state', () => {
-        const props = getProps();
-        const wrapper = getWrapper(props);
         const joyride = { current: { reset: sinon.spy() } };
-        wrapper.instance().joyride = joyride;
-        const stateStub = sinon.stub(wrapper.instance(), 'setState');
+        instance.joyride = joyride;
+        const stateStub = sinon.stub(instance, 'setState');
         const nextProps = getProps();
         nextProps.walkthroughClicked = true;
         wrapper.setProps(nextProps);
@@ -172,10 +158,8 @@ describe('ExportInfo component', () => {
     });
 
     it('componentDidUpdate should update the providers and call checkProviders', () => {
-        const props = getProps();
-        const wrapper = getWrapper(props);
-        const stateStub = sinon.stub(wrapper.instance(), 'setState');
-        const checkStub = sinon.stub(wrapper.instance(), 'checkProviders');
+        const stateStub = sinon.stub(instance, 'setState');
+        const checkStub = sinon.stub(instance, 'checkProviders');
         const nextProps = getProps();
         nextProps.providers = [{ slug: '124' }];
         wrapper.setProps(nextProps);
@@ -184,12 +168,9 @@ describe('ExportInfo component', () => {
     });
 
     it('onNameChange should call updateExportInfo', () => {
-        const props = getProps();
-        props.updateExportInfo = sinon.spy();
         const event = { target: { value: 'test' } };
-        const wrapper = getWrapper(props);
         props.updateExportInfo.reset();
-        wrapper.instance().onNameChange(event);
+        instance.onNameChange(event);
         expect(props.updateExportInfo.calledOnce).toBe(true);
         expect(props.updateExportInfo.calledWith({
             ...props.exportInfo,
@@ -198,12 +179,9 @@ describe('ExportInfo component', () => {
     });
 
     it('onDescriptionChange should call persist and nameHandler', () => {
-        const props = getProps();
-        props.updateExportInfo = sinon.spy();
         const event = { target: { value: 'test' } };
-        const wrapper = getWrapper(props);
         props.updateExportInfo.reset();
-        wrapper.instance().onDescriptionChange(event);
+        instance.onDescriptionChange(event);
         expect(props.updateExportInfo.calledOnce).toBe(true);
         expect(props.updateExportInfo.calledWith({
             ...props.exportInfo,
@@ -212,12 +190,9 @@ describe('ExportInfo component', () => {
     });
 
     it('onProjectChange should call persist and nameHandler', () => {
-        const props = getProps();
-        props.updateExportInfo = sinon.spy();
         const event = { target: { value: 'test' } };
-        const wrapper = getWrapper(props);
         props.updateExportInfo.reset();
-        wrapper.instance().onProjectChange(event);
+        instance.onProjectChange(event);
         expect(props.updateExportInfo.calledOnce).toBe(true);
         expect(props.updateExportInfo.calledWith({
             ...props.exportInfo,
@@ -229,12 +204,14 @@ describe('ExportInfo component', () => {
         const appProviders = [{ name: 'one' }, { name: 'two' }];
         const exportProviders = [{ name: 'one' }];
         const event = { target: { name: 'two', checked: true } };
-        const props = getProps();
-        props.updateExportInfo = sinon.spy();
-        props.exportInfo.providers = exportProviders;
-        props.providers = appProviders;
-        const wrapper = getWrapper(props);
-        wrapper.instance().onChangeCheck(event);
+        wrapper.setProps({
+            providers: appProviders,
+            exportInfo: {
+                ...props.exportInfo,
+                providers: exportProviders,
+            },
+        });
+        instance.onChangeCheck(event);
         expect(props.updateExportInfo.called).toBe(true);
         expect(props.updateExportInfo.calledWith({
             ...props.exportInfo,
@@ -246,12 +223,14 @@ describe('ExportInfo component', () => {
         const appProviders = [{ name: 'one' }, { name: 'two' }];
         const exportProviders = [{ name: 'one' }, { name: 'two' }];
         const event = { target: { name: 'two', checked: false } };
-        const props = getProps();
-        props.updateExportInfo = sinon.spy();
-        props.exportInfo.providers = exportProviders;
-        props.providers = appProviders;
-        const wrapper = getWrapper(props);
-        wrapper.instance().onChangeCheck(event);
+        wrapper.setProps({
+            providers: appProviders,
+            exportInfo: {
+                ...props.exportInfo,
+                providers: exportProviders,
+            },
+        });
+        instance.onChangeCheck(event);
         expect(props.updateExportInfo.called).toBe(true);
         expect(props.updateExportInfo.calledWith({
             ...props.exportInfo,
@@ -260,13 +239,13 @@ describe('ExportInfo component', () => {
     });
 
     it('onRefresh should setState with empty availability and call checkAvailability', () => {
-        const props = getProps();
-        props.providers = [{ name: 'one' }, { name: 'two' }];
-        props.exportInfo.providers = [...props.providers];
-        const wrapper = getWrapper(props);
-        const stateStub = sinon.stub(wrapper.instance(), 'setState');
-        const checkStub = sinon.stub(wrapper.instance(), 'checkAvailability');
-        wrapper.instance().onRefresh();
+        const p = getProps();
+        p.providers = [{ name: 'one' }, { name: 'two' }];
+        p.exportInfo.providers = [...p.providers];
+        setup(p);
+        const stateStub = sinon.stub(instance, 'setState');
+        const checkStub = sinon.stub(instance, 'checkAvailability');
+        instance.onRefresh();
         const expected = [
             { name: 'one', availability: {} },
             { name: 'two', availability: {} },
@@ -285,8 +264,6 @@ describe('ExportInfo component', () => {
         };
         mock.onPost(`/api/providers/${provider.slug}/status`)
             .reply(200, { status: 'some status' });
-        const props = getProps();
-        const wrapper = getWrapper(props);
         const parseStub = sinon.stub(JSON, 'parse').callsFake(input => input);
         const expected = {
             ...provider,
@@ -295,7 +272,7 @@ describe('ExportInfo component', () => {
                 slug: provider.slug,
             },
         };
-        const newProvider = await wrapper.instance().getAvailability(provider, {});
+        const newProvider = await instance.getAvailability(provider, {});
         expect(newProvider).toEqual(expected);
         parseStub.restore();
     });
@@ -307,8 +284,6 @@ describe('ExportInfo component', () => {
         };
         mock.onPost(`/api/providers/${provider.slug}/status`)
             .reply(400, { status: 'some status' });
-        const props = getProps();
-        const wrapper = getWrapper(props);
         const expected = {
             ...provider,
             availability: {
@@ -318,7 +293,7 @@ describe('ExportInfo component', () => {
                 slug: provider.slug,
             },
         };
-        const newProvider = await wrapper.instance().getAvailability(provider, {});
+        const newProvider = await instance.getAvailability(provider, {});
         expect(newProvider).toEqual(expected);
     });
 
@@ -334,64 +309,52 @@ describe('ExportInfo component', () => {
             },
         };
 
-        const props = getProps();
-        const wrapper = getWrapper(props);
-        sinon.stub(wrapper.instance(), 'getAvailability').callsFake(() => (
+        sinon.stub(instance, 'getAvailability').callsFake(() => (
             new Promise((resolve) => {
                 setTimeout(() => resolve(newProvider), 100);
             })
         ));
-        const stateSpy = sinon.spy(wrapper.instance(), 'setState');
-        await wrapper.instance().checkAvailability(provider);
+        const stateSpy = sinon.spy(instance, 'setState');
+        await instance.checkAvailability(provider);
         expect(stateSpy.calledOnce).toBe(true);
         expect(wrapper.state().providers).toEqual([newProvider]);
     });
 
     it('checkProviders should call checkAvailablity for each provider', () => {
         const providers = [{ display: true }, { display: false }, { display: true }];
-        const props = getProps();
-        const wrapper = getWrapper(props);
-        const checkStub = sinon.stub(wrapper.instance(), 'checkAvailability');
-        wrapper.instance().checkProviders(providers);
+        const checkStub = sinon.stub(instance, 'checkAvailability');
+        instance.checkProviders(providers);
         expect(checkStub.calledTwice).toBe(true);
     });
 
     it('handleProjectionsOpen should setState to true', () => {
-        const props = getProps();
-        const wrapper = getWrapper(props);
-        const stateStub = sinon.stub(wrapper.instance(), 'setState');
-        wrapper.instance().handleProjectionsOpen();
+        const stateStub = sinon.stub(instance, 'setState');
+        instance.handleProjectionsOpen();
         expect(stateStub.calledOnce).toBe(true);
         expect(stateStub.calledWith({ projectionsDialogOpen: true })).toBe(true);
         stateStub.restore();
     });
 
     it('handleProjectionsClose should setState to false', () => {
-        const props = getProps();
-        const wrapper = getWrapper(props);
-        const stateStub = sinon.stub(wrapper.instance(), 'setState');
-        wrapper.instance().handleProjectionsClose();
+        const stateStub = sinon.stub(instance, 'setState');
+        instance.handleProjectionsClose();
         expect(stateStub.calledOnce).toBe(true);
         expect(stateStub.calledWith({ projectionsDialogOpen: false })).toBe(true);
         stateStub.restore();
     });
 
     it('handlePopoverOpen should setState with anchorEl', () => {
-        const props = getProps();
-        const wrapper = getWrapper(props);
-        const stateStub = sinon.stub(wrapper.instance(), 'setState');
+        const stateStub = sinon.stub(instance, 'setState');
         const e = { currentTarget: sinon.spy() };
-        wrapper.instance().handlePopoverOpen(e);
+        instance.handlePopoverOpen(e);
         expect(stateStub.calledOnce).toBe(true);
         expect(stateStub.calledWith({ refreshPopover: e.currentTarget })).toBe(true);
         stateStub.restore();
     });
 
     it('handlePopoverClose should setState anchorEl', () => {
-        const props = getProps();
-        const wrapper = getWrapper(props);
-        const stateStub = sinon.stub(wrapper.instance(), 'setState');
-        wrapper.instance().handlePopoverClose();
+        const stateStub = sinon.stub(instance, 'setState');
+        instance.handlePopoverClose();
         expect(stateStub.calledOnce).toBe(true);
         expect(stateStub.calledWith({ refreshPopover: null })).toBe(true);
         stateStub.restore();
@@ -410,10 +373,8 @@ describe('ExportInfo component', () => {
             projectName: 'name',
             providers: [{}],
         };
-        const props = getProps();
-        const wrapper = getWrapper(props);
-        expect(wrapper.instance().hasRequiredFields(invalid)).toBe(false);
-        expect(wrapper.instance().hasRequiredFields(valid)).toBe(true);
+        expect(instance.hasRequiredFields(invalid)).toBe(false);
+        expect(instance.hasRequiredFields(valid)).toBe(true);
     });
 
     it('hasDisallowedSelection should return true if the provider status is FATAL', () => {
@@ -422,10 +383,8 @@ describe('ExportInfo component', () => {
             availability: { status: 'FATAL' },
         };
         const info = { providers: [provider] };
-        const props = getProps();
-        props.providers = [provider];
-        const wrapper = getWrapper(props);
-        expect(wrapper.instance().hasDisallowedSelection(info)).toBe(true);
+        setup({ providers: [provider] });
+        expect(instance.hasDisallowedSelection(info)).toBe(true);
     });
 
     it('hasDisallowedSelection should return false if no status', () => {
@@ -434,10 +393,8 @@ describe('ExportInfo component', () => {
             availability: { status: undefined },
         };
         const info = { providers: [provider] };
-        const props = getProps();
-        props.providers = [provider];
-        const wrapper = getWrapper(props);
-        expect(wrapper.instance().hasDisallowedSelection(info)).toBe(false);
+        setup({ providers: [provider] });
+        expect(instance.hasDisallowedSelection(info)).toBe(false);
     });
 
     it('joyrideAddSteps should set state for steps in tour', () => {
@@ -450,10 +407,8 @@ describe('ExportInfo component', () => {
                 style: {},
             },
         ];
-        const props = getProps();
-        const wrapper = getWrapper(props);
-        const stateSpy = sinon.stub(wrapper.instance(), 'setState');
-        wrapper.instance().joyrideAddSteps(steps);
+        const stateSpy = sinon.stub(instance, 'setState');
+        instance.joyrideAddSteps(steps);
         expect(stateSpy.calledOnce).toBe(true);
         expect(stateSpy.calledWith({ steps }));
         stateSpy.restore();
@@ -472,11 +427,9 @@ describe('ExportInfo component', () => {
             },
             type: 'step:before',
         };
-        const props = getProps();
-        const wrapper = getWrapper(props);
-        wrapper.instance().joyride = { current: { reset: sinon.spy() } };
-        const stateSpy = sinon.stub(wrapper.instance(), 'setState');
-        wrapper.instance().callback(callbackData);
+        instance.joyride = { current: { reset: sinon.spy() } };
+        const stateSpy = sinon.stub(instance, 'setState');
+        instance.callback(callbackData);
         expect(stateSpy.calledWith({ isRunning: false }));
         stateSpy.restore();
     });
@@ -490,10 +443,8 @@ describe('ExportInfo component', () => {
             },
             type: 'step:before',
         };
-        const props = getProps();
-        const wrapper = getWrapper(props);
         expect(window.location.hash).toEqual('');
-        wrapper.instance().callback(data);
+        instance.callback(data);
         expect(window.location.hash).toEqual(`#${data.step.scrollToId}`);
     });
 
@@ -504,10 +455,7 @@ describe('ExportInfo component', () => {
             step: {},
             type: 'tooltip:before',
         };
-        const props = getProps();
-        props.setNextEnabled = sinon.spy();
-        const wrapper = getWrapper(props);
-        wrapper.instance().callback(data);
+        instance.callback(data);
         expect(props.setNextEnabled.calledOnce).toBe(true);
     });
 });
