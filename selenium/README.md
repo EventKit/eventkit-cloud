@@ -10,8 +10,9 @@ To run the tests locally, perform the following steps:
 * Set up the following variables in your environment:
   * `ek_password` The EventKit user account password to use
   * `ek_username` The EventKit user account name to use
-  * `ek_url` The URL of eventkit to test.
+  * `ek_url` The URL of eventkit to test. Three login pages are currently supported:
+      * the geoaxis login page.
+      * the api login page: /api/login/?next=dashboard
+      * the local instance login page i.e. http://cloud.eventkit.test/
 * From this `selenium` directory, run `docker-compose up` to run the tests.
 
-# JenkinsFile
-TODO
