@@ -5,8 +5,8 @@ import { connect } from 'react-redux';
 import Joyride from 'react-joyride';
 import Paper from '@material-ui/core/Paper';
 import MapCard from '../common/MapCard';
-import CustomScrollbar from '../CustomScrollbar';
-import CustomTableRow from '../CustomTableRow';
+import CustomScrollbar from '../common/CustomScrollbar';
+import CustomTableRow from '../common/CustomTableRow';
 import { joyride } from '../../joyride.config';
 
 export class ExportSummary extends Component {

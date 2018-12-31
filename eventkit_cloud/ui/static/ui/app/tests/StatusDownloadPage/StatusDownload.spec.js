@@ -8,7 +8,7 @@ import PageLoading from '../../components/common/PageLoading';
 import { StatusDownload } from '../../components/StatusDownloadPage/StatusDownload';
 import DataCartDetails from '../../components/StatusDownloadPage/DataCartDetails';
 import DataPackAoiInfo from '../../components/StatusDownloadPage/DataPackAoiInfo';
-import CustomScrollbar from '../../components/CustomScrollbar';
+import CustomScrollbar from '../../components/common/CustomScrollbar';
 
 describe('StatusDownload component', () => {
     let shallow;

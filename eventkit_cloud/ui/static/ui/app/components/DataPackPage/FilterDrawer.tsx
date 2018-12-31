@@ -4,7 +4,7 @@ import PermissionFilter from './PermissionsFilter';
 import StatusFilter from './StatusFilter';
 import DateFilter from './DateFilter';
 import FilterHeader from './FilterHeader';
-import CustomScrollbar from '../CustomScrollbar';
+import CustomScrollbar from '../common/CustomScrollbar';
 import ProvidersFilter from './ProvidersFilter';
 
 export interface Props {

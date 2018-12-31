@@ -1,7 +1,13 @@
-import React, { Component } from 'react';
-import { Scrollbars } from 'react-custom-scrollbars';
+import * as React from 'react';
+import Scrollbars, { ScrollbarProps } from 'react-custom-scrollbars';
 
-export class CustomScrollbar extends Component {
+export interface Props extends ScrollbarProps {
+    style?: object;
+}
+
+export class CustomScrollbar extends React.Component<Props, {}> {
+    private scrollbar: Scrollbars;
+
     scrollToTop() {
         this.scrollbar.scrollToTop();
     }

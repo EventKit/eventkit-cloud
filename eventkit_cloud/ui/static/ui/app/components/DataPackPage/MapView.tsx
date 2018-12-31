@@ -38,7 +38,7 @@ import css from '../../styles/ol3map.css';
 import DataPackListItem from './DataPackListItem';
 import LoadButtons from '../common/LoadButtons';
 import MapPopup from './MapPopup';
-import CustomScrollbar from '../CustomScrollbar';
+import CustomScrollbar from '../common/CustomScrollbar';
 import SearchAOIToolbar from '../MapTools/SearchAOIToolbar';
 import DrawAOIToolbar from '../MapTools/DrawAOIToolbar';
 import InvalidDrawWarning from '../MapTools/InvalidDrawWarning';

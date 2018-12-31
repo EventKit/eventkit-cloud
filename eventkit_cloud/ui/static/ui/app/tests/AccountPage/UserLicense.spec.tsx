@@ -6,7 +6,7 @@ import Card from '@material-ui/core/Card';
 import CardHeader from '@material-ui/core/CardHeader';
 import CardContent from '@material-ui/core/CardContent';
 import ExpandMoreIcon from '@material-ui/icons/ExpandMore';
-import CustomScrollbar from '../../components/CustomScrollbar';
+import CustomScrollbar from '../../components/common/CustomScrollbar';
 import UserLicense from '../../components/AccountPage/UserLicense';
 
 describe('User License component', () => {

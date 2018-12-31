@@ -1,7 +1,7 @@
 import React from 'react';
 import sinon from 'sinon';
 import { createShallow } from '@material-ui/core/test-utils';
-import CustomTextField from '../../components/CustomTextField';
+import CustomTextField from '../../components/common/CustomTextField';
 import GroupRow from '../../components/DataPackShareDialog/GroupRow';
 import GroupsHeaderRow from '../../components/DataPackShareDialog/GroupsHeaderRow';
 import GroupBodyTooltip from '../../components/DataPackShareDialog/ShareBodyTooltip';

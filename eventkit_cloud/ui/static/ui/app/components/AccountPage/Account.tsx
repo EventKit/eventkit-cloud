@@ -10,7 +10,7 @@ import LicenseInfo from './LicenseInfo';
 import SaveButton from './SaveButton';
 import getLicenses from '../../actions/licenseActions';
 import { patchUser } from '../../actions/userActions';
-import CustomScrollbar from '../CustomScrollbar';
+import CustomScrollbar from '../common/CustomScrollbar';
 import { DrawerTimeout } from '../../actions/uiActions';
 import { joyride } from '../../joyride.config';
 

@@ -6,8 +6,8 @@ import Joyride from 'react-joyride';
 import { shallow } from 'enzyme';
 import MapCard from '../../components/common/MapCard';
 import { ExportSummary } from '../../components/CreateDataPack/ExportSummary';
-import CustomScrollbar from '../../components/CustomScrollbar';
-import CustomTableRow from '../../components/CustomTableRow';
+import CustomScrollbar from '../../components/common/CustomScrollbar';
+import CustomTableRow from '../../components/common/CustomTableRow';
 
 
 // this polyfills requestAnimationFrame in the test browser, required for ol3

@@ -11,7 +11,7 @@ import Tile from 'ol/layer/tile';
 import Attribution from 'ol/control/attribution';
 import ScaleLine from 'ol/control/scaleline';
 import Zoom from 'ol/control/zoom';
-import CustomTableRow from '../CustomTableRow';
+import CustomTableRow from '../common/CustomTableRow';
 import { getSqKmString } from '../../utils/generic';
 import ol3mapCss from '../../styles/ol3map.css';
 

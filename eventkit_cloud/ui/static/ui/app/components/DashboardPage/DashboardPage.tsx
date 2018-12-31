@@ -12,7 +12,7 @@ import PageLoading from '../common/PageLoading';
 import { deleteRun, getFeaturedRuns, getRuns } from '../../actions/datapackActions';
 import { getViewedJobs } from '../../actions/userActivityActions';
 import { getNotifications } from '../../actions/notificationsActions';
-import CustomScrollbar from '../CustomScrollbar';
+import CustomScrollbar from '../common/CustomScrollbar';
 import { getProviders } from '../../actions/providerActions';
 import DashboardSection from './DashboardSection';
 import DataPackGridItem from '../DataPackPage/DataPackGridItem';

@@ -2,7 +2,7 @@ import PropTypes from 'prop-types';
 import React, { Component } from 'react';
 import { withTheme } from '@material-ui/core/styles';
 import Info from '@material-ui/icons/Info';
-import CustomTableRow from '../CustomTableRow';
+import CustomTableRow from '../common/CustomTableRow';
 import BaseDialog from '../Dialog/BaseDialog';
 
 export class DataPackGeneralTable extends Component {

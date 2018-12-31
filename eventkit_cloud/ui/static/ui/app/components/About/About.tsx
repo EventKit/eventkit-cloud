@@ -1,6 +1,6 @@
 import * as React from 'react';
 import PageHeader from '../common/PageHeader';
-import CustomScrollbar from '../CustomScrollbar';
+import CustomScrollbar from '../common/CustomScrollbar';
 import InfoParagraph from './InfoParagraph';
 import ThreeStepInfo from './ThreeStepInfo';
 import InfoGrid from './InfoGrid';

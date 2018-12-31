@@ -2,7 +2,7 @@ import React from 'react';
 import { createShallow } from '@material-ui/core/test-utils';
 import sinon from 'sinon';
 import TextField from '@material-ui/core/TextField';
-import { CustomTextField } from '../components/CustomTextField';
+import { CustomTextField } from '../components/common/CustomTextField';
 
 describe('CustomTextField component', () => {
     let shallow;

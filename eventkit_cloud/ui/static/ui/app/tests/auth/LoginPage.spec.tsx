@@ -3,7 +3,7 @@ import * as sinon from 'sinon';
 import { shallow } from 'enzyme';
 import Paper from '@material-ui/core/Paper';
 import LoginForm from '../../containers/loginContainer';
-import CustomScrollbar from '../../components/CustomScrollbar';
+import CustomScrollbar from '../../components/common/CustomScrollbar';
 import * as utils from '../../utils/generic';
 import { LoginPage } from '../../components/auth/LoginPage';
 

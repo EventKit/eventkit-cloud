@@ -6,7 +6,7 @@ import PageHeader from '../../components/common/PageHeader';
 import InfoParagraph from '../../components/About/InfoParagraph';
 import ThreeStepInfo from '../../components/About/ThreeStepInfo';
 import InfoGrid from '../../components/About/InfoGrid';
-import CustomScrollbar from '../../components/CustomScrollbar';
+import CustomScrollbar from '../../components/common/CustomScrollbar';
 
 
 describe('About component', () => {

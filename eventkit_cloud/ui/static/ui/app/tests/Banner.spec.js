@@ -1,7 +1,7 @@
 import PropTypes from 'prop-types';
 import React from 'react';
 import { mount } from 'enzyme';
-import Banner from '../components/Banner';
+import Banner from '../components/common/Banner';
 
 describe('Banner component', () => {
     it('should render a div with string and style from context', () => {

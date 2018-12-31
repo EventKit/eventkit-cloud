@@ -7,7 +7,7 @@ import PermissionFilter from '../../components/DataPackPage/PermissionsFilter';
 import StatusFilter from '../../components/DataPackPage/StatusFilter';
 import DateFilter from '../../components/DataPackPage/DateFilter';
 import FilterHeader from '../../components/DataPackPage/FilterHeader';
-import CustomScrollbar from '../../components/CustomScrollbar';
+import CustomScrollbar from '../../components/common/CustomScrollbar';
 import ProvidersFilter from '../../components/DataPackPage/ProvidersFilter';
 
 describe('FilterDrawer component', () => {

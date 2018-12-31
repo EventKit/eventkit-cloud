@@ -1,7 +1,11 @@
-import PropTypes from 'prop-types';
-import React, { Component } from 'react';
+import * as PropTypes from 'prop-types';
+import * as React from 'react';
 
-class Banner extends Component {
+class Banner extends React.Component<{}, {}> {
+    static contextTypes = {
+        config: PropTypes.object,
+    };
+
     render() {
         const style = {
             lineHeight: '25px',
@@ -10,7 +14,7 @@ class Banner extends Component {
             color: this.context.config.BANNER_TEXT_COLOR ?
                 this.context.config.BANNER_TEXT_COLOR : '#fff',
             fontSize: '18px',
-            textAlign: 'center',
+            textAlign: 'center' as 'center',
         };
 
         return (
@@ -20,9 +24,5 @@ class Banner extends Component {
         );
     }
 }
-
-Banner.contextTypes = {
-    config: PropTypes.object,
-};
 
 export default Banner;

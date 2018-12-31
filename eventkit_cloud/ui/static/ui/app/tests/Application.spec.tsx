@@ -6,7 +6,7 @@ import { createShallow } from '@material-ui/core/test-utils';
 import AppBar from '@material-ui/core/AppBar';
 import createTestStore from '../store/configureTestStore';
 import BaseDialog from '../components/Dialog/BaseDialog';
-import Banner from '../components/Banner';
+import Banner from '../components/common/Banner';
 import Drawer from '../components/Drawer';
 import { Application } from '../components/Application';
 import NotificationsDropdown from '../components/Notification/NotificationsDropdown';

@@ -11,7 +11,7 @@ import NavigationArrowDropUp from '@material-ui/icons/ArrowDropUp';
 import DataPackListItem from './DataPackListItem';
 import DataPackTableItem from './DataPackTableItem';
 import LoadButtons from '../common/LoadButtons';
-import CustomScrollbar from '../CustomScrollbar';
+import CustomScrollbar from '../common/CustomScrollbar';
 import withRef from '../../utils/withRef';
 import { Breakpoint } from '@material-ui/core/styles/createBreakpoints';
 

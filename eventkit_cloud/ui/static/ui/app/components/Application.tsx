@@ -9,7 +9,7 @@ import AppBar from '@material-ui/core/AppBar';
 import IconButton from '@material-ui/core/IconButton';
 import Menu from '@material-ui/icons/Menu';
 import Notifications from '@material-ui/icons/Notifications';
-import Banner from './Banner';
+import Banner from './common/Banner';
 import Drawer from './Drawer';
 import BaseDialog from './Dialog/BaseDialog';
 import { DrawerTimeout } from '../actions/uiActions';

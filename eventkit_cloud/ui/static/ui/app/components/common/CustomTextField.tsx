@@ -1,10 +1,40 @@
-import PropTypes from 'prop-types';
-import React, { Component } from 'react';
-import { withTheme } from '@material-ui/core/styles';
+import * as React from 'react';
+import { withTheme, Theme } from '@material-ui/core/styles';
 import TextField from '@material-ui/core/TextField';
 
-export class CustomTextField extends Component {
-    constructor(props) {
+export interface Props {
+    value: string;
+    defaultValue: string;
+    showRemaining: boolean;
+    maxLength: number;
+    charsRemainingStyle: object;
+    onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+    onFocus: (e: React.FocusEvent<HTMLInputElement>) => void;
+    onBlur: (e: React.FocusEvent<HTMLInputElement>) => void;
+    inputProps: any;
+    InputProps: any;
+    theme: Eventkit.Theme & Theme;
+}
+
+export interface State {
+    charsRemaining: number;
+    focused: boolean;
+}
+
+export class CustomTextField extends React.Component<Props, State> {
+    static defaultProps = {
+        showRemaining: true,
+        maxLength: 100,
+        charsRemainingStyle: {},
+        onChange: undefined,
+        onFocus: undefined,
+        onBlur: undefined,
+        inputProps: {},
+        InputProps: {},
+    };
+
+    private styles;
+    constructor(props: Props) {
         super(props);
         this.onChange = this.onChange.bind(this);
         this.onFocus = this.onFocus.bind(this);
@@ -27,7 +57,7 @@ export class CustomTextField extends Component {
         };
     }
 
-    onChange(e) {
+    private onChange(e: React.ChangeEvent<HTMLInputElement>) {
         if (this.props.onChange) {
             this.props.onChange(e);
         }
@@ -35,7 +65,7 @@ export class CustomTextField extends Component {
         this.setState({ charsRemaining: this.props.maxLength - e.target.value.length });
     }
 
-    onFocus(e) {
+    private onFocus(e: React.FocusEvent<HTMLInputElement>) {
         if (this.props.onFocus) {
             this.props.onFocus(e);
         }
@@ -43,7 +73,7 @@ export class CustomTextField extends Component {
         this.setState({ focused: true });
     }
 
-    onBlur(e) {
+    private onBlur(e: React.FocusEvent<HTMLInputElement>) {
         if (this.props.onBlur) {
             this.props.onBlur(e);
         }
@@ -51,7 +81,7 @@ export class CustomTextField extends Component {
         this.setState({ focused: false });
     }
 
-    getTextLength() {
+    private getTextLength() {
         // If we list value or defaultValue as a prop we need to include a default value for them.
         // Setting the default values as undefined somehow messes up the MUI component ¯\_(ツ)_/¯
         // For that reason we just wont list it, so turning of the eslint warning in this case only.
@@ -99,7 +129,6 @@ export class CustomTextField extends Component {
                     onFocus={this.onFocus}
                     onBlur={this.onBlur}
                     inputProps={{ maxLength, ...inputProps }}
-                    // eslint-disable-next-line react/jsx-no-duplicate-props
                     InputProps={{ ...InputProps, style: inputStyle }}
                     type="text"
                     {...rest}
@@ -119,29 +148,4 @@ export class CustomTextField extends Component {
     }
 }
 
-CustomTextField.propTypes = {
-    showRemaining: PropTypes.bool,
-    maxLength: PropTypes.number,
-    charsRemainingStyle: PropTypes.object,
-    onChange: PropTypes.func,
-    onFocus: PropTypes.func,
-    onBlur: PropTypes.func,
-    inputProps: PropTypes.object,
-    InputProps: PropTypes.object,
-    theme: PropTypes.object.isRequired,
-};
-
-CustomTextField.defaultProps = {
-    showRemaining: true,
-    maxLength: 100,
-    charsRemainingStyle: {},
-    onChange: undefined,
-    onFocus: undefined,
-    onBlur: undefined,
-    inputProps: {},
-    InputProps: {},
-};
-
-export default
-@withTheme()
-class Default extends CustomTextField {}
+export default withTheme()(CustomTextField);

@@ -24,7 +24,7 @@ import {
 import { updateExpiration, getDatacartDetails, clearDataCartDetails, deleteRun } from '../../actions/datapackActions';
 import { getProviders, cancelProviderTask } from '../../actions/providerActions';
 import { viewedJob } from '../../actions/userActivityActions';
-import CustomScrollbar from '../../components/CustomScrollbar';
+import CustomScrollbar from '../common/CustomScrollbar';
 import BaseDialog from '../../components/Dialog/BaseDialog';
 import { joyride } from '../../joyride.config';
 import { makeDatacartSelector } from '../../selectors/runSelector';

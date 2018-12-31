@@ -1,8 +1,22 @@
-import PropTypes from 'prop-types';
-import React, { Component } from 'react';
-import { withTheme } from '@material-ui/core/styles';
+import * as React from 'react';
+import { withTheme, Theme } from '@material-ui/core/styles';
 
-export class CustomTableRow extends Component {
+export interface Props {
+    title: string;
+    data: any;
+    containerStyle: object;
+    titleStyle: object;
+    dataStyle: object;
+    theme: Eventkit.Theme & Theme;
+}
+
+export class CustomTableRow extends React.Component<Props, {}> {
+    static defaultProps = {
+        containerStyle: {},
+        titleStyle: {},
+        dataStyle: {},
+    };
+
     render() {
         const { colors } = this.props.theme.eventkit;
 
@@ -26,12 +40,12 @@ export class CustomTableRow extends Component {
             data: {
                 display: 'flex',
                 flex: '1 1 auto',
-                flexWrap: 'wrap',
+                flexWrap: 'wrap' as 'wrap',
                 alignItems: 'center',
                 backgroundColor: colors.secondary,
                 color: colors.text_primary,
                 padding: '10px',
-                wordBreak: 'break-word',
+                wordBreak: 'break-word' as 'break-word',
                 width: '100%',
                 ...this.props.dataStyle,
             },
@@ -52,24 +66,5 @@ export class CustomTableRow extends Component {
         );
     }
 }
-
-CustomTableRow.defaultProps = {
-    containerStyle: {},
-    titleStyle: {},
-    dataStyle: {},
-};
-
-CustomTableRow.propTypes = {
-    title: PropTypes.string.isRequired,
-    data: PropTypes.oneOfType([
-        PropTypes.string,
-        PropTypes.node,
-        PropTypes.arrayOf(PropTypes.node),
-    ]).isRequired,
-    containerStyle: PropTypes.object,
-    titleStyle: PropTypes.object,
-    dataStyle: PropTypes.object,
-    theme: PropTypes.object.isRequired,
-};
 
 export default withTheme()(CustomTableRow);

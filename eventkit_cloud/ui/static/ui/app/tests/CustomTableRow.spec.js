@@ -1,6 +1,6 @@
 import React from 'react';
 import { createShallow } from '@material-ui/core/test-utils';
-import { CustomTableRow } from '../components/CustomTableRow';
+import { CustomTableRow } from '../components/common/CustomTableRow';
 
 describe('CustomTextField component', () => {
     let shallow;

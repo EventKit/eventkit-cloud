@@ -1,7 +1,7 @@
 import PropTypes from 'prop-types';
 import React, { Component } from 'react';
 import moment from 'moment';
-import CustomTableRow from '../CustomTableRow';
+import CustomTableRow from '../common/CustomTableRow';
 
 export class DataCartInfoTable extends Component {
     render() {

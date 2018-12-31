@@ -5,7 +5,7 @@ import withWidth, { isWidthDown } from '@material-ui/core/withWidth';
 import { Breakpoint } from '@material-ui/core/styles/createBreakpoints';
 import Paper from '@material-ui/core/Paper';
 import LoginForm from '../../containers/loginContainer';
-import CustomScrollbar from '../CustomScrollbar';
+import CustomScrollbar from '../common/CustomScrollbar';
 
 interface Props {
     theme: Eventkit.Theme & Theme;

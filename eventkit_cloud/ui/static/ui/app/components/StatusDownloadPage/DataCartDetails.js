@@ -3,7 +3,7 @@ import React, { Component } from 'react';
 import { withTheme } from '@material-ui/core/styles';
 import moment from 'moment';
 import DataPackDetails from './DataPackDetails';
-import CustomTableRow from '../CustomTableRow';
+import CustomTableRow from '../common/CustomTableRow';
 import DataPackStatusTable from './DataPackStatusTable';
 import DataPackOptions from './DataPackOptions';
 import DataPackGeneralTable from './DataPackGeneralTable';

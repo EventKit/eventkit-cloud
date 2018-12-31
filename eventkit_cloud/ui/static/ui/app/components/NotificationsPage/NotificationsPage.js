@@ -7,7 +7,7 @@ import GridList from '@material-ui/core/GridList';
 import Paper from '@material-ui/core/Paper';
 import PageHeader from '../common/PageHeader';
 import PageLoading from '../common/PageLoading';
-import CustomScrollbar from '../CustomScrollbar';
+import CustomScrollbar from '../common/CustomScrollbar';
 import NotificationsTable from '../Notification/NotificationsTable';
 import NotificationGridItem from '../Notification/NotificationGridItem';
 import LoadButtons from '../common/LoadButtons';

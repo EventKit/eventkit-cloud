@@ -13,8 +13,8 @@ import BaseDialog from '../../components/Dialog/BaseDialog';
 import MapCard from '../../components/common/MapCard';
 import DataProvider from '../../components/CreateDataPack/DataProvider';
 import { ExportInfo } from '../../components/CreateDataPack/ExportInfo';
-import CustomScrollbar from '../../components/CustomScrollbar';
-import TextField from '../../components/CustomTextField';
+import CustomScrollbar from '../../components/common/CustomScrollbar';
+import TextField from '../../components/common/CustomTextField';
 import * as utils from '../../utils/generic';
 
 // this polyfills requestAnimationFrame in the test browser, required for ol3

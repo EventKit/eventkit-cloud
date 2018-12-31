@@ -13,14 +13,14 @@ import Typography from '@material-ui/core/Typography';
 import ActionCheckCircle from '@material-ui/icons/CheckCircle';
 import Info from '@material-ui/icons/Info';
 import NavigationRefresh from '@material-ui/icons/Refresh';
-import CustomScrollbar from '../CustomScrollbar';
+import CustomScrollbar from '../common/CustomScrollbar';
 import DataProvider from './DataProvider';
 import MapCard from '../common/MapCard';
 import { updateExportInfo } from '../../actions/datacartActions';
 import { stepperNextDisabled, stepperNextEnabled } from '../../actions/uiActions';
 import BaseDialog from '../Dialog/BaseDialog';
-import CustomTextField from '../CustomTextField';
-import CustomTableRow from '../CustomTableRow';
+import CustomTextField from '../common/CustomTextField';
+import CustomTableRow from '../common/CustomTableRow';
 import { joyride } from '../../joyride.config';
 import { getSqKmString } from '../../utils/generic';
 
