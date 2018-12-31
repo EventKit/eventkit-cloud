@@ -5,6 +5,9 @@ import json
 import math
 
 
+_dbg_geom_cache_misses = 0
+
+
 def _create_cache_geom_entry(job):
     """
     Constructs a geometry cache entry

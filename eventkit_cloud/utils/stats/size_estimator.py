@@ -126,4 +126,4 @@ def get_vector_estimate(provider, bbox, srs='4326'):
                                          gap_fill_thresh=0.1,
                                          default_value=0)
     method['size_per_km'] = size_per_km
-    return req_area * (size_per_km if size_per_km is not None else 0.0), method
+    return req_area * size_per_km, method

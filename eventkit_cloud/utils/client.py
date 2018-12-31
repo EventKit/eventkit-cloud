@@ -231,7 +231,7 @@ def convert_seconds_to_hms(seconds):
 
 def parse_byte_size(size, desired_unit='b'):
     """
-    :param size: A string ("size unit")
+    :param size: A string ("size unit" -- e.g. "256 MB")
     :param desired_unit: The desired output unit e.g. MB
     :return: sizeInBytes
     """

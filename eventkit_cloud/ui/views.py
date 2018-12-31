@@ -346,25 +346,6 @@ def help_presets(request):
     )
 
 
-# @require_http_methods(['POST'])
-# def data_estimator(request):
-#     """
-#
-#     :param request: Example {'providers': ['ESRI-Imagery'], 'bbox': [-43.238239, -22.933733, -43.174725, -22.892623]}
-#     :return: HttpResponse, with the size.
-#     """
-#     request_data = json.loads(request.body.decode())
-#     size = 0
-#     providers = request_data.get('providers')
-#     bbox = request_data.get('bbox')
-#     if not providers and not bbox:
-#         return HttpResponse("Providers or BBOX were not supplied in the request", status=400)
-#
-#     for provider in providers:
-#         estimates = get_size_estimate(provider, bbox)
-#         size += estimates[1]
-#     return HttpResponse([size], status=200)
-
 @require_http_methods(['GET'])
 def get_config(request):
     """

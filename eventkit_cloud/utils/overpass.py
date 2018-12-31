@@ -108,7 +108,9 @@ class Overpass(object):
                     raise Exception("Overpass Query failed to return any data")
 
             # Since the request takes a while, jump progress to a very high percent...
-            update_progress(self.task_uid, progress=85,
+            query_percent = 85.0
+            download_percent = 100.0 - query_percent
+            update_progress(self.task_uid, progress=query_percent,
                             subtask_percentage=subtask_percentage,
                             subtask_start=subtask_start,
                             eta=eta,
@@ -131,9 +133,8 @@ class Overpass(object):
                     # certain model changes rather than logging absolutely everything.
                     last_update += CHUNK
                     if last_update > update_interval:
-                        # Because progress is already at 50, we need to make this part start at 50 percent
                         last_update = 0
-                        progress = 50.0 + (float(written_size) / float(total_size) * 50.0)
+                        progress = query_percent + (float(written_size) / float(total_size) * download_percent)
                         update_progress(self.task_uid, progress=progress,
                                         subtask_percentage=subtask_percentage,
                                         subtask_start=subtask_start,

@@ -20,7 +20,6 @@ urlpatterns = [
     re_path(r'^about', never_cache(login_required(TemplateView.as_view(template_name='ui/index.html'))), name="about"),
     re_path(r'^groups', never_cache(login_required(TemplateView.as_view(template_name='ui/index.html'))), name="groups"),
     re_path(r'^logout', never_cache(login_required(logout)), name="logout"),
-    #re_path(r'^estimator/?$', never_cache(login_required(data_estimator))),
     re_path(r'^search/?$', never_cache(login_required(search))),
     re_path(r'^geocode/?$', never_cache(login_required(geocode))),
     re_path(r'^convert/?$', login_required(convert)),

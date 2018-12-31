@@ -59,7 +59,7 @@ class ETA(object):
 
     def eta_string(self):
         """
-        :return: String representation (e.g. 2018-12-21-21:23:31-UTC)
+        :return: String representation (e.g. 2018-12-21-21:23:31-UTC), or 'N/A' if no current estimate
         """
         timestamp = self.eta()
         if timestamp is None:
@@ -72,13 +72,17 @@ class ETA(object):
 
     def eta_datetime(self):
         """
-        :return: ETA represented as a datetime object
+        :return: ETA represented as a datetime object, or None if no current estimate
         """
+        timestamp = self.eta()
+        if timestamp is None:
+            return
+
         return datetime.datetime.fromtimestamp(self.eta(), datetime.timezone.utc)
 
     def eta(self):
         """
-        :return: ETA represented as float defined by Python's time module
+        :return: ETA represented as float defined by Python's time module, or None if no current estimate
         """
         if not self.tick_count:
             return

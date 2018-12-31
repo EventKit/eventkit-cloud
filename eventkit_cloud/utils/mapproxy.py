@@ -39,7 +39,9 @@ class CustomLogger(ProgressLog):
 
     def log_step(self, progress):
         from eventkit_cloud.tasks.export_tasks import update_progress
-        self.eta.update(progress.progress)
+        self.eta.update(progress.progress)  # This may also get called by update_progress but because update_progress
+                                            # is rate-limited; we also do it here to get more data points for making
+                                            # better eta estimates
 
         if self.task_uid:
             if self.log_step_counter == 0:

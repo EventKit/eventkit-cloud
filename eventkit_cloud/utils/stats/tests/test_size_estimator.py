@@ -12,6 +12,13 @@ logger = logging.getLogger(__name__)
 
 
 def compute_estimator_error(task_limit=None, slugs=None, filename=None):
+    """
+    Runs the current size estimator against previous completed jobs and computes several error metrics
+    :param task_limit: Maximum number of tasks to evaluate
+    :param slugs: List of slugs defining provider types to evaluate
+    :param filename: A file to write out a per-task CSV of task and error info
+    :return:
+    """
     # Loop through every job and compute the error of the estimate against the actual
     os = None
     geom_cache = {}
@@ -100,7 +107,15 @@ def compute_estimator_error(task_limit=None, slugs=None, filename=None):
         }
 
 
-def perf_benchmark(num_iters=500, seed=None):
+def perf_benchmark(slug='osm', num_iters=500, seed=None):
+    """
+    Benchmarks the cost (time) of generating size estimates for a particular provider by invoking
+    num_iters requests using a series of random bboxes
+    :param slug: The slug of the data provider to benchmark
+    :param num_iters: The number of requests to make
+    :param seed: The seed to the prng generating bboxes
+    :return: total_time and time_per_estimate measured in seconds
+    """
     import time
     import random
 
@@ -117,7 +132,7 @@ def perf_benchmark(num_iters=500, seed=None):
         w = random.random() * 340.0 - 170.0  # west coord of lower_left corner
         s = random.random() * 160.0 - 80.0
 
-        estimator.get_size_estimate_slug('osm', [w, s, w + width, s + height], srs='4326')
+        estimator.get_size_estimate_slug(slug, [w, s, w + width, s + height], srs='4326')
 
     end = time.time()
     return {

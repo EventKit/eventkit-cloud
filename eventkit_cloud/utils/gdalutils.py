@@ -531,6 +531,8 @@ def track_progress(proc, callback, *args, **kwargs):
 
     :param proc: The subprocess where GDAL is running
     :param callback: Function with callback
+    :param args: Additional parameters passed to callback
+    :param kwargs: Additional parameters passed to callback
     :return:
     """
     buffer = [None] * 10
