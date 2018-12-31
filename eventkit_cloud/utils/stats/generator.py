@@ -487,6 +487,7 @@ def query(group_name, field, statistic_name, bbox, bbox_srs, gap_fill_thresh=0.1
             return fld[statistic_name][1]  # Get the upper bound
 
     get_value = get_upper_ci_value if statistic_name.startswith('ci_') else get_single_value
+    stat_value = None
 
     if all_stats:
         group_stats = all_stats.get(group_name)
@@ -543,11 +544,12 @@ def query(group_name, field, statistic_name, bbox, bbox_srs, gap_fill_thresh=0.1
                 # No overlapping tiles, use group specific stats
                 method['group'] = group_name
                 stat_value = get_value(group_stats)
-        else:
+        elif 'GLOBAL' in all_stats:
             # No group-specific data, use statistics computed across all groups (i.e. every completed job)
             method['group'] = 'GLOBAL'
             stat_value = get_value(all_stats['GLOBAL'])
-    else:
+
+    if stat_value is None:
         # No statistics... use default
         method['group'] = 'None'
         stat_value = default_value

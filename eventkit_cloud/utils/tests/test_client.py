@@ -86,7 +86,7 @@ class TestClient(TestCase):
         self.assertEqual(parse_size_unit('TB'), 1e12)
 
     def test_parse_byte_size(self):
-        self.assertEqual(256000, parse_byte_size('256 MB', 'KB'))
-        self.assertEqual(256, parse_byte_size('256 MB', 'MB'))
-        self.assertEqual(.256, parse_byte_size('256000 KB', 'GB'))
-        self.assertEqual(.000256, parse_byte_size('256000 KB', 'TB'))
+        self.assertAlmostEqual(256000, parse_byte_size('256 MB', 'KB'))
+        self.assertAlmostEqual(256, parse_byte_size('256 MB', 'MB'))
+        self.assertAlmostEqual(.256, parse_byte_size('256000 KB', 'GB'))
+        self.assertAlmostEqual(.000256, parse_byte_size('256000 KB', 'TB'), places=10)

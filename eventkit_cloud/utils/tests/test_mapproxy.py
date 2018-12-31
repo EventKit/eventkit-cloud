@@ -132,15 +132,12 @@ class TestLogger(TransactionTestCase):
 
     @patch('eventkit_cloud.tasks.export_tasks.update_progress')
     def test_log_step(self, mock_update_progress):
-
         test_task_uid = "1234"
-        test_timestamp = 1490641718
         test_progress = 0.42
         custom_logger = CustomLogger(task_uid=test_task_uid)
         custom_logger.log_step_counter = 0
         self.assertIsNotNone(custom_logger)
         mock_progress = MagicMock()
         mock_progress.progress = test_progress
-        mock_progress.eta.eta.return_value = test_timestamp
         custom_logger.log_step(mock_progress)
-        mock_update_progress.assert_called_once_with(test_task_uid, progress=test_progress*100)
+        mock_update_progress.assert_called_with(test_task_uid, progress=test_progress*100, eta=custom_logger.eta)
