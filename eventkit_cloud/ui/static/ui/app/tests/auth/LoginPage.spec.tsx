@@ -1,26 +1,18 @@
-import PropTypes from 'prop-types';
-import React from 'react';
-import sinon from 'sinon';
+import * as React from 'react';
+import * as sinon from 'sinon';
 import { shallow } from 'enzyme';
 import Paper from '@material-ui/core/Paper';
-import { fakeStore } from '../../__mocks__/fakeStore';
-import { LoginPage } from '../../components/auth/LoginPage';
 import LoginForm from '../../containers/loginContainer';
 import CustomScrollbar from '../../components/CustomScrollbar';
 import * as utils from '../../utils/generic';
-
+import { LoginPage } from '../../components/auth/LoginPage';
 
 describe('LoginPage component', () => {
-    const store = fakeStore({});
-    const loginConfig = { LOGIN_DISCLAIMER: 'This is a disclaimer', ...global.eventkit_test_props };
+    const loginConfig = { LOGIN_DISCLAIMER: 'This is a disclaimer', ...(global as any).eventkit_test_props };
 
     function getWrapper(config) {
-        return shallow(<LoginPage {...global.eventkit_test_props} />, {
-            context: { store, config },
-            childContextTypes: {
-                store: PropTypes.object,
-                config: PropTypes.object,
-            },
+        return shallow(<LoginPage {...(global as any).eventkit_test_props} />, {
+            context: { config }
         });
     }
 

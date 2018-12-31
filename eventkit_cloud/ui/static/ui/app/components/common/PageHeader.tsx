@@ -1,8 +1,15 @@
-import PropTypes from 'prop-types';
-import React, { Component } from 'react';
-import { withTheme } from '@material-ui/core/styles';
+import * as React from 'react';
+import { withTheme, Theme } from '@material-ui/core/styles';
 
-export class PageHeader extends Component {
+export interface Props {
+    id?: string;
+    className?: string;
+    title: any;
+    children: any;
+    theme: Eventkit.Theme & Theme;
+}
+
+export class PageHeader extends React.Component<Props, {}> {
     render() {
         const { colors } = this.props.theme.eventkit;
 
@@ -29,7 +36,7 @@ export class PageHeader extends Component {
                 overflow: 'hidden',
                 height: '35px',
                 justifyContent: 'flex-end',
-                textAlign: 'right',
+                textAlign: 'right' as 'right',
             },
         };
 
@@ -48,23 +55,5 @@ export class PageHeader extends Component {
         );
     }
 }
-
-PageHeader.defaultProps = {
-    title: '',
-    children: null,
-};
-
-PageHeader.propTypes = {
-    title: PropTypes.oneOfType([
-        PropTypes.string,
-        PropTypes.node,
-    ]),
-    children: PropTypes.oneOfType([
-        PropTypes.string,
-        PropTypes.node,
-        PropTypes.arrayOf(PropTypes.node),
-    ]),
-    theme: PropTypes.object.isRequired,
-};
 
 export default withTheme()(PageHeader);

@@ -1,6 +1,5 @@
-import PropTypes from 'prop-types';
-import React, { Component } from 'react';
-import { withTheme } from '@material-ui/core/styles';
+import * as React from 'react';
+import { withTheme, Theme } from '@material-ui/core/styles';
 import Collapse from '@material-ui/core/Collapse';
 import IconButton from '@material-ui/core/IconButton';
 import List from '@material-ui/core/List';
@@ -8,8 +7,19 @@ import ListItem from '@material-ui/core/ListItem';
 import ExpandLess from '@material-ui/icons/ExpandLess';
 import ExpandMore from '@material-ui/icons/ExpandMore';
 
-export class DropDownListItem extends Component {
-    constructor(props) {
+export interface Props {
+    title: any;
+    children: any;
+    alt: boolean;
+    theme: Eventkit.Theme & Theme;
+}
+
+export interface State {
+    open: boolean;
+}
+
+export class DropDownListItem extends React.Component<Props, State> {
+    constructor(props: Props) {
         super(props);
         this.handleExpand = this.handleExpand.bind(this);
         this.state = {
@@ -17,7 +27,7 @@ export class DropDownListItem extends Component {
         };
     }
 
-    handleExpand() {
+    private handleExpand() {
         this.setState({ open: !this.state.open });
     }
 
@@ -52,24 +62,5 @@ export class DropDownListItem extends Component {
         ]);
     }
 }
-
-DropDownListItem.propTypes = {
-    title: PropTypes.oneOfType([
-        PropTypes.string,
-        PropTypes.node,
-        PropTypes.arrayOf(PropTypes.node),
-    ]).isRequired,
-    children: PropTypes.oneOfType([
-        PropTypes.string,
-        PropTypes.node,
-        PropTypes.arrayOf(PropTypes.node),
-    ]).isRequired,
-    alt: PropTypes.bool,
-    theme: PropTypes.object.isRequired,
-};
-
-DropDownListItem.defaultProps = {
-    alt: false,
-};
 
 export default withTheme()(DropDownListItem);

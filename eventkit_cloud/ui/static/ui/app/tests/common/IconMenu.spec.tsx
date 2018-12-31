@@ -1,17 +1,16 @@
-import React from 'react';
+import * as React from 'react';
 import { mount } from 'enzyme';
-import sinon from 'sinon';
-import Button from '@material-ui/core/Button';
+import * as sinon from 'sinon';
+import IconButton from '@material-ui/core/IconButton';
 import Menu from '@material-ui/core/Menu';
-import DropDownMenu from '../../components/common/DropDownMenu';
+import IconMenu from '../../components/common/IconMenu';
 
-
-describe('DropDownMenu component', () => {
+describe('IconMenu component', () => {
     let wrapper;
 
     const defaultProps = () => (
         {
-            children: [<span className="test-child">hello</span>],
+            children: [<span key="test" className="test-child">hello</span>],
         }
     );
 
@@ -20,19 +19,19 @@ describe('DropDownMenu component', () => {
             ...defaultProps(),
             ...propsOverride,
         };
-        wrapper = mount(<DropDownMenu {...props} />);
+        wrapper = mount(<IconMenu {...props} />);
     };
 
     beforeEach(setup);
 
     it('should render a button and menu', () => {
-        expect(wrapper.find(Button)).toHaveLength(1);
+        expect(wrapper.find(IconButton)).toHaveLength(1);
         expect(wrapper.find(Menu)).toHaveLength(1);
     });
 
     it('handleOpen should set anchor to current target', () => {
         expect(wrapper.state('anchor')).toBe(null);
-        const e = { currentTarget: <p>hi</p> };
+        const e = { currentTarget: <p>hi</p>, stopPropagation: sinon.spy() };
         const stateStub = sinon.stub(wrapper.instance(), 'setState');
         wrapper.instance().handleOpen(e);
         wrapper.update();

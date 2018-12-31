@@ -1,6 +1,6 @@
-import React from 'react';
+import * as React from 'react';
 import { shallow } from 'enzyme';
-import sinon from 'sinon';
+import * as sinon from 'sinon';
 import Tab from '@material-ui/core/Tab';
 import Tabs from '@material-ui/core/Tabs';
 import SwipeableViews from 'react-swipeable-views';
@@ -17,7 +17,7 @@ describe('DashboardSection component', () => {
             columns: 3,
             providers: [],
             noDataElement: <div className="qa-DashboardSection-NoDataElement" />,
-            ...global.eventkit_test_props,
+            ...(global as any).eventkit_test_props,
         };
     }
 

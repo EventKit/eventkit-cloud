@@ -1,6 +1,5 @@
-import React from 'react';
-import sinon from 'sinon';
-import raf from 'raf';
+import * as React from 'react';
+import * as sinon from 'sinon';
 import { shallow } from 'enzyme';
 import Map from 'ol/map';
 import View from 'ol/view';
@@ -47,7 +46,6 @@ const geojson = {
 };
 
 describe('MapCard component', () => {
-    raf.polyfill();
     let wrapper;
     let instance;
 
@@ -55,7 +53,7 @@ describe('MapCard component', () => {
         {
             geojson,
             children: <span>Hello</span>,
-            ...global.eventkit_test_props,
+            ...(global as any).eventkit_test_props,
         }
     );
 
