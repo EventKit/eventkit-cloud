@@ -227,6 +227,12 @@ export class DataPackDetails extends React.Component<Props, State> {
                                 FILE SIZE
                             </TableCell>
                             <TableCell
+                                className="qa-DataPackDetails-TableCell-estimatedFinish"
+                                style={styles.genericColumn}
+                            >
+                                ESTIMATED FINISH
+                            </TableCell>
+                            <TableCell
                                 className="qa-DataPackDetails-TableCell-progress"
                                 style={styles.genericColumn}
                             >
