@@ -5,6 +5,7 @@ import ListItem from '@material-ui/core/ListItem';
 import Collapse from '@material-ui/core/Collapse';
 import ActionCheckCircle from '@material-ui/icons/CheckCircle';
 import UncheckedCircle from '@material-ui/icons/RadioButtonUnchecked';
+import CircularProgress from '@material-ui/core/CircularProgress';
 import Checkbox from '@material-ui/core/Checkbox';
 import ExpandLess from '@material-ui/icons/ExpandLess';
 import ExpandMore from '@material-ui/icons/ExpandMore';
@@ -64,6 +65,11 @@ export interface ProviderData extends Eventkit.Provider {
         type: string;
         message: string;
     };
+    estimate?: {
+        size: number;
+        unit: string;
+        slug: string;
+    };
 }
 
 interface Props {
@@ -91,6 +97,7 @@ interface State {
 }
 
 export class DataProvider extends React.Component<Props, State> {
+
     constructor(props: Props) {
         super(props);
         this.handleLicenseOpen = this.handleLicenseOpen.bind(this);
@@ -112,6 +119,18 @@ export class DataProvider extends React.Component<Props, State> {
 
     private handleExpand() {
         this.setState(state => ({ open: !state.open }));
+    }
+
+    private formatSize(providerEstimate){
+        if (!providerEstimate){
+            return CircularProgress
+        }
+        if (!providerEstimate.size){
+            return "unknown"
+        }
+        let estimateSize = 0.000;
+        estimateSize = Number(estimateSize) + Number(providerEstimate.size);
+        return Number(estimateSize).toFixed(3) + ' MB';
     }
 
     render() {
@@ -207,6 +226,12 @@ export class DataProvider extends React.Component<Props, State> {
                             className={`qa-DataProvider-ListItemName ${classes.name}`}
                         >
                             {provider.name}
+                        </span>
+                        <span
+                            className={`qa-DataProvider-ListItemName ${classes.name} size`}
+                            style={{ marginRight: '55px', display: 'flex', justifyContent: 'flex-end', position: 'relative'}}
+                        >
+                            {this.formatSize(provider.estimate)}
                         </span>
                         <ProviderStatusIcon
                             id="ProviderStatus"

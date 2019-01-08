@@ -23,6 +23,7 @@ import CustomTextField from '../CustomTextField';
 import CustomTableRow from '../CustomTableRow';
 import { joyride } from '../../joyride.config';
 import { getSqKmString } from '../../utils/generic';
+import { featureToBbox, WGS84 } from '../../utils/mapUtils';
 
 const jss = (theme: Eventkit.Theme & Theme) => createStyles({
     underlineStyle: {
@@ -156,6 +157,7 @@ export class ExportInfo extends React.Component<Props, State> {
         this.onRefresh = this.onRefresh.bind(this);
         this.getAvailability = this.getAvailability.bind(this);
         this.checkAvailability = this.checkAvailability.bind(this);
+        this.checkEstimate = this.checkEstimate.bind(this);
         this.checkProviders = this.checkProviders.bind(this);
         this.handlePopoverOpen = this.handlePopoverOpen.bind(this);
         this.handlePopoverClose = this.handlePopoverClose.bind(this);
@@ -281,10 +283,7 @@ export class ExportInfo extends React.Component<Props, State> {
         // update state with the new copy of providers
         this.setState({ providers });
 
-        // check all of providers again
-        providers.forEach((provider) => {
-            this.checkAvailability(provider);
-        });
+        this.checkProviders(providers);
     }
 
     private getAvailability(provider: Eventkit.Provider, data: any) {
@@ -313,6 +312,31 @@ export class ExportInfo extends React.Component<Props, State> {
         });
     }
 
+    private getEstimate(provider: Eventkit.Provider, bbox: number[]) {
+        // make a copy of the provider to edit
+        const newProvider = { ...provider } as ProviderData;
+        const data = { slugs: provider.slug,
+                       srs: 4326,
+                       bbox: bbox.join(',') };
+        const csrfmiddlewaretoken = cookie.load('csrftoken');
+        return axios({
+            url: `/api/estimate`,
+            method: 'get',
+            params: data,
+            headers: { 'X-CSRFToken': csrfmiddlewaretoken },
+        }).then((response) => {
+            newProvider.estimate = response.data[0];
+            return newProvider;
+        }).catch(() => {
+            newProvider.estimate = {
+                size: null,
+                slug: provider.slug,
+                unit: null,
+            };
+            return newProvider;
+        });
+    }
+
     async checkAvailability(provider: ProviderData) {
         const data = { geojson: this.props.geojson };
         const newProvider = await this.getAvailability(provider, data);
@@ -322,6 +346,21 @@ export class ExportInfo extends React.Component<Props, State> {
             providers.splice(providers.indexOf(provider), 1, newProvider);
             return { providers };
         });
+        return newProvider;
+    }
+
+    async checkEstimate(provider: ProviderData) {
+        // This assumes that the entire selection is the first feature, if the feature collection becomes the
+        // selection then the bbox would need to be calculated for it.
+        const bbox = featureToBbox(this.props.geojson.features[0], WGS84);
+        const newProvider = await this.getEstimate(provider, bbox);
+        this.setState((prevState) => {
+            // make a copy of state providers and replace the one we updated
+            const providers = [...prevState.providers];
+            providers.splice(providers.indexOf(provider), 1, newProvider);
+            return { providers };
+        });
+        return newProvider;
     }
 
     private checkProviders(providers: ProviderData[]) {
@@ -329,7 +368,12 @@ export class ExportInfo extends React.Component<Props, State> {
             if (provider.display === false) {
                 return;
             }
-            this.checkAvailability(provider);
+            // This can be switched to finally in newer version of ES and typescript.
+            this.checkAvailability(provider).then((newProvider) => {
+                this.checkEstimate(newProvider);
+            }).catch((newProvider) => {
+                this.checkEstimate(newProvider);
+            });
         });
     }
 
@@ -499,6 +543,12 @@ export class ExportInfo extends React.Component<Props, State> {
                                         style={{ flex: '1 1 auto' }}
                                     >
                                         DATA PROVIDERS
+                                    </div>
+                                    <div
+                                        className="qa-ExportInfo-ListHeaderItem"
+                                        style={{ display: 'flex', justifyContent: 'flex-end', marginRight: '10px', position: 'relative' }}
+                                    >
+                                        <span>SIZE ESTIMATE</span>
                                     </div>
                                     <div
                                         className="qa-ExportInfo-ListHeaderItem"
