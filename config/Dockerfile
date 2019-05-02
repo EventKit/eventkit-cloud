@@ -1,4 +1,4 @@
-FROM cloudfoundry/cflinuxfs2:1.46.0
+FROM cloudfoundry/cflinuxfs3:0.82.0
 
 
 RUN groupadd -g 880 eventkit && useradd -u 8800 -g 880 -m eventkit && \
@@ -14,7 +14,7 @@ COPY --chown=eventkit ./conda /var/lib/eventkit/conda
 
 ENV PATH="/home/eventkit/miniconda3/bin:$PATH"
 
-RUN curl -L https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh -o miniconda.sh && \
+RUN curl -L https://repo.continuum.io/miniconda/Miniconda3-4.5.11-Linux-x86_64.sh -o miniconda.sh && \
     /bin/bash miniconda.sh -b -p "/home/eventkit/miniconda3" && \
     rm miniconda.sh && \
     echo "y" | conda update -n root --all && \
