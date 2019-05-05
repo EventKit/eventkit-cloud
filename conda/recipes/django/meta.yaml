@@ -1,4 +1,4 @@
-{% set version = "2.0.9" %}
+{% set version = "2.2.1" %}
 
 # Forked from https://github.com/conda-forge/django-feedstock/blob/master/recipe/meta.yaml
 package:
@@ -7,7 +7,7 @@ package:
 
 source:
   url: https://pypi.io/packages/source/D/Django/Django-{{ version }}.tar.gz
-  sha256: d6d94554abc82ca37e447c3d28958f5ac39bd7d4adaa285543ae97fb1129fd69
+  sha256: 6fcc3cbd55b16f9a01f37de8bcbe286e0ea22e87096557f1511051780338eaea
   patches:
     # Hard-code gdal and geos' paths to the corresponding conda packages.
     - libgdal.patch
@@ -27,6 +27,7 @@ requirements:
   run:
     - python
     - pytz
+    - sqlparse
 
 test:
   requires:

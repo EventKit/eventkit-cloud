@@ -18,16 +18,16 @@ build:
 
 requirements:
   host:
-    - pillow !=2.4.0
+    - pillow
     - pip
     - python
-    - pyyaml >=3.0,<3.99
+    - pyyaml
     - setuptools
     - proj4
   run:
-    - pillow !=2.4.0
+    - pillow
     - python
-    - pyyaml >=3.0,<3.99
+    - pyyaml
     - setuptools
     - proj4
 

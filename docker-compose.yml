@@ -84,7 +84,7 @@ services:
     - DEV_MACHINE_CODE_PATH
     extra_hosts:
     - "${SITE_NAME}:${SITE_IP}"
-    command: /home/eventkit/miniconda3/envs/eventkit-cloud/lib/python3.5/site-packages/scripts/run-celery.sh
+    command: /home/eventkit/miniconda3/envs/eventkit-cloud/lib/python3.7/site-packages/scripts/run-celery.sh
   celery-beat:
     image: eventkit/eventkit-base:1.2.3
     volumes:

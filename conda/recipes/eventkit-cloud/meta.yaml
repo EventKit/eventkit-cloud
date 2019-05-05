@@ -12,7 +12,7 @@ build:
 
 requirements:
   build:
-    - python=3.5
+    - python=3.7
     - pip
     - setuptools
     - wheel
@@ -20,49 +20,50 @@ requirements:
     - ruby
     - git
   run:
-    - python=3.5
+    - python=3.7
     - django-audit-logging=0.2.0
-    - gdal=2.2.4
-    - geos=3.6.2
-    - libgdal=2.2.4
+    - gdal=2.4.1
+    - geos=3.7.1
+    - libgdal=2.4.1
     - osmctools=0.7.0
-    - openldap=2.4.45
-    - proj4=4.9.3
+    - openldap=2.4.46
+    - proj4
     - python-ldap=3.1.0
-    - amqp=2.3.2
+    - amqp=2.4.2
     - billiard=3.5.0.4
-    - boto3=1.7.48
+    - boto3=1.9.141
     - celery=4.2.1
-    - certifi=2018.8.24
-    - django=2.0.9
+    - certifi=2019.3.9
+    - django=2.2.1
     - dj-database-url=0.4.2
     - django-auth-ldap=1.7.0
-    - django-celery-beat=1.1.1
-    - django-celery-results=1.0.1
-    - django-extensions=1.7.7
-    - django-filter=2.0.0
+    - django-celery-beat=1.4.0
+    - django-celery-results=1.0.4
+    - django-extensions=2.1.6
+    - django-filter=2.1.0
     - django-notifications-hq=1.5.0
-    - djangorestframework=3.8.0
-    - djangorestframework-gis=0.13
-    - eventlet=0.20.1
-    - gunicorn=19.7.1
+    - djangorestframework=3.9.3
+    - djangorestframework-gis=0.14
+    - eventlet=0.23.0
+    - gunicorn=19.9.0
     - kombu=4.2.1
-    - lxml=3.7.3
+    - lxml=4.3.3
     - MapProxy=1.11.0
-    - Markdown=2.6.8
-    - numpy=1.14.3
-    - Pillow= 5.2.0
-    - psycopg2=2.7.3.2
-    - PyJWT=1.4.2
-    - pyparsing=2.1.10
-    - python-dateutil=2.7.2
-    - python-magic=0.4.12
-    - pytz=2018.5
-    - PyYAML=3.12
-    - requests=2.20.1
+    - Markdown=3.1
+    - numpy=1.16.3
+    - Pillow=6.0.0
+    - psycopg2=2.8.2
+    - PyJWT=1.7.1
+    - pyparsing=2.4.0
+    - python-dateutil=2.8.0
+    - python-magic=0.4.15
+    - pytz=2019.1
+    - PyYAML=5.1
+    - requests=2.21.0
     - Shapely=1.6.4
-    - simplejson=3.10.0
-    - whitenoise=3.3.0
+    - simplejson=3.16.0
+    - sqlparse
+    - whitenoise=4.1.2
 
 about:
   home: https://github.com/venicegeo/eventkit-cloud

@@ -1,5 +1,5 @@
 {% set name = "django-celery-results" %}
-{% set version = "1.0.1" %}
+{% set version = "1.0.4" %}
 
 package:
   name: "{{ name|lower }}"
@@ -7,7 +7,7 @@ package:
 
 source:
   url: https://github.com/celery/{{ name }}/archive/v{{ version }}.tar.gz
-  sha256: ad01484834387a3472a1ff5c20264ab31657b5b3d27c489efdb4321427005d80
+  sha256: 4f3b1c08deb161a21fb82e7eeea44cef15d1d416c7cee92c7f8aeb97e520e326
 
 build:
   number: 0
