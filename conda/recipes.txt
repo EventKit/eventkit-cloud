@@ -1,7 +1,5 @@
 berkeleydb
-openldap
 osmctools
-django
 django-audit-logging
 django-auth-ldap
 django-celery-beat
