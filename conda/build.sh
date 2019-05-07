@@ -17,8 +17,8 @@ conda index /root/miniconda3/conda-bld/noarch
 echo "Adding channels"
 conda config --remove channels defaults
 conda config --add channels defaults
-conda config --add channels conda-forge
 conda config --add channels bioconda
+conda config --add channels conda-forge
 conda config --add channels local
 
 cd /root/repo
