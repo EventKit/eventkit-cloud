@@ -5,7 +5,7 @@ WORKDIR /root
 ENV PATH="/root/miniconda3/bin:$PATH"
 
 RUN apt-get update && apt-get install -y groff groff-base libcairo2-dev libpango1.0-dev libgif-dev && \
-    curl -L https://repo.continuum.io/miniconda/Miniconda3-4.5.4-Linux-x86_64.sh -o miniconda.sh && \
+    curl -L https://repo.continuum.io/miniconda/Miniconda3-4.6.14-Linux-x86_64.sh -o miniconda.sh && \
     /bin/bash miniconda.sh -b -p $HOME/miniconda3 && \
     rm miniconda.sh && \
     echo 'root=$(pwd -P)' >> /root/.bashrc && \
