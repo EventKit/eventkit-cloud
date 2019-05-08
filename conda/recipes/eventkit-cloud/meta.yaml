@@ -51,7 +51,6 @@ requirements:
     - djangorestframework=3.9.3=py_0
     - djangorestframework-gis=0.14=py_0
     - docutils=0.14=py37_1001
-    - eventkit-cloud=1.2.3=py37_149
     - eventlet=0.23.0=py37_1000
     - expat=2.2.5=hf484d3e_1002
     - fontconfig=2.13.1=he4413a7_1000
