@@ -287,14 +287,14 @@ def clip_dataset(boundary=None, in_dataset=None, out_dataset=None, fmt=None, tab
     # Overwrite is added to the commands in the event that the dataset is retried.  In general we want these to
     # act idempotently.
     if table:
-        cmd_template = Template("ogr2ogr -overwrite -f $fmt -clipsrc $boundary $out_ds $in_ds $table")
+        cmd_template = Template("ogr2ogr -skipfailures -nlt PROMOTE_TO_MULTI -overwrite -f $fmt -clipsrc $boundary $out_ds $in_ds $table")
     elif meta['is_raster']:
         cmd_template = Template("gdalwarp -overwrite -cutline $boundary -crop_to_cutline $dstalpha -of $fmt $type $in_ds $out_ds")
         # Geopackage raster only supports byte band type, so check for that
         if fmt.lower() == 'gpkg':
             band_type = "-ot byte"
     else:
-        cmd_template = Template("ogr2ogr -overwrite -f $fmt -clipsrc $boundary $out_ds $in_ds")
+        cmd_template = Template("ogr2ogr -skipfailures -nlt PROMOTE_TO_MULTI -overwrite -f $fmt -clipsrc $boundary $out_ds $in_ds")
 
     temp_boundfile = None
     if isinstance(boundary, list):
