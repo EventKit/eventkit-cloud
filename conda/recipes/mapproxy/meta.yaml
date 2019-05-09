@@ -1,16 +1,15 @@
 {% set name = "mapproxy" %}
-{% set version = "1.11.0" %}
 
 package:
   name: "{{ name|lower }}"
-  version: "{{ version }}"
+  version: "{{ environ.get("GIT_DESCRIBE_HASH", "0.0.0") }}"
 
 source:
-  url: https://github.com/{{ name }}/{{ name }}/archive/{{ version }}.tar.gz
-  sha256: f051ee400b50f9a4f20467e04c736c442e0bed71cf25f7c5e878a2603114cc5f
+  git_url: https://github.com/{{ name }}/{{ name }}.git
+  git_rev: 2317a159495dbb62c41d3c44eb1561a54c79bd83
 
 build:
-  number: 0
+  number: environ.get("GIT_DESCRIBE_HASH", 0)
   entry_points:
     - mapproxy-seed = mapproxy.seed.script:main
     - mapproxy-util = mapproxy.script.util:main
@@ -62,10 +61,10 @@ about:
   home: https://mapproxy.org
   license: Apache Software
   license_family: APACHE
-  license_file: 
+  license_file:
   summary: An accelerating proxy for tile and web map services
-  doc_url: 
-  dev_url: 
+  doc_url:
+  dev_url:
 
 extra:
   recipe-maintainers:

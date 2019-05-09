@@ -101,7 +101,7 @@ requirements:
     - libxml2 =2.9.9=h13577e0_0
     - libxslt =1.1.32=h4785a14_1002
     - lxml =4.3.3=py37h7ec2d77_0
-    - mapproxy =1.11.0=py37_0
+    - mapproxy =g2317a159=py37_0
     - markdown =3.1=py37_0
     - ncurses =6.1=hf484d3e_1002
     - numpy =1.16.3=py37he5ce36f_0
@@ -251,7 +251,7 @@ requirements:
     - libxml2 =2.9.9=h13577e0_0
     - libxslt =1.1.32=h4785a14_1002
     - lxml =4.3.3=py37h7ec2d77_0
-    - mapproxy =1.11.0=py37_0
+    - mapproxy =g2317a159=py37_0
     - markdown =3.1=py37_0
     - ncurses =6.1=hf484d3e_1002
     - numpy =1.16.3=py37he5ce36f_0
