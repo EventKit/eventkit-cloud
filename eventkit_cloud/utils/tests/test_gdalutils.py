@@ -157,7 +157,7 @@ class TestGdalUtils(TestCase):
 
         # Vector
         fmt = "gpkg"
-        expected_cmd = "ogr2ogr -overwrite -f {0} -clipsrc {1} {2} {3}".format(
+        expected_cmd = "ogr2ogr -skipfailures -nlt PROMOTE_TO_MULTI -overwrite -f {0} -clipsrc {1} {2} {3}".format(
             fmt,
             geojson_file,
             dataset,
