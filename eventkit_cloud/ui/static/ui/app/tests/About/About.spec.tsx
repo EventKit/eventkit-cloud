@@ -45,9 +45,9 @@ describe('About component', () => {
 
     it('should render the version tag', () => {
         const props = getProps();
-        props.context.config.VERSION = '1.2.3';
+        props.context.config.VERSION = '1.3.0';
         const wrapper = getWrapper(props);
-        expect(wrapper.find(PageHeader).props().children).toEqual('1.2.3');
+        expect(wrapper.find(PageHeader).props().children).toEqual('1.3.0');
     });
 
     it('should show the contact link', () => {
