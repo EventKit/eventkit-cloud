@@ -9,7 +9,7 @@ from mock import Mock, patch, call, MagicMock, ANY
 from osgeo import gdal, ogr
 
 from eventkit_cloud.utils.gdalutils import clip_dataset, is_envelope, convert, get_distance, \
-    get_dimensions, merge_geotiffs, get_meta, get_band_statistics, track_progress
+    get_dimensions, merge_geotiffs, get_meta, get_band_statistics
 
 logger = logging.getLogger(__name__)
 
@@ -277,17 +277,3 @@ class TestGdalUtils(TestCase):
 
         mock_gdal.Open.return_value.GetRasterBand.return_value.GetStatistics.side_effect = [Exception]
         self.assertIsNone(get_band_statistics(in_file))
-
-    def test_track_progress(self):
-        step = 0
-
-        def assert_progress(progress):
-            nonlocal step
-            self.assertEqual(progress, step * 10.0)
-            step += 1
-
-        script_file = "{}/files/mock_gdal_progress.sh".format(
-            os.path.dirname(os.path.abspath(__file__)).replace("\\", "/"))
-        proc = Popen(["bash", "-c", script_file], stdout=PIPE, stderr=PIPE, bufsize=0, universal_newlines=True)
-        track_progress(proc, assert_progress)
-        self.assertEqual(step, 11)  # len([0, 10, 20, ..., 100])
