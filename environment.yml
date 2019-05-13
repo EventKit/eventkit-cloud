@@ -3,5 +3,5 @@ channels:
   - local
   - https://eventkit_readonly:eventkit-readonly@nexus.devops.geointservices.io/content/repositories/eventkit-Releases/
 dependencies:
-  - python=3.7
+  - python=3.6
   - eventkit-cloud
