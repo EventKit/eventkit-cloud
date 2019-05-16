@@ -1,14 +1,10 @@
-requests
 berkeleydb
-openldap
-python-ldap
 osmctools
-python-magic
-django
 django-audit-logging
 django-auth-ldap
 django-celery-beat
 django-celery-results
 django-notifications-hq
+django-timezone-field
 mapproxy
 eventkit-cloud
