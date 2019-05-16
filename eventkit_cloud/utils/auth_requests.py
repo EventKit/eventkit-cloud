@@ -1,4 +1,7 @@
 # -*- coding: utf-8 -*-
+
+from mapproxy.client import http as mapproxy_http
+
 import http.client
 import logging
 import os
@@ -8,7 +11,6 @@ from functools import wraps
 from tempfile import NamedTemporaryFile
 
 import requests
-from mapproxy.client import http as mapproxy_http
 
 logger = logging.getLogger(__name__)
 
