@@ -34,11 +34,11 @@ if [ -z "$1" ]; then
         echo "***Building  $recipe ...***"
         NAME=$(echo "$recipe" | tr -d '\r')
         for i in 1 2 3; do conda build $NAME && \
-        echo "y" | conda install $NAME && s=0 && break || sleep 15; done; (exit $s)
+        echo "y" | conda install $NAME && s=0 && break || s=$? && sleep 15; done; (exit $s)
     done < /root/recipes.txt
 else
  echo "***Building $@...***"
-    for i in 1 2 3; do conda build $@ && echo "y" | conda install $@ && s=0 && break || sleep 15; done; (exit $s)
+    for i in 1 2 3; do conda build $@ && echo "y" | conda install $@ && s=0 && break || s=$? && sleep 5; done; (exit $s)
 fi
 echo "Move files and create index"
 cp /root/miniconda3/pkgs/*.tar.bz2 /root/repo/linux-64/
