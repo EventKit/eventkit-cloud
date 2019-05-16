@@ -15,9 +15,7 @@ conda index /root/miniconda3/conda-bld/linux-64
 conda index /root/miniconda3/conda-bld/noarch
 
 echo "Adding channels"
-conda config --remove channels defaults
 conda config --add channels defaults
-conda config --add channels bioconda
 conda config --add channels conda-forge
 conda config --add channels local
 
@@ -34,7 +32,7 @@ if [ -z "$1" ]; then
         echo "***Building  $recipe ...***"
         NAME=$(echo "$recipe" | tr -d '\r')
         for i in 1 2 3; do conda build $NAME && \
-        echo "y" | conda install $NAME && s=0 && break || s=$? && sleep 15; done; (exit $s)
+        echo "y" | conda install $NAME && s=0 && break || s=$? && sleep 5; done; (exit $s)
     done < /root/recipes.txt
 else
  echo "***Building $@...***"
@@ -47,4 +45,3 @@ cp /root/miniconda3/conda-bld/linux-64/*.tar.bz2 /root/repo/linux-64/
 conda config --add channels file://root/repo/
 cd /root/repo
 conda index linux-64 noarch || echo "JSON Parse Error"
-

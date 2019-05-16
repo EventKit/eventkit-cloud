@@ -23,13 +23,13 @@ requirements:
     - python
     - pyyaml
     - setuptools
-    - proj4
+    - proj4<6.0.1.0a0
   run:
     - pillow
     - python
     - pyyaml
     - setuptools
-    - proj4
+    - proj4<6.0.1.0a0
 
 test:
   imports:
