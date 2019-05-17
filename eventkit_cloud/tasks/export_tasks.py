@@ -6,6 +6,7 @@ import os
 import re
 import shutil
 import socket
+import time
 import traceback
 from zipfile import ZipFile, ZIP_DEFLATED
 
@@ -858,12 +859,17 @@ def pick_up_run_task(self, result=None, run_uid=None, user_details=None, *args, 
         run.worker = worker
         run.save()
         TaskFactory().parse_tasks(worker=worker, run_uid=run_uid, user_details=user_details)
+        wait_for_run(run=run, uid=run_uid)
     except Exception as e:
         run.status = TaskStates.FAILED.value
         run.save()
         logger.error(str(e))
         raise
 
+def wait_for_run(run, uid):
+    while(TaskStates[run.status] not in TaskStates.get_finished_states()):
+        time.sleep(10)
+        run.refresh_from_db()
 
 # This could be improved by using Redis or Memcached to help manage state.
 @app.task(name='Wait For Providers', base=UserDetailsBase, acks_late=True)
@@ -1036,7 +1042,7 @@ def zip_files(include_files, file_path=None, static_files=None, *args, **kwargs)
                 filepath,
                 arcname=filename
             )
-        
+
         if zipfile.testzip():
             raise Exception("The zipped file was corrupted.")
 
