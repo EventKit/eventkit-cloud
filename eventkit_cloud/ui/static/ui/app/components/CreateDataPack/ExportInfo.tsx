@@ -92,6 +92,11 @@ const jss = (theme: Eventkit.Theme & Theme) => createStyles({
         display: 'flex',
         lineHeight: '24px',
     },
+    // selectAll: {
+    //     padding: '0px 10px 10px 10px',
+    //     display: 'flex',
+    //     lineHeight: '24px',
+    // },
     infoIcon: {
         height: '24px',
         width: '24px',
@@ -536,6 +541,16 @@ export class ExportInfo extends React.Component<Props, State> {
                                     (You must choose <strong>at least one</strong>)
                                 </div>
                             </div>
+                            {/*<div id="select" className={`qa-ExportInfo-selectAll ${classes.selectAll}`}>*/}
+                            {/*    <Checkbox*/}
+                            {/*        name="SelectAll"*/}
+                            {/*        checked*/}
+                            {/*        style={{ width: '24px', height: '24px' }}*/}
+                            {/*    />*/}
+                            {/*    <span style={{ padding: '0px 15px', display: 'flex', flexWrap: 'wrap' }}>*/}
+                            {/*        Select All*/}
+                            {/*    </span>*/}
+                            {/*</div>*/}
                             <div className={classes.sectionBottom}>
                                 <div className={`qa-ExportInfo-ListHeader ${classes.listHeading}`}>
                                     <div
@@ -543,12 +558,6 @@ export class ExportInfo extends React.Component<Props, State> {
                                         style={{ flex: '1 1 auto' }}
                                     >
                                         DATA PROVIDERS
-                                    </div>
-                                    <div
-                                        className="qa-ExportInfo-ListHeaderItem"
-                                        style={{ display: 'flex', justifyContent: 'flex-end', marginRight: '10px', position: 'relative' }}
-                                    >
-                                        <span>SIZE ESTIMATE</span>
                                     </div>
                                     <div
                                         className="qa-ExportInfo-ListHeaderItem"

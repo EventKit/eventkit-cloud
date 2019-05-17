@@ -2,15 +2,15 @@ import * as React from 'react';
 import { withTheme, Theme, createStyles, withStyles } from '@material-ui/core/styles';
 import List from '@material-ui/core/List';
 import ListItem from '@material-ui/core/ListItem';
+import ListItemText from '@material-ui/core/ListItemText';
 import Collapse from '@material-ui/core/Collapse';
-import ActionCheckCircle from '@material-ui/icons/CheckCircle';
-import UncheckedCircle from '@material-ui/icons/RadioButtonUnchecked';
 import CircularProgress from '@material-ui/core/CircularProgress';
 import Checkbox from '@material-ui/core/Checkbox';
 import ExpandLess from '@material-ui/icons/ExpandLess';
 import ExpandMore from '@material-ui/icons/ExpandMore';
 import ProviderStatusIcon from './ProviderStatusIcon';
 import BaseDialog from '../Dialog/BaseDialog';
+import {Typography} from "@material-ui/core";
 
 const jss = (theme: Theme & Eventkit.Theme) => createStyles({
     container: {
@@ -21,6 +21,9 @@ const jss = (theme: Theme & Eventkit.Theme) => createStyles({
         fontWeight: 'normal',
         fontSize: '16px',
         padding: '16px 10px',
+    },
+    listItemText: {
+        fontSize: 'inherit',
     },
     sublistItem: {
         fontWeight: 'normal',
@@ -81,6 +84,7 @@ interface Props {
     classes: {
         container: string;
         listItem: string;
+        listItemText: string;
         sublistItem: string;
         checkbox: string;
         checked: string;
@@ -219,20 +223,13 @@ export class DataProvider extends React.Component<Props, State> {
                             name={provider.name}
                             checked={this.props.checked}
                             onChange={this.props.onChange}
-                            checkedIcon={<ActionCheckCircle className="qa-DataProvider-ActionCheckCircle-provider" />}
-                            icon={<UncheckedCircle className="qa-DataProvider-UncheckedCircle-provider" />}
                         />
-                        <span
-                            className={`qa-DataProvider-ListItemName ${classes.name}`}
-                        >
-                            {provider.name}
-                        </span>
-                        <span
-                            className={`qa-DataProvider-ListItemName ${classes.name} size`}
-                            style={{ marginRight: '55px', display: 'flex', justifyContent: 'flex-end', position: 'relative'}}
-                        >
-                            {this.formatSize(provider.estimate)}
-                        </span>
+                        <ListItemText
+                            disableTypography
+                            classes={{ root: classes.listItemText}}
+                            primary={<Typography style={{fontSize: "1.0em"}}>{provider.name}</Typography>}
+                            secondary={<Typography style={{fontSize: "0.8em"}}>{this.formatSize(provider.estimate)}</Typography>}
+                        />
                         <ProviderStatusIcon
                             id="ProviderStatus"
                             baseStyle={{ marginRight: '40px' }}
