@@ -127,7 +127,7 @@ export class DataProvider extends React.Component<Props, State> {
 
     private formatSize(providerEstimate){
         if (!providerEstimate){
-            return "waiting"
+            return (<CircularProgress size={10}/>)
         }
         if (!providerEstimate.size){
             return "unknown"

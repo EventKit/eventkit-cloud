@@ -143,6 +143,7 @@ export interface State {
     isRunning: boolean;
     providers: ProviderData[];
     refreshPopover: null | HTMLElement;
+    sizeEstimate: number;
 }
 
 export class ExportInfo extends React.Component<Props, State> {
@@ -160,6 +161,7 @@ export class ExportInfo extends React.Component<Props, State> {
             // we make a local copy of providers for editing
             providers: props.providers,
             refreshPopover: null,
+            sizeEstimate: 0
         };
         this.onNameChange = this.onNameChange.bind(this);
         this.onDescriptionChange = this.onDescriptionChange.bind(this);
@@ -261,6 +263,21 @@ export class ExportInfo extends React.Component<Props, State> {
         });
     }
 
+    private updateEstimate(){
+        this.setState((prevState) => {
+            const providers = [...this.props.exportInfo.providers];
+            let sizeEstimate = 0;
+            for (const provider of providers) {
+                const estimate = provider.props.provider.estimate;
+                if (estimate.size) {
+                    sizeEstimate += estimate.size;
+                }
+            }
+
+            return { sizeEstimate };
+        });
+    }
+
     private onChangeCheck(e: React.ChangeEvent<HTMLInputElement>) {
         // current array of providers
         const providers = [...this.props.exportInfo.providers];
@@ -290,6 +307,7 @@ export class ExportInfo extends React.Component<Props, State> {
             ...this.props.exportInfo,
             providers,
         });
+        this.updateEstimate();
     }
 
     private onSelectAll(e: React.ChangeEvent<HTMLInputElement>) {
