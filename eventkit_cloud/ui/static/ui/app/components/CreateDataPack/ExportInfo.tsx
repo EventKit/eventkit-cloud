@@ -92,11 +92,11 @@ const jss = (theme: Eventkit.Theme & Theme) => createStyles({
         display: 'flex',
         lineHeight: '24px',
     },
-    // selectAll: {
-    //     padding: '0px 10px 10px 10px',
-    //     display: 'flex',
-    //     lineHeight: '24px',
-    // },
+    selectAll: {
+        padding: '0px 10px 10px 10px',
+        display: 'flex',
+        lineHeight: '24px',
+    },
     infoIcon: {
         height: '24px',
         width: '24px',
@@ -109,6 +109,17 @@ const jss = (theme: Eventkit.Theme & Theme) => createStyles({
         cursor: 'pointer',
         color: theme.eventkit.colors.primary,
     },
+    checkbox: {
+        width: '24px',
+        height: '24px',
+        marginRight: '15px',
+        flex: '0 0 auto',
+        color: theme.eventkit.colors.primary,
+        '&$checked': {
+            color: theme.eventkit.colors.success,
+        },
+    },
+    checked: {},
 });
 
 export interface Props {
@@ -159,6 +170,7 @@ export class ExportInfo extends React.Component<Props, State> {
         this.handleProjectionsClose = this.handleProjectionsClose.bind(this);
         this.handleProjectionsOpen = this.handleProjectionsOpen.bind(this);
         this.onChangeCheck = this.onChangeCheck.bind(this);
+        this.onSelectAll = this.onSelectAll.bind(this);
         this.onRefresh = this.onRefresh.bind(this);
         this.getAvailability = this.getAvailability.bind(this);
         this.checkAvailability = this.checkAvailability.bind(this);
@@ -273,6 +285,20 @@ export class ExportInfo extends React.Component<Props, State> {
             }
         }
 
+        // update the state with the new array of options
+        this.props.updateExportInfo({
+            ...this.props.exportInfo,
+            providers,
+        });
+    }
+
+    private onSelectAll(e: React.ChangeEvent<HTMLInputElement>) {
+        // current array of providers
+        let providers = [];
+        if (e.target.checked) {
+            //set providers to the list of ALL providers
+            providers = [...this.props.providers];
+        }
         // update the state with the new array of options
         this.props.updateExportInfo({
             ...this.props.exportInfo,
@@ -541,16 +567,20 @@ export class ExportInfo extends React.Component<Props, State> {
                                     (You must choose <strong>at least one</strong>)
                                 </div>
                             </div>
-                            {/*<div id="select" className={`qa-ExportInfo-selectAll ${classes.selectAll}`}>*/}
-                            {/*    <Checkbox*/}
-                            {/*        name="SelectAll"*/}
-                            {/*        checked*/}
-                            {/*        style={{ width: '24px', height: '24px' }}*/}
-                            {/*    />*/}
-                            {/*    <span style={{ padding: '0px 15px', display: 'flex', flexWrap: 'wrap' }}>*/}
-                            {/*        Select All*/}
-                            {/*    </span>*/}
-                            {/*</div>*/}
+                            <div id="select" className={`qa-ExportInfo-selectAll ${classes.selectAll}`}>
+                                <Checkbox
+                                    classes={{ root: classes.checkbox, checked: classes.checked }}
+                                    name="SelectAll"
+                                    checked={this.props.exportInfo.providers.length == this.props.providers.length      }
+                                    onChange={this.onSelectAll}
+                                    style={{ width: '24px', height: '24px' }}
+                                />
+                                <span style={{
+                                    padding: '0px 15px', display: 'flex',
+                                    flexWrap: 'wrap' , fontSize: '16px',}}>
+                                    Select All
+                                </span>
+                            </div>
                             <div className={classes.sectionBottom}>
                                 <div className={`qa-ExportInfo-ListHeader ${classes.listHeading}`}>
                                     <div

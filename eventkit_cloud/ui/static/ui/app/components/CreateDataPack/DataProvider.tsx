@@ -127,7 +127,7 @@ export class DataProvider extends React.Component<Props, State> {
 
     private formatSize(providerEstimate){
         if (!providerEstimate){
-            return CircularProgress
+            return "waiting"
         }
         if (!providerEstimate.size){
             return "unknown"
@@ -228,7 +228,7 @@ export class DataProvider extends React.Component<Props, State> {
                             disableTypography
                             classes={{ root: classes.listItemText}}
                             primary={<Typography style={{fontSize: "1.0em"}}>{provider.name}</Typography>}
-                            secondary={<Typography style={{fontSize: "0.8em"}}>{this.formatSize(provider.estimate)}</Typography>}
+                            secondary={<Typography style={{fontSize: "0.7em"}}>{this.formatSize(provider.estimate)}</Typography>}
                         />
                         <ProviderStatusIcon
                             id="ProviderStatus"
