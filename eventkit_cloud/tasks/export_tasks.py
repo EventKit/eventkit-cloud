@@ -859,17 +859,20 @@ def pick_up_run_task(self, result=None, run_uid=None, user_details=None, *args, 
         run.worker = worker
         run.save()
         TaskFactory().parse_tasks(worker=worker, run_uid=run_uid, user_details=user_details)
-        wait_for_run(run=run, uid=run_uid)
     except Exception as e:
         run.status = TaskStates.FAILED.value
         run.save()
         logger.error(str(e))
         raise
+    wait_for_run(run=run, uid=run_uid)
 
-def wait_for_run(run, uid):
-    while(TaskStates[run.status] not in TaskStates.get_finished_states()):
-        time.sleep(10)
-        run.refresh_from_db()
+def wait_for_run(run=None, uid=None):
+    if run.status:
+        while(TaskStates[run.status] not in TaskStates.get_finished_states() and
+                TaskStates[run.status] not in TaskStates.get_incomplete_states()):
+            print(run.status)
+            time.sleep(10)
+            run.refresh_from_db()
 
 # This could be improved by using Redis or Memcached to help manage state.
 @app.task(name='Wait For Providers', base=UserDetailsBase, acks_late=True)

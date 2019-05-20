@@ -271,7 +271,7 @@ class TestJobViewSet(APITestCase):
         # test that the mock methods get called.
         create_run_mock.assert_called_once_with(job_uid=job_uid, user=self.user)
         expected_user_details = {'username': 'demo', 'is_superuser': False, 'is_staff': False}
-        pickup_mock.delay.assert_called_once_with(run_uid="some_run_uid", user_details=expected_user_details)
+        pickup_mock.apply_async.assert_called_once_with(kwargs={"run_uid":"some_run_uid", "user_details":expected_user_details}, queue="runs", routing_key="runs")
         # test the response headers
         self.assertEqual(response.status_code, status.HTTP_202_ACCEPTED)
         self.assertEqual(response['Content-Type'], 'application/json')
@@ -316,7 +316,7 @@ class TestJobViewSet(APITestCase):
         # test that the mock methods get called.
         create_run_mock.assert_called_once_with(job_uid=job_uid, user=self.user)
         expected_user_details = {'username': 'demo', 'is_superuser': False, 'is_staff': False}
-        pickup_mock.delay.assert_called_once_with(run_uid="some_run_uid", user_details=expected_user_details)
+        pickup_mock.apply_async.assert_called_once_with(kwargs={"run_uid":"some_run_uid", "user_details":expected_user_details}, queue="runs", routing_key="runs")
 
         # test the response headers
         self.assertEqual(response.status_code, status.HTTP_202_ACCEPTED)
@@ -356,7 +356,7 @@ class TestJobViewSet(APITestCase):
         # test that the mock methods get called.
         create_run_mock.assert_called_once_with(job_uid=job_uid, user=self.user)
         expected_user_details = {'username': 'demo', 'is_superuser': False, 'is_staff': False}
-        pickup_mock.delay.assert_called_once_with(run_uid="some_run_uid", user_details=expected_user_details)
+        pickup_mock.apply_async.assert_called_once_with(kwargs={"run_uid":"some_run_uid", "user_details":expected_user_details}, queue="runs", routing_key="runs")
 
         # test the response headers
         self.assertEqual(response.status_code, status.HTTP_202_ACCEPTED)
