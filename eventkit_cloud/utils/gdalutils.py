@@ -9,6 +9,7 @@ import time
 from string import Template
 from tempfile import NamedTemporaryFile
 from functools import wraps
+import sys
 
 
 from osgeo import gdal, ogr, osr
@@ -26,10 +27,11 @@ MAX_DB_CONNECTION_DELAY = 5
 # We have used this solution for now as I could not find options supporting this in the ogr2ogr or gdalwarp
 # documentation.
 
-
 def retry(f):
+
     @wraps(f)
     def wrapper(*args, **kwds):
+
         attempts = MAX_DB_CONNECTION_RETRIES
         exc = None
         while attempts:
@@ -43,11 +45,17 @@ def retry(f):
                 logger.error("The function {0} threw an error.".format(getattr(f, '__name__')))
                 logger.error(str(e))
                 exc = e
+
+                if any(['test' in argument for argument in sys.argv]):
+                    # Don't wait/retry when running tests.
+                    break
+
                 attempts -= 1
                 time.sleep(MAX_DB_CONNECTION_DELAY)
                 if attempts:
                     logger.error("Retrying {0} times.".format(str(attempts)))
         raise exc
+
     return wrapper
 
 
