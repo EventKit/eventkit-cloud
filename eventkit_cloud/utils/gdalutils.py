@@ -15,6 +15,7 @@ import sys
 from osgeo import gdal, ogr, osr
 
 from eventkit_cloud.tasks.task_process import TaskProcess
+from django.conf import settings
 
 logger = logging.getLogger(__name__)
 
@@ -46,7 +47,7 @@ def retry(f):
                 logger.error(str(e))
                 exc = e
 
-                if any(['test' in argument for argument in sys.argv]):
+                if getattr(settings, 'TESTING', False):
                     # Don't wait/retry when running tests.
                     break
 
