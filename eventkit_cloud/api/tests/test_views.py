@@ -205,7 +205,10 @@ class TestJobViewSet(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertEqual(response.data[0]['detail'], 'ADMIN permission is required to delete this job.')
 
-    def test_create_zipfile(self):
+    @patch('eventkit_cloud.api.views.pick_up_run_task')
+    @patch('eventkit_cloud.api.views.create_run')
+    def test_create_zipfile(self, create_run_mock, pickup_mock):
+        create_run_mock.return_value = "some_run_uid"
         formats = [export_format.slug for export_format in ExportFormat.objects.all()]
         request_data = {
             'name': 'TestJob',
@@ -220,6 +223,8 @@ class TestJobViewSet(APITestCase):
         }
         url = reverse('api:jobs-list')
         response = self.client.post(url, request_data, format='json')
+        expected_user_details = {'username': 'demo', 'is_superuser': False, 'is_staff': False}
+        pickup_mock.apply_async.assert_called_with(kwargs={"run_uid":"some_run_uid", "user_details":expected_user_details}, queue="runs", routing_key="runs")
         msg = 'status_code {} != {}: {}'.format(200, response.status_code, response.content)
         self.assertEqual(202, response.status_code, msg)
         job_uid = response.data['uid']
@@ -525,8 +530,11 @@ class TestBBoxSearch(APITestCase):
         super(TestBBoxSearch, self).__init__(*args, **kwargs)
         self.user = None
         self.client = None
+    @patch('eventkit_cloud.api.views.pick_up_run_task')
+    @patch('eventkit_cloud.api.views.create_run')
+    def setUp(self, create_run_mock, pickup_mock):
+        create_run_mock.return_value = "some_run_uid"
 
-    def setUp(self,):
         url = reverse('api:jobs-list')
         # create dummy user
         self.group, created = Group.objects.get_or_create(name='TestDefaultExportExtentGroup')
@@ -555,6 +563,8 @@ class TestBBoxSearch(APITestCase):
                 'provider_tasks': [{'provider': 'OpenStreetMap Data (Generic)', 'formats': formats}]
             }
             response = self.client.post(url, request_data, format='json')
+            expected_user_details = {'username': 'demo', 'is_superuser': True, 'is_staff': False}
+            pickup_mock.apply_async.assert_called_with(kwargs={"run_uid":"some_run_uid", "user_details":expected_user_details}, queue="runs", routing_key="runs")
             self.assertEqual(status.HTTP_202_ACCEPTED, response.status_code, response.content)
         self.assertEqual(8, len(Job.objects.all()))
         LinkHeaderPagination.page_size = 2
