@@ -1,4 +1,4 @@
-node {
+node("legacy") {
 
     stage("Add Repo"){
         checkout scm
