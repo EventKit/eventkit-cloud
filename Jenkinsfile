@@ -99,7 +99,7 @@ def postStatus(status){
 def getStatusURL(){
     withCredentials([string(credentialsId: 'githubToken', variable: 'GITHUB_TOKEN')])  {
         def git_sha = getGitSHA()
-        return "https://api.github.com/repos/venicegeo/eventkit-cloud/statuses/${git_sha}?access_token=${GITHUB_TOKEN}"
+        return "https://api.github.com/repos/eventkit/eventkit-cloud/statuses/${git_sha}?access_token=${GITHUB_TOKEN}"
     }
 }
 
