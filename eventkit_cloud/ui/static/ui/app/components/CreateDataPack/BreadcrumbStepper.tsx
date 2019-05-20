@@ -24,6 +24,7 @@ import BaseDialog from '../Dialog/BaseDialog';
 import ConfirmDialog from '../Dialog/ConfirmDialog';
 import PageLoading from '../common/PageLoading';
 import { Location } from 'history';
+import {Typography} from "@material-ui/core";
 
 export interface JobData {
     name: string;
@@ -72,6 +73,7 @@ export interface State {
         max: number;
         sizes: number[];
     };
+    sizeEstimate: number;
 }
 
 export class BreadcrumbStepper extends React.Component<Props, State> {
@@ -108,6 +110,7 @@ export class BreadcrumbStepper extends React.Component<Props, State> {
                 max: 0,
                 sizes: [],
             },
+            sizeEstimate: 0.0
         };
         this.leaveRoute = null;
     }
@@ -147,6 +150,12 @@ export class BreadcrumbStepper extends React.Component<Props, State> {
         this.props.clearAoiInfo();
         this.props.clearExportInfo();
         this.props.clearJobInfo();
+    }
+
+    private formatSize(){
+        let estimateSize = 0.000;
+        estimateSize = Number(estimateSize) + Number(this.state.sizeEstimate);
+        return Number(estimateSize).toFixed(3) + ' MB';
     }
 
     private async getProviders() {
@@ -197,6 +206,11 @@ export class BreadcrumbStepper extends React.Component<Props, State> {
             marginLeft: '24px',
         };
 
+        const textStyle = {
+            color: this.props.theme.eventkit.colors.white,
+            fontSize: 'inherit'
+        };
+
         switch (stepIndex) {
             case 0:
                 return (
@@ -206,8 +220,13 @@ export class BreadcrumbStepper extends React.Component<Props, State> {
                 );
             case 1:
                 return (
-                    <div className="qa-BreadcrumbStepper-step2Label" style={labelStyle}>
-                    STEP 2 OF 3:  Select Data & Formats
+                    <div className="qa-BreadcrumbStepper-step2Label" style={{...labelStyle, fontSize: '16px'}}>
+                        <Typography style={{...textStyle, fontSize: '0.9em'}}>
+                        STEP 2 OF 3:  Select Data & Formats
+                        </Typography>
+                        <Typography style={{...textStyle, fontSize: '0.9em'}}>
+                        Estimate: {this.formatSize()}
+                        </Typography>
                     </div>
                 );
             case 2:
@@ -241,6 +260,7 @@ export class BreadcrumbStepper extends React.Component<Props, State> {
                         handlePrev={this.handlePrev}
                         walkthroughClicked={this.props.walkthroughClicked}
                         onWalkthroughReset={this.props.onWalkthroughReset}
+                        onUpdateEstimate={(sizeEstimate: number) => {this.setState({sizeEstimate});}}
                     />
                 );
             case 2:

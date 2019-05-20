@@ -1,10 +1,10 @@
 import * as PropTypes from 'prop-types';
 import * as React from 'react';
-import { withTheme, Theme, withStyles, createStyles } from '@material-ui/core/styles';
-import { connect } from 'react-redux';
+import {createStyles, Theme, withStyles, withTheme} from '@material-ui/core/styles';
+import {connect} from 'react-redux';
 import axios from 'axios';
 import cookie from 'react-cookie';
-import Joyride, { Step } from 'react-joyride';
+import Joyride, {Step} from 'react-joyride';
 import List from '@material-ui/core/List';
 import Paper from '@material-ui/core/Paper';
 import Popover from '@material-ui/core/Popover';
@@ -14,16 +14,17 @@ import ActionCheckCircle from '@material-ui/icons/CheckCircle';
 import Info from '@material-ui/icons/Info';
 import NavigationRefresh from '@material-ui/icons/Refresh';
 import CustomScrollbar from '../CustomScrollbar';
-import DataProvider, { ProviderData } from './DataProvider';
+import DataProvider, {ProviderData} from './DataProvider';
 import MapCard from '../common/MapCard';
-import { updateExportInfo } from '../../actions/datacartActions';
-import { stepperNextDisabled, stepperNextEnabled } from '../../actions/uiActions';
+import {updateExportInfo} from '../../actions/datacartActions';
+import {stepperNextDisabled, stepperNextEnabled} from '../../actions/uiActions';
 import BaseDialog from '../Dialog/BaseDialog';
 import CustomTextField from '../CustomTextField';
 import CustomTableRow from '../CustomTableRow';
-import { joyride } from '../../joyride.config';
-import { getSqKmString } from '../../utils/generic';
-import { featureToBbox, WGS84 } from '../../utils/mapUtils';
+import {joyride} from '../../joyride.config';
+import {getSqKmString} from '../../utils/generic';
+import {featureToBbox, WGS84} from '../../utils/mapUtils';
+import CircularProgress from "@material-ui/core/CircularProgress";
 
 const jss = (theme: Eventkit.Theme & Theme) => createStyles({
     underlineStyle: {
@@ -135,6 +136,7 @@ export interface Props {
     onWalkthroughReset: () => void;
     theme: Eventkit.Theme & Theme;
     classes: { [className: string]: string };
+    onUpdateEstimate?: (args: any) => void;
 }
 
 export interface State {
@@ -143,6 +145,7 @@ export interface State {
     isRunning: boolean;
     providers: ProviderData[];
     refreshPopover: null | HTMLElement;
+    providerEstimates: {};
     sizeEstimate: number;
 }
 
@@ -161,7 +164,8 @@ export class ExportInfo extends React.Component<Props, State> {
             // we make a local copy of providers for editing
             providers: props.providers,
             refreshPopover: null,
-            sizeEstimate: 0
+            sizeEstimate: 0,
+            providerEstimates: {}
         };
         this.onNameChange = this.onNameChange.bind(this);
         this.onDescriptionChange = this.onDescriptionChange.bind(this);
@@ -263,19 +267,33 @@ export class ExportInfo extends React.Component<Props, State> {
         });
     }
 
-    private updateEstimate(){
-        this.setState((prevState) => {
-            const providers = [...this.props.exportInfo.providers];
-            let sizeEstimate = 0;
-            for (const provider of providers) {
-                const estimate = provider.props.provider.estimate;
-                if (estimate.size) {
-                    sizeEstimate += estimate.size;
-                }
-            }
+    private addProviderEstimate(provider: Eventkit.Provider){
+        const providers = [...this.props.exportInfo.providers];
+        providers.push(provider);
+        this.updateEstimate(providers);
+    }
 
-            return { sizeEstimate };
-        });
+    private removeProviderEstimate(provider: Eventkit.Provider){
+        const providers = [...this.props.exportInfo.providers];
+        let index = providers.map(x => x.id).indexOf(provider.id);
+        providers.splice(index, 1);
+        this.updateEstimate(providers);
+    }
+
+    private updateEstimate(providers: Eventkit.Provider[])
+    {
+        // Updates the state's sizeEstimate to include all estimates for the
+        // provided set of providers (where available)
+        let sizeEstimate = 0;
+        for (const provider of providers) {
+            const estimate = this.state.providerEstimates[provider.id];
+            if(estimate)
+            {
+                sizeEstimate += estimate.size;
+            }
+        }
+        this.setState({sizeEstimate});
+        this.props.onUpdateEstimate(sizeEstimate);
     }
 
     private onChangeCheck(e: React.ChangeEvent<HTMLInputElement>) {
@@ -289,6 +307,7 @@ export class ExportInfo extends React.Component<Props, State> {
             for (const provider of propsProviders) {
                 if (provider.name === e.target.name) {
                     providers.push(provider);
+                    this.addProviderEstimate(provider);
                     break;
                 }
             }
@@ -298,16 +317,15 @@ export class ExportInfo extends React.Component<Props, State> {
             for (const provider of propsProviders) {
                 if (provider.name === e.target.name) {
                     providers.splice(index, 1);
+                    this.removeProviderEstimate(provider);
                 }
             }
         }
-
         // update the state with the new array of options
         this.props.updateExportInfo({
             ...this.props.exportInfo,
             providers,
         });
-        this.updateEstimate();
     }
 
     private onSelectAll(e: React.ChangeEvent<HTMLInputElement>) {
@@ -316,6 +334,14 @@ export class ExportInfo extends React.Component<Props, State> {
         if (e.target.checked) {
             //set providers to the list of ALL providers
             providers = [...this.props.providers];
+            this.updateEstimate(providers);
+        }
+        else
+        {
+            this.setState({sizeEstimate: 0});
+            // Normally updateEstimate propagates the sizeEstimate change upwards,
+            // We need to trigger it manually here.
+            this.props.onUpdateEstimate(0);
         }
         // update the state with the new array of options
         this.props.updateExportInfo({
@@ -374,7 +400,19 @@ export class ExportInfo extends React.Component<Props, State> {
             params: data,
             headers: { 'X-CSRFToken': csrfmiddlewaretoken },
         }).then((response) => {
-            newProvider.estimate = response.data[0];
+            const estimate = response.data[0];
+            newProvider.estimate = estimate;
+            // record the estimate found for this provider.
+            this.setState(prevState => {
+                // update provider estimates to map this provider to its estimate
+                return {
+                    providerEstimates: {
+                        ...prevState.providerEstimates,
+                        [provider.id]: estimate
+                    }
+                }
+            });
+            this.updateEstimate([...this.props.exportInfo.providers]);
             return newProvider;
         }).catch(() => {
             newProvider.estimate = {
@@ -484,7 +522,7 @@ export class ExportInfo extends React.Component<Props, State> {
         const { action, step, type } = data;
         this.props.setNextDisabled();
         if (action === 'close' || action === 'skip' || type === 'finished') {
-            this.setState({ isRunning: false });
+                this.setState({ isRunning: false });
             this.props.onWalkthroughReset();
             this.joyride.current.reset(true);
             window.location.hash = '';
@@ -589,7 +627,7 @@ export class ExportInfo extends React.Component<Props, State> {
                                 <Checkbox
                                     classes={{ root: classes.checkbox, checked: classes.checked }}
                                     name="SelectAll"
-                                    checked={this.props.exportInfo.providers.length == this.props.providers.length      }
+                                    checked={this.props.exportInfo.providers.length == this.props.providers.length}
                                     onChange={this.onSelectAll}
                                     style={{ width: '24px', height: '24px' }}
                                 />
