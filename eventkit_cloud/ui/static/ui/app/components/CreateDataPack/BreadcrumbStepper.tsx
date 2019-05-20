@@ -208,7 +208,7 @@ export class BreadcrumbStepper extends React.Component<Props, State> {
 
         const textStyle = {
             color: this.props.theme.eventkit.colors.white,
-            fontSize: 'inherit'
+            fontSize: '0.9em'
         };
 
         switch (stepIndex) {
@@ -221,18 +221,23 @@ export class BreadcrumbStepper extends React.Component<Props, State> {
             case 1:
                 return (
                     <div className="qa-BreadcrumbStepper-step2Label" style={{...labelStyle, fontSize: '16px'}}>
-                        <Typography style={{...textStyle, fontSize: '0.9em'}}>
+                        <Typography style={textStyle}>
                         STEP 2 OF 3:  Select Data & Formats
                         </Typography>
-                        <Typography style={{...textStyle, fontSize: '0.9em'}}>
+                        <Typography style={textStyle}>
                         Estimate: {this.formatSize()}
                         </Typography>
                     </div>
                 );
             case 2:
                 return (
-                    <div className="qa-BreadcrumbStepper-step3Label" style={labelStyle}>
-                    STEP 3 OF 3:  Review & Submit
+                    <div className="qa-BreadcrumbStepper-step3Label" style={{...labelStyle, fontSize: '16px'}}>
+                        <Typography style={textStyle}>
+                        STEP 3 OF 3:  Review & Submit
+                        </Typography>
+                        <Typography style={textStyle}>
+                        Estimate: {this.formatSize()}
+                        </Typography>
                     </div>
                 );
             default:
