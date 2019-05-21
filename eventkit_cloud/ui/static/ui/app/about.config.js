@@ -121,7 +121,7 @@ export const about = [
         title: 'Additional Resources',
         body: (
             <div style={{ textAlign: 'center' }}>
-                <a href="https://github.com/venicegeo/eventkit-cloud">GitHub</a><br />
+                <a href="https://github.com/eventkit/eventkit-cloud">GitHub</a><br />
             </div>
         ),
     },

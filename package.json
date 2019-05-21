@@ -174,7 +174,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/venicegeo/eventkit-cloud.git"
+    "url": "git+https://github.com/eventkit/eventkit-cloud.git"
   },
   "keywords": [
     "eventkit",
@@ -183,7 +183,7 @@
   "author": "jsvrcek",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/venicegeo/eventkit-cloud/issues"
+    "url": "https://github.com/eventkit/eventkit-cloud/issues"
   },
-  "homepage": "https://github.com/venicegeo/eventkit-cloud#readme"
+  "homepage": "https://github.com/eventkit/eventkit-cloud#readme"
 }
