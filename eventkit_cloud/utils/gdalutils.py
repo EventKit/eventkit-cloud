@@ -9,11 +9,13 @@ import time
 from string import Template
 from tempfile import NamedTemporaryFile
 from functools import wraps
+import sys
 
 
 from osgeo import gdal, ogr, osr
 
 from eventkit_cloud.tasks.task_process import TaskProcess
+from django.conf import settings
 
 logger = logging.getLogger(__name__)
 
@@ -26,10 +28,11 @@ MAX_DB_CONNECTION_DELAY = 5
 # We have used this solution for now as I could not find options supporting this in the ogr2ogr or gdalwarp
 # documentation.
 
-
 def retry(f):
+
     @wraps(f)
     def wrapper(*args, **kwds):
+
         attempts = MAX_DB_CONNECTION_RETRIES
         exc = None
         while attempts:
@@ -43,11 +46,17 @@ def retry(f):
                 logger.error("The function {0} threw an error.".format(getattr(f, '__name__')))
                 logger.error(str(e))
                 exc = e
+
+                if getattr(settings, 'TESTING', False):
+                    # Don't wait/retry when running tests.
+                    break
+
                 attempts -= 1
                 time.sleep(MAX_DB_CONNECTION_DELAY)
                 if attempts:
                     logger.error("Retrying {0} times.".format(str(attempts)))
         raise exc
+
     return wrapper
 
 
@@ -269,10 +278,13 @@ def clip_dataset(boundary=None, in_dataset=None, out_dataset=None, fmt=None, tab
     if not out_dataset:
         out_dataset = in_dataset
 
+    # don't operate on the original file.  If the renamed file already exists,
+    # then don't try to rename, since that file may not exist if this is a retry.
     if out_dataset == in_dataset:
         in_dataset = os.path.join(os.path.dirname(out_dataset), "old_{0}".format(os.path.basename(out_dataset)))
-        logger.info("Renaming '{}' to '{}'".format(out_dataset, in_dataset))
-        os.rename(out_dataset, in_dataset)
+        if not os.path.isfile(in_dataset):
+            logger.info("Renaming '{}' to '{}'".format(out_dataset, in_dataset))
+            os.rename(out_dataset, in_dataset)
 
     meta = get_meta(in_dataset)
 
@@ -284,14 +296,14 @@ def clip_dataset(boundary=None, in_dataset=None, out_dataset=None, fmt=None, tab
     # Overwrite is added to the commands in the event that the dataset is retried.  In general we want these to
     # act idempotently.
     if table:
-        cmd_template = Template("ogr2ogr -overwrite -f $fmt -clipsrc $boundary $out_ds $in_ds $table")
+        cmd_template = Template("ogr2ogr -skipfailures -nlt PROMOTE_TO_MULTI -overwrite -f $fmt -clipsrc $boundary $out_ds $in_ds $table")
     elif meta['is_raster']:
         cmd_template = Template("gdalwarp -overwrite -cutline $boundary -crop_to_cutline $dstalpha -of $fmt $type $in_ds $out_ds")
         # Geopackage raster only supports byte band type, so check for that
         if fmt.lower() == 'gpkg':
             band_type = "-ot byte"
     else:
-        cmd_template = Template("ogr2ogr -overwrite -f $fmt -clipsrc $boundary $out_ds $in_ds")
+        cmd_template = Template("ogr2ogr -skipfailures -nlt PROMOTE_TO_MULTI -overwrite -f $fmt -clipsrc $boundary $out_ds $in_ds")
 
     temp_boundfile = None
     if isinstance(boundary, list):
@@ -407,8 +419,9 @@ def get_dimensions(bbox, scale):
     :param scale: A scale in meters per pixel.
     :return: A list [width, height] representing pixels
     """
-    width = get_distance([bbox[0], bbox[1]], [bbox[2], bbox[1]])
-    height = get_distance([bbox[0], bbox[1]], [bbox[0], bbox[3]])
+    # Request at least one pixel
+    width = get_distance([bbox[0], bbox[1]], [bbox[2], bbox[1]]) or 1
+    height = get_distance([bbox[0], bbox[1]], [bbox[0], bbox[3]]) or 1
     return [int(width/scale), int(height/scale)]
 
 

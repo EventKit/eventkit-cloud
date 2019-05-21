@@ -30,12 +30,12 @@ export const toFullProviderTask = (providerTask, exportTasks) => {
     };
 };
 
-export const toFullRun = (run, jobs, providerTasks, exportTasks) => {
-    if (!run.provider_tasks) {
-        return run;
-    }
+export const toFullRun = (run, jobs, providerTasks?, exportTasks?) => {
     const runJob = jobs[run.job];
-    const runTasks = run.provider_tasks.map(id => toFullProviderTask(providerTasks[id], exportTasks));
+    let runTasks = run.provider_tasks;
+    if (providerTasks && exportTasks) {
+        runTasks = run.provider_tasks.map(id => toFullProviderTask(providerTasks[id], exportTasks));
+    }
     return {
         ...run,
         job: runJob,
@@ -44,24 +44,23 @@ export const toFullRun = (run, jobs, providerTasks, exportTasks) => {
 };
 
 export const makeFullRunSelector = () => createSelector(
-    [getPropsRun, getPropsJob, getPropsProviderTasks()],
-    (run, job, providerTasks) => run ? ({
+    [getPropsRun, getPropsJob],
+    (run, job) => run ? ({
         ...run,
         job,
-        provider_tasks: providerTasks,
     }) : null,
 );
 
 export const makeAllRunsSelector = () => createSelector(
-    [getAllRuns, getAllJobs, getAllProviderTasks, getAllExportTasks],
-    (runs, jobs, providerTasks, exportTasks) => {
-        return Object.values(runs).map(run => toFullRun(run, jobs, providerTasks, exportTasks));
+    [getAllRuns, getAllJobs],
+    (runs, jobs) => {
+        return Object.values(runs).map(run => toFullRun(run, jobs));
     }
 );
 
 export const getDatacarts = createSelector(
     [getDatacartIds, getAllRuns],
-    (ids, runs) => ids.map(id => runs[id]),
+    (ids, runs) => ids.map(id => runs[id]).filter(run => run !== undefined),
 );
 
 export const makeDatacartSelector = () => createSelector(

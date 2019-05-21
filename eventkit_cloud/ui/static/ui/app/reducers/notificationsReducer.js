@@ -7,6 +7,8 @@ export const initialState = {
     status: {
         fetching: null,
         fetched: null,
+        deleting: null,
+        deleted: null,
         error: null,
         cancelSource: null,
     },
@@ -55,16 +57,25 @@ export function notificationsReducer(state = initialState, action) {
                 cancelSource: null,
             };
 
-            let changed = Object.keys(state.data.notifications).length !== action.notifications.length;
+            // assume that the notifications have not changed
+            let changed = false;
 
+            // old state for comparison
             const old = { ...state.data.notifications };
-            const updated = {};
+
+            // new state should still include the old notifications
+            const updated = { ...state.data.notifications };
+
             action.notifications.forEach((n) => {
                 if (old[n.id]) {
+                    // if the notifcation was already in state check if it has changed
                     if (old[n.id].unread !== n.unread || old[n.id].deleted !== n.deleted) {
                         changed = true;
                     }
+                } else { // if the notification was not in state then we know there is a change
+                    changed = true;
                 }
+                // re-add updated notification or add brand new notification
                 updated[n.id] = n;
             });
 
@@ -116,6 +127,7 @@ export function notificationsReducer(state = initialState, action) {
             return {
                 ...state,
                 data: {
+                    ...state.data,
                     notifications,
                     notificationsSorted: getSortedNotifications(notifications),
                 },
@@ -151,6 +163,7 @@ export function notificationsReducer(state = initialState, action) {
             return {
                 ...state,
                 data: {
+                    ...state.data,
                     notifications,
                     notificationsSorted: getSortedNotifications(notifications),
                 },
@@ -182,6 +195,7 @@ export function notificationsReducer(state = initialState, action) {
             return {
                 ...state,
                 data: {
+                    ...state.data,
                     notifications,
                     notificationsSorted: getSortedNotifications(notifications),
                 },
@@ -202,17 +216,30 @@ export function notificationsReducer(state = initialState, action) {
                 },
             };
         case types.REMOVING_NOTIFICATIONS: {
-            const notifications = { ...state.data.notifications };
+            let notifications = { ...state.data.notifications };
             let { unreadCount } = state.unreadCount.data;
-            action.notifications.forEach((notification) => {
-                if (notifications[notification.id].unread) {
-                    unreadCount -= 1;
-                }
-                delete notifications[notification.id];
-            });
+
+            if (action.notifications) {
+                action.notifications.forEach((notification) => {
+                    if (notifications[notification.id].unread) {
+                        unreadCount -= 1;
+                    }
+                    delete notifications[notification.id];
+                });
+            } else {
+                // clear all notifications
+                notifications = {};
+            }
+
             return {
                 ...state,
+                status: {
+                    ...state.status,
+                    deleting: true,
+                    deleted: false,
+                },
                 data: {
+                    ...state.data,
                     notifications,
                     notificationsSorted: getSortedNotifications(notifications),
                 },
@@ -224,11 +251,22 @@ export function notificationsReducer(state = initialState, action) {
                 },
             };
         }
+        case types.REMOVED_NOTIFICATIONS:
+            return {
+                ...state,
+                status: {
+                    ...state.status,
+                    deleting: false,
+                    deleted: true,
+                },
+            };
         case types.REMOVE_NOTIFICATIONS_ERROR:
             return {
                 ...state,
                 status: {
                     ...state.status,
+                    deleted: false,
+                    deleting: false,
                     error: action.error,
                 },
             };

@@ -17,7 +17,7 @@ from eventkit_cloud.tasks.export_tasks import (finalize_export_provider_task, Ta
                                                wait_for_providers_task, create_zip_task, finalize_run_task,
                                                output_selection_geojson_task,
                                                osm_data_collection_task, wfs_export_task,
-                                               external_raster_service_export_task, wcs_export_task,
+                                               mapproxy_export_task, wcs_export_task,
                                                arcgis_feature_service_export_task)
 from eventkit_cloud.tasks import TaskStates
 from eventkit_cloud.tasks.helpers import get_run_staging_dir, get_provider_staging_dir, get_style_files
@@ -36,11 +36,11 @@ class TaskFactory:
     def __init__(self,):
         self.type_task_map = {'osm': osm_data_collection_task,
                               'wfs': wfs_export_task,
-                              'wms': external_raster_service_export_task,
+                              'wms': mapproxy_export_task,
                               'wcs': wcs_export_task,
-                              'wmts': external_raster_service_export_task,
-                              'tms': external_raster_service_export_task,
-                              'arcgis-raster': external_raster_service_export_task,
+                              'wmts': mapproxy_export_task,
+                              'tms': mapproxy_export_task,
+                              'arcgis-raster': mapproxy_export_task,
                               'arcgis-feature': arcgis_feature_service_export_task}
 
     def parse_tasks(self, worker=None, run_uid=None, user_details=None):
@@ -89,8 +89,13 @@ class TaskFactory:
             run_dir = get_run_staging_dir(run.uid)
             os.makedirs(run_dir, 0o750)
 
+            wait_for_providers_settings = {
+                'queue': "{}.finalize".format(worker), 'routing_key': "{}.finalize".format(worker),
+                'priority': TaskPriority.FINALIZE_PROVIDER.value}
+
             finalize_task_settings = {
-                'interval': 4, 'max_retries': 10, 'queue': worker, 'routing_key': worker,
+                'interval': 4, 'max_retries': 10, 'queue': "{}.finalize".format(worker),
+                'routing_key': "{}.finalize".format(worker),
                 'priority': TaskPriority.FINALIZE_RUN.value}
 
             finalized_provider_task_chain_list = []
@@ -133,7 +138,7 @@ class TaskFactory:
                         run_uid=run_uid,
                         locking_task_key=run_uid,
                         callback_task=create_finalize_run_task_collection(run_uid, run_dir, run_zip_task_chain, apply_args=finalize_task_settings),
-                        apply_args=finalize_task_settings).set(**finalize_task_settings)
+                        apply_args=finalize_task_settings).set(**wait_for_providers_settings)
 
                     if provider_subtask_chain:
                         # The finalize_export_provider_task will check all of the export tasks
@@ -271,7 +276,7 @@ def get_invalid_licenses(job, user=None):
     """
     from eventkit_cloud.api.serializers import UserDataSerializer
     user = user or job.user
-    licenses = UserDataSerializer.get_accepted_licenses(user)
+    licenses = UserDataSerializer.get_user_accepted_licenses(user)
     invalid_licenses = []
     for provider_tasks in job.provider_tasks.all():
         license = provider_tasks.provider.license

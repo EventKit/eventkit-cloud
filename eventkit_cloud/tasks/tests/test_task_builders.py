@@ -14,7 +14,7 @@ from eventkit_cloud.tasks.task_factory import create_run
 from eventkit_cloud.tasks.task_builders import (
     TaskChainBuilder, create_export_task_record
 )
-from eventkit_cloud.tasks.export_tasks import osm_data_collection_task, external_raster_service_export_task, \
+from eventkit_cloud.tasks.export_tasks import osm_data_collection_task, mapproxy_export_task, \
     wcs_export_task
 
 logger = logging.getLogger(__name__)
@@ -78,7 +78,7 @@ class TestTaskBuilder(TestCase):
         task_chain_builder = TaskChainBuilder()
         # Even though code using pipes seems to be supported here it is throwing an error.
         try:
-            task_chain_builder.build_tasks(external_raster_service_export_task,
+            task_chain_builder.build_tasks(mapproxy_export_task,
                                            provider_task_uid=provider_task_record.uid, run=self.job.runs.first(),
                                            service_type='wms',
                                            worker="some_worker")

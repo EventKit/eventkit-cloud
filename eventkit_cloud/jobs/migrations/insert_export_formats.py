@@ -15,7 +15,7 @@ class Migration(migrations.Migration):
         ExportFormat.objects.create(name='GeoTIFF Format', description="GeoTIFF Raster", slug='gtiff')
 
     dependencies = [
-        ('jobs', '0001_initial'),
+        ('jobs', 'create_hstore_extension'),
     ]
 
     operations = [

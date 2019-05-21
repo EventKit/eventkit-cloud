@@ -17,11 +17,11 @@ interface Props extends React.HTMLAttributes<HTMLElement> {
 }
 
 interface State {
-    anchorEl?: HTMLElement;
+    anchorEl: null | HTMLElement;
 }
 
 export class ProviderStatusIcon extends React.Component<Props, State> {
-    constructor(props) {
+    constructor(props: Props) {
         super(props);
         this.handlePopoverClose = this.handlePopoverClose.bind(this);
         this.handlePopoverOpen = this.handlePopoverOpen.bind(this);
@@ -32,11 +32,11 @@ export class ProviderStatusIcon extends React.Component<Props, State> {
 
     static defaultProps = { availability: { status: '', type: '', message: '' } };
 
-    handlePopoverOpen(e: Event) {
-        this.setState({ anchorEl: e.currentTarget as HTMLElement });
+    private handlePopoverOpen(e: React.MouseEvent<HTMLElement>) {
+        this.setState({ anchorEl: e.currentTarget });
     }
 
-    handlePopoverClose() {
+    private handlePopoverClose() {
         this.setState({ anchorEl: null });
     }
 

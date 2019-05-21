@@ -1,0 +1,44 @@
+site_name: EventKit
+nav:
+  - Home: index.md
+  - Settings: settings.md
+  - Sources: sources.md
+
+site_dir: 'site/docs'
+
+site_author: 'Joe Svrcek,Luke Rees'
+
+theme: 
+  name: 'material'
+  language: 'en'
+  favicon: 'images/favicon.ico'
+  logo: 'images/eventkit-icon-white.svg'
+  font:
+    text: 'Roboto'
+    code: 'Roboto Mono'
+  palette:
+    primary: 'blue grey'
+    accent: 'cyan'
+
+markdown_extensions:
+  - admonition
+  - codehilite:
+      guess_lang: false
+  - toc:
+      permalink: true
+  - pymdownx.arithmatex
+  - pymdownx.betterem:
+      smart_enable: all
+  - pymdownx.caret
+  - pymdownx.critic
+  - pymdownx.details
+  - pymdownx.emoji:
+      emoji_generator: !!python/name:pymdownx.emoji.to_svg
+  - pymdownx.inlinehilite
+  - pymdownx.magiclink
+  - pymdownx.mark
+  - pymdownx.smartsymbols
+  - pymdownx.superfences
+  - pymdownx.tasklist:
+      custom_checkbox: true
+  - pymdownx.tilde

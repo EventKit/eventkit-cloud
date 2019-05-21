@@ -36,7 +36,8 @@ from eventkit_cloud.tasks.models import (
     ExportTaskRecord,
     ExportTaskException,
     FileProducingTaskResult,
-    DataProviderTaskRecord
+    DataProviderTaskRecord,
+    prefetch_export_runs
 )
 
 try:
@@ -171,6 +172,10 @@ class ExportTaskRecordSerializer(serializers.ModelSerializer):
         except ExportTaskException.DoesNotExist:
             return None
 
+class ExportTaskListSerializer(serializers.BaseSerializer):
+    def to_representation(self, obj):
+        return obj.uid
+
 
 class DataProviderTaskRecordSerializer(serializers.ModelSerializer):
     tasks = serializers.SerializerMethodField()
@@ -180,11 +185,21 @@ class DataProviderTaskRecordSerializer(serializers.ModelSerializer):
     )
 
     def get_tasks(self, obj):
-        return ExportTaskRecordSerializer(obj.tasks, many=True, required=False, context=self.context).data
+        request = self.context['request']
+        if request.query_params.get('slim'):
+            return ExportTaskListSerializer(obj.tasks, many=True, required=False, context=self.context).data
+        else:
+            return ExportTaskRecordSerializer(obj.tasks, many=True, required=False, context=self.context).data
 
     class Meta:
         model = DataProviderTaskRecord
-        fields = ('uid', 'url', 'name', 'started_at', 'finished_at', 'duration', 'tasks', 'status', 'display', 'slug')
+        fields = ('uid', 'url', 'name', 'started_at', 'finished_at', 'duration',
+                  'tasks', 'status', 'display', 'slug', 'estimated_size')
+
+
+class DataProviderListSerializer(serializers.BaseSerializer):
+    def to_representation(self, obj):
+        return obj.uid
 
 
 class SimpleJobSerializer(serializers.Serializer):
@@ -209,6 +224,7 @@ class SimpleJobSerializer(serializers.Serializer):
     featured = serializers.BooleanField()
     formats = serializers.SerializerMethodField()
     permissions = serializers.SerializerMethodField(read_only=True)
+    relationship = serializers.SerializerMethodField(read_only=True)
 
     @staticmethod
     def get_uid(obj):
@@ -248,6 +264,12 @@ class SimpleJobSerializer(serializers.Serializer):
         permissions = JobPermission.jobpermissions(obj)
         permissions['value'] = obj.visibility
         return permissions
+
+    def get_relationship(self, obj):
+        request = self.context['request']
+        user = request.user
+        return JobPermission.get_user_permissions(user, obj.uid)
+
 
     @staticmethod
     def get_formats(obj):
@@ -305,7 +327,11 @@ class ExportRunSerializer(serializers.ModelSerializer):
 
     def get_provider_tasks(self, obj):
         if not obj.deleted:
-            return DataProviderTaskRecordSerializer(obj.provider_tasks, many=True, context=self.context).data
+            request = self.context['request']
+            if request.query_params.get('slim'):
+                return DataProviderListSerializer(obj.provider_tasks, many=True, context=self.context).data
+            else:
+                return DataProviderTaskRecordSerializer(obj.provider_tasks, many=True, context=self.context).data
 
     def get_zipfile_url(self, obj):
         request = self.context['request']
@@ -368,17 +394,16 @@ class GroupSerializer(serializers.ModelSerializer):
         fields = ('id', 'name', 'members', 'administrators')
 
     @staticmethod
-    def get_members(instance):
-        user_ids = [permission.user.id for permission in GroupPermission.objects.filter(group=instance).filter(
-            permission=GroupPermissionLevel.MEMBER.value)]
-        return [user.username for user in User.objects.filter(id__in=user_ids).all()]
+    def get_group_permissions(instance):
+        return GroupPermission.objects.filter(group=instance).prefetch_related('user', 'group')
 
-    @staticmethod
-    def get_administrators(instance):
-        user_ids = [permission.user.id for permission in GroupPermission.objects.filter(group=instance).filter(
-            permission=GroupPermissionLevel.ADMIN.value)]
-        return [user.username for user in User.objects.filter(id__in=user_ids).all()]
-        return []
+    def get_members(self, instance):
+        qs = self.get_group_permissions(instance).filter(permission=GroupPermissionLevel.MEMBER.value)
+        return [permission.user.username for permission in qs]
+
+    def get_administrators(self, instance):
+        qs = self.get_group_permissions(instance).filter(permission=GroupPermissionLevel.ADMIN.value)
+        return [permission.user.username for permission in qs]
 
     @staticmethod
     def get_identification(instance):
@@ -386,6 +411,41 @@ class GroupSerializer(serializers.ModelSerializer):
             return instance.oauth.identification
         else:
             return None
+
+class GroupUserSerializer(serializers.ModelSerializer):
+    members = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Group
+        fields = ('name', 'members')
+
+    def get_members(self, instance):
+        request = self.context['request']
+        limit = 1000
+        if request.query_params.get('limit'):
+            limit = int(request.query_params.get('limit'))
+        gp_admins = GroupPermission.objects.filter(group=instance)\
+            .filter(permission=GroupPermissionLevel.ADMIN.value)[:limit]
+        admins = [gp.user for gp in gp_admins]
+        members = []
+        gp_members = GroupPermission.objects.filter(group=instance)\
+            .filter(permission=GroupPermissionLevel.MEMBER.value).exclude(user__in=admins)[:limit - gp_admins.count()]
+        for gp in gp_members:
+            if gp.user not in admins:
+                members.append(gp.user)
+
+        return [self.user_representation(user, GroupPermissionLevel.ADMIN.value) for user in admins]\
+               + [self.user_representation(user, GroupPermissionLevel.MEMBER.value) for user in members]
+
+    @staticmethod
+    def user_representation(user, permission_lvl):
+        return dict(
+            username=user.username,
+            last_name=user.last_name,
+            first_name=user.first_name,
+            email=user.email,
+            permission=permission_lvl,
+        )
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -423,7 +483,6 @@ class UserSerializer(serializers.ModelSerializer):
 class UserDataSerializer(serializers.Serializer):
     """
         Return a GeoJSON representation of the user data.
-
     """
     user = serializers.SerializerMethodField()
     accepted_licenses = serializers.SerializerMethodField()
@@ -438,12 +497,26 @@ class UserDataSerializer(serializers.Serializer):
             'user',
         )
 
+    def get_accepted_licenses(self, instance):
+        licenses = dict()
+        request = self.context['request']
+        if request.user != instance:
+            return licenses
+        user_licenses = UserLicense.objects.filter(user=instance)
+        for license in License.objects.all():
+            if user_licenses.filter(license=license):
+                licenses[license.slug] = True
+            else:
+                licenses[license.slug] = False
+        return licenses
+
+
     @staticmethod
     def get_user(instance):
         return UserSerializer(instance).data
 
     @staticmethod
-    def get_accepted_licenses(instance):
+    def get_user_accepted_licenses(instance):
         licenses = dict()
         user_licenses = UserLicense.objects.filter(user=instance)
         for license in License.objects.all():
@@ -587,6 +660,7 @@ class ListJobSerializer(serializers.Serializer):
     visibility = serializers.CharField()
     featured = serializers.BooleanField()
     permissions = serializers.SerializerMethodField(read_only=True)
+    relationship = serializers.SerializerMethodField(read_only=True)
 
     @staticmethod
     def get_uid(obj):
@@ -625,6 +699,11 @@ class ListJobSerializer(serializers.Serializer):
     def get_owner(obj):
         return obj.user.username
 
+    def get_relationship(self, obj):
+        request = self.context['request']
+        user = request.user
+        return JobPermission.get_user_permissions(user, obj.uid)
+
     @staticmethod
     def get_permissions(obj):
         permissions = JobPermission.jobpermissions(obj)
@@ -661,6 +740,7 @@ class JobSerializer(serializers.Serializer):
     updated_at = serializers.DateTimeField(read_only=True)
     owner = serializers.SerializerMethodField(read_only=True)
     permissions = serializers.SerializerMethodField(read_only=True)
+    relationship = serializers.SerializerMethodField(read_only=True)
     exports = serializers.SerializerMethodField()
     preset = serializers.PrimaryKeyRelatedField(queryset=DatamodelPreset.objects.all(), required=False)
     published = serializers.BooleanField(required=False)
@@ -767,6 +847,11 @@ class JobSerializer(serializers.Serializer):
         """Return the username for the owner of this export."""
         return obj.user.username
 
+    def get_relationship(self, obj):
+        request = self.context['request']
+        user = request.user
+        return JobPermission.get_user_permissions(user, obj.uid)
+
     @staticmethod
     def get_permissions(obj):
         permissions = JobPermission.jobpermissions(obj)
@@ -775,12 +860,11 @@ class JobSerializer(serializers.Serializer):
 
 
 class UserJobActivitySerializer(serializers.ModelSerializer):
-    job = ListJobSerializer()
     last_export_run = serializers.SerializerMethodField()
 
     class Meta:
         model = UserJobActivity
-        fields = ('job', 'last_export_run', 'type', 'created_at')
+        fields = ('last_export_run', 'type', 'created_at')
 
     def get_last_export_run(self, obj):
         if obj.job.last_export_run:
@@ -790,29 +874,122 @@ class UserJobActivitySerializer(serializers.ModelSerializer):
             return None
 
 
+class GenericNotificationRelatedSerializer(serializers.BaseSerializer):
+
+    def to_representation(self, referenced_object):
+        if isinstance(referenced_object, User):
+            serializer = UserSerializer(referenced_object)
+        elif isinstance(referenced_object, Job):
+            serializer = NotificationJobSerializer(referenced_object, context={'request': self.context['request']})
+        elif isinstance(referenced_object, ExportRun):
+            serializer = NotificationRunSerializer(referenced_object, context={'request': self.context['request']})
+        elif isinstance(referenced_object, Group):
+            serializer = GroupSerializer(referenced_object)
+        return serializer.data
+
+
 class NotificationSerializer(serializers.ModelSerializer):
+
+    actor = serializers.SerializerMethodField()
+    target = serializers.SerializerMethodField()
+    action_object = serializers.SerializerMethodField()
 
     class Meta:
         model = Notification
-        fields = ( 'unread', 'deleted', 'level', 'verb', 'description', 'id', 'timestamp', 'recipient_id' )
+        fields = ('unread', 'deleted', 'level', 'verb', 'description', 'id', 'timestamp',
+                  'recipient_id', 'actor', 'target', 'action_object')
 
-    def serialize_referenced_object(self, obj, referenced_object_content_type_id, referenced_object_id, referenced_object, request):
+    def get_related_object(self, obj, related_type=None):
+        if not related_type:
+            return None
+        type_id = getattr(obj, '{}_content_type_id'.format(related_type))
+        if type_id:
+            return {'type': str(ContentType.objects.get(id=type_id).model),
+                    'id': getattr(obj, '{0}_object_id'.format(related_type)),
+                    'details': GenericNotificationRelatedSerializer(getattr(obj, related_type),
+                                                                    context={'request': self.context['request']}).data}
 
-        response = {}
-        referenced_object_id = referenced_object_id or 0
-        if int(referenced_object_id) > 0:
-            response['type'] = str(ContentType.objects.get(id=referenced_object_content_type_id ).model)
-            response['id'] = referenced_object_id
+    def get_actor(self, obj):
+        return self.get_related_object(obj, 'actor')
 
-        if isinstance(referenced_object, User):
-            response['details'] = UserSerializer(referenced_object).data
-        if isinstance(referenced_object, Job):
-            job = Job.objects.get(pk=obj.actor_object_id)
-            response['details'] = ListJobSerializer(job,context={'request': request}).data
-        if isinstance(referenced_object, ExportRun):
-            run = ExportRun.objects.get(pk=obj.actor_object_id)
-            response['details'] = ExportRunSerializer(run,context={'request': request}).data
-        if isinstance(referenced_object, Group):
-            response['details'] = GroupSerializer(referenced_object).data
+    def get_target(self, obj):
+        return self.get_related_object(obj, 'target')
 
-        return response
+    def get_action_object(self, obj):
+        return self.get_related_object(obj, 'action_object')
+
+class NotificationJobSerializer(serializers.Serializer):
+    """Return a slimmed down representation of a Job model."""
+
+    def update(self, instance, validated_data):
+        super(NotificationJobSerializer, self).update(instance, validated_data)
+
+    uid = serializers.SerializerMethodField()
+    name = serializers.CharField()
+    event = serializers.CharField()
+    description = serializers.CharField()
+    published = serializers.BooleanField()
+    visibility = serializers.CharField()
+    featured = serializers.BooleanField()
+
+    @staticmethod
+    def get_uid(obj):
+        return obj.uid
+
+class NotificationRunSerializer(serializers.ModelSerializer):
+    """Return a slimmed down representation of a ExportRun model."""
+    job = serializers.SerializerMethodField()  # nest the job details
+    user = serializers.SerializerMethodField()
+    expiration = serializers.SerializerMethodField()
+    created_at = serializers.SerializerMethodField()
+    started_at = serializers.SerializerMethodField()
+    finished_at = serializers.SerializerMethodField()
+    duration = serializers.SerializerMethodField()
+    status = serializers.SerializerMethodField()
+    expiration = serializers.SerializerMethodField()
+
+    class Meta:
+        model = ExportRun
+
+        fields = (
+            'uid', 'created_at', 'updated_at', 'started_at', 'finished_at', 'duration', 'user',
+            'status', 'job', 'expiration', 'deleted'
+        )
+        read_only_fields = ('created_at', 'updated_at')
+
+    @staticmethod
+    def get_user(obj):
+        if not obj.deleted:
+            return obj.user.username
+
+    def get_created_at(self, obj):
+        if not obj.deleted:
+            return obj.created_at
+
+    def get_started_at(self, obj):
+        if not obj.deleted:
+            return obj.started_at
+
+    def get_finished_at(self, obj):
+        if not obj.deleted:
+            return obj.finished_at
+
+    def get_duration(self, obj):
+        if not obj.deleted:
+            return obj.duration
+
+    def get_status(self, obj):
+        if not obj.deleted:
+            return obj.status
+
+    def get_job(self, obj):
+        data = NotificationJobSerializer(obj.job, context=self.context).data
+        if not obj.deleted:
+            return data
+        else:
+            return {'uid': data['uid'], 'name': data['name']}
+
+    def get_expiration(self, obj):
+        if not obj.deleted:
+            return obj.expiration
+

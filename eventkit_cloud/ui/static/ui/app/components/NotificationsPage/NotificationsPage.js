@@ -10,17 +10,17 @@ import PageLoading from '../common/PageLoading';
 import CustomScrollbar from '../CustomScrollbar';
 import NotificationsTable from '../Notification/NotificationsTable';
 import NotificationGridItem from '../Notification/NotificationGridItem';
-import LoadButtons from '../DataPackPage/LoadButtons';
+import LoadButtons from '../common/LoadButtons';
 import { getNotifications } from '../../actions/notificationsActions';
 
 export class NotificationsPage extends React.Component {
-    constructor(props) {
+    constructor(props, context) {
         super(props);
         this.refresh = this.refresh.bind(this);
         this.getGridPadding = this.getGridPadding.bind(this);
         this.getRange = this.getRange.bind(this);
         this.handleLoadMore = this.handleLoadMore.bind(this);
-        this.itemsPerPage = 12;
+        this.itemsPerPage = Number(context.config.NOTIFICATIONS_PAGE_SIZE) || 10;
         this.state = {
             loadingPage: true,
             loading: true,
@@ -38,6 +38,18 @@ export class NotificationsPage extends React.Component {
                 loadingPage: false,
                 loading: false,
             });
+        }
+
+        if (this.props.notificationsStatus.deleted && !prevProps.notificationsStatus.deleted) {
+            this.refresh();
+        }
+
+        // In some rare cases the config is not loaded when this page mounts so we need to watch for an update
+        if (Number(this.context.config.NOTIFICATIONS_PAGE_SIZE) !== this.itemsPerPage) {
+            if (this.context.config.NOTIFICATIONS_PAGE_SIZE) {
+                this.itemsPerPage = Number(this.context.config.NOTIFICATIONS_PAGE_SIZE);
+                this.setState({ pageSize: this.itemsPerPage }, this.refresh);
+            }
         }
     }
 
@@ -59,8 +71,8 @@ export class NotificationsPage extends React.Component {
     }
 
     refresh() {
-        this.props.getNotifications({ pageSize: this.state.pageSize });
         this.setState({ loading: true });
+        this.props.getNotifications({ pageSize: this.state.pageSize });
     }
 
     handleLoadMore() {
@@ -126,7 +138,7 @@ export class NotificationsPage extends React.Component {
                     title="Notifications"
                 />
                 {this.state.loading ?
-                    <PageLoading background="transparent" />
+                    <PageLoading background="transparent" style={{ zIndex: 10 }} />
                     : null
                 }
                 <CustomScrollbar style={styles.customScrollbar}>
@@ -148,7 +160,7 @@ export class NotificationsPage extends React.Component {
                                 <div className="qa-NotificationsPage-Content-Notifications">
                                     {isWidthUp('md', this.props.width) ?
                                         <NotificationsTable
-                                            notifications={this.props.notificationsData}
+                                            notificationsData={this.props.notificationsData}
                                             notificationsArray={notifications}
                                             router={this.props.router}
                                         />
@@ -183,6 +195,12 @@ export class NotificationsPage extends React.Component {
         );
     }
 }
+
+NotificationsPage.contextTypes = {
+    config: PropTypes.shape({
+        NOTIFICATIONS_PAGE_SIZE: PropTypes.string,
+    }),
+};
 
 NotificationsPage.propTypes = {
     router: PropTypes.object.isRequired,

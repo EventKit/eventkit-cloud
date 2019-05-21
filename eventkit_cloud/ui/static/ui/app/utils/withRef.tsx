@@ -8,14 +8,14 @@ import * as React from 'react';
 
 interface BaseProps {
     customRef: React.RefObject<any>;
-};
+}
 
 const withRef = () =>
     <T extends React.Component, OriginalProps extends {}>(
         Component: React.ComponentClass<OriginalProps>
     ) => {
 
-    type PrivateProps = { forwardedRef: React.RefObject<T> };
+    interface PrivateProps { forwardedRef: React.RefObject<T>; }
     type Props = OriginalProps & PrivateProps & BaseProps;
 
     class WithRef extends React.Component<Props> {

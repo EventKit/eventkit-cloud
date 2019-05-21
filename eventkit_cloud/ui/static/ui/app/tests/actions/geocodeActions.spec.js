@@ -1,115 +1,77 @@
-import axios from 'axios';
-import MockAdapter from 'axios-mock-adapter';
-import createTestStore from '../../store/configureTestStore';
 import * as actions from '../../actions/geocodeActions';
 
-describe('async searchToolbar actions', () => {
-    const mock = new MockAdapter(axios, { delayResponse: 10 });
+describe('geocodeActions', () => {
+    describe('getGeocode action', () => {
+        it('should return the correct types', () => {
+            expect(actions.getGeocode().types).toEqual([
+                actions.types.FETCHING_GEOCODE,
+                actions.types.RECEIVED_GEOCODE,
+                actions.types.FETCH_GEOCODE_ERROR,
+            ]);
+        });
 
-    const collection = {
-        type: 'FeatureCollection',
-        features: [
-            {
-                geometry: {
-                    type: 'Polygon',
-                    coordinates: [
-                        [
-                            [-1, 1],
-                            [-1, 1],
-                            [-1, 1],
-                            [-1, 1],
-                            [-1, 1],
-                        ],
+        it('getCancelSource should return the source', () => {
+            const state = { geocode: { cancelSource: 'test' } };
+            expect(actions.getGeocode().getCancelSource(state)).toEqual('test');
+        });
+
+        it('should pass the query as a param', () => {
+            const query = 'search q';
+            expect(actions.getGeocode(query).params).toEqual({ query });
+        });
+
+        it('onSuccess should return feature with properties copied', () => {
+            const ret = {
+                data: {
+                    features: [
+                        { geometry: {}, properties: { one: 'one', two: 'two' } },
                     ],
                 },
-                type: 'Feature',
-                properties: {
-                    label: 'A',
-                    source: 'B',
-                    name: 'C',
-                    country: 'X',
-                    region: 'Y',
-                },
-                bbox: [-1, 1, -1, 1],
-            },
-        ],
-        bbox: [-1, 1, -1, 1],
-    };
-
-    const expected = [{
-        geometry: {
-            type: 'Polygon',
-            coordinates: [
-                [
-                    [-1, 1],
-                    [-1, 1],
-                    [-1, 1],
-                    [-1, 1],
-                    [-1, 1],
+            };
+            const expected = {
+                data: [
+                    {
+                        geometry: {},
+                        properties: { one: 'one', two: 'two' },
+                        one: 'one',
+                        two: 'two',
+                    },
                 ],
-            ],
-        },
-        type: 'Feature',
-        properties: {
-            label: 'A',
-            source: 'B',
-            name: 'C',
-            country: 'X',
-            region: 'Y',
-        },
-        bbox: [-1, 1, -1, 1],
-        label: 'A',
-        source: 'B',
-        name: 'C',
-        country: 'X',
-        region: 'Y',
-    }];
+            };
+            expect(actions.getGeocode().onSuccess(ret)).toEqual(expected);
+        });
 
-    let store = createTestStore({ geocode: [] });
-
-    it('getGeonames should dispatch RECEIVED_GEONAMES after fetching', () => {
-        mock.onGet('/search').reply(200, collection);
-
-        const expectedActions = [
-            { type: 'FETCHING_GEOCODE' },
-            { type: 'RECEIVED_GEOCODE', data: expected },
-        ];
-
-        return store.dispatch(actions.getGeocode('some place'))
-            .then(() => {
-                expect(store.getActions()).toEqual(expectedActions);
+        it('onSuccess should return empty data', () => {
+            const ret = { data: { features: undefined } };
+            expect(actions.getGeocode().onSuccess(ret)).toEqual({
+                data: [],
             });
-    });
+        });
 
-    it('should handle errors', () => {
-        store = createTestStore({ geocode: [] });
-        const fail = new MockAdapter(axios, { delayResponse: 10 });
-        fail.onGet('/search').reply(400, 'Request failed with status code 400');
-
-        const expectedActions = [
-            { type: 'FETCHING_GEOCODE' },
-            { type: 'FETCH_GEOCODE_ERROR', error: 'Request failed with status code 400' },
-        ];
-
-        return store.dispatch(actions.getGeocode('18SJT9710003009'))
-            .then(() => {
-                expect(store.getActions()).toEqual(expectedActions);
+        it('onSuccess should skip features with no geometry', () => {
+            const ret = {
+                data: {
+                    features: [
+                        { geometry: undefined, properties: { one: 'one' } },
+                    ],
+                },
+            };
+            expect(actions.getGeocode().onSuccess(ret)).toEqual({
+                data: [],
             });
-    });
+        });
 
-    it('should handle unknown errors', () => {
-        store = createTestStore({ geocode: [] });
-        const fail = new MockAdapter(axios, { delayResponse: 10 });
-        fail.onGet('/search').reply(400, '');
-
-        const expectedActions = [
-            { type: 'FETCHING_GEOCODE' },
-            { type: 'FETCH_GEOCODE_ERROR', error: 'An unknown error has occured' },
-        ];
-
-        return store.dispatch(actions.getGeocode('18SJT9710003009'))
-            .then(() => {
-                expect(store.getActions()).toEqual(expectedActions);
+        it('onError should return generic error string', () => {
+            expect(actions.getGeocode().onError({ response: {} })).toEqual({
+                error: 'An unknown error has occured',
             });
+        });
+
+        it('onError should return the response error msg', () => {
+            const ret = { response: { data: 'error msg' } };
+            expect(actions.getGeocode().onError(ret)).toEqual({
+                error: 'error msg',
+            });
+        });
     });
 });

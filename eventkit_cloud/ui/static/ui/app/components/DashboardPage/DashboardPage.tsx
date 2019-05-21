@@ -19,8 +19,6 @@ import DataPackGridItem from '../DataPackPage/DataPackGridItem';
 import DataPackFeaturedItem from './DataPackFeaturedItem';
 import NotificationGridItem from '../Notification/NotificationGridItem';
 import { updateDataCartPermissions } from '../../actions/datacartActions';
-import { getGroups } from '../../actions/groupActions';
-import { getUsers } from '../../actions/usersActions';
 import { joyride } from '../../joyride.config';
 
 export const CUSTOM_BREAKPOINTS = {
@@ -49,11 +47,7 @@ interface Props {
     deleteRun: (options?: object) => void;
     getNotifications: (options?: object) => void;
     updatePermission: Eventkit.Store.UpdatePermissions;
-    users: Eventkit.Store.Users;
-    groups: Eventkit.Store.Groups;
     updateDataCartPermissions: () => void;
-    getGroups: () => void;
-    getUsers: () => void;
     theme: Eventkit.Theme;
 
     userData: any;
@@ -61,7 +55,7 @@ interface Props {
 
 interface State {
     loadingPage: boolean;
-    steps: Array<object>;
+    steps: object[];
     isRunning: boolean;
     width: string;
 }
@@ -102,8 +96,6 @@ export class DashboardPage extends React.Component<Props, State> {
     }
 
     componentDidMount() {
-        this.props.getUsers();
-        this.props.getGroups();
         this.props.getProviders();
         this.props.getNotifications({
             pageSize: this.getNotificationsColumns({ getMax: true }) * this.getNotificationsRows() * 3,
@@ -283,8 +275,6 @@ export class DashboardPage extends React.Component<Props, State> {
             this.props.runsFetched === null ||
             this.props.featuredRunsFetched === null ||
             this.props.viewedRunsFetched === null ||
-            this.props.users.fetched === null ||
-            this.props.groups.fetched === null ||
             this.props.runDeletion.deleting ||
             this.props.updatePermission.updating
         );
@@ -466,7 +456,6 @@ export class DashboardPage extends React.Component<Props, State> {
                                 columns={this.getNotificationsColumns()}
                                 rows={this.getNotificationsRows()}
                                 gridPadding={this.getGridPadding()}
-                                providers={this.props.providers}
                                 onViewAll={this.handleNotificationsViewAll}
                                 noDataElement={
                                     <Paper
@@ -494,7 +483,6 @@ export class DashboardPage extends React.Component<Props, State> {
                                 name="RecentlyViewed"
                                 columns={this.getGridColumns()}
                                 gridPadding={this.getGridPadding()}
-                                providers={this.props.providers}
                                 noDataElement={
                                     <Paper
                                         className="qa-DashboardSection-RecentlyViewed-NoData"
@@ -524,8 +512,6 @@ export class DashboardPage extends React.Component<Props, State> {
                                             gridName="RecentlyViewed"
                                             index={index}
                                             showFeaturedFlag={false}
-                                            users={this.props.users.users}
-                                            groups={this.props.groups.groups}
                                         />
                                     );
                                 })}
@@ -542,7 +528,6 @@ export class DashboardPage extends React.Component<Props, State> {
                                     columns={this.getGridWideColumns()}
                                     gridPadding={this.getGridPadding()}
                                     cellHeight={this.state.width !== 'xs' ? 335 : 435}
-                                    providers={this.props.providers}
                                     onViewAll={this.handleFeaturedViewAll}
                                 >
                                     {this.props.featuredIds.map((id, index) => (
@@ -565,7 +550,6 @@ export class DashboardPage extends React.Component<Props, State> {
                                 name="MyDataPacks"
                                 columns={this.getGridColumns()}
                                 gridPadding={this.getGridPadding()}
-                                providers={this.props.providers}
                                 onViewAll={this.handleMyDataPacksViewAll}
                                 noDataElement={
                                     <Paper
@@ -595,8 +579,6 @@ export class DashboardPage extends React.Component<Props, State> {
                                         gridName="MyDataPacks"
                                         index={index}
                                         showFeaturedFlag={false}
-                                        users={this.props.users.users}
-                                        groups={this.props.groups.groups}
                                     />
                                 ))}
                             </DashboardSection>
@@ -622,8 +604,6 @@ function mapStateToProps(state) {
         featuredRunsFetched: state.exports.featuredInfo.status.fetched,
         viewedRunsFetched: state.exports.viewedInfo.status.fetched,
         updatePermission: state.updatePermission,
-        users: state.users,
-        groups: state.groups,
     };
 }
 
@@ -636,8 +616,6 @@ function mapDispatchToProps(dispatch) {
         deleteRun: uid => dispatch(deleteRun(uid)),
         getNotifications: args => dispatch(getNotifications(args)),
         updateDataCartPermissions: (uid, permissions) => dispatch(updateDataCartPermissions(uid, permissions)),
-        getUsers: () => dispatch(getUsers()),
-        getGroups: () => dispatch(getGroups()),
     };
 }
 

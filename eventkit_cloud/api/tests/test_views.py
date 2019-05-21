@@ -28,8 +28,6 @@ from eventkit_cloud.tasks import TaskStates
 from eventkit_cloud.tasks.models import ExportRun, ExportTaskRecord, DataProviderTaskRecord, FileProducingTaskResult
 from eventkit_cloud.tasks.task_factory import InvalidLicense
 
-# from django.test import TestCase as APITestCase
-
 
 logger = logging.getLogger(__name__)
 
@@ -207,7 +205,10 @@ class TestJobViewSet(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertEqual(response.data[0]['detail'], 'ADMIN permission is required to delete this job.')
 
-    def test_create_zipfile(self):
+    @patch('eventkit_cloud.api.views.pick_up_run_task')
+    @patch('eventkit_cloud.api.views.create_run')
+    def test_create_zipfile(self, create_run_mock, pickup_mock):
+        create_run_mock.return_value = "some_run_uid"
         formats = [export_format.slug for export_format in ExportFormat.objects.all()]
         request_data = {
             'name': 'TestJob',
@@ -222,6 +223,8 @@ class TestJobViewSet(APITestCase):
         }
         url = reverse('api:jobs-list')
         response = self.client.post(url, request_data, format='json')
+        expected_user_details = {'username': 'demo', 'is_superuser': False, 'is_staff': False}
+        pickup_mock.apply_async.assert_called_with(kwargs={"run_uid":"some_run_uid", "user_details":expected_user_details}, queue="runs", routing_key="runs")
         msg = 'status_code {} != {}: {}'.format(200, response.status_code, response.content)
         self.assertEqual(202, response.status_code, msg)
         job_uid = response.data['uid']
@@ -273,7 +276,7 @@ class TestJobViewSet(APITestCase):
         # test that the mock methods get called.
         create_run_mock.assert_called_once_with(job_uid=job_uid, user=self.user)
         expected_user_details = {'username': 'demo', 'is_superuser': False, 'is_staff': False}
-        pickup_mock.delay.assert_called_once_with(run_uid="some_run_uid", user_details=expected_user_details)
+        pickup_mock.apply_async.assert_called_once_with(kwargs={"run_uid":"some_run_uid", "user_details":expected_user_details}, queue="runs", routing_key="runs")
         # test the response headers
         self.assertEqual(response.status_code, status.HTTP_202_ACCEPTED)
         self.assertEqual(response['Content-Type'], 'application/json')
@@ -318,7 +321,7 @@ class TestJobViewSet(APITestCase):
         # test that the mock methods get called.
         create_run_mock.assert_called_once_with(job_uid=job_uid, user=self.user)
         expected_user_details = {'username': 'demo', 'is_superuser': False, 'is_staff': False}
-        pickup_mock.delay.assert_called_once_with(run_uid="some_run_uid", user_details=expected_user_details)
+        pickup_mock.apply_async.assert_called_once_with(kwargs={"run_uid":"some_run_uid", "user_details":expected_user_details}, queue="runs", routing_key="runs")
 
         # test the response headers
         self.assertEqual(response.status_code, status.HTTP_202_ACCEPTED)
@@ -358,7 +361,7 @@ class TestJobViewSet(APITestCase):
         # test that the mock methods get called.
         create_run_mock.assert_called_once_with(job_uid=job_uid, user=self.user)
         expected_user_details = {'username': 'demo', 'is_superuser': False, 'is_staff': False}
-        pickup_mock.delay.assert_called_once_with(run_uid="some_run_uid", user_details=expected_user_details)
+        pickup_mock.apply_async.assert_called_once_with(kwargs={"run_uid":"some_run_uid", "user_details":expected_user_details}, queue="runs", routing_key="runs")
 
         # test the response headers
         self.assertEqual(response.status_code, status.HTTP_202_ACCEPTED)
@@ -527,8 +530,11 @@ class TestBBoxSearch(APITestCase):
         super(TestBBoxSearch, self).__init__(*args, **kwargs)
         self.user = None
         self.client = None
+    @patch('eventkit_cloud.api.views.pick_up_run_task')
+    @patch('eventkit_cloud.api.views.create_run')
+    def setUp(self, create_run_mock, pickup_mock):
+        create_run_mock.return_value = "some_run_uid"
 
-    def setUp(self,):
         url = reverse('api:jobs-list')
         # create dummy user
         self.group, created = Group.objects.get_or_create(name='TestDefaultExportExtentGroup')
@@ -557,6 +563,8 @@ class TestBBoxSearch(APITestCase):
                 'provider_tasks': [{'provider': 'OpenStreetMap Data (Generic)', 'formats': formats}]
             }
             response = self.client.post(url, request_data, format='json')
+            expected_user_details = {'username': 'demo', 'is_superuser': True, 'is_staff': False}
+            pickup_mock.apply_async.assert_called_with(kwargs={"run_uid":"some_run_uid", "user_details":expected_user_details}, queue="runs", routing_key="runs")
             self.assertEqual(status.HTTP_202_ACCEPTED, response.status_code, response.content)
         self.assertEqual(8, len(Job.objects.all()))
         LinkHeaderPagination.page_size = 2
@@ -1298,7 +1306,7 @@ class TestUserJobActivityViewSet(APITestCase):
         self.assertEqual(len(viewed_jobs), prev_viewed_jobs_count + 1)
 
         # Make sure the first returned viewed job matches what we just viewed.
-        self.assertEqual(viewed_jobs[0]['job']['uid'], str(job.uid))
+        self.assertEqual(viewed_jobs[0]['last_export_run']['job']['uid'], str(job.uid))
         self.assertEqual(viewed_jobs[0]['type'], UserJobActivity.VIEWED)
 
     def test_create_viewed_consecutive(self):
@@ -1343,11 +1351,11 @@ class TestUserJobActivityViewSet(APITestCase):
         viewed_jobs = response.json()
         job_a_count = 0
         for viewed_job in viewed_jobs:
-            if viewed_job['job']['uid'] == str(job_a.uid):
+            if viewed_job['last_export_run']['job']['uid'] == str(job_a.uid):
                 job_a_count += 1
 
         self.assertEqual(job_a_count, 1)
-        self.assertEqual(viewed_jobs[0]['job']['uid'], str(job_a.uid))
+        self.assertEqual(viewed_jobs[-1]['last_export_run']['job']['uid'], str(job_a.uid))
 
     def create_job(self, name):
         extents = (-3.9, 16.1, 7.0, 27.6)

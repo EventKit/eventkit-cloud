@@ -16,7 +16,7 @@ class Migration(migrations.Migration):
         ExportProfile.objects.create(name='DefaultExportProfile', max_extent=2500000, group=group)
 
     dependencies = [
-        ('jobs', 'install_region_mask'),
+        ('jobs', '0002_auto_20181213_1723'),
     ]
 
     operations = [

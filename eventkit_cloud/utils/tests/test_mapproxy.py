@@ -9,7 +9,7 @@ from mapproxy.config.config import load_default_config
 from mock import Mock, patch, MagicMock
 
 from eventkit_cloud.utils.mapproxy import (MapproxyGeopackage,
-                                           check_service, get_cache_template, CustomLogger, check_zoom_levels)
+                                           get_cache_template, CustomLogger, check_zoom_levels)
 
 logger = logging.getLogger(__name__)
 
@@ -26,7 +26,6 @@ class TestGeopackage(TransactionTestCase):
     @patch('eventkit_cloud.utils.mapproxy.auth_requests.patch_https')
     @patch('eventkit_cloud.utils.mapproxy.set_gpkg_contents_bounds')
     @patch('eventkit_cloud.utils.mapproxy.check_zoom_levels')
-    @patch('eventkit_cloud.utils.mapproxy.check_service')
     @patch('eventkit_cloud.utils.mapproxy.remove_empty_zoom_levels')
     @patch('eventkit_cloud.utils.mapproxy.connections')
     @patch('eventkit_cloud.utils.mapproxy.SeedingConfiguration')
@@ -34,7 +33,9 @@ class TestGeopackage(TransactionTestCase):
     @patch('eventkit_cloud.utils.mapproxy.load_config')
     @patch('eventkit_cloud.utils.mapproxy.get_cache_template')
     @patch('eventkit_cloud.utils.mapproxy.get_seed_template')
-    def test_convert(self, seed_template, cache_template, load_config, seeder, seeding_config, connections, remove_zoom_levels, check_service, mock_check_zoom_levels, mock_set_gpkg_contents_bounds, patch_https):
+    def test_convert(self, seed_template, cache_template, load_config, seeder, seeding_config, connections,
+                     remove_zoom_levels, mock_check_zoom_levels, mock_set_gpkg_contents_bounds,
+                     patch_https):
         gpkgfile = '/var/lib/eventkit/test.gpkg'
         config = "layers:\r\n - name: imagery\r\n   title: imagery\r\n   sources: [cache]\r\n\r\nsources:\r\n  imagery:\r\n    type: tile\r\n    grid: webmercator\r\n    url: http://a.tile.openstreetmap.fr/hot/%(z)s/%(x)s/%(y)s.png\r\n\r\ngrids:\r\n  webmercator:\r\n    srs: EPSG:3857\r\n    tile_size: [256, 256]\r\n    origin: nw"
         json_config = real_yaml.load(config)
@@ -64,7 +65,6 @@ class TestGeopackage(TransactionTestCase):
         json_config['services'] = ['demo']
 
         patch_https.assert_called_once_with('imagery')
-        check_service.assert_called_once_with(json_config, 'imagery')
         load_config.assert_called_once_with(mapproxy_config, config_dict=json_config)
         remove_zoom_levels.assert_called_once_with(gpkgfile)
         mock_set_gpkg_contents_bounds.assert_called_once_with(gpkgfile, 'imagery', bbox)
@@ -75,29 +75,6 @@ class TestGeopackage(TransactionTestCase):
 
 
 class TestHelpers(TransactionTestCase):
-
-    @patch('eventkit_cloud.utils.mapproxy.auth_requests.get')
-    def test_check_service(self, requests_get):
-
-        conf_dict = {'sources': {'source1': {'url': 'http://example.com/url'},
-                                 'source2': {'url': 'http://example2.com/url'}}}
-
-        response = Mock(status_code=None, text="Some Text")
-
-        response.status_code = 200
-        requests_get.return_value = response
-        self.assertIsNone(check_service(conf_dict))
-
-        response.status_code = 401
-        requests_get.return_value = response
-        with self.assertRaisesMessage(Exception, "The provider does not have valid credentials."):
-            check_service(conf_dict)
-
-        response.status_code = 500
-        response.ok = False
-        requests_get.return_value = response
-        with self.assertRaisesMessage(Exception, "The provider reported a server error."):
-            check_service(conf_dict)
 
     def get_cache_template(self):
         example_geopackage = '/test/example.gpkg'
@@ -154,15 +131,12 @@ class TestLogger(TransactionTestCase):
 
     @patch('eventkit_cloud.tasks.export_tasks.update_progress')
     def test_log_step(self, mock_update_progress):
-
         test_task_uid = "1234"
-        test_timestamp = 1490641718
         test_progress = 0.42
         custom_logger = CustomLogger(task_uid=test_task_uid)
         custom_logger.log_step_counter = 0
         self.assertIsNotNone(custom_logger)
         mock_progress = MagicMock()
         mock_progress.progress = test_progress
-        mock_progress.eta.eta.return_value = test_timestamp
         custom_logger.log_step(mock_progress)
-        mock_update_progress.assert_called_once_with(test_task_uid, progress=test_progress*100)
+        mock_update_progress.assert_called_with(test_task_uid, progress=test_progress*100, eta=custom_logger.eta)

@@ -16,7 +16,6 @@ from django.views.decorators.http import require_http_methods
 from rest_framework.renderers import JSONRenderer
 
 from eventkit_cloud.api.serializers import UserDataSerializer
-from eventkit_cloud.ui.data_estimator import get_size_estimate
 from eventkit_cloud.ui.helpers import file_to_geojson, set_session_user_last_active_at, is_mgrs, is_lat_lon
 from eventkit_cloud.utils.geocoding.coordinate_converter import CoordinateConverter
 from eventkit_cloud.utils.geocoding.geocode import Geocode
@@ -72,7 +71,7 @@ def view_export(request, uuid=None):  # NOQA
 def auth(request):
     if (request.method == 'GET') and request.user.is_authenticated:
         # If the user is already authenticated we want to return the user data (required for oauth).
-        return HttpResponse(JSONRenderer().render(UserDataSerializer(request.user).data),
+        return HttpResponse(JSONRenderer().render(UserDataSerializer(request.user, context={'request': request}).data),
                             content_type="application/json",
                             status=200)
     elif getattr(settings, "LDAP_SERVER_URI", getattr(settings, "DJANGO_MODEL_LOGIN")):
@@ -87,7 +86,7 @@ def auth(request):
             else:
                 login(request, user_data)
                 set_session_user_last_active_at(request)
-                return HttpResponse(JSONRenderer().render(UserDataSerializer(user_data).data),
+                return HttpResponse(JSONRenderer().render(UserDataSerializer(user_data, context={'request': request}).data),
                                     content_type="application/json",
                                     status=200)
         if request.method == 'GET':
@@ -346,25 +345,6 @@ def help_presets(request):
         RequestContext(request)
     )
 
-
-@require_http_methods(['POST'])
-def data_estimator(request):
-    """
-
-    :param request: Example {'providers': ['ESRI-Imagery'], 'bbox': [-43.238239, -22.933733, -43.174725, -22.892623]}
-    :return: HttpResponse, with the size.
-    """
-    request_data = json.loads(request.body.decode())
-    size = 0
-    providers = request_data.get('providers')
-    bbox = request_data.get('bbox')
-    if not providers and not bbox:
-        return HttpResponse("Providers or BBOX were not supplied in the request", status=400)
-
-    for provider in providers:
-        estimates = get_size_estimate(provider, bbox)
-        size += estimates[1]
-    return HttpResponse([size], status=200)
 
 @require_http_methods(['GET'])
 def get_config(request):

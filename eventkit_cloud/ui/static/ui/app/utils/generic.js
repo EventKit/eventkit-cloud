@@ -1,24 +1,26 @@
 import numeral from 'numeral';
 import GeoJSON from 'ol/format/geojson';
 
-export function userIsDataPackAdmin(user, permissions, groups) {
-    const { username } = user;
-    if (permissions.members[username] === 'ADMIN') {
-        return true;
+export function getHeaderPageInfo(response) {
+    let nextPage = false;
+    let links = [];
+
+    if (response.headers.link) {
+        links = response.headers.link.split(',');
     }
-    const groupPermissions = Object.keys(permissions.groups);
-    return groupPermissions.some((groupName) => {
-        if (permissions.groups[groupName] === 'ADMIN') {
-            const adminGroup = groups.find(g => g.name === groupName);
-            if (adminGroup) {
-                if (adminGroup.administrators.includes(username)) {
-                    return true;
-                }
-                return false;
-            }
+
+    links.forEach((link) => {
+        if (link.includes('rel="next"')) {
+            nextPage = true;
         }
-        return false;
     });
+
+    let range = '';
+    if (response.headers['content-range']) {
+        [, range] = response.headers['content-range'].split('-');
+    }
+
+    return { nextPage, range };
 }
 
 export function isMgrsString(c) {

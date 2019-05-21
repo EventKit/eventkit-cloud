@@ -2,7 +2,7 @@ import PropTypes from 'prop-types';
 import React, { Component } from 'react';
 import { withTheme } from '@material-ui/core/styles';
 import { Link } from 'react-router';
-import { verbs, getNotificationViewPath } from '../../utils/notificationUtils';
+import { verbs, getNotificationViewPath, requiresActionObjDetails, requiresActorDetails } from '../../utils/notificationUtils';
 
 export class NotificationMessage extends Component {
     constructor(props) {
@@ -45,7 +45,11 @@ export class NotificationMessage extends Component {
             textOverflow: 'ellipsis',
         };
 
-        if (!notification.actor.details && !notification.action_object.details) {
+        if (
+            (requiresActorDetails.includes(verb) && (!notification.actor || !notification.actor.details))
+            ||
+            (requiresActionObjDetails.includes(verb) && (!notification.action_object || !notification.action_object.details))
+        ) {
             return (
                 <React.Fragment>
                     <span
@@ -115,7 +119,7 @@ export class NotificationMessage extends Component {
                 break;
             }
             default: {
-                console.error(`Unsupported notification verb '${verb}'`, notification);
+                console.warn(`Unsupported notification verb '${verb}'`, notification);
                 return null;
             }
         }

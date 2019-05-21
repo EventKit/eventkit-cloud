@@ -35,7 +35,6 @@ class JobFilter(django_filters.FilterSet):
     feature = django_filters.CharFilter(field_name="tags__name", lookup_expr="icontains")
     visibility = django_filters.CharFilter(field_name="visibility", lookup_expr="exact")
     featured = django_filters.BooleanFilter(field_name="featured", widget=django_filters.widgets.BooleanWidget())
-
     user_private = django_filters.CharFilter(method='user_private_filter')
 
     class Meta:
@@ -84,7 +83,7 @@ class UserFilter(django_filters.FilterSet):
 
     class Meta:
         model = User
-        fields = ["min_date", "max_date", "started_at"]
+        fields = ["username", "min_date", "max_date", "started_at"]
 
     @staticmethod
     def group_filter(queryset, fieldname, value):

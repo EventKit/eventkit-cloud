@@ -2,6 +2,7 @@
 import logging
 import os
 from uuid import uuid4
+from subprocess import Popen, PIPE
 
 from django.test import TestCase
 from mock import Mock, patch, call, MagicMock, ANY
@@ -156,7 +157,7 @@ class TestGdalUtils(TestCase):
 
         # Vector
         fmt = "gpkg"
-        expected_cmd = "ogr2ogr -overwrite -f {0} -clipsrc {1} {2} {3}".format(
+        expected_cmd = "ogr2ogr -skipfailures -nlt PROMOTE_TO_MULTI -overwrite -f {0} -clipsrc {1} {2} {3}".format(
             fmt,
             geojson_file,
             dataset,

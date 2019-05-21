@@ -1,26 +1,30 @@
 import os
-from distutils.core import setup
+from setuptools import setup, find_packages
+
 
 def read(*rnames):
     return open(os.path.join(os.path.dirname(__file__), *rnames)).read()
 
+
 setup(
     name="eventkit",
-    version="0.1",
-    author="",
-    author_email="",
+    version="1.3.0",
+    author="Joseph Svrcek",
+    author_email="joseph.svrcek@rgi-corp.com",
     description="Eventkit Cloud",
     long_description=(read('readme.md')),
     # Full list of classifiers can be found at:
     # http://pypi.python.org/pypi?%3Aaction=list_classifiers
     classifiers=[
-        'Development Status :: 1 - Planning',
+        'Development Status :: 4 - Beta',
+        'Framework :: Django',
+        'Operating System :: POSIX :: Linux',
+        'Programming Language :: Python :: 3.5',
+        'Programming Language :: JavaScript'
     ],
     license="BSD",
-    keywords="osm-export-tool2 django eventkit",
-    packages=['eventkit_cloud',],
+    keywords="eventkit osm-export-tool django mapproxy",
+    packages=find_packages(exclude=["*.tests", "*.tests.*", "tests.*", "tests"]),
     include_package_data=True,
-    zip_safe=False,
-    install_requires=[
-    ]
+    scripts=['manage.py']
 )

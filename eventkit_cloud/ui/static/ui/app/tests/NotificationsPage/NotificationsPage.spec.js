@@ -4,7 +4,7 @@ import sinon from 'sinon';
 import PageLoading from '../../components/common/PageLoading';
 import { NotificationsPage } from '../../components/NotificationsPage/NotificationsPage';
 import NotificationsTable from '../../components/Notification/NotificationsTable';
-import LoadButtons from '../../components/DataPackPage/LoadButtons';
+import LoadButtons from '../../components/common/LoadButtons';
 import NotificationGridItem from '../../components/Notification/NotificationGridItem';
 
 const mockNotifications = {
@@ -64,12 +64,16 @@ describe('NotificationsPage component', () => {
         };
     }
 
+    const config = { NOTIFICATIONS_PAGE_SIZE: '12' };
+
     function setup(propsOverride = {}) {
         const props = {
             ...defaultProps(),
             ...propsOverride,
         };
-        wrapper = shallow(<NotificationsPage {...props} />);
+        wrapper = shallow(<NotificationsPage {...props} />, {
+            context: { config },
+        });
         instance = wrapper.instance();
     }
 

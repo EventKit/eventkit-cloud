@@ -2,20 +2,21 @@
 import logging
 # -*- coding: utf-8 -*-
 from collections import OrderedDict
-from datetime import datetime, timedelta, date
+from datetime import datetime, timedelta
 
 from dateutil import parser
 from django.conf import settings
 from django.contrib.auth.models import User, Group
+from django.contrib.contenttypes.models import ContentType
 from django.contrib.gis.geos import GEOSException, GEOSGeometry
 from django.db import transaction
-from django.db.models import Q, Prefetch
+from django.db.models import Q
 from django_filters.rest_framework import DjangoFilterBackend
 from django.utils.translation import ugettext as _
 from notifications.models import Notification
 from rest_framework import exceptions
 from rest_framework import filters, permissions, status, views, viewsets, mixins
-from rest_framework.decorators import detail_route, list_route
+from rest_framework.decorators import detail_route, list_route, action
 from rest_framework.parsers import JSONParser
 from rest_framework.permissions import AllowAny
 from rest_framework.renderers import JSONRenderer
@@ -32,7 +33,7 @@ from eventkit_cloud.api.serializers import (
     ExportFormatSerializer, ExportRunSerializer,
     ExportTaskRecordSerializer, JobSerializer, RegionMaskSerializer, DataProviderTaskRecordSerializer,
     RegionSerializer, ListJobSerializer, ProviderTaskSerializer, DataProviderSerializer, LicenseSerializer,
-    UserDataSerializer, GroupSerializer, UserJobActivitySerializer, NotificationSerializer
+    UserDataSerializer, GroupSerializer, UserJobActivitySerializer, NotificationSerializer, GroupUserSerializer
 )
 from eventkit_cloud.api.validators import validate_bbox_params, validate_search_bbox
 from eventkit_cloud.core.helpers import sendnotification, NotificationVerb, NotificationLevel
@@ -42,10 +43,11 @@ from eventkit_cloud.jobs.models import (
     UserJobActivity
 )
 from eventkit_cloud.tasks.export_tasks import pick_up_run_task, cancel_export_provider_task
-from eventkit_cloud.tasks.models import ExportRun, ExportTaskRecord, DataProviderTaskRecord
+from eventkit_cloud.tasks.models import ExportRun, ExportTaskRecord, DataProviderTaskRecord, prefetch_export_runs
 from eventkit_cloud.tasks.task_factory import create_run, get_invalid_licenses, InvalidLicense, Error
 from eventkit_cloud.utils.gdalutils import get_area
 from eventkit_cloud.utils.provider_check import perform_provider_check
+from eventkit_cloud.utils.stats.size_estimator import get_size_estimate_slug
 
 # Get an instance of a logger
 logger = logging.getLogger(__name__)
@@ -394,7 +396,7 @@ class JobViewSet(viewsets.ModelViewSet):
             running = JobSerializer(job, context={'request': request})
 
             # Run is passed to celery to start the tasks.
-            pick_up_run_task.delay(run_uid=run_uid, user_details=user_details)
+            pick_up_run_task.apply_async(queue="runs", routing_key="runs", kwargs={'run_uid':run_uid, 'user_details':user_details})
             return Response(running.data, status=status.HTTP_202_ACCEPTED)
         else:
             return Response(serializer.errors,
@@ -432,7 +434,7 @@ class JobViewSet(viewsets.ModelViewSet):
         run = ExportRun.objects.get(uid=run_uid)
         if run:
             logger.debug("Placing pick_up_run_task for {0} on the queue.".format(run.uid))
-            pick_up_run_task.delay(run_uid=run_uid, user_details=user_details)
+            pick_up_run_task.apply_async(queue="runs", routing_key="runs", kwargs={'run_uid':run_uid, 'user_details':user_details})
             logger.debug("Getting Run Data.".format(run.uid))
             running = ExportRunSerializer(run, context={'request': request})
             logger.debug("Returning Run Data.".format(run.uid))
@@ -835,14 +837,15 @@ class ExportRunViewSet(viewsets.ModelViewSet):
     ordering = ('-started_at',)
 
     def get_queryset(self):
-        perms, job_ids = JobPermission.userjobs(self.request.user, "READ")
-        prefetched_queryset = ExportRun.objects.filter((Q(job_id__in=job_ids) | Q(job__visibility=VisibilityState.PUBLIC.value)))\
-            .select_related('job', 'user')\
-            .prefetch_related(Prefetch('provider_tasks',
-                queryset=DataProviderTaskRecord.objects.prefetch_related(Prefetch('tasks',
-                    queryset=ExportTaskRecord.objects.select_related('result').prefetch_related('exceptions')))))
-
-        return prefetched_queryset
+        _, job_ids = JobPermission.userjobs(self.request.user, "READ")
+        if self.request.query_params.get('slim'):
+            return ExportRun.objects.filter(
+                (Q(job_id__in=job_ids) | Q(job__visibility=VisibilityState.PUBLIC.value))
+            )
+        else:
+            return prefetch_export_runs((ExportRun.objects.filter(
+                (Q(job_id__in=job_ids) | Q(job__visibility=VisibilityState.PUBLIC.value))
+            )))
 
     def retrieve(self, request, uid=None, *args, **kwargs):
         """
@@ -1183,6 +1186,7 @@ class UserDataViewSet(viewsets.GenericViewSet):
     serializer_class = UserDataSerializer
     permission_classes = (permissions.IsAuthenticated, IsOwnerOrReadOnly)
     parser_classes = (JSONParser,)
+    pagination_class = LinkHeaderPagination
     filter_class = UserFilter
     filter_backends = (DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter)
     lookup_field = 'username'
@@ -1229,21 +1233,38 @@ class UserDataViewSet(viewsets.GenericViewSet):
         * return: A list of all users.
         """
         queryset = self.get_queryset()
-        total = len(queryset)
-        delta = date.today() - timedelta(days=14)
-        new = len(queryset.filter(date_joined__gte=delta))
-        not_grouped = 0
-        for user in queryset:
-            if not len(GroupPermission.objects.filter(user=user)):
-                not_grouped += 1
-        headers = {'Total-Users': total, 'New-Users': new, 'Not-Grouped-Users': not_grouped}
+        total = queryset.count()
         filtered_queryset = self.filter_queryset(queryset)
         if request.query_params.get('exclude_self'):
             filtered_queryset = filtered_queryset.exclude(username=request.user.username)
-        serializer = UserDataSerializer(filtered_queryset, many=True)
-        return Response(serializer.data, headers=headers, status=status.HTTP_200_OK)
+        elif request.query_params.get('prepend_self'):
+            if request.user in filtered_queryset:
+                filtered_queryset = filtered_queryset.exclude(username=request.user.username)
+                filtered_queryset = [qs for qs in filtered_queryset]
+                filtered_queryset = [request.user] + filtered_queryset
 
-    @list_route(methods=['post', 'get'])
+        page = None
+        if not request.query_params.get('disable_page'):
+            page = self.paginate_queryset(filtered_queryset)
+        if page is not None:
+            serializer = self.get_serializer(page, many=True, context={'request': request})
+            response = self.get_paginated_response(serializer.data)
+        else:
+            serializer = self.get_serializer(filtered_queryset, many=True, context={'request': request})
+            response =  Response(serializer.data, status=status.HTTP_200_OK)
+
+        response['Total-Users'] = total
+        return response
+
+    def retrieve(self, request, username=None):
+        """
+        GET a user by username
+        """
+        queryset = self.get_queryset().get(username=username)
+        serializer = self.get_serializer(queryset, context={'request': request})
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+    @action(detail=False, methods=['post', 'get'])
     def members(self, request, *args, **kwargs):
         """
         Member list from list of group ids
@@ -1264,18 +1285,30 @@ class UserDataViewSet(viewsets.GenericViewSet):
 
         users = User.objects.filter(username__in=targetnames).all()
         for u in users:
-            serializer = UserDataSerializer(u)
+            serializer = self.get_serializer(u, context={'request': request})
             payload.append(serializer.data)
 
         return Response(payload, status=status.HTTP_200_OK)
 
-    def retrieve(self, request, username=None):
+    @action(detail=True, methods=['get'])
+    def job_permissions(self, request, username=None):
         """
-        GET a user by username
+        Get user's permission level for a specific job
+
+        Example: /api/users/job_permissions/admin_user?uid=job-uid-123
+
+        Response: { 'permission': USERS_PERMISSION_LEVEL }
+        where USERS_PERMISSION_LEVEL is either READ, ADMIN, or None
         """
-        queryset = self.get_queryset().get(username=username)
-        serializer = UserDataSerializer(queryset)
-        return Response(serializer.data, status=status.HTTP_200_OK)
+        user = User.objects.get(username=username)
+        uid = request.query_params.get('uid', None)
+
+        if not user or not uid:
+            return Response(status=status.HTTP_400_BAD_REQUEST)
+
+        permission = JobPermission.get_user_permissions(user, uid)
+
+        return Response({ 'permission': permission }, status=status.HTTP_200_OK)
 
 
 class UserJobActivityViewSet(mixins.CreateModelMixin,
@@ -1291,18 +1324,29 @@ class UserJobActivityViewSet(mixins.CreateModelMixin,
 
     def get_queryset(self):
         activity_type = self.request.query_params.get('activity', '').lower()
+
+        if self.request.query_params.get('slim'):
+            activities = UserJobActivity.objects.select_related('job', 'user')
+        else:
+            activities = UserJobActivity.objects.select_related('job', 'user').prefetch_related(
+                'job__provider_tasks__provider',
+                'job__provider_tasks__formats',
+                'job__last_export_run__provider_tasks__tasks__result',
+                'job__last_export_run__provider_tasks__tasks__exceptions')
+
         if activity_type == 'viewed':
-            activity_ids = UserJobActivity.objects.filter(
+            ids = UserJobActivity.objects.filter(
                 user=self.request.user,
                 type=UserJobActivity.VIEWED,
                 job__last_export_run__isnull=False,
                 job__last_export_run__deleted=False,
-            ).order_by('job', '-created_at').distinct('job').values_list('id', flat=True)
+            ).distinct('job').values_list('id', flat=True)
 
-            return UserJobActivity.objects.filter(id__in=activity_ids).order_by('-created_at')
+            return activities.filter(id__in=ids).order_by('-created_at')
         else:
-            activity_ids = UserJobActivity.objects.filter(user=self.request.user)
-            return UserJobActivity.objects.filter(id__in=activity_ids).order_by('-created_at')
+            return activities.filter(
+                user=self.request.user).order_by('-created_at')
+
 
     def list(self, request, *args, **kwargs):
         """
@@ -1323,17 +1367,21 @@ class UserJobActivityViewSet(mixins.CreateModelMixin,
         """
         activity_type = request.query_params.get('activity', '').lower()
         job_uid = request.data.get('job_uid')
-
-        # Save the
-        job = Job.objects.get(uid=job_uid)
+        # Save a record of the view activity
         if activity_type == 'viewed':
-            # Don't save consecutive views of the same job.
-            queryset = self.get_queryset()
+            queryset =  UserJobActivity.objects.filter(
+                user=self.request.user,
+                type=UserJobActivity.VIEWED,
+                job__last_export_run__isnull=False,
+                job__last_export_run__deleted=False,
+            ).order_by('-created_at')
+
             if queryset.count() > 0:
-                last_job_viewed = queryset.latest('created_at')
+                last_job_viewed = queryset.first()
+                # Don't save consecutive views of the same job.
                 if str(last_job_viewed.job.uid) == job_uid:
                     return Response({'ignored': True}, content_type='application/json', status=status.HTTP_200_OK)
-
+            job = Job.objects.get(uid=job_uid)
             UserJobActivity.objects.create(user=self.request.user, job=job, type=UserJobActivity.VIEWED)
         else:
             raise exceptions.ValidationError("Activity type '%s' is invalid." % activity_type)
@@ -1348,6 +1396,7 @@ class GroupViewSet(viewsets.ModelViewSet):
     """
     serializer_class = GroupSerializer
     permission_classes = (permissions.IsAuthenticated,)
+    pagination_class = LinkHeaderPagination
     parser_classes = (JSONParser,)
     filter_class = GroupFilter
     filter_backends = (filters.SearchFilter, filters.OrderingFilter)
@@ -1393,9 +1442,23 @@ class GroupViewSet(viewsets.ModelViewSet):
             ]
 
         """
-        queryset = self.filter_queryset(self.get_queryset())
-        serializer = GroupSerializer(queryset, many=True)
-        return Response(serializer.data, status=status.HTTP_200_OK)
+
+        queryset = self.get_queryset()
+        total = queryset.count()
+        filtered_queryset = self.filter_queryset(queryset)
+
+        page = None
+        if not request.query_params.get('disable_page'):
+            page = self.paginate_queryset(filtered_queryset)
+        if page is not None:
+            serializer = self.get_serializer(page, many=True, context={'request': request})
+            response = self.get_paginated_response(serializer.data)
+        else:
+            serializer = self.get_serializer(filtered_queryset, many=True, context={'request': request})
+            response = Response(serializer.data, status=status.HTTP_200_OK)
+
+        response['Total-Groups'] = total
+        return response
 
     @transaction.atomic
     def create(self, request, *args, **kwargs):
@@ -1582,7 +1645,21 @@ class GroupViewSet(viewsets.ModelViewSet):
         return Response("OK", status=status.HTTP_200_OK)
 
 
-class NotificationViewSet(viewsets.GenericViewSet):
+    @action(detail=True, methods=['get'])
+    def users(self, request, id=None, *args, **kwargs):
+        try:
+            group = Group.objects.get(id=id)
+        except Group.DoesNotExist:
+            return Response(status=status.HTTP_404_NOT_FOUND)
+
+        serializer = GroupUserSerializer(group, context={'request': request})
+        return Response(data=serializer.data, status=status.HTTP_200_OK)
+
+
+
+
+
+class NotificationViewSet(viewsets.ModelViewSet):
     """
      Api components for viewing and working with notifications
     """
@@ -1591,46 +1668,80 @@ class NotificationViewSet(viewsets.GenericViewSet):
     filter_backends = (DjangoFilterBackend, filters.SearchFilter)
     pagination_class = LinkHeaderPagination
 
-    def serialize_records(self, notifications, request):
-        payload = []
-        for notification in notifications:
-            serializer = NotificationSerializer(notification)
-            item = serializer.data
-            item['actor'] = serializer.serialize_referenced_object(
-                notification, notification.actor_content_type_id,notification.actor_object_id, notification.actor, request)
-            item['target'] = serializer.serialize_referenced_object(
-                notification, notification.target_content_type_id,notification.target_object_id, notification.target, request)
-            item['action_object'] = serializer.serialize_referenced_object(
-                notification, notification.action_object_content_type_id,notification.action_object_object_id, notification.action_object, request)
-            payload.append(item)
-        return payload
-
     def get_queryset(self):
-        return Notification.objects.filter(recipient_id=self.request.user.id)
+        qs = Notification.objects.filter(recipient_id=self.request.user.id, deleted=False)
+        return qs
 
-    @list_route(methods=['get'])
-    def all(self, request, *args, **kwargs):
-        notifications =  request.user.notifications.active()
+    def list(self, request, *args, **kwargs):
+        """
+        Get all user notifications that are not deleted
+        """
+        notifications = self.get_queryset()
         page = self.paginate_queryset(notifications)
         if page is not None:
-            payload = self.serialize_records(page, request)
+            serializer = self.get_serializer(page, context={'request': self.request}, many=True)
         else:
-            payload = self.serialize_records(notifications,request)
-        return self.get_paginated_response(payload)
+            serializer = self.get_serializer(notifications, context={'request': self.request}, many=True)
+        return self.get_paginated_response(serializer.data)
 
-    @list_route(methods=['get'])
+    @action(detail=False, methods=['delete'])
+    def delete(self, request, *args, **kwargs):
+        """
+        Delete notifications
+        If request data of { ids: [....ids] } is provided only those ids will be deleted
+        If no request data is included all notifications will be deleted
+        """
+        notifications = self.get_queryset()
+        if request.data.get('ids', None):
+            for id in request.data.get('ids'):
+                note = notifications.get(id=id)
+                if note:
+                    note.deleted = True
+                    note.save()
+        else:
+            notifications = self.get_queryset()
+            notifications.mark_all_as_deleted()
+        return Response({"success": True}, status=status.HTTP_200_OK)
+
+    @action(detail=False, methods=['post'])
     def read(self, request, *args, **kwargs):
-        notifications =  request.user.notifications.read()
-        payload = self.serialize_records(notifications,request)
-        return Response(payload, status=status.HTTP_200_OK)
+        """
+        Mark notifications as read
+        If request data of { ids: [....ids] } is provided only those ids will be marked
+        If no request data is included all notifications will be marked read
+        """
+        notifications = self.get_queryset()
+        if request.data.get('ids', None):
+            for id in request.data.get('ids'):
+                note = notifications.get(id=id)
+                if note:
+                    note.unread = False
+                    note.save()
+        else:
+            notifications = self.get_queryset()
+            notifications.mark_all_as_read()
+        return Response({"success": True}, status=status.HTTP_200_OK)
 
-    @list_route(methods=['get'])
+    @action(detail=False, methods=['post'])
     def unread(self, request, *args, **kwargs):
-        notifications =  request.user.notifications.unread()
-        payload = self.serialize_records(notifications,request)
-        return Response(payload, status=status.HTTP_200_OK)
+        """
+        Mark notifications as unread
+        If request data of { ids: [....ids] } is provided only those ids will be marked
+        If no request data is included all notifications will be marked unread
+        """
+        notifications = self.get_queryset()
+        if request.data.get('ids', None):
+            for id in request.data.get('ids'):
+                note = notifications.get(id=id)
+                if note:
+                    note.unread = True
+                    note.save()
+        else:
+            notifications = self.get_queryset()
+            notifications.mark_all_as_unread()
+        return Response({"success": True}, status=status.HTTP_200_OK)
 
-    @list_route(methods=['get'])
+    @action(detail=False, methods=['get'])
     def counts(self, request, *args, **kwargs):
         payload = {
             "read": len(request.user.notifications.read()),
@@ -1639,17 +1750,11 @@ class NotificationViewSet(viewsets.GenericViewSet):
 
         return Response(payload, status=status.HTTP_200_OK)
 
-    @list_route(methods=['post'])
-    def mark_all_as_read(self, request, *args, **kwargs):
-        qs = Notification.objects.filter(recipient_id=self.request.user.id)
-        qs.mark_all_as_read()
-        return Response( { "success" : True},  status=status.HTTP_200_OK)
-
-    @list_route(methods=['post'])
+    @action(detail=False, methods=['post'])
     def mark(self, request, *args, **kwargs):
         """
          Change the status of one or more notifications.
-
+         **Use if you need to modify in more than one way. Otherwise just use 'delete', 'read', or 'unread'**
 
          Args:
              A list containing one or more records like this:
@@ -1666,7 +1771,7 @@ class NotificationViewSet(viewsets.GenericViewSet):
 
         logger.info(request.data)
         for row in request.data:
-            qs = Notification.objects.filter(recipient_id=self.request.user.id,id=row['id'])
+            qs = Notification.objects.filter(recipient_id=self.request.user.id, id=row['id'])
             logger.info(qs)
             if row['action'] == 'READ':
                 qs.mark_all_as_read()
@@ -1675,7 +1780,39 @@ class NotificationViewSet(viewsets.GenericViewSet):
             if row['action'] == 'UNREAD':
                 qs.mark_all_as_unread()
 
-        return Response( { "success" : True},  status=status.HTTP_200_OK)
+        return Response({"success": True}, status=status.HTTP_200_OK)
+
+
+class EstimatorView(views.APIView):
+    """
+     Api components for computing size estimates for providers within a specified bounding box
+    """
+    @action(detail=False, methods=['get'])
+    def get(self, request, *args, **kwargs):
+        """
+         Args:
+             slugs: Comma separated list of slugs for provider slugs (e.g. 'osm,some_wms1')
+             bbox: Bounding box as w,s,e,n (e.g. '-130,-45,-100,10)
+             srs: EPSG code for the bbox srs (default=4326)
+         Returns:
+            [{ "slug" : $slug_1, "size": $estimate_1, "unit": "mb"}, ...] or error
+        """
+        payload = []
+        logger.info(request.query_params)
+
+        bbox = request.query_params.get('bbox', None).split(',')  # w, s, e, n
+        bbox = list(map(lambda a: float(a), bbox))
+        srs = request.query_params.get('srs', '4326')
+
+        if request.query_params.get('slugs', None):
+            for slug in request.query_params.get('slugs').split(','):
+                payload += [{
+                    'slug': slug,
+                    'size': get_size_estimate_slug(slug, bbox, srs)[0],
+                    'unit': 'MB'
+                }]
+
+        return Response(payload, status=status.HTTP_200_OK)
 
 
 def get_models(model_list, model_object, model_index):
@@ -1858,4 +1995,3 @@ class SwaggerSchemaView(views.APIView):
         except ImportError:
             # CoreAPI couldn't be imported, falling back to static schema
             return Response()
-

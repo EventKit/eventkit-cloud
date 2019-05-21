@@ -9,7 +9,7 @@ from eventkit_cloud.api.views import (
     ExportFormatViewSet, ExportRunViewSet,
     ExportTaskViewSet, JobViewSet, RegionViewSet, DataProviderViewSet, SwaggerSchemaView,
     DataProviderTaskViewSet, UserDataViewSet, GroupViewSet, LicenseViewSet,
-    UserJobActivityViewSet, NotificationViewSet
+    UserJobActivityViewSet, NotificationViewSet, EstimatorView
 )
 
 import notifications.urls
@@ -36,5 +36,6 @@ schema_view = SwaggerSchemaView.as_view()
 urlpatterns = [
     re_path(r'^api/docs$', schema_view),
     re_path(r'^api/', include(router.urls)),
-    re_path(r'^api/', include(notifications.urls))
+    re_path(r'^api/', include(notifications.urls)),
+    re_path(r'^api/estimate$', EstimatorView.as_view())
 ]

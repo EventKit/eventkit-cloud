@@ -115,7 +115,8 @@ describe('NotificationsTable component', () => {
             },
         });
         const tableMenu = wrapper.find(NotificationsTableMenu);
-        expect(Object.keys(tableMenu.props()).length).toBe(5);
+        expect(Object.keys(tableMenu.props()).length).toBe(6);
+        expect(tableMenu.props().allSelected).toBe(true);
         expect(tableMenu.props().selectedNotifications).toBe(wrapper.state().selected);
         expect(tableMenu.props().onMarkAsRead).toBe(instance.props.onMarkAsRead);
         expect(tableMenu.props().onMarkAsUnread).toBe(instance.props.onMarkAsUnread);

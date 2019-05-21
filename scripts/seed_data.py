@@ -4,6 +4,10 @@ import getpass
 import json
 import logging
 import os
+try:
+    input = raw_input
+except NameError:
+    pass
 
 from eventkit_cloud.utils.client import EventKitClient
 
@@ -23,16 +27,24 @@ def main():
                         help='The project name, will be the same for all datapacks (not based on file).')
     parser.add_argument('--limit', type=int, default=0,
                         help='The project name, will be the same for all datapacks (not based on file).')
+    parser.add_argument('--start', type=int, default=0,
+                        help='The index (0-based) of the first geojson feature to use to create a datapack')
+    parser.add_argument('--verify', default='true',
+                        help='True to enable ssl verification, false to disable ssl verification')
 
     args = parser.parse_args()
     user = os.getenv('EVENTKIT_USER')
     if not user:
-        getpass.getpass("EventKit Username:")
+        user = input("EventKit Username: ")
     password = os.getenv('EVENTKIT_PASS')
     if not password:
-        password = getpass.getpass("EventKit Password:")
+        password = getpass.getpass("EventKit Password: ")
 
-    client = EventKitClient(args.url.rstrip('/'), user, password)
+    verify = True
+    if args.verify.lower() in ['false', 'f']:
+        verify = False
+
+    client = EventKitClient(args.url.rstrip('/'), user, password, verify=verify)
     if args.sources:
         provider_tasks = []
         for provider in client.get_providers():
@@ -44,12 +56,17 @@ def main():
     with open(args.file, 'rb') as geojson_file:
         geojson_data = json.load(geojson_file)
 
-    count = args.limit or len(geojson_data['features'])
-    index = 0
+    count = args.limit or len(geojson_data['features'])  # number of jobs to submit
+    index = args.start  # current feature
+    # Stop when count gets to zero (user gets desired number of jobs)
+    # or we run out of features to create jobs for.
     while count or (index > len(geojson_data['features'])):
         feature = geojson_data['features'][index]
+        # Iterate index independently of the count because we might skip some jobs which would iterate the
+        # features but not change the number of jobs submitted.
         index += 1
         name = feature['properties'].get(args.name)
+
         description = feature['properties'].get(args.description) or "Created using the seed_data script."
         project = feature['properties'].get(args.project) or "seed"
         if name in [run['job']['name'] for run in client.get_runs(search_term=name)]:

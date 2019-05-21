@@ -10,7 +10,7 @@ describe('Run Selector', () => {
                     111: { uid: '111', job: '111', provider_tasks: ['111', '222'] },
                     222: { uid: '222', job: '222', provider_tasks: ['111', '222'] },
                 },
-                jobs: { 111: {}, 222: {} },
+                jobs: { 111: { uid: 111 }, 222: { uid: 222 } },
                 provider_tasks: { 111: { tasks: ['111', '222'] }, 222: { tasks: ['333', '444'] } },
                 tasks: { 111: { uid: '111' }, 222: { uid: '222' }, 333: { uid: '333' }, 444: { uid: '444' } },
             },
@@ -21,16 +21,16 @@ describe('Run Selector', () => {
     });
 
     const getFullMockRun = (id) => {
-        const state = getState();
-        const run = state.exports.data.runs[id];
+        const s = getState();
+        const run = s.exports.data.runs[id];
         const providerTasks = run.provider_tasks.map(providerId => {
-            const provider = { ...state.exports.data.provider_tasks[providerId] };
-            provider.tasks = provider.tasks.map(taskId => ({ ...state.exports.data.tasks[taskId] }));
+            const provider = { ...s.exports.data.provider_tasks[providerId] };
+            provider.tasks = provider.tasks.map(taskId => ({ ...s.exports.data.tasks[taskId] }));
             return provider;
         });
         return {
             ...run,
-            job: { ...state.exports.data.jobs[run.job] },
+            job: { ...s.exports.data.jobs[run.job] },
             provider_tasks: providerTasks,
         };
     };
@@ -98,28 +98,26 @@ describe('Run Selector', () => {
         )).toEqual(expected);
     });
 
-    it('toFulRun should return the simple run in no provider tasks provided', () => {
+    it('toFullRun should return the simple run if no provider tasks provided', () => {
         const runId = '111';
         const inputRun = { ...state.exports.data.runs[runId] };
         inputRun.provider_tasks = null;
         expect(selectors.toFullRun(
             inputRun,
             state.exports.data.jobs,
-            state.exports.data.provider_tasks,
-            state.exports.data.tasks,
-        )).toEqual(inputRun);
+        )).toEqual({ ...inputRun, job: state.exports.data.jobs[inputRun.job] });
     });
 
-    it('makeFullRunSelector should return a run with complete job and provider tasks', () => {
+    it('makeFullRunSelector should return a run with job', () => {
         const runId = '222';
-        const expected = getFullMockRun(runId);
+        const expected = { ...state.exports.data.runs[runId], job: state.exports.data.jobs['222'] };
         const fullRunSelector = selectors.makeFullRunSelector();
         expect(fullRunSelector(state, { runId })).toEqual(expected);
     });
 
-    it('makeAllRunsSelector should return all runs in full', () => {
+    it('makeAllRunsSelector should return all runs', () => {
         const expected = Object.values(state.exports.data.runs)
-            .map((run: { uid: string; }) => getFullMockRun(run.uid));
+            .map((run: { job: string }) => ({ ...run, job: state.exports.data.jobs[run.job] }));
         const allRunsSelector = selectors.makeAllRunsSelector();
         expect(allRunsSelector(state)).toEqual(expected);
     });

@@ -279,8 +279,12 @@ class Geopackage(object):
         gdal.UseExceptions()
         self.srs = osr.SpatialReference()
         self.srs.ImportFromEPSG(4326)  # configurable
+        try:
+            os.remove(self.output_gpkg)
+        except Exception:
+            pass
 
-    def run(self):
+    def run(self, subtask_percentage=100, subtask_start=0, eta=None):
         """
         Create the GeoPackage from the osm data.
         """
@@ -310,17 +314,19 @@ class Geopackage(object):
         cur.execute("select load_extension('mod_spatialite')")
         cur.execute("CREATE TABLE boundary (id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, geom GEOMETRY)");
         cur.execute("INSERT INTO boundary (geom) VALUES (GeomFromWKB(?,4326));", (self.aoi_geom.wkb,))
-        update_progress(self.export_task_record_uid, progress=30)
+        update_progress(self.export_task_record_uid, 30, subtask_percentage, subtask_start, eta=eta)
+
         cur.executescript(SPATIAL_SQL)
         self.update_zindexes(cur, self.feature_selection)
-        update_progress(self.export_task_record_uid, progress=42)
+        update_progress(self.export_task_record_uid, 42, subtask_percentage, subtask_start, eta=eta)
 
         # add themes
         create_sqls, index_sqls = self.feature_selection.sqls
         for query in create_sqls:
             LOG.debug(query)
             cur.executescript(query)
-        update_progress(self.export_task_record_uid, progress=50)
+        update_progress(self.export_task_record_uid, 50, subtask_percentage, subtask_start, eta=eta)
+
         for query in index_sqls:
             LOG.debug(query)
             cur.executescript(query)
@@ -351,6 +357,8 @@ class Geopackage(object):
                         cur.executescript(stmt)
                 conn.commit()
                 conn.close()
+
+        update_progress(self.export_task_record_uid, 100, subtask_percentage, subtask_start, eta=eta)
 
     @property
     def is_complete(self):

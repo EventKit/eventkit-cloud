@@ -48,7 +48,6 @@ class TestUIViews(TestCase):
                 'MAX_DATAPACK_EXPIRATION_DAYS': '30',
             })
 
-
     @patch('eventkit_cloud.ui.views.file_to_geojson')
     def test_covert_to_geojson(self, file_to_geojson):
         geojson = {
@@ -89,23 +88,6 @@ class TestUIViews(TestCase):
                                     {'file': file_upload})
         self.assertEqual(response.status_code, 400)
         self.assertEqual(response.content.decode(), 'This is the message')
-
-
-    @patch('eventkit_cloud.ui.views.get_size_estimate')
-    def test_data_estimate_view(self, get_estimate):
-
-        get_estimate.return_value = [1, 0.000123]
-
-        response = self.client.post('/estimator',
-                          data=json.dumps({'providers': ['ESRI-Imagery'],
-                                           'bbox': [-43.238239, -22.933733, -43.174725, -22.892623]}),
-                          content_type='application/json')
-        self.assertEqual(response.status_code, 200)
-        self.assertEqual(float(response.content), 0.000123)
-
-        response = self.client.post('/estimator', data=json.dumps({}), content_type='application/json')
-        self.assertEqual(response.status_code, 400)
-        self.assertEqual(response.content.decode(), 'Providers or BBOX were not supplied in the request')
 
     @patch('eventkit_cloud.ui.views.is_lat_lon')
     @patch('eventkit_cloud.ui.views.is_mgrs')
@@ -230,7 +212,7 @@ class TestUIViews(TestCase):
         geocode = Mock()
         geocode.search.return_value = expected_result
         mock_geocode.return_value = geocode
-        response = self.client.get('/geocode',{'search': 'some_search'})
+        response = self.client.get('/geocode', {'search': 'some_search'})
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.json(), expected_result)
 
@@ -248,4 +230,3 @@ class TestUIViews(TestCase):
         mock_geocode.return_value = geocode
         response = self.client.get('/geocode', {'wrong-key': 'value'})
         self.assertEqual(response.status_code, 204)
-

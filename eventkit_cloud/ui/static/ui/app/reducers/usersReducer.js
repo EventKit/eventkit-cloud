@@ -6,8 +6,9 @@ export const initialState = {
     fetched: null,
     error: null,
     total: 0,
-    new: 0,
-    ungrouped: 0,
+    range: '',
+    nextPage: false,
+    cancelSource: null,
 };
 
 export function usersReducer(state = initialState, action) {
@@ -18,16 +19,18 @@ export function usersReducer(state = initialState, action) {
                 error: null,
                 fetching: true,
                 fetched: false,
+                cancelSource: action.cancelSource,
             };
         case types.FETCHED_USERS:
             return {
                 ...state,
                 fetching: false,
                 fetched: true,
-                users: action.users,
+                users: action.append ? [...state.users, ...action.users] : action.users,
                 total: action.total,
-                new: action.new,
-                ungrouped: action.ungrouped,
+                range: action.range,
+                nextPage: action.nextPage,
+                cancelSource: null,
             };
         case types.FETCH_USERS_ERROR:
             return {
@@ -36,8 +39,13 @@ export function usersReducer(state = initialState, action) {
                 fetched: false,
                 error: action.error,
                 total: 0,
-                new: 0,
-                ungrouped: 0,
+                range: '',
+                nextPage: false,
+                cancelSource: null,
+            };
+        case types.CLEAR_USERS:
+            return {
+                ...initialState,
             };
         default:
             return state;
