@@ -30,9 +30,9 @@ describe('LoginPage component', () => {
     it('should render the version number', () => {
         const isValidStub = sinon.stub(utils, 'isBrowserValid')
             .returns(true);
-        const wrapper = getWrapper({ VERSION: '1.2.3' });
+        const wrapper = getWrapper({ VERSION: '1.3.0' });
         expect(wrapper.find('.qa-LoginPage-version')).toHaveLength(1);
-        expect(wrapper.find('.qa-LoginPage-version').text()).toEqual('EventKit Version 1.2.3');
+        expect(wrapper.find('.qa-LoginPage-version').text()).toEqual('EventKit Version 1.3.0');
         isValidStub.restore();
     });
 

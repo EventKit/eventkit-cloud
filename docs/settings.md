@@ -92,7 +92,7 @@ Used in EventKit to seach up the heirarchy to assist in zooming to locations.
 <pre>GEOCODING_UPDATE_URL='http://my-pelias.com/api/v1/place'</pre>
 
 ###### Convert
-Used with a [custom version](https://github.com/venicegeo/pelias-api) of the API to convert coordinates. 
+Used with a [custom version](https://github.com/eventkit/pelias-api) of the API to convert coordinates.
 <pre>CONVERT_URL='http://my-pelias.com/api/v1/convert'</pre>
 
 #### Map Settings
@@ -261,3 +261,19 @@ The default number of Notifications to be displayed in the Notifications page
 The default number of users to be loaded on the Groups Page
 <pre>USER_GROUPS_PAGE_SIZE='20'</pre>
 
+### Concurrency Settings
+
+These settings are used when setting up the celery workers in the `run-celery.sh` script.
+
+#### Concurrency
+The max number of processes/threads the `worker` celery worker will use to complete tasks at any one time.
+<pre>CONCURRENCY=4</pre>
+#### MapProxy Concurrency
+Increases the number of concurrent requests when seeding data from a WMS/WMTS/ArcGIS Raster source.  This can also be done per [data source](https://github.com/EventKit/eventkit-cloud/blob/master/docs/sources.md#mapproxy-configuration).
+<pre>MAPPROXY_CONCURRENCY=4</pre>
+#### OSM Concurrency
+Increases the number of concurrent requests when using an OSM source per run. The number of total OSM tasks that can be running at once will be effected by the `RUNS_CONCURRENCY` setting below.
+<pre>OSM_CONCURRENCY=1</pre>
+#### Runs Concurrency
+The max number of processes/threads the `runs` celery worker will use. This will effect how many total OSM tasks can be running at one time per celery instance.
+<pre>RUNS_CONCURRENCY=1</pre>
