@@ -23,7 +23,7 @@ DEFAULT_CACHE_EXPIRATION = 86400  # expire in a day
 COMPUTATION_LOCK = Lock()
 
 
-def get_statistics(grouping='provider_name', force=True):
+def get_statistics(grouping='provider_name', force=False):
     """
     :param force: True to re-compute the desired statistics
     :param grouping: see group_providers_by
@@ -494,7 +494,6 @@ def query(group_name, field, statistic_name, bbox, bbox_srs, gap_fill_thresh=0.1
         if group_stats:
             # TODO tile_grid params should be serialized on all_stats object
             # We have some statistics specific to this group (e.g. osm, wms, etc)
-            logger.info(json.dumps(group_stats))
             tile_grid = get_default_tile_grid()
             req_bbox = mapproxy_grid.grid_bbox(bbox, mapproxy_srs.SRS(bbox_srs), tile_grid.srs)
             req_area = get_area_bbox(req_bbox)
