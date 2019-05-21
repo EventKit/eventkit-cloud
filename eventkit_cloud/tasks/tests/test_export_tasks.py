@@ -649,7 +649,6 @@ class TestExportTasks(ExportTaskBase):
         mock_get_arcgis_metadata.assert_called_once_with(metadata)
         self.assertEqual(returned_zip, {'result': expected_zip})
 
-
     def test_zip_file_task_invalid_params(self):
 
         with self.assertRaises(Exception):

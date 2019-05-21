@@ -23,7 +23,6 @@ class TestGeopackage(TransactionTestCase):
         self.addCleanup(self.task_process_patcher.stop)
         self.task_uid = uuid4()
 
-    @patch('eventkit_cloud.utils.mapproxy.retry')
     @patch('eventkit_cloud.utils.mapproxy.auth_requests.patch_https')
     @patch('eventkit_cloud.utils.mapproxy.set_gpkg_contents_bounds')
     @patch('eventkit_cloud.utils.mapproxy.check_zoom_levels')
@@ -36,7 +35,7 @@ class TestGeopackage(TransactionTestCase):
     @patch('eventkit_cloud.utils.mapproxy.get_seed_template')
     def test_convert(self, seed_template, cache_template, load_config, seeder, seeding_config, connections,
                      remove_zoom_levels, mock_check_zoom_levels, mock_set_gpkg_contents_bounds,
-                     patch_https, mock_retry):
+                     patch_https):
         gpkgfile = '/var/lib/eventkit/test.gpkg'
         config = "layers:\r\n - name: imagery\r\n   title: imagery\r\n   sources: [cache]\r\n\r\nsources:\r\n  imagery:\r\n    type: tile\r\n    grid: webmercator\r\n    url: http://a.tile.openstreetmap.fr/hot/%(z)s/%(x)s/%(y)s.png\r\n\r\ngrids:\r\n  webmercator:\r\n    srs: EPSG:3857\r\n    tile_size: [256, 256]\r\n    origin: nw"
         json_config = real_yaml.load(config)

@@ -396,7 +396,7 @@ class JobViewSet(viewsets.ModelViewSet):
             running = JobSerializer(job, context={'request': request})
 
             # Run is passed to celery to start the tasks.
-            pick_up_run_task.delay(run_uid=run_uid, user_details=user_details)
+            pick_up_run_task.apply_async(queue="runs", routing_key="runs", kwargs={'run_uid':run_uid, 'user_details':user_details})
             return Response(running.data, status=status.HTTP_202_ACCEPTED)
         else:
             return Response(serializer.errors,
@@ -434,7 +434,7 @@ class JobViewSet(viewsets.ModelViewSet):
         run = ExportRun.objects.get(uid=run_uid)
         if run:
             logger.debug("Placing pick_up_run_task for {0} on the queue.".format(run.uid))
-            pick_up_run_task.delay(run_uid=run_uid, user_details=user_details)
+            pick_up_run_task.apply_async(queue="runs", routing_key="runs", kwargs={'run_uid':run_uid, 'user_details':user_details})
             logger.debug("Getting Run Data.".format(run.uid))
             running = ExportRunSerializer(run, context={'request': request})
             logger.debug("Returning Run Data.".format(run.uid))
