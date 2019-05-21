@@ -103,14 +103,14 @@ requirements:
     - whitenoise =4.1.2
 
 about:
-  home: https://github.com/venicegeo/eventkit-cloud
+  home: https://github.com/eventkit/eventkit-cloud
   license: BSD 3-Clause
   license_family: BSD
   license_file: /eventkit-cloud/LICENSE.md
   summary: 'A tool for packaging and sharing data from various web services.'
   description: "Eventkit-cloud is based on the HOT OSM Export Tool 2. It allows the user to select data from different sources to export into a variety of formats."
-  doc_url: 'https://github.com/venicegeo/eventkit-cloud/blob/master/README.md'
-  dev_url: 'https://github.com/venicegeo/eventkit-cloud'
+  doc_url: 'https://github.com/eventkit/eventkit-cloud/blob/master/readme.md'
+  dev_url: 'https://github.com/eventkit/eventkit-cloud'
 
 extra:
   recipe-maintainers:
