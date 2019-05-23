@@ -14,6 +14,7 @@ import logging
 import datetime
 import json
 import math
+import os
 import statistics
 
 logger = logging.getLogger(__name__)
@@ -23,7 +24,7 @@ DEFAULT_CACHE_EXPIRATION = 86400  # expire in a day
 COMPUTATION_LOCK = Lock()
 
 
-def get_statistics(grouping='provider_name', force=True):
+def get_statistics(grouping='provider_name', force=os.getenv("FORCE_STATISTICS_RECOMPUTE", False)):
     """
     :param force: True to re-compute the desired statistics
     :param grouping: see group_providers_by
