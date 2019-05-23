@@ -21,6 +21,7 @@ services:
     environment:
     - DATABASE_URL=postgres://eventkit:eventkit_exports@postgis:5432/eventkit_exports
     - BROKER_URL=amqp://guest:guest@rabbitmq:5672/
+    - SERVE_ESTIMATES
     - SITE_NAME
     - SITE_IP
     - TERM

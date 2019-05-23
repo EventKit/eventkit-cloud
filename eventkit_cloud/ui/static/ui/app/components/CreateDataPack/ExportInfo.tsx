@@ -290,7 +290,6 @@ export class ExportInfo extends React.Component<Props, State> {
             ...this.props.exportInfo,
             providers,
         });
-        this.props.onUpdateEstimate();
     }
 
     private onSelectAll(e: React.ChangeEvent<HTMLInputElement>) {
@@ -306,7 +305,6 @@ export class ExportInfo extends React.Component<Props, State> {
             ...this.props.exportInfo,
             providers,
         });
-        this.props.onUpdateEstimate();
     }
 
     private onRefresh() {
@@ -369,6 +367,8 @@ export class ExportInfo extends React.Component<Props, State> {
                         [provider.id]: estimate
                     }
             });
+            // Trigger a estimate update in the parent, this will cause the estimate
+            // to update if the newly returned estimate is on a selected provider.
             this.props.onUpdateEstimate();
             return newProvider;
         }).catch(() => {
@@ -396,15 +396,17 @@ export class ExportInfo extends React.Component<Props, State> {
     async checkEstimate(provider: ProviderData) {
         // This assumes that the entire selection is the first feature, if the feature collection becomes the
         // selection then the bbox would need to be calculated for it.
-        const bbox = featureToBbox(this.props.geojson.features[0], WGS84);
-        const newProvider = await this.getEstimate(provider, bbox);
-        this.setState((prevState) => {
-            // make a copy of state providers and replace the one we updated
-            const providers = [...prevState.providers];
-            providers.splice(providers.indexOf(provider), 1, newProvider);
-            return { providers };
-        });
-        return newProvider;
+        if(this.context.config.SERVE_ESTIMATES) {
+            const bbox = featureToBbox(this.props.geojson.features[0], WGS84);
+            const newProvider = await this.getEstimate(provider, bbox);
+            this.setState((prevState) => {
+                // make a copy of state providers and replace the one we updated
+                const providers = [...prevState.providers];
+                providers.splice(providers.indexOf(provider), 1, newProvider);
+                return {providers};
+            });
+            return newProvider;
+        }
     }
 
     private checkProviders(providers: ProviderData[]) {
@@ -655,6 +657,7 @@ export class ExportInfo extends React.Component<Props, State> {
                                             checked={this.props.exportInfo.providers.map(x => x.name)
                                                 .indexOf(provider.name) !== -1}
                                             alt={ix % 2 === 0}
+                                            renderEstimate={this.context.config.SERVE_ESTIMATES}
                                         />
                                     ))}
                                 </List>

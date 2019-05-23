@@ -26,6 +26,7 @@ import ConfirmDialog from '../Dialog/ConfirmDialog';
 import PageLoading from '../common/PageLoading';
 import { Location } from 'history';
 import {Typography} from "@material-ui/core";
+import * as PropTypes from "prop-types";
 
 export interface JobData {
     name: string;
@@ -86,6 +87,10 @@ export class BreadcrumbStepper extends React.Component<Props, State> {
         jobFetched: null,
     };
 
+    static contextTypes = {
+        config: PropTypes.object,
+    };
+
     constructor(props: Props) {
         super(props);
         this.getProviders = this.getProviders.bind(this);
@@ -124,6 +129,14 @@ export class BreadcrumbStepper extends React.Component<Props, State> {
         if (this.props.exportInfo.exportName === '') {
             this.props.setNextDisabled();
         }
+        // if(this.props.exportInfo.providerEstimates === undefined) {
+        //     // ensure provider estimates is defined, update estimates can be called before its set
+        //     // otherwise in some circumstances
+        //     this.props.updateExportInfo({
+        //         ...this.props.exportInfo,
+        //         providerEstimates: {}
+        //     })
+        // }
         this.getProviders();
         this.props.getFormats();
 
@@ -155,7 +168,9 @@ export class BreadcrumbStepper extends React.Component<Props, State> {
             this.updateEstimate()
         }
         else if (!prevProviders.every((p1) => {return providers.includes(p1)})) {
-            this.updateEstimate()
+            if(this.context.config.SERVE_ESTIMATES) {
+                this.updateEstimate()
+            }
         }
     }
 
@@ -172,12 +187,15 @@ export class BreadcrumbStepper extends React.Component<Props, State> {
     }
 
     private updateEstimate() {
+        if(!this.context.config.SERVE_ESTIMATES)
+            return;
         let sizeEstimate = 0;
         for (const provider of this.props.exportInfo.providers) {
-            const estimate = this.props.exportInfo.providerEstimates[provider.id];
-            if(estimate)
-            {
-                sizeEstimate += estimate.size;
+            if(provider.id in this.props.exportInfo.providerEstimates) {
+                const estimate = this.props.exportInfo.providerEstimates[provider.id];
+                if (estimate) {
+                    sizeEstimate += estimate.size;
+                }
             }
         }
         this.setState({sizeEstimate});
@@ -229,7 +247,11 @@ export class BreadcrumbStepper extends React.Component<Props, State> {
             display: 'inline-block',
             lineHeight: '50px',
             marginLeft: '24px',
+            fontSize: '16px'
         };
+
+        // capture estimate flag
+        const renderEstimate = this.context.config.SERVE_ESTIMATES;
 
         const textStyle = {
             color: this.props.theme.eventkit.colors.white,
@@ -240,29 +262,35 @@ export class BreadcrumbStepper extends React.Component<Props, State> {
             case 0:
                 return (
                     <div className="qa-BreadcrumbStepper-step1Label" style={labelStyle}>
-                    STEP 1 OF 3:  Define Area of Interest
+                        <Typography style={{...textStyle, lineHeight: '50px'}}>
+                        STEP 1 OF 3:  Define Area of Interest
+                        </Typography>
                     </div>
                 );
             case 1:
                 return (
-                    <div className="qa-BreadcrumbStepper-step2Label" style={{...labelStyle, fontSize: '16px'}}>
-                        <Typography style={textStyle}>
+                    <div className="qa-BreadcrumbStepper-step2Label" style={labelStyle}>
+                        <Typography style={{...textStyle, lineHeight: (renderEstimate ? 'normal' : '50px')}}>
                         STEP 2 OF 3:  Select Data & Formats
                         </Typography>
-                        <Typography style={textStyle}>
-                        Estimate: {this.formatSize()}
-                        </Typography>
+                        {renderEstimate &&
+                            <Typography style={textStyle}>
+                            Estimate: {this.formatSize()}
+                            </Typography>
+                        }
                     </div>
                 );
             case 2:
                 return (
-                    <div className="qa-BreadcrumbStepper-step3Label" style={{...labelStyle, fontSize: '16px'}}>
-                        <Typography style={textStyle}>
+                    <div className="qa-BreadcrumbStepper-step3Label" style={labelStyle}>
+                        <Typography style={{...textStyle, lineHeight: (renderEstimate ? 'normal' : '50px')}}>
                         STEP 3 OF 3:  Review & Submit
                         </Typography>
-                        <Typography style={textStyle}>
-                        Estimate: {this.formatSize()}
-                        </Typography>
+                        {renderEstimate &&
+                            <Typography style={textStyle}>
+                                Estimate: {this.formatSize()}
+                            </Typography>
+                        }
                     </div>
                 );
             default:

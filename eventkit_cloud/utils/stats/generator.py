@@ -23,7 +23,7 @@ DEFAULT_CACHE_EXPIRATION = 86400  # expire in a day
 COMPUTATION_LOCK = Lock()
 
 
-def get_statistics(grouping='provider_name', force=False):
+def get_statistics(grouping='provider_name', force=True):
     """
     :param force: True to re-compute the desired statistics
     :param grouping: see group_providers_by

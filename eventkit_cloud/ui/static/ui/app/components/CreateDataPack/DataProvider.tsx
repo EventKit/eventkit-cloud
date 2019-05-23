@@ -81,6 +81,7 @@ interface Props {
     onChange: (event: React.ChangeEvent<HTMLInputElement>) => void;
     alt: boolean;
     theme: Eventkit.Theme & Theme;
+    renderEstimate: boolean;
     classes: {
         container: string;
         listItem: string;
@@ -101,6 +102,8 @@ interface State {
 }
 
 export class DataProvider extends React.Component<Props, State> {
+
+    static defaultProps;
 
     constructor(props: Props) {
         super(props);
@@ -205,6 +208,13 @@ export class DataProvider extends React.Component<Props, State> {
             </ListItem>
         ));
 
+        // Only set this if we want to display the estimate
+        let secondary = undefined;
+        if(this.props.renderEstimate)
+        {
+            secondary = <Typography style={{fontSize: "0.7em"}}>{this.formatSize(provider.estimate)}</Typography>
+        }
+
         const backgroundColor = (this.props.alt) ? colors.secondary : colors.white;
 
         return (
@@ -228,7 +238,7 @@ export class DataProvider extends React.Component<Props, State> {
                             disableTypography
                             classes={{ root: classes.listItemText}}
                             primary={<Typography style={{fontSize: "1.0em"}}>{provider.name}</Typography>}
-                            secondary={<Typography style={{fontSize: "0.7em"}}>{this.formatSize(provider.estimate)}</Typography>}
+                            secondary={secondary}
                         />
                         <ProviderStatusIcon
                             id="ProviderStatus"
@@ -251,5 +261,9 @@ export class DataProvider extends React.Component<Props, State> {
         );
     }
 }
+
+DataProvider.defaultProps = {
+    renderEstimate: false
+};
 
 export default withTheme()(withStyles<any, any>(jss)(DataProvider));
