@@ -34,6 +34,29 @@ CELERY_TASK_SERIALIZER = "json"
 CELERY_ACCEPT_CONTENT = ["json"]
 # configure periodic task
 
+BEAT_SCHEDULE = {
+    'expire-runs': {
+        'task': 'Expire Runs',
+        'schedule': crontab(minute='0', hour='0', day_of_week='*')
+    },
+    'provider-statuses': {
+        'task': 'Check Provider Availability',
+        'schedule': crontab(minute='*/{}'.format(os.getenv('PROVIDER_CHECK_INTERVAL', '30')))
+    },
+}
+
+PCF_SCALING = os.getenv("PCF_SCALING", False)
+if PCF_SCALING:
+    BEAT_SCHEDULE.update({
+        'pcf-scale-celery': {
+            'task': 'PCF Scale Celery',
+            'schedule': 60.0,
+            'kwargs' : {"max_instances": int(os.getenv("CELERY_INSTANCES", 3))},
+            'options': {'priority': 90,
+                        'queue': "scale".format(socket.gethostname()),
+                        'routing_key': "scale".format(socket.gethostname())}
+        },
+    })
 
 app.conf.task_queues = [
     Queue('celery', routing_key='celery'),
@@ -46,24 +69,7 @@ app.conf.task_queues = [
           routing_key="{0}.cancel".format(socket.gethostname())),
 ]
 
-app.conf.beat_schedule = {
-    'expire-runs': {
-        'task': 'Expire Runs',
-        'schedule': crontab(minute='0', hour='0', day_of_week='*')
-    },
-    'scale-celery': {
-            'task': 'Scale Celery',
-            'schedule': 60.0,
-            'kwargs' : {"max_instances": int(os.getenv("CELERY_INSTANCES", 3))},
-            'options': {'priority': 90,
-                        'queue': "scale".format(socket.gethostname()),
-                        'routing_key': "scale".format(socket.gethostname())}
-    },
-    'provider-statuses': {
-        'task': 'Check Provider Availability',
-        'schedule': crontab(minute='*/{}'.format(os.getenv('PROVIDER_CHECK_INTERVAL', '30')))
-    }
-}
+app.conf.beat_schedule = BEAT_SCHEDULE
 
 CELERYD_USER = CELERYD_GROUP = 'eventkit'
 if os.getenv("VCAP_SERVICES"):

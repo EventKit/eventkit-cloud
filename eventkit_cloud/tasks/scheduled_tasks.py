@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 import datetime
 import json
+import os
 
 from celery.utils.log import get_task_logger
 from django.conf import settings
@@ -66,10 +67,45 @@ def expire_runs():
             run.save()
 
 
-@app.task(name='Check Provider Availability')
+@app.task(name="PCF Scale Celery")
+def pcf_scale_celery(max_instances):
+    from eventkit_cloud.utils.pcf import PcfClient
+    from eventkit_cloud.tasks.models import ExportRun
+
+    app_name = json.loads(os.getenv("VCAP_APPLICATION", "{}")).get("application_name")
+    # Connect to PCF Client
+    client = PcfClient()
+    # Get running tasks
+    running_tasks = client.get_running_tasks(app_name)
+    running_tasks_count = running_tasks["pagination"]["total_results"]
+
+    # If running tasks are at the limit, skip scaling.
+    if running_tasks_count >= max_instances:
+        logger.info("Already at max instances, skipping.")
+        return
+
+    command = "celery worker -A eventkit_cloud --concurrency=1 --loglevel=INFO -n runs@%h -Q runs & \
+            celery worker -A eventkit_cloud --concurrency=1 --loglevel=INFO -n worker@%h -Q $HOSTNAME & \
+            celery worker -A eventkit_cloud --loglevel=INFO -n celery@%h -Q celery & \
+            celery worker -A eventkit_cloud --loglevel=INFO -n cancel@%h -Q $HOSTNAME.cancel & \
+            celery worker -A eventkit_cloud --loglevel=INFO -n finalize@%h -Q $HOSTNAME.finalize & \
+            celery worker -A eventkit_cloud --concurrency=$OSM_CONCURRENCY --loglevel=INFO -n osm@%h -Q $HOSTNAME.osm"
+
+    # Check for existing runs that are still at the submitted stage.
+    runs = ExportRun.objects.all()
+    for run in runs:
+        logger.info(run.status)
+        if run.status == "SUBMITTED":
+            logger.info("Spawn celery instance")
+            client.run_task(command, app_name=app_name)
+            break
+
+
+@app.task(name="Check Provider Availability")
 def check_provider_availability():
     from eventkit_cloud.jobs.models import DataProvider, DataProviderStatus
     from eventkit_cloud.utils.provider_check import perform_provider_check
+
     for provider in DataProvider.objects.all():
         status = json.loads(perform_provider_check(provider, None))
         data_provider_status = DataProviderStatus.objects.create(related_provider=provider)

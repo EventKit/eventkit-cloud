@@ -7,4 +7,5 @@ django-celery-results
 django-notifications-hq
 django-timezone-field
 mapproxy
+pyrabbit
 eventkit-cloud

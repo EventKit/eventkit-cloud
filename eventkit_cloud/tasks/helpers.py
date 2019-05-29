@@ -1,3 +1,4 @@
+import kombu
 import os
 import re
 
@@ -479,3 +480,13 @@ def get_data_type_from_provider(provider_slug):
     if data_provider.slug.lower() == 'nome':
         type_mapped = 'nome'
     return type_mapped
+
+def get_message_count(queue_name):
+    connection = kombu.Connection("amqp://guest:guest@rabbitmq:5672/")
+    connection.connect()
+    client = connection.get_manager()
+    queues = client.get_queues()
+
+    for queue in queues:
+        if queue.get("name") == queue_name:
+            return queue.get("messages_unacknowledged")

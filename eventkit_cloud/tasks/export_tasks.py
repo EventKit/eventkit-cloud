@@ -32,7 +32,8 @@ from eventkit_cloud.tasks.exceptions import CancelException, DeleteException
 from eventkit_cloud.tasks.helpers import normalize_name, get_archive_data_path, get_run_download_url, \
     get_download_filename, get_run_staging_dir, get_provider_staging_dir, get_run_download_dir, Directory, \
     default_format_time, progressive_kill, get_style_files, generate_qgs_style, create_license_file, \
-    get_human_readable_metadata_document, pickle_exception, get_data_type_from_provider, get_arcgis_metadata
+    get_human_readable_metadata_document, pickle_exception, get_data_type_from_provider, get_arcgis_metadata, \
+    get_message_count
 from eventkit_cloud.utils.auth_requests import get_cred
 from eventkit_cloud.utils import (
     overpass, pbf, s3, mapproxy, wcs, geopackage, gdalutils
@@ -1135,6 +1136,20 @@ class FinalizeRunBase(UserDetailsBase):
         except IOError or OSError:
             logger.error('Error removing {0} during export finalize'.format(stage_dir))
 
+        PCF_SCALING = os.getenv("PCF_SCALING", False)
+        if PCF_SCALING:
+            try:
+                message_count = get_message_count("runs")
+                if message_count > 0:
+                    logger.info("More tasks available, continue.")
+                    return
+
+                logger.info("Queue is at zero, shutting down.")
+                app.control.broadcast("shutdown")
+            except Exception as e:
+                logger.info(e)
+                logger.info("Could not get queues, shutting down.")
+                app.control.broadcast("shutdown")
 
 # There's a celery bug with callbacks that use bind=True.  If altering this task do not use Bind.
 # @see: https://github.com/celery/celery/issues/3723
