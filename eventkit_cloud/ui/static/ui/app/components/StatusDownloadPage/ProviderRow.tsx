@@ -202,6 +202,15 @@ export class ProviderRow extends React.Component<Props, State> {
         }
     }
 
+    private getLastEstimatedFinish(tasks: Eventkit.Task[]) {
+        return this.getEstimatedFinish([...tasks].sort((a, b) => {
+            if (a.estimated_finish && b.estimated_finish)
+                return new Date(b.estimated_finish).getTime() - new Date(a.estimated_finish).getTime();
+            else
+                return -1;
+        })[0]);
+    }
+
     private getTaskStatus(task: Eventkit.Task) {
         const { colors } = this.props.theme.eventkit;
         switch (task.status) {
@@ -478,7 +487,9 @@ export class ProviderRow extends React.Component<Props, State> {
                             <TableCell
                                 className="qa-ProviderRow-TableCell-estimatedFinish"
                                 classes={{ root: classes.estimatedFinishColumn }}
-                            />
+                            >
+                                {this.getLastEstimatedFinish(tasks)}
+                            </TableCell>
                             <TableCell
                                 className="qa-ProviderRow-TableCell-providerStatus"
                                 classes={{ root: classes.providerStatusColumn }}
