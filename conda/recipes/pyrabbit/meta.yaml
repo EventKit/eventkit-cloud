@@ -1,0 +1,40 @@
+{% set name = "pyrabbit" %}
+{% set version = "1.1.0" %}
+
+package:
+  name: "{{ name|lower }}"
+  version: "{{ version }}"
+
+source:
+  url: https://pypi.io/packages/source/{{ name[0] }}/{{ name }}/{{ name }}-{{ version }}.tar.gz
+  sha256: 50b8995fbfde14820ddc97292312c8f0c77054748c2b018138d03d94e400c39c
+
+build:
+  number: 0
+  script: "{{ PYTHON }} -m pip install . --no-deps --ignore-installed -vv "
+
+requirements:
+  host:
+    - httplib2
+    - pip
+    - python
+  run:
+    - httplib2
+    - python
+
+test:
+  imports:
+    - pyrabbit
+
+about:
+  home: http://www.github.com/bkjones/pyrabbit
+  license: MIT
+  license_family: MIT
+  license_file: 
+  summary: A Pythonic interface to the RabbitMQ Management HTTP API
+  doc_url: 
+  dev_url: 
+
+extra:
+  recipe-maintainers:
+    - your-github-id-here
