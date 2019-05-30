@@ -20,7 +20,6 @@ import '../styles/bootstrap/css/bootstrap.css';
 import '../styles/openlayers/ol.css';
 import '../styles/flexboxgrid.css';
 import '../styles/react-joyride-compliled.css';
-import set = Reflect.set;
 // tslint:disable-next-line:no-var-requires
 require('../fonts/index.css');
 
