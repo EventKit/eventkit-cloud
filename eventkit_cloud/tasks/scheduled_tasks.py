@@ -90,14 +90,13 @@ def pcf_scale_celery(max_instances):
 
     command = os.getenv('CELERY_TASK_COMMAND')
 
-    # Check for existing runs that are still at the submitted stage.
-    runs = ExportRun.objects.all()
-    for run in runs:
-        logger.info(run.status)
-        if run.status == "SUBMITTED":
-            logger.info("Spawn celery instance")
-            client.run_task(command, app_name=app_name)
-            break
+    # Check to see if there are runs pending.
+    message_count = get_message_count("runs")
+    # Spin up a PCF task to handle the runs.
+    if message_count > 0:
+        logger.info(F"Sending task to {app_name} with command {command}")
+        client.run_task(command, app_name=app_name)
+        break
 
 
 @app.task(name="Check Provider Availability")
