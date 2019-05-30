@@ -72,7 +72,10 @@ def pcf_scale_celery(max_instances):
     from eventkit_cloud.utils.pcf import PcfClient
     from eventkit_cloud.tasks.models import ExportRun
 
-    app_name = json.loads(os.getenv("VCAP_APPLICATION", "{}")).get("application_name")
+    initial_app_name = json.loads(os.getenv("VCAP_APPLICATION", "{}")).get("application_name")
+    split_app_name = initial_app_name.split("-", 1)
+    app_name = F"celery-{split_app_name[1]}"
+
     # Connect to PCF Client
     client = PcfClient()
     # Get running tasks
