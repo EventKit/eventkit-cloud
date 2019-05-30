@@ -33,7 +33,8 @@ def get_statistics(grouping='provider_name', force=os.getenv("FORCE_STATISTICS_R
     cache_key = "DATA_STATISTICS_BY_{}".format(grouping)
     compute_stats = lambda: json.dumps(compute_statistics(group_providers_by(grouping)))
     if force:
-        cache.set(cache_key, compute_stats(), timeout=DEFAULT_CACHE_EXPIRATION)
+        stats = compute_stats()
+        cache.set(cache_key, stats, timeout=DEFAULT_CACHE_EXPIRATION)
     else:
         # get_or_set needs a callable to avoid evaluating early.
         # compute stats will only be evaluated if the cache is not set.
