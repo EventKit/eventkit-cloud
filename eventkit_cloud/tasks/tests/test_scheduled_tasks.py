@@ -10,12 +10,14 @@ from django.utils import timezone
 from eventkit_cloud.jobs.models import DataProvider, DataProviderStatus
 from eventkit_cloud.jobs.models import Job
 from eventkit_cloud.tasks.models import ExportRun
-from eventkit_cloud.tasks.scheduled_tasks import expire_runs, send_warning_email, check_provider_availability
+from eventkit_cloud.tasks.scheduled_tasks import expire_runs, send_warning_email, check_provider_availability, \
+    clean_up_queues, get_all_rabbitmq_objects
 from eventkit_cloud.utils.provider_check import CheckResults
 
 import json
 import logging
 from mock import patch, call
+import requests_mock
 
 from notifications.models import Notification
 
@@ -102,4 +104,37 @@ class TestEmailNotifications(TestCase):
         alternatives().send.assert_called_once()
 
 
+class TestCleanUpRabbit(TestCase):
 
+    @patch('eventkit_cloud.tasks.scheduled_tasks.app')
+    @patch('eventkit_cloud.tasks.scheduled_tasks.get_all_rabbitmq_objects')
+    def test_clean_up_queues(self, mock_get_all_rabbitmq_objects, mock_celery_app):
+
+        expected_queues = [{"name": "queue1"}, {"name": "queue2"}]
+        expected_exchanges = [{"name": "exchange1"}, {"name": "exchange2"}]
+        mock_get_all_rabbitmq_objects.side_effect = [expected_queues, expected_exchanges]
+        clean_up_queues()
+        mock_celery_app.connection.__enter__().channel().queue_delete('queue1', if_empty=True, if_unused=True),
+        mock_celery_app.connection.__enter__().channel().queue_delete('queue2', if_empty=True, if_unused=True),
+        mock_celery_app.connection.__enter__().channel().exchange_delete('exchange1', if_empty=True, if_unused=True),
+        mock_celery_app.connection.__enter__().channel().exchange_delete('exchange2', if_empty=True, if_unused=True),
+
+        with self.assertRaises(Exception):
+            mock_celery_app.connection.__enter__().channel().queue_delete().return_value = Exception()
+            clean_up_queues()
+
+        with self.assertRaises(Exception):
+            mock_celery_app.connection.__enter__().channel().exchange_delete().return_value = Exception()
+            clean_up_queues()
+
+    @requests_mock.Mocker()
+    def test_get_all_rabbitmq_objects(self, requests_mocker):
+        example_api = "http://example/api/"
+        queues = "queues"
+        expected_queues = [{"name": "queue1"}, {"name": "queue2"}]
+        requests_mocker.get(example_api + queues, text=json.dumps(expected_queues))
+        result = get_all_rabbitmq_objects(example_api, queues)
+        self.assertEqual(result, expected_queues)
+
+        with self.assertRaises(Exception):
+            get_all_rabbitmq_objects(example_api, "WRONG")
