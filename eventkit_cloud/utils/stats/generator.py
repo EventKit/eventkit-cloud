@@ -39,7 +39,7 @@ def get_statistics(grouping='provider_name', force=os.getenv("FORCE_STATISTICS_R
         # compute stats will only be evaluated if the cache is not set.
         stats = cache.get_or_set(cache_key, compute_stats, timeout=DEFAULT_CACHE_EXPIRATION)
 
-    return stats
+    return json.loads(stats)
 
 
 def get_default_tile_grid(level=10):
