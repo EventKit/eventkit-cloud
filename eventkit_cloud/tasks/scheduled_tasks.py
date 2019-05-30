@@ -85,11 +85,11 @@ def pcf_scale_celery(max_instances):
         return
 
     command = "celery worker -A eventkit_cloud --concurrency=1 --loglevel=INFO -n runs@%h -Q runs & \
-            celery worker -A eventkit_cloud --concurrency=1 --loglevel=INFO -n worker@%h -Q $HOSTNAME & \
-            celery worker -A eventkit_cloud --loglevel=INFO -n celery@%h -Q celery & \
-            celery worker -A eventkit_cloud --loglevel=INFO -n cancel@%h -Q $HOSTNAME.cancel & \
-            celery worker -A eventkit_cloud --loglevel=INFO -n finalize@%h -Q $HOSTNAME.finalize & \
-            celery worker -A eventkit_cloud --concurrency=1 --loglevel=INFO -n osm@%h -Q $HOSTNAME.osm"
+            exec celery worker -A eventkit_cloud --concurrency=1 --loglevel=INFO -n worker@%h -Q $HOSTNAME & \
+            exec celery worker -A eventkit_cloud --loglevel=INFO -n celery@%h -Q celery & \
+            exec celery worker -A eventkit_cloud --loglevel=INFO -n cancel@%h -Q $HOSTNAME.cancel & \
+            exec celery worker -A eventkit_cloud --loglevel=INFO -n finalize@%h -Q $HOSTNAME.finalize & \
+            exec celery worker -A eventkit_cloud --concurrency=1 --loglevel=INFO -n osm@%h -Q $HOSTNAME.osm"
 
     # Check for existing runs that are still at the submitted stage.
     runs = ExportRun.objects.all()
