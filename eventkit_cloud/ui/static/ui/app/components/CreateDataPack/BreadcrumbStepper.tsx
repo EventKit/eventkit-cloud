@@ -27,7 +27,7 @@ import PageLoading from '../common/PageLoading';
 import { Location } from 'history';
 import {Typography} from "@material-ui/core";
 import * as PropTypes from "prop-types";
-import Help from '@material-ui/icons/Help';
+import Info from '@material-ui/icons/Info';
 
 
 export interface JobData {
@@ -251,7 +251,7 @@ export class BreadcrumbStepper extends React.Component<Props, State> {
                 <Typography style={{...textStyle, width: 'auto'}}>
                     Estimate: {this.formatSize()}
                 </Typography>
-                <Help
+                <Info
                     className={`qa-Estimate-Info-Icon`}
                     onClick={this.handleEstimateExplantionOpen}
                     color="primary"
