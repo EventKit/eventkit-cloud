@@ -96,7 +96,6 @@ def pcf_scale_celery(max_instances):
     if message_count > 0:
         logger.info(F"Sending task to {app_name} with command {command}")
         client.run_task(command, app_name=app_name)
-        break
 
 
 @app.task(name="Check Provider Availability")
