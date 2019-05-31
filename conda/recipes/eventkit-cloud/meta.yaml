@@ -50,7 +50,6 @@ requirements:
     - psycopg2 =2.8.2
     - PyJWT =1.7.1
     - pyparsing =2.4.0
-    - pyrabbit =1.1.0
     - python-dateutil =2.8.0
     - python-magic =0.4.15
     - pytz =2019.1
@@ -93,7 +92,6 @@ requirements:
     - psycopg2 =2.8.2
     - PyJWT =1.7.1
     - pyparsing =2.4.0
-    - pyrabbit =1.1.0
     - python-dateutil =2.8.0
     - python-magic =0.4.15
     - pytz =2019.1
