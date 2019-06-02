@@ -13,8 +13,10 @@ from django.db.models import Q
 from enum import Enum
 from numpy import linspace
 
+from eventkit_cloud.celery import app
 from eventkit_cloud.utils import auth_requests
 from eventkit_cloud.utils.gdalutils import get_band_statistics
+from eventkit_cloud.tasks.scheduled_tasks import get_all_rabbitmq_objects
 import pickle
 import logging
 from time import sleep
@@ -482,11 +484,21 @@ def get_data_type_from_provider(provider_slug):
     return type_mapped
 
 def get_message_count(queue_name):
-    connection = kombu.Connection("amqp://guest:guest@rabbitmq:5672/")
-    connection.connect()
-    client = connection.get_manager()
-    queues = client.get_queues()
+    broker_api_url = getattr(settings, 'BROKER_API_URL')
+    queue_class = "queues"
 
-    for queue in queues:
-        if queue.get("name") == queue_name:
-            return queue.get("messages_unacknowledged")
+    if not broker_api_url:
+        logger.error("Cannot clean up queues without a BROKER_API_URL.")
+        return
+    with app.connection() as conn:
+        channel = conn.channel()
+        if not channel:
+            logger.error("Could not establish a rabbitmq channel")
+            return
+        for queue in get_all_rabbitmq_objects(broker_api_url, queue_class):
+            if queue.get("name") == queue_name:
+                try:
+                    logger.info("Message count: {}".format(queue.get("messages")))
+                    return queue.get("messages")
+                except Exception as e:
+                    logger.info(e)
