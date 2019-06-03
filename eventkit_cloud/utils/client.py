@@ -2,32 +2,41 @@
 
 import logging
 import requests
-from datetime import timedelta
+from datetime import timedelta, datetime
 import statistics
 import json
 import re
+from time import sleep
 
 logger = logging.getLogger(__name__)
+
+DEFAULT_TIMEOUT = 60 * 30  # 60 seconds * 30 (30 minutes)
 
 
 class EventKitClient(object):
 
-    def __init__(self, url, username, password, verify=True):
+    def __init__(self, url, username=None, password=None, certificate=None, verify=True):
         self.base_url = url
         self.login_url = self.base_url + '/api/login/'
+        self.cert_url = self.base_url + '/oauth'
         self.create_export_url = self.base_url + '/create'
         self.jobs_url = self.base_url + '/api/jobs'
         self.runs_url = self.base_url + '/api/runs'
         self.providers_url = self.base_url + '/api/providers'
+
         self.client = requests.session()
         self.client.verify = verify
         self.client.get(self.login_url)
         self.csrftoken = self.client.cookies.get('csrftoken')
 
-
-        login_data = dict(username=username, password=password, submit="Log in", csrfmiddlewaretoken=self.csrftoken, next='/')
-        self.client.post(self.login_url, data=login_data, headers=dict(Referer=self.login_url),
-                         auth=(username, password))
+        if certificate:
+            self.client.get(self.cert_url, cert=certificate)
+        elif username and password:
+            login_data = dict(username=username, password=password, submit="Log in", csrfmiddlewaretoken=self.csrftoken, next='/')
+            self.client.post(self.login_url, data=login_data, headers=dict(Referer=self.login_url),
+                             auth=(username, password))
+        else:
+            raise Exception("Unable to login without a certificate or username/password.")
         response = self.client.get(self.runs_url)
         if response.status_code in [401, 403]:
             raise Exception("Invalid Credentials were provided to EventKitClient")
@@ -45,7 +54,7 @@ class EventKitClient(object):
             raise Exception("Unable to get providers.")
         return response.json()
 
-    def get_runs(self, search_term=None):
+    def search_runs(self, search_term=None):
         params={"search_term":search_term}
         page = 1
         runs = []
@@ -64,7 +73,14 @@ class EventKitClient(object):
             page += 1
         return runs
 
-    def run_job(self, **kwargs):
+    def get_runs(self, params):
+        response = self.client.get(self.runs_url, params=params)
+        if not response.ok:
+            logger.info(response.content.decode())
+            raise Exception("Could not search for runs with params: {}".formtat(params))
+        return response.json()
+
+    def create_job(self, **kwargs):
         """
         :param name: A name for the datapack.
         :param description: A description for the datapack.
@@ -98,22 +114,13 @@ class EventKitClient(object):
                                              'Referer': self.create_export_url})
         if response.status_code != 202:
             logger.error("There was an error creating the job: {0}".format(kwargs.get('name')))
-            logger.error(response.text)
+            logger.error(response.content.decode())
             raise Exception("Unable to get create Job.")
         return response.json()
 
     def rerun_job(self, job_uid):
         """
-        :param name: A name for the datapack.
-        :param description: A description for the datapack.
-        :param project: A title for the project/event.
-        :param selection: A geojson FeatureCollection representing the selection.
-        :param provider_tasks: A list of providers (data sources).
-           Example:
-              [{
-                "provider": "OpenStreetMap Data (Themes)",
-                "formats": ["shp", "gpkg"]
-              }]
+        :param job_uid: The Job UID to rerun.
         :return:
         """
         response = self.client.get("{0}/{1}/run".format(self.jobs_url, job_uid),
@@ -201,6 +208,64 @@ class EventKitClient(object):
         for run in runs:
             if run.get('status', '') != "COMPLETED":
                 self.rerun_job(run['job']['uid'])
+
+    def delete_run(self, run_uid):
+        url = "{}/{}".format(self.runs_url.rstrip('/'), run_uid)
+        response = self.client.delete(url,
+                                      headers={'X-CSRFToken': self.csrftoken,
+                                               'Referer': url})
+        if response.status_code != 204:
+            logger.info(response.status_code)
+            logger.info(response.content.decode())
+            raise Exception("Failed to properly delete run: {}".format(run_uid))
+
+    def wait_for_run(self, run_uid, run_timeout=DEFAULT_TIMEOUT):
+        finished = False
+        response = None
+        first_check = datetime.now()
+        errors = None
+        while not finished:
+            sleep(1)
+            run_url = self.runs_url.rstrip('/'), run_uid
+            logger.info(run_url)
+            response = self.client.get(
+                "{}/{}".format(self.runs_url.rstrip('/'), run_uid),
+                headers={'X-CSRFToken': self.csrftoken
+                         })
+            if not response.ok:
+                logger.info(response.content.decode())
+                raise Exception("Unable to get status of run {}".format(run_uid))
+            response = response.json()
+            status = response[0].get('status')
+            if status in ["COMPLETED", "INCOMPLETE", "CANCELED"]:
+                finished = True
+            last_check = datetime.now()
+            for run_details in response:
+                for provider_task in run_details['provider_tasks']:
+                    for task in provider_task['tasks']:
+                        if task['status'] == 'FAILED':
+                            errors += [
+                                '{}: {}'.format(k, v) for error_dict in task['errors'] for k, v in
+                                list(error_dict.items())
+                            ]
+            if last_check - first_check > timedelta(seconds=run_timeout):
+                raise Exception('Run timeout ({}s) exceeded'.format(run_timeout))
+        if errors:
+            raise Exception("The run failed with errors: {}".format("\n".join(errors)))
+        return response[0]
+
+    def check_provider(self, provider_slug):
+        url = "{}/{}/status".format(self.providers_url, provider_slug)
+        response = self.client.get(url)
+        if not response.ok:
+            logger.error(response.content.decode())
+            raise Exception("Failed to get the status of {}".format(provider_slug))
+        response = response.json()
+        if type(response) == str:
+            # This is because the API is outputting the wrong type. It should return a JSON and proper error code.
+            response = json.loads(response)
+        if response.get("status") in ["SUCCESS", "WARN"]:
+            return True
 
 
 def parse_duration(duration):

@@ -47,26 +47,26 @@ class TestClient(TestCase):
         self.mock_requests.register_uri('GET', "{0}/filter".format(self.client.runs_url),
                                         [{'text': json.dumps(request_response), 'status_code': 200},
                                          {'text': '', 'status_code': 404}])
-        runs = self.client.get_runs()
+        runs = self.client.search_runs()
         self.assertEqual(expected_response, runs)
 
         with self.assertRaises(Exception):
             self.mock_requests.get("{0}/filter".format(self.client.runs_url), text=json.dumps(expected_response), status_code=400)
-            self.client.get_runs()
+            self.client.search_runs()
 
     def test_run_job(self):
         expected_response = {"runs": "runs"}
         self.mock_requests.post(self.client.jobs_url, text=json.dumps(expected_response), status_code=202)
-        job_response = self.client.run_job(name='Name', description='Description', project='Project')
+        job_response = self.client.create_job(name='Name', description='Description', project='Project')
         self.assertEqual(expected_response, job_response)
 
         with self.assertRaises(Exception):
             self.mock_requests.post(self.client.jobs_url, text=json.dumps(expected_response), status_code=400)
-            self.client.run_job(name='Name', description='Description', project='Project')
+            self.client.create_job(name='Name', description='Description', project='Project')
 
         with self.assertRaises(Exception):
             self.mock_requests.post(self.client.jobs_url, text=json.dumps(expected_response), status_code=202)
-            self.client.run_job(name=None)
+            self.client.create_job(name=None)
 
     def test_parse_duration(self):
         def with_timedelta(td):

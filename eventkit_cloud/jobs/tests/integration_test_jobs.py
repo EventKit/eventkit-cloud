@@ -449,19 +449,17 @@ class TestJob(TestCase):
                 picked_up = True
         return response[0]
 
-    def wait_for_run(self, job_uid, run_timeout=DEFAULT_TIMEOUT):
+    def wait_for_run(self, run_uid, run_timeout=DEFAULT_TIMEOUT):
         finished = False
         response = None
         first_check = datetime.now()
-        last_check = datetime.now()
         while not finished:
             sleep(1)
             response = self.client.get(
-                self.runs_url,
-                params={"job_uid": job_uid},
+                "{}/{}".join(self.runs_url.rstrip('/'), run_uid),
                 headers={'X-CSRFToken': self.csrftoken
                          }).json()
-            status = response[0].get('status')
+            status = response.get('status')
             if status in [TaskStates.COMPLETED.value, TaskStates.INCOMPLETE.value, TaskStates.CANCELED.value]:
                 finished = True
             last_check = datetime.now()
@@ -478,7 +476,7 @@ class TestJob(TestCase):
             if last_check - first_check > timedelta(seconds=run_timeout):
                 raise Exception('Run timeout ({}s) exceeded'.format(run_timeout))
 
-        return response[0]
+        return response
 
     @staticmethod
     def get_gpkg_url(run, provider_task_name):
