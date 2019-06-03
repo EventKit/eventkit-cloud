@@ -1,13 +1,11 @@
 # -*- coding: utf-8 -*-
 import json
 import os
+import socket
 
 from celery.schedules import crontab
-
-import os
-import json
-import socket
 from kombu import Exchange, Queue
+
 from eventkit_cloud.celery import app
 from eventkit_cloud.settings.contrib import *  # NOQA
 

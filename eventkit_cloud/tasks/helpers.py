@@ -1,4 +1,3 @@
-import kombu
 import os
 import re
 import requests
@@ -499,6 +498,10 @@ def get_all_rabbitmq_objects(api_url, rabbit_class):
 
 
 def get_message_count(queue_name):
+    """
+    :param queue_name: The queue that you want to check messages for.
+    :return: An integer count of pending messages.
+    """
     broker_api_url = getattr(settings, 'BROKER_API_URL')
     queue_class = "queues"
 
@@ -513,7 +516,6 @@ def get_message_count(queue_name):
         for queue in get_all_rabbitmq_objects(broker_api_url, queue_class):
             if queue.get("name") == queue_name:
                 try:
-                    logger.info("Message count: {}".format(queue.get("messages")))
                     return queue.get("messages")
                 except Exception as e:
                     logger.info(e)

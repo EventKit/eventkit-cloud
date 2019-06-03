@@ -70,6 +70,10 @@ def expire_runs():
 
 @app.task(name="PCF Scale Celery")
 def pcf_scale_celery(max_instances):
+    """
+    Built specifically for PCF deployments.
+    Scales up celery instances when necessary.
+    """
     from eventkit_cloud.utils.pcf import PcfClient
     from eventkit_cloud.tasks.models import ExportRun
 
@@ -78,23 +82,18 @@ def pcf_scale_celery(max_instances):
     else:
         app_name = json.loads(os.getenv("VCAP_APPLICATION", "{}")).get("application_name")
 
-    # Connect to PCF Client
     client = PcfClient()
-    # Get running tasks
+
     running_tasks = client.get_running_tasks(app_name)
     running_tasks_count = running_tasks["pagination"]["total_results"]
 
-    # If running tasks are at the limit, skip scaling.
     if running_tasks_count >= max_instances:
         logger.info("Already at max instances, skipping.")
         return
 
-    command = os.getenv('CELERY_TASK_COMMAND')
-
-    # Check to see if there are runs pending.
     message_count = get_message_count("runs")
-    # Spin up a PCF task to handle the runs.
     if message_count > 0:
+        command = os.getenv('CELERY_TASK_COMMAND')
         logger.info(F"Sending task to {app_name} with command {command}")
         client.run_task(command, app_name=app_name)
 
