@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 import datetime
 import json
+import requests
 
 from celery.utils.log import get_task_logger
 from django.conf import settings
@@ -108,3 +109,47 @@ def send_warning_email(date=None, url=None, addr=None, job_name=None):
     except Exception as e:
         logger.error("Encountered an error when sending status email: {}".format(e))
 
+
+@app.task(name='Clean Up Queues')
+def clean_up_queues():
+    broker_api_url = getattr(settings, 'BROKER_API_URL')
+    queue_class = "queues"
+    exchange_class = "exchanges"
+
+    if not broker_api_url:
+        logger.error("Cannot clean up queues without a BROKER_API_URL.")
+        return
+    with app.connection() as conn:
+        channel = conn.channel()
+        if not channel:
+            logger.error("Could not establish a rabbitmq channel")
+            return
+        for queue in get_all_rabbitmq_objects(broker_api_url, queue_class):
+            queue_name = queue.get('name')
+            try:
+                channel.queue_delete(queue_name, if_unused=True, if_empty=True)
+                logger.info("Removed queue: {}".format(queue_name))
+            except Exception as e:
+                logger.info(e)
+        for exchange in get_all_rabbitmq_objects(broker_api_url, exchange_class):
+            exchange_name = exchange.get('name')
+            try:
+                channel.exchange_delete(exchange_name, if_unused=True)
+                logger.info("Removed exchange: {}".format(exchange_name))
+            except Exception as e:
+                logger.info(e)
+
+
+def get_all_rabbitmq_objects(api_url, rabbit_class):
+    """
+    :param api_url: The http api url including authentication values.
+    :param rabbit_class: The type of rabbitmq class (i.e. queues or exchanges) as a string.
+    :return: An array of dicts with the desired objects.
+    """
+    queues_url = "{}/{}".format(api_url.rstrip('/'), rabbit_class)
+    response = requests.get(queues_url)
+    if response.ok:
+        return response.json()
+    else:
+        logger.error(response.content.decode())
+        logger.error("Could not get the {}".format(type))
