@@ -223,7 +223,7 @@ if os.getenv('VCAP_SERVICES'):
             try:
                 if ('pg_95' in service) or ('postgres' in service):
                     DATABASES['default'] = dj_database_url.config(default=listings[0]['credentials']['uri'])
-                    DATABASES['default']['CONN_MAX_AGE'] = 30
+                    DATABASES['default']['CONN_MAX_AGE'] = 180
             except (KeyError, TypeError) as e:
                 print(("Could not configure information for service: {0}".format(service)))
                 print(e)
