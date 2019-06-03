@@ -255,6 +255,12 @@ class EventKitClient(object):
         return response[0]
 
     def check_provider(self, provider_slug):
+        """
+        
+        :param provider_slug: The providuer slug (e.g. osm) to test. 
+        :return: True if provider status check is success or warn, else False.
+        """""
+
         url = "{}/{}/status".format(self.providers_url, provider_slug)
         response = self.client.get(url)
         if not response.ok:
@@ -266,6 +272,7 @@ class EventKitClient(object):
             response = json.loads(response)
         if response.get("status") in ["SUCCESS", "WARN"]:
             return True
+        return False
 
 
 def parse_duration(duration):
