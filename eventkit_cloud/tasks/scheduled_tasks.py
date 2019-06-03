@@ -11,6 +11,7 @@ from django.template.loader import get_template
 from django.utils import timezone
 
 from eventkit_cloud.celery import app
+from eventkit_cloud.tasks.helpers import get_message_count
 
 logger = get_task_logger(__name__)
 
