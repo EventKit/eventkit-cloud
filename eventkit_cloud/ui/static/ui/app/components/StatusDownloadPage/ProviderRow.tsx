@@ -441,6 +441,7 @@ export class ProviderRow extends React.Component<Props, State> {
                                 <TableCell
                                     className="qa-ProviderRow-TableCell-estimatedFinish"
                                     classes={{ root: classes.estimatedFinishColumn }}
+                                    style={{fontSize: '.85em'}}
                                 >
                                     {this.getEstimatedFinish(task)}
                                 </TableCell>
