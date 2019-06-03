@@ -2,7 +2,6 @@
 import datetime
 import json
 import os
-import requests
 
 from celery.utils.log import get_task_logger
 from django.conf import settings
@@ -11,7 +10,7 @@ from django.template.loader import get_template
 from django.utils import timezone
 
 from eventkit_cloud.celery import app
-from eventkit_cloud.tasks.helpers import get_message_count
+from eventkit_cloud.tasks.helpers import get_all_rabbitmq_objects, get_message_count
 
 logger = get_task_logger(__name__)
 
@@ -172,18 +171,3 @@ def clean_up_queues():
                 logger.info("Removed exchange: {}".format(exchange_name))
             except Exception as e:
                 logger.info(e)
-
-
-def get_all_rabbitmq_objects(api_url, rabbit_class):
-    """
-    :param api_url: The http api url including authentication values.
-    :param rabbit_class: The type of rabbitmq class (i.e. queues or exchanges) as a string.
-    :return: An array of dicts with the desired objects.
-    """
-    queues_url = "{}/{}".format(api_url.rstrip('/'), rabbit_class)
-    response = requests.get(queues_url)
-    if response.ok:
-        return response.json()
-    else:
-        logger.error(response.content.decode())
-        logger.error("Could not get the {}".format(type))
