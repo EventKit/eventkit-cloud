@@ -205,9 +205,9 @@ export class ProviderRow extends React.Component<Props, State> {
     private getLastEstimatedFinish(tasks: Eventkit.Task[]) {
         return this.getEstimatedFinish([...tasks].sort((a, b) => {
             if (a.estimated_finish && b.estimated_finish)
-                return new Date(b.estimated_finish).getTime() - new Date(a.estimated_finish).getTime();
+                return new Date(a.estimated_finish).getTime() - new Date(b.estimated_finish).getTime();
             else
-                return -1;
+                return 1;
         })[0]);
     }
 
