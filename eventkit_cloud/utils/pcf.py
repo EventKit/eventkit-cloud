@@ -21,10 +21,22 @@ class PcfClient(object):
         if not self.api_url:
             raise Exception("No api_url or PCF_API_URL provided.")
         self.session = requests.Session()
+        self.info = None
+        self.token = None
+        self.org_name = org_name
+        self.space_name = space_name
+        self.org_guid = None
+        self.space_guid = None
+
+    def login(self, org_name=None, space_name=None):
+        org_name = org_name or self.org_name
+        space_name = space_name or self.space_name
+        if not org_name and space_name:
+            raise Exception("Both an org and space are required to login.")
         self.info = self.get_info()
         self.token = self.get_token()
-        self.org_guid, self.org_name = self.get_org_guid(org_name=os.getenv('PCF_ORG', org_name))
-        self.space_guid, self.space_name = self.get_space_guid(space_name=os.getenv('PCF_SPACE', space_name))
+        self.org_guid, self.org_name = self.get_org_guid(org_name=os.getenv('PCF_ORG', self.org_name))
+        self.space_guid, self.space_name = self.get_space_guid(space_name=os.getenv('PCF_SPACE', self.space_name))
 
     def get_info(self):
         return self.session.get("{0}/v2/info".format(self.api_url.rstrip('/')),

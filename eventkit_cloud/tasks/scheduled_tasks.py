@@ -83,6 +83,7 @@ def pcf_scale_celery(max_instances):
         app_name = json.loads(os.getenv("VCAP_APPLICATION", "{}")).get("application_name")
 
     client = PcfClient()
+    client.login()
 
     running_tasks = client.get_running_tasks(app_name)
     running_tasks_count = running_tasks["pagination"]["total_results"]
