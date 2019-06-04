@@ -35,7 +35,7 @@ class TestPcfClient(TestCase):
             "description": "https://docs.pivotal.io/pivotalcf/2-3/pcf-release-notes/runtime-rn.html",
             "authorization_endpoint": self.auth_url,
             "token_endpoint": self.token_url,
-            "routing_endpoint": "https://api.system.dev.east.paas.geointservices.io/routing"
+            "routing_endpoint": self.routing_url
         }
         self.client = PcfClient(api_url=self.api_url, org_name=self.org, space_name=self.space)
 
