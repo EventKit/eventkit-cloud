@@ -9,7 +9,6 @@ from eventkit_cloud.utils.client import parse_duration
 from eventkit_cloud.utils.stats.geomutils import prefetch_geometry_cache, lookup_cache_geometry,\
     get_area_bbox, get_bbox_intersect
 
-from threading import Lock
 import logging
 import datetime
 import json
@@ -21,7 +20,6 @@ logger = logging.getLogger(__name__)
 _dbg_geom_cache_misses = 0
 MAX_SAMPLES_PER_TARGET = 2000
 DEFAULT_CACHE_EXPIRATION = 86400  # expire in a day
-COMPUTATION_LOCK = Lock()
 
 
 def get_statistics(grouping='provider_name', force=os.getenv("FORCE_STATISTICS_RECOMPUTE", False)):
