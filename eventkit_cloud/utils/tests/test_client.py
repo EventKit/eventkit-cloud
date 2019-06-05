@@ -2,6 +2,7 @@
 import json
 import logging
 import datetime
+import uuid
 
 import requests_mock
 from django.test import TestCase
@@ -47,26 +48,84 @@ class TestClient(TestCase):
         self.mock_requests.register_uri('GET', "{0}/filter".format(self.client.runs_url),
                                         [{'text': json.dumps(request_response), 'status_code': 200},
                                          {'text': '', 'status_code': 404}])
-        runs = self.client.get_runs()
+        runs = self.client.search_runs()
         self.assertEqual(expected_response, runs)
 
         with self.assertRaises(Exception):
             self.mock_requests.get("{0}/filter".format(self.client.runs_url), text=json.dumps(expected_response), status_code=400)
-            self.client.get_runs()
+            self.client.search_runs()
 
     def test_run_job(self):
         expected_response = {"runs": "runs"}
         self.mock_requests.post(self.client.jobs_url, text=json.dumps(expected_response), status_code=202)
-        job_response = self.client.run_job(name='Name', description='Description', project='Project')
+        job_response = self.client.create_job(name='Name', description='Description', project='Project')
         self.assertEqual(expected_response, job_response)
 
         with self.assertRaises(Exception):
             self.mock_requests.post(self.client.jobs_url, text=json.dumps(expected_response), status_code=400)
-            self.client.run_job(name='Name', description='Description', project='Project')
+            self.client.create_job(name='Name', description='Description', project='Project')
 
         with self.assertRaises(Exception):
             self.mock_requests.post(self.client.jobs_url, text=json.dumps(expected_response), status_code=202)
-            self.client.run_job(name=None)
+            self.client.create_job(name=None)
+
+    def test_delete(self):
+        example_run_uid = uuid.uuid4()
+        expected_status = 204
+        url = "{}/{}".format(self.client.runs_url.rstrip('/'), example_run_uid)
+        self.mock_requests.delete(url, status_code=expected_status)
+        self.client.delete_run(example_run_uid)
+
+        with self.assertRaises(Exception):
+            wrong_status = 500
+            self.mock_requests.delete(url, status_code=wrong_status)
+            self.client.delete_run(example_run_uid)
+
+    def test_wait_for_run(self):
+        example_run_uid = uuid.uuid4()
+        in_progress_response = [{"status": "PENDING",
+                                 "provider_tasks": [{"tasks": [{"status": "IN_PROGRESS", "errors": ""}]}]}]
+        finished_response = [{"status": "COMPLETED",
+                              "provider_tasks": [{"tasks": [{"status": "SUCCESS", "errors": ""}]}]}]
+        expected_errors = ["EXAMPLE", "ERROR"]
+        failure_reponse = [{"provider_tasks": [{"tasks": [{"status": "FAILED", "errors": expected_errors}]}],
+                            "status": "INCOMPLETE"}]
+        url = "{}/{}".format(self.client.runs_url.rstrip('/'), example_run_uid)
+        self.mock_requests.register_uri('GET', url,
+                                        [{'text': json.dumps(finished_response), 'status_code': 200}])
+        response = self.client.wait_for_run(run_uid=example_run_uid, run_timeout=2)
+        self.assertEqual(response.get("status"), finished_response[0].get("status"))
+
+        # Test failed to get status
+        with self.assertRaises(Exception):
+            self.mock_requests.register_uri('GET', url,
+                                            [{'text': json.dumps(failure_reponse), 'status_code': 404}])
+            self.client.wait_for_run(run_uid=example_run_uid, run_timeout=2)
+
+        # Test failed run
+        with self.assertRaises(Exception):
+            self.mock_requests.register_uri('GET', url,
+                                            [{'text': json.dumps(failure_reponse), 'status_code': 200}])
+            self.client.wait_for_run(run_uid=example_run_uid, run_timeout=2)
+
+        # Test timeout.
+        with self.assertRaises(Exception):
+            self.mock_requests.register_uri('GET', url,
+                                            [{'text': json.dumps(in_progress_response), 'status_code': 200}])
+            self.client.wait_for_run(run_uid=example_run_uid, run_timeout=1)
+
+    def test_check_provider(self):
+        example_slug = "test"
+        url = "{}/{}/status".format(self.client.providers_url, example_slug)
+        success_response = '{"status": "SUCCESS"}'
+        fail_response = '{"status": "ERROR"}'
+        self.mock_requests.get(url, text=success_response)
+        response = self.client.check_provider(example_slug)
+        self.assertTrue(response)
+
+        self.mock_requests.get(url, text=fail_response)
+        response = self.client.check_provider(example_slug)
+        self.assertFalse(response)
 
     def test_parse_duration(self):
         def with_timedelta(td):

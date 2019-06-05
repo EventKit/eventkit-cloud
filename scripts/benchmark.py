@@ -58,7 +58,7 @@ class BenchmarkEventkit(object):
             name = feature['properties'].get(self.name)
             description = "Created using the benchmark script."
             project = "benchmark"
-            runs = [run for run in self.client.get_runs(search_term=name)]
+            runs = [run for run in self.client.search_runs(search_term=name)]
             if name in [run['job']['name'] for run in runs] and self.username in [run['user'] for run in runs]:
                 print("Skipping {0} because data already exists in a DataPack with the same name.".format(name))
                 continue
@@ -66,8 +66,8 @@ class BenchmarkEventkit(object):
                 print("Skipping: \n {0} \n"
                       "because a valid name wasn't provided or found.".format(feature))
                 continue
-            response = self.client.run_job(name=name, description=description, project=project,
-                                           provider_tasks=provider_tasks, selection=feature)
+            response = self.client.create_job(name=name, description=description, project=project,
+                                              provider_tasks=provider_tasks, selection=feature)
 
             if response:
                 print('Submitted job for {0}'.format(name))
@@ -79,7 +79,7 @@ class BenchmarkEventkit(object):
                 print(response)
 
     def delete_runs(self):
-        response = self.client.get_runs()
+        response = self.client.search_runs()
         while response:
             for run in response:
                 if run.get('user') == self.username:
@@ -87,7 +87,7 @@ class BenchmarkEventkit(object):
                     if job_url:
                         self.client.client.delete(run['job']['url'],
                                                   headers={'X-CSRFToken': self.client.csrftoken})
-            response = self.client.get_runs()
+            response = self.client.search_runs()
 
     def wait_for_run(self, job_uid, run_timeout=0):
         finished = False
