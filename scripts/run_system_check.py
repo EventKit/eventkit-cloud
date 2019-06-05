@@ -59,9 +59,10 @@ def main():
             client = EventKitClient(args.url.rstrip('/'), username=user, password=password, certificate=certificate,
                                     verify=verify)
             break
-        except Exception:
+        except Exception as e:
             tries -= 1
             print("Failed to login.")
+            print(e)
             print("{} attempts remaining.".format(tries))
             time.sleep(1)
     if not client:
