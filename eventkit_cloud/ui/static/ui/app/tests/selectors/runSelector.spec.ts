@@ -111,7 +111,6 @@ describe('Run Selector', () => {
     it('toFullRun should return the simple run if no provider tasks provided', () => {
         const runId = '111';
         const inputRun = { ...state.exports.data.runs[runId] };
-        inputRun.provider_tasks = null;
         expect(selectors.toFullRun(
             inputRun,
             state.exports.data.jobs,
@@ -121,8 +120,9 @@ describe('Run Selector', () => {
     it('toFullRun should return normally when run provider tasks are not present', () => {
         const runId = '111';
         const expected = getMockEmptyRun(runId);
+        const run = {...state.exports.data.runs[runId], provider_tasks: null};
         expect(selectors.toFullRun(
-            state.exports.data.runs[runId],
+            run,
             state.exports.data.jobs,
             state.exports.data.provider_tasks,
             state.exports.data.tasks,
