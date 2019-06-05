@@ -116,8 +116,8 @@ describe('BreadcrumbStepper component', () => {
     let wrapper;
     let instance;
 
-    const setup = (overrides = {}) => {
-        const config = { SERVE_ESTIMATES: true};
+    const setup = (overrides = {}, serveEstimates = false) => {
+        const config = { SERVE_ESTIMATES: serveEstimates};
         props = { ...getProps(), ...overrides };
         wrapper = shallow(<BreadcrumbStepper {...props} />, {
             context: { config },
@@ -209,10 +209,6 @@ describe('BreadcrumbStepper component', () => {
     });
 
     it('getStepLabel should return the correct label for each stepIndex', () => {
-        const config = { SERVE_ESTIMATES: false};
-        let wrapper = shallow(<BreadcrumbStepper {...getProps()} />, {
-            context: { config },
-        });
         let elem = mount(wrapper.instance().getStepLabel(0));
         expect(elem.text()).toEqual(expect.stringContaining('STEP 1 OF 3:  Define Area of Interest'));
 
