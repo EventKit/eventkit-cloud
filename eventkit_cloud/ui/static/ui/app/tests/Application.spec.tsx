@@ -135,7 +135,8 @@ describe('Application component', () => {
         const wrapper = getWrapper(props);
         await wrapper.instance().getConfig();
         expect(stateSpy.called).toBe(true);
-        expect(stateSpy.calledWith({ childContext: { config: { LOGIN_DISCLAIMER: 'Test string' } } })).toBe(true);
+        expect(stateSpy.calledWith({ childContext: { config: { LOGIN_DISCLAIMER: 'Test string',
+                SERVE_ESTIMATES: false} } })).toBe(true);
         stateSpy.restore();
     });
 

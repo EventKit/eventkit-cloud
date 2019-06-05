@@ -76,7 +76,8 @@ describe('ExportInfo component', () => {
     let wrapper;
     let instance;
     const setup = (overrides = {}) => {
-        const config = { BASEMAP_URL: 'http://my-osm-tile-service/{z}/{x}/{y}.png' };
+        const config = { BASEMAP_URL: 'http://my-osm-tile-service/{z}/{x}/{y}.png',
+        SERVE_ESTIMATES: true};
         props = { ...getProps(), ...overrides };
         wrapper = shallow(<ExportInfo {...props} />, {
             context: { config },
@@ -342,6 +343,31 @@ describe('ExportInfo component', () => {
         const stateSpy = sinon.spy(instance, 'setState');
         await instance.checkEstimate(provider);
         expect(stateSpy.calledOnce).toBe(true);
+        expect(wrapper.state().providers).toEqual([newProvider]);
+    });
+
+    it('checkEstimate should not setState when SERVE_ESTIMATES is false', async () => {
+        const provider = {
+            slug: '123',
+        };
+
+        const newProvider = {
+            slug: '123',
+            estimate: {
+                slug: '123',
+                size: 10,
+                unit: 'MB',
+            }
+        };
+
+        sinon.stub(instance, 'getEstimate').callsFake(() => (
+            new Promise((resolve) => {
+                setTimeout(() => resolve(newProvider), 10);
+            })
+        ));
+        const stateSpy = sinon.spy(instance, 'setState');
+        await instance.checkEstimate(provider);
+        expect(stateSpy.called).toBe(true);
         expect(wrapper.state().providers).toEqual([newProvider]);
     });
 

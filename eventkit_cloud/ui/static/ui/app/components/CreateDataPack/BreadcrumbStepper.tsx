@@ -159,14 +159,20 @@ export class BreadcrumbStepper extends React.Component<Props, State> {
             this.setState({ modified: true });
         }
 
-        // only update the estimate if providers has changed
-        const prevProviders = prevProps.exportInfo.providers;
-        const providers = this.props.exportInfo.providers;
-        if(prevProviders.length != providers.length) {
-            this.updateEstimate()
-        }
-        else if (!prevProviders.every((p1) => {return providers.includes(p1)})) {
-            if(this.context.config.SERVE_ESTIMATES) {
+        if(this.context.config.SERVE_ESTIMATES) {
+            // only update the estimate if providers has changed
+            const prevProviders = prevProps.exportInfo.providers;
+            const providers = this.props.exportInfo.providers;
+            if(prevProviders && providers) {
+                if (prevProviders.length != providers.length) {
+                    this.updateEstimate()
+                } else if (!prevProviders.every((p1) => {
+                    return providers.includes(p1)
+                })) {
+                    this.updateEstimate()
+                }
+            }
+            else if(prevProviders || providers) {
                 this.updateEstimate()
             }
         }
@@ -182,21 +188,6 @@ export class BreadcrumbStepper extends React.Component<Props, State> {
         let estimateSize = 0.000;
         estimateSize = Number(estimateSize) + Number(this.state.sizeEstimate);
         return Number(estimateSize).toFixed(3) + ' MB';
-    }
-
-    private updateEstimate() {
-        if(!this.context.config.SERVE_ESTIMATES)
-            return;
-        let sizeEstimate = 0;
-        for (const provider of this.props.exportInfo.providers) {
-            if(provider.id in this.props.exportInfo.providerEstimates) {
-                const estimate = this.props.exportInfo.providerEstimates[provider.id];
-                if (estimate) {
-                    sizeEstimate += estimate.size;
-                }
-            }
-        }
-        this.setState({sizeEstimate});
     }
 
     private async getProviders() {
@@ -551,6 +542,21 @@ export class BreadcrumbStepper extends React.Component<Props, State> {
 
     private handleLeaveWarningDialogConfirm() {
         this.props.router.push(this.leaveRoute);
+    }
+
+    private updateEstimate() {
+        if(!this.context.config.SERVE_ESTIMATES || !this.props.exportInfo.providers)
+            return;
+        let sizeEstimate = 0;
+        for (const provider of this.props.exportInfo.providers) {
+            if(provider.id in this.props.exportInfo.providerEstimates) {
+                const estimate = this.props.exportInfo.providerEstimates[provider.id];
+                if (estimate) {
+                    sizeEstimate += estimate.size;
+                }
+            }
+        }
+        this.setState({sizeEstimate});
     }
 
     render() {
