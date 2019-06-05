@@ -103,7 +103,8 @@ describe('DataPackDetails component', () => {
             .html())
             .toContain('CREATING DATAPACK ZIP');
         expect(table.find(TableCell).at(1).dive().html()).toContain('FILE SIZE');
-        expect(table.find(TableCell).at(2).dive().html()).toContain('PROGRESS');
+        expect(table.find(TableCell).at(2).dive().html()).toContain('ESTIMATED FINISH');
+        expect(table.find(TableCell).at(3).dive().html()).toContain('PROGRESS');
         expect(wrapper.find(ProviderRow)).toHaveLength(1);
     });
 
