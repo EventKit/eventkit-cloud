@@ -19,7 +19,7 @@ def string2bool(string_value):
     if string_value.lower() in ["true", "t", 1, "yes", "y"]:
         return True
     if string_value.lower() in ["false", "f", 0, "no", "n"]:
-        return True
+        return False
     return string_value
 
 
