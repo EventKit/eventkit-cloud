@@ -348,6 +348,7 @@ declare namespace Eventkit {
             formats: string[];
             projectName: string;
             providers: Provider[];
+            providerEstimates: {};
         }
 
         interface AoiInfo {

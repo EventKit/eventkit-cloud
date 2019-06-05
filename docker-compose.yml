@@ -22,6 +22,7 @@ services:
       - DATABASE_URL=postgres://eventkit:eventkit_exports@postgis:5432/eventkit_exports
       - BROKER_URL=amqp://guest:guest@rabbitmq:5672/
       - BROKER_API_URL=http://guest:guest@rabbitmq:15672/api/
+      - SERVE_ESTIMATES
       - SITE_NAME
       - SITE_IP
       - TERM

@@ -9,45 +9,36 @@ from eventkit_cloud.utils.client import parse_duration
 from eventkit_cloud.utils.stats.geomutils import prefetch_geometry_cache, lookup_cache_geometry,\
     get_area_bbox, get_bbox_intersect
 
-from threading import Lock
 import logging
 import datetime
 import json
 import math
+import os
 import statistics
 
 logger = logging.getLogger(__name__)
 _dbg_geom_cache_misses = 0
 MAX_SAMPLES_PER_TARGET = 2000
 DEFAULT_CACHE_EXPIRATION = 86400  # expire in a day
-COMPUTATION_LOCK = Lock()
 
 
-def get_statistics(grouping='provider_name', force=False):
+def get_statistics(grouping='provider_name', force=os.getenv("FORCE_STATISTICS_RECOMPUTE", False)):
     """
     :param force: True to re-compute the desired statistics
     :param grouping: see group_providers_by
     :return: The statistics object
     """
-    with COMPUTATION_LOCK:
-        cache_key = "DATA_STATISTICS_BY_{}".format(grouping)
-        if not force:
-            stats = cache.get(cache_key)
-            if stats:
-                return json.loads(stats)
+    cache_key = "DATA_STATISTICS_BY_{}".format(grouping)
+    compute_stats = lambda: json.dumps(compute_statistics(group_providers_by(grouping)))
+    if force:
+        stats = compute_stats()
+        cache.set(cache_key, stats, timeout=DEFAULT_CACHE_EXPIRATION)
+    else:
+        # get_or_set needs a callable to avoid evaluating early.
+        # compute stats will only be evaluated if the cache is not set.
+        stats = cache.get_or_set(cache_key, compute_stats, timeout=DEFAULT_CACHE_EXPIRATION)
 
-        # Order by time descending to ensure more recent samples are collected first
-        etr = ExportTaskRecord.objects\
-            .filter(result__isnull=False) \
-            .order_by('-finished_at') \
-            .select_related("result") \
-            .all()
-
-        grouper = group_providers_by(grouping)
-        stats = compute_statistics(etr, grouper)
-        cache.set(cache_key, json.dumps(stats), timeout=DEFAULT_CACHE_EXPIRATION)
-
-    return stats
+    return json.loads(stats)
 
 
 def get_default_tile_grid(level=10):
@@ -102,7 +93,7 @@ def has_tiles(export_task_record_name):
     return export_task_record_name not in ['Area of Interest (.geojson)', 'Project File (.zip)']
 
 
-def compute_statistics(export_task_records, get_group, tile_grid=get_default_tile_grid(), filename=None):
+def compute_statistics(get_group, tile_grid=get_default_tile_grid(), filename=None):
     """
     :param export_task_records: ExporTaskRecords is a list of all export tasks
     :param get_group: Function to generate a group id given a DataExportProviderTask
@@ -110,6 +101,12 @@ def compute_statistics(export_task_records, get_group, tile_grid=get_default_til
     :param filename: Serializes the intermediate data-sample data so it can be shared btw different deployments
     :return: A dict with statistics including area, duration, and package size per sq. kilometer
     """
+    # Order by time descending to ensure more recent samples are collected first
+    export_task_records = ExportTaskRecord.objects \
+        .filter(result__isnull=False) \
+        .order_by('-finished_at') \
+        .select_related("result") \
+        .all()
 
     # Method to pull normalized data values off of the run, provider_task, or provider_task.task objects
     accessors = {
@@ -499,7 +496,6 @@ def query(group_name, field, statistic_name, bbox, bbox_srs, gap_fill_thresh=0.1
             req_area = get_area_bbox(req_bbox)
 
             affected_tiles = get_tile_stats(group_stats, tile_grid, req_bbox)
-
             if affected_tiles and len(affected_tiles) > 0:
                 # We have some stats specific to this group, at tiles within the user-defined region
                 # We want to weight tile-specific statistics based on its % overlap with the bbox

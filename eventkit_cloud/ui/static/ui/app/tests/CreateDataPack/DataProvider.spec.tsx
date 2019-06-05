@@ -18,6 +18,7 @@ describe('DataProvider component', () => {
                 name: 'test license',
             },
             availability: {},
+            estimate: {},
         },
         checked: false,
         onChange: sinon.spy(),

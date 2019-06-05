@@ -81,6 +81,7 @@ describe('exportInfo reducer', () => {
             providers: [],
             areaStr: '',
             formats: ['gpkg'],
+            providerEstimates: {},
         });
     });
 
@@ -133,6 +134,7 @@ describe('exportInfo reducer', () => {
             providers: [],
             areaStr: '',
             formats: ['gpkg'],
+            providerEstimates: {},
         });
     });
 });
