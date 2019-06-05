@@ -1,10 +1,10 @@
 import * as PropTypes from 'prop-types';
 import * as React from 'react';
-import { withTheme, Theme, withStyles, createStyles } from '@material-ui/core/styles';
-import { connect } from 'react-redux';
+import {createStyles, Theme, withStyles, withTheme} from '@material-ui/core/styles';
+import {connect} from 'react-redux';
 import axios from 'axios';
 import cookie from 'react-cookie';
-import Joyride, { Step } from 'react-joyride';
+import Joyride, {Step} from 'react-joyride';
 import List from '@material-ui/core/List';
 import Paper from '@material-ui/core/Paper';
 import Popover from '@material-ui/core/Popover';
@@ -14,15 +14,16 @@ import ActionCheckCircle from '@material-ui/icons/CheckCircle';
 import Info from '@material-ui/icons/Info';
 import NavigationRefresh from '@material-ui/icons/Refresh';
 import CustomScrollbar from '../CustomScrollbar';
-import DataProvider, { ProviderData } from './DataProvider';
+import DataProvider, {ProviderData} from './DataProvider';
 import MapCard from '../common/MapCard';
-import { updateExportInfo } from '../../actions/datacartActions';
-import { stepperNextDisabled, stepperNextEnabled } from '../../actions/uiActions';
+import {updateExportInfo} from '../../actions/datacartActions';
+import {stepperNextDisabled, stepperNextEnabled} from '../../actions/uiActions';
 import BaseDialog from '../Dialog/BaseDialog';
 import CustomTextField from '../CustomTextField';
 import CustomTableRow from '../CustomTableRow';
-import { joyride } from '../../joyride.config';
-import { getSqKmString } from '../../utils/generic';
+import {joyride} from '../../joyride.config';
+import {getSqKmString} from '../../utils/generic';
+import {featureToBbox, WGS84} from '../../utils/mapUtils';
 
 const jss = (theme: Eventkit.Theme & Theme) => createStyles({
     underlineStyle: {
@@ -91,6 +92,11 @@ const jss = (theme: Eventkit.Theme & Theme) => createStyles({
         display: 'flex',
         lineHeight: '24px',
     },
+    selectAll: {
+        padding: '0px 10px 10px 10px',
+        display: 'flex',
+        lineHeight: '24px',
+    },
     infoIcon: {
         height: '24px',
         width: '24px',
@@ -103,6 +109,17 @@ const jss = (theme: Eventkit.Theme & Theme) => createStyles({
         cursor: 'pointer',
         color: theme.eventkit.colors.primary,
     },
+    checkbox: {
+        width: '24px',
+        height: '24px',
+        marginRight: '15px',
+        flex: '0 0 auto',
+        color: theme.eventkit.colors.primary,
+        '&$checked': {
+            color: theme.eventkit.colors.success,
+        },
+    },
+    checked: {},
 });
 
 export interface Props {
@@ -118,6 +135,7 @@ export interface Props {
     onWalkthroughReset: () => void;
     theme: Eventkit.Theme & Theme;
     classes: { [className: string]: string };
+    onUpdateEstimate?: () => void;
 }
 
 export interface State {
@@ -153,9 +171,11 @@ export class ExportInfo extends React.Component<Props, State> {
         this.handleProjectionsClose = this.handleProjectionsClose.bind(this);
         this.handleProjectionsOpen = this.handleProjectionsOpen.bind(this);
         this.onChangeCheck = this.onChangeCheck.bind(this);
+        this.onSelectAll = this.onSelectAll.bind(this);
         this.onRefresh = this.onRefresh.bind(this);
         this.getAvailability = this.getAvailability.bind(this);
         this.checkAvailability = this.checkAvailability.bind(this);
+        this.checkEstimate = this.checkEstimate.bind(this);
         this.checkProviders = this.checkProviders.bind(this);
         this.handlePopoverOpen = this.handlePopoverOpen.bind(this);
         this.handlePopoverClose = this.handlePopoverClose.bind(this);
@@ -265,6 +285,20 @@ export class ExportInfo extends React.Component<Props, State> {
                 }
             }
         }
+        // update the state with the new array of options
+        this.props.updateExportInfo({
+            ...this.props.exportInfo,
+            providers,
+        });
+    }
+
+    private onSelectAll(e: React.ChangeEvent<HTMLInputElement>) {
+        // current array of providers
+        let providers = [];
+        if (e.target.checked) {
+            //set providers to the list of ALL providers
+            providers = [...this.props.providers];
+        }
 
         // update the state with the new array of options
         this.props.updateExportInfo({
@@ -281,10 +315,7 @@ export class ExportInfo extends React.Component<Props, State> {
         // update state with the new copy of providers
         this.setState({ providers });
 
-        // check all of providers again
-        providers.forEach((provider) => {
-            this.checkAvailability(provider);
-        });
+        this.checkProviders(providers);
     }
 
     private getAvailability(provider: Eventkit.Provider, data: any) {
@@ -313,6 +344,43 @@ export class ExportInfo extends React.Component<Props, State> {
         });
     }
 
+    private getEstimate(provider: Eventkit.Provider, bbox: number[]) {
+        // make a copy of the provider to edit
+        const newProvider = { ...provider } as ProviderData;
+        const data = { slugs: provider.slug,
+                       srs: 4326,
+                       bbox: bbox.join(',') };
+        const csrfmiddlewaretoken = cookie.load('csrftoken');
+        return axios({
+            url: `/api/estimate`,
+            method: 'get',
+            params: data,
+            headers: { 'X-CSRFToken': csrfmiddlewaretoken },
+        }).then((response) => {
+            const estimate = response.data[0];
+            newProvider.estimate = estimate;
+            // record the estimate found for this provider.
+            this.props.updateExportInfo({
+                ...this.props.exportInfo,
+                providerEstimates: {
+                        ...this.props.exportInfo.providerEstimates,
+                        [provider.id]: estimate
+                    }
+            });
+            // Trigger a estimate update in the parent, this will cause the estimate
+            // to update if the newly returned estimate is on a selected provider.
+            this.props.onUpdateEstimate();
+            return newProvider;
+        }).catch(() => {
+            newProvider.estimate = {
+                size: null,
+                slug: provider.slug,
+                unit: null,
+            };
+            return newProvider;
+        });
+    }
+
     async checkAvailability(provider: ProviderData) {
         const data = { geojson: this.props.geojson };
         const newProvider = await this.getAvailability(provider, data);
@@ -322,6 +390,23 @@ export class ExportInfo extends React.Component<Props, State> {
             providers.splice(providers.indexOf(provider), 1, newProvider);
             return { providers };
         });
+        return newProvider;
+    }
+
+    async checkEstimate(provider: ProviderData) {
+        // This assumes that the entire selection is the first feature, if the feature collection becomes the
+        // selection then the bbox would need to be calculated for it.
+        if(this.context.config.SERVE_ESTIMATES) {
+            const bbox = featureToBbox(this.props.geojson.features[0], WGS84);
+            const newProvider = await this.getEstimate(provider, bbox);
+            this.setState((prevState) => {
+                // make a copy of state providers and replace the one we updated
+                const providers = [...prevState.providers];
+                providers.splice(providers.indexOf(provider), 1, newProvider);
+                return {providers};
+            });
+            return newProvider;
+        }
     }
 
     private checkProviders(providers: ProviderData[]) {
@@ -329,7 +414,12 @@ export class ExportInfo extends React.Component<Props, State> {
             if (provider.display === false) {
                 return;
             }
-            this.checkAvailability(provider);
+            // This can be switched to finally in newer version of ES and typescript.
+            this.checkAvailability(provider).then((newProvider) => {
+                this.checkEstimate(newProvider);
+            }).catch((newProvider) => {
+                this.checkEstimate(newProvider);
+            });
         });
     }
 
@@ -391,7 +481,7 @@ export class ExportInfo extends React.Component<Props, State> {
         const { action, step, type } = data;
         this.props.setNextDisabled();
         if (action === 'close' || action === 'skip' || type === 'finished') {
-            this.setState({ isRunning: false });
+                this.setState({ isRunning: false });
             this.props.onWalkthroughReset();
             this.joyride.current.reset(true);
             window.location.hash = '';
@@ -406,11 +496,13 @@ export class ExportInfo extends React.Component<Props, State> {
         }
     }
 
+    private getProviders() {
+        return this.state.providers.filter(provider => (provider.display !== false));
+    }
+
     render() {
         const { classes } = this.props;
         const { steps, isRunning } = this.state;
-
-        const providers = this.state.providers.filter(provider => (provider.display !== false));
 
         return (
             <div id="root" className={`qa-ExportInfo-root ${classes.root}`} >
@@ -492,6 +584,20 @@ export class ExportInfo extends React.Component<Props, State> {
                                     (You must choose <strong>at least one</strong>)
                                 </div>
                             </div>
+                            <div id="select" className={`qa-ExportInfo-selectAll ${classes.selectAll}`}>
+                                <Checkbox
+                                    classes={{ root: classes.checkbox, checked: classes.checked }}
+                                    name="SelectAll"
+                                    checked={this.props.exportInfo.providers.length == this.props.providers.length}
+                                    onChange={this.onSelectAll}
+                                    style={{ width: '24px', height: '24px' }}
+                                />
+                                <span style={{
+                                    padding: '0px 15px', display: 'flex',
+                                    flexWrap: 'wrap' , fontSize: '16px',}}>
+                                    Select All
+                                </span>
+                            </div>
                             <div className={classes.sectionBottom}>
                                 <div className={`qa-ExportInfo-ListHeader ${classes.listHeading}`}>
                                     <div
@@ -543,7 +649,7 @@ export class ExportInfo extends React.Component<Props, State> {
                                     className="qa-ExportInfo-List"
                                     style={{ width: '100%', fontSize: '16px' }}
                                 >
-                                    {providers.map((provider, ix) => (
+                                    {this.getProviders().map((provider, ix) => (
                                         <DataProvider
                                             key={provider.slug}
                                             provider={provider}
@@ -551,6 +657,7 @@ export class ExportInfo extends React.Component<Props, State> {
                                             checked={this.props.exportInfo.providers.map(x => x.name)
                                                 .indexOf(provider.name) !== -1}
                                             alt={ix % 2 === 0}
+                                            renderEstimate={this.context.config.SERVE_ESTIMATES}
                                         />
                                     ))}
                                 </List>

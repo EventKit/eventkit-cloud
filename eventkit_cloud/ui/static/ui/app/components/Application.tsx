@@ -116,6 +116,7 @@ interface State {
         DATAPACK_PAGE_SIZE?: string;
         NOTIFICATIONS_PAGE_SIZE?: string;
         CONTACT_URL?: string;
+        SERVE_ESTIMATES?: boolean
     }};
     autoLogoutWarningText: string;
     showAutoLogoutWarningDialog: boolean;
@@ -280,11 +281,19 @@ export class Application extends React.Component<Props, State> {
         return axios.get('/configuration')
             .then((response) => {
                 if (response.data) {
-                    this.setState({ childContext: { config: response.data } });
+                    let data = response.data;
+                    data['SERVE_ESTIMATES'] = this.getBooleanSetting(data.SERVE_ESTIMATES);
+                    this.setState({ childContext: { config: data } });
                 }
             }).catch((error) => {
                 console.warn(error.response.data);
             });
+    }
+
+    private getBooleanSetting(settingValue) {
+        // convert a setting to lower case to test for boolean values
+        // any value other than 'true' will be treated as false, including undefined
+        return settingValue ? settingValue.toLowerCase() === 'true' : false;
     }
 
     async handleStayLoggedIn() {

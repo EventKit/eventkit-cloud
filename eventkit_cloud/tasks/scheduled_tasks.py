@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 import datetime
 import json
-import requests
+import os
 
 from celery.utils.log import get_task_logger
 from django.conf import settings
@@ -10,6 +10,7 @@ from django.template.loader import get_template
 from django.utils import timezone
 
 from eventkit_cloud.celery import app
+from eventkit_cloud.tasks.helpers import get_all_rabbitmq_objects, get_message_count
 
 logger = get_task_logger(__name__)
 
@@ -67,10 +68,42 @@ def expire_runs():
             run.save()
 
 
-@app.task(name='Check Provider Availability')
+@app.task(name="PCF Scale Celery")
+def pcf_scale_celery(max_instances):
+    """
+    Built specifically for PCF deployments.
+    Scales up celery instances when necessary.
+    """
+    from eventkit_cloud.utils.pcf import PcfClient
+    from eventkit_cloud.tasks.models import ExportRun
+
+    if os.getenv('CELERY_TASK_APP'):
+        app_name = os.getenv('CELERY_TASK_APP')
+    else:
+        app_name = json.loads(os.getenv("VCAP_APPLICATION", "{}")).get("application_name")
+
+    client = PcfClient()
+    client.login()
+
+    running_tasks = client.get_running_tasks(app_name)
+    running_tasks_count = running_tasks["pagination"]["total_results"]
+
+    if running_tasks_count >= max_instances:
+        logger.info("Already at max instances, skipping.")
+        return
+
+    message_count = get_message_count("runs")
+    if message_count > 0:
+        command = os.getenv('CELERY_TASK_COMMAND')
+        logger.info(F"Sending task to {app_name} with command {command}")
+        client.run_task(command, app_name=app_name)
+
+
+@app.task(name="Check Provider Availability")
 def check_provider_availability():
     from eventkit_cloud.jobs.models import DataProvider, DataProviderStatus
     from eventkit_cloud.utils.provider_check import perform_provider_check
+
     for provider in DataProvider.objects.all():
         status = json.loads(perform_provider_check(provider, None))
         data_provider_status = DataProviderStatus.objects.create(related_provider=provider)
@@ -138,18 +171,3 @@ def clean_up_queues():
                 logger.info("Removed exchange: {}".format(exchange_name))
             except Exception as e:
                 logger.info(e)
-
-
-def get_all_rabbitmq_objects(api_url, rabbit_class):
-    """
-    :param api_url: The http api url including authentication values.
-    :param rabbit_class: The type of rabbitmq class (i.e. queues or exchanges) as a string.
-    :return: An array of dicts with the desired objects.
-    """
-    queues_url = "{}/{}".format(api_url.rstrip('/'), rabbit_class)
-    response = requests.get(queues_url)
-    if response.ok:
-        return response.json()
-    else:
-        logger.error(response.content.decode())
-        logger.error("Could not get the {}".format(type))

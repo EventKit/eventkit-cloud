@@ -2,14 +2,15 @@ import * as React from 'react';
 import { withTheme, Theme, createStyles, withStyles } from '@material-ui/core/styles';
 import List from '@material-ui/core/List';
 import ListItem from '@material-ui/core/ListItem';
+import ListItemText from '@material-ui/core/ListItemText';
 import Collapse from '@material-ui/core/Collapse';
-import ActionCheckCircle from '@material-ui/icons/CheckCircle';
-import UncheckedCircle from '@material-ui/icons/RadioButtonUnchecked';
+import CircularProgress from '@material-ui/core/CircularProgress';
 import Checkbox from '@material-ui/core/Checkbox';
 import ExpandLess from '@material-ui/icons/ExpandLess';
 import ExpandMore from '@material-ui/icons/ExpandMore';
 import ProviderStatusIcon from './ProviderStatusIcon';
 import BaseDialog from '../Dialog/BaseDialog';
+import {Typography} from "@material-ui/core";
 
 const jss = (theme: Theme & Eventkit.Theme) => createStyles({
     container: {
@@ -20,6 +21,9 @@ const jss = (theme: Theme & Eventkit.Theme) => createStyles({
         fontWeight: 'normal',
         fontSize: '16px',
         padding: '16px 10px',
+    },
+    listItemText: {
+        fontSize: 'inherit',
     },
     sublistItem: {
         fontWeight: 'normal',
@@ -64,6 +68,11 @@ export interface ProviderData extends Eventkit.Provider {
         type: string;
         message: string;
     };
+    estimate?: {
+        size: number;
+        unit: string;
+        slug: string;
+    };
 }
 
 interface Props {
@@ -72,9 +81,11 @@ interface Props {
     onChange: (event: React.ChangeEvent<HTMLInputElement>) => void;
     alt: boolean;
     theme: Eventkit.Theme & Theme;
+    renderEstimate: boolean;
     classes: {
         container: string;
         listItem: string;
+        listItemText: string;
         sublistItem: string;
         checkbox: string;
         checked: string;
@@ -91,6 +102,9 @@ interface State {
 }
 
 export class DataProvider extends React.Component<Props, State> {
+
+    static defaultProps;
+
     constructor(props: Props) {
         super(props);
         this.handleLicenseOpen = this.handleLicenseOpen.bind(this);
@@ -112,6 +126,18 @@ export class DataProvider extends React.Component<Props, State> {
 
     private handleExpand() {
         this.setState(state => ({ open: !state.open }));
+    }
+
+    private formatSize(providerEstimate){
+        if (!providerEstimate){
+            return (<CircularProgress size={10}/>)
+        }
+        if (!providerEstimate.size){
+            return "unknown"
+        }
+        let estimateSize = 0.000;
+        estimateSize = Number(estimateSize) + Number(providerEstimate.size);
+        return Number(estimateSize).toFixed(3) + ' MB';
     }
 
     render() {
@@ -182,6 +208,13 @@ export class DataProvider extends React.Component<Props, State> {
             </ListItem>
         ));
 
+        // Only set this if we want to display the estimate
+        let secondary = undefined;
+        if(this.props.renderEstimate)
+        {
+            secondary = <Typography style={{fontSize: "0.7em"}}>{this.formatSize(provider.estimate)}</Typography>
+        }
+
         const backgroundColor = (this.props.alt) ? colors.secondary : colors.white;
 
         return (
@@ -200,14 +233,13 @@ export class DataProvider extends React.Component<Props, State> {
                             name={provider.name}
                             checked={this.props.checked}
                             onChange={this.props.onChange}
-                            checkedIcon={<ActionCheckCircle className="qa-DataProvider-ActionCheckCircle-provider" />}
-                            icon={<UncheckedCircle className="qa-DataProvider-UncheckedCircle-provider" />}
                         />
-                        <span
-                            className={`qa-DataProvider-ListItemName ${classes.name}`}
-                        >
-                            {provider.name}
-                        </span>
+                        <ListItemText
+                            disableTypography
+                            classes={{ root: classes.listItemText}}
+                            primary={<Typography style={{fontSize: "1.0em"}}>{provider.name}</Typography>}
+                            secondary={secondary}
+                        />
                         <ProviderStatusIcon
                             id="ProviderStatus"
                             baseStyle={{ marginRight: '40px' }}
@@ -229,5 +261,9 @@ export class DataProvider extends React.Component<Props, State> {
         );
     }
 }
+
+DataProvider.defaultProps = {
+    renderEstimate: false
+};
 
 export default withTheme()(withStyles<any, any>(jss)(DataProvider));
