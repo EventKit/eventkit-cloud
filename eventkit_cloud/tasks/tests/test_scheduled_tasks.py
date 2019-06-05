@@ -11,13 +11,12 @@ from eventkit_cloud.jobs.models import DataProvider, DataProviderStatus
 from eventkit_cloud.jobs.models import Job
 from eventkit_cloud.tasks.models import ExportRun
 from eventkit_cloud.tasks.scheduled_tasks import expire_runs, send_warning_email, check_provider_availability, \
-    clean_up_queues, get_all_rabbitmq_objects
+    clean_up_queues, pcf_scale_celery
 from eventkit_cloud.utils.provider_check import CheckResults
 
 import json
 import logging
 from mock import patch, call
-import requests_mock
 
 from notifications.models import Notification
 
@@ -60,6 +59,19 @@ class TestExpireRunsTask(TestCase):
                                        addr=job.user.email, job_name=job.name)
             self.assertEqual(3, ExportRun.objects.all().count())
             self.assertEqual(0, Notification.objects.all().count())
+
+
+class TestPcfScaleCeleryTask(TestCase):
+
+    @patch('eventkit_cloud.tasks.scheduled_tasks.get_message_count')
+    @patch('eventkit_cloud.utils.pcf.PcfClient')
+    def test_pcf_scale_celery(self, mock_pcf_client, mock_get_message_count):
+        # Figure out how to test the two differnt environment variable options
+        mock_pcf_client().get_running_tasks.return_value = {"pagination": {"total_results": 0}}
+        mock_get_message_count.return_value = 1
+
+        pcf_scale_celery(3)
+        mock_pcf_client().run_task.assert_called_once()
 
 
 class TestCheckProviderAvailabilityTask(TestCase):
@@ -126,15 +138,3 @@ class TestCleanUpRabbit(TestCase):
         with self.assertRaises(Exception):
             mock_celery_app.connection.__enter__().channel().exchange_delete().return_value = Exception()
             clean_up_queues()
-
-    @requests_mock.Mocker()
-    def test_get_all_rabbitmq_objects(self, requests_mocker):
-        example_api = "http://example/api/"
-        queues = "queues"
-        expected_queues = [{"name": "queue1"}, {"name": "queue2"}]
-        requests_mocker.get(example_api + queues, text=json.dumps(expected_queues))
-        result = get_all_rabbitmq_objects(example_api, queues)
-        self.assertEqual(result, expected_queues)
-
-        with self.assertRaises(Exception):
-            get_all_rabbitmq_objects(example_api, "WRONG")
