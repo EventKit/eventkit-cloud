@@ -1,8 +1,12 @@
 # -*- coding: utf-8 -*-
 import json
 import os
+import socket
 
 from celery.schedules import crontab
+from kombu import Exchange, Queue
+
+from eventkit_cloud.celery import app
 from eventkit_cloud.settings.contrib import *  # NOQA
 
 # Celery config
@@ -27,7 +31,8 @@ CELERY_RESULT_BACKEND = os.environ.get('CELERY_RESULT_BACKEND', 'django-db')
 CELERY_TASK_SERIALIZER = "json"
 CELERY_ACCEPT_CONTENT = ["json"]
 # configure periodic task
-CELERYBEAT_SCHEDULE = {
+
+BEAT_SCHEDULE = {
     'expire-runs': {
         'task': 'Expire Runs',
         'schedule': crontab(minute='0', hour='0', day_of_week='*')
@@ -41,6 +46,32 @@ CELERYBEAT_SCHEDULE = {
         'schedule': crontab(minute='0', hour='0', day_of_week='*')
     },
 }
+
+PCF_SCALING = os.getenv("PCF_SCALING", False)
+if PCF_SCALING:
+    BEAT_SCHEDULE.update({
+        'pcf-scale-celery': {
+            'task': 'PCF Scale Celery',
+            'schedule': 60.0,
+            'kwargs' : {"max_instances": int(os.getenv("CELERY_INSTANCES", 3))},
+            'options': {'priority': 90,
+                        'queue': "scale".format(socket.gethostname()),
+                        'routing_key': "scale".format(socket.gethostname())}
+        },
+    })
+
+app.conf.task_queues = [
+    Queue('celery', routing_key='celery'),
+    Queue("scale".format(socket.gethostname()), Exchange("scale".format(socket.gethostname())),
+          routing_key="scale".format(socket.gethostname())),
+    # Work needs to be able to be assigned to a specific worker.  That worker has access to the staged files.
+    Queue(socket.gethostname(), Exchange(socket.gethostname()), routing_key=socket.gethostname()),
+    # Canceling needs to be assigned to a specific worker, because that worker will have the actual PID to kill.
+    Queue("{0}.cancel".format(socket.gethostname()), Exchange("{0}.cancel".format(socket.gethostname())),
+          routing_key="{0}.cancel".format(socket.gethostname())),
+]
+
+app.conf.beat_schedule = BEAT_SCHEDULE
 
 CELERYD_USER = CELERYD_GROUP = 'eventkit'
 if os.getenv("VCAP_SERVICES"):

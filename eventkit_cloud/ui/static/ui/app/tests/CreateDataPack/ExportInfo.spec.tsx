@@ -76,7 +76,8 @@ describe('ExportInfo component', () => {
     let wrapper;
     let instance;
     const setup = (overrides = {}) => {
-        const config = { BASEMAP_URL: 'http://my-osm-tile-service/{z}/{x}/{y}.png' };
+        const config = { BASEMAP_URL: 'http://my-osm-tile-service/{z}/{x}/{y}.png',
+        SERVE_ESTIMATES: true};
         props = { ...getProps(), ...overrides };
         wrapper = shallow(<ExportInfo {...props} />, {
             context: { config },
@@ -238,21 +239,21 @@ describe('ExportInfo component', () => {
         })).toBe(true);
     });
 
-    it('onRefresh should setState with empty availability and call checkAvailability', () => {
+    it('onRefresh should setState with empty availability and estimate and call checkProviders', () => {
         const p = getProps();
         p.providers = [{ name: 'one' }, { name: 'two' }];
         p.exportInfo.providers = [...p.providers];
         setup(p);
         const stateStub = sinon.stub(instance, 'setState');
-        const checkStub = sinon.stub(instance, 'checkAvailability');
+        const checkStub = sinon.stub(instance, 'checkProviders');
         instance.onRefresh();
         const expected = [
-            { name: 'one', availability: {} },
-            { name: 'two', availability: {} },
+            { name: 'one', availability: {}, estimate: {} },
+            { name: 'two', availability: {}, estimate: {} },
         ];
         expect(stateStub.calledOnce).toBe(true);
         expect(stateStub.calledWith({ providers: expected }));
-        expect(checkStub.calledTwice).toBe(true);
+        expect(checkStub.calledOnce).toBe(true);
         stateStub.restore();
         checkStub.restore();
     });
@@ -311,7 +312,7 @@ describe('ExportInfo component', () => {
 
         sinon.stub(instance, 'getAvailability').callsFake(() => (
             new Promise((resolve) => {
-                setTimeout(() => resolve(newProvider), 100);
+                setTimeout(() => resolve(newProvider), 10);
             })
         ));
         const stateSpy = sinon.spy(instance, 'setState');
@@ -320,11 +321,63 @@ describe('ExportInfo component', () => {
         expect(wrapper.state().providers).toEqual([newProvider]);
     });
 
-    it('checkProviders should call checkAvailablity for each provider', () => {
+    it('checkEstimate should setState with new provider', async () => {
+        const provider = {
+            slug: '123',
+        };
+
+        const newProvider = {
+            slug: '123',
+            estimate: {
+                slug: '123',
+                size: 10,
+                unit: 'MB',
+            }
+        };
+
+        sinon.stub(instance, 'getEstimate').callsFake(() => (
+            new Promise((resolve) => {
+                setTimeout(() => resolve(newProvider), 10);
+            })
+        ));
+        const stateSpy = sinon.spy(instance, 'setState');
+        await instance.checkEstimate(provider);
+        expect(stateSpy.calledOnce).toBe(true);
+        expect(wrapper.state().providers).toEqual([newProvider]);
+    });
+
+    it('checkEstimate should not setState when SERVE_ESTIMATES is false', async () => {
+        const provider = {
+            slug: '123',
+        };
+
+        const newProvider = {
+            slug: '123',
+            estimate: {
+                slug: '123',
+                size: 10,
+                unit: 'MB',
+            }
+        };
+
+        sinon.stub(instance, 'getEstimate').callsFake(() => (
+            new Promise((resolve) => {
+                setTimeout(() => resolve(newProvider), 10);
+            })
+        ));
+        const stateSpy = sinon.spy(instance, 'setState');
+        await instance.checkEstimate(provider);
+        expect(stateSpy.called).toBe(true);
+        expect(wrapper.state().providers).toEqual([newProvider]);
+    });
+
+    it('checkProviders should call checkAvailablity and checkEstimate for each provider', async () => {
         const providers = [{ display: true }, { display: false }, { display: true }];
-        const checkStub = sinon.stub(instance, 'checkAvailability');
-        instance.checkProviders(providers);
-        expect(checkStub.calledTwice).toBe(true);
+        const checkAvailStub = sinon.stub(instance, 'checkAvailability').resolves({});
+        const checkEstStub = sinon.stub(instance, 'checkEstimate');
+        await instance.checkProviders(providers);
+        expect(checkAvailStub.calledTwice).toBe(true);
+        expect(checkEstStub.calledTwice).toBe(true);
     });
 
     it('handleProjectionsOpen should setState to true', () => {

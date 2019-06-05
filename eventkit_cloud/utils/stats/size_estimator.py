@@ -105,7 +105,11 @@ def get_raster_tile_grid_size_estimate(provider, bbox, srs='4326', with_clipping
 
     method['mpp'] = mpp
     method['with_clipping'] = with_clipping
-    return total_pixels * mpp, method
+    # max acceptable is expected maximum number of bytes for the specified amount of pixels
+    # pixels * <pixels per byte> / <bytes per MB>
+    max_acceptable = total_pixels * 3 / 1e6
+    estimate = total_pixels * mpp
+    return estimate if estimate < max_acceptable else max_acceptable, method
 
 
 def get_vector_estimate(provider, bbox, srs='4326'):

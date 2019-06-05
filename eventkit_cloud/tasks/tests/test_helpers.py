@@ -1,7 +1,8 @@
 # -*- coding: utf-8 -*-
 
-
+import json
 import logging
+import requests_mock
 import signal
 
 from django.test import TestCase
@@ -11,7 +12,8 @@ from mock import patch, call, Mock, MagicMock, ANY
 import os
 import signal
 from eventkit_cloud.tasks.helpers import get_style_files, get_file_paths, get_last_update, get_metadata_url, \
-    get_osm_last_update, cd, get_arcgis_metadata, get_metadata
+    get_osm_last_update, cd, get_arcgis_metadata, get_metadata, get_message_count, \
+    get_all_rabbitmq_objects
 from eventkit_cloud.tasks.export_tasks import TaskStates
 
 from eventkit_cloud.tasks.helpers import progressive_kill
@@ -208,3 +210,24 @@ class TestHelpers(TestCase):
                 }
         }
         self.assertEqual(expected_metadata, get_arcgis_metadata(example_metadata))
+
+    @requests_mock.Mocker()
+    def test_get_all_rabbitmq_objects(self, requests_mocker):
+        example_api = "http://example/api/"
+        queues = "queues"
+        expected_queues = [{"name": "queue1"}, {"name": "queue2"}]
+        requests_mocker.get(example_api + queues, text=json.dumps(expected_queues))
+        result = get_all_rabbitmq_objects(example_api, queues)
+        self.assertEqual(result, expected_queues)
+
+        with self.assertRaises(Exception):
+            get_all_rabbitmq_objects(example_api, "WRONG")
+
+    @patch('eventkit_cloud.tasks.helpers.get_all_rabbitmq_objects')
+    def test_get_message_count(self, mock_get_all_rabbitmq_objects):
+        queue = "queue2"
+        expected_queues = [{"name": "queue1"}, {"name": "queue2", "messages": "5"}]
+        expected_messages = "5"
+        mock_get_all_rabbitmq_objects.return_value = expected_queues
+        messages = get_message_count(queue)
+        self.assertEqual(messages, expected_messages)

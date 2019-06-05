@@ -281,9 +281,13 @@ export function unwrapPoint([x, y]) {
     ];
 }
 
-export function featureToBbox(feature) {
+export function featureToBbox(feature, projection) {
+    let featProjection = projection;
+    if (!featProjection) {
+        featProjection = WEB_MERCATOR;
+    }
     const reader = new GeoJSON();
-    const geometry = reader.readGeometry(feature.geometry, { featureProjection: WEB_MERCATOR });
+    const geometry = reader.readGeometry(feature.geometry, { featureProjection: featProjection });
     return geometry.getExtent();
 }
 
