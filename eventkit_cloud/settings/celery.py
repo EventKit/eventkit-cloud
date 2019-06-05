@@ -35,7 +35,11 @@ CELERYBEAT_SCHEDULE = {
     'provider-statuses': {
         'task': 'Check Provider Availability',
         'schedule': crontab(minute='*/{}'.format(os.getenv('PROVIDER_CHECK_INTERVAL', '30')))
-    }
+    },
+    'clean-up-queues': {
+        'task': 'Clean Up Queues',
+        'schedule': crontab(minute='0', hour='0', day_of_week='*')
+    },
 }
 
 CELERYD_USER = CELERYD_GROUP = 'eventkit'
@@ -58,3 +62,18 @@ if os.getenv("VCAP_SERVICES"):
             break
 if not BROKER_URL:
     BROKER_URL = os.environ.get('BROKER_URL', 'amqp://guest:guest@localhost:5672//')
+
+BROKER_API_URL = None
+if os.getenv("VCAP_SERVICES"):
+    for service, listings in json.loads(os.getenv("VCAP_SERVICES")).items():
+        try:
+            if 'rabbitmq' in service:
+                BROKER_API_URL = listings[0]['credentials']['http_api_uri']
+            if 'cloudamqp' in service:
+                BROKER_API_URL = listings[0]['credentials']['http_api_uri']
+        except KeyError as TypeError:
+            continue
+        if BROKER_API_URL:
+            break
+if not BROKER_API_URL:
+    BROKER_API_URL = os.environ.get('BROKER_API_URL', 'http://guest:guest@localhost:15672/api/')
