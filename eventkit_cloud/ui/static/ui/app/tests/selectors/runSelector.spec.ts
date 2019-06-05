@@ -35,6 +35,16 @@ describe('Run Selector', () => {
         };
     };
 
+    const getMockEmptyRun = (id) => {
+        const s = getState();
+        const run = s.exports.data.runs[id];
+        return {
+            ...run,
+            job: { ...s.exports.data.jobs[run.job] },
+            provider_tasks: null,
+        };
+    };
+
     let state;
 
     beforeEach(() => { state = getState(); });
@@ -106,6 +116,17 @@ describe('Run Selector', () => {
             inputRun,
             state.exports.data.jobs,
         )).toEqual({ ...inputRun, job: state.exports.data.jobs[inputRun.job] });
+    });
+
+    it('toFullRun should return normally when run provider tasks are not present', () => {
+        const runId = '111';
+        const expected = getMockEmptyRun(runId);
+        expect(selectors.toFullRun(
+            state.exports.data.runs[runId],
+            state.exports.data.jobs,
+            state.exports.data.provider_tasks,
+            state.exports.data.tasks,
+        )).toEqual(expected);
     });
 
     it('makeFullRunSelector should return a run with job', () => {

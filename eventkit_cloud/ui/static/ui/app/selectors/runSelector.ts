@@ -33,13 +33,11 @@ export const toFullProviderTask = (providerTask, exportTasks) => {
 export const toFullRun = (run, jobs, providerTasks?, exportTasks?) => {
     const runJob = jobs[run.job];
     let runTasks = run.provider_tasks;
-    if (providerTasks && exportTasks) {
-        if(runTasks) {
-            runTasks = run.provider_tasks.map(id => toFullProviderTask(providerTasks[id], exportTasks));
-        }
-        else {
-            runTasks = {};
-        }
+    if (providerTasks && exportTasks && runTasks) {
+        runTasks = runTasks.map(id => toFullProviderTask(providerTasks[id], exportTasks));
+    }
+    else if(!runTasks) {
+        runTasks = {};
     }
     return {
         ...run,
