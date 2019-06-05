@@ -34,7 +34,12 @@ export const toFullRun = (run, jobs, providerTasks?, exportTasks?) => {
     const runJob = jobs[run.job];
     let runTasks = run.provider_tasks;
     if (providerTasks && exportTasks) {
-        runTasks = run.provider_tasks.map(id => toFullProviderTask(providerTasks[id], exportTasks));
+        if(runTasks) {
+            runTasks = run.provider_tasks.map(id => toFullProviderTask(providerTasks[id], exportTasks));
+        }
+        else {
+            runTasks = {};
+        }
     }
     return {
         ...run,
