@@ -32,7 +32,7 @@ export const toFullProviderTask = (providerTask, exportTasks) => {
 
 export const toFullRun = (run, jobs, providerTasks?, exportTasks?) => {
     const runJob = jobs[run.job];
-    // if provider tasks are not present, let it be null
+    // check run.provider_tasks, it may be null for deleted tasks, in this case let it be an empty array
     let runTasks = Array.isArray(run.provider_tasks) ? run.provider_tasks  : [];
     if (providerTasks && exportTasks && runTasks) {
         // if provider tasks are present and the full representations are provided, map each
