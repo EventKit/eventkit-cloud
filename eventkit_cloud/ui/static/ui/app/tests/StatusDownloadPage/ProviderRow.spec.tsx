@@ -108,7 +108,7 @@ describe('ProviderRow component', () => {
         expect(wrapper.find(Table)).toHaveLength(1);
         expect(wrapper.find(TableHead)).toHaveLength(1);
         expect(wrapper.find(TableRow)).toHaveLength(1);
-        expect(wrapper.find(TableCell)).toHaveLength(5);
+        expect(wrapper.find(TableCell)).toHaveLength(6);
         expect(wrapper.find(ArrowDown)).toHaveLength(1);
         expect(wrapper.find(IconMenu)).toHaveLength(1);
         expect(wrapper.find(IconButton)).toHaveLength(1);
@@ -132,7 +132,7 @@ describe('ProviderRow component', () => {
         expect(wrapper.find(Table)).toHaveLength(2);
         expect(wrapper.find(TableHead)).toHaveLength(1);
         expect(wrapper.find(TableRow)).toHaveLength(2);
-        expect(wrapper.find(TableCell)).toHaveLength(11);
+        expect(wrapper.find(TableCell)).toHaveLength(13);
         expect(wrapper.find(TableBody)).toHaveLength(1);
         expect(wrapper.find(LicenseRow)).toHaveLength(1);
     });
