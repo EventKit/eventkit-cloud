@@ -96,14 +96,15 @@ describe('DataPackDetails component', () => {
         expect(wrapper.find(Table)).toHaveLength(1);
         const table = wrapper.find(Table).dive();
         expect(table.find(TableRow)).toHaveLength(1);
-        expect(table.find(TableCell)).toHaveLength(4);
+        expect(table.find(TableCell)).toHaveLength(5);
         expect(wrapper.find(Table).find(TableCell)
             .at(0)
             .find(Button)
             .html())
             .toContain('CREATING DATAPACK ZIP');
         expect(table.find(TableCell).at(1).dive().html()).toContain('FILE SIZE');
-        expect(table.find(TableCell).at(2).dive().html()).toContain('PROGRESS');
+        expect(table.find(TableCell).at(2).dive().html()).toContain('ESTIMATED FINISH');
+        expect(table.find(TableCell).at(3).dive().html()).toContain('PROGRESS');
         expect(wrapper.find(ProviderRow)).toHaveLength(1);
     });
 

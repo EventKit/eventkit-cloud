@@ -20,6 +20,7 @@ import ProviderError from './ProviderError';
 import BaseDialog from '../Dialog/BaseDialog';
 import LicenseRow from './LicenseRow';
 import { Breakpoint } from '@material-ui/core/styles/createBreakpoints';
+import * as moment from 'moment';
 
 interface Props {
     provider: Eventkit.ProviderTask;
@@ -88,6 +89,19 @@ const jss = (theme: Eventkit.Theme & Theme) => createStyles({
         },
     },
     fileSizeColumn: {
+        width: '80px',
+        paddingRight: '0px',
+        paddingLeft: '0px',
+        textAlign: 'center',
+        color: theme.eventkit.colors.black,
+        fontSize: '12px',
+        [theme.breakpoints.up('md')]: {
+            fontSize: '14px',
+            width: '120px',
+        },
+    },
+    estimatedFinishColumn: {
+        whiteSpace: 'pre',
         width: '80px',
         paddingRight: '0px',
         paddingLeft: '0px',
@@ -177,6 +191,24 @@ export class ProviderRow extends React.Component<Props, State> {
         }
 
         return fileSize.toFixed(3);
+    }
+
+    private getEstimatedFinish(task: Eventkit.Task) {
+        if (!task.estimated_finish){
+            return '';
+        } else {
+            // return moment(task.estimated_finish).format();
+            return moment(task.estimated_finish).format('kk:mm [\r\n] MMM Do');
+        }
+    }
+
+    private getLastEstimatedFinish(tasks: Eventkit.Task[]) {
+        return this.getEstimatedFinish([...tasks].sort((a, b) => {
+            if (a.estimated_finish && b.estimated_finish)
+                return new Date(a.estimated_finish).getTime() - new Date(b.estimated_finish).getTime();
+            else
+                return 1;
+        })[0]);
     }
 
     private getTaskStatus(task: Eventkit.Task) {
@@ -407,6 +439,13 @@ export class ProviderRow extends React.Component<Props, State> {
                                     {task.result == null ? '' : task.result.size}
                                 </TableCell>
                                 <TableCell
+                                    className="qa-ProviderRow-TableCell-estimatedFinish"
+                                    classes={{ root: classes.estimatedFinishColumn }}
+                                    style={{fontSize: '.85em'}}
+                                >
+                                    {this.getEstimatedFinish(task)}
+                                </TableCell>
+                                <TableCell
                                     className="qa-ProviderRow-TableCell-status"
                                     classes={{ root: classes.taskStatusColumn }}
                                 >
@@ -445,6 +484,12 @@ export class ProviderRow extends React.Component<Props, State> {
                                 classes={{ root: classes.fileSizeColumn }}
                             >
                                 {this.state.fileSize == null ? '' : `${this.state.fileSize} MB`}
+                            </TableCell>
+                            <TableCell
+                                className="qa-ProviderRow-TableCell-estimatedFinish"
+                                classes={{ root: classes.estimatedFinishColumn }}
+                            >
+                                {this.getLastEstimatedFinish(tasks)}
                             </TableCell>
                             <TableCell
                                 className="qa-ProviderRow-TableCell-providerStatus"
