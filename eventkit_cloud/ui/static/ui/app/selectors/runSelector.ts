@@ -33,7 +33,7 @@ export const toFullProviderTask = (providerTask, exportTasks) => {
 export const toFullRun = (run, jobs, providerTasks?, exportTasks?) => {
     const runJob = jobs[run.job];
     // if provider tasks are not present, let it be null
-    let runTasks = run.provider_tasks || null;
+    let runTasks = Array.isArray(run.provider_tasks) ? run.provider_tasks  : [];
     if (providerTasks && exportTasks && runTasks) {
         // if provider tasks are present and the full representations are provided, map each
         // provider task to the full provider task representation
@@ -42,7 +42,7 @@ export const toFullRun = (run, jobs, providerTasks?, exportTasks?) => {
     return {
         ...run,
         job: runJob,
-        provider_tasks: runTasks,
+        provider_tasks: runTasks
     };
 };
 
