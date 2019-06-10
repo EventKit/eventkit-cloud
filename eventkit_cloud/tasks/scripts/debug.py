@@ -45,7 +45,7 @@ def final_task(result=None, job_num=None, task_num=None):
 
 @task(base=TestTask)
 def pick_up_job_task(job_num=None):
-    worker = os.getenv("CELERY_GROUP_NAME", socket.gethostname())
+    worker = socket.gethostname()
     print(("AssignTask picked up by {0} running job {1}".format(worker, job_num)))
     create_task_factory(worker, job_num)
 
