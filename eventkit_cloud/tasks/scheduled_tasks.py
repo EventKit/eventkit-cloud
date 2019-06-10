@@ -2,7 +2,6 @@
 import datetime
 import json
 import os
-import uuid
 
 from celery.utils.log import get_task_logger
 from django.conf import settings
@@ -93,16 +92,13 @@ def pcf_scale_celery(max_instances):
         logger.info("Already at max instances, skipping.")
         return
 
-    CELERY_GROUP_NAME = uuid.uuid4()
-    command = (f"python manage.py runinitial && echo 'Starting celery workers' && celery worker -A eventkit_cloud "
-    f"--concurrency=$CONCURRENCY --loglevel=$LOG_LEVEL -n runs@{CELERY_GROUP_NAME} -Q runs & exec celery worker -A "
-    f"eventkit_cloud --concurrency=$CONCURRENCY --loglevel=$LOG_LEVEL -n worker@{CELERY_GROUP_NAME} -Q "
-    f"{CELERY_GROUP_NAME} & exec celery worker -A eventkit_cloud --loglevel=$LOG_LEVEL -n celery@{CELERY_GROUP_NAME} -Q "
-    f"celery & exec celery worker -A eventkit_cloud --loglevel=$LOG_LEVEL -n cancel@{CELERY_GROUP_NAME} -Q "
-    f"{CELERY_GROUP_NAME}.cancel & exec celery worker -A eventkit_cloud --concurrency=2 -n "
-    f"finalize@{CELERY_GROUP_NAME} -Q {CELERY_GROUP_NAME}.finalize & exec celery worker -A eventkit_cloud "
-    f"--concurrency=1 --loglevel=$LOG_LEVEL -n osm@{CELERY_GROUP_NAME} -Q {CELERY_GROUP_NAME}.osm & "
-    f"exec export CELERY_GROUP_NAME={CELERY_GROUP_NAME}")
+    command = ("python manage.py runinitial && echo 'Starting celery workers' && "
+    "celery worker -A eventkit_cloud --concurrency=$CONCURRENCY --loglevel=$LOG_LEVEL -n runs@%h -Q runs "
+    "& exec celery worker -A eventkit_cloud --concurrency=$CONCURRENCY --loglevel=$LOG_LEVEL -n worker@%h -Q $CELERY_GROUP_NAME "
+    "& exec celery worker -A eventkit_cloud --loglevel=$LOG_LEVEL -n celery@%h -Q celery "
+    "& exec celery worker -A eventkit_cloud --loglevel=$LOG_LEVEL -n cancel@%h -Q $CELERY_GROUP_NAME.cancel "
+    "& exec celery worker -A eventkit_cloud --concurrency=2 -n finalize@%h -Q $CELERY_GROUP_NAME.finalize "
+    "& exec celery worker -A eventkit_cloud --concurrency=1 --loglevel=$LOG_LEVEL -n osm@%h -Q $CELERY_GROUP_NAME.osm ")
 
     message_count = get_message_count("runs")
     if message_count > 0:
