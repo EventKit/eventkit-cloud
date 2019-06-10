@@ -856,7 +856,7 @@ def pick_up_run_task(self, result=None, run_uid=None, user_details=None, *args, 
     from eventkit_cloud.tasks.task_factory import TaskFactory
     run = ExportRun.objects.get(uid=run_uid)
     try:
-        worker = socket.gethostname()
+        worker = os.getenv("CELERY_GROUP_NAME", socket.gethostname())
         run.worker = worker
         run.save()
         TaskFactory().parse_tasks(worker=worker, run_uid=run_uid, user_details=user_details)

@@ -93,16 +93,16 @@ def pcf_scale_celery(max_instances):
         logger.info("Already at max instances, skipping.")
         return
 
-    celery_group_name = uuid.uuid4()
+    CELERY_GROUP_NAME = uuid.uuid4()
     command = (f"python manage.py runinitial && echo 'Starting celery workers' && celery worker -A eventkit_cloud "
-    f"--concurrency=$CONCURRENCY --loglevel=$LOG_LEVEL -n runs@{celery_group_name} -Q runs & exec celery worker -A "
-    f"eventkit_cloud --concurrency=$CONCURRENCY --loglevel=$LOG_LEVEL -n worker@{celery_group_name} -Q "
-    f"{celery_group_name} & exec celery worker -A eventkit_cloud --loglevel=$LOG_LEVEL -n celery@{celery_group_name} -Q "
-    f"celery & exec celery worker -A eventkit_cloud --loglevel=$LOG_LEVEL -n cancel@{celery_group_name} -Q "
-    f"{celery_group_name}.cancel & exec celery worker -A eventkit_cloud --concurrency=2 -n "
-    f"finalize@{celery_group_name} -Q {celery_group_name}.finalize & exec celery worker -A eventkit_cloud "
-    f"--concurrency=1 --loglevel=$LOG_LEVEL -n osm@{celery_group_name} -Q {celery_group_name}.osm & "
-    f"exec export CELERY_GROUP_NAME={celery_group_name}")
+    f"--concurrency=$CONCURRENCY --loglevel=$LOG_LEVEL -n runs@{CELERY_GROUP_NAME} -Q runs & exec celery worker -A "
+    f"eventkit_cloud --concurrency=$CONCURRENCY --loglevel=$LOG_LEVEL -n worker@{CELERY_GROUP_NAME} -Q "
+    f"{CELERY_GROUP_NAME} & exec celery worker -A eventkit_cloud --loglevel=$LOG_LEVEL -n celery@{CELERY_GROUP_NAME} -Q "
+    f"celery & exec celery worker -A eventkit_cloud --loglevel=$LOG_LEVEL -n cancel@{CELERY_GROUP_NAME} -Q "
+    f"{CELERY_GROUP_NAME}.cancel & exec celery worker -A eventkit_cloud --concurrency=2 -n "
+    f"finalize@{CELERY_GROUP_NAME} -Q {CELERY_GROUP_NAME}.finalize & exec celery worker -A eventkit_cloud "
+    f"--concurrency=1 --loglevel=$LOG_LEVEL -n osm@{CELERY_GROUP_NAME} -Q {CELERY_GROUP_NAME}.osm & "
+    f"exec export CELERY_GROUP_NAME={CELERY_GROUP_NAME}")
 
     message_count = get_message_count("runs")
     if message_count > 0:
