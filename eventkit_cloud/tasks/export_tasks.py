@@ -1137,11 +1137,13 @@ class FinalizeRunBase(UserDetailsBase):
             logger.error('Error removing {0} during export finalize'.format(stage_dir))
 
         PCF_SCALING = os.getenv("PCF_SCALING", False)
+        CELERY_GROUP_NAME = os.getenv("CELERY_GROUP_NAME")
         if PCF_SCALING:
-            hostnames = []
+            worker_full_names = []
             workers = ["runs", "worker", "celery", "cancel", "finalize", "osm"]
             for worker in workers:
-                hostnames.append(F"{worker}@{socket.gethostname()}")
+                logger.info(F"Worker being shut down is {worker}@{CELERY_GROUP_NAME}")
+                worker_full_names.append(F"{worker}@{CELERY_GROUP_NAME}")
 
             try:
                 message_count = get_message_count("runs")
@@ -1150,10 +1152,11 @@ class FinalizeRunBase(UserDetailsBase):
                     return
 
                 logger.info("Queue is at zero, shutting down.")
-                app.control.broadcast("shutdown", destination=hostnames)
+                logger.info(F"Shutting down {worker_full_names}")
+                app.control.broadcast("shutdown", destination=worker_full_names)
             except Exception:
                 logger.info("Could not get queues, shutting down.")
-                app.control.broadcast("shutdown", destination=hostnames)
+                app.control.broadcast("shutdown", destination=worker_full_names)
 
 # There's a celery bug with callbacks that use bind=True.  If altering this task do not use Bind.
 # @see: https://github.com/celery/celery/issues/3723
