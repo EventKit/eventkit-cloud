@@ -97,8 +97,9 @@ class LockingTask(UserDetailsBase):
 
         lock_key = kwargs.get('locking_task_key')
         worker = kwargs.get('worker')
+        queue_group = os.getenv("CELERY_GROUP_NAME", worker)
         task_settings = {
-            'interval': 4, 'max_retries': 10, 'queue': worker, 'routing_key': worker,
+            'interval': 4, 'max_retries': 10, 'queue': queue_group, 'routing_key': queue_group,
             'priority': TaskPriority.RUN_TASK.value}
 
         if lock_key:
@@ -1265,11 +1266,12 @@ def cancel_synchronous_task_chain(data_provider_task_uid=None):
         if TaskStates[export_task.status] == TaskStates.PENDING.value:
             export_task.status = TaskStates.CANCELED.value
             export_task.save()
+            queue_group = os.getenv("CELERY_GROUP_NAME", export_task.worker)
             kill_task.apply_async(
                 kwargs={"task_pid": export_task.pid, "celery_uid": export_task.celery_uid},
-                queue="{0}.cancel".format(export_task.worker),
+                queue="{0}.cancel".format(queue_group),
                 priority=TaskPriority.CANCEL.value,
-                routing_key="{0}.cancel".format(export_task.worker))
+                routing_key="{0}.cancel".format(queue_group))
 
 
 @app.task(name='Cancel Export Provider Task', base=UserDetailsBase)
@@ -1325,11 +1327,12 @@ def cancel_export_provider_task(result=None, data_provider_task_uid=None, cancel
             task_result.soft_delete()
 
         if int(export_task.pid) > 0 and export_task.worker:
+            queue_group = os.getenv("CELERY_GROUP_NAME", export_task.worker)
             kill_task.apply_async(
                 kwargs={"task_pid": export_task.pid, "celery_uid": export_task.celery_uid},
-                queue="{0}.cancel".format(export_task.worker),
+                queue="{0}.cancel".format(queue_group),
                 priority=TaskPriority.CANCEL.value,
-                routing_key="{0}.cancel".format(export_task.worker))
+                routing_key="{0}.cancel".format(queue_group))
 
     if TaskStates[data_provider_task_record.status] not in TaskStates.get_finished_states():
         if error:
