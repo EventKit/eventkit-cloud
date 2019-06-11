@@ -13,6 +13,7 @@ import ExportAOI from './ExportAOI';
 import ExportInfo from './ExportInfo';
 import ExportSummary from './ExportSummary';
 import { flattenFeatureCollection } from '../../utils/mapUtils';
+import { getDuration, formatMegaBytes } from '../../utils/generic';
 import {
     submitJob, clearAoiInfo, clearExportInfo, clearJobInfo,
 } from '../../actions/datacartActions';
@@ -79,6 +80,7 @@ export interface State {
         sizes: number[];
     };
     sizeEstimate: number;
+    timeEstimate: number;
     estimateExplanationOpen: boolean;
 }
 
@@ -124,6 +126,7 @@ export class BreadcrumbStepper extends React.Component<Props, State> {
                 sizes: [],
             },
             sizeEstimate: 0.0,
+            timeEstimate: 0,
             estimateExplanationOpen: false
         };
         this.leaveRoute = null;
@@ -184,12 +187,6 @@ export class BreadcrumbStepper extends React.Component<Props, State> {
         this.props.clearJobInfo();
     }
 
-    private formatSize(){
-        let estimateSize = 0.000;
-        estimateSize = Number(estimateSize) + Number(this.state.sizeEstimate);
-        return Number(estimateSize).toFixed(3) + ' MB';
-    }
-
     private async getProviders() {
         await this.props.getProviders();
         let max = 0;
@@ -239,8 +236,8 @@ export class BreadcrumbStepper extends React.Component<Props, State> {
     private getEstimate(textStyle) {
         return (
             <div style={{display: 'flex', }}>
-                <Typography style={{...textStyle, width: 'auto'}}>
-                    Estimate: {this.formatSize()}
+                <Typography style={{...textStyle, width: 'auto', fontSize: '.8em'}}>
+                    <strong style={{fontSize: '.9em'}}>ETA</strong>: {this.formatEstimate()}
                 </Typography>
                 <Info
                     className={`qa-Estimate-Info-Icon`}
@@ -259,18 +256,52 @@ export class BreadcrumbStepper extends React.Component<Props, State> {
                         className="qa-ExportInfo-dialog-projection"
                     >
                         <p>
-                            EventKit calculates estimates intelligently by examining previous DataPack jobs. This number
-                            represents the sum total estimate for all selected DataSources.
+                            EventKit calculates estimates intelligently by examining previous DataPack jobs. These numbers
+                            represent the sum total estimate for all selected DataSources.
                         </p>
-                        <p>Estimates for a Data Source are calculated by looking at the size of previous DataPacks
-                            created using the specified Data Source. These estimates can vary based on availability of
-                            data for past jobs and the specified AOI.
+                        <p>Estimates for a Data Source are calculated by looking at the size of and time to complete previous DataPacks
+                            created using the specified Data Source(s). These estimates can vary based on availability of
+                            data for past jobs and the specified AOI. Larger AOIs will tend to take a longer time to complete
+                            and result in larger DataPacks.
                         </p>
 
                     </div>
                 </BaseDialog>
             </div>
         );
+    }
+
+    private formatEstimate(){
+        let dateTimeEstimate;
+        let sizeEstimate;
+        let durationEstimate;
+        // function that will return nf (not found) when the provided estimate is undefined
+        const get = (estimate, nf='unknown') => {return (estimate) ? estimate.toString() : nf};
+        if(this.state.sizeEstimate !== -1) {
+            sizeEstimate = formatMegaBytes(this.state.sizeEstimate);
+        }
+        if(this.state.timeEstimate !== -1) {
+            const estimateInSeconds = this.state.timeEstimate;
+            durationEstimate = getDuration(estimateInSeconds);
+
+            // get the current time, add the estimate (in seconds) to it to get the date time of completion
+            let dateEstimate = new Date();
+            dateEstimate.setSeconds(dateEstimate.getSeconds() + estimateInSeconds);
+            // month of completion in short hand format, upper cased March -> MAR,  January -> JAN
+            const monthShort = dateEstimate.toLocaleDateString('en-us',{month: 'short'}).toUpperCase();
+            // Standard time of day based on users locale settings.
+            const timeOfDay = dateEstimate.toLocaleTimeString();
+            // Date of completion in the format 1-JAN-2019 12:32 PM
+            dateTimeEstimate = `${dateEstimate.getDate()}-${monthShort}-${dateEstimate.getFullYear()} ${timeOfDay}`;
+        }
+        // Secondary estimate shown in parenthesis (<duration in days hours minutes> - <size>)
+        let secondary;
+        let noEstimateMessage = 'Select providers to get estimate';
+        if(sizeEstimate || durationEstimate) {
+            secondary = ` ( ${get(durationEstimate, noEstimateMessage)} - ${get(sizeEstimate, 'size unknown')})`;
+            noEstimateMessage = 'Unknown Date'; // used when the size estimate is displayed but time is not.
+        }
+        return `${get(dateTimeEstimate, noEstimateMessage)}${get(secondary, '')}`;
     }
 
     private getStepLabel(stepIndex: number) {
@@ -548,15 +579,27 @@ export class BreadcrumbStepper extends React.Component<Props, State> {
         if(!this.context.config.SERVE_ESTIMATES || !this.props.exportInfo.providers)
             return;
         let sizeEstimate = 0;
+        let timeEstimate = 0;
+        // this flag checks whether at least one estimate value is available
+        let estimatesAvailable = false;
         for (const provider of this.props.exportInfo.providers) {
             if(provider.id in this.props.exportInfo.providerEstimates) {
                 const estimate = this.props.exportInfo.providerEstimates[provider.id];
                 if (estimate) {
-                    sizeEstimate += estimate.size;
+                    estimatesAvailable = true;
+                    if(estimate.size)
+                        sizeEstimate += estimate.size.value;
+                    if(estimate.time)
+                        timeEstimate += estimate.time.value;
                 }
             }
         }
-        this.setState({sizeEstimate});
+        if(!estimatesAvailable)
+            if(timeEstimate === 0)
+                timeEstimate = -1;
+            if(sizeEstimate === 0)
+                sizeEstimate = -1;
+        this.setState({sizeEstimate, timeEstimate});
     }
 
     render() {

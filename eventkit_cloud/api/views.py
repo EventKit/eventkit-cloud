@@ -7,12 +7,11 @@ from datetime import datetime, timedelta
 from dateutil import parser
 from django.conf import settings
 from django.contrib.auth.models import User, Group
-from django.contrib.contenttypes.models import ContentType
 from django.contrib.gis.geos import GEOSException, GEOSGeometry
 from django.db import transaction
 from django.db.models import Q
-from django_filters.rest_framework import DjangoFilterBackend
 from django.utils.translation import ugettext as _
+from django_filters.rest_framework import DjangoFilterBackend
 from notifications.models import Notification
 from rest_framework import exceptions
 from rest_framework import filters, permissions, status, views, viewsets, mixins
@@ -48,6 +47,7 @@ from eventkit_cloud.tasks.task_factory import create_run, get_invalid_licenses, 
 from eventkit_cloud.utils.gdalutils import get_area
 from eventkit_cloud.utils.provider_check import perform_provider_check
 from eventkit_cloud.utils.stats.size_estimator import get_size_estimate_slug
+from eventkit_cloud.utils.stats.time_estimator import get_time_estimate_slug
 
 # Get an instance of a logger
 logger = logging.getLogger(__name__)
@@ -1808,8 +1808,8 @@ class EstimatorView(views.APIView):
             for slug in request.query_params.get('slugs').split(','):
                 payload += [{
                     'slug': slug,
-                    'size': get_size_estimate_slug(slug, bbox, srs)[0],
-                    'unit': 'MB'
+                    'size': {'value': get_size_estimate_slug(slug, bbox, srs)[0], 'unit': 'MB'},
+                    'time': {'value': get_time_estimate_slug(slug, bbox, srs), 'unit': 'seconds'},
                 }]
 
         return Response(payload, status=status.HTTP_200_OK)

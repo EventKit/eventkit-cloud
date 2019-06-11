@@ -102,7 +102,6 @@ def get_raster_tile_grid_size_estimate(provider, bbox, srs='4326', with_clipping
                                  grouping='provider_name',
                                  gap_fill_thresh=0.1,
                                  default_value=0.00000006)
-
     method['mpp'] = mpp
     method['with_clipping'] = with_clipping
     # max acceptable is expected maximum number of bytes for the specified amount of pixels
