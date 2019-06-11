@@ -60,17 +60,6 @@ if PCF_SCALING:
         },
     })
 
-app.conf.task_queues = [
-    Queue('celery', routing_key='celery'),
-    Queue("scale".format(socket.gethostname()), Exchange("scale".format(socket.gethostname())),
-          routing_key="scale".format(socket.gethostname())),
-    # Work needs to be able to be assigned to a specific worker.  That worker has access to the staged files.
-    Queue(socket.gethostname(), Exchange(socket.gethostname()), routing_key=socket.gethostname()),
-    # Canceling needs to be assigned to a specific worker, because that worker will have the actual PID to kill.
-    Queue("{0}.cancel".format(socket.gethostname()), Exchange("{0}.cancel".format(socket.gethostname())),
-          routing_key="{0}.cancel".format(socket.gethostname())),
-]
-
 app.conf.beat_schedule = BEAT_SCHEDULE
 
 CELERYD_USER = CELERYD_GROUP = 'eventkit'
