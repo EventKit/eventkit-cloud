@@ -125,8 +125,8 @@ export class BreadcrumbStepper extends React.Component<Props, State> {
                 max: 0,
                 sizes: [],
             },
-            sizeEstimate: 0.0,
-            timeEstimate: 0,
+            sizeEstimate: -1,
+            timeEstimate: -1,
             estimateExplanationOpen: false
         };
         this.leaveRoute = null;
@@ -288,9 +288,9 @@ export class BreadcrumbStepper extends React.Component<Props, State> {
             let dateEstimate = new Date();
             dateEstimate.setSeconds(dateEstimate.getSeconds() + estimateInSeconds);
             // month of completion in short hand format, upper cased March -> MAR,  January -> JAN
-            const monthShort = dateEstimate.toLocaleDateString('en-us',{month: 'short'}).toUpperCase();
-            // Standard time of day based on users locale settings.
-            const timeOfDay = dateEstimate.toLocaleTimeString();
+            const monthShort = dateEstimate.toLocaleDateString('default',{month: 'short'}).toUpperCase();
+            // Standard time of day based on users locale settings. Options used to omit seconds.
+            const timeOfDay = dateEstimate.toLocaleTimeString('default', {hour: '2-digit', minute:'2-digit'});
             // Date of completion in the format 1-JAN-2019 12:32 PM
             dateTimeEstimate = `${dateEstimate.getDate()}-${monthShort}-${dateEstimate.getFullYear()} ${timeOfDay}`;
         }
@@ -586,7 +586,6 @@ export class BreadcrumbStepper extends React.Component<Props, State> {
             if(provider.id in this.props.exportInfo.providerEstimates) {
                 const estimate = this.props.exportInfo.providerEstimates[provider.id];
                 if (estimate) {
-                    estimatesAvailable = true;
                     if(estimate.size)
                         sizeEstimate += estimate.size.value;
                     if(estimate.time)
