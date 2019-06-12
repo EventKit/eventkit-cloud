@@ -364,7 +364,7 @@ elif os.path.isfile(ssl_verification_settings):
 else:
     SSL_VERIFICATION = True
 
-LAND_DATA_URL = os.getenv('LAND_DATA_URL', "http://data.openstreetmapdata.com/land-polygons-split-3857.zip")
+LAND_DATA_URL = os.getenv('LAND_DATA_URL', "https://osmdata.openstreetmap.de/download/land-polygons-split-3857.zip")
 
 AUTO_LOGOUT_COOKIE_NAME = 'eventkit_auto_logout'
 

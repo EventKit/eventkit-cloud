@@ -210,8 +210,8 @@ Note an array can be used and EventKit will try each one for a valid value to en
 <pre>LOG_LEVEL=Info</pre> 
 
 #### Land Data
-EventKit include land data with OSM exports, this data needs to be initially loaded and a custom location can be provided with:
-<pre>LAND_DATA_URL=http://data.openstreetmapdata.com/land-polygons-split-3857.zip</pre>
+EventKit includes land data with OSM exports, this data needs to be initially loaded and a custom location can be provided with:
+<pre>LAND_DATA_URL=https://osmdata.openstreetmap.de/download/land-polygons-split-3857.zip</pre>
 
 #### SSL Verification
 By default SSL verification will be enabled and the system certificates and certifi certs will be used.
