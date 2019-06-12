@@ -514,7 +514,7 @@ def get_message_count(queue_name):
     broker_api_url = getattr(settings, 'BROKER_API_URL')
     queue_class = "queues"
 
-    for queue in get_all_rabbitmq_objects(queue_class):
+    for queue in get_all_rabbitmq_objects(broker_api_url, queue_class):
         if queue.get("name") == queue_name:
             try:
                 return queue.get("messages")
