@@ -1809,7 +1809,7 @@ class EstimatorView(views.APIView):
                 payload += [{
                     'slug': slug,
                     'size': {'value': get_size_estimate_slug(slug, bbox, srs)[0], 'unit': 'MB'},
-                    'time': {'value': get_time_estimate_slug(slug, bbox, srs), 'unit': 'seconds'},
+                    'time': {'value': get_time_estimate_slug(slug, bbox, srs)[0], 'unit': 'seconds'},
                 }]
 
         return Response(payload, status=status.HTTP_200_OK)

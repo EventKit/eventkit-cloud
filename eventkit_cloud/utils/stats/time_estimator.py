@@ -68,4 +68,4 @@ def get_time_estimate(provider, bbox, srs='4326', with_clipping=True):
                                                     gap_fill_thresh=0.1,
                                                     default_value=0)
     logger.info("""Area as reported: {}""".format(area_as_reported))
-    return area * duration_per_unit_area
+    return area * duration_per_unit_area, method

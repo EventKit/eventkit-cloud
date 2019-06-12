@@ -82,9 +82,8 @@ class TaskChainBuilder(object):
                 export_tasks.pop('gpkg')
 
         # Record estimates for size and time
-        estimated_size, meta = get_size_estimate(provider_task.provider, run.job.extents)
-        # TODO: update model to store time
-        estimated_duration, meta = get_time_estimate(provider_task.provider, run.job.extents)
+        estimated_size, meta_s = get_size_estimate(provider_task.provider, run.job.extents)
+        estimated_duration, meta_t = get_time_estimate(provider_task.provider, run.job.extents)
 
         # run the tasks
         data_provider_task_record = DataProviderTaskRecord.objects.create(run=run,
@@ -92,7 +91,8 @@ class TaskChainBuilder(object):
                                                                           slug=provider_task.provider.slug,
                                                                           status=TaskStates.PENDING.value,
                                                                           display=True,
-                                                                          estimated_size=estimated_size)
+                                                                          estimated_size=estimated_size,
+                                                                          estimated_duration=estimated_duration)
 
         for format, task in export_tasks.items():
             export_task = create_export_task_record(

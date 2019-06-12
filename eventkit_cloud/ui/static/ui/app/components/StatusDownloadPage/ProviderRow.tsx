@@ -194,11 +194,38 @@ export class ProviderRow extends React.Component<Props, State> {
     }
 
     private getEstimatedFinish(task: Eventkit.Task) {
-        if (!task.estimated_finish){
+        if (!task.estimated_finish && (!task.estimated_duration || !task.started_at)){
             return '';
         } else {
-            // return moment(task.estimated_finish).format();
-            return moment(task.estimated_finish).format('kk:mm [\r\n] MMM Do');
+            let etaSeconds, estimatedSeconds;
+            let estimatedFinish: moment.Moment;
+            // at least one of these blocks must execute
+            if(task.estimated_finish) {
+                // get the seconds until completion according to the reported ETA
+                const finishMoment: any = moment(task.estimated_finish);
+                const nowMoment: any = moment();
+                etaSeconds = (finishMoment - nowMoment) / 1000;
+            }
+            if(task.estimated_duration) {
+                // get the seconds to completion according to estimated duration
+                const beginMoment: any = moment(task.started_at);
+                const calculatedFinish: any = moment(beginMoment).add(task.estimated_duration);
+                estimatedSeconds = (calculatedFinish - beginMoment) / 1000;
+            }
+            if(etaSeconds !== undefined && estimatedSeconds !== undefined) {
+                console.log(`ETA (derived): ${moment().add({seconds: etaSeconds})}`);
+                console.log(`ETA (est): ${moment().add({seconds: estimatedSeconds})}`);
+                console.log(`ETA (calc): ${moment().add({seconds: (etaSeconds + estimatedSeconds) / 2})}`);
+                console.log(`ETA (backend): ${moment(task.estimated_finish)}`);
+                estimatedFinish = moment().add({seconds: (etaSeconds + estimatedSeconds) / 2})
+            }
+            else if(etaSeconds !== undefined) {
+                estimatedFinish = moment().add({seconds: etaSeconds});
+            }
+            else if(estimatedSeconds !== undefined) {
+                estimatedFinish = moment().add({seconds: estimatedSeconds});
+            }
+            return estimatedFinish.format('kk:mm [\r\n] MMM Do');
         }
     }
 
