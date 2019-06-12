@@ -488,6 +488,15 @@ def get_all_rabbitmq_objects(api_url, rabbit_class):
     :param rabbit_class: The type of rabbitmq class (i.e. queues or exchanges) as a string.
     :return: An array of dicts with the desired objects.
     """
+    if not api_url:
+        logger.error("Cannot fetch queues without BROKER_API_URL")
+        return
+    with app.connection() as conn:
+        channel = conn.channel()
+        if not channel:
+            logger.error("Could not establish a rabbitmq channel")
+            return
+
     queues_url = "{}/{}".format(api_url.rstrip('/'), rabbit_class)
     response = requests.get(queues_url)
     if response.ok:
@@ -505,17 +514,9 @@ def get_message_count(queue_name):
     broker_api_url = getattr(settings, 'BROKER_API_URL')
     queue_class = "queues"
 
-    if not broker_api_url:
-        logger.error("Cannot clean up queues without a BROKER_API_URL.")
-        return
-    with app.connection() as conn:
-        channel = conn.channel()
-        if not channel:
-            logger.error("Could not establish a rabbitmq channel")
-            return
-        for queue in get_all_rabbitmq_objects(broker_api_url, queue_class):
-            if queue.get("name") == queue_name:
-                try:
-                    return queue.get("messages")
-                except Exception as e:
-                    logger.info(e)
+    for queue in get_all_rabbitmq_objects(queue_class):
+        if queue.get("name") == queue_name:
+            try:
+                return queue.get("messages")
+            except Exception as e:
+                logger.info(e)
