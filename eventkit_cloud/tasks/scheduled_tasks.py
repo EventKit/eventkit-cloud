@@ -2,6 +2,7 @@
 import datetime
 import json
 import os
+import socket
 
 from celery.utils.log import get_task_logger
 from django.conf import settings
@@ -104,6 +105,21 @@ def pcf_scale_celery(max_instances):
     if message_count > 0:
         logger.info(F"Sending task to {app_name} with command {command}")
         client.run_task(command, app_name=app_name)
+        return
+
+    celery_group_name = os.getenv("CELERY_GROUP_NAME", socket.gethostname())
+    broker_api_url = getattr(settings, 'BROKER_API_URL')
+    queue_class = "queues"
+
+    for queue in get_all_rabbitmq_objects(broker_api_url, queue_class):
+        queue_name = queue.get('name')
+        pending_messages = queue.get('messages')
+        if celery_group_name in queue_name:
+            logger.info(f"Queue {queue_name} has {pending_messages} pending messages.")
+            if pending_messages > 0 and running_tasks_count < 1:
+                logger.info(F"Sending task to {app_name} with command {command}")
+                client.run_task(command, app_name=app_name)
+                return
 
 
 @app.task(name="Check Provider Availability")
