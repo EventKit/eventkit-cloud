@@ -35,6 +35,16 @@ describe('Run Selector', () => {
         };
     };
 
+    const getMockEmptyRun = (id) => {
+        const s = getState();
+        const run = s.exports.data.runs[id];
+        return {
+            ...run,
+            job: { ...s.exports.data.jobs[run.job] },
+            provider_tasks: [],
+        };
+    };
+
     let state;
 
     beforeEach(() => { state = getState(); });
@@ -101,11 +111,47 @@ describe('Run Selector', () => {
     it('toFullRun should return the simple run if no provider tasks provided', () => {
         const runId = '111';
         const inputRun = { ...state.exports.data.runs[runId] };
-        inputRun.provider_tasks = null;
         expect(selectors.toFullRun(
             inputRun,
             state.exports.data.jobs,
         )).toEqual({ ...inputRun, job: state.exports.data.jobs[inputRun.job] });
+    });
+
+    it('toFullRun should return normally when run provider tasks are null', () => {
+        const runId = '111';
+        const expected = getMockEmptyRun(runId);
+        const run = {...state.exports.data.runs[runId], provider_tasks: null};
+        expect(selectors.toFullRun(
+            run,
+            state.exports.data.jobs,
+            state.exports.data.provider_tasks,
+            state.exports.data.tasks,
+        )).toEqual(expected);
+    });
+
+    it('toFullRun should return normally when run provider tasks are not present', () => {
+        const runId = '111';
+        const expected = getMockEmptyRun(runId);
+        const run = {...state.exports.data.runs[runId], provider_tasks: []};
+        expect(selectors.toFullRun(
+            run,
+            state.exports.data.jobs,
+            state.exports.data.provider_tasks,
+            state.exports.data.tasks,
+        )).toEqual(expected);
+    });
+
+    it('toFullRun should return normally when run provider_tasks is undefined', () => {
+        const runId = '111';
+        const expected = getMockEmptyRun(runId);
+        const run = {...state.exports.data.runs[runId]};
+        run.provider_tasks = undefined;
+        expect(selectors.toFullRun(
+            run,
+            state.exports.data.jobs,
+            state.exports.data.provider_tasks,
+            state.exports.data.tasks,
+        )).toEqual(expected);
     });
 
     it('makeFullRunSelector should return a run with job', () => {
