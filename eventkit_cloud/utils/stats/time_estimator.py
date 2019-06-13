@@ -54,10 +54,22 @@ def get_time_estimate(provider, bbox, srs='4326', with_clipping=True):
     from eventkit_cloud.utils.stats.geomutils import prefetch_geometry_cache, lookup_cache_geometry, \
         get_area_bbox, get_bbox_intersect
 
+    dur_ci_90, method = ek_stats.query(provider.name, 'duration', 'mean', bbox, srs,
+                                       grouping='provider_name',
+                                       gap_fill_thresh=0.1,
+                                       default_value=0)
+    dur_max, method = ek_stats.query(provider.name, 'duration', 'ci_90', bbox, srs,
+                                       grouping='provider_name',
+                                       gap_fill_thresh=0.1,
+                                       default_value=0)
+    logger.info("""Max Dur: {}
+    CI_90 Dur: {}""".format(dur_ci_90, dur_max))
+
     duration_per_unit_area, method = ek_stats.query(provider.name, 'duration', 'mean', bbox, srs,
                                  grouping='provider_name',
                                  gap_fill_thresh=0.1,
                                  default_value=0)
+
     area = get_area_bbox(bbox)
     logger.info("Calculating Time Estimate")
     logger.info("""Area: {}
