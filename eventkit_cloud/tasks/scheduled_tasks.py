@@ -126,11 +126,9 @@ def pcf_scale_celery(max_instances):
     if total_pending_messages == 0 and running_tasks_count > 0:
         hostnames = []
         workers = ["runs", "worker", "celery", "cancel", "finalize", "osm"]
-        for worker in workers:
-            hostnames.append(F"{worker}@{socket.gethostname()}")
 
         logger.info("Queue is at zero, shutting down.")
-        app.control.broadcast("shutdown", destination=hostnames)
+        app.control.broadcast("shutdown", destination=workers)
 
 @app.task(name="Check Provider Availability")
 def check_provider_availability():
