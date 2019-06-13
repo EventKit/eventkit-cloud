@@ -112,6 +112,7 @@ def pcf_scale_celery(max_instances):
     queue_class = "queues"
     total_pending_messages = 0
 
+    # If there are queues with work and no workers, spawn a new worker instance
     for queue in get_all_rabbitmq_objects(broker_api_url, queue_class):
         queue_name = queue.get('name')
         pending_messages = queue.get('messages')
@@ -123,12 +124,20 @@ def pcf_scale_celery(max_instances):
                 client.run_task(command, app_name=app_name)
                 return
 
+    # If there is no work in the group, shut down the groups workers
     if total_pending_messages == 0 and running_tasks_count > 0:
-        hostnames = []
-        workers = ["runs", "worker", "celery", "cancel", "finalize", "osm"]
+        shutdown_celery_workers.apply_async(queue=celery_group_name)
 
-        logger.info("Queue is at zero, shutting down.")
-        app.control.broadcast("shutdown", destination=workers)
+
+@app.task(name="Shutdown Celery Workers")
+def shutdown_celery_workers():
+    hostnames = []
+    workers = ["runs", "worker", "celery", "cancel", "finalize", "osm"]
+    for worker in workers:
+        hostnames.append(F"{worker}@{socket.gethostname()}")
+
+    logger.info("Queue is at zero, shutting down.")
+    app.control.broadcast("shutdown", destination=hostnames)
 
 @app.task(name="Check Provider Availability")
 def check_provider_availability():
