@@ -110,17 +110,27 @@ def pcf_scale_celery(max_instances):
     celery_group_name = os.getenv("CELERY_GROUP_NAME", socket.gethostname())
     broker_api_url = getattr(settings, 'BROKER_API_URL')
     queue_class = "queues"
+    total_pending_messages = 0
 
     for queue in get_all_rabbitmq_objects(broker_api_url, queue_class):
         queue_name = queue.get('name')
         pending_messages = queue.get('messages')
-        if celery_group_name in queue_name:
+        total_pending_messages = total_pending_messages + pending_messages
+        if celery_group_name in queue_name or queue_name == "celery":
             logger.info(f"Queue {queue_name} has {pending_messages} pending messages.")
             if pending_messages > 0 and running_tasks_count < 1:
                 logger.info(F"Sending task to {app_name} with command {command}")
                 client.run_task(command, app_name=app_name)
                 return
 
+    if total_pending_messages == 0 and running_tasks_count > 0:
+        hostnames = []
+        workers = ["runs", "worker", "celery", "cancel", "finalize", "osm"]
+        for worker in workers:
+            hostnames.append(F"{worker}@{socket.gethostname()}")
+
+        logger.info("Queue is at zero, shutting down.")
+        app.control.broadcast("shutdown", destination=hostnames)
 
 @app.task(name="Check Provider Availability")
 def check_provider_availability():
