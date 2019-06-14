@@ -2,7 +2,7 @@ import * as React from 'react';
 import { connect } from 'react-redux';
 import * as debounce from 'lodash/debounce';
 import { withTheme, Theme } from '@material-ui/core/styles';
-import { Link, browserHistory } from 'react-router';
+import { Link } from 'react-router-dom';
 import Joyride from 'react-joyride';
 import Help from '@material-ui/icons/Help';
 import Paper from '@material-ui/core/Paper';
@@ -20,6 +20,7 @@ import DataPackFeaturedItem from './DataPackFeaturedItem';
 import NotificationGridItem from '../Notification/NotificationGridItem';
 import { updateDataCartPermissions } from '../../actions/datacartActions';
 import { joyride } from '../../joyride.config';
+import history from '../../utils/history';
 
 export const CUSTOM_BREAKPOINTS = {
     xl: 1920,
@@ -258,15 +259,15 @@ export class DashboardPage extends React.Component<Props, State> {
     }
 
     private handleNotificationsViewAll() {
-        browserHistory.push('/notifications');
+        history.push('/notifications');
     }
 
     private handleFeaturedViewAll() {
-        browserHistory.push('/exports');
+        history.push('/exports');
     }
 
     private handleMyDataPacksViewAll() {
-        browserHistory.push(`/exports?collection=${this.props.userData.user.username}`);
+        history.push(`/exports?collection=${this.props.userData.user.username}`);
     }
 
     private isLoading() {

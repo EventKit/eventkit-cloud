@@ -3,7 +3,7 @@ import * as React from 'react';
 import { connect } from 'react-redux';
 import { withTheme, Theme } from '@material-ui/core/styles';
 import withWidth, { isWidthUp } from '@material-ui/core/withWidth';
-import { browserHistory, RouteComponentProps } from 'react-router';
+import { RouteComponentProps } from 'react-router';
 import Joyride, { Step } from 'react-joyride';
 import Help from '@material-ui/icons/Help';
 import Paper from '@material-ui/core/Paper';
@@ -30,6 +30,7 @@ import { joyride } from '../../joyride.config';
 import { makeDatacartSelector } from '../../selectors/runSelector';
 import { Location } from 'history';
 import { Breakpoint } from '@material-ui/core/styles/createBreakpoints';
+import history from "../../utils/history";
 
 export interface Props {
     runs: Eventkit.FullRun[];
@@ -109,7 +110,7 @@ export class StatusDownload extends React.Component<Props, State> {
 
     componentDidUpdate(prevProps: Props) {
         if (this.props.runDeletion.deleted && !prevProps.runDeletion.deleted) {
-            browserHistory.push('/exports');
+            history.push('/exports');
         }
         if (this.props.exportReRun.error && !prevProps.exportReRun.error) {
             this.setState({ error: this.props.exportReRun.error });
@@ -519,7 +520,7 @@ function mapDispatchToProps(dispatch) {
                 providers: providerArray,
                 layers: 'Geopackage',
             }));
-            browserHistory.push('/create');
+            history.push('/create');
         },
         cancelProviderTask: providerUid => (
             dispatch(cancelProviderTask(providerUid))

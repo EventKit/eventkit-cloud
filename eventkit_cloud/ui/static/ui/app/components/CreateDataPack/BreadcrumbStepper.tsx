@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { browserHistory, InjectedRouter, PlainRoute } from 'react-router';
+import { InjectedRouter, PlainRoute } from 'react-router';
 import { connect } from 'react-redux';
 import { withTheme, Theme } from '@material-ui/core/styles';
 import * as isEqual from 'lodash/isEqual';
@@ -28,7 +28,7 @@ import { Location } from 'history';
 import {Typography} from "@material-ui/core";
 import * as PropTypes from "prop-types";
 import Info from '@material-ui/icons/Info';
-
+import history from '../../utils/history';
 
 export interface JobData {
     name: string;
@@ -147,7 +147,7 @@ export class BreadcrumbStepper extends React.Component<Props, State> {
             this.props.clearJobInfo();
             this.props.getNotifications();
             this.props.getNotificationsUnreadCount();
-            browserHistory.push(`/status/${this.props.jobuid}`);
+            history.push(`/status/${this.props.jobuid}`);
         }
         if (this.props.jobError && !prevProps.jobError) {
             this.hideLoading();

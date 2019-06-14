@@ -3,7 +3,6 @@ import * as React from 'react';
 import { connect } from 'react-redux';
 import { withTheme, Theme } from '@material-ui/core/styles';
 import withWidth, { isWidthUp } from '@material-ui/core/withWidth';
-import { browserHistory } from 'react-router';
 import * as Joyride from 'react-joyride';
 import Help from '@material-ui/icons/Help';
 import Toolbar from '@material-ui/core/Toolbar';
@@ -28,6 +27,7 @@ import { updateDataCartPermissions } from '../../actions/datacartActions';
 import { setPageOrder, setPageView } from '../../actions/uiActions';
 import { flattenFeatureCollection } from '../../utils/mapUtils';
 import { joyride } from '../../joyride.config';
+import history from '../../utils/history';
 import { Breakpoint } from '@material-ui/core/styles/createBreakpoints';
 
 interface Props {
@@ -173,10 +173,10 @@ export class DataPackPage extends React.Component<Props, State> {
         this.fetch = window.setInterval(this.autoRunRequest, 10000);
         // make sure no geojson upload is in the state
         this.props.resetGeoJSONFile();
-        browserHistory.listen((location) => {
+        history.listen((location) => {
             // do not allow the page to navigate to itself without url parameters
             if (location.search === '' && location.pathname === '/exports') {
-                browserHistory.push(this.getCurrentLocation());
+                history.push(this.getCurrentLocation());
             }
         });
     }
@@ -329,7 +329,7 @@ export class DataPackPage extends React.Component<Props, State> {
     }
 
     private updateLocationQuery(query: any) {
-        browserHistory.push({
+        history.push({
             ...this.props.location,
             query: {
                 ...this.props.location.query,

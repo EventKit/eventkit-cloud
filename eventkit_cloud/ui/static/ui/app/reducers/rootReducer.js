@@ -1,5 +1,5 @@
 import { combineReducers } from 'redux';
-import { routerReducer } from 'react-router-redux';
+import { connectRouter } from 'connected-react-router'
 import { types } from '../actions/uiActions';
 import { userReducer } from './userReducer';
 import { usersReducer } from './usersReducer';
@@ -25,6 +25,7 @@ import { licenseReducer } from './licenseReducer';
 import authReducer from './authReducer';
 import { userGroupsReducer } from './groupReducer';
 import { notificationsReducer } from './notificationsReducer';
+import history from '../utils/history';
 
 const reducer = combineReducers({
     // short hand property names
@@ -34,7 +35,7 @@ const reducer = combineReducers({
     geocode: geocodeReducer,
     importGeom: importGeomReducer,
     user: userReducer,
-    routing: routerReducer,
+    router: connectRouter(history),
     drawer: drawerMenuReducer,
     providers: getProvidersReducer,
     stepperNextEnabled: stepperReducer,

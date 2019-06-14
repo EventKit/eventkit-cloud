@@ -5,9 +5,11 @@ import { render } from 'react-dom';
 import { Provider } from 'react-redux';
 import { MuiThemeProvider, createMuiTheme } from '@material-ui/core/styles';
 import Loadable from 'react-loadable';
-import { connectedReduxRedirect } from 'redux-auth-wrapper/history3/redirect';
-import { browserHistory, Router, Route, Redirect, RouteComponentProps } from 'react-router';
-import { syncHistoryWithStore, routerActions } from 'react-router-redux';
+import { connectedReduxRedirect } from 'redux-auth-wrapper/history4/redirect';
+import { Route, Redirect, RouteComponentProps } from 'react-router';
+import { BrowserRouter } from 'react-router-dom';
+import { ConnectedRouter, routerActions } from 'connected-react-router';
+import history from './utils/history';
 import configureStore from './store/configureStore';
 import { login } from './actions/userActions';
 import ekTheme from './styles/eventkit_theme';
@@ -15,7 +17,7 @@ import PageLoading from './components/common/PageLoading';
 
 const theme = createMuiTheme(ekTheme);
 
-const Loading = args => {
+const Loading = (args) => {
     if (args.pastDelay) {
         return (
             <PageLoading background="pattern" />
@@ -26,7 +28,6 @@ const Loading = args => {
 };
 
 const store = configureStore();
-const history = syncHistoryWithStore(browserHistory, store);
 
 interface State {
     user: Eventkit.Store.User;
@@ -60,7 +61,7 @@ const UserIsNotAuthenticated = connectedReduxRedirect({
     wrapperDisplayName: 'UserIsNotAuthenticated',
     authenticatedSelector: (state: State) => !state.user.data && state.user.status.isLoading === false,
     redirectPath: (state, ownProps: RouteComponentProps<{}, {}>) => (
-        (ownProps.location.query.redirect || ownProps.location.query.next) || '/dashboard'
+        ownProps.location.query || '/dashboard'
     ),
     allowRedirectBack: false,
 });
@@ -73,7 +74,7 @@ const UserHasAgreed = connectedReduxRedirect({
 });
 
 function checkAuth(storeObj) {
-    return nextState => {
+    return () => {
         const { user } = storeObj.getState();
         if (!user.data) {
             storeObj.dispatch(login(null));
@@ -139,21 +140,27 @@ const NotificationsPage = Loadable({
 render(
     <Provider store={store}>
         <MuiThemeProvider theme={theme}>
-            <Router history={history}>
-                <Redirect from="/" to="/dashboard" />
-                <Route path="/" component={Application} onEnter={checkAuth(store)}>
-                    <Route path="/login" component={UserIsNotAuthenticated(LoginPage)} />
-                    <Route path="/logout" component={Logout} />
-                    <Route path="/dashboard" component={UserIsAuthenticated(UserHasAgreed(DashboardPage))} />
-                    <Route path="/exports" component={UserIsAuthenticated(UserHasAgreed(DataPackPage))} />
-                    <Route path="/create" component={UserIsAuthenticated(UserHasAgreed(CreateExport))} />
-                    <Route path="/status/:jobuid" component={UserIsAuthenticated(UserHasAgreed(StatusDownload))} />
-                    <Route path="/about" component={UserIsAuthenticated(About)} />
-                    <Route path="/account" component={UserIsAuthenticated(Account)} />
-                    <Route path="/groups" component={UserIsAuthenticated(UserGroupsPage)} />
-                    <Route path="/notifications" component={UserIsAuthenticated(NotificationsPage)} />
-                </Route>
-            </Router>
+            <BrowserRouter history={history}>
+                <ConnectedRouter history={history}>
+                    <div>
+                        <Redirect from="/" to="/dashboard" />
+                        <Route path="/" component={Application} onEnter={checkAuth(store)} />
+                        <Route path="/login" component={UserIsNotAuthenticated(LoginPage)} />
+                        <Route path="/logout" component={Logout} />
+                        <Route path="/dashboard" component={UserIsAuthenticated(UserHasAgreed(DashboardPage))} />
+                        <Route path="/exports" component={UserIsAuthenticated(UserHasAgreed(DataPackPage))} />
+                        <Route path="/create" component={UserIsAuthenticated(UserHasAgreed(CreateExport))} />
+                        <Route
+                            path="/status/:jobuid"
+                            component={UserIsAuthenticated(UserHasAgreed(StatusDownload))}
+                        />
+                        <Route path="/about" component={UserIsAuthenticated(About)} />
+                        <Route path="/account" component={UserIsAuthenticated(Account)} />
+                        <Route path="/groups" component={UserIsAuthenticated(UserGroupsPage)} />
+                        <Route path="/notifications" component={UserIsAuthenticated(NotificationsPage)} />
+                    </div>
+                </ConnectedRouter>
+            </BrowserRouter>
         </MuiThemeProvider>
     </Provider>,
     document.getElementById('root'),

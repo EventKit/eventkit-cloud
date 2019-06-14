@@ -3,7 +3,6 @@ import * as React from 'react';
 import { connect } from 'react-redux';
 import { withTheme, Theme, withStyles, createStyles } from '@material-ui/core/styles';
 import withWidth, { isWidthDown } from '@material-ui/core/withWidth';
-import { browserHistory } from 'react-router';
 import Joyride, { Step } from 'react-joyride';
 import Help from '@material-ui/icons/Help';
 import Button from '@material-ui/core/Button';
@@ -34,6 +33,7 @@ import { DrawerTimeout } from '../../actions/uiActions';
 import { joyride } from '../../joyride.config';
 import { Breakpoint } from '@material-ui/core/styles/createBreakpoints';
 import { Location } from 'history';
+import history from '../../utils/history';
 
 const jss = (theme: Eventkit.Theme & Theme) => createStyles({
     header: {
@@ -278,7 +278,7 @@ export class UserGroupsPage extends React.Component<Props, State> {
             page_size = this.pageSize;
             this.props.location.query.page_size = page_size;
         }
-        browserHistory.replace({
+        history.replace({
             ...this.props.location,
             query: {
                 ...this.props.location.query,
@@ -351,7 +351,7 @@ export class UserGroupsPage extends React.Component<Props, State> {
                 delete query.search;
             }
             this.setState({ search: '' });
-            browserHistory.push({
+            history.push({
                 ...this.props.location,
                 query,
             });
@@ -466,7 +466,7 @@ export class UserGroupsPage extends React.Component<Props, State> {
                 const query = { ...this.props.location.query };
                 query.search = text;
                 query.page_size = this.pageSize;
-                browserHistory.push({ ...this.props.location, query });
+                history.push({ ...this.props.location, query });
             }
         }
     }
@@ -482,26 +482,26 @@ export class UserGroupsPage extends React.Component<Props, State> {
             query.search = null;
             delete query.search;
             query.page_size = this.pageSize;
-            browserHistory.push({ ...this.props.location, query });
+            history.push({ ...this.props.location, query });
         }
     }
 
     private handleOrderingChange(value: string) {
         const query = { ...this.props.location.query };
         query.ordering = value;
-        browserHistory.push({ ...this.props.location, query });
+        history.push({ ...this.props.location, query });
     }
 
     private handleLoadMore() {
         const query = { ...this.props.location.query };
         query.page_size = Number(query.page_size) + this.pageSize;
-        browserHistory.push({ ...this.props.location, query });
+        history.push({ ...this.props.location, query });
     }
 
     private handleLoadLess() {
         const query = { ...this.props.location.query };
         query.page_size = Number(query.page_size) - this.pageSize;
-        browserHistory.push({ ...this.props.location, query });
+        history.push({ ...this.props.location, query });
     }
 
     private handleCreateOpen() {
@@ -609,7 +609,7 @@ export class UserGroupsPage extends React.Component<Props, State> {
         query.search = null;
         delete query.search;
         query.page_size = this.pageSize;
-        browserHistory.push({ ...this.props.location, query });
+        history.push({ ...this.props.location, query });
     }
 
     private handleMakeAdmin(user: Eventkit.User) {

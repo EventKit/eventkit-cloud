@@ -1,6 +1,6 @@
-import { push } from 'react-router-redux';
+import { push } from 'connected-react-router';
 import axios from 'axios';
-import cookie from 'react-cookie';
+import { useCookies } from 'react-cookie';
 import { resetState } from './uiActions';
 
 export const types = {
@@ -33,7 +33,8 @@ export function logout() {
 
 export function login(data) {
     return (dispatch) => {
-        const csrftoken = cookie.load('csrftoken');
+        const [cookies] = useCookies(['csrftoken']);
+        const csrftoken = cookies.get('csrftoken');
 
         dispatch({
             type: types.USER_LOGGING_IN,

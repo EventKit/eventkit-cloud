@@ -3,7 +3,7 @@ import { withTheme, withStyles, createStyles } from '@material-ui/core/styles';
 import { Breakpoint } from '@material-ui/core/styles/createBreakpoints';
 import MuiDrawer from '@material-ui/core/Drawer';
 import MenuItem from '@material-ui/core/MenuItem';
-import { IndexLink, Link } from 'react-router';
+import { Link, NavLink } from 'react-router-dom';
 import AVLibraryBooks from '@material-ui/icons/LibraryBooks';
 import ContentAddBox from '@material-ui/icons/AddBox';
 import Dashboard from '@material-ui/icons/Dashboard';
@@ -144,14 +144,14 @@ export class Drawer extends React.Component<Props, State> {
                             className={`qa-Drawer-MenuItem-dashboard ${classes.menuItem}`}
                             onClick={this.props.handleMenuItemClick}
                         >
-                            <IndexLink
+                            <NavLink
                                 className={`qa-Drawer-Link-dashboard ${classes.link}`}
                                 activeClassName={classes.activeLink}
                                 to="/dashboard"
                             >
                                 <Dashboard className={classes.icon} />
                                 Dashboard
-                            </IndexLink>
+                            </NavLink>
                         </MenuItem>
                         <MenuItem
                             className={`qa-Drawer-MenuItem-exports ${classes.menuItem}`}
@@ -259,8 +259,4 @@ export class Drawer extends React.Component<Props, State> {
     }
 }
 
-export default withTheme()(
-    withStyles(jss)(
-        Drawer
-    )
-);
+export default withTheme()(withStyles(jss)(Drawer));

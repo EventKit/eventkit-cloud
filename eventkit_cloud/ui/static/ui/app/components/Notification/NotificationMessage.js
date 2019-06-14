@@ -1,7 +1,7 @@
 import PropTypes from 'prop-types';
 import React, { Component } from 'react';
 import { withTheme } from '@material-ui/core/styles';
-import { Link } from 'react-router';
+import { Link } from 'react-router-dom';
 import { verbs, getNotificationViewPath, requiresActionObjDetails, requiresActorDetails } from '../../utils/notificationUtils';
 
 export class NotificationMessage extends Component {

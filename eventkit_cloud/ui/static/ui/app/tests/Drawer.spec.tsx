@@ -2,7 +2,7 @@ import * as React from 'react';
 import * as sinon from 'sinon';
 import { createShallow } from '@material-ui/core/test-utils';
 import MenuItem from '@material-ui/core/MenuItem';
-import { Link, IndexLink } from 'react-router';
+import { Link, NavLink } from 'react-router-dom';
 import Dashboard from '@material-ui/icons/Dashboard';
 import AVLibraryBooks from '@material-ui/icons/LibraryBooks';
 import ContentAddBox from '@material-ui/icons/AddBox';
@@ -37,7 +37,7 @@ describe('Drawer component', () => {
         expect(drawer.find(MenuItem)).toHaveLength(7);
         expect(drawer.find(MenuItem).at(0).html()).toContain('Dashboard');
         expect(drawer.find(MenuItem).at(0).find(Dashboard)).toHaveLength(1);
-        expect(drawer.find(MenuItem).at(0).find(IndexLink)).toHaveLength(1);
+        expect(drawer.find(MenuItem).at(0).find(NavLink)).toHaveLength(1);
         expect(drawer.find(MenuItem).at(1).html()).toContain('DataPack Library');
         expect(drawer.find(MenuItem).at(1).find(AVLibraryBooks)).toHaveLength(1);
         expect(drawer.find(MenuItem).at(1).find(Link)).toHaveLength(1);
