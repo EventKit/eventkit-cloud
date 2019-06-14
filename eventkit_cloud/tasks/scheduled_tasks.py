@@ -93,13 +93,7 @@ def pcf_scale_celery(max_instances):
         logger.info("Already at max instances, skipping.")
         return
 
-    command = ("python manage.py runinitial && echo 'Starting celery workers' && "
-    "celery worker -A eventkit_cloud --concurrency=$CONCURRENCY --loglevel=$LOG_LEVEL -n runs@%h -Q runs "
-    "& exec celery worker -A eventkit_cloud --concurrency=$CONCURRENCY --loglevel=$LOG_LEVEL -n worker@%h -Q $CELERY_GROUP_NAME "
-    "& exec celery worker -A eventkit_cloud --loglevel=$LOG_LEVEL -n celery@%h -Q celery "
-    "& exec celery worker -A eventkit_cloud --loglevel=$LOG_LEVEL -n cancel@%h -Q $CELERY_GROUP_NAME.cancel "
-    "& exec celery worker -A eventkit_cloud --concurrency=2 -n finalize@%h -Q $CELERY_GROUP_NAME.finalize "
-    "& exec celery worker -A eventkit_cloud --concurrency=1 --loglevel=$LOG_LEVEL -n osm@%h -Q $CELERY_GROUP_NAME.osm ")
+    command = os.getenv('CELERY_TASK_COMMAND')
 
     message_count = get_message_count("runs")
     if message_count > 0:
@@ -189,17 +183,25 @@ def clean_up_queues():
     queue_class = "queues"
     exchange_class = "exchanges"
 
-    for queue in get_all_rabbitmq_objects(broker_api_url, queue_class):
-        queue_name = queue.get('name')
-        try:
-            channel.queue_delete(queue_name, if_unused=True, if_empty=True)
-            logger.info("Removed queue: {}".format(queue_name))
-        except Exception as e:
-            logger.info(e)
-    for exchange in get_all_rabbitmq_objects(broker_api_url, exchange_class):
-        exchange_name = exchange.get('name')
-        try:
-            channel.exchange_delete(exchange_name, if_unused=True)
-            logger.info("Removed exchange: {}".format(exchange_name))
-        except Exception as e:
-            logger.info(e)
+    if not broker_api_url:
+        logger.error("Cannot clean up queues without a BROKER_API_URL.")
+        return
+    with app.connection() as conn:
+        channel = conn.channel()
+        if not channel:
+            logger.error("Could not establish a rabbitmq channel")
+            return
+        for queue in get_all_rabbitmq_objects(broker_api_url, queue_class):
+            queue_name = queue.get('name')
+            try:
+                channel.queue_delete(queue_name, if_unused=True, if_empty=True)
+                logger.info("Removed queue: {}".format(queue_name))
+            except Exception as e:
+                logger.info(e)
+        for exchange in get_all_rabbitmq_objects(broker_api_url, exchange_class):
+            exchange_name = exchange.get('name')
+            try:
+                channel.exchange_delete(exchange_name, if_unused=True)
+                logger.info("Removed exchange: {}".format(exchange_name))
+            except Exception as e:
+                logger.info(e)

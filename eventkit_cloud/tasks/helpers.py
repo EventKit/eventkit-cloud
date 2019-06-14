@@ -488,14 +488,6 @@ def get_all_rabbitmq_objects(api_url, rabbit_class):
     :param rabbit_class: The type of rabbitmq class (i.e. queues or exchanges) as a string.
     :return: An array of dicts with the desired objects.
     """
-    if not api_url:
-        logger.error("Cannot fetch queues without BROKER_API_URL")
-        return
-    with app.connection() as conn:
-        channel = conn.channel()
-        if not channel:
-            logger.error("Could not establish a rabbitmq channel")
-            return
 
     queues_url = "{}/{}".format(api_url.rstrip('/'), rabbit_class)
     response = requests.get(queues_url)
