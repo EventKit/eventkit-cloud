@@ -1,4 +1,5 @@
 from django.core.exceptions import ObjectDoesNotExist
+from eventkit_cloud.utils.stats.geomutils import get_area_bbox
 
 
 
@@ -40,44 +41,17 @@ def get_time_estimate_name(provider_name, bbox, srs='4326'):
     return get_time_estimate(provider, bbox, srs)
 
 
-def get_time_estimate(provider, bbox, srs='4326', with_clipping=True):
+def get_time_estimate(provider, bbox, srs='4326'):
     """
     :param provider: The DataProvider to test
     :param bbox: The bounding box of the request
     :param srs: The SRS of the bounding box
     :param with_clipping: see get_total_num_pixels
-    :return: (estimate in mbs, object w/ metadata about how it was generated)
+    :return: (estimate in seconds, object w/ metadata about how it was generated)
     """
-    # TODO: Both total_pixels and query intersect the tile grid, can save time if we do it once for both
-    tile_grid = ek_stats.get_provider_grid(provider)
-    total_pixels = ek_stats.get_total_num_pixels(tile_grid, bbox, srs, with_clipping)
-    from eventkit_cloud.utils.stats.geomutils import prefetch_geometry_cache, lookup_cache_geometry, \
-        get_area_bbox, get_bbox_intersect
-
-    dur_ci_90, method = ek_stats.query(provider.name, 'duration', 'mean', bbox, srs,
-                                       grouping='provider_name',
-                                       gap_fill_thresh=0.1,
-                                       default_value=0)
-    dur_max, method = ek_stats.query(provider.name, 'duration', 'ci_90', bbox, srs,
-                                       grouping='provider_name',
-                                       gap_fill_thresh=0.1,
-                                       default_value=0)
-    logger.info("""Max Dur: {}
-    CI_90 Dur: {}""".format(dur_ci_90, dur_max))
-
     duration_per_unit_area, method = ek_stats.query(provider.name, 'duration', 'mean', bbox, srs,
                                  grouping='provider_name',
                                  gap_fill_thresh=0.1,
                                  default_value=0)
-
     area = get_area_bbox(bbox)
-    logger.info("Calculating Time Estimate")
-    logger.info("""Area: {}
-     Duration per unit area: {}
-     Duration Estimate: {}""".format(area, duration_per_unit_area, duration_per_unit_area * area))
-    area_as_reported, method = ek_stats.query(provider.name, 'area', 'mean', bbox, srs,
-                                                    grouping='provider_name',
-                                                    gap_fill_thresh=0.1,
-                                                    default_value=0)
-    logger.info("""Area as reported: {}""".format(area_as_reported))
     return area * duration_per_unit_area, method
