@@ -64,7 +64,7 @@ renderer_classes = (JSONRenderer, HOTExportApiRenderer)
 class AutoSchemaOverride(AutoSchema):
     """Implementation of AutoSchema that allows links to be override on a per HTTP action basis."""
 
-    def __init__(self, manual_action_fields=None, manual_fields=None):
+    def __init__(self, action_manual_fields=None, manual_fields=None, overwrite=False):
         """
         Parameters:
 
@@ -77,20 +77,22 @@ class AutoSchemaOverride(AutoSchema):
         if manual_fields is None:
             manual_fields = list()
         self._manual_fields = manual_fields
-        if manual_action_fields is None:
-            manual_action_fields = CaseInsensitiveDict()
+        if action_manual_fields is None:
+            action_manual_fields = CaseInsensitiveDict()
+        self._action_manual_fields = action_manual_fields
 
-        self._manual_action_fields = manual_action_fields
+        self.overwrite = overwrite
 
     def get_link(self, path, method, base_url):
         """Get the link from the base class, then override with manual fields if need be."""
         link = super(AutoSchemaOverride, self).get_link(path, method, base_url)
-        fields = self.get_manual_action_fields(path, method)
+        fields = self.get_action_manual_fields(path, method)
+        # path param is unused in the above call, this identical to how the base class does this,
+        # unclear why at the moment
         if len(fields) == 0:
-            # path param is unused in the above call, this identical to how the base class does this,
-            # unclear why at the moment.
             return link
-        fields = self.update_fields(link.fields, fields)
+        if not self.overwrite:
+            fields = self.update_fields(link.fields, fields)
         return coreapi.Link(
             url=link.url,
             action=link.action,
@@ -99,13 +101,13 @@ class AutoSchemaOverride(AutoSchema):
             description=link.description
         )
 
-    def get_manual_action_fields(self, path, method):
+    def get_action_manual_fields(self, path, method):
         """
         Get any manual fields corresponding to the specified action.
 
         Method signature mimics `get_manual_fields` from the base class.
         """
-        return self._manual_action_fields.get(method, list())
+        return self._action_manual_fields.get(method, list())
 
 
 class JobViewSet(viewsets.ModelViewSet):
@@ -420,7 +422,6 @@ class JobViewSet(viewsets.ModelViewSet):
                                               "detail": _('One or more: {0} are invalid'.format(provider_tasks))
                                               }]}
                     return Response(error_data, status=status_code)
-
 
             # run the tasks
             job_uid = str(job.uid)
@@ -1235,7 +1236,7 @@ class UserDataViewSet(viewsets.GenericViewSet):
     User Data
 
     """
-    schema = AutoSchemaOverride(manual_action_fields={'PATCH': [
+    schema = AutoSchemaOverride(action_manual_fields={'PATCH': [
             (coreapi.Field(
                 name='username',
                 required=True,
@@ -1245,7 +1246,7 @@ class UserDataViewSet(viewsets.GenericViewSet):
                 required=True,
                 location='form',
             )),
-        ]})
+        ]}, overwrite=True)
 
     serializer_class = UserDataSerializer
     permission_classes = (permissions.IsAuthenticated, IsOwnerOrReadOnly)
@@ -1328,13 +1329,13 @@ class UserDataViewSet(viewsets.GenericViewSet):
         serializer = self.get_serializer(queryset, context={'request': request})
         return Response(serializer.data, status=status.HTTP_200_OK)
 
-    @action(detail=False, methods=['post', 'get'], schema=AutoSchemaOverride(manual_action_fields={'POST': [
+    @action(detail=False, methods=['post', 'get'], schema=AutoSchemaOverride(action_manual_fields={'POST': [
         (coreapi.Field(
             name='data',
             required=True,
             location='form',
         )),
-    ]}))
+    ]}, overwrite=True))
     def members(self, request, *args, **kwargs):
         """
         Member list from list of group ids
@@ -2010,47 +2011,8 @@ class SwaggerSchemaView(views.APIView):
 
     def get(self, request):
         try:
-            import coreapi
             generator = SchemaGenerator(title='EventKit API')
             schema = generator.get_schema(request=request)
-
-            # links = generator.get_links(request=request)
-            # # This obviously shouldn't go here.  Need to implment better way to inject CoreAPI customizations.
-            # partial_update_link = links.get('users', {}).get('partial_update')
-            # logger.info(links.get('users'))
-            # del links['users']
-            # if partial_update_link:
-            #     links['users']['partial_update'] = coreapi.Link(
-            #         url=partial_update_link.url,
-            #         action=partial_update_link.action,
-            #         fields=[
-            #             (coreapi.Field(
-            #                 name='username',
-            #                 required=True,
-            #                 location='path')),
-            #             (coreapi.Field(
-            #                 name='data',
-            #                 required=True,
-            #                 location='form',
-            #             )),
-            #         ],
-            #         description=partial_update_link.description
-            #     )
-            #
-            # # members_link = links.get('users', {}).get('members').get('create')
-            # # if members_link:
-            # #     links['users']['members'] = coreapi.Link(
-            # #         url=members_link.url,
-            # #         action=members_link.action,
-            # #         fields=[
-            # #             (coreapi.Field(
-            # #                 name='data',
-            # #                 required=True,
-            # #                 location='form',
-            # #             )),
-            # #         ],
-            # #         description=members_link.description
-            # #     )
 
             if not schema:
                 raise exceptions.ValidationError(
