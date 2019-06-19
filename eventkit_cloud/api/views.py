@@ -83,11 +83,10 @@ class AutoSchemaOverride(AutoSchema):
         self._manual_action_fields = manual_action_fields
 
     def get_link(self, path, method, base_url):
-        logger.info('OVERRIDE GET LINK')
+        """Get the link from the base class, then override with manual fields if need be."""
         link = super(AutoSchemaOverride, self).get_link(path, method, base_url)
         fields = self.get_manual_action_fields(path, method)
         if len(fields) == 0:
-            logger.info(f"""No override for path ({path}) and method ({method})""")
             # path param is unused in the above call, this identical to how the base class does this,
             # unclear why at the moment.
             return link
@@ -1329,7 +1328,13 @@ class UserDataViewSet(viewsets.GenericViewSet):
         serializer = self.get_serializer(queryset, context={'request': request})
         return Response(serializer.data, status=status.HTTP_200_OK)
 
-    @action(detail=False, methods=['post', 'get'])
+    @action(detail=False, methods=['post', 'get'], schema=AutoSchemaOverride(manual_action_fields={'POST': [
+        (coreapi.Field(
+            name='data',
+            required=True,
+            location='form',
+        )),
+    ]}))
     def members(self, request, *args, **kwargs):
         """
         Member list from list of group ids
@@ -2053,8 +2058,6 @@ class SwaggerSchemaView(views.APIView):
                 )
 
             return Response(schema)
-        except Exception:
+        except:
             # CoreAPI couldn't be imported, falling back to static schema
-            import traceback
-            traceback.print_exc()
             return Response()
