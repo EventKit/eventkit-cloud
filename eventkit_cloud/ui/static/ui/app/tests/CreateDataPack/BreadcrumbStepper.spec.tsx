@@ -1,7 +1,6 @@
 import * as React from 'react';
 import * as sinon from 'sinon';
 import { mount, shallow } from 'enzyme';
-import { browserHistory } from 'react-router';
 import Warning from '@material-ui/icons/Warning';
 import Button from '@material-ui/core/Button';
 import NavigationArrowBack from '@material-ui/icons/ArrowBack';
@@ -13,6 +12,7 @@ import ExportAOI from '../../components/CreateDataPack/ExportAOI';
 import ExportInfo from '../../components/CreateDataPack/ExportInfo';
 import ExportSummary from '../../components/CreateDataPack/ExportSummary';
 import * as utils from '../../utils/mapUtils';
+import history from '../../utils/history';
 
 const providers = [
     {
@@ -164,7 +164,7 @@ describe('BreadcrumbStepper component', () => {
     });
 
     it('componentDidUpdate should push to status page and clearJobInfo', () => {
-        const pushStub = sinon.stub(browserHistory, 'push');
+        const pushStub = sinon.stub(history, 'push');
         const nextProps = { ...getProps() };
         nextProps.jobuid = '123';
         nextProps.jobFetched = true;

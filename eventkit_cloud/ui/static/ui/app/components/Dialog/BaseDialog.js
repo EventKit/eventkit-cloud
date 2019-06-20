@@ -133,6 +133,7 @@ BaseDialog.propTypes = {
     buttonStyle: PropTypes.object,
     overlayStyle: PropTypes.object,
     theme: PropTypes.object.isRequired,
+    className: PropTypes.string,
 };
 
 export default withTheme()(BaseDialog);

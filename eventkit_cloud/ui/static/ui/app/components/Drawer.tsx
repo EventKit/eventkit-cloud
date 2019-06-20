@@ -230,7 +230,7 @@ export class Drawer extends React.Component<Props, State> {
                                 className={`qa-Drawer-Link-logout ${classes.link}`}
                                 activeClassName={classes.activeLink}
                                 onClick={this.handleLogoutClick}
-                                to={undefined}
+                                to={"/"}
                             >
                                 <ActionExitToApp className={classes.icon} />
                                 Log Out
@@ -244,16 +244,16 @@ export class Drawer extends React.Component<Props, State> {
                         <Mail className={classes.icon} />Contact Us
                     </a> : null}
                 </MuiDrawer>
-                <ConfirmDialog
-                    show={this.state.showLogoutDialog}
-                    title="LOG OUT"
-                    confirmLabel="Log Out"
-                    isDestructive
-                    onCancel={this.handleLogoutDialogCancel}
-                    onConfirm={this.handleLogoutDialogConfirm}
-                >
-                    <strong>Are you sure?</strong>
-                </ConfirmDialog>
+                {/*<ConfirmDialog*/}
+                {/*    show={this.state.showLogoutDialog}*/}
+                {/*    title="LOG OUT"*/}
+                {/*    confirmLabel="Log Out"*/}
+                {/*    isDestructive*/}
+                {/*    onCancel={this.handleLogoutDialogCancel}*/}
+                {/*    onConfirm={this.handleLogoutDialogConfirm}*/}
+                {/*>*/}
+                {/*    <strong>Are you sure?</strong>*/}
+                {/*</ConfirmDialog>*/}
             </React.Fragment>
         );
     }

@@ -3,9 +3,9 @@ import { withTheme, Theme, withStyles, createStyles } from '@material-ui/core/st
 import * as numeral from 'numeral';
 import Button from '@material-ui/core/Button';
 import TextField from '@material-ui/core/TextField';
-import Slider from '@material-ui/lab/Slider';
 import AlertWarning from '@material-ui/icons/Warning';
 import Clear from '@material-ui/icons/Clear';
+import Slider from '@material-ui/lab/Slider';
 import AlertCallout from './AlertCallout';
 import { getSqKm, getSqKmString } from '../../utils/generic';
 
@@ -249,7 +249,7 @@ export class BufferDialog extends React.Component<Props, State> {
                                     <tr>
                                         <td className={classes.tableData} style={{ borderLeft: '1px solid #ccc' }} >
                                             <Slider
-                                                className={classes.slider}
+                                                classes={classes.slider}
                                                 step={10}
                                                 max={10000}
                                                 min={0}

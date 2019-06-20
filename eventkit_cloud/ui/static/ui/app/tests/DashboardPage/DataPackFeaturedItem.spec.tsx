@@ -55,8 +55,9 @@ describe('DataPackFeaturedItem component', () => {
     it('renders card title with correct text and props', () => {
         const title = wrapShallow(wrapper.find(CardHeader).props().title);
         const titleLink = title.find(Link);
-        expect(titleLink.props().to).toBe(`/status/${instance.props.run.job.uid}`);
-        expect(titleLink.props().href).toBe(`/status/${instance.props.run.job.uid}`);
+        const props = titleLink.props() as any;
+        expect(props.to).toBe(`/status/${instance.props.run.job.uid}`);
+        expect(props.href).toBe(`/status/${instance.props.run.job.uid}`);
         expect(titleLink.childAt(0).text()).toBe(instance.props.run.job.name);
     });
 

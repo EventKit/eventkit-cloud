@@ -1,7 +1,6 @@
 import * as React from 'react';
 import { createShallow } from '@material-ui/core/test-utils';
 import * as sinon from 'sinon';
-import { browserHistory } from 'react-router';
 import Joyride from 'react-joyride';
 import Help from '@material-ui/icons/Help';
 import GroupsDrawer from '../../components/UserGroupsPage/GroupsDrawer';
@@ -13,6 +12,7 @@ import UserRow from '../../components/UserGroupsPage/UserRow';
 import OwnUserRow from '../../components/UserGroupsPage/OwnUserRow';
 import UserHeader from '../../components/UserGroupsPage/UserHeader';
 import { UserGroupsPage } from '../../components/UserGroupsPage/UserGroupsPage';
+import history from '../../utils/history';
 
 describe('UserGroupsPage component', () => {
     let shallow;
@@ -120,15 +120,15 @@ describe('UserGroupsPage component', () => {
         instance = wrapper.instance();
     };
 
-    let history;
+    let browserHistory;
     beforeAll(() => {
-        history = sinon.stub(browserHistory, 'push');
+        browserHistory = sinon.stub(browserHistory, 'push');
     });
 
     beforeEach(setup);
 
     afterAll(() => {
-        history.restore();
+        browserHistory.restore();
     });
 
     it('should render its basic components', () => {
@@ -162,15 +162,15 @@ describe('UserGroupsPage component', () => {
         setup({ location: { query: { ordering: 'username', group: '2' } } });
         const requestStub = sinon.stub(instance, 'makeUserRequest');
         const nextProps = getProps();
-        nextProps.location.query = { ordering: 'username', group: '1' };
+        nextProps.location.search = { ordering: 'username', group: '1' };
         wrapper.setProps(nextProps);
         expect(requestStub.calledOnce).toBe(true);
-        expect(requestStub.calledWith(nextProps.location.query)).toBe(true);
+        expect(requestStub.calledWith(nextProps.location.search)).toBe(true);
         const lastProps = getProps();
-        lastProps.location.query = { ordering: 'username' };
+        lastProps.location.search = { ordering: 'username' };
         wrapper.setProps(lastProps);
         expect(requestStub.calledTwice).toBe(true);
-        expect(requestStub.calledWith(lastProps.location.query)).toBe(true);
+        expect(requestStub.calledWith(lastProps.location.search)).toBe(true);
         requestStub.restore();
     });
 
@@ -224,11 +224,11 @@ describe('UserGroupsPage component', () => {
         setup({ location: { query: { groups: '12' }}});
         const makeRequestStub = sinon.stub(instance, 'makeUserRequest');
         const groupsCallCount = props.getGroups.callCount;
-        history.reset();
+        browserHistory.reset();
         wrapper.setProps({ groups: { ...props.groups, deleted: true } });
         expect(props.getGroups.callCount).toEqual(groupsCallCount + 1);
-        expect(history.calledOnce).toBe(true);
-        expect(history.calledWith({ ...props.location, query: {} }));
+        expect(browserHistory.calledOnce).toBe(true);
+        expect(browserHistory.calledWith({ ...props.location, query: {} }));
         makeRequestStub.restore();
     });
 
@@ -361,36 +361,36 @@ describe('UserGroupsPage component', () => {
     });
 
     it('handleSearchKeyDown should set query with search text', () => {
-        history.reset();
+        browserHistory.reset();
         const fakeEvent = { key: 'Enter', target: { value: 'search text' } };
         instance.handleSearchKeyDown(fakeEvent);
-        expect(history.calledOnce).toBe(true);
-        expect(history.calledWith({
+        expect(browserHistory.calledOnce).toBe(true);
+        expect(browserHistory.calledWith({
             ...props.location,
-            query: { ...props.location.query, search: 'search text' },
+            query: { ...props.location.search, search: 'search text' },
         })).toBe(true);
     });
 
     it('handleSearchChange should clear search query if the input is empty', () => {
         setup({ location: { query: { ordering: 'admin', search: 'search text' }}});
-        history.reset();
+        browserHistory.reset();
         const value = '';
         instance.handleSearchChange({ target: { value } });
-        expect(history.calledOnce).toBe(true);
-        expect(history.calledWith({
+        expect(browserHistory.calledOnce).toBe(true);
+        expect(browserHistory.calledWith({
             ...props.location,
             query: { ordering: 'admin', page_size: instance.pageSize },
         })).toBe(true);
     });
 
     it('handleOrderingChange should update the ordering query', () => {
-        history.reset();
+        browserHistory.reset();
         const val = '-username';
         instance.handleOrderingChange(val);
-        expect(history.calledOnce).toBe(true);
-        expect(history.calledWith({
+        expect(browserHistory.calledOnce).toBe(true);
+        expect(browserHistory.calledWith({
             ...props.location,
-            query: { ...props.location.query, ordering: val },
+            query: { ...props.location.search, ordering: val },
         }));
     });
 
@@ -566,24 +566,24 @@ describe('UserGroupsPage component', () => {
 
     it('handleDrawerSelectionChange should clear the group query', () => {
         setup({ location: { query: { groups: '12' }}});
-        history.reset();
+        browserHistory.reset();
         const fakeValue = 'all';
         instance.handleDrawerSelectionChange(fakeValue);
-        expect(history.calledOnce).toBe(true);
-        expect(history.calledWith({
+        expect(browserHistory.calledOnce).toBe(true);
+        expect(browserHistory.calledWith({
             ...props.location,
             query: {},
         }));
     });
 
     it('handleDrawerSelectionChange should set the group query', () => {
-        history.reset();
+        browserHistory.reset();
         const fakeValue = '12';
         instance.handleDrawerSelectionChange(fakeValue);
-        expect(history.calledOnce).toBe(true);
-        expect(history.calledWith({
+        expect(browserHistory.calledOnce).toBe(true);
+        expect(browserHistory.calledWith({
             ...props.location,
-            query: { ...props.location.query, groups: fakeValue },
+            query: { ...props.location.search, groups: fakeValue },
         }));
     });
 
@@ -617,7 +617,7 @@ describe('UserGroupsPage component', () => {
     });
 
     it('handleRemoveUser should update the group with user removed', () => {
-        props.location.query = { groups: '1' };
+        props.location.search = { groups: '1' };
         setup({ location: { query: { groups: '1' }}});
         const user = props.users.users[0];
         instance.handleRemoveUser(user);
@@ -638,7 +638,7 @@ describe('UserGroupsPage component', () => {
             members: ['1', '2', '3'],
             administrators: ['1', '2', '3'],
         };
-        p.location.query = { groups: '12' };
+        p.location.search = { groups: '12' };
         p.groups.groups.push(group);
         setup(p);
         const users = [
@@ -659,7 +659,7 @@ describe('UserGroupsPage component', () => {
     });
 
     it('handleBatchAdminRights should update group with new admins', () => {
-        props.location.query = { groups: String(props.groups.groups[0].id) };
+        props.location.search = { groups: String(props.groups.groups[0].id) };
         const users = [
             { user: { username: '1' } },
             { user: { username: '2' } },

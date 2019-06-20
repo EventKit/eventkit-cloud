@@ -4,12 +4,13 @@ import Help from '@material-ui/icons/Help';
 import ButtonBase from '@material-ui/core/ButtonBase';
 import PageHeader from '../common/PageHeader';
 import BreadcrumbStepper from './BreadcrumbStepper';
-import { InjectedRouter, PlainRoute } from 'react-router';
+import { Router } from 'react-router';
+import { Route } from 'react-router-dom';
 
 export interface Props {
     children: any;
-    router: InjectedRouter;
-    routes: PlainRoute[];
+    router: Router;
+    routes: Route[];
     theme: Eventkit.Theme & Theme;
 }
 

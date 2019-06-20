@@ -1,5 +1,6 @@
 import * as React from 'react';
-import { InjectedRouter, PlainRoute } from 'react-router';
+import { Router, Route } from 'react-router';
+import history from '../../utils/history';
 import { connect } from 'react-redux';
 import { withTheme, Theme } from '@material-ui/core/styles';
 import * as isEqual from 'lodash/isEqual';
@@ -28,7 +29,7 @@ import { Location } from 'history';
 import {Typography} from "@material-ui/core";
 import * as PropTypes from "prop-types";
 import Info from '@material-ui/icons/Info';
-import history from '../../utils/history';
+
 
 export interface JobData {
     name: string;
@@ -59,8 +60,8 @@ export interface Props {
     getFormats: () => void;
     walkthroughClicked: boolean;
     onWalkthroughReset: () => void;
-    router: InjectedRouter;
-    routes: PlainRoute[];
+    router: Router;
+    routes: Route[];
     getNotifications: () => void;
     getNotificationsUnreadCount: () => void;
     updateExportInfo: (args: any) => void;
@@ -107,8 +108,8 @@ export class BreadcrumbStepper extends React.Component<Props, State> {
         this.hideLoading = this.hideLoading.bind(this);
         this.submitDatapack = this.submitDatapack.bind(this);
         this.routeLeaveHook = this.routeLeaveHook.bind(this);
-        this.handleLeaveWarningDialogCancel = this.handleLeaveWarningDialogCancel.bind(this);
-        this.handleLeaveWarningDialogConfirm = this.handleLeaveWarningDialogConfirm.bind(this);
+        // this.handleLeaveWarningDialogCancel = this.handleLeaveWarningDialogCancel.bind(this);
+        // this.handleLeaveWarningDialogConfirm = this.handleLeaveWarningDialogConfirm.bind(this);
         this.updateEstimate = this.updateEstimate.bind(this);
         this.handleEstimateExplantionOpen = this.handleEstimateExplantionOpen.bind(this);
         this.handleEstimateExplanationClosed = this.handleEstimateExplanationClosed.bind(this);
@@ -139,7 +140,7 @@ export class BreadcrumbStepper extends React.Component<Props, State> {
         this.props.getFormats();
 
         const route = this.props.routes[this.props.routes.length - 1];
-        this.props.router.setRouteLeaveHook(route, this.routeLeaveHook);
+        // this.props.router.setRouteLeaveHook(route, this.routeLeaveHook);
     }
 
     componentDidUpdate(prevProps) {
@@ -491,7 +492,7 @@ export class BreadcrumbStepper extends React.Component<Props, State> {
             providerTasks.push({ provider: provider.name, formats: [formats[0]] });
         });
 
-        const selection = flattenFeatureCollection(this.props.aoiInfo.geojson);
+        const selection = flattenFeatureCollection(this.props.aoiInfo.geojson) as GeoJSON.FeatureCollection;
 
         const data: JobData = {
             name: this.props.exportInfo.exportName,
@@ -535,14 +536,14 @@ export class BreadcrumbStepper extends React.Component<Props, State> {
         this.setState({ loading: false });
     }
 
-    private handleLeaveWarningDialogCancel() {
-        this.setState({ showLeaveWarningDialog: false });
-        this.leaveRoute = null;
-    }
+    // private handleLeaveWarningDialogCancel() {
+    //     this.setState({ showLeaveWarningDialog: false });
+    //     this.leaveRoute = null;
+    // }
 
-    private handleLeaveWarningDialogConfirm() {
-        this.props.router.push(this.leaveRoute);
-    }
+    // private handleLeaveWarningDialogConfirm() {
+    //     this.props.router.push(this.leaveRoute);
+    // }
 
     private updateEstimate() {
         if(!this.context.config.SERVE_ESTIMATES || !this.props.exportInfo.providers)
@@ -590,16 +591,16 @@ export class BreadcrumbStepper extends React.Component<Props, State> {
                 >
                     <div>{message}</div>
                 </BaseDialog>
-                <ConfirmDialog
-                    show={this.state.showLeaveWarningDialog}
-                    title="ARE YOU SURE?"
-                    onCancel={this.handleLeaveWarningDialogCancel}
-                    onConfirm={this.handleLeaveWarningDialogConfirm}
-                    confirmLabel="Yes, I'm Sure"
-                    isDestructive
-                >
-                    <strong>You haven&apos;t finished creating this DataPack yet. Any settings will be lost.</strong>
-                </ConfirmDialog>
+                {/*<ConfirmDialog*/}
+                {/*    show={this.state.showLeaveWarningDialog}*/}
+                {/*    title="ARE YOU SURE?"*/}
+                {/*    onCancel={this.handleLeaveWarningDialogCancel}*/}
+                {/*    onConfirm={this.handleLeaveWarningDialogConfirm}*/}
+                {/*    confirmLabel="Yes, I'm Sure"*/}
+                {/*    isDestructive*/}
+                {/*>*/}
+                {/*    <strong>You haven&apos;t finished creating this DataPack yet. Any settings will be lost.</strong>*/}
+                {/*</ConfirmDialog>*/}
                 { this.state.loading ?
                     <PageLoading background="transparent" />
                     :

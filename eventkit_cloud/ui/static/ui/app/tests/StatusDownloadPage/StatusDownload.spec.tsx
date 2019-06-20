@@ -1,7 +1,6 @@
 import * as React from 'react';
 import * as sinon from 'sinon';
 import { createShallow } from '@material-ui/core/test-utils';
-import { browserHistory } from 'react-router';
 import Joyride from 'react-joyride';
 import Paper from '@material-ui/core/Paper';
 import PageLoading from '../../components/common/PageLoading';
@@ -9,6 +8,7 @@ import { StatusDownload } from '../../components/StatusDownloadPage/StatusDownlo
 import DataCartDetails from '../../components/StatusDownloadPage/DataCartDetails';
 import DataPackAoiInfo from '../../components/StatusDownloadPage/DataPackAoiInfo';
 import CustomScrollbar from '../../components/CustomScrollbar';
+import history from '../../utils/history';
 
 describe('StatusDownload component', () => {
     let shallow;
@@ -216,8 +216,8 @@ describe('StatusDownload component', () => {
         joyrideSpy.restore();
     });
 
-    it('componentDidUpdate should call browserHistory push if a run has been deleted', () => {
-        const pushStub = sinon.stub(browserHistory, 'push');
+    it('componentDidUpdate should call history push if a run has been deleted', () => {
+        const pushStub = sinon.stub(history, 'push');
         const nextProps = getProps();
         nextProps.runDeletion.deleted = true;
         wrapper.setProps(nextProps);

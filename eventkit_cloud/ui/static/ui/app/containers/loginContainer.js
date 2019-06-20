@@ -53,7 +53,7 @@ export class Form extends React.Component {
 
     handleSubmit(event) {
         event.preventDefault();
-        this.props.handleLogin(this.state, (this.props.location ? this.props.location.query : ''));
+        this.props.handleLogin(this.state, (this.props.location ? this.props.location.search : ''));
     }
 
     handleOAuth(event) {

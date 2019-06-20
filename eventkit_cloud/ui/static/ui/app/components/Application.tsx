@@ -13,7 +13,7 @@ import Banner from './Banner';
 import Drawer from './Drawer';
 import BaseDialog from './Dialog/BaseDialog';
 import { DrawerTimeout } from '../actions/uiActions';
-import { userActive } from '../actions/userActions';
+import {login, userActive} from '../actions/userActions';
 import { getNotifications, getNotificationsUnreadCount } from '../actions/notificationsActions';
 import NotificationsDropdown from './Notification/NotificationsDropdown';
 import '../styles/bootstrap/css/bootstrap.css';
@@ -109,6 +109,7 @@ interface Props {
         notificationsButton: string;
         notificationsIndicator: string;
     };
+    dispatch: (options?: object) => void;
 }
 
 interface State {
@@ -124,6 +125,7 @@ interface State {
     showNotificationsDropdown: boolean;
     notificationsLoading: boolean;
     loggedIn: boolean;
+    isMounted: false;
 }
 
 export class Application extends React.Component<Props, State> {
@@ -188,6 +190,7 @@ export class Application extends React.Component<Props, State> {
             showNotificationsDropdown: false,
             notificationsLoading: true,
             loggedIn: Boolean(props.userData),
+            isMounted: false,
         };
         this.userActiveInputTypes = ['mousemove', 'click', 'keypress', 'wheel', 'touchstart', 'touchmove', 'touchend'];
         this.notificationsUnreadCountRefreshInterval = 10000;
@@ -201,8 +204,21 @@ export class Application extends React.Component<Props, State> {
         return this.state.childContext;
     }
 
+     // getDerivedStateFromProps(props, state) {
+    //     // ...
+    // }
+    checkAuth() {
+        if (!this.props.userData) {
+            this.props.dispatch(login(null));
+        };
+    }
+
     componentDidMount() {
         this.getConfig();
+        this.checkAuth();
+        // this.setState({"isMounted": true}, () => {
+        //
+        // });
     }
 
     componentDidUpdate(prevProps, prevState) {
@@ -278,12 +294,13 @@ export class Application extends React.Component<Props, State> {
     }
 
     getConfig() {
+        console.log("GETTING CONFIG!");
         return axios.get('/configuration')
             .then((response) => {
                 if (response.data) {
-                    let data = response.data;
-                    data['SERVE_ESTIMATES'] = this.getBooleanSetting(data.SERVE_ESTIMATES);
-                    this.setState({ childContext: { config: data } });
+                    const data = response.data;
+                    data.SERVE_ESTIMATES = this.getBooleanSetting(data.SERVE_ESTIMATES);
+                    this.setState({childContext: {config: data}});
                 }
             }).catch((error) => {
                 console.warn(error.response.data);
@@ -653,6 +670,7 @@ function mapDispatchToProps(dispatch) {
         getNotifications: (args) => {
             dispatch(getNotifications(args));
         },
+        dispatch
     };
 }
 

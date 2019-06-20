@@ -70,6 +70,7 @@ CustomTableRow.propTypes = {
     titleStyle: PropTypes.object,
     dataStyle: PropTypes.object,
     theme: PropTypes.object.isRequired,
+    className: PropTypes.string,
 };
 
 export default withTheme()(CustomTableRow);
