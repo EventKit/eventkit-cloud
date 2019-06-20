@@ -8,7 +8,6 @@ from datetime import datetime, timedelta
 from dateutil import parser
 from django.conf import settings
 from django.contrib.auth.models import User, Group
-from django.contrib.contenttypes.models import ContentType
 from django.contrib.gis.geos import GEOSException, GEOSGeometry
 from django.db import transaction
 from django.db.models import Q
@@ -23,9 +22,7 @@ from rest_framework.permissions import AllowAny
 from rest_framework.renderers import JSONRenderer
 from rest_framework.response import Response
 from rest_framework.schemas import SchemaGenerator, AutoSchema
-from rest_framework.schemas.generators import distribute_links
 from rest_framework.serializers import ValidationError
-import coreschema
 
 from eventkit_cloud.api.filters import ExportRunFilter, JobFilter, UserFilter, GroupFilter, UserJobActivityFilter
 from eventkit_cloud.api.pagination import LinkHeaderPagination
@@ -64,7 +61,7 @@ renderer_classes = (JSONRenderer, HOTExportApiRenderer)
 class AutoSchemaOverride(AutoSchema):
     """Implementation of AutoSchema that allows links to be override on a per HTTP action basis."""
 
-    def __init__(self, action_manual_fields=None, manual_fields=None, overwrite=False):
+    def __init__(self, action_manual_fields=None, manual_fields=None, override=False):
         """
         Parameters:
 
@@ -72,6 +69,8 @@ class AutoSchemaOverride(AutoSchema):
             will be added to auto-generated fields, overwriting on `Field.name`
         * `manual_fields`: list of `coreapi.Field` instances that
             will be added to auto-generated fields, overwriting on `Field.name`
+        * `overwrite`: if True, auto generated fields will not be included, i.e. only manually defined
+            fields will be included.
         """
         super(AutoSchema, self).__init__()
         if manual_fields is None:
@@ -81,7 +80,7 @@ class AutoSchemaOverride(AutoSchema):
             action_manual_fields = CaseInsensitiveDict()
         self._action_manual_fields = action_manual_fields
 
-        self.overwrite = overwrite
+        self.override = override
 
     def get_link(self, path, method, base_url):
         """Get the link from the base class, then override with manual fields if need be."""
@@ -91,7 +90,7 @@ class AutoSchemaOverride(AutoSchema):
         # unclear why at the moment
         if len(fields) == 0:
             return link
-        if not self.overwrite:
+        if not self.override:
             fields = self.update_fields(link.fields, fields)
         return coreapi.Link(
             url=link.url,
@@ -1246,7 +1245,7 @@ class UserDataViewSet(viewsets.GenericViewSet):
                 required=True,
                 location='form',
             )),
-        ]}, overwrite=True)
+        ]}, override=True)
 
     serializer_class = UserDataSerializer
     permission_classes = (permissions.IsAuthenticated, IsOwnerOrReadOnly)
@@ -1335,7 +1334,7 @@ class UserDataViewSet(viewsets.GenericViewSet):
             required=True,
             location='form',
         )),
-    ]}, overwrite=True))
+    ]}, override=True))
     def members(self, request, *args, **kwargs):
         """
         Member list from list of group ids
