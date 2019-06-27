@@ -1,8 +1,6 @@
 from django.core.exceptions import ObjectDoesNotExist
 from eventkit_cloud.utils.stats.geomutils import get_area_bbox
 
-
-
 import logging
 
 from eventkit_cloud.jobs.models import DataProvider

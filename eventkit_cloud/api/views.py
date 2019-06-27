@@ -46,8 +46,7 @@ from eventkit_cloud.tasks.models import ExportRun, ExportTaskRecord, DataProvide
 from eventkit_cloud.tasks.task_factory import create_run, get_invalid_licenses, InvalidLicense, Error
 from eventkit_cloud.utils.gdalutils import get_area
 from eventkit_cloud.utils.provider_check import perform_provider_check
-from eventkit_cloud.utils.stats.size_estimator import get_size_estimate_slug
-from eventkit_cloud.utils.stats.time_estimator import get_time_estimate_slug
+from eventkit_cloud.utils.stats.size_estimator import RegionEstimates
 
 # Get an instance of a logger
 logger = logging.getLogger(__name__)
@@ -1805,11 +1804,12 @@ class EstimatorView(views.APIView):
         srs = request.query_params.get('srs', '4326')
 
         if request.query_params.get('slugs', None):
+            estimator = RegionEstimates(bbox=bbox)
             for slug in request.query_params.get('slugs').split(','):
                 payload += [{
                     'slug': slug,
-                    'size': {'value': get_size_estimate_slug(slug, bbox, srs)[0], 'unit': 'MB'},
-                    'time': {'value': get_time_estimate_slug(slug, bbox, srs)[0], 'unit': 'seconds'},
+                    'size': {'value': estimator.get_estimate_from_slug(estimator.SIZE, slug)[0], 'unit': 'MB'},
+                    'time': {'value': estimator.get_estimate_from_slug(estimator.TIME, slug)[0], 'unit': 'seconds'},
                 }]
 
         return Response(payload, status=status.HTTP_200_OK)

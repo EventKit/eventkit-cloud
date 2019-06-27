@@ -6,8 +6,93 @@ import logging
 
 from eventkit_cloud.jobs.models import DataProvider
 import eventkit_cloud.utils.stats.generator as ek_stats
+from eventkit_cloud.utils.stats.geomutils import get_area_bbox
 
 logger = logging.getLogger(__name__)
+
+
+class Stats(object):
+    """
+    Util classes acting as a container for statistics constants.
+
+    This may not be an exhaustive list, it's just what we have used so far in practice or testing.
+    """
+
+    # Average result, tends to give the best result while not underestimating
+    MEAN = 'mean'
+    CI_99 = 'ci_99'
+    CI_95 = 'ci_95'
+    CI_90 = 'ci_90'
+    MAX = 'max'
+    MIN = 'min'
+
+    class Fields(object):
+        """Container class representing methods used for statistics."""
+
+        # Used for raster images, megabytes per pixel
+        MPP = 'mpp'
+        # Used for vector size estimates, size per km (size of result / area of result in km)
+        SIZE = 'size'
+        # Used for duration estimates for all types, seconds per unit area
+        DURATION = 'duration'
+
+
+class RegionEstimates(object):
+
+    TIME = 'duration'
+    SIZE = 'size'
+    AVAILABLE_ESTIMATES = [TIME, SIZE]
+
+    def __init__(self, bbox, bbox_srs='4326', with_clipping=True, cap_estimates=True):
+        self.bbox = bbox
+        self.bbox_srs = bbox_srs
+        self._with_clipping = with_clipping
+        self._cap_estimates = cap_estimates
+        self._results = dict()
+
+    def get_estimate_from_slug(self, estimate_type, provider_slug):
+        try:
+            provider = DataProvider.objects.select_related("export_provider_type").get(slug=provider_slug)
+        except ObjectDoesNotExist:
+            raise ValueError("Provider slug '{}' is not valid".format(provider_slug))
+        return self._get_estimate(estimate_type, provider)
+
+    def get_estimate(self, estimate_type, provider):
+        if estimate_type.lower() not in self.AVAILABLE_ESTIMATES:
+            raise ValueError(f"""'{estimate_type}' is not a valid estimate type.""")
+        return self.get_estimate(estimate_type, provider)
+
+    def get_estimates(self, estimate_type, providers):
+        if estimate_type.lower() not in self.AVAILABLE_ESTIMATES:
+            raise ValueError(f"""'{estimate_type}' is not a valid estimate type.""")
+        return {_provider: self._get_estimate(estimate_type, _provider) for _provider in providers}
+
+    def _get_estimate(self, estimate_type, provider):
+        if estimate_type.lower() == 'size':
+            return self._get_size_estimate(provider)
+        elif estimate_type.lower() == 'duration':
+            return self._get_time_estimate(provider)
+        # This ideally should never be reached, it can only be reached when calling this directly.
+        raise ValueError(f"""Unable to compute '{estimate_type}' estimate.""")
+
+    def _get_size_estimate(self, provider):
+        """Get size estimate for this provider by checking the provider type."""
+        if is_raster_single(provider) or is_raster_tile_grid(provider):
+            return get_raster_tile_grid_size_estimate(provider, self.bbox, self.bbox_srs, with_clipping=self._with_clipping)
+        elif is_vector(provider):
+            return get_vector_estimate(provider, bbox=self.bbox, srs=self.bbox_srs)
+        else:
+            logger.info(f"""Non-specific provider found with slug {provider.slug}, falling back to vector estimate""")
+            return get_vector_estimate(provider, bbox=self.bbox, srs=self.bbox_srs)
+
+    def _get_time_estimate(self, provider):
+        duration_per_unit_area, method = ek_stats.query(provider.name,
+                                                        field=Stats.Fields.DURATION, statistic_name=Stats.MEAN,
+                                                        bbox=self.bbox, bbox_srs=self.bbox_srs,
+                                                        grouping='provider_name',
+                                                        gap_fill_thresh=0.1, default_value=0)
+        area = get_area_bbox(self.bbox)
+        return area * duration_per_unit_area, method
 
 
 def get_size_estimate_slug(slug, bbox, srs='4326'):
@@ -21,21 +106,6 @@ def get_size_estimate_slug(slug, bbox, srs='4326'):
         provider = DataProvider.objects.select_related("export_provider_type").get(slug=slug)
     except ObjectDoesNotExist:
         raise ValueError("Provider slug '{}' is not valid".format(slug))
-
-    return get_size_estimate(provider, bbox, srs)
-
-
-def get_size_estimate_name(provider_name, bbox, srs='4326'):
-    """
-    See get_size_estimate
-    :param provider_name: Name of the DataProvider
-    :param bbox
-    :param srs
-    """
-    try:
-        provider = DataProvider.objects.select_related("export_provider_type").get(name=provider_name)
-    except ObjectDoesNotExist:
-        raise ValueError("Provider name '{}' is not valid".format(provider_name))
 
     return get_size_estimate(provider, bbox, srs)
 
@@ -98,10 +168,10 @@ def get_raster_tile_grid_size_estimate(provider, bbox, srs='4326', with_clipping
     tile_grid = ek_stats.get_provider_grid(provider)
     total_pixels = ek_stats.get_total_num_pixels(tile_grid, bbox, srs, with_clipping)
 
-    mpp, method = ek_stats.query(provider.name, 'mpp', 'mean', bbox, srs,
+    mpp, method = ek_stats.query(provider.name, field=Stats.Fields.MPP, statistic_name=Stats.MEAN,
+                                 bbox=bbox, bbox_srs=srs,
                                  grouping='provider_name',
-                                 gap_fill_thresh=0.1,
-                                 default_value=0.00000006)
+                                 gap_fill_thresh=0.1, default_value=0.00000006)
     method['mpp'] = mpp
     method['with_clipping'] = with_clipping
     # max acceptable is expected maximum number of bytes for the specified amount of pixels
@@ -124,9 +194,28 @@ def get_vector_estimate(provider, bbox, srs='4326'):
     req_area = ek_stats.get_area_bbox(req_bbox)
 
     # Compute estimate
-    size_per_km, method = ek_stats.query(provider.export_provider_type.type_name, 'size', 'mean', bbox, srs,
-                                         grouping='provider_type',
-                                         gap_fill_thresh=0.1,
+    size_per_km, method = ek_stats.query(provider.export_provider_type.type_name,
+                                         field=Stats.Fields.SIZE, statistic_name=Stats.MEAN,
+                                         bbox=bbox, bbox_srs=srs, grouping='provider_type', gap_fill_thresh=0.1,
                                          default_value=0)
     method['size_per_km'] = size_per_km
     return req_area * size_per_km, method
+
+
+def get_time_estimate(provider, bbox, bbox_srs='4326'):
+    """
+    :param provider: The DataProvider to test
+    :param bbox: The bounding box of the request
+    :param bbox_srs: The SRS of the bounding box
+    :return: (estimate in seconds, object w/ metadata about how it was generated)
+    """
+    duration_per_unit_area, method = ek_stats.query(provider.name,
+                                                    field=Stats.Fields.DURATION, statistic_name=Stats.MEAN,
+                                                    bbox=bbox, bbox_srs=bbox_srs,
+                                                    grouping='provider_name',
+                                                    gap_fill_thresh=0.1, default_value=0)
+    area = get_area_bbox(bbox)
+    max_acceptable = 60 * 60 * 24  # Hard capping time estimates to one day (in seconds)
+    estimate = area * duration_per_unit_area
+    # If the estimate is more than a day, return a day and one second, we will use this on the front end.
+    return estimate if estimate < max_acceptable else max_acceptable + 1, method
