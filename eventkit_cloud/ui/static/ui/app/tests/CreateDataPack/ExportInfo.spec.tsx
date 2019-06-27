@@ -2,7 +2,7 @@ import * as React from 'react';
 import * as sinon from 'sinon';
 import axios from 'axios';
 import { shallow } from 'enzyme';
-import * as  MockAdapter from 'axios-mock-adapter';
+import MockAdapter from 'axios-mock-adapter';
 import List from '@material-ui/core/List';
 import Paper from '@material-ui/core/Paper';
 import Checkbox from '@material-ui/core/Checkbox';

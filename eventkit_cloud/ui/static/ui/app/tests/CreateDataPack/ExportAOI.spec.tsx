@@ -2,7 +2,7 @@ import * as React from 'react';
 import * as sinon from 'sinon';
 import { shallow } from 'enzyme';
 import axios from 'axios';
-import * as MockAdapter from 'axios-mock-adapter';
+import MockAdapter from 'axios-mock-adapter';
 import Joyride from 'react-joyride';
 
 import Map from 'ol/map';

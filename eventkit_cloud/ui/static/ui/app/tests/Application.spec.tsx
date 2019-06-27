@@ -1,7 +1,7 @@
 import * as React from 'react';
 import axios from 'axios';
 import * as sinon from 'sinon';
-import * as MockAdapter from 'axios-mock-adapter';
+import MockAdapter from 'axios-mock-adapter';
 import { createShallow } from '@material-ui/core/test-utils';
 import AppBar from '@material-ui/core/AppBar';
 import createTestStore from '../store/configureTestStore';
