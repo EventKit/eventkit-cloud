@@ -73,4 +73,4 @@ CustomTableRow.propTypes = {
     className: PropTypes.string,
 };
 
-export default withTheme()(CustomTableRow);
+export default withTheme(CustomTableRow);

@@ -258,4 +258,4 @@ export class MembersHeaderRow extends React.Component<Props, State> {
     }
 }
 
-export default withWidth()(withTheme()(MembersHeaderRow));
+export default withWidth()(withTheme(MembersHeaderRow));

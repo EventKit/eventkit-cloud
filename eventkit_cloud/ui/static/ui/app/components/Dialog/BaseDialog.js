@@ -136,4 +136,4 @@ BaseDialog.propTypes = {
     className: PropTypes.string,
 };
 
-export default withTheme()(BaseDialog);
+export default withTheme(BaseDialog);

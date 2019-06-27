@@ -225,4 +225,4 @@ export class PermissionsData extends React.Component<Props, State> {
     }
 }
 
-export default withTheme()(PermissionsData);
+export default withTheme(PermissionsData);

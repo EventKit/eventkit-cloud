@@ -18,12 +18,6 @@ import CustomTextField from '../../CustomTextField';
 import CustomScrollbar from '../../CustomScrollbar';
 
 const jss = (theme: Eventkit.Theme & Theme) => createStyles({
-    label: {
-        fontSize: '14px',
-    },
-    labelContainer: {
-        padding: '6px 0px',
-    },
     selected: {
         borderBottom: `2px solid ${theme.eventkit.colors.primary}`,
         transition: 'border-bottom 200ms',
@@ -69,6 +63,7 @@ const jss = (theme: Eventkit.Theme & Theme) => createStyles({
         flex: '1 1 auto',
         minHeight: '36px',
         height: '36px',
+        padding: '6px 0px',
     },
     assignedTab: {
         color: theme.eventkit.colors.text_primary,
@@ -473,8 +468,6 @@ export class AddMembersDialog extends React.Component<Props, State> {
                             className="qa-AddMembersDialog-Tab-unassigned"
                             classes={{
                                 root: classes.unassignedTab,
-                                label: classes.label,
-                                labelContainer: classes.labelContainer,
                                 selected: classes.selected
                             }}
                         />
@@ -484,8 +477,6 @@ export class AddMembersDialog extends React.Component<Props, State> {
                             className="qa-AddMembersDialog-Tab-assigned"
                             classes={{
                                 root: classes.assignedTab,
-                                label: classes.label,
-                                labelContainer: classes.labelContainer,
                                 selected: classes.selected
                             }}
                         />
@@ -548,4 +539,4 @@ export class AddMembersDialog extends React.Component<Props, State> {
     }
 }
 
-export default withTheme()(withStyles(jss)(AddMembersDialog));
+export default withTheme(withStyles(jss)(AddMembersDialog));

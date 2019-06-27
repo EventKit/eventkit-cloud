@@ -87,4 +87,4 @@ export class CreateExport extends React.Component<Props, State> {
     }
 }
 
-export default withTheme()(CreateExport);
+export default withTheme(CreateExport);

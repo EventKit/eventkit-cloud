@@ -188,4 +188,4 @@ function mapDispatchToProps(dispatch) {
     };
 }
 
-export default withTheme()(connect(null, mapDispatchToProps)(Form));
+export default withTheme(connect(null, mapDispatchToProps)(Form));

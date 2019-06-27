@@ -620,4 +620,4 @@ function mapDispatchToProps(dispatch) {
     };
 }
 
-export default withTheme()<any>(connect(mapStateToProps, mapDispatchToProps)(DashboardPage));
+export default withTheme<any>(connect(mapStateToProps, mapDispatchToProps)(DashboardPage));

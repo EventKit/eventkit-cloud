@@ -766,7 +766,7 @@ function mapDispatchToProps(dispatch) {
     };
 }
 
-export default withTheme()(withStyles(jss)(withCookies(connect(
+export default withTheme(withStyles(jss)(withCookies(connect(
     mapStateToProps,
     mapDispatchToProps,
 )(ExportInfo))));

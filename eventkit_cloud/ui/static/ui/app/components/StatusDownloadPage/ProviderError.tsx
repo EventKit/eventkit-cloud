@@ -123,4 +123,4 @@ export class ProviderError extends React.Component<Props, State> {
     }
 }
 
-export default withTheme()(ProviderError);
+export default withTheme(ProviderError);

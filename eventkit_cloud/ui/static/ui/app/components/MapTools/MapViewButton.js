@@ -104,5 +104,4 @@ MapViewButton.propTypes = {
     theme: PropTypes.object.isRequired,
 };
 
-export default withTheme()(MapViewButton);
-
+export default withTheme(MapViewButton);

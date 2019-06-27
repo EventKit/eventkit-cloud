@@ -232,4 +232,4 @@ function mapStateToProps(state) {
     };
 }
 
-export default withTheme()(withStyles(jss)(connect(mapStateToProps)(ExportSummary)));
+export default withTheme(withStyles(jss)(connect(mapStateToProps)(ExportSummary)));

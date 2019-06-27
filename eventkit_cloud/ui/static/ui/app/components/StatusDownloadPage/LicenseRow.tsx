@@ -118,4 +118,4 @@ export class LicenseRow extends React.Component<Props, State> {
     }
 }
 
-export default withWidth()(withTheme()(withStyles(jss)(LicenseRow)));
+export default withWidth()(withTheme(withStyles(jss)(LicenseRow)));

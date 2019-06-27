@@ -39,4 +39,4 @@ export class DataPackLinkButton extends React.Component<Props, {}> {
     }
 }
 
-export default withTheme()(DataPackLinkButton);
+export default withTheme(DataPackLinkButton);

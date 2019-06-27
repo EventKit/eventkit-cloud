@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { withTheme, withStyles, createStyles } from '@material-ui/core/styles';
+import { createStyles, Theme, withStyles, withTheme } from '@material-ui/core/styles';
 import { Breakpoint } from '@material-ui/core/styles/createBreakpoints';
 import MuiDrawer from '@material-ui/core/Drawer';
 import MenuItem from '@material-ui/core/MenuItem';
@@ -81,7 +81,7 @@ interface Props {
     handleMenuItemClick: () => void;
     contactUrl?: string;
     width: Breakpoint;
-    theme: Eventkit.Theme;
+    theme: Theme;
     classes: {
         link: string;
         activeLink: string;
@@ -259,4 +259,4 @@ export class Drawer extends React.Component<Props, State> {
     }
 }
 
-export default withTheme()(withStyles(jss)(Drawer));
+export default withTheme(withStyles(jss)(Drawer));

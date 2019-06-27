@@ -113,4 +113,4 @@ export class UserLicense extends React.Component<Props, State> {
     }
 }
 
-export default withTheme()(UserLicense);
+export default withTheme(UserLicense);

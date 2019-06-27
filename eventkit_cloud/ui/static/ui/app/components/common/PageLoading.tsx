@@ -61,4 +61,4 @@ export function PageLoading(props: Props) {
     );
 }
 
-export default withTheme()(withStyles<any, any>(jss)(PageLoading));
+export default withTheme(withStyles<any, any>(jss)(PageLoading));

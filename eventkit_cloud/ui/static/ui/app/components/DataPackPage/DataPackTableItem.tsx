@@ -310,4 +310,4 @@ const makeMapStateToProps = () => {
     return mapStateToProps;
 };
 
-export default withTheme()(connect(makeMapStateToProps)(DataPackTableItem));
+export default withTheme(connect(makeMapStateToProps)(DataPackTableItem));

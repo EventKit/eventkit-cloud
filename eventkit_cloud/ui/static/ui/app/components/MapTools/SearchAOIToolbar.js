@@ -210,4 +210,4 @@ SearchAOIToolbar.propTypes = {
     theme: PropTypes.object.isRequired,
 };
 
-export default withTheme()(SearchAOIToolbar);
+export default withTheme(SearchAOIToolbar);

@@ -612,6 +612,7 @@ export class Application extends React.Component<Props, State> {
                     </div> : null}
                 </AppBar>
                 <Drawer
+                    width={this.props.width}
                     open={this.props.drawer === 'open' || this.props.drawer === 'opening'}
                     handleLogout={this.logout}
                     handleMenuItemClick={this.onMenuItemClick}
@@ -675,7 +676,7 @@ function mapDispatchToProps(dispatch) {
 }
 
 export default withWidth()(
-    withTheme()<any>(
+    withTheme<any>(
         withStyles<any, any>(jss)(
             connect(mapStateToProps, mapDispatchToProps)(
                 Application

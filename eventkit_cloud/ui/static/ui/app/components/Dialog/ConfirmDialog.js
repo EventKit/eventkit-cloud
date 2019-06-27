@@ -72,4 +72,4 @@ ConfirmDialog.defaultProps = {
     children: undefined,
 };
 
-export default withTheme()(ConfirmDialog);
+export default withTheme(ConfirmDialog);

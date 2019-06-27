@@ -246,4 +246,4 @@ export class MapPopup extends React.Component<Props, State> {
     }
 }
 
-export default withTheme()(MapPopup);
+export default withTheme(MapPopup);
