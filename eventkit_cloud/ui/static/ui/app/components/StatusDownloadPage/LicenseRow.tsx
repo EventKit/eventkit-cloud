@@ -26,6 +26,19 @@ const jss = (theme: Eventkit.Theme & Theme) => createStyles({
             width: '120px',
         },
     },
+    estimatedFinishColumn: {
+        whiteSpace: 'pre',
+        width: '80px',
+        paddingRight: '0px',
+        paddingLeft: '0px',
+        textAlign: 'center',
+        color: theme.eventkit.colors.black,
+        fontSize: '12px',
+        [theme.breakpoints.up('md')]: {
+            fontSize: '14px',
+            width: '120px',
+        },
+    },
     providerStatusColumn: {
         width: '80px',
         padding: '0px',
@@ -110,6 +123,7 @@ export class LicenseRow extends React.Component<Props, State> {
                     </BaseDialog>
                 </TableCell>
                 <TableCell classes={{ root: classes.fileSizeColumn }} />
+                <TableCell classes={{ root: classes.estimatedFinishColumn }} />
                 <TableCell classes={{ root: classes.providerStatusColumn }} />
                 <TableCell classes={{ root: classes.menuColumn }} />
                 <TableCell classes={{ root: classes.arrowColumn }} />
