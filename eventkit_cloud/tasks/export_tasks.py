@@ -1269,9 +1269,9 @@ def cancel_synchronous_task_chain(data_provider_task_uid=None):
             queue_group = os.getenv("CELERY_GROUP_NAME", export_task.worker)
             kill_task.apply_async(
                 kwargs={"task_pid": export_task.pid, "celery_uid": export_task.celery_uid},
-                queue="{0}.cancel".format(queue_group),
+                queue="{0}.cancel".format(export_task.worker),
                 priority=TaskPriority.CANCEL.value,
-                routing_key="{0}.cancel".format(queue_group))
+                routing_key="{0}.cancel".format(export_task.worker))
 
 
 @app.task(name='Cancel Export Provider Task', base=UserDetailsBase)
@@ -1330,9 +1330,9 @@ def cancel_export_provider_task(result=None, data_provider_task_uid=None, cancel
             queue_group = os.getenv("CELERY_GROUP_NAME", export_task.worker)
             kill_task.apply_async(
                 kwargs={"task_pid": export_task.pid, "celery_uid": export_task.celery_uid},
-                queue="{0}.cancel".format(queue_group),
+                queue="{0}.cancel".format(export_task.worker),
                 priority=TaskPriority.CANCEL.value,
-                routing_key="{0}.cancel".format(queue_group))
+                routing_key="{0}.cancel".format(export_task.worker))
 
     if TaskStates[data_provider_task_record.status] not in TaskStates.get_finished_states():
         if error:
