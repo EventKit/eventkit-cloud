@@ -74,4 +74,4 @@ export class ThreeStepInfo extends React.Component<Props, {}> {
     }
 }
 
-export default withTheme(ThreeStepInfo);
+export default withTheme()(ThreeStepInfo);

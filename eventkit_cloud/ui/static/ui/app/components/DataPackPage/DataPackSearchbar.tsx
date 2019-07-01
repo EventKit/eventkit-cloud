@@ -61,4 +61,4 @@ export class DataPackSearchbar extends React.Component<Props, {}> {
     }
 }
 
-export default withTheme(DataPackSearchbar);
+export default withTheme()(DataPackSearchbar);

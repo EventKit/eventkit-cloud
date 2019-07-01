@@ -129,4 +129,4 @@ export class LoginPage extends React.Component<Props, {}> {
     }
 }
 
-export default withWidth()(withTheme(LoginPage));
+export default withWidth()(withTheme()(LoginPage));

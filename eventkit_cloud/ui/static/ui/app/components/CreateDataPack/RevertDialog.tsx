@@ -180,4 +180,4 @@ export class RevertDialog extends React.Component<Props, {}> {
     }
 }
 
-export default withTheme(withStyles(jss)(RevertDialog));
+export default withTheme()(withStyles(jss)(RevertDialog));

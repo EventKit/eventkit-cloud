@@ -323,6 +323,6 @@ const makeMapStateToProps = () => {
 };
 
 export default withWidth()(
-    withTheme(
+    withTheme()(
         withStyles(jss)(
             connect(makeMapStateToProps)(DataPackFeaturedItem))));

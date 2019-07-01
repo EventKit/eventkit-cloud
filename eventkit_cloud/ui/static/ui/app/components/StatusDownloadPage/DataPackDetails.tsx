@@ -262,4 +262,4 @@ export class DataPackDetails extends React.Component<Props, State> {
     }
 }
 
-export default withWidth()(withTheme(withStyles(jss)(DataPackDetails)));
+export default withWidth()(withTheme()(withStyles(jss)(DataPackDetails)));

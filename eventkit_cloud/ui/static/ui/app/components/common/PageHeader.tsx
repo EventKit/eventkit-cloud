@@ -56,4 +56,4 @@ export class PageHeader extends React.Component<Props, {}> {
     }
 }
 
-export default withTheme(PageHeader);
+export default withTheme()(PageHeader);

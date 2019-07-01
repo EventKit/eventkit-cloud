@@ -394,8 +394,9 @@ export class BreadcrumbStepper extends React.Component<Props, State> {
             case 2:
                 return (
                     <Button
+                        mini
                         id="Previous"
-                        variant="contained"
+                        variant="fab"
                         color="primary"
                         className="qa-BreadcrumbStepper-Button-previous"
                         onClick={this.handlePrev}
@@ -427,8 +428,9 @@ export class BreadcrumbStepper extends React.Component<Props, State> {
             case 1:
                 return (
                     <Button
+                        mini
                         id="Next"
-                        variant="contained"
+                        variant="fab"
                         color="primary"
                         className="qa-BreadcrumbStepper-Button-next"
                         disabled={!this.props.stepperNextEnabled}
@@ -442,7 +444,7 @@ export class BreadcrumbStepper extends React.Component<Props, State> {
                 return (
                     <Button
                         id="Next"
-                        variant="contained"
+                        variant="fab"
                         color="primary"
                         className="qa-BreadcrumbStepper-Button-next"
                         disabled={!this.props.stepperNextEnabled}
@@ -656,7 +658,7 @@ function mapDispatchToProps(dispatch) {
     };
 }
 
-export default withTheme(connect(
+export default withTheme()(connect(
     mapStateToProps,
     mapDispatchToProps,
 )(BreadcrumbStepper));

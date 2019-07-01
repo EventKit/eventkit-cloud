@@ -121,4 +121,4 @@ export class ShareBaseDialog extends React.Component<Props, {}> {
     }
 }
 
-export default withWidth()(withTheme(ShareBaseDialog));
+export default withWidth()(withTheme()(ShareBaseDialog));

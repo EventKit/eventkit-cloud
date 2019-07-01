@@ -102,4 +102,5 @@ DrawBoxButton.propTypes = {
     theme: PropTypes.object.isRequired,
 };
 
-export default withTheme(DrawBoxButton);
+export default withTheme()(DrawBoxButton);
+

@@ -80,4 +80,4 @@ export class ProvidersFilter extends React.Component<Props, {}> {
     }
 }
 
-export default withTheme(ProvidersFilter);
+export default withTheme()(ProvidersFilter);

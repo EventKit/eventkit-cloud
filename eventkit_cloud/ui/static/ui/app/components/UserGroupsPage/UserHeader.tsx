@@ -287,4 +287,4 @@ export class UserHeader extends React.Component<Props, State> {
     }
 }
 
-export default withTheme(UserHeader);
+export default withTheme()(UserHeader);

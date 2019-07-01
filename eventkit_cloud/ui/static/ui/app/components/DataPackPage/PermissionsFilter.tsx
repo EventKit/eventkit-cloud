@@ -207,4 +207,4 @@ export class PermissionsFilter extends React.Component<Props, State> {
     }
 }
 
-export default withTheme(PermissionsFilter);
+export default withTheme()(PermissionsFilter);

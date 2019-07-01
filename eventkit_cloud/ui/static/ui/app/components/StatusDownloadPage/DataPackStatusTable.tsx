@@ -71,4 +71,4 @@ export class DataPackStatusTable extends React.Component<Props, {}> {
     }
 }
 
-export default withTheme(DataPackStatusTable);
+export default withTheme()(DataPackStatusTable);

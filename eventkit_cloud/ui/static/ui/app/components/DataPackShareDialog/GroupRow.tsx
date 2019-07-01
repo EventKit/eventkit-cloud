@@ -261,4 +261,4 @@ export class GroupRow extends React.Component<Props, State> {
     }
 }
 
-export default withTheme(withStyles(jss)(GroupRow));
+export default withTheme()(withStyles(jss)(GroupRow));

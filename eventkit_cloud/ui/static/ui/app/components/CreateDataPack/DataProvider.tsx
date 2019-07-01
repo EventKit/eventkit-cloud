@@ -265,4 +265,4 @@ DataProvider.defaultProps = {
     renderEstimate: false
 };
 
-export default withTheme(withStyles<any, any>(jss)(DataProvider));
+export default withTheme()(withStyles<any, any>(jss)(DataProvider));

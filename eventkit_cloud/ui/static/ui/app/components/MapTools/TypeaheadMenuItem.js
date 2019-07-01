@@ -85,4 +85,4 @@ TypeaheadMenuItem.propTypes = {
     theme: PropTypes.object.isRequired,
 };
 
-export default withTheme(TypeaheadMenuItem);
+export default withTheme()(TypeaheadMenuItem);

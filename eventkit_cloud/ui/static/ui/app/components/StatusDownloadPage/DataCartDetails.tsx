@@ -176,4 +176,4 @@ export class DataCartDetails extends React.Component<Props, State> {
     }
 }
 
-export default withTheme(DataCartDetails);
+export default withTheme()(DataCartDetails);

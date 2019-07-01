@@ -49,4 +49,4 @@ export class AlertCallout extends React.Component<Props, {}> {
     }
 }
 
-export default withTheme(AlertCallout);
+export default withTheme()(AlertCallout);

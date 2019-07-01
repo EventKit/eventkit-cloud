@@ -39,4 +39,4 @@ export class DataPackFilterButton extends React.Component<Props, {}> {
     }
 }
 
-export default withWidth()(withTheme(DataPackFilterButton));
+export default withWidth()(withTheme()(DataPackFilterButton));

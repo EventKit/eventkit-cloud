@@ -35,4 +35,4 @@ InvalidDrawWarning.propTypes = {
     theme: PropTypes.object.isRequired,
 };
 
-export default withTheme(InvalidDrawWarning);
+export default withTheme()(InvalidDrawWarning);

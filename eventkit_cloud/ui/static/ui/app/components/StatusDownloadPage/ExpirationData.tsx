@@ -102,4 +102,4 @@ export class ExpirationData extends React.Component<Props, State> {
     }
 }
 
-export default withTheme(ExpirationData);
+export default withTheme()(ExpirationData);

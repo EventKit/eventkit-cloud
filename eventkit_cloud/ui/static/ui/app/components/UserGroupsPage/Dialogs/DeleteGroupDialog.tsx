@@ -51,4 +51,4 @@ export class DeleteGroupDialog extends React.Component<Props, {}> {
     }
 }
 
-export default withTheme(DeleteGroupDialog);
+export default withTheme()(DeleteGroupDialog);

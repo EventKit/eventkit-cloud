@@ -51,4 +51,4 @@ export class LeaveGroupDialog extends React.Component<Props, {}> {
     }
 }
 
-export default withTheme(LeaveGroupDialog);
+export default withTheme()(LeaveGroupDialog);

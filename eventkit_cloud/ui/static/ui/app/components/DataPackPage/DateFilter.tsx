@@ -160,4 +160,4 @@ export class DateFilter extends React.Component<Props, State> {
     }
 }
 
-export default withTheme(DateFilter);
+export default withTheme()(DateFilter);

@@ -101,4 +101,5 @@ DrawFreeButton.propTypes = {
     theme: PropTypes.object.isRequired,
 };
 
-export default withTheme(DrawFreeButton);
+export default withTheme()(DrawFreeButton);
+

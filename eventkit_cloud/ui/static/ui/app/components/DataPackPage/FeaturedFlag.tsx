@@ -36,4 +36,4 @@ export class FeaturedFlag extends React.Component<Props, {}> {
     }
 }
 
-export default withTheme(FeaturedFlag);
+export default withTheme()(FeaturedFlag);

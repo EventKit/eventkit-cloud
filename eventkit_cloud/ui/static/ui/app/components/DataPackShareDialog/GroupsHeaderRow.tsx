@@ -245,4 +245,4 @@ export class GroupsHeaderRow extends React.Component<Props, State> {
     }
 }
 
-export default withTheme(GroupsHeaderRow);
+export default withTheme()(GroupsHeaderRow);

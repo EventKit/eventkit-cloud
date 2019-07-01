@@ -534,4 +534,4 @@ function mapDispatchToProps(dispatch) {
     };
 }
 
-export default withWidth()(withTheme(connect(makeMapStateToProps, mapDispatchToProps)(StatusDownload)));
+export default withWidth()(withTheme()(connect(makeMapStateToProps, mapDispatchToProps)(StatusDownload)));

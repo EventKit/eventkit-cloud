@@ -330,4 +330,4 @@ const makeMapStateToProps = () => {
     return mapStateToProps;
 };
 
-export default withTheme(connect(makeMapStateToProps)(DataPackListItem));
+export default withTheme()(connect(makeMapStateToProps)(DataPackListItem));

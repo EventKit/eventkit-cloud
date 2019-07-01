@@ -254,7 +254,7 @@ export class BufferDialog extends React.Component<Props, State> {
                                                 max={10000}
                                                 min={0}
                                                 value={this.props.value}
-                                                onChange={(e, value) => this.props.handleBufferChange(this.props.value)}
+                                                onChange={(e, value) => this.props.handleBufferChange(value)}
                                             />
                                         </td>
                                         <td className={classes.tableData} style={{ borderRight: '1px solid #ccc' }} />
@@ -279,4 +279,4 @@ export class BufferDialog extends React.Component<Props, State> {
     }
 }
 
-export default withTheme(withStyles(jss)(BufferDialog));
+export default withTheme()(withStyles(jss)(BufferDialog));

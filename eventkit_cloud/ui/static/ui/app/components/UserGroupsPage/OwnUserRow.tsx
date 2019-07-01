@@ -169,4 +169,4 @@ export class OwnUserRow extends React.Component<Props, {}> {
     }
 }
 
-export default withTheme(withStyles(jss)(OwnUserRow));
+export default withTheme()(withStyles(jss)(OwnUserRow));

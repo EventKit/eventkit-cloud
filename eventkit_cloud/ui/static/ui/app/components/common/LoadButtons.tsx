@@ -1,11 +1,11 @@
 import * as React from 'react';
-import { withTheme, Theme, withStyles } from '@material-ui/core/styles';
+import { withTheme, Theme } from '@material-ui/core/styles';
 import Button from '@material-ui/core/Button';
 import KeyboardArrowDown from '@material-ui/icons/KeyboardArrowDown';
 import KeyboardArrowUp from '@material-ui/icons/KeyboardArrowUp';
 
 export interface Props {
-    style?: object;
+    style: object;
     range: string;
     handleLoadLess: () => void;
     handleLoadMore: () => void;
@@ -109,4 +109,4 @@ export class LoadButtons extends React.Component<Props, State> {
     }
 }
 
-export default withTheme(LoadButtons);
+export default withTheme()(LoadButtons);

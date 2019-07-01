@@ -68,4 +68,4 @@ export class RenameGroupDialog extends React.Component<Props, {}> {
     }
 }
 
-export default withTheme(RenameGroupDialog);
+export default withTheme()(RenameGroupDialog);

@@ -41,4 +41,4 @@ export class UserInfoTableRow extends React.Component<Props, {}> {
     }
 }
 
-export default withTheme(UserInfoTableRow);
+export default withTheme()(UserInfoTableRow);
