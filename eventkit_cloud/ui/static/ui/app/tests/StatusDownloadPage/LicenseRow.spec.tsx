@@ -26,7 +26,7 @@ describe('LicenseRow component', () => {
         const props = getProps();
         const wrapper = getWrapper(props);
         expect(wrapper.find(TableRow)).toHaveLength(1);
-        expect(wrapper.find(TableCell)).toHaveLength(6);
+        expect(wrapper.find(TableCell)).toHaveLength(7);
         expect(wrapper.find(BaseDialog)).toHaveLength(1);
         expect(wrapper.find('i')).toHaveLength(1);
         expect(wrapper.find('i').text()).toEqual('Use of this data is governed by\u00a0test name');
