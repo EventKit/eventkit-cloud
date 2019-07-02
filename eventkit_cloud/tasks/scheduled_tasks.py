@@ -2,6 +2,7 @@
 import datetime
 import json
 import os
+import socket
 
 from celery.utils.log import get_task_logger
 from django.conf import settings
@@ -92,12 +93,53 @@ def pcf_scale_celery(max_instances):
         logger.info("Already at max instances, skipping.")
         return
 
+    default_command = ("python manage.py runinitial && echo 'Starting celery workers' && "
+    "celery worker -A eventkit_cloud --concurrency=$CONCURRENCY --loglevel=$LOG_LEVEL -n runs@%h -Q runs "
+    "& exec celery worker -A eventkit_cloud --concurrency=$CONCURRENCY --loglevel=$LOG_LEVEL -n worker@%h -Q $CELERY_GROUP_NAME "
+    "& exec celery worker -A eventkit_cloud --loglevel=$LOG_LEVEL -n celery@%h -Q celery "
+    "& exec celery worker -A eventkit_cloud --loglevel=$LOG_LEVEL -n cancel@%h -Q $HOSTNAME.cancel "
+    "& exec celery worker -A eventkit_cloud --concurrency=2 -n finalize@%h -Q $CELERY_GROUP_NAME.finalize "
+    "& exec celery worker -A eventkit_cloud --concurrency=1 --loglevel=$LOG_LEVEL -n osm@%h -Q $CELERY_GROUP_NAME.osm ")
+
+    command = os.getenv('CELERY_TASK_COMMAND',  default_command)
+
     message_count = get_message_count("runs")
     if message_count > 0:
-        command = os.getenv('CELERY_TASK_COMMAND')
         logger.info(F"Sending task to {app_name} with command {command}")
         client.run_task(command, app_name=app_name)
+        return
 
+    celery_group_name = os.getenv("CELERY_GROUP_NAME", socket.gethostname())
+    broker_api_url = getattr(settings, 'BROKER_API_URL')
+    queue_class = "queues"
+    total_pending_messages = 0
+
+    # If there are queues with work and no workers, spawn a new worker instance
+    for queue in get_all_rabbitmq_objects(broker_api_url, queue_class):
+        queue_name = queue.get('name')
+        pending_messages = queue.get('messages')
+        total_pending_messages = total_pending_messages + pending_messages
+        if celery_group_name in queue_name or queue_name == "celery":
+            logger.info(f"Queue {queue_name} has {pending_messages} pending messages.")
+            if pending_messages > 0 and running_tasks_count < 1:
+                logger.info(F"Sending task to {app_name} with command {command}")
+                client.run_task(command, app_name=app_name)
+                return
+
+    # If there is no work in the group, shut down the groups workers
+    if total_pending_messages == 0 and running_tasks_count > 0:
+        shutdown_celery_workers.apply_async(queue=celery_group_name)
+
+
+@app.task(name="Shutdown Celery Workers")
+def shutdown_celery_workers():
+    hostnames = []
+    workers = ["runs", "worker", "celery", "cancel", "finalize", "osm"]
+    for worker in workers:
+        hostnames.append(F"{worker}@{socket.gethostname()}")
+
+    logger.info("Queue is at zero, shutting down.")
+    app.control.broadcast("shutdown", destination=hostnames)
 
 @app.task(name="Check Provider Availability")
 def check_provider_availability():
