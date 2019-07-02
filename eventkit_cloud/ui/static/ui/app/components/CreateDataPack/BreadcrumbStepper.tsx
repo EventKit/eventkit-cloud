@@ -112,7 +112,7 @@ export class BreadcrumbStepper extends React.Component<Props, State> {
         this.handleLeaveWarningDialogCancel = this.handleLeaveWarningDialogCancel.bind(this);
         this.handleLeaveWarningDialogConfirm = this.handleLeaveWarningDialogConfirm.bind(this);
         this.updateEstimate = this.updateEstimate.bind(this);
-        this.handleEstimateExplantionOpen = this.handleEstimateExplantionOpen.bind(this);
+        this.handleEstimateExplanationOpen = this.handleEstimateExplanationOpen.bind(this);
         this.handleEstimateExplanationClosed = this.handleEstimateExplanationClosed.bind(this);
         this.state = {
             stepIndex: 0,
@@ -212,7 +212,7 @@ export class BreadcrumbStepper extends React.Component<Props, State> {
         this.setState({ estimateExplanationOpen: false });
     }
 
-    private handleEstimateExplantionOpen() {
+    private handleEstimateExplanationOpen() {
         this.setState({ estimateExplanationOpen: true });
     }
 
@@ -241,7 +241,7 @@ export class BreadcrumbStepper extends React.Component<Props, State> {
                 </Typography>
                 <Info
                     className={`qa-Estimate-Info-Icon`}
-                    onClick={this.handleEstimateExplantionOpen}
+                    onClick={this.handleEstimateExplanationOpen}
                     color="primary"
                     style={{cursor: 'pointer', verticalAlign: 'middle',
                         marginLeft: '10px', height: '18px', width: '18px',}}
@@ -277,6 +277,7 @@ export class BreadcrumbStepper extends React.Component<Props, State> {
         let durationEstimate;
         // function that will return nf (not found) when the provided estimate is undefined
         const get = (estimate, nf='unknown') => {return (estimate) ? estimate.toString() : nf};
+
         if(this.state.sizeEstimate !== -1) {
             sizeEstimate = formatMegaBytes(this.state.sizeEstimate);
         }
@@ -298,10 +299,37 @@ export class BreadcrumbStepper extends React.Component<Props, State> {
         let secondary;
         let noEstimateMessage = 'Select providers to get estimate';
         if(sizeEstimate || durationEstimate) {
-            secondary = ` ( ${get(durationEstimate, noEstimateMessage)} - ${get(sizeEstimate, 'size unknown')})`;
+            let separator = (sizeEstimate && durationEstimate) ? ' - ' : '';
+            secondary = ` ( ${get(durationEstimate, '')}${separator}${get(sizeEstimate, 'size unknown')})`;
             noEstimateMessage = 'Unknown Date'; // used when the size estimate is displayed but time is not.
         }
         return `${get(dateTimeEstimate, noEstimateMessage)}${get(secondary, '')}`;
+    }
+
+    private updateEstimate() {
+        if(!this.context.config.SERVE_ESTIMATES || !this.props.exportInfo.providers)
+            return;
+        let sizeEstimate = 0;
+        let timeEstimate = 0;
+        const maxAcceptableTime = 60 * 60 * 24 * this.props.exportInfo.providers.length;
+        for (const provider of this.props.exportInfo.providers) {
+            if(provider.id in this.props.exportInfo.providerEstimates) {
+                const estimate = this.props.exportInfo.providerEstimates[provider.id];
+                if (estimate) {
+                    if(estimate.size)
+                        sizeEstimate += estimate.size.value;
+                    if(estimate.time)
+                        timeEstimate += estimate.time.value;
+                }
+            }
+        }
+        if(timeEstimate === 0)
+            timeEstimate = -1;
+        else if(timeEstimate > maxAcceptableTime)
+            timeEstimate = maxAcceptableTime;
+        if(sizeEstimate === 0)
+            sizeEstimate = -1;
+        this.setState({sizeEstimate, timeEstimate});
     }
 
     private getStepLabel(stepIndex: number) {
@@ -573,32 +601,6 @@ export class BreadcrumbStepper extends React.Component<Props, State> {
 
     private handleLeaveWarningDialogConfirm() {
         this.props.router.push(this.leaveRoute);
-    }
-
-    private updateEstimate() {
-        if(!this.context.config.SERVE_ESTIMATES || !this.props.exportInfo.providers)
-            return;
-        let sizeEstimate = 0;
-        let timeEstimate = 0;
-        // this flag checks whether at least one estimate value is available
-        let estimatesAvailable = false;
-        for (const provider of this.props.exportInfo.providers) {
-            if(provider.id in this.props.exportInfo.providerEstimates) {
-                const estimate = this.props.exportInfo.providerEstimates[provider.id];
-                if (estimate) {
-                    if(estimate.size)
-                        sizeEstimate += estimate.size.value;
-                    if(estimate.time)
-                        timeEstimate += estimate.time.value;
-                }
-            }
-        }
-        if(!estimatesAvailable)
-            if(timeEstimate === 0)
-                timeEstimate = -1;
-            if(sizeEstimate === 0)
-                sizeEstimate = -1;
-        this.setState({sizeEstimate, timeEstimate});
     }
 
     render() {

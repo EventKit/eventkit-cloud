@@ -1,12 +1,15 @@
+import logging
+import eventkit_cloud.utils.stats.generator as ek_stats
+
 from django.core.exceptions import ObjectDoesNotExist
+
 from mapproxy import grid as mapproxy_grid
 from mapproxy import srs as mapproxy_srs
 
-import logging
-
 from eventkit_cloud.jobs.models import DataProvider
-import eventkit_cloud.utils.stats.generator as ek_stats
 from eventkit_cloud.utils.stats.geomutils import get_area_bbox
+
+from enum import Enum, auto
 
 logger = logging.getLogger(__name__)
 
@@ -35,15 +38,42 @@ class Stats(object):
         SIZE = 'size'
         # Used for duration estimates for all types, seconds per unit area
         DURATION = 'duration'
+        # Unsure what the intention for this is, currently unused but exists.
+        AREA = 'area'
 
 
-class RegionEstimates(object):
+class AoiEstimator(object):
+    """Object used to return estimates for a selected region (AOI/BBOX)"""
 
-    TIME = 'duration'
-    SIZE = 'size'
-    AVAILABLE_ESTIMATES = [TIME, SIZE]
+    class Types(Enum):
+        """Simple enum representing available estimate types."""
+
+        # First two are the same, time and duration alias each other.
+        TIME = 'time'
+        DURATION = 'duration'
+        SIZE = 'size'
+
+        @classmethod
+        def is_valid(cls, value):
+            """
+            Return True if the specified value is valid for this enum.
+
+            Checks if the value is a valid estimate that we provide. First checks if it is a valid enum type,
+            this is the builtin way to check if a value is part of the enum. Then we fall back and check for string
+            type access to support specifying the estimate type with strings.
+            :param value:
+            :return:
+            """
+            if isinstance(value, AoiEstimator.Types):
+                return True
+            try:
+                return any(value.lower() == _item.value.lower() for _item in cls)
+            except AttributeError:
+                return False
 
     def __init__(self, bbox, bbox_srs='4326', with_clipping=True, cap_estimates=True):
+        # It would be good to integrate a BBOX class to pass around instead of doing this
+        # It can get cumbersome and lead to errors when the bbox srs is assumed
         self.bbox = bbox
         self.bbox_srs = bbox_srs
         self._with_clipping = with_clipping
@@ -51,26 +81,29 @@ class RegionEstimates(object):
         self._results = dict()
 
     def get_estimate_from_slug(self, estimate_type, provider_slug):
+        """Get the specified estimate type for a provider by doing a slug lookup."""
         try:
             provider = DataProvider.objects.select_related("export_provider_type").get(slug=provider_slug)
         except ObjectDoesNotExist:
             raise ValueError("Provider slug '{}' is not valid".format(provider_slug))
-        return self._get_estimate(estimate_type, provider)
-
-    def get_estimate(self, estimate_type, provider):
-        if estimate_type.lower() not in self.AVAILABLE_ESTIMATES:
-            raise ValueError(f"""'{estimate_type}' is not a valid estimate type.""")
         return self.get_estimate(estimate_type, provider)
 
     def get_estimates(self, estimate_type, providers):
-        if estimate_type.lower() not in self.AVAILABLE_ESTIMATES:
-            raise ValueError(f"""'{estimate_type}' is not a valid estimate type.""")
-        return {_provider: self._get_estimate(estimate_type, _provider) for _provider in providers}
+        """
+        Get a dictionary mapping providers to their estimates.
 
-    def _get_estimate(self, estimate_type, provider):
-        if estimate_type.lower() == 'size':
+        :param estimate_type: string identifier for the type of estimate ('duration', 'size')
+        :param providers: flat list of
+        :return:
+        """
+        return {_provider: self.get_estimate(estimate_type, _provider) for _provider in providers}
+
+    def get_estimate(self, estimate_type, provider):
+        if not self.Types.is_valid(estimate_type):
+            raise ValueError(f"""'{estimate_type}' is not a valid estimate type.""")
+        if estimate_type == self.Types.SIZE:
             return self._get_size_estimate(provider)
-        elif estimate_type.lower() == 'duration':
+        elif estimate_type == self.Types.TIME or estimate_type == self.Types.DURATION:
             return self._get_time_estimate(provider)
         # This ideally should never be reached, it can only be reached when calling this directly.
         raise ValueError(f"""Unable to compute '{estimate_type}' estimate.""")
@@ -86,13 +119,8 @@ class RegionEstimates(object):
             return get_vector_estimate(provider, bbox=self.bbox, srs=self.bbox_srs)
 
     def _get_time_estimate(self, provider):
-        duration_per_unit_area, method = ek_stats.query(provider.name,
-                                                        field=Stats.Fields.DURATION, statistic_name=Stats.MEAN,
-                                                        bbox=self.bbox, bbox_srs=self.bbox_srs,
-                                                        grouping='provider_name',
-                                                        gap_fill_thresh=0.1, default_value=0)
-        area = get_area_bbox(self.bbox)
-        return area * duration_per_unit_area, method
+        """Get the time estimate for the specified provider."""
+        return get_time_estimate(provider, bbox=self.bbox, bbox_srs=self.bbox_srs)
 
 
 def get_size_estimate_slug(slug, bbox, srs='4326'):
@@ -214,8 +242,10 @@ def get_time_estimate(provider, bbox, bbox_srs='4326'):
                                                     bbox=bbox, bbox_srs=bbox_srs,
                                                     grouping='provider_name',
                                                     gap_fill_thresh=0.1, default_value=0)
+
     area = get_area_bbox(bbox)
-    max_acceptable = 60 * 60 * 24  # Hard capping time estimates to one day (in seconds)
     estimate = area * duration_per_unit_area
+
     # If the estimate is more than a day, return a day and one second, we will use this on the front end.
+    max_acceptable = 60 * 60 * 24  # Hard capping time estimates to one day (in seconds)
     return estimate if estimate < max_acceptable else max_acceptable + 1, method

@@ -108,12 +108,15 @@ export function getSqKmString(geojson) {
     return `${areaStr} sq km`;
 }
 
-export function getDuration(seconds) {
+export function getDuration(seconds, capEstimate=true) {
     // returns a string duration formatted like  1d 5h 30m (1 day 5 hours 30 minutes)
     // this is calculated based on the number of seconds supplied
     let remainingSeconds = seconds;
     const secondsInDay = 60 * 60 * 24;
     const secondsInHour = 60 * 60;
+
+    if(capEstimate && seconds >= secondsInDay)
+        return `At least 1 day`;
 
     let days: any = Math.floor(remainingSeconds / secondsInDay);
     remainingSeconds -= days * secondsInDay;
@@ -123,7 +126,7 @@ export function getDuration(seconds) {
 
     days = (days > 0) ? `${days}d ` : '';
     hours = (hours > 0) ? `${hours}h ` : '';
-    minutes = (minutes > 0) ? `${minutes}m` : '<1m';
+    minutes = (minutes <= 0 && days == 0 && hours == 0) ? '<1m' : `${minutes}m`;
     return `${days}${hours}${minutes}`;
 }
 

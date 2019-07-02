@@ -136,7 +136,7 @@ export class DataProvider extends React.Component<Props, State> {
 
     private formatEstimate(providerEstimate){
         if (!providerEstimate){
-            return (<CircularProgress size={10}/>)
+            return ''
         }
         let sizeEstimate;
         let durationEstimate;
@@ -224,7 +224,10 @@ export class DataProvider extends React.Component<Props, State> {
         let secondary = undefined;
         if(this.props.renderEstimate)
         {
-            secondary = <Typography style={{fontSize: "0.7em"}}>{this.formatEstimate(provider.estimate)}</Typography>
+            if(this.formatEstimate(provider.estimate))
+                secondary = <Typography style={{fontSize: "0.7em"}}>{this.formatEstimate(provider.estimate)}</Typography>
+            else
+                secondary = <CircularProgress size={10}/>
         }
 
         const backgroundColor = (this.props.alt) ? colors.secondary : colors.white;
