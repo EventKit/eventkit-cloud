@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 import importlib
 import logging
+import os
 
 from celery import chain  # required for tests
 from django.db import DatabaseError
@@ -101,12 +102,14 @@ class TaskChainBuilder(object):
         """
         Create a celery chain which gets the data & runs export formats
         """
+        queue_group = os.getenv("CELERY_GROUP_NAME", worker)
+
         if export_tasks:
             format_tasks = chain(
                 task.get('obj').s(
                     run_uid=run.uid, stage_dir=stage_dir, job_name=job_name, task_uid=task.get('task_uid'),
                     user_details=user_details, locking_task_key=data_provider_task_record.uid
-                ).set(queue=worker, routing_key=worker)
+                ).set(queue=queue_group, routing_key=queue_group)
                 for format_ignored, task in export_tasks.items()
             )
         else:
@@ -121,9 +124,9 @@ class TaskChainBuilder(object):
         )
 
         if "osm" in primary_export_task.name.lower():
-            queue_routing_key_name = "{}.osm".format(worker)
+            queue_routing_key_name = "{}.osm".format(queue_group)
         else:
-            queue_routing_key_name = worker
+            queue_routing_key_name = queue_group
 
         primary_export_task_signature = primary_export_task.s(name=provider_task.provider.slug,
                                                               run_uid=run.uid,
