@@ -22,7 +22,7 @@ MAX_SAMPLES_PER_TARGET = 2000
 DEFAULT_CACHE_EXPIRATION = 86400  # expire in a day
 
 
-def get_statistics(grouping='provider_name', force=True):
+def get_statistics(grouping='provider_name', force=os.getenv('FORCE_STATISTICS_RECOMPUTE', False)):
     """
     :param force: True to re-compute the desired statistics
     :param grouping: see group_providers_by
