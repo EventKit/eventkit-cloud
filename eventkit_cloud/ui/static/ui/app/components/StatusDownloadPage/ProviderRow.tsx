@@ -213,10 +213,6 @@ export class ProviderRow extends React.Component<Props, State> {
                 estimatedSeconds = (calculatedFinish - beginMoment) / 1000;
             }
             if(etaSeconds !== undefined && estimatedSeconds !== undefined) {
-                console.log(`ETA (derived): ${moment().add({seconds: etaSeconds})}`);
-                console.log(`ETA (est): ${moment().add({seconds: estimatedSeconds})}`);
-                console.log(`ETA (calc): ${moment().add({seconds: (etaSeconds + estimatedSeconds) / 2})}`);
-                console.log(`ETA (backend): ${moment(task.estimated_finish)}`);
                 estimatedFinish = moment().add({seconds: (etaSeconds + estimatedSeconds) / 2})
             }
             else if(etaSeconds !== undefined) {
