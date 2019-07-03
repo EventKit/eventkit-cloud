@@ -1,6 +1,6 @@
 """Provides classes for handling API requests."""
 import logging
-import coreapi
+
 # -*- coding: utf-8 -*-
 from collections import OrderedDict
 from datetime import datetime, timedelta
@@ -84,6 +84,8 @@ class AutoSchemaOverride(AutoSchema):
 
     def get_link(self, path, method, base_url):
         """Get the link from the base class, then override with manual fields if need be."""
+        # Lazy load coreapi, since its a dev dependency.
+        import coreapi
         link = super(AutoSchemaOverride, self).get_link(path, method, base_url)
         fields = self.get_action_manual_fields(path, method)
         # path param is unused in the above call, this identical to how the base class does this,
@@ -1235,6 +1237,8 @@ class UserDataViewSet(viewsets.GenericViewSet):
     User Data
 
     """
+    # Lazy load coreapi, since its a dev dependency.
+    import coreapi
     schema = AutoSchemaOverride(action_manual_fields={'PATCH': [
             (coreapi.Field(
                 name='username',
@@ -2019,6 +2023,6 @@ class SwaggerSchemaView(views.APIView):
                 )
 
             return Response(schema)
-        except:
+        except ImportError:
             # CoreAPI couldn't be imported, falling back to static schema
             return Response()
