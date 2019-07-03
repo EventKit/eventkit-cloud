@@ -2,6 +2,7 @@ import * as PropTypes from 'prop-types';
 import * as React from 'react';
 import { connect } from 'react-redux';
 import axios from 'axios';
+import { withCookies, Cookies } from 'react-cookie';
 import { withTheme, withStyles, createStyles } from '@material-ui/core/styles';
 import withWidth, { isWidthUp } from '@material-ui/core/withWidth';
 import { Breakpoint } from '@material-ui/core/styles/createBreakpoints';
@@ -110,6 +111,7 @@ interface Props {
         notificationsIndicator: string;
     };
     dispatch: (options?: object) => void;
+    cookies: Cookies;
 }
 
 interface State {
@@ -209,7 +211,9 @@ export class Application extends React.Component<Props, State> {
     // }
     checkAuth() {
         if (!this.props.userData) {
-            this.props.dispatch(login(null));
+            const { cookies } = this.props;
+            const csrftoken = cookies.get('csrftoken');
+            this.props.dispatch(login(null, csrftoken));
         };
     }
 
@@ -676,10 +680,10 @@ function mapDispatchToProps(dispatch) {
 
 export default withWidth()(
     withTheme()<any>(
-        withStyles<any, any>(jss)(
+        withStyles<any, any>(jss)(withCookies(
             connect(mapStateToProps, mapDispatchToProps)(
                 Application
             )
         )
     )
-);
+));
