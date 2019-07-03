@@ -29,7 +29,7 @@ requirements:
     - boto3 =1.9.141
     - celery =4.2.1
     - certifi =2019.3.9
-    - django =2.2.1
+    - django =2.2.2
     - dj-database-url =0.4.2
     - django-auth-ldap =1.7.0
     - django-celery-beat =1.4.0
@@ -71,7 +71,7 @@ requirements:
     - boto3 =1.9.141
     - celery =4.2.1
     - certifi =2019.3.9
-    - django =2.2.1
+    - django =2.2.2
     - dj-database-url =0.4.2
     - django-auth-ldap =1.7.0
     - django-celery-beat =1.4.0
