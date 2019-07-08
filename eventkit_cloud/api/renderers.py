@@ -104,8 +104,6 @@ def update_schema(new_schema):
             default_json.dump(new_schema, open_file)
 
 
-
-
 class PlainTextRenderer(BaseRenderer):
     media_type = 'text/plain'
     format = 'txt'
@@ -213,5 +211,3 @@ class CustomSwaggerUIRenderer(BaseRenderer):
             data['validatorUrl'] = swagger_settings.VALIDATOR_URL
 
         return data
-
-
