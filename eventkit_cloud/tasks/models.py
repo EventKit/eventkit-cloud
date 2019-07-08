@@ -146,6 +146,7 @@ class DataProviderTaskRecord(UIDMixin, TimeStampedModelMixin, TimeTrackingModelM
     status = models.CharField(blank=True, max_length=20, db_index=True)
     display = models.BooleanField(default=False)
     estimated_size = models.FloatField(null=True, blank=True)
+    estimated_duration = models.FloatField(null=True, blank=True)
 
     class Meta:
         ordering = ['name']
