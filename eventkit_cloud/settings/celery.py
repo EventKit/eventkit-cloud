@@ -59,6 +59,12 @@ if PCF_SCALING:
                         'routing_key': "scale".format(socket.gethostname())}
         },
     })
+    # memory and disk in MB
+    pcf_celery_defaults = {"default": {"memory": 1024, "disk": 2048, "concurrency": 2},
+                           "large": {"memory": 3072, "disk": 6144, "concurrency": 1}}
+    PCF_CELERY_SETTINGS = os.getenv(json.loads("PCF_CELERY_SETTINGS", pcf_celery_defaults))
+
+CELERY_GROUP_NAME = os.getenv("CELERY_GROUP_NAME", socket.gethostname())
 
 app.conf.beat_schedule = BEAT_SCHEDULE
 

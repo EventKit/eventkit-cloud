@@ -116,7 +116,7 @@ class PcfClient(object):
             raise Exception("Error the app {0} does not exist in {1}.".format(app_name, self.space_name))
         return app_info['resources'][app_index]["metadata"]["guid"]
 
-    def run_task(self, command, app_name=None):
+    def run_task(self, command, app_name=None, memory=2048, disk=2048):
         app_name = os.getenv("PCF_APP",
                              json.loads(os.getenv("VCAP_APPLICATION", "{}")).get('application_name')) or app_name
         if not app_name:
@@ -126,8 +126,8 @@ class PcfClient(object):
             raise Exception("An application guid could not be recovered for app {0}.".format(app_name))
         payload = {
             "command": command,
-            "disk_in_mb": os.getenv("CELERY_TASK_DISK", "2048"),
-            "memory_in_mb": os.getenv("CELERY_TASK_MEMORY", "2048"),
+            "disk_in_mb": memory,
+            "memory_in_mb": disk,
         }
         url = "{0}/v3/apps/{1}/tasks".format(self.api_url.rstrip('/'), app_guid)
         return self.session.post(url, json=payload,

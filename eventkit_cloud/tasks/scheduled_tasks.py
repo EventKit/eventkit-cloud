@@ -76,7 +76,6 @@ def pcf_scale_celery(max_instances):
     Scales up celery instances when necessary.
     """
     from eventkit_cloud.utils.pcf import PcfClient
-    from eventkit_cloud.tasks.models import ExportRun
 
     if os.getenv('CELERY_TASK_APP'):
         app_name = os.getenv('CELERY_TASK_APP')
@@ -89,27 +88,32 @@ def pcf_scale_celery(max_instances):
     running_tasks = client.get_running_tasks(app_name)
     running_tasks_count = running_tasks["pagination"]["total_results"]
 
+    total_task_memory = sum([task.get('memory_in_mb') for task in running_tasks])
+    total_task_disk = sum([task.get('disk_in_mb') for task in running_tasks])
+
     if running_tasks_count >= max_instances:
         logger.info("Already at max instances, skipping.")
         return
 
+    celery_group_name = settings.CELERY_GROUP_NAME
+    celery_settings = settings.PCF_CELERY_SETTINGS
+
+    individual_queues = {celery_group_name: "worker@%h",
+                         F"{celery_group_name}.large": "large@%h",
+                         F"{celery_group_name}.finalize": "finalize@%h"}
     default_command = ("python manage.py runinitial && echo 'Starting celery workers' && "
-    "celery worker -A eventkit_cloud --concurrency=$CONCURRENCY --loglevel=$LOG_LEVEL -n runs@%h -Q runs "
-    "& exec celery worker -A eventkit_cloud --concurrency=$CONCURRENCY --loglevel=$LOG_LEVEL -n worker@%h -Q $CELERY_GROUP_NAME "
-    "& exec celery worker -A eventkit_cloud --loglevel=$LOG_LEVEL -n celery@%h -Q celery "
-    "& exec celery worker -A eventkit_cloud --loglevel=$LOG_LEVEL -n cancel@%h -Q $HOSTNAME.cancel "
-    "& exec celery worker -A eventkit_cloud --concurrency=2 -n finalize@%h -Q $CELERY_GROUP_NAME.finalize "
-    "& exec celery worker -A eventkit_cloud --concurrency=1 --loglevel=$LOG_LEVEL -n osm@%h -Q $CELERY_GROUP_NAME.osm ")
+    "exec celery worker -A eventkit_cloud --concurrency=1 --loglevel=$LOG_LEVEL -n celery@%h -Q celery "
+    "& exec celery worker -A eventkit_cloud --concurrency=1 --loglevel=$LOG_LEVEL -n cancel@%h -Q $HOSTNAME.cancel")
 
-    command = os.getenv('CELERY_TASK_COMMAND',  default_command)
+    command = os.getenv('CELERY_TASK_COMMAND')
 
-    message_count = get_message_count("runs")
-    if message_count > 0:
-        logger.info(F"Sending task to {app_name} with command {command}")
-        client.run_task(command, app_name=app_name)
-        return
+    if command:
+        message_count = get_message_count("runs")
+        if message_count > 0:
+            logger.info(F"Sending task to {app_name} with command {command}")
+            client.run_task(command, app_name=app_name)
+            return
 
-    celery_group_name = os.getenv("CELERY_GROUP_NAME", socket.gethostname())
     broker_api_url = getattr(settings, 'BROKER_API_URL')
     queue_class = "queues"
     total_pending_messages = 0
@@ -120,11 +124,19 @@ def pcf_scale_celery(max_instances):
         pending_messages = queue.get('messages')
         total_pending_messages = total_pending_messages + pending_messages
         if celery_group_name in queue_name or queue_name == "celery":
-            logger.info(f"Queue {queue_name} has {pending_messages} pending messages.")
-            if pending_messages > 0 and running_tasks_count < 1:
-                logger.info(F"Sending task to {app_name} with command {command}")
-                client.run_task(command, app_name=app_name)
+            logger.info(F"Queue {queue_name} has {pending_messages} pending messages.")
+            node_name = individual_queues.get(queue_name)
+            if not node_name:
+                # We don't know the queue so just leave it.
                 return
+            if pending_messages > 0:
+                logger.info(F"Sending task to {app_name} with command {command}")
+                queues_settings = celery_settings.get(queue_name, celery_settings.get("default"))
+                memory = queues_settings.get("memory")
+                disk = queues_settings.get("disk")
+                concurrency = queues_settings.get("concurrency")
+                task_command = default_command + F" & exec celery worker -A eventkit_cloud --concurrency={concurrency} --loglevel=$LOG_LEVEL -n {node_name} -Q {queue_name}"
+                client.run_task(task_command, app_name=app_name, memory=memory, disk=disk)
 
     # If there is no work in the group, shut down the groups workers
     if total_pending_messages == 0 and running_tasks_count > 0:
