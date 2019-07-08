@@ -22,7 +22,7 @@ MAX_SAMPLES_PER_TARGET = 2000
 DEFAULT_CACHE_EXPIRATION = 86400  # expire in a day
 
 
-def get_statistics(grouping='provider_name', force=os.getenv("FORCE_STATISTICS_RECOMPUTE", False)):
+def get_statistics(grouping='provider_name', force=os.getenv('FORCE_STATISTICS_RECOMPUTE', False)):
     """
     :param force: True to re-compute the desired statistics
     :param grouping: see group_providers_by
@@ -31,6 +31,7 @@ def get_statistics(grouping='provider_name', force=os.getenv("FORCE_STATISTICS_R
     cache_key = "DATA_STATISTICS_BY_{}".format(grouping)
     compute_stats = lambda: json.dumps(compute_statistics(group_providers_by(grouping)))
     if force:
+        logger.info('Force Statistics Recompute.')
         stats = compute_stats()
         cache.set(cache_key, stats, timeout=DEFAULT_CACHE_EXPIRATION)
     else:

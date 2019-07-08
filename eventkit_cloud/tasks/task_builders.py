@@ -10,7 +10,7 @@ from eventkit_cloud.jobs.models import DataProviderTask
 from eventkit_cloud.tasks import TaskStates
 from eventkit_cloud.tasks.helpers import normalize_name
 from eventkit_cloud.tasks.models import ExportTaskRecord, DataProviderTaskRecord
-from eventkit_cloud.utils.stats.size_estimator import get_size_estimate
+from eventkit_cloud.utils.stats.aoi_estimators import AoiEstimator
 
 logger = logging.getLogger(__name__)
 
@@ -81,7 +81,10 @@ class TaskChainBuilder(object):
             if export_tasks.get('gpkg'):
                 export_tasks.pop('gpkg')
 
-        est_sz, meta = get_size_estimate(provider_task.provider, run.job.extents)
+        # Record estimates for size and time
+        estimator = AoiEstimator(run.job.extents)
+        estimated_size, meta_s = estimator.get_estimate(estimator.Types.SIZE, provider_task.provider)
+        estimated_duration, meta_t = estimator.get_estimate(estimator.Types.TIME, provider_task.provider)
 
         # run the tasks
         data_provider_task_record = DataProviderTaskRecord.objects.create(run=run,
@@ -89,7 +92,8 @@ class TaskChainBuilder(object):
                                                                           slug=provider_task.provider.slug,
                                                                           status=TaskStates.PENDING.value,
                                                                           display=True,
-                                                                          estimated_size=est_sz)
+                                                                          estimated_size=estimated_size,
+                                                                          estimated_duration=estimated_duration)
 
         for format, task in export_tasks.items():
             export_task = create_export_task_record(
