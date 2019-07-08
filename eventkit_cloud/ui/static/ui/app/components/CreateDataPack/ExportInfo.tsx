@@ -375,7 +375,7 @@ export class ExportInfo extends React.Component<Props, State> {
             newProvider.estimate = {
                 size: null,
                 slug: provider.slug,
-                unit: null,
+                time: null,
             };
             return newProvider;
         });

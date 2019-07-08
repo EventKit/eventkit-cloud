@@ -5,7 +5,7 @@ import json
 import logging
 
 from eventkit_cloud.tasks.models import ExportTaskRecord
-import eventkit_cloud.utils.stats.size_estimator as estimator
+import eventkit_cloud.utils.stats.aoi_estimators as estimator
 import eventkit_cloud.utils.stats.generator as ek_stats
 
 logger = logging.getLogger(__name__)
