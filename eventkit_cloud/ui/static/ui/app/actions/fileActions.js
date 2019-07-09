@@ -1,5 +1,6 @@
 import axios from 'axios';
-import { useCookies } from 'react-cookie';
+import { getCookie } from '../utils/generic'
+
 export const types = {
     FILE_PROCESSING: 'FILE_PROCESSING',
     FILE_PROCESSED: 'FILE_PROCESSED',
@@ -17,8 +18,7 @@ export function resetGeoJSONFile() {
 export const processGeoJSONFile = file => (dispatch) => {
     dispatch({ type: types.FILE_PROCESSING, filename: file.name });
 
-    const [cookies] = useCookies(['csrftoken']);
-    const csrftoken = cookies.get('csrftoken');
+    const csrftoken = getCookie('csrftoken');
 
     const formData = new FormData();
     formData.append('file', file);
@@ -40,4 +40,3 @@ export const processGeoJSONFile = file => (dispatch) => {
         dispatch({ type: types.FILE_ERROR, error: error.response.data });
     });
 };
-

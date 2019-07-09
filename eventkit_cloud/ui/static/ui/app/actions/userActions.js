@@ -1,6 +1,7 @@
 import { push } from 'connected-react-router';
 import axios from 'axios';
 import { resetState } from './uiActions';
+import { getCookie } from '../utils/generic'
 
 export const types = {
     USER_LOGGING_IN: 'USER_LOGGING_IN',
@@ -30,9 +31,10 @@ export function logout() {
     );
 }
 
-export function login(data, csrftoken) {
+export function login(data) {
     return (dispatch) => {
 
+        const csrftoken = getCookie('csrftoken');
         dispatch({
             type: types.USER_LOGGING_IN,
         });

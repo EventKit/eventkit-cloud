@@ -107,3 +107,8 @@ export function getSqKmString(geojson) {
     const areaStr = numeral(area).format('0,0');
     return `${areaStr} sq km`;
 }
+
+export function getCookie(name) {
+    var v = document.cookie.match('(^|;) ?' + name + '=([^;]*)(;|$)');
+    return v ? v[2] : null;
+}

@@ -3,7 +3,7 @@ import * as React from 'react';
 import {createStyles, Theme, withStyles, withTheme} from '@material-ui/core/styles';
 import {connect} from 'react-redux';
 import axios from 'axios';
-import { withCookies, Cookies } from 'react-cookie';
+import { getCookie } from '../../utils/generic'
 import Joyride, {Step} from 'react-joyride';
 import List from '@material-ui/core/List';
 import Paper from '@material-ui/core/Paper';
@@ -136,7 +136,6 @@ export interface Props {
     theme: Eventkit.Theme & Theme;
     classes: { [className: string]: string };
     onUpdateEstimate?: () => void;
-    cookies: Cookies;
 }
 
 export interface State {
@@ -323,8 +322,7 @@ export class ExportInfo extends React.Component<Props, State> {
         // make a copy of the provider to edit
         const newProvider = { ...provider } as ProviderData;
 
-        const { cookies } = this.props;
-        const csrfmiddlewaretoken = cookies.get('csrftoken');
+        const csrfmiddlewaretoken = getCookie('csrftoken');
         return axios({
             url: `/api/providers/${provider.slug}/status`,
             method: 'POST',
@@ -352,8 +350,7 @@ export class ExportInfo extends React.Component<Props, State> {
         const data = { slugs: provider.slug,
                        srs: 4326,
                        bbox: bbox.join(',') };
-        const { cookies } = this.props;
-        const csrfmiddlewaretoken = cookies.get('csrftoken');
+        const csrfmiddlewaretoken = getCookie('csrftoken');
         return axios({
             url: `/api/estimate`,
             method: 'get',
@@ -766,7 +763,7 @@ function mapDispatchToProps(dispatch) {
     };
 }
 
-export default withTheme()(withStyles(jss)(withCookies(connect(
+export default withTheme()(withStyles(jss)(connect(
     mapStateToProps,
     mapDispatchToProps,
-)(ExportInfo))));
+)(ExportInfo)));
