@@ -2,6 +2,7 @@ import * as PropTypes from 'prop-types';
 import * as React from 'react';
 import { connect } from 'react-redux';
 import axios from 'axios';
+import queryString from 'query-string';
 import { withTheme, withStyles, createStyles } from '@material-ui/core/styles';
 import withWidth, { isWidthUp } from '@material-ui/core/withWidth';
 import { Breakpoint } from '@material-ui/core/styles/createBreakpoints';
@@ -134,7 +135,7 @@ interface Props {
         notificationsButton: string;
         notificationsIndicator: string;
     };
-    dispatch: (options?: object) => void;
+    login: (options?: object) => void;
 }
 
 interface State {
@@ -151,6 +152,7 @@ interface State {
     notificationsLoading: boolean;
     loggedIn: boolean;
     isMounted: false;
+    user: {data: any, status: any};
 }
 
 const Loader = Loadable({
@@ -159,8 +161,8 @@ const Loader = Loadable({
 });
 
 const UserIsAuthenticated = connectedReduxRedirect({
-    authenticatedSelector: (props: Props) => !!props.userData,
-    authenticatingSelector: (props: Props) => props.isLoading,
+    authenticatedSelector: (state: State) => !!state.user.data,
+    authenticatingSelector: (state: State) => state.user.status.isLoading ,
     AuthenticatingComponent: Loader,
     redirectAction: routerActions.replace,
     wrapperDisplayName: 'UserIsAuthenticated',
@@ -170,10 +172,18 @@ const UserIsAuthenticated = connectedReduxRedirect({
 const UserIsNotAuthenticated = connectedReduxRedirect({
     redirectAction: routerActions.replace,
     wrapperDisplayName: 'UserIsNotAuthenticated',
-    authenticatedSelector: (props: Props) => !props.userData && props.isLoading === false,
-    redirectPath: (state, ownProps: RouteComponentProps<{}, {}>) => (
-        ownProps.location.search || '/dashboard'
-    ),
+    authenticatedSelector: (state: State) => {
+        console.error("NOT AUTH");
+        console.error(state);
+        const checked = !state.user.data && state.user.status.isLoading === false;
+        console.error("CHECKED: " + checked);
+        return checked;
+    },
+    redirectPath: (state, ownProps: RouteComponentProps<{}, {}>) => {
+        console.error("Redirect not auth.");
+        const {redirect, next} = queryString.parse(ownProps.location.search);
+        return (redirect || next) || '/dashboard';
+    },
     allowRedirectBack: false,
 });
 
@@ -297,6 +307,7 @@ export class Application extends React.Component<Props, State> {
             notificationsLoading: true,
             loggedIn: Boolean(props.userData),
             isMounted: false,
+            user: null
         };
         this.userActiveInputTypes = ['mousemove', 'click', 'keypress', 'wheel', 'touchstart', 'touchmove', 'touchend'];
         this.notificationsUnreadCountRefreshInterval = 10000;
@@ -313,14 +324,14 @@ export class Application extends React.Component<Props, State> {
     checkAuth() {
         console.log("userData", this.props.userData);
         if (!this.props.userData) {
-            this.props.dispatch(login(null));
-        };
+            this.props.login(null);
+        }
     }
 
     componentDidMount() {
         this.getConfig();
         this.checkAuth();
-        console.log("Props", this.props)
+        console.log("Props", this.props);
     }
 
     componentDidUpdate(prevProps, prevState) {
@@ -751,7 +762,6 @@ export class Application extends React.Component<Props, State> {
                     <strong>You have been automatically logged out due to inactivity.</strong>
                 </BaseDialog>
             </div>
-
         );
     }
 }
@@ -787,7 +797,9 @@ function mapDispatchToProps(dispatch) {
         getNotifications: (args) => {
             dispatch(getNotifications(args));
         },
-        dispatch
+        login: (args) => {
+            dispatch(login(args));
+        }
     };
 }
 
