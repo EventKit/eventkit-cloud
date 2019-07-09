@@ -174,14 +174,10 @@ const UserIsNotAuthenticated = connectedReduxRedirect({
     redirectAction: routerActions.replace,
     wrapperDisplayName: 'UserIsNotAuthenticated',
     authenticatedSelector: (state: State) => {
-        console.error("NOT AUTH");
-        console.error(state);
         const checked = !state.user.data && state.user.status.isLoading === false;
-        console.error("CHECKED: " + checked);
         return checked;
     },
     redirectPath: (state, ownProps: RouteComponentProps<{}, {}>) => {
-        console.error("Redirect not auth.");
         const {redirect, next} = queryString.parse(ownProps.location.search);
         return (redirect || next) || '/dashboard';
     },

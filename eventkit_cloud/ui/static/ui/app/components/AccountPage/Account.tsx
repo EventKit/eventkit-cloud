@@ -110,7 +110,7 @@ export class Account extends React.Component<Props, State> {
     private callback(data) {
         if (data.action === 'close' || data.action === 'skip' || data.type === 'finished') {
             this.setState({ isRunning: false });
-            this.joyride.reset(true);
+
             if (this.state.acceptedLicenses['fake-license-for-tour'] !== undefined) {
                 this.setState({ acceptedLicenses: {} });
                 this.props.licenses.licenses = [];
@@ -128,7 +128,7 @@ export class Account extends React.Component<Props, State> {
     private handleJoyride() {
         if (this.state.isRunning === true) {
             this.setState({ isRunning: false });
-            this.joyride.reset(true);
+
         } else {
             this.setState({ isRunning: true });
             if (!Object.keys(this.state.acceptedLicenses).length) {
@@ -202,10 +202,9 @@ export class Account extends React.Component<Props, State> {
                     callback={this.callback}
                     ref={(instance) => { this.joyride = instance; }}
                     steps={steps}
-                    autoStart
-                    type="continuous"
+                    continuous
                     showSkipButton
-                    showStepsProgress
+                    showProgress
                     locale={{
                         // @ts-ignore
                         back: (<span>Back</span>),

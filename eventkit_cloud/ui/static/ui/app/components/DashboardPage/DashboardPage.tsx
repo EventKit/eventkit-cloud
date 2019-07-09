@@ -301,7 +301,7 @@ export class DashboardPage extends React.Component<Props, State> {
         const { action, step, type } = data;
         if (action === 'close' || action === 'skip' || type === 'finished') {
             this.setState({ isRunning: false });
-            this.joyride.reset(true);
+
             window.location.hash = '';
         }
 
@@ -313,7 +313,7 @@ export class DashboardPage extends React.Component<Props, State> {
     private handleWalkthroughClick() {
         if (this.state.isRunning) {
             this.setState({ isRunning: false });
-            this.joyride.reset(true);
+
         } else {
             const [...steps] = joyride.DashboardPage;
             this.setState({ isRunning: true, steps: [] });
@@ -420,10 +420,9 @@ export class DashboardPage extends React.Component<Props, State> {
                         ref={instance => { this.joyride = instance; }}
                         // @ts-ignore
                         steps={this.state.steps}
-                        autoStart
-                        type="continuous"
+                        continuous
                         showSkipButton
-                        showStepsProgress
+                        showProgress
                         locale={{
                             // @ts-ignore
                             back: (<span>Back</span>),

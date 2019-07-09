@@ -260,7 +260,7 @@ export class StatusDownload extends React.Component<Props, State> {
         const { action, type, step } = data;
         if (action === 'close' || action === 'skip' || type === 'finished') {
             this.setState({ isRunning: false });
-            this.joyride.reset(true);
+
             window.location.hash = '';
         }
         if (step && step.scrollToId) {
@@ -415,11 +415,10 @@ export class StatusDownload extends React.Component<Props, State> {
                             callback={this.callback}
                             ref={(instance) => { this.joyride = instance; }}
                             steps={steps}
-                            scrollToSteps
-                            autoStart
-                            type="continuous"
+                            disableScrolling={false}
+                            continuous
                             showSkipButton
-                            showStepsProgress
+                            showProgress
                             locale={{
                                 back: (<span>Back</span>) as any,
                                 close: (<span>Close</span>) as any,

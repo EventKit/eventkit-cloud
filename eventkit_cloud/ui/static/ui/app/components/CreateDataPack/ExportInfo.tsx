@@ -510,10 +510,9 @@ export class ExportInfo extends React.Component<Props, State> {
                     callback={this.callback}
                     ref={this.joyride}
                     steps={steps}
-                    autoStart
-                    type="continuous"
+                    continuous
                     showSkipButton
-                    showStepsProgress
+                    showProgress
                     locale={{
                         back: (<span>Back</span>) as any,
                         close: (<span>Close</span>) as any,

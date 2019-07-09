@@ -102,7 +102,7 @@ export class ExportSummary extends React.Component<Props, State> {
 
     componentDidUpdate(prevProps: Props) {
         if (this.props.walkthroughClicked && !prevProps.walkthroughClicked && !this.state.isRunning) {
-            this.joyride.reset(true);
+
             this.setState({ isRunning: true });
         }
     }
@@ -130,7 +130,7 @@ export class ExportSummary extends React.Component<Props, State> {
         if (action === 'close' || action === 'skip' || type === 'finished') {
             this.setState({ isRunning: false });
             this.props.onWalkthroughReset();
-            this.joyride.reset(true);
+
             window.location.hash = '';
         }
 
@@ -150,10 +150,9 @@ export class ExportSummary extends React.Component<Props, State> {
                     callback={this.callback}
                     ref={(instance) => { this.joyride = instance; }}
                     steps={steps}
-                    autoStart
-                    type="continuous"
+                    continuous
                     showSkipButton
-                    showStepsProgress
+                    showProgress
                     locale={{
                         back: (<span>Back</span>) as any,
                         close: (<span>Close</span>) as any,
