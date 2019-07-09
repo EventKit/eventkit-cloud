@@ -1,4 +1,5 @@
 import axios from 'axios';
+import { getCookie } from '../utils/generic'
 
 export const crashReporter = () => next => (action) => {
     try {
@@ -31,7 +32,6 @@ export const simpleApiCall = ({ dispatch, getState }) => next => (action) => {
         data,
         headers = {},
         cancellable = false,
-        cookies,
     } = action;
 
     if (!types) {
@@ -67,7 +67,7 @@ export const simpleApiCall = ({ dispatch, getState }) => next => (action) => {
 
     dispatch({...payload, cancelSource, type: requestType});
 
-    const csrftoken = cookies.get('csrftoken');
+    const csrftoken = getCookie('csrftoken');
 
     return axios({
         url,

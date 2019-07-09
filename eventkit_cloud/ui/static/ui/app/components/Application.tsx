@@ -104,6 +104,7 @@ interface Props {
     userActive: () => void;
     drawer: string;
     router: any;
+    history: any;
     userData: {
         accepted_licenses: object;
         user: {
@@ -191,7 +192,7 @@ const UserHasAgreed = connectedReduxRedirect({
     redirectAction: routerActions.replace,
     redirectPath: '/account',
     wrapperDisplayName: 'UserHasAgreed',
-    authenticatedSelector: (props: Props) => allTrue(props.userData.accepted_licenses),
+    authenticatedSelector: (state: State) => allTrue(state.user.data.accepted_licenses),
 });
 
 const LoginPage = Loadable({
@@ -445,7 +446,7 @@ export class Application extends React.Component<Props, State> {
 
     logout() {
         this.props.closeDrawer();
-        this.props.router.push('/logout');
+        this.props.history.push('/logout');
     }
 
     startListeningForNotifications() {
@@ -696,7 +697,7 @@ export class Application extends React.Component<Props, State> {
                             <IconButton
                                 className={`qa-Application-AppBar-NotificationsButton ${classes.notificationsButton}`}
                                 style={{
-                                    backgroundColor: (this.props.router.location.pathname.indexOf('/notifications') === 0) ?
+                                    backgroundColor: (this.props.history.location.pathname.indexOf('/notifications') === 0) ?
                                         colors.primary : '',
                                 }}
                                 color="secondary"
