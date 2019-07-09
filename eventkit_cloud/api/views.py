@@ -1992,6 +1992,6 @@ class SwaggerSchemaView(views.APIView):
                 )
 
             return Response(schema)
-        except (ImportError, ModuleNotFoundError) as e:
+        except (ImportError, ModuleNotFoundError):
             # CoreAPI couldn't be imported, falling back to static schema
             return Response()
