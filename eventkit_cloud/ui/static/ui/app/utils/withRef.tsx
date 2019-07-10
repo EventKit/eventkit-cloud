@@ -28,7 +28,7 @@ const withRef = () =>
         }
     }
 
-    const forwardRef = (props: Props) => {
+    const forwardRef = (props: Props, ref) => {
         const { customRef } = props;
         return <WithRef {...props} forwardedRef={customRef} />;
     };
