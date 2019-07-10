@@ -51,7 +51,7 @@ export interface Props {
     getProviders: () => void;
     providers: Eventkit.Provider[];
     user: Eventkit.Store.User;
-    router: RouteComponentProps<any, any>;
+    match: any;
     location: Location;
     viewedJob: (uid: string) => void;
     theme: Eventkit.Theme & Theme;
@@ -116,14 +116,14 @@ export class StatusDownload extends React.Component<Props, State> {
             this.setState({ error: this.props.exportReRun.error });
         }
         if (this.props.exportReRun.fetched && !prevProps.exportReRun.fetched) {
-            this.props.getDatacartDetails(this.props.router.match.params.jobuid);
+            this.props.getDatacartDetails(this.props.match.params.jobuid);
             this.startTimer();
         }
         if (this.props.expirationState.updated && !prevProps.expirationState.updated) {
-            this.props.getDatacartDetails(this.props.router.match.params.jobuid);
+            this.props.getDatacartDetails(this.props.match.params.jobuid);
         }
         if (this.props.permissionState.updated && !prevProps.permissionState.updated) {
-            this.props.getDatacartDetails(this.props.router.match.params.jobuid);
+            this.props.getDatacartDetails(this.props.match.params.jobuid);
         }
         if (this.props.detailsFetched && !prevProps.detailsFetched) {
             if (this.state.isLoading) {
@@ -162,7 +162,7 @@ export class StatusDownload extends React.Component<Props, State> {
                     this.timer = null;
                     window.clearTimeout(this.timeout);
                     this.timeout = window.setTimeout(() => {
-                        this.props.getDatacartDetails(this.props.router.match.params.jobuid);
+                        this.props.getDatacartDetails(this.props.match.params.jobuid);
                     }, 270000);
                 }
             }
@@ -185,8 +185,8 @@ export class StatusDownload extends React.Component<Props, State> {
     }
 
     private async onMount() {
-        this.props.getDatacartDetails(this.props.router.match.params.jobuid);
-        this.props.viewedJob(this.props.router.match.params.jobuid);
+        this.props.getDatacartDetails(this.props.match.params.jobuid);
+        this.props.viewedJob(this.props.match.params.jobuid);
         this.props.getProviders();
         this.startTimer();
 
@@ -230,7 +230,7 @@ export class StatusDownload extends React.Component<Props, State> {
     private startTimer() {
         window.clearInterval(this.timer);
         this.timer = window.setInterval(() => {
-            this.props.getDatacartDetails(this.props.router.match.params.jobuid);
+            this.props.getDatacartDetails(this.props.match.params.jobuid);
         }, 5000);
     }
 
