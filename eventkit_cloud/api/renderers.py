@@ -104,8 +104,6 @@ def update_schema(new_schema):
             default_json.dump(new_schema, open_file)
 
 
-
-
 class PlainTextRenderer(BaseRenderer):
     media_type = 'text/plain'
     format = 'txt'
@@ -146,10 +144,10 @@ class CustomOpenAPIRenderer(BaseRenderer):
             schema = OpenAPICodec().encode(data, **options)
             update_schema(json.loads(schema))
             return schema
-        except ImportError:
+        except (ImportError, ModuleNotFoundError) as e:
             # Couldn't import coreapi so this must be in production, just used static schema
             schema_file = get_schema_file()
-            with open(schema_file, 'r') as open_file:
+            with open(schema_file, 'rb') as open_file:
                 return open_file.read()
 
     def get_customizations(self):
@@ -213,5 +211,3 @@ class CustomSwaggerUIRenderer(BaseRenderer):
             data['validatorUrl'] = swagger_settings.VALIDATOR_URL
 
         return data
-
-
