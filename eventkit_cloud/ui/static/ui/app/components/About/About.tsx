@@ -1,3 +1,4 @@
+import * as PropTypes from 'prop-types';
 import * as React from 'react';
 import PageHeader from '../common/PageHeader';
 import CustomScrollbar from '../CustomScrollbar';
@@ -8,32 +9,27 @@ import { about } from '../../about.config';
 
 const COMPONENT_MAPPING = { InfoParagraph, ThreeStepInfo, InfoGrid };
 
-export interface Props {
-    context: {
-        config: {
-            VERSION: string,
-            CONTACT_URL: string,
-        },
-    };
-}
-
 export interface State {
     pageInfo: object[];
 }
 
-export class About extends React.Component<Props, State> {
-    constructor(props) {
-        super(props);
-        this.state = {
-            pageInfo: about,
-        };
-    }
+export class About extends React.Component<State> {
+    static contextTypes = {
+        config: PropTypes.shape({
+            VERSION: PropTypes.string,
+            LOGIN_DISCLAIMER: PropTypes.string,
+        }),
+    };
+
+    state = {
+        pageInfo: about,
+    };
 
     shouldComponentUpdate(nextProps, nextState) {
         return (
-            nextProps.context.config.VERSION !== this.props.context.config.VERSION
+            nextProps.context.config.VERSION !== this.context.config.VERSION
             ||
-            nextProps.context.config.CONTACT_URL !== this.props.context.config.CONTACT_URL
+            nextProps.context.config.CONTACT_URL !== this.context.config.CONTACT_URL
         );
     }
 
@@ -70,9 +66,9 @@ export class About extends React.Component<Props, State> {
 
         let version = '';
         let contactUrl = '';
-        if (this.props.context.config) {
-            version = this.props.context.config.VERSION;
-            contactUrl = this.props.context.config.CONTACT_URL;
+        if (this.context.config) {
+            version = this.context.config.VERSION;
+            contactUrl = this.context.config.CONTACT_URL;
         }
 
         return (
