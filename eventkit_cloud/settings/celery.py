@@ -62,7 +62,7 @@ if PCF_SCALING:
     # memory and disk in MB
     pcf_celery_defaults = {"default": {"memory": 1024, "disk": 2048, "concurrency": 2},
                            "large": {"memory": 3072, "disk": 6144, "concurrency": 1}}
-    PCF_CELERY_SETTINGS = os.getenv(json.loads("PCF_CELERY_SETTINGS", pcf_celery_defaults))
+    PCF_CELERY_SETTINGS = json.loads(os.getenv("PCF_CELERY_SETTINGS", "{}")) or pcf_celery_defaults
 
 CELERY_GROUP_NAME = os.getenv("CELERY_GROUP_NAME", socket.gethostname())
 
