@@ -7,7 +7,7 @@ import { Link } from 'react-router-dom';
 import Card from '@material-ui/core/Card';
 import CardHeader from '@material-ui/core/CardHeader';
 import CardContent from '@material-ui/core/CardContent';
-import * as moment from 'moment';
+import moment from 'moment';
 import Map from 'ol/map';
 import View from 'ol/view';
 import interaction from 'ol/interaction';

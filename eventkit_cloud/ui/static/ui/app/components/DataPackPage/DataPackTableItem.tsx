@@ -11,7 +11,7 @@ import SocialGroup from '@material-ui/icons/Group';
 import NavigationCheck from '@material-ui/icons/Check';
 import Star from '@material-ui/icons/Star';
 import NotificationSync from '@material-ui/icons/Sync';
-import * as moment from 'moment';
+import moment from 'moment';
 import IconMenu from '../common/IconMenu';
 import DeleteDataPackDialog from '../Dialog/DeleteDataPackDialog';
 import ProviderDialog from '../Dialog/ProviderDialog';

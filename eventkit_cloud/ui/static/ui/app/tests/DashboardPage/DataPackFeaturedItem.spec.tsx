@@ -2,7 +2,7 @@ import * as  React from 'react';
 import { Link } from 'react-router-dom';
 import * as sinon from 'sinon';
 import { shallow } from 'enzyme';
-import * as moment from 'moment';
+import moment from 'moment';
 import CardHeader from '@material-ui/core/CardHeader';
 import CardContent from '@material-ui/core/CardContent';
 import { DataPackFeaturedItem } from '../../components/DashboardPage/DataPackFeaturedItem';

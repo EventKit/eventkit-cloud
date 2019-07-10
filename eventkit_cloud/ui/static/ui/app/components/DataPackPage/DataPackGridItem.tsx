@@ -16,7 +16,7 @@ import NotificationSync from '@material-ui/icons/Sync';
 import NavigationCheck from '@material-ui/icons/Check';
 import AlertError from '@material-ui/icons/Error';
 import * as isUndefined from 'lodash/isUndefined';
-import * as moment from 'moment';
+import moment from 'moment';
 
 import Map from 'ol/map';
 import View from 'ol/view';

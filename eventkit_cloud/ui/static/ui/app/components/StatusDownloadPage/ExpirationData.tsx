@@ -2,7 +2,7 @@ import * as React from 'react';
 import { withTheme, Theme } from '@material-ui/core/styles';
 import Popover from '@material-ui/core/Popover';
 import Edit from '@material-ui/icons/Edit';
-import * as moment from 'moment';
+import moment from 'moment';
 import DayPicker from 'react-day-picker';
 import 'react-day-picker/lib/style.css';
 
