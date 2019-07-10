@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { withTheme, Theme, createStyles, withStyles } from '@material-ui/core/styles';
+import {createStyles, Theme, withStyles, withTheme} from '@material-ui/core/styles';
 import List from '@material-ui/core/List';
 import ListItem from '@material-ui/core/ListItem';
 import ListItemText from '@material-ui/core/ListItemText';
@@ -10,6 +10,7 @@ import ExpandLess from '@material-ui/icons/ExpandLess';
 import ExpandMore from '@material-ui/icons/ExpandMore';
 import ProviderStatusIcon from './ProviderStatusIcon';
 import BaseDialog from '../Dialog/BaseDialog';
+import { getDuration, formatMegaBytes } from '../../utils/generic';
 import {Typography} from "@material-ui/core";
 
 const jss = (theme: Theme & Eventkit.Theme) => createStyles({
@@ -61,6 +62,11 @@ const jss = (theme: Theme & Eventkit.Theme) => createStyles({
     },
 });
 
+interface EstimateData {
+    value: number;
+    units: string;
+}
+
 export interface ProviderData extends Eventkit.Provider {
     availability?: {
         slug: string;
@@ -69,8 +75,8 @@ export interface ProviderData extends Eventkit.Provider {
         message: string;
     };
     estimate?: {
-        size: number;
-        unit: string;
+        size?: EstimateData;
+        time?: EstimateData;
         slug: string;
     };
 }
@@ -128,16 +134,22 @@ export class DataProvider extends React.Component<Props, State> {
         this.setState(state => ({ open: !state.open }));
     }
 
-    private formatSize(providerEstimate) {
-        if (!providerEstimate) {
-            return (<CircularProgress size={10}/>);
+    private formatEstimate(providerEstimate){
+        if (!providerEstimate){
+            return ''
         }
-        if (!providerEstimate.size) {
-            return "unknown";
+        let sizeEstimate;
+        let durationEstimate;
+        // func that will return nf (not found) when the provided estimate is undefined
+        const get = (estimate, nf='unknown') => {return (estimate) ? estimate.toString() : nf};
+        if(providerEstimate.size) {
+            sizeEstimate = formatMegaBytes(providerEstimate.size.value);
         }
-        let estimateSize = 0.000;
-        estimateSize = Number(estimateSize) + Number(providerEstimate.size);
-        return Number(estimateSize).toFixed(3) + ' MB';
+        if(providerEstimate.time) {
+            const estimateInSeconds = providerEstimate.time.value;
+            durationEstimate = getDuration(estimateInSeconds);
+        }
+        return `${get(sizeEstimate)} / ${get(durationEstimate)}`;
     }
 
     render() {
@@ -209,9 +221,13 @@ export class DataProvider extends React.Component<Props, State> {
         ));
 
         // Only set this if we want to display the estimate
-        let secondary;
-        if (this.props.renderEstimate) {
-            secondary = <Typography style={{fontSize: "0.7em"}}>{this.formatSize(provider.estimate)}</Typography>;
+        let secondary = undefined;
+        if(this.props.renderEstimate)
+        {
+            if(this.formatEstimate(provider.estimate))
+                secondary = <Typography style={{fontSize: "0.7em"}}>{this.formatEstimate(provider.estimate)}</Typography>
+            else
+                secondary = <CircularProgress size={10}/>
         }
 
         const backgroundColor = (this.props.alt) ? colors.secondary : colors.white;

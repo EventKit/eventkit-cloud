@@ -1,4 +1,4 @@
-import sinon from 'sinon';
+import * as sinon from 'sinon';
 import GeoJSON from 'ol/format/geojson';
 import Feature from 'ol/feature';
 import * as utils from '../../utils/generic';
@@ -56,5 +56,21 @@ describe('test generic utils', () => {
 
     it('getSqKmString should call getSqKm and return a formated string', () => {
         expect(utils.getSqKmString({ type: 'FeatureCollection', features: [] })).toEqual('0 sq km');
+    });
+
+    it('formatMegaBytes should convert 1000 to 1.00 GB', () => {
+        expect(utils.formatMegaBytes(1000)).toEqual('1.00 GB');
+    });
+
+    it('formatMegaBytes should convert 1 to 1.00 MB', () => {
+        expect(utils.formatMegaBytes(1)).toEqual('1.00 MB');
+    });
+
+    it('formatMegaBytes should convert 19999 to 20.00 GB', () => {
+        expect(utils.formatMegaBytes(19999)).toEqual('20.00 GB');
+    });
+
+    it('formatMegaBytes should convert 1000000 to 1.00 TB', () => {
+        expect(utils.formatMegaBytes(1000000)).toEqual('1.00 TB');
     });
 });

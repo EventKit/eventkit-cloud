@@ -1,4 +1,4 @@
-import numeral from 'numeral';
+import * as numeral from 'numeral';
 import GeoJSON from 'ol/format/geojson';
 
 export function getHeaderPageInfo(response) {
@@ -55,7 +55,7 @@ export function isLatLon(c) {
                 parsedCoordArray.push(parseFloat(coord));
             }
         });
-    } else if (!Number.isNaN(parseFloat(coordArray[0]) && !Number.isNaN(parseFloat(coordArray[1])))) {
+    } else if (!Number.isNaN(parseFloat(coordArray[0])) && !Number.isNaN(parseFloat(coordArray[1]))) {
         coordArray.forEach((coord) => {
             parsedCoordArray.push(parseFloat(coord));
         });
@@ -106,6 +106,41 @@ export function getSqKmString(geojson) {
     const area = getSqKm(geojson);
     const areaStr = numeral(area).format('0,0');
     return `${areaStr} sq km`;
+}
+
+export function getDuration(seconds, capEstimate=true) {
+    // returns a string duration formatted like  1d 5h 30m (1 day 5 hours 30 minutes)
+    // this is calculated based on the number of seconds supplied
+    let remainingSeconds = seconds;
+    const secondsInDay = 60 * 60 * 24;
+    const secondsInHour = 60 * 60;
+
+    if(capEstimate && seconds >= secondsInDay)
+        return `At least 1 day`;
+
+    let days: any = Math.floor(remainingSeconds / secondsInDay);
+    remainingSeconds -= days * secondsInDay;
+    let hours: any = Math.floor(remainingSeconds / secondsInHour);
+    remainingSeconds -= hours * secondsInHour;
+    let minutes: any = Math.floor(remainingSeconds / 60);
+
+    days = (days > 0) ? `${days}d ` : '';
+    hours = (hours > 0) ? `${hours}h ` : '';
+    minutes = (minutes <= 0 && days == 0 && hours == 0) ? '<1m' : `${minutes}m`;
+    return `${days}${hours}${minutes}`;
+}
+
+export function formatMegaBytes(megabytes) {
+    // format a size so that it is reasonably displayed.
+    // megabytes = 40 => 40 MB
+    // megabytes = 1337 => 1.34 GB
+    let units = ['MB', 'GB', 'TB']; // More can be added, obviously
+    let order = 0;
+    megabytes = Number(megabytes);
+    while(megabytes / 10 ** ((order + 1) * 3) >= 1) {
+        order += 1;
+    }
+    return `${Number(megabytes / 10 ** (order * 3)).toFixed(2)} ${units[order]}`
 }
 
 export function getCookie(name) {
