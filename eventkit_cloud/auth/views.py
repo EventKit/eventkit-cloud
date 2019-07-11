@@ -44,20 +44,23 @@ def oauth(request):
 
 
 def callback(request):
-    access_token = request_access_token(request.GET.get('code'))
-    user = fetch_user_from_token(access_token)
-    state = request.GET.get('state')
-    if user:
-        login(request, user, backend='django.contrib.auth.backends.ModelBackend')
-        logger.info('User "{0}" has logged in successfully'.format(get_id(user)))
-        if state:
-            return redirect(base64.b64decode(state).decode())
-        return redirect('dashboard')
-    else:
-        logger.error('User could not be logged in.')
-        return HttpResponse('{"error":"User could not be logged in"}',
-                            content_type="application/json",
-                            status=401)
+    try:
+        access_token = request_access_token(request.GET.get('code'))
+        user = fetch_user_from_token(access_token)
+        state = request.GET.get('state')
+        if user:
+            login(request, user, backend='django.contrib.auth.backends.ModelBackend')
+            logger.info('User "{0}" has logged in successfully'.format(get_id(user)))
+            if state:
+                return redirect(base64.b64decode(state).decode())
+            return redirect('dashboard')
+        else:
+            logger.error('User could not be logged in.')
+            return HttpResponse('{"error":"User could not be logged in"}',
+                                content_type="application/json",
+                                status=401)
+    except:
+        return redirect('/login/error')
 
 
 def logout(request):

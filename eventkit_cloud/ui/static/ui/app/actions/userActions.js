@@ -5,6 +5,7 @@ import { resetState } from './uiActions';
 
 export const types = {
     USER_LOGGING_IN: 'USER_LOGGING_IN',
+    USER_LOGIN_ERROR: 'USER_LOGIN_ERROR',
     USER_LOGGED_IN: 'USER_LOGGED_IN',
     USER_LOGGED_OUT: 'USER_LOGGED_OUT',
     PATCHING_USER: 'PATCHING_USER',
@@ -63,9 +64,12 @@ export function login(data) {
                     type: types.USER_LOGGED_OUT,
                 });
             }
-        }).catch(() => {
+        }).catch((response) => {
             dispatch({
                 type: types.USER_LOGGED_OUT,
+                status: {
+                    error: response.response.status
+                }
             });
         });
     };

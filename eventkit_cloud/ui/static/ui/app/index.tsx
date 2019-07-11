@@ -91,6 +91,11 @@ const LoginPage = Loadable({
     loader: () => import('./components/auth/LoginPage'),
 });
 
+const LoginErrorPage = Loadable({
+    ...loadableDefaults,
+    loader: () => import('./components/auth/LoginErrorPage'),
+});
+
 const Logout = Loadable({
     ...loadableDefaults,
     loader: () => import('./containers/logoutContainer'),
@@ -144,6 +149,7 @@ render(
                 <Route path="/" component={Application} onEnter={checkAuth(store)}>
                     <Route path="/login" component={UserIsNotAuthenticated(LoginPage)} />
                     <Route path="/logout" component={Logout} />
+                    <Route path="/login/error" component={LoginErrorPage} />
                     <Route path="/dashboard" component={UserIsAuthenticated(UserHasAgreed(DashboardPage))} />
                     <Route path="/exports" component={UserIsAuthenticated(UserHasAgreed(DataPackPage))} />
                     <Route path="/create" component={UserIsAuthenticated(UserHasAgreed(CreateExport))} />

@@ -188,4 +188,11 @@ function mapDispatchToProps(dispatch) {
     };
 }
 
+function mapStateToProps (state) {
+    return {
+        error: state.login.error,
+        errorMessage: state.login.errorMessage,
+    };
+};
+
 export default withTheme()(connect(null, mapDispatchToProps)(Form));
