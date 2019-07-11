@@ -6,11 +6,12 @@ import axios from 'axios';
 import Button from '@material-ui/core/Button';
 import { login } from '../actions/userActions';
 
-export class Form extends React.Component {
+export class Form extends React.Component<Props> {
     constructor(props) {
         super(props);
         this.onChange = this.onChange.bind(this);
         this.handleSubmit = this.handleSubmit.bind(this);
+        this.getErrorMessage = this.getErrorMessage.bind(this);
         this.state = {
             username: '',
             password: '',
@@ -23,6 +24,7 @@ export class Form extends React.Component {
     componentDidMount() {
         this.checkAuthEndpoint();
         this.checkOAuthEndpoint();
+        this.setState({ oauthName: 'oauth' });
     }
 
     onChange(event) {
@@ -59,6 +61,22 @@ export class Form extends React.Component {
     handleOAuth(event) {
         event.preventDefault();
         window.location.assign('/oauth');
+    }
+
+    getErrorMessage() {
+        if(!this.props.error) {
+            return 'An unknown error occurred. Please contact an administrator.'
+        }
+        const {statusCode, authType } = {...this.props.error};
+        if(statusCode === 401) {
+            if(authType === 'auth') {
+                return 'Username or Password incorrect.';
+            }
+            else {
+                return 'Authentication failed. Please try again or contact an administrator.'
+            }
+        }
+        return 'An unknown error occurred. Please contact an administrator.'
     }
 
     render() {
@@ -167,6 +185,11 @@ export class Form extends React.Component {
                         No login methods available, please contact an administrator
                     </div>
                     : null}
+                {this.props.error &&
+                    <div style={{ color: colors.white, marginTop: '10px' }}>
+                        {this.getErrorMessage()}
+                    </div>
+                }
             </div>
         );
     }
@@ -178,6 +201,7 @@ Form.propTypes = {
         query: PropTypes.object,
     }).isRequired,
     theme: PropTypes.object.isRequired,
+    error: PropTypes.any,
 };
 
 function mapDispatchToProps(dispatch) {
@@ -190,9 +214,8 @@ function mapDispatchToProps(dispatch) {
 
 function mapStateToProps (state) {
     return {
-        error: state.login.error,
-        errorMessage: state.login.errorMessage,
+        error: state.user.status.error,
     };
-};
+}
 
-export default withTheme()(connect(null, mapDispatchToProps)(Form));
+export default withTheme()(connect(mapStateToProps, mapDispatchToProps)(Form));

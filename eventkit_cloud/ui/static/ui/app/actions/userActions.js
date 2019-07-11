@@ -68,7 +68,10 @@ export function login(data) {
             dispatch({
                 type: types.USER_LOGGED_OUT,
                 status: {
-                    error: response.response.status
+                    error: {
+                        authType: 'auth',
+                        statusCode: response.response.status
+                    }
                 }
             });
         });

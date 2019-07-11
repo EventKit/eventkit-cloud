@@ -12,6 +12,7 @@ import configureStore from './store/configureStore';
 import { login } from './actions/userActions';
 import ekTheme from './styles/eventkit_theme';
 import PageLoading from './components/common/PageLoading';
+import {Switch} from "@material-ui/core";
 
 const theme = createMuiTheme(ekTheme);
 
@@ -148,8 +149,8 @@ render(
                 <Redirect from="/" to="/dashboard" />
                 <Route path="/" component={Application} onEnter={checkAuth(store)}>
                     <Route path="/login" component={UserIsNotAuthenticated(LoginPage)} />
+                    <Route path="/login/error" component={UserIsNotAuthenticated(LoginErrorPage)} />
                     <Route path="/logout" component={Logout} />
-                    <Route path="/login/error" component={LoginErrorPage} />
                     <Route path="/dashboard" component={UserIsAuthenticated(UserHasAgreed(DashboardPage))} />
                     <Route path="/exports" component={UserIsAuthenticated(UserHasAgreed(DataPackPage))} />
                     <Route path="/create" component={UserIsAuthenticated(UserHasAgreed(CreateExport))} />

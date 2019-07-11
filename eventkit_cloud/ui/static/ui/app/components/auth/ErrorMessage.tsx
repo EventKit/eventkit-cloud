@@ -1,11 +1,9 @@
-import { logout } from '../../actions/userActions';
 import * as React from 'react';
 import { withTheme, Theme } from '@material-ui/core/styles';
-import withWidth from '@material-ui/core/withWidth';
 import { Breakpoint } from '@material-ui/core/styles/createBreakpoints';
 import {Button} from "@material-ui/core";
 
-interface Props {
+export interface Props {
     theme: Eventkit.Theme & Theme;
     width: Breakpoint;
     router: any;
@@ -18,10 +16,9 @@ export class ErrorMessage extends React.Component<Props, {}> {
         this.onClick = this.onClick.bind(this);
     }
 
-    onClick() {
-        console.log("FIRE");
-        this.props.router.push('/logout');
-        this.props.router.push('/login');
+    onClick(event) {
+        event.preventDefault();
+        window.location.assign('/logout');
     }
 
     render() {
@@ -62,4 +59,4 @@ export class ErrorMessage extends React.Component<Props, {}> {
     }
 }
 
-export default withWidth()(withTheme()(ErrorMessage));
+export default withTheme()(ErrorMessage);

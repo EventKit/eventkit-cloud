@@ -40,7 +40,7 @@ def oauth(request):
             encoded_params = urlencode(params)
             return redirect('{0}?{1}'.format(settings.OAUTH_AUTHORIZATION_URL.rstrip('/'), encoded_params))
     else:
-        return HttpResponse(status=400)
+        return redirect('/login/error')
 
 
 def callback(request):
@@ -59,7 +59,9 @@ def callback(request):
             return HttpResponse('{"error":"User could not be logged in"}',
                                 content_type="application/json",
                                 status=401)
-    except:
+    except Exception:
+        # Unless otherwise noted, we want any excepltion to redirect to the error page.
+        logger.error('Exception occurred during oauth, redirecting user.')
         return redirect('/login/error')
 
 
