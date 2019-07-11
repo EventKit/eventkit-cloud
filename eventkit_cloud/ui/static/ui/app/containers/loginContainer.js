@@ -24,7 +24,6 @@ export class Form extends React.Component<Props> {
     componentDidMount() {
         this.checkAuthEndpoint();
         this.checkOAuthEndpoint();
-        this.setState({ oauthName: 'oauth' });
     }
 
     onChange(event) {
@@ -104,7 +103,7 @@ export class Form extends React.Component<Props> {
                 width: '100%',
                 height: '45px',
                 color: colors.white,
-                margin: '15px auto 0px auto',
+                margin: '0px auto 15px auto',
                 padding: '10px',
             },
         };
@@ -178,6 +177,11 @@ export class Form extends React.Component<Props> {
         }
         return (
             <div style={{ verticalAlign: 'middle', textAlign: 'center', marginTop: '30px' }}>
+                {this.props.error &&
+                <div style={{ color: colors.warning}}>
+                    {this.getErrorMessage()}
+                </div>
+                }
                 {loginForm}
                 {oauthButton}
                 {!loginForm && !oauthButton ?
@@ -185,11 +189,6 @@ export class Form extends React.Component<Props> {
                         No login methods available, please contact an administrator
                     </div>
                     : null}
-                {this.props.error &&
-                    <div style={{ color: colors.white, marginTop: '10px' }}>
-                        {this.getErrorMessage()}
-                    </div>
-                }
             </div>
         );
     }
