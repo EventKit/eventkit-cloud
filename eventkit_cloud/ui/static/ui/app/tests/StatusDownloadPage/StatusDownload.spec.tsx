@@ -6,7 +6,6 @@ import Paper from '@material-ui/core/Paper';
 import PageLoading from '../../components/common/PageLoading';
 import { StatusDownload } from '../../components/StatusDownloadPage/StatusDownload';
 import DataCartDetails from '../../components/StatusDownloadPage/DataCartDetails';
-import DataPackAoiInfo from '../../components/StatusDownloadPage/DataPackAoiInfo';
 import CustomScrollbar from '../../components/CustomScrollbar';
 import history from '../../utils/history';
 
@@ -122,7 +121,7 @@ describe('StatusDownload component', () => {
                 },
             },
         },
-        router: {
+        match: {
             params: {
                 jobuid: '123456789',
             },
@@ -253,7 +252,7 @@ describe('StatusDownload component', () => {
         nextProps.expirationState.updated = true;
         wrapper.setProps(nextProps);
         expect(nextProps.getDatacartDetails.calledOnce).toBe(true);
-        expect(nextProps.getDatacartDetails.calledWith(props.router.params.jobuid)).toBe(true);
+        expect(nextProps.getDatacartDetails.calledWith(props.match.params.jobuid)).toBe(true);
     });
 
     it('componentDidUpdate should handle permission update', () => {
@@ -262,7 +261,7 @@ describe('StatusDownload component', () => {
         nextProps.permissionState.updated = true;
         wrapper.setProps(nextProps);
         expect(nextProps.getDatacartDetails.calledOnce).toBe(true);
-        expect(nextProps.getDatacartDetails.calledWith(props.router.params.jobuid)).toBe(true);
+        expect(nextProps.getDatacartDetails.calledWith(props.match.params.jobuid)).toBe(true);
     });
 
     it('componentDidUpdate should handle fetched datacartDetails and set isLoading false', () => {

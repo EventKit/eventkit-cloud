@@ -45,7 +45,7 @@ describe('NotificationsTableMenu component', () => {
     function defaultProps() {
         return {
             selectedNotifications: mockNotifications,
-            router: {
+            history: {
                 push: sinon.spy(),
             },
             onView: sinon.spy(),

@@ -56,7 +56,7 @@ describe('NotificationsPage component', () => {
             notificationsStatus: {
                 fetched: false,
             },
-            router: {
+            history: {
                 push: sinon.spy(),
             },
             getNotifications: sinon.spy(),

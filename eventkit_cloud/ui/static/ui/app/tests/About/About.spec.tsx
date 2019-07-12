@@ -27,7 +27,7 @@ describe('About component', () => {
     });
 
     it('should not show the version tag if no version in context', () => {
-        const wrapper = getWrapper({});
+        const wrapper = getWrapper({VERSION: ''});
         expect(wrapper.find(PageHeader).props().children).toEqual('');
     });
 
@@ -37,14 +37,12 @@ describe('About component', () => {
     });
 
     it('should render the version tag', () => {
-        this.context.config.VERSION = '1.3.0';
-        const wrapper = getWrapper({});
+        const wrapper = getWrapper({ VERSION: '1.3.0'});
         expect(wrapper.find(PageHeader).props().children).toEqual('1.3.0');
     });
 
     it('should show the contact link', () => {
-        this.context.config.CONTACT_URL = 'something';
-        const wrapper = getWrapper({});
+        const wrapper = getWrapper({ CONTACT_URL: 'something' });
         expect(wrapper.find('.qa-About-contact')).toHaveLength(1);
     });
 

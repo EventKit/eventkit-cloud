@@ -1,9 +1,9 @@
 import * as React from 'react';
-import { Router, Route } from 'react-router';
+import { Route } from 'react-router';
 import history from '../../utils/history';
 import { connect } from 'react-redux';
 import { withTheme, Theme } from '@material-ui/core/styles';
-import * as isEqual from 'lodash/isEqual';
+import isEqual from 'lodash/isEqual';
 import Divider from '@material-ui/core/Divider';
 import Warning from '@material-ui/icons/Warning';
 import Button from '@material-ui/core/Button';
@@ -61,7 +61,7 @@ export interface Props {
     getFormats: () => void;
     walkthroughClicked: boolean;
     onWalkthroughReset: () => void;
-    router: Router;
+    history: any;
     routes: Route[];
     getNotifications: () => void;
     getNotificationsUnreadCount: () => void;
@@ -110,8 +110,8 @@ export class BreadcrumbStepper extends React.Component<Props, State> {
         this.hideLoading = this.hideLoading.bind(this);
         this.submitDatapack = this.submitDatapack.bind(this);
         this.routeLeaveHook = this.routeLeaveHook.bind(this);
-        // this.handleLeaveWarningDialogCancel = this.handleLeaveWarningDialogCancel.bind(this);
-        // this.handleLeaveWarningDialogConfirm = this.handleLeaveWarningDialogConfirm.bind(this);
+        this.handleLeaveWarningDialogCancel = this.handleLeaveWarningDialogCancel.bind(this);
+        this.handleLeaveWarningDialogConfirm = this.handleLeaveWarningDialogConfirm.bind(this);
         this.updateEstimate = this.updateEstimate.bind(this);
         this.handleEstimateExplanationOpen = this.handleEstimateExplanationOpen.bind(this);
         this.handleEstimateExplanationClosed = this.handleEstimateExplanationClosed.bind(this);
@@ -142,7 +142,7 @@ export class BreadcrumbStepper extends React.Component<Props, State> {
         this.getProviders();
         this.props.getFormats();
 
-        const route = this.props.routes[this.props.routes.length - 1];
+        // const route = this.props.routes[this.props.routes.length - 1];
         // this.props.router.setRouteLeaveHook(route, this.routeLeaveHook);
     }
 
@@ -595,14 +595,14 @@ export class BreadcrumbStepper extends React.Component<Props, State> {
         this.setState({ loading: false });
     }
 
-    // private handleLeaveWarningDialogCancel() {
-    //     this.setState({ showLeaveWarningDialog: false });
-    //     this.leaveRoute = null;
-    // }
+    private handleLeaveWarningDialogCancel() {
+        this.setState({ showLeaveWarningDialog: false });
+        this.leaveRoute = null;
+    }
 
-    // private handleLeaveWarningDialogConfirm() {
-    //     this.props.router.push(this.leaveRoute);
-    // }
+    private handleLeaveWarningDialogConfirm() {
+        this.props.history.push(this.leaveRoute);
+    }
 
     render() {
         const { colors } = this.props.theme.eventkit;
@@ -635,16 +635,16 @@ export class BreadcrumbStepper extends React.Component<Props, State> {
                 >
                     <div>{message}</div>
                 </BaseDialog>
-                {/*<ConfirmDialog*/}
-                {/*    show={this.state.showLeaveWarningDialog}*/}
-                {/*    title="ARE YOU SURE?"*/}
-                {/*    onCancel={this.handleLeaveWarningDialogCancel}*/}
-                {/*    onConfirm={this.handleLeaveWarningDialogConfirm}*/}
-                {/*    confirmLabel="Yes, I'm Sure"*/}
-                {/*    isDestructive*/}
-                {/*>*/}
-                {/*    <strong>You haven&apos;t finished creating this DataPack yet. Any settings will be lost.</strong>*/}
-                {/*</ConfirmDialog>*/}
+                    <ConfirmDialog
+                    show={this.state.showLeaveWarningDialog}
+                    title="ARE YOU SURE?"
+                    onCancel={this.handleLeaveWarningDialogCancel}
+                    onConfirm={this.handleLeaveWarningDialogConfirm}
+                    confirmLabel="Yes, I'm Sure"
+                    isDestructive
+                    >
+                    <strong>You haven&apos;t finished creating this DataPack yet. Any settings will be lost.</strong>
+                </ConfirmDialog>
                 { this.state.loading ?
                     <PageLoading background="transparent" />
                     :

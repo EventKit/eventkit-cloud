@@ -18,7 +18,7 @@ export class NotificationsDropdown extends React.Component {
 
     handleViewAll() {
         if (this.props.onNavigate('/notifications')) {
-            this.props.router.push('/notifications');
+            this.props.history.push('/notifications');
         }
     }
 
@@ -132,7 +132,6 @@ export class NotificationsDropdown extends React.Component {
                             }}
                             notification={notification}
                             onView={this.props.onNavigate}
-                            router={this.props.router}
                         />
                     ))}
                 </GridList>
@@ -191,7 +190,6 @@ export class NotificationsDropdown extends React.Component {
 NotificationsDropdown.propTypes = {
     style: PropTypes.object,
     notifications: PropTypes.object.isRequired,
-    router: PropTypes.object.isRequired,
     onNavigate: PropTypes.func,
     loading: PropTypes.bool.isRequired,
     markAllNotificationsAsRead: PropTypes.func.isRequired,

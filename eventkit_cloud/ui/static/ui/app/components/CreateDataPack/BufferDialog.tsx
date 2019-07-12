@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { withTheme, Theme, withStyles, createStyles } from '@material-ui/core/styles';
-import * as numeral from 'numeral';
+import numeral from 'numeral';
 import Button from '@material-ui/core/Button';
 import TextField from '@material-ui/core/TextField';
 import AlertWarning from '@material-ui/icons/Warning';

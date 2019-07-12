@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { connect } from 'react-redux';
-import * as debounce from 'lodash/debounce';
+import debounce from 'lodash/debounce';
 import { withTheme, Theme } from '@material-ui/core/styles';
 import { Link } from 'react-router-dom';
 import Joyride from 'react-joyride';
@@ -30,7 +30,6 @@ export const CUSTOM_BREAKPOINTS = {
 };
 
 interface Props {
-    router: object;
     notificationsData: Eventkit.Store.NotificationsData;
     notificationsStatus: Eventkit.Store.NotificationsStatus;
     providers: Eventkit.Provider[];
@@ -471,7 +470,6 @@ export class DashboardPage extends React.Component<Props, State> {
                                     <NotificationGridItem
                                         key={`Notification-${notification.id}`}
                                         notification={notification}
-                                        router={this.props.router}
                                     />
                                 ))}
                             </DashboardSection>

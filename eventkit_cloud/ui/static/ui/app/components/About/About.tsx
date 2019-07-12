@@ -25,14 +25,6 @@ export class About extends React.Component<State> {
         pageInfo: about,
     };
 
-    shouldComponentUpdate(nextProps, nextState) {
-        return (
-            nextProps.context.config.VERSION !== this.context.config.VERSION
-            ||
-            nextProps.context.config.CONTACT_URL !== this.context.config.CONTACT_URL
-        );
-    }
-
     private getComponent(obj) {
         if (!obj.type) { return null; }
         const InfoComponent = COMPONENT_MAPPING[obj.type];

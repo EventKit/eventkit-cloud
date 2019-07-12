@@ -1,4 +1,4 @@
-import * as numeral from 'numeral';
+import numeral from 'numeral';
 import GeoJSON from 'ol/format/geojson';
 
 export function getHeaderPageInfo(response) {

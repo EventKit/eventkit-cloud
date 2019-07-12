@@ -21,6 +21,11 @@ describe('UserGroupsPage component', () => {
         shallow = createShallow();
     });
 
+    afterEach(() => {
+        // Restore the default sandbox here
+        sinon.restore();
+    });
+
     const getProps = () => ({
         location: {
             query: { ordering: 'admin' },
@@ -122,7 +127,7 @@ describe('UserGroupsPage component', () => {
 
     let browserHistory;
     beforeAll(() => {
-        browserHistory = sinon.stub(browserHistory, 'push');
+        browserHistory = sinon.stub(history, 'push');
     });
 
     beforeEach(setup);

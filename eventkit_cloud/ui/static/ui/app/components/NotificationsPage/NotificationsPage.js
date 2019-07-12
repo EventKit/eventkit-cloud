@@ -162,7 +162,6 @@ export class NotificationsPage extends React.Component {
                                         <NotificationsTable
                                             notificationsData={this.props.notificationsData}
                                             notificationsArray={notifications}
-                                            router={this.props.router}
                                         />
                                         :
                                         <GridList
@@ -176,7 +175,6 @@ export class NotificationsPage extends React.Component {
                                                 <NotificationGridItem
                                                     key={`Notification-${notification.id}`}
                                                     notification={notification}
-                                                    router={this.props.router}
                                                 />
                                             ))}
                                         </GridList>
@@ -203,7 +201,6 @@ NotificationsPage.contextTypes = {
 };
 
 NotificationsPage.propTypes = {
-    router: PropTypes.object.isRequired,
     notificationsData: PropTypes.object.isRequired,
     notificationsStatus: PropTypes.object.isRequired,
     getNotifications: PropTypes.func.isRequired,

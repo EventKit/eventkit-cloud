@@ -1,5 +1,5 @@
 import * as React from 'react';
-import * as sinon from 'sinon';
+import sinon from 'sinon';
 import { shallow } from 'enzyme';
 import axios from 'axios';
 import MockAdapter from 'axios-mock-adapter';
@@ -101,6 +101,11 @@ describe('ExportAOI component', () => {
     };
 
     beforeEach(setup);
+
+    afterEach(() => {
+        // Restore the default sandbox here
+        sinon.restore();
+    });
 
     it('should render the basic elements', () => {
         expect(wrapper.find('#map')).toHaveLength(1);
@@ -421,8 +426,6 @@ describe('ExportAOI component', () => {
         const fitSpy = sinon.spy(View.prototype, 'fit');
         const enableStub = sinon.stub(instance, 'shouldEnableNext').returns(true);
         const addSpy = sinon.spy(VectorSource.prototype, 'addFeatures');
-        const hasPointOrLineStub = sinon.stub(utils, 'hasPointOrLine')
-            .returns(false);
         const featureCollection = {
             type: 'FeatureCollection',
             features: [
@@ -447,7 +450,6 @@ describe('ExportAOI component', () => {
         readSpy.restore();
         fitSpy.restore();
         addSpy.restore();
-        hasPointOrLineStub.restore();
         enableStub.restore();
     });
 

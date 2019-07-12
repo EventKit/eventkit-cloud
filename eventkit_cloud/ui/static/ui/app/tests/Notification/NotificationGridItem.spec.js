@@ -33,7 +33,7 @@ describe('NotificationGridItem component', () => {
                 timestamp: '2018-05-04T17:32:04.716806Z',
                 unread: true,
             },
-            router: {
+            history: {
                 push: sinon.spy(),
             },
             markNotificationsAsRead: sinon.spy(),
@@ -85,7 +85,7 @@ describe('NotificationGridItem component', () => {
 
     it('passes correct props to NotificationMenu', () => {
         const notificationMenu = wrapper.find(NotificationMenu);
-        expect(Object.keys(notificationMenu.props())).toHaveLength(6);
+        expect(Object.keys(notificationMenu.props())).toHaveLength(5);
         expect(notificationMenu.props().notification).toBe(instance.props.notification);
         expect(notificationMenu.props().router).toBe(instance.props.router);
         expect(notificationMenu.props().onMarkAsRead).toBe(instance.props.onMarkAsRead);
@@ -150,8 +150,8 @@ describe('NotificationGridItem component', () => {
             });
 
             it('navigates to view path', () => {
-                expect(instance.props.router.push.callCount).toBe(1);
-                expect(instance.props.router.push.calledWith(viewPath)).toBe(true);
+                expect(instance.props.history.push.callCount).toBe(1);
+                expect(instance.props.history.push.calledWith(viewPath)).toBe(true);
             });
 
             it('marks notification as read', () => {
@@ -168,7 +168,7 @@ describe('NotificationGridItem component', () => {
             });
 
             it('does not navigate anywhere', () => {
-                expect(instance.props.router.push.callCount).toBe(0);
+                expect(instance.props.history.push.callCount).toBe(0);
             });
 
             it('does not mark notification as read', () => {

@@ -47,7 +47,7 @@ export class NotificationsTableItem extends React.Component {
     handleView() {
         const path = getNotificationViewPath(this.props.notification);
         if (this.props.onView(this.props.notification, path)) {
-            this.props.router.push(path);
+            this.props.history.push(path);
             this.props.markNotificationsAsRead([this.props.notification]);
         }
     }
@@ -217,7 +217,6 @@ export class NotificationsTableItem extends React.Component {
                             <NotificationMenu
                                 className="qa-NotificationsTableItem-ActionMenu"
                                 notification={this.props.notification}
-                                router={this.props.router}
                                 onMarkAsRead={this.props.onMarkAsRead}
                                 onMarkAsUnread={this.props.onMarkAsUnread}
                                 onRemove={this.props.onRemove}
@@ -233,7 +232,6 @@ export class NotificationsTableItem extends React.Component {
 
 NotificationsTableItem.propTypes = {
     notification: PropTypes.object.isRequired,
-    router: PropTypes.object.isRequired,
     isSelected: PropTypes.bool.isRequired,
     setSelected: PropTypes.func.isRequired,
     onMarkAsRead: PropTypes.func,

@@ -103,7 +103,6 @@ interface Props {
     closeDrawer: () => void;
     userActive: () => void;
     drawer: string;
-    router: any;
     history: any;
     userData: {
         accepted_licenses: object;
@@ -713,7 +712,6 @@ export class Application extends React.Component<Props, State> {
                                     <NotificationsDropdown
                                         loading={this.state.notificationsLoading}
                                         notifications={this.props.notificationsData}
-                                        router={this.props.router}
                                         onNavigate={this.handleNotificationsDropdownNavigate}
                                         onClickAway={this.handleClick}
                                     /> : null }

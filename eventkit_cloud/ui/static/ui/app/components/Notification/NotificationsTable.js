@@ -191,7 +191,6 @@ export class NotificationsTable extends React.Component {
                             <NotificationsTableItem
                                 key={`NotificationsTableItem-${notification.id}`}
                                 notification={notification}
-                                router={this.props.router}
                                 isSelected={this.isSelected(notification)}
                                 setSelected={this.setSelected}
                                 onMarkAsRead={this.props.onMarkAsRead}
@@ -211,7 +210,6 @@ export class NotificationsTable extends React.Component {
 NotificationsTable.propTypes = {
     notificationsArray: PropTypes.arrayOf(PropTypes.object).isRequired,
     notificationsData: PropTypes.object.isRequired,
-    router: PropTypes.object.isRequired,
     onMarkAsRead: PropTypes.func,
     onMarkAsUnread: PropTypes.func,
     onRemove: PropTypes.func,

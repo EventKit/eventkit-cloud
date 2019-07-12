@@ -4,7 +4,7 @@ import { withTheme, Theme } from '@material-ui/core/styles';
 import withWidth, { isWidthUp } from '@material-ui/core/withWidth';
 import { connect } from 'react-redux';
 import axios from 'axios';
-import * as debounce from 'lodash/debounce';
+import debounce from 'lodash/debounce';
 import Joyride, { Step } from 'react-joyride';
 
 import Map from 'ol/map';

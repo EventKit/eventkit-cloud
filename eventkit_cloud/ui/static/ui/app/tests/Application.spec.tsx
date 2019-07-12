@@ -25,7 +25,7 @@ describe('Application component', () => {
     const getProps = () => ({
         userData: {},
         drawer: 'open',
-        router: {
+        history: {
             push: () => sinon.stub(),
             location: {
                 pathname: '/exports',
@@ -263,7 +263,7 @@ describe('Application component', () => {
         let button = wrapper.find('.qa-Application-AppBar-NotificationsButton').at(0);
         expect(button.props().style.backgroundColor).toBe('');
         wrapper.setProps({
-            router: {
+            history: {
                 location: {
                     pathname: '/notifications',
                 },
@@ -272,7 +272,7 @@ describe('Application component', () => {
         button = wrapper.find('.qa-Application-AppBar-NotificationsButton').at(0);
         expect(button.props().style.backgroundColor).toBe('#4598bf');
         wrapper.setProps({
-            router: {
+            history: {
                 location: {
                     pathname: '/exports',
                 },

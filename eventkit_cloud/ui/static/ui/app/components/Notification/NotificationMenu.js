@@ -44,7 +44,7 @@ export class NotificationMenu extends React.Component {
     handleView() {
         const path = getNotificationViewPath(this.props.notification);
         if (this.props.onView(this.props.notification, path)) {
-            this.props.router.push(path);
+            this.props.history.push(path);
             this.props.markNotificationsAsRead([this.props.notification]);
         }
     }
@@ -117,7 +117,6 @@ export class NotificationMenu extends React.Component {
 
 NotificationMenu.propTypes = {
     notification: PropTypes.object.isRequired,
-    router: PropTypes.object.isRequired,
     onMarkAsRead: PropTypes.func,
     onMarkAsUnread: PropTypes.func,
     onRemove: PropTypes.func,
