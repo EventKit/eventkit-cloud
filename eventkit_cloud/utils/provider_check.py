@@ -240,8 +240,10 @@ class OverpassProviderCheck(ProviderCheck):
                 self.result = CheckResults.NO_URL
                 return
 
-            response = auth_requests.post(url=self.service_url, slug=self.slug, data="out meta;", timeout=self.timeout,
-                                          verify=self.verify)
+            cert_var = self.config.get('cert_var') or self.slug
+
+            response = auth_requests.post(url=self.service_url, cert_var=cert_var, data="out meta;",
+                                          timeout=self.timeout, verify=self.verify)
 
             self.token_dict['status'] = response.status_code
 

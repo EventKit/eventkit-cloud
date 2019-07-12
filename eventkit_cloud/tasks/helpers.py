@@ -13,13 +13,13 @@ from django.db.models import Q
 from enum import Enum
 from numpy import linspace
 
-from eventkit_cloud.celery import app
 from eventkit_cloud.utils import auth_requests
 from eventkit_cloud.utils.gdalutils import get_band_statistics
 import pickle
 import logging
 from time import sleep
 import signal
+import yaml
 
 logger = logging.getLogger()
 
@@ -513,3 +513,18 @@ def get_message_count(queue_name):
                 return queue.get("messages")
             except Exception as e:
                 logger.info(e)
+
+def clean_config(config):
+    """
+    Used to remove adhoc service related values from the configuration.
+    :param config: A yaml structured string.
+    :return:
+    """
+    service_keys = ["cert_var", "cert_cred", "concurrency", "max_repeat"]
+
+    conf = yaml.load(config)
+
+    for service_key in service_keys:
+        conf.pop(service_key, None)
+
+    return yaml.dump(conf)

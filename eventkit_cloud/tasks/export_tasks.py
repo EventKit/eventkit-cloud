@@ -33,7 +33,7 @@ from eventkit_cloud.tasks.helpers import normalize_name, get_archive_data_path, 
     get_download_filename, get_run_staging_dir, get_provider_staging_dir, get_run_download_dir, Directory, \
     default_format_time, progressive_kill, get_style_files, generate_qgs_style, create_license_file, \
     get_human_readable_metadata_document, pickle_exception, get_data_type_from_provider, get_arcgis_metadata, \
-    get_message_count
+    get_message_count, clean_config
 from eventkit_cloud.utils.auth_requests import get_cred
 from eventkit_cloud.utils import (
     overpass, pbf, s3, mapproxy, wcs, geopackage, gdalutils
@@ -391,6 +391,7 @@ def osm_data_collection_pipeline(
         logger.error("No configuration was provided for OSM export")
         raise RuntimeError("The configuration field is required for OSM data providers")
 
+    config = clean_config(config)
     feature_selection = FeatureSelection.example(config)
 
     update_progress(export_task_record_uid, progress=67, eta=eta, msg='Converting data to Geopackage')
