@@ -65,15 +65,22 @@ export function login(data) {
                 });
             }
         }).catch((response) => {
-            dispatch({
-                type: types.USER_LOGGED_OUT,
-                status: {
-                    error: {
-                        authType: 'auth',
-                        statusCode: response.response.status
+            if(method === 'get') {
+                dispatch({
+                    type: types.USER_LOGGED_OUT,
+                });
+            }
+            else {
+                dispatch({
+                    type: types.USER_LOGGED_OUT,
+                    status: {
+                        error: {
+                            authType: 'auth',
+                            statusCode: response.response.status
+                        }
                     }
-                }
-            });
+                });
+            }
         });
     };
 }
