@@ -374,7 +374,7 @@ def osm_data_collection_pipeline(
     op = overpass.Overpass(
         bbox=bbox, stage_dir=stage_dir, slug=slug, url=url,
         job_name=job_name, task_uid=export_task_record_uid,
-        raw_data_filename='{}_query.osm'.format(job_name)
+        raw_data_filename='{}_query.osm'.format(job_name), config=config
     )
 
     osm_data_filename = op.run_query(user_details=user_details, subtask_percentage=65, eta=eta)  # run the query
@@ -689,7 +689,7 @@ def wfs_export_task(self, result=None, layer=None, config=None, run_uid=None, ta
         service_url += "?" + query_str
 
     url = service_url
-    cred = get_cred(slug=name, url=url)
+    cred = get_cred(cred_var=name, url=url)
     if cred:
         user, pw = cred
         if not re.search(r"(?<=://)[a-zA-Z0-9\-._~]+:[a-zA-Z0-9\-._~]+(?=@)", url):

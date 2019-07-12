@@ -141,6 +141,7 @@ def shutdown_celery_workers():
     logger.info("Queue is at zero, shutting down.")
     app.control.broadcast("shutdown", destination=hostnames)
 
+
 @app.task(name="Check Provider Availability")
 def check_provider_availability():
     from eventkit_cloud.jobs.models import DataProvider, DataProviderStatus
