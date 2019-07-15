@@ -984,7 +984,7 @@ export class UserGroupsPage extends React.Component<Props, State> {
                         <TextField
                             type="text"
                             placeholder="Search Users"
-                            value={this.state.search}
+                            value={queryString.parse(this.props.location.search).search}
                             InputProps={{ className: classes.input }}
                             onChange={this.handleSearchChange}
                             onKeyDown={this.handleSearchKeyDown}
