@@ -33,7 +33,6 @@ import { getUsers } from '../../actions/usersActions';
 import { DrawerTimeout } from '../../actions/uiActions';
 import { joyride } from '../../joyride.config';
 import { Breakpoint } from '@material-ui/core/styles/createBreakpoints';
-import { Location } from 'history';
 import history from '../../utils/history';
 
 const jss = (theme: Eventkit.Theme & Theme) => createStyles({
@@ -197,7 +196,9 @@ export interface Props {
     createGroup: (name: string, usernames: string[]) => void;
     updateGroup: (id: string | number, args: any) => void;
     getUsers: (args: any) => void;
-    location: Location;
+    location: {
+        search: string;
+    };
     theme: Eventkit.Theme & Theme;
     width: Breakpoint;
     classes: { [className: string]: string };
@@ -265,29 +266,20 @@ export class UserGroupsPage extends React.Component<Props, State> {
     }
 
     componentWillMount() {
-        /* eslint-disable camelcase */
         // If there is no ordering specified default to username
-        let { ordering, page_size } = queryString.parse(this.props.location.search);
-        if (!ordering) {
-            ordering = 'username';
-            // Set the current ordering to username so a change wont be detected
-            // by componentDidUpdate
-            queryString.parse(this.props.location.search).ordering = ordering;
-            // Replace the url with the ordering query included
+        const query = queryString.parse(this.props.location.search);
+        let changedQuery = false
+        if (!query.ordering) {
+            query.ordering = 'username';
+            changedQuery = true
         }
-        if (!page_size) {
-            page_size = this.pageSize;
-            queryString.parse(this.props.location.search).page_size = page_size;
+        if (!query.page_size) {
+            query.page_size = this.pageSize.toString();
+            changedQuery = true
         }
-        history.replace({
-            ...this.props.location,
-            search: queryString.stringify(
-                this.props.location.search,
-                ordering,
-                page_size,
-            )
-        });
-        /* eslint-enable camelcase */
+        if (changedQuery) {
+            history.replace({ ...this.props.location, "search": queryString.stringify(query) });
+        }
     }
 
     componentDidMount() {
@@ -301,16 +293,16 @@ export class UserGroupsPage extends React.Component<Props, State> {
     componentDidUpdate(prevProps: Props) {
         let changedQuery = false;
         if (Object.keys(queryString.parse(this.props.location.search)).length
-                !== Object.keys(prevProps.location.search).length) {
+            !== Object.keys(queryString.parse(prevProps.location.search)).length) {
             changedQuery = true;
         } else {
             const keys = Object.keys(queryString.parse(this.props.location.search));
-            if (!keys.every(key => queryString.parse(this.props.location.search)[key] === prevProps.location.search[key])) {
+            if (!keys.every(key => queryString.parse(this.props.location.search)[key] === queryString.parse(prevProps.location.search)[key])) {
                 changedQuery = true;
             }
         }
         if (changedQuery) {
-            this.makeUserRequest(queryString.parse(this.props.location.search));
+            this.makeUserRequest();
         }
 
         if (this.props.users.fetched && !prevProps.users.fetched) {
@@ -416,7 +408,7 @@ export class UserGroupsPage extends React.Component<Props, State> {
             params.groups = options.groups;
         }
 
-        params.prepend_self = true;
+        params.prepend_self = 'true';
 
         this.props.getUsers(params);
     }
@@ -467,7 +459,7 @@ export class UserGroupsPage extends React.Component<Props, State> {
             if (text) {
                 const query = queryString.parse(this.props.location.search);
                 query.search = text;
-                query.page_size = this.pageSize;
+                query.page_size = this.pageSize.toString();
                 history.push({ ...this.props.location, "search": queryString.stringify(query) });
             }
         }
@@ -483,7 +475,7 @@ export class UserGroupsPage extends React.Component<Props, State> {
             const query = queryString.parse(this.props.location.search);
             query.search = null;
             delete query.search;
-            query.page_size = this.pageSize;
+            query.page_size = this.pageSize.toString();
             history.push({ ...this.props.location, "search": queryString.stringify(query) });
         }
     }
@@ -496,13 +488,13 @@ export class UserGroupsPage extends React.Component<Props, State> {
 
     private handleLoadMore() {
         const query = queryString.parse(this.props.location.search);
-        query.page_size = Number(query.page_size) + this.pageSize;
+        query.page_size = (Number(query.page_size) + this.pageSize).toString();
         history.push({ ...this.props.location, "search": queryString.stringify(query) });
     }
 
     private handleLoadLess() {
         const query = queryString.parse(this.props.location.search);
-        query.page_size = Number(query.page_size) - this.pageSize;
+        query.page_size = (Number(query.page_size) - this.pageSize).toString();
         history.push({ ...this.props.location, "search": queryString.stringify(query) });
     }
 
@@ -610,7 +602,7 @@ export class UserGroupsPage extends React.Component<Props, State> {
         this.setState({ search: '' });
         query.search = null;
         delete query.search;
-        query.page_size = this.pageSize;
+        query.page_size = this.pageSize.toString();
         history.push({ ...this.props.location, "search": queryString.stringify(query) });
     }
 
