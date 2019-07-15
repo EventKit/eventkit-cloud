@@ -173,7 +173,7 @@ export class DataPackPage extends React.Component<Props, State> {
         history.listen((location) => {
             // do not allow the page to navigate to itself without url parameters
             if (location.search === '' && location.pathname === '/exports') {
-                history.push(queryString.stringify(this.getCurrentLocation()));
+                history.push({"search": queryString.stringify(this.getCurrentLocation()).search});
             }
         });
     }
