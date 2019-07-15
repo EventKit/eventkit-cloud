@@ -120,13 +120,13 @@ describe('DataPackPage component', () => {
         instance = wrapper.instance();
     };
 
-    let browserHistroy;
+    let browserHistory;
     beforeAll(() => {
-        browserHistroy = sinon.stub(browserHistroy, 'push');
+        browserHistory = sinon.stub(history, 'push');
     });
 
     afterAll(() => {
-        browserHistroy.restore();
+        browserHistory.restore();
     });
 
     beforeEach(setup);
@@ -172,12 +172,12 @@ describe('DataPackPage component', () => {
     // });
 
     it('should use order and view from props or just default to map and featured', () => {
-        browserHistroy.reset();
+        browserHistory.reset();
         const order = 'job__featured';
         const view = 'grid';
         setup({ runsMeta: { ...props.runsMeta, order, view }});
-        expect(browserHistroy.called).toBe(true);
-        expect(browserHistroy.calledWith({
+        expect(browserHistory.called).toBe(true);
+        expect(browserHistory.calledWith({
             ...props.location,
             query: {
                 ...props.location.search,
@@ -185,10 +185,10 @@ describe('DataPackPage component', () => {
                 view: 'grid',
             },
         })).toBe(true);
-        browserHistroy.reset();
+        browserHistory.reset();
         setup();
-        expect(browserHistroy.called).toBe(true);
-        expect(browserHistroy.calledWith({
+        expect(browserHistory.called).toBe(true);
+        expect(browserHistory.calledWith({
             ...props.location,
             query: {
                 ...props.location.search,
@@ -344,7 +344,7 @@ describe('DataPackPage component', () => {
     });
 
     it('updateLocationQuery should call push with updated query', () => {
-        browserHistroy.reset();
+        browserHistory.reset();
         const query = { somekey: 'this is a new query key' };
         const expected = {
             ...props.location,
@@ -354,8 +354,8 @@ describe('DataPackPage component', () => {
             },
         };
         instance.updateLocationQuery(query);
-        expect(browserHistroy.calledOnce).toBe(true);
-        expect(browserHistroy.calledWith(expected)).toBe(true);
+        expect(browserHistory.calledOnce).toBe(true);
+        expect(browserHistory.calledWith(expected)).toBe(true);
     });
 
     it('checkForEmptySearch should call updateLocationQuery with search undefined', () => {
