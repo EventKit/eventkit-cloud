@@ -41,7 +41,6 @@ render(
         <MuiThemeProvider theme={theme}>
             <ConnectedRouter history={history}>
                 <div>
-                    <Redirect from="/" to="/dashboard" />
                     <Route path="/" component={Application} />
                 </div>
             </ConnectedRouter>
