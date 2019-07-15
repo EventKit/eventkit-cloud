@@ -30,6 +30,7 @@ import { flattenFeatureCollection } from '../../utils/mapUtils';
 import { joyride } from '../../joyride.config';
 import history from '../../utils/history';
 import { Breakpoint } from '@material-ui/core/styles/createBreakpoints';
+import isEqual from 'lodash/isEqual';
 
 interface Props {
     runIds: string[];
@@ -326,8 +327,10 @@ export class DataPackPage extends React.Component<Props, State> {
 
     private updateLocationQuery(query: any) {
         const queryAsString = queryString.stringify(query);
-        history.push({"search": queryAsString});
-        this.props.location.search = queryAsString;
+        if (!isEqual(queryString.parse(queryAsString), queryString.parse(this.props.location.search))) {
+            history.push({"search": queryAsString});
+            this.props.location.search = queryAsString;
+        }
     }
 
     private checkForEmptySearch(searchText: string) {

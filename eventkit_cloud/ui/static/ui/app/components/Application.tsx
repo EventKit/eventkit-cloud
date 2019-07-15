@@ -730,6 +730,8 @@ export class Application extends React.Component<Props, State> {
                     <Route path="/login" component={UserIsNotAuthenticated(LoginPage)} />
                     <Route path="/logout" component={Logout} />
                     <Route path="/dashboard" component={UserIsAuthenticated(UserHasAgreed(DashboardPage))} />
+                    {/*<Route path="/exports" component={DataPackPage} />*/}
+
                     <Route path="/exports" component={UserIsAuthenticated(UserHasAgreed(DataPackPage))} />
                     <Route path="/create" component={UserIsAuthenticated(UserHasAgreed(CreateExport))} />
                     <Route

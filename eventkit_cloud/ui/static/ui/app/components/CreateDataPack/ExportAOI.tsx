@@ -106,7 +106,7 @@ export class ExportAOI extends React.Component<Props, State> {
         config: PropTypes.object,
     };
 
-    private bufferFunction: () => void;
+    private bufferFunction: (val: any) => void;
     private drawLayer;
     private map;
     private drawBoxInteraction;
