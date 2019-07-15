@@ -157,7 +157,7 @@ export class Drawer extends React.Component<Props, State> {
                             className={`qa-Drawer-MenuItem-exports ${classes.menuItem}`}
                             onClick={this.props.handleMenuItemClick}
                         >
-                            <Link
+                            <NavLink
                                 className={`qa-Drawer-Link-exports ${classes.link}`}
                                 activeClassName={classes.activeLink}
                                 to="/exports"
@@ -165,13 +165,13 @@ export class Drawer extends React.Component<Props, State> {
                             >
                                 <AVLibraryBooks className={classes.icon} />
                                 DataPack Library
-                            </Link>
+                            </NavLink>
                         </MenuItem>
                         <MenuItem
                             className={`qa-Drawer-MenuItem-create ${classes.menuItem}`}
                             onClick={this.props.handleMenuItemClick}
                         >
-                            <Link
+                            <NavLink
                                 className={`qa-Drawer-Link-create ${classes.link}`}
                                 activeClassName={classes.activeLink}
                                 to="/create"
@@ -179,13 +179,13 @@ export class Drawer extends React.Component<Props, State> {
                             >
                                 <ContentAddBox className={classes.icon} />
                                 Create DataPack
-                            </Link>
+                            </NavLink>
                         </MenuItem>
                         <MenuItem
                             className={`qa-Drawer-MenuItem-groups ${classes.menuItem}`}
                             onClick={this.props.handleMenuItemClick}
                         >
-                            <Link
+                            <NavLink
                                 className={`qa-Drawer-Link-groups ${classes.link}`}
                                 activeClassName={classes.activeLink}
                                 to="/groups"
@@ -193,13 +193,13 @@ export class Drawer extends React.Component<Props, State> {
                             >
                                 <SocialGroup className={classes.icon} />
                                 Members and Groups
-                            </Link>
+                            </NavLink>
                         </MenuItem>
                         <MenuItem
                             className={`qa-Drawer-MenuItem-about ${classes.menuItem}`}
                             onClick={this.props.handleMenuItemClick}
                         >
-                            <Link
+                            <NavLink
                                 className={`qa-Drawer-Link-about ${classes.link}`}
                                 activeClassName={classes.activeLink}
                                 to="/about"
@@ -207,13 +207,13 @@ export class Drawer extends React.Component<Props, State> {
                             >
                                 <ActionInfoOutline className={classes.icon} />
                                 About EventKit
-                            </Link>
+                            </NavLink>
                         </MenuItem>
                         <MenuItem
                             className={`qa-Drawer-MenuItem-account ${classes.menuItem}`}
                             onClick={this.props.handleMenuItemClick}
                         >
-                            <Link
+                            <NavLink
                                 className={`qa-Drawer-Link-account ${classes.link}`}
                                 activeClassName={classes.activeLink}
                                 to="/account"
@@ -221,12 +221,12 @@ export class Drawer extends React.Component<Props, State> {
                             >
                                 <SocialPerson className={classes.icon} />
                                 Account Settings
-                            </Link>
+                            </NavLink>
                         </MenuItem>
                         <MenuItem
                             className={`qa-Drawer-MenuItem-logout ${classes.menuItem}`}
                         >
-                            <Link // eslint-disable-line jsx-a11y/anchor-is-valid
+                            <NavLink // eslint-disable-line jsx-a11y/anchor-is-valid
                                 className={`qa-Drawer-Link-logout ${classes.link}`}
                                 activeClassName={classes.activeLink}
                                 onClick={this.handleLogoutClick}
@@ -234,7 +234,7 @@ export class Drawer extends React.Component<Props, State> {
                             >
                                 <ActionExitToApp className={classes.icon} />
                                 Log Out
-                            </Link>
+                            </NavLink>
                         </MenuItem>
                     </div>
                     {this.props.contactUrl ? <a
@@ -244,16 +244,16 @@ export class Drawer extends React.Component<Props, State> {
                         <Mail className={classes.icon} />Contact Us
                     </a> : null}
                 </MuiDrawer>
-                {/*<ConfirmDialog*/}
-                {/*    show={this.state.showLogoutDialog}*/}
-                {/*    title="LOG OUT"*/}
-                {/*    confirmLabel="Log Out"*/}
-                {/*    isDestructive*/}
-                {/*    onCancel={this.handleLogoutDialogCancel}*/}
-                {/*    onConfirm={this.handleLogoutDialogConfirm}*/}
-                {/*>*/}
-                {/*    <strong>Are you sure?</strong>*/}
-                {/*</ConfirmDialog>*/}
+                <ConfirmDialog
+                    show={this.state.showLogoutDialog}
+                    title="LOG OUT"
+                    confirmLabel="Log Out"
+                    isDestructive
+                    onCancel={this.handleLogoutDialogCancel}
+                    onConfirm={this.handleLogoutDialogConfirm}
+                >
+                    <strong>Are you sure?</strong>
+                </ConfirmDialog>
             </React.Fragment>
         );
     }

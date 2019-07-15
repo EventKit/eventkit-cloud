@@ -30,7 +30,6 @@ import { flattenFeatureCollection } from '../../utils/mapUtils';
 import { joyride } from '../../joyride.config';
 import history from '../../utils/history';
 import { Breakpoint } from '@material-ui/core/styles/createBreakpoints';
-import {LocationDescriptorObject} from "history";
 
 interface Props {
     runIds: string[];
@@ -69,13 +68,7 @@ interface Props {
         error: any;
     };
     location: {
-        search: {
-            search: string;
-            collection: string;
-            order: string;
-            view: string;
-            page_size: string;
-        };
+        search: string;
     };
     theme: Eventkit.Theme & Theme;
     width: Breakpoint;
@@ -158,13 +151,14 @@ export class DataPackPage extends React.Component<Props, State> {
             order: props.runsMeta.order || '-job__featured',
             view: props.runsMeta.view || 'map',
             page_size: this.pageSize,
+            search: null,
         };
     }
 
     componentWillMount() {
         const query = {
             ...this.defaultQuery,
-            ...this.props.location.search,
+            ...queryString.parse(this.props.location.search),
         };
         this.updateLocationQuery(query);
     }
@@ -178,7 +172,7 @@ export class DataPackPage extends React.Component<Props, State> {
         history.listen((location) => {
             // do not allow the page to navigate to itself without url parameters
             if (location.search === '' && location.pathname === '/exports') {
-                history.push({"search": queryString.stringify(this.getCurrentLocation())});
+                history.push(queryString.stringify(this.getCurrentLocation()));
             }
         });
     }
@@ -215,12 +209,12 @@ export class DataPackPage extends React.Component<Props, State> {
 
         // if the location query has changed we need to update our state
         let changedQuery = false;
-        if (Object.keys(this.props.location.search).length
-                !== Object.keys(prevProps.location.search).length) {
+        if (Object.keys(queryString.parse(this.props.location.search)).length
+                !== Object.keys(queryString.parse(prevProps.location.search)).length) {
             changedQuery = true;
         } else {
-            const keys = Object.keys(this.props.location.search);
-            if (!keys.every(key => this.props.location.search[key] === prevProps.location.search[key])) {
+            const keys = Object.keys(queryString.parse(this.props.location.search));
+            if (!keys.every(key => queryString.parse(this.props.location.search)[key] === queryString.parse(prevProps.location.search)[key])) {
                 changedQuery = true;
             }
         }
@@ -237,7 +231,7 @@ export class DataPackPage extends React.Component<Props, State> {
             }
         }
 
-        if (prevProps.location.search.view !== this.props.location.search.view) {
+        if (queryString.parse(prevProps.location.search).view !== queryString.parse(this.props.location.search).view) {
             const steps = this.getJoyRideSteps();
             this.joyrideAddSteps(steps);
         }
@@ -246,11 +240,11 @@ export class DataPackPage extends React.Component<Props, State> {
     componentWillUnmount() {
         window.clearInterval(this.fetch);
         // save view and order to redux state so it can be set next time the page is visited
-        if (this.props.runsMeta.order !== this.props.location.search.order) {
-            this.props.setOrder(this.props.location.search.order);
+        if (this.props.runsMeta.order !== queryString.parse(this.props.location.search).order) {
+            this.props.setOrder(queryString.parse(this.props.location.search).order);
         }
-        if (this.props.runsMeta.view !== this.props.location.search.view) {
-            this.props.setView(this.props.location.search.view);
+        if (this.props.runsMeta.view !== queryString.parse(this.props.location.search).view) {
+            this.props.setView(queryString.parse(this.props.location.search).view);
         }
     }
 
@@ -267,7 +261,7 @@ export class DataPackPage extends React.Component<Props, State> {
     }
 
     private getJoyRideSteps(): any[] {
-        switch (this.props.location.search.view) {
+        switch (queryString.parse(this.props.location.search).view) {
             case 'map':
                 return joyride.DataPackPage.map;
             case 'grid':
@@ -297,7 +291,7 @@ export class DataPackPage extends React.Component<Props, State> {
                     <DataPackList
                         {...commonProps}
                         onSort={this.handleSortChange}
-                        order={this.props.location.search.order}
+                        order={queryString.parse(this.props.location.search).order}
                         customRef={this.getViewRef}
                     />
                 );
@@ -331,12 +325,14 @@ export class DataPackPage extends React.Component<Props, State> {
     }
 
     private updateLocationQuery(query: any) {
-        history.push({"search": queryString.stringify(query)});
+        const queryAsString = queryString.stringify(query);
+        history.push({"search": queryAsString});
+        this.props.location.search = queryAsString;
     }
 
     private checkForEmptySearch(searchText: string) {
-        if (searchText === '' && this.props.location.search.search) {
-            const query = { ...this.props.location.search };
+        const query = queryString.parse(this.props.location.search);
+        if (searchText === '' && query.search) {
             query.search = undefined;
             this.updateLocationQuery(query);
         }
@@ -353,11 +349,12 @@ export class DataPackPage extends React.Component<Props, State> {
     }
 
     private makeRunRequest(isAuto = false) {
+        const params = queryString.parse(this.props.location.search);
         return this.props.getRuns({
-            page_size: Number(this.props.location.search.page_size),
-            ordering: this.props.location.search.order,
-            ownerFilter: this.props.location.search.collection,
-            search: this.props.location.search.search,
+            page_size: Number(params.page_size),
+            ordering: params.order,
+            ownerFilter: params.collection,
+            search: params.search,
             status: this.state.status,
             minDate: this.state.minDate,
             maxDate: this.state.maxDate,
@@ -411,7 +408,7 @@ export class DataPackPage extends React.Component<Props, State> {
 
     private changeView(view: string) {
         const sharedViewOrders = ['started_at', '-started_at', 'job__name', '-job__name', '-job__featured', 'job__featured'];
-        if (sharedViewOrders.indexOf(this.props.location.search.order) < 0) {
+        if (sharedViewOrders.indexOf(queryString.parse(this.props.location.search).order) < 0) {
             this.updateLocationQuery({ view, order: '-started_at' });
         } else {
             this.updateLocationQuery({ view });
@@ -425,15 +422,15 @@ export class DataPackPage extends React.Component<Props, State> {
     private loadMore() {
         if (this.props.runsMeta.nextPage) {
             this.updateLocationQuery({
-                page_size: Number(this.props.location.search.page_size) + this.pageSize,
+                page_size: Number(queryString.parse(this.props.location.search).page_size) + this.pageSize,
             });
         }
     }
 
     private loadLess() {
-        if (Number(this.props.location.search.page_size) > this.pageSize) {
+        if (Number(queryString.parse(this.props.location.search).page_size) > this.pageSize) {
             this.updateLocationQuery({
-                page_size: Number(this.props.location.search.page_size) - this.pageSize,
+                page_size: Number(queryString.parse(this.props.location.search).page_size) - this.pageSize,
             });
         }
     }
@@ -471,7 +468,7 @@ export class DataPackPage extends React.Component<Props, State> {
             }
             if (data.step.title === 'Menu Options'
                 && data.type === 'step:before'
-                && this.props.location.search.view === 'list'
+                && queryString.parse(this.props.location.search).view === 'list'
                 && !isWidthUp('xl', this.props.width)
             ) {
                 this.setState({ open: false });
@@ -668,31 +665,31 @@ export class DataPackPage extends React.Component<Props, State> {
                     <DataPackSearchbar
                         onSearchChange={this.checkForEmptySearch}
                         onSearchSubmit={this.onSearch}
-                        defaultValue={this.props.location.search.search}
+                        defaultValue={queryString.parse(this.props.location.search).search}
                     />
                 </Toolbar>
 
                 <Toolbar className="qa-DataPackPage-Toolbar-sort" style={styles.toolbarSort}>
                     <DataPackOwnerSort
                         handleChange={this.handleOwnerFilter}
-                        value={this.props.location.search.collection || 'all'}
+                        value={queryString.parse(this.props.location.search).collection || 'all'}
                         owner={this.props.user.data.user.username}
                     />
                     <DataPackFilterButton
                         handleToggle={this.handleToggle}
                         active={this.state.open}
                     />
-                    {this.props.location.search.view === 'list' && isWidthUp('md', this.props.width) ?
+                    {queryString.parse(this.props.location.search).view === 'list' && isWidthUp('md', this.props.width) ?
                         null
                         :
                         <DataPackSortDropDown
                             handleChange={this.handleSortChange}
-                            value={this.props.location.search.order || '-job__featured'}
+                            value={queryString.parse(this.props.location.search).order || '-job__featured'}
                         />
                     }
                     <DataPackViewButtons
                         handleViewChange={this.changeView}
-                        view={this.props.location.search.view || 'map'}
+                        view={queryString.parse(this.props.location.search).view || 'map'}
                     />
                 </Toolbar>
 
@@ -717,7 +714,7 @@ export class DataPackPage extends React.Component<Props, State> {
                                 </div>
                                 : null
                             }
-                            {this.getView(this.props.location.search.view)}
+                            {this.getView(queryString.parse(this.props.location.search).view)}
                         </div>
                     }
                 </div>
