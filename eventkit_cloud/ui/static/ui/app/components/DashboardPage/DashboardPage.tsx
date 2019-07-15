@@ -30,6 +30,7 @@ export const CUSTOM_BREAKPOINTS = {
 };
 
 interface Props {
+    history: any;
     notificationsData: Eventkit.Store.NotificationsData;
     notificationsStatus: Eventkit.Store.NotificationsStatus;
     providers: Eventkit.Provider[];
@@ -470,6 +471,7 @@ export class DashboardPage extends React.Component<Props, State> {
                                     <NotificationGridItem
                                         key={`Notification-${notification.id}`}
                                         notification={notification}
+                                        history={this.props.history}
                                     />
                                 ))}
                             </DashboardSection>

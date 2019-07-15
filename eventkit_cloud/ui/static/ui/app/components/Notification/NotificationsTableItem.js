@@ -217,6 +217,7 @@ export class NotificationsTableItem extends React.Component {
                             <NotificationMenu
                                 className="qa-NotificationsTableItem-ActionMenu"
                                 notification={this.props.notification}
+                                history={this.props.history}
                                 onMarkAsRead={this.props.onMarkAsRead}
                                 onMarkAsUnread={this.props.onMarkAsUnread}
                                 onRemove={this.props.onRemove}
@@ -232,6 +233,7 @@ export class NotificationsTableItem extends React.Component {
 
 NotificationsTableItem.propTypes = {
     notification: PropTypes.object.isRequired,
+    history: PropTypes.object.isRequired,
     isSelected: PropTypes.bool.isRequired,
     setSelected: PropTypes.func.isRequired,
     onMarkAsRead: PropTypes.func,

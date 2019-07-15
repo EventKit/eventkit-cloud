@@ -712,6 +712,7 @@ export class Application extends React.Component<Props, State> {
                                     <NotificationsDropdown
                                         loading={this.state.notificationsLoading}
                                         notifications={this.props.notificationsData}
+                                        history={this.props.history}
                                         onNavigate={this.handleNotificationsDropdownNavigate}
                                         onClickAway={this.handleClick}
                                     /> : null }

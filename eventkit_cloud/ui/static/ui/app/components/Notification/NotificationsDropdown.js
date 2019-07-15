@@ -131,6 +131,7 @@ export class NotificationsDropdown extends React.Component {
                                 borderTop: (index === 0) ? `1px solid ${colors.secondary}` : '',
                             }}
                             notification={notification}
+                            history={this.props.history}
                             onView={this.props.onNavigate}
                         />
                     ))}
@@ -190,6 +191,7 @@ export class NotificationsDropdown extends React.Component {
 NotificationsDropdown.propTypes = {
     style: PropTypes.object,
     notifications: PropTypes.object.isRequired,
+    history: PropTypes.object.isRequired,
     onNavigate: PropTypes.func,
     loading: PropTypes.bool.isRequired,
     markAllNotificationsAsRead: PropTypes.func.isRequired,

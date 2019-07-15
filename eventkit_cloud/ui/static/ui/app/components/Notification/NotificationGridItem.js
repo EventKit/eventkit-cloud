@@ -86,6 +86,7 @@ export class NotificationGridItem extends Component {
                     </div>
                     <NotificationMenu
                         notification={this.props.notification}
+                        history={this.props.history}
                         onMarkAsRead={this.props.onMarkAsRead}
                         onMarkAsUnread={this.props.onMarkAsUnread}
                         onRemove={this.props.onRemove}
@@ -101,6 +102,7 @@ NotificationGridItem.propTypes = {
     style: PropTypes.object,
     paperStyle: PropTypes.object,
     notification: PropTypes.object.isRequired,
+    history: PropTypes.object.isRequired,
     onMarkAsRead: PropTypes.func,
     onMarkAsUnread: PropTypes.func,
     onRemove: PropTypes.func,

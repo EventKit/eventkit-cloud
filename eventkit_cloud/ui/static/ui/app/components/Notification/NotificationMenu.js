@@ -117,6 +117,7 @@ export class NotificationMenu extends React.Component {
 
 NotificationMenu.propTypes = {
     notification: PropTypes.object.isRequired,
+    history: PropTypes.object.isRequired,
     onMarkAsRead: PropTypes.func,
     onMarkAsUnread: PropTypes.func,
     onRemove: PropTypes.func,
