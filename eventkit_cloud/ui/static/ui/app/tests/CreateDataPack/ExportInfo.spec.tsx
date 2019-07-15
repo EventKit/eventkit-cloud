@@ -170,7 +170,7 @@ describe('ExportInfo component', () => {
 
     it('onNameChange should call updateExportInfo', () => {
         const event = { target: { value: 'test' } };
-        props.updateExportInfo.reset();
+        props.updateExportInfo.resetHistory();
         instance.onNameChange(event);
         expect(props.updateExportInfo.calledOnce).toBe(true);
         expect(props.updateExportInfo.calledWith({
@@ -181,7 +181,7 @@ describe('ExportInfo component', () => {
 
     it('onDescriptionChange should call persist and nameHandler', () => {
         const event = { target: { value: 'test' } };
-        props.updateExportInfo.reset();
+        props.updateExportInfo.resetHistory();
         instance.onDescriptionChange(event);
         expect(props.updateExportInfo.calledOnce).toBe(true);
         expect(props.updateExportInfo.calledWith({
@@ -192,7 +192,7 @@ describe('ExportInfo component', () => {
 
     it('onProjectChange should call persist and nameHandler', () => {
         const event = { target: { value: 'test' } };
-        props.updateExportInfo.reset();
+        props.updateExportInfo.resetHistory();
         instance.onProjectChange(event);
         expect(props.updateExportInfo.calledOnce).toBe(true);
         expect(props.updateExportInfo.calledWith({

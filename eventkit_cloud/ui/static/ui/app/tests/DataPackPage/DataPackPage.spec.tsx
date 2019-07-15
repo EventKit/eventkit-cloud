@@ -21,6 +21,7 @@ import DataPackLinkButton from '../../components/DataPackPage/DataPackLinkButton
 import * as utils from '../../utils/mapUtils';
 import { joyride } from '../../joyride.config';
 import history from '../../utils/history';
+import queryString from 'query-string';
 
 describe('DataPackPage component', () => {
     const getProps = () => ({
@@ -253,12 +254,12 @@ describe('DataPackPage component', () => {
         expect(requestStub.called).toBe(false);
         expect(stateStub.called).toBe(false);
         nextProps = getProps();
-        nextProps.location.search.newKey = 'new query thing';
+        queryString.parse(nextProps.location.search).newKey = 'new query thing';
         wrapper.setProps(nextProps);
         expect(requestStub.calledOnce).toBe(true);
         expect(stateStub.calledOnce).toBe(true);
         nextProps = getProps();
-        nextProps.location.search.newKey = 'a changed value';
+        queryString.parse(nextProps.location.search).newKey = 'a changed value';
         wrapper.setProps(nextProps);
         expect(requestStub.calledTwice).toBe(true);
         expect(stateStub.calledTwice).toBe(true);
@@ -268,7 +269,7 @@ describe('DataPackPage component', () => {
         const getStub = sinon.stub(instance, 'getJoyRideSteps');
         const addStub = sinon.stub(instance, 'joyrideAddSteps');
         const nextProps = getProps();
-        nextProps.location.search.view = 'grid';
+        queryString.parse(nextProps.location.search).view = 'grid';
         wrapper.setProps(nextProps);
         expect(getStub.calledOnce).toBe(true);
         expect(addStub.calledOnce).toBe(true);
@@ -371,7 +372,7 @@ describe('DataPackPage component', () => {
     });
 
     it('if a run has been deleted it should call makeRunRequest again', () => {
-        const stateStub = sinon.stub(instance, 'setState').callsFake((state, cb) => { cb(); });
+        const stateStub = sinon.stub(instance, 'setState').callsFake(cb => (cb));
         const makeRequestStub = sinon.stub(instance, 'makeRunRequest');
         const nextProps = getProps();
         nextProps.runDeletion.deleted = true;
@@ -396,11 +397,11 @@ describe('DataPackPage component', () => {
     });
 
     it('makeRunRequest should build a params object and pass it to props.getRuns', () => {
-        const p = getProps();
-        p.location.search.search = 'search_text';
-        p.location.search.order = '-job__featured';
-        p.location.search.collection = 'test_user';
-        wrapper.setProps(p);
+        const props = getProps();
+        queryString.parse(props.location.search).search = 'search_text';
+        queryString.parse(props.location.search).order = '-job__featured';
+        queryString.parse(props.location.search).collection = 'test_user';
+        wrapper.setProps(props);
         const status = { completed: true, incomplete: true };
         const minDate = new Date(2017, 6, 30, 8, 0, 0);
         const maxDate = new Date(2017, 7, 1, 3, 0, 0);
@@ -430,12 +431,12 @@ describe('DataPackPage component', () => {
             providers,
             geojson_geometry: geojson,
         });
-        p.getRuns.reset();
+        props.getRuns.resetHistory();
         // instance.forceUpdate();
         // wrapper.update();
         instance.makeRunRequest();
-        expect(p.getRuns.calledOnce).toBe(true);
-        expect(p.getRuns.getCall(0).args).toEqual(expectedParams);
+        expect(props.getRuns.calledOnce).toBe(true);
+        expect(props.getRuns.getCall(0).args).toEqual(expectedParams);
     });
 
     it('handleOwnerFilter call updateLocationQuery', () => {
@@ -535,7 +536,7 @@ describe('DataPackPage component', () => {
         expect(updateStub.calledWith({ view: 'list' })).toBe(true);
 
         const nextProps = getProps();
-        nextProps.location.search.order = 'not_shared_order';
+        queryString.parse(nextProps.location.search).order = 'not_shared_order';
         wrapper.setProps(nextProps);
         instance.changeView('map');
         expect(updateStub.calledTwice).toBe(true);
@@ -619,17 +620,17 @@ describe('DataPackPage component', () => {
     it('getJoyRideSteps should return correct steps based on view', () => {
         // const location = { ...getP.location, query: { ...props.location.search, view: 'map' } };
         let { location } = getProps();
-        location.search.view = 'map';
+        (queryString.parse(location.search).view) = 'map'
         wrapper.setProps({ location });
         expect(instance.getJoyRideSteps()).toEqual(joyride.DataPackPage.map);
 
         location = getProps().location;
-        location.search.view = 'grid';
+        (queryString.parse(location.search).view) = 'grid';
         wrapper.setProps({ location });
         expect(instance.getJoyRideSteps()).toEqual(joyride.DataPackPage.grid);
 
         location = getProps().location;
-        location.search.view = 'list';
+        (queryString.parse(location.search).view) = 'list';
         wrapper.setProps({ location });
         expect(instance.getJoyRideSteps()).toEqual(joyride.DataPackPage.list);
     });

@@ -44,6 +44,7 @@ describe('Application component', () => {
         openDrawer: sinon.stub(),
         closeDrawer: sinon.stub(),
         userActive: sinon.stub(),
+        login: sinon.stub(),
         getNotifications: sinon.spy(),
         getNotificationsUnreadCount: sinon.stub(),
         classes: {},

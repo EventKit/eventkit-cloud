@@ -1146,7 +1146,7 @@ describe('ExportAOI component', () => {
         aoiInfo.geojson = geojson;
         aoiInfo.geomType = 'Polygon';
         setup({ aoiInfo });
-        props.setNextEnabled.reset();
+        props.setNextEnabled.resetHistory();
         const fakeFeature = new Feature();
 
         const addStub = sinon.stub(VectorSource.prototype, 'addFeatures');

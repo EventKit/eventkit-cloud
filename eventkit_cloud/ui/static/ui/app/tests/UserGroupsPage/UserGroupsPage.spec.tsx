@@ -282,7 +282,7 @@ describe('UserGroupsPage component', () => {
 
     it('makeUserRequest should make the default request', () => {
         setup({ location: { query: {} }});
-        props.getUsers.reset();
+        props.getUsers.resetHistory();
         const expectedParams = {
             ordering: 'username',
             prepend_self: true,
@@ -295,7 +295,7 @@ describe('UserGroupsPage component', () => {
 
     it('makeUserRequest should request users with a search param', () => {
         setup({ location: { query: { ordering: 'username', search: 'my-search' }}});
-        props.getUsers.reset();
+        props.getUsers.resetHistory();
         const expectedParams = {
             ordering: 'username',
             search: 'my-search',
@@ -309,7 +309,7 @@ describe('UserGroupsPage component', () => {
 
     it('makeUserRequest should request users in a specific group', () => {
         setup({ location: { query: { groups: 2 }}});
-        props.getUsers.reset();
+        props.getUsers.resetHistory();
         const expectedParams = {
             groups: 2,
             ordering: 'username',
