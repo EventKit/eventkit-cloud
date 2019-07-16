@@ -4,8 +4,8 @@ boto3==1.9.141
 celery==4.2.1
 certifi==2019.3.9
 dj-database-url==0.4.2
-Django==2.2.1
-git+https://github.com/venicegeo/django-audit-logging.git@v0.2.0#egg=django-audit-logging
+Django==2.2.3
+git+https://github.com/venicegeo/django-audit-logging.git@v0.2.1#egg=django-audit-logging
 django-auth-ldap==1.7.0
 django-celery-beat==1.4.0
 django-celery-results==1.0.4

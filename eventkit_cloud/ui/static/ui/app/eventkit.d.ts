@@ -34,6 +34,7 @@ declare namespace Eventkit {
         status: string;
         progress: number;
         estimated_finish: string;
+        estimated_duration: string;
         started_at: string;
         finished_at: string;
         duration: string;

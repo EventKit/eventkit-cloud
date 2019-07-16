@@ -89,13 +89,14 @@ class TaskFactory:
             run_dir = get_run_staging_dir(run.uid)
             os.makedirs(run_dir, 0o750)
 
+            queue_group = os.getenv("CELERY_GROUP_NAME", worker)
             wait_for_providers_settings = {
-                'queue': "{}.finalize".format(worker), 'routing_key': "{}.finalize".format(worker),
+                'queue': "{}.finalize".format(queue_group), 'routing_key': "{}.finalize".format(queue_group),
                 'priority': TaskPriority.FINALIZE_PROVIDER.value}
 
             finalize_task_settings = {
-                'interval': 4, 'max_retries': 10, 'queue': "{}.finalize".format(worker),
-                'routing_key': "{}.finalize".format(worker),
+                'interval': 4, 'max_retries': 10, 'queue': "{}.finalize".format(queue_group),
+                'routing_key': "{}.finalize".format(queue_group),
                 'priority': TaskPriority.FINALIZE_RUN.value}
 
             finalized_provider_task_chain_list = []
@@ -255,11 +256,12 @@ def create_task(data_provider_task_uid=None, stage_dir=None, worker=None, select
         task_name=task.name, export_provider_task=export_provider_task, worker=worker,
         display=getattr(task, "display", False)
     )
+    queue_group = os.getenv("CELERY_GROUP_NAME", worker)
     return task.s(
         run_uid=export_provider_task.run.uid, task_uid=export_task.uid, selection=selection, stage_dir=stage_dir,
         provider_slug=export_provider_task.slug, data_provider_task_uid=data_provider_task_uid, job_name=job_name,
         user_details=user_details, bbox=export_provider_task.run.job.extents, locking_task_key=data_provider_task_uid
-    ).set(queue=worker, routing_key=worker)
+    ).set(queue=queue_group, routing_key=queue_group)
 
 
 def get_zip_task_chain(data_provider_task_uid=None, worker=None, stage_dir=None):
