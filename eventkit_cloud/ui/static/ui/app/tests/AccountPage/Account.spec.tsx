@@ -70,8 +70,8 @@ describe('Account Component', () => {
     it('joyrideAddSteps should set state for steps in tour', () => {
         const steps = [{
             title: 'Welcome to the Account Settings Page',
-            text: ' example text',
-            selector: '.qa-PageHeader',
+            content: ' example text',
+            target: '.qa-PageHeader',
             position: 'top',
             style: {},
             isFixed: true,
@@ -97,9 +97,9 @@ describe('Account Component', () => {
             index: 2,
             step: {
                 position: 'bottom',
-                selector: '.qa-Application-MenuItem-create',
+                target: '.qa-Application-MenuItem-create',
                 style: {},
-                text: 'Or to create your own DataPack.',
+                content: 'Or to create your own DataPack.',
                 title: 'Navigate Application',
             },
             type: 'step:before',

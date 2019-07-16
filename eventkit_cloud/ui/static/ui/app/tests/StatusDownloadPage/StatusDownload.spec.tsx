@@ -305,8 +305,8 @@ describe('StatusDownload component', () => {
         const steps = [
             {
                 title: 'DataPack Info',
-                text: 'This is the name of the datapack.',
-                selector: '.qa-DataCartDetails-table-name',
+                content: 'This is the name of the datapack.',
+                target: '.qa-DataCartDetails-table-name',
                 position: 'bottom',
                 style: {},
                 isFixed: true,
@@ -325,9 +325,9 @@ describe('StatusDownload component', () => {
             index: 2,
             step: {
                 position: 'bottom',
-                selector: '.qa-DataPackLinkButton-Button',
+                target: '.qa-DataPackLinkButton-Button',
                 style: {},
-                text: 'Click here to Navigate to Create a DataPack.',
+                content: 'Click here to Navigate to Create a DataPack.',
                 title: 'Create DataPack',
             },
             type: 'step:before',

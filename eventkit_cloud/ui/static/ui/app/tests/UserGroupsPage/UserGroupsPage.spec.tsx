@@ -786,8 +786,8 @@ describe('UserGroupsPage component', () => {
     it('joyrideAddSteps should set state for steps in tour', () => {
         const steps = [{
             title: 'Welcome to the Account Settings Page',
-            text: 'Example text',
-            selector: '.qa-PageHeader',
+            content: 'Example text',
+            target: '.qa-PageHeader',
             position: 'top',
             style: {},
             isFixed: true,
@@ -813,9 +813,9 @@ describe('UserGroupsPage component', () => {
             index: 2,
             step: {
                 position: 'bottom',
-                selector: '.qa-Application-MenuItem-create',
+                target: '.qa-Application-MenuItem-create',
                 style: {},
-                text: 'Or to create your own DataPack.',
+                content: 'Or to create your own DataPack.',
                 title: 'Navigate Application',
             },
             type: 'step:before',
@@ -832,7 +832,7 @@ describe('UserGroupsPage component', () => {
             action: 'next',
             index: 2,
             step: {
-                selector: '.qa-GroupsDrawer-addGroup',
+                target: '.qa-GroupsDrawer-addGroup',
             },
             type: 'step:fake',
         };
@@ -849,7 +849,7 @@ describe('UserGroupsPage component', () => {
             action: 'next',
             index: 2,
             step: {
-                selector: '.qa-GroupsDrawer-groupsHeading',
+                target: '.qa-GroupsDrawer-groupsHeading',
             },
             type: 'step:before',
         };
@@ -864,7 +864,7 @@ describe('UserGroupsPage component', () => {
             action: 'next',
             index: 2,
             step: {
-                selector: '.qa-GroupsDrawer-groupsHeading',
+                target: '.qa-GroupsDrawer-groupsHeading',
             },
             type: 'step:after',
         };
@@ -882,7 +882,7 @@ describe('UserGroupsPage component', () => {
             action: 'next',
             index: 2,
             step: {
-                selector: '.qa-UserHeader-checkbox',
+                target: '.qa-UserHeader-checkbox',
             },
             type: 'tooltip:before',
         };
@@ -897,7 +897,7 @@ describe('UserGroupsPage component', () => {
             action: 'next',
             index: 2,
             step: {
-                selector: '.qa-UserHeader-options',
+                target: '.qa-UserHeader-options',
             },
             type: 'step:after',
         };

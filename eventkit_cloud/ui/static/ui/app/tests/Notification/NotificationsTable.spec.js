@@ -131,7 +131,7 @@ describe('NotificationsTable component', () => {
             },
         });
         const tableItem = wrapper.find(NotificationsTableItem).at(0);
-        expect(Object.keys(tableItem.props()).length).toBe(8);
+        expect(Object.keys(tableItem.props()).length).toBe(9);
         expect(tableItem.props().notification).toBe(instance.props.notificationsArray[0]);
         expect(tableItem.props().router).toBe(instance.props.router);
         expect(tableItem.props().isSelected).toBe(true);

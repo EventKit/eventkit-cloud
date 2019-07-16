@@ -93,8 +93,8 @@ describe('Export Summary Component', () => {
     it('joyrideAddSteps should set state for steps in tour', () => {
         const steps = [{
             title: 'Verify Information',
-            text: 'Verify the information entered is correct before proceeding.',
-            selector: '.qa-ExportSummary-div',
+            content: 'Verify the information entered is correct before proceeding.',
+            target: '.qa-ExportSummary-div',
             position: 'bottom',
             style: {},
         }];
@@ -112,9 +112,9 @@ describe('Export Summary Component', () => {
             index: 2,
             step: {
                 position: 'bottom',
-                selector: '.qa-DataPackLinkButton-Button',
+                target: '.qa-DataPackLinkButton-Button',
                 style: {},
-                text: 'Click here to Navigate to Create a DataPack.',
+                content: 'Click here to Navigate to Create a DataPack.',
                 title: 'Create DataPack',
             },
             type: 'step:before',

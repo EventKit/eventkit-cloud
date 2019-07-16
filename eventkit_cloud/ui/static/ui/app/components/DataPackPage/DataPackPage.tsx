@@ -502,8 +502,8 @@ export class DataPackPage extends React.Component<Props, State> {
 
             const newStep = {
                 title: 'Featured DataPacks',
-                text: 'Popular or sought after DataPacks can be tagged as “Featured” and will be prominently displayed in each view',
-                selector: '.tour-datapack-featured',
+                content: 'Popular or sought after DataPacks can be tagged as “Featured” and will be prominently displayed in each view',
+                target: '.tour-datapack-featured',
                 style: {
                     backgroundColor: colors.white,
                     borderRadius: '0',

@@ -639,8 +639,8 @@ describe('DataPackPage component', () => {
         const steps = [
             {
                 title: 'Create DataPack',
-                text: 'Click here to Navigate to Create a DataPack.',
-                selector: '.qa-DataPackLinkButton-Button',
+                content: 'Click here to Navigate to Create a DataPack.',
+                target: '.qa-DataPackLinkButton-Button',
                 position: 'bottom',
                 style: {},
             },
@@ -658,9 +658,9 @@ describe('DataPackPage component', () => {
             index: 2,
             step: {
                 position: 'bottom',
-                selector: '.qa-DataPackLinkButton-Button',
+                target: '.qa-DataPackLinkButton-Button',
                 style: {},
-                text: 'Click here to Navigate to Create a DataPack.',
+                content: 'Click here to Navigate to Create a DataPack.',
                 title: 'Filters',
             },
             type: 'step:before',
@@ -679,9 +679,9 @@ describe('DataPackPage component', () => {
             index: 2,
             step: {
                 position: 'bottom',
-                selector: '.qa-DataPackLinkButton-Button',
+                target: '.qa-DataPackLinkButton-Button',
                 style: {},
-                text: 'Click here to Navigate to Create a DataPack.',
+                content: 'Click here to Navigate to Create a DataPack.',
                 title: 'Create DataPack',
             },
             type: 'step:before',
