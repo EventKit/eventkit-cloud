@@ -5,7 +5,6 @@ import { resetState } from './uiActions';
 
 export const types = {
     USER_LOGGING_IN: 'USER_LOGGING_IN',
-    USER_LOGIN_ERROR: 'USER_LOGIN_ERROR',
     USER_LOGGED_IN: 'USER_LOGGED_IN',
     USER_LOGGED_OUT: 'USER_LOGGED_OUT',
     PATCHING_USER: 'PATCHING_USER',
