@@ -64,7 +64,7 @@ export class Form extends React.Component<Props> {
 
     getErrorMessage() {
         if(!this.props.error) {
-            return 'An unknown error occurred. Please contact an administrator.'
+            return '';
         }
         const {statusCode, authType } = {...this.props.error};
         if(statusCode === 401) {
@@ -72,10 +72,10 @@ export class Form extends React.Component<Props> {
                 return 'Username or Password incorrect.';
             }
             else {
-                return 'Authentication failed. Please try again or contact an administrator.'
+                return 'Authentication failed. Please try again or contact an administrator.';
             }
         }
-        return 'An unknown error occurred. Please contact an administrator.'
+        return 'An unknown error occurred. Please contact an administrator.';
     }
 
     render() {

@@ -6,8 +6,6 @@ import { Breakpoint } from '@material-ui/core/styles/createBreakpoints';
 import Paper from '@material-ui/core/Paper';
 import CustomScrollbar from '../CustomScrollbar';
 import {ErrorMessage} from "./ErrorMessage";
-import {logout} from '../../actions/userActions';
-import { connect } from 'react-redux';
 
 interface Props {
     theme: Eventkit.Theme & Theme;

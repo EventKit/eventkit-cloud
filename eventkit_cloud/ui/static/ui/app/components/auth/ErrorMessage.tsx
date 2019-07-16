@@ -40,8 +40,6 @@ export class ErrorMessage extends React.Component<Props, {}> {
 
         return (
             <div style={{ verticalAlign: 'middle', textAlign: 'center', marginTop: '30px' }}>
-
-                    {/*<div style={styles.heading}>Server Error</div>*/}
                     <div style={styles.heading}>
                         An authentication error was caught. Please try again or contact an administrator.
                     </div>
