@@ -13,6 +13,7 @@ import OwnUserRow from '../../components/UserGroupsPage/OwnUserRow';
 import UserHeader from '../../components/UserGroupsPage/UserHeader';
 import { UserGroupsPage } from '../../components/UserGroupsPage/UserGroupsPage';
 import history from '../../utils/history';
+import queryString from 'query-string';
 
 describe('UserGroupsPage component', () => {
     let shallow;
@@ -21,14 +22,9 @@ describe('UserGroupsPage component', () => {
         shallow = createShallow();
     });
 
-    afterEach(() => {
-        // Restore the default sandbox here
-        sinon.restore();
-    });
-
     const getProps = () => ({
         location: {
-            query: { ordering: 'admin' },
+            search: queryString.stringify({ ordering: 'admin' }),
         },
         user: {
             username: 'user_one',
@@ -164,18 +160,18 @@ describe('UserGroupsPage component', () => {
     });
 
     it('componentDidUpdate should handle a query change', () => {
-        setup({ location: { query: { ordering: 'username', group: '2' } } });
+        setup({ location: { search: queryString.stringify({ ordering: 'username', group: '2' }) } });
         const requestStub = sinon.stub(instance, 'makeUserRequest');
         const nextProps = getProps();
-        nextProps.location.search = { ordering: 'username', group: '1' };
+        nextProps.location.search = queryString.stringify({ ordering: 'username', group: '1' });
         wrapper.setProps(nextProps);
         expect(requestStub.calledOnce).toBe(true);
-        expect(requestStub.calledWith(nextProps.location.search)).toBe(true);
+        expect(requestStub.calledWith(queryString.parse(nextProps.location.search))).toBe(true);
         const lastProps = getProps();
-        lastProps.location.search = { ordering: 'username' };
+        lastProps.location.search = queryString.stringify({ ordering: 'username' });
         wrapper.setProps(lastProps);
         expect(requestStub.calledTwice).toBe(true);
-        expect(requestStub.calledWith(lastProps.location.search)).toBe(true);
+        expect(requestStub.calledWith(queryString.parse(lastProps.location.search))).toBe(true);
         requestStub.restore();
     });
 
@@ -259,7 +255,7 @@ describe('UserGroupsPage component', () => {
     });
 
     it('getQueryGroup should return the correct group object', () => {
-        const location = { query: { ordering: 'username', groups: String(props.groups.groups[0].id) } };
+        const location = { search: queryString.stringify({ ordering: 'username', groups: String(props.groups.groups[0].id) }) };
         setup({ location });
         expect(instance.getQueryGroup()).toEqual(props.groups.groups[0]);
     });
@@ -270,18 +266,18 @@ describe('UserGroupsPage component', () => {
     });
 
     it('getGroupTitle should return "No Members Matching Group Found"', () => {
-        setup({ location: { query: { groups: 'some group' }}});
+        setup({ location: { search: queryString.stringify({ groups: 'some group' })}});
         expect(instance.getGroupTitle()).toEqual('No Members Matching Group Found');
     });
 
     it('getGroupTitle should return the group name', () => {
-        setup({ location: { query: { groups: String(props.groups.groups[0]) }}});
+        setup({ location: { search: queryString.stringify({ groups: String(props.groups.groups[0]) })}});
         expect(instance.getGroupTitle(props.groups.groups[0]))
             .toEqual(`${props.groups.groups[0].name} Members`);
     });
 
     it('makeUserRequest should make the default request', () => {
-        setup({ location: { query: {} }});
+        setup({ location: { search: '' }});
         props.getUsers.resetHistory();
         const expectedParams = {
             ordering: 'username',
@@ -294,13 +290,12 @@ describe('UserGroupsPage component', () => {
     });
 
     it('makeUserRequest should request users with a search param', () => {
-        setup({ location: { query: { ordering: 'username', search: 'my-search' }}});
+        setup({ location: { search: queryString.stringify({ ordering: 'username', search: 'my-search' })}});
         props.getUsers.resetHistory();
         const expectedParams = {
             ordering: 'username',
             search: 'my-search',
             prepend_self: true,
-            page_size: instance.pageSize,
         };
         instance.makeUserRequest();
         expect(props.getUsers.calledOnce).toBe(true);
@@ -308,13 +303,11 @@ describe('UserGroupsPage component', () => {
     });
 
     it('makeUserRequest should request users in a specific group', () => {
-        setup({ location: { query: { groups: 2 }}});
+        setup({ location: { search: queryString.stringify({ groups: 2 })}});
         props.getUsers.resetHistory();
         const expectedParams = {
-            groups: 2,
-            ordering: 'username',
+            groups: '2',
             prepend_self: true,
-            page_size: instance.pageSize,
         };
         instance.makeUserRequest();
         expect(props.getUsers.calledOnce).toBe(true);
@@ -372,19 +365,19 @@ describe('UserGroupsPage component', () => {
         expect(browserHistory.calledOnce).toBe(true);
         expect(browserHistory.calledWith({
             ...props.location,
-            query: { ...props.location.search, search: 'search text' },
+            search: queryString.stringify({ ordering: 'admin', page_size: '20', search: 'search text' }),
         })).toBe(true);
     });
 
     it('handleSearchChange should clear search query if the input is empty', () => {
-        setup({ location: { query: { ordering: 'admin', search: 'search text' }}});
+        setup({ location: { search: queryString.stringify({ ordering: 'admin', search: 'search text' })}});
         browserHistory.reset();
         const value = '';
         instance.handleSearchChange({ target: { value } });
         expect(browserHistory.calledOnce).toBe(true);
         expect(browserHistory.calledWith({
             ...props.location,
-            query: { ordering: 'admin', page_size: instance.pageSize },
+            search: queryString.stringify({ ordering: 'admin', page_size: instance.pageSize }),
         })).toBe(true);
     });
 
@@ -622,8 +615,8 @@ describe('UserGroupsPage component', () => {
     });
 
     it('handleRemoveUser should update the group with user removed', () => {
-        props.location.search = { groups: '1' };
-        setup({ location: { query: { groups: '1' }}});
+        props.location.search = queryString.stringify({ groups: '1' });
+        setup({ location: { search: queryString.stringify({ groups: '1' })}});
         const user = props.users.users[0];
         instance.handleRemoveUser(user);
         expect(props.updateGroup.calledOnce).toBe(true);
@@ -636,16 +629,16 @@ describe('UserGroupsPage component', () => {
     });
 
     it('handleBatchRemoveUser should remove users and updateGroup', () => {
-        const p = getProps();
+        const props = getProps();
         const group = {
             id: 12,
             name: 'twelve',
             members: ['1', '2', '3'],
             administrators: ['1', '2', '3'],
         };
-        p.location.search = { groups: '12' };
-        p.groups.groups.push(group);
-        setup(p);
+        props.location.search = queryString.stringify({ groups: '12' });
+        props.groups.groups.push(group);
+        setup(props);
         const users = [
             { user: { username: '1' } },
             { user: { username: '2' } },
@@ -664,12 +657,12 @@ describe('UserGroupsPage component', () => {
     });
 
     it('handleBatchAdminRights should update group with new admins', () => {
-        props.location.search = { groups: String(props.groups.groups[0].id) };
+        props.location.search = queryString.stringify({ groups: String(props.groups.groups[0].id) });
         const users = [
             { user: { username: '1' } },
             { user: { username: '2' } },
         ];
-        setup({ location: { query: { groups: String(props.groups.groups[0].id )}}});
+        setup({ location: { search: queryString.stringify({ groups: String(props.groups.groups[0].id )})}});
         instance.handleBatchAdminRights(users);
         const expectedAdmins = [...props.groups.groups[0].administrators, '1', '2'];
         expect(props.updateGroup.calledOnce).toBe(true);
@@ -678,9 +671,9 @@ describe('UserGroupsPage component', () => {
         })).toBe(true);
     });
 
-    it('handleBatchAdminRighs should update group with removed admins', () => {
+    it('handleBatchAdminRights should update group with removed admins', () => {
         const users = [{ user: { username: 'user_one' } }];
-        setup({ location: { query: { groups: String(props.groups.groups[0].id )}}});
+        setup({ location: { search: queryString.stringify({ groups: String(props.groups.groups[0].id )})}});
         instance.handleBatchAdminRights(users);
         expect(props.updateGroup.calledOnce).toBe(true);
         expect(props.updateGroup.calledWith(props.groups.groups[0].id, { administrators: [] })).toBe(true);

@@ -267,18 +267,18 @@ export class UserGroupsPage extends React.Component<Props, State> {
 
     componentWillMount() {
         // If there is no ordering specified default to username
-        const query = queryString.parse(this.props.location.search);
+        let { ordering, page_size } = queryString.parse(this.props.location.search);
         let changedQuery = false
-        if (!query.ordering) {
-            query.ordering = 'username';
+        if (!ordering) {
+            ordering = 'username';
             changedQuery = true
         }
-        if (!query.page_size) {
-            query.page_size = this.pageSize.toString();
+        if (!page_size) {
+            page_size = this.pageSize.toString();
             changedQuery = true
         }
         if (changedQuery) {
-            history.replace({ ...this.props.location, "search": queryString.stringify(query) });
+            history.replace({ ...this.props.location, "search": queryString.stringify({ordering, page_size}) });
         }
     }
 
@@ -302,7 +302,7 @@ export class UserGroupsPage extends React.Component<Props, State> {
             }
         }
         if (changedQuery) {
-            this.makeUserRequest();
+            this.makeUserRequest(queryString.parse(this.props.location.search));
         }
 
         if (this.props.users.fetched && !prevProps.users.fetched) {
@@ -408,8 +408,7 @@ export class UserGroupsPage extends React.Component<Props, State> {
             params.groups = options.groups;
         }
 
-        params.prepend_self = 'true';
-
+        params.prepend_self = true;
         this.props.getUsers(params);
     }
 
