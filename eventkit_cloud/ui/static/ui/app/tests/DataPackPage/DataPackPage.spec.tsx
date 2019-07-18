@@ -101,7 +101,10 @@ describe('DataPackPage component', () => {
         location: {
             search: queryString.stringify({
                 collection: '',
+                order: '-job__featured',
+                view: 'map',
                 page_size: '12',
+                search: null
             }),
         },
         ...(global as any).eventkit_test_props,
@@ -178,20 +181,20 @@ describe('DataPackPage component', () => {
         const order = 'job__featured';
         const view = 'grid';
         const expectedParams = {
-            collection: '',
+            collection: 'all',
             order,
             view,
             page_size: '12',
             search: null,
         }
-        setup({ runsMeta: { ...props.runsMeta, order, view }});
+        setup({ runsMeta: { ...props.runsMeta, order, view }, location: { search: {} } });
         expect(browserHistory.called).toBe(true);
         expect(browserHistory.calledWith({
             ...props.location,
             search: queryString.stringify(expectedParams),
         })).toBe(true);
         browserHistory.reset();
-        setup();
+        setup({ location: { search: {} } });
         expectedParams.order = '-job__featured'
         expectedParams.view = 'map'
         expect(browserHistory.called).toBe(true);
@@ -256,13 +259,15 @@ describe('DataPackPage component', () => {
         expect(requestStub.called).toBe(false);
         expect(stateStub.called).toBe(false);
         nextProps = getProps();
-        queryString.parse(nextProps.location.search).newKey = 'new query thing';
-        wrapper.setProps(nextProps);
+        nextProps.location.search = queryString.parse(nextProps.location.search);
+        nextProps.location.search.newKey = 'new query thing';
+        wrapper.setProps({ location: { search: queryString.stringify(nextProps.location.search) } });
         expect(requestStub.calledOnce).toBe(true);
         expect(stateStub.calledOnce).toBe(true);
         nextProps = getProps();
-        queryString.parse(nextProps.location.search).newKey = 'a changed value';
-        wrapper.setProps(nextProps);
+        nextProps.location.search = queryString.parse(nextProps.location.search);
+        nextProps.location.search.newKey = 'a changed value';
+        wrapper.setProps({ location: { search: queryString.stringify(nextProps.location.search) } });
         expect(requestStub.calledTwice).toBe(true);
         expect(stateStub.calledTwice).toBe(true);
     });
@@ -270,9 +275,9 @@ describe('DataPackPage component', () => {
     it('componentDidUpdate should update joyride steps', () => {
         const getStub = sinon.stub(instance, 'getJoyRideSteps');
         const addStub = sinon.stub(instance, 'joyrideAddSteps');
-        const nextProps = getProps();
-        queryString.parse(nextProps.location.search).view = 'grid';
-        wrapper.setProps(nextProps);
+        let location = { search: queryString.parse(getProps().location) };
+        location.search.view = 'grid';
+        wrapper.setProps({ location: { search: queryString.stringify(location.search) } });
         expect(getStub.calledOnce).toBe(true);
         expect(addStub.calledOnce).toBe(true);
     });
@@ -527,9 +532,9 @@ describe('DataPackPage component', () => {
         expect(updateStub.calledOnce).toBe(true);
         expect(updateStub.calledWith({ view: 'list' })).toBe(true);
 
-        const nextProps = getProps();
-        queryString.parse(nextProps.location.search).order = 'not_shared_order';
-        wrapper.setProps(nextProps);
+        let location = { search: queryString.parse(getProps().location) };
+        location.search.order = 'not_shared_order';
+        wrapper.setProps({ location: { search: queryString.stringify(location.search) } });
         instance.changeView('map');
         expect(updateStub.calledTwice).toBe(true);
         expect(updateStub.calledWith({ view: 'map', order: '-started_at' })).toBe(true);
@@ -574,12 +579,11 @@ describe('DataPackPage component', () => {
             providers: [],
             openShare: instance.handleShareOpen,
         };
-
         expect(instance.getView('list')).toEqual((
             <DataPackList
                 {...commonProps}
                 onSort={instance.handleSortChange}
-                order={wrapper.state().order}
+                order={queryString.parse(props.location.search).order}
                 customRef={instance.getViewRef}
             />
         ),
