@@ -1,6 +1,5 @@
 """Provides classes for handling API requests."""
 import logging
-import coreapi
 # -*- coding: utf-8 -*-
 from collections import OrderedDict
 from datetime import datetime, timedelta
@@ -21,7 +20,8 @@ from rest_framework.parsers import JSONParser
 from rest_framework.permissions import AllowAny
 from rest_framework.renderers import JSONRenderer
 from rest_framework.response import Response
-from rest_framework.schemas import SchemaGenerator, AutoSchema
+from rest_framework.schemas.generators import SchemaGenerator, distribute_links
+
 from rest_framework.serializers import ValidationError
 
 from eventkit_cloud.api.filters import ExportRunFilter, JobFilter, UserFilter, GroupFilter, UserJobActivityFilter
@@ -56,57 +56,6 @@ logger = logging.getLogger(__name__)
 
 # controls how api responses are rendered
 renderer_classes = (JSONRenderer, HOTExportApiRenderer)
-
-
-class AutoSchemaOverride(AutoSchema):
-    """Implementation of AutoSchema that allows links to be override on a per HTTP action basis."""
-
-    def __init__(self, action_manual_fields=None, manual_fields=None, override=False):
-        """
-        Parameters:
-
-        * `manual_action_fields`: dict mapping an HTTP action to a list of `coreapi.Field` items
-            will be added to auto-generated fields, overwriting on `Field.name`
-        * `manual_fields`: list of `coreapi.Field` instances that
-            will be added to auto-generated fields, overwriting on `Field.name`
-        * `overwrite`: if True, auto generated fields will not be included, i.e. only manually defined
-            fields will be included.
-        """
-        super(AutoSchema, self).__init__()
-        if manual_fields is None:
-            manual_fields = list()
-        self._manual_fields = manual_fields
-        if action_manual_fields is None:
-            action_manual_fields = CaseInsensitiveDict()
-        self._action_manual_fields = action_manual_fields
-
-        self.override = override
-
-    def get_link(self, path, method, base_url):
-        """Get the link from the base class, then override with manual fields if need be."""
-        link = super(AutoSchemaOverride, self).get_link(path, method, base_url)
-        fields = self.get_action_manual_fields(path, method)
-        # path param is unused in the above call, this identical to how the base class does this,
-        # unclear why at the moment
-        if len(fields) == 0:
-            return link
-        if not self.override:
-            fields = self.update_fields(link.fields, fields)
-        return coreapi.Link(
-            url=link.url,
-            action=link.action,
-            encoding=link.encoding,
-            fields=fields,
-            description=link.description
-        )
-
-    def get_action_manual_fields(self, path, method):
-        """
-        Get any manual fields corresponding to the specified action.
-
-        Method signature mimics `get_manual_fields` from the base class.
-        """
-        return self._action_manual_fields.get(method, list())
 
 
 class JobViewSet(viewsets.ModelViewSet):
@@ -1235,18 +1184,6 @@ class UserDataViewSet(viewsets.GenericViewSet):
     User Data
 
     """
-    schema = AutoSchemaOverride(action_manual_fields={'PATCH': [
-            (coreapi.Field(
-                name='username',
-                required=True,
-                location='path')),
-            (coreapi.Field(
-                name='data',
-                required=True,
-                location='form',
-            )),
-        ]}, override=True)
-
     serializer_class = UserDataSerializer
     permission_classes = (permissions.IsAuthenticated, IsOwnerOrReadOnly)
     parser_classes = (JSONParser,)
@@ -1328,13 +1265,7 @@ class UserDataViewSet(viewsets.GenericViewSet):
         serializer = self.get_serializer(queryset, context={'request': request})
         return Response(serializer.data, status=status.HTTP_200_OK)
 
-    @action(detail=False, methods=['post', 'get'], schema=AutoSchemaOverride(action_manual_fields={'POST': [
-        (coreapi.Field(
-            name='data',
-            required=True,
-            location='form',
-        )),
-    ]}, override=True))
+    @action(detail=False, methods=['post', 'get'])
     def members(self, request, *args, **kwargs):
         """
         Member list from list of group ids
@@ -2009,8 +1940,51 @@ class SwaggerSchemaView(views.APIView):
 
     def get(self, request):
         try:
+            import coreapi
             generator = SchemaGenerator(title='EventKit API')
-            schema = generator.get_schema(request=request)
+            generator.get_schema(request=request)
+            links = generator.get_links()
+            distribute_links(links)
+            # This obviously shouldn't go here.  Need to implement better way to inject CoreAPI customizations.
+            partial_update_link = links.get('users', {}).get('partial_update')
+            if partial_update_link:
+                links['users']['partial_update'] = coreapi.Link(
+                    url=partial_update_link.url,
+                    action=partial_update_link.action,
+                    fields=[
+                        (coreapi.Field(
+                            name='username',
+                            required=True,
+                            location='path')),
+                        (coreapi.Field(
+                            name='data',
+                            required=True,
+                            location='form',
+                        )),
+                    ],
+                    description=partial_update_link.description
+                )
+
+            members_link = links.get('users', {}).get('members').get('create')
+            if members_link:
+                links['users']['members'] = coreapi.Link(
+                    url=members_link.url,
+                    action=members_link.action,
+                    fields=[
+                        (coreapi.Field(
+                            name='data',
+                            required=True,
+                            location='form',
+                        )),
+                    ],
+                    description=members_link.description
+                )
+
+            schema = coreapi.Document(
+                title='EventKit API',
+                url=request.build_absolute_uri(),
+                content=links
+            )
 
             if not schema:
                 raise exceptions.ValidationError(
@@ -2018,6 +1992,6 @@ class SwaggerSchemaView(views.APIView):
                 )
 
             return Response(schema)
-        except:
+        except (ImportError, ModuleNotFoundError):
             # CoreAPI couldn't be imported, falling back to static schema
             return Response()
