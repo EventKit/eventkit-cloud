@@ -1,4 +1,3 @@
-import * as PropTypes from 'prop-types';
 import * as React from 'react';
 import { withTheme, Theme } from '@material-ui/core/styles';
 import withWidth, { isWidthDown } from '@material-ui/core/withWidth';
@@ -14,13 +13,6 @@ interface Props {
 }
 
 export class LoginErrorPage extends React.Component<Props, {}> {
-    static contextTypes = {
-        config: PropTypes.shape({
-            VERSION: PropTypes.string,
-            LOGIN_DISCLAIMER: PropTypes.string,
-        }),
-    };
-
     render() {
         const { colors, images } = this.props.theme.eventkit;
 
@@ -52,12 +44,6 @@ export class LoginErrorPage extends React.Component<Props, {}> {
                 padding: '15px',
                 alignSelf: 'center',
             },
-            disclaimerHeading: {
-                color: colors.white,
-                fontSize: '16px',
-                marginBottom: '5px',
-                textAlign: 'center' as 'center',
-            },
             footerText: {
                 color: colors.grey,
                 padding: '5px 10px 5px',
@@ -76,34 +62,20 @@ export class LoginErrorPage extends React.Component<Props, {}> {
             },
         };
 
-        const version = this.context.config && this.context.config.VERSION ? this.context.config.VERSION : '';
-
         return (
             <div style={styles.wholeDiv}>
-                <CustomScrollbar style={{ height: 'calc(100vh - 95px)' }}>
                     <div style={styles.container} className="qa-LoginPage-container">
                         <div style={styles.paperContainer}>
-                            <Paper className="qa-LoginPage-Paper" style={styles.paper}>
+                            <Paper className="qa-LoginErrorPage-Paper" style={styles.paper}>
                                 <ErrorMessage {...this.props}/>
                             </Paper>
                         </div>
-                        <div style={mobile && this.context.config.LOGIN_DISCLAIMER ? styles.mobileFooter : styles.desktopFooter}>
-                            { version ?
-                                <div
-                                    style={styles.footerText}
-                                    className="qa-LoginPage-version"
-                                >
-                                    EventKit Version {version}
-                                </div>
-                                :
-                                null
-                            }
-                            <div style={styles.footerText} className="qa-LoginPage-browser-text">
+                        <div style={mobile ? styles.mobileFooter : styles.desktopFooter}>
+                            <div style={styles.footerText} className="qa-LoginErrorPage-browser-text">
                                 Supported Browsers: Chrome, Firefox, Opera, and Edge
                             </div>
                         </div>
                     </div>
-                </CustomScrollbar>
             </div>
         );
     }
