@@ -120,12 +120,12 @@ describe('DataPackTableItem component', () => {
         expect(wrapper.find(Link)).toHaveLength(1);
         expect(wrapper.find(Link).props().to).toEqual(`/status/${run.job.uid}`);
         expect(wrapper.find(IconMenu)).toHaveLength(1);
-        expect(wrapper.find(TableCell).at(0).html()).toContain(run.job.name);
-        expect(wrapper.find(TableCell).at(1).html()).toContain(run.job.event);
-        expect(wrapper.find(TableCell).at(2).html()).toContain('3/10/17');
+        expect(wrapper.find(TableCell).at(0).debug()).toContain(run.job.name);
+        expect(wrapper.find(TableCell).at(1).debug()).toContain(run.job.event);
+        expect(wrapper.find(TableCell).at(2).debug()).toContain('3/10/17');
         expect(wrapper.find(TableCell).at(3).find(NavigationCheck)).toHaveLength(1);
         expect(wrapper.find(TableCell).at(4).find(Lock)).toHaveLength(1);
-        expect(wrapper.find(TableCell).at(5).html()).toContain('My DataPack');
+        expect(wrapper.find(TableCell).at(5).debug()).toContain('My DataPack');
         expect(wrapper.find(DataPackShareDialog)).toHaveLength(1);
     });
 
