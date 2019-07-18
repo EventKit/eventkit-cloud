@@ -1,6 +1,7 @@
 from logging import getLogger
 
 from django.core.management import BaseCommand, call_command
+from django.db import connection
 from shutil import copytree, rmtree, copy
 import os
 
@@ -53,6 +54,7 @@ class Command(BaseCommand):
         call_command('showmigrations')
         print('Clearing out old migrations...')
         delete_old_migrations()
+        purge_celery_migrations()
         call_command('showmigrations')
 
 
@@ -98,12 +100,6 @@ app_migrations = {
     "core": [
         "0002_auto_20181213_1723"
     ],
-    "django_celery_beat": [
-        "0006_auto_20180210_1226"
-    ],
-    "django_celery_results": [
-        "0001_initial"
-    ],
     "eventkit_cloud.auth": [
         "0001_initial"
     ],
@@ -138,3 +134,22 @@ def fake_new_migrations():
                 call_command('migrate', '--fake', app_name, migration)
             except Exception:
                 pass
+
+
+def purge_celery_migrations():
+    commands = ["drop table django_celery_beat_crontabschedule CASCADE;",
+                "drop table django_celery_beat_intervalschedule CASCADE;",
+                "drop table django_celery_beat_periodictask CASCADE;",
+                "drop table django_celery_beat_periodictasks CASCADE;",
+                "drop table django_celery_beat_solarschedule CASCADE;",
+                "drop table django_celery_results_taskresult CASCADE;",
+                "delete from django_migrations where app = 'django_celery_beat';",
+                "delete from django_migrations where app = 'django_celery_results';"]
+
+    with connection.cursor() as cursor:
+        for command in commands:
+            try:
+                cursor.execute(command)
+            except Exception as e:
+                print(e)
+
