@@ -13,12 +13,16 @@ class Command(BaseCommand):
 
     def add_arguments(self, parser):
         parser.add_argument('fake', nargs='*')
+        parser.add_argument('purge_celery', nargs='*')
 
     def handle(self, *args, **options):
         # The migrations had issues in version <1.2.3, this cleans out all that garbage, and starts fresh
         # there could be a little pain upgrading to 1.2.4 but it had to happen sometime.
         if options['fake']:
             fake_new_migrations()
+            print('After this new migrations should be applied "python manage.py migrate"')
+        elif options['purge_celery']:
+            purge_celery_migrations()
             print('After this new migrations should be applied "python manage.py migrate"')
         else:
             print('Running migrations up to 1.2.3...')
