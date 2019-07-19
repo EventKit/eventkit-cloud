@@ -29,11 +29,7 @@ describe('DropZoneDialog component', () => {
         const wrapper = getWrapper(props);
         const children = wrapper.find(BaseDialog).dive();
         expect(children.find(Dropzone)).toHaveLength(1);
-        expect(children.find('.qa-DropZoneDialog-text')).toHaveLength(1);
-        expect(children.find('.qa-DropZoneDialog-text').find('span').first().text())
-            .toEqual('GeoJSON, KML, GPKG, zipped SHP,and other major geospatial data formats are supported. 5 MB maxDrag and drop or');
-        expect(children.find('.qa-DropZoneDialog-Button-select')).toHaveLength(1);
-        expect(children.find(FileFileUpload)).toHaveLength(1);
+        expect(children.find('.qa-DropZoneDialog-Dropzone')).toHaveLength(1);
     });
 
     it('onDrop should setModalState and process file', () => {
@@ -60,16 +56,6 @@ describe('DropZoneDialog component', () => {
         children.find(Dropzone).simulate('drop', { dataTransfer: { files: oversizedFile } });
         expect(props.setImportModalState.calledOnce).toEqual(false);
         expect(props.processGeoJSONFile.calledWith(oversizedFile)).toEqual(false);
-    });
-
-    it('onOpenClick should call dropzone.open', () => {
-        const props = getProps();
-        const wrapper = getWrapper(props);
-        const openSpy = sinon.spy();
-        wrapper.instance().dropzone = { open: openSpy };
-        expect(openSpy.called).toBe(false);
-        wrapper.instance().onOpenClick();
-        expect(openSpy.calledOnce).toBe(true);
     });
 
     it('handleClear should call setImportModalState and setAllButtonsDefault', () => {

@@ -329,7 +329,7 @@ export class ExportInfo extends React.Component<Props, State> {
             data,
             headers: { 'X-CSRFToken': csrfmiddlewaretoken },
         }).then((response) => {
-            newProvider.availability = JSON.parse(response.data);
+            newProvider.availability = response.data;
             newProvider.availability.slug = provider.slug;
             return newProvider;
         }).catch(() => {

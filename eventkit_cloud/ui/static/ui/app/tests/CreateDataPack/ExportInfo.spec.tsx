@@ -265,7 +265,6 @@ describe('ExportInfo component', () => {
         };
         mock.onPost(`/api/providers/${provider.slug}/status`)
             .reply(200, { status: 'some status' });
-        const parseStub = sinon.stub(JSON, 'parse').callsFake(input => input);
         const expected = {
             ...provider,
             availability: {
@@ -275,7 +274,7 @@ describe('ExportInfo component', () => {
         };
         const newProvider = await instance.getAvailability(provider, {});
         expect(newProvider).toEqual(expected);
-        parseStub.restore();
+        mock.restore();
     });
 
     it('getAvailability should return failed provider', async () => {
@@ -296,6 +295,7 @@ describe('ExportInfo component', () => {
         };
         const newProvider = await instance.getAvailability(provider, {});
         expect(newProvider).toEqual(expected);
+        mock.restore();
     });
 
     it('checkAvailability should setState with new provider', async () => {
