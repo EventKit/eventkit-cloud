@@ -37,16 +37,16 @@ def content_to_file(content):
     return decorator
 
 
-def find_cert_var(slug=None):
+def find_cert_var(cert_var: str=None):
     """
     Given a provider slug, returns the contents of an environment variable consisting of the slug (lower or uppercase)
     followed by "_CERT". If no variable was found, return None.
-    :param slug: Provider slug
+    :param cert_var: Provider slug
     :return: Cert contents if found
     """
-    if slug:
-        env_slug = slug.replace('-', '_')
-        cert = os.getenv(env_slug + "_CERT") or os.getenv(env_slug.upper() + "_CERT")
+    if cert_var:
+        env_slug: str = cert_var.replace('-', '_')
+        cert: str = os.getenv(env_slug + "_CERT") or os.getenv(env_slug.upper() + "_CERT") or os.getenv(env_slug)
     else:
         cert = None
 
@@ -56,7 +56,7 @@ def find_cert_var(slug=None):
     return cert
 
 
-def slug_to_cert(func):
+def cert_var_to_cert(func):
     """
     Decorator that takes a kwarg `slug` of the target function, and replaces it with `cert`, which points to an
     open file containing the client certificate and key for that provider slug.
@@ -65,35 +65,34 @@ def slug_to_cert(func):
     """
     @wraps(func)
     def wrapper(*args, **kwargs):
-        cert_env = find_cert_var(kwargs.get("slug", None))
-
+        cert_env = find_cert_var(kwargs.pop("cert_var", None))
         return content_to_file(cert_env)(func)(*args, **kwargs)
     return wrapper
 
 
-def get_cred(slug=None, url=None, params=None):
+def get_cred(cred_var=None, url=None, params=None):
     """
     Given a URL with a query string, locates parameters corresponding to username and password, and returns them.
     If both username and password are not found, return None.
-    :param slug: Provider slug
+    :param cred_var: Provider slug
     :param url: URL with query string
     :param params: Parameters dict to be passed to request
     :return: (username, password) or None
     """
     # Check for environment variable
     cred = None
-    if slug:
-        env_slug = slug.replace('-', '_')
-        cred = os.getenv(env_slug + "_CRED") or os.getenv(env_slug.upper() + "_CRED")
+    if cred_var:
+        env_slug = cred_var.replace('-', '_')
+        cred = os.getenv(env_slug + "_CRED") or os.getenv(env_slug.upper() + "_CRED") or os.getenv(env_slug)
     if cred is not None and ":" in cred and all(cred.split(":")):
-        logger.debug("Found credentials for %s in env var", slug)
+        logger.debug("Found credentials for %s in env var", cred_var)
         return cred.split(":")
 
     # Check url and params for http credentials
     if url:
         cred_str = re.search(r"(?<=://)[a-zA-Z0-9\-._~]+:[a-zA-Z0-9\-._~]+(?=@)", url)
         if cred_str:
-            logger.debug("Found credentials for %s in query string", slug)
+            logger.debug("Found credentials for %s in query string", cred_var)
             return cred_str.group().split(":")
 
         # Check in query string
@@ -101,7 +100,7 @@ def get_cred(slug=None, url=None, params=None):
         password = re.search(r"(?<=[?&]password=)[a-zA-Z0-9\-._~]+", url)
         cred = (username.group(), password.group()) if username and password else None
         if cred:
-            logger.debug("Found credentials for %s in query string", slug)
+            logger.debug("Found credentials for %s in query string", cred_var)
             return cred
 
     if params and params.get("username") and params.get("password"):
@@ -120,7 +119,9 @@ def handle_basic_auth(func):
     @wraps(func)
     def wrapper(url, **kwargs):
         try:
-            cred = get_cred(slug=kwargs.pop("slug", None), url=url, params=kwargs.get("params", None))
+            if not kwargs.get("cert_var"):
+                cred_var = kwargs.pop("cred_var", None) or kwargs.pop("slug", None)
+            cred = get_cred(cred_var=cred_var, url=url, params=kwargs.get("params", None))
             if cred:
                 kwargs["auth"] = tuple(cred)
             logger.debug("requests.%s('%s', %s)", func.__name__, url, ", ".join(["%s=%s" % (k,v) for k,v in kwargs.items()]))
@@ -133,7 +134,7 @@ def handle_basic_auth(func):
     return wrapper
 
 
-@slug_to_cert
+@cert_var_to_cert
 @handle_basic_auth
 def get(url, **kwargs):
     """
@@ -146,7 +147,7 @@ def get(url, **kwargs):
     return requests.get(url, **kwargs)
 
 
-@slug_to_cert
+@cert_var_to_cert
 @handle_basic_auth
 def post(url, **kwargs):
     """
@@ -163,15 +164,18 @@ _ORIG_HTTPSCONNECTION_INIT = http.client.HTTPSConnection.__init__
 _ORIG_URLOPENERCACHE_CALL = mapproxy_http._URLOpenerCache.__call__
 
 
-def patch_https(slug):
+def patch_https(slug: str = None, cert_var: str = None):
     """
     Given a provider slug, wrap the initializer for HTTPSConnection so it checks for client keys and certs
     in environment variables named after the given slug, and if found, provides them to the SSLContext.
     If no certs are found, this should function identically to the original, even if external certs/keys are given.
     :param slug: Provider slug, used for finding cert/key environment variable
+    :param cert_var: An optional parameter, to use for finding the cert/key in the environment.
+                     Takes priority over slug.
     :return: None
     """
-    cert = find_cert_var(slug)
+    cert_var = cert_var or slug
+    cert = find_cert_var(cert_var)
     logger.debug("Patching with slug %s, cert [%s B]", slug, len(cert) if cert is not None else 0)
 
     @content_to_file(cert)
@@ -179,13 +183,13 @@ def patch_https(slug):
         certfile = kwargs.pop("cert", None)
         kwargs["key_file"] = certfile or kwargs.get("key_file", None)
         kwargs["cert_file"] = certfile or kwargs.get("cert_file", None)
-        logger.debug("Initializing new HTTPSConnection with provider=%s, certfile=%s", slug, certfile)
+        logger.debug(F"Initializing new HTTPSConnection with provider={slug}, cert_var={cert_var} certfile={certfile}")
         _ORIG_HTTPSCONNECTION_INIT(_self, *args, **kwargs)
 
     http.client.HTTPSConnection.__init__ = _new_init
 
 
-def patch_mapproxy_opener_cache(slug=None):
+def patch_mapproxy_opener_cache(slug=None, cred_var=None):
     """
     Monkey-patches MapProxy's urllib opener constructor to include support for http cookies.
     :return:
@@ -194,6 +198,8 @@ def patch_mapproxy_opener_cache(slug=None):
 
     def _new_call(self, ssl_ca_certs, url, username, password, insecure=False):
         if ssl_ca_certs not in self._opener or slug not in self._opener:
+            if not isinstance(os.getenv('SSL_VERIFICATION', True), bool):
+                ssl_ca_certs = os.getenv('SSL_VERIFICATION')
             https_handler = mapproxy_http.build_https_handler(ssl_ca_certs, insecure)
             passman = urllib.request.HTTPPasswordMgrWithDefaultRealm()
             handlers = [urllib.request.HTTPCookieProcessor,
@@ -209,7 +215,7 @@ def patch_mapproxy_opener_cache(slug=None):
         else:
             opener, passman = self._opener[ssl_ca_certs or slug]
 
-        cred = get_cred(slug=slug)
+        cred = get_cred(cred_var=cred_var or slug)
         if cred and len(cred) == 2:
             username = username or cred[0]
             password = password or cred[1]

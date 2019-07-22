@@ -77,7 +77,7 @@ class WCSConverter(object):
 
     def get_coverage_with_gdal(self):
         # Get username and password from url params, if possible
-        cred = auth_requests.get_cred(slug=self.name, url=self.service_url)
+        cred = auth_requests.get_cred(cred_var=self.name, url=self.service_url)
 
         try:
             # Isolate url params
@@ -156,7 +156,8 @@ class WCSConverter(object):
             except OSError:
                 pass
             try:
-                req = auth_requests.get(self.service_url, params=params, slug=self.slug, stream=True,
+                cert_var = self.config.get('cert_var', self.slug)
+                req = auth_requests.get(self.service_url, params=params, cert_var=cert_var, stream=True,
                                         verify=getattr(settings, 'SSL_VERIFICATION', True))
                 logger.info("Getting the coverage: {0}".format(req.url))
                 try:
