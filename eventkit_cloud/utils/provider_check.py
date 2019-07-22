@@ -12,8 +12,10 @@ from django.conf import settings
 from django.contrib.gis.geos import GEOSGeometry, Polygon, GeometryCollection
 from django.utils.translation import ugettext as _
 from enum import Enum
+import yaml
 
 from eventkit_cloud.utils import auth_requests
+from eventkit_cloud.jobs.models import DataProvider
 
 logger = logging.getLogger(__name__)
 
@@ -98,7 +100,7 @@ class ProviderCheck(object):
     Once returned, the information is displayed via an icon and tooltip in the EventKit UI.
     """
 
-    def __init__(self, service_url, layer, aoi_geojson=None, slug=None, max_area=0):
+    def __init__(self, service_url, layer, aoi_geojson=None, slug=None, max_area=None, config: dict = None):
         """
         Initialize this ProviderCheck object with a service URL and layer.
         :param service_url: URL of provider, if applicable. Query string parameters are ignored.
@@ -114,6 +116,7 @@ class ProviderCheck(object):
         self.result = CheckResults.SUCCESS
         self.timeout = 10
         self.verify = getattr(settings, "SSL_VERIFICATION", True)
+        self.config = config
 
         if aoi_geojson is not None and aoi_geojson is not "":
             if isinstance(aoi_geojson, str):
@@ -159,7 +162,8 @@ class ProviderCheck(object):
                 self.result = CheckResults.NO_URL
                 return None
 
-            response = auth_requests.get(self.service_url, slug=self.slug, params=self.query, timeout=self.timeout,
+            cert_var = self.config.get("cert_var", self.slug)
+            response = auth_requests.get(self.service_url, cert_var=cert_var, params=self.query, timeout=self.timeout,
                                          verify=self.verify)
 
             self.token_dict['status'] = response.status_code
@@ -236,8 +240,10 @@ class OverpassProviderCheck(ProviderCheck):
                 self.result = CheckResults.NO_URL
                 return
 
-            response = auth_requests.post(url=self.service_url, slug=self.slug, data="out meta;", timeout=self.timeout,
-                                          verify=self.verify)
+            cert_var = self.config.get('cert_var') or self.slug
+
+            response = auth_requests.post(url=self.service_url, cert_var=cert_var, data="out meta;",
+                                          timeout=self.timeout, verify=self.verify)
 
             self.token_dict['status'] = response.status_code
 
@@ -582,15 +588,16 @@ def get_provider_checker(type_slug):
         return ProviderCheck
 
 
-def perform_provider_check(provider, geojson):
+def perform_provider_check(provider: DataProvider, geojson):
     provider_type = str(provider.export_provider_type)
 
     url = str(provider.url)
     if url == '' and 'osm' in provider_type:
         url = settings.OVERPASS_API_URL
 
-    checker_type = get_provider_checker(provider_type)
-    checker = checker_type(service_url=url, layer=provider.layer, aoi_geojson=geojson, slug=provider.slug, max_area=provider.max_selection)
+    provider_checker = get_provider_checker(provider_type)
+    checker = provider_checker(service_url=url, layer=provider.layer, aoi_geojson=geojson, slug=provider.slug,
+                               max_area=provider.max_selection, config=yaml.load(provider.config))
     response = checker.check()
 
     logger.info("Status of provider '{}': {}".format(str(provider.name), response))

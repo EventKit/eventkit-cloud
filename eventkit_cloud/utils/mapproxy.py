@@ -189,8 +189,11 @@ class MapproxyGeopackage(object):
         mapproxy.cache.geopackage.GeopackageCache.load_tile_metadata = load_tile_metadata
         logger.info("Beginning seeding to {0}".format(self.gpkgfile))
         try:
-            auth_requests.patch_https(self.name)
-            auth_requests.patch_mapproxy_opener_cache(slug=self.name)
+            cert_var = yaml.load(self.config).get("cert_var")
+            auth_requests.patch_https(slug=self.name, cert_var=cert_var)
+
+            cred_var = yaml.load(self.config).get("cred_var")
+            auth_requests.patch_mapproxy_opener_cache(slug=self.name, cred_var=cred_var)
 
             progress_store = get_progress_store(self.gpkgfile)
             progress_logger = CustomLogger(verbose=True, task_uid=self.task_uid, progress_store=progress_store)

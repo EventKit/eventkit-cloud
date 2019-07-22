@@ -13,13 +13,13 @@ from django.db.models import Q
 from enum import Enum
 from numpy import linspace
 
-from eventkit_cloud.celery import app
 from eventkit_cloud.utils import auth_requests
 from eventkit_cloud.utils.gdalutils import get_band_statistics
 import pickle
 import logging
 from time import sleep
 import signal
+import yaml
 
 logger = logging.getLogger()
 
@@ -226,16 +226,16 @@ def get_file_paths(directory, paths=None):
     return paths
 
 
-def get_last_update(url, type, slug=None):
+def get_last_update(url, type, cert_var=None):
     """
     A wrapper to get different timestamps.
     :param url: The url to get the timestamp
     :param type: The type of services (e.g. osm)
-    :param slug: Optionally a slug if the service requires credentials.
+    :param cert_var: Optionally a slug if the service requires credentials.
     :return: The timestamp as a string.
     """
     if type == 'osm':
-        return get_osm_last_update(url, slug=slug)
+        return get_osm_last_update(url, cert_var=cert_var)
 
 
 def get_metadata_url(url, type):
@@ -251,16 +251,16 @@ def get_metadata_url(url, type):
         return url
 
 
-def get_osm_last_update(url, slug=None):
+def get_osm_last_update(url, cert_var=None):
     """
 
     :param url: A path to the overpass api.
-    :param slug: Optionally a slug if credentials are needed
+    :param cert_var: Optionally a slug if credentials are needed
     :return: The default timestamp as a string (2018-06-18T13:09:59Z)
     """
     try:
         timestamp_url = "{0}timestamp".format(url.rstrip('/').rstrip('interpreter'))
-        response = auth_requests.get(timestamp_url, slug=slug)
+        response = auth_requests.get(timestamp_url, cert_var=cert_var)
         if response:
             return response.content.decode()
         raise Exception("Get OSM last update failed with {0}: {1}".format(response.status_code, response.content))
@@ -398,6 +398,7 @@ def get_metadata(data_provider_task_uid):
                         provider_task.slug,
                         download_filename
                     )
+                    cert_var = yaml.load(data_provider.config).get('cert_var', data_provider.slug)
                     metadata['data_sources'][provider_task.slug] = {'uid': str(provider_task.uid),
                                                                     'slug': provider_task.slug,
                                                                     'name': provider_task.name,
@@ -411,7 +412,7 @@ def get_metadata(data_provider_task_uid):
                                                                     # 'description': data_provider.service_description,
                                                                     'last_update': get_last_update(data_provider.url,
                                                                                                    provider_type,
-                                                                                                   slug=data_provider.slug),
+                                                                                                   cert_var=cert_var),
                                                                     'metadata': get_metadata_url(data_provider.url,
                                                                                                  provider_type),
                                                                     'copyright': data_provider.service_copyright}
@@ -512,3 +513,18 @@ def get_message_count(queue_name):
                 return queue.get("messages")
             except Exception as e:
                 logger.info(e)
+
+def clean_config(config):
+    """
+    Used to remove adhoc service related values from the configuration.
+    :param config: A yaml structured string.
+    :return:
+    """
+    service_keys = ["cert_var", "cert_cred", "concurrency", "max_repeat"]
+
+    conf = yaml.load(config)
+
+    for service_key in service_keys:
+        conf.pop(service_key, None)
+
+    return yaml.dump(conf)
