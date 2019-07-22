@@ -24,7 +24,7 @@ describe('UserGroupsPage component', () => {
 
     const getProps = () => ({
         location: {
-            search: queryString.stringify({ ordering: 'admin' }),
+            search: queryString.stringify({}),
         },
         user: {
             username: 'user_one',
@@ -277,12 +277,12 @@ describe('UserGroupsPage component', () => {
     });
 
     it('makeUserRequest should make the default request', () => {
-        setup({ location: { search: '' }});
+        setup({ location: { search: queryString.stringify({ ordering: 'username', page_size: 20 }) } })
         props.getUsers.resetHistory();
         const expectedParams = {
             ordering: 'username',
             prepend_self: true,
-            page_size: instance.pageSize,
+            page_size: instance.pageSize.toString(),
         };
         instance.makeUserRequest();
         expect(props.getUsers.calledOnce).toBe(true);
@@ -359,6 +359,7 @@ describe('UserGroupsPage component', () => {
     });
 
     it('handleSearchKeyDown should set query with search text', () => {
+        setup({ location: { search: queryString.stringify({ ordering: 'admin' }) } })
         browserHistory.reset();
         const fakeEvent = { key: 'Enter', target: { value: 'search text' } };
         instance.handleSearchKeyDown(fakeEvent);

@@ -370,7 +370,7 @@ describe('DataPackPage component', () => {
     });
 
     it('if a run has been deleted it should call makeRunRequest again', () => {
-        const stateStub = sinon.stub(instance, 'setState').callsFake(cb => (cb));
+        const stateStub = sinon.stub(instance, 'setState').callsFake((state, cb) => { cb(); });
         const makeRequestStub = sinon.stub(instance, 'makeRunRequest');
         const nextProps = getProps();
         nextProps.runDeletion.deleted = true;
