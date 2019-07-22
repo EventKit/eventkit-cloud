@@ -12,8 +12,8 @@ class Command(BaseCommand):
     help = 'Updates version 1.1 to 1.2 in the database models.'
 
     def add_arguments(self, parser):
-        parser.add_argument('fake', nargs='*')
-        parser.add_argument('purge_celery', nargs='*')
+        parser.add_argument('--fake', action='store_true')
+        parser.add_argument('--purge_celery', action='store_true')
 
     def handle(self, *args, **options):
         # The migrations had issues in version <1.2.3, this cleans out all that garbage, and starts fresh
@@ -22,6 +22,7 @@ class Command(BaseCommand):
             fake_new_migrations()
             print('After this new migrations should be applied "python manage.py migrate"')
         elif options['purge_celery']:
+            print('Purging celery models and migrations')
             purge_celery_migrations()
             print('After this new migrations should be applied "python manage.py migrate"')
         else:
