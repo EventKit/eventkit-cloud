@@ -20,7 +20,7 @@ class OAuthAdmin(admin.ModelAdmin):
 
     def get_actions(self, request):
         actions = super(OAuthAdmin, self).get_actions(request)
-        del actions['delete_selected']
+        actions.pop('delete_selected', None)
         return actions
 
 
