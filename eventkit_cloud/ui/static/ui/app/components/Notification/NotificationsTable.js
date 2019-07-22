@@ -25,11 +25,11 @@ export class NotificationsTable extends React.Component {
         };
     }
 
-    componentDidUpdate(prevProps) {
+    componentDidUpdate(prevProps, prevState) {
         if (this.props.notificationsData !== prevProps.notificationsData) {
             // Make sure to deselect any notifications that have been removed. Handle it here instead of
             // the standard callback in case it was removed by the notifications dropdown.
-            const selected = { ...this.state.selected };
+            const selected = { ...prevState.selected };
 
             Object.keys(selected).forEach((uid) => {
                 if (!this.props.notificationsData.notifications[uid]) {
@@ -53,14 +53,15 @@ export class NotificationsTable extends React.Component {
     }
 
     setSelected(notification, isSelected) {
-        const selected = { ...this.state.selected };
-        if (isSelected) {
-            selected[notification.id] = notification;
-        } else {
-            delete selected[notification.id];
-        }
-
-        this.setState({ selected });
+        this.setState((prevState) => {
+            const selected = { ...prevState.selected };
+            if (isSelected) {
+                selected[notification.id] = notification;
+            } else {
+                delete selected[notification.id];
+            }
+            return { selected };
+        });
     }
 
     isSelected(notification) {
@@ -68,15 +69,17 @@ export class NotificationsTable extends React.Component {
     }
 
     handleSelectAllCheck() {
-        let selected = { ...this.state.selected };
-        if (this.getSelectedCount() === 0) {
-            this.props.notificationsArray.forEach((notification) => {
-                selected[notification.id] = notification;
-            });
-        } else {
-            selected = {};
-        }
-        this.setState({ selected });
+        this.setState((prevState) => {
+            let selected = { ...prevState.selected };
+            if (this.getSelectedCount() === 0) {
+                this.props.notificationsArray.forEach((notification) => {
+                    selected[notification.id] = notification;
+                });
+            } else {
+                selected = {};
+            }
+            return { selected };
+        });
     }
 
     render() {
@@ -161,7 +164,11 @@ export class NotificationsTable extends React.Component {
                                 style={styles.contentHeaderColumn}
                             >
                                 <div style={styles.contentHeaderColumnWrapper}>
-                                    <span>{selectedCount} Selected</span>
+                                    <span>
+                                        {selectedCount}
+                                        {' '}
+Selected
+                                    </span>
                                     <NotificationsTableMenu
                                         allSelected={selectedCount === this.props.notificationsArray.length}
                                         selectedNotifications={this.state.selected}

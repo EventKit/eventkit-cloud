@@ -86,7 +86,7 @@ export class ImportButton extends Component {
         }
 
         return (
-            <button className="qa-ImportButton-button" style={styles.drawButtonGeneral} onClick={this.handleOnClick}>
+            <button type="button" className="qa-ImportButton-button" style={styles.drawButtonGeneral} onClick={this.handleOnClick}>
                 {icon}
             </button>
         );

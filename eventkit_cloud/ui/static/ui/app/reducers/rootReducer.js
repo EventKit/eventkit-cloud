@@ -1,5 +1,5 @@
 import { combineReducers } from 'redux';
-import { connectRouter } from 'connected-react-router'
+import { connectRouter } from 'connected-react-router';
 import { types } from '../actions/uiActions';
 import { userReducer } from './userReducer';
 import { usersReducer } from './usersReducer';

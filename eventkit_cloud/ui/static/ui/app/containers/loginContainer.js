@@ -162,10 +162,12 @@ export class Form extends React.Component {
             <div style={{ verticalAlign: 'middle', textAlign: 'center', marginTop: '30px' }}>
                 {loginForm}
                 {oauthButton}
-                {!loginForm && !oauthButton ?
-                    <div style={{ color: colors.white, marginTop: '150px' }}>
+                {!loginForm && !oauthButton
+                    ? (
+                        <div style={{ color: colors.white, marginTop: '150px' }}>
                         No login methods available, please contact an administrator
-                    </div>
+                        </div>
+                    )
                     : null}
             </div>
         );
@@ -175,7 +177,7 @@ export class Form extends React.Component {
 Form.propTypes = {
     handleLogin: PropTypes.func.isRequired,
     location: PropTypes.shape({
-        query: PropTypes.object,
+        search: PropTypes.object,
     }).isRequired,
     theme: PropTypes.object.isRequired,
 };

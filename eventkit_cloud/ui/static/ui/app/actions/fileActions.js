@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { getCookie } from '../utils/generic'
+import { getCookie } from '../utils/generic';
 
 export const types = {
     FILE_PROCESSING: 'FILE_PROCESSING',

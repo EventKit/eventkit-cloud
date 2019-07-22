@@ -153,76 +153,83 @@ export class NotificationsTableItem extends React.Component {
                     style={styles.optionsRowColumn}
                 >
                     <div style={styles.optionsButtonsContainer}>
-                        {(isWidthUp('xl', width)) ?
-                            <div
-                                className="qa-NotificationsTableItem-ActionButtons"
-                                style={{ display: 'flex', flex: '1' }}
-                            >
-                                <div style={{
-                                    flex: '1', textAlign: 'right', marginRight: '6px', boxSizing: 'border-box',
-                                }}
+                        {(isWidthUp('xl', width))
+                            ? (
+                                <div
+                                    className="qa-NotificationsTableItem-ActionButtons"
+                                    style={{ display: 'flex', flex: '1' }}
                                 >
-                                    {viewPath ?
-                                        <ButtonBase
-                                            className="qa-NotificationsTableItem-ActionButtons-View"
-                                            style={styles.button}
-                                            onClick={this.handleView}
-                                        >
-                                            <OpenInNewIcon style={styles.optionButtonLabel} color="primary" />
-                                            View
-                                        </ButtonBase>
-                                        :
-                                        null
-                                    }
-                                </div>
-                                <div style={{
-                                    flex: '0 1 180px', textAlign: 'center', margin: '0 6px', boxSizing: 'border-box',
-                                }}
-                                >
-                                    {this.props.notification.unread ?
-                                        <ButtonBase
-                                            className="qa-NotificationsTableItem-ActionButtons-MarkAsRead"
-                                            style={styles.button}
-                                            onClick={this.handleMarkAsRead}
-                                        >
-                                            <FlagIcon style={styles.optionButtonLabel} color="primary" />
-                                            Mark As Read
-                                        </ButtonBase>
-                                        :
-                                        <ButtonBase
-                                            className="qa-NotificationsTableItem-ActionButtons-MarkAsUnread"
-                                            style={styles.button}
-                                            onClick={this.handleMarkAsUnread}
-                                        >
-                                            <FlagIcon style={styles.optionButtonLabel} color="primary" />
-                                            Mark As Unread
-                                        </ButtonBase>
-                                    }
-                                </div>
-                                <div style={{
-                                    flex: '1', textAlign: 'left', marginLeft: '6px', boxSizing: 'border-box',
-                                }}
-                                >
-                                    <ButtonBase
-                                        className="qa-NotificationsTableItem-ActionButtons-Remove"
-                                        style={styles.button}
-                                        onClick={this.handleRemove}
+                                    <div style={{
+                                        flex: '1', textAlign: 'right', marginRight: '6px', boxSizing: 'border-box',
+                                    }}
                                     >
-                                        <CloseIcon style={styles.optionButtonLabel} color="primary" />
+                                        {viewPath
+                                            ? (
+                                                <ButtonBase
+                                                    className="qa-NotificationsTableItem-ActionButtons-View"
+                                                    style={styles.button}
+                                                    onClick={this.handleView}
+                                                >
+                                                    <OpenInNewIcon style={styles.optionButtonLabel} color="primary" />
+                                            View
+                                                </ButtonBase>
+                                            )
+                                            : null
+                                        }
+                                    </div>
+                                    <div style={{
+                                        flex: '0 1 180px', textAlign: 'center', margin: '0 6px', boxSizing: 'border-box',
+                                    }}
+                                    >
+                                        {this.props.notification.unread
+                                            ? (
+                                                <ButtonBase
+                                                    className="qa-NotificationsTableItem-ActionButtons-MarkAsRead"
+                                                    style={styles.button}
+                                                    onClick={this.handleMarkAsRead}
+                                                >
+                                                    <FlagIcon style={styles.optionButtonLabel} color="primary" />
+                                            Mark As Read
+                                                </ButtonBase>
+                                            )
+                                            : (
+                                                <ButtonBase
+                                                    className="qa-NotificationsTableItem-ActionButtons-MarkAsUnread"
+                                                    style={styles.button}
+                                                    onClick={this.handleMarkAsUnread}
+                                                >
+                                                    <FlagIcon style={styles.optionButtonLabel} color="primary" />
+                                            Mark As Unread
+                                                </ButtonBase>
+                                            )
+                                        }
+                                    </div>
+                                    <div style={{
+                                        flex: '1', textAlign: 'left', marginLeft: '6px', boxSizing: 'border-box',
+                                    }}
+                                    >
+                                        <ButtonBase
+                                            className="qa-NotificationsTableItem-ActionButtons-Remove"
+                                            style={styles.button}
+                                            onClick={this.handleRemove}
+                                        >
+                                            <CloseIcon style={styles.optionButtonLabel} color="primary" />
                                         Remove
-                                    </ButtonBase>
+                                        </ButtonBase>
+                                    </div>
                                 </div>
-                            </div>
-                            :
-                            <NotificationMenu
-                                className="qa-NotificationsTableItem-ActionMenu"
-                                notification={this.props.notification}
-                                history={this.props.history}
-                                onMarkAsRead={this.props.onMarkAsRead}
-                                onMarkAsUnread={this.props.onMarkAsUnread}
-                                onRemove={this.props.onRemove}
-                                onView={this.props.onView}
-                            />
+                            )
+                            : (
+                                <NotificationMenu
+                                    className="qa-NotificationsTableItem-ActionMenu"
+                                    notification={this.props.notification}
+                                    history={this.props.history}
+                                    onMarkAsRead={this.props.onMarkAsRead}
+                                    onMarkAsUnread={this.props.onMarkAsUnread}
+                                    onRemove={this.props.onRemove}
+                                    onView={this.props.onView}
+                                />
+                            )
                         }
                     </div>
                 </TableCell>

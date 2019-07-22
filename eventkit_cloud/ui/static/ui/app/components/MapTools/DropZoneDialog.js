@@ -1,11 +1,11 @@
 import PropTypes from 'prop-types';
-import React, { Component, createRef } from 'react';
+import React, { Component } from 'react';
 import { withTheme } from '@material-ui/core/styles';
 import Dropzone from 'react-dropzone';
 import Button from '@material-ui/core/Button';
 import FileFileUpload from '@material-ui/icons/CloudUpload';
-import BaseDialog from '../Dialog/BaseDialog';
 import RootRef from '@material-ui/core/RootRef/RootRef';
+import BaseDialog from '../Dialog/BaseDialog';
 
 export class DropZoneDialog extends Component {
     constructor(props) {
@@ -64,30 +64,37 @@ export class DropZoneDialog extends Component {
                     style={{}}
                     maxSize={5000000}
                     className="qa-DropZoneDialog-Dropzone"
-                >{({getRootProps, getInputProps}) => {
-                    const {ref} = getRootProps();
-                    return (
-                    <RootRef rootRef={ref}>
-                        <div {...getRootProps()} style={styles.drop} className="qa-DropZoneDialog-text">
-                        <span style={styles.text}>
-                            <strong>GeoJSON, KML, GPKG, zipped SHP,</strong><br/>
-                            and other major geospatial data formats are supported.<br/>
-                            <strong> 5 MB </strong>max<br/>
-                            Drag and drop or<br/>
-                        </span>
-                                <Button
-                                    style={{margin: '15px 10px'}}
-                                    variant="contained"
-                                    color="primary"
-                                    className="qa-DropZoneDialog-Button-select"
-                                >
-                                    <input {...getInputProps()} />
-                                    <FileFileUpload color="secondary" style={{marginRight: '5px'}}/>
+                >
+                    {({ getRootProps, getInputProps }) => {
+                        const { ref } = getRootProps();
+                        return (
+                            <RootRef rootRef={ref}>
+                                <div {...getRootProps()} style={styles.drop} className="qa-DropZoneDialog-text">
+                                    <span style={styles.text}>
+                                        <strong>GeoJSON, KML, GPKG, zipped SHP,</strong>
+                                        <br />
+                            and other major geospatial data formats are supported.
+                                        <br />
+                                        <strong> 5 MB </strong>
+max
+                                        <br />
+                            Drag and drop or
+                                        <br />
+                                    </span>
+                                    <Button
+                                        style={{ margin: '15px 10px' }}
+                                        variant="contained"
+                                        color="primary"
+                                        className="qa-DropZoneDialog-Button-select"
+                                    >
+                                        <input {...getInputProps()} />
+                                        <FileFileUpload color="secondary" style={{ marginRight: '5px' }} />
                                     Select A File
-                                </Button>
-                        </div>
-                    </RootRef>)
-                }}
+                                    </Button>
+                                </div>
+                            </RootRef>
+                        );
+                    }}
                 </Dropzone>
             </BaseDialog>
         );

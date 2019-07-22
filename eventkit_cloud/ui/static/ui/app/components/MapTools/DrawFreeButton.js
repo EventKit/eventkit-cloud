@@ -85,7 +85,7 @@ export class DrawFreeButton extends Component {
         }
 
         return (
-            <button className="qa-DrawFreeButton-button" style={styles.drawButtonGeneral} onClick={this.handleOnClick}>
+            <button type="button" className="qa-DrawFreeButton-button" style={styles.drawButtonGeneral} onClick={this.handleOnClick}>
                 {icon}
             </button>
         );
@@ -102,4 +102,3 @@ DrawFreeButton.propTypes = {
 };
 
 export default withTheme()(DrawFreeButton);
-

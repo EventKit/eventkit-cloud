@@ -77,9 +77,9 @@ export class NotificationsPage extends React.Component {
 
     handleLoadMore() {
         if (this.props.notificationsData.nextPage) {
-            this.setState({
-                pageSize: this.state.pageSize + this.itemsPerPage,
-            }, this.refresh);
+            this.setState(prevState => ({
+                pageSize: prevState.pageSize + this.itemsPerPage,
+            }), this.refresh);
         }
     }
 
@@ -137,58 +137,65 @@ export class NotificationsPage extends React.Component {
                     className="qa-Notifications-PageHeader"
                     title="Notifications"
                 />
-                {this.state.loading ?
-                    <PageLoading background="transparent" style={{ zIndex: 10 }} />
+                {this.state.loading
+                    ? <PageLoading background="transparent" style={{ zIndex: 10 }} />
                     : null
                 }
                 <CustomScrollbar style={styles.customScrollbar}>
-                    {this.state.loadingPage ?
-                        null
-                        :
-                        <div
-                            className="qa-NotificationsPage-Content"
-                            style={styles.content}
-                        >
-                            {(notifications.length === 0) ?
-                                <Paper
-                                    className="qa-NotificationsPage-Content-NoData"
-                                    style={styles.noData}
-                                >
-                                    {"You don't have any notifications."}
-                                </Paper>
-                                :
-                                <div className="qa-NotificationsPage-Content-Notifications">
-                                    {isWidthUp('md', this.props.width) ?
-                                        <NotificationsTable
-                                            notificationsData={this.props.notificationsData}
-                                            notificationsArray={notifications}
-                                            history={this.props.history}
-                                        />
-                                        :
-                                        <GridList
-                                            className="qa-NotificationsPage-Content-Notifications-Grid"
-                                            cellHeight="auto"
-                                            style={styles.gridList}
-                                            spacing={2}
-                                            cols={1}
+                    {this.state.loadingPage
+                        ? null
+                        : (
+                            <div
+                                className="qa-NotificationsPage-Content"
+                                style={styles.content}
+                            >
+                                {(notifications.length === 0)
+                                    ? (
+                                        <Paper
+                                            className="qa-NotificationsPage-Content-NoData"
+                                            style={styles.noData}
                                         >
-                                            {notifications.map(notification => (
-                                                <NotificationGridItem
-                                                    key={`Notification-${notification.id}`}
-                                                    notification={notification}
-                                                    history={this.props.history}
-                                                />
-                                            ))}
-                                        </GridList>
-                                    }
-                                    <LoadButtons
-                                        range={this.getRange(notifications)}
-                                        handleLoadMore={this.handleLoadMore}
-                                        loadMoreDisabled={!this.props.notificationsData.nextPage}
-                                    />
-                                </div>
-                            }
-                        </div>
+                                            {"You don't have any notifications."}
+                                        </Paper>
+                                    )
+                                    : (
+                                        <div className="qa-NotificationsPage-Content-Notifications">
+                                            {isWidthUp('md', this.props.width)
+                                                ? (
+                                                    <NotificationsTable
+                                                        notificationsData={this.props.notificationsData}
+                                                        notificationsArray={notifications}
+                                                        history={this.props.history}
+                                                    />
+                                                )
+                                                : (
+                                                    <GridList
+                                                        className="qa-NotificationsPage-Content-Notifications-Grid"
+                                                        cellHeight="auto"
+                                                        style={styles.gridList}
+                                                        spacing={2}
+                                                        cols={1}
+                                                    >
+                                                        {notifications.map(notification => (
+                                                            <NotificationGridItem
+                                                                key={`Notification-${notification.id}`}
+                                                                notification={notification}
+                                                                history={this.props.history}
+                                                            />
+                                                        ))}
+                                                    </GridList>
+                                                )
+                                            }
+                                            <LoadButtons
+                                                range={this.getRange(notifications)}
+                                                handleLoadMore={this.handleLoadMore}
+                                                loadMoreDisabled={!this.props.notificationsData.nextPage}
+                                            />
+                                        </div>
+                                    )
+                                }
+                            </div>
+                        )
                     }
                 </CustomScrollbar>
             </div>

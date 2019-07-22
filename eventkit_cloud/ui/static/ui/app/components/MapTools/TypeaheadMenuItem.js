@@ -44,10 +44,9 @@ export class TypeaheadMenuItem extends Component {
 
         let icon = null;
         if (this.props.result && this.props.result.geometry && this.props.result.geometry.type) {
-            icon = this.props.result.geometry.type === 'Point' ?
-                <ActionRoom className="qa-TypeaheadMenuItem-ActionRoom" style={styles.icon} />
-                :
-                <IrregularPolygon className="qa-TypeaheadMenuItem-IrregularPolygon" style={styles.icon} />;
+            icon = this.props.result.geometry.type === 'Point'
+                ? <ActionRoom className="qa-TypeaheadMenuItem-ActionRoom" style={styles.icon} />
+                : <IrregularPolygon className="qa-TypeaheadMenuItem-IrregularPolygon" style={styles.icon} />;
         }
 
         return (

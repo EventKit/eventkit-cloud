@@ -2,7 +2,6 @@ import React from 'react';
 import sinon from 'sinon';
 import { createShallow } from '@material-ui/core/test-utils';
 import Dropzone from 'react-dropzone';
-import FileFileUpload from '@material-ui/icons/CloudUpload';
 import BaseDialog from '../../components/Dialog/BaseDialog';
 import { DropZoneDialog } from '../../components/MapTools/DropZoneDialog';
 

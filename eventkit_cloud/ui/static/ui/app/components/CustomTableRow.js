@@ -39,7 +39,7 @@ export class CustomTableRow extends Component {
 
         return (
             <div
-                className="qa-CustomTableRow"
+                className={this.props.className}
                 style={styles.container}
             >
                 <div style={styles.title}>
@@ -57,6 +57,7 @@ CustomTableRow.defaultProps = {
     containerStyle: {},
     titleStyle: {},
     dataStyle: {},
+    className: 'qa-CustomTableRow',
 };
 
 CustomTableRow.propTypes = {

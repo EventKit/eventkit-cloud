@@ -88,7 +88,7 @@ export class MapViewButton extends Component {
         }
 
         return (
-            <button className="qa-MapViewButton-button" style={styles.drawButtonGeneral} onClick={this.handleOnClick}>
+            <button type="button" className="qa-MapViewButton-button" style={styles.drawButtonGeneral} onClick={this.handleOnClick}>
                 {icon}
             </button>
         );
@@ -105,4 +105,3 @@ MapViewButton.propTypes = {
 };
 
 export default withTheme()(MapViewButton);
-

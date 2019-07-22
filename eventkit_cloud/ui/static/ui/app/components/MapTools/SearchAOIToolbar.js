@@ -122,7 +122,9 @@ export class SearchAOIToolbar extends Component {
             if (this.props.geocode.error) {
                 content = (
                     <div style={styles.error}>
-                        ERROR: {this.props.geocode.error}
+                        ERROR:
+                        {' '}
+                        {this.props.geocode.error}
                     </div>
                 );
             } else if (this.props.geocode.fetched) {
@@ -172,13 +174,15 @@ export class SearchAOIToolbar extends Component {
                         renderMenu={renderer}
                         className="qa-SearchAOIToolbar-typeahead"
                     />
-                    {this.props.geocode.fetching ?
-                        <div style={styles.loading}>
-                            <CircularProgress
-                                size={25}
-                                color="primary"
-                            />
-                        </div>
+                    {this.props.geocode.fetching
+                        ? (
+                            <div style={styles.loading}>
+                                <CircularProgress
+                                    size={25}
+                                    color="primary"
+                                />
+                            </div>
+                        )
                         : null
                     }
                 </div>

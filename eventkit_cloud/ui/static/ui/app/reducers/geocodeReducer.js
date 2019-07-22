@@ -38,4 +38,3 @@ export function geocodeReducer(state = initialState, action) {
             return state;
     }
 }
-
