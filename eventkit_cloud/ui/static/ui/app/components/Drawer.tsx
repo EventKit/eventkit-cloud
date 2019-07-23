@@ -228,7 +228,6 @@ export class Drawer extends React.Component<Props, State> {
                         >
                             <NavLink // eslint-disable-line jsx-a11y/anchor-is-valid
                                 className={`qa-Drawer-Link-logout ${classes.link}`}
-                                activeClassName={classes.activeLink}
                                 onClick={this.handleLogoutClick}
                                 to={"/"}
                             >
