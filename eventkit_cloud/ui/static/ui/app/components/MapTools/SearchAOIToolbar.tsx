@@ -206,20 +206,6 @@ export class SearchAOIToolbar extends React.Component<Props, State> {
                         minLength={2}
                         renderMenu={renderer}
                     />
-<<<<<<< Updated upstream:eventkit_cloud/ui/static/ui/app/components/MapTools/SearchAOIToolbar.js
-                    {this.props.geocode.fetching
-                        ? (
-                            <div style={styles.loading}>
-                                <CircularProgress
-                                    size={25}
-                                    color="primary"
-                                />
-                            </div>
-                        )
-                        : null
-                    }
-=======
->>>>>>> Stashed changes:eventkit_cloud/ui/static/ui/app/components/MapTools/SearchAOIToolbar.tsx
                 </div>
                 {this.props.geocode.fetching ?
                     <div className={classes.buttonContainer}
