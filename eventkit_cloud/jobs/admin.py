@@ -12,6 +12,7 @@ from django_celery_beat.models import IntervalSchedule, CrontabSchedule
 
 from eventkit_cloud.jobs.models import ExportFormat, Job, Region, DataProvider, DataProviderType, \
     DatamodelPreset, License, DataProviderStatus
+from eventkit_cloud.tasks.helpers import clean_config
 
 logger = logging.getLogger(__name__)
 
@@ -131,7 +132,8 @@ class DataProviderForm(forms.ModelForm):
             if not config:
                 raise forms.ValidationError("Configuration is required for OSM data providers")
             from eventkit_cloud.feature_selection.feature_selection import FeatureSelection
-            feature_selection = FeatureSelection(config)
+            cleaned_config = clean_config(config)
+            feature_selection = FeatureSelection(cleaned_config)
             feature_selection.valid
             if feature_selection.errors:
                 raise forms.ValidationError("Invalid configuration: {0}".format(feature_selection.errors))

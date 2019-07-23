@@ -115,6 +115,12 @@ service credentials can be added to the environment using the service slug as th
 
 For example a slug of 'osm' would use environment variables `OSM_CRED` or `OSM_CERT` if requiring authentication.
 
+If there are many services that use the same certificate, a certificate can be added to the environment and then referenced, 
+in the configuration block for each data provider.  For example, the certificate can be loaded as a single string in an 
+environment setting, `SOURCE_CERT`.  Then in each data provider, in the configuration block, there would be a key
+and value added `cert_var: SOURCE_CERT`.  _Note: The cert_var IS case sensitive._
+
+
 ##### Basic Auth
 To use basic auth, add the username and password to the environment as such
 <pre>SLUG_CRED='username:password'</pre>

@@ -33,7 +33,7 @@ from eventkit_cloud.tasks.helpers import normalize_name, get_archive_data_path, 
     get_download_filename, get_run_staging_dir, get_provider_staging_dir, get_run_download_dir, Directory, \
     default_format_time, progressive_kill, get_style_files, generate_qgs_style, create_license_file, \
     get_human_readable_metadata_document, pickle_exception, get_data_type_from_provider, get_arcgis_metadata, \
-    get_message_count
+    get_message_count, clean_config
 from eventkit_cloud.utils.auth_requests import get_cred
 from eventkit_cloud.utils import (
     overpass, pbf, s3, mapproxy, wcs, geopackage, gdalutils
@@ -374,7 +374,7 @@ def osm_data_collection_pipeline(
     op = overpass.Overpass(
         bbox=bbox, stage_dir=stage_dir, slug=slug, url=url,
         job_name=job_name, task_uid=export_task_record_uid,
-        raw_data_filename='{}_query.osm'.format(job_name)
+        raw_data_filename='{}_query.osm'.format(job_name), config=config
     )
 
     osm_data_filename = op.run_query(user_details=user_details, subtask_percentage=65, eta=eta)  # run the query
@@ -391,6 +391,7 @@ def osm_data_collection_pipeline(
         logger.error("No configuration was provided for OSM export")
         raise RuntimeError("The configuration field is required for OSM data providers")
 
+    config = clean_config(config)
     feature_selection = FeatureSelection.example(config)
 
     update_progress(export_task_record_uid, progress=67, eta=eta, msg='Converting data to Geopackage')
@@ -689,7 +690,7 @@ def wfs_export_task(self, result=None, layer=None, config=None, run_uid=None, ta
         service_url += "?" + query_str
 
     url = service_url
-    cred = get_cred(slug=name, url=url)
+    cred = get_cred(cred_var=name, url=url)
     if cred:
         user, pw = cred
         if not re.search(r"(?<=://)[a-zA-Z0-9\-._~]+:[a-zA-Z0-9\-._~]+(?=@)", url):

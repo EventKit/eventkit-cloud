@@ -7,7 +7,8 @@ from string import Template
 
 from django.conf import settings
 from requests import exceptions
-from . import auth_requests
+from eventkit_cloud.utils import auth_requests
+import yaml
 
 logger = logging.getLogger(__name__)
 
@@ -20,7 +21,7 @@ class Overpass(object):
     """
 
     def __init__(self, url=None, slug=None, bbox=None, stage_dir=None, job_name=None, debug=False, task_uid=None,
-                 raw_data_filename=None):
+                 raw_data_filename=None, config=None):
         """
         Initialize the Overpass utility.
 
@@ -42,6 +43,7 @@ class Overpass(object):
         self.debug = debug
         self.task_uid = task_uid
         self.verify_ssl = getattr(settings, "SSL_VERIFICATION", True)
+        self.config = config
         if bbox:
             # Overpass expects a bounding box string of the form "<lat0>,<long0>,<lat1>,<long1>"
             self.bbox = '{},{},{},{}'.format(bbox[1], bbox[0], bbox[3], bbox[2])
@@ -96,8 +98,8 @@ class Overpass(object):
             update_progress(self.task_uid, progress=0, subtask_percentage=subtask_percentage,
                             subtask_start=subtask_start, eta=eta,
                             msg='Querying provider data')
-
-            req = auth_requests.post(self.url, slug=self.slug, data=q, stream=True, verify=self.verify_ssl)
+            cert_var = yaml.load(self.config).get('cert_var') or self.slug
+            req = auth_requests.post(self.url, cert_var=cert_var, data=q, stream=True, verify=self.verify_ssl)
 
             try:
                 total_size = int(req.headers.get('content-length'))
