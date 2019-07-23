@@ -1,15 +1,87 @@
-import PropTypes from 'prop-types';
-import React, { Component } from 'react';
-import { withTheme } from '@material-ui/core/styles';
-import 'react-bootstrap-typeahead/css/Typeahead.css';
+import React from 'react';
+import {createStyles, Theme, withStyles, withTheme} from '@material-ui/core/styles';
+import '../../styles/typeaheadStyles.css';
 import debounce from 'lodash/debounce';
 import CircularProgress from '@material-ui/core/CircularProgress';
-import { Typeahead, Menu } from 'react-bootstrap-typeahead';
+import {Typeahead, Menu} from 'react-bootstrap-typeahead';
 import TypeaheadMenuItem from './TypeaheadMenuItem';
 import SearchAOIButton from './SearchAOIButton';
-import css from '../../styles/typeahead.css';
 
-export class SearchAOIToolbar extends Component {
+const jss = (theme: Theme & Eventkit.Theme) => createStyles({
+    container: {
+        zIndex: 2,
+        position: 'absolute',
+        width: 'calc(100% - 60px)',
+        minWidth: '300px',
+        maxWidth: '700px',
+        height: '50px',
+        top: '1em',
+        right: '10px',
+        backgroundColor: theme.eventkit.colors.secondary,
+    },
+    buttonContainer: {
+        position: 'absolute',
+        right: '0px',
+        width: '50px',
+        height: '50px',
+    },
+    error: {
+        color: theme.eventkit.colors.warning,
+        padding: '16px',
+        userSelect: 'none',
+        cursor: 'default',
+        borderTop: '1px solid rgba(112, 114, 116, .4)',
+        borderBottom: '1px solid rgba(112, 114, 116, .4)',
+    },
+    empty: {
+        padding: '16px',
+        userSelect: 'none',
+        cursor: 'default',
+        borderTop: '1px solid rgba(112, 114, 116, .4)',
+        borderBottom: '1px solid rgba(112, 114, 116, .4)',
+    },
+    loading: {
+        position: 'absolute',
+        width: '50px',
+        height: '100%',
+        right: '0px',
+        display: 'flex',
+        justifyContent: 'center',
+        alignItems: 'center',
+        zIndex: 1,
+    },
+});
+
+interface Props {
+    toolbarIcons: any;
+    geocode: any;
+    getGeocode: (any) => void;
+    handleSearch: (any) => any;
+    handleCancel: () => void;
+    setAllButtonsDefault: () => void;
+    setSearchAOIButtonSelected: () => void;
+    containerStyle: any;
+    theme: any;
+    classes: {
+        container: string;
+        buttonContainer: string;
+        error: string;
+        empty: string;
+        loading: string;
+    }
+}
+
+interface State {
+    suggestions: any[];
+}
+
+export class SearchAOIToolbar extends React.Component<Props, State> {
+    private typeAheadInput: React.RefObject<Typeahead>;
+    static defaultProps = {
+        containerStyle: {},
+    };
+    private debouncer;
+
     constructor(props) {
         super(props);
         this.handleInputChange = this.handleInputChange.bind(this);
@@ -18,6 +90,7 @@ export class SearchAOIToolbar extends Component {
         this.state = {
             suggestions: [],
         };
+        this.typeAheadInput = React.createRef();
     }
 
     componentWillMount() {
@@ -26,13 +99,13 @@ export class SearchAOIToolbar extends Component {
 
     componentDidUpdate(prevProps) {
         if (this.props.geocode.fetched === true && !prevProps.geocode.fetched) {
-            this.setState({ suggestions: this.props.geocode.data });
+            this.setState({suggestions: this.props.geocode.data});
         } else if (!this.props.geocode.fetched && this.state.suggestions.length > 0) {
-            this.setState({ suggestions: [] });
+            this.setState({suggestions: []});
         }
         if (this.props.toolbarIcons.search !== prevProps.toolbarIcons.search) {
             if (this.props.toolbarIcons.search === 'DEFAULT') {
-                this.typeaheadref.getInstance().clear();
+                this.typeAheadInput.current.clear();
             }
         }
     }
@@ -57,74 +130,33 @@ export class SearchAOIToolbar extends Component {
     handleEnter(e) {
         const results = e.slice(0, 1000);
 
-        this.setState({ suggestions: [] });
+        this.setState({suggestions: []});
         if (results.length > 0) {
             if (this.props.handleSearch(results[0])) {
                 this.props.setSearchAOIButtonSelected();
             } else {
                 this.props.setAllButtonsDefault();
             }
-            this.typeaheadref.getInstance().blur();
+            this.typeAheadInput.current.blur();
         }
     }
 
     render() {
-        const { colors } = this.props.theme.eventkit;
-
-        const styles = {
-            container: {
-                zIndex: 2,
-                position: 'absolute',
-                width: 'calc(100% - 60px)',
-                minWidth: '300px',
-                maxWidth: '700px',
-                height: '50px',
-                top: '1em',
-                right: '10px',
-                backgroundColor: colors.white,
-                ...this.props.containerStyle,
-            },
-            buttonContainer: {
-                position: 'absolute',
-                right: '0px',
-                width: '50px',
-                height: '50px',
-            },
-            error: {
-                color: colors.warning,
-                padding: '16px',
-                userSelect: 'none',
-                cursor: 'default',
-                borderTop: '1px solid rgba(112, 114, 116, .4)',
-                borderBottom: '1px solid rgba(112, 114, 116, .4)',
-            },
-            empty: {
-                padding: '16px',
-                userSelect: 'none',
-                cursor: 'default',
-                borderTop: '1px solid rgba(112, 114, 116, .4)',
-                borderBottom: '1px solid rgba(112, 114, 116, .4)',
-            },
-            loading: {
-                position: 'absolute',
-                width: '50px',
-                height: '100%',
-                right: '0px',
-                display: 'flex',
-                justifyContent: 'center',
-                alignItems: 'center',
-                zIndex: '1',
-            },
-        };
+        const {classes} = this.props;
 
         const renderer = (results, menuProps) => {
             let content = null;
             if (this.props.geocode.error) {
                 content = (
+<<<<<<< Updated upstream:eventkit_cloud/ui/static/ui/app/components/MapTools/SearchAOIToolbar.js
                     <div style={styles.error}>
                         ERROR:
                         {' '}
                         {this.props.geocode.error}
+=======
+                    <div className={classes.error}>
+                        ERROR: {this.props.geocode.error}
+>>>>>>> Stashed changes:eventkit_cloud/ui/static/ui/app/components/MapTools/SearchAOIToolbar.tsx
                     </div>
                 );
             } else if (this.props.geocode.fetched) {
@@ -138,7 +170,7 @@ export class SearchAOIToolbar extends Component {
                     ));
                 } else {
                     content = (
-                        <div style={styles.empty}>
+                        <div className={classes.empty}>
                             No results
                         </div>
                     );
@@ -153,10 +185,11 @@ export class SearchAOIToolbar extends Component {
         };
 
         return (
-            <div style={styles.container}>
-                <div className={css.typeahead}>
+            <div className={classes.container} style={{display: 'inline-grid'}}>
+                <div className="typeahead">
                     <Typeahead
-                        ref={(instance) => { this.typeaheadref = instance; }}
+                        id="aoiSearchBar"
+                        ref={this.typeAheadInput}
                         disabled={this.props.toolbarIcons.search === 'INACTIVE'}
                         options={this.state.suggestions}
                         onChange={this.handleEnter}
@@ -172,8 +205,8 @@ export class SearchAOIToolbar extends Component {
                         emptyLabel=""
                         minLength={2}
                         renderMenu={renderer}
-                        className="qa-SearchAOIToolbar-typeahead"
                     />
+<<<<<<< Updated upstream:eventkit_cloud/ui/static/ui/app/components/MapTools/SearchAOIToolbar.js
                     {this.props.geocode.fetching
                         ? (
                             <div style={styles.loading}>
@@ -185,8 +218,20 @@ export class SearchAOIToolbar extends Component {
                         )
                         : null
                     }
+=======
+>>>>>>> Stashed changes:eventkit_cloud/ui/static/ui/app/components/MapTools/SearchAOIToolbar.tsx
                 </div>
-                <div style={styles.buttonContainer}>
+                {this.props.geocode.fetching ?
+                    <div className={classes.buttonContainer}
+                    style={{paddingTop:'12px', right: '34px'}}>
+                        <CircularProgress
+                            size={25}
+                            color="primary"
+                        />
+                    </div>
+                    : null
+                }
+                <div className={classes.buttonContainer}>
                     <SearchAOIButton
                         buttonState={this.props.toolbarIcons.search}
                         handleCancel={this.props.handleCancel}
@@ -198,20 +243,4 @@ export class SearchAOIToolbar extends Component {
     }
 }
 
-SearchAOIToolbar.defaultProps = {
-    containerStyle: {},
-};
-
-SearchAOIToolbar.propTypes = {
-    toolbarIcons: PropTypes.object.isRequired,
-    geocode: PropTypes.object.isRequired,
-    getGeocode: PropTypes.func.isRequired,
-    handleSearch: PropTypes.func.isRequired,
-    handleCancel: PropTypes.func.isRequired,
-    setAllButtonsDefault: PropTypes.func.isRequired,
-    setSearchAOIButtonSelected: PropTypes.func.isRequired,
-    containerStyle: PropTypes.object,
-    theme: PropTypes.object.isRequired,
-};
-
-export default withTheme()(SearchAOIToolbar);
+export default withTheme()(withStyles<any, any>(jss)(SearchAOIToolbar));
