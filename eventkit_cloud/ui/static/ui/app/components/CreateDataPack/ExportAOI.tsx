@@ -208,7 +208,7 @@ export class ExportAOI extends React.Component<Props, State> {
         }
 
         if (this.props.walkthroughClicked && !prevProps.walkthroughClicked && this.state.isRunning === false) {
-
+            this.joyride.reset(true);
             this.setState({ isRunning: true });
         }
 
@@ -864,7 +864,7 @@ export class ExportAOI extends React.Component<Props, State> {
 
             this.setState({ isRunning: false, stepIndex: 0 });
             this.props.onWalkthroughReset();
-
+            this.joyride.reset(true);
         } else {
             if (index === 2 && type === 'step:before') {
                 //  if there is no aoi we load some fake data
@@ -876,16 +876,16 @@ export class ExportAOI extends React.Component<Props, State> {
                 }
             }
             // if the buffer dialog is open we need to close it so its not hiding the AOI info
-            if (step.target === '.qa-AoiInfobar-body' && type === 'tooltip:before' && this.state.showBuffer) {
+            if (step.selector === '.qa-AoiInfobar-body' && type === 'tooltip:before' && this.state.showBuffer) {
                 this.closeBufferDialog();
             }
             // if we are done highlighting the buffer dialog we need to close it again
-            if (step.target === '.qa-BufferDialog-main' && type === 'step:after') {
+            if (step.selector === '.qa-BufferDialog-main' && type === 'step:after') {
                 this.closeBufferDialog();
             }
             // if step:after or error we will want to advance to the next step
             if (type === 'step:after' || type === 'error:target_not_found') {
-                if (type === 'error:target_not_found' && step.target === '.qa-BufferDialog-main') {
+                if (type === 'error:target_not_found' && step.selector === '.qa-BufferDialog-main') {
                     // Okay, we can probably all agree that this is a very janky solution, but it
                     // was the best fix I could come up with of given the serious limitations of react-joyride at this time (v1.11.4).
                     // We cannot open the buffer dialog prior to the buffer step because it will be too soon
@@ -973,9 +973,10 @@ export class ExportAOI extends React.Component<Props, State> {
                     ref={(instance) => { this.joyride = instance; }}
                     steps={steps}
                     stepIndex={this.state.stepIndex}
-                    continuous
+                    autoStart
+                    type="continuous"
                     showSkipButton
-                    showProgress
+                    showStepsProgress
                     locale={{
                         back: (<span>Back</span>) as any,
                         close: (<span>Close</span>) as any,

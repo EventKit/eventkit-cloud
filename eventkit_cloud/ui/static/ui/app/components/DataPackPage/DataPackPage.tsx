@@ -456,6 +456,7 @@ export class DataPackPage extends React.Component<Props, State> {
         if (data.action === 'close' || data.action === 'skip' || data.type === 'finished') {
             // This explicitly stops the tour (otherwise it displays a "beacon" to resume the tour)
             this.setState({ isRunning: false, steps: [] });
+            this.joyride.reset(true);
         }
         if (data.step) {
             if (data.step.title === 'Filters' && data.type === 'step:before') {
@@ -484,6 +485,7 @@ export class DataPackPage extends React.Component<Props, State> {
 
         if (this.state.isRunning === true) {
             this.setState({ isRunning: false });
+            this.joyride.reset(true);
         } else {
             let { view } = this;
             // react-redux connect does not have good support for forwarded refs
@@ -639,9 +641,10 @@ export class DataPackPage extends React.Component<Props, State> {
                     callback={this.callback}
                     ref={(instance) => { this.joyride = instance; }}
                     steps={steps as Joyride.Step[]}
-                    continuous
+                    autoStart
+                    type="continuous"
                     showSkipButton
-                    showProgress
+                    showStepsProgress
                     locale={{
                         // @ts-ignore
                         back: (<span>Back</span>),

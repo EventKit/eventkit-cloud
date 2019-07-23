@@ -732,10 +732,10 @@ export class UserGroupsPage extends React.Component<Props, State> {
 
         if (isWidthDown('xs', this.props.width)) {
             const ix = newSteps.findIndex(step => (
-                step.target === '.qa-UserGroupsPage-Button-create'
+                step.selector === '.qa-UserGroupsPage-Button-create'
             ));
             if (ix > -1) {
-                newSteps[ix + 1].content = newSteps[ix].content;
+                newSteps[ix + 1].text = newSteps[ix].text;
                 newSteps.splice(ix, 1);
             }
         }
@@ -765,15 +765,15 @@ export class UserGroupsPage extends React.Component<Props, State> {
                 this.props.users.users.splice(fakeIx, 1);
             }
             this.setState({ isRunning: false, stepIndex: 0 });
-
+            this.joyride.reset(true);
         } else {
-            if (step.target === '.qa-GroupsDrawer-addGroup' && isWidthDown('sm', this.props.width) && !this.state.drawerOpen) {
+            if (step.selector === '.qa-GroupsDrawer-addGroup' && isWidthDown('sm', this.props.width) && !this.state.drawerOpen) {
                 // because the next step will render immediately after (before the drawer is fully open)
                 // we need to wait till the drawer is open and then update the placement of the step items
                 await this.toggleDrawer();
                 // @ts-ignore
                 this.joyride.calcPlacement();
-            } else if (step.target === '.qa-GroupsDrawer-groupsHeading') {
+            } else if (step.selector === '.qa-GroupsDrawer-groupsHeading') {
                 if (type === 'step:before') {
                     this.scrollbar.scrollToTop();
                     const users = this.props.users.users.filter(u => u.user.username !== this.props.user.username);
@@ -798,9 +798,9 @@ export class UserGroupsPage extends React.Component<Props, State> {
                 } else if (type === 'step:after' && isWidthDown('sm', this.props.width)) {
                     this.toggleDrawer();
                 }
-            } else if (step.target === '.qa-UserHeader-checkbox' && type === 'tooltip:before') {
+            } else if (step.selector === '.qa-UserHeader-checkbox' && type === 'tooltip:before') {
                 this.handleSelectAll(true);
-            } else if (step.target === '.qa-UserHeader-options' && type === 'step:after') {
+            } else if (step.selector === '.qa-UserHeader-options' && type === 'step:after') {
                 // because the next step will render immidiately after (before the drawer is fully open)
                 // we need to wait till the drawer is open and then update the placement of the step items
                 await this.toggleDrawer();
@@ -819,7 +819,7 @@ export class UserGroupsPage extends React.Component<Props, State> {
             this.toggleDrawer();
         }
         if (this.state.isRunning === true) {
-
+            this.joyride.reset(true);
             this.setState({ isRunning: true });
         } else {
             this.setState({ isRunning: true });
@@ -935,9 +935,10 @@ export class UserGroupsPage extends React.Component<Props, State> {
                     ref={(instance) => { this.joyride = instance; }}
                     steps={steps}
                     stepIndex={this.state.stepIndex}
-                    continuous
+                    autoStart
+                    type="continuous"
                     showSkipButton
-                    showProgress
+                    showStepsProgress
                     locale={{
                         back: (<span>Back</span>) as any,
                         close: (<span>Close</span>) as any,
