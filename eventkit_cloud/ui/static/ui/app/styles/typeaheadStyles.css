@@ -15,6 +15,8 @@ has no support for inline styles :(
     height: 50px;
     color: #707274;
     padding: 6px 48px 6px 12px !important;
+    border: 0;
+    border-radius: 0;
 }
 
 .typeahead > div > div > div {
@@ -23,6 +25,8 @@ has no support for inline styles :(
 
 .typeahead > div > div > input:focus {
     padding: 6px 12px !important;
+    border: 0;
+    border-radius: 0;
 }
 
 .typeahead ul {
