@@ -4,7 +4,7 @@ import { withTheme } from '@material-ui/core/styles';
 import { MenuItem } from 'react-bootstrap-typeahead';
 import ActionRoom from '@material-ui/icons/Room';
 import IrregularPolygon from '../icons/IrregularPolygon';
-import css from '../../styles/typeaheadStyles.css';
+import '../../styles/typeaheadStyles.css';
 
 export class TypeaheadMenuItem extends Component {
     createDescription(result) {
