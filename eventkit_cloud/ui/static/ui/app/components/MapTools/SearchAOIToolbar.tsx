@@ -1,5 +1,6 @@
 import React from 'react';
 import {createStyles, Theme, withStyles, withTheme} from '@material-ui/core/styles';
+import 'react-bootstrap-typeahead/css/Typeahead.css';
 import '../../styles/typeaheadStyles.css';
 import debounce from 'lodash/debounce';
 import CircularProgress from '@material-ui/core/CircularProgress';
@@ -129,7 +130,6 @@ export class SearchAOIToolbar extends React.Component<Props, State> {
 
     handleEnter(e) {
         const results = e.slice(0, 1000);
-
         this.setState({suggestions: []});
         if (results.length > 0) {
             if (this.props.handleSearch(results[0])) {
@@ -148,15 +148,8 @@ export class SearchAOIToolbar extends React.Component<Props, State> {
             let content = null;
             if (this.props.geocode.error) {
                 content = (
-<<<<<<< Updated upstream:eventkit_cloud/ui/static/ui/app/components/MapTools/SearchAOIToolbar.js
-                    <div style={styles.error}>
-                        ERROR:
-                        {' '}
-                        {this.props.geocode.error}
-=======
                     <div className={classes.error}>
                         ERROR: {this.props.geocode.error}
->>>>>>> Stashed changes:eventkit_cloud/ui/static/ui/app/components/MapTools/SearchAOIToolbar.tsx
                     </div>
                 );
             } else if (this.props.geocode.fetched) {
