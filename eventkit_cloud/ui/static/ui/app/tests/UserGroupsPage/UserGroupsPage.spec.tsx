@@ -826,7 +826,7 @@ describe('UserGroupsPage component', () => {
             action: 'next',
             index: 2,
             step: {
-                target: '.qa-GroupsDrawer-addGroup',
+                selector: '.qa-GroupsDrawer-addGroup',
             },
             type: 'step:fake',
         };
@@ -843,7 +843,7 @@ describe('UserGroupsPage component', () => {
             action: 'next',
             index: 2,
             step: {
-                target: '.qa-GroupsDrawer-groupsHeading',
+                selector: '.qa-GroupsDrawer-groupsHeading',
             },
             type: 'step:before',
         };
@@ -858,7 +858,7 @@ describe('UserGroupsPage component', () => {
             action: 'next',
             index: 2,
             step: {
-                target: '.qa-GroupsDrawer-groupsHeading',
+                selector: '.qa-GroupsDrawer-groupsHeading',
             },
             type: 'step:after',
         };
@@ -876,7 +876,7 @@ describe('UserGroupsPage component', () => {
             action: 'next',
             index: 2,
             step: {
-                target: '.qa-UserHeader-checkbox',
+                selector: '.qa-UserHeader-checkbox',
             },
             type: 'tooltip:before',
         };
@@ -891,7 +891,7 @@ describe('UserGroupsPage component', () => {
             action: 'next',
             index: 2,
             step: {
-                target: '.qa-UserHeader-options',
+                selector: '.qa-UserHeader-options',
             },
             type: 'step:after',
         };
