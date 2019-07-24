@@ -1267,7 +1267,7 @@ describe('ExportAOI component', () => {
                 text: 'Click here to Navigate to Create a DataPack.',
                 title: 'Create DataPack',
             },
-            event: 'step:before',
+            type: 'step:before',
         };
         const stateSpy = sinon.spy(ExportAOI.prototype, 'setState');
         instance.callback(callbackData);
