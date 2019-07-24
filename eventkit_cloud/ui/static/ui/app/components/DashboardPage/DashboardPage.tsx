@@ -318,7 +318,7 @@ export class DashboardPage extends React.Component<Props, State> {
             const [...steps] = joyride.DashboardPage;
             this.setState({ isRunning: true, steps: [] });
             if (this.props.featuredIds.length === 0) {
-                const ix = steps.findIndex(s => s.target === '.qa-DashboardSection-Featured');
+                const ix = steps.findIndex(s => s.selector === '.qa-DashboardSection-Featured');
                 if (ix > -1) {
                     steps.splice(ix, 1);
                 }

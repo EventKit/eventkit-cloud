@@ -780,8 +780,8 @@ describe('UserGroupsPage component', () => {
     it('joyrideAddSteps should set state for steps in tour', () => {
         const steps = [{
             title: 'Welcome to the Account Settings Page',
-            content: 'Example text',
-            target: '.qa-PageHeader',
+            text: 'Example text',
+            selector: '.qa-PageHeader',
             position: 'top',
             style: {},
             isFixed: true,
@@ -807,9 +807,9 @@ describe('UserGroupsPage component', () => {
             index: 2,
             step: {
                 position: 'bottom',
-                target: '.qa-Application-MenuItem-create',
+                selector: '.qa-Application-MenuItem-create',
                 style: {},
-                content: 'Or to create your own DataPack.',
+                text: 'Or to create your own DataPack.',
                 title: 'Navigate Application',
             },
             type: 'step:before',

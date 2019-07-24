@@ -454,8 +454,8 @@ describe('ExportInfo component', () => {
         const steps = [
             {
                 title: 'Search for location',
-                content: 'Type in location name to set area of interest.',
-                target: '.bootstrap-typeahead-input',
+                text: 'Type in location name to set area of interest.',
+                selector: '.bootstrap-typeahead-input',
                 position: 'bottom',
                 style: {},
             },
@@ -473,9 +473,9 @@ describe('ExportInfo component', () => {
             index: 2,
             step: {
                 position: 'bottom',
-                target: '.qa-DataPackLinkButton-Button',
+                selector: '.qa-DataPackLinkButton-Button',
                 style: {},
-                content: 'Click here to Navigate to Create a DataPack.',
+                text: 'Click here to Navigate to Create a DataPack.',
                 title: 'Create DataPack',
             },
             type: 'step:before',

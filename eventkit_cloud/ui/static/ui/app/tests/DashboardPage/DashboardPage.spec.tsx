@@ -215,9 +215,9 @@ describe('DashboardPage component', () => {
             index: 2,
             step: {
                 position: 'bottom',
-                target: '.select',
+                selector: '.select',
                 style: {},
-                content: 'Click here to Navigate to Create a DataPack.',
+                text: 'Click here to Navigate to Create a DataPack.',
                 title: 'Create DataPack',
             },
             type: 'step:before',
@@ -235,9 +235,9 @@ describe('DashboardPage component', () => {
             step: {
                 scrollToId: 'test-id',
                 position: 'bottom',
-                target: '.select',
+                selector: '.select',
                 style: {},
-                content: 'Click here to Navigate to Create a DataPack.',
+                text: 'Click here to Navigate to Create a DataPack.',
                 title: 'Create DataPack',
             },
             type: 'step:before',
