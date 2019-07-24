@@ -240,6 +240,27 @@ const NotificationsPage = Loadable({
     loader: () => import('./NotificationsPage/NotificationsPage'),
 });
 
+const routes = (
+    <div>
+        <Route path="/login" component={UserIsNotAuthenticated(LoginPage)} />
+        <Route path="/logout" component={Logout} />
+        <Route path="/dashboard" component={UserIsAuthenticated(UserHasAgreed(DashboardPage))} />
+        <Route path="/exports" component={UserIsAuthenticated(UserHasAgreed(DataPackPage))} />
+        <Route path="/create" component={UserIsAuthenticated(UserHasAgreed(CreateExport))} />
+        <Route
+            path="/status/:jobuid"
+            component={UserIsAuthenticated(UserHasAgreed(StatusDownload))}
+        />
+        <Route path="/about" component={UserIsAuthenticated(About)} />
+        <Route path="/account" component={UserIsAuthenticated(Account)} />
+        <Route path="/groups" component={UserIsAuthenticated(UserGroupsPage)} />
+        <Route path="/notifications" component={UserIsAuthenticated(NotificationsPage)} />
+        <Route exact path="/" render={() => (
+            <Redirect to="/dashboard" />
+        )} />
+    </div>
+)
+
 export class Application extends React.Component<Props, State> {
     private userActiveInputTypes: string[];
     private notificationsUnreadCountRefreshInterval: number;
@@ -726,22 +747,7 @@ export class Application extends React.Component<Props, State> {
                 />
                 <div className="qa-Application-content" style={styles.content}>
                     <div>{childrenWithContext}</div>
-                    <Switch>
-                        <Route path="/login" component={UserIsNotAuthenticated(LoginPage)} />
-                        <Route path="/logout" component={Logout} />
-                        <Route path="/dashboard" component={UserIsAuthenticated(UserHasAgreed(DashboardPage))} />
-                        <Route path="/exports" component={UserIsAuthenticated(UserHasAgreed(DataPackPage))} />
-                        <Route path="/create" component={UserIsAuthenticated(UserHasAgreed(CreateExport))} />
-                        <Route
-                            path="/status/:jobuid"
-                            component={UserIsAuthenticated(UserHasAgreed(StatusDownload))}
-                        />
-                        <Route path="/about" component={UserIsAuthenticated(About)} />
-                        <Route path="/account" component={UserIsAuthenticated(Account)} />
-                        <Route path="/groups" component={UserIsAuthenticated(UserGroupsPage)} />
-                        <Route path="/notifications" component={UserIsAuthenticated(NotificationsPage)} />
-                        <Redirect exact from="/" to="/dashboard" />
-                    </Switch>
+                    { routes }
                 </div>
                 <BaseDialog
                     show={this.state.showAutoLogoutWarningDialog}
