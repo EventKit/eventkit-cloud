@@ -198,6 +198,7 @@ export class SearchAOIToolbar extends React.Component<Props, State> {
                         emptyLabel=""
                         minLength={2}
                         renderMenu={renderer}
+                        className="qa-SearchAOIToolbar-typeahead"
                     />
                 </div>
                 {this.props.geocode.fetching ?
