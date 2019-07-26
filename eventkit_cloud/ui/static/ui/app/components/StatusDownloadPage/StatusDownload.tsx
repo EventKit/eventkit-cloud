@@ -3,7 +3,7 @@ import * as React from 'react';
 import { connect } from 'react-redux';
 import { withTheme, Theme } from '@material-ui/core/styles';
 import withWidth, { isWidthUp } from '@material-ui/core/withWidth';
-import { browserHistory, RouteComponentProps } from 'react-router';
+import { RouteComponentProps } from 'react-router';
 import Joyride, { Step } from 'react-joyride';
 import Help from '@material-ui/icons/Help';
 import Paper from '@material-ui/core/Paper';
@@ -30,6 +30,7 @@ import { joyride } from '../../joyride.config';
 import { makeDatacartSelector } from '../../selectors/runSelector';
 import { Location } from 'history';
 import { Breakpoint } from '@material-ui/core/styles/createBreakpoints';
+import history from "../../utils/history";
 
 export interface Props {
     runs: Eventkit.FullRun[];
@@ -50,7 +51,7 @@ export interface Props {
     getProviders: () => void;
     providers: Eventkit.Provider[];
     user: Eventkit.Store.User;
-    router: RouteComponentProps<any, any>;
+    match: any;
     location: Location;
     viewedJob: (uid: string) => void;
     theme: Eventkit.Theme & Theme;
@@ -109,20 +110,20 @@ export class StatusDownload extends React.Component<Props, State> {
 
     componentDidUpdate(prevProps: Props) {
         if (this.props.runDeletion.deleted && !prevProps.runDeletion.deleted) {
-            browserHistory.push('/exports');
+            history.push('/exports');
         }
         if (this.props.exportReRun.error && !prevProps.exportReRun.error) {
             this.setState({ error: this.props.exportReRun.error });
         }
         if (this.props.exportReRun.fetched && !prevProps.exportReRun.fetched) {
-            this.props.getDatacartDetails(this.props.router.params.jobuid);
+            this.props.getDatacartDetails(this.props.match.params.jobuid);
             this.startTimer();
         }
         if (this.props.expirationState.updated && !prevProps.expirationState.updated) {
-            this.props.getDatacartDetails(this.props.router.params.jobuid);
+            this.props.getDatacartDetails(this.props.match.params.jobuid);
         }
         if (this.props.permissionState.updated && !prevProps.permissionState.updated) {
-            this.props.getDatacartDetails(this.props.router.params.jobuid);
+            this.props.getDatacartDetails(this.props.match.params.jobuid);
         }
         if (this.props.detailsFetched && !prevProps.detailsFetched) {
             if (this.state.isLoading) {
@@ -161,7 +162,7 @@ export class StatusDownload extends React.Component<Props, State> {
                     this.timer = null;
                     window.clearTimeout(this.timeout);
                     this.timeout = window.setTimeout(() => {
-                        this.props.getDatacartDetails(this.props.router.params.jobuid);
+                        this.props.getDatacartDetails(this.props.match.params.jobuid);
                     }, 270000);
                 }
             }
@@ -184,8 +185,8 @@ export class StatusDownload extends React.Component<Props, State> {
     }
 
     private async onMount() {
-        this.props.getDatacartDetails(this.props.router.params.jobuid);
-        this.props.viewedJob(this.props.router.params.jobuid);
+        this.props.getDatacartDetails(this.props.match.params.jobuid);
+        this.props.viewedJob(this.props.match.params.jobuid);
         this.props.getProviders();
         this.startTimer();
 
@@ -229,7 +230,7 @@ export class StatusDownload extends React.Component<Props, State> {
     private startTimer() {
         window.clearInterval(this.timer);
         this.timer = window.setInterval(() => {
-            this.props.getDatacartDetails(this.props.router.params.jobuid);
+            this.props.getDatacartDetails(this.props.match.params.jobuid);
         }, 5000);
     }
 
@@ -519,7 +520,7 @@ function mapDispatchToProps(dispatch) {
                 providers: providerArray,
                 layers: 'Geopackage',
             }));
-            browserHistory.push('/create');
+            history.push('/create');
         },
         cancelProviderTask: providerUid => (
             dispatch(cancelProviderTask(providerUid))

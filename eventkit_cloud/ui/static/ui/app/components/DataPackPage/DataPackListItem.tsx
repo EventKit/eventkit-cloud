@@ -1,8 +1,8 @@
 import * as React from 'react';
 import { connect } from 'react-redux';
 import { withTheme, Theme } from '@material-ui/core/styles';
-import * as moment from 'moment';
-import { Link, browserHistory } from 'react-router';
+import moment from 'moment';
+import { Link } from 'react-router-dom';
 import Card from '@material-ui/core/Card';
 import CardHeader from '@material-ui/core/CardHeader';
 import MenuItem from '@material-ui/core/MenuItem';
@@ -17,6 +17,7 @@ import ProviderDialog from '../Dialog/ProviderDialog';
 import FeaturedFlag from './FeaturedFlag';
 import DataPackShareDialog from '../DataPackShareDialog/DataPackShareDialog';
 import { makeFullRunSelector } from '../../selectors/runSelector';
+import history from '../../utils/history';
 
 export interface Props {
     run: Eventkit.Run;
@@ -219,7 +220,7 @@ export class DataPackListItem extends React.Component<Props, State> {
                                         key="link"
                                         className="qa-DataPackListItem-MenuItem-statusDownloadLink"
                                         style={{ fontSize: subtitleFontSize }}
-                                        onClick={() => { browserHistory.push(`/status/${this.props.run.job.uid}`); }}
+                                        onClick={() => { history.push(`/status/${this.props.run.job.uid}`); }}
                                     >
                                         Status & Download
                                     </MenuItem>

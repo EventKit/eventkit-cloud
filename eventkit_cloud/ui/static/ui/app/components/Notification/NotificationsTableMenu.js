@@ -132,49 +132,51 @@ export class NotificationsTableMenu extends React.Component {
                     anchorOrigin={{ horizontal: 'left', vertical: 'top' }}
                     transformOrigin={{ horizontal: 'left', vertical: 'top' }}
                 >
-                    {showMarkAsRead ?
-                        <MenuItem
-                            key="markRead"
-                            className="qa-NotificationsTableMenu-MarkAsRead"
-                            style={styles.item}
-                            onClick={this.handleMarkAsRead}
-                        >
-                            <FlagIcon style={styles.icon} />
+                    {showMarkAsRead
+                        ? (
+                            <MenuItem
+                                key="markRead"
+                                className="qa-NotificationsTableMenu-MarkAsRead"
+                                style={styles.item}
+                                onClick={this.handleMarkAsRead}
+                            >
+                                <FlagIcon style={styles.icon} />
                             Mark As Read
-                        </MenuItem>
-                        :
-                        null
+                            </MenuItem>
+                        )
+                        : null
                     }
-                    {showMarkAsUnread ?
-                        <MenuItem
-                            key="markUnread"
-                            className="qa-NotificationsTableMenu-MarkAsUnread"
-                            style={styles.item}
-                            onClick={this.handleMarkAsUnread}
-                        >
-                            <FlagIcon style={styles.icon} />
+                    {showMarkAsUnread
+                        ? (
+                            <MenuItem
+                                key="markUnread"
+                                className="qa-NotificationsTableMenu-MarkAsUnread"
+                                style={styles.item}
+                                onClick={this.handleMarkAsUnread}
+                            >
+                                <FlagIcon style={styles.icon} />
                             Mark As Unread
-                        </MenuItem>
-                        :
-                        null
+                            </MenuItem>
+                        )
+                        : null
                     }
-                    {(selectedNotificationsKeys.length > 0) ?
-                        <MenuItem
-                            key="remove"
-                            className="qa-NotificationsTableMenu-Remove"
-                            style={styles.item}
-                            onClick={this.handleRemove}
-                        >
-                            <CloseIcon style={styles.icon} />
+                    {(selectedNotificationsKeys.length > 0)
+                        ? (
+                            <MenuItem
+                                key="remove"
+                                className="qa-NotificationsTableMenu-Remove"
+                                style={styles.item}
+                                onClick={this.handleRemove}
+                            >
+                                <CloseIcon style={styles.icon} />
                             Remove
-                        </MenuItem>
-                        :
-                        null
+                            </MenuItem>
+                        )
+                        : null
                     }
-                    {(selectedNotificationsKeys.length > 0) ?
-                        <Divider key="divider" />
-                        :
-                        null
+                    {(selectedNotificationsKeys.length > 0)
+                        ? <Divider key="divider" />
+                        : null
                     }
                     <MenuItem
                         key="markAll"

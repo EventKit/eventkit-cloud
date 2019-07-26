@@ -20,7 +20,7 @@ import ProviderError from './ProviderError';
 import BaseDialog from '../Dialog/BaseDialog';
 import LicenseRow from './LicenseRow';
 import { Breakpoint } from '@material-ui/core/styles/createBreakpoints';
-import * as moment from 'moment';
+import moment from 'moment';
 
 interface Props {
     provider: Eventkit.ProviderTask;

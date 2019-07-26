@@ -105,7 +105,7 @@ export function bufferGeometry(jstsGeometry, bufferSize, bufferPolys) {
         const buff = new BufferOp(tempGeom, bufferParams);
         const geomBuff = buff.getResultGeometry(size);
         return transformJSTSGeometry(geomBuff, 'EPSG:3857', 'EPSG:4326');
-    } else if (!(jstsGeometry.getGeometryType() === 'Polygon' || jstsGeometry.getGeometryType() === 'MultiPolygon')) {
+    } if (!(jstsGeometry.getGeometryType() === 'Polygon' || jstsGeometry.getGeometryType() === 'MultiPolygon')) {
         const tempGeom = transformJSTSGeometry(jstsGeometry, 'EPSG:4326', 'EPSG:3857');
         return transformJSTSGeometry(BufferOp.bufferOp(tempGeom, size), 'EPSG:3857', 'EPSG:4326');
     }

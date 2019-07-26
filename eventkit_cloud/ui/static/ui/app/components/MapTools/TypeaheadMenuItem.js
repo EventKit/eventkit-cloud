@@ -4,7 +4,7 @@ import { withTheme } from '@material-ui/core/styles';
 import { MenuItem } from 'react-bootstrap-typeahead';
 import ActionRoom from '@material-ui/icons/Room';
 import IrregularPolygon from '../icons/IrregularPolygon';
-import css from '../../styles/typeahead.css';
+import '../../styles/typeaheadStyles.css';
 
 export class TypeaheadMenuItem extends Component {
     createDescription(result) {
@@ -44,17 +44,16 @@ export class TypeaheadMenuItem extends Component {
 
         let icon = null;
         if (this.props.result && this.props.result.geometry && this.props.result.geometry.type) {
-            icon = this.props.result.geometry.type === 'Point' ?
-                <ActionRoom className="qa-TypeaheadMenuItem-ActionRoom" style={styles.icon} />
-                :
-                <IrregularPolygon className="qa-TypeaheadMenuItem-IrregularPolygon" style={styles.icon} />;
+            icon = this.props.result.geometry.type === 'Point'
+                ? <ActionRoom className="qa-TypeaheadMenuItem-ActionRoom" style={styles.icon} />
+                : <IrregularPolygon className="qa-TypeaheadMenuItem-IrregularPolygon" style={styles.icon} />;
         }
 
         return (
             <MenuItem
                 option={this.props.result}
                 position={this.props.index}
-                className={css.menuItem}
+                className="menuItem"
             >
                 <div className="row">
                     <div className="qa-TypeaheadMenuItem-icon-div" style={styles.iconDiv}>

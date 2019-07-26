@@ -9,7 +9,7 @@ import PageHeader from '../../components/common/PageHeader';
 describe('CreateExport component', () => {
     function getProps() {
         return {
-            router: {
+            history: {
                 push: sinon.spy(),
                 setRouteLeaveHook: sinon.spy(),
             },

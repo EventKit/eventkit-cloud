@@ -11,6 +11,7 @@ describe('withRef Higher Order Component (HOC)', () => {
                 super(props);
                 this.data = 'find me';
             }
+
             render() {
                 return (
                     <h1>I have your data</h1>

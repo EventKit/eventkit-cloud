@@ -85,10 +85,9 @@ export function getRuns(args = {}) {
     const params = { slim: 'true' };
     params.page_size = args.page_size;
     if (args.ordering) {
-        params.ordering = args.ordering.includes('featured') ?
-            `${args.ordering},-started_at`
-            :
-            args.ordering;
+        params.ordering = args.ordering.includes('featured')
+            ? `${args.ordering},-started_at`
+            : args.ordering;
     } else {
         params.ordering = '-job__featured';
     }

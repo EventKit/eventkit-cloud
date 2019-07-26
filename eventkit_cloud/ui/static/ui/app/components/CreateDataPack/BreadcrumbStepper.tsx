@@ -1,8 +1,9 @@
 import * as React from 'react';
-import { browserHistory, InjectedRouter, PlainRoute } from 'react-router';
+import { Route } from 'react-router';
+import history from '../../utils/history';
 import { connect } from 'react-redux';
 import { withTheme, Theme } from '@material-ui/core/styles';
-import * as isEqual from 'lodash/isEqual';
+import isEqual from 'lodash/isEqual';
 import Divider from '@material-ui/core/Divider';
 import Warning from '@material-ui/icons/Warning';
 import Button from '@material-ui/core/Button';
@@ -60,8 +61,8 @@ export interface Props {
     getFormats: () => void;
     walkthroughClicked: boolean;
     onWalkthroughReset: () => void;
-    router: InjectedRouter;
-    routes: PlainRoute[];
+    history: any;
+    routes: Route[];
     getNotifications: () => void;
     getNotificationsUnreadCount: () => void;
     updateExportInfo: (args: any) => void;
@@ -141,8 +142,8 @@ export class BreadcrumbStepper extends React.Component<Props, State> {
         this.getProviders();
         this.props.getFormats();
 
-        const route = this.props.routes[this.props.routes.length - 1];
-        this.props.router.setRouteLeaveHook(route, this.routeLeaveHook);
+        // const route = this.props.routes[this.props.routes.length - 1];
+        // this.props.router.setRouteLeaveHook(route, this.routeLeaveHook);
     }
 
     componentDidUpdate(prevProps) {
@@ -150,7 +151,7 @@ export class BreadcrumbStepper extends React.Component<Props, State> {
             this.props.clearJobInfo();
             this.props.getNotifications();
             this.props.getNotificationsUnreadCount();
-            browserHistory.push(`/status/${this.props.jobuid}`);
+            history.push(`/status/${this.props.jobuid}`);
         }
         if (this.props.jobError && !prevProps.jobError) {
             this.hideLoading();
@@ -550,7 +551,7 @@ export class BreadcrumbStepper extends React.Component<Props, State> {
             providerTasks.push({ provider: provider.name, formats: [formats[0]] });
         });
 
-        const selection = flattenFeatureCollection(this.props.aoiInfo.geojson);
+        const selection = flattenFeatureCollection(this.props.aoiInfo.geojson) as GeoJSON.FeatureCollection;
 
         const data: JobData = {
             name: this.props.exportInfo.exportName,
@@ -600,7 +601,7 @@ export class BreadcrumbStepper extends React.Component<Props, State> {
     }
 
     private handleLeaveWarningDialogConfirm() {
-        this.props.router.push(this.leaveRoute);
+        this.props.history.push(this.leaveRoute);
     }
 
     render() {
@@ -634,14 +635,14 @@ export class BreadcrumbStepper extends React.Component<Props, State> {
                 >
                     <div>{message}</div>
                 </BaseDialog>
-                <ConfirmDialog
+                    <ConfirmDialog
                     show={this.state.showLeaveWarningDialog}
                     title="ARE YOU SURE?"
                     onCancel={this.handleLeaveWarningDialogCancel}
                     onConfirm={this.handleLeaveWarningDialogConfirm}
                     confirmLabel="Yes, I'm Sure"
                     isDestructive
-                >
+                    >
                     <strong>You haven&apos;t finished creating this DataPack yet. Any settings will be lost.</strong>
                 </ConfirmDialog>
                 { this.state.loading ?

@@ -48,7 +48,7 @@ describe('NotificationsDropdown component', () => {
                 notifications: {},
                 notificationsSorted: [],
             },
-            router: {
+            history: {
                 push: sinon.spy(),
             },
             loading: true,
@@ -175,8 +175,8 @@ describe('NotificationsDropdown component', () => {
             });
 
             it('navigates to "/notifications"', () => {
-                expect(instance.props.router.push.callCount).toBe(1);
-                expect(instance.props.router.push.calledWith('/notifications')).toBe(true);
+                expect(instance.props.history.push.callCount).toBe(1);
+                expect(instance.props.history.push.calledWith('/notifications')).toBe(true);
             });
         });
 
@@ -188,7 +188,7 @@ describe('NotificationsDropdown component', () => {
             });
 
             it('does not navigate to "/notifications"', () => {
-                expect(instance.props.router.push.callCount).toBe(0);
+                expect(instance.props.history.push.callCount).toBe(0);
             });
         });
     });

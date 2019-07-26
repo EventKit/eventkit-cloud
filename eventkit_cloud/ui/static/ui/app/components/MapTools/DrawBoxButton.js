@@ -86,7 +86,7 @@ export class DrawBoxButton extends Component {
         }
 
         return (
-            <button className="qa-DrawBoxButton-button" style={styles.drawButtonGeneral} onClick={this.handleOnClick}>
+            <button type="button" className="qa-DrawBoxButton-button" style={styles.drawButtonGeneral} onClick={this.handleOnClick}>
                 {icon}
             </button>
         );
@@ -103,4 +103,3 @@ DrawBoxButton.propTypes = {
 };
 
 export default withTheme()(DrawBoxButton);
-

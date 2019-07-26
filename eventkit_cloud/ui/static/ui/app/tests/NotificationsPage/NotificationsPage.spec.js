@@ -56,7 +56,7 @@ describe('NotificationsPage component', () => {
             notificationsStatus: {
                 fetched: false,
             },
-            router: {
+            history: {
                 push: sinon.spy(),
             },
             getNotifications: sinon.spy(),
@@ -234,7 +234,7 @@ describe('NotificationsPage component', () => {
 
     describe('when it refreshes', () => {
         beforeEach(() => {
-            instance.props.getNotifications.reset();
+            instance.props.getNotifications.resetHistory();
             instance.refresh();
         });
 

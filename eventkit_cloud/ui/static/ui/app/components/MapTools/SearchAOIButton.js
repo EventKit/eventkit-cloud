@@ -60,7 +60,7 @@ export class SearchAOIButton extends Component {
                     style={{ opacity: 0.4 }}
                     color="primary"
                 />
-                <div className="qa-SearchAOIButton-div-default"style={{ ...styles.buttonName, opacity: 0.4 }}>SEARCH</div>
+                <div className="qa-SearchAOIButton-div-default" style={{ ...styles.buttonName, opacity: 0.4 }}>SEARCH</div>
             </div>
         ));
 
@@ -82,7 +82,7 @@ export class SearchAOIButton extends Component {
         }
 
         return (
-            <button className="qa-SearchAOIButton-button"style={styles.buttonGeneral} onClick={this.handleOnClick}>
+            <button type="button" className="qa-SearchAOIButton-button" style={styles.buttonGeneral} onClick={this.handleOnClick}>
                 {icon}
             </button>
         );
@@ -97,4 +97,3 @@ SearchAOIButton.propTypes = {
 };
 
 export default withTheme()(SearchAOIButton);
-

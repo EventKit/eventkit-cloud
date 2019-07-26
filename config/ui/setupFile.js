@@ -1,14 +1,16 @@
 /* eslint-disable import/no-extraneous-dependencies */
-import { jsdom } from 'jsdom';
+import jsdom from 'jsdom';
 import Enzyme from 'enzyme';
 import Adapter from 'enzyme-adapter-react-16';
+import '@babel/polyfill';
 import 'raf/polyfill';
 import theme from './eventkit_cloud/ui/static/ui/app/styles/eventkit_theme';
 
 // this adds the ability to change the dom size when testing components that render
 // differently for different dom sizes
+const { JSDOM } = jsdom;
 const documentHTML = '<!doctype html><html><body><div id="root"></div></body></html>';
-global.document = jsdom(documentHTML);
+global.document = new JSDOM(documentHTML);
 global.window = document.parentWindow;
 
 global.window.resizeTo = (width, height) => {

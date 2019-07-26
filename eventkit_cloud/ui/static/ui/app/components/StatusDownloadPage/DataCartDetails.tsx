@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { withTheme, Theme } from '@material-ui/core/styles';
-import * as moment from 'moment';
+import moment from 'moment';
 import DataPackDetails from './DataPackDetails';
 import CustomTableRow from '../CustomTableRow';
 import DataPackStatusTable from './DataPackStatusTable';

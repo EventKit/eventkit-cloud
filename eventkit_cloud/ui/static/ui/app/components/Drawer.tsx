@@ -3,7 +3,7 @@ import { withTheme, withStyles, createStyles } from '@material-ui/core/styles';
 import { Breakpoint } from '@material-ui/core/styles/createBreakpoints';
 import MuiDrawer from '@material-ui/core/Drawer';
 import MenuItem from '@material-ui/core/MenuItem';
-import { IndexLink, Link } from 'react-router';
+import { Link, NavLink } from 'react-router-dom';
 import AVLibraryBooks from '@material-ui/icons/LibraryBooks';
 import ContentAddBox from '@material-ui/icons/AddBox';
 import Dashboard from '@material-ui/icons/Dashboard';
@@ -144,20 +144,20 @@ export class Drawer extends React.Component<Props, State> {
                             className={`qa-Drawer-MenuItem-dashboard ${classes.menuItem}`}
                             onClick={this.props.handleMenuItemClick}
                         >
-                            <IndexLink
+                            <NavLink
                                 className={`qa-Drawer-Link-dashboard ${classes.link}`}
                                 activeClassName={classes.activeLink}
                                 to="/dashboard"
                             >
                                 <Dashboard className={classes.icon} />
                                 Dashboard
-                            </IndexLink>
+                            </NavLink>
                         </MenuItem>
                         <MenuItem
                             className={`qa-Drawer-MenuItem-exports ${classes.menuItem}`}
                             onClick={this.props.handleMenuItemClick}
                         >
-                            <Link
+                            <NavLink
                                 className={`qa-Drawer-Link-exports ${classes.link}`}
                                 activeClassName={classes.activeLink}
                                 to="/exports"
@@ -165,13 +165,13 @@ export class Drawer extends React.Component<Props, State> {
                             >
                                 <AVLibraryBooks className={classes.icon} />
                                 DataPack Library
-                            </Link>
+                            </NavLink>
                         </MenuItem>
                         <MenuItem
                             className={`qa-Drawer-MenuItem-create ${classes.menuItem}`}
                             onClick={this.props.handleMenuItemClick}
                         >
-                            <Link
+                            <NavLink
                                 className={`qa-Drawer-Link-create ${classes.link}`}
                                 activeClassName={classes.activeLink}
                                 to="/create"
@@ -179,13 +179,13 @@ export class Drawer extends React.Component<Props, State> {
                             >
                                 <ContentAddBox className={classes.icon} />
                                 Create DataPack
-                            </Link>
+                            </NavLink>
                         </MenuItem>
                         <MenuItem
                             className={`qa-Drawer-MenuItem-groups ${classes.menuItem}`}
                             onClick={this.props.handleMenuItemClick}
                         >
-                            <Link
+                            <NavLink
                                 className={`qa-Drawer-Link-groups ${classes.link}`}
                                 activeClassName={classes.activeLink}
                                 to="/groups"
@@ -193,13 +193,13 @@ export class Drawer extends React.Component<Props, State> {
                             >
                                 <SocialGroup className={classes.icon} />
                                 Members and Groups
-                            </Link>
+                            </NavLink>
                         </MenuItem>
                         <MenuItem
                             className={`qa-Drawer-MenuItem-about ${classes.menuItem}`}
                             onClick={this.props.handleMenuItemClick}
                         >
-                            <Link
+                            <NavLink
                                 className={`qa-Drawer-Link-about ${classes.link}`}
                                 activeClassName={classes.activeLink}
                                 to="/about"
@@ -207,13 +207,13 @@ export class Drawer extends React.Component<Props, State> {
                             >
                                 <ActionInfoOutline className={classes.icon} />
                                 About EventKit
-                            </Link>
+                            </NavLink>
                         </MenuItem>
                         <MenuItem
                             className={`qa-Drawer-MenuItem-account ${classes.menuItem}`}
                             onClick={this.props.handleMenuItemClick}
                         >
-                            <Link
+                            <NavLink
                                 className={`qa-Drawer-Link-account ${classes.link}`}
                                 activeClassName={classes.activeLink}
                                 to="/account"
@@ -221,20 +221,19 @@ export class Drawer extends React.Component<Props, State> {
                             >
                                 <SocialPerson className={classes.icon} />
                                 Account Settings
-                            </Link>
+                            </NavLink>
                         </MenuItem>
                         <MenuItem
                             className={`qa-Drawer-MenuItem-logout ${classes.menuItem}`}
                         >
-                            <Link // eslint-disable-line jsx-a11y/anchor-is-valid
+                            <NavLink // eslint-disable-line jsx-a11y/anchor-is-valid
                                 className={`qa-Drawer-Link-logout ${classes.link}`}
-                                activeClassName={classes.activeLink}
                                 onClick={this.handleLogoutClick}
-                                to={undefined}
+                                to={"/"}
                             >
                                 <ActionExitToApp className={classes.icon} />
                                 Log Out
-                            </Link>
+                            </NavLink>
                         </MenuItem>
                     </div>
                     {this.props.contactUrl ? <a
@@ -259,8 +258,4 @@ export class Drawer extends React.Component<Props, State> {
     }
 }
 
-export default withTheme()(
-    withStyles(jss)(
-        Drawer
-    )
-);
+export default withTheme()(withStyles(jss)(Drawer));

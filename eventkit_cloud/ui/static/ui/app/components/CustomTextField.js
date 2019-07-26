@@ -62,8 +62,10 @@ export class CustomTextField extends Component {
         const { defaultValue } = this.props;
 
         if (value) {
+            // eslint-disable-next-line react/prop-types
             return value.length;
-        } else if (defaultValue) {
+        } if (defaultValue) {
+            // eslint-disable-next-line react/prop-types
             return defaultValue.length;
         }
         return 0;
@@ -104,15 +106,16 @@ export class CustomTextField extends Component {
                     type="text"
                     {...rest}
                 />
-                {(maxLength && showRemaining && this.state.focused) ?
-                    <div
-                        className="qa-CustomTextField-div-charsRemaining"
-                        style={{ ...this.styles.charsRemaining, color: charsRemainingColor }}
-                    >
-                        {this.state.charsRemaining}
-                    </div>
-                    :
-                    null
+                {(maxLength && showRemaining && this.state.focused)
+                    ? (
+                        <div
+                            className="qa-CustomTextField-div-charsRemaining"
+                            style={{ ...this.styles.charsRemaining, color: charsRemainingColor }}
+                        >
+                            {this.state.charsRemaining}
+                        </div>
+                    )
+                    : null
                 }
             </div>
         );

@@ -1,5 +1,5 @@
 import axios from 'axios';
-import cookie from 'react-cookie';
+import { getCookie } from '../utils/generic'
 
 export const crashReporter = () => next => (action) => {
     try {
@@ -65,9 +65,9 @@ export const simpleApiCall = ({ dispatch, getState }) => next => (action) => {
 
     const [requestType, successType, failureType] = types;
 
-    dispatch({ ...payload, cancelSource, type: requestType });
+    dispatch({...payload, cancelSource, type: requestType});
 
-    const csrftoken = cookie.load('csrftoken');
+    const csrftoken = getCookie('csrftoken');
 
     return axios({
         url,

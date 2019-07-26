@@ -4,12 +4,12 @@ import Help from '@material-ui/icons/Help';
 import ButtonBase from '@material-ui/core/ButtonBase';
 import PageHeader from '../common/PageHeader';
 import BreadcrumbStepper from './BreadcrumbStepper';
-import { InjectedRouter, PlainRoute } from 'react-router';
+import { Route } from 'react-router';
 
 export interface Props {
     children: any;
-    router: InjectedRouter;
-    routes: PlainRoute[];
+    history: any;
+    routes: Route[];
     theme: Eventkit.Theme & Theme;
 }
 
@@ -73,7 +73,7 @@ export class CreateExport extends React.Component<Props, State> {
                     {iconElementRight}
                 </PageHeader>
                 <BreadcrumbStepper
-                    router={this.props.router}
+                    history={this.props.history}
                     routes={this.props.routes}
                     walkthroughClicked={this.state.walkthroughClicked}
                     onWalkthroughReset={this.handleWalkthroughReset}

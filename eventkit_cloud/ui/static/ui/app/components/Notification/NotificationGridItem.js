@@ -22,7 +22,7 @@ export class NotificationGridItem extends Component {
         // Allow the parent component the opportunity to stop or handle navigation.
         const path = getNotificationViewPath(this.props.notification);
         if (this.props.onView(this.props.notification, path)) {
-            this.props.router.push(path);
+            this.props.history.push(path);
             this.props.markNotificationsAsRead([this.props.notification]);
         }
     }
@@ -86,7 +86,7 @@ export class NotificationGridItem extends Component {
                     </div>
                     <NotificationMenu
                         notification={this.props.notification}
-                        router={this.props.router}
+                        history={this.props.history}
                         onMarkAsRead={this.props.onMarkAsRead}
                         onMarkAsUnread={this.props.onMarkAsUnread}
                         onRemove={this.props.onRemove}
@@ -102,7 +102,7 @@ NotificationGridItem.propTypes = {
     style: PropTypes.object,
     paperStyle: PropTypes.object,
     notification: PropTypes.object.isRequired,
-    router: PropTypes.object.isRequired,
+    history: PropTypes.object.isRequired,
     onMarkAsRead: PropTypes.func,
     onMarkAsUnread: PropTypes.func,
     onRemove: PropTypes.func,
