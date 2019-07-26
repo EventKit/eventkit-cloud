@@ -5,7 +5,7 @@ var WriteFilePlugin = require('write-file-webpack-plugin');
 var BundleAnalyzerPlugin = require('webpack-bundle-analyzer').BundleAnalyzerPlugin;
 var CompressionPlugin = require('compression-webpack-plugin');
 var ExtractTextPlugin = require("extract-text-webpack-plugin");
-var CleanWebpackPlugin = require('clean-webpack-plugin');
+var { CleanWebpackPlugin } = require('clean-webpack-plugin');
 var UglifyJsPlugin = require('uglifyjs-webpack-plugin');
 
 var BASE_DIR = path.resolve('eventkit_cloud', 'ui', 'static', 'ui')
@@ -15,7 +15,7 @@ var APP_DIR = path.resolve(BASE_DIR, 'app');
 var PROD = JSON.parse(process.env.PROD || false);
 var devtool = 'cheap-source-map';
 var plugins = [
-    new CleanWebpackPlugin([BUILD_DIR]),
+    new CleanWebpackPlugin(),
     new BundleAnalyzerPlugin({
         analyzerMode: 'static',
         reportFilename: 'report.html'
@@ -68,9 +68,9 @@ var config = {
                     {
                         loader: 'css-loader',
                         options: {
-                            modules: true,
-                            localIdentName: '[name]__[local]___[hash:base64:5]',
-                            minimize: true,
+                            modules: {
+                                localIdentName: '[name]__[local]___[hash:base64:5]',
+                            },
                         },
                     },
                 ],
@@ -81,7 +81,7 @@ var config = {
                 exclude: /(ol3map.css|typeahead.css$|popup.css$)/,
                 use: ExtractTextPlugin.extract({
                     fallback: 'style-loader',
-                    use: [{ loader: 'css-loader', options: { minimize: true }}]
+                    use: [{ loader: 'css-loader' }]
                 })
             },
             {

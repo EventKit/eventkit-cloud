@@ -2,7 +2,7 @@ import * as React from 'react';
 import * as sinon from 'sinon';
 import axios from 'axios';
 import { shallow } from 'enzyme';
-import * as MockAdapter from 'axios-mock-adapter';
+import MockAdapter from 'axios-mock-adapter';
 import Card from '@material-ui/core/Card';
 import CardHeader from '@material-ui/core/CardHeader';
 import CardContent from '@material-ui/core/CardContent';

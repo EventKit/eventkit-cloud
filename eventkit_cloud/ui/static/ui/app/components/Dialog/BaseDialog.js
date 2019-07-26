@@ -79,7 +79,7 @@ export class BaseDialog extends Component {
 
         return (
             <Dialog
-                className="qa-BaseDialog-Dialog"
+                className={this.props.className}
                 open={this.props.show}
                 onClose={this.props.onClose}
                 maxWidth="md"
@@ -113,6 +113,7 @@ BaseDialog.defaultProps = {
     actionsStyle: {},
     buttonStyle: {},
     overlayStyle: {},
+    className: 'qa-BaseDialog-Dialog',
 };
 
 BaseDialog.propTypes = {
@@ -133,6 +134,7 @@ BaseDialog.propTypes = {
     buttonStyle: PropTypes.object,
     overlayStyle: PropTypes.object,
     theme: PropTypes.object.isRequired,
+    className: PropTypes.string,
 };
 
 export default withTheme()(BaseDialog);

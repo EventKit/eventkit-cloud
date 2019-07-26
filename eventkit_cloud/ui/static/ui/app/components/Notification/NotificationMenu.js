@@ -6,7 +6,7 @@ import MenuItem from '@material-ui/core/MenuItem';
 import OpenInNewIcon from '@material-ui/icons/OpenInNew';
 import FlagIcon from '@material-ui/icons/Flag';
 import CloseIcon from '@material-ui/icons/Close';
-import IconMenu from '../../components/common/IconMenu';
+import IconMenu from '../common/IconMenu';
 import { getNotificationViewPath } from '../../utils/notificationUtils';
 import {
     markNotificationsAsRead,
@@ -44,7 +44,7 @@ export class NotificationMenu extends React.Component {
     handleView() {
         const path = getNotificationViewPath(this.props.notification);
         if (this.props.onView(this.props.notification, path)) {
-            this.props.router.push(path);
+            this.props.history.push(path);
             this.props.markNotificationsAsRead([this.props.notification]);
         }
     }
@@ -71,36 +71,46 @@ export class NotificationMenu extends React.Component {
                 menuStyle={{ zIndex: 1400 }}
                 style={{ width: '26px', height: '26px' }}
             >
-                {viewPath ?
-                    <MenuItem
-                        key="view"
-                        className="qa-NotificationMenu-MenuItem-View"
-                        style={styles.menuItem}
-                        onClick={this.handleView}
-                    >
-                        <OpenInNewIcon style={styles.icon} /> View
-                    </MenuItem>
-                    :
-                    null
+                {viewPath
+                    ? (
+                        <MenuItem
+                            key="view"
+                            className="qa-NotificationMenu-MenuItem-View"
+                            style={styles.menuItem}
+                            onClick={this.handleView}
+                        >
+                            <OpenInNewIcon style={styles.icon} />
+                            {' '}
+View
+                        </MenuItem>
+                    )
+                    : null
                 }
-                {this.props.notification.unread ?
-                    <MenuItem
-                        key="markRead"
-                        className="qa-NotificationMenu-MenuItem-MarkAsRead"
-                        style={styles.menuItem}
-                        onClick={this.handleMarkAsRead}
-                    >
-                        <FlagIcon style={styles.icon} /> Mark As Read
-                    </MenuItem>
-                    :
-                    <MenuItem
-                        key="markUnread"
-                        className="qa-NotificationMenu-MenuItem-MarkAsUnread"
-                        style={styles.menuItem}
-                        onClick={this.handleMarkAsUnread}
-                    >
-                        <FlagIcon style={styles.icon} /> Mark As Unread
-                    </MenuItem>
+                {this.props.notification.unread
+                    ? (
+                        <MenuItem
+                            key="markRead"
+                            className="qa-NotificationMenu-MenuItem-MarkAsRead"
+                            style={styles.menuItem}
+                            onClick={this.handleMarkAsRead}
+                        >
+                            <FlagIcon style={styles.icon} />
+                            {' '}
+Mark As Read
+                        </MenuItem>
+                    )
+                    : (
+                        <MenuItem
+                            key="markUnread"
+                            className="qa-NotificationMenu-MenuItem-MarkAsUnread"
+                            style={styles.menuItem}
+                            onClick={this.handleMarkAsUnread}
+                        >
+                            <FlagIcon style={styles.icon} />
+                            {' '}
+Mark As Unread
+                        </MenuItem>
+                    )
                 }
                 <MenuItem
                     key="remove"
@@ -108,7 +118,9 @@ export class NotificationMenu extends React.Component {
                     style={styles.menuItem}
                     onClick={this.handleRemove}
                 >
-                    <CloseIcon style={styles.icon} /> Remove
+                    <CloseIcon style={styles.icon} />
+                    {' '}
+Remove
                 </MenuItem>
             </IconMenu>
         );
@@ -117,7 +129,7 @@ export class NotificationMenu extends React.Component {
 
 NotificationMenu.propTypes = {
     notification: PropTypes.object.isRequired,
-    router: PropTypes.object.isRequired,
+    history: PropTypes.object.isRequired,
     onMarkAsRead: PropTypes.func,
     onMarkAsUnread: PropTypes.func,
     onRemove: PropTypes.func,

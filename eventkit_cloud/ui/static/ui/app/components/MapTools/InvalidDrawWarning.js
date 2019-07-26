@@ -23,7 +23,7 @@ export class InvalidDrawWarning extends Component {
         };
 
         return (
-            <div style={style} className="qa-InvalidDrawWardning-div" >
+            <div style={style} className="qa-InvalidDrawWardning-div">
                 <span>You drew an invalid bounding box, please redraw.</span>
             </div>
         );

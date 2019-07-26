@@ -1,7 +1,7 @@
 import * as React from 'react';
 import * as sinon from 'sinon';
 import { createShallow } from '@material-ui/core/test-utils';
-import * as moment from 'moment';
+import moment from 'moment';
 import DataPackDetails from '../../components/StatusDownloadPage/DataPackDetails';
 import DataPackStatusTable from '../../components/StatusDownloadPage/DataPackStatusTable';
 import DataPackOptions from '../../components/StatusDownloadPage/DataPackOptions';

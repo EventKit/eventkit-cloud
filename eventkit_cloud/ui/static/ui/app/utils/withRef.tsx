@@ -11,7 +11,7 @@ interface BaseProps {
 }
 
 const withRef = () =>
-    <T extends React.Component, OriginalProps extends {}>(
+    <T extends React.Component, OriginalProps extends {} >(
         Component: React.ComponentClass<OriginalProps>
     ) => {
 
@@ -28,7 +28,7 @@ const withRef = () =>
         }
     }
 
-    const forwardRef = (props: Props) => {
+    const forwardRef = (props: Props, ref) => {
         const { customRef } = props;
         return <WithRef {...props} forwardedRef={customRef} />;
     };
@@ -36,7 +36,7 @@ const withRef = () =>
     const name = Component.displayName || React.Component.name;
     (forwardRef as any).displayName = `withRef(${name})`;
 
-    return React.forwardRef<T, OriginalProps>(forwardRef);
+    return React.forwardRef<T, OriginalProps>(forwardRef as any);
 };
 
 export default withRef;

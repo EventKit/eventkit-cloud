@@ -1,11 +1,11 @@
 import * as React from 'react';
 import { withTheme, Theme, withStyles, createStyles } from '@material-ui/core/styles';
-import * as numeral from 'numeral';
+import numeral from 'numeral';
 import Button from '@material-ui/core/Button';
 import TextField from '@material-ui/core/TextField';
-import Slider from '@material-ui/lab/Slider';
 import AlertWarning from '@material-ui/icons/Warning';
 import Clear from '@material-ui/icons/Clear';
+import Slider from '@material-ui/lab/Slider';
 import AlertCallout from './AlertCallout';
 import { getSqKm, getSqKmString } from '../../utils/generic';
 

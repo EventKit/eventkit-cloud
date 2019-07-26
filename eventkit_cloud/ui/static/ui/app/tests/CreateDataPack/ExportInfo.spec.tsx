@@ -2,7 +2,7 @@ import * as React from 'react';
 import * as sinon from 'sinon';
 import axios from 'axios';
 import { shallow } from 'enzyme';
-import * as  MockAdapter from 'axios-mock-adapter';
+import MockAdapter from 'axios-mock-adapter';
 import List from '@material-ui/core/List';
 import Paper from '@material-ui/core/Paper';
 import Checkbox from '@material-ui/core/Checkbox';
@@ -170,7 +170,7 @@ describe('ExportInfo component', () => {
 
     it('onNameChange should call updateExportInfo', () => {
         const event = { target: { value: 'test' } };
-        props.updateExportInfo.reset();
+        props.updateExportInfo.resetHistory();
         instance.onNameChange(event);
         expect(props.updateExportInfo.calledOnce).toBe(true);
         expect(props.updateExportInfo.calledWith({
@@ -181,7 +181,7 @@ describe('ExportInfo component', () => {
 
     it('onDescriptionChange should call persist and nameHandler', () => {
         const event = { target: { value: 'test' } };
-        props.updateExportInfo.reset();
+        props.updateExportInfo.resetHistory();
         instance.onDescriptionChange(event);
         expect(props.updateExportInfo.calledOnce).toBe(true);
         expect(props.updateExportInfo.calledWith({
@@ -192,7 +192,7 @@ describe('ExportInfo component', () => {
 
     it('onProjectChange should call persist and nameHandler', () => {
         const event = { target: { value: 'test' } };
-        props.updateExportInfo.reset();
+        props.updateExportInfo.resetHistory();
         instance.onProjectChange(event);
         expect(props.updateExportInfo.calledOnce).toBe(true);
         expect(props.updateExportInfo.calledWith({
@@ -265,7 +265,6 @@ describe('ExportInfo component', () => {
         };
         mock.onPost(`/api/providers/${provider.slug}/status`)
             .reply(200, { status: 'some status' });
-        const parseStub = sinon.stub(JSON, 'parse').callsFake(input => input);
         const expected = {
             ...provider,
             availability: {
@@ -275,7 +274,7 @@ describe('ExportInfo component', () => {
         };
         const newProvider = await instance.getAvailability(provider, {});
         expect(newProvider).toEqual(expected);
-        parseStub.restore();
+        mock.restore();
     });
 
     it('getAvailability should return failed provider', async () => {
@@ -296,6 +295,7 @@ describe('ExportInfo component', () => {
         };
         const newProvider = await instance.getAvailability(provider, {});
         expect(newProvider).toEqual(expected);
+        mock.restore();
     });
 
     it('checkAvailability should setState with new provider', async () => {

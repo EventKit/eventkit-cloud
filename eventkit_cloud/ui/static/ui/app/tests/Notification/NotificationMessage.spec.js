@@ -1,7 +1,7 @@
 import React from 'react';
 import { createShallow } from '@material-ui/core/test-utils';
 import sinon from 'sinon';
-import { Link } from 'react-router';
+import { Link } from 'react-router-dom';
 import { NotificationMessage } from '../../components/Notification/NotificationMessage';
 
 describe('NotificationMessage component', () => {

@@ -2,6 +2,7 @@ import * as PropTypes from 'prop-types';
 import * as React from 'react';
 import { connect } from 'react-redux';
 import axios from 'axios';
+import queryString from 'query-string';
 import { withTheme, withStyles, createStyles } from '@material-ui/core/styles';
 import withWidth, { isWidthUp } from '@material-ui/core/withWidth';
 import { Breakpoint } from '@material-ui/core/styles/createBreakpoints';
@@ -13,15 +14,39 @@ import Banner from './Banner';
 import Drawer from './Drawer';
 import BaseDialog from './Dialog/BaseDialog';
 import { DrawerTimeout } from '../actions/uiActions';
-import { userActive } from '../actions/userActions';
+import {login, userActive} from '../actions/userActions';
 import { getNotifications, getNotificationsUnreadCount } from '../actions/notificationsActions';
 import NotificationsDropdown from './Notification/NotificationsDropdown';
+import Loadable from 'react-loadable';
+import { connectedReduxRedirect } from 'redux-auth-wrapper/history4/redirect';
+import { Redirect, Route, RouteComponentProps, Switch } from 'react-router';
+import { routerActions } from 'connected-react-router';
+import PageLoading from './common/PageLoading';
 import '../styles/bootstrap/css/bootstrap.css';
 import '../styles/openlayers/ol.css';
 import '../styles/flexboxgrid.css';
 import '../styles/react-joyride-compliled.css';
 // tslint:disable-next-line:no-var-requires
 require('../fonts/index.css');
+
+const Loading = (args) => {
+    if (args.pastDelay) {
+        return (
+            <PageLoading background="pattern" />
+        );
+    }
+
+    return null;
+};
+
+function allTrue(acceptedLicenses) {
+    return Object.keys(acceptedLicenses).every(license => acceptedLicenses[license]);
+}
+
+const loadableDefaults = {
+    loading: Loading,
+    delay: 1000,
+};
 
 const jss = (theme: any) => createStyles({
     appBar: {
@@ -78,7 +103,7 @@ interface Props {
     closeDrawer: () => void;
     userActive: () => void;
     drawer: string;
-    router: any;
+    history: any;
     userData: {
         accepted_licenses: object;
         user: {
@@ -92,6 +117,7 @@ interface Props {
             identification: string;
         };
     };
+    isLoading: boolean;
     autoLogoutAt: Date;
     autoLogoutWarningAt: Date;
     notificationsData: Eventkit.Store.NotificationsData;
@@ -109,6 +135,7 @@ interface Props {
         notificationsButton: string;
         notificationsIndicator: string;
     };
+    login: (options?: object) => void;
 }
 
 interface State {
@@ -124,7 +151,115 @@ interface State {
     showNotificationsDropdown: boolean;
     notificationsLoading: boolean;
     loggedIn: boolean;
+    isMounted: false;
+    user: {data: any, status: any};
 }
+
+const Loader = Loadable({
+    ...loadableDefaults,
+    loader: () => import('./common/PageLoading'),
+});
+
+const UserIsAuthenticated = connectedReduxRedirect({
+    authenticatedSelector: (state: State) => !!state.user.data,
+    authenticatingSelector: (state: State) => state.user.status.isLoading ,
+    AuthenticatingComponent: Loader,
+    redirectAction: routerActions.replace,
+    wrapperDisplayName: 'UserIsAuthenticated',
+    redirectPath: '/login',
+});
+
+const UserIsNotAuthenticated = connectedReduxRedirect({
+    redirectAction: routerActions.replace,
+    wrapperDisplayName: 'UserIsNotAuthenticated',
+    authenticatedSelector: (state: State) => {
+        const checked = !state.user.data && state.user.status.isLoading === false;
+        return checked;
+    },
+    redirectPath: (state, ownProps: RouteComponentProps<{}, {}>) => {
+        const {redirect, next} = queryString.parse(ownProps.location.search);
+        return (redirect || next) || '/dashboard';
+    },
+    allowRedirectBack: false,
+});
+
+const UserHasAgreed = connectedReduxRedirect({
+    redirectAction: routerActions.replace,
+    redirectPath: '/account',
+    wrapperDisplayName: 'UserHasAgreed',
+    authenticatedSelector: (state: State) => allTrue(state.user.data.accepted_licenses),
+});
+
+const LoginPage = Loadable({
+    ...loadableDefaults,
+    loader: () => import('./auth/LoginPage'),
+});
+
+const Logout = Loadable({
+    ...loadableDefaults,
+    loader: () => import('../containers/logoutContainer'),
+});
+
+const About = Loadable({
+    ...loadableDefaults,
+    loader: () => import('./About/About'),
+});
+
+const Account = Loadable({
+    ...loadableDefaults,
+    loader: () => import('./AccountPage/Account'),
+});
+
+const DashboardPage = Loadable({
+    ...loadableDefaults,
+    loader: () => import('./DashboardPage/DashboardPage'),
+});
+
+const DataPackPage = Loadable({
+    ...loadableDefaults,
+    loader: () => import('./DataPackPage/DataPackPage'),
+});
+
+const CreateExport = Loadable({
+    ...loadableDefaults,
+    loader: () => import('./CreateDataPack/CreateExport'),
+});
+
+const StatusDownload = Loadable({
+    ...loadableDefaults,
+    loader: () => import('./StatusDownloadPage/StatusDownload'),
+});
+
+const UserGroupsPage = Loadable({
+    ...loadableDefaults,
+    loader: () => import('./UserGroupsPage/UserGroupsPage'),
+});
+
+const NotificationsPage = Loadable({
+    ...loadableDefaults,
+    loader: () => import('./NotificationsPage/NotificationsPage'),
+});
+
+const routes = (
+    <div>
+        <Route path="/login" component={UserIsNotAuthenticated(LoginPage)} />
+        <Route path="/logout" component={Logout} />
+        <Route path="/dashboard" component={UserIsAuthenticated(UserHasAgreed(DashboardPage))} />
+        <Route path="/exports" component={UserIsAuthenticated(UserHasAgreed(DataPackPage))} />
+        <Route path="/create" component={UserIsAuthenticated(UserHasAgreed(CreateExport))} />
+        <Route
+            path="/status/:jobuid"
+            component={UserIsAuthenticated(UserHasAgreed(StatusDownload))}
+        />
+        <Route path="/about" component={UserIsAuthenticated(About)} />
+        <Route path="/account" component={UserIsAuthenticated(Account)} />
+        <Route path="/groups" component={UserIsAuthenticated(UserGroupsPage)} />
+        <Route path="/notifications" component={UserIsAuthenticated(NotificationsPage)} />
+        <Route exact path="/" render={() => (
+            <Redirect to="/dashboard" />
+        )} />
+    </div>
+)
 
 export class Application extends React.Component<Props, State> {
     private userActiveInputTypes: string[];
@@ -188,6 +323,8 @@ export class Application extends React.Component<Props, State> {
             showNotificationsDropdown: false,
             notificationsLoading: true,
             loggedIn: Boolean(props.userData),
+            isMounted: false,
+            user: null
         };
         this.userActiveInputTypes = ['mousemove', 'click', 'keypress', 'wheel', 'touchstart', 'touchmove', 'touchend'];
         this.notificationsUnreadCountRefreshInterval = 10000;
@@ -201,8 +338,15 @@ export class Application extends React.Component<Props, State> {
         return this.state.childContext;
     }
 
+    checkAuth() {
+        if (!this.props.userData) {
+            this.props.login(null);
+        }
+    }
+
     componentDidMount() {
         this.getConfig();
+        this.checkAuth();
     }
 
     componentDidUpdate(prevProps, prevState) {
@@ -278,12 +422,13 @@ export class Application extends React.Component<Props, State> {
     }
 
     getConfig() {
+        console.log("GETTING CONFIG!");
         return axios.get('/configuration')
             .then((response) => {
                 if (response.data) {
-                    let data = response.data;
-                    data['SERVE_ESTIMATES'] = this.getBooleanSetting(data.SERVE_ESTIMATES);
-                    this.setState({ childContext: { config: data } });
+                    const data = response.data;
+                    data.SERVE_ESTIMATES = this.getBooleanSetting(data.SERVE_ESTIMATES);
+                    this.setState({childContext: {config: data}});
                 }
             }).catch((error) => {
                 console.warn(error.response.data);
@@ -315,7 +460,7 @@ export class Application extends React.Component<Props, State> {
 
     logout() {
         this.props.closeDrawer();
-        this.props.router.push('/logout');
+        this.props.history.push('/logout');
     }
 
     startListeningForNotifications() {
@@ -566,7 +711,7 @@ export class Application extends React.Component<Props, State> {
                             <IconButton
                                 className={`qa-Application-AppBar-NotificationsButton ${classes.notificationsButton}`}
                                 style={{
-                                    backgroundColor: (this.props.router.location.pathname.indexOf('/notifications') === 0) ?
+                                    backgroundColor: (this.props.history.location.pathname.indexOf('/notifications') === 0) ?
                                         colors.primary : '',
                                 }}
                                 color="secondary"
@@ -586,7 +731,7 @@ export class Application extends React.Component<Props, State> {
                                     <NotificationsDropdown
                                         loading={this.state.notificationsLoading}
                                         notifications={this.props.notificationsData}
-                                        router={this.props.router}
+                                        history={this.props.history}
                                         onNavigate={this.handleNotificationsDropdownNavigate}
                                         onClickAway={this.handleClick}
                                     /> : null }
@@ -602,6 +747,7 @@ export class Application extends React.Component<Props, State> {
                 />
                 <div className="qa-Application-content" style={styles.content}>
                     <div>{childrenWithContext}</div>
+                    { routes }
                 </div>
                 <BaseDialog
                     show={this.state.showAutoLogoutWarningDialog}
@@ -627,6 +773,7 @@ function mapStateToProps(state) {
     return {
         drawer: state.drawer,
         userData: state.user.data,
+        isLoading: state.user.status.isLoading,
         autoLogoutAt: state.user.meta.autoLogoutAt,
         autoLogoutWarningAt: state.user.meta.autoLogoutWarningAt,
         notificationsStatus: state.notifications.status,
@@ -653,6 +800,9 @@ function mapDispatchToProps(dispatch) {
         getNotifications: (args) => {
             dispatch(getNotifications(args));
         },
+        login: (args) => {
+            dispatch(login(args));
+        }
     };
 }
 

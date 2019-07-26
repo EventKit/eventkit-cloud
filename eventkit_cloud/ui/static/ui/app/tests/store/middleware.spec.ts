@@ -1,5 +1,5 @@
 import axios from 'axios';
-import * as MockAdapter from 'axios-mock-adapter';
+import MockAdapter from 'axios-mock-adapter';
 import * as sinon from 'sinon';
 import * as middleware from '../../store/middlewares';
 

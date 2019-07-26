@@ -2,7 +2,7 @@ import * as React from 'react';
 import { Theme, withStyles, createStyles } from '@material-ui/core/styles';
 import withWidth from '@material-ui/core/withWidth';
 import { Breakpoint } from '@material-ui/core/styles/createBreakpoints';
-import * as numeral from 'numeral';
+import numeral from 'numeral';
 import Button from '@material-ui/core/Button';
 import Divider from '@material-ui/core/Divider';
 import IconButton from '@material-ui/core/IconButton';

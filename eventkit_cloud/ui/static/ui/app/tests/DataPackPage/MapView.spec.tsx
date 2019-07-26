@@ -2,8 +2,8 @@ import * as React from 'react';
 import * as sinon from 'sinon';
 import { shallow } from 'enzyme';
 import GridList from '@material-ui/core/GridList';
-import * as axios from 'axios';
-import * as MockAdapter from 'axios-mock-adapter';
+import axios from 'axios';
+import MockAdapter from 'axios-mock-adapter';
 
 import Map from 'ol/map';
 import Feature from 'ol/feature';

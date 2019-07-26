@@ -61,7 +61,7 @@ describe('NotificationsTable component', () => {
                 mockNotifications['1'],
                 mockNotifications['2'],
             ],
-            router: {
+            history: {
                 push: sinon.spy(),
             },
             onView: sinon.spy(),

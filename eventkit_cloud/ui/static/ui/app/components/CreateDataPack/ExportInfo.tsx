@@ -3,7 +3,7 @@ import * as React from 'react';
 import {createStyles, Theme, withStyles, withTheme} from '@material-ui/core/styles';
 import {connect} from 'react-redux';
 import axios from 'axios';
-import cookie from 'react-cookie';
+import { getCookie } from '../../utils/generic'
 import Joyride, {Step} from 'react-joyride';
 import List from '@material-ui/core/List';
 import Paper from '@material-ui/core/Paper';
@@ -151,7 +151,7 @@ export class ExportInfo extends React.Component<Props, State> {
         config: PropTypes.object,
     };
 
-    private joyride;
+    joyride;
     constructor(props: Props) {
         super(props);
         this.state = {
@@ -296,7 +296,7 @@ export class ExportInfo extends React.Component<Props, State> {
         // current array of providers
         let providers = [];
         if (e.target.checked) {
-            //set providers to the list of ALL providers
+            // set providers to the list of ALL providers
             providers = [...this.props.providers];
         }
 
@@ -322,14 +322,14 @@ export class ExportInfo extends React.Component<Props, State> {
         // make a copy of the provider to edit
         const newProvider = { ...provider } as ProviderData;
 
-        const csrfmiddlewaretoken = cookie.load('csrftoken');
+        const csrfmiddlewaretoken = getCookie('csrftoken');
         return axios({
             url: `/api/providers/${provider.slug}/status`,
             method: 'POST',
             data,
             headers: { 'X-CSRFToken': csrfmiddlewaretoken },
         }).then((response) => {
-            newProvider.availability = JSON.parse(response.data);
+            newProvider.availability = response.data;
             newProvider.availability.slug = provider.slug;
             return newProvider;
         }).catch(() => {
@@ -350,7 +350,7 @@ export class ExportInfo extends React.Component<Props, State> {
         const data = { slugs: provider.slug,
                        srs: 4326,
                        bbox: bbox.join(',') };
-        const csrfmiddlewaretoken = cookie.load('csrftoken');
+        const csrfmiddlewaretoken = getCookie('csrftoken');
         return axios({
             url: `/api/estimate`,
             method: 'get',
@@ -396,7 +396,7 @@ export class ExportInfo extends React.Component<Props, State> {
     async checkEstimate(provider: ProviderData) {
         // This assumes that the entire selection is the first feature, if the feature collection becomes the
         // selection then the bbox would need to be calculated for it.
-        if(this.context.config.SERVE_ESTIMATES) {
+        if (this.context.config.SERVE_ESTIMATES) {
             const bbox = featureToBbox(this.props.geojson.features[0], WGS84);
             const newProvider = await this.getEstimate(provider, bbox);
             this.setState((prevState) => {
@@ -481,7 +481,7 @@ export class ExportInfo extends React.Component<Props, State> {
         const { action, step, type } = data;
         this.props.setNextDisabled();
         if (action === 'close' || action === 'skip' || type === 'finished') {
-                this.setState({ isRunning: false });
+            this.setState({isRunning: false});
             this.props.onWalkthroughReset();
             this.joyride.current.reset(true);
             window.location.hash = '';
@@ -586,15 +586,18 @@ export class ExportInfo extends React.Component<Props, State> {
                             </div>
                             <div id="select" className={`qa-ExportInfo-selectAll ${classes.selectAll}`}>
                                 <Checkbox
-                                    classes={{ root: classes.checkbox, checked: classes.checked }}
+                                    classes={{root: classes.checkbox, checked: classes.checked}}
                                     name="SelectAll"
-                                    checked={this.props.exportInfo.providers.length == this.props.providers.length}
+                                    checked={this.props.exportInfo.providers.length === this.props.providers.length}
                                     onChange={this.onSelectAll}
-                                    style={{ width: '24px', height: '24px' }}
+                                    style={{width: '24px', height: '24px'}}
                                 />
-                                <span style={{
-                                    padding: '0px 15px', display: 'flex',
-                                    flexWrap: 'wrap' , fontSize: '16px',}}>
+                                <span
+                                    style={{
+                                        padding: '0px 15px', display: 'flex',
+                                        flexWrap: 'wrap', fontSize: '16px',
+                                    }}
+                                >
                                     Select All
                                 </span>
                             </div>

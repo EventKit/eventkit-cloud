@@ -4,13 +4,13 @@ import { withTheme } from '@material-ui/core/styles';
 import Dropzone from 'react-dropzone';
 import Button from '@material-ui/core/Button';
 import FileFileUpload from '@material-ui/icons/CloudUpload';
+import RootRef from '@material-ui/core/RootRef/RootRef';
 import BaseDialog from '../Dialog/BaseDialog';
 
 export class DropZoneDialog extends Component {
     constructor(props) {
         super(props);
         this.onDrop = this.onDrop.bind(this);
-        this.onOpenClick = this.onOpenClick.bind(this);
         this.handleClear = this.handleClear.bind(this);
     }
 
@@ -20,10 +20,6 @@ export class DropZoneDialog extends Component {
             this.props.setImportModalState(false);
             this.props.processGeoJSONFile(file);
         }
-    }
-
-    onOpenClick() {
-        this.dropzone.open();
     }
 
     handleClear() {
@@ -43,6 +39,7 @@ export class DropZoneDialog extends Component {
                 border: '1px dashed',
                 fontSize: '1em',
                 color: colors.primary,
+                verticalAlign: 'center',
             },
             text: {
                 verticalAlign: 'center',
@@ -64,30 +61,40 @@ export class DropZoneDialog extends Component {
                 <Dropzone
                     onDrop={this.onDrop}
                     multiple={false}
-                    style={styles.drop}
-                    ref={(node) => { this.dropzone = node; }}
-                    disableClick
+                    style={{}}
                     maxSize={5000000}
                     className="qa-DropZoneDialog-Dropzone"
                 >
-                    <div style={styles.text} className="qa-DropZoneDialog-text">
-                        <span>
-                            <strong>GeoJSON, KML, GPKG, zipped SHP,</strong><br />
-                            and other major geospatial data formats are supported.<br />
-                            <strong> 5 MB </strong>max<br />
-                            Drag and drop or<br />
-                        </span>
-                        <Button
-                            style={{ margin: '15px 10px' }}
-                            variant="contained"
-                            color="primary"
-                            onClick={this.onOpenClick}
-                            className="qa-DropZoneDialog-Button-select"
-                        >
-                            <FileFileUpload color="secondary" style={{ marginRight: '5px' }} />
-                            Select A File
-                        </Button>
-                    </div>
+                    {({ getRootProps, getInputProps }) => {
+                        const { ref } = getRootProps();
+                        return (
+                            <RootRef rootRef={ref}>
+                                <div {...getRootProps()} style={styles.drop} className="qa-DropZoneDialog-text">
+                                    <span style={styles.text}>
+                                        <strong>GeoJSON, KML, GPKG, zipped SHP,</strong>
+                                        <br />
+                            and other major geospatial data formats are supported.
+                                        <br />
+                                        <strong> 5 MB </strong>
+max
+                                        <br />
+                            Drag and drop or
+                                        <br />
+                                    </span>
+                                    <Button
+                                        style={{ margin: '15px 10px' }}
+                                        variant="contained"
+                                        color="primary"
+                                        className="qa-DropZoneDialog-Button-select"
+                                    >
+                                        <input {...getInputProps()} />
+                                        <FileFileUpload color="secondary" style={{ marginRight: '5px' }} />
+                                    Select A File
+                                    </Button>
+                                </div>
+                            </RootRef>
+                        );
+                    }}
                 </Dropzone>
             </BaseDialog>
         );

@@ -3,7 +3,7 @@ import * as PropTypes from 'prop-types';
 import * as React from 'react';
 import { connect } from 'react-redux';
 import { withTheme, withStyles, createStyles, StyledComponentProps } from '@material-ui/core/styles';
-import { Link, browserHistory } from 'react-router';
+import { Link } from 'react-router-dom';
 import Collapse from '@material-ui/core/Collapse';
 import Card from '@material-ui/core/Card';
 import CardHeader from '@material-ui/core/CardHeader';
@@ -15,8 +15,8 @@ import Lock from '@material-ui/icons/LockOutlined';
 import NotificationSync from '@material-ui/icons/Sync';
 import NavigationCheck from '@material-ui/icons/Check';
 import AlertError from '@material-ui/icons/Error';
-import * as isUndefined from 'lodash/isUndefined';
-import * as moment from 'moment';
+import isUndefined from 'lodash/isUndefined';
+import moment from 'moment';
 
 import Map from 'ol/map';
 import View from 'ol/view';
@@ -37,6 +37,7 @@ import ol3mapCss from '../../styles/ol3map.css';
 import DataPackShareDialog from '../DataPackShareDialog/DataPackShareDialog';
 import { makeFullRunSelector } from '../../selectors/runSelector';
 import ProviderDialog from '../Dialog/ProviderDialog';
+import history from '../../utils/history';
 
 const jss = (theme: any) => createStyles({
     cardTitle: {
@@ -403,7 +404,7 @@ export class DataPackGridItem extends React.Component<Props, State> {
                                         key="status"
                                         className="qa-DataPackGridItem-MenuItem-goToStatus"
                                         style={{ fontSize: cardTextFontSize }}
-                                        onClick={() => { browserHistory.push(`/status/${this.props.run.job.uid}`); }}
+                                        onClick={() => { history.push(`/status/${this.props.run.job.uid}`); }}
                                     >
                                         Status & Download
                                     </MenuItem>

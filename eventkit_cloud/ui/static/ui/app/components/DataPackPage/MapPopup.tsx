@@ -7,7 +7,7 @@ import ArrowUp from '@material-ui/icons/KeyboardArrowUp';
 import Dot from '@material-ui/icons/FiberManualRecord';
 import OpenInNewIcon from '@material-ui/icons/OpenInNew';
 import ActionZoomInIcon from '@material-ui/icons/ZoomIn';
-import * as moment from 'moment';
+import moment from 'moment';
 
 export interface Props {
     featureInfo: Eventkit.Run & {

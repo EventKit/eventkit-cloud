@@ -52,4 +52,3 @@ Logout.propTypes = {
 };
 
 export default connect()(Logout);
-

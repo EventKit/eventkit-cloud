@@ -249,4 +249,3 @@ describe('DataPackList actions', () => {
         expect(actions.clearDataCartDetails()).toEqual({ type: actions.types.CLEAR_DATACART_DETAILS });
     });
 });
-

@@ -1,6 +1,6 @@
 import * as React from 'react';
 import * as sinon from 'sinon';
-import { browserHistory } from 'react-router';
+
 import { shallow } from 'enzyme';
 import Joyride from 'react-joyride';
 import Help from '@material-ui/icons/Help';
@@ -20,6 +20,8 @@ import DataPackOwnerSort from '../../components/DataPackPage/DataPackOwnerSort';
 import DataPackLinkButton from '../../components/DataPackPage/DataPackLinkButton';
 import * as utils from '../../utils/mapUtils';
 import { joyride } from '../../joyride.config';
+import history from '../../utils/history';
+import queryString from 'query-string';
 
 describe('DataPackPage component', () => {
     const getProps = () => ({
@@ -97,10 +99,13 @@ describe('DataPackPage component', () => {
             error: null,
         },
         location: {
-            query: {
+            search: queryString.stringify({
                 collection: '',
+                order: '-job__featured',
+                view: 'map',
                 page_size: '12',
-            },
+                search: null
+            }),
         },
         ...(global as any).eventkit_test_props,
     });
@@ -119,13 +124,13 @@ describe('DataPackPage component', () => {
         instance = wrapper.instance();
     };
 
-    let history;
+    let browserHistory;
     beforeAll(() => {
-        history = sinon.stub(browserHistory, 'push');
+        browserHistory = sinon.stub(history, 'push');
     });
 
     afterAll(() => {
-        history.restore();
+        browserHistory.restore();
     });
 
     beforeEach(setup);
@@ -149,12 +154,13 @@ describe('DataPackPage component', () => {
     });
 
     it('componentWillMount should call updateLocationQuery with default query', () => {
-        const location = { ...props.location, query: {} };
+        const location = { ...props.location, search: {} };
         const expectedDefault = {
             collection: 'all',
             order: '-job__featured',
             view: 'map',
             page_size: Number(config.DATAPACK_PAGE_SIZE),
+            search: null
         };
         const updateStub = sinon.stub(instance, 'updateLocationQuery');
         wrapper.setProps({ location });
@@ -171,29 +177,30 @@ describe('DataPackPage component', () => {
     // });
 
     it('should use order and view from props or just default to map and featured', () => {
-        history.reset();
+        browserHistory.reset();
         const order = 'job__featured';
         const view = 'grid';
-        setup({ runsMeta: { ...props.runsMeta, order, view }});
-        expect(history.called).toBe(true);
-        expect(history.calledWith({
+        const expectedParams = {
+            collection: 'all',
+            order,
+            view,
+            page_size: '12',
+            search: null,
+        }
+        setup({ runsMeta: { ...props.runsMeta, order, view }, location: { search: {} } });
+        expect(browserHistory.called).toBe(true);
+        expect(browserHistory.calledWith({
             ...props.location,
-            query: {
-                ...props.location.query,
-                order: 'job__featured',
-                view: 'grid',
-            },
+            search: queryString.stringify(expectedParams),
         })).toBe(true);
-        history.reset();
-        setup();
-        expect(history.called).toBe(true);
-        expect(history.calledWith({
+        browserHistory.reset();
+        setup({ location: { search: {} } });
+        expectedParams.order = '-job__featured'
+        expectedParams.view = 'map'
+        expect(browserHistory.called).toBe(true);
+        expect(browserHistory.calledWith({
             ...props.location,
-            query: {
-                ...props.location.query,
-                order: '-job__featured',
-                view: 'map',
-            },
+            search: queryString.stringify(expectedParams),
         })).toBe(true);
     });
 
@@ -252,13 +259,15 @@ describe('DataPackPage component', () => {
         expect(requestStub.called).toBe(false);
         expect(stateStub.called).toBe(false);
         nextProps = getProps();
-        nextProps.location.query.newKey = 'new query thing';
-        wrapper.setProps(nextProps);
+        nextProps.location.search = queryString.parse(nextProps.location.search);
+        nextProps.location.search.newKey = 'new query thing';
+        wrapper.setProps({ location: { search: queryString.stringify(nextProps.location.search) } });
         expect(requestStub.calledOnce).toBe(true);
         expect(stateStub.calledOnce).toBe(true);
         nextProps = getProps();
-        nextProps.location.query.newKey = 'a changed value';
-        wrapper.setProps(nextProps);
+        nextProps.location.search = queryString.parse(nextProps.location.search);
+        nextProps.location.search.newKey = 'a changed value';
+        wrapper.setProps({ location: { search: queryString.stringify(nextProps.location.search) } });
         expect(requestStub.calledTwice).toBe(true);
         expect(stateStub.calledTwice).toBe(true);
     });
@@ -266,9 +275,9 @@ describe('DataPackPage component', () => {
     it('componentDidUpdate should update joyride steps', () => {
         const getStub = sinon.stub(instance, 'getJoyRideSteps');
         const addStub = sinon.stub(instance, 'joyrideAddSteps');
-        const nextProps = getProps();
-        nextProps.location.query.view = 'grid';
-        wrapper.setProps(nextProps);
+        let location = { search: queryString.parse(getProps().location) };
+        location.search.view = 'grid';
+        wrapper.setProps({ location: { search: queryString.stringify(location.search) } });
         expect(getStub.calledOnce).toBe(true);
         expect(addStub.calledOnce).toBe(true);
     });
@@ -283,7 +292,7 @@ describe('DataPackPage component', () => {
 
     it('should setOrder and setView if props are different from state', () => {
         setup({
-            location: { ...props.location, query: { order: '-job__featured', view: 'list' } },
+            location: { ...props.location, search: queryString.stringify({ order: '-job__featured', view: 'list' }) },
         });
         wrapper.unmount();
         expect(props.setOrder.calledOnce).toBe(true);
@@ -343,30 +352,21 @@ describe('DataPackPage component', () => {
     });
 
     it('updateLocationQuery should call push with updated query', () => {
-        history.reset();
+        browserHistory.reset();
         const query = { somekey: 'this is a new query key' };
-        const expected = {
-            ...props.location,
-            query: {
-                ...props.location.query,
-                ...query,
-            },
-        };
+        const expected = { "search": queryString.stringify(query) };
         instance.updateLocationQuery(query);
-        expect(history.calledOnce).toBe(true);
-        expect(history.calledWith(expected)).toBe(true);
+        expect(browserHistory.calledOnce).toBe(true);
+        expect(browserHistory.calledWith(expected)).toBe(true);
     });
 
     it('checkForEmptySearch should call updateLocationQuery with search undefined', () => {
-        const location = {
-            ...props.location,
-            query: { ...props.location.query, search: 'test_search' },
-        };
+        const location = { search: queryString.stringify({search: 'test_search'})}
         wrapper.setProps({ location });
         const updateStub = sinon.stub(instance, 'updateLocationQuery');
         instance.checkForEmptySearch('');
         expect(updateStub.calledOnce).toBe(true);
-        expect(updateStub.calledWith({ ...props.location.query, search: undefined })).toBe(true);
+        expect(updateStub.calledWith({ search: undefined })).toBe(true);
     });
 
     it('if a run has been deleted it should call makeRunRequest again', () => {
@@ -395,11 +395,12 @@ describe('DataPackPage component', () => {
     });
 
     it('makeRunRequest should build a params object and pass it to props.getRuns', () => {
-        const p = getProps();
-        p.location.query.search = 'search_text';
-        p.location.query.order = '-job__featured';
-        p.location.query.collection = 'test_user';
-        wrapper.setProps(p);
+        let location = { search: queryString.parse(getProps().location) };
+        location.search.page_size = '12'
+        location.search.search = 'search_text';
+        location.search.order = '-job__featured';
+        location.search.collection = 'test_user';
+        wrapper.setProps({ location: { search: queryString.stringify(location.search) } });
         const status = { completed: true, incomplete: true };
         const minDate = new Date(2017, 6, 30, 8, 0, 0);
         const maxDate = new Date(2017, 7, 1, 3, 0, 0);
@@ -429,12 +430,10 @@ describe('DataPackPage component', () => {
             providers,
             geojson_geometry: geojson,
         });
-        p.getRuns.reset();
-        // instance.forceUpdate();
-        // wrapper.update();
+        props.getRuns.resetHistory();
         instance.makeRunRequest();
-        expect(p.getRuns.calledOnce).toBe(true);
-        expect(p.getRuns.getCall(0).args).toEqual(expectedParams);
+        expect(props.getRuns.calledOnce).toBe(true);
+        expect(props.getRuns.getCall(0).args).toEqual(expectedParams);
     });
 
     it('handleOwnerFilter call updateLocationQuery', () => {
@@ -526,16 +525,16 @@ describe('DataPackPage component', () => {
 
     it('changeView updateLocationQuery with new order if its not a shared order, otherwise just update with view', () => {
         wrapper.setProps({
-            location: { ...props.location, query: { ...props.location.query, order: 'started_at' } }
+            location: { ...props.location, query: { ...props.location.search, order: 'started_at' } }
         });
         const updateStub = sinon.stub(instance, 'updateLocationQuery');
         instance.changeView('list');
         expect(updateStub.calledOnce).toBe(true);
         expect(updateStub.calledWith({ view: 'list' })).toBe(true);
 
-        const nextProps = getProps();
-        nextProps.location.query.order = 'not_shared_order';
-        wrapper.setProps(nextProps);
+        let location = { search: queryString.parse(getProps().location) };
+        location.search.order = 'not_shared_order';
+        wrapper.setProps({ location: { search: queryString.stringify(location.search) } });
         instance.changeView('map');
         expect(updateStub.calledTwice).toBe(true);
         expect(updateStub.calledWith({ view: 'map', order: '-started_at' })).toBe(true);
@@ -558,7 +557,7 @@ describe('DataPackPage component', () => {
     });
 
     it('if pageSize is greater than 12  is should decrease pageSize and makeRunRequest', () => {
-        const location = { ...props.location, query: { ...props.location.query, page_size: '24' } };
+        const location = { ...props.location, search: queryString.stringify({ page_size: '24' }) };
         wrapper.setProps({ location });
         const updateStub = sinon.stub(instance, 'updateLocationQuery');
         instance.loadLess();
@@ -580,12 +579,11 @@ describe('DataPackPage component', () => {
             providers: [],
             openShare: instance.handleShareOpen,
         };
-
         expect(instance.getView('list')).toEqual((
             <DataPackList
                 {...commonProps}
                 onSort={instance.handleSortChange}
-                order={wrapper.state().order}
+                order={queryString.parse(props.location.search).order}
                 customRef={instance.getViewRef}
             />
         ),
@@ -616,20 +614,17 @@ describe('DataPackPage component', () => {
     });
 
     it('getJoyRideSteps should return correct steps based on view', () => {
-        // const location = { ...getP.location, query: { ...props.location.query, view: 'map' } };
-        let { location } = getProps();
-        location.query.view = 'map';
-        wrapper.setProps({ location });
+        let location = {search: queryString.parse(getProps().location)};
+        location.search.view = 'map'
+        wrapper.setProps({ location: { search: queryString.stringify(location.search) } });
         expect(instance.getJoyRideSteps()).toEqual(joyride.DataPackPage.map);
 
-        location = getProps().location;
-        location.query.view = 'grid';
-        wrapper.setProps({ location });
+        location.search.view = 'grid';
+        wrapper.setProps({ location: { search: queryString.stringify(location.search) } });
         expect(instance.getJoyRideSteps()).toEqual(joyride.DataPackPage.grid);
 
-        location = getProps().location;
-        location.query.view = 'list';
-        wrapper.setProps({ location });
+        location.search.view = 'list';
+        wrapper.setProps({ location: { search: queryString.stringify(location.search) } });
         expect(instance.getJoyRideSteps()).toEqual(joyride.DataPackPage.list);
     });
 

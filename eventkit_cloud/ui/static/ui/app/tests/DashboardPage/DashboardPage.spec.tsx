@@ -1,7 +1,6 @@
 import * as React from 'react';
 import { shallow } from 'enzyme';
 import * as sinon from 'sinon';
-import { browserHistory } from 'react-router';
 import PageLoading from '../../components/common/PageLoading';
 import { DashboardPage } from '../../components/DashboardPage/DashboardPage';
 import DataPackShareDialog from '../../components/DataPackShareDialog/DataPackShareDialog';
@@ -9,6 +8,7 @@ import DashboardSection from '../../components/DashboardPage/DashboardSection';
 import NotificationGridItem from '../../components/Notification/NotificationGridItem';
 import DataPackGridItem from '../../components/DataPackPage/DataPackGridItem';
 import DataPackFeaturedItem from '../../components/DashboardPage/DataPackFeaturedItem';
+import history from '../../utils/history';
 
 const mockNotifications = {
     1: {
@@ -430,7 +430,7 @@ describe('DashboardPage component', () => {
         let browserHistoryPushStub;
 
         beforeEach(() => {
-            browserHistoryPushStub = sinon.stub(browserHistory, 'push');
+            browserHistoryPushStub = sinon.stub(history, 'push');
             instance.handleNotificationsViewAll();
         });
 
@@ -448,7 +448,7 @@ describe('DashboardPage component', () => {
         let browserHistoryPushStub;
 
         beforeEach(() => {
-            browserHistoryPushStub = sinon.stub(browserHistory, 'push');
+            browserHistoryPushStub = sinon.stub(history, 'push');
             instance.handleFeaturedViewAll();
         });
 
@@ -466,7 +466,7 @@ describe('DashboardPage component', () => {
         let browserHistoryPushStub;
 
         beforeEach(() => {
-            browserHistoryPushStub = sinon.stub(browserHistory, 'push');
+            browserHistoryPushStub = sinon.stub(history, 'push');
             instance.handleMyDataPacksViewAll();
         });
 

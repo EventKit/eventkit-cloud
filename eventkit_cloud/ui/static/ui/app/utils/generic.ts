@@ -1,4 +1,4 @@
-import * as numeral from 'numeral';
+import numeral from 'numeral';
 import GeoJSON from 'ol/format/geojson';
 
 export function getHeaderPageInfo(response) {
@@ -141,4 +141,9 @@ export function formatMegaBytes(megabytes) {
         order += 1;
     }
     return `${Number(megabytes / 10 ** (order * 3)).toFixed(2)} ${units[order]}`
+}
+
+export function getCookie(name) {
+    var v = document.cookie.match('(^|;) ?' + name + '=([^;]*)(;|$)');
+    return v ? v[2] : null;
 }

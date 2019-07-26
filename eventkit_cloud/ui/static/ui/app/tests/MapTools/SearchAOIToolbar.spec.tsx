@@ -15,6 +15,7 @@ describe('SearchAOIToolbar button', () => {
 
     const getProps = () => ({
         toolbarIcons: { search: 'DEFAULT' },
+        classes: {},
         geocode: {
             fetching: false,
             fetched: false,
@@ -26,7 +27,7 @@ describe('SearchAOIToolbar button', () => {
         handleCancel: () => {},
         setAllButtonsDefault: () => {},
         setSearchAOIButtonSelected: () => {},
-        ...global.eventkit_test_props,
+        ...(global as any).eventkit_test_props,
     });
 
     it('should render a searchbar and button', () => {

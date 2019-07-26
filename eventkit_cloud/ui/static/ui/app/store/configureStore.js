@@ -1,14 +1,13 @@
 import { applyMiddleware, createStore, compose } from 'redux';
 import { reduxBatch } from '@manaflair/redux-batch';
 import thunkMiddleware from 'redux-thunk';
-import createLogger from 'redux-logger';
-import { browserHistory } from 'react-router';
-import { routerMiddleware } from 'react-router-redux';
+import { createLogger } from 'redux-logger';
+import { routerMiddleware } from 'connected-react-router';
 import rootReducer from '../reducers/rootReducer';
 import { simpleApiCall, crashReporter } from './middlewares';
+import history from '../utils/history';
 
-const baseHistory = browserHistory;
-const routingMiddleware = routerMiddleware(baseHistory);
+const routingMiddleware = routerMiddleware(history);
 
 let middleware = [simpleApiCall, thunkMiddleware, crashReporter, routingMiddleware];
 

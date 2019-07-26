@@ -1,7 +1,7 @@
 import * as React from 'react';
 import axios from 'axios';
 import * as sinon from 'sinon';
-import * as MockAdapter from 'axios-mock-adapter';
+import MockAdapter from 'axios-mock-adapter';
 import { createShallow } from '@material-ui/core/test-utils';
 import AppBar from '@material-ui/core/AppBar';
 import createTestStore from '../store/configureTestStore';
@@ -25,7 +25,7 @@ describe('Application component', () => {
     const getProps = () => ({
         userData: {},
         drawer: 'open',
-        router: {
+        history: {
             push: () => sinon.stub(),
             location: {
                 pathname: '/exports',
@@ -44,6 +44,7 @@ describe('Application component', () => {
         openDrawer: sinon.stub(),
         closeDrawer: sinon.stub(),
         userActive: sinon.stub(),
+        login: sinon.stub(),
         getNotifications: sinon.spy(),
         getNotificationsUnreadCount: sinon.stub(),
         classes: {},
@@ -263,7 +264,7 @@ describe('Application component', () => {
         let button = wrapper.find('.qa-Application-AppBar-NotificationsButton').at(0);
         expect(button.props().style.backgroundColor).toBe('');
         wrapper.setProps({
-            router: {
+            history: {
                 location: {
                     pathname: '/notifications',
                 },
@@ -272,7 +273,7 @@ describe('Application component', () => {
         button = wrapper.find('.qa-Application-AppBar-NotificationsButton').at(0);
         expect(button.props().style.backgroundColor).toBe('#4598bf');
         wrapper.setProps({
-            router: {
+            history: {
                 location: {
                     pathname: '/exports',
                 },

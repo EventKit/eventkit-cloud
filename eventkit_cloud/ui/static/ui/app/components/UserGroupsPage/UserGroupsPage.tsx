@@ -3,8 +3,8 @@ import * as React from 'react';
 import { connect } from 'react-redux';
 import { withTheme, Theme, withStyles, createStyles } from '@material-ui/core/styles';
 import withWidth, { isWidthDown } from '@material-ui/core/withWidth';
-import { browserHistory } from 'react-router';
 import Joyride, { Step } from 'react-joyride';
+import queryString from 'query-string';
 import Help from '@material-ui/icons/Help';
 import Button from '@material-ui/core/Button';
 import ButtonBase from '@material-ui/core/ButtonBase';
@@ -33,7 +33,7 @@ import { getUsers } from '../../actions/usersActions';
 import { DrawerTimeout } from '../../actions/uiActions';
 import { joyride } from '../../joyride.config';
 import { Breakpoint } from '@material-ui/core/styles/createBreakpoints';
-import { Location } from 'history';
+import history from '../../utils/history';
 
 const jss = (theme: Eventkit.Theme & Theme) => createStyles({
     header: {
@@ -196,7 +196,9 @@ export interface Props {
     createGroup: (name: string, usernames: string[]) => void;
     updateGroup: (id: string | number, args: any) => void;
     getUsers: (args: any) => void;
-    location: Location;
+    location: {
+        search: string;
+    };
     theme: Eventkit.Theme & Theme;
     width: Breakpoint;
     classes: { [className: string]: string };
@@ -242,7 +244,7 @@ export class UserGroupsPage extends React.Component<Props, State> {
         this.state = {
             drawerOpen: !(isWidthDown('sm', this.props.width)),
             selectedUsers: [],
-            search: props.location.query.search || '',
+            search: props.location.search || '',
             showAddUsers: false,
             showCreate: false,
             showLeave: false,
@@ -264,29 +266,20 @@ export class UserGroupsPage extends React.Component<Props, State> {
     }
 
     componentWillMount() {
-        /* eslint-disable camelcase */
         // If there is no ordering specified default to username
-        let { ordering, page_size } = this.props.location.query;
+        let { ordering, page_size } = queryString.parse(this.props.location.search);
+        let changedQuery = false
         if (!ordering) {
             ordering = 'username';
-            // Set the current ordering to username so a change wont be detected
-            // by componentDidUpdate
-            this.props.location.query.ordering = ordering;
-            // Replace the url with the ordering query included
+            changedQuery = true
         }
         if (!page_size) {
-            page_size = this.pageSize;
-            this.props.location.query.page_size = page_size;
+            page_size = this.pageSize.toString();
+            changedQuery = true
         }
-        browserHistory.replace({
-            ...this.props.location,
-            query: {
-                ...this.props.location.query,
-                ordering,
-                page_size,
-            },
-        });
-        /* eslint-enable camelcase */
+        if (changedQuery) {
+            history.replace({ ...this.props.location, "search": queryString.stringify({ordering, page_size}) });
+        }
     }
 
     componentDidMount() {
@@ -299,17 +292,17 @@ export class UserGroupsPage extends React.Component<Props, State> {
 
     componentDidUpdate(prevProps: Props) {
         let changedQuery = false;
-        if (Object.keys(this.props.location.query).length
-                !== Object.keys(prevProps.location.query).length) {
+        if (Object.keys(queryString.parse(this.props.location.search)).length
+            !== Object.keys(queryString.parse(prevProps.location.search)).length) {
             changedQuery = true;
         } else {
-            const keys = Object.keys(this.props.location.query);
-            if (!keys.every(key => this.props.location.query[key] === prevProps.location.query[key])) {
+            const keys = Object.keys(queryString.parse(this.props.location.search));
+            if (!keys.every(key => queryString.parse(this.props.location.search)[key] === queryString.parse(prevProps.location.search)[key])) {
                 changedQuery = true;
             }
         }
         if (changedQuery) {
-            this.makeUserRequest({ ...this.props.location.query });
+            this.makeUserRequest(queryString.parse(this.props.location.search));
         }
 
         if (this.props.users.fetched && !prevProps.users.fetched) {
@@ -341,7 +334,7 @@ export class UserGroupsPage extends React.Component<Props, State> {
         }
         if (this.props.groups.deleted && !prevProps.groups.deleted) {
             this.props.getGroups({ disable_page: true });
-            const query = { ...this.props.location.query };
+            const query = queryString.parse(this.props.location.search);
             if (query.groups) {
                 query.groups = null;
                 delete query.groups;
@@ -351,9 +344,10 @@ export class UserGroupsPage extends React.Component<Props, State> {
                 delete query.search;
             }
             this.setState({ search: '' });
-            browserHistory.push({
+
+            history.push({
                 ...this.props.location,
-                query,
+                "search": queryString.stringify(query),
             });
         }
         if (this.props.groups.error && !prevProps.groups.error) {
@@ -366,7 +360,7 @@ export class UserGroupsPage extends React.Component<Props, State> {
 
     private getQueryGroup(targetGroups = null) {
         const groups = targetGroups || this.props.groups.groups;
-        const id = this.props.location.query.groups;
+        const id = queryString.parse(this.props.location.search).groups;
         if (id) {
             return groups.find(group => group.id === Number(id));
         }
@@ -374,7 +368,7 @@ export class UserGroupsPage extends React.Component<Props, State> {
     }
 
     private getGroupTitle(group: Eventkit.Group) {
-        const selection = this.props.location.query.groups || 'all';
+        const selection = queryString.parse(this.props.location.search).groups || 'all';
         if (selection === 'all') {
             return 'All Members';
         }
@@ -385,7 +379,7 @@ export class UserGroupsPage extends React.Component<Props, State> {
     }
 
     private makeUserRequest(options = { groups: null, ordering: null, search: null }) {
-        const params = { ...this.props.location.query };
+        const params = queryString.parse(this.props.location.search);
 
         if (options.search === undefined && params.search) {
             // if the search option is undefined we need to clear search from the query
@@ -415,7 +409,6 @@ export class UserGroupsPage extends React.Component<Props, State> {
         }
 
         params.prepend_self = true;
-
         this.props.getUsers(params);
     }
 
@@ -463,10 +456,10 @@ export class UserGroupsPage extends React.Component<Props, State> {
         if (event.key === 'Enter') {
             const text = (event.target as HTMLInputElement).value || '';
             if (text) {
-                const query = { ...this.props.location.query };
+                const query = queryString.parse(this.props.location.search);
                 query.search = text;
-                query.page_size = this.pageSize;
-                browserHistory.push({ ...this.props.location, query });
+                query.page_size = this.pageSize.toString();
+                history.push({ ...this.props.location, "search": queryString.stringify(query) });
             }
         }
     }
@@ -476,32 +469,32 @@ export class UserGroupsPage extends React.Component<Props, State> {
         // always update state since that is what will show in the searchbar
         this.setState({ search: text });
         // if text is empty we need to clear the search and page size
-        if (!text && this.props.location.query.search) {
+        if (!text && queryString.parse(this.props.location.search).search) {
             // we need to undo any search
-            const query = { ...this.props.location.query };
+            const query = queryString.parse(this.props.location.search);
             query.search = null;
             delete query.search;
-            query.page_size = this.pageSize;
-            browserHistory.push({ ...this.props.location, query });
+            query.page_size = this.pageSize.toString();
+            history.push({ ...this.props.location, "search": queryString.stringify(query) });
         }
     }
 
     private handleOrderingChange(value: string) {
-        const query = { ...this.props.location.query };
+        const query = queryString.parse(this.props.location.search);
         query.ordering = value;
-        browserHistory.push({ ...this.props.location, query });
+        history.push({ ...this.props.location, "search": queryString.stringify(query) });
     }
 
     private handleLoadMore() {
-        const query = { ...this.props.location.query };
-        query.page_size = Number(query.page_size) + this.pageSize;
-        browserHistory.push({ ...this.props.location, query });
+        const query = queryString.parse(this.props.location.search);
+        query.page_size = (Number(query.page_size) + this.pageSize).toString();
+        history.push({ ...this.props.location, "search": queryString.stringify(query) });
     }
 
     private handleLoadLess() {
-        const query = { ...this.props.location.query };
-        query.page_size = Number(query.page_size) - this.pageSize;
-        browserHistory.push({ ...this.props.location, query });
+        const query = queryString.parse(this.props.location.search);
+        query.page_size = (Number(query.page_size) - this.pageSize).toString();
+        history.push({ ...this.props.location, "search": queryString.stringify(query) });
     }
 
     private handleCreateOpen() {
@@ -597,7 +590,7 @@ export class UserGroupsPage extends React.Component<Props, State> {
     }
 
     private handleDrawerSelectionChange(value: string) {
-        const query = { ...this.props.location.query };
+        const query = queryString.parse(this.props.location.search);
         if (value === 'all') {
             query.groups = null;
             delete query.groups;
@@ -608,8 +601,8 @@ export class UserGroupsPage extends React.Component<Props, State> {
         this.setState({ search: '' });
         query.search = null;
         delete query.search;
-        query.page_size = this.pageSize;
-        browserHistory.push({ ...this.props.location, query });
+        query.page_size = this.pageSize.toString();
+        history.push({ ...this.props.location, "search": queryString.stringify(query) });
     }
 
     private handleMakeAdmin(user: Eventkit.User) {
@@ -892,7 +885,7 @@ export class UserGroupsPage extends React.Component<Props, State> {
         // get a list of all the usernames from selected users
         const selectedUsernames = this.state.selectedUsers.map(user => user.user.username);
         // if viewing all, new, or ungrouped, we want to show the admin buttons
-        const showAdminLabel = this.props.location.query.groups && !this.props.users.fetching;
+        const showAdminLabel = queryString.parse(this.props.location.search).groups && !this.props.users.fetching;
         const showAdminButton = showAdminLabel && !!ownedQueryGroup;
 
         let ownUser = null;
@@ -915,7 +908,7 @@ export class UserGroupsPage extends React.Component<Props, State> {
             );
         }
 
-        if (this.props.location.query.ordering === 'admin' && !!queryGroup) {
+        if (queryString.parse(this.props.location.search).ordering === 'admin' && !!queryGroup) {
             users.sort((a, b) => {
                 const aIsAdmin = queryGroup.administrators.includes(a.user.username);
                 const bIsAdmin = queryGroup.administrators.includes(b.user.username);
@@ -929,7 +922,7 @@ export class UserGroupsPage extends React.Component<Props, State> {
             });
         }
 
-        const pageSize = Number(this.props.location.query.page_size);
+        const pageSize = Number(queryString.parse(this.props.location.search).page_size);
         const len = queryGroup ? queryGroup.members.length : this.props.users.total;
 
         const loadMoreDisabled = !this.props.users.nextPage;
@@ -991,7 +984,7 @@ export class UserGroupsPage extends React.Component<Props, State> {
                         <TextField
                             type="text"
                             placeholder="Search Users"
-                            value={this.state.search}
+                            value={queryString.parse(this.props.location.search).search}
                             InputProps={{ className: classes.input }}
                             onChange={this.handleSearchChange}
                             onKeyDown={this.handleSearchKeyDown}
@@ -1002,7 +995,7 @@ export class UserGroupsPage extends React.Component<Props, State> {
                             onSelect={this.handleSelectAll}
                             selectedUsers={this.state.selectedUsers}
                             selectedGroup={queryGroup}
-                            orderingValue={this.props.location.query.ordering || 'username'}
+                            orderingValue={queryString.parse(this.props.location.search).ordering || 'username'}
                             handleOrderingChange={this.handleOrderingChange}
                             handleRemoveUsers={this.handleBatchRemoveUser}
                             handleNewGroup={this.handleNewGroup}
@@ -1061,7 +1054,7 @@ export class UserGroupsPage extends React.Component<Props, State> {
                     </div>
                 </div>
                 <GroupsDrawer
-                    selectedValue={Number(this.props.location.query.groups) || 'all'}
+                    selectedValue={Number(queryString.parse(this.props.location.search).groups) || 'all'}
                     onSelectionChange={this.handleDrawerSelectionChange}
                     open={this.state.drawerOpen || !smallViewport}
                     ownedGroups={ownedGroups}
