@@ -16,7 +16,7 @@ djangorestframework==3.6.0
 djangorestframework-gis==0.11
 enum34==1.1.6
 eventlet==0.20.1
-GDAL==2.2.2
+GDAL==2.2.4
 gunicorn==19.7.1
 # Kombu declared explicitly because of incompatibility with celery requirements.
 kombu==4.2.1
