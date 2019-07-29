@@ -63,20 +63,19 @@ export function login(data) {
                 });
             }
         }).catch((response) => {
-            if(method === 'get') {
+            if (method === 'get') {
                 dispatch({
                     type: types.USER_LOGGED_OUT,
                 });
-            }
-            else {
+            } else {
                 dispatch({
                     type: types.USER_LOGGED_OUT,
                     status: {
                         error: {
                             authType: 'auth',
-                            statusCode: response.response.status
-                        }
-                    }
+                            statusCode: response.response.status,
+                        },
+                    },
                 });
             }
         });

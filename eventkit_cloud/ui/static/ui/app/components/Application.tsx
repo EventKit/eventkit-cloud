@@ -183,6 +183,20 @@ const UserIsNotAuthenticated = connectedReduxRedirect({
     allowRedirectBack: false,
 });
 
+const UserCanViewErrorPage = connectedReduxRedirect({
+    redirectAction: routerActions.replace,
+    wrapperDisplayName: 'UserIsNotAuthenticated',
+    authenticatedSelector: (state: State) => {
+        const checked = !state.user.data;
+        return checked;
+    },
+    redirectPath: (state, ownProps: RouteComponentProps<{}, {}>) => {
+        const {redirect, next} = queryString.parse(ownProps.location.search);
+        return (redirect || next) || '/dashboard';
+    },
+    allowRedirectBack: false,
+});
+
 const UserHasAgreed = connectedReduxRedirect({
     redirectAction: routerActions.replace,
     redirectPath: '/account',
@@ -193,6 +207,11 @@ const UserHasAgreed = connectedReduxRedirect({
 const LoginPage = Loadable({
     ...loadableDefaults,
     loader: () => import('./auth/LoginPage'),
+});
+
+const LoginErrorPage = Loadable({
+    ...loadableDefaults,
+    loader: () => import('./auth/LoginErrorPage'),
 });
 
 const Logout = Loadable({
@@ -242,7 +261,10 @@ const NotificationsPage = Loadable({
 
 const routes = (
     <div>
+        <switch>
+        <Route path="/login/error" component={UserCanViewErrorPage(LoginErrorPage)} />
         <Route path="/login" component={UserIsNotAuthenticated(LoginPage)} />
+        </switch>
         <Route path="/logout" component={Logout} />
         <Route path="/dashboard" component={UserIsAuthenticated(UserHasAgreed(DashboardPage))} />
         <Route path="/exports" component={UserIsAuthenticated(UserHasAgreed(DataPackPage))} />

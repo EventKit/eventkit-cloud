@@ -6,7 +6,7 @@ import axios from 'axios';
 import Button from '@material-ui/core/Button';
 import { login } from '../actions/userActions';
 
-export class Form extends React.Component<Props> {
+export class Form extends React.Component {
     constructor(props) {
         super(props);
         this.onChange = this.onChange.bind(this);
@@ -38,6 +38,21 @@ export class Form extends React.Component<Props> {
         });
     }
 
+    getErrorMessage() {
+        if (!this.props.error) {
+            return '';
+        }
+        const { statusCode, authType } = { ...this.props.error };
+        if (statusCode === 401) {
+            if (authType === 'auth') {
+                return 'Username or Password incorrect.';
+            }
+
+            return 'Authentication failed. Please try again or contact an administrator.';
+        }
+        return 'An unknown error occurred. Please contact an administrator.';
+    }
+
     checkAuthEndpoint() {
         return axios.get('/auth').then(() => {
             this.setState({ loginForm: true });
@@ -62,21 +77,6 @@ export class Form extends React.Component<Props> {
         window.location.assign('/oauth');
     }
 
-    getErrorMessage() {
-        if(!this.props.error) {
-            return '';
-        }
-        const {statusCode, authType } = {...this.props.error};
-        if(statusCode === 401) {
-            if(authType === 'auth') {
-                return 'Username or Password incorrect.';
-            }
-            else {
-                return 'Authentication failed. Please try again or contact an administrator.';
-            }
-        }
-        return 'An unknown error occurred. Please contact an administrator.';
-    }
 
     render() {
         const { colors } = this.props.theme.eventkit;
@@ -177,10 +177,12 @@ export class Form extends React.Component<Props> {
         }
         return (
             <div style={{ verticalAlign: 'middle', textAlign: 'center', marginTop: '30px' }}>
-                {this.props.error &&
-                <div style={{ color: colors.warning}}>
-                    {this.getErrorMessage()}
-                </div>
+                {this.props.error
+                && (
+                    <div style={{ color: colors.warning }}>
+                        {this.getErrorMessage()}
+                    </div>
+                )
                 }
                 {loginForm}
                 {oauthButton}
@@ -202,7 +204,7 @@ Form.propTypes = {
         search: PropTypes.object,
     }).isRequired,
     theme: PropTypes.object.isRequired,
-    error: PropTypes.any,
+    error: PropTypes.object.isRequired,
 };
 
 function mapDispatchToProps(dispatch) {
@@ -213,7 +215,7 @@ function mapDispatchToProps(dispatch) {
     };
 }
 
-function mapStateToProps (state) {
+function mapStateToProps(state) {
     return {
         error: state.user.status.error,
     };
