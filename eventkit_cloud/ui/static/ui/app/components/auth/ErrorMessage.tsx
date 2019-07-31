@@ -36,7 +36,7 @@ export class ErrorMessage extends React.Component<Props, {}> {
                    href={this.context.config.CONTACT_URL}>contact us.</a>)
         }
         else {
-            errorMessage = "contact and administrator.";
+            errorMessage = "contact an administrator.";
         }
         return errorMessage;
     }
