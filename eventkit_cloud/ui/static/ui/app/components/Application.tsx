@@ -448,18 +448,11 @@ export class Application extends React.Component<Props, State> {
             .then((response) => {
                 if (response.data) {
                     const data = response.data;
-                    data.SERVE_ESTIMATES = this.getBooleanSetting(data.SERVE_ESTIMATES);
                     this.setState({childContext: {config: data}});
                 }
             }).catch((error) => {
                 console.warn(error.response.data);
             });
-    }
-
-    private getBooleanSetting(settingValue) {
-        // convert a setting to lower case to test for boolean values
-        // any value other than 'true' will be treated as false, including undefined
-        return settingValue ? settingValue.toLowerCase() === 'true' : false;
     }
 
     async handleStayLoggedIn() {
