@@ -219,6 +219,8 @@ class ProviderCheck(object):
         else:
             self.result = CheckResults.TOO_LARGE
 
+        # TODO: This should not be dumped to a string here
+        # The front end should NOT receive a string, it should get a valid JSON response.
         result_json = json.dumps(self.result.value[0]) % self.token_dict
         logger.debug("Provider check returning result: %s", result_json)
         return result_json
