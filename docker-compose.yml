@@ -52,7 +52,6 @@ services:
       - GEOCODING_AUTH_CERT
       - GEOCODING_AUTH_KEY
       - PROVIDER_CHECK_INTERVAL
-      - SERVE_ESTIMATES=True
     extra_hosts:
       - "${SITE_NAME}:${SITE_IP}"
   celery:
