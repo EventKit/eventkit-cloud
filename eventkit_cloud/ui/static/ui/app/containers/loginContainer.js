@@ -11,6 +11,7 @@ export class Form extends React.Component {
         super(props);
         this.onChange = this.onChange.bind(this);
         this.handleSubmit = this.handleSubmit.bind(this);
+        this.getErrorMessage = this.getErrorMessage.bind(this);
         this.state = {
             username: '',
             password: '',
@@ -37,6 +38,21 @@ export class Form extends React.Component {
         });
     }
 
+    getErrorMessage() {
+        if (!this.props.error) {
+            return '';
+        }
+        const { statusCode, authType } = { ...this.props.error };
+        if (statusCode === 401) {
+            if (authType === 'auth') {
+                return 'Username or Password incorrect.';
+            }
+
+            return 'Authentication failed. Please try again or contact an administrator.';
+        }
+        return 'An unknown error occurred. Please contact an administrator.';
+    }
+
     checkAuthEndpoint() {
         return axios.get('/auth').then(() => {
             this.setState({ loginForm: true });
@@ -60,6 +76,7 @@ export class Form extends React.Component {
         event.preventDefault();
         window.location.assign('/oauth');
     }
+
 
     render() {
         const { colors } = this.props.theme.eventkit;
@@ -86,7 +103,7 @@ export class Form extends React.Component {
                 width: '100%',
                 height: '45px',
                 color: colors.white,
-                margin: '15px auto 0px auto',
+                margin: '0px auto 15px auto',
                 padding: '10px',
             },
         };
@@ -160,6 +177,13 @@ export class Form extends React.Component {
         }
         return (
             <div style={{ verticalAlign: 'middle', textAlign: 'center', marginTop: '30px' }}>
+                {this.props.error
+                && (
+                    <div style={{ color: colors.warning }}>
+                        {this.getErrorMessage()}
+                    </div>
+                )
+                }
                 {loginForm}
                 {oauthButton}
                 {!loginForm && !oauthButton
@@ -180,6 +204,7 @@ Form.propTypes = {
         search: PropTypes.object,
     }).isRequired,
     theme: PropTypes.object.isRequired,
+    error: PropTypes.object.isRequired,
 };
 
 function mapDispatchToProps(dispatch) {
@@ -190,4 +215,10 @@ function mapDispatchToProps(dispatch) {
     };
 }
 
-export default withTheme()(connect(null, mapDispatchToProps)(Form));
+function mapStateToProps(state) {
+    return {
+        error: state.user.status.error,
+    };
+}
+
+export default withTheme()(connect(mapStateToProps, mapDispatchToProps)(Form));
