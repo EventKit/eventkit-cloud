@@ -131,6 +131,7 @@ describe('Application component', () => {
         const props = getProps();
         mock.onGet('/configuration').reply(200, {
             LOGIN_DISCLAIMER: 'Test string',
+            SERVE_ESTIMATES: false,
         });
         const stateSpy = sinon.spy(Application.prototype, 'setState');
         const wrapper = getWrapper(props);
