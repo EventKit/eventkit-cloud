@@ -28,6 +28,19 @@ export class ErrorMessage extends React.Component<Props, {}> {
         window.location.assign('/logout');
     }
 
+    getErrorMessage() {
+        let errorMessage;
+        if(this.context.config.CONTACT_URL) {
+            errorMessage = (
+                <a className={`qa-Error-contact`}
+                   href={this.context.config.CONTACT_URL}>contact us.</a>)
+        }
+        else {
+            errorMessage = "contact and administrator.";
+        }
+        return errorMessage;
+    }
+
     render() {
         const { colors } = this.props.theme.eventkit;
 
@@ -45,15 +58,6 @@ export class ErrorMessage extends React.Component<Props, {}> {
             },
         };
 
-        let errorMessage;
-        if(this.context.config.CONTACT_URL) {
-            errorMessage = (
-                <a className={`qa-Error-contact`}
-                href={this.context.config.CONTACT_URL}>contact us.</a>)
-        }
-        else {
-            errorMessage = "contact and administrator.";
-        }
 
         return (
             <div style={{ verticalAlign: 'middle', textAlign: 'center' }}>
@@ -65,7 +69,7 @@ export class ErrorMessage extends React.Component<Props, {}> {
                     }}>
                         <strong>SERVER ERROR</strong>
                         <p style={styles.message}>
-                        An error occurred during the authentication process. Please try again or {errorMessage}
+                        An error occurred during the authentication process. Please try again or {this.getErrorMessage()}
                         </p>
                     </div>
                     <Button

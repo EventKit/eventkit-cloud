@@ -66,11 +66,7 @@ export class LoginErrorPage extends React.Component<Props, {}> {
                     <div style={styles.container} className="qa-LoginPage-container">
                         <div style={styles.paperContainer}>
                             <Paper className="qa-LoginErrorPage-Paper" style={styles.paper}>
-                                <ErrorMessage
-                                    theme={this.props.theme}
-                                    router={this.props.router}
-                                    width={this.props.width}
-                                />
+                                <ErrorMessage {...this.props}/>
                             </Paper>
                         </div>
                         <div style={mobile ? styles.mobileFooter : styles.desktopFooter}>
