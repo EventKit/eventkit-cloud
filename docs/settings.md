@@ -266,6 +266,11 @@ The default number of Notifications to be displayed in the Notifications page
 #### User Groups Page Size
 The default number of users to be loaded on the Groups Page
 <pre>USER_GROUPS_PAGE_SIZE='20'</pre>
+#### Serving Estimates
+Estimates are provided for time to finish, data size, as well as in progress estimated finish times. 
+This is enabled by default, but if adding new services or deploying eventkit for the first time, these values may not 
+be very accurate.  To disable these estimates:
+<pre>SERVE_ESTIMATES='false'</pre>
 
 ### Concurrency Settings
 
