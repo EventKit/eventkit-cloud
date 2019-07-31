@@ -4,6 +4,7 @@
 import dj_database_url
 
 from eventkit_cloud.settings.celery import *  # NOQA
+from distutils.util import strtobool
 
 BASE_DIR = os.path.abspath(os.path.dirname(__file__))
 
@@ -108,10 +109,7 @@ if EMAIL_HOST_PASSWORD:
 else:
     EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 
-if 'f' in os.getenv('EMAIL_USE_TLS', '').lower():
-    EMAIL_USE_TLS = False
-else:
-    EMAIL_USE_TLS = True
+EMAIL_USE_TLS = bool(strtobool(os.getenv('EMAIL_USE_TLS', 'false').lower()))
 
 """
 Overpass Element limit
@@ -286,7 +284,7 @@ BASE_DIR = os.path.dirname(os.path.dirname(__file__))
 STATIC_URL = '/static/'
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 STATICFILES_STORAGE = 'django.contrib.staticfiles.storage.StaticFilesStorage'
-
+SERVE_ESTIMATES = bool(strtobool(os.getenv('SERVE_ESTIMATES', 'true').lower()))
 UI_CONFIG = {
     'VERSION': os.getenv('VERSION', ''),
     'CONTACT_URL': os.getenv('CONTACT_URL', 'mailto:eventkit.team@gmail.com'),
@@ -300,7 +298,7 @@ UI_CONFIG = {
     'USER_GROUPS_PAGE_SIZE': os.getenv('USER_GROUPS_PAGE_SIZE', '20'),
     'DATAPACK_PAGE_SIZE': os.getenv('DATAPACK_PAGE_SIZE', '10'),
     'NOTIFICATIONS_PAGE_SIZE': os.getenv('NOTIFICATIONS_PAGE_SIZE', '10'),
-    'SERVE_ESTIMATES': os.getenv('SERVE_ESTIMATES', '')
+    'SERVE_ESTIMATES': SERVE_ESTIMATES
 }
 
 if os.getenv('USE_S3'):
@@ -354,10 +352,9 @@ LOGGING = {
 
 # SSL_VERIFICATION should point to a CA certificate file (.pem), if not then REQUESTS_CA_BUNDLE should be set also.
 # If wishing to disable verification (not recommended), set SSL_VERIFICATION to False.
-ssl_verification_settings = os.getenv('SSL_VERIFICATION', "")
-if ssl_verification_settings.lower() in ['f', 'false']:
-    SSL_VERIFICATION = False
-elif os.path.isfile(ssl_verification_settings):
+ssl_verification_settings = os.getenv('SSL_VERIFICATION', "false")
+SSL_VERIFICATION = bool(strtobool(ssl_verification_settings.lower()))
+if os.path.isfile(ssl_verification_settings):
     SSL_VERIFICATION = ssl_verification_settings
     if not os.getenv('REQUESTS_CA_BUNDLE'):
         os.environ['REQUESTS_CA_BUNDLE'] = SSL_VERIFICATION

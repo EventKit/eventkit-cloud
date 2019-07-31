@@ -183,6 +183,20 @@ const UserIsNotAuthenticated = connectedReduxRedirect({
     allowRedirectBack: false,
 });
 
+const UserCanViewErrorPage = connectedReduxRedirect({
+    redirectAction: routerActions.replace,
+    wrapperDisplayName: 'UserIsNotAuthenticated',
+    authenticatedSelector: (state: State) => {
+        const checked = !state.user.data;
+        return checked;
+    },
+    redirectPath: (state, ownProps: RouteComponentProps<{}, {}>) => {
+        const {redirect, next} = queryString.parse(ownProps.location.search);
+        return (redirect || next) || '/dashboard';
+    },
+    allowRedirectBack: false,
+});
+
 const UserHasAgreed = connectedReduxRedirect({
     redirectAction: routerActions.replace,
     redirectPath: '/account',
@@ -193,6 +207,11 @@ const UserHasAgreed = connectedReduxRedirect({
 const LoginPage = Loadable({
     ...loadableDefaults,
     loader: () => import('./auth/LoginPage'),
+});
+
+const LoginErrorPage = Loadable({
+    ...loadableDefaults,
+    loader: () => import('./auth/LoginErrorPage'),
 });
 
 const Logout = Loadable({
@@ -242,7 +261,9 @@ const NotificationsPage = Loadable({
 
 const routes = (
     <div>
-        <Route path="/login" component={UserIsNotAuthenticated(LoginPage)} />
+        <Route exact path="/login/error" component={UserCanViewErrorPage(LoginErrorPage)} />
+        <Route exact path="/login" component={UserIsNotAuthenticated(LoginPage)} />
+
         <Route path="/logout" component={Logout} />
         <Route path="/dashboard" component={UserIsAuthenticated(UserHasAgreed(DashboardPage))} />
         <Route path="/exports" component={UserIsAuthenticated(UserHasAgreed(DataPackPage))} />
@@ -427,18 +448,11 @@ export class Application extends React.Component<Props, State> {
             .then((response) => {
                 if (response.data) {
                     const data = response.data;
-                    data.SERVE_ESTIMATES = this.getBooleanSetting(data.SERVE_ESTIMATES);
                     this.setState({childContext: {config: data}});
                 }
             }).catch((error) => {
                 console.warn(error.response.data);
             });
-    }
-
-    private getBooleanSetting(settingValue) {
-        // convert a setting to lower case to test for boolean values
-        // any value other than 'true' will be treated as false, including undefined
-        return settingValue ? settingValue.toLowerCase() === 'true' : false;
     }
 
     async handleStayLoggedIn() {

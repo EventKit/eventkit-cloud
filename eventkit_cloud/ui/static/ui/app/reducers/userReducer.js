@@ -30,7 +30,9 @@ export const userStatusReducer = (state = user.status, action) => {
         case types.USER_LOGGED_OUT:
             return {
                 ...state,
+                ...action.status,
                 isLoading: false,
+
             };
         case types.PATCHING_USER:
             return {

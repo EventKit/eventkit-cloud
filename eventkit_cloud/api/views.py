@@ -1765,10 +1765,10 @@ class NotificationViewSet(viewsets.ModelViewSet):
             { "success" : True} or error
         """
 
-        logger.info(request.data)
+        logger.debug(request.data)
         for row in request.data:
             qs = Notification.objects.filter(recipient_id=self.request.user.id, id=row['id'])
-            logger.info(qs)
+            logger.debug(qs)
             if row['action'] == 'READ':
                 qs.mark_all_as_read()
             if row['action'] == 'DELETE':
@@ -1794,7 +1794,7 @@ class EstimatorView(views.APIView):
             [{ "slug" : $slug_1, "size": $estimate_1, "unit": "mb"}, ...] or error
         """
         payload = []
-        logger.info(request.query_params)
+        logger.debug(request.query_params)
 
         bbox = request.query_params.get('bbox', None).split(',')  # w, s, e, n
         bbox = list(map(lambda a: float(a), bbox))
