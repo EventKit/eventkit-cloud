@@ -261,10 +261,9 @@ const NotificationsPage = Loadable({
 
 const routes = (
     <div>
-        <switch>
-        <Route path="/login/error" component={UserCanViewErrorPage(LoginErrorPage)} />
-        <Route path="/login" component={UserIsNotAuthenticated(LoginPage)} />
-        </switch>
+        <Route exact path="/login/error" component={UserCanViewErrorPage(LoginErrorPage)} />
+        <Route exact path="/login" component={UserIsNotAuthenticated(LoginPage)} />
+
         <Route path="/logout" component={Logout} />
         <Route path="/dashboard" component={UserIsAuthenticated(UserHasAgreed(DashboardPage))} />
         <Route path="/exports" component={UserIsAuthenticated(UserHasAgreed(DataPackPage))} />

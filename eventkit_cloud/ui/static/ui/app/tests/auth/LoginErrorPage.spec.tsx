@@ -13,7 +13,7 @@ describe('LoginErrorPage component', () => {
         return shallow(<LoginErrorPage {...(global as any).eventkit_test_props} />);
     }
 
-    it('should render just the login paper', () => {
+    it('should render just the login error paper', () => {
         const isValidStub = sinon.stub(utils, 'isBrowserValid')
             .returns(true);
         const wrapper = getWrapper();

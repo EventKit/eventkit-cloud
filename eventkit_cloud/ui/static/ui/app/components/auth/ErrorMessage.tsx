@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { withTheme, Theme } from '@material-ui/core/styles';
+import {withTheme, Theme, createStyles, withStyles} from '@material-ui/core/styles';
 import { Breakpoint } from '@material-ui/core/styles/createBreakpoints';
 import {Button} from "@material-ui/core";
 import * as PropTypes from "prop-types";
@@ -16,13 +16,15 @@ export class ErrorMessage extends React.Component<Props, {}> {
         config: PropTypes.object,
     };
 
-    constructor(props) {
+    constructor(props: Props) {
         super(props);
         this.onClick = this.onClick.bind(this);
     }
 
     onClick(event) {
         event.preventDefault();
+        // Redirect to the logout page (logout container).
+        // This is done as an attempt to reset the user to a blank slate.
         window.location.assign('/logout');
     }
 
@@ -35,30 +37,44 @@ export class ErrorMessage extends React.Component<Props, {}> {
                 margin: '0 auto',
                 maxWidth: 300,
             },
-            heading: {
+            message: {
                 width: '100%',
                 fontSize: '18px',
                 color: colors.white,
-                marginTop: '60px'
+                marginTop: '30px'
             },
         };
 
+        let errorMessage;
+        if(this.context.config.CONTACT_URL) {
+            errorMessage = (
+                <a className={`qa-Error-contact`}
+                href={this.context.config.CONTACT_URL}>contact us.</a>)
+        }
+        else {
+            errorMessage = "contact and administrator.";
+        }
+
         return (
-            <div style={{ verticalAlign: 'middle', textAlign: 'center', marginTop: '30px' }}>
-                    <div style={styles.heading}>
-                        <p>
-                        An authentication error was caught. Please try again or contact an administrator.
+            <div style={{ verticalAlign: 'middle', textAlign: 'center' }}>
+                    <div style={{
+                        ...styles.message,
+                        fontSize: '20px',
+                        marginTop: '0px',
+                        marginBottom: '90px'
+                    }}>
+                        <strong>SERVER ERROR</strong>
+                        <p style={styles.message}>
+                        An error occurred during the authentication process. Please try again or {errorMessage}
                         </p>
-                        Email: <a href={this.context.config.CONTACT_URL}>{this.context.config.CONTACT_URL}</a>
                     </div>
                     <Button
-                        style={{ margin: '30px auto', width: '150px' }}
                         onClick={this.onClick}
                         name="submit"
                         color="primary"
                         variant="contained"
                     >
-                        Logout
+                        Return to Login
                     </Button>
             </div>
         );

@@ -3,8 +3,7 @@ import { withTheme, Theme } from '@material-ui/core/styles';
 import withWidth, { isWidthDown } from '@material-ui/core/withWidth';
 import { Breakpoint } from '@material-ui/core/styles/createBreakpoints';
 import Paper from '@material-ui/core/Paper';
-import CustomScrollbar from '../CustomScrollbar';
-import {ErrorMessage} from "./ErrorMessage";
+import ErrorMessage from "./ErrorMessage";
 
 interface Props {
     theme: Eventkit.Theme & Theme;
@@ -67,7 +66,11 @@ export class LoginErrorPage extends React.Component<Props, {}> {
                     <div style={styles.container} className="qa-LoginPage-container">
                         <div style={styles.paperContainer}>
                             <Paper className="qa-LoginErrorPage-Paper" style={styles.paper}>
-                                <ErrorMessage {...this.props}/>
+                                <ErrorMessage
+                                    theme={this.props.theme}
+                                    router={this.props.router}
+                                    width={this.props.width}
+                                />
                             </Paper>
                         </div>
                         <div style={mobile ? styles.mobileFooter : styles.desktopFooter}>
