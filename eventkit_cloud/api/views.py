@@ -78,6 +78,8 @@ class JobViewSet(viewsets.ModelViewSet):
     * ymax (required): The maximum latitude coordinate.
     * formats (required): One of the supported export formats ([html](/api/formats) or [json](/api/formats.json)).
         * Use the format `slug` as the value of the formats parameter, eg `formats=thematic&formats=shp`.
+    * min_zoom: The minimum zoom level for your export on a per provider basis.
+    * max_zoom: The maximum zoom level for your export on a per provider basis.
     * preset: One of the published preset files ([html](/api/configurations) or [json](/api/configurations.json)).
         * Use the `uid` as the value of the preset parameter, eg `preset=eed84023-6874-4321-9b48-2f7840e76257`.
         * If no preset parameter is provided, then the default HDM tags will be used for the export.

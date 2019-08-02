@@ -132,6 +132,10 @@ class TaskChainBuilder(object):
         else:
             queue_routing_key_name = queue_group
 
+        # Set custom zoom levels if available, otherwise use the provider defaults.
+        min_zoom = provider_task.min_zoom if provider_task.min_zoom else provider_task.provider.level_from
+        max_zoom = provider_task.max_zoom if provider_task.max_zoom else provider_task.provider.level_to
+
         primary_export_task_signature = primary_export_task.s(name=provider_task.provider.slug,
                                                               run_uid=run.uid,
                                                               provider_slug=provider_task.provider.slug,
@@ -145,8 +149,8 @@ class TaskChainBuilder(object):
                                                               user_details=user_details,
                                                               task_uid=primary_export_task_record.uid,
                                                               layer=provider_task.provider.layer,
-                                                              level_from=provider_task.provider.level_from,
-                                                              level_to=provider_task.provider.level_to,
+                                                              level_from=min_zoom,
+                                                              level_to=max_zoom,
                                                               service_type=service_type,
                                                               service_url=provider_task.provider.url,
                                                               config=provider_task.provider.config).set(queue=queue_routing_key_name,

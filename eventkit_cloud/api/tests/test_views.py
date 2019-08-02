@@ -111,7 +111,7 @@ class TestJobViewSet(APITestCase):
             'description': 'Test description',
             'event': 'Test Activation',
             'selection': bbox_to_geojson([5, 16, 5.1, 16.1]),
-            'provider_tasks': [{'provider': 'test', 'formats': formats}],
+            'provider_tasks': [{'provider': 'test', 'formats': formats, 'min_zoom': 3, 'max_zoom': 6}],
             'export_providers': [{'name': 'test', 'level_from': 0, 'level_to': 1,
                                   'url': 'http://coolproviderurl.to',
                                   'preview_url': 'http://coolproviderurl.to'}],
@@ -122,6 +122,11 @@ class TestJobViewSet(APITestCase):
         response = self.client.post(url, data=json.dumps(request_data), content_type='application/json; version=1.0')
         response = response.json()
         export_providers = DataProvider.objects.all()
+
+        # Test that the provider task was created with custom zoom levels.
+        provider_task = DataProviderTask.objects.last()
+        self.assertEqual(provider_task.min_zoom, request_data['provider_tasks'][0]['min_zoom'])
+        self.assertEqual(provider_task.max_zoom, request_data['provider_tasks'][0]['max_zoom'])
 
         self.assertEqual(len(export_providers), export_providers_start_len + 1)
 
