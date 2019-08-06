@@ -542,13 +542,35 @@ export class BreadcrumbStepper extends React.Component<Props, State> {
 
     private handleSubmit() {
         const providerTasks = [];
+        const { exportOptions } = this.props.exportInfo;
         const providers = [...this.props.exportInfo.providers];
 
         // formats only consists of geopackage right now
         const { formats } = this.props.exportInfo;
 
         providers.forEach((provider) => {
-            providerTasks.push({ provider: provider.name, formats: [formats[0]] });
+            let minZoom, maxZoom;
+            if(exportOptions[provider.id]) {
+                let options = exportOptions[provider.id];
+                minZoom = options.minZoom;
+                maxZoom = options.maxZoom;
+                if(minZoom === null || minZoom === undefined) {
+                    minZoom = provider.level_from;
+                }
+                if(maxZoom === null || maxZoom === undefined) {
+                    maxZoom = provider.level_to;
+                }
+            }
+            if(minZoom != undefined || maxZoom != undefined) {
+                providerTasks.push({
+                    provider: provider.name, formats: [formats[0]],
+                    max_zoom: maxZoom, min_zoom: minZoom
+                });
+            }
+            else {
+                providerTasks.push({ provider: provider.name, formats: [formats[0]] });
+            }
+            
         });
 
         const selection = flattenFeatureCollection(this.props.aoiInfo.geojson) as GeoJSON.FeatureCollection;

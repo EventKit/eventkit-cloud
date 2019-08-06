@@ -12,6 +12,9 @@ import ProviderStatusIcon from './ProviderStatusIcon';
 import BaseDialog from '../Dialog/BaseDialog';
 import { getDuration, formatMegaBytes } from '../../utils/generic';
 import {Typography} from "@material-ui/core";
+import ZoomLevelSlider from "./ZoomLevelSlider";
+import {connect} from "react-redux";
+import {updateExportInfo} from '../../actions/datacartActions';
 
 const jss = (theme: Theme & Eventkit.Theme) => createStyles({
     container: {
@@ -82,6 +85,8 @@ export interface ProviderData extends Eventkit.Provider {
 }
 
 interface Props {
+    exportInfo: Eventkit.Store.ExportInfo;
+    updateExportInfo: (args: any) => void;
     provider: ProviderData;
     checked: boolean;
     onChange: (event: React.ChangeEvent<HTMLInputElement>) => void;
@@ -116,10 +121,28 @@ export class DataProvider extends React.Component<Props, State> {
         this.handleLicenseOpen = this.handleLicenseOpen.bind(this);
         this.handleLicenseClose = this.handleLicenseClose.bind(this);
         this.handleExpand = this.handleExpand.bind(this);
+        this.setZoom = this.setZoom.bind(this);
         this.state = {
             open: false,
             licenseDialogOpen: false,
         };
+    }
+
+    private setZoom(minZoom=null, maxZoom=null) {
+        // update the state with the new array of options
+        const { provider } = this.props;
+
+        let exportOptions = {
+            ...this.props.exportInfo.exportOptions,
+            [provider.id]: {
+                minZoom: minZoom || provider.level_from,
+                maxZoom: maxZoom || provider.level_to,
+            }
+        };
+        this.props.updateExportInfo({
+            ...this.props.exportInfo,
+            exportOptions
+        });
     }
 
     private handleLicenseOpen() {
@@ -155,6 +178,7 @@ export class DataProvider extends React.Component<Props, State> {
     render() {
         const { colors } = this.props.theme.eventkit;
         const { classes, provider } = this.props;
+        const { exportOptions } = this.props.exportInfo;
 
         // Show license if one exists.
         const nestedItems = [];
@@ -190,6 +214,21 @@ export class DataProvider extends React.Component<Props, State> {
                 </ListItem>
             ));
         }
+
+        nestedItems.push((
+            <ListItem
+                className={`qa-DataProvider-ListItem-provZoomSlider ${classes.sublistItem}`}
+                key={nestedItems.length}
+                dense
+                disableGutters
+            >
+                <ZoomLevelSlider
+                    updateZoom={this.setZoom}
+                    provider={provider as Eventkit.Provider}
+                    providerZoom={(exportOptions[provider.id]) ? exportOptions[provider.id].maxZoom : provider.level_to}
+                />
+            </ListItem>
+        ));
 
         nestedItems.push((
             <ListItem
@@ -281,4 +320,21 @@ DataProvider.defaultProps = {
     renderEstimate: false
 };
 
-export default withTheme()(withStyles<any, any>(jss)(DataProvider));
+function mapStateToProps(state) {
+    return {
+        exportInfo: state.exportInfo,
+    };
+}
+
+function mapDispatchToProps(dispatch) {
+    return {
+        updateExportInfo: (exportInfo) => {
+            dispatch(updateExportInfo(exportInfo));
+        },
+    };
+}
+
+export default withTheme()(withStyles<any, any>(jss)(connect(
+    mapStateToProps,
+    mapDispatchToProps,
+    )(DataProvider)));
