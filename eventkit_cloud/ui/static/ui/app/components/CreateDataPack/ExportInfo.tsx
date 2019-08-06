@@ -330,7 +330,8 @@ export class ExportInfo extends React.Component<Props, State> {
             headers: { 'X-CSRFToken': csrfmiddlewaretoken },
         }).then((response) => {
             // The backend currently returns the response as a string, it needs to be parsed before being used.
-            newProvider.availability = JSON.parse(response.data);
+            const data = typeof(response.data == "object") ? response.data : JSON.parse(response.data);
+            newProvider.availability = data;
             newProvider.availability.slug = provider.slug;
             return newProvider;
         }).catch(() => {
