@@ -14,7 +14,7 @@ COPY --chown=eventkit ./conda /var/lib/eventkit/conda
 
 ENV PATH="/home/eventkit/miniconda3/bin:$PATH"
 
-RUN curl -L https://repo.continuum.io/miniconda/Miniconda3-4.6.14-Linux-x86_64.sh -o miniconda.sh && \
+RUN curl -L https://repo.continuum.io/miniconda/Miniconda3-4.7.10-Linux-x86_64.sh -o miniconda.sh && \
     /bin/bash miniconda.sh -b -p "/home/eventkit/miniconda3" && \
     rm miniconda.sh && \
     echo "y" | conda update -n root --all && \

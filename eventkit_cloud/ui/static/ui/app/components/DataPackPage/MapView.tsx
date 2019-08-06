@@ -84,7 +84,13 @@ export interface Props {
     loadLessDisabled: boolean;
     loadMoreDisabled: boolean;
     providers: Eventkit.Provider[];
-    geocode: object;
+    geocode: {
+        cancelSource: boolean;
+        data: any;
+        error: any;
+        fetched: boolean;
+        fetching: boolean;
+    };
     getGeocode: () => void;
     importGeom: {
         processed: boolean;
@@ -1103,4 +1109,4 @@ const makeMapStateToProps = () => {
     return mapStateToProps;
 };
 
-export default withWidth()(withTheme()(withRef()(connect(makeMapStateToProps, null, null, { forwardRef: true })(MapView))));
+export default withWidth()(withTheme()(connect(makeMapStateToProps, null, null, { forwardRef: true })(MapView)));
