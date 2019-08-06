@@ -35,7 +35,7 @@ END
             postStatus(getPendingStatus("Building the docker containers..."))
             sh "docker-compose down || exit 0"
             sh "docker system prune -f"
-            sh "cd conda && docker-compose up --build && cd .."
+            sh "cd conda && docker-compose build --no-cache && docker-compose run --rm conda && cd .."
             sh "docker-compose build --no-cache"
             // Exit 0 provided for when setup has already ran on a previous build.
             // This could hide errors at this step but they will show up again during the tests.
