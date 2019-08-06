@@ -75,7 +75,6 @@ class TestOverpass(TestCase):
         mock_post.return_value = mock_response
         op.run_query()
         mock_post.assert_called_once_with(self.url,
-                                          slug='testslug',
                                           data=q,
                                           stream=True,
                                           verify=verify_ssl)

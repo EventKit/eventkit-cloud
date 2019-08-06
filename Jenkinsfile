@@ -1,4 +1,4 @@
-node("legacy") {
+node() {
 
     stage("Add Repo"){
         checkout scm
@@ -25,11 +25,10 @@ END
         }
     }
 
-    stage("Remove volumes"){
-    // have to remove the volumes from docker because they mount stuff in jenkins
-
-        removeVolumes()
-    }
+   // stage("Remove volumes"){
+   // // have to remove the volumes from docker because they mount stuff in jenkins
+   //     removeVolumes()
+   // }
 
     stage("Build"){
         try{

@@ -17,6 +17,7 @@ from eventkit_cloud.tasks.helpers import get_style_files, get_file_paths, get_la
 from eventkit_cloud.tasks.export_tasks import TaskStates
 
 from eventkit_cloud.tasks.helpers import progressive_kill
+from unittest import skip
 
 logger = logging.getLogger(__name__)
 
@@ -67,7 +68,7 @@ class TestHelpers(TestCase):
         test_type = "osm"
         test_slug = "slug"
         get_last_update(test_url, test_type, cert_var=test_slug)
-        mock_get_osm_last_update.assert_called_once_with(test_url, slug=test_slug)
+        mock_get_osm_last_update.assert_called_once_with(test_url, cert_var=test_slug)
 
     @patch('eventkit_cloud.tasks.helpers.auth_requests')
     def test_get_osm_last_update(self, mock_auth_requests):
@@ -78,7 +79,7 @@ class TestHelpers(TestCase):
 
         mock_auth_requests.get.return_value.content.decode.return_value = expected_time
         returned_time = get_osm_last_update(test_url, cert_var=test_slug)
-        mock_auth_requests.get.assert_called_once_with(expected_url, slug=test_slug)
+        mock_auth_requests.get.assert_called_once_with(expected_url, cert_var=test_slug)
         self.assertEqual(expected_time, returned_time)
 
         mock_auth_requests.get.side_effect = Exception("FAIL")
@@ -132,9 +133,10 @@ class TestHelpers(TestCase):
         mocked_data_provider.slug = expected_provider_slug
         mocked_data_provider.export_provider_type.type_name = 'osm'
         mocked_data_provider.service_copyright = expected_copyright = "mocked_copyright"
+        mocked_data_provider.config = F"cert_var: {expected_provider_slug}"
 
         mocked_data_provider.service_description = expected_data_provider_desc = 'example_description'
-        mock_DataProvider.objects.get.return_value= mocked_data_provider
+        mock_DataProvider.objects.get.return_value = mocked_data_provider
 
         mocked_run = MagicMock()
         mocked_run.uid = run_uid
@@ -183,7 +185,6 @@ class TestHelpers(TestCase):
             "run_uid": run_uid,
             "url": "{}/status/{}".format(getattr(settings, 'SITE_URL'), expected_job_uid)
         }
-
         returned_metadata = get_metadata(mocked_provider_task.uid)
         self.maxDiff = None
         self.assertEqual(expected_metadata, returned_metadata)
