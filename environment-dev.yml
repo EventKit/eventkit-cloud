@@ -3,7 +3,7 @@ channels:
   - local
 dependencies:
   - python=3.6
-  - postgresql=11.2
+  - postgresql
   - eventkit-cloud
    # The eventkit-cloud recipe is in conda/recipes/eventkit-cloud/meta.yaml.
   - pip:
