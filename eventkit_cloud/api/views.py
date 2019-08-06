@@ -1801,9 +1801,16 @@ class EstimatorView(views.APIView):
         bbox = request.query_params.get('bbox', None).split(',')  # w, s, e, n
         bbox = list(map(lambda a: float(a), bbox))
         srs = request.query_params.get('srs', '4326')
+        min_zoom = request.query_params.get('min_zoom', None)
+        max_zoom = request.query_params.get('max_zoom', None)
 
         if request.query_params.get('slugs', None):
-            estimator = AoiEstimator(bbox=bbox, bbox_srs=srs)
+            estimator = AoiEstimator(
+                bbox=bbox,
+                bbox_srs=srs,
+                min_zoom=min_zoom,
+                max_zoom=max_zoom
+            )
             for slug in request.query_params.get('slugs').split(','):
                 size = estimator.get_estimate_from_slug(AoiEstimator.Types.SIZE, slug)[0]
                 time = estimator.get_estimate_from_slug(AoiEstimator.Types.TIME, slug)[0]
