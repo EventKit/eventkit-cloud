@@ -430,13 +430,17 @@ def get_confidence_interval(mean, std_dev, sample_size, ci=1.96):
     return [mean - error_margin, mean + error_margin]
 
 
-def get_provider_grid(provider):
+def get_provider_grid(provider, min_zoom=None, max_zoom=None):
     """
     :param provider: The DataProvider
     :return: The tile grid used by the DataProvider
     """
+    # Set custom zoom levels if available, otherwise use the provider defaults.
+    min_zoom = int(min_zoom) if min_zoom else provider.level_from
+    max_zoom = int(max_zoom) if max_zoom else provider.level_to
+
     # TODO: Pull this provider's grid out of it's config
-    levels = list(range(provider.level_from, provider.level_to + 1))
+    levels = list(range(min_zoom, max_zoom + 1))
     tmp = mapproxy_grid.tile_grid_for_epsg('EPSG:4326')
     res = list(map(lambda l: tmp.resolution(l), levels))
 
