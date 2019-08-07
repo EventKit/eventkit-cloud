@@ -36,7 +36,7 @@ END
             sh "docker-compose down || exit 0"
             sh "docker system prune -f"
             // sh "cd conda && docker-compose up --build && cd .."
-            sh "docker-compose build --no-cache"
+            sh "docker-compose build"
             // Exit 0 provided for when setup has already ran on a previous build.
             // This could hide errors at this step but they will show up again during the tests.
             // No use bringing up containers if integration tests aren't configured.
