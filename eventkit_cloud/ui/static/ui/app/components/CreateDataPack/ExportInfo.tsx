@@ -177,6 +177,7 @@ export class ExportInfo extends React.Component<Props, State> {
         this.checkAvailability = this.checkAvailability.bind(this);
         this.checkEstimate = this.checkEstimate.bind(this);
         this.checkProviders = this.checkProviders.bind(this);
+        this.checkProvider = this.checkProvider.bind(this);
         this.handlePopoverOpen = this.handlePopoverOpen.bind(this);
         this.handlePopoverClose = this.handlePopoverClose.bind(this);
 
@@ -412,15 +413,19 @@ export class ExportInfo extends React.Component<Props, State> {
 
     private checkProviders(providers: ProviderData[]) {
         providers.forEach((provider) => {
-            if (provider.display === false) {
-                return;
-            }
-            // This can be switched to finally in newer version of ES and typescript.
-            this.checkAvailability(provider).then((newProvider) => {
-                this.checkEstimate(newProvider);
-            }).catch((newProvider) => {
-                this.checkEstimate(newProvider);
-            });
+            this.checkProvider(provider);
+        });
+    }
+
+    checkProvider(provider: ProviderData) {
+        if (provider.display === false) {
+            return;
+        }
+        // This can be switched to finally in newer version of ES and typescript.
+        this.checkAvailability(provider).then((newProvider) => {
+            this.checkEstimate(newProvider);
+        }).catch((newProvider) => {
+            this.checkEstimate(newProvider);
         });
     }
 

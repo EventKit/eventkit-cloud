@@ -1,34 +1,41 @@
 import * as React from 'react';
 import {createStyles, Theme, withStyles, withTheme} from '@material-ui/core/styles';
 import Slider from "@material-ui/lab/Slider";
-import {Grid} from "@material-ui/core";
-import Typography from "@material-ui/core/Typography";
-import TableBody from "@material-ui/core/TableBody";
-import TableRow from "@material-ui/core/TableRow";
-import TableCell from "@material-ui/core/TableCell";
-import Table from "@material-ui/core/Table";
 import TextField from "@material-ui/core/TextField";
 
 const jss = (theme: Theme & Eventkit.Theme) => createStyles({
     container: {
         width: '100%'
     },
-    slider: {
+    sliderBox: {
         width: 'calc(100%)',
-        maxWidth: '500px',
+        maxWidth: '400px',
         padding: '0'
     },
-    zoomHeader: {
-        fontSize: '16px',
+    slider: {
+        width: '100%',
+        bottom: 0,
+        padding: '21px 0px',
     },
     levelLabel: {
         border: 'none',
-        padding: '0'
+        padding: '0',
+        width: '100%'
     },
     textField: {
         fontSize: '16px',
         width: '40px'
     },
+    tableData: {
+        width: '50%',
+        height: '22px',
+    },
+    zoomHeader: {
+        display: 'inline-flex',
+        fontSize: '16px',
+        paddingTop: '15px',
+        paddingBottom: '5px',
+    }
 });
 
 interface Props {
@@ -51,7 +58,14 @@ export class ZoomLevelSlider extends React.Component<Props, {}> {
     }
 
     handleChange = (event, value) => {
-        this.props.updateZoom(null, value);
+        if(value >= this.props.provider.level_from && value <= this.props.provider.level_to) {
+            value = parseInt(value);
+            this.props.updateZoom(null, value);
+        }
+        else {
+            // Send null for min and max zoom to force the prop to reupdate with the last valid value
+            this.props.updateZoom(null, null);
+        }
     };
 
     render() {
@@ -63,40 +77,44 @@ export class ZoomLevelSlider extends React.Component<Props, {}> {
                 <TextField
                     className={classes.textField}
                     type="number"
-                    name="buffer-value"
+                    name="zoom-value"
                     value={this.props.providerZoom}
                     onChange={e => this.handleChange(e, e.target.value)}
-                    InputProps={{ style: { fontSize: '14px'} }}
                     // MUI uses the case of the i to distinguish between Input component and input html element
                     // eslint-disable-next-line react/jsx-no-duplicate-props
-                    inputProps={{ style: { textAlign: 'center' } }}
+                    InputProps={{ style: { bottom: '5px' } }}
+                    inputProps={{ style: { textAlign: 'center', fontWeight: 'bold', fontSize: '16px'} }}
                 />
                 <span style={{ fontSize: '16px',}}>Selected Zoom</span>
                 <br/>
-                <strong style={{ fontSize: '16px', paddingTop: '15px', paddingBottom: '5px'}}>Zoom</strong>
-                <Slider
-                    className={classes.slider}
-                    style={{paddingTop: '8px'}}
-                    value={this.props.providerZoom}
-                    aria-labelledby="label"
-                    onChange={this.handleChange}
-                    max={this.props.provider.level_to}
-                    step={1}
-                />
-                <Table style={{tableLayout: 'fixed'}}>
-                    <TableBody>
-                        <TableRow className={classes.slider}>
-                            <TableCell className={classes.levelLabel}>
-                                0
-                            </TableCell>
-                            <TableCell className={classes.levelLabel}/>
-                            <TableCell className={classes.levelLabel}
-                                       style={{textAlign: 'center'}}>
-                                {this.props.provider.level_to}
-                            </TableCell>
-                        </TableRow>
-                    </TableBody>
-                </Table>
+                <strong className={classes.zoomHeader}>Zoom</strong>
+                <div className={classes.sliderBox} style={{ textAlign: 'center' }}>
+                    <table style={{ width: '100%', position: 'relative' }}>
+                        <tbody>
+                        <tr style={{ borderLeft: '1px solid #ccc', width: '100%' }}>
+                            <td style={{width: '100%', borderRight: '1px solid #ccc'}}>
+                                <Slider
+                                    style={{borderRight: '1px solid #ccc'}}
+                                    className={classes.slider}
+                                    value={this.props.providerZoom}
+                                    aria-labelledby="label"
+                                    onChange={this.handleChange}
+                                    max={this.props.provider.level_to}
+                                    step={1}
+                                />
+                            </td>
+                        </tr>
+                        <tr>
+                            <td className={classes.tableData}>
+                                <span style={{ float: 'left' }}>{this.props.provider.level_from}</span>
+                            </td>
+                            <td className={classes.tableData}>
+                                <span style={{ float: 'right'}}>{this.props.provider.level_to}</span>
+                            </td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
             </div>
         );
     }

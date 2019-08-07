@@ -128,20 +128,43 @@ export class DataProvider extends React.Component<Props, State> {
         };
     }
 
-    private setZoom(minZoom=null, maxZoom=null) {
+    private setZoom(minZoom: number, maxZoom: number) {
         // update the state with the new array of options
         const { provider } = this.props;
+        const { exportOptions } = this.props.exportInfo;
+        let lastMin, lastMax;
+        if(exportOptions[provider.id]) {
+            lastMin = exportOptions[provider.id].minZoom;
+            lastMax = exportOptions[provider.id].maxZoom;
+        }
 
-        let exportOptions = {
-            ...this.props.exportInfo.exportOptions,
+        if(minZoom === undefined || minZoom === null) {
+            if(lastMin !== undefined && lastMin !== null) {
+                minZoom = lastMin;
+            }
+            else {
+                minZoom = provider.level_from;
+            }
+        }
+        if(maxZoom === undefined || maxZoom === null) {
+            if(lastMax !== undefined && lastMax !== null) {
+                maxZoom = lastMax;
+            }
+            else {
+                maxZoom = provider.level_to;
+            }
+        }
+
+        let updatedExportOptions = {
+            ...exportOptions,
             [provider.id]: {
-                minZoom: minZoom || provider.level_from,
-                maxZoom: maxZoom || provider.level_to,
+                minZoom: minZoom,
+                maxZoom: maxZoom,
             }
         };
         this.props.updateExportInfo({
             ...this.props.exportInfo,
-            exportOptions
+            exportOptions: updatedExportOptions,
         });
     }
 
