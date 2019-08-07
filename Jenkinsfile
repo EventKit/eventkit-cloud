@@ -35,6 +35,7 @@ END
             postStatus(getPendingStatus("Building the docker containers..."))
             sh "docker-compose down || exit 0"
             sh "docker system prune -f"
+            sh "chmod g+w -R ./*"
             // sh "cd conda && docker-compose up --build && cd .."
             sh "docker-compose build"
             // Exit 0 provided for when setup has already ran on a previous build.
