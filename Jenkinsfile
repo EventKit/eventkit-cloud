@@ -1,4 +1,4 @@
-node("legacy") {
+node() {
 
     stage("Add Repo"){
         checkout scm
@@ -13,7 +13,7 @@ import yaml
 data = {}
 with open('environment-dev.yml', 'r') as yaml_file:
     data = yaml.load(yaml_file)
-data['channels'] = ['$CONDA_REPO']
+data['channels'] = ['local', '$CONDA_REPO']
 
 with open('environment-dev.yml', 'w') as outfile:
     yaml.dump(data, outfile, default_flow_style=False)
@@ -27,7 +27,6 @@ END
 
     stage("Remove volumes"){
     // have to remove the volumes from docker because they mount stuff in jenkins
-
         removeVolumes()
     }
 
@@ -36,8 +35,11 @@ END
             postStatus(getPendingStatus("Building the docker containers..."))
             sh "docker-compose down || exit 0"
             sh "docker system prune -f"
-            sh "cd conda && docker-compose up --build && cd .."
-            sh "docker-compose build --no-cache"
+            sh "ls -al ."
+            sh "ls -al conda/*"
+            sh "chmod g+w -R ./*"
+            // sh "cd conda && docker-compose up --build && cd .."
+            sh "docker-compose build"
             // Exit 0 provided for when setup has already ran on a previous build.
             // This could hide errors at this step but they will show up again during the tests.
             // No use bringing up containers if integration tests aren't configured.

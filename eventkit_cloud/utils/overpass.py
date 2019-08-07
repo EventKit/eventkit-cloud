@@ -21,7 +21,7 @@ class Overpass(object):
     """
 
     def __init__(self, url=None, slug=None, bbox=None, stage_dir=None, job_name=None, debug=False, task_uid=None,
-                 raw_data_filename=None, config=None):
+                 raw_data_filename=None, config=""):
         """
         Initialize the Overpass utility.
 
@@ -98,7 +98,8 @@ class Overpass(object):
             update_progress(self.task_uid, progress=0, subtask_percentage=subtask_percentage,
                             subtask_start=subtask_start, eta=eta,
                             msg='Querying provider data')
-            cert_var = yaml.load(self.config).get('cert_var') or self.slug
+            conf: dict = yaml.load(self.config) or dict()
+            cert_var = conf.get('cert_var') or self.slug
             req = auth_requests.post(self.url, cert_var=cert_var, data=q, stream=True, verify=self.verify_ssl)
 
             try:
@@ -171,17 +172,17 @@ if __name__ == '__main__':
     parser.add_argument('-u', '--url', required=False, dest="url", help='The url endpoint of the overpass interpreter')
     parser.add_argument('-d', '--debug', action="store_true", help="Turn on debug output")
     args = parser.parse_args()
-    config = {}
+    configuration = {}
     for k, v in list(vars(args).items()):
         if (v == None):
             continue
         else:
-            config[k] = v
-    osm = config.get('osm')
-    url = config.get('url')
-    bbox = config.get('bbox')
+            configuration[k] = v
+    osm = configuration.get('osm')
+    url = configuration.get('url')
+    bbox = configuration.get('bbox')
     debug = False
-    if config.get('debug'):
-        debug = config.get('debug')
+    if configuration.get('debug'):
+        debug = configuration.get('debug')
     overpass = Overpass(url=url, bbox=bbox, raw_data_filename=osm, debug=debug)
     overpass.run_query()
