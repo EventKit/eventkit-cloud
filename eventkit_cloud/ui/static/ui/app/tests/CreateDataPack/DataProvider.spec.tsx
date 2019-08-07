@@ -20,6 +20,9 @@ describe('DataProvider component', () => {
             availability: {},
             estimate: {},
         },
+        exportInfo: {
+            exportOptions: {123: {minZoom: 0, maxZoom: 1}}
+        },
         checked: false,
         onChange: sinon.spy(),
         alt: false,
