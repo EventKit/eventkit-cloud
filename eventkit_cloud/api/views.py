@@ -1799,7 +1799,6 @@ class EstimatorView(views.APIView):
         bbox = request.query_params.get('bbox', None).split(',')  # w, s, e, n
         bbox = list(map(lambda a: float(a), bbox))
         srs = request.query_params.get('srs', '4326')
-        import random
         if request.query_params.get('slugs', None):
             estimator = AoiEstimator(bbox=bbox, bbox_srs=srs)
             for slug in request.query_params.get('slugs').split(','):
@@ -1807,7 +1806,7 @@ class EstimatorView(views.APIView):
                 time = estimator.get_estimate_from_slug(AoiEstimator.Types.TIME, slug)[0]
                 payload += [{
                     'slug': slug,
-                    'size': {'value': random.randint(0, 1000000), 'unit': 'MB'},
+                    'size': {'value': size, 'unit': 'MB'},
                     'time': {'value': time, 'unit': 'seconds'},
                 }]
 
