@@ -15,6 +15,7 @@ import {Typography} from "@material-ui/core";
 import ZoomLevelSlider from "./ZoomLevelSlider";
 import {connect} from "react-redux";
 import {updateExportInfo} from '../../actions/datacartActions';
+import debounce from 'lodash/debounce';
 
 const jss = (theme: Theme & Eventkit.Theme) => createStyles({
     container: {
@@ -32,7 +33,7 @@ const jss = (theme: Theme & Eventkit.Theme) => createStyles({
     sublistItem: {
         fontWeight: 'normal',
         fontSize: '13px',
-        padding: '14px 20px 14px 49px',
+        padding: '0px 20px 14px 49px',
         borderTop: theme.eventkit.colors.secondary,
     },
     checkbox: {
@@ -88,6 +89,7 @@ interface Props {
     exportInfo: Eventkit.Store.ExportInfo;
     updateExportInfo: (args: any) => void;
     provider: ProviderData;
+    checkProvider: (args: any) => void;
     checked: boolean;
     onChange: (event: React.ChangeEvent<HTMLInputElement>) => void;
     alt: boolean;
@@ -115,17 +117,24 @@ interface State {
 export class DataProvider extends React.Component<Props, State> {
 
     static defaultProps;
-
+    private estimateDebouncer;
     constructor(props: Props) {
         super(props);
         this.handleLicenseOpen = this.handleLicenseOpen.bind(this);
         this.handleLicenseClose = this.handleLicenseClose.bind(this);
         this.handleExpand = this.handleExpand.bind(this);
         this.setZoom = this.setZoom.bind(this);
+        this.estimateDebouncer = () => { /* do nothing while not mounted */ };
         this.state = {
             open: false,
             licenseDialogOpen: false,
         };
+    }
+
+    componentDidMount() {
+        this.estimateDebouncer = debounce((val) => {
+            this.props.checkProvider(val);
+        }, 1000);
     }
 
     private setZoom(minZoom: number, maxZoom: number) {
@@ -166,6 +175,7 @@ export class DataProvider extends React.Component<Props, State> {
             ...this.props.exportInfo,
             exportOptions: updatedExportOptions,
         });
+        this.estimateDebouncer(this.props.provider);
     }
 
     private handleLicenseOpen() {

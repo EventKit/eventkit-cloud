@@ -15,7 +15,7 @@ const jss = (theme: Theme & Eventkit.Theme) => createStyles({
     slider: {
         width: '100%',
         bottom: 0,
-        padding: '21px 0px',
+        padding: '10px 0px',
     },
     levelLabel: {
         border: 'none',
@@ -28,12 +28,11 @@ const jss = (theme: Theme & Eventkit.Theme) => createStyles({
     },
     tableData: {
         width: '50%',
-        height: '22px',
     },
     zoomHeader: {
         display: 'inline-flex',
         fontSize: '16px',
-        paddingTop: '15px',
+        paddingTop: '10px',
         paddingBottom: '5px',
     }
 });
@@ -60,7 +59,12 @@ export class ZoomLevelSlider extends React.Component<Props, {}> {
     handleChange = (event, value) => {
         if(value >= this.props.provider.level_from && value <= this.props.provider.level_to) {
             value = parseInt(value);
-            this.props.updateZoom(null, value);
+            if(Number.isNaN(value)) {
+                this.props.updateZoom(null, null);
+            }
+            else {
+                this.props.updateZoom(null, value);
+            }
         }
         else {
             // Send null for min and max zoom to force the prop to reupdate with the last valid value
@@ -94,7 +98,6 @@ export class ZoomLevelSlider extends React.Component<Props, {}> {
                         <tr style={{ borderLeft: '1px solid #ccc', width: '100%' }}>
                             <td style={{width: '100%', borderRight: '1px solid #ccc'}}>
                                 <Slider
-                                    style={{borderRight: '1px solid #ccc'}}
                                     className={classes.slider}
                                     value={this.props.providerZoom}
                                     aria-labelledby="label"

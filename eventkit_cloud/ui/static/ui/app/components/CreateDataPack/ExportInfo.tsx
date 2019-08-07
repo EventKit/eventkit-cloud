@@ -668,6 +668,7 @@ export class ExportInfo extends React.Component<Props, State> {
                                                 .indexOf(provider.name) !== -1}
                                             alt={ix % 2 === 0}
                                             renderEstimate={this.context.config.SERVE_ESTIMATES}
+                                            checkProvider={this.checkProvider}
                                         />
                                     ))}
                                 </List>
