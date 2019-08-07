@@ -71,11 +71,13 @@ class AoiEstimator(object):
             except AttributeError:
                 return False
 
-    def __init__(self, bbox, bbox_srs='4326', with_clipping=True, cap_estimates=True):
+    def __init__(self, bbox, bbox_srs='4326', with_clipping=True, cap_estimates=True, min_zoom=None, max_zoom=None):
         # It would be good to integrate a BBOX class to pass around instead of doing this
         # It can get cumbersome and lead to errors when the bbox srs is assumed
         self.bbox = bbox
         self.bbox_srs = bbox_srs
+        self.min_zoom = min_zoom
+        self.max_zoom = max_zoom
         self._with_clipping = with_clipping
         self._cap_estimates = cap_estimates
         self._results = dict()
@@ -111,7 +113,14 @@ class AoiEstimator(object):
     def _get_size_estimate(self, provider):
         """Get size estimate for this provider by checking the provider type."""
         if is_raster_single(provider) or is_raster_tile_grid(provider):
-            return get_raster_tile_grid_size_estimate(provider, self.bbox, self.bbox_srs, with_clipping=self._with_clipping)
+            return get_raster_tile_grid_size_estimate(
+                provider,
+                self.bbox,
+                self.bbox_srs,
+                with_clipping=self._with_clipping,
+                min_zoom=self.min_zoom,
+                max_zoom=self.max_zoom
+            )
         elif is_vector(provider):
             return get_vector_estimate(provider, bbox=self.bbox, srs=self.bbox_srs)
         else:
@@ -123,7 +132,7 @@ class AoiEstimator(object):
         return get_time_estimate(provider, bbox=self.bbox, bbox_srs=self.bbox_srs)
 
 
-def get_size_estimate_slug(slug, bbox, srs='4326'):
+def get_size_estimate_slug(slug, bbox, srs='4326', min_zoom=None, max_zoom=None):
     """
     See get_size_estimate
     :param slug: slug of the DataProvider
@@ -135,10 +144,10 @@ def get_size_estimate_slug(slug, bbox, srs='4326'):
     except ObjectDoesNotExist:
         raise ValueError("Provider slug '{}' is not valid".format(slug))
 
-    return get_size_estimate(provider, bbox, srs)
+    return get_size_estimate(provider, bbox, srs, min_zoom, max_zoom)
 
 
-def get_size_estimate(provider, bbox, srs='4326'):
+def get_size_estimate(provider, bbox, srs='4326', min_zoom=None, max_zoom=None):
     """
     The estimate size of a data export from provider over the specified region, in MBs
     :param provider: DataProvider
@@ -184,7 +193,7 @@ def is_vector(provider):
     return type_name == 'osm-generic' or type_name == 'osm' or type_name == 'wfs'
 
 
-def get_raster_tile_grid_size_estimate(provider, bbox, srs='4326', with_clipping=True):
+def get_raster_tile_grid_size_estimate(provider, bbox, srs='4326', with_clipping=True, min_zoom=None, max_zoom=None):
     """
     :param provider: The DataProvider to test
     :param bbox: The bounding box of the request
@@ -193,7 +202,7 @@ def get_raster_tile_grid_size_estimate(provider, bbox, srs='4326', with_clipping
     :return: (estimate in mbs, object w/ metadata about how it was generated)
     """
     # TODO: Both total_pixels and query intersect the tile grid, can save time if we do it once for both
-    tile_grid = ek_stats.get_provider_grid(provider)
+    tile_grid = ek_stats.get_provider_grid(provider, min_zoom, max_zoom)
     total_pixels = ek_stats.get_total_num_pixels(tile_grid, bbox, srs, with_clipping)
 
     mpp, method = ek_stats.query(provider.name, field=Stats.Fields.MPP, statistic_name=Stats.MEAN,

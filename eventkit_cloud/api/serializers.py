@@ -61,7 +61,7 @@ class ProviderTaskSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = DataProviderTask
-        fields = ('provider', 'formats')
+        fields = ('provider', 'formats', 'min_zoom', 'max_zoom')
 
     @staticmethod
     def create(validated_data, **kwargs):
@@ -71,6 +71,8 @@ class ProviderTaskSerializer(serializers.ModelSerializer):
         provider_model = DataProvider.objects.get(name=validated_data.get("provider"))
         provider_task = DataProviderTask.objects.create(provider=provider_model)
         provider_task.formats.add(*formats)
+        provider_task.min_zoom = validated_data.pop("min_zoom", None)
+        provider_task.max_zoom = validated_data.pop("max_zoom", None)
         provider_task.save()
         return provider_task
 

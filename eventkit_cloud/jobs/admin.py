@@ -11,7 +11,7 @@ from django.utils.html import format_html
 from django_celery_beat.models import IntervalSchedule, CrontabSchedule
 
 from eventkit_cloud.jobs.models import ExportFormat, Job, Region, DataProvider, DataProviderType, \
-    DatamodelPreset, License, DataProviderStatus
+    DatamodelPreset, License, DataProviderStatus, DataProviderTask
 from eventkit_cloud.tasks.helpers import clean_config
 
 logger = logging.getLogger(__name__)
@@ -20,6 +20,7 @@ admin.site.register(ExportFormat)
 admin.site.register(DataProviderType)
 admin.site.register(DatamodelPreset)
 admin.site.register(License)
+admin.site.register(DataProviderTask)
 
 
 class JobAdmin(OSMGeoAdmin):

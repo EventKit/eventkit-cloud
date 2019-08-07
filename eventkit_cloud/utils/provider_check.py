@@ -100,12 +100,14 @@ class ProviderCheck(object):
     Once returned, the information is displayed via an icon and tooltip in the EventKit UI.
     """
 
-    def __init__(self, service_url, layer, aoi_geojson=None, slug=None, max_area=None, config: dict = None):
+    def __init__(self, service_url, layer, aoi_geojson=None, slug=None, max_area=0, config: dict = None):
         """
         Initialize this ProviderCheck object with a service URL and layer.
         :param service_url: URL of provider, if applicable. Query string parameters are ignored.
         :param layer: Layer or coverage to check for
         :param aoi_geojson: (Optional) AOI to check for layer intersection
+        :param slug: (Optional) A provider slug to use for getting credentials.
+        :param max_area: The upper limit for this datasource.
         """
 
         self.service_url = service_url
@@ -116,7 +118,7 @@ class ProviderCheck(object):
         self.result = CheckResults.SUCCESS
         self.timeout = 10
         self.verify = getattr(settings, "SSL_VERIFICATION", True)
-        self.config = config
+        self.config = config or dict()
 
         if aoi_geojson is not None and aoi_geojson is not "":
             if isinstance(aoi_geojson, str):
@@ -577,7 +579,7 @@ PROVIDER_CHECK_MAP = {
 }
 
 
-def get_provider_checker(type_slug):
+def get_provider_checker(type_slug) -> ProviderCheck:
     """
     Given a string describing a provider type, return a reference to the class appropriate for checking the status
     of a provider of that type.
@@ -598,8 +600,9 @@ def perform_provider_check(provider: DataProvider, geojson):
         url = settings.OVERPASS_API_URL
 
     provider_checker = get_provider_checker(provider_type)
+    conf = yaml.load(provider.config) or dict()
     checker = provider_checker(service_url=url, layer=provider.layer, aoi_geojson=geojson, slug=provider.slug,
-                               max_area=provider.max_selection, config=yaml.load(provider.config))
+                               max_area=provider.max_selection, config=conf)
     response = checker.check()
 
     logger.info("Status of provider '{}': {}".format(str(provider.name), response))
