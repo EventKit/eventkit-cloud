@@ -16,6 +16,7 @@ import ZoomLevelSlider from "./ZoomLevelSlider";
 import {connect} from "react-redux";
 import {updateExportInfo} from '../../actions/datacartActions';
 import {MapCard} from "../common/MapCard";
+import CustomTableRow from "../CustomTableRow";
 
 const jss = (theme: Theme & Eventkit.Theme) => createStyles({
     container: {
@@ -128,7 +129,7 @@ export class DataProvider extends React.Component<Props, State> {
         this.state = {
             open: false,
             licenseDialogOpen: false,
-            zoomLevel: 0,
+            zoomLevel: this.props.provider.level_to,
         };
     }
 
@@ -240,27 +241,17 @@ export class DataProvider extends React.Component<Props, State> {
         }
 
         nestedItems.push((
-            <ListItem
-                className={`qa-DataProvider-ListItem-provZoomSlider ${classes.sublistItem}`}
-                key={nestedItems.length}
-                dense
-                disableGutters
-            >
+            <div style={{padding: '10px 20px 10px'}}>
                 <ZoomLevelSlider
                     updateZoom={this.setZoom}
                     provider={provider as Eventkit.Provider}
                     providerZoom={this.state.zoomLevel}
                 />
-            </ListItem>
+            </div>
         ));
 
         nestedItems.push((
-            <ListItem
-                className={`qa-DataProvider-ListItem-MapCard ${classes.sublistItem}`}
-                key={nestedItems.length}
-                dense
-                disableGutters
-            >
+            <div style={{padding: '10px 20px 10px'}}>
                 <MapCard
                     geojson={this.props.geojson}
                     theme={this.props.theme}
@@ -269,9 +260,9 @@ export class DataProvider extends React.Component<Props, State> {
                     providerZoom={this.state.zoomLevel}
                     provider={provider}
                 >
-                    <span style={{ marginRight: '10px' }}>Zoom Preview</span>
+                    <span style={{marginRight: '10px'}}>Zoom Level Preview</span>
                 </MapCard>
-            </ListItem>
+            </div>
         ));
 
         nestedItems.push((

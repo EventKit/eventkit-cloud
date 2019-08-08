@@ -88,27 +88,27 @@ export class ZoomLevelSlider extends React.Component<Props, {}> {
                 <div className={classes.sliderBox} style={{textAlign: 'center'}}>
                     <table style={{width: '100%', position: 'relative'}}>
                         <tbody>
-                        <tr style={{borderLeft: '1px solid #ccc', width: '100%'}}>
-                            <td style={{width: '100%', borderRight: '1px solid #ccc'}}>
-                                <Slider
-                                    style={{borderRight: '1px solid #ccc'}}
-                                    className={classes.slider}
-                                    value={this.props.providerZoom}
-                                    aria-labelledby="label"
-                                    onChange={this.handleChange}
-                                    max={this.props.provider.level_to}
-                                    step={1}
-                                />
-                            </td>
-                        </tr>
-                        <tr>
-                            <td className={classes.tableData}>
-                                <span style={{float: 'left'}}>{this.props.provider.level_from}</span>
-                            </td>
-                            <td className={classes.tableData}>
-                                <span style={{float: 'right'}}>{this.props.provider.level_to}</span>
-                            </td>
-                        </tr>
+                            <tr style={{borderLeft: '1px solid #ccc', width: '100%'}}>
+                                <td style={{width: '100%', borderRight: '1px solid #ccc'}}>
+                                    <Slider
+                                        style={{borderRight: '1px solid #ccc'}}
+                                        className={classes.slider}
+                                        value={this.props.providerZoom}
+                                        aria-labelledby="label"
+                                        onChange={this.handleChange}
+                                        max={this.props.provider.level_to}
+                                        step={1}
+                                    />
+                                </td>
+                            </tr>
+                            <tr>
+                                <td className={classes.tableData}>
+                                    <span style={{float: 'left'}}>{this.props.provider.level_from}</span>
+                                </td>
+                                <td className={classes.tableData}>
+                                    <span style={{float: 'right'}}>{this.props.provider.level_to}</span>
+                                </td>
+                            </tr>
                         </tbody>
                     </table>
                 </div>

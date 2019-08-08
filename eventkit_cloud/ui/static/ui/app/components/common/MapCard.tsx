@@ -35,8 +35,12 @@ export interface State {
 }
 
 export class MapCard extends React.Component<Props, State> {
+
     private map: any;
-    private mapDiv: string;
+    readonly mapDiv: string;
+    private zoomLevel: number;
+    readonly minZoom: number;
+    readonly maxZoom: number;
 
     static contextTypes = {
         config: PropTypes.object,
@@ -49,10 +53,26 @@ export class MapCard extends React.Component<Props, State> {
             open: false,
         };
         this.mapDiv = this.props.provider ? this.props.provider.id + "-map" : "infoMap";
+        this.minZoom = 2
+        if (this.props.provider && (this.props.provider.level_from != null)) {
+            this.minZoom = this.props.provider.level_from;
+        }
+        this.maxZoom = 22
+        if (this.props.provider && this.props.provider.level_to) {
+            this.maxZoom = this.props.provider.level_to;
+        }
+        this.zoomLevel = 20;
     }
 
     componentDidUpdate(prevProps: Props, prevState: State) {
-        // if the user expaned the AOI section mount the map
+        if (this.props.providerZoom) {
+            this.zoomLevel = this.props.providerZoom;
+        } else if (this.props.provider) {
+            this.zoomLevel = this.props.provider.level_to;
+        } else {
+            this.zoomLevel = this.maxZoom;
+        }
+        // if the user expanded the AOI section mount the map
         if (prevState.open !== this.state.open) {
             if (this.state.open) {
                 this.initializeOpenLayers();
@@ -61,7 +81,9 @@ export class MapCard extends React.Component<Props, State> {
                 this.map = null;
             }
         } else if (this.state.open) {
-            this.map.getView().setZoom(this.props.providerZoom);
+            if (this.props.providerZoom) {
+                this.map.getView().setZoom(this.zoomLevel);
+            }
         }
     }
 
@@ -77,14 +99,6 @@ export class MapCard extends React.Component<Props, State> {
                 attributions: this.context.config.BASEMAP_COPYRIGHT,
             }),
         });
-        let minZoom = 2
-        if (this.props.provider && (this.props.provider.level_from != null)) {
-            minZoom = this.props.provider.level_from;
-        }
-        let maxZoom = 22
-        if (this.props.provider && this.props.provider.level_to) {
-            maxZoom = this.props.provider.level_to;
-        }
         this.map = new Map({
             interactions: interaction.defaults({
                 keyboard: false,
@@ -97,9 +111,9 @@ export class MapCard extends React.Component<Props, State> {
             view: new View({
                 projection: 'EPSG:3857',
                 center: [110, 0],
-                zoom: minZoom,
-                minZoom,
-                maxZoom,
+                zoom: this.zoomLevel,
+                minZoom: this.minZoom,
+                maxZoom: this.maxZoom,
             }),
             controls: [
                 new ScaleLine({
@@ -128,14 +142,10 @@ export class MapCard extends React.Component<Props, State> {
         });
 
         this.map.addLayer(layer);
-        if (this.props.providerZoom) {
-            this.map.getView().centerOn(source.getExtent(), this.map.getSize(), this.map.getSize().map(x => x / 2));
-        } else {
-            this.map.getView().fit(source.getExtent(), this.map.getSize());
-        }
+        this.map.getView().fit(source.getExtent(), this.map.getSize());
+        this.map.getView().setZoom(this.zoomLevel);
 
         this.map.on('moveend', () => {
-            console.log("Map Moved")
             if (this.props.setZoom) {
                 this.props.setZoom(null, this.map.getView().getZoom());
             }
