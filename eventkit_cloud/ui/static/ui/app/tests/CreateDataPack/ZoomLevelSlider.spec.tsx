@@ -1,13 +1,6 @@
 import * as React from 'react';
-import * as sinon from 'sinon';
 import { shallow } from 'enzyme';
 import { ZoomLevelSlider } from '../../components/CreateDataPack/ZoomLevelSlider';
-import Paper from "@material-ui/core/Paper";
-import List from "@material-ui/core/List";
-import DataProvider from "../../components/CreateDataPack/DataProvider";
-import Checkbox from "@material-ui/core/Checkbox";
-import MapCard from "../../components/common/MapCard";
-import Joyride from "react-joyride";
 import {TextField} from "@material-ui/core";
 import {Slider} from "@material-ui/lab";
 
@@ -45,7 +38,7 @@ describe('ZoomLevelSlider component', () => {
 
     beforeEach(setup);
 
-    it('should render', () => {
+    it('should render input controls', () => {
         expect(wrapper.find(TextField)).toHaveLength(1);
         expect(wrapper.find(Slider)).toHaveLength(1);
     });

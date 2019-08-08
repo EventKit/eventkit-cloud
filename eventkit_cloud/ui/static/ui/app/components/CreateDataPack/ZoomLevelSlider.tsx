@@ -1,16 +1,11 @@
 import * as React from 'react';
 import {createStyles, Theme, withStyles, withTheme} from '@material-ui/core/styles';
 import Slider from "@material-ui/lab/Slider";
-import TextField from "@material-ui/core/TextField";
+import TextField from '@material-ui/core/TextField';
 
 const jss = (theme: Theme & Eventkit.Theme) => createStyles({
     container: {
         width: '100%'
-    },
-    sliderBox: {
-        width: 'calc(100%)',
-        maxWidth: '400px',
-        padding: '0'
     },
     slider: {
         width: '100%',
@@ -39,8 +34,9 @@ const jss = (theme: Theme & Eventkit.Theme) => createStyles({
 
 interface Props {
     updateZoom: (min: number, max: number) => void;
-    providerZoom: number;
-    provider: Eventkit.Provider;
+    maxZoom: number;
+    minZoom: number;
+    zoom: number;
     theme: Eventkit.Theme & Theme;
     classes: { [className: string]: string };
 }
@@ -52,19 +48,15 @@ export class ZoomLevelSlider extends React.Component<Props, {}> {
     constructor(props: Props) {
         super(props);
         this.state = {
+
         };
         this.handleChange = this.handleChange.bind(this);
     }
 
     handleChange = (event, value) => {
-        if(value >= this.props.provider.level_from && value <= this.props.provider.level_to) {
-            value = parseInt(value);
-            if(Number.isNaN(value)) {
-                this.props.updateZoom(null, null);
-            }
-            else {
-                this.props.updateZoom(null, value);
-            }
+        value = Number(value);
+        if(value >= this.props.minZoom && value <= this.props.maxZoom) {
+            this.props.updateZoom(null, value);
         }
         else {
             // Send null for min and max zoom to force the prop to reupdate with the last valid value
@@ -82,37 +74,37 @@ export class ZoomLevelSlider extends React.Component<Props, {}> {
                     className={classes.textField}
                     type="number"
                     name="zoom-value"
-                    value={this.props.providerZoom}
+                    value={this.props.zoom}
                     onChange={e => this.handleChange(e, e.target.value)}
+                    InputProps={{ style: { bottom: '5px' } }}
                     // MUI uses the case of the i to distinguish between Input component and input html element
                     // eslint-disable-next-line react/jsx-no-duplicate-props
-                    InputProps={{ style: { bottom: '5px' } }}
                     inputProps={{ style: { textAlign: 'center', fontWeight: 'bold', fontSize: '16px'} }}
                 />
                 <span style={{ fontSize: '16px',}}>Selected Zoom</span>
                 <br/>
                 <strong className={classes.zoomHeader}>Zoom</strong>
-                <div className={classes.sliderBox} style={{ textAlign: 'center' }}>
+                <div style={{ textAlign: 'center' }}>
                     <table style={{ width: '100%', position: 'relative' }}>
                         <tbody>
                         <tr style={{ borderLeft: '1px solid #ccc', width: '100%' }}>
                             <td style={{width: '100%', borderRight: '1px solid #ccc'}}>
                                 <Slider
                                     className={classes.slider}
-                                    value={this.props.providerZoom}
+                                    value={this.props.zoom}
                                     aria-labelledby="label"
                                     onChange={this.handleChange}
-                                    max={this.props.provider.level_to}
+                                    max={this.props.maxZoom}
                                     step={1}
                                 />
                             </td>
                         </tr>
                         <tr>
                             <td className={classes.tableData}>
-                                <span style={{ float: 'left' }}>{this.props.provider.level_from}</span>
+                                <span style={{ float: 'left' }}>{this.props.minZoom}</span>
                             </td>
                             <td className={classes.tableData}>
-                                <span style={{ float: 'right'}}>{this.props.provider.level_to}</span>
+                                <span style={{ float: 'right'}}>{this.props.maxZoom}</span>
                             </td>
                         </tr>
                         </tbody>

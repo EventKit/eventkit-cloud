@@ -255,11 +255,17 @@ export class DataProvider extends React.Component<Props, State> {
                 dense
                 disableGutters
             >
-                <ZoomLevelSlider
-                    updateZoom={this.setZoom}
-                    provider={provider as Eventkit.Provider}
-                    providerZoom={(exportOptions[provider.id]) ? exportOptions[provider.id].maxZoom : provider.level_to}
-                />
+                <div style={{
+                    width: 'calc(100%)',
+                    maxWidth: '400px',
+                }}>
+                    <ZoomLevelSlider
+                        updateZoom={this.setZoom}
+                        zoom={(exportOptions[provider.id]) ? exportOptions[provider.id].maxZoom : provider.level_to}
+                        maxZoom={provider.level_to}
+                        minZoom={provider.level_from}
+                    />
+                </div>
             </ListItem>
         ));
 
