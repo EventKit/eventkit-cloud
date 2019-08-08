@@ -241,7 +241,7 @@ export class DataProvider extends React.Component<Props, State> {
         }
 
         nestedItems.push((
-            <div style={{padding: '10px 20px 10px'}}>
+            <div style={{padding: '10px 20px'}}>
                 <ZoomLevelSlider
                     updateZoom={this.setZoom}
                     provider={provider as Eventkit.Provider}
@@ -251,7 +251,7 @@ export class DataProvider extends React.Component<Props, State> {
         ));
 
         nestedItems.push((
-            <div style={{padding: '10px 20px 10px'}}>
+            <div style={{padding: '10px 20px'}}>
                 <MapCard
                     geojson={this.props.geojson}
                     theme={this.props.theme}
