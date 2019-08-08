@@ -568,7 +568,8 @@ export class BreadcrumbStepper extends React.Component<Props, State> {
                 });
             }
             else {
-                providerTasks.push({ provider: provider.name, formats: [formats[0]] });
+                providerTasks.push({ provider: provider.name, formats: [formats[0]],
+                    max_zoom: provider.level_to, min_zoom: provider.level_from});
             }
             
         });
