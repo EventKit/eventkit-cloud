@@ -15,6 +15,7 @@ import {Typography} from "@material-ui/core";
 import ZoomLevelSlider from "./ZoomLevelSlider";
 import {connect} from "react-redux";
 import {updateExportInfo} from '../../actions/datacartActions';
+import {MapCard} from "../common/MapCard";
 
 const jss = (theme: Theme & Eventkit.Theme) => createStyles({
     container: {
@@ -85,6 +86,7 @@ export interface ProviderData extends Eventkit.Provider {
 }
 
 interface Props {
+    geojson: GeoJSON.FeatureCollection;
     exportInfo: Eventkit.Store.ExportInfo;
     updateExportInfo: (args: any) => void;
     provider: ProviderData;
@@ -110,6 +112,7 @@ interface Props {
 interface State {
     open: boolean;
     licenseDialogOpen: boolean;
+    zoomLevel: number;
 }
 
 export class DataProvider extends React.Component<Props, State> {
@@ -125,47 +128,45 @@ export class DataProvider extends React.Component<Props, State> {
         this.state = {
             open: false,
             licenseDialogOpen: false,
+            zoomLevel: 0,
         };
     }
 
-    private setZoom(minZoom: number, maxZoom: number) {
+    setZoom(minZoom: number, maxZoom: number) {
         // update the state with the new array of options
         const { provider } = this.props;
         const { exportOptions } = this.props.exportInfo;
-        let lastMin, lastMax;
-        if(exportOptions[provider.id]) {
+        let lastMin;
+        let lastMax;
+        if (exportOptions[provider.id]) {
             lastMin = exportOptions[provider.id].minZoom;
             lastMax = exportOptions[provider.id].maxZoom;
         }
 
-        if(minZoom === undefined || minZoom === null) {
-            if(lastMin !== undefined && lastMin !== null) {
+        if (minZoom === undefined || minZoom === null) {
+            if (lastMin !== undefined && lastMin !== null) {
                 minZoom = lastMin;
-            }
-            else {
+            } else {
                 minZoom = provider.level_from;
             }
         }
-        if(maxZoom === undefined || maxZoom === null) {
-            if(lastMax !== undefined && lastMax !== null) {
+        if (maxZoom === undefined || maxZoom === null) {
+            if (lastMax !== undefined && lastMax !== null) {
                 maxZoom = lastMax;
-            }
-            else {
+            } else {
                 maxZoom = provider.level_to;
             }
         }
 
-        let updatedExportOptions = {
+        const updatedExportOptions = {
             ...exportOptions,
-            [provider.id]: {
-                minZoom: minZoom,
-                maxZoom: maxZoom,
-            }
+            [provider.id]: {minZoom, maxZoom}
         };
         this.props.updateExportInfo({
             ...this.props.exportInfo,
             exportOptions: updatedExportOptions,
         });
+        this.setState({zoomLevel: maxZoom});
     }
 
     private handleLicenseOpen() {
@@ -180,18 +181,18 @@ export class DataProvider extends React.Component<Props, State> {
         this.setState(state => ({ open: !state.open }));
     }
 
-    private formatEstimate(providerEstimate){
-        if (!providerEstimate){
-            return ''
+    private formatEstimate(providerEstimate) {
+        if (!providerEstimate) {
+            return '';
         }
         let sizeEstimate;
         let durationEstimate;
         // func that will return nf (not found) when the provided estimate is undefined
-        const get = (estimate, nf='unknown') => {return (estimate) ? estimate.toString() : nf};
-        if(providerEstimate.size) {
+        const get = (estimate, nf = 'unknown' ) =>  (estimate) ? estimate.toString() : nf ;
+        if (providerEstimate.size) {
             sizeEstimate = formatMegaBytes(providerEstimate.size.value);
         }
-        if(providerEstimate.time) {
+        if (providerEstimate.time) {
             const estimateInSeconds = providerEstimate.time.value;
             durationEstimate = getDuration(estimateInSeconds);
         }
@@ -248,8 +249,28 @@ export class DataProvider extends React.Component<Props, State> {
                 <ZoomLevelSlider
                     updateZoom={this.setZoom}
                     provider={provider as Eventkit.Provider}
-                    providerZoom={(exportOptions[provider.id]) ? exportOptions[provider.id].maxZoom : provider.level_to}
+                    providerZoom={this.state.zoomLevel}
                 />
+            </ListItem>
+        ));
+
+        nestedItems.push((
+            <ListItem
+                className={`qa-DataProvider-ListItem-MapCard ${classes.sublistItem}`}
+                key={nestedItems.length}
+                dense
+                disableGutters
+            >
+                <MapCard
+                    geojson={this.props.geojson}
+                    theme={this.props.theme}
+                    setZoom={this.setZoom}
+                    exportOptions={exportOptions[provider.id]}
+                    providerZoom={this.state.zoomLevel}
+                    provider={provider}
+                >
+                    <span style={{ marginRight: '10px' }}>Zoom Preview</span>
+                </MapCard>
             </ListItem>
         ));
 
@@ -283,13 +304,14 @@ export class DataProvider extends React.Component<Props, State> {
         ));
 
         // Only set this if we want to display the estimate
-        let secondary = undefined;
-        if(this.props.renderEstimate)
-        {
-            if(this.formatEstimate(provider.estimate))
-                secondary = <Typography style={{fontSize: "0.7em"}}>{this.formatEstimate(provider.estimate)}</Typography>
-            else
-                secondary = <CircularProgress size={10}/>
+        let secondary;
+        if (this.props.renderEstimate) {
+            if (this.formatEstimate(provider.estimate)) {
+                secondary =
+                    <Typography style={{fontSize: "0.7em"}}>{this.formatEstimate(provider.estimate)}</Typography>;
+            } else {
+                secondary = <CircularProgress size={10}/>;
+            }
         }
 
         const backgroundColor = (this.props.alt) ? colors.secondary : colors.white;
@@ -346,6 +368,7 @@ DataProvider.defaultProps = {
 function mapStateToProps(state) {
     return {
         exportInfo: state.exportInfo,
+        geojson: state.aoiInfo.geojson,
     };
 }
 

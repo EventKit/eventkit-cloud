@@ -661,6 +661,7 @@ export class ExportInfo extends React.Component<Props, State> {
                                 >
                                     {this.getProviders().map((provider, ix) => (
                                         <DataProvider
+                                            geojson={this.props.geojson}
                                             key={provider.slug}
                                             provider={provider}
                                             onChange={this.onChangeCheck}

@@ -24,6 +24,10 @@ export interface Props {
     children: any;
     geojson: object;
     theme: Eventkit.Theme & Theme;
+    exportOptions?: Eventkit.Store.ProviderExportOptions;
+    setZoom?: (min: number, max: number) => void;
+    provider?: Eventkit.Provider;
+    providerZoom?: number;
 }
 
 export interface State {
@@ -32,6 +36,7 @@ export interface State {
 
 export class MapCard extends React.Component<Props, State> {
     private map: any;
+    private mapDiv: string;
 
     static contextTypes = {
         config: PropTypes.object,
@@ -43,6 +48,7 @@ export class MapCard extends React.Component<Props, State> {
         this.state = {
             open: false,
         };
+        this.mapDiv = this.props.provider ? this.props.provider.id + "-map" : "infoMap";
     }
 
     componentDidUpdate(prevProps: Props, prevState: State) {
@@ -54,6 +60,8 @@ export class MapCard extends React.Component<Props, State> {
                 this.map.setTarget(null);
                 this.map = null;
             }
+        } else if (this.state.open) {
+            this.map.getView().setZoom(this.props.providerZoom);
         }
     }
 
@@ -69,7 +77,14 @@ export class MapCard extends React.Component<Props, State> {
                 attributions: this.context.config.BASEMAP_COPYRIGHT,
             }),
         });
-
+        let minZoom = 2
+        if (this.props.provider && (this.props.provider.level_from != null)) {
+            minZoom = this.props.provider.level_from;
+        }
+        let maxZoom = 22
+        if (this.props.provider && this.props.provider.level_to) {
+            maxZoom = this.props.provider.level_to;
+        }
         this.map = new Map({
             interactions: interaction.defaults({
                 keyboard: false,
@@ -78,13 +93,13 @@ export class MapCard extends React.Component<Props, State> {
                 mouseWheelZoom: false,
             }),
             layers: [base],
-            target: 'infoMap',
+            target: this.mapDiv,
             view: new View({
                 projection: 'EPSG:3857',
                 center: [110, 0],
-                zoom: 2,
-                minZoom: 2,
-                maxZoom: 22,
+                zoom: minZoom,
+                minZoom,
+                maxZoom,
             }),
             controls: [
                 new ScaleLine({
@@ -100,6 +115,7 @@ export class MapCard extends React.Component<Props, State> {
                 }),
             ],
         });
+
         const source = new VectorSource();
         const geojson = new GeoJSON();
         const features = geojson.readFeatures(this.props.geojson, {
@@ -112,7 +128,18 @@ export class MapCard extends React.Component<Props, State> {
         });
 
         this.map.addLayer(layer);
-        this.map.getView().fit(source.getExtent(), this.map.getSize());
+        if (this.props.providerZoom) {
+            this.map.getView().centerOn(source.getExtent(), this.map.getSize(), this.map.getSize().map(x => x / 2));
+        } else {
+            this.map.getView().fit(source.getExtent(), this.map.getSize());
+        }
+
+        this.map.on('moveend', () => {
+            console.log("Map Moved")
+            if (this.props.setZoom) {
+                this.props.setZoom(null, this.map.getView().getZoom());
+            }
+        });
     }
 
     render() {
@@ -162,7 +189,7 @@ export class MapCard extends React.Component<Props, State> {
                         className="qa-MapCard-CardText-map"
                         style={{ padding: '5px', backgroundColor: colors.secondary }}
                     >
-                        <div id="infoMap" style={style.map} />
+                        <div id={this.mapDiv} style={style.map} />
                     </CardContent>
                 </Collapse>
             </Card>

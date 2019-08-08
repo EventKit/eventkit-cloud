@@ -5,12 +5,12 @@ import TextField from "@material-ui/core/TextField";
 
 const jss = (theme: Theme & Eventkit.Theme) => createStyles({
     container: {
-        width: '100%'
+        width: '100%',
     },
     sliderBox: {
         width: 'calc(100%)',
         maxWidth: '400px',
-        padding: '0'
+        padding: '0',
     },
     slider: {
         width: '100%',
@@ -20,11 +20,11 @@ const jss = (theme: Theme & Eventkit.Theme) => createStyles({
     levelLabel: {
         border: 'none',
         padding: '0',
-        width: '100%'
+        width: '100%',
     },
     textField: {
         fontSize: '16px',
-        width: '40px'
+        width: '40px',
     },
     tableData: {
         width: '50%',
@@ -35,7 +35,7 @@ const jss = (theme: Theme & Eventkit.Theme) => createStyles({
         fontSize: '16px',
         paddingTop: '15px',
         paddingBottom: '5px',
-    }
+    },
 });
 
 interface Props {
@@ -52,28 +52,25 @@ export class ZoomLevelSlider extends React.Component<Props, {}> {
 
     constructor(props: Props) {
         super(props);
-        this.state = {
-        };
+        this.state = {};
         this.handleChange = this.handleChange.bind(this);
     }
 
     handleChange = (event, value) => {
-        if(value >= this.props.provider.level_from && value <= this.props.provider.level_to) {
-            value = parseInt(value);
-            this.props.updateZoom(null, value);
-        }
-        else {
+        if (value >= this.props.provider.level_from && value <= this.props.provider.level_to) {
+            this.props.updateZoom(null, parseInt(value, 10));
+        } else {
             // Send null for min and max zoom to force the prop to reupdate with the last valid value
             this.props.updateZoom(null, null);
         }
-    };
+    }
 
     render() {
-        const {classes} = this.props;
+        const { classes } = this.props;
 
         return (
             <div className={classes.container}>
-                <span style={{ fontSize: '16px',}}>0 to </span>
+                <span style={{fontSize: '16px',}}>0 to </span>
                 <TextField
                     className={classes.textField}
                     type="number"
@@ -82,16 +79,16 @@ export class ZoomLevelSlider extends React.Component<Props, {}> {
                     onChange={e => this.handleChange(e, e.target.value)}
                     // MUI uses the case of the i to distinguish between Input component and input html element
                     // eslint-disable-next-line react/jsx-no-duplicate-props
-                    InputProps={{ style: { bottom: '5px' } }}
-                    inputProps={{ style: { textAlign: 'center', fontWeight: 'bold', fontSize: '16px'} }}
+                    InputProps={{style: {bottom: '5px'}}}
+                    inputProps={{style: {textAlign: 'center', fontWeight: 'bold', fontSize: '16px'}}}
                 />
-                <span style={{ fontSize: '16px',}}>Selected Zoom</span>
+                <span style={{fontSize: '16px',}}>Selected Zoom</span>
                 <br/>
                 <strong className={classes.zoomHeader}>Zoom</strong>
-                <div className={classes.sliderBox} style={{ textAlign: 'center' }}>
-                    <table style={{ width: '100%', position: 'relative' }}>
+                <div className={classes.sliderBox} style={{textAlign: 'center'}}>
+                    <table style={{width: '100%', position: 'relative'}}>
                         <tbody>
-                        <tr style={{ borderLeft: '1px solid #ccc', width: '100%' }}>
+                        <tr style={{borderLeft: '1px solid #ccc', width: '100%'}}>
                             <td style={{width: '100%', borderRight: '1px solid #ccc'}}>
                                 <Slider
                                     style={{borderRight: '1px solid #ccc'}}
@@ -106,10 +103,10 @@ export class ZoomLevelSlider extends React.Component<Props, {}> {
                         </tr>
                         <tr>
                             <td className={classes.tableData}>
-                                <span style={{ float: 'left' }}>{this.props.provider.level_from}</span>
+                                <span style={{float: 'left'}}>{this.props.provider.level_from}</span>
                             </td>
                             <td className={classes.tableData}>
-                                <span style={{ float: 'right'}}>{this.props.provider.level_to}</span>
+                                <span style={{float: 'right'}}>{this.props.provider.level_to}</span>
                             </td>
                         </tr>
                         </tbody>
