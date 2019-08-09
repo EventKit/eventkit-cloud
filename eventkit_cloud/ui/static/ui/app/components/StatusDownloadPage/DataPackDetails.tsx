@@ -32,7 +32,7 @@ export interface Props {
     providerTasks: Eventkit.ProviderTask[];
     onProviderCancel: (uid: string) => void;
     providers: Eventkit.Provider[];
-    job: any;
+    job: Eventkit.Job;
     zipFileProp: string;
     classes: { [className: string]: string };
     theme: Eventkit.Theme & Theme;

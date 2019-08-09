@@ -63,7 +63,7 @@ export interface State {
     error: any;
     steps: Step[];
     isRunning: boolean;
-    job: any;
+    job: Eventkit.Job;
 }
 
 export class StatusDownload extends React.Component<Props, State> {
@@ -92,7 +92,7 @@ export class StatusDownload extends React.Component<Props, State> {
             error: null,
             steps: [],
             isRunning: false,
-            job: {}
+            job: null,
         };
     }
 

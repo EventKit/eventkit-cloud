@@ -67,6 +67,13 @@ declare namespace Eventkit {
         service_description: string;
     }
 
+    interface DataProviderTask {
+        provider: string;
+        formats: string[];
+        min_zoom: number;
+        max_zoom: number;
+    }
+
     interface Job {
         uid: string;
         name: string;
@@ -82,6 +89,7 @@ declare namespace Eventkit {
         created_at: string;
         relationship: Permissions.Level;
         permissions: Permissions;
+        provider_tasks: DataProviderTask[];
     }
 
     interface Run {

@@ -21,7 +21,7 @@ export interface Props {
     onProviderCancel: (uid: string) => void;
     maxResetExpirationDays: string;
     providers: Eventkit.Provider[];
-    job: any;
+    job: Eventkit.Job;
     user: Eventkit.Store.User;
     theme: Eventkit.Theme & Theme;
 }

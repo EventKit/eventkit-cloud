@@ -24,7 +24,7 @@ import moment from 'moment';
 
 interface Props {
     provider: Eventkit.ProviderTask;
-    job: any;
+    job: Eventkit.Job;
     selectedProviders: { [uid: string]: boolean };
     onProviderCancel: (uid: string) => void;
     providers: Eventkit.Provider[];
@@ -407,12 +407,12 @@ export class ProviderRow extends React.Component<Props, State> {
         const { provider } = this.props;
         const { job } = this.props
 
-        const dataProviderTask = job.provider_tasks.find(obj => obj.provider === provider.name)
+        const dataProviderTask = job && job.provider_tasks.find(obj => obj.provider === provider.name)
         const propsProvider = this.props.providers.find(obj => obj.slug === provider.slug);
 
         // If available, get custom zoom levels from DataProviderTask othewise use Provider defaults.
-        const min_zoom = dataProviderTask.min_zoom || propsProvider && propsProvider.level_from
-        const max_zoom = dataProviderTask.max_zoom || propsProvider && propsProvider.level_to
+        const min_zoom = dataProviderTask && dataProviderTask.min_zoom || propsProvider && propsProvider.level_from
+        const max_zoom = dataProviderTask && dataProviderTask.max_zoom || propsProvider && propsProvider.level_to
 
         const licenseData = propsProvider && propsProvider.license ?
             <LicenseRow name={propsProvider.license.name} text={propsProvider.license.text} />
