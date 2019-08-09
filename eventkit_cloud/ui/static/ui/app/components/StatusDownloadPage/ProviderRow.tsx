@@ -572,7 +572,7 @@ export class ProviderRow extends React.Component<Props, State> {
                                     title={provider.name}
                                     onClose={this.handleProviderClose}
                                 >
-                                    Zoom Levels {min_zoom} - {max_zoom} <br />
+                                    <div>Zoom Levels {min_zoom} - {max_zoom}</div>
                                     {this.state.providerDesc}
                                 </BaseDialog>
                             </TableCell>

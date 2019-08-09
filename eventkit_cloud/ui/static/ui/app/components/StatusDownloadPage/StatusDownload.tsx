@@ -1,9 +1,9 @@
 import * as PropTypes from 'prop-types';
 import * as React from 'react';
+import axios from 'axios';
 import { connect } from 'react-redux';
 import { withTheme, Theme } from '@material-ui/core/styles';
 import withWidth, { isWidthUp } from '@material-ui/core/withWidth';
-import { RouteComponentProps } from 'react-router';
 import Joyride, { Step } from 'react-joyride';
 import Help from '@material-ui/icons/Help';
 import Paper from '@material-ui/core/Paper';
@@ -97,11 +97,10 @@ export class StatusDownload extends React.Component<Props, State> {
     }
 
     getJobDetails(jobuid) {
-        fetch('/api/jobs/' + jobuid)
-        .then(res => res.json())
+        axios.get('/api/jobs/' + jobuid)
             .then((result) => {
                 this.setState({
-                    job: result
+                    job: result.data
                 });
         })
         .catch(console.log)
