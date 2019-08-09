@@ -63,6 +63,7 @@ export interface State {
     error: any;
     steps: Step[];
     isRunning: boolean;
+    job: any;
 }
 
 export class StatusDownload extends React.Component<Props, State> {
@@ -78,6 +79,7 @@ export class StatusDownload extends React.Component<Props, State> {
         super(props);
         this.callback = this.callback.bind(this);
         this.getInitialState = this.getInitialState.bind(this);
+        this.getJobDetails = this.getJobDetails.bind(this);
         this.clearError = this.clearError.bind(this);
         this.getErrorMessage = this.getErrorMessage.bind(this);
         this.handleWalkthroughClick = this.handleWalkthroughClick.bind(this);
@@ -90,11 +92,24 @@ export class StatusDownload extends React.Component<Props, State> {
             error: null,
             steps: [],
             isRunning: false,
+            job: {}
         };
+    }
+
+    getJobDetails(jobuid) {
+        fetch('/api/jobs/' + jobuid)
+        .then(res => res.json())
+            .then((result) => {
+                this.setState({
+                    job: result
+                });
+        })
+        .catch(console.log)
     }
 
     componentDidMount() {
         this.onMount();
+        this.getJobDetails(this.props.match.params.jobuid);
     }
 
     shouldComponentUpdate(p: Props) {
@@ -377,6 +392,7 @@ export class StatusDownload extends React.Component<Props, State> {
                     onClone={this.props.cloneExport}
                     onProviderCancel={this.props.cancelProviderTask}
                     providers={this.props.providers}
+                    job={this.state.job}
                     maxResetExpirationDays={this.context.config.MAX_DATAPACK_EXPIRATION_DAYS}
                     user={this.props.user}
                 />

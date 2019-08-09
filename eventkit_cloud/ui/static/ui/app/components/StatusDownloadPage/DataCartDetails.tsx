@@ -21,6 +21,7 @@ export interface Props {
     onProviderCancel: (uid: string) => void;
     maxResetExpirationDays: string;
     providers: Eventkit.Provider[];
+    job: any;
     user: Eventkit.Store.User;
     theme: Eventkit.Theme & Theme;
 }
@@ -133,6 +134,7 @@ export class DataCartDetails extends React.Component<Props, State> {
                         providerTasks={this.props.cartDetails.provider_tasks}
                         onProviderCancel={this.props.onProviderCancel}
                         providers={this.props.providers}
+                        job={this.props.job}
                         zipFileProp={this.props.cartDetails.zipfile_url}
                     />
                 </div>
