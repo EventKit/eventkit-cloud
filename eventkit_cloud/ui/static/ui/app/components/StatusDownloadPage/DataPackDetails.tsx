@@ -32,6 +32,7 @@ export interface Props {
     providerTasks: Eventkit.ProviderTask[];
     onProviderCancel: (uid: string) => void;
     providers: Eventkit.Provider[];
+    job: Eventkit.Job;
     zipFileProp: string;
     classes: { [className: string]: string };
     theme: Eventkit.Theme & Theme;
@@ -252,6 +253,7 @@ export class DataPackDetails extends React.Component<Props, State> {
                             key={provider.uid}
                             onProviderCancel={this.props.onProviderCancel}
                             provider={provider}
+                            job={this.props.job}
                             selectedProviders={this.state.selectedProviders}
                             providers={this.props.providers}
                         />

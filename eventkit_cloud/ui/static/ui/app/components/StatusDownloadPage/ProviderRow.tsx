@@ -24,6 +24,7 @@ import moment from 'moment';
 
 interface Props {
     provider: Eventkit.ProviderTask;
+    job: Eventkit.Job;
     selectedProviders: { [uid: string]: boolean };
     onProviderCancel: (uid: string) => void;
     providers: Eventkit.Provider[];
@@ -70,6 +71,14 @@ const jss = (theme: Eventkit.Theme & Theme) => createStyles({
         fontWeight: 'bold',
     },
     taskLinkColumn: {
+        paddingRight: '12px',
+        paddingLeft: '0px',
+        fontSize: '12px',
+        [theme.breakpoints.up('md')]: {
+            fontSize: '14px',
+        },
+    },
+    zoomLevelColumn: {
         paddingRight: '12px',
         paddingLeft: '0px',
         fontSize: '12px',
@@ -396,8 +405,15 @@ export class ProviderRow extends React.Component<Props, State> {
     render() {
         const { classes } = this.props;
         const { provider } = this.props;
+        const { job } = this.props
 
-        const propsProvider = this.props.providers.find(x => x.slug === provider.slug);
+        const dataProviderTask = job && job.provider_tasks.find(obj => obj.provider === provider.name)
+        const propsProvider = this.props.providers.find(obj => obj.slug === provider.slug);
+
+        // If available, get custom zoom levels from DataProviderTask otherwise use Provider defaults.
+        const min_zoom = dataProviderTask && dataProviderTask.min_zoom || propsProvider && propsProvider.level_from
+        const max_zoom = dataProviderTask && dataProviderTask.max_zoom || propsProvider && propsProvider.level_to
+
         const licenseData = propsProvider && propsProvider.license ?
             <LicenseRow name={propsProvider.license.name} text={propsProvider.license.text} />
             :
@@ -442,6 +458,23 @@ export class ProviderRow extends React.Component<Props, State> {
                         className="qa-ProviderRow-TableBody"
                     >
                         {licenseData}
+                        <TableRow
+                            className="qa-ProviderRow-TableRow-task"
+                        >
+                            <TableCell classes={{ root: classes.insetColumn }} />
+
+                            <TableCell
+                                className="qa-ProviderRow-TableCell-zoomLevels"
+                                classes={{ root: classes.zoomLevelColumn }}
+                            >
+                                Zoom Levels {min_zoom} - {max_zoom}
+                            </TableCell>
+                            <TableCell classes={{ root: classes.sizeColumnn }}/>
+                            <TableCell classes={{ root: classes.estimatedFinishColumn }}/>
+                            <TableCell classes={{ root: classes.taskStatusColumn }}/>
+                            <TableCell classes={{ root: classes.menuColumn }} />
+                            <TableCell classes={{ root: classes.arrowColumn }} />
+                        </TableRow>
                         {tasks.map(task => (
                             <TableRow
                                 className="qa-ProviderRow-TableRow-task"
@@ -539,6 +572,7 @@ export class ProviderRow extends React.Component<Props, State> {
                                     title={provider.name}
                                     onClose={this.handleProviderClose}
                                 >
+                                    <div>Zoom Levels {min_zoom} - {max_zoom}</div>
                                     {this.state.providerDesc}
                                 </BaseDialog>
                             </TableCell>
