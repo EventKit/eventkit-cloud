@@ -1,6 +1,5 @@
 import * as PropTypes from 'prop-types';
 import * as React from 'react';
-import axios from 'axios';
 import { connect } from 'react-redux';
 import { withTheme, Theme } from '@material-ui/core/styles';
 import withWidth, { isWidthUp } from '@material-ui/core/withWidth';
@@ -31,6 +30,7 @@ import { makeDatacartSelector } from '../../selectors/runSelector';
 import { Location } from 'history';
 import { Breakpoint } from '@material-ui/core/styles/createBreakpoints';
 import history from "../../utils/history";
+import { getJobDetails } from "../../utils/generic"
 
 export interface Props {
     runs: Eventkit.FullRun[];
@@ -79,7 +79,6 @@ export class StatusDownload extends React.Component<Props, State> {
         super(props);
         this.callback = this.callback.bind(this);
         this.getInitialState = this.getInitialState.bind(this);
-        this.getJobDetails = this.getJobDetails.bind(this);
         this.clearError = this.clearError.bind(this);
         this.getErrorMessage = this.getErrorMessage.bind(this);
         this.handleWalkthroughClick = this.handleWalkthroughClick.bind(this);
@@ -96,19 +95,13 @@ export class StatusDownload extends React.Component<Props, State> {
         };
     }
 
-    getJobDetails(jobuid) {
-        axios.get('/api/jobs/' + jobuid)
-            .then((result) => {
-                this.setState({
-                    job: result.data
-                });
-        })
-        .catch(console.log)
-    }
-
     componentDidMount() {
         this.onMount();
-        this.getJobDetails(this.props.match.params.jobuid);
+        getJobDetails(this.props.match.params.jobuid).then(data => {
+            this.setState({
+                job: data
+            })
+        })
     }
 
     shouldComponentUpdate(p: Props) {

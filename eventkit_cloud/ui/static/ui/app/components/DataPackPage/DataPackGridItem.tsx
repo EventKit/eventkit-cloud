@@ -441,6 +441,7 @@ export class DataPackGridItem extends React.Component<Props, State> {
                                 </IconMenu>
                                 <ProviderDialog
                                     uids={this.props.run.provider_tasks}
+                                    jobuid={this.props.run.job.uid}
                                     open={this.state.providerDialogOpen}
                                     onClose={this.handleProviderClose}
                                     providers={this.props.providers}

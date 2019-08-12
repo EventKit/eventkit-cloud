@@ -1,3 +1,4 @@
+import axios from 'axios';
 import numeral from 'numeral';
 import GeoJSON from 'ol/format/geojson';
 
@@ -146,4 +147,12 @@ export function formatMegaBytes(megabytes) {
 export function getCookie(name) {
     var v = document.cookie.match('(^|;) ?' + name + '=([^;]*)(;|$)');
     return v ? v[2] : null;
+}
+
+export function getJobDetails(jobuid) {
+    return axios.get('/api/jobs/' + jobuid)
+        .then((result) => {
+            return result.data
+        })
+        .catch(console.log)
 }

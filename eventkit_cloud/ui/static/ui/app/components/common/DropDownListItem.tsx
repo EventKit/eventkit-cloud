@@ -54,9 +54,13 @@ export class DropDownListItem extends React.Component<Props, State> {
             </ListItem>,
             <Collapse in={this.state.open} key="list-item-content">
                 <List style={{ backgroundColor, padding: '8px 10px' }}>
-                    <ListItem>
-                        {this.props.children}
-                    </ListItem>
+                    {React.Children.map(this.props.children, (child, index) => {
+                        return (
+                            <ListItem key={index}>
+                                {child}
+                            </ListItem>
+                        )
+                    })}
                 </List>
             </Collapse>,
         ]);
