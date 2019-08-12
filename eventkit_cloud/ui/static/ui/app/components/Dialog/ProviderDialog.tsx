@@ -105,7 +105,6 @@ export class ProviderDialog extends React.Component<Props, State> {
                                     key={provider.slug}
                                     alt={ix % 2 !== 0}
                                 >
-                                    <span>{`Zoom Levels ${providerTask.min_zoom || 'null'}-${providerTask.max_zoom} || 'null`}</span>
                                     {provider.service_description}
                                 </DropDownListItem>
                             );
