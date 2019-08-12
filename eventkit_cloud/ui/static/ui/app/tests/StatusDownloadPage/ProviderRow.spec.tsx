@@ -131,8 +131,8 @@ describe('ProviderRow component', () => {
         wrapper.setState({ openTable: true });
         expect(wrapper.find(Table)).toHaveLength(2);
         expect(wrapper.find(TableHead)).toHaveLength(1);
-        expect(wrapper.find(TableRow)).toHaveLength(2);
-        expect(wrapper.find(TableCell)).toHaveLength(13);
+        expect(wrapper.find(TableRow)).toHaveLength(3);
+        expect(wrapper.find(TableCell)).toHaveLength(20);
         expect(wrapper.find(TableBody)).toHaveLength(1);
         expect(wrapper.find(LicenseRow)).toHaveLength(1);
     });
@@ -320,7 +320,7 @@ describe('ProviderRow component', () => {
         expect(stateSpy.called).toBe(true);
         expect(stateSpy.calledWith({ providerDesc: 'provider description', providerDialogOpen: true })).toBe(true);
         wrapper.update();
-        expect(wrapper.find(BaseDialog).childAt(0).text()).toEqual('provider description');
+        expect(wrapper.find(BaseDialog).childAt(1).text()).toContain('provider description');
         stateSpy.restore();
     });
 
