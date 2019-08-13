@@ -605,6 +605,7 @@ class DataProviderSerializer(serializers.ModelSerializer):
         lookup_field='slug'
     )
     type = serializers.SerializerMethodField(read_only=True)
+    supported_formats = serializers.SerializerMethodField(read_only=True)
     license = LicenseSerializer(required=False)
 
     class Meta:
@@ -630,6 +631,10 @@ class DataProviderSerializer(serializers.ModelSerializer):
     @staticmethod
     def get_type(obj):
         return obj.export_provider_type.type_name
+
+    @staticmethod
+    def get_supported_formats(obj):
+        return obj.export_provider_type.supported_formats.all().values('uid', 'name', 'slug', 'description')
 
 
 class ListJobSerializer(serializers.Serializer):
