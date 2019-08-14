@@ -550,8 +550,8 @@ export class BreadcrumbStepper extends React.Component<Props, State> {
 
         providers.forEach((provider) => {
             let minZoom, maxZoom;
-            if(exportOptions[provider.id]) {
-                let options = exportOptions[provider.id];
+            if(exportOptions[provider.slug]) {
+                let options = exportOptions[provider.slug];
                 minZoom = options.minZoom;
                 maxZoom = options.maxZoom;
                 if(minZoom === null || minZoom === undefined) {

@@ -65,16 +65,16 @@ export class ZoomLevelSlider extends React.Component<Props, {}> {
     };
 
     render() {
-        const {classes} = this.props;
+        const { classes, zoom } = this.props;
 
         return (
             <div className={classes.container}>
                 <span style={{ fontSize: '16px',}}>0 to </span>
                 <TextField
                     className={classes.textField}
-                    type="number"
+                    type="text"
                     name="zoom-value"
-                    value={this.props.zoom}
+                    value={zoom}
                     onChange={e => this.handleChange(e, e.target.value)}
                     InputProps={{ style: { bottom: '5px' } }}
                     // MUI uses the case of the i to distinguish between Input component and input html element
@@ -91,7 +91,7 @@ export class ZoomLevelSlider extends React.Component<Props, {}> {
                             <td style={{width: '100%', borderRight: '1px solid #ccc'}}>
                                 <Slider
                                     className={classes.slider}
-                                    value={this.props.zoom}
+                                    value={zoom}
                                     aria-labelledby="label"
                                     onChange={this.handleChange}
                                     max={this.props.maxZoom}

@@ -166,7 +166,7 @@ export class DataProvider extends React.Component<Props, State> {
 
         let updatedExportOptions = {
             ...exportOptions,
-            [provider.id]: {
+            [provider.slug]: {
                 minZoom: minZoom,
                 maxZoom: maxZoom,
             }
@@ -261,7 +261,7 @@ export class DataProvider extends React.Component<Props, State> {
                 }}>
                     <ZoomLevelSlider
                         updateZoom={this.setZoom}
-                        zoom={(exportOptions[provider.id]) ? exportOptions[provider.id].maxZoom : provider.level_to}
+                        zoom={(exportOptions[provider.slug]) ? exportOptions[provider.slug].maxZoom : provider.level_to}
                         maxZoom={provider.level_to}
                         minZoom={provider.level_from}
                     />

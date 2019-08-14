@@ -65,8 +65,6 @@ declare namespace Eventkit {
         slug: string;
         license: License;
         service_description: string;
-        min_zoom: number;
-        max_zoom: number;
     }
 
     interface DataProviderTask {
@@ -353,8 +351,10 @@ declare namespace Eventkit {
         }
 
         export interface ProviderExportOptions {
-            minZoom: number;
-            maxZoom: number;
+            [id: string]: {
+                minZoom: number;
+                maxZoom: number;
+            }
         }
 
         interface ExportInfo {
@@ -365,7 +365,7 @@ declare namespace Eventkit {
             projectName: string;
             providers: Provider[];
             providerEstimates: {};
-            exportOptions: ProviderExportOptions[];
+            exportOptions: ProviderExportOptions;
         }
 
         interface AoiInfo {
