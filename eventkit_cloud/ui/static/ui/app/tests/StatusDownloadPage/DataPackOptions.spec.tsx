@@ -24,9 +24,32 @@ describe('DataPackOptions component', () => {
                 uid: '67890',
             },
             provider_tasks: [
-                { slug: 'test1', display: true },
-                { slug: 'test2', display: false },
+                { slug: 'test1', name: 'test1', display: true },
+                { slug: 'test2', name: 'test2', display: false },
             ],
+        },
+        job: {
+            uid: '67890',
+            name: 'test',
+            event: 'test',
+            description: 'test',
+            url: 'http://cloud.eventkit.test/api/jobs/67890',
+            formats: [
+                'Geopackage',
+            ],
+            permissions: {
+                value: 'PRIVATE',
+                groups: {},
+                members: {},
+            },
+            provider_tasks: [{
+                provider: 'test1',
+                formats: [
+                    'Geopackage',
+                ],
+                min_zoom: 0,
+                max_zoom: 3,
+            }]
         },
         ...(global as any).eventkit_test_props,
     });

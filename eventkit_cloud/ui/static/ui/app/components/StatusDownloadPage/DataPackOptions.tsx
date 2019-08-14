@@ -89,11 +89,6 @@ export class DataPackOptions extends React.Component<Props, State> {
             };
             providerArray.push(provider);
         });
-        // this.props.dataPack.provider_tasks.forEach((provider) => {
-        //     if (provider.display === true) {
-        //         providerArray.push(provider);
-        //     }
-        // });
         this.props.onClone(this.props.dataPack, providerArray, zooms);
         this.setState({ showCloneDialog: false });
     }
