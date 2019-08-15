@@ -146,9 +146,15 @@ describe('DataPackOptions component', () => {
 
     it('handleClone should clone a job with the correct data', () => {
         const stateStub = sinon.stub(instance, 'setState');
+        const exportInfo = {
+            'test1': {
+                minZoom: 0,
+                maxZoom: 3,
+            }
+        };
         instance.handleClone();
         expect(props.onClone.calledOnce).toBe(true);
-        expect(props.onClone.calledWith(props.dataPack, [props.dataPack.provider_tasks[0]])).toBe(true);
+        expect(props.onClone.calledWith(props.dataPack, [props.dataPack.provider_tasks[0]], exportInfo)).toBe(true);
         expect(stateStub.calledOnce).toBe(true);
         expect(stateStub.calledWith({ showCloneDialog: false })).toBe(true);
         stateStub.restore();

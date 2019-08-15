@@ -212,6 +212,15 @@ export class DataProvider extends React.Component<Props, State> {
         const { colors } = this.props.theme.eventkit;
         const { classes, provider } = this.props;
         const { exportOptions } = this.props.exportInfo;
+        // Take the current zoom from the current exportOptions if they exist and the value is valid,
+        // otherwise set it to the max allowable level.
+        let currentMaxZoom = provider.level_to;
+        if (exportOptions[provider.slug]) {
+            const { maxZoom } = exportOptions[provider.slug];
+            if (maxZoom || maxZoom === 0) {
+                currentMaxZoom = maxZoom;
+            }
+        }
 
         // Show license if one exists.
         const nestedItems = [];
@@ -261,7 +270,7 @@ export class DataProvider extends React.Component<Props, State> {
                 }}>
                     <ZoomLevelSlider
                         updateZoom={this.setZoom}
-                        zoom={(exportOptions[provider.slug]) ? exportOptions[provider.slug].maxZoom : provider.level_to}
+                        zoom={currentMaxZoom}
                         maxZoom={provider.level_to}
                         minZoom={provider.level_from}
                     />

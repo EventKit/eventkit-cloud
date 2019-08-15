@@ -508,7 +508,7 @@ function mapDispatchToProps(dispatch) {
             dispatch(clearReRunInfo())
         ),
         cloneExport: (cartDetails: Eventkit.FullRun, providerArray: Eventkit.Provider[],
-                      zooms: Eventkit.Store.ProviderExportOptions) => {
+                      exportOptions: Eventkit.Store.ProviderExportOptions) => {
             const featureCollection = {
                 type: 'FeatureCollection',
                 features: [cartDetails.job.extent],
@@ -528,7 +528,7 @@ function mapDispatchToProps(dispatch) {
                 projectName: cartDetails.job.event,
                 providers: providerArray,
                 layers: 'Geopackage',
-                exportOptions: zooms,
+                exportOptions: exportOptions,
             }));
             history.push('/create');
         },
