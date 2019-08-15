@@ -82,7 +82,9 @@ export class DataPackOptions extends React.Component<Props, State> {
         this.props.dataPack.provider_tasks.forEach((provider) => {
             if (provider.display === true) {
                 let providerTask = this.props.job.provider_tasks.find((providerTask) =>
-                    // Currently `provider` should represent the provider name
+                    // Currently `provider` is the provider name
+                    // The backend should be updated in the future to make it point to a uuid or the slug
+                    // this change will need to happen here as well
                     provider.name === providerTask.provider
                 );
                 zooms[provider.slug] = {

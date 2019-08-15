@@ -11,6 +11,7 @@ describe('ZoomLevelSlider component', () => {
     const defaultProps = () => ({
         provider: {
             uid: '123',
+            type: 'wmts',
             name: 'test provider',
             max_selection: '10000',
             service_description: 'test description',

@@ -10,7 +10,7 @@ import ExpandLess from '@material-ui/icons/ExpandLess';
 import ExpandMore from '@material-ui/icons/ExpandMore';
 import ProviderStatusIcon from './ProviderStatusIcon';
 import BaseDialog from '../Dialog/BaseDialog';
-import { getDuration, formatMegaBytes } from '../../utils/generic';
+import {getDuration, formatMegaBytes, isZoomLevelInRange, supportsZoomLevels} from '../../utils/generic';
 import {Typography} from "@material-ui/core";
 import ZoomLevelSlider from "./ZoomLevelSlider";
 import {connect} from "react-redux";
@@ -118,13 +118,15 @@ export class DataProvider extends React.Component<Props, State> {
 
     static defaultProps;
     private estimateDebouncer;
+
     constructor(props: Props) {
         super(props);
         this.handleLicenseOpen = this.handleLicenseOpen.bind(this);
         this.handleLicenseClose = this.handleLicenseClose.bind(this);
         this.handleExpand = this.handleExpand.bind(this);
         this.setZoom = this.setZoom.bind(this);
-        this.estimateDebouncer = () => { /* do nothing while not mounted */ };
+        this.estimateDebouncer = () => { /* do nothing while not mounted */
+        };
         this.state = {
             open: false,
             licenseDialogOpen: false,
@@ -139,29 +141,26 @@ export class DataProvider extends React.Component<Props, State> {
 
     private setZoom(minZoom: number, maxZoom: number) {
         // update the state with the new array of options
-        const { provider } = this.props;
-        const { exportOptions } = this.props.exportInfo;
+        const {provider} = this.props;
+        const {exportOptions} = this.props.exportInfo;
+
         let lastMin, lastMax;
-        if(exportOptions[provider.id]) {
+        if (exportOptions[provider.id]) {
             lastMin = exportOptions[provider.id].minZoom;
             lastMax = exportOptions[provider.id].maxZoom;
+            if (!isZoomLevelInRange(lastMin, provider)) {
+                lastMin = provider.level_from;
+            }
+            if (!isZoomLevelInRange(lastMax, provider)) {
+                lastMax = provider.level_to;
+            }
         }
 
-        if(minZoom === undefined || minZoom === null) {
-            if(lastMin !== undefined && lastMin !== null) {
-                minZoom = lastMin;
-            }
-            else {
-                minZoom = provider.level_from;
-            }
+        if (!isZoomLevelInRange(minZoom, provider)) {
+            minZoom = lastMin;
         }
-        if(maxZoom === undefined || maxZoom === null) {
-            if(lastMax !== undefined && lastMax !== null) {
-                maxZoom = lastMax;
-            }
-            else {
-                maxZoom = provider.level_to;
-            }
+        if (!isZoomLevelInRange(maxZoom, provider)) {
+            maxZoom = lastMax;
         }
 
         let updatedExportOptions = {
@@ -175,33 +174,38 @@ export class DataProvider extends React.Component<Props, State> {
             ...this.props.exportInfo,
             exportOptions: updatedExportOptions,
         });
-        this.estimateDebouncer(this.props.provider);
+        if (minZoom !== lastMin || maxZoom !== lastMax) {
+            // Only trigger an estimate update if the value is new.
+            this.estimateDebouncer(this.props.provider);
+        }
     }
 
     private handleLicenseOpen() {
-        this.setState({ licenseDialogOpen: true });
+        this.setState({licenseDialogOpen: true});
     }
 
     private handleLicenseClose() {
-        this.setState({ licenseDialogOpen: false });
+        this.setState({licenseDialogOpen: false});
     }
 
     private handleExpand() {
-        this.setState(state => ({ open: !state.open }));
+        this.setState(state => ({open: !state.open}));
     }
 
-    private formatEstimate(providerEstimate){
-        if (!providerEstimate){
+    private formatEstimate(providerEstimate) {
+        if (!providerEstimate) {
             return ''
         }
         let sizeEstimate;
         let durationEstimate;
         // func that will return nf (not found) when the provided estimate is undefined
-        const get = (estimate, nf='unknown') => {return (estimate) ? estimate.toString() : nf};
-        if(providerEstimate.size) {
+        const get = (estimate, nf = 'unknown') => {
+            return (estimate) ? estimate.toString() : nf
+        };
+        if (providerEstimate.size) {
             sizeEstimate = formatMegaBytes(providerEstimate.size.value);
         }
-        if(providerEstimate.time) {
+        if (providerEstimate.time) {
             const estimateInSeconds = providerEstimate.time.value;
             durationEstimate = getDuration(estimateInSeconds);
         }
@@ -209,17 +213,39 @@ export class DataProvider extends React.Component<Props, State> {
     }
 
     render() {
-        const { colors } = this.props.theme.eventkit;
-        const { classes, provider } = this.props;
-        const { exportOptions } = this.props.exportInfo;
+        const {colors} = this.props.theme.eventkit;
+        const {classes, provider} = this.props;
+        const {exportOptions} = this.props.exportInfo;
         // Take the current zoom from the current exportOptions if they exist and the value is valid,
         // otherwise set it to the max allowable level.
         let currentMaxZoom = provider.level_to;
         if (exportOptions[provider.slug]) {
-            const { maxZoom } = exportOptions[provider.slug];
+            const {maxZoom} = exportOptions[provider.slug];
             if (maxZoom || maxZoom === 0) {
                 currentMaxZoom = maxZoom;
             }
+        }
+
+        let zoomDiv;
+        if (supportsZoomLevels(this.props.provider)) {
+            zoomDiv = (
+                <div style={{
+                    width: 'calc(100%)',
+                    maxWidth: '400px',
+                }}>
+                    <ZoomLevelSlider
+                        updateZoom={this.setZoom}
+                        zoom={currentMaxZoom}
+                        maxZoom={provider.level_to}
+                        minZoom={provider.level_from}
+                    />
+                </div>)
+        }
+        else {
+            zoomDiv = (
+                <div>
+                    <em >Zoom not available for this source.</em>
+                </div>)
         }
 
         // Show license if one exists.
@@ -264,17 +290,7 @@ export class DataProvider extends React.Component<Props, State> {
                 dense
                 disableGutters
             >
-                <div style={{
-                    width: 'calc(100%)',
-                    maxWidth: '400px',
-                }}>
-                    <ZoomLevelSlider
-                        updateZoom={this.setZoom}
-                        zoom={currentMaxZoom}
-                        maxZoom={provider.level_to}
-                        minZoom={provider.level_from}
-                    />
-                </div>
+                {zoomDiv}
             </ListItem>
         ));
 
@@ -285,7 +301,8 @@ export class DataProvider extends React.Component<Props, State> {
                 dense
                 disableGutters
             >
-                <div className={classes.prewrap}>{provider.service_description || 'No provider description available.'}</div>
+                <div
+                    className={classes.prewrap}>{provider.service_description || 'No provider description available.'}</div>
             </ListItem>
         ));
 
@@ -299,9 +316,9 @@ export class DataProvider extends React.Component<Props, State> {
                 <div className={classes.prewrap}>
                     <strong>Maximum selection area: </strong>
                     {((provider.max_selection == null ||
-                        provider.max_selection === '' ||
-                        parseFloat(provider.max_selection) <= 0) ?
-                        'unlimited' : `${provider.max_selection} km²`
+                            provider.max_selection === '' ||
+                            parseFloat(provider.max_selection) <= 0) ?
+                            'unlimited' : `${provider.max_selection} km²`
                     )}
                 </div>
             </ListItem>
@@ -309,10 +326,10 @@ export class DataProvider extends React.Component<Props, State> {
 
         // Only set this if we want to display the estimate
         let secondary = undefined;
-        if(this.props.renderEstimate)
-        {
-            if(this.formatEstimate(provider.estimate))
-                secondary = <Typography style={{fontSize: "0.7em"}}>{this.formatEstimate(provider.estimate)}</Typography>
+        if (this.props.renderEstimate) {
+            if (this.formatEstimate(provider.estimate))
+                secondary =
+                    <Typography style={{fontSize: "0.7em"}}>{this.formatEstimate(provider.estimate)}</Typography>
             else
                 secondary = <CircularProgress size={10}/>
         }
@@ -324,38 +341,38 @@ export class DataProvider extends React.Component<Props, State> {
                 <ListItem
                     className={`qa-DataProvider-ListItem ${classes.listItem}`}
                     key={provider.uid}
-                    style={{ backgroundColor }}
+                    style={{backgroundColor}}
                     dense
                     disableGutters
                 >
                     <div className={classes.container}>
                         <Checkbox
                             className="qa-DataProvider-CheckBox-provider"
-                            classes={{ root: classes.checkbox, checked: classes.checked }}
+                            classes={{root: classes.checkbox, checked: classes.checked}}
                             name={provider.name}
                             checked={this.props.checked}
                             onChange={this.props.onChange}
                         />
                         <ListItemText
                             disableTypography
-                            classes={{ root: classes.listItemText}}
+                            classes={{root: classes.listItemText}}
                             primary={<Typography style={{fontSize: "1.0em"}}>{provider.name}</Typography>}
                             secondary={secondary}
                         />
                         <ProviderStatusIcon
                             id="ProviderStatus"
-                            baseStyle={{ marginRight: '40px' }}
+                            baseStyle={{marginRight: '40px'}}
                             availability={provider.availability}
                         />
                         {this.state.open ?
-                            <ExpandLess className={classes.expand} onClick={this.handleExpand} color="primary" />
+                            <ExpandLess className={classes.expand} onClick={this.handleExpand} color="primary"/>
                             :
-                            <ExpandMore className={classes.expand} onClick={this.handleExpand} color="primary" />
+                            <ExpandMore className={classes.expand} onClick={this.handleExpand} color="primary"/>
                         }
                     </div>
                 </ListItem>
                 <Collapse in={this.state.open} key={`${provider.uid}-expanded`}>
-                    <List style={{ backgroundColor }}>
+                    <List style={{backgroundColor}}>
                         {nestedItems}
                     </List>
                 </Collapse>
@@ -385,4 +402,4 @@ function mapDispatchToProps(dispatch) {
 export default withTheme()(withStyles<any, any>(jss)(connect(
     mapStateToProps,
     mapDispatchToProps,
-    )(DataProvider)));
+)(DataProvider)));

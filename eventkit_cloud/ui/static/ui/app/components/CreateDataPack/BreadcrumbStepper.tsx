@@ -549,29 +549,21 @@ export class BreadcrumbStepper extends React.Component<Props, State> {
         const { formats } = this.props.exportInfo;
 
         providers.forEach((provider) => {
-            let minZoom, maxZoom;
-            if(exportOptions[provider.slug]) {
-                let options = exportOptions[provider.slug];
-                minZoom = options.minZoom;
-                maxZoom = options.maxZoom;
-                if(minZoom === null || minZoom === undefined) {
-                    minZoom = provider.level_from;
+            let minZoom = provider.level_from, maxZoom = provider.level_to;
+            let options = exportOptions[provider.slug];
+            if(options) {
+                if(options.minZoom || options.minZoom === 0) {
+                    minZoom = Number(options.minZoom);
                 }
-                if(maxZoom === null || maxZoom === undefined) {
-                    maxZoom = provider.level_to;
+                if(options.maxZoom || options.maxZoom === 0) {
+                    maxZoom = Number(options.maxZoom);
                 }
             }
-            if(minZoom != undefined || maxZoom != undefined) {
-                providerTasks.push({
-                    provider: provider.name, formats: [formats[0]],
-                    max_zoom: maxZoom, min_zoom: minZoom
-                });
-            }
-            else {
-                providerTasks.push({ provider: provider.name, formats: [formats[0]],
-                    max_zoom: provider.level_to, min_zoom: provider.level_from});
-            }
-            
+
+            providerTasks.push({
+                provider: provider.name, formats: [formats[0]],
+                max_zoom: maxZoom, min_zoom: minZoom
+            });
         });
 
         const selection = flattenFeatureCollection(this.props.aoiInfo.geojson) as GeoJSON.FeatureCollection;
