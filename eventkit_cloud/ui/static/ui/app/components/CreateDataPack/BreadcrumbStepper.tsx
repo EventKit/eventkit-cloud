@@ -14,7 +14,7 @@ import ExportAOI from './ExportAOI';
 import ExportInfo from './ExportInfo';
 import ExportSummary from './ExportSummary';
 import { flattenFeatureCollection } from '../../utils/mapUtils';
-import { getDuration, formatMegaBytes } from '../../utils/generic';
+import {getDuration, formatMegaBytes, isZoomLevelInRange} from '../../utils/generic';
 import {
     submitJob, clearAoiInfo, clearExportInfo, clearJobInfo,
 } from '../../actions/datacartActions';
@@ -552,10 +552,10 @@ export class BreadcrumbStepper extends React.Component<Props, State> {
             let minZoom = provider.level_from, maxZoom = provider.level_to;
             let options = exportOptions[provider.slug];
             if(options) {
-                if(options.minZoom || options.minZoom === 0) {
+                if(isZoomLevelInRange(options.minZoom, provider as Eventkit.Provider)) {
                     minZoom = Number(options.minZoom);
                 }
-                if(options.maxZoom || options.maxZoom === 0) {
+                if(isZoomLevelInRange(options.maxZoom, provider as Eventkit.Provider)) {
                     maxZoom = Number(options.maxZoom);
                 }
             }

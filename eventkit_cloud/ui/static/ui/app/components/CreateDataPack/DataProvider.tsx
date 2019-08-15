@@ -145,9 +145,9 @@ export class DataProvider extends React.Component<Props, State> {
         const {exportOptions} = this.props.exportInfo;
 
         let lastMin, lastMax;
-        if (exportOptions[provider.id]) {
-            lastMin = exportOptions[provider.id].minZoom;
-            lastMax = exportOptions[provider.id].maxZoom;
+        if (exportOptions[provider.slug]) {
+            lastMin = exportOptions[provider.slug].minZoom;
+            lastMax = exportOptions[provider.slug].maxZoom;
             if (!isZoomLevelInRange(lastMin, provider)) {
                 lastMin = provider.level_from;
             }
