@@ -3,7 +3,7 @@ import * as React from 'react';
 import {createStyles, Theme, withStyles, withTheme} from '@material-ui/core/styles';
 import {connect} from 'react-redux';
 import axios from 'axios';
-import { getCookie } from '../../utils/generic'
+import {getCookie, isZoomLevelInRange} from '../../utils/generic'
 import Joyride, {Step} from 'react-joyride';
 import List from '@material-ui/core/List';
 import Paper from '@material-ui/core/Paper';
@@ -152,6 +152,7 @@ export class ExportInfo extends React.Component<Props, State> {
     };
 
     joyride;
+
     constructor(props: Props) {
         super(props);
         this.state = {
@@ -211,7 +212,7 @@ export class ExportInfo extends React.Component<Props, State> {
     componentDidUpdate(prevProps: Props) {
         // if currently in walkthrough, we want to be able to show the green forward button, so ignore these statements
         if (!this.props.walkthroughClicked) {
-        // if required fields are fulfilled enable next
+            // if required fields are fulfilled enable next
             if (this.hasRequiredFields(this.props.exportInfo) &&
                 !this.hasDisallowedSelection(this.props.exportInfo)) {
                 if (!this.props.nextEnabled) {
@@ -224,11 +225,11 @@ export class ExportInfo extends React.Component<Props, State> {
         }
         if (this.props.walkthroughClicked && !prevProps.walkthroughClicked && !this.state.isRunning) {
             this.joyride.current.reset(true);
-            this.setState({ isRunning: true });
+            this.setState({isRunning: true});
         }
 
         if (this.props.providers.length !== prevProps.providers.length) {
-            this.setState({ providers: this.props.providers });
+            this.setState({providers: this.props.providers});
             this.checkProviders(this.props.providers);
         }
     }
@@ -311,27 +312,27 @@ export class ExportInfo extends React.Component<Props, State> {
     private onRefresh() {
         // make a copy of providers and set availability to empty json
         const providers = this.state.providers.map(provider => (
-            { ...provider, availability: { slug: undefined, type: undefined, status: undefined, message: undefined } }
+            {...provider, availability: {slug: undefined, type: undefined, status: undefined, message: undefined}}
         ));
         // update state with the new copy of providers
-        this.setState({ providers });
+        this.setState({providers});
 
         this.checkProviders(providers);
     }
 
     private getAvailability(provider: Eventkit.Provider, data: any) {
         // make a copy of the provider to edit
-        const newProvider = { ...provider } as ProviderData;
+        const newProvider = {...provider} as ProviderData;
 
         const csrfmiddlewaretoken = getCookie('csrftoken');
         return axios({
             url: `/api/providers/${provider.slug}/status`,
             method: 'POST',
             data,
-            headers: { 'X-CSRFToken': csrfmiddlewaretoken },
+            headers: {'X-CSRFToken': csrfmiddlewaretoken},
         }).then((response) => {
             // The backend currently returns the response as a string, it needs to be parsed before being used.
-            const data = typeof(response.data == "object") ? response.data : JSON.parse(response.data);
+            const data = typeof (response.data == "object") ? response.data : JSON.parse(response.data);
             newProvider.availability = data;
             newProvider.availability.slug = provider.slug;
             return newProvider;
@@ -348,17 +349,32 @@ export class ExportInfo extends React.Component<Props, State> {
     }
 
     private getEstimate(provider: Eventkit.Provider, bbox: number[]) {
+        const providerExportOptions = this.props.exportInfo.exportOptions[provider.slug];
+        let minZoom = provider.level_from;
+        let maxZoom = provider.level_to;
+
+        if (providerExportOptions) {
+            if (isZoomLevelInRange(providerExportOptions.minZoom, provider)) {
+                minZoom = providerExportOptions.minZoom;
+            }
+            if (isZoomLevelInRange(providerExportOptions.maxZoom, provider)) {
+                maxZoom = providerExportOptions.maxZoom;
+            }
+        }
         // make a copy of the provider to edit
-        const newProvider = { ...provider } as ProviderData;
-        const data = { slugs: provider.slug,
-                       srs: 4326,
-                       bbox: bbox.join(',') };
+        const newProvider = {...provider} as ProviderData;
+        const data = {
+            slugs: provider.slug,
+            srs: 4326,
+            bbox: bbox.join(','), min_zoom: minZoom, max_zoom: maxZoom
+        };
+
         const csrfmiddlewaretoken = getCookie('csrftoken');
         return axios({
             url: `/api/estimate`,
             method: 'get',
             params: data,
-            headers: { 'X-CSRFToken': csrfmiddlewaretoken },
+            headers: {'X-CSRFToken': csrfmiddlewaretoken},
         }).then((response) => {
             const estimate = response.data[0];
             newProvider.estimate = estimate;
@@ -366,9 +382,9 @@ export class ExportInfo extends React.Component<Props, State> {
             this.props.updateExportInfo({
                 ...this.props.exportInfo,
                 providerEstimates: {
-                        ...this.props.exportInfo.providerEstimates,
-                        [provider.id]: estimate
-                    }
+                    ...this.props.exportInfo.providerEstimates,
+                    [provider.id]: estimate
+                }
             });
             // Trigger a estimate update in the parent, this will cause the estimate
             // to update if the newly returned estimate is on a selected provider.
@@ -385,13 +401,13 @@ export class ExportInfo extends React.Component<Props, State> {
     }
 
     async checkAvailability(provider: ProviderData) {
-        const data = { geojson: this.props.geojson };
+        const data = {geojson: this.props.geojson};
         const newProvider = await this.getAvailability(provider, data);
         this.setState((prevState) => {
             // make a copy of state providers and replace the one we updated
             const providers = [...prevState.providers];
             providers.splice(providers.indexOf(provider), 1, newProvider);
-            return { providers };
+            return {providers};
         });
         return newProvider;
     }
@@ -431,19 +447,19 @@ export class ExportInfo extends React.Component<Props, State> {
     }
 
     private handleProjectionsClose() {
-        this.setState({ projectionsDialogOpen: false });
+        this.setState({projectionsDialogOpen: false});
     }
 
     private handleProjectionsOpen() {
-        this.setState({ projectionsDialogOpen: true });
+        this.setState({projectionsDialogOpen: true});
     }
 
     private handlePopoverOpen(e: React.MouseEvent<any>) {
-        this.setState({ refreshPopover: e.currentTarget });
+        this.setState({refreshPopover: e.currentTarget});
     }
 
     private handlePopoverClose() {
-        this.setState({ refreshPopover: null });
+        this.setState({refreshPopover: null});
     }
 
     private hasRequiredFields(exportInfo: Eventkit.Store.ExportInfo) {
@@ -463,7 +479,7 @@ export class ExportInfo extends React.Component<Props, State> {
             if (!providerState) {
                 return false;
             }
-            const { availability } = providerState;
+            const {availability} = providerState;
             if (availability && availability.status) {
                 return availability.status.toUpperCase() === 'FATAL';
             }
@@ -478,14 +494,14 @@ export class ExportInfo extends React.Component<Props, State> {
         }
 
         this.setState((currentState) => {
-            const nextState = { ...currentState };
+            const nextState = {...currentState};
             nextState.steps = nextState.steps.concat(newSteps);
             return nextState;
         });
     }
 
     private callback(data: any) {
-        const { action, step, type } = data;
+        const {action, step, type} = data;
         this.props.setNextDisabled();
         if (action === 'close' || action === 'skip' || type === 'finished') {
             this.setState({isRunning: false});
@@ -508,11 +524,11 @@ export class ExportInfo extends React.Component<Props, State> {
     }
 
     render() {
-        const { classes } = this.props;
-        const { steps, isRunning } = this.state;
+        const {classes} = this.props;
+        const {steps, isRunning} = this.state;
 
         return (
-            <div id="root" className={`qa-ExportInfo-root ${classes.root}`} >
+            <div id="root" className={`qa-ExportInfo-root ${classes.root}`}>
                 <Joyride
                     callback={this.callback}
                     ref={this.joyride}
@@ -544,7 +560,7 @@ export class ExportInfo extends React.Component<Props, State> {
                                 >
                                     Enter General Information
                                 </div>
-                                <div style={{ marginBottom: '30px' }}>
+                                <div style={{marginBottom: '30px'}}>
                                     <CustomTextField
                                         className={`qa-ExportInfo-input-name ${classes.textField}`}
                                         id="Name"
@@ -552,7 +568,7 @@ export class ExportInfo extends React.Component<Props, State> {
                                         onChange={this.onNameChange}
                                         defaultValue={this.props.exportInfo.exportName}
                                         placeholder="Datapack Name"
-                                        InputProps={{ className: classes.input }}
+                                        InputProps={{className: classes.input}}
                                         fullWidth
                                         maxLength={100}
                                     />
@@ -564,11 +580,11 @@ export class ExportInfo extends React.Component<Props, State> {
                                         defaultValue={this.props.exportInfo.datapackDescription}
                                         placeholder="Description"
                                         multiline
-                                        inputProps={{ style: { fontSize: '16px', lineHeight: '20px' } }}
+                                        inputProps={{style: {fontSize: '16px', lineHeight: '20px'}}}
                                         fullWidth
                                         maxLength={250}
                                         // eslint-disable-next-line react/jsx-no-duplicate-props
-                                        InputProps={{ className: classes.input, style: { lineHeight: '21px' } }}
+                                        InputProps={{className: classes.input, style: {lineHeight: '21px'}}}
                                     />
                                     <CustomTextField
                                         className={`qa-ExportInfo-input-project ${classes.textField}`}
@@ -577,17 +593,19 @@ export class ExportInfo extends React.Component<Props, State> {
                                         onChange={this.onProjectChange}
                                         defaultValue={this.props.exportInfo.projectName}
                                         placeholder="Project Name"
-                                        InputProps={{ className: classes.input }}
+                                        InputProps={{className: classes.input}}
                                         fullWidth
                                         maxLength={100}
                                     />
                                 </div>
                             </div>
                             <div className={classes.heading}>
-                                <div id="layersHeader" className="qa-ExportInfo-layersHeader" style={{ marginRight: '5px' }}>
+                                <div id="layersHeader" className="qa-ExportInfo-layersHeader"
+                                     style={{marginRight: '5px'}}>
                                     Select Data Sources
                                 </div>
-                                <div id="layersSubheader" style={{ fontWeight: 'normal', fontSize: '12px', fontStyle: 'italic' }}>
+                                <div id="layersSubheader"
+                                     style={{fontWeight: 'normal', fontSize: '12px', fontStyle: 'italic'}}>
                                     (You must choose <strong>at least one</strong>)
                                 </div>
                             </div>
@@ -612,13 +630,13 @@ export class ExportInfo extends React.Component<Props, State> {
                                 <div className={`qa-ExportInfo-ListHeader ${classes.listHeading}`}>
                                     <div
                                         className="qa-ExportInfo-ListHeaderItem"
-                                        style={{ flex: '1 1 auto' }}
+                                        style={{flex: '1 1 auto'}}
                                     >
                                         DATA PROVIDERS
                                     </div>
                                     <div
                                         className="qa-ExportInfo-ListHeaderItem"
-                                        style={{ display: 'flex', justifyContent: 'flex-end', position: 'relative' }}
+                                        style={{display: 'flex', justifyContent: 'flex-end', position: 'relative'}}
                                     >
                                         <span>AVAILABILITY</span>
                                         <NavigationRefresh
@@ -629,9 +647,9 @@ export class ExportInfo extends React.Component<Props, State> {
                                             color="primary"
                                         />
                                         <Popover
-                                            style={{ pointerEvents: 'none' }}
+                                            style={{pointerEvents: 'none'}}
                                             PaperProps={{
-                                                style: { padding: '16px' },
+                                                style: {padding: '16px'},
                                             }}
                                             open={Boolean(this.state.refreshPopover)}
                                             anchorEl={this.state.refreshPopover}
@@ -645,11 +663,13 @@ export class ExportInfo extends React.Component<Props, State> {
                                                 horizontal: 'center',
                                             }}
                                         >
-                                            <div style={{ maxWidth: 400 }}>
-                                                <Typography variant="h6" gutterBottom style={{ fontWeight: 600 }}>
+                                            <div style={{maxWidth: 400}}>
+                                                <Typography variant="h6" gutterBottom style={{fontWeight: 600}}>
                                                     RUN AVAILABILITY CHECK AGAIN
                                                 </Typography>
-                                                <div>You may try to resolve errors by running the availability check again.</div>
+                                                <div>You may try to resolve errors by running the availability check
+                                                    again.
+                                                </div>
                                             </div>
                                         </Popover>
                                     </div>
@@ -657,7 +677,7 @@ export class ExportInfo extends React.Component<Props, State> {
                                 <List
                                     id="ProviderList"
                                     className="qa-ExportInfo-List"
-                                    style={{ width: '100%', fontSize: '16px' }}
+                                    style={{width: '100%', fontSize: '16px'}}
                                 >
                                     {this.getProviders().map((provider, ix) => (
                                         <DataProvider
@@ -686,11 +706,12 @@ export class ExportInfo extends React.Component<Props, State> {
                                         className="qa-ExportInfo-CheckBox-projection"
                                         name="EPSG:4326"
                                         checked
-                                        style={{ width: '24px', height: '24px' }}
+                                        style={{width: '24px', height: '24px'}}
                                         disabled
-                                        checkedIcon={<ActionCheckCircle className="qa-ExportInfo-ActionCheckCircle-projection" />}
+                                        checkedIcon={<ActionCheckCircle
+                                            className="qa-ExportInfo-ActionCheckCircle-projection"/>}
                                     />
-                                    <span style={{ padding: '0px 15px', display: 'flex', flexWrap: 'wrap' }}>
+                                    <span style={{padding: '0px 15px', display: 'flex', flexWrap: 'wrap'}}>
                                         EPSG:4326 - World Geodetic System 1984 (WGS84)
                                     </span>
                                     <Info
@@ -704,13 +725,13 @@ export class ExportInfo extends React.Component<Props, State> {
                                         onClose={this.handleProjectionsClose}
                                     >
                                         <div
-                                            style={{ paddingBottom: '10px', wordWrap: 'break-word' }}
+                                            style={{paddingBottom: '10px', wordWrap: 'break-word'}}
                                             className="qa-ExportInfo-dialog-projection"
                                         >
                                             All geospatial data provided by EventKit are in the
-                                             World Geodetic System 1984 (WGS 84) projection.
-                                             This projection is also commonly known by its EPSG code: 4326.
-                                             Additional projection support will be added in subsequent versions.
+                                            World Geodetic System 1984 (WGS 84) projection.
+                                            This projection is also commonly known by its EPSG code: 4326.
+                                            Additional projection support will be added in subsequent versions.
                                         </div>
                                     </BaseDialog>
                                 </div>
@@ -723,11 +744,11 @@ export class ExportInfo extends React.Component<Props, State> {
                                     className="qa-ExportInfo-area"
                                     title="Area"
                                     data={this.props.exportInfo.areaStr}
-                                    containerStyle={{ fontSize: '16px' }}
+                                    containerStyle={{fontSize: '16px'}}
                                 />
-                                <div style={{ padding: '15px 0px 20px' }}>
+                                <div style={{padding: '15px 0px 20px'}}>
                                     <MapCard geojson={this.props.geojson}>
-                                        <span style={{ marginRight: '10px' }}>Selected Area of Interest</span>
+                                        <span style={{marginRight: '10px'}}>Selected Area of Interest</span>
                                         <span
                                             role="button"
                                             tabIndex={0}
