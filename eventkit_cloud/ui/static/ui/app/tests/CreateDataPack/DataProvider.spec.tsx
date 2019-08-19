@@ -1,7 +1,8 @@
 import * as React from 'react';
 import * as sinon from 'sinon';
-import { shallow } from 'enzyme';
-import { DataProvider } from '../../components/CreateDataPack/DataProvider';
+import {shallow} from 'enzyme';
+import {DataProvider} from '../../components/CreateDataPack/DataProvider';
+import ZoomLevelSlider from "../../components/CreateDataPack/ZoomLevelSlider";
 
 describe('DataProvider component', () => {
     let wrapper;
@@ -12,6 +13,7 @@ describe('DataProvider component', () => {
             uid: '123',
             name: 'test provider',
             max_selection: '10000',
+            type: 'wmts',
             service_description: 'test description',
             license: {
                 text: 'test license text',
@@ -19,6 +21,9 @@ describe('DataProvider component', () => {
             },
             availability: {},
             estimate: {},
+        },
+        exportInfo: {
+            exportOptions: {123: {minZoom: 0, maxZoom: 1}}
         },
         checked: false,
         onChange: sinon.spy(),
@@ -51,12 +56,12 @@ describe('DataProvider component', () => {
 
         it('handleLicenseOpen sets true in state', () => {
             instance.handleLicenseOpen();
-            expect(stateSpy.calledWith({ licenseDialogOpen: true })).toBe(true);
+            expect(stateSpy.calledWith({licenseDialogOpen: true})).toBe(true);
         });
 
         it('handleLicenseClose should set false in state', () => {
             instance.handleLicenseClose();
-            expect(stateSpy.calledWith({ licenseDialogOpen: false })).toBe(true);
+            expect(stateSpy.calledWith({licenseDialogOpen: false})).toBe(true);
         });
 
         it('handleExpand should negate the open state', () => {
@@ -66,4 +71,29 @@ describe('DataProvider component', () => {
             expect(instance.state.open).toBe(expected);
         });
     });
+
+    describe('it handles providers correctly', () => {
+
+        it('it renders ZoomLevelSlider when type is valid', () => {
+            expect(wrapper.find(ZoomLevelSlider)).toHaveLength(1);
+        });
+
+        it('it renders zoom not supported message when type invalid', () => {
+            let provider = {
+                uid: '123',
+                name: 'test provider',
+                max_selection: '10000',
+                type: 'osm',
+                service_description: 'test description',
+                license: {
+                    text: 'test license text',
+                    name: 'test license',
+                },
+                availability: {},
+                estimate: {},
+            };
+            setup({provider});
+            expect(wrapper.find(ZoomLevelSlider)).toHaveLength(0);
+        });
+    })
 });

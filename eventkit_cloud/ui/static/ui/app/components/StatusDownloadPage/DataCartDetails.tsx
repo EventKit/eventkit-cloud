@@ -147,6 +147,7 @@ export class DataCartDetails extends React.Component<Props, State> {
                         onClone={this.props.onClone}
                         onDelete={this.props.onRunDelete}
                         dataPack={this.props.cartDetails}
+                        job={this.props.job}
                         adminPermissions={this.props.cartDetails.job.relationship === 'ADMIN'}
                     />
                 </div>

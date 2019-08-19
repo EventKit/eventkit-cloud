@@ -24,9 +24,32 @@ describe('DataPackOptions component', () => {
                 uid: '67890',
             },
             provider_tasks: [
-                { slug: 'test1', display: true },
-                { slug: 'test2', display: false },
+                { slug: 'test1', name: 'test1', display: true },
+                { slug: 'test2', name: 'test2', display: false },
             ],
+        },
+        job: {
+            uid: '67890',
+            name: 'test',
+            event: 'test',
+            description: 'test',
+            url: 'http://cloud.eventkit.test/api/jobs/67890',
+            formats: [
+                'Geopackage',
+            ],
+            permissions: {
+                value: 'PRIVATE',
+                groups: {},
+                members: {},
+            },
+            provider_tasks: [{
+                provider: 'test1',
+                formats: [
+                    'Geopackage',
+                ],
+                min_zoom: 0,
+                max_zoom: 3,
+            }]
         },
         ...(global as any).eventkit_test_props,
     });
@@ -123,9 +146,15 @@ describe('DataPackOptions component', () => {
 
     it('handleClone should clone a job with the correct data', () => {
         const stateStub = sinon.stub(instance, 'setState');
+        const exportInfo = {
+            'test1': {
+                minZoom: 0,
+                maxZoom: 3,
+            }
+        };
         instance.handleClone();
         expect(props.onClone.calledOnce).toBe(true);
-        expect(props.onClone.calledWith(props.dataPack, [props.dataPack.provider_tasks[0]])).toBe(true);
+        expect(props.onClone.calledWith(props.dataPack, [props.dataPack.provider_tasks[0]], exportInfo)).toBe(true);
         expect(stateStub.calledOnce).toBe(true);
         expect(stateStub.calledWith({ showCloneDialog: false })).toBe(true);
         stateStub.restore();

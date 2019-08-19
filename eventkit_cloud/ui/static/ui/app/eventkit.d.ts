@@ -350,6 +350,13 @@ declare namespace Eventkit {
             error: any;
         }
 
+        export interface ProviderExportOptions {
+            [id: string]: {
+                minZoom: number;
+                maxZoom: number;
+            }
+        }
+
         interface ExportInfo {
             areaStr: string;
             datapackDescription: string;
@@ -358,6 +365,7 @@ declare namespace Eventkit {
             projectName: string;
             providers: Provider[];
             providerEstimates: {};
+            exportOptions: ProviderExportOptions;
         }
 
         interface AoiInfo {
