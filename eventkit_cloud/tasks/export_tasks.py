@@ -629,10 +629,12 @@ def geotiff_export_task(self, result=None, run_uid=None, task_uid=None, stage_di
     """
     result = result or {}
 
-    gtiff = parse_result(result, 'result')
+    gtiff_in_dataset = parse_result(result, 'result')
+    gtiff_out_dataset = os.path.join(stage_dir, '{0}.tif'.format(job_name))
     selection = parse_result(result, 'selection')
     if selection:
-        gtiff = gdalutils.clip_dataset(boundary=selection, in_dataset=gtiff, fmt='gtiff', task_uid=task_uid)
+        gtiff = gdalutils.clip_dataset(boundary=selection, in_dataset=gtiff_in_dataset,
+                                       out_dataset=gtiff_out_dataset, fmt='gtiff', task_uid=task_uid)
     else:
         gtiff = gdalutils.convert(dataset=gtiff, fmt='gtiff', task_uid=task_uid)
 
