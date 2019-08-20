@@ -65,8 +65,6 @@ declare namespace Eventkit {
         slug: string;
         license: License;
         service_description: string;
-        min_zoom: number;
-        max_zoom: number;
     }
 
     interface DataProviderTask {
@@ -356,7 +354,7 @@ declare namespace Eventkit {
             [id: string]: {
                 minZoom: number;
                 maxZoom: number;
-            };
+            }
         }
 
         interface ExportInfo {

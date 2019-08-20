@@ -1,7 +1,6 @@
 import * as React from 'react';
 import { shallow } from 'enzyme';
 import { ZoomLevelSlider } from '../../components/CreateDataPack/ZoomLevelSlider';
-
 import {TextField} from "@material-ui/core";
 import {Slider} from "@material-ui/lab";
 

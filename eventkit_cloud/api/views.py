@@ -1801,7 +1801,6 @@ class EstimatorView(views.APIView):
         bbox = request.query_params.get('bbox', None).split(',')  # w, s, e, n
         bbox = list(map(lambda a: float(a), bbox))
         srs = request.query_params.get('srs', '4326')
-
         min_zoom = request.query_params.get('min_zoom', None)
         max_zoom = request.query_params.get('max_zoom', None)
 
@@ -1911,7 +1910,7 @@ def get_job_ids_via_permissions(permissions):
         usernames = permissions["members"]
 
     groups = Group.objects.filter(name__in=groupnames)
-
+    payload = {}
     master_job_list = []
     initialized = False
     for group in groups:

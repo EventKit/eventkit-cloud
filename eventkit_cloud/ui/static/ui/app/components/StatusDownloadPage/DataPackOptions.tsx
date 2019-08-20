@@ -78,7 +78,7 @@ export class DataPackOptions extends React.Component<Props, State> {
 
     private handleClone() {
         const providerArray = [];
-        const zooms = {};
+        let zooms = {};
         this.props.dataPack.provider_tasks.forEach((provider) => {
             if (provider.display === true) {
                 let providerTask = this.props.job.provider_tasks.find((providerTask) =>
