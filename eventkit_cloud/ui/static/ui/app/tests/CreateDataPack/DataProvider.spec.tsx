@@ -2,7 +2,6 @@ import * as React from 'react';
 import * as sinon from 'sinon';
 import {shallow} from 'enzyme';
 import {DataProvider} from '../../components/CreateDataPack/DataProvider';
-import ZoomLevelSlider from "../../components/CreateDataPack/ZoomLevelSlider";
 
 describe('DataProvider component', () => {
     let wrapper;
@@ -11,6 +10,7 @@ describe('DataProvider component', () => {
     const defaultProps = () => ({
         provider: {
             uid: '123',
+            slug: 'slug',
             name: 'test provider',
             max_selection: '10000',
             type: 'wmts',
@@ -37,7 +37,9 @@ describe('DataProvider component', () => {
             ...defaultProps(),
             ...propsOverride,
         };
-        wrapper = shallow(<DataProvider {...props} />);
+        wrapper = shallow(<DataProvider {...props} />, {
+            context: { config: { BASEMAP_URL: '', BASEMAP_COPYRIGHT: '' } },
+        });
         instance = wrapper.instance();
     };
 
@@ -75,11 +77,12 @@ describe('DataProvider component', () => {
     describe('it handles providers correctly', () => {
 
         it('it renders ZoomLevelSlider when type is valid', () => {
-            expect(wrapper.find(ZoomLevelSlider)).toHaveLength(1);
+            expect(wrapper.find('div.slug-sliderDiv')).toHaveLength(1);
+            expect(wrapper.find('div.slug-mapDiv')).toHaveLength(1);
         });
 
         it('it renders zoom not supported message when type invalid', () => {
-            let provider = {
+            const provider = {
                 uid: '123',
                 name: 'test provider',
                 max_selection: '10000',
@@ -93,7 +96,8 @@ describe('DataProvider component', () => {
                 estimate: {},
             };
             setup({provider});
-            expect(wrapper.find(ZoomLevelSlider)).toHaveLength(0);
+            expect(wrapper.find('div.slug-sliderDiv')).toHaveLength(0);
+            expect(wrapper.find('div.slug-mapDiv')).toHaveLength(0);
         });
-    })
+    });
 });

@@ -520,7 +520,11 @@ export class ExportInfo extends React.Component<Props, State> {
     }
 
     private getProviders() {
-        return this.state.providers.filter(provider => (provider.display !== false));
+        // During rapid state updates, it is possible that duplicate providers get added to the list.
+        // They need to be deduplicated, so that they don't render duplicate elements or cause havoc on the DOM.
+        let providers = this.state.providers.filter(provider => (provider.display !== false));
+        providers = [...new Map(providers.map(x => [x.slug, x])).values()];
+        return providers;
     }
 
     render() {
@@ -680,16 +684,18 @@ export class ExportInfo extends React.Component<Props, State> {
                                     style={{width: '100%', fontSize: '16px'}}
                                 >
                                     {this.getProviders().map((provider, ix) => (
-                                        <DataProvider
-                                            key={provider.slug}
-                                            provider={provider}
-                                            onChange={this.onChangeCheck}
-                                            checked={this.props.exportInfo.providers.map(x => x.name)
-                                                .indexOf(provider.name) !== -1}
-                                            alt={ix % 2 === 0}
-                                            renderEstimate={this.context.config.SERVE_ESTIMATES}
-                                            checkProvider={this.checkProvider}
-                                        />
+                                        <li key={provider.slug + "-DataProviderList"}>
+                                            <DataProvider
+                                                geojson={this.props.geojson}
+                                                provider={provider}
+                                                onChange={this.onChangeCheck}
+                                                checked={this.props.exportInfo.providers.map(x => x.name)
+                                                    .indexOf(provider.name) !== -1}
+                                                alt={ix % 2 === 0}
+                                                renderEstimate={this.context.config.SERVE_ESTIMATES}
+                                                checkProvider={this.checkProvider}
+                                            />
+                                        </li>
                                     ))}
                                 </List>
                             </div>
