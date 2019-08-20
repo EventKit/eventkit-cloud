@@ -14,7 +14,7 @@ import ExportAOI from './ExportAOI';
 import ExportInfo from './ExportInfo';
 import ExportSummary from './ExportSummary';
 import { flattenFeatureCollection } from '../../utils/mapUtils';
-import { getDuration, formatMegaBytes } from '../../utils/generic';
+import {getDuration, formatMegaBytes, isZoomLevelInRange} from '../../utils/generic';
 import {
     submitJob, clearAoiInfo, clearExportInfo, clearJobInfo,
 } from '../../actions/datacartActions';
@@ -163,21 +163,20 @@ export class BreadcrumbStepper extends React.Component<Props, State> {
             this.setState({ modified: true });
         }
 
-        if(this.context.config.SERVE_ESTIMATES) {
+        if (this.context.config.SERVE_ESTIMATES) {
             // only update the estimate if providers has changed
             const prevProviders = prevProps.exportInfo.providers;
             const providers = this.props.exportInfo.providers;
-            if(prevProviders && providers) {
-                if (prevProviders.length != providers.length) {
-                    this.updateEstimate()
+            if (prevProviders && providers) {
+                if (prevProviders.length !== providers.length) {
+                    this.updateEstimate();
                 } else if (!prevProviders.every((p1) => {
-                    return providers.includes(p1)
+                    return providers.includes(p1);
                 })) {
-                    this.updateEstimate()
+                    this.updateEstimate();
                 }
-            }
-            else if(prevProviders || providers) {
-                this.updateEstimate()
+            } else if (prevProviders || providers) {
+                this.updateEstimate();
             }
         }
     }
@@ -245,7 +244,7 @@ export class BreadcrumbStepper extends React.Component<Props, State> {
                     onClick={this.handleEstimateExplanationOpen}
                     color="primary"
                     style={{cursor: 'pointer', verticalAlign: 'middle',
-                        marginLeft: '10px', height: '18px', width: '18px',}}
+                        marginLeft: '10px', height: '18px', width: '18px', } }
                 />
                 <BaseDialog
                     show={this.state.estimateExplanationOpen}
@@ -272,35 +271,35 @@ export class BreadcrumbStepper extends React.Component<Props, State> {
         );
     }
 
-    private formatEstimate(){
+    private formatEstimate() {
         let dateTimeEstimate;
         let sizeEstimate;
         let durationEstimate;
         // function that will return nf (not found) when the provided estimate is undefined
-        const get = (estimate, nf='unknown') => {return (estimate) ? estimate.toString() : nf};
+        const get = (estimate, nf= 'unknown') => (estimate) ? estimate.toString() : nf;
 
-        if(this.state.sizeEstimate !== -1) {
+        if (this.state.sizeEstimate !== -1) {
             sizeEstimate = formatMegaBytes(this.state.sizeEstimate);
         }
-        if(this.state.timeEstimate !== -1) {
+        if (this.state.timeEstimate !== -1) {
             const estimateInSeconds = this.state.timeEstimate;
             durationEstimate = getDuration(estimateInSeconds);
 
             // get the current time, add the estimate (in seconds) to it to get the date time of completion
-            let dateEstimate = new Date();
+            const dateEstimate = new Date();
             dateEstimate.setSeconds(dateEstimate.getSeconds() + estimateInSeconds);
             // month of completion in short hand format, upper cased March -> MAR,  January -> JAN
-            const monthShort = dateEstimate.toLocaleDateString('default',{month: 'short'}).toUpperCase();
+            const monthShort = dateEstimate.toLocaleDateString('default',{ month: 'short' }).toUpperCase();
             // Standard time of day based on users locale settings. Options used to omit seconds.
-            const timeOfDay = dateEstimate.toLocaleTimeString('default', {hour: '2-digit', minute:'2-digit'});
+            const timeOfDay = dateEstimate.toLocaleTimeString('default', { hour: '2-digit', minute: '2-digit' });
             // Date of completion in the format 1-JAN-2019 12:32 PM
             dateTimeEstimate = `${dateEstimate.getDate()}-${monthShort}-${dateEstimate.getFullYear()} ${timeOfDay}`;
         }
         // Secondary estimate shown in parenthesis (<duration in days hours minutes> - <size>)
         let secondary;
         let noEstimateMessage = 'Select providers to get estimate';
-        if(sizeEstimate || durationEstimate) {
-            let separator = (sizeEstimate && durationEstimate) ? ' - ' : '';
+        if (sizeEstimate || durationEstimate) {
+            const separator = (sizeEstimate && durationEstimate) ? ' - ' : '';
             secondary = ` ( ${get(durationEstimate, '')}${separator}${get(sizeEstimate, 'size unknown')})`;
             noEstimateMessage = 'Unknown Date'; // used when the size estimate is displayed but time is not.
         }
@@ -308,28 +307,35 @@ export class BreadcrumbStepper extends React.Component<Props, State> {
     }
 
     private updateEstimate() {
-        if(!this.context.config.SERVE_ESTIMATES || !this.props.exportInfo.providers)
+        if (!this.context.config.SERVE_ESTIMATES || !this.props.exportInfo.providers) {
             return;
+        }
         let sizeEstimate = 0;
         let timeEstimate = 0;
         const maxAcceptableTime = 60 * 60 * 24 * this.props.exportInfo.providers.length;
         for (const provider of this.props.exportInfo.providers) {
-            if(provider.id in this.props.exportInfo.providerEstimates) {
+            if (provider.id in this.props.exportInfo.providerEstimates) {
                 const estimate = this.props.exportInfo.providerEstimates[provider.id];
                 if (estimate) {
-                    if(estimate.size)
+                    if (estimate.size) {
                         sizeEstimate += estimate.size.value;
-                    if(estimate.time)
+                    }
+                    if (estimate.time) {
                         timeEstimate += estimate.time.value;
+                    }
                 }
             }
         }
-        if(timeEstimate === 0)
+
+        if (timeEstimate === 0) {
             timeEstimate = -1;
-        else if(timeEstimate > maxAcceptableTime)
+        } else if (timeEstimate > maxAcceptableTime) {
             timeEstimate = maxAcceptableTime;
-        if(sizeEstimate === 0)
+        }
+
+        if (sizeEstimate === 0) {
             sizeEstimate = -1;
+        }
         this.setState({sizeEstimate, timeEstimate});
     }
 
@@ -549,28 +555,22 @@ export class BreadcrumbStepper extends React.Component<Props, State> {
         const { formats } = this.props.exportInfo;
 
         providers.forEach((provider) => {
-            let minZoom, maxZoom;
-            if(exportOptions[provider.id]) {
-                let options = exportOptions[provider.id];
-                minZoom = options.minZoom;
-                maxZoom = options.maxZoom;
-                if(minZoom === null || minZoom === undefined) {
-                    minZoom = provider.level_from;
+            let providerMinZoom = provider.level_from;
+            let providerMaxZoom = provider.level_to;
+            const options = exportOptions[provider.slug];
+            if (options) {
+                if (isZoomLevelInRange(options.minZoom, provider as Eventkit.Provider)) {
+                    providerMinZoom = Number(options.minZoom);
                 }
-                if(maxZoom === null || maxZoom === undefined) {
-                    maxZoom = provider.level_to;
+                if (isZoomLevelInRange(options.maxZoom, provider as Eventkit.Provider)) {
+                    providerMaxZoom = Number(options.maxZoom);
                 }
             }
-            if(minZoom != undefined || maxZoom != undefined) {
-                providerTasks.push({
-                    provider: provider.name, formats: [formats[0]],
-                    max_zoom: maxZoom, min_zoom: minZoom
-                });
-            }
-            else {
-                providerTasks.push({ provider: provider.name, formats: [formats[0]] });
-            }
-            
+
+            providerTasks.push({
+                provider: provider.name, formats: [formats[0]],
+                max_zoom: providerMaxZoom, min_zoom: providerMinZoom
+            });
         });
 
         const selection = flattenFeatureCollection(this.props.aoiInfo.geojson) as GeoJSON.FeatureCollection;
@@ -658,15 +658,15 @@ export class BreadcrumbStepper extends React.Component<Props, State> {
                     <div>{message}</div>
                 </BaseDialog>
                     <ConfirmDialog
-                    show={this.state.showLeaveWarningDialog}
-                    title="ARE YOU SURE?"
-                    onCancel={this.handleLeaveWarningDialogCancel}
-                    onConfirm={this.handleLeaveWarningDialogConfirm}
-                    confirmLabel="Yes, I'm Sure"
-                    isDestructive
+                        show={this.state.showLeaveWarningDialog}
+                        title="ARE YOU SURE?"
+                        onCancel={this.handleLeaveWarningDialogCancel}
+                        onConfirm={this.handleLeaveWarningDialogConfirm}
+                        confirmLabel="Yes, I'm Sure"
+                        isDestructive
                     >
-                    <strong>You haven&apos;t finished creating this DataPack yet. Any settings will be lost.</strong>
-                </ConfirmDialog>
+                        <strong>You haven&apos;t finished creating this DataPack yet. Any settings will be lost.</strong>
+                    </ConfirmDialog>
                 { this.state.loading ?
                     <PageLoading background="transparent" />
                     :

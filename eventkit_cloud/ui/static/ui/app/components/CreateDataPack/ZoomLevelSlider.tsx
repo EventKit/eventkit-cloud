@@ -28,15 +28,16 @@ const jss = (theme: Theme & Eventkit.Theme) => createStyles({
     zoomHeader: {
         display: 'inline-flex',
         fontSize: '16px',
-        paddingTop: '15px',
+        paddingTop: '10px',
         paddingBottom: '5px',
     },
 });
 
 interface Props {
     updateZoom: (min: number, max: number) => void;
-    providerZoom: number;
-    provider: Eventkit.Provider;
+    maxZoom: number;
+    minZoom: number;
+    zoom: number;
     theme: Eventkit.Theme & Theme;
     classes: { [className: string]: string };
 }
@@ -47,13 +48,16 @@ export class ZoomLevelSlider extends React.Component<Props, {}> {
 
     constructor(props: Props) {
         super(props);
+
         this.state = {};
+
         this.handleChange = this.handleChange.bind(this);
     }
 
     handleChange = (event, value) => {
-        if (value >= this.props.provider.level_from && value <= this.props.provider.level_to) {
-            this.props.updateZoom(null, parseInt(value, 10));
+        const zoomValue = Number(value);
+        if (zoomValue >= this.props.minZoom && zoomValue <= this.props.maxZoom) {
+            this.props.updateZoom(null, zoomValue);
         } else {
             // Send null for min and max zoom to force the prop to reupdate with the last valid value
             this.props.updateZoom(null, null);
@@ -70,7 +74,7 @@ export class ZoomLevelSlider extends React.Component<Props, {}> {
                     className={classes.textField}
                     type="number"
                     name="zoom-value"
-                    value={this.props.providerZoom}
+                    value={this.props.zoom}
                     onChange={e => this.handleChange(e, e.target.value)}
                     // MUI uses the case of the i to distinguish between Input component and input html element
                     // eslint-disable-next-line react/jsx-no-duplicate-props
@@ -83,18 +87,18 @@ export class ZoomLevelSlider extends React.Component<Props, {}> {
                 <div>
                     <Slider
                         className={classes.slider}
-                        value={this.props.providerZoom}
+                        value={this.props.zoom}
                         aria-labelledby="label"
                         onChange={this.handleChange}
-                        max={this.props.provider.level_to}
+                        max={this.props.maxZoom}
                         step={1}
                     />
                     <div id="labels" style={{ display: 'flex', justifyContent: 'space-between' }}>
                         <span style={{ textAlign: 'left' }}>
-                            {this.props.provider.level_from}
+                            {this.props.minZoom}
                         </span>
                         <span style={{ textAlign: 'right' }}>
-                            {this.props.provider.level_to}
+                            {this.props.maxZoom}
                         </span>
                     </div>
                 </div>

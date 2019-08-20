@@ -259,6 +259,7 @@ export class DataPackListItem extends React.Component<Props, State> {
                                 <ProviderDialog
                                     open={this.state.providerDialogOpen}
                                     uids={this.props.run.provider_tasks}
+                                    jobuid={this.props.run.job.uid}
                                     providers={this.props.providers}
                                     onClose={this.handleProviderClose}
                                 />

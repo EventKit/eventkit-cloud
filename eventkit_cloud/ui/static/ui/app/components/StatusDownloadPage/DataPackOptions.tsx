@@ -6,9 +6,11 @@ import DeleteDataPackDialog from '../Dialog/DeleteDataPackDialog';
 export interface Props {
     adminPermissions: boolean;
     onRerun: (uid: string) => void;
-    onClone: (data: Eventkit.FullRun, providers: Eventkit.Provider[]) => void;
+    onClone: (cartDetails: Eventkit.FullRun, providerArray: Eventkit.Provider[],
+              exportOptions: Eventkit.Store.ProviderExportOptions) => void;
     onDelete: (uid: string) => void;
     dataPack: Eventkit.FullRun;
+    job: Eventkit.Job;
 }
 
 export interface State {
@@ -76,12 +78,23 @@ export class DataPackOptions extends React.Component<Props, State> {
 
     private handleClone() {
         const providerArray = [];
+        const zooms = {};
         this.props.dataPack.provider_tasks.forEach((provider) => {
             if (provider.display === true) {
+                let providerTask = this.props.job.provider_tasks.find((providerTask) =>
+                    // Currently `provider` is the provider name
+                    // The backend should be updated in the future to make it point to a uuid or the slug
+                    // this change will need to happen here as well
+                    provider.name === providerTask.provider
+                );
+                zooms[provider.slug] = {
+                    minZoom: (providerTask) ? providerTask.min_zoom : null,
+                    maxZoom: (providerTask) ? providerTask.max_zoom : null,
+                };
                 providerArray.push(provider);
             }
         });
-        this.props.onClone(this.props.dataPack, providerArray);
+        this.props.onClone(this.props.dataPack, providerArray, zooms);
         this.setState({ showCloneDialog: false });
     }
 

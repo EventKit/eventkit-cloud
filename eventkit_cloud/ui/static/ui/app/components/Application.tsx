@@ -443,7 +443,6 @@ export class Application extends React.Component<Props, State> {
     }
 
     getConfig() {
-        console.log("GETTING CONFIG!");
         return axios.get('/configuration')
             .then((response) => {
                 if (response.data) {

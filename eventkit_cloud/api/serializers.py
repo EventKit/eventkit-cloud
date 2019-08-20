@@ -61,7 +61,7 @@ class ProviderTaskSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = DataProviderTask
-        fields = ('provider', 'formats')
+        fields = ('provider', 'formats', 'min_zoom', 'max_zoom')
 
     @staticmethod
     def create(validated_data, **kwargs):
@@ -71,6 +71,8 @@ class ProviderTaskSerializer(serializers.ModelSerializer):
         provider_model = DataProvider.objects.get(name=validated_data.get("provider"))
         provider_task = DataProviderTask.objects.create(provider=provider_model)
         provider_task.formats.add(*formats)
+        provider_task.min_zoom = validated_data.pop("min_zoom", None)
+        provider_task.max_zoom = validated_data.pop("max_zoom", None)
         provider_task.save()
         return provider_task
 
@@ -273,11 +275,12 @@ class SimpleJobSerializer(serializers.Serializer):
 
     @staticmethod
     def get_formats(obj):
-        # Since formats are the same for all provider_tasks (1.1.0) just grab anyone and print them.
-        provider_task = obj.provider_tasks.first()
         formats = []
-        if hasattr(provider_task, "formats"):
-            formats = [format.name for format in obj.provider_tasks.first().formats.all()]
+        for provider_task in obj.provider_tasks.all():
+            if hasattr(provider_task, "formats"):
+                for format in provider_task.formats.all():
+                    if format.slug not in formats:
+                        formats.append(format.slug)
         return formats
 
 
@@ -603,6 +606,7 @@ class DataProviderSerializer(serializers.ModelSerializer):
         lookup_field='slug'
     )
     type = serializers.SerializerMethodField(read_only=True)
+    supported_formats = serializers.SerializerMethodField(read_only=True)
     license = LicenseSerializer(required=False)
 
     class Meta:
@@ -628,6 +632,10 @@ class DataProviderSerializer(serializers.ModelSerializer):
     @staticmethod
     def get_type(obj):
         return obj.export_provider_type.type_name
+
+    @staticmethod
+    def get_supported_formats(obj):
+        return obj.export_provider_type.supported_formats.all().values('uid', 'name', 'slug', 'description')
 
 
 class ListJobSerializer(serializers.Serializer):
@@ -992,4 +1000,3 @@ class NotificationRunSerializer(serializers.ModelSerializer):
     def get_expiration(self, obj):
         if not obj.deleted:
             return obj.expiration
-

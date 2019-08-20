@@ -21,7 +21,7 @@ class ListFilter(django_filters.Filter):
             return self.get_method(qs)(**{lookup: value_list}).distinct()
         else:
             return qs
-          
+
 
 class JobFilter(django_filters.FilterSet):
     """Filter export results according to a range of critera."""
@@ -68,11 +68,12 @@ class ExportRunFilter(django_filters.FilterSet):
     visibility = django_filters.CharFilter(field_name="job__visibility", lookup_expr="exact")
     featured = django_filters.BooleanFilter(field_name="job__featured", widget=django_filters.widgets.BooleanWidget())
     providers = ListFilter(field_name="job__provider_tasks__provider__slug")
+    formats = ListFilter(field_name="job__provider_tasks__formats__slug", lookup_expr="exact")
 
     class Meta:
         model = ExportRun
         fields = ('user', 'status', 'job_uid', 'min_date', 'max_date',
-                  'started_at', 'visibility', 'providers')
+                  'started_at', 'visibility', 'providers', 'formats')
 
 
 class UserFilter(django_filters.FilterSet):
