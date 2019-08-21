@@ -57,6 +57,12 @@ describe('ExportInfo component', () => {
                 datapackDescription: '',
                 projectName: '',
                 providers: [],
+                exportOptions: {
+                    '123': {
+                        minZoom: 0,
+                        maxZoom: 2,
+                    }
+                }
             },
             providers: [],
             formats,

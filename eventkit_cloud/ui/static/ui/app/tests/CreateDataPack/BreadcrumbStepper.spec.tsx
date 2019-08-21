@@ -87,6 +87,11 @@ describe('BreadcrumbStepper component', () => {
             areaStr: '',
             formats: ['gpkg'],
             providerEstimates: {},
+            exportOptions: {
+                1: {
+                    minZoom: 0, maxZoom: 10
+                }
+            }
         },
         history: {
             push: sinon.spy(),
@@ -309,6 +314,7 @@ describe('BreadcrumbStepper component', () => {
             provider_tasks: [{
                 provider: 'OpenStreetMap Data (Themes)',
                 formats: ['gpkg'],
+                min_zoom: 0, max_zoom: 10
             }],
             selection: {},
             original_selection: {},

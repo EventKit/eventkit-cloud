@@ -46,6 +46,9 @@ class TestJob(TestCase):
         self.uid = self.job.uid
         # add the formats to the job
         provider_task.formats.add(*self.formats)
+        provider_task.min_zoom = 3
+        provider_task.max_zoom = 6
+        provider_task.save()
         self.job.provider_tasks.add(provider_task)
         self.job.save()
 
@@ -58,6 +61,8 @@ class TestJob(TestCase):
         saved_provider_tasks = saved_job.provider_tasks.first()
         self.assertIsNotNone(saved_provider_tasks.formats.all())
         self.assertCountEqual(saved_provider_tasks.formats.all(), self.formats)
+        self.assertEqual(saved_provider_tasks.min_zoom, 3)
+        self.assertEqual(saved_provider_tasks.max_zoom, 6)
         self.assertEqual('Test description', saved_job.description)
         self.assertEqual(4, len(saved_job.json_tags))
         self.assertEqual(False, saved_job.include_zipfile)  # default

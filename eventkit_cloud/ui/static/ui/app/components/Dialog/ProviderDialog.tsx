@@ -7,6 +7,7 @@ import Progress from '@material-ui/core/CircularProgress';
 import BaseDialog from '../Dialog/BaseDialog';
 import DropDownListItem from '../common/DropDownListItem';
 import { getProviderTask } from '../../actions/providerActions';
+import { getJobDetails } from "../../utils/generic"
 
 interface OwnProps {
     uids: string[];
@@ -17,10 +18,12 @@ interface OwnProps {
 
 interface State {
     loading: boolean;
+    job: Eventkit.Job;
 }
 
 interface StateProps {
     providerTasks: Eventkit.ProviderTask[];
+    jobuid: string;
 }
 
 interface DispatchProps {
@@ -34,6 +37,7 @@ export class ProviderDialog extends React.Component<Props, State> {
         super(props);
         this.state = {
             loading: false,
+            job: null,
         };
     }
 
@@ -41,6 +45,11 @@ export class ProviderDialog extends React.Component<Props, State> {
         if (this.props.open) {
             this.getProviders(this.props.uids);
         }
+        getJobDetails(this.props.jobuid).then(data => {
+            this.setState({
+                job: data
+            })
+        })
     }
 
     componentDidUpdate(prevProps) {
@@ -99,13 +108,22 @@ export class ProviderDialog extends React.Component<Props, State> {
                             if (!provider) {
                                 return;
                             }
+
+                            const { job } = this.state
+                            const dataProviderTask = job && job.provider_tasks.find(obj => obj.provider === provider.name)
+
+                            // If available, get custom zoom levels from DataProviderTask otherwise use Provider defaults.
+                            const min_zoom = dataProviderTask && dataProviderTask.min_zoom || provider && provider.level_from
+                            const max_zoom = dataProviderTask && dataProviderTask.max_zoom || provider && provider.level_to
+
                             return (
                                 <DropDownListItem
                                     title={provider.name}
                                     key={provider.slug}
                                     alt={ix % 2 !== 0}
                                 >
-                                    {provider.service_description}
+                                    <div>Zoom Levels {min_zoom} - {max_zoom}</div>
+                                    <div>{provider.service_description}</div>
                                 </DropDownListItem>
                             );
                         })}

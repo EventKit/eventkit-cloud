@@ -55,7 +55,13 @@ interface Props {
     importGeom: {
         processing: boolean;
     };
-    geocode: object;
+    geocode: {
+        cancelSource: boolean;
+        data: any;
+        error: any;
+        fetched: boolean;
+        fetching: boolean;
+    };
     getGeocode: () => void;
     processGeoJSONFile: (file: File) => void;
     resetGeoJSONFile: () => void;

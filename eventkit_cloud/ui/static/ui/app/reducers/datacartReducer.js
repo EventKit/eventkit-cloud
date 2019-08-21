@@ -25,6 +25,7 @@ export const initialState = {
         areaStr: '',
         formats: ['gpkg'],
         providerEstimates: {},
+        exportOptions: {},
     },
     updatePermission: {
         updating: null,
@@ -82,6 +83,7 @@ export function exportInfoReducer(state = initialState.exportInfo, action) {
                 areaStr: '',
                 formats: ['gpkg'],
                 providerEstimates: {},
+                exportOptions: {},
             };
         default:
             return state;

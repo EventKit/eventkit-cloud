@@ -1,7 +1,7 @@
 import * as React from 'react';
 import * as sinon from 'sinon';
-import { shallow } from 'enzyme';
-import { DataProvider } from '../../components/CreateDataPack/DataProvider';
+import {shallow} from 'enzyme';
+import {DataProvider} from '../../components/CreateDataPack/DataProvider';
 
 describe('DataProvider component', () => {
     let wrapper;
@@ -10,8 +10,10 @@ describe('DataProvider component', () => {
     const defaultProps = () => ({
         provider: {
             uid: '123',
+            slug: 'slug',
             name: 'test provider',
             max_selection: '10000',
+            type: 'wmts',
             service_description: 'test description',
             license: {
                 text: 'test license text',
@@ -19,6 +21,9 @@ describe('DataProvider component', () => {
             },
             availability: {},
             estimate: {},
+        },
+        exportInfo: {
+            exportOptions: {123: {minZoom: 0, maxZoom: 1}}
         },
         checked: false,
         onChange: sinon.spy(),
@@ -32,7 +37,9 @@ describe('DataProvider component', () => {
             ...defaultProps(),
             ...propsOverride,
         };
-        wrapper = shallow(<DataProvider {...props} />);
+        wrapper = shallow(<DataProvider {...props} />, {
+            context: { config: { BASEMAP_URL: '', BASEMAP_COPYRIGHT: '' } },
+        });
         instance = wrapper.instance();
     };
 
@@ -51,12 +58,12 @@ describe('DataProvider component', () => {
 
         it('handleLicenseOpen sets true in state', () => {
             instance.handleLicenseOpen();
-            expect(stateSpy.calledWith({ licenseDialogOpen: true })).toBe(true);
+            expect(stateSpy.calledWith({licenseDialogOpen: true})).toBe(true);
         });
 
         it('handleLicenseClose should set false in state', () => {
             instance.handleLicenseClose();
-            expect(stateSpy.calledWith({ licenseDialogOpen: false })).toBe(true);
+            expect(stateSpy.calledWith({licenseDialogOpen: false})).toBe(true);
         });
 
         it('handleExpand should negate the open state', () => {
@@ -64,6 +71,33 @@ describe('DataProvider component', () => {
             instance.handleExpand();
             expect(stateSpy.calledOnce).toBe(true);
             expect(instance.state.open).toBe(expected);
+        });
+    });
+
+    describe('it handles providers correctly', () => {
+
+        it('it renders ZoomLevelSlider when type is valid', () => {
+            expect(wrapper.find('div.slug-sliderDiv')).toHaveLength(1);
+            expect(wrapper.find('div.slug-mapDiv')).toHaveLength(1);
+        });
+
+        it('it renders zoom not supported message when type invalid', () => {
+            const provider = {
+                uid: '123',
+                name: 'test provider',
+                max_selection: '10000',
+                type: 'osm',
+                service_description: 'test description',
+                license: {
+                    text: 'test license text',
+                    name: 'test license',
+                },
+                availability: {},
+                estimate: {},
+            };
+            setup({provider});
+            expect(wrapper.find('div.slug-sliderDiv')).toHaveLength(0);
+            expect(wrapper.find('div.slug-mapDiv')).toHaveLength(0);
         });
     });
 });

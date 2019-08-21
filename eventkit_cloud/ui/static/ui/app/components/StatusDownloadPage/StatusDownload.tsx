@@ -3,7 +3,6 @@ import * as React from 'react';
 import { connect } from 'react-redux';
 import { withTheme, Theme } from '@material-ui/core/styles';
 import withWidth, { isWidthUp } from '@material-ui/core/withWidth';
-import { RouteComponentProps } from 'react-router';
 import Joyride, { Step } from 'react-joyride';
 import Help from '@material-ui/icons/Help';
 import Paper from '@material-ui/core/Paper';
@@ -31,6 +30,7 @@ import { makeDatacartSelector } from '../../selectors/runSelector';
 import { Location } from 'history';
 import { Breakpoint } from '@material-ui/core/styles/createBreakpoints';
 import history from "../../utils/history";
+import { getJobDetails } from "../../utils/generic"
 
 export interface Props {
     runs: Eventkit.FullRun[];
@@ -63,6 +63,7 @@ export interface State {
     error: any;
     steps: Step[];
     isRunning: boolean;
+    job: Eventkit.Job;
 }
 
 export class StatusDownload extends React.Component<Props, State> {
@@ -90,11 +91,17 @@ export class StatusDownload extends React.Component<Props, State> {
             error: null,
             steps: [],
             isRunning: false,
+            job: null,
         };
     }
 
     componentDidMount() {
         this.onMount();
+        getJobDetails(this.props.match.params.jobuid).then(data => {
+            this.setState({
+                job: data
+            })
+        })
     }
 
     shouldComponentUpdate(p: Props) {
@@ -377,6 +384,7 @@ export class StatusDownload extends React.Component<Props, State> {
                     onClone={this.props.cloneExport}
                     onProviderCancel={this.props.cancelProviderTask}
                     providers={this.props.providers}
+                    job={this.state.job}
                     maxResetExpirationDays={this.context.config.MAX_DATAPACK_EXPIRATION_DAYS}
                     user={this.props.user}
                 />
@@ -499,7 +507,8 @@ function mapDispatchToProps(dispatch) {
         clearReRunInfo: () => (
             dispatch(clearReRunInfo())
         ),
-        cloneExport: (cartDetails: Eventkit.FullRun, providerArray: Eventkit.Provider[]) => {
+        cloneExport: (cartDetails: Eventkit.FullRun, providerArray: Eventkit.Provider[],
+                      exportOptions: Eventkit.Store.ProviderExportOptions) => {
             const featureCollection = {
                 type: 'FeatureCollection',
                 features: [cartDetails.job.extent],
@@ -519,6 +528,7 @@ function mapDispatchToProps(dispatch) {
                 projectName: cartDetails.job.event,
                 providers: providerArray,
                 layers: 'Geopackage',
+                exportOptions: exportOptions,
             }));
             history.push('/create');
         },

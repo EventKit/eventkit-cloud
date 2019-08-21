@@ -14,17 +14,20 @@ COPY --chown=eventkit ./conda /var/lib/eventkit/conda
 
 ENV PATH="/home/eventkit/miniconda3/bin:$PATH"
 
-RUN curl -L https://repo.continuum.io/miniconda/Miniconda3-4.6.14-Linux-x86_64.sh -o miniconda.sh && \
+RUN curl -L https://repo.continuum.io/miniconda/Miniconda3-4.7.10-Linux-x86_64.sh -o miniconda.sh && \
     /bin/bash miniconda.sh -b -p "/home/eventkit/miniconda3" && \
     rm miniconda.sh && \
     echo "y" | conda update -n root --all && \
     conda config --add channels local && \
     conda config --add channels file://var/lib/eventkit/conda/repo && \
+    conda config --set channel_priority strict && \
     conda env create --file environment-dev.yml python=3.6 && \
     conda clean --yes --all && \
     /home/eventkit/miniconda3/envs/eventkit-cloud/bin/python \
     /home/eventkit/miniconda3/envs/eventkit-cloud/bin/manage.py collectstatic && \
     rm -rf /var/lib/eventkit/conda
+
+COPY --chown=eventkit ./eventkit_cloud /home/eventkit/miniconda3/envs/eventkit-cloud/lib/python3.6/site-packages/eventkit_cloud
 
 ENTRYPOINT ["bash", "/home/eventkit/miniconda3/envs/eventkit-cloud/lib/python3.6/site-packages/scripts/wait-for-postgis.sh"]
 

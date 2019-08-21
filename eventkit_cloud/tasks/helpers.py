@@ -349,7 +349,6 @@ def get_metadata(data_provider_task_uid):
 
     if data_provider_task.name == 'run':
         provider_tasks = run.provider_tasks.filter(~Q(name='run'))
-        data_provider_task = None
     else:
         provider_tasks = [data_provider_task]
 
@@ -374,6 +373,7 @@ def get_metadata(data_provider_task_uid):
     for provider_task in provider_tasks:
         if TaskStates[provider_task.status] in TaskStates.get_incomplete_states():
             continue
+
         data_provider = DataProvider.objects.get(slug=provider_task.slug)
         provider_type = data_provider.export_provider_type.type_name
         metadata['data_sources'][provider_task.slug] = {"name": provider_task.name}
@@ -398,7 +398,9 @@ def get_metadata(data_provider_task_uid):
                         provider_task.slug,
                         download_filename
                     )
-                    cert_var = yaml.load(data_provider.config).get('cert_var', data_provider.slug)
+
+                    conf = yaml.load(data_provider.config) or dict()
+                    cert_var = conf.get('cert_var', data_provider.slug)
                     metadata['data_sources'][provider_task.slug] = {'uid': str(provider_task.uid),
                                                                     'slug': provider_task.slug,
                                                                     'name': provider_task.name,
@@ -406,10 +408,10 @@ def get_metadata(data_provider_task_uid):
                                                                     'full_file_path': full_file_path,
                                                                     'file_type': file_ext,
                                                                     'type': get_data_type_from_provider(
-                                                                        provider_task.slug), 'description': str(
+                                                                        provider_task.slug),
+                                                                    'description': str(
                             data_provider.service_description).replace('\r\n', '\n').replace(
                             '\n', '\r\n\t'),
-                                                                    # 'description': data_provider.service_description,
                                                                     'last_update': get_last_update(data_provider.url,
                                                                                                    provider_type,
                                                                                                    cert_var=cert_var),
@@ -522,7 +524,7 @@ def clean_config(config):
     """
     service_keys = ["cert_var", "cert_cred", "concurrency", "max_repeat"]
 
-    conf = yaml.load(config)
+    conf = yaml.load(config) or dict()
 
     for service_key in service_keys:
         conf.pop(service_key, None)

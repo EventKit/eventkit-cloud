@@ -14,7 +14,7 @@ import ExportAOI from './ExportAOI';
 import ExportInfo from './ExportInfo';
 import ExportSummary from './ExportSummary';
 import { flattenFeatureCollection } from '../../utils/mapUtils';
-import { getDuration, formatMegaBytes } from '../../utils/generic';
+import {getDuration, formatMegaBytes, isZoomLevelInRange} from '../../utils/generic';
 import {
     submitJob, clearAoiInfo, clearExportInfo, clearJobInfo,
 } from '../../actions/datacartActions';
@@ -542,13 +542,28 @@ export class BreadcrumbStepper extends React.Component<Props, State> {
 
     private handleSubmit() {
         const providerTasks = [];
+        const { exportOptions } = this.props.exportInfo;
         const providers = [...this.props.exportInfo.providers];
 
         // formats only consists of geopackage right now
         const { formats } = this.props.exportInfo;
 
         providers.forEach((provider) => {
-            providerTasks.push({ provider: provider.name, formats: [formats[0]] });
+            let minZoom = provider.level_from, maxZoom = provider.level_to;
+            let options = exportOptions[provider.slug];
+            if(options) {
+                if(isZoomLevelInRange(options.minZoom, provider as Eventkit.Provider)) {
+                    minZoom = Number(options.minZoom);
+                }
+                if(isZoomLevelInRange(options.maxZoom, provider as Eventkit.Provider)) {
+                    maxZoom = Number(options.maxZoom);
+                }
+            }
+
+            providerTasks.push({
+                provider: provider.name, formats: [formats[0]],
+                max_zoom: maxZoom, min_zoom: minZoom
+            });
         });
 
         const selection = flattenFeatureCollection(this.props.aoiInfo.geojson) as GeoJSON.FeatureCollection;

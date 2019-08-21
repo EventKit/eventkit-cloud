@@ -225,6 +225,8 @@ class DataProviderTask(models.Model):
     uid = models.UUIDField(unique=True, default=uuid.uuid4, editable=False, db_index=True)
     provider = models.ForeignKey(DataProvider, on_delete=models.CASCADE, related_name='provider')
     formats = models.ManyToManyField(ExportFormat, related_name='formats')
+    min_zoom = models.IntegerField(blank=True, null=True)
+    max_zoom = models.IntegerField(blank=True, null=True)
 
     def __str__(self):
         return '{0} - {1}'.format(str(self.uid), self.provider)
