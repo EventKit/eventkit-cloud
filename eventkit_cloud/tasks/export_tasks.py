@@ -520,7 +520,7 @@ def shp_export_task(self, result=None, run_uid=None, task_uid=None, stage_dir=No
     try:
         ogr = OGR(task_uid=task_uid)
         out = ogr.convert(file_format='ESRI Shapefile', in_file=gpkg, out_file=shapefile,
-                          params="-lco 'ENCODING=UTF-8' -overwrite")
+                          params="-lco 'ENCODING=UTF-8' -overwrite -skipfailures")
         result['result'] = out
         result['geopackage'] = gpkg
         return result
