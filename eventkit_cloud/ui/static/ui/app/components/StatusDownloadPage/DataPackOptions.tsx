@@ -7,7 +7,7 @@ export interface Props {
     adminPermissions: boolean;
     onRerun: (uid: string) => void;
     onClone: (cartDetails: Eventkit.FullRun, providerArray: Eventkit.Provider[],
-              exportOptions: Eventkit.Store.ProviderExportOptions) => void;
+              exportOptions: Eventkit.Map<Eventkit.Store.ProviderExportOptions>) => void;
     onDelete: (uid: string) => void;
     dataPack: Eventkit.FullRun;
     job: Eventkit.Job;
@@ -78,7 +78,7 @@ export class DataPackOptions extends React.Component<Props, State> {
 
     private handleClone() {
         const providerArray = [];
-        let zooms = {};
+        let exportOptions = {};
         this.props.dataPack.provider_tasks.forEach((provider) => {
             if (provider.display === true) {
                 let providerTask = this.props.job.provider_tasks.find((providerTask) =>
@@ -87,14 +87,14 @@ export class DataPackOptions extends React.Component<Props, State> {
                     // this change will need to happen here as well
                     provider.name === providerTask.provider
                 );
-                zooms[provider.slug] = {
+                exportOptions[provider.slug] = {
                     minZoom: (providerTask) ? providerTask.min_zoom : null,
                     maxZoom: (providerTask) ? providerTask.max_zoom : null,
-                };
+                } as Eventkit.Store.ProviderExportOptions;
                 providerArray.push(provider);
             }
         });
-        this.props.onClone(this.props.dataPack, providerArray, zooms);
+        this.props.onClone(this.props.dataPack, providerArray, exportOptions);
         this.setState({ showCloneDialog: false });
     }
 

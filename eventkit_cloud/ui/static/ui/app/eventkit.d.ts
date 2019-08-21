@@ -139,6 +139,14 @@ declare namespace Eventkit {
         zip: boolean;
         display: boolean;
         export_provider_type: number;
+        supported_formats: Format[];
+    }
+
+    interface Format {
+        uid: string;
+        name: string;
+        slug: string;
+        description: string;
     }
 
     interface UserData {
@@ -179,6 +187,10 @@ declare namespace Eventkit {
         actor: object;
         target: object;
         action_object: object;
+    }
+
+    interface Map<T> {
+        [id: string]: T;
     }
 
     interface Theme {
@@ -350,11 +362,10 @@ declare namespace Eventkit {
             error: any;
         }
 
-        export interface ProviderExportOptions {
-            [id: string]: {
+        interface ProviderExportOptions {
                 minZoom: number;
                 maxZoom: number;
-            }
+                formats: string[];
         }
 
         interface ExportInfo {
@@ -365,7 +376,7 @@ declare namespace Eventkit {
             projectName: string;
             providers: Provider[];
             providerEstimates: {};
-            exportOptions: ProviderExportOptions;
+            exportOptions: Map<ProviderExportOptions>;
         }
 
         interface AoiInfo {

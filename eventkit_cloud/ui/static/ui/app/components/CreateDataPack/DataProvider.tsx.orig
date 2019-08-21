@@ -17,8 +17,11 @@ import {connect} from "react-redux";
 import {updateExportInfo} from '../../actions/datacartActions';
 import {MapView} from "../common/MapView";
 import debounce from 'lodash/debounce';
+<<<<<<< Updated upstream
 import * as PropTypes from "prop-types";
+=======
 import FormatSelector from "./FormatSelector";
+>>>>>>> Stashed changes
 
 const jss = (theme: Theme & Eventkit.Theme) => createStyles({
     container: {
@@ -91,7 +94,6 @@ export interface ProviderData extends Eventkit.Provider {
 interface Props {
     geojson: GeoJSON.FeatureCollection;
     exportInfo: Eventkit.Store.ExportInfo;
-    providerOptions: any;
     updateExportInfo: (args: any) => void;
     provider: ProviderData;
     checkProvider: (args: any) => void;
@@ -153,22 +155,21 @@ export class DataProvider extends React.Component<Props, State> {
     private setZoom(minZoom: number, maxZoom: number) {
         // update the state with the new array of options
         const {provider} = this.props;
-        let providerOptions = {...this.props.providerOptions};
+        const {exportOptions} = this.props.exportInfo;
 
-        // Check if a value was already set, we will fall back to this if the new values are invalid
-        // If no values have been set, or the values are somehow invalid,
-        // we will instead fall back to the min/max for the provider (from/to)
-        let lastMin = providerOptions.minZoom;
-        let lastMax = providerOptions.maxZoom;
-        if (!isZoomLevelInRange(lastMin, provider)) {
-            lastMin = provider.level_from;
+        let lastMin;
+        let lastMax;
+        if (exportOptions[provider.slug]) {
+            lastMin = exportOptions[provider.slug].minZoom;
+            lastMax = exportOptions[provider.slug].maxZoom;
+            if (!isZoomLevelInRange(lastMin, provider)) {
+                lastMin = provider.level_from;
+            }
+            if (!isZoomLevelInRange(lastMax, provider)) {
+                lastMax = provider.level_to;
+            }
         }
-        if (!isZoomLevelInRange(lastMax, provider)) {
-            lastMax = provider.level_to;
-        }
 
-
-        // Check the parameters, if they are invalid, fall back to lastMin and or lastMax
         if (!isZoomLevelInRange(minZoom, provider)) {
             minZoom = lastMin;
         }
@@ -177,9 +178,8 @@ export class DataProvider extends React.Component<Props, State> {
         }
 
         const updatedExportOptions = {
-            ...this.props.exportInfo.exportOptions,
+            ...exportOptions,
             [provider.slug]: {
-                ...providerOptions,
                 minZoom,
                 maxZoom,
             }
@@ -366,7 +366,12 @@ export class DataProvider extends React.Component<Props, State> {
                 <div className={classes.prewrap}>
                     <span><strong>Select Format(s)</strong></span>
                     <FormatSelector
-                        formats={provider.supported_formats}
+                        formats={[{
+                            name: 'Format1',
+                            description: 'this is a format',
+                            slug: 'fm1',
+                            uid: 'uid',
+                        } as Eventkit.Format]}
                         provider={provider}
                     />
                 </div>
@@ -435,9 +440,8 @@ DataProvider.defaultProps = {
     renderEstimate: false
 };
 
-function mapStateToProps(state, ownProps) {
+function mapStateToProps(state) {
     return {
-        providerOptions: state.exportInfo.exportOptions[ownProps.provider] || {} as Eventkit.Store.ProviderExportOptions,
         exportInfo: state.exportInfo,
         geojson: state.aoiInfo.geojson,
     };
