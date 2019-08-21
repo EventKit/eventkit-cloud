@@ -26,27 +26,29 @@ def map(request, slug, path):
     except Exception:
         raise Exception(F"Unable to find provider for slug {slug}")
 
+    # Load and "clean" mapproxy config for displaying a map.
+    try:
+        conf_dict = yaml.load(provider.config)
+        conf_dict.pop("caches", "")
+        conf_dict.pop("layers", "")
+    except Exception:
+        raise Exception(F"Unable to load a mapproxy configuration for slug {slug}")
+
+
     #TODO: place this somewhere else consolidate settings.
     base_config = {"services": {"demo": None,
-                                 "wmts": None,
-                                 },
-                    "caches": {slug: {"cache": {"type": "file"},
-                                      "sources": ["imagery"],
-                                      "grids": ["geodetic"]},
-                               "cache": {"cache": {"type": "file"},
-                                         "sources": ["imagery"],
-                                         "grids": ["geodetic"]}
-                               },
-                    "layers": [{"name": slug, "title": provider.name, "sources": slug}]
-                    }
+                                "wmts": None,
+                                },
+                   "caches": {slug: {"cache": {"type": "file"},
+                                     "sources": ["default"],
+                                     "grids": ["default"]}},
+                   "layers": [{"name": slug, "title": provider.name, "sources": [slug]}]
+                   }
 
     try:
-        #TODO: Can this be consolidated with mapproxy utils?
-        conf_dict = yaml.load(provider.config)
-
         mapproxy_config = load_default_config()
-        mapproxy_config.update(base_config)
         load_config(mapproxy_config, config_dict=conf_dict)
+        load_config(mapproxy_config, config_dict=base_config)
         mapproxy_configuration = ProxyConfiguration(mapproxy_config)
     except ConfigurationError as e:
         logger.error(e)

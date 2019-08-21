@@ -123,7 +123,7 @@ class MapproxyGeopackage(object):
             raise ConfigurationError("MapProxy configuration is required for raster data providers")
 
         if not conf_dict.get('grids'):
-            conf_dict['grids'] = {'geodetic': {'srs': 'EPSG:4326',
+            conf_dict['grids'] = {'default': {'srs': 'EPSG:4326',
                                                'tile_size': [256, 256],
                                                'origin': 'nw'},
                                   'webmercator': {'srs': 'EPSG:3857',
@@ -240,7 +240,7 @@ def get_cache_template(sources, grids, geopackage, table_name='tiles'):
             "filename": str(geopackage),
             "table_name": table_name or 'None'
         },
-        "grids": [grid for grid in grids if grid == 'geodetic'] or grids,
+        "grids": [grid for grid in grids if grid == 'default'] or grids,
         "format": "mixed",
         "request_format": "image/png"
     }
@@ -264,7 +264,7 @@ def get_seed_template(bbox=None, level_from=None, level_to=None, coverage_file=N
                     'to': level_to or 10,
                     'from': level_from or 0
                 },
-                'caches': ['cache']
+                'caches': ['default']
             }
         }
     }
