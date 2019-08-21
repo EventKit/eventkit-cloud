@@ -437,7 +437,7 @@ DataProvider.defaultProps = {
 
 function mapStateToProps(state, ownProps) {
     return {
-        providerOptions: state.exportInfo.exportOptions[ownProps.provider] || {} as Eventkit.Store.ProviderExportOptions,
+        providerOptions: state.exportInfo.exportOptions[ownProps.provider.slug] || {} as Eventkit.Store.ProviderExportOptions,
         exportInfo: state.exportInfo,
         geojson: state.aoiInfo.geojson,
     };

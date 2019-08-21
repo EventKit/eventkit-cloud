@@ -156,7 +156,7 @@ export class FormatSelector extends React.Component<Props, State> {
 
 function mapStateToProps(state, ownProps) {
     return {
-        providerOptions: state.exportInfo.exportOptions[ownProps.provider] || {} as Eventkit.Store.ProviderExportOptions,
+        providerOptions: state.exportInfo.exportOptions[ownProps.provider.slug] || {} as Eventkit.Store.ProviderExportOptions,
     };
 }
 
