@@ -38,7 +38,7 @@ export function updateExportInfo(exportInfo) {
     };
 }
 
-export function updateExportOptions({providerSlug, providerOptions}) {
+export function updateExportOptions({ providerSlug, providerOptions }) {
     return {
         type: types.UPDATE_EXPORT_OPTIONS,
         providerSlug,

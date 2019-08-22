@@ -1,4 +1,4 @@
-import {types} from '../actions/datacartActions';
+import { types } from '../actions/datacartActions';
 
 export const initialState = {
     aoiInfo: {
@@ -79,10 +79,9 @@ export function exportInfoReducer(state = initialState.exportInfo, action) {
                 exportOptions: {
                     ...state.exportOptions,
                     [action.providerSlug]: {
-                        ...action.providerOptions
-                    }
-                }
-
+                        ...action.providerOptions,
+                    },
+                },
             };
         case types.CLEAR_EXPORT_INFO:
             return {
@@ -126,11 +125,11 @@ export function submitJobReducer(state = initialState.submitJob, action) {
 export function updatePermissionReducer(state = initialState.updatePermission, action) {
     switch (action.type) {
         case types.UPDATING_PERMISSION:
-            return {updating: true, updated: false, error: null};
+            return { updating: true, updated: false, error: null };
         case types.UPDATE_PERMISSION_SUCCESS:
-            return {updating: false, updated: true, error: null};
+            return { updating: false, updated: true, error: null };
         case types.UPDATE_PERMISSION_ERROR:
-            return {updating: false, updated: false, error: action.error};
+            return { updating: false, updated: false, error: action.error };
         default:
             return state;
     }
