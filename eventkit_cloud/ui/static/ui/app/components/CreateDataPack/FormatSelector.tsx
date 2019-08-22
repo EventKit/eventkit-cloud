@@ -14,22 +14,23 @@ const jss = (theme: Theme & Eventkit.Theme) => createStyles({
     },
     listItem: {
         fontWeight: 'normal',
-        fontSize: '16px',
-        padding: '16px 10px',
+        paddingLeft: '10px',
+        paddingBottom: '10px',
+        whiteSpace: 'pre-wrap',
     },
     listItemText: {
         fontSize: 'inherit',
     },
     sublistItem: {
         fontWeight: 'normal',
-        fontSize: '13px',
-        padding: '14px 20px 14px 49px',
+        fontSize: '.9em',
+        paddingLeft: '5px',
+        paddingTop: '5px',
         borderTop: theme.eventkit.colors.secondary,
     },
     checkbox: {
         width: '24px',
         height: '24px',
-        marginRight: '15px',
         flex: '0 0 auto',
         color: theme.eventkit.colors.primary,
         '&$checked': {
@@ -50,9 +51,6 @@ const jss = (theme: Theme & Eventkit.Theme) => createStyles({
     license: {
         cursor: 'pointer',
         color: theme.eventkit.colors.primary,
-    },
-    prewrap: {
-        whiteSpace: 'pre-wrap',
     },
 });
 
@@ -89,6 +87,20 @@ export class FormatSelector extends React.Component<Props, State> {
         this.state = {};
     }
 
+    componentDidMount() {
+        // If this is the first time hitting this page, the datacart will be in a default state
+        // with no formats selected. We want GPKG to be selected by default.
+        let providerOptions = {...this.props.providerOptions};
+        let formats;
+        if (!providerOptions.formats) {
+            if (this.props.formats.map(format => format.slug).indexOf('gpkg') >= 0) {
+                formats = ['gpkg'];
+            }
+            this.props.updateExportOptions(this.props.provider.slug,
+                {...providerOptions, formats});
+        }
+    }
+
     handleChange = (event) => {
         let providerOptions = {...this.props.providerOptions};
         let selectedFormats = providerOptions.formats || [];
@@ -119,19 +131,12 @@ export class FormatSelector extends React.Component<Props, State> {
         const {providerOptions} = this.props;
         const selectedFormats = providerOptions.formats || [];
 
+
         return (
-            <List
-                id="ProviderList"
-                className="qa-ExportInfo-List"
-                style={{width: '100%', fontSize: '16px'}}
-            >
+                <div>
                 {formats.map((format, ix) => (
-                    <ListItem
+                    <div
                         className={`qa-FormatSelector-ListItem ${classes.listItem}`}
-                        style={{backgroundColor: (ix % 2 === 0) ? colors.secondary : colors.white}}
-                        dense
-                        key={format.slug}
-                        disableGutters
                     >
                         <div className={classes.container}>
                             <Checkbox
@@ -141,15 +146,16 @@ export class FormatSelector extends React.Component<Props, State> {
                                 checked={selectedFormats.indexOf(format.slug) >= 0}
                                 onChange={this.handleChange}
                             />
-                            <ListItemText
-                                disableTypography
-                                classes={{root: classes.listItemText}}
-                                primary={<div className={classes.prewrap}>{format.name}</div>}
-                            />
+                            <div
+                                className={classes.listItem}
+                            >
+                                <div className={classes.listItemText}>{format.name}</div>
+                                <div className={classes.sublistItem}>Estimate:</div>
+                            </div>
                         </div>
-                    </ListItem>
+                    </div>
                 ))}
-            </List>
+                </div>
         );
     }
 }

@@ -164,7 +164,7 @@ declare namespace Eventkit {
 
     interface User {
         user: UserData;
-        accepted_licenses: { [s: string]: boolean};
+        accepted_licenses: { [s: string]: boolean };
         groups: number[];
     }
 
@@ -363,9 +363,9 @@ declare namespace Eventkit {
         }
 
         interface ProviderExportOptions {
-                minZoom: number;
-                maxZoom: number;
-                formats: string[];
+            minZoom: number;
+            maxZoom: number;
+            formats: string[];
         }
 
         interface ExportInfo {

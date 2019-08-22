@@ -90,6 +90,7 @@ export class DataPackOptions extends React.Component<Props, State> {
                 exportOptions[provider.slug] = {
                     minZoom: (providerTask) ? providerTask.min_zoom : null,
                     maxZoom: (providerTask) ? providerTask.max_zoom : null,
+                    formats: (providerTask) ? providerTask.formats: null,
                 } as Eventkit.Store.ProviderExportOptions;
                 providerArray.push(provider);
             }
