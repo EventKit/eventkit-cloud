@@ -541,7 +541,7 @@ def kml_export_task(self, result=None, run_uid=None, task_uid=None, stage_dir=No
     kmlfile = os.path.join(stage_dir, '{0}.kml'.format(job_name))
     try:
         ogr = OGR(task_uid=task_uid)
-        out = ogr.convert(file_format='KML', in_file=gpkg, out_file=kmlfile)
+        out = gdalutils.convert(file_format='KML', in_file=gpkg, out_file=kmlfile)
         result['result'] = out
         result['geopackage'] = gpkg
         return result
@@ -614,7 +614,7 @@ def geopackage_export_task(self, result={}, run_uid=None, task_uid=None,
 
     add_metadata_task(result=result, job_uid=run.job.uid, provider_slug=task.export_provider_task.slug)
     gpkg = parse_result(result, 'result')
-    gpkg = gdalutils.convert(dataset=gpkg, fmt='gpkg', task_uid=task_uid)
+    gpkg = gdalutils.convert(file_format='gpkg', in_file=gpkg, task_uid=task_uid)
 
     result['result'] = gpkg
     result['geopackage'] = gpkg
@@ -636,7 +636,8 @@ def geotiff_export_task(self, result=None, run_uid=None, task_uid=None, stage_di
         gtiff = gdalutils.clip_dataset(boundary=selection, in_dataset=gtiff_in_dataset,
                                        out_dataset=gtiff_out_dataset, fmt='gtiff', task_uid=task_uid)
     else:
-        gtiff = gdalutils.convert(dataset=gtiff, fmt='gtiff', task_uid=task_uid)
+        gtiff = gdalutils.convert(
+            file_format='gtiff', in_file=gtiff_in_dataset, out_file=gtiff_out_dataset, task_uid=task_uid)
 
     result['result'] = gtiff
     result['geotiff'] = gtiff

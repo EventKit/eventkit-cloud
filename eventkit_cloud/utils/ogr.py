@@ -4,11 +4,13 @@
 import logging
 import os
 import subprocess
-from eventkit_cloud.tasks.task_process import TaskProcess
-from eventkit_cloud.tasks.helpers import get_file_paths, cd
+import sqlite3
 from zipfile import ZipFile, ZIP_DEFLATED
 
-import sqlite3
+from eventkit_cloud.tasks.task_process import TaskProcess
+from eventkit_cloud.tasks.helpers import cd, get_file_paths
+from eventkit_cloud.utils.generic import create_zip_file, get_zip_name, requires_zip
+
 
 logger = logging.getLogger(__name__)
 
@@ -54,46 +56,6 @@ class OGR(object):
             out_file = create_zip_file(out_file, get_zip_name(out_file))
         logger.debug('ogr2ogr returned: {0}'.format(task_process.exitcode))
         return out_file
-
-    @staticmethod
-    def requires_zip(file_format):
-        zipped_formats = ['KML', 'ESRI Shapefile']
-        if file_format in zipped_formats:
-            return True
-
-
-def create_zip_file(in_file, out_file):
-    """
-
-    :param in_file: The file to be compressed.
-    :param out_file: The result.
-    :return: The archive.
-    """
-    logger.debug("Creating the zipfile {0} from {1}".format(out_file, in_file))
-    with ZipFile(out_file, 'a', compression=ZIP_DEFLATED, allowZip64=True) as zipfile:
-        if os.path.isdir(in_file):
-            # Shapefiles will be all of the layers in a directory.
-            # When this gets zipped they will all be in the same zip file.  Some applications (QGIS) will
-            # read this without a problem whereas ArcGIS will need the files extracted first.
-            file_paths = get_file_paths(in_file)
-            for absolute_file_path, relative_file_path in file_paths.items():
-                if os.path.isfile(absolute_file_path):
-                    zipfile.write(
-                        absolute_file_path,
-                        arcname=os.path.basename(relative_file_path)
-                    )
-        else:
-            zipfile.write(
-                in_file
-            )
-    return out_file
-
-
-def get_zip_name(file_name):
-    basename, ext = os.path.splitext(file_name)
-    if ext == '.kml':
-        return basename + ".kmz"
-    return basename + ".zip"
 
 
 def execute_spatialite_script(db, sql_script, user_details=None):
