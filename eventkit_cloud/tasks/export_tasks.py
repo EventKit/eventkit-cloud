@@ -644,6 +644,24 @@ def geotiff_export_task(self, result=None, run_uid=None, task_uid=None, stage_di
     return result
 
 
+@app.task(name='National Imagery Transmission Format (.nitf)', bind=True, base=FormatTask)
+def nitf_export_task(self, result=None, run_uid=None, task_uid=None, stage_dir=None, job_name=None,
+                        user_details=None, *args, **kwargs):
+    """
+    Class defining nitf export function.
+    """
+    result = result or {}
+
+    nitf_in_dataset = parse_result(result, 'result')
+    nitf_out_dataset = os.path.join(stage_dir, '{0}.nitf'.format(job_name))
+    nitf = gdalutils.convert(
+        file_format='nitf', in_file=nitf_in_dataset, out_file=nitf_out_dataset, task_uid=task_uid)
+
+    result['result'] = nitf
+    result['nitf'] = nitf
+    return result
+
+
 @app.task(name='Clip Export', bind=True, base=UserDetailsBase)
 def clip_export_task(self, result=None, run_uid=None, task_uid=None, stage_dir=None, job_name=None, user_details=None,
                      *args, **kwargs):

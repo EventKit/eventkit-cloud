@@ -20,7 +20,8 @@ export_task_registry = {
     'shp': 'eventkit_cloud.tasks.export_tasks.shp_export_task',
     'gpkg': 'eventkit_cloud.tasks.export_tasks.geopackage_export_task',
     'gpkg-thematic': 'eventkit_cloud.tasks.export_tasks.osm_thematic_gpkg_export_task',
-    'gtiff': 'eventkit_cloud.tasks.export_tasks.geotiff_export_task'
+    'gtiff': 'eventkit_cloud.tasks.export_tasks.geotiff_export_task',
+    'nitf': 'eventkit_cloud.tasks.export_tasks.nitf_export_task'
 }
 
 
