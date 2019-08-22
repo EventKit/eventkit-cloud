@@ -364,11 +364,17 @@ export class DataProvider extends React.Component<Props, State> {
                 disableGutters
             >
                 <div className={classes.prewrap}>
-                    <span><strong>Select Format(s)</strong></span>
-                    <FormatSelector
-                        formats={provider.supported_formats}
-                        provider={provider}
-                    />
+                    <span>
+                        <strong>Select Format(s)</strong>
+                        <div><em>Cartography only available with GeoPackage.</em></div>
+                    </span>
+
+                    <div style={{marginTop: '10px'}}>
+                        <FormatSelector
+                            formats={provider.supported_formats}
+                            provider={provider}
+                        />
+                    </div>
                 </div>
             </ListItem>
         ));

@@ -15,7 +15,7 @@ const jss = (theme: Theme & Eventkit.Theme) => createStyles({
     listItem: {
         fontWeight: 'normal',
         paddingLeft: '10px',
-        paddingBottom: '10px',
+        marginBottom: '10px',
         whiteSpace: 'pre-wrap',
     },
     listItemText: {
@@ -24,8 +24,7 @@ const jss = (theme: Theme & Eventkit.Theme) => createStyles({
     sublistItem: {
         fontWeight: 'normal',
         fontSize: '.9em',
-        paddingLeft: '5px',
-        paddingTop: '5px',
+        paddingTop: '3px',
         borderTop: theme.eventkit.colors.secondary,
     },
     checkbox: {
@@ -136,7 +135,7 @@ export class FormatSelector extends React.Component<Props, State> {
                 <div>
                 {formats.map((format, ix) => (
                     <div
-                        className={`qa-FormatSelector-ListItem ${classes.listItem}`}
+                        className={`qa-FormatSelector-ListItem`}
                     >
                         <div className={classes.container}>
                             <Checkbox
@@ -150,7 +149,7 @@ export class FormatSelector extends React.Component<Props, State> {
                                 className={classes.listItem}
                             >
                                 <div className={classes.listItemText}>{format.name}</div>
-                                <div className={classes.sublistItem}>Estimate:</div>
+                                <div className={classes.sublistItem}>Estimate Placeholder</div>
                             </div>
                         </div>
                     </div>
