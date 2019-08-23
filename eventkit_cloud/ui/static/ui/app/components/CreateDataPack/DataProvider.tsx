@@ -15,7 +15,9 @@ import {Typography} from "@material-ui/core";
 import ZoomLevelSlider from "./ZoomLevelSlider";
 import {connect} from "react-redux";
 import {updateExportInfo} from '../../actions/datacartActions';
+import {MapView} from "../common/MapView";
 import debounce from 'lodash/debounce';
+import * as PropTypes from "prop-types";
 
 const jss = (theme: Theme & Eventkit.Theme) => createStyles({
     container: {
@@ -86,6 +88,7 @@ export interface ProviderData extends Eventkit.Provider {
 }
 
 interface Props {
+    geojson: GeoJSON.FeatureCollection;
     exportInfo: Eventkit.Store.ExportInfo;
     updateExportInfo: (args: any) => void;
     provider: ProviderData;
@@ -112,12 +115,17 @@ interface Props {
 interface State {
     open: boolean;
     licenseDialogOpen: boolean;
+    zoomLevel: number;
 }
 
 export class DataProvider extends React.Component<Props, State> {
 
     static defaultProps;
     private estimateDebouncer;
+
+    static contextTypes = {
+        config: PropTypes.object,
+    };
 
     constructor(props: Props) {
         super(props);
@@ -130,6 +138,7 @@ export class DataProvider extends React.Component<Props, State> {
         this.state = {
             open: false,
             licenseDialogOpen: false,
+            zoomLevel: this.props.provider.level_to,
         };
     }
 
@@ -144,7 +153,8 @@ export class DataProvider extends React.Component<Props, State> {
         const {provider} = this.props;
         const {exportOptions} = this.props.exportInfo;
 
-        let lastMin, lastMax;
+        let lastMin;
+        let lastMax;
         if (exportOptions[provider.slug]) {
             lastMin = exportOptions[provider.slug].minZoom;
             lastMax = exportOptions[provider.slug].maxZoom;
@@ -163,17 +173,18 @@ export class DataProvider extends React.Component<Props, State> {
             maxZoom = lastMax;
         }
 
-        let updatedExportOptions = {
+        const updatedExportOptions = {
             ...exportOptions,
             [provider.slug]: {
-                minZoom: minZoom,
-                maxZoom: maxZoom,
+                minZoom,
+                maxZoom,
             }
         };
         this.props.updateExportInfo({
             ...this.props.exportInfo,
             exportOptions: updatedExportOptions,
         });
+
         if (minZoom !== lastMin || maxZoom !== lastMax) {
             // Only trigger an estimate update if the value is new.
             this.estimateDebouncer(this.props.provider);
@@ -194,14 +205,13 @@ export class DataProvider extends React.Component<Props, State> {
 
     private formatEstimate(providerEstimate) {
         if (!providerEstimate) {
-            return ''
+            return '';
         }
         let sizeEstimate;
         let durationEstimate;
         // func that will return nf (not found) when the provided estimate is undefined
-        const get = (estimate, nf = 'unknown') => {
-            return (estimate) ? estimate.toString() : nf
-        };
+        const get = (estimate, nf = 'unknown' ) =>  (estimate) ? estimate.toString() : nf ;
+
         if (providerEstimate.size) {
             sizeEstimate = formatMegaBytes(providerEstimate.size.value);
         }
@@ -213,10 +223,11 @@ export class DataProvider extends React.Component<Props, State> {
     }
 
     render() {
+
         const {colors} = this.props.theme.eventkit;
         const {classes, provider} = this.props;
         const {exportOptions} = this.props.exportInfo;
-        // Take the current zoom from the current exportOptions if they exist and the value is valid,
+        // Take the current zoom from the current zoomLevels if they exist and the value is valid,
         // otherwise set it to the max allowable level.
         let currentMaxZoom = provider.level_to;
         if (exportOptions[provider.slug]) {
@@ -224,28 +235,6 @@ export class DataProvider extends React.Component<Props, State> {
             if (maxZoom || maxZoom === 0) {
                 currentMaxZoom = maxZoom;
             }
-        }
-
-        let zoomDiv;
-        if (supportsZoomLevels(this.props.provider)) {
-            zoomDiv = (
-                <div style={{
-                    width: 'calc(100%)',
-                    maxWidth: '400px',
-                }}>
-                    <ZoomLevelSlider
-                        updateZoom={this.setZoom}
-                        zoom={currentMaxZoom}
-                        maxZoom={provider.level_to}
-                        minZoom={provider.level_from}
-                    />
-                </div>)
-        }
-        else {
-            zoomDiv = (
-                <div>
-                    <em >Zoom not available for this source.</em>
-                </div>)
         }
 
         // Show license if one exists.
@@ -282,17 +271,53 @@ export class DataProvider extends React.Component<Props, State> {
                 </ListItem>
             ));
         }
+        if (supportsZoomLevels(this.props.provider)) {
+            nestedItems.push(
+                <div
+                    className={`qa-DataProvider-ListItem-zoomSlider ${this.props.provider.slug + '-sliderDiv'}`}
+                    key={this.props.provider.slug + '-sliderDiv'}
+                    style={{padding: '10px 40px'}}
+                >
+                    <ZoomLevelSlider
+                        updateZoom={this.setZoom}
+                        zoom={currentMaxZoom}
+                        maxZoom={provider.level_to}
+                        minZoom={provider.level_from}
+                    />
+                </div>
+            );
 
-        nestedItems.push((
-            <ListItem
-                className={`qa-DataProvider-ListItem-provZoomSlider ${classes.sublistItem}`}
-                key={nestedItems.length}
-                dense
-                disableGutters
-            >
-                {zoomDiv}
-            </ListItem>
-        ));
+            nestedItems.push(
+                <div
+                    className={`qa-DataProvider-ListItem-zoomMap ${this.props.provider.slug + '-mapDiv'}`}
+                    key={this.props.provider.slug + '-mapDiv'}
+                    style={{padding: '10px 40px'}}
+                >
+                    <MapView
+                        id={this.props.provider.id + "-map"}
+                        url={this.context.config.BASEMAP_URL}
+                        copyright={this.context.config.BASEMAP_COPYRIGHT}
+                        geojson={this.props.geojson}
+                        setZoom={this.setZoom}
+                        zoom={currentMaxZoom}
+                        minZoom={this.props.provider.level_from}
+                        maxZoom={this.props.provider.level_to}
+                    />
+                </div>
+            );
+        } else {
+            nestedItems.push(
+                <ListItem
+                    className={`qa-DataProvider-ListItem-zoomSlider ${classes.sublistItem}`}
+                    key={nestedItems.length}
+                    dense
+                    disableGutters
+                >
+                    <div>
+                        <em>Zoom not available for this source.</em>
+                    </div>
+                </ListItem>);
+        }
 
         nestedItems.push((
             <ListItem
@@ -302,7 +327,10 @@ export class DataProvider extends React.Component<Props, State> {
                 disableGutters
             >
                 <div
-                    className={classes.prewrap}>{provider.service_description || 'No provider description available.'}</div>
+                    className={classes.prewrap}
+                >
+                    {provider.service_description || 'No provider description available.'}
+                </div>
             </ListItem>
         ));
 
@@ -325,13 +353,14 @@ export class DataProvider extends React.Component<Props, State> {
         ));
 
         // Only set this if we want to display the estimate
-        let secondary = undefined;
+        let secondary;
         if (this.props.renderEstimate) {
-            if (this.formatEstimate(provider.estimate))
+            if (this.formatEstimate(provider.estimate)) {
                 secondary =
-                    <Typography style={{fontSize: "0.7em"}}>{this.formatEstimate(provider.estimate)}</Typography>
-            else
-                secondary = <CircularProgress size={10}/>
+                    <Typography style={{fontSize: "0.7em"}}>{this.formatEstimate(provider.estimate)}</Typography>;
+            } else {
+                secondary = <CircularProgress size={10}/>;
+            }
         }
 
         const backgroundColor = (this.props.alt) ? colors.secondary : colors.white;
@@ -388,6 +417,7 @@ DataProvider.defaultProps = {
 function mapStateToProps(state) {
     return {
         exportInfo: state.exportInfo,
+        geojson: state.aoiInfo.geojson,
     };
 }
 
