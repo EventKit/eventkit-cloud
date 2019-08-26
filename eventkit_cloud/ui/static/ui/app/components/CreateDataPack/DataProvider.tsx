@@ -185,7 +185,6 @@ export class DataProvider extends React.Component<Props, State> {
             }
         };
         this.props.updateExportInfo({
-            ...this.props.exportInfo,
             exportOptions: updatedExportOptions,
         });
 

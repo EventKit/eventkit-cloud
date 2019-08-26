@@ -1,11 +1,8 @@
 import * as React from 'react';
 import {createStyles, Theme, withStyles, withTheme} from '@material-ui/core/styles';
-import ListItem from '@material-ui/core/ListItem';
-import ListItemText from '@material-ui/core/ListItemText';
 import Checkbox from '@material-ui/core/Checkbox';
 import {connect} from "react-redux";
 import {updateExportOptions} from '../../actions/datacartActions';
-import List from '@material-ui/core/List';
 
 const jss = (theme: Theme & Eventkit.Theme) => createStyles({
     container: {
@@ -132,7 +129,7 @@ export class FormatSelector extends React.Component<Props, State> {
 
 
         return (
-                <div>
+                <div className={`qa-FormatSelector-Container`} key={this.props.provider.slug}>
                 {formats.map((format, ix) => (
                     <div
                         className={`qa-FormatSelector-ListItem`}

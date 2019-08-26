@@ -196,7 +196,6 @@ export class ExportInfo extends React.Component<Props, State> {
         const areaStr = getSqKmString(this.props.geojson);
 
         this.props.updateExportInfo({
-            ...this.props.exportInfo,
             areaStr,
         });
 
@@ -239,7 +238,6 @@ export class ExportInfo extends React.Component<Props, State> {
         // but the TextField (v0.18.7) does not size vertically to the defaultValue prop, only the value prop.
         // If we use value we cannot debounce the input because the user should see it as they type.
         this.props.updateExportInfo({
-            ...this.props.exportInfo,
             exportName: e.target.value,
         });
     }
@@ -249,7 +247,6 @@ export class ExportInfo extends React.Component<Props, State> {
         // but the TextField (v0.18.7) does not size vertically to the defaultValue prop, only the value prop.
         // If we use value we cannot debounce the input because the user should see it as they type.
         this.props.updateExportInfo({
-            ...this.props.exportInfo,
             datapackDescription: e.target.value,
         });
     }
@@ -259,7 +256,6 @@ export class ExportInfo extends React.Component<Props, State> {
         // but the TextField (v0.18.7) does not size vertically to the defaultValue prop, only the value prop.
         // If we use value we cannot debounce the input because the user should see it as they type.
         this.props.updateExportInfo({
-            ...this.props.exportInfo,
             projectName: e.target.value,
         });
     }
@@ -289,7 +285,6 @@ export class ExportInfo extends React.Component<Props, State> {
         }
         // update the state with the new array of options
         this.props.updateExportInfo({
-            ...this.props.exportInfo,
             providers,
         });
     }
@@ -304,7 +299,6 @@ export class ExportInfo extends React.Component<Props, State> {
 
         // update the state with the new array of options
         this.props.updateExportInfo({
-            ...this.props.exportInfo,
             providers,
         });
     }
