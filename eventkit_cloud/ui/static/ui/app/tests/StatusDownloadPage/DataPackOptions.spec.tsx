@@ -35,7 +35,7 @@ describe('DataPackOptions component', () => {
             description: 'test',
             url: 'http://cloud.eventkit.test/api/jobs/67890',
             formats: [
-                'Geopackage',
+                'gpkg',
             ],
             permissions: {
                 value: 'PRIVATE',
@@ -45,7 +45,7 @@ describe('DataPackOptions component', () => {
             provider_tasks: [{
                 provider: 'test1',
                 formats: [
-                    'Geopackage',
+                    'gpkg',
                 ],
                 min_zoom: 0,
                 max_zoom: 3,
@@ -150,6 +150,7 @@ describe('DataPackOptions component', () => {
             'test1': {
                 minZoom: 0,
                 maxZoom: 3,
+                formats: ['gpkg'],
             }
         };
         instance.handleClone();
