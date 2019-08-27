@@ -508,7 +508,7 @@ function mapDispatchToProps(dispatch) {
             dispatch(clearReRunInfo())
         ),
         cloneExport: (cartDetails: Eventkit.FullRun, providerArray: Eventkit.Provider[],
-                      exportOptions: Eventkit.Store.ProviderExportOptions) => {
+                      exportOptions: Eventkit.Map<Eventkit.Store.ProviderExportOptions>) => {
             const featureCollection = {
                 type: 'FeatureCollection',
                 features: [cartDetails.job.extent],

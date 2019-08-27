@@ -545,11 +545,9 @@ export class BreadcrumbStepper extends React.Component<Props, State> {
         const { exportOptions } = this.props.exportInfo;
         const providers = [...this.props.exportInfo.providers];
 
-        // formats only consists of geopackage right now
-        const { formats } = this.props.exportInfo;
-
         providers.forEach((provider) => {
             let minZoom = provider.level_from, maxZoom = provider.level_to;
+            let formats = ['gpkg'];  // Default to GPKG if nothing is passed through
             let options = exportOptions[provider.slug];
             if(options) {
                 if(isZoomLevelInRange(options.minZoom, provider as Eventkit.Provider)) {
@@ -558,11 +556,14 @@ export class BreadcrumbStepper extends React.Component<Props, State> {
                 if(isZoomLevelInRange(options.maxZoom, provider as Eventkit.Provider)) {
                     maxZoom = Number(options.maxZoom);
                 }
+                if (options && options.formats) {
+                    formats = options.formats;
+                }
             }
 
             providerTasks.push({
-                provider: provider.name, formats: [formats[0]],
-                max_zoom: maxZoom, min_zoom: minZoom
+                provider: provider.name, formats: formats,
+                max_zoom: maxZoom, min_zoom: minZoom,
             });
         });
 

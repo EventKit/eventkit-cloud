@@ -1,4 +1,3 @@
-
 import { types } from '../actions/datacartActions';
 
 export const initialState = {
@@ -73,6 +72,16 @@ export function exportInfoReducer(state = initialState.exportInfo, action) {
             return {
                 ...state,
                 ...action.exportInfo,
+            };
+        case types.UPDATE_EXPORT_OPTIONS:
+            return {
+                ...state,
+                exportOptions: {
+                    ...state.exportOptions,
+                    [action.providerSlug]: {
+                        ...action.providerOptions,
+                    },
+                },
             };
         case types.CLEAR_EXPORT_INFO:
             return {
