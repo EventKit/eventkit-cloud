@@ -662,6 +662,24 @@ def nitf_export_task(self, result=None, run_uid=None, task_uid=None, stage_dir=N
     return result
 
 
+@app.task(name='Erdas Imagine HFA (.img)', bind=True, base=FormatTask)
+def hfa_export_task(self, result=None, run_uid=None, task_uid=None, stage_dir=None, job_name=None,
+                     user_details=None, *args, **kwargs):
+    """
+    Class defining Erdas Imagine HFA (.img) export function.
+    """
+    result = result or {}
+
+    hfa_in_dataset = parse_result(result, 'result')
+    hfa_out_dataset = os.path.join(stage_dir, '{0}.img'.format(job_name))
+    hfa = gdalutils.convert(
+        file_format='hfa', in_file=hfa_in_dataset, out_file=hfa_out_dataset, task_uid=task_uid)
+
+    result['result'] = hfa
+    result['hfa'] = hfa
+    return result
+
+
 @app.task(name='Clip Export', bind=True, base=UserDetailsBase)
 def clip_export_task(self, result=None, run_uid=None, task_uid=None, stage_dir=None, job_name=None, user_details=None,
                      *args, **kwargs):

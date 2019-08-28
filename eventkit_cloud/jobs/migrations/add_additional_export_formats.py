@@ -9,6 +9,8 @@ class Migration(migrations.Migration):
         ExportFormat = apps.get_model('jobs', 'ExportFormat')  # NOQA
         ExportFormat.objects.create(
             name='National Imagery Transmission Format', description='NITF Raster', slug='nitf')
+        ExportFormat.objects.create(
+            name='Erdas Imagine HFA Format', description='Erdas Imagine HFA Raster', slug='hfa')
 
     dependencies = [
         ('jobs', '0003_auto_20190801_0137'),
