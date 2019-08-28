@@ -541,7 +541,7 @@ def kml_export_task(self, result=None, run_uid=None, task_uid=None, stage_dir=No
     kmlfile = os.path.join(stage_dir, '{0}.kml'.format(job_name))
     try:
         ogr = OGR(task_uid=task_uid)
-        out = gdalutils.convert(file_format='KML', in_file=gpkg, out_file=kmlfile)
+        out = ogr.convert(file_format='KML', in_file=gpkg, out_file=kmlfile)
         result['result'] = out
         result['geopackage'] = gpkg
         return result

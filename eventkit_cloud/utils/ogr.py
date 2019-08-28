@@ -51,7 +51,7 @@ class OGR(object):
         if task_process.exitcode != 0:
             logger.error('%s', task_process.stderr)
             raise Exception("ogr2ogr process failed with returncode: {0}".format(task_process.exitcode))
-        if self.requires_zip(file_format):
+        if requires_zip(file_format):
             logger.debug("Requires zip: {0}".format(out_file))
             out_file = create_zip_file(out_file, get_zip_name(out_file))
         logger.debug('ogr2ogr returned: {0}'.format(task_process.exitcode))

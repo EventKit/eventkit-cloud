@@ -179,42 +179,42 @@ class TestGdalUtils(TestCase):
             convert(dataset=None)
 
         # No-op (same source and destination format)
-        dataset = "/path/to/dataset"
         in_dataset = "/path/to/old_dataset"
+        out_dataset = "/path/to/dataset"
         fmt = "gpkg"
         get_meta_mock.return_value = {'driver': 'gpkg', 'is_raster': True}
         self.task_process.return_value = Mock(exitcode=0)
-        convert(dataset=dataset, fmt=fmt, task_uid=self.task_uid)
+        convert(file_format=fmt, in_file=in_dataset, out_file=out_dataset, task_uid=self.task_uid)
         self.task_process().start_process.assert_not_called()
 
         # Raster geopackage from geotiff
-        dataset = "/path/to/dataset"
         in_dataset = "/path/to/old_dataset"
+        out_dataset = "/path/to/dataset"
         fmt = "gpkg"
         band_type = "-ot byte"
-        expected_cmd = "gdalwarp -overwrite -of {0} {1} {2} {3}".format(
+        expected_cmd = "gdal_translate -of {0} {1} {2} {3}".format(
             fmt,
             band_type,
             in_dataset,
-            dataset
+            out_dataset
         )
         get_meta_mock.return_value = {'driver': 'gtiff', 'is_raster': True, 'nodata': None}
         self.task_process.return_value = Mock(exitcode=0)
-        convert(dataset=dataset, fmt=fmt, task_uid=self.task_uid)
+        convert(file_format=fmt, in_file=in_dataset, out_file=out_dataset, task_uid=self.task_uid)
         self.task_process().start_process.assert_called_with(expected_cmd, executable='/bin/bash', shell=True,
                                                              stderr=-1, stdout=-1)
 
         # Geotiff from raster geopackage
         fmt = "gtiff"
         band_type = ""
-        expected_cmd = "gdalwarp -overwrite -of {0} {1} {2} {3}".format(
+        expected_cmd = "gdal_translate -of {0} {1} {2} {3}".format(
             fmt,
             band_type,
             in_dataset,
-            dataset
+            out_dataset
         )
         get_meta_mock.return_value = {'driver': 'gpkg', 'is_raster': True}
-        convert(dataset=dataset, fmt=fmt, task_uid=self.task_uid)
+        convert(file_format=fmt, in_file=in_dataset, out_file=out_dataset, task_uid=self.task_uid)
         self.task_process().start_process.assert_called_with(expected_cmd, executable='/bin/bash', shell=True,
                                                              stderr=-1, stdout=-1)
 
@@ -222,11 +222,11 @@ class TestGdalUtils(TestCase):
         fmt = "gpkg"
         expected_cmd = "ogr2ogr -overwrite -f {0} {1} {2}".format(
             fmt,
-            dataset,
+            out_dataset,
             in_dataset
         )
         get_meta_mock.return_value = {'driver': 'geojson', 'is_raster': False}
-        convert(dataset=dataset, fmt=fmt, task_uid=self.task_uid)
+        convert(file_format=fmt, in_file=in_dataset, out_file=out_dataset, task_uid=self.task_uid)
         self.task_process().start_process.assert_called_with(expected_cmd, executable='/bin/bash', shell=True,
                                                              stderr=-1, stdout=-1)
 
