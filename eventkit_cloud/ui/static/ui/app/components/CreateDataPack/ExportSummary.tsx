@@ -147,32 +147,36 @@ export class ExportSummary extends React.Component<Props, State> {
             window.location.hash = step.scrollToId;
         }
     }
-    
+
     private getExportInfo(provider: Eventkit.Provider) {
+        // Generate elements to display information about the export options for the specified provider.
         const providerOptions = this.props.exportOptions[provider.slug];
         // Reusable func to add a section of text to the info.
-        let generateSection = (content) => { return (<p className={this.props.classes.exportInfoLine}>{content}</p>)};
-        let exportInfo = [];
-        exportInfo.push((<p className={this.props.classes.exportInfoLine} style={{fontWeight: 'bold'}}>{provider.name}</p>));
-        if(providerOptions) {
+        let index = 0; // Used for keys as React considers this to be a list.
+        const generateSection = (content) => (<p className={this.props.classes.exportInfoLine} key={index++}>{content}</p>);
+        const exportInfo = [];
+        exportInfo.push((<p className={this.props.classes.exportInfoLine} style={{fontWeight: 'bold'}} key="name">{provider.name}</p>));
+        if (providerOptions) {
             if (supportsZoomLevels(provider)) {
-                let minZoom = isZoomLevelInRange(providerOptions.minZoom, provider) ? providerOptions.minZoom : provider.level_from;
-                let maxZoom = isZoomLevelInRange(providerOptions.maxZoom, provider) ? providerOptions.maxZoom : provider.level_to;
+                // For sources that support specifying a zoom level, check for and validate the values, otherwise use from/to
+                const minZoom = isZoomLevelInRange(providerOptions.minZoom, provider) ? providerOptions.minZoom : provider.level_from;
+                const maxZoom = isZoomLevelInRange(providerOptions.maxZoom, provider) ? providerOptions.maxZoom : provider.level_to;
                 exportInfo.push(generateSection(`Zooms: ${minZoom}-${maxZoom}`));
-            }
-            else {
+            } else {
+                // Source does not support zooming
                 exportInfo.push(generateSection(`Zooms: Default zoom selected.`));
             }
             if (providerOptions.formats) {
-                let formatNames = provider.supported_formats.filter(format => providerOptions.formats.indexOf(format.slug) >= 0).map(format => format.name);
+                // Formats should always be specified.
+                const formatNames = provider.supported_formats.filter(
+                    format => providerOptions.formats.indexOf(format.slug) >= 0).map(format => format.name);
                 exportInfo.push(generateSection(`Formats: ${formatNames.join(', ')}`));
             }
-        }
-        else {
+        } else {
             // If we allow no options to be selected, display a default message.
-            exportInfo.push(generateSection(`Default options selected.`))
+            exportInfo.push(generateSection(`Default options selected.`));
         }
-        return (<div style={{paddingBottom: '10px'}} key={provider.uid}>{exportInfo.map((info) => {return info})}</div>)
+        return (<div className="source-info" style={{paddingBottom: '10px'}} key={provider.uid}>{exportInfo.map((info) => info)}</div>);
     }
 
     render() {
