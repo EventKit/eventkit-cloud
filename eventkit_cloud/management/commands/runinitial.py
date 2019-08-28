@@ -14,7 +14,6 @@ class Command(BaseCommand):
         call_command('createcachetable')
         if options['setup']:
             call_command('loaddata', 'admin_user')
-            call_command('loaddata', 'insert_provider_types')
             call_command('loaddata', 'osm_provider')
             call_command('loaddata', 'datamodel_presets')
             call_command('load_land_data')
