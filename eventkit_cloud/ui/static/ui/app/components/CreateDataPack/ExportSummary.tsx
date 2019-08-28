@@ -8,6 +8,7 @@ import MapCard from '../common/MapCard';
 import CustomScrollbar from '../CustomScrollbar';
 import CustomTableRow from '../CustomTableRow';
 import { joyride } from '../../joyride.config';
+import {isZoomLevelInRange, supportsZoomLevels} from "../../utils/generic";
 
 const jss = (theme: Eventkit.Theme & Theme) => createStyles({
     root: {
@@ -60,6 +61,12 @@ const jss = (theme: Eventkit.Theme & Theme) => createStyles({
     map: {
         width: '100%',
     },
+    exportInfoLine: {
+        width: '100%',
+        paddingLeft: '2em',
+        textIndent: '-2em',
+        margin: '0',
+    }
 });
 
 export interface Props {
@@ -69,6 +76,7 @@ export interface Props {
     projectName: string;
     providers: Eventkit.Provider[];
     areaStr: string;
+    exportOptions: Eventkit.Map<Eventkit.Store.ProviderExportOptions>;
     walkthroughClicked: boolean;
     onWalkthroughReset: () => void;
     theme: Eventkit.Theme & Theme;
@@ -93,6 +101,7 @@ export class ExportSummary extends React.Component<Props, State> {
             isRunning: false,
         };
         this.callback = this.callback.bind(this);
+        this.getExportInfo = this.getExportInfo.bind(this);
     }
 
     componentDidMount() {
@@ -137,6 +146,33 @@ export class ExportSummary extends React.Component<Props, State> {
         if (step && step.scrollToId) {
             window.location.hash = step.scrollToId;
         }
+    }
+    
+    private getExportInfo(provider: Eventkit.Provider) {
+        const providerOptions = this.props.exportOptions[provider.slug];
+        // Reusable func to add a section of text to the info.
+        let generateSection = (content) => { return (<p className={this.props.classes.exportInfoLine}>{content}</p>)};
+        let exportInfo = [];
+        exportInfo.push((<p className={this.props.classes.exportInfoLine} style={{fontWeight: 'bold'}}>{provider.name}</p>));
+        if(providerOptions) {
+            if (supportsZoomLevels(provider)) {
+                let minZoom = isZoomLevelInRange(providerOptions.minZoom, provider) ? providerOptions.minZoom : provider.level_from;
+                let maxZoom = isZoomLevelInRange(providerOptions.maxZoom, provider) ? providerOptions.maxZoom : provider.level_to;
+                exportInfo.push(generateSection(`Zooms: ${minZoom}-${maxZoom}`));
+            }
+            else {
+                exportInfo.push(generateSection(`Zooms: Default zoom selected.`));
+            }
+            if (providerOptions.formats) {
+                let formatNames = provider.supported_formats.filter(format => providerOptions.formats.indexOf(format.slug) >= 0).map(format => format.name);
+                exportInfo.push(generateSection(`Formats: ${formatNames.join(', ')}`));
+            }
+        }
+        else {
+            // If we allow no options to be selected, display a default message.
+            exportInfo.push(generateSection(`Default options selected.`))
+        }
+        return (<div style={{paddingBottom: '10px'}} key={provider.uid}>{exportInfo.map((info) => {return info})}</div>)
     }
 
     render() {
@@ -197,7 +233,8 @@ export class ExportSummary extends React.Component<Props, State> {
                                 <CustomTableRow
                                     className="qa-ExportSummary-sources"
                                     title="Data Sources"
-                                    data={providers.map(provider => <p style={{ width: '100%' }} key={provider.uid}>{provider.name}</p>)}
+                                    data={providers.map(provider => this.getExportInfo(provider))}
+                                    dataStyle={{display: 'block'}}
                                 />
                                 <div id="aoi-heading" className={`qa-ExportSummary-aoiHeading ${classes.exportHeading}`} >
                                     Area of Interest (AOI)
@@ -229,6 +266,7 @@ function mapStateToProps(state) {
         projectName: state.exportInfo.projectName,
         providers: state.exportInfo.providers,
         areaStr: state.exportInfo.areaStr,
+        exportOptions: state.exportInfo.exportOptions,
     };
 }
 
