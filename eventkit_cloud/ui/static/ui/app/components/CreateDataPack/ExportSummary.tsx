@@ -155,7 +155,7 @@ export class ExportSummary extends React.Component<Props, State> {
         let index = 0; // Used for keys as React considers this to be a list.
         const generateSection = (content) => (<p className={this.props.classes.exportInfoLine} key={index++}>{content}</p>);
         const exportInfo = [];
-        exportInfo.push((<p className={this.props.classes.exportInfoLine} style={{fontWeight: 'bold'}} key="name">{provider.name}</p>));
+        exportInfo.push((<p className={this.props.classes.exportInfoLine} style={{color: 'black'}} key="name">{provider.name}</p>));
         if (providerOptions) {
             if (supportsZoomLevels(provider)) {
                 // For sources that support specifying a zoom level, check for and validate the values, otherwise use from/to
