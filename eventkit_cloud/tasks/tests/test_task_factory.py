@@ -22,7 +22,7 @@ class TestExportTaskFactory(TestCase):
     Test cases for the TaskFactory.
     """
 
-    fixtures = ('insert_provider_types.json', 'osm_provider.json',)
+    fixtures = ('osm_provider.json',)
 
     def setUp(self,):
         self.path = os.path.dirname(os.path.realpath(__file__))

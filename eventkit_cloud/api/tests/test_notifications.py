@@ -15,7 +15,7 @@ from eventkit_cloud.core.helpers import sendnotification, NotificationVerb, Noti
 
 
 class TestNotifications(APITestCase):
-    fixtures = ('insert_provider_types.json', 'osm_provider.json', 'datamodel_presets.json',)
+    fixtures = ('osm_provider.json', 'datamodel_presets.json',)
 
     def __init__(self, *args, **kwargs):
         super(TestNotifications, self).__init__(*args, **kwargs)
@@ -45,6 +45,3 @@ class TestNotifications(APITestCase):
         self.assertEqual(response.data[0]["description"],memo)
         self.assertEqual(response.data[0]["level"],level)
         self.assertEqual(response.data[0]["verb"],verb)
-
-
-

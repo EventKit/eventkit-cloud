@@ -1,37 +1,29 @@
+from contextlib import contextmanager
+import copy
+from enum import Enum
+import logging
 import os
+import pickle
 import re
 import requests
+import signal
+from time import sleep
 
-import copy
-from contextlib import contextmanager
+from numpy import linspace
+import yaml
+
+
 
 from django.conf import settings
 from django.template.loader import render_to_string
 from django.utils import timezone
 from django.db.models import Q
 
-from enum import Enum
-from numpy import linspace
-
 from eventkit_cloud.utils import auth_requests
 from eventkit_cloud.utils.gdalutils import get_band_statistics
-import pickle
-import logging
-from time import sleep
-import signal
-import yaml
+from eventkit_cloud.utils.generic import cd, get_file_paths
 
 logger = logging.getLogger()
-
-
-@contextmanager
-def cd(newdir):
-    prevdir = os.getcwd()
-    os.chdir(newdir)
-    try:
-        yield
-    finally:
-        os.chdir(prevdir)
 
 
 class Directory(Enum):
@@ -215,15 +207,6 @@ def get_human_readable_metadata_document(metadata):
                              context={'metadata': metadata}).replace('\r\n', '\n').replace('\n',
                                                                                            '\r\n').encode())
     return metadata_file
-
-
-def get_file_paths(directory, paths=None):
-    paths = paths or dict()
-    with cd(directory):
-        for dirpath, _, filenames in os.walk('./'):
-            for f in filenames:
-                paths[os.path.abspath(os.path.join(dirpath, f))] = os.path.join(dirpath, f)
-    return paths
 
 
 def get_last_update(url, type, cert_var=None):

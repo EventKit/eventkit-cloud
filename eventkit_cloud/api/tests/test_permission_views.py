@@ -18,7 +18,7 @@ from eventkit_cloud.tasks.models import ExportRun
 
 
 class TestJobPermissions(APITestCase):
-    fixtures = ('insert_provider_types.json', 'osm_provider.json', 'datamodel_presets.json',)
+    fixtures = ('osm_provider.json', 'datamodel_presets.json',)
 
     def __init__(self, *args, **kwargs):
         super(TestJobPermissions, self).__init__(*args, **kwargs)
@@ -284,7 +284,7 @@ class TestJobPermissions(APITestCase):
         self.assertEqual(response.data["permissions"]["groups"]["group_one"], "READ")
 
 class TestExportRunViewSet(APITestCase):
-    fixtures = ('insert_provider_types.json', 'osm_provider.json', 'datamodel_presets.json',)
+    fixtures = ('osm_provider.json', 'datamodel_presets.json',)
 
     def __init__(self, *args, **kwargs):
         super(TestExportRunViewSet, self).__init__(*args, **kwargs)
