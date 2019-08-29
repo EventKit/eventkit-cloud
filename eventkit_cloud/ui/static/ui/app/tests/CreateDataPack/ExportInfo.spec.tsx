@@ -124,7 +124,6 @@ describe('ExportInfo component', () => {
         expect(joyrideSpy.calledOnce).toBe(true);
         expect(props.setNextDisabled.called).toBe(true);
         expect(props.updateExportInfo.calledWith({
-            ...props.exportInfo,
             areaStr: expectedString,
         })).toBe(true);
         expect(props.updateExportInfo.called).toBe(true);
@@ -180,7 +179,6 @@ describe('ExportInfo component', () => {
         instance.onNameChange(event);
         expect(props.updateExportInfo.calledOnce).toBe(true);
         expect(props.updateExportInfo.calledWith({
-            ...props.exportInfo,
             exportName: 'test',
         })).toBe(true);
     });
@@ -191,7 +189,6 @@ describe('ExportInfo component', () => {
         instance.onDescriptionChange(event);
         expect(props.updateExportInfo.calledOnce).toBe(true);
         expect(props.updateExportInfo.calledWith({
-            ...props.exportInfo,
             datapackDescription: 'test',
         })).toBe(true);
     });
@@ -202,7 +199,6 @@ describe('ExportInfo component', () => {
         instance.onProjectChange(event);
         expect(props.updateExportInfo.calledOnce).toBe(true);
         expect(props.updateExportInfo.calledWith({
-            ...props.exportInfo,
             projectName: 'test',
         })).toBe(true);
     });
@@ -221,7 +217,6 @@ describe('ExportInfo component', () => {
         instance.onChangeCheck(event);
         expect(props.updateExportInfo.called).toBe(true);
         expect(props.updateExportInfo.calledWith({
-            ...props.exportInfo,
             providers: [{ name: 'one' }, { name: 'two' }],
         })).toBe(true);
     });
@@ -240,7 +235,6 @@ describe('ExportInfo component', () => {
         instance.onChangeCheck(event);
         expect(props.updateExportInfo.called).toBe(true);
         expect(props.updateExportInfo.calledWith({
-            ...props.exportInfo,
             providers: [{ name: 'one' }],
         })).toBe(true);
     });

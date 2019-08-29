@@ -352,9 +352,10 @@ describe('DataPackPage component', () => {
     });
 
     it('updateLocationQuery should call push with updated query', () => {
+        wrapper.setProps({location: {...props.location, search: {}}});
         browserHistory.reset();
-        const query = { somekey: 'this is a new query key' };
-        const expected = { "search": queryString.stringify(query) };
+        const query = { somekey: 'Some_New_Key' };
+        const expected = { "search": queryString.stringify(query)};
         instance.updateLocationQuery(query);
         expect(browserHistory.calledOnce).toBe(true);
         expect(browserHistory.calledWith(expected)).toBe(true);

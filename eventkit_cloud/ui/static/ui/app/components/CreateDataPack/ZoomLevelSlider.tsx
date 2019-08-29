@@ -62,7 +62,7 @@ export class ZoomLevelSlider extends React.Component<Props, {}> {
             // Send null for min and max zoom to force the prop to reupdate with the last valid value
             this.props.updateZoom(null, null);
         }
-    }
+    };
 
     render() {
         const { classes } = this.props;

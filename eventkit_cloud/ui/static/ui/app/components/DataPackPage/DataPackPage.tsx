@@ -221,7 +221,9 @@ export class DataPackPage extends React.Component<Props, State> {
             changedQuery = true;
         } else {
             const keys = Object.keys(queryString.parse(this.props.location.search));
-            if (!keys.every(key => queryString.parse(this.props.location.search)[key] === queryString.parse(prevProps.location.search)[key])) {
+            const previousQuery = queryString.parse(prevProps.location.search);
+            const newQuery = queryString.parse(this.props.location.search);
+            if (!keys.every(key => previousQuery[key] === newQuery[key])) {
                 changedQuery = true;
             }
         }
@@ -332,10 +334,14 @@ export class DataPackPage extends React.Component<Props, State> {
     }
 
     private updateLocationQuery(query: any) {
-        const queryAsString = queryString.stringify(query);
-        if (!isEqual(queryString.parse(queryAsString), queryString.parse(this.props.location.search))) {
+        const currentQuery = queryString.parse(this.props.location.search);
+        const newQuery = {
+            ...currentQuery,
+            ...query
+        }
+        if (!isEqual(currentQuery, newQuery)) {
+            const queryAsString = queryString.stringify(newQuery);
             history.push({"search": queryAsString});
-            this.props.location.search = queryAsString;
         }
     }
 
