@@ -32,7 +32,7 @@ from eventkit_cloud.tasks.task_factory import InvalidLicense
 logger = logging.getLogger(__name__)
 
 class TestJobViewSet(APITestCase):
-    fixtures = ('insert_provider_types.json', 'osm_provider.json', 'datamodel_presets.json',)
+    fixtures = ('osm_provider.json', 'datamodel_presets.json',)
 
     def __init__(self, *args, **kwargs):
         super(TestJobViewSet, self).__init__(*args, **kwargs)
@@ -529,7 +529,7 @@ class TestBBoxSearch(APITestCase):
     Test cases for testing bounding box searches.
     """
 
-    fixtures = ('insert_provider_types.json', 'osm_provider.json', 'datamodel_presets.json')
+    fixtures = ('osm_provider.json', 'datamodel_presets.json')
 
     def __init__(self, *args, **kwargs):
         super(TestBBoxSearch, self).__init__(*args, **kwargs)
@@ -619,7 +619,7 @@ class TestExportRunViewSet(APITestCase):
     """
     Test cases for ExportRunViewSet
     """
-    fixtures = ('insert_provider_types.json', 'osm_provider.json', 'datamodel_presets.json',)
+    fixtures = ('osm_provider.json', 'datamodel_presets.json',)
 
     def __init__(self, *args, **kwargs):
         super(TestExportRunViewSet, self).__init__(*args, **kwargs)
@@ -853,7 +853,7 @@ class TestExportTaskViewSet(APITestCase):
     Test cases for ExportTaskViewSet
     """
 
-    fixtures = ('insert_provider_types.json', 'osm_provider.json', 'datamodel_presets.json',)
+    fixtures = ('osm_provider.json', 'datamodel_presets.json',)
 
     def __init__(self, *args, **kwargs):
         super(TestExportTaskViewSet, self).__init__(*args, **kwargs)
@@ -1242,7 +1242,7 @@ class TestGroupDataViewSet(APITestCase):
 
 
 class TestUserJobActivityViewSet(APITestCase):
-    fixtures = ('insert_provider_types.json', 'osm_provider.json')
+    fixtures = ('osm_provider.json')
 
     def __init__(self, *args, **kwargs):
         super(TestUserJobActivityViewSet, self).__init__(*args, **kwargs)

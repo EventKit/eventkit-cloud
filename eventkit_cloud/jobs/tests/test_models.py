@@ -21,7 +21,7 @@ class TestJob(TestCase):
     """
     Test cases for Job model
     """
-    fixtures = ('insert_provider_types.json', 'osm_provider.json', 'datamodel_presets.json')
+    fixtures = ('osm_provider.json', 'datamodel_presets.json')
 
     def setUp(self):
         self.path = os.path.dirname(os.path.realpath(__file__))

@@ -14,7 +14,7 @@ logger = logging.getLogger(__name__)
 
 
 class TestJobFilter(APITestCase):
-    fixtures = ('insert_provider_types.json', 'osm_provider.json',)
+    fixtures = ('osm_provider.json',)
 
     def __init__(self, *args, **kwargs):
         self.user1 = None
