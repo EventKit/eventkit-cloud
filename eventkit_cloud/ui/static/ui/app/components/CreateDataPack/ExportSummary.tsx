@@ -182,6 +182,7 @@ export class ExportSummary extends React.Component<Props, State> {
     render() {
         const { classes } = this.props;
         const { steps, isRunning } = this.state;
+        const dataStyle = { color: 'black' };
 
         const providers = this.props.providers.filter(provider => (provider.display !== false));
         return (
@@ -223,16 +224,19 @@ export class ExportSummary extends React.Component<Props, State> {
                                     className="qa-ExportSummary-name"
                                     title="Name"
                                     data={this.props.exportName}
+                                    dataStyle={dataStyle}
                                 />
                                 <CustomTableRow
                                     className="qa-ExportSummary-description"
                                     title="Description"
                                     data={this.props.datapackDescription}
+                                    dataStyle={dataStyle}
                                 />
                                 <CustomTableRow
                                     className="qa-ExportSummary-project"
                                     title="Project / Category"
                                     data={this.props.projectName}
+                                    dataStyle={dataStyle}
                                 />
                                 <CustomTableRow
                                     className="qa-ExportSummary-sources"
@@ -247,6 +251,7 @@ export class ExportSummary extends React.Component<Props, State> {
                                     className="qa-ExportsSummary-area"
                                     title="Area"
                                     data={this.props.areaStr}
+                                    dataStyle={dataStyle}
                                 />
                             </div>
                             <div id="aoi-map" className={`qa-ExportSummary-map ${classes.mapCard}`}>
