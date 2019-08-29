@@ -1242,7 +1242,7 @@ class TestGroupDataViewSet(APITestCase):
 
 
 class TestUserJobActivityViewSet(APITestCase):
-    fixtures = ('osm_provider.json')
+    fixtures = ('osm_provider.json',)
 
     def __init__(self, *args, **kwargs):
         super(TestUserJobActivityViewSet, self).__init__(*args, **kwargs)
