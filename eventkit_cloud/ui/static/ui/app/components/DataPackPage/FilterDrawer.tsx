@@ -6,12 +6,14 @@ import DateFilter from './DateFilter';
 import FilterHeader from './FilterHeader';
 import CustomScrollbar from '../CustomScrollbar';
 import ProvidersFilter from './ProvidersFilter';
+import FormatsFilter from "./FormatsFilter";
 
 export interface Props {
     onFilterApply: (state: State) => void;
     onFilterClear: () => void;
     open: boolean;
     providers: Eventkit.Provider[];
+    formats: Eventkit.Format[];
 }
 
 export interface State {
@@ -24,6 +26,7 @@ export interface State {
         submitted: boolean;
     };
     providers: { [slug: string]: boolean };
+    formats: { [slug: string]: boolean };
 }
 
 export class FilterDrawer extends React.Component<Props, State> {
@@ -34,6 +37,7 @@ export class FilterDrawer extends React.Component<Props, State> {
         this.handleFilterClear = this.handleFilterClear.bind(this);
         this.handlePermissionsChange = this.handlePermissionsChange.bind(this);
         this.handleProvidersChange = this.handleProvidersChange.bind(this);
+        this.handleFormatsChange = this.handleFormatsChange.bind(this);
         this.handleStatusChange = this.handleStatusChange.bind(this);
         this.handleMinDate = this.handleMinDate.bind(this);
         this.handleMaxDate = this.handleMaxDate.bind(this);
@@ -55,6 +59,7 @@ export class FilterDrawer extends React.Component<Props, State> {
                 submitted: false,
             },
             providers: {},
+            formats: {},
         };
     }
 
@@ -86,6 +91,17 @@ export class FilterDrawer extends React.Component<Props, State> {
         }
 
         this.setState({ providers });
+    }
+
+    private handleFormatsChange(slug: string, isSelected: boolean) {
+        const { formats } = this.state;
+        if (isSelected) {
+            formats[slug] = true;
+        } else {
+            delete formats[slug];
+        }
+
+        this.setState({ formats });
     }
 
     private handleMinDate(date: string) {
@@ -142,6 +158,11 @@ export class FilterDrawer extends React.Component<Props, State> {
                         onChange={this.handleProvidersChange}
                         providers={this.props.providers}
                         selected={this.state.providers}
+                    />
+                    <FormatsFilter
+                        onChange={this.handleFormatsChange}
+                        formats={this.props.formats}
+                        selected={this.state.formats}
                     />
                 </CustomScrollbar>
             </Drawer>

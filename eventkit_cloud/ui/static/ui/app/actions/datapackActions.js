@@ -82,6 +82,7 @@ export function getRuns(args = {}) {
         });
     }
     const providers = (args.providers) ? Object.keys(args.providers) : [];
+    const formats = (args.formats) ? Object.keys(args.formats) : [];
     const params = { slim: 'true' };
     params.page_size = args.page_size;
     if (args.ordering) {
@@ -97,6 +98,7 @@ export function getRuns(args = {}) {
     if (args.maxDate) params.max_date = args.maxDate;
     if (args.search) params.search_term = args.search.slice(0, 1000);
     if (providers.length) params.providers = providers.join(',');
+    if (formats.length) params.formats = formats.join(',');
 
     const data = {};
     if (args.geojson) {
