@@ -15,6 +15,7 @@ import sys
 from osgeo import gdal, ogr, osr
 
 from eventkit_cloud.tasks.task_process import TaskProcess
+from eventkit_cloud.utils.generic import requires_zip, create_zip_file, get_zip_name
 from django.conf import settings
 
 logger = logging.getLogger(__name__)
@@ -363,43 +364,45 @@ def clip_dataset(boundary=None, in_dataset=None, out_dataset=None, fmt=None, tab
 
 
 @retry
-def convert(dataset=None, fmt=None, task_uid=None):
+def convert(file_format, in_file=None, out_file=None, task_uid=None):
     """
     Uses gdalwarp or ogr2ogr to convert a raster or vector dataset into another format.
     If the dataset is already in the output format, returns the unaltered original.
-    :param dataset: Raster or vector file to be converted
-    :param fmt: Short format (e.g. gpkg, gtiff) to convert into
+    :param in_file: Raster or vector file to be converted
+    :param out_file: Raster or vector file to be output
+    :param file_format: Short format (e.g. gpkg, gtiff) to convert into
     :param task_uid: A task uid to update
     :return: Converted dataset, same filename as input
     """
 
-    if not dataset:
-        raise Exception("Could not open input file: {0}".format(dataset))
+    if not in_file:
+        raise Exception("Could not open input file: {0}".format(in_file))
 
-    meta = get_meta(dataset)
+    meta = get_meta(in_file)
     driver, is_raster = meta['driver'], meta['is_raster']
 
-    if not fmt or not driver or driver.lower() == fmt.lower():
-        return dataset
+    if not file_format or not driver or driver.lower() == file_format.lower():
+        return in_file
 
-    in_ds = os.path.join(os.path.dirname(dataset), "old_{0}".format(os.path.basename(dataset)))
-    os.rename(dataset, in_ds)
+    if out_file is None:
+        out_file = in_file
 
     band_type = ""
     if is_raster:
-        cmd_template = Template("gdalwarp -overwrite -of $fmt $type $in_ds $out_ds")
+        cmd_template = Template("gdal_translate -of $fmt $type $in_ds $out_ds")
         # Geopackage raster only supports byte band type, so check for that
-        if fmt.lower() == 'gpkg':
+        if file_format.lower() == 'gpkg':
             band_type = "-ot byte"
     else:
         cmd_template = Template("ogr2ogr -overwrite -f $fmt $out_ds $in_ds")
 
-    cmd = cmd_template.safe_substitute({'fmt': fmt,
+    cmd = cmd_template.safe_substitute({'fmt': file_format,
                                         'type': band_type,
-                                        'in_ds': in_ds,
-                                        'out_ds': dataset})
+                                        'in_ds': in_file,
+                                        'out_ds': out_file})
 
     logger.debug("GDAL convert cmd: %s", cmd)
+    logger.info(f"GDAL COMMAND {cmd}")
 
     task_process = TaskProcess(task_uid=task_uid)
     task_process.start_process(cmd, shell=True, executable="/bin/bash",
@@ -408,9 +411,11 @@ def convert(dataset=None, fmt=None, task_uid=None):
     if task_process.exitcode != 0:
         logger.error('{0}'.format(task_process.stderr))
         raise Exception("Conversion process failed with return code {0}".format(task_process.exitcode))
+    if requires_zip(file_format):
+        logger.debug("Requires zip: {0}".format(out_file))
+        out_file = create_zip_file(out_file, get_zip_name(out_file))
 
-    return dataset
-
+    return out_file
 
 def get_dimensions(bbox, scale):
     """
