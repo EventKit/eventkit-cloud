@@ -25,7 +25,7 @@ export class FormatsFilter extends React.Component<Props, {}> {
                 margin: '0px',
                 lineHeight: '36px',
             },
-            provider: {
+            format: {
                 display: 'flex',
                 flexWrap: 'nowrap' as 'nowrap',
                 lineHeight: '24px',
@@ -52,7 +52,7 @@ export class FormatsFilter extends React.Component<Props, {}> {
                     <strong>Formats</strong>
                 </p>
                 {formats.map(format => (
-                    <div style={styles.provider} key={format.slug}>
+                    <div style={styles.format} key={format.slug}>
                         <Checkbox
                             className="qa-FormatsFilter-Checkbox"
                             key={format.slug}
