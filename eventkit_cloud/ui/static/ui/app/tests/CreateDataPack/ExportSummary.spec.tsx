@@ -27,11 +27,15 @@ describe('Export Summary Component', () => {
         projectName: 'project',
         makePublic: true,
         providers: [
-            { name: 'one', uid: 1, display: true },
-            { name: 'two', uid: 2, display: false },
-            { name: 'three', uid: 3, display: false },
+            { name: 'one', uid: 1, display: true, slug: 'one', type: 'wmts', supported_formats: ['gpkg'] },
+            { name: 'two', uid: 2, display: false, slug: 'two', type: 'wmts', supported_formats: ['gpkg'] },
+            { name: 'three', uid: 3, display: false, slug: 'three', type: 'wmts', supported_formats: ['gpkg'] },
         ],
         areaStr: '12 sq km',
+        exportOptions: {
+            'one': { minZoom: 0, maxZoom: 2, formats: ['gpkg']},
+            'two': {},
+        },
         formats: 'gpkg',
         allFormats: [
             {

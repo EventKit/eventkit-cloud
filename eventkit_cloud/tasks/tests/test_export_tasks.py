@@ -185,7 +185,7 @@ class TestExportTasks(ExportTaskBase):
                                             stage_dir=stage_dir, job_name=job_name)
         mock_add_metadata_task.assert_called_once_with(result=result, job_uid=self.run.job.uid, provider_slug=expected_provider_slug)
         mock_clip.assert_not_called()
-        mock_convert.assert_called_once_with(dataset=expected_output_path, fmt='gpkg',
+        mock_convert.assert_called_once_with(file_format='gpkg', in_file=expected_output_path,
                                              task_uid=str(saved_export_task.uid))
         mock_convert.reset_mock()
         self.assertEqual(expected_output_path, result['result'])
@@ -201,7 +201,7 @@ class TestExportTasks(ExportTaskBase):
                                             task_uid=str(saved_export_task.uid), stage_dir=stage_dir, job_name=job_name)
         mock_clip.assert_called_once_with(boundary=expected_geojson, in_dataset=expected_output_path,
                                           fmt=None)
-        mock_convert.assert_called_once_with(dataset=expected_output_path, fmt='gpkg',
+        mock_convert.assert_called_once_with(file_format='gpkg', in_file=expected_output_path,
                                              task_uid=str(saved_export_task.uid))
         self.assertEqual(expected_output_path, result['result'])
         self.assertEqual(expected_output_path, result['geopackage'])

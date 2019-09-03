@@ -520,7 +520,7 @@ def shp_export_task(self, result=None, run_uid=None, task_uid=None, stage_dir=No
     try:
         ogr = OGR(task_uid=task_uid)
         out = ogr.convert(file_format='ESRI Shapefile', in_file=gpkg, out_file=shapefile,
-                          params="-lco 'ENCODING=UTF-8' -overwrite")
+                          params="-lco 'ENCODING=UTF-8' -overwrite -skipfailures")
         result['result'] = out
         result['geopackage'] = gpkg
         return result
@@ -614,7 +614,7 @@ def geopackage_export_task(self, result={}, run_uid=None, task_uid=None,
 
     add_metadata_task(result=result, job_uid=run.job.uid, provider_slug=task.export_provider_task.slug)
     gpkg = parse_result(result, 'result')
-    gpkg = gdalutils.convert(dataset=gpkg, fmt='gpkg', task_uid=task_uid)
+    gpkg = gdalutils.convert(file_format='gpkg', in_file=gpkg, task_uid=task_uid)
 
     result['result'] = gpkg
     result['geopackage'] = gpkg
@@ -629,15 +629,54 @@ def geotiff_export_task(self, result=None, run_uid=None, task_uid=None, stage_di
     """
     result = result or {}
 
-    gtiff = parse_result(result, 'result')
+    gtiff_in_dataset = parse_result(result, 'result')
+    gtiff_out_dataset = os.path.join(stage_dir, '{0}.tif'.format(job_name))
     selection = parse_result(result, 'selection')
     if selection:
-        gtiff = gdalutils.clip_dataset(boundary=selection, in_dataset=gtiff, fmt='gtiff', task_uid=task_uid)
+        gtiff = gdalutils.clip_dataset(boundary=selection, in_dataset=gtiff_in_dataset,
+                                       out_dataset=gtiff_out_dataset, fmt='gtiff', task_uid=task_uid)
     else:
-        gtiff = gdalutils.convert(dataset=gtiff, fmt='gtiff', task_uid=task_uid)
+        gtiff = gdalutils.convert(
+            file_format='gtiff', in_file=gtiff_in_dataset, out_file=gtiff_out_dataset, task_uid=task_uid)
 
     result['result'] = gtiff
     result['geotiff'] = gtiff
+    return result
+
+
+@app.task(name='National Imagery Transmission Format (.nitf)', bind=True, base=FormatTask)
+def nitf_export_task(self, result=None, run_uid=None, task_uid=None, stage_dir=None, job_name=None,
+                        user_details=None, *args, **kwargs):
+    """
+    Class defining nitf export function.
+    """
+    result = result or {}
+
+    nitf_in_dataset = parse_result(result, 'result')
+    nitf_out_dataset = os.path.join(stage_dir, '{0}.nitf'.format(job_name))
+    nitf = gdalutils.convert(
+        file_format='nitf', in_file=nitf_in_dataset, out_file=nitf_out_dataset, task_uid=task_uid)
+
+    result['result'] = nitf
+    result['nitf'] = nitf
+    return result
+
+
+@app.task(name='Erdas Imagine HFA (.img)', bind=True, base=FormatTask)
+def hfa_export_task(self, result=None, run_uid=None, task_uid=None, stage_dir=None, job_name=None,
+                     user_details=None, *args, **kwargs):
+    """
+    Class defining Erdas Imagine HFA (.img) export function.
+    """
+    result = result or {}
+
+    hfa_in_dataset = parse_result(result, 'result')
+    hfa_out_dataset = os.path.join(stage_dir, '{0}.img'.format(job_name))
+    hfa = gdalutils.convert(
+        file_format='hfa', in_file=hfa_in_dataset, out_file=hfa_out_dataset, task_uid=task_uid)
+
+    result['result'] = hfa
+    result['hfa'] = hfa
     return result
 
 

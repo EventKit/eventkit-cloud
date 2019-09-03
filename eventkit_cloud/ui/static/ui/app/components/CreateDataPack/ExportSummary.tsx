@@ -8,6 +8,7 @@ import MapCard from '../common/MapCard';
 import CustomScrollbar from '../CustomScrollbar';
 import CustomTableRow from '../CustomTableRow';
 import { joyride } from '../../joyride.config';
+import {isZoomLevelInRange, supportsZoomLevels} from "../../utils/generic";
 
 const jss = (theme: Eventkit.Theme & Theme) => createStyles({
     root: {
@@ -60,6 +61,12 @@ const jss = (theme: Eventkit.Theme & Theme) => createStyles({
     map: {
         width: '100%',
     },
+    exportInfoLine: {
+        width: '100%',
+        paddingLeft: '2em',
+        textIndent: '-2em',
+        margin: '0',
+    }
 });
 
 export interface Props {
@@ -69,6 +76,7 @@ export interface Props {
     projectName: string;
     providers: Eventkit.Provider[];
     areaStr: string;
+    exportOptions: Eventkit.Map<Eventkit.Store.ProviderExportOptions>;
     walkthroughClicked: boolean;
     onWalkthroughReset: () => void;
     theme: Eventkit.Theme & Theme;
@@ -93,6 +101,7 @@ export class ExportSummary extends React.Component<Props, State> {
             isRunning: false,
         };
         this.callback = this.callback.bind(this);
+        this.getExportInfo = this.getExportInfo.bind(this);
     }
 
     componentDidMount() {
@@ -139,9 +148,41 @@ export class ExportSummary extends React.Component<Props, State> {
         }
     }
 
+    private getExportInfo(provider: Eventkit.Provider) {
+        // Generate elements to display information about the export options for the specified provider.
+        const providerOptions = this.props.exportOptions[provider.slug];
+        // Reusable func to add a section of text to the info.
+        let index = 0; // Used for keys as React considers this to be a list.
+        const generateSection = (content) => (<p className={this.props.classes.exportInfoLine} key={index++}>{content}</p>);
+        const exportInfo = [];
+        exportInfo.push((<p className={this.props.classes.exportInfoLine} style={{color: 'black'}} key="name">{provider.name}</p>));
+        if (providerOptions) {
+            if (supportsZoomLevels(provider)) {
+                // For sources that support specifying a zoom level, check for and validate the values, otherwise use from/to
+                const minZoom = isZoomLevelInRange(providerOptions.minZoom, provider) ? providerOptions.minZoom : provider.level_from;
+                const maxZoom = isZoomLevelInRange(providerOptions.maxZoom, provider) ? providerOptions.maxZoom : provider.level_to;
+                exportInfo.push(generateSection(`Zooms: ${minZoom}-${maxZoom}`));
+            } else {
+                // Source does not support zooming
+                exportInfo.push(generateSection(`Zooms: Default zoom selected.`));
+            }
+            if (providerOptions.formats) {
+                // Formats should always be specified.
+                const formatNames = provider.supported_formats.filter(
+                    format => providerOptions.formats.indexOf(format.slug) >= 0).map(format => format.name);
+                exportInfo.push(generateSection(`Formats: ${formatNames.join(', ')}`));
+            }
+        } else {
+            // If we allow no options to be selected, display a default message.
+            exportInfo.push(generateSection(`Default options selected.`));
+        }
+        return (<div className="source-info" style={{paddingBottom: '10px'}} key={provider.uid}>{exportInfo.map((info) => info)}</div>);
+    }
+
     render() {
         const { classes } = this.props;
         const { steps, isRunning } = this.state;
+        const dataStyle = { color: 'black' };
 
         const providers = this.props.providers.filter(provider => (provider.display !== false));
         return (
@@ -183,21 +224,25 @@ export class ExportSummary extends React.Component<Props, State> {
                                     className="qa-ExportSummary-name"
                                     title="Name"
                                     data={this.props.exportName}
+                                    dataStyle={dataStyle}
                                 />
                                 <CustomTableRow
                                     className="qa-ExportSummary-description"
                                     title="Description"
                                     data={this.props.datapackDescription}
+                                    dataStyle={dataStyle}
                                 />
                                 <CustomTableRow
                                     className="qa-ExportSummary-project"
                                     title="Project / Category"
                                     data={this.props.projectName}
+                                    dataStyle={dataStyle}
                                 />
                                 <CustomTableRow
                                     className="qa-ExportSummary-sources"
                                     title="Data Sources"
-                                    data={providers.map(provider => <p style={{ width: '100%' }} key={provider.uid}>{provider.name}</p>)}
+                                    data={providers.map(provider => this.getExportInfo(provider))}
+                                    dataStyle={{display: 'block'}}
                                 />
                                 <div id="aoi-heading" className={`qa-ExportSummary-aoiHeading ${classes.exportHeading}`} >
                                     Area of Interest (AOI)
@@ -206,6 +251,7 @@ export class ExportSummary extends React.Component<Props, State> {
                                     className="qa-ExportsSummary-area"
                                     title="Area"
                                     data={this.props.areaStr}
+                                    dataStyle={dataStyle}
                                 />
                             </div>
                             <div id="aoi-map" className={`qa-ExportSummary-map ${classes.mapCard}`}>
@@ -229,6 +275,7 @@ function mapStateToProps(state) {
         projectName: state.exportInfo.projectName,
         providers: state.exportInfo.providers,
         areaStr: state.exportInfo.areaStr,
+        exportOptions: state.exportInfo.exportOptions,
     };
 }
 
