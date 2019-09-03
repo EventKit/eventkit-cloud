@@ -24,13 +24,23 @@ describe('FilterDrawer component', () => {
             service_description: 'OpenStreetMap vector data.',
             display: true,
             export_provider_type: 2,
+            supported_formats: ['fmt1'],
         },
+    ];
+    const formats = [
+        {
+            slug: 'fmt1',
+            name: 'Format One',
+            description: 'The first format for testing',
+            uid: '12346',
+        }
     ];
     const getProps = () => ({
         onFilterApply: sinon.spy(),
         onFilterClear: sinon.spy(),
         open: true,
         providers,
+        formats,
         groups: [
             { id: 'group1', name: 'group1', members: ['user1', 'user2', 'user3'] },
             { id: 'group2', name: 'group2', members: ['user1', 'user2'] },
@@ -83,6 +93,7 @@ describe('FilterDrawer component', () => {
                 submitted: false,
             },
             providers: { osm: true },
+            formats: { fmt1: true },
         };
         wrapper.setState(initialState);
         const stateStub = sinon.stub(instance, 'setState');
@@ -100,6 +111,7 @@ describe('FilterDrawer component', () => {
                 submitted: false,
             },
             providers: {},
+            formats: {},
         };
         expect(wrapper.state()).toEqual(initialState);
         instance.handleFilterClear();
