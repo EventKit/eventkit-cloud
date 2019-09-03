@@ -515,7 +515,7 @@ def shp_export_task(self, result=None, run_uid=None, task_uid=None, stage_dir=No
     """
     result = result or {}
     gpkg = os.path.join(stage_dir, '{0}.gpkg'.format(job_name))
-    shapefile = os.path.join(stage_dir, '{0}_shp'.format(job_name))
+    shapefile = os.path.join(stage_dir, '{0}'.format(job_name))
 
     try:
         ogr = OGR(task_uid=task_uid)

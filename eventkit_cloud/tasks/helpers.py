@@ -386,8 +386,7 @@ def get_metadata(data_provider_task_uid):
                                                             'slug': provider_task.slug,
                                                             'name': provider_task.name,
                                                             'files': [],
-                                                            'type': get_data_type_from_provider(
-                                                                provider_task.slug),
+                                                            'type': get_data_type_from_provider(provider_task.slug),
                                                             'description': str(
                                                                 data_provider.service_description).replace('\r\n',
                                                                                                            '\n').replace(
@@ -398,9 +397,9 @@ def get_metadata(data_provider_task_uid):
                                                             'metadata': get_metadata_url(data_provider.url,
                                                                                          provider_type),
                                                             'copyright': data_provider.service_copyright}
-            if metadata['data_sources'][provider_task.slug]['type'] == 'raster':
+            if metadata['data_sources'][provider_task.slug].get('type') == 'raster':
                 metadata['has_raster'] = True
-            if metadata['data_sources'][provider_task.slug]['type'] == 'elevation':
+            if metadata['data_sources'][provider_task.slug].get('type') == 'elevation':
                 metadata['has_elevation'] = True
 
             for export_task in provider_task.tasks.all():
@@ -421,19 +420,20 @@ def get_metadata(data_provider_task_uid):
                         download_filename
                     )
 
-                    metadata['data_sources'][provider_task.slug]['files'] += [
-                        {'file_path': filepath, 'full_file_path': full_file_path, 'file_ext': file_ext}]
-                    if metadata['data_sources'][provider_task.slug]['type'] == 'elevation':
+                    file_data = {'file_path': filepath, 'full_file_path': full_file_path, 'file_ext': file_ext}
+                    if metadata['data_sources'][provider_task.slug].get('type') == 'elevation':
                         # Get statistics to update ranges in template.
                         band_stats = get_band_statistics(full_file_path)
                         logger.info("Band Stats {0}: {1}".format(full_file_path, band_stats))
-                        metadata['data_sources'][provider_task.slug]['files']["band_stats"] = band_stats
+                        file_data["band_stats"] = band_stats
                         # Calculate the value for each elevation step (of 16)
                         try:
                             steps = linspace(band_stats[0], band_stats[1], num=16)
-                            metadata['data_sources'][provider_task.slug]['files']["ramp_shader_steps"] = list(map(int, steps))
+                            file_data["ramp_shader_steps"] = list(map(int, steps))
                         except TypeError:
-                            metadata['data_sources'][provider_task.slug]['files']["ramp_shader_steps"] = None
+                            file_data["ramp_shader_steps"] = None
+
+                    metadata['data_sources'][provider_task.slug]['files'] += [file_data]
 
                 if not os.path.isfile(full_file_path):
                     logger.error("Could not find file {0} for export {1}.".format(full_file_path, export_task.name))
@@ -470,7 +470,6 @@ def get_arcgis_metadata(metadata):
 
 def get_data_type_from_provider(provider_slug: str) -> str:
     from eventkit_cloud.jobs.models import DataProvider
-    # NOTE TIF here is a place holder until we figure out how to support other formats.
     data_types = {'wms': 'raster',
                   'tms': 'raster',
                   'wmts': 'raster',
@@ -518,6 +517,7 @@ def get_message_count(queue_name):
                 return queue.get("messages")
             except Exception as e:
                 logger.info(e)
+
 
 def clean_config(config):
     """
