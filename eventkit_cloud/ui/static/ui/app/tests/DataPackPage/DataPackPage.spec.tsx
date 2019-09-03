@@ -37,6 +37,7 @@ describe('DataPackPage component', () => {
         user: { data: { user: { username: 'admin' } } },
         getRuns: sinon.spy(),
         deleteRun: sinon.spy(),
+        getFormats: sinon.spy(),
         getProviders: sinon.spy(),
         runDeletion: {
             deleting: false,
@@ -242,6 +243,7 @@ describe('DataPackPage component', () => {
         const intervalStub = sinon.stub(window, 'setInterval');
         setup();
         expect(props.getProviders.calledOnce).toBe(true);
+        expect(props.getFormats.calledOnce).toBe(true);
         expect(requestStub.calledOnce).toBe(true);
         expect(intervalStub.calledWith(instance.autoRunRequest, 10000)).toBe(true);
         expect(props.resetGeoJSONFile.calledOnce).toBe(true);
@@ -408,6 +410,7 @@ describe('DataPackPage component', () => {
         const collection = 'test_user';
         const search = 'search_text';
         const providers = ['test_provider'];
+        const formats = ['test_format'];
         const geojson = { data: {} };
         const permissions = { value: 'SHARED', groups: {}, members: {} };
         const expectedParams = [{
@@ -419,6 +422,7 @@ describe('DataPackPage component', () => {
             maxDate,
             search,
             providers,
+            formats,
             geojson,
             permissions,
             isAuto: false,
@@ -429,6 +433,7 @@ describe('DataPackPage component', () => {
             maxDate,
             permissions,
             providers,
+            formats,
             geojson_geometry: geojson,
         });
         props.getRuns.resetHistory();
@@ -490,6 +495,7 @@ describe('DataPackPage component', () => {
             minDate: null,
             maxDate: null,
             providers: {},
+            formats: {},
             loading: true,
         }, instance.makeRunRequest)).toBe(true);
         expect(stateSpy.calledWith({ open: false })).toBe(true);

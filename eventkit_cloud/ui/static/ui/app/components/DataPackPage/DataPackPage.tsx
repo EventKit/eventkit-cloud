@@ -31,6 +31,7 @@ import { joyride } from '../../joyride.config';
 import history from '../../utils/history';
 import { Breakpoint } from '@material-ui/core/styles/createBreakpoints';
 import isEqual from 'lodash/isEqual';
+import {getFormats} from "../../actions/formatActions";
 
 interface Props {
     runIds: string[];
@@ -47,6 +48,7 @@ interface Props {
     getRuns: (args: object) => void;
     deleteRun: () => void;
     getProviders: () => void;
+    getFormats: () => void;
     runDeletion: {
         deleted: boolean;
         deleting: boolean;
@@ -68,6 +70,7 @@ interface Props {
     setOrder: (order: string) => void;
     setView: (view: string) => void;
     providers: Eventkit.Provider[];
+    formats: Eventkit.Format[];
     updateDataCartPermissions: () => void;
     updatePermissions: {
         updating: boolean;
@@ -92,6 +95,7 @@ interface State {
         incomplete: boolean;
     };
     providers: any;
+    formats: any;
     pageLoading: boolean;
     loading: boolean;
     geojson_geometry: null | GeoJSON.Geometry;
@@ -146,6 +150,7 @@ export class DataPackPage extends React.Component<Props, State> {
                 incomplete: false,
             },
             providers: {},
+            formats: {},
             pageLoading: props.runsFetched === null,
             loading: true,
             geojson_geometry: null,
@@ -172,6 +177,7 @@ export class DataPackPage extends React.Component<Props, State> {
 
     componentDidMount() {
         this.props.getProviders();
+        this.props.getFormats();
         this.makeRunRequest();
         this.fetch = window.setInterval(this.autoRunRequest, 10000);
         // make sure no geojson upload is in the state
@@ -374,6 +380,7 @@ export class DataPackPage extends React.Component<Props, State> {
             minDate: this.state.minDate,
             maxDate: this.state.maxDate,
             providers: this.state.providers,
+            formats: this.state.formats,
             geojson: this.state.geojson_geometry,
             permissions: this.state.permissions,
             isAuto,
@@ -406,6 +413,7 @@ export class DataPackPage extends React.Component<Props, State> {
                 submitted: false,
             },
             providers: {},
+            formats: {},
             loading: true,
         }, this.makeRunRequest);
         if (!isWidthUp('xl', this.props.width)) {
@@ -717,6 +725,7 @@ export class DataPackPage extends React.Component<Props, State> {
                         onFilterClear={this.handleFilterClear}
                         open={this.state.open}
                         providers={this.props.providers}
+                        formats={this.props.formats}
                     />
 
                     {this.state.pageLoading ?
@@ -752,6 +761,7 @@ function mapStateToProps(state) {
         runDeletion: state.runDeletion,
         drawer: state.drawer,
         providers: state.providers,
+        formats: state.formats,
         importGeom: state.importGeom,
         geocode: state.geocode,
         updatePermissions: state.updatePermission,
@@ -768,6 +778,9 @@ function mapDispatchToProps(dispatch) {
         },
         getProviders: () => {
             dispatch(getProviders());
+        },
+        getFormats: () => {
+            dispatch(getFormats());
         },
         getGeocode: (query: object) => {
             dispatch(getGeocode(query));
