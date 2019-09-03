@@ -84,11 +84,11 @@ export class DataPackOptions extends React.Component<Props, State> {
             if (providerTask.display === true) {
                 // Map the provider task to its Provider to ensure we have all needed data for the Provider.
                 const fullProvider = this.props.providers.find((provider) => providerTask.slug === provider.slug);
-                const dataProviderTask = this.props.job.provider_tasks.find((d) =>
+                const dataProviderTask = this.props.job.provider_tasks.find((jobProviderTask) =>
                     // Currently `provider` is the provider name
                     // The backend should be updated in the future to make it point to a uuid or the slug
                     // this change will need to happen here as well
-                    providerTask.name === d.provider
+                    providerTask.name === jobProviderTask.provider
                 );
                 exportOptions[providerTask.slug] = {
                     minZoom: (dataProviderTask) ? dataProviderTask.min_zoom : null,
