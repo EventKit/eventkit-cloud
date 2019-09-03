@@ -90,7 +90,7 @@ export class DataPackOptions extends React.Component<Props, State> {
                     // this change will need to happen here as well
                     providerTask.name === d.provider
                 );
-                exportOptions[fullProvider.slug] = {
+                exportOptions[providerTask.slug] = {
                     minZoom: (dataProviderTask) ? dataProviderTask.min_zoom : null,
                     maxZoom: (dataProviderTask) ? dataProviderTask.max_zoom : null,
                     formats: (dataProviderTask) ? dataProviderTask.formats: null,
