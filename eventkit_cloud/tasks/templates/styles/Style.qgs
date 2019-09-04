@@ -22426,7 +22426,7 @@ def my_form_open(dialog, layer, feature):
       <keywordList>
         <value></value>
       </keywordList>
-      <layername>{{ job_name.split|join:"_" }}-{{ provider.name }}-{{ job_date_time|slice:":8" }}</layername>
+      <layername>{{ job_name.split|join:"_" }}-{{ provider.name }}-{{ job_date_time|slice:":8" }}{{ file_details.file_ext|slugify }}</layername>
       <srs>
         <spatialrefsys>
           <proj4>+proj=longlat +datum=WGS84 +no_defs</proj4>
@@ -22450,28 +22450,28 @@ def my_form_open(dialog, layer, feature):
         <map-layer-style name=""/>
       </map-layer-style-manager>
       <pipe>
-       {% if provider.band_stats %}
-        {% if provider.ramp_shader_steps %}
-        <rasterrenderer opacity="1" alphaBand="0" classificationMax="{{ provider.band_stats.1 }}" classificationMinMaxOrigin="CumulativeCutFullExtentEstimated" band="1" classificationMin="{{ provider.band_stats.0 }}" type="singlebandpseudocolor">
+       {% if file_details.band_stats %}
+        {% if file_details.ramp_shader_steps %}
+        <rasterrenderer opacity="1" alphaBand="0" classificationMax="{{ file_details.band_stats.1 }}" classificationMinMaxOrigin="CumulativeCutFullExtentEstimated" band="1" classificationMin="{{ file_details.band_stats.0 }}" type="singlebandpseudocolor">
           <rasterTransparency/>
            <rastershader>
             <colorrampshader colorRampType="INTERPOLATED" clip="0">
-              <item alpha="255" value="{{ provider.ramp_shader_steps.0 }}" label="{{ provider.ramp_shader_steps.0 }}" color="#b0f3be"/>
-              <item alpha="255" value="{{ provider.ramp_shader_steps.1 }}" label="{{ provider.ramp_shader_steps.1 }}" color="#e0fbb2"/>
-              <item alpha="255" value="{{ provider.ramp_shader_steps.2 }}" label="{{ provider.ramp_shader_steps.2 }}" color="#b8de76"/>
-              <item alpha="255" value="{{ provider.ramp_shader_steps.3 }}" label="{{ provider.ramp_shader_steps.3 }}" color="#27a52a"/>
-              <item alpha="255" value="{{ provider.ramp_shader_steps.4 }}" label="{{ provider.ramp_shader_steps.4 }}" color="#34883c"/>
-              <item alpha="255" value="{{ provider.ramp_shader_steps.5 }}" label="{{ provider.ramp_shader_steps.5 }}" color="#9ca429"/>
-              <item alpha="255" value="{{ provider.ramp_shader_steps.6 }}" label="{{ provider.ramp_shader_steps.6 }}" color="#f8b004"/>
-              <item alpha="255" value="{{ provider.ramp_shader_steps.7 }}" label="{{ provider.ramp_shader_steps.7 }}" color="#c04a02"/>
-              <item alpha="255" value="{{ provider.ramp_shader_steps.8 }}" label="{{ provider.ramp_shader_steps.8 }}" color="#870800"/>
-              <item alpha="255" value="{{ provider.ramp_shader_steps.9 }}" label="{{ provider.ramp_shader_steps.9 }}" color="#741805"/>
-              <item alpha="255" value="{{ provider.ramp_shader_steps.10 }}" label="{{ provider.ramp_shader_steps.10 }}" color="#6c2a0a"/>
-              <item alpha="255" value="{{ provider.ramp_shader_steps.11 }}" label="{{ provider.ramp_shader_steps.11 }}" color="#7d4a2b"/>
-              <item alpha="255" value="{{ provider.ramp_shader_steps.12}}" label="{{ provider.ramp_shader_steps.12 }}" color="#9c8170"/>
-              <item alpha="255" value="{{ provider.ramp_shader_steps.13 }}" label="{{ provider.ramp_shader_steps.13 }}" color="#b5b5b5"/>
-              <item alpha="255" value="{{ provider.ramp_shader_steps.14 }}" label="{{ provider.ramp_shader_steps.14 }}" color="#dad8da"/>
-              <item alpha="255" value="{{ provider.ramp_shader_steps.15 }}" label="{{ provider.ramp_shader_steps.15 }}" color="#dad8da"/>
+              <item alpha="255" value="{{ file_details.ramp_shader_steps.0 }}" label="{{ file_details.ramp_shader_steps.0 }}" color="#b0f3be"/>
+              <item alpha="255" value="{{ file_details.ramp_shader_steps.1 }}" label="{{ file_details.ramp_shader_steps.1 }}" color="#e0fbb2"/>
+              <item alpha="255" value="{{ file_details.ramp_shader_steps.2 }}" label="{{ file_details.ramp_shader_steps.2 }}" color="#b8de76"/>
+              <item alpha="255" value="{{ file_details.ramp_shader_steps.3 }}" label="{{ file_details.ramp_shader_steps.3 }}" color="#27a52a"/>
+              <item alpha="255" value="{{ file_details.ramp_shader_steps.4 }}" label="{{ file_details.ramp_shader_steps.4 }}" color="#34883c"/>
+              <item alpha="255" value="{{ file_details.ramp_shader_steps.5 }}" label="{{ file_details.ramp_shader_steps.5 }}" color="#9ca429"/>
+              <item alpha="255" value="{{ file_details.ramp_shader_steps.6 }}" label="{{ file_details.ramp_shader_steps.6 }}" color="#f8b004"/>
+              <item alpha="255" value="{{ file_details.ramp_shader_steps.7 }}" label="{{ file_details.ramp_shader_steps.7 }}" color="#c04a02"/>
+              <item alpha="255" value="{{ file_details.ramp_shader_steps.8 }}" label="{{ file_details.ramp_shader_steps.8 }}" color="#870800"/>
+              <item alpha="255" value="{{ file_details.ramp_shader_steps.9 }}" label="{{ file_details.ramp_shader_steps.9 }}" color="#741805"/>
+              <item alpha="255" value="{{ file_details.ramp_shader_steps.10 }}" label="{{ file_details.ramp_shader_steps.10 }}" color="#6c2a0a"/>
+              <item alpha="255" value="{{ file_details.ramp_shader_steps.11 }}" label="{{ file_details.ramp_shader_steps.11 }}" color="#7d4a2b"/>
+              <item alpha="255" value="{{ file_details.ramp_shader_steps.12}}" label="{{ file_details.ramp_shader_steps.12 }}" color="#9c8170"/>
+              <item alpha="255" value="{{ file_details.ramp_shader_steps.13 }}" label="{{ file_details.ramp_shader_steps.13 }}" color="#b5b5b5"/>
+              <item alpha="255" value="{{ file_details.ramp_shader_steps.14 }}" label="{{ file_details.ramp_shader_steps.14 }}" color="#dad8da"/>
+              <item alpha="255" value="{{ file_details.ramp_shader_steps.15 }}" label="{{ file_details.ramp_shader_steps.15 }}" color="#dad8da"/>
             </colorrampshader>
           </rastershader>
         </rasterrenderer>
@@ -22511,7 +22511,7 @@ def my_form_open(dialog, layer, feature):
       <keywordList>
         <value></value>
       </keywordList>
-      <layername>{{ job_name.split|join:"_" }}-{{ provider.name }}-{{ job_date_time|slice:":8" }}</layername>
+      <layername>{{ job_name.split|join:"_" }}-{{ provider.name }}-{{ job_date_time|slice:":8" }}{{ file_details.file_ext|slugify }}</layername>
       <srs>
         <spatialrefsys>
           <proj4>+proj=longlat +datum=WGS84 +no_defs</proj4>
