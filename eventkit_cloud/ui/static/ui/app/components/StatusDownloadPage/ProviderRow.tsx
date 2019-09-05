@@ -203,31 +203,30 @@ export class ProviderRow extends React.Component<Props, State> {
     }
 
     private getEstimatedFinish(task: Eventkit.Task) {
-        if (!task.estimated_finish && (!task.estimated_duration || !task.started_at)){
+        if (!task || !task.estimated_finish && (!task.estimated_duration || !task.started_at)) {
             return '';
         } else {
-            let etaSeconds, estimatedSeconds;
+            let etaSeconds;
+            let estimatedSeconds;
             let estimatedFinish: moment.Moment;
             // at least one of these blocks must execute
-            if(task.estimated_finish) {
+            if (task.estimated_finish) {
                 // get the seconds until completion according to the reported ETA
                 const finishMoment: any = moment(task.estimated_finish);
                 const nowMoment: any = moment();
                 etaSeconds = (finishMoment - nowMoment) / 1000;
             }
-            if(task.estimated_duration) {
+            if (task.estimated_duration) {
                 // get the seconds to completion according to estimated duration
                 const beginMoment: any = moment(task.started_at);
                 const calculatedFinish: any = moment(beginMoment).add(task.estimated_duration);
                 estimatedSeconds = (calculatedFinish - beginMoment) / 1000;
             }
-            if(etaSeconds !== undefined && estimatedSeconds !== undefined) {
-                estimatedFinish = moment().add({seconds: (etaSeconds + estimatedSeconds) / 2})
-            }
-            else if(etaSeconds !== undefined) {
+            if (etaSeconds !== undefined && estimatedSeconds !== undefined) {
+                estimatedFinish = moment().add({seconds: (etaSeconds + estimatedSeconds) / 2});
+            } else if (etaSeconds !== undefined) {
                 estimatedFinish = moment().add({seconds: etaSeconds});
-            }
-            else if(estimatedSeconds !== undefined) {
+            } else if (estimatedSeconds !== undefined) {
                 estimatedFinish = moment().add({seconds: estimatedSeconds});
             }
             return estimatedFinish.format('kk:mm [\r\n] MMM Do');
@@ -235,11 +234,14 @@ export class ProviderRow extends React.Component<Props, State> {
     }
 
     private getLastEstimatedFinish(tasks: Eventkit.Task[]) {
+        if (!tasks || tasks.length === 0) {
+            return '';
         return this.getEstimatedFinish([...tasks].sort((a, b) => {
-            if (a.estimated_finish && b.estimated_finish)
+            if (a.estimated_finish && b.estimated_finish) {
                 return new Date(a.estimated_finish).getTime() - new Date(b.estimated_finish).getTime();
-            else
+            } else {
                 return 1;
+            }
         })[0]);
     }
 
@@ -405,14 +407,14 @@ export class ProviderRow extends React.Component<Props, State> {
     render() {
         const { classes } = this.props;
         const { provider } = this.props;
-        const { job } = this.props
+        const { job } = this.props;
 
-        const dataProviderTask = job && job.provider_tasks.find(obj => obj.provider === provider.name)
+        const dataProviderTask = job && job.provider_tasks.find(obj => obj.provider === provider.name);
         const propsProvider = this.props.providers.find(obj => obj.slug === provider.slug);
 
         // If available, get custom zoom levels from DataProviderTask otherwise use Provider defaults.
-        const min_zoom = dataProviderTask && dataProviderTask.min_zoom || propsProvider && propsProvider.level_from
-        const max_zoom = dataProviderTask && dataProviderTask.max_zoom || propsProvider && propsProvider.level_to
+        const min_zoom = dataProviderTask && dataProviderTask.min_zoom || propsProvider && propsProvider.level_from;
+        const max_zoom = dataProviderTask && dataProviderTask.max_zoom || propsProvider && propsProvider.level_to;
 
         const licenseData = propsProvider && propsProvider.license ?
             <LicenseRow name={propsProvider.license.name} text={propsProvider.license.text} />
