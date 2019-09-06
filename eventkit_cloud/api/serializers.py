@@ -22,6 +22,7 @@ from . import validators
 from eventkit_cloud.core.models import GroupPermission, GroupPermissionLevel, JobPermission
 from eventkit_cloud.jobs.models import (
     ExportFormat,
+    Projection,
     DatamodelPreset,
     Job,
     Region,
@@ -204,6 +205,14 @@ class DataProviderListSerializer(serializers.BaseSerializer):
         return obj.uid
 
 
+class ProjectionSerializer(serializers.ModelSerializer):
+    """Return a representation of the ExportFormat model."""
+
+    class Meta:
+        model = Projection
+        fields = ('uid', 'srid', 'name', 'description')
+
+
 class SimpleJobSerializer(serializers.Serializer):
     """Return a sub-set of Job model attributes."""
 
@@ -227,6 +236,7 @@ class SimpleJobSerializer(serializers.Serializer):
     formats = serializers.SerializerMethodField()
     permissions = serializers.SerializerMethodField(read_only=True)
     relationship = serializers.SerializerMethodField(read_only=True)
+    projections = ProjectionSerializer(many=True)
 
     @staticmethod
     def get_uid(obj):
@@ -598,7 +608,6 @@ class ExportFormatSerializer(serializers.ModelSerializer):
     class Meta:
         model = ExportFormat
         fields = ('uid', 'url', 'slug', 'name', 'description')
-
 
 class DataProviderSerializer(serializers.ModelSerializer):
     model_url = serializers.HyperlinkedIdentityField(
