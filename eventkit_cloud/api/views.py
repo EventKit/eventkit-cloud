@@ -10,6 +10,7 @@ from django.contrib.auth.models import User, Group
 from django.contrib.gis.geos import GEOSException, GEOSGeometry
 from django.db import transaction
 from django.db.models import Q
+from django.shortcuts import get_object_or_404
 from django.utils.translation import ugettext as _
 from django_filters.rest_framework import DjangoFilterBackend
 from notifications.models import Notification
@@ -30,7 +31,7 @@ from eventkit_cloud.api.permissions import IsOwnerOrReadOnly
 from eventkit_cloud.api.renderers import HOTExportApiRenderer, PlainTextRenderer, CustomSwaggerUIRenderer, \
     CustomOpenAPIRenderer
 from eventkit_cloud.api.serializers import (
-    ExportFormatSerializer, ExportRunSerializer,
+    ExportFormatSerializer, ExportRunSerializer, ProjectionSerializer,
     ExportTaskRecordSerializer, JobSerializer, RegionMaskSerializer, DataProviderTaskRecordSerializer,
     RegionSerializer, ListJobSerializer, ProviderTaskSerializer, DataProviderSerializer, LicenseSerializer,
     UserDataSerializer, GroupSerializer, UserJobActivitySerializer, NotificationSerializer, GroupUserSerializer
@@ -39,7 +40,7 @@ from eventkit_cloud.api.validators import validate_bbox_params, validate_search_
 from eventkit_cloud.core.helpers import sendnotification, NotificationVerb, NotificationLevel
 from eventkit_cloud.core.models import GroupPermission, GroupPermissionLevel, JobPermission, JobPermissionLevel
 from eventkit_cloud.jobs.models import (
-    ExportFormat, Job, Region, RegionMask, DataProvider, DataProviderTask, DatamodelPreset, License, VisibilityState,
+    ExportFormat, Projection, Job, Region, RegionMask, DataProvider, DataProviderTask, DatamodelPreset, License, VisibilityState,
     UserJobActivity
 )
 from eventkit_cloud.tasks.export_tasks import pick_up_run_task, cancel_export_provider_task
@@ -184,6 +185,7 @@ class JobViewSet(viewsets.ModelViewSet):
                     "include_zipfile" : true,
                     "selection": { ... valid geojson ... },
                     "tags" : [],
+                    "projections" : [4326],
                     "provider_tasks" : [{
                             "provider" : "OpenStreetMap Data (Themes)",
                             "formats" : ["shp", "gpkg"]
@@ -290,6 +292,7 @@ class JobViewSet(viewsets.ModelViewSet):
             """Get the required data from the validated request."""
             export_providers = request.data.get('export_providers', [])
             provider_tasks = request.data.get('provider_tasks', [])
+            projections = request.data.get('projections', [])
             tags = request.data.get('tags')
             preset = request.data.get('preset')
 
@@ -370,6 +373,19 @@ class JobViewSet(viewsets.ModelViewSet):
                     error_data = {"errors": [{"status": status_code,
                                               "title": _('Invalid provider task'),
                                               "detail": _('One or more: {0} are invalid'.format(provider_tasks))
+                                              }]}
+                    return Response(error_data, status=status_code)
+
+                try:
+                    for projection in projections:
+                        current_projection = Projection.objects.get(srid=projection)
+                        job.projections.add(current_projection)
+                        job.save()
+                except Exception as e:
+                    status_code = status.HTTP_400_BAD_REQUEST
+                    error_data = {"errors": [{"status": status_code,
+                                              "title": _('Invalid projection specified.'),
+                                              "detail": _('One or more: {0} are invalid'.format(projections))
                                               }]}
                     return Response(error_data, status=status_code)
 
@@ -645,6 +661,16 @@ class ExportFormatViewSet(viewsets.ReadOnlyModelViewSet):
         """
         return super(ExportFormatViewSet, self).retrieve(self, request, slug, *args, **kwargs)
 
+
+class ProjectionViewSet(viewsets.ReadOnlyModelViewSet):
+    """
+    A simple ViewSet for listing or retrieving projections.
+    """
+    serializer_class = ProjectionSerializer
+    permission_classes = (permissions.IsAuthenticated,)
+    queryset = Projection.objects.all()
+    lookup_field = 'srid'
+    ordering = ['srid']
 
 class LicenseViewSet(viewsets.ReadOnlyModelViewSet):
     """
