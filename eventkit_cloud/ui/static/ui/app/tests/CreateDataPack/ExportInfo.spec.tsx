@@ -7,7 +7,6 @@ import List from '@material-ui/core/List';
 import Paper from '@material-ui/core/Paper';
 import Checkbox from '@material-ui/core/Checkbox';
 import Joyride from 'react-joyride';
-import BaseDialog from '../../components/Dialog/BaseDialog';
 import MapCard from '../../components/common/MapCard';
 import DataProvider from '../../components/CreateDataPack/DataProvider';
 import { ExportInfo } from '../../components/CreateDataPack/ExportInfo';
@@ -30,6 +29,18 @@ const formats = [
         name: 'Geopackage',
         description: 'GeoPackage',
     }];
+const projections = [
+    {
+        srid: 4326,
+        name: 'EPSG:4326',
+        description: null,
+    },
+    {
+        srid: 1,
+        name: 'EPSG:1',
+        description: null,
+    }
+];
 
 describe('ExportInfo component', () => {
     const getProps = () => (
@@ -62,9 +73,12 @@ describe('ExportInfo component', () => {
                         minZoom: 0,
                         maxZoom: 2,
                     }
-                }
+                },
+                projections: [],
             },
             providers: [],
+            projections,
+            getProjections: sinon.spy(),
             formats,
             nextEnabled: true,
             walkthroughClicked: false,
@@ -107,9 +121,8 @@ describe('ExportInfo component', () => {
         expect(wrapper.find(DataProvider)).toHaveLength(0);
         expect(wrapper.find('.qa-ExportInfo-projectionHeader')).toHaveLength(1);
         expect(wrapper.find('.qa-ExportInfo-projectionHeader').text()).toEqual('Select Projection');
-        expect(wrapper.find('.qa-ExportInfo-projections').find(Checkbox)).toHaveLength(1);
+        expect(wrapper.find('.qa-ExportInfo-projections').find(Checkbox)).toHaveLength(2);
         expect(wrapper.find(MapCard)).toHaveLength(1);
-        expect(wrapper.find(BaseDialog)).toHaveLength(1);
         expect(wrapper.find(Joyride)).toHaveLength(1);
     });
 
@@ -378,22 +391,6 @@ describe('ExportInfo component', () => {
         await instance.checkProviders(providers);
         expect(checkAvailStub.calledTwice).toBe(true);
         expect(checkEstStub.calledTwice).toBe(true);
-    });
-
-    it('handleProjectionsOpen should setState to true', () => {
-        const stateStub = sinon.stub(instance, 'setState');
-        instance.handleProjectionsOpen();
-        expect(stateStub.calledOnce).toBe(true);
-        expect(stateStub.calledWith({ projectionsDialogOpen: true })).toBe(true);
-        stateStub.restore();
-    });
-
-    it('handleProjectionsClose should setState to false', () => {
-        const stateStub = sinon.stub(instance, 'setState');
-        instance.handleProjectionsClose();
-        expect(stateStub.calledOnce).toBe(true);
-        expect(stateStub.calledWith({ projectionsDialogOpen: false })).toBe(true);
-        stateStub.restore();
     });
 
     it('handlePopoverOpen should setState with anchorEl', () => {

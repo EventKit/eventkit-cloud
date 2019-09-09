@@ -87,6 +87,7 @@ describe('BreadcrumbStepper component', () => {
             areaStr: '',
             formats: ['gpkg'],
             providerEstimates: {},
+            projections: [4326],
             exportOptions: {
                 1: {
                     minZoom: 0, maxZoom: 10
@@ -316,6 +317,7 @@ describe('BreadcrumbStepper component', () => {
                 formats: ['gpkg'],
                 min_zoom: 0, max_zoom: 10
             }],
+            projections: [4326],
             selection: {},
             original_selection: {},
             tags: [],

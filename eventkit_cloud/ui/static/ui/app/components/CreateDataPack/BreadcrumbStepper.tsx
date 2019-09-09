@@ -31,7 +31,6 @@ import {Typography} from "@material-ui/core";
 import * as PropTypes from "prop-types";
 import Info from '@material-ui/icons/Info';
 
-
 export interface JobData {
     name: string;
     description: string;
@@ -41,6 +40,7 @@ export interface JobData {
     selection: GeoJSON.FeatureCollection;
     original_selection: GeoJSON.FeatureCollection;
     tags: [];
+    projections: number[];
 }
 
 export interface Props {
@@ -163,21 +163,20 @@ export class BreadcrumbStepper extends React.Component<Props, State> {
             this.setState({ modified: true });
         }
 
-        if(this.context.config.SERVE_ESTIMATES) {
+        if (this.context.config.SERVE_ESTIMATES) {
             // only update the estimate if providers has changed
             const prevProviders = prevProps.exportInfo.providers;
             const providers = this.props.exportInfo.providers;
-            if(prevProviders && providers) {
+            if (prevProviders && providers) {
                 if (prevProviders.length != providers.length) {
-                    this.updateEstimate()
+                    this.updateEstimate();
                 } else if (!prevProviders.every((p1) => {
-                    return providers.includes(p1)
+                    return providers.includes(p1);
                 })) {
-                    this.updateEstimate()
+                    this.updateEstimate();
                 }
-            }
-            else if(prevProviders || providers) {
-                this.updateEstimate()
+            } else if (prevProviders || providers) {
+                this.updateEstimate();
             }
         }
     }
@@ -245,7 +244,7 @@ export class BreadcrumbStepper extends React.Component<Props, State> {
                     onClick={this.handleEstimateExplanationOpen}
                     color="primary"
                     style={{cursor: 'pointer', verticalAlign: 'middle',
-                        marginLeft: '10px', height: '18px', width: '18px',}}
+                        marginLeft: '10px', height: '18px', width: '18px', }}
                 />
                 <BaseDialog
                     show={this.state.estimateExplanationOpen}
@@ -272,35 +271,35 @@ export class BreadcrumbStepper extends React.Component<Props, State> {
         );
     }
 
-    private formatEstimate(){
+    private formatEstimate() {
         let dateTimeEstimate;
         let sizeEstimate;
         let durationEstimate;
         // function that will return nf (not found) when the provided estimate is undefined
-        const get = (estimate, nf='unknown') => {return (estimate) ? estimate.toString() : nf};
+        const get = (estimate, nf= 'unknown') => (estimate) ? estimate.toString() : nf;
 
-        if(this.state.sizeEstimate !== -1) {
+        if (this.state.sizeEstimate !== -1) {
             sizeEstimate = formatMegaBytes(this.state.sizeEstimate);
         }
-        if(this.state.timeEstimate !== -1) {
+        if (this.state.timeEstimate !== -1) {
             const estimateInSeconds = this.state.timeEstimate;
             durationEstimate = getDuration(estimateInSeconds);
 
             // get the current time, add the estimate (in seconds) to it to get the date time of completion
-            let dateEstimate = new Date();
+            const dateEstimate = new Date();
             dateEstimate.setSeconds(dateEstimate.getSeconds() + estimateInSeconds);
             // month of completion in short hand format, upper cased March -> MAR,  January -> JAN
-            const monthShort = dateEstimate.toLocaleDateString('default',{month: 'short'}).toUpperCase();
+            const monthShort = dateEstimate.toLocaleDateString('default', {month: 'short'}).toUpperCase();
             // Standard time of day based on users locale settings. Options used to omit seconds.
-            const timeOfDay = dateEstimate.toLocaleTimeString('default', {hour: '2-digit', minute:'2-digit'});
+            const timeOfDay = dateEstimate.toLocaleTimeString('default', {hour: '2-digit', minute: '2-digit'});
             // Date of completion in the format 1-JAN-2019 12:32 PM
             dateTimeEstimate = `${dateEstimate.getDate()}-${monthShort}-${dateEstimate.getFullYear()} ${timeOfDay}`;
         }
         // Secondary estimate shown in parenthesis (<duration in days hours minutes> - <size>)
         let secondary;
         let noEstimateMessage = 'Select providers to get estimate';
-        if(sizeEstimate || durationEstimate) {
-            let separator = (sizeEstimate && durationEstimate) ? ' - ' : '';
+        if (sizeEstimate || durationEstimate) {
+            const separator = (sizeEstimate && durationEstimate) ? ' - ' : '';
             secondary = ` ( ${get(durationEstimate, '')}${separator}${get(sizeEstimate, 'size unknown')})`;
             noEstimateMessage = 'Unknown Date'; // used when the size estimate is displayed but time is not.
         }
@@ -308,28 +307,33 @@ export class BreadcrumbStepper extends React.Component<Props, State> {
     }
 
     private updateEstimate() {
-        if(!this.context.config.SERVE_ESTIMATES || !this.props.exportInfo.providers)
+        if (!this.context.config.SERVE_ESTIMATES || !this.props.exportInfo.providers) {
             return;
+        }
         let sizeEstimate = 0;
         let timeEstimate = 0;
         const maxAcceptableTime = 60 * 60 * 24 * this.props.exportInfo.providers.length;
         for (const provider of this.props.exportInfo.providers) {
-            if(provider.id in this.props.exportInfo.providerEstimates) {
+            if (provider.id in this.props.exportInfo.providerEstimates) {
                 const estimate = this.props.exportInfo.providerEstimates[provider.id];
                 if (estimate) {
-                    if(estimate.size)
+                    if (estimate.size) {
                         sizeEstimate += estimate.size.value;
-                    if(estimate.time)
+                    }
+                    if (estimate.time) {
                         timeEstimate += estimate.time.value;
+                    }
                 }
             }
         }
-        if(timeEstimate === 0)
+        if (timeEstimate === 0) {
             timeEstimate = -1;
-        else if(timeEstimate > maxAcceptableTime)
+        } else if (timeEstimate > maxAcceptableTime) {
             timeEstimate = maxAcceptableTime;
-        if(sizeEstimate === 0)
+ }
+        if (sizeEstimate === 0) {
             sizeEstimate = -1;
+        }
         this.setState({sizeEstimate, timeEstimate});
     }
 
@@ -543,17 +547,19 @@ export class BreadcrumbStepper extends React.Component<Props, State> {
     private handleSubmit() {
         const providerTasks = [];
         const { exportOptions } = this.props.exportInfo;
-        const providers = [...this.props.exportInfo.providers];
+        const {providers, projections } = this.props.exportInfo;
+
 
         providers.forEach((provider) => {
-            let minZoom = provider.level_from, maxZoom = provider.level_to;
+            let minZoom = provider.level_from;
+            let maxZoom = provider.level_to;
             let formats = ['gpkg'];  // Default to GPKG if nothing is passed through
-            let options = exportOptions[provider.slug];
-            if(options) {
-                if(isZoomLevelInRange(options.minZoom, provider as Eventkit.Provider)) {
+            const options = exportOptions[provider.slug];
+            if (options) {
+                if (isZoomLevelInRange(options.minZoom, provider as Eventkit.Provider)) {
                     minZoom = Number(options.minZoom);
                 }
-                if(isZoomLevelInRange(options.maxZoom, provider as Eventkit.Provider)) {
+                if (isZoomLevelInRange(options.maxZoom, provider as Eventkit.Provider)) {
                     maxZoom = Number(options.maxZoom);
                 }
                 if (options && options.formats) {
@@ -562,20 +568,21 @@ export class BreadcrumbStepper extends React.Component<Props, State> {
             }
 
             providerTasks.push({
-                provider: provider.name, formats: formats,
-                max_zoom: maxZoom, min_zoom: minZoom,
+                formats,
+                provider: provider.name, max_zoom: maxZoom, min_zoom: minZoom,
             });
         });
 
         const selection = flattenFeatureCollection(this.props.aoiInfo.geojson) as GeoJSON.FeatureCollection;
 
         const data: JobData = {
+            projections,
+            selection,
             name: this.props.exportInfo.exportName,
             description: this.props.exportInfo.datapackDescription,
             event: this.props.exportInfo.projectName,
             include_zipfile: false,
             provider_tasks: providerTasks,
-            selection,
             original_selection: this.props.aoiInfo.originalGeojson,
             tags: [],
         };

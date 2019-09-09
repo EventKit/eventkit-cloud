@@ -147,7 +147,6 @@ export class FormatSelector extends React.Component<Props, State> {
                                 className={classes.listItem}
                             >
                                 <div className={classes.listItemText}>{format.name}</div>
-                                <div className={classes.sublistItem}>Estimate Placeholder</div>
                             </div>
                         </div>
                     </div>

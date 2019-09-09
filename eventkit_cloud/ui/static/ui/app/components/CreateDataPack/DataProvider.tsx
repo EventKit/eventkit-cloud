@@ -226,7 +226,6 @@ export class DataProvider extends React.Component<Props, State> {
     }
 
     render() {
-
         const {colors} = this.props.theme.eventkit;
         const {classes, provider} = this.props;
         const {exportOptions} = this.props.exportInfo;
