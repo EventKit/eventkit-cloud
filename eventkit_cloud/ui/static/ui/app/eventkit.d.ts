@@ -193,6 +193,12 @@ declare namespace Eventkit {
         [id: string]: T;
     }
 
+    interface Projection {
+        srid: number;
+        name: string;
+        description: string;
+    }
+
     interface Theme {
         eventkit: {
             colors: {
@@ -377,6 +383,7 @@ declare namespace Eventkit {
             providers: Provider[];
             providerEstimates: {};
             exportOptions: Map<ProviderExportOptions>;
+            projections: number[];  // Expecting projection srid
         }
 
         interface AoiInfo {

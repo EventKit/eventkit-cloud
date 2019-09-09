@@ -97,9 +97,9 @@ export class FormatSelector extends React.Component<Props, State> {
         }
     }
 
-    handleChange = (event) => {
-        let providerOptions = {...this.props.providerOptions};
-        let selectedFormats = providerOptions.formats || [];
+    handleChange(event) {
+        const providerOptions = {...this.props.providerOptions};
+        const selectedFormats = providerOptions.formats || [];
 
         let index;
         // check if the check box is checked or unchecked
@@ -119,7 +119,7 @@ export class FormatSelector extends React.Component<Props, State> {
         }
         this.props.updateExportOptions(this.props.provider.slug,
             {...providerOptions, formats: selectedFormats});
-    };
+    }
 
     render() {
         const {colors} = this.props.theme.eventkit;
@@ -132,6 +132,7 @@ export class FormatSelector extends React.Component<Props, State> {
                 <div className={`qa-FormatSelector-Container`} key={this.props.provider.slug}>
                 {formats.map((format, ix) => (
                     <div
+                        key={format.slug}
                         className={`qa-FormatSelector-ListItem`}
                     >
                         <div className={classes.container}>
