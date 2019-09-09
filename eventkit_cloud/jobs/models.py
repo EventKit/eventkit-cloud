@@ -104,6 +104,17 @@ class ExportFormat(UIDMixin, TimeStampedModelMixin):
     def __str__(self):
         return '{0}'.format(self.name)
 
+class Projection(UIDMixin, TimeStampedModelMixin):
+    """
+    Model for a Projection.
+    """
+    name = models.CharField(max_length=100)
+    srid = models.IntegerField(unique=True)
+    description = models.CharField(max_length=255, null=True, blank=True)
+
+    def __str__(self):
+        return '{0}'.format(self.name)
+
 
 class DataProviderType(TimeStampedModelMixin):
     """
@@ -271,6 +282,7 @@ class Job(UIDMixin, TimeStampedModelMixin):
     include_zipfile = models.BooleanField(default=False)
     json_tags = JSONField(default=dict)
     last_export_run = models.ForeignKey('tasks.ExportRun', on_delete=models.CASCADE, null=True, related_name='last_export_run')
+    projections = models.ManyToManyField(Projection, related_name='projections')
 
     class Meta:  # pragma: no cover
         managed = True

@@ -166,7 +166,7 @@ export class ExportSummary extends React.Component<Props, State> {
                 // Source does not support zooming
                 exportInfo.push(generateSection(`Zooms: Default zoom selected.`));
             }
-            if (providerOptions.formats) {
+            if (providerOptions.formats && !!provider.supported_formats) {
                 // Formats should always be specified.
                 const formatNames = provider.supported_formats.filter(
                     format => providerOptions.formats.indexOf(format.slug) >= 0).map(format => format.name);
