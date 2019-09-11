@@ -66,6 +66,11 @@ const jss = (theme: Eventkit.Theme & Theme) => createStyles({
         paddingLeft: '2em',
         textIndent: '-2em',
         margin: '0',
+    },
+    projectionInfoLine: {
+        width: '100%',
+        marginRight: '8px',
+        display: 'inline-block',
     }
 });
 
@@ -81,6 +86,8 @@ export interface Props {
     onWalkthroughReset: () => void;
     theme: Eventkit.Theme & Theme;
     classes: { [className: string]: string; };
+    selectedProjections: number[];
+    projections: Eventkit.Projection[];
 }
 
 export interface State {
@@ -102,6 +109,7 @@ export class ExportSummary extends React.Component<Props, State> {
         };
         this.callback = this.callback.bind(this);
         this.getExportInfo = this.getExportInfo.bind(this);
+        this.getProjectionInfo = this.getProjectionInfo.bind(this);
     }
 
     componentDidMount() {
@@ -148,6 +156,18 @@ export class ExportSummary extends React.Component<Props, State> {
         }
     }
 
+    private getProjectionInfo(projectionSrids: number[]) {
+        // Generate elements to display information about the export options for the specified provider.
+        let index = 0; // Used for keys as React considers this to be a list.
+        const generateSection = (content) => (<span className={this.props.classes.projectionInfoLine} key={index++}>{content}</span>);
+        const exportInfo = [];
+        projectionSrids.map((srid => {
+            const projection = this.props.projections.find((proj) => proj.srid === srid);
+            exportInfo.push(generateSection(projection.name));
+        }));
+        return (<div className="projection-info" style={{paddingBottom: '10px'}}>{exportInfo.map((info) => info)}</div>);
+    }
+
     private getExportInfo(provider: Eventkit.Provider) {
         // Generate elements to display information about the export options for the specified provider.
         const providerOptions = this.props.exportOptions[provider.slug];
@@ -185,6 +205,7 @@ export class ExportSummary extends React.Component<Props, State> {
         const dataStyle = { color: 'black' };
 
         const providers = this.props.providers.filter(provider => (provider.display !== false));
+        const projections = this.props.projections.filter(projection => this.props.selectedProjections.indexOf(projection.srid) !== -1);
         return (
             <div id="root" className={classes.root}>
                 <Joyride
@@ -244,6 +265,12 @@ export class ExportSummary extends React.Component<Props, State> {
                                     data={providers.map(provider => this.getExportInfo(provider))}
                                     dataStyle={{display: 'block'}}
                                 />
+                                <CustomTableRow
+                                    className="qa-ExportSummary-project"
+                                    title="Project / Category"
+                                    data={this.getProjectionInfo(this.props.selectedProjections)}
+                                    dataStyle={dataStyle}
+                                />
                                 <div id="aoi-heading" className={`qa-ExportSummary-aoiHeading ${classes.exportHeading}`} >
                                     Area of Interest (AOI)
                                 </div>
@@ -276,6 +303,8 @@ function mapStateToProps(state) {
         providers: state.exportInfo.providers,
         areaStr: state.exportInfo.areaStr,
         exportOptions: state.exportInfo.exportOptions,
+        selectedProjections: state.exportInfo.projections,
+        projections: state.projections,
     };
 }
 

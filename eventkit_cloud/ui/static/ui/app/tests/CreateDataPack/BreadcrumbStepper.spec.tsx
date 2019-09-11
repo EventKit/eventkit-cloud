@@ -73,6 +73,19 @@ const formats = [
     },
 ];
 
+const projections = [
+    {
+        srid: 4326,
+        name: 'EPSG:4326',
+        description: null,
+    },
+    {
+        srid: 1,
+        name: 'EPSG:1',
+        description: null,
+    }
+];
+
 describe('BreadcrumbStepper component', () => {
     const getProps = () => ({
         aoiInfo: { geojson: {}, originalGeojson: {} },
@@ -100,6 +113,7 @@ describe('BreadcrumbStepper component', () => {
         },
         routes: [],
         formats,
+        projections,
         walkthroughClicked: false,
         onUpdateEstimate: sinon.spy(),
         createExportRequest: sinon.spy(),
@@ -115,6 +129,7 @@ describe('BreadcrumbStepper component', () => {
         getNotifications: sinon.spy(),
         getNotificationsUnreadCount: sinon.spy(),
         getFormats: sinon.spy(),
+        getProjections: sinon.spy(),
         ...(global as any).eventkit_test_props,
     });
 

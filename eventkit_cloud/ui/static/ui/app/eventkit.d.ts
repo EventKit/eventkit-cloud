@@ -90,6 +90,7 @@ declare namespace Eventkit {
         relationship: Permissions.Level;
         permissions: Permissions;
         provider_tasks: DataProviderTask[];
+        projections: Projection[];
     }
 
     interface Run {

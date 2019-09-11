@@ -30,6 +30,7 @@ import { Location } from 'history';
 import {Typography} from "@material-ui/core";
 import * as PropTypes from "prop-types";
 import Info from '@material-ui/icons/Info';
+import {getProjections} from "../../actions/projectionActions";
 
 export interface JobData {
     name: string;
@@ -67,6 +68,8 @@ export interface Props {
     getNotificationsUnreadCount: () => void;
     updateExportInfo: (args: any) => void;
     theme: Eventkit.Theme & Theme;
+    getProjections: () => void;
+    projections: Eventkit.Projection[];
 }
 
 export interface State {
@@ -140,6 +143,7 @@ export class BreadcrumbStepper extends React.Component<Props, State> {
             this.props.setNextDisabled();
         }
         this.getProviders();
+        this.props.getProjections();
         this.props.getFormats();
 
         // const route = this.props.routes[this.props.routes.length - 1];
@@ -688,6 +692,7 @@ function mapStateToProps(state) {
         jobError: state.submitJob.error,
         jobuid: state.submitJob.jobuid,
         formats: state.formats,
+        projections: state.projections,
     };
 }
 function mapDispatchToProps(dispatch) {
@@ -697,6 +702,9 @@ function mapDispatchToProps(dispatch) {
         },
         getProviders: () => (
             dispatch(getProviders())
+        ),
+        getProjections: () => (
+            dispatch(getProjections())
         ),
         setNextDisabled: () => {
             dispatch(stepperNextDisabled());

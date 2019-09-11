@@ -11,12 +11,15 @@ describe('DataPackGeneralTable component', () => {
         shallow = createShallow();
     });
 
+    const projections = [{srid: 4326, name: "TEST:4326"}];
+
     const getProps = () => ({
         dataPack: {
             job: {
                 description: 'job description',
                 event: 'job event',
                 formats: ['gpkg'],
+                projections,
             },
             provider_tasks: [
                 {
@@ -92,24 +95,6 @@ describe('DataPackGeneralTable component', () => {
         instance.handleProviderClose();
         expect(statestub.calledOnce).toBe(true);
         expect(statestub.calledWith({ providerDialogOpen: false })).toBe(true);
-        statestub.restore();
-    });
-
-    it('handleProjectionOpen should set projection dialog to open', () => {
-        const statestub = sinon.stub(instance, 'setState');
-        expect(statestub.called).toBe(false);
-        instance.handleProjectionsOpen();
-        expect(statestub.calledOnce).toBe(true);
-        expect(statestub.calledWith({ projectionsDialogOpen: true })).toBe(true);
-        statestub.restore();
-    });
-
-    it('handleProjectionsClose should set the projections dialog to closed', () => {
-        const statestub = sinon.stub(instance, 'setState');
-        expect(statestub.called).toBe(false);
-        instance.handleProjectionsClose();
-        expect(statestub.calledOnce).toBe(true);
-        expect(statestub.calledWith({ projectionsDialogOpen: false })).toBe(true);
         statestub.restore();
     });
 });

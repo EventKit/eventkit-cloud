@@ -10,15 +10,12 @@ import Paper from '@material-ui/core/Paper';
 import Popover from '@material-ui/core/Popover';
 import Checkbox from '@material-ui/core/Checkbox';
 import Typography from '@material-ui/core/Typography';
-import Info from '@material-ui/icons/Info';
 import NavigationRefresh from '@material-ui/icons/Refresh';
 import CustomScrollbar from '../CustomScrollbar';
 import DataProvider, {ProviderData} from './DataProvider';
 import MapCard from '../common/MapCard';
 import {updateExportInfo} from '../../actions/datacartActions';
-import {getProjections} from '../../actions/projectionActions';
 import {stepperNextDisabled, stepperNextEnabled} from '../../actions/uiActions';
-import BaseDialog from '../Dialog/BaseDialog';
 import CustomTextField from '../CustomTextField';
 import CustomTableRow from '../CustomTableRow';
 import {joyride} from '../../joyride.config';
@@ -136,7 +133,6 @@ export interface Props {
     classes: { [className: string]: string };
     onUpdateEstimate?: () => void;
     projections: Eventkit.Projection[];
-    getProjections: () => void;
 }
 
 export interface State {
@@ -185,7 +181,6 @@ export class ExportInfo extends React.Component<Props, State> {
 
     componentDidMount() {
         // if the state does not have required data disable next
-        this.props.getProjections();
         if (!this.hasRequiredFields(this.props.exportInfo) ||
             this.hasDisallowedSelection(this.props.exportInfo)) {
             this.props.setNextDisabled();
@@ -194,9 +189,9 @@ export class ExportInfo extends React.Component<Props, State> {
         // calculate the area of the AOI
         const areaStr = getSqKmString(this.props.geojson);
 
-        this.props.updateExportInfo({
+        const updatedInfo = {
             areaStr,
-        });
+        } as Eventkit.Store.ExportInfo;
 
         // make requests to check provider availability
         if (this.state.providers) {
@@ -205,6 +200,13 @@ export class ExportInfo extends React.Component<Props, State> {
 
         const steps = joyride.ExportInfo as any[];
         this.joyrideAddSteps(steps);
+
+        if (this.props.projections.find((projection) => projection.srid === 4326)) {
+            if (this.props.exportInfo.projections && this.props.exportInfo.projections.length ===0) {
+                updatedInfo.projections = [4326];
+            }
+        }
+        this.props.updateExportInfo(updatedInfo);
     }
 
     componentDidUpdate(prevProps: Props) {
@@ -542,6 +544,13 @@ export class ExportInfo extends React.Component<Props, State> {
         const {classes} = this.props;
         const {steps, isRunning} = this.state;
 
+        // Move EPSG:4326 (if present -- it should always be) to the front so it displays first.
+        let projections = [...this.props.projections];
+        const indexOf4326 = projections.map(projection => projection.srid).indexOf(4326);
+        if (indexOf4326 >= 1) {
+            projections = [projections.splice(indexOf4326, 1)[0], ...projections];
+        }
+
         return (
             <div id="root" className={`qa-ExportInfo-root ${classes.root}`}>
                 <Joyride
@@ -724,7 +733,7 @@ export class ExportInfo extends React.Component<Props, State> {
                             </div>
                             <div className={classes.sectionBottom}>
                                 <div id="Projections" className={`qa-ExportInfo-projections ${classes.projections}`}>
-                                    {this.props.projections.map((projection, ix) => (
+                                    {projections.map((projection, ix) => (
                                         <div
                                             key={projection.srid}
                                             style={{
@@ -792,9 +801,6 @@ function mapStateToProps(state) {
 
 function mapDispatchToProps(dispatch) {
     return {
-        getProjections: () => {
-            dispatch(getProjections());
-        },
         updateExportInfo: (exportInfo) => {
             dispatch(updateExportInfo(exportInfo));
         },
