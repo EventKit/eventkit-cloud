@@ -912,7 +912,6 @@ def wait_for_run(run=None, uid=None):
     if run.status:
         while(TaskStates[run.status] not in TaskStates.get_finished_states() and
                 TaskStates[run.status] not in TaskStates.get_incomplete_states()):
-            print(run.status)
             time.sleep(10)
             run.refresh_from_db()
 
