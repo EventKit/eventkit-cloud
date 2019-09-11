@@ -146,6 +146,21 @@ describe('ExportInfo component', () => {
         joyrideSpy.restore();
     });
 
+    it('componentDidMount should not update projections when already in state', () => {
+        const expectedString = '12,393 sq km';
+        const areaSpy = sinon.spy(utils, 'getSqKmString');
+        const defaultProps = getProps();
+        setup({exportInfo: {
+                ...defaultProps.exportInfo,
+                projections: [3857],
+            }});
+        expect(props.updateExportInfo.calledWith({
+            areaStr: expectedString,
+        })).toBe(true);
+        expect(props.updateExportInfo.called).toBe(true);
+        areaSpy.restore();
+    });
+
     it('componentDidUpdate should setNextEnabled', () => {
         const nextProps = getProps();
         nextProps.setNextEnabled = sinon.spy();

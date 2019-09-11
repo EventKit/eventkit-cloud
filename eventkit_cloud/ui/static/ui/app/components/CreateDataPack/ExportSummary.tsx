@@ -163,7 +163,12 @@ export class ExportSummary extends React.Component<Props, State> {
         const exportInfo = [];
         projectionSrids.map((srid => {
             const projection = this.props.projections.find((proj) => proj.srid === srid);
-            exportInfo.push(generateSection(projection.name));
+            if (projection) {
+                exportInfo.push(generateSection(projection.name));
+            } else {
+                // If we can't find a corresponding projection object, display the SRID.
+                exportInfo.push(generateSection(`EPSG:${srid}`));
+            }
         }));
         return (<div className="projection-info" style={{paddingBottom: '10px'}}>{exportInfo.map((info) => info)}</div>);
     }
