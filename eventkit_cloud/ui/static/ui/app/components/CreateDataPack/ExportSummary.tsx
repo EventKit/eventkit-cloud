@@ -164,7 +164,7 @@ export class ExportSummary extends React.Component<Props, State> {
         projectionSrids.map((srid => {
             const projection = this.props.projections.find((proj) => proj.srid === srid);
             if (projection) {
-                exportInfo.push(generateSection(projection.name));
+                exportInfo.push(generateSection(`EPSG:${srid} - ${projection.name}`));
             } else {
                 // If we can't find a corresponding projection object, display the SRID.
                 exportInfo.push(generateSection(`EPSG:${srid}`));
@@ -271,8 +271,8 @@ export class ExportSummary extends React.Component<Props, State> {
                                     dataStyle={{display: 'block'}}
                                 />
                                 <CustomTableRow
-                                    className="qa-ExportSummary-project"
-                                    title="Project / Category"
+                                    className="qa-ExportSummary-projections"
+                                    title="Projection(s)"
                                     data={this.getProjectionInfo(this.props.selectedProjections)}
                                     dataStyle={dataStyle}
                                 />
