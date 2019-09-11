@@ -172,7 +172,7 @@ export class BreadcrumbStepper extends React.Component<Props, State> {
             const prevProviders = prevProps.exportInfo.providers;
             const providers = this.props.exportInfo.providers;
             if (prevProviders && providers) {
-                if (prevProviders.length != providers.length) {
+                if (prevProviders.length !== providers.length) {
                     this.updateEstimate();
                 } else if (!prevProviders.every((p1) => {
                     return providers.includes(p1);

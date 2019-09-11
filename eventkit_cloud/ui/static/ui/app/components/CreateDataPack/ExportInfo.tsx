@@ -476,10 +476,18 @@ export class ExportInfo extends React.Component<Props, State> {
 
     private hasRequiredFields(exportInfo: Eventkit.Store.ExportInfo) {
         // if the required fields are populated return true, else return false
+        const { exportOptions } = exportInfo;
+        const formatsAreSelected = exportInfo.providers.map((provider) => {
+            return !!exportOptions[provider.slug]
+                && exportOptions[provider.slug].formats
+                && exportOptions[provider.slug].formats.length > 0;
+        });
         return exportInfo.exportName
             && exportInfo.datapackDescription
             && exportInfo.projectName
-            && exportInfo.providers.length > 0;
+            && exportInfo.providers.length > 0
+            && exportInfo.projections.length > 0
+            && formatsAreSelected.every(selected => selected === true);
     }
 
     private hasDisallowedSelection(exportInfo: Eventkit.Store.ExportInfo) {
