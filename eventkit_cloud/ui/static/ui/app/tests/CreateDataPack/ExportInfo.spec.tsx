@@ -138,6 +138,7 @@ describe('ExportInfo component', () => {
         expect(props.setNextDisabled.called).toBe(true);
         expect(props.updateExportInfo.calledWith({
             areaStr: expectedString,
+            projections: [4326], // We force 4326 to be selected by default (except when something is already selected e.g. cloning)
         })).toBe(true);
         expect(props.updateExportInfo.called).toBe(true);
         areaSpy.restore();
