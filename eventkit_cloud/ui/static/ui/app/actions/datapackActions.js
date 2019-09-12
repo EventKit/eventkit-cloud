@@ -83,6 +83,7 @@ export function getRuns(args = {}) {
     }
     const providers = (args.providers) ? Object.keys(args.providers) : [];
     const formats = (args.formats) ? Object.keys(args.formats) : [];
+    const projections = (args.projections) ? Object.keys(args.projections) : [];
     const params = { slim: 'true' };
     params.page_size = args.page_size;
     if (args.ordering) {
@@ -99,6 +100,7 @@ export function getRuns(args = {}) {
     if (args.search) params.search_term = args.search.slice(0, 1000);
     if (providers.length) params.providers = providers.join(',');
     if (formats.length) params.formats = formats.join(',');
+    if (projections.length) params.projections = projections.join(',');
 
     const data = {};
     if (args.geojson) {

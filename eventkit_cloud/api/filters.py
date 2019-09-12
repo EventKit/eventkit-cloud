@@ -69,11 +69,12 @@ class ExportRunFilter(django_filters.FilterSet):
     featured = django_filters.BooleanFilter(field_name="job__featured", widget=django_filters.widgets.BooleanWidget())
     providers = ListFilter(field_name="job__provider_tasks__provider__slug")
     formats = ListFilter(field_name="job__provider_tasks__formats__slug", lookup_expr="exact")
+    projections = ListFilter(field_name="job__projections__srid", lookup_expr="exact")
 
     class Meta:
         model = ExportRun
         fields = ('user', 'status', 'job_uid', 'min_date', 'max_date',
-                  'started_at', 'visibility', 'providers', 'formats')
+                  'started_at', 'visibility', 'providers', 'formats', 'projections')
 
 
 class UserFilter(django_filters.FilterSet):
