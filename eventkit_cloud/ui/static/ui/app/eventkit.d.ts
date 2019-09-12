@@ -90,6 +90,7 @@ declare namespace Eventkit {
         relationship: Permissions.Level;
         permissions: Permissions;
         provider_tasks: DataProviderTask[];
+        projections: Projection[];
     }
 
     interface Run {
@@ -191,6 +192,12 @@ declare namespace Eventkit {
 
     interface Map<T> {
         [id: string]: T;
+    }
+
+    interface Projection {
+        srid: number;
+        name: string;
+        description: string;
     }
 
     interface Theme {
@@ -377,6 +384,7 @@ declare namespace Eventkit {
             providers: Provider[];
             providerEstimates: {};
             exportOptions: Map<ProviderExportOptions>;
+            projections: number[];  // Expecting projection srid
         }
 
         interface AoiInfo {
