@@ -1,16 +1,15 @@
 import * as React from 'react';
 import * as sinon from 'sinon';
 import axios from 'axios';
-import { shallow } from 'enzyme';
+import {shallow} from 'enzyme';
 import MockAdapter from 'axios-mock-adapter';
 import List from '@material-ui/core/List';
 import Paper from '@material-ui/core/Paper';
 import Checkbox from '@material-ui/core/Checkbox';
 import Joyride from 'react-joyride';
-import BaseDialog from '../../components/Dialog/BaseDialog';
 import MapCard from '../../components/common/MapCard';
 import DataProvider from '../../components/CreateDataPack/DataProvider';
-import { ExportInfo } from '../../components/CreateDataPack/ExportInfo';
+import {ExportInfo} from '../../components/CreateDataPack/ExportInfo';
 import CustomScrollbar from '../../components/CustomScrollbar';
 import TextField from '../../components/CustomTextField';
 import * as utils from '../../utils/generic';
@@ -30,6 +29,18 @@ const formats = [
         name: 'Geopackage',
         description: 'GeoPackage',
     }];
+const projections = [
+    {
+        srid: 4326,
+        name: 'EPSG:4326',
+        description: null,
+    },
+    {
+        srid: 1,
+        name: 'EPSG:1',
+        description: null,
+    }
+];
 
 describe('ExportInfo component', () => {
     const getProps = () => (
@@ -62,9 +73,12 @@ describe('ExportInfo component', () => {
                         minZoom: 0,
                         maxZoom: 2,
                     }
-                }
+                },
+                projections: [],
             },
             providers: [],
+            projections,
+            getProjections: sinon.spy(),
             formats,
             nextEnabled: true,
             walkthroughClicked: false,
@@ -82,11 +96,13 @@ describe('ExportInfo component', () => {
     let wrapper;
     let instance;
     const setup = (overrides = {}) => {
-        const config = { BASEMAP_URL: 'http://my-osm-tile-service/{z}/{x}/{y}.png',
-        SERVE_ESTIMATES: true};
-        props = { ...getProps(), ...overrides };
+        const config = {
+            BASEMAP_URL: 'http://my-osm-tile-service/{z}/{x}/{y}.png',
+            SERVE_ESTIMATES: true
+        };
+        props = {...getProps(), ...overrides};
         wrapper = shallow(<ExportInfo {...props} />, {
-            context: { config },
+            context: {config},
         });
         instance = wrapper.instance();
     };
@@ -107,9 +123,8 @@ describe('ExportInfo component', () => {
         expect(wrapper.find(DataProvider)).toHaveLength(0);
         expect(wrapper.find('.qa-ExportInfo-projectionHeader')).toHaveLength(1);
         expect(wrapper.find('.qa-ExportInfo-projectionHeader').text()).toEqual('Select Projection');
-        expect(wrapper.find('.qa-ExportInfo-projections').find(Checkbox)).toHaveLength(1);
+        expect(wrapper.find('.qa-ExportInfo-projections').find(Checkbox)).toHaveLength(2);
         expect(wrapper.find(MapCard)).toHaveLength(1);
-        expect(wrapper.find(BaseDialog)).toHaveLength(1);
         expect(wrapper.find(Joyride)).toHaveLength(1);
     });
 
@@ -125,11 +140,29 @@ describe('ExportInfo component', () => {
         expect(props.setNextDisabled.called).toBe(true);
         expect(props.updateExportInfo.calledWith({
             areaStr: expectedString,
+            projections: [4326], // We force 4326 to be selected by default (except when something is already selected e.g. cloning)
         })).toBe(true);
         expect(props.updateExportInfo.called).toBe(true);
         areaSpy.restore();
         hasFieldsSpy.restore();
         joyrideSpy.restore();
+    });
+
+    it('componentDidMount should not update projections when already in state', () => {
+        const expectedString = '12,393 sq km';
+        const areaSpy = sinon.spy(utils, 'getSqKmString');
+        const defaultProps = getProps();
+        setup({
+            exportInfo: {
+                ...defaultProps.exportInfo,
+                projections: [3857],
+            }
+        });
+        expect(props.updateExportInfo.calledWith({
+            areaStr: expectedString,
+        })).toBe(true);
+        expect(props.updateExportInfo.called).toBe(true);
+        areaSpy.restore();
     });
 
     it('componentDidUpdate should setNextEnabled', () => {
@@ -138,7 +171,13 @@ describe('ExportInfo component', () => {
         nextProps.exportInfo.exportName = 'name';
         nextProps.exportInfo.datapackDescription = 'description';
         nextProps.exportInfo.projectName = 'project';
-        nextProps.exportInfo.providers = [{}];
+        nextProps.exportInfo.projections = [4326];
+        nextProps.exportInfo.providers = [{slug: 'providerslug'}];
+        nextProps.exportInfo.exportOptions = {
+            providerslug: {
+                formats: ['validformat']
+            }
+        };
         nextProps.nextEnabled = false;
         wrapper.setProps(nextProps);
         expect(nextProps.setNextEnabled.calledOnce).toBe(true);
@@ -153,28 +192,28 @@ describe('ExportInfo component', () => {
     });
 
     it('componentDidUpdate should reset joyride and set running state', () => {
-        const joyride = { current: { reset: sinon.spy() } };
+        const joyride = {current: {reset: sinon.spy()}};
         instance.joyride = joyride;
         const stateStub = sinon.stub(instance, 'setState');
         const nextProps = getProps();
         nextProps.walkthroughClicked = true;
         wrapper.setProps(nextProps);
         expect(joyride.current.reset.calledOnce).toBe(true);
-        expect(stateStub.calledWith({ isRunning: true })).toBe(true);
+        expect(stateStub.calledWith({isRunning: true})).toBe(true);
     });
 
     it('componentDidUpdate should update the providers and call checkProviders', () => {
         const stateStub = sinon.stub(instance, 'setState');
         const checkStub = sinon.stub(instance, 'checkProviders');
         const nextProps = getProps();
-        nextProps.providers = [{ slug: '124' }];
+        nextProps.providers = [{slug: '124'}];
         wrapper.setProps(nextProps);
-        expect(stateStub.calledWith({ providers: nextProps.providers })).toBe(true);
+        expect(stateStub.calledWith({providers: nextProps.providers})).toBe(true);
         expect(checkStub.calledWith(nextProps.providers)).toBe(true);
     });
 
     it('onNameChange should call updateExportInfo', () => {
-        const event = { target: { value: 'test' } };
+        const event = {target: {value: 'test'}};
         props.updateExportInfo.resetHistory();
         instance.onNameChange(event);
         expect(props.updateExportInfo.calledOnce).toBe(true);
@@ -184,7 +223,7 @@ describe('ExportInfo component', () => {
     });
 
     it('onDescriptionChange should call persist and nameHandler', () => {
-        const event = { target: { value: 'test' } };
+        const event = {target: {value: 'test'}};
         props.updateExportInfo.resetHistory();
         instance.onDescriptionChange(event);
         expect(props.updateExportInfo.calledOnce).toBe(true);
@@ -194,7 +233,7 @@ describe('ExportInfo component', () => {
     });
 
     it('onProjectChange should call persist and nameHandler', () => {
-        const event = { target: { value: 'test' } };
+        const event = {target: {value: 'test'}};
         props.updateExportInfo.resetHistory();
         instance.onProjectChange(event);
         expect(props.updateExportInfo.calledOnce).toBe(true);
@@ -204,9 +243,9 @@ describe('ExportInfo component', () => {
     });
 
     it('onChangeCheck should add a provider', () => {
-        const appProviders = [{ name: 'one' }, { name: 'two' }];
-        const exportProviders = [{ name: 'one' }];
-        const event = { target: { name: 'two', checked: true } };
+        const appProviders = [{name: 'one'}, {name: 'two'}];
+        const exportProviders = [{name: 'one'}];
+        const event = {target: {name: 'two', checked: true}};
         wrapper.setProps({
             providers: appProviders,
             exportInfo: {
@@ -217,14 +256,14 @@ describe('ExportInfo component', () => {
         instance.onChangeCheck(event);
         expect(props.updateExportInfo.called).toBe(true);
         expect(props.updateExportInfo.calledWith({
-            providers: [{ name: 'one' }, { name: 'two' }],
+            providers: [{name: 'one'}, {name: 'two'}],
         })).toBe(true);
     });
 
     it('onChangeCheck should remove a provider', () => {
-        const appProviders = [{ name: 'one' }, { name: 'two' }];
-        const exportProviders = [{ name: 'one' }, { name: 'two' }];
-        const event = { target: { name: 'two', checked: false } };
+        const appProviders = [{name: 'one'}, {name: 'two'}];
+        const exportProviders = [{name: 'one'}, {name: 'two'}];
+        const event = {target: {name: 'two', checked: false}};
         wrapper.setProps({
             providers: appProviders,
             exportInfo: {
@@ -235,36 +274,36 @@ describe('ExportInfo component', () => {
         instance.onChangeCheck(event);
         expect(props.updateExportInfo.called).toBe(true);
         expect(props.updateExportInfo.calledWith({
-            providers: [{ name: 'one' }],
+            providers: [{name: 'one'}],
         })).toBe(true);
     });
 
     it('onRefresh should setState with empty availability and estimate and call checkProviders', () => {
         const p = getProps();
-        p.providers = [{ name: 'one' }, { name: 'two' }];
+        p.providers = [{name: 'one'}, {name: 'two'}];
         p.exportInfo.providers = [...p.providers];
         setup(p);
         const stateStub = sinon.stub(instance, 'setState');
         const checkStub = sinon.stub(instance, 'checkProviders');
         instance.onRefresh();
         const expected = [
-            { name: 'one', availability: {}, estimate: {} },
-            { name: 'two', availability: {}, estimate: {} },
+            {name: 'one', availability: {}, estimate: {}},
+            {name: 'two', availability: {}, estimate: {}},
         ];
         expect(stateStub.calledOnce).toBe(true);
-        expect(stateStub.calledWith({ providers: expected }));
+        expect(stateStub.calledWith({providers: expected}));
         expect(checkStub.calledOnce).toBe(true);
         stateStub.restore();
         checkStub.restore();
     });
 
     it('getAvailability should return updated provider', async () => {
-        const mock = new MockAdapter(axios, { delayResponse: 10 });
+        const mock = new MockAdapter(axios, {delayResponse: 10});
         const provider = {
             slug: '123',
         };
         mock.onPost(`/api/providers/${provider.slug}/status`)
-            .reply(200, { status: 'some status' });
+            .reply(200, {status: 'some status'});
         const expected = {
             ...provider,
             availability: {
@@ -278,12 +317,12 @@ describe('ExportInfo component', () => {
     });
 
     it('getAvailability should return failed provider', async () => {
-        const mock = new MockAdapter(axios, { delayResponse: 10 });
+        const mock = new MockAdapter(axios, {delayResponse: 10});
         const provider = {
             slug: '123',
         };
         mock.onPost(`/api/providers/${provider.slug}/status`)
-            .reply(400, { status: 'some status' });
+            .reply(400, {status: 'some status'});
         const expected = {
             ...provider,
             availability: {
@@ -372,7 +411,7 @@ describe('ExportInfo component', () => {
     });
 
     it('checkProviders should call checkAvailablity and checkEstimate for each provider', async () => {
-        const providers = [{ display: true }, { display: false }, { display: true }];
+        const providers = [{display: true}, {display: false}, {display: true}];
         const checkAvailStub = sinon.stub(instance, 'checkAvailability').resolves({});
         const checkEstStub = sinon.stub(instance, 'checkEstimate');
         await instance.checkProviders(providers);
@@ -380,28 +419,12 @@ describe('ExportInfo component', () => {
         expect(checkEstStub.calledTwice).toBe(true);
     });
 
-    it('handleProjectionsOpen should setState to true', () => {
-        const stateStub = sinon.stub(instance, 'setState');
-        instance.handleProjectionsOpen();
-        expect(stateStub.calledOnce).toBe(true);
-        expect(stateStub.calledWith({ projectionsDialogOpen: true })).toBe(true);
-        stateStub.restore();
-    });
-
-    it('handleProjectionsClose should setState to false', () => {
-        const stateStub = sinon.stub(instance, 'setState');
-        instance.handleProjectionsClose();
-        expect(stateStub.calledOnce).toBe(true);
-        expect(stateStub.calledWith({ projectionsDialogOpen: false })).toBe(true);
-        stateStub.restore();
-    });
-
     it('handlePopoverOpen should setState with anchorEl', () => {
         const stateStub = sinon.stub(instance, 'setState');
-        const e = { currentTarget: sinon.spy() };
+        const e = {currentTarget: sinon.spy()};
         instance.handlePopoverOpen(e);
         expect(stateStub.calledOnce).toBe(true);
-        expect(stateStub.calledWith({ refreshPopover: e.currentTarget })).toBe(true);
+        expect(stateStub.calledWith({refreshPopover: e.currentTarget})).toBe(true);
         stateStub.restore();
     });
 
@@ -409,7 +432,7 @@ describe('ExportInfo component', () => {
         const stateStub = sinon.stub(instance, 'setState');
         instance.handlePopoverClose();
         expect(stateStub.calledOnce).toBe(true);
-        expect(stateStub.calledWith({ refreshPopover: null })).toBe(true);
+        expect(stateStub.calledWith({refreshPopover: null})).toBe(true);
         stateStub.restore();
     });
 
@@ -419,12 +442,19 @@ describe('ExportInfo component', () => {
             datapackDescription: 'stuff',
             projectName: 'name',
             providers: [],
+            exportOptions: {}
         };
         const valid = {
             exportName: 'name',
             datapackDescription: 'stuff',
             projectName: 'name',
-            providers: [{}],
+            providers: [{slug: 'providerslug'}],
+            projections: [4326],
+            exportOptions: {
+                providerslug: {
+                    formats: ['validformat'],
+                }
+            },
         };
         expect(instance.hasRequiredFields(invalid)).toBe(false);
         expect(instance.hasRequiredFields(valid)).toBe(true);
@@ -433,20 +463,20 @@ describe('ExportInfo component', () => {
     it('hasDisallowedSelection should return true if the provider status is FATAL', () => {
         const provider = {
             slug: 'test',
-            availability: { status: 'FATAL' },
+            availability: {status: 'FATAL'},
         };
-        const info = { providers: [provider] };
-        setup({ providers: [provider] });
+        const info = {providers: [provider]};
+        setup({providers: [provider]});
         expect(instance.hasDisallowedSelection(info)).toBe(true);
     });
 
     it('hasDisallowedSelection should return false if no status', () => {
         const provider = {
             slug: 'test',
-            availability: { status: undefined },
+            availability: {status: undefined},
         };
-        const info = { providers: [provider] };
-        setup({ providers: [provider] });
+        const info = {providers: [provider]};
+        setup({providers: [provider]});
         expect(instance.hasDisallowedSelection(info)).toBe(false);
     });
 
@@ -463,7 +493,7 @@ describe('ExportInfo component', () => {
         const stateSpy = sinon.stub(instance, 'setState');
         instance.joyrideAddSteps(steps);
         expect(stateSpy.calledOnce).toBe(true);
-        expect(stateSpy.calledWith({ steps }));
+        expect(stateSpy.calledWith({steps}));
         stateSpy.restore();
     });
 
@@ -480,10 +510,10 @@ describe('ExportInfo component', () => {
             },
             type: 'step:before',
         };
-        instance.joyride = { current: { reset: sinon.spy() } };
+        instance.joyride = {current: {reset: sinon.spy()}};
         const stateSpy = sinon.stub(instance, 'setState');
         instance.callback(callbackData);
-        expect(stateSpy.calledWith({ isRunning: false }));
+        expect(stateSpy.calledWith({isRunning: false}));
         stateSpy.restore();
     });
 

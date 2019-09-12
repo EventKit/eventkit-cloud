@@ -79,7 +79,7 @@ export class DataPackOptions extends React.Component<Props, State> {
 
     private handleClone() {
         const providerArray = [];
-        let exportOptions = {};
+        const exportOptions = {};
         this.props.dataPack.provider_tasks.forEach((providerTask) => {
             if (providerTask.display === true) {
                 // Map the provider task to its Provider to ensure we have all needed data for the Provider.
@@ -93,7 +93,7 @@ export class DataPackOptions extends React.Component<Props, State> {
                 exportOptions[providerTask.slug] = {
                     minZoom: (dataProviderTask) ? dataProviderTask.min_zoom : null,
                     maxZoom: (dataProviderTask) ? dataProviderTask.max_zoom : null,
-                    formats: (dataProviderTask) ? dataProviderTask.formats: null,
+                    formats: (dataProviderTask) ? dataProviderTask.formats : null,
                 } as Eventkit.Store.ProviderExportOptions;
                 // Cannot clone a provider without the full set of info.
                 if (fullProvider) {

@@ -70,23 +70,20 @@ interface Props {
     };
 }
 
-interface State {
-
-}
-
-export class FormatSelector extends React.Component<Props, State> {
+export class FormatSelector extends React.Component<Props, {}> {
 
     static defaultProps;
 
     constructor(props: Props) {
         super(props);
         this.state = {};
+        this.handleChange = this.handleChange.bind(this);
     }
 
     componentDidMount() {
         // If this is the first time hitting this page, the datacart will be in a default state
         // with no formats selected. We want GPKG to be selected by default.
-        let providerOptions = {...this.props.providerOptions};
+        const providerOptions = {...this.props.providerOptions};
         let formats;
         if (!providerOptions.formats) {
             if (this.props.formats.map(format => format.slug).indexOf('gpkg') >= 0) {
@@ -97,9 +94,9 @@ export class FormatSelector extends React.Component<Props, State> {
         }
     }
 
-    handleChange = (event) => {
-        let providerOptions = {...this.props.providerOptions};
-        let selectedFormats = providerOptions.formats || [];
+    handleChange(event) {
+        const providerOptions = {...this.props.providerOptions};
+        const selectedFormats = providerOptions.formats || [];
 
         let index;
         // check if the check box is checked or unchecked
@@ -119,7 +116,7 @@ export class FormatSelector extends React.Component<Props, State> {
         }
         this.props.updateExportOptions(this.props.provider.slug,
             {...providerOptions, formats: selectedFormats});
-    };
+    }
 
     render() {
         const {colors} = this.props.theme.eventkit;
@@ -127,11 +124,11 @@ export class FormatSelector extends React.Component<Props, State> {
         const {providerOptions} = this.props;
         const selectedFormats = providerOptions.formats || [];
 
-
         return (
                 <div className={`qa-FormatSelector-Container`} key={this.props.provider.slug}>
-                {formats.map((format, ix) => (
+                {formats.map((format) => (
                     <div
+                        key={format.slug}
                         className={`qa-FormatSelector-ListItem`}
                     >
                         <div className={classes.container}>
@@ -146,7 +143,6 @@ export class FormatSelector extends React.Component<Props, State> {
                                 className={classes.listItem}
                             >
                                 <div className={classes.listItemText}>{format.name}</div>
-                                <div className={classes.sublistItem}>Estimate Placeholder</div>
                             </div>
                         </div>
                     </div>
