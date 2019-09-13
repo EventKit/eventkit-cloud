@@ -204,7 +204,7 @@ class TestExportTasks(ExportTaskBase):
         mock_convert.assert_called_once_with(file_format='gpkg', in_file=expected_output_path,
                                              task_uid=str(saved_export_task.uid))
         self.assertEqual(expected_output_path, result['result'])
-        self.assertEqual(expected_output_path, result['geopackage'])
+        self.assertEqual(expected_output_path, result['gpkg'])
 
     @patch('celery.app.task.Task.request')
     @patch('eventkit_cloud.tasks.export_tasks.OGR')

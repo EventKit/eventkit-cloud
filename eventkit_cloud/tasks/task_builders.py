@@ -8,7 +8,8 @@ from django.db import DatabaseError
 
 from eventkit_cloud.jobs.models import DataProviderTask
 from eventkit_cloud.tasks import TaskStates
-from eventkit_cloud.tasks.helpers import normalize_name
+from eventkit_cloud.tasks.export_tasks import reprojection_task
+from eventkit_cloud.tasks.helpers import normalize_name, get_metadata
 from eventkit_cloud.tasks.models import ExportTaskRecord, DataProviderTaskRecord
 from eventkit_cloud.utils.stats.aoi_estimators import AoiEstimator
 
@@ -77,12 +78,6 @@ class TaskChainBuilder(object):
                 msg = 'Error importing export task: {0}'.format(e)
                 logger.debug(msg)
 
-        # First everything is already in gpkg format by default, except WCS and we don't want gpkg for that
-        #  so just remove gpkg so that it doesn't show twice in the UI (i.e. raster export(.gpkg) and geopackage)...
-        if len(export_tasks) > 0:
-            if export_tasks.get('gpkg'):
-                export_tasks.pop('gpkg')
-
         # Record estimates for size and time
         estimator = AoiEstimator(run.job.extents)
         estimated_size, meta_s = estimator.get_estimate(estimator.Types.SIZE, provider_task.provider)
@@ -98,8 +93,10 @@ class TaskChainBuilder(object):
                                                                           estimated_duration=estimated_duration)
 
         for format, task in export_tasks.items():
+            # Exports are in 4326 by default, include that in the name.
+            task_name = f"{task.get('obj').name} - EPSG:4326"
             export_task = create_export_task_record(
-                task_name=task.get('obj').name,
+                task_name=task_name,
                 export_provider_task=data_provider_task_record, worker=worker,
                 display=getattr(task.get('obj'), "display", False)
             )
@@ -111,13 +108,31 @@ class TaskChainBuilder(object):
         queue_group = os.getenv("CELERY_GROUP_NAME", worker)
 
         if export_tasks:
-            format_tasks = chain(
-                task.get('obj').s(
-                    run_uid=run.uid, stage_dir=stage_dir, job_name=job_name, task_uid=task.get('task_uid'),
-                    user_details=user_details, locking_task_key=data_provider_task_record.uid
-                ).set(queue=queue_group, routing_key=queue_group)
-                for format_ignored, task in export_tasks.items()
-            )
+            subtasks = []
+            for format_ignored, task in export_tasks.items():
+                subtasks.append(task.get('obj').s(
+                    run_uid=run.uid, stage_dir=stage_dir, job_name=job_name,
+                    task_uid=task.get('task_uid'), user_details=user_details, locking_task_key=data_provider_task_record.uid
+                ).set(queue=queue_group, routing_key=queue_group))
+                projections = get_metadata(data_provider_task_record.uid)['projections']
+                for projection in projections:
+                    # Source data is already in 4326, no need to reproject.
+                    if projection == 4326:
+                        continue
+
+                    task_name = f"{task.get('obj').name} - EPSG:{projection}"
+                    projection_task = create_export_task_record(
+                        task_name=task_name,
+                        export_provider_task=data_provider_task_record, worker=worker,
+                        display=getattr(task.get('obj'), "display", False)
+                    )
+
+                    subtasks.append(reprojection_task.s(
+                        run_uid=run.uid, stage_dir=stage_dir, job_name=job_name,
+                        task_uid=projection_task.uid, user_details=user_details,
+                        locking_task_key=data_provider_task_record.uid, projection=projection
+                    ).set(queue=queue_group, routing_key=queue_group))
+            format_tasks = chain(subtasks)
         else:
             format_tasks = None
 

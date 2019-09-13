@@ -33,7 +33,7 @@ from eventkit_cloud.tasks.helpers import normalize_name, get_archive_data_path, 
     get_download_filename, get_run_staging_dir, get_provider_staging_dir, get_run_download_dir, Directory, \
     default_format_time, progressive_kill, get_style_files, generate_qgs_style, create_license_file, \
     get_human_readable_metadata_document, pickle_exception, get_data_type_from_provider, get_arcgis_metadata, \
-    get_message_count, clean_config
+    get_message_count, clean_config, get_metadata
 from eventkit_cloud.utils.auth_requests import get_cred
 from eventkit_cloud.utils import (
     overpass, pbf, s3, mapproxy, wcs, geopackage, gdalutils
@@ -457,7 +457,7 @@ def osm_data_collection_task(
             gpkg_filepath = gdalutils.clip_dataset(boundary=selection, in_dataset=gpkg_filepath, fmt=None)
 
         result['result'] = gpkg_filepath
-        result['geopackage'] = gpkg_filepath
+        result['gpkg'] = gpkg_filepath
 
         result = add_metadata_task(result=result, job_uid=run.job.uid, provider_slug=provider_slug)
 
@@ -480,7 +480,7 @@ def add_metadata_task(self, result=None, job_uid=None, provider_slug=None, user_
 
     provider = DataProvider.objects.get(slug=provider_slug)
     result = result or {}
-    input_gpkg = parse_result(result, 'geopackage')
+    input_gpkg = parse_result(result, 'gpkg')
     date_time = timezone.now()
     bbox = job.extents
     metadata_values = {"fileIdentifier": '{0}-{1}-{2}'.format(job.name, provider.slug, default_format_time(date_time)),
@@ -503,7 +503,7 @@ def add_metadata_task(self, result=None, job_uid=None, provider_slug=None, user_
     geopackage.add_file_metadata(input_gpkg, metadata)
 
     result['result'] = input_gpkg
-    result['geopackage'] = input_gpkg
+    result['gpkg'] = input_gpkg
     return result
 
 
@@ -521,8 +521,9 @@ def shp_export_task(self, result=None, run_uid=None, task_uid=None, stage_dir=No
         ogr = OGR(task_uid=task_uid)
         out = ogr.convert(file_format='ESRI Shapefile', in_file=gpkg, out_file=shapefile,
                           params="-lco 'ENCODING=UTF-8' -overwrite -skipfailures")
+        result['file_format'] = 'ESRI Shapefile'
         result['result'] = out
-        result['geopackage'] = gpkg
+        result['shp'] = out
         return result
     except Exception as e:
         logger.error('Exception while converting {} -> {}: {}'.format(gpkg, shapefile, str(e)))
@@ -542,8 +543,9 @@ def kml_export_task(self, result=None, run_uid=None, task_uid=None, stage_dir=No
     try:
         ogr = OGR(task_uid=task_uid)
         out = ogr.convert(file_format='KML', in_file=gpkg, out_file=kmlfile)
+        result['file_format'] = 'kml'
         result['result'] = out
-        result['geopackage'] = gpkg
+        result['kml'] = out
         return result
     except Exception as e:
         logger.error('Raised exception in kml export, %s', str(e))
@@ -563,8 +565,9 @@ def sqlite_export_task(self, result=None, run_uid=None, task_uid=None, stage_dir
     try:
         ogr = OGR(task_uid=task_uid)
         out = ogr.convert(file_format='SQLite', in_file=gpkg, out_file=sqlitefile)
+        result['file_format'] = 'sqlite'
         result['result'] = out
-        result['geopackage'] = gpkg
+        result['sqlite'] = out
         return result
     except Exception as e:
         logger.error('Raised exception in sqlite export, %s', str(e))
@@ -596,28 +599,22 @@ def output_selection_geojson_task(self, result=None, task_uid=None, selection=No
 
 
 @app.task(name='Geopackage Format', bind=True, base=FormatTask)
-def geopackage_export_task(self, result={}, run_uid=None, task_uid=None,
+def geopackage_export_task(self, result=None, run_uid=None, task_uid=None, stage_dir=None, job_name=None,
                            user_details=None, *args, **kwargs):
     """
     Class defining geopackage export function.
     """
-    from eventkit_cloud.tasks.models import ExportRun, ExportTaskRecord
-
     result = result or {}
-    run = ExportRun.objects.get(uid=run_uid)
-    task = ExportTaskRecord.objects.get(uid=task_uid)
 
-    selection = parse_result(result, 'selection')
-    if selection:
-        gpkg = parse_result(result, 'result')
-        gdalutils.clip_dataset(boundary=selection, in_dataset=gpkg, fmt=None)
+    gpkg_in_dataset = parse_result(result, 'result')
+    gpkg_out_dataset = os.path.join(stage_dir, '{0}.gpkg'.format(job_name))
 
-    add_metadata_task(result=result, job_uid=run.job.uid, provider_slug=task.export_provider_task.slug)
-    gpkg = parse_result(result, 'result')
-    gpkg = gdalutils.convert(file_format='gpkg', in_file=gpkg, task_uid=task_uid)
+    gpkg = gdalutils.convert(
+            file_format='gpkg', in_file=gpkg_in_dataset, out_file=gpkg_out_dataset, task_uid=task_uid)
 
+    result['file_format'] = 'gpkg'
     result['result'] = gpkg
-    result['geopackage'] = gpkg
+    result['gpkg'] = gpkg
     return result
 
 
@@ -639,8 +636,10 @@ def geotiff_export_task(self, result=None, run_uid=None, task_uid=None, stage_di
         gtiff = gdalutils.convert(
             file_format='gtiff', in_file=gtiff_in_dataset, out_file=gtiff_out_dataset, task_uid=task_uid)
 
+    result['file_extension'] = 'tif'
+    result['file_format'] = 'gtiff'
     result['result'] = gtiff
-    result['geotiff'] = gtiff
+    result['gtiff'] = gtiff
     return result
 
 
@@ -657,6 +656,7 @@ def nitf_export_task(self, result=None, run_uid=None, task_uid=None, stage_dir=N
     nitf = gdalutils.convert(
         file_format='nitf', in_file=nitf_in_dataset, out_file=nitf_out_dataset, task_uid=task_uid)
 
+    result['file_format'] = 'nitf'
     result['result'] = nitf
     result['nitf'] = nitf
     return result
@@ -675,8 +675,37 @@ def hfa_export_task(self, result=None, run_uid=None, task_uid=None, stage_dir=No
     hfa = gdalutils.convert(
         file_format='hfa', in_file=hfa_in_dataset, out_file=hfa_out_dataset, task_uid=task_uid)
 
+    result['file_format'] = 'hfa'
     result['result'] = hfa
     result['hfa'] = hfa
+    return result
+
+
+@app.task(name='Reprojection Task', bind=True, base=FormatTask)
+def reprojection_task(self, result=None, run_uid=None, task_uid=None, stage_dir=None, job_name=None,
+                        user_details=None, projection=None, *args, **kwargs):
+    """
+    Class defining a task that will reproject all file formats to the chosen projections.
+    """
+    result = result or {}
+
+    file_format = parse_result(result, 'file_format')
+
+    if parse_result(result, 'file_extension'):
+        file_extension = parse_result(result, 'file_extension')
+    else:
+        file_extension = file_format
+
+    in_dataset = parse_result(result, 'gpkg')
+    out_dataset = os.path.join(stage_dir, '{0}-{1}.{2}'.format(job_name, projection, file_extension))
+
+    if file_format == 'ESRI Shapefile':
+        out_dataset = os.path.join(stage_dir, '{0}_shp'.format(job_name))
+
+    reprojection = gdalutils.convert(
+        file_format=file_format, in_file=in_dataset, out_file=out_dataset, task_uid=task_uid, projection=projection)
+
+    result['result'] = reprojection
     return result
 
 
@@ -745,7 +774,7 @@ def wfs_export_task(self, result=None, layer=None, config=None, run_uid=None, ta
         ogr = OGR(task_uid=task_uid)
         out = ogr.convert(file_format='GPKG', in_file="WFS:\"{}\"".format(url), out_file=gpkg, params=params)
         result['result'] = out
-        result['geopackage'] = out
+        result['gpkg'] = out
         # Check for geopackage contents; gdal wfs driver fails silently
         if not geopackage.check_content_exists(out):
             raise Exception("Empty response: Unknown layer name '{}' or invalid AOI bounds".format(layer))
@@ -814,7 +843,7 @@ def arcgis_feature_service_export_task(self, result=None, task_uid=None,
         ogr = OGR(task_uid=task_uid)
         out = ogr.convert(file_format='GPKG', in_file=service_url, out_file=gpkg, params=params)
         result['result'] = out
-        result['geopackage'] = out
+        result['gpkg'] = out
         return result
     except Exception as e:
         logger.error('Raised exception in arcgis feature service export, %s', str(e))
@@ -836,7 +865,7 @@ def bounds_export_task(self, result={}, run_uid=None, task_uid=None, stage_dir=N
 
     run = ExportRun.objects.get(uid=run_uid)
 
-    result_gpkg = parse_result(result, 'geopackage')
+    result_gpkg = parse_result(result, 'gpkg')
     bounds = run.job.the_geom.geojson or run.job.bounds_geojson
 
     gpkg = os.path.join(stage_dir, '{0}_bounds.gpkg'.format(provider_slug))
@@ -845,7 +874,7 @@ def bounds_export_task(self, result={}, run_uid=None, task_uid=None, stage_dir=N
     )
 
     result['result'] = gpkg
-    result['geopackage'] = result_gpkg
+    result['gpkg'] = result_gpkg
     return result
 
 
@@ -874,8 +903,9 @@ def mapproxy_export_task(self, result=None, layer=None, config=None, run_uid=Non
                                           level_to=level_to, service_type=service_type,
                                           task_uid=task_uid, selection=selection)
         gpkg = w2g.convert()
+        result['file_format'] = 'gpkg'
         result['result'] = gpkg
-        result['geopackage'] = gpkg
+        result['gpkg'] = gpkg
         add_metadata_task(result=result, job_uid=run.job.uid, provider_slug=task.export_provider_task.slug)
 
         return result
@@ -943,7 +973,6 @@ def create_zip_task(result=None, data_provider_task_uid=None, *args, **kwargs):
     :return: The run files, or a single zip file if data_provider_task_uid is passed.
     """
     from eventkit_cloud.tasks.models import DataProviderTaskRecord
-    from eventkit_cloud.tasks.helpers import get_metadata
 
     if not result:
         result = {}

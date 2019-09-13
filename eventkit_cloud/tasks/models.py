@@ -140,7 +140,7 @@ class DataProviderTaskRecord(UIDMixin, TimeStampedModelMixin, TimeTrackingModelM
     """
     The DataProviderTaskRecord stores the task information for a specific provider.
     """
-    name = models.CharField(max_length=50, blank=True)
+    name = models.CharField(max_length=100, blank=True)
     slug = LowerCaseCharField(max_length=40, default='')
     run = models.ForeignKey(ExportRun, related_name='provider_tasks', on_delete=models.CASCADE)
     status = models.CharField(blank=True, max_length=20, db_index=True)
@@ -187,7 +187,7 @@ class ExportTaskRecord(UIDMixin, TimeStampedModelMixin, TimeTrackingModelMixin):
     An ExportTaskRecord holds the information about the process doing the actual work for a task.
     """
     celery_uid = models.UUIDField(null=True)  # celery task uid
-    name = models.CharField(max_length=50)
+    name = models.CharField(max_length=100)
     export_provider_task = models.ForeignKey(DataProviderTaskRecord, related_name='tasks', on_delete=models.CASCADE)
     status = models.CharField(blank=True, max_length=20, db_index=True)
     pid = models.IntegerField(blank=True, default=-1)
