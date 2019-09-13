@@ -73,6 +73,19 @@ const formats = [
     },
 ];
 
+const projections = [
+    {
+        srid: 4326,
+        name: 'EPSG:4326',
+        description: null,
+    },
+    {
+        srid: 1,
+        name: 'EPSG:1',
+        description: null,
+    }
+];
+
 describe('BreadcrumbStepper component', () => {
     const getProps = () => ({
         aoiInfo: { geojson: {}, originalGeojson: {} },
@@ -87,6 +100,7 @@ describe('BreadcrumbStepper component', () => {
             areaStr: '',
             formats: ['gpkg'],
             providerEstimates: {},
+            projections: [4326],
             exportOptions: {
                 1: {
                     minZoom: 0, maxZoom: 10
@@ -99,6 +113,7 @@ describe('BreadcrumbStepper component', () => {
         },
         routes: [],
         formats,
+        projections,
         walkthroughClicked: false,
         onUpdateEstimate: sinon.spy(),
         createExportRequest: sinon.spy(),
@@ -114,6 +129,7 @@ describe('BreadcrumbStepper component', () => {
         getNotifications: sinon.spy(),
         getNotificationsUnreadCount: sinon.spy(),
         getFormats: sinon.spy(),
+        getProjections: sinon.spy(),
         ...(global as any).eventkit_test_props,
     });
 
@@ -316,6 +332,7 @@ describe('BreadcrumbStepper component', () => {
                 formats: ['gpkg'],
                 min_zoom: 0, max_zoom: 10
             }],
+            projections: [4326],
             selection: {},
             original_selection: {},
             tags: [],

@@ -25,6 +25,7 @@ import { licenseReducer } from './licenseReducer';
 import authReducer from './authReducer';
 import { userGroupsReducer } from './groupReducer';
 import { notificationsReducer } from './notificationsReducer';
+import { getProjectionsReducer } from './projectionReducer';
 import history from '../utils/history';
 
 const reducer = combineReducers({
@@ -52,6 +53,7 @@ const reducer = combineReducers({
     notifications: notificationsReducer,
     exports: runsReducer,
     providerTasks: providerTasksReducer,
+    projections: getProjectionsReducer,
 });
 
 const rootReducer = (rootState, action) => {

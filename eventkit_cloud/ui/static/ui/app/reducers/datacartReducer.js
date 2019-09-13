@@ -25,6 +25,7 @@ export const initialState = {
         formats: ['gpkg'],
         providerEstimates: {},
         exportOptions: {},
+        projections: [],
     },
     updatePermission: {
         updating: null,
@@ -93,6 +94,7 @@ export function exportInfoReducer(state = initialState.exportInfo, action) {
                 formats: ['gpkg'],
                 providerEstimates: {},
                 exportOptions: {},
+                projections: [],
             };
         default:
             return state;
