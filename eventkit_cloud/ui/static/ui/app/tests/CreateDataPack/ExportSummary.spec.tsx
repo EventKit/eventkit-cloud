@@ -55,6 +55,8 @@ describe('Export Summary Component', () => {
         ],
         walkthroughClicked: false,
         onWalkthroughReset: sinon.spy(),
+        projections: [{srid: 4326, name: 'EPSG:4326'}],
+        selectedProjections: [4326],
         ...(global as any).eventkit_test_props,
         classes: {},
     });
@@ -75,7 +77,7 @@ describe('Export Summary Component', () => {
 
     it('should render the basic components', () => {
         expect(wrapper.find(CustomScrollbar)).toHaveLength(1);
-        expect(wrapper.find(CustomTableRow)).toHaveLength(5);
+        expect(wrapper.find(CustomTableRow)).toHaveLength(6);
         expect(wrapper.find('#form')).toHaveLength(1);
         expect(wrapper.find('#mainHeading').text()).toEqual('Preview and Run Export');
         expect(wrapper.find('#subHeading').text()).toEqual('Please make sure all the information below is correct.');
