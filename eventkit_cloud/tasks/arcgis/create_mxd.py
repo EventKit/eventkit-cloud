@@ -3,7 +3,7 @@
 # This file is used to create an MXD file based on a datapack.  It needs to be run via the python application that is
 # packaged with arcgis.  For many users this is the default python, for other users they may have to specify this location
 # for example ('C:\Python27\ArcGIS10.5\python create_mxd.py').
-print("Creating an MXD file for your osm data...")
+print("Creating an MXD file for your data...")
 
 import os
 import logging
@@ -25,7 +25,6 @@ if os.getenv('LOG_LEVEL'):
 
 try:
     from django.conf import settings
-
     BASE_DIR = settings.BASE_DIR
 except Exception:
     BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -62,28 +61,49 @@ def update_mxd_from_metadata(file_name, metadata, verify=False):
     df = mxd.activeDataFrame
     version = get_version()
     for layer_name, layer_info in metadata['data_sources'].items():
-        file_path = os.path.abspath(os.path.join(BASE_DIR, layer_info['file_path']))
-        # If possible calculate the statistics now so that they are correct when opening arcmap.
-        try:
-            print(("Calculating statistics for the file {0}...".format(file_path)))
-            arcpy.CalculateStatistics_management(file_path)
-        except Exception as e:
-            print(e)
-        layer_file = get_layer_file(layer_info['type'], version)
-        if not layer_file:
-            print((
-                "Skipping layer {0} because the file type is not supported for ArcMap {1}".format(layer_name, version)))
-            if version == '10.5':
-                print("However with your version of ArcMap you can still drag and drop this layer onto the Map.")
-            continue
-        layer_from_file = arcpy.mapping.Layer(layer_file)
-        layer_from_file.name = layer_info['name']
-        print(('Adding layer: {0}...'.format(layer_from_file.name)))
-        arcpy.mapping.AddLayer(df, layer_from_file, "TOP")
-        # Get instance of layer from MXD, not the template file.
-        del layer_from_file
-        layer = arcpy.mapping.ListLayers(mxd)[0]
-        update_layer(layer, file_path, verify=verify)
+        for file_info in layer_info['files']:
+            # As of arcgis 10.5.1 shapefiles can't be imported as zips.
+            if file_info['file_ext'] in ['.zip']:
+                print("This script can't automatically add zipped shapefiles.  You can try to use the osm layer in the template folder then update the source data after extracting the shapefiles.")
+                continue
+            file_path = os.path.abspath(os.path.join(BASE_DIR, file_info['file_path']))
+            # If possible calculate the statistics now so that they are correct when opening arcmap.
+            try:
+                print(("Calculating statistics for the file {0}...".format(file_path)))
+                arcpy.CalculateStatistics_management(file_path)
+            except Exception as e:
+                print(e)
+            layer_file = get_layer_file(layer_info['type'], version)
+            if not layer_file:
+                print((
+                    "Skipping layer {0} because the file type is not supported for ArcMap {1}".format(layer_name, version)))
+                if version == '10.5':
+                    print("However with your version of ArcMap you can still drag and drop this layer onto the Map.")
+                continue
+            if file_info['file_ext'] in ['.kml','.kmz']:
+                kml_layer = os.path.splitext(os.path.basename(file_path))[0]
+                template_dir = os.path.join(BASE_DIR, 'arcgis', 'templates')
+                layer_file = os.path.join(template_dir, "{}.lyr".format(kml_layer))
+                try:
+                    layer_from_file = arcpy.KMLToLayer_conversion(in_kml_file=file_path, output_folder=template_dir, output_data=kml_layer)
+                except Exception as e:
+                    # This could fail for various reasons including that the file already exists.  If KMLs are very important to your workflow please contact us
+                    # and we can make this more robust.
+                    print("Could not create a new KML layer file and gdb, it may already exist.")
+                    layer_from_file = arcpy.mapping.Layer(layer_file)
+                layer_from_file.name = layer_info['name'] + file_info['file_ext'].replace('.','_')
+                print(('Adding layer: {0}...'.format(layer_from_file.name)))
+                arcpy.mapping.AddLayer(df, layer_from_file, "TOP")
+                del layer_from_file
+            else:
+                layer_from_file = arcpy.mapping.Layer(layer_file)
+                layer_from_file.name = layer_info['name'] + file_info['file_ext'].replace('.','_')
+                print(('Adding layer: {0}...'.format(layer_from_file.name)))
+                arcpy.mapping.AddLayer(df, layer_from_file, "TOP")
+                # Get instance of layer from MXD, not the template file.
+                del layer_from_file
+                layer = arcpy.mapping.ListLayers(mxd)[0]
+                update_layer(layer, file_path, layer_info['type'], verify=verify)
 
     logger.debug('Getting dataframes...')
     df = mxd.activeDataFrame
@@ -146,19 +166,17 @@ def get_version():
         raise
 
 
-def update_layer(layer, file_path, verify=False):
+def update_layer(layer, file_path, type, verify=False):
     """
     :param layer: An Arc Layer object to be updated.
     :param file_path: A new datasource.
     :param verify:  If true will validate the datasource after the layer is updated.
-    :param mxd: Pass a reference to an MXD document if the layer is in an mxd, needed
-    due to a bug with saving layers in a windows USERPROFILE directory.
     :return: The updated ext.
     """
     for lyr in arcpy.mapping.ListLayers(layer):
         if lyr.supports("DATASOURCE"):
             try:
-                logging.debug("layer: {0}".format(lyr))
+                logger.debug("layer: {0}".format(lyr))
                 logger.debug("removing old layer workspacePath: {0}".format(lyr.workspacePath))
             except Exception:
                 # Skip layers that don't have paths.
@@ -166,14 +184,16 @@ def update_layer(layer, file_path, verify=False):
             try:
                 # Try to update the extents based on the layers
                 logger.debug("Updating layers from {0} to {1}".format(lyr.workspacePath, file_path))
-                # For the tif file we want the workspace path to be the directory not the DB name.
-                if os.path.splitext(file_path)[1] == '.tif':
-                    lyr.replaceDataSource(os.path.dirname(file_path), "NONE", os.path.basename(file_path))
+                # For files that aren't geopackages we want the workspace path to be the directory not the DB name.
+                if type == 'raster':
+                    lyr.replaceDataSource(os.path.dirname(file_path), "RASTER_WORKSPACE", os.path.basename(file_path), verify)
+                elif type == 'elevation':
+                    lyr.replaceDataSource(os.path.dirname(file_path), "NONE", os.path.basename(file_path), verify)
                 else:
-                    lyr.findAndReplaceWorkspacePath(lyr.workspacePath, file_path, verify)
+                    lyr.findAndReplaceWorkspacePath(lyr.workspacePath, file_path, False)
                 if lyr.isFeatureLayer:
                     logger.debug(arcpy.RecalculateFeatureClassExtent_management(lyr).getMessages())
-            except AttributeError as ae:
+            except AttributeError:
                 raise
 
 

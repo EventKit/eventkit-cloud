@@ -12,57 +12,57 @@
       {% for file_details in provider.files %}
       <layer-tree-group expanded="0" checked="Qt::Checked" name="{{ provider.name }}_{{ file_details.file_ext|slugify }}">
         <customproperties/>
-        <layer-tree-layer expanded="1" providerKey="ogr" checked="Qt::Checked" id="{{ job_name.split|join:"_" }}_places_points_any_{{ provider.slug}}{{ job_date_time }}_{{ file_details.file_ext|slugify }}" source="{% if file_details.file_ext == '.zip'%}/vsizip/{% endif %}./data/{{ provider.slug }}/{{ job_name.split|join:"_" }}-{{ provider.slug }}-{{ job_date_time|slice:":8" }}{{file_details.file_ext}}|layername=places_points" name="place label">
+        <layer-tree-layer expanded="1" providerKey="ogr" checked="Qt::Checked" id="{{ job_name.split|join:"_" }}_places_points_any_{{ provider.slug}}{{ job_date_time }}_{{ file_details.file_ext|slugify }}" source="{% if file_details.file_ext == '.zip'%}/vsizip/{% endif %}./{{ file_details.file_path }}|layername=places_points" name="place label">
           <customproperties/>
         </layer-tree-layer>
-        <layer-tree-layer expanded="1" providerKey="ogr" checked="Qt::Checked" id="{{ job_name.split|join:"_" }}_aviation_points_any_{{ provider.slug}}{{ job_date_time }}_{{ file_details.file_ext|slugify }}" source="{% if file_details.file_ext == '.zip'%}/vsizip/{% endif %}./data/{{ provider.slug }}/{{ job_name.split|join:"_" }}-{{ provider.slug }}-{{ job_date_time|slice:":8" }}{{file_details.file_ext}}|layername=aviation_points|subset=&quot;aeroway&quot; = 'aerodrome'" name="airport">
+        <layer-tree-layer expanded="1" providerKey="ogr" checked="Qt::Checked" id="{{ job_name.split|join:"_" }}_aviation_points_any_{{ provider.slug}}{{ job_date_time }}_{{ file_details.file_ext|slugify }}" source="{% if file_details.file_ext == '.zip'%}/vsizip/{% endif %}./{{ file_details.file_path }}|layername=aviation_points|subset=&quot;aeroway&quot; = 'aerodrome'" name="airport">
           <customproperties/>
         </layer-tree-layer>
         <layer-tree-group expanded="1" checked="Qt::Checked" name="points of interest">
           <customproperties/>
-          <layer-tree-layer expanded="0" providerKey="ogr" checked="Qt::Checked" id="{{ job_name.split|join:"_" }}_amenities_points_any_{{ provider.slug}}{{ job_date_time }}_{{ file_details.file_ext|slugify }}" source="{% if file_details.file_ext == '.zip'%}/vsizip/{% endif %}./data/{{ provider.slug }}/{{ job_name.split|join:"_" }}-{{ provider.slug }}-{{ job_date_time|slice:":8" }}{{file_details.file_ext}}|layername=amenities_points" name="POI (points)">
+          <layer-tree-layer expanded="0" providerKey="ogr" checked="Qt::Checked" id="{{ job_name.split|join:"_" }}_amenities_points_any_{{ provider.slug}}{{ job_date_time }}_{{ file_details.file_ext|slugify }}" source="{% if file_details.file_ext == '.zip'%}/vsizip/{% endif %}./{{ file_details.file_path }}|layername=amenities_points" name="POI (points)">
             <customproperties/>
           </layer-tree-layer>
-          <layer-tree-layer expanded="0" providerKey="ogr" checked="Qt::Checked" id="{{ job_name.split|join:"_" }}_amenities_polygons_any_{{ provider.slug}}{{ job_date_time }}_{{ file_details.file_ext|slugify }}" source="{% if file_details.file_ext == '.zip'%}/vsizip/{% endif %}./data/{{ provider.slug }}/{{ job_name.split|join:"_" }}-{{ provider.slug }}-{{ job_date_time|slice:":8" }}{{file_details.file_ext}}|layername=amenities_polygons" name="POI (areas)">
+          <layer-tree-layer expanded="0" providerKey="ogr" checked="Qt::Checked" id="{{ job_name.split|join:"_" }}_amenities_polygons_any_{{ provider.slug}}{{ job_date_time }}_{{ file_details.file_ext|slugify }}" source="{% if file_details.file_ext == '.zip'%}/vsizip/{% endif %}./{{ file_details.file_path }}|layername=amenities_polygons" name="POI (areas)">
             <customproperties/>
           </layer-tree-layer>
         </layer-tree-group>
-        <layer-tree-layer expanded="0" providerKey="ogr" checked="Qt::Checked" id="{{ job_name.split|join:"_" }}_roads_lines_any_{{ provider.slug}}{{ job_date_time }}_{{ file_details.file_ext|slugify }}" source="{% if file_details.file_ext == '.zip'%}/vsizip/{% endif %}./data/{{ provider.slug }}/{{ job_name.split|join:"_" }}-{{ provider.slug }}-{{ job_date_time|slice:":8" }}{{file_details.file_ext}}|layername=roads_lines" name="roads">
+        <layer-tree-layer expanded="0" providerKey="ogr" checked="Qt::Checked" id="{{ job_name.split|join:"_" }}_roads_lines_any_{{ provider.slug}}{{ job_date_time }}_{{ file_details.file_ext|slugify }}" source="{% if file_details.file_ext == '.zip'%}/vsizip/{% endif %}./{{ file_details.file_path }}|layername=roads_lines" name="roads">
           <customproperties/>
         </layer-tree-layer>
-        <layer-tree-layer expanded="1" providerKey="ogr" checked="Qt::Checked" id="{{ job_name.split|join:"_" }}_buildings_polygons_any_{{ provider.slug}}{{ job_date_time }}_{{ file_details.file_ext|slugify }}" source="{% if file_details.file_ext == '.zip'%}/vsizip/{% endif %}./data/{{ provider.slug }}/{{ job_name.split|join:"_" }}-{{ provider.slug }}-{{ job_date_time|slice:":8" }}{{file_details.file_ext}}|layername=buildings_polygons" name="building">
+        <layer-tree-layer expanded="1" providerKey="ogr" checked="Qt::Checked" id="{{ job_name.split|join:"_" }}_buildings_polygons_any_{{ provider.slug}}{{ job_date_time }}_{{ file_details.file_ext|slugify }}" source="{% if file_details.file_ext == '.zip'%}/vsizip/{% endif %}./{{ file_details.file_path }}|layername=buildings_polygons" name="building">
           <customproperties/>
         </layer-tree-layer>
-        <layer-tree-layer expanded="1" providerKey="ogr" checked="Qt::Checked" id="{{ job_name.split|join:"_" }}_waterways_lines_any_{{ provider.slug}}{{ job_date_time }}_{{ file_details.file_ext|slugify }}" source="{% if file_details.file_ext == '.zip'%}/vsizip/{% endif %}./data/{{ provider.slug }}/{{ job_name.split|join:"_" }}-{{ provider.slug }}-{{ job_date_time|slice:":8" }}{{file_details.file_ext}}|layername=waterways_lines" name="waterways">
+        <layer-tree-layer expanded="1" providerKey="ogr" checked="Qt::Checked" id="{{ job_name.split|join:"_" }}_waterways_lines_any_{{ provider.slug}}{{ job_date_time }}_{{ file_details.file_ext|slugify }}" source="{% if file_details.file_ext == '.zip'%}/vsizip/{% endif %}./{{ file_details.file_path }}|layername=waterways_lines" name="waterways">
           <customproperties/>
         </layer-tree-layer>
-        <layer-tree-layer expanded="1" providerKey="ogr" checked="Qt::Checked" id="{{ job_name.split|join:"_" }}natural_polygons_grassland_{{ provider.slug}}{{ job_date_time }}_{{ file_details.file_ext|slugify }}" source="{% if file_details.file_ext == '.zip'%}/vsizip/{% endif %}./data/{{ provider.slug }}/{{ job_name.split|join:"_" }}-{{ provider.slug }}-{{ job_date_time|slice:":8" }}{{file_details.file_ext}}|layername=natural_polygons|subset=&quot;natural&quot; = 'grassland'" name="grassland">
+        <layer-tree-layer expanded="1" providerKey="ogr" checked="Qt::Checked" id="{{ job_name.split|join:"_" }}natural_polygons_grassland_{{ provider.slug}}{{ job_date_time }}_{{ file_details.file_ext|slugify }}" source="{% if file_details.file_ext == '.zip'%}/vsizip/{% endif %}./{{ file_details.file_path }}|layername=natural_polygons|subset=&quot;natural&quot; = 'grassland'" name="grassland">
           <customproperties/>
         </layer-tree-layer>
-        <layer-tree-layer expanded="1" providerKey="ogr" checked="Qt::Checked" id="{{ job_name.split|join:"_" }}_leisure_polygons_any_{{ provider.slug}}{{ job_date_time }}_{{ file_details.file_ext|slugify }}" source="{% if file_details.file_ext == '.zip'%}/vsizip/{% endif %}./data/{{ provider.slug }}/{{ job_name.split|join:"_" }}-{{ provider.slug }}-{{ job_date_time|slice:":8" }}{{file_details.file_ext}}|layername=leisure_polygons" name="leisure">
+        <layer-tree-layer expanded="1" providerKey="ogr" checked="Qt::Checked" id="{{ job_name.split|join:"_" }}_leisure_polygons_any_{{ provider.slug}}{{ job_date_time }}_{{ file_details.file_ext|slugify }}" source="{% if file_details.file_ext == '.zip'%}/vsizip/{% endif %}./{{ file_details.file_path }}|layername=leisure_polygons" name="leisure">
           <customproperties/>
         </layer-tree-layer>
-        <layer-tree-layer expanded="0" providerKey="ogr" checked="Qt::Checked" id="{{ job_name.split|join:"_" }}_landuse_polygons_any_{{ provider.slug}}{{ job_date_time }}_{{ file_details.file_ext|slugify }}" source="{% if file_details.file_ext == '.zip'%}/vsizip/{% endif %}./data/{{ provider.slug }}/{{ job_name.split|join:"_" }}-{{ provider.slug }}-{{ job_date_time|slice:":8" }}{{file_details.file_ext}}|layername=landuse_polygons" name="landuses">
+        <layer-tree-layer expanded="0" providerKey="ogr" checked="Qt::Checked" id="{{ job_name.split|join:"_" }}_landuse_polygons_any_{{ provider.slug}}{{ job_date_time }}_{{ file_details.file_ext|slugify }}" source="{% if file_details.file_ext == '.zip'%}/vsizip/{% endif %}./{{ file_details.file_path }}|layername=landuse_polygons" name="landuses">
           <customproperties/>
         </layer-tree-layer>
-        <layer-tree-layer expanded="1" providerKey="ogr" checked="Qt::Checked" id="{{ job_name.split|join:"_" }}_amenities_polygons_any_{{ provider.slug}}{{ job_date_time }}_{{ file_details.file_ext|slugify }}" source="{% if file_details.file_ext == '.zip'%}/vsizip/{% endif %}./data/{{ provider.slug }}/{{ job_name.split|join:"_" }}-{{ provider.slug }}-{{ job_date_time|slice:":8" }}{{file_details.file_ext}}|layername=amenities_polygons" name="amenities">
+        <layer-tree-layer expanded="1" providerKey="ogr" checked="Qt::Checked" id="{{ job_name.split|join:"_" }}_amenities_polygons_any_{{ provider.slug}}{{ job_date_time }}_{{ file_details.file_ext|slugify }}" source="{% if file_details.file_ext == '.zip'%}/vsizip/{% endif %}./{{ file_details.file_path }}|layername=amenities_polygons" name="amenities">
           <customproperties/>
         </layer-tree-layer>
-        <layer-tree-layer expanded="1" providerKey="ogr" checked="Qt::Checked" id="{{ job_name.split|join:"_" }}_aviation_lines_any_{{ provider.slug}}{{ job_date_time }}_{{ file_details.file_ext|slugify }}" source="{% if file_details.file_ext == '.zip'%}/vsizip/{% endif %}./data/{{ provider.slug }}/{{ job_name.split|join:"_" }}-{{ provider.slug }}-{{ job_date_time|slice:":8" }}{{file_details.file_ext}}|layername=aviation_lines" name="aviation lines">
+        <layer-tree-layer expanded="1" providerKey="ogr" checked="Qt::Checked" id="{{ job_name.split|join:"_" }}_aviation_lines_any_{{ provider.slug}}{{ job_date_time }}_{{ file_details.file_ext|slugify }}" source="{% if file_details.file_ext == '.zip'%}/vsizip/{% endif %}./{{ file_details.file_path }}|layername=aviation_lines" name="aviation lines">
           <customproperties/>
         </layer-tree-layer>
-        <layer-tree-layer expanded="1" providerKey="ogr" checked="Qt::Checked" id="{{ job_name.split|join:"_" }}_aviation_polygons_any_{{ provider.slug}}{{ job_date_time }}_{{ file_details.file_ext|slugify }}" source="{% if file_details.file_ext == '.zip'%}/vsizip/{% endif %}./data/{{ provider.slug }}/{{ job_name.split|join:"_" }}-{{ provider.slug }}-{{ job_date_time|slice:":8" }}{{file_details.file_ext}}|layername=aviation_polygons" name="aviation polygons">
+        <layer-tree-layer expanded="1" providerKey="ogr" checked="Qt::Checked" id="{{ job_name.split|join:"_" }}_aviation_polygons_any_{{ provider.slug}}{{ job_date_time }}_{{ file_details.file_ext|slugify }}" source="{% if file_details.file_ext == '.zip'%}/vsizip/{% endif %}./{{ file_details.file_path }}|layername=aviation_polygons" name="aviation polygons">
           <customproperties/>
         </layer-tree-layer>
-        <layer-tree-layer expanded="1" providerKey="ogr" checked="Qt::Checked" id="{{ job_name.split|join:"_" }}natural_polygons_water_{{ provider.slug}}{{ job_date_time }}_{{ file_details.file_ext|slugify }}" source="{% if file_details.file_ext == '.zip'%}/vsizip/{% endif %}./data/{{ provider.slug }}/{{ job_name.split|join:"_" }}-{{ provider.slug }}-{{ job_date_time|slice:":8" }}{{file_details.file_ext}}|layername=natural_polygons|subset=&quot;natural&quot; = &quot;water&quot;" name="water">
+        <layer-tree-layer expanded="1" providerKey="ogr" checked="Qt::Checked" id="{{ job_name.split|join:"_" }}natural_polygons_water_{{ provider.slug}}{{ job_date_time }}_{{ file_details.file_ext|slugify }}" source="{% if file_details.file_ext == '.zip'%}/vsizip/{% endif %}./{{ file_details.file_path }}|layername=natural_polygons|subset=&quot;natural&quot; = &quot;water&quot;" name="water">
           <customproperties/>
         </layer-tree-layer>
         <layer-tree-group expanded="1" checked="Qt::Checked" name="background">
           <customproperties/>
-          <layer-tree-layer expanded="1" providerKey="ogr" checked="Qt::Checked" id="{{ job_name.split|join:"_" }}_land_polygonsnome{{ job_date_time }}" source="{% if file_details.file_ext == '.zip'%}/vsizip/{% endif %}./data/{{ provider.slug }}/{{ job_name.split|join:"_" }}-{{ provider.slug }}-{{ job_date_time|slice:":8" }}{{file_details.file_ext}}|layername=land_polygons" name="land">
+          <layer-tree-layer expanded="1" providerKey="ogr" checked="Qt::Checked" id="{{ job_name.split|join:"_" }}_land_polygonsnome{{ job_date_time }}" source="{% if file_details.file_ext == '.zip'%}/vsizip/{% endif %}./{{ file_details.file_path }}|layername=land_polygons" name="land">
             <customproperties/>
           </layer-tree-layer>
-          <layer-tree-layer expanded="1" providerKey="ogr" checked="Qt::Checked" id="osm_bounds_{{ provider.slug}}_{{ job_date_time }}" source="{% if file_details.file_ext == '.zip'%}/vsizip/{% endif %}./data/{{ provider.slug }}/{{ job_name.split|join:"_" }}-{{ provider.slug }}-{{ job_date_time|slice:":8" }}{{file_details.file_ext}}|layername=boundary" name="boundary">
+          <layer-tree-layer expanded="1" providerKey="ogr" checked="Qt::Checked" id="osm_bounds_{{ provider.slug}}_{{ job_date_time }}_{{ file_details.file_ext|slugify }}" source="{% if file_details.file_ext == '.zip'%}/vsizip/{% endif %}./{{ file_details.file_path }}|layername=boundary" name="boundary">
             <customproperties/>
           </layer-tree-layer>
         </layer-tree-group>
@@ -73,65 +73,65 @@
       {% for file_details in provider.files %}
       <layer-tree-group expanded="0" checked="Qt::Checked" name="{{ provider.name }}_{{ file_details.file_ext|slugify }}">
         <customproperties/>
-        <layer-tree-layer expanded="1" providerKey="ogr" checked="Qt::Checked" id="{{ job_name.split|join:"_" }}_places_points_any_{{ provider.slug}}{{ job_date_time }}_{{ file_details.file_ext|slugify }}" source="{% if file_details.file_ext == '.zip'%}/vsizip/{% endif %}./data/{{ provider.slug }}/{{ job_name.split|join:"_" }}-{{ provider.slug }}-{{ job_date_time|slice:":8" }}{{file_details.file_ext}}|layername=places_points" name="place label">
+        <layer-tree-layer expanded="1" providerKey="ogr" checked="Qt::Checked" id="{{ job_name.split|join:"_" }}_places_points_any_{{ provider.slug}}{{ job_date_time }}_{{ file_details.file_ext|slugify }}" source="{% if file_details.file_ext == '.zip'%}/vsizip/{% endif %}./{{ file_details.file_path }}|layername=places_points" name="place label">
           <customproperties/>
         </layer-tree-layer>
-        <layer-tree-layer expanded="1" providerKey="ogr" checked="Qt::Checked" id="{{ job_name.split|join:"_" }}_aviation_points_any_{{ provider.slug}}{{ job_date_time }}_{{ file_details.file_ext|slugify }}" source="{% if file_details.file_ext == '.zip'%}/vsizip/{% endif %}./data/{{ provider.slug }}/{{ job_name.split|join:"_" }}-{{ provider.slug }}-{{ job_date_time|slice:":8" }}{{file_details.file_ext}}|layername=aviation_points|subset=&quot;aeroway&quot; = 'aerodrome'" name="airport">
+        <layer-tree-layer expanded="1" providerKey="ogr" checked="Qt::Checked" id="{{ job_name.split|join:"_" }}_aviation_points_any_{{ provider.slug}}{{ job_date_time }}_{{ file_details.file_ext|slugify }}" source="{% if file_details.file_ext == '.zip'%}/vsizip/{% endif %}./{{ file_details.file_path }}|layername=aviation_points|subset=&quot;aeroway&quot; = 'aerodrome'" name="airport">
           <customproperties/>
         </layer-tree-layer>
         <layer-tree-group expanded="1" checked="Qt::Checked" name="points of interest">
           <customproperties/>
-          <layer-tree-layer expanded="0" providerKey="ogr" checked="Qt::Checked" id="{{ job_name.split|join:"_" }}_amenities_points_any{{ provider.slug}}{{ job_date_time }}_{{ file_details.file_ext|slugify }}" source="{% if file_details.file_ext == '.zip'%}/vsizip/{% endif %}./data/{{ provider.slug }}/{{ job_name.split|join:"_" }}-{{ provider.slug }}-{{ job_date_time|slice:":8" }}{{file_details.file_ext}}|layername=amenities_points" name="POI (points)">
+          <layer-tree-layer expanded="0" providerKey="ogr" checked="Qt::Checked" id="{{ job_name.split|join:"_" }}_amenities_points_any{{ provider.slug}}{{ job_date_time }}_{{ file_details.file_ext|slugify }}" source="{% if file_details.file_ext == '.zip'%}/vsizip/{% endif %}./{{ file_details.file_path }}|layername=amenities_points" name="POI (points)">
             <customproperties/>
           </layer-tree-layer>
-          <layer-tree-layer expanded="0" providerKey="ogr" checked="Qt::Checked" id="{{ job_name.split|join:"_" }}_amenities_polygons_any{{ provider.slug}}{{ job_date_time }}_{{ file_details.file_ext|slugify }}" source="{% if file_details.file_ext == '.zip'%}/vsizip/{% endif %}./data/{{ provider.slug }}/{{ job_name.split|join:"_" }}-{{ provider.slug }}-{{ job_date_time|slice:":8" }}{{file_details.file_ext}}|layername=amenities_polygons" name="POI (polygon, set 2)">
+          <layer-tree-layer expanded="0" providerKey="ogr" checked="Qt::Checked" id="{{ job_name.split|join:"_" }}_amenities_polygons_any{{ provider.slug}}{{ job_date_time }}_{{ file_details.file_ext|slugify }}" source="{% if file_details.file_ext == '.zip'%}/vsizip/{% endif %}./{{ file_details.file_path }}|layername=amenities_polygons" name="POI (polygon, set 2)">
             <customproperties/>
           </layer-tree-layer>
-          <layer-tree-layer expanded="0" providerKey="ogr" checked="Qt::Checked" id="{{ job_name.split|join:"_" }}_amenities_polygons_any{{ provider.slug}}{{ job_date_time }}_{{ file_details.file_ext|slugify }}" source="{% if file_details.file_ext == '.zip'%}/vsizip/{% endif %}./data/{{ provider.slug }}/{{ job_name.split|join:"_" }}-{{ provider.slug }}-{{ job_date_time|slice:":8" }}{{file_details.file_ext}}|layername=amenities_polygons" name="POI (polygon, set 1)">
+          <layer-tree-layer expanded="0" providerKey="ogr" checked="Qt::Checked" id="{{ job_name.split|join:"_" }}_amenities_polygons_any{{ provider.slug}}{{ job_date_time }}_{{ file_details.file_ext|slugify }}" source="{% if file_details.file_ext == '.zip'%}/vsizip/{% endif %}./{{ file_details.file_path }}|layername=amenities_polygons" name="POI (polygon, set 1)">
             <customproperties>
               <property key="showFeatureCount" value="0"/>
             </customproperties>
           </layer-tree-layer>
         </layer-tree-group>
-        <layer-tree-layer expanded="1" providerKey="ogr" checked="Qt::Checked" id="{{ job_name.split|join:"_" }}_rail_lines_any_{{ provider.slug}}{{ job_date_time }}_{{ file_details.file_ext|slugify }}" source="{% if file_details.file_ext == '.zip'%}/vsizip/{% endif %}./data/{{ provider.slug }}/{{ job_name.split|join:"_" }}-{{ provider.slug }}-{{ job_date_time|slice:":8" }}{{file_details.file_ext}}|layername=rail_lines" name="railway">
+        <layer-tree-layer expanded="1" providerKey="ogr" checked="Qt::Checked" id="{{ job_name.split|join:"_" }}_rail_lines_any_{{ provider.slug}}{{ job_date_time }}_{{ file_details.file_ext|slugify }}" source="{% if file_details.file_ext == '.zip'%}/vsizip/{% endif %}./{{ file_details.file_path }}|layername=rail_lines" name="railway">
           <customproperties/>
         </layer-tree-layer>
-        <layer-tree-layer expanded="0" providerKey="ogr" checked="Qt::Checked" id="{{ job_name.split|join:"_" }}_roads_lines_any_{{ provider.slug}}{{ job_date_time }}_{{ file_details.file_ext|slugify }}" source="{% if file_details.file_ext == '.zip'%}/vsizip/{% endif %}./data/{{ provider.slug }}/{{ job_name.split|join:"_" }}-{{ provider.slug }}-{{ job_date_time|slice:":8" }}{{file_details.file_ext}}|layername=roads_lines" name="roads">
+        <layer-tree-layer expanded="0" providerKey="ogr" checked="Qt::Checked" id="{{ job_name.split|join:"_" }}_roads_lines_any_{{ provider.slug}}{{ job_date_time }}_{{ file_details.file_ext|slugify }}" source="{% if file_details.file_ext == '.zip'%}/vsizip/{% endif %}./{{ file_details.file_path }}|layername=roads_lines" name="roads">
           <customproperties/>
         </layer-tree-layer>
-        <layer-tree-layer expanded="1" providerKey="ogr" checked="Qt::Checked" id="{{ job_name.split|join:"_" }}_buildings_polygons_any_{{ provider.slug}}{{ job_date_time }}_{{ file_details.file_ext|slugify }}" source="{% if file_details.file_ext == '.zip'%}/vsizip/{% endif %}./data/{{ provider.slug }}/{{ job_name.split|join:"_" }}-{{ provider.slug }}-{{ job_date_time|slice:":8" }}{{file_details.file_ext}}|layername=buildings_polygons" name="building">
+        <layer-tree-layer expanded="1" providerKey="ogr" checked="Qt::Checked" id="{{ job_name.split|join:"_" }}_buildings_polygons_any_{{ provider.slug}}{{ job_date_time }}_{{ file_details.file_ext|slugify }}" source="{% if file_details.file_ext == '.zip'%}/vsizip/{% endif %}./{{ file_details.file_path }}|layername=buildings_polygons" name="building">
           <customproperties/>
         </layer-tree-layer>
-        <layer-tree-layer expanded="1" providerKey="ogr" checked="Qt::Checked" id="{{ job_name.split|join:"_" }}_waterways_lines_any_{{ provider.slug}}{{ job_date_time }}_{{ file_details.file_ext|slugify }}" source="{% if file_details.file_ext == '.zip'%}/vsizip/{% endif %}./data/{{ provider.slug }}/{{ job_name.split|join:"_" }}-{{ provider.slug }}-{{ job_date_time|slice:":8" }}{{file_details.file_ext}}|layername=waterways_lines" name="waterways">
+        <layer-tree-layer expanded="1" providerKey="ogr" checked="Qt::Checked" id="{{ job_name.split|join:"_" }}_waterways_lines_any_{{ provider.slug}}{{ job_date_time }}_{{ file_details.file_ext|slugify }}" source="{% if file_details.file_ext == '.zip'%}/vsizip/{% endif %}./{{ file_details.file_path }}|layername=waterways_lines" name="waterways">
           <customproperties/>
         </layer-tree-layer>
-        <layer-tree-layer expanded="1" providerKey="ogr" checked="Qt::Checked" id="{{ job_name.split|join:"_" }}_natural_polygons_grassland_{{ provider.slug}}{{ job_date_time }}_{{ file_details.file_ext|slugify }}" source="{% if file_details.file_ext == '.zip'%}/vsizip/{% endif %}./data/{{ provider.slug }}/{{ job_name.split|join:"_" }}-{{ provider.slug }}-{{ job_date_time|slice:":8" }}{{file_details.file_ext}}|layername=natural_polygons|subset=&quot;natural&quot; = 'grassland'" name="grassland">
+        <layer-tree-layer expanded="1" providerKey="ogr" checked="Qt::Checked" id="{{ job_name.split|join:"_" }}_natural_polygons_grassland_{{ provider.slug}}{{ job_date_time }}_{{ file_details.file_ext|slugify }}" source="{% if file_details.file_ext == '.zip'%}/vsizip/{% endif %}./{{ file_details.file_path }}|layername=natural_polygons|subset=&quot;natural&quot; = 'grassland'" name="grassland">
           <customproperties/>
         </layer-tree-layer>
-        <layer-tree-layer expanded="1" providerKey="ogr" checked="Qt::Checked" id="{{ job_name.split|join:"_" }}_leisure_polygons_any_{{ provider.slug}}{{ job_date_time }}_{{ file_details.file_ext|slugify }}" source="{% if file_details.file_ext == '.zip'%}/vsizip/{% endif %}./data/{{ provider.slug }}/{{ job_name.split|join:"_" }}-{{ provider.slug }}-{{ job_date_time|slice:":8" }}{{file_details.file_ext}}|layername=leisure_polygons" name="leisure">
+        <layer-tree-layer expanded="1" providerKey="ogr" checked="Qt::Checked" id="{{ job_name.split|join:"_" }}_leisure_polygons_any_{{ provider.slug}}{{ job_date_time }}_{{ file_details.file_ext|slugify }}" source="{% if file_details.file_ext == '.zip'%}/vsizip/{% endif %}./{{ file_details.file_path }}|layername=leisure_polygons" name="leisure">
           <customproperties/>
         </layer-tree-layer>
-        <layer-tree-layer expanded="0" providerKey="ogr" checked="Qt::Checked" id="{{ job_name.split|join:"_" }}_landuse_polygons_any_{{ provider.slug}}{{ job_date_time }}_{{ file_details.file_ext|slugify }}" source="{% if file_details.file_ext == '.zip'%}/vsizip/{% endif %}./data/{{ provider.slug }}/{{ job_name.split|join:"_" }}-{{ provider.slug }}-{{ job_date_time|slice:":8" }}{{file_details.file_ext}}|layername=landuse_polygons" name="landuses">
+        <layer-tree-layer expanded="0" providerKey="ogr" checked="Qt::Checked" id="{{ job_name.split|join:"_" }}_landuse_polygons_any_{{ provider.slug}}{{ job_date_time }}_{{ file_details.file_ext|slugify }}" source="{% if file_details.file_ext == '.zip'%}/vsizip/{% endif %}./{{ file_details.file_path }}|layername=landuse_polygons" name="landuses">
           <customproperties/>
         </layer-tree-layer>
-        <layer-tree-layer expanded="1" providerKey="ogr" checked="Qt::Checked" id="{{ job_name.split|join:"_" }}_amenities_polygons_any_{{ provider.slug}}{{ job_date_time }}_{{ file_details.file_ext|slugify }}" source="{% if file_details.file_ext == '.zip'%}/vsizip/{% endif %}./data/{{ provider.slug }}/{{ job_name.split|join:"_" }}-{{ provider.slug }}-{{ job_date_time|slice:":8" }}{{file_details.file_ext}}|layername=amenities_polygons" name="amenities">
+        <layer-tree-layer expanded="1" providerKey="ogr" checked="Qt::Checked" id="{{ job_name.split|join:"_" }}_amenities_polygons_any_{{ provider.slug}}{{ job_date_time }}_{{ file_details.file_ext|slugify }}" source="{% if file_details.file_ext == '.zip'%}/vsizip/{% endif %}./{{ file_details.file_path }}|layername=amenities_polygons" name="amenities">
           <customproperties/>
         </layer-tree-layer>
-        <layer-tree-layer expanded="1" providerKey="ogr" checked="Qt::Checked" id="{{ job_name.split|join:"_" }}_aviation_lines_any_{{ provider.slug}}{{ job_date_time }}_{{ file_details.file_ext|slugify }}" source="{% if file_details.file_ext == '.zip'%}/vsizip/{% endif %}./data/{{ provider.slug }}/{{ job_name.split|join:"_" }}-{{ provider.slug }}-{{ job_date_time|slice:":8" }}{{file_details.file_ext}}|layername=aviation_lines" name="aviation lines">
+        <layer-tree-layer expanded="1" providerKey="ogr" checked="Qt::Checked" id="{{ job_name.split|join:"_" }}_aviation_lines_any_{{ provider.slug}}{{ job_date_time }}_{{ file_details.file_ext|slugify }}" source="{% if file_details.file_ext == '.zip'%}/vsizip/{% endif %}./{{ file_details.file_path }}|layername=aviation_lines" name="aviation lines">
           <customproperties/>
         </layer-tree-layer>
-        <layer-tree-layer expanded="1" providerKey="ogr" checked="Qt::Checked" id="{{ job_name.split|join:"_" }}_aviation_polygons_any_{{ provider.slug}}{{ job_date_time }}_{{ file_details.file_ext|slugify }}" source="{% if file_details.file_ext == '.zip'%}/vsizip/{% endif %}./data/{{ provider.slug }}/{{ job_name.split|join:"_" }}-{{ provider.slug }}-{{ job_date_time|slice:":8" }}{{file_details.file_ext}}|layername=aviation_polygons" name="aviation polygons">
+        <layer-tree-layer expanded="1" providerKey="ogr" checked="Qt::Checked" id="{{ job_name.split|join:"_" }}_aviation_polygons_any_{{ provider.slug}}{{ job_date_time }}_{{ file_details.file_ext|slugify }}" source="{% if file_details.file_ext == '.zip'%}/vsizip/{% endif %}./{{ file_details.file_path }}|layername=aviation_polygons" name="aviation polygons">
           <customproperties/>
         </layer-tree-layer>
-        <layer-tree-layer expanded="1" providerKey="ogr" checked="Qt::Checked" id="{{ job_name.split|join:"_" }}_natural_polygons_water_{{ provider.slug}}{{ job_date_time }}_{{ file_details.file_ext|slugify }}" source="{% if file_details.file_ext == '.zip'%}/vsizip/{% endif %}./data/{{ provider.slug }}/{{ job_name.split|join:"_" }}-{{ provider.slug }}-{{ job_date_time|slice:":8" }}{{file_details.file_ext}}|layername=natural_polygons|subset=&quot;natural&quot; = &quot;water&quot;" name="water">
+        <layer-tree-layer expanded="1" providerKey="ogr" checked="Qt::Checked" id="{{ job_name.split|join:"_" }}_natural_polygons_water_{{ provider.slug}}{{ job_date_time }}_{{ file_details.file_ext|slugify }}" source="{% if file_details.file_ext == '.zip'%}/vsizip/{% endif %}./{{ file_details.file_path }}|layername=natural_polygons|subset=&quot;natural&quot; = &quot;water&quot;" name="water">
           <customproperties/>
         </layer-tree-layer>
         <layer-tree-group expanded="1" checked="Qt::Checked" name="background">
           <customproperties/>
-          <layer-tree-layer expanded="1" providerKey="ogr" checked="Qt::Checked" id="{{ job_name.split|join:"_" }}_land_polygons_{{ provider.slug}}{{ job_date_time }}_{{ file_details.file_ext|slugify }}" source="{% if file_details.file_ext == '.zip'%}/vsizip/{% endif %}./data/{{ provider.slug }}/{{ job_name.split|join:"_" }}-{{ provider.slug }}-{{ job_date_time|slice:":8" }}{{file_details.file_ext}}|layername=land_polygons" name="land">
+          <layer-tree-layer expanded="1" providerKey="ogr" checked="Qt::Checked" id="{{ job_name.split|join:"_" }}_land_polygons_{{ provider.slug}}{{ job_date_time }}_{{ file_details.file_ext|slugify }}" source="{% if file_details.file_ext == '.zip'%}/vsizip/{% endif %}./{{ file_details.file_path }}|layername=land_polygons" name="land">
             <customproperties/>
           </layer-tree-layer>
-          <layer-tree-layer expanded="1" providerKey="ogr" checked="Qt::Checked" id="osm_bounds_{{ provider.slug}}_{{ job_date_time }}" source="{% if file_details.file_ext == '.zip'%}/vsizip/{% endif %}./data/{{ provider.slug }}/{{ job_name.split|join:"_" }}-{{ provider.slug }}-{{ job_date_time|slice:":8" }}{{file_details.file_ext}}|layername=boundary" name="boundary">
+          <layer-tree-layer expanded="1" providerKey="ogr" checked="Qt::Checked" id="osm_bounds_{{ provider.slug}}_{{ job_date_time }}_{{ file_details.file_ext|slugify }}" source="{% if file_details.file_ext == '.zip'%}/vsizip/{% endif %}./{{ file_details.file_path }}|layername=boundary" name="boundary">
             <customproperties/>
           </layer-tree-layer>
         </layer-tree-group>
@@ -145,7 +145,8 @@
       {% for provider in provider_details %}
       {% if provider.type == "raster" %}
       {% for file_details in provider.files %}
-      <layer-tree-layer expanded="1" providerKey="gdal" checked="Qt::Checked" id="{{ job_name }}_{{ provider.slug }}_{{ job_date_time }}{{ file_details.file_ext }}" source="{% if file_details.file_ext == '.zip'%}/vsizip/{% endif %}./data/{{ provider.slug }}/{{ job_name.split|join:"_" }}-{{ provider.slug }}-{{ job_date_time|slice:":8" }}{{file_details.file_ext}}" name="{{ provider.name }}{{ file_details.file_ext }}">
+          {{ job_name }}_{{ provider.slug }}_{{ job_date_time }}_{{ file_details.file_ext|slugify }}
+      <layer-tree-layer expanded="1" providerKey="gdal" checked="Qt::Checked" id="{{ job_name }}_{{ provider.slug }}_{{ job_date_time }}_{{ file_details.file_ext|slugify}}" source="{% if file_details.file_ext == '.zip'%}/vsizip/{% endif %}./{{ file_details.file_path }}" name="{{ provider.name }}-{{ file_details.file_ext }}">
         <customproperties/>
       </layer-tree-layer>
       {% endfor %}
@@ -159,7 +160,7 @@
       {% for provider in provider_details %}
       {% if provider.type == "elevation" %}
       {% for file_details in provider.files %}
-      <layer-tree-layer expanded="1" providerKey="gdal" checked="Qt::Checked" id="{{ job_name }}_{{ provider.slug }}_{{ job_date_time }}{{ file_details.file_ext }}" source="{% if file_details.file_ext == '.zip'%}/vsizip/{% endif %}./data/{{ provider.slug }}/{{ job_name.split|join:"_" }}-{{ provider.slug }}-{{ job_date_time|slice:":8" }}{{file_details.file_ext}}" name="{{ provider.name }}{{ file_details.file_ext }}">
+      <layer-tree-layer expanded="1" providerKey="gdal" checked="Qt::Checked" id="{{ job_name }}_{{ provider.slug }}_{{ job_date_time }}_{{ file_details.file_ext|slugify }}" source="{% if file_details.file_ext == '.zip'%}/vsizip/{% endif %}./{{ file_details.file_path }}" name="{{ provider.name }}-{{ file_details.file_ext }}">
         <customproperties/>
       </layer-tree-layer>
       {% endfor %}
@@ -199,6 +200,7 @@
     <custom-order enabled="0">
       {% for provider in provider_details %}
       {% if provider.slug == "nome" %}
+      {% for file_details in provider.files %}
       <item>{{ job_name.split|join:"_" }}_places_points_any_{{ provider.slug}}{{ job_date_time }}_{{ file_details.file_ext|slugify }}</item>
       <item>{{ job_name.split|join:"_" }}_aviation_points_any_{{ provider.slug}}{{ job_date_time }}_{{ file_details.file_ext|slugify }}</item>
       <item>{{ job_name.split|join:"_" }}_amenities_points_any_{{ provider.slug}}{{ job_date_time }}_{{ file_details.file_ext|slugify }}</item>
@@ -215,8 +217,10 @@
       <item>{{ job_name.split|join:"_" }}natural_polygons_water_{{ provider.slug}}{{ job_date_time }}_{{ file_details.file_ext|slugify }}</item>
       <item>{{ job_name.split|join:"_" }}_land_polygonsnome{{ job_date_time }}</item>
       <item>osm_bounds_{{ provider.slug}}_{{ job_date_time }}</item>
-      {%  endif %}
+      {% endfor %}
+      {% endif %}
       {% if provider.slug == "osm" %}
+      {% for file_details in provider.files %}
       <item>{{ job_name.split|join:"_" }}_places_points_any_{{ provider.slug}}{{ job_date_time }}_{{ file_details.file_ext|slugify }}</item>
       <item>{{ job_name.split|join:"_" }}_aviation_points_any_{{ provider.slug}}{{ job_date_time }}_{{ file_details.file_ext|slugify }}</item>
       <item>{{ job_name.split|join:"_" }}_amenities_points_any{{ provider.slug}}{{ job_date_time }}_{{ file_details.file_ext|slugify }}</item>
@@ -235,11 +239,12 @@
       <item>{{ job_name.split|join:"_" }}_natural_polygons_water_{{ provider.slug}}{{ job_date_time }}_{{ file_details.file_ext|slugify }}</item>
       <item>{{ job_name.split|join:"_" }}_land_polygons_{{ provider.slug}}{{ job_date_time }}_{{ file_details.file_ext|slugify }}</item>
       <item>osm_bounds_{{ provider.slug}}_{{ job_date_time }}</item>
-      {%  endif %}
+      {% endfor %}
+      {% endif %}
       {% if provider.slug != "osm" and provider.slug != "nome" %}
       <item>{{ job_name }}_{{ provider.slug }}_{{ job_date_time }}{{ file_details.file_ext }}</item>
-      {%  endif %}
-    {%  endfor %}
+      {% endif %}
+    {% endfor %}
 
     </custom-order>
 
@@ -248,6 +253,7 @@
     <legendgroup open="true" checked="Qt::Checked" name="EventKit - {{ job_name }}">
       {% for provider in provider_details %}
       {% if provider.slug == "nome" %}
+      {% for file_details in provider.files %}
       <legendgroup open="false" checked="Qt::Checked" name="{{ provider.name }}">
         <legendlayer drawingOrder="-1" open="true" checked="Qt::Checked" name="place label" showFeatureCount="0">
           <filegroup open="true" hidden="false">
@@ -329,13 +335,15 @@
           </legendlayer>
           <legendlayer drawingOrder="-1" open="true" checked="Qt::Checked" name="boundary" showFeatureCount="0">
             <filegroup open="true" hidden="false">
-              <legendlayerfile isInOverview="0" layerid="osm_bounds_{{ provider.slug}}_{{ job_date_time }}" visible="1"/>
+              <legendlayerfile isInOverview="0" layerid="osm_bounds_{{ provider.slug}}_{{ job_date_time }}_{{ file_details.file_ext|slugify }}" visible="1"/>
             </filegroup>
           </legendlayer>
         </legendgroup>
       </legendgroup>
-      {%  endif %}
+      {% endfor %}
+      {% endif %}
       {% if provider.slug == "osm" %}
+      {% for file_details in provider.files %}
       <legendgroup open="false" checked="Qt::Checked" name="{{ provider.name }}">
         <legendlayer drawingOrder="-1" open="true" checked="Qt::Checked" name="place label" showFeatureCount="0">
           <filegroup open="true" hidden="false">
@@ -427,35 +435,37 @@
           </legendlayer>
           <legendlayer drawingOrder="-1" open="true" checked="Qt::Checked" name="boundary" showFeatureCount="0">
             <filegroup open="true" hidden="false">
-              <legendlayerfile isInOverview="0" layerid="osm_bounds_{{ provider.slug}}_{{ job_date_time }}" visible="1"/>
+              <legendlayerfile isInOverview="0" layerid="osm_bounds_{{ provider.slug}}_{{ job_date_time }}_{{ file_details.file_ext|slugify }}" visible="1"/>
             </filegroup>
           </legendlayer>
         </legendgroup>
       </legendgroup>
-      {%  endif %}
+      {% endfor %}
+      {% endif %}
       {% endfor %}
       <legendgroup open="true" checked="Qt::Checked" name="Rasters">
       {% for provider in provider_details %}
-      {% if provider.file_type == "rasters" %}
-        <legendlayer drawingOrder="-1" open="true" checked="Qt::Checked" name="{{ job_name.split|join:"_" }}-{{ provider.name }}-{{ job_date_time|slice:":8" }}" showFeatureCount="0">
-          <filegroup open="true" hidden="false">
-            <legendlayerfile isInOverview="0" layerid="{{ job_name }}_{{ provider.slug }}_{{ job_date_time }}{{ file_details.file_ext }}" visible="1"/>
-          </filegroup>
-        </legendlayer>
-        {% endif %}
-        {% endfor %}
-
+      {% if provider.type == "raster" %}
+      {% for file_details in provider.files %}
+          <legendlayer drawingOrder="-1" open="true" checked="Qt::Checked" name="{{ job_name.split|join:"_" }}-{{ provider.name }}-{{ job_date_time|slice:":8" }}}-{{ file_details.file_ext|slugify }}" showFeatureCount="0">
+            <filegroup open="true" hidden="false">
+              <legendlayerfile isInOverview="0" layerid="{{ job_name.split|join:"_" }}-{{ provider.name }}-{{ job_date_time|slice:":8" }}-{{ file_details.file_ext|slugify }}" visible="1"/>
+            </filegroup>
+          </legendlayer>
+      {% endfor %}
+      {% endif %}
+      {% endfor %}
       </legendgroup>
       <legendgroup open="true" checked="Qt::Checked" name="Elevation">
         {% for provider in provider_details %}
-        {% if provider.slug != "osm" and provider.slug != "nome" %}
-        {% if provider.file_type == "elevation" %}
+        {% if provider.type == "elevation" %}
+        {% for file_details in provider.files %}
         <legendlayer drawingOrder="-1" open="true" checked="Qt::Checked" name="{{ job_name.split|join:"_" }}-{{ provider.name }}-{{ job_date_time|slice:":8" }}" showFeatureCount="0">
           <filegroup open="true" hidden="false">
-            <legendlayerfile isInOverview="0" layerid="{{ job_name }}_{{ provider.slug }}_{{ job_date_time }}{{ file_details.file_ext }}" visible="1"/>
+            <legendlayerfile isInOverview="0" layerid="{{ job_name }}_{{ provider.slug }}_{{ job_date_time }}_{{ file_details.file_ext|slugify }}" visible="1"/>
           </filegroup>
         </legendlayer>
-        {% endif %}
+        {% endfor %}
         {% endif %}
         {% endfor %}
       </legendgroup>
@@ -473,7 +483,7 @@
       <ymax>{{ bbox.3 }}</ymax>
       </extent>
       <id>osm_bounds_{{ provider.slug}}_{{ job_date_time }}</id>
-      <datasource>{% if file_details.file_ext == '.zip'%}/vsizip/{% endif %}./data/{{ provider.slug}}/{{ job_name.split|join:"_" }}-{{ provider.slug}}-{{ job_date_time|slice:":8" }}{{file_details.file_ext}}|layername=boundary</datasource>
+      <datasource>{% if file_details.file_ext == '.zip'%}/vsizip/{% endif %}./{{ file_details.file_path }}|layername=boundary</datasource>
       <keywordList>
         <value></value>
       </keywordList>
@@ -769,7 +779,7 @@ def my_form_open(dialog, layer, feature):
       <ymax>{{ bbox.3 }}</ymax>
       </extent>
       <id>osm_bounds_{{ provider.slug}}__{{ provider.slug}}{{ job_date_time }}_{{ file_details.file_ext|slugify }}</id>
-      <datasource>{% if file_details.file_ext == '.zip'%}/vsizip/{% endif %}./data/{{ provider.slug}}/{{ job_name.split|join:"_" }}-{{ provider.slug}}-{{ job_date_time|slice:":8" }}{{file_details.file_ext}}|layername=boundary</datasource>
+      <datasource>{% if file_details.file_ext == '.zip'%}/vsizip/{% endif %}./{{ file_details.file_path }}|layername=boundary</datasource>
       <keywordList>
         <value></value>
       </keywordList>
@@ -1065,7 +1075,7 @@ def my_form_open(dialog, layer, feature):
       <ymax>{{ bbox.3 }}</ymax>
       </extent>
       <id>{{ job_name.split|join:"_" }}_amenities_points_any_{{ provider.slug}}{{ job_date_time }}_{{ file_details.file_ext|slugify }}</id>
-      <datasource>{% if file_details.file_ext == '.zip'%}/vsizip/{% endif %}./data/{{ provider.slug}}/{{ job_name.split|join:"_" }}-{{ provider.slug}}-{{ job_date_time|slice:":8" }}{{file_details.file_ext}}|layername=amenities_points</datasource>
+      <datasource>{% if file_details.file_ext == '.zip'%}/vsizip/{% endif %}./{{ file_details.file_path }}|layername=amenities_points</datasource>
       <keywordList>
         <value></value>
       </keywordList>
@@ -1715,7 +1725,7 @@ def my_form_open(dialog, layer, feature):
       <ymax>{{ bbox.3 }}</ymax>
       </extent>
       <id>{{ job_name.split|join:"_" }}_amenities_polygons_any_{{ provider.slug}}{{ job_date_time }}_{{ file_details.file_ext|slugify }}</id>
-      <datasource>{% if file_details.file_ext == '.zip'%}/vsizip/{% endif %}./data/{{ provider.slug}}/{{ job_name.split|join:"_" }}-{{ provider.slug}}-{{ job_date_time|slice:":8" }}{{file_details.file_ext}}|layername=amenities_polygons</datasource>
+      <datasource>{% if file_details.file_ext == '.zip'%}/vsizip/{% endif %}./{{ file_details.file_path }}|layername=amenities_polygons</datasource>
       <keywordList>
         <value></value>
       </keywordList>
@@ -2156,7 +2166,7 @@ def my_form_open(dialog, layer, feature):
       <ymax>{{ bbox.3 }}</ymax>
       </extent>
       <id>{{ job_name.split|join:"_" }}_amenities_polygons_any_{{ provider.slug}}{{ job_date_time }}_{{ file_details.file_ext|slugify }}</id>
-      <datasource>{% if file_details.file_ext == '.zip'%}/vsizip/{% endif %}./data/{{ provider.slug}}/{{ job_name.split|join:"_" }}-{{ provider.slug}}-{{ job_date_time|slice:":8" }}{{file_details.file_ext}}|layername=amenities_polygons</datasource>
+      <datasource>{% if file_details.file_ext == '.zip'%}/vsizip/{% endif %}./{{ file_details.file_path }}|layername=amenities_polygons</datasource>
       <keywordList>
         <value></value>
       </keywordList>
@@ -2945,7 +2955,7 @@ def my_form_open(dialog, layer, feature):
       <ymax>{{ bbox.3 }}</ymax>
       </extent>
       <id>{{ job_name.split|join:"_" }}_aviation_lines_any_{{ provider.slug}}{{ job_date_time }}_{{ file_details.file_ext|slugify }}</id>
-      <datasource>{% if file_details.file_ext == '.zip'%}/vsizip/{% endif %}./data/{{ provider.slug}}/{{ job_name.split|join:"_" }}-{{ provider.slug}}-{{ job_date_time|slice:":8" }}{{file_details.file_ext}}|layername=aviation_lines</datasource>
+      <datasource>{% if file_details.file_ext == '.zip'%}/vsizip/{% endif %}./{{ file_details.file_path }}|layername=aviation_lines</datasource>
       <keywordList>
         <value></value>
       </keywordList>
@@ -3354,7 +3364,7 @@ def my_form_open(dialog, layer, feature):
       <ymax>{{ bbox.3 }}</ymax>
       </extent>
       <id>{{ job_name.split|join:"_" }}_aviation_points_any_{{ provider.slug}}{{ job_date_time }}_{{ file_details.file_ext|slugify }}</id>
-      <datasource>{% if file_details.file_ext == '.zip'%}/vsizip/{% endif %}./data/{{ provider.slug}}/{{ job_name.split|join:"_" }}-{{ provider.slug}}-{{ job_date_time|slice:":8" }}{{file_details.file_ext}}|layername=aviation_points|subset="aeroway" = 'aerodrome'</datasource>
+      <datasource>{% if file_details.file_ext == '.zip'%}/vsizip/{% endif %}./{{ file_details.file_path }}|layername=aviation_points|subset="aeroway" = 'aerodrome'</datasource>
       <keywordList>
         <value></value>
       </keywordList>
@@ -3700,7 +3710,7 @@ def my_form_open(dialog, layer, feature):
       <ymax>{{ bbox.3 }}</ymax>
       </extent>
       <id>{{ job_name.split|join:"_" }}_aviation_polygons_any_{{ provider.slug}}{{ job_date_time }}_{{ file_details.file_ext|slugify }}</id>
-      <datasource>{% if file_details.file_ext == '.zip'%}/vsizip/{% endif %}./data/{{ provider.slug}}/{{ job_name.split|join:"_" }}-{{ provider.slug}}-{{ job_date_time|slice:":8" }}{{file_details.file_ext}}|layername=aviation_polygons</datasource>
+      <datasource>{% if file_details.file_ext == '.zip'%}/vsizip/{% endif %}./{{ file_details.file_path }}|layername=aviation_polygons</datasource>
       <keywordList>
         <value></value>
       </keywordList>
@@ -4100,7 +4110,7 @@ def my_form_open(dialog, layer, feature):
       <ymax>{{ bbox.3 }}</ymax>
       </extent>
       <id>{{ job_name.split|join:"_" }}_buildings_polygons_any_{{ provider.slug}}{{ job_date_time }}_{{ file_details.file_ext|slugify }}</id>
-      <datasource>{% if file_details.file_ext == '.zip'%}/vsizip/{% endif %}./data/{{ provider.slug}}/{{ job_name.split|join:"_" }}-{{ provider.slug}}-{{ job_date_time|slice:":8" }}{{file_details.file_ext}}|layername=buildings_polygons</datasource>
+      <datasource>{% if file_details.file_ext == '.zip'%}/vsizip/{% endif %}./{{ file_details.file_path }}|layername=buildings_polygons</datasource>
       <keywordList>
         <value></value>
       </keywordList>
@@ -4433,7 +4443,7 @@ def my_form_open(dialog, layer, feature):
       <ymax>{{ bbox.3 }}</ymax>
       </extent>
       <id>{{ job_name.split|join:"_" }}_land_polygonsnome{{ job_date_time }}</id>
-      <datasource>{% if file_details.file_ext == '.zip'%}/vsizip/{% endif %}./data/{{ provider.slug}}/{{ job_name.split|join:"_" }}-{{ provider.slug}}-{{ job_date_time|slice:":8" }}{{file_details.file_ext}}|layername=land_polygons</datasource>
+      <datasource>{% if file_details.file_ext == '.zip'%}/vsizip/{% endif %}./{{ file_details.file_path }}|layername=land_polygons</datasource>
       <keywordList>
         <value></value>
       </keywordList>
@@ -4736,7 +4746,7 @@ def my_form_open(dialog, layer, feature):
       <ymax>{{ bbox.3 }}</ymax>
       </extent>
       <id>{{ job_name.split|join:"_" }}_landuse_polygons_any_{{ provider.slug}}{{ job_date_time }}_{{ file_details.file_ext|slugify }}</id>
-      <datasource>{% if file_details.file_ext == '.zip'%}/vsizip/{% endif %}./data/{{ provider.slug}}/{{ job_name.split|join:"_" }}-{{ provider.slug}}-{{ job_date_time|slice:":8" }}{{file_details.file_ext}}|layername=landuse_polygons</datasource>
+      <datasource>{% if file_details.file_ext == '.zip'%}/vsizip/{% endif %}./{{ file_details.file_path }}|layername=landuse_polygons</datasource>
       <keywordList>
         <value></value>
       </keywordList>
@@ -5601,7 +5611,7 @@ def my_form_open(dialog, layer, feature):
       <ymax>{{ bbox.3 }}</ymax>
       </extent>
       <id>{{ job_name.split|join:"_" }}_leisure_polygons_any_{{ provider.slug}}{{ job_date_time }}_{{ file_details.file_ext|slugify }}</id>
-      <datasource>{% if file_details.file_ext == '.zip'%}/vsizip/{% endif %}./data/{{ provider.slug}}/{{ job_name.split|join:"_" }}-{{ provider.slug}}-{{ job_date_time|slice:":8" }}{{file_details.file_ext}}|layername=leisure_polygons</datasource>
+      <datasource>{% if file_details.file_ext == '.zip'%}/vsizip/{% endif %}./{{ file_details.file_path }}|layername=leisure_polygons</datasource>
       <keywordList>
         <value></value>
       </keywordList>
@@ -5964,7 +5974,7 @@ def my_form_open(dialog, layer, feature):
       <ymax>{{ bbox.3 }}</ymax>
       </extent>
       <id>{{ job_name.split|join:"_" }}natural_polygons_grassland_{{ provider.slug}}{{ job_date_time }}_{{ file_details.file_ext|slugify }}</id>
-      <datasource>{% if file_details.file_ext == '.zip'%}/vsizip/{% endif %}./data/{{ provider.slug}}/{{ job_name.split|join:"_" }}-{{ provider.slug}}-{{ job_date_time|slice:":8" }}{{file_details.file_ext}}|layername=natural_polygons|subset="natural" = 'grassland'</datasource>
+      <datasource>{% if file_details.file_ext == '.zip'%}/vsizip/{% endif %}./{{ file_details.file_path }}|layername=natural_polygons|subset="natural" = 'grassland'</datasource>
       <keywordList>
         <value></value>
       </keywordList>
@@ -6285,7 +6295,7 @@ def my_form_open(dialog, layer, feature):
       <ymax>{{ bbox.3 }}</ymax>
       </extent>
       <id>{{ job_name.split|join:"_" }}natural_polygons_water_{{ provider.slug}}{{ job_date_time }}_{{ file_details.file_ext|slugify }}</id>
-      <datasource>{% if file_details.file_ext == '.zip'%}/vsizip/{% endif %}./data/{{ provider.slug}}/{{ job_name.split|join:"_" }}-{{ provider.slug}}-{{ job_date_time|slice:":8" }}{{file_details.file_ext}}|layername=natural_polygons|subset="natural" = "water" OR "waterway" = "riverbank"</datasource>
+      <datasource>{% if file_details.file_ext == '.zip'%}/vsizip/{% endif %}./{{ file_details.file_path }}|layername=natural_polygons|subset="natural" = "water" OR "waterway" = "riverbank"</datasource>
       <keywordList>
         <value></value>
       </keywordList>
@@ -6608,7 +6618,7 @@ def my_form_open(dialog, layer, feature):
       <ymax>{{ bbox.3 }}</ymax>
       </extent>
       <id>{{ job_name.split|join:"_" }}_places_points_any_{{ provider.slug}}{{ job_date_time }}_{{ file_details.file_ext|slugify }}</id>
-      <datasource>{% if file_details.file_ext == '.zip'%}/vsizip/{% endif %}./data/{{ provider.slug}}/{{ job_name.split|join:"_" }}-{{ provider.slug}}-{{ job_date_time|slice:":8" }}{{file_details.file_ext}}|layername=places_points</datasource>
+      <datasource>{% if file_details.file_ext == '.zip'%}/vsizip/{% endif %}./{{ file_details.file_path }}|layername=places_points</datasource>
       <keywordList>
         <value></value>
       </keywordList>
@@ -7123,7 +7133,7 @@ def my_form_open(dialog, layer, feature):
       <ymax>{{ bbox.3 }}</ymax>
       </extent>
       <id>{{ job_name.split|join:"_" }}_roads_lines_any_{{ provider.slug}}{{ job_date_time }}_{{ file_details.file_ext|slugify }}</id>
-      <datasource>{% if file_details.file_ext == '.zip'%}/vsizip/{% endif %}./data/{{ provider.slug}}/{{ job_name.split|join:"_" }}-{{ provider.slug}}-{{ job_date_time|slice:":8" }}{{file_details.file_ext}}|layername=roads_lines</datasource>
+      <datasource>{% if file_details.file_ext == '.zip'%}/vsizip/{% endif %}./{{ file_details.file_path }}|layername=roads_lines</datasource>
       <keywordList>
         <value></value>
       </keywordList>
@@ -8325,7 +8335,7 @@ def my_form_open(dialog, layer, feature):
       <ymax>{{ bbox.3 }}</ymax>
       </extent>
       <id>{{ job_name.split|join:"_" }}_waterways_lines_any_{{ provider.slug}}{{ job_date_time }}_{{ file_details.file_ext|slugify }}</id>
-      <datasource>{% if file_details.file_ext == '.zip'%}/vsizip/{% endif %}./data/{{ provider.slug}}/{{ job_name.split|join:"_" }}-{{ provider.slug}}-{{ job_date_time|slice:":8" }}{{file_details.file_ext}}|layername=waterways_lines</datasource>
+      <datasource>{% if file_details.file_ext == '.zip'%}/vsizip/{% endif %}./{{ file_details.file_path }}|layername=waterways_lines</datasource>
       <keywordList>
         <value></value>
       </keywordList>
@@ -8879,7 +8889,7 @@ def my_form_open(dialog, layer, feature):
       <ymax>{{ bbox.3 }}</ymax>
       </extent>
       <id>osm_bounds_{{ provider.slug}}_{{ job_date_time }}</id>
-      <datasource>{% if file_details.file_ext == '.zip'%}/vsizip/{% endif %}./data/{{ provider.slug}}/{{ job_name.split|join:"_" }}-{{ provider.slug}}-{{ job_date_time|slice:":8" }}{{file_details.file_ext}}|layername=boundary</datasource>
+      <datasource>{% if file_details.file_ext == '.zip'%}/vsizip/{% endif %}./{{ file_details.file_path }}|layername=boundary</datasource>
       <keywordList>
         <value></value>
       </keywordList>
@@ -9175,7 +9185,7 @@ def my_form_open(dialog, layer, feature):
       <ymax>{{ bbox.3 }}</ymax>
       </extent>
       <id>{{ job_name.split|join:"_" }}_amenities_points_any{{ provider.slug}}{{ job_date_time }}_{{ file_details.file_ext|slugify }}</id>
-      <datasource>{% if file_details.file_ext == '.zip'%}/vsizip/{% endif %}./data/{{ provider.slug}}/{{ job_name.split|join:"_" }}-{{ provider.slug}}-{{ job_date_time|slice:":8" }}{{file_details.file_ext}}|layername=amenities_points</datasource>
+      <datasource>{% if file_details.file_ext == '.zip'%}/vsizip/{% endif %}./{{ file_details.file_path }}|layername=amenities_points</datasource>
       <keywordList>
         <value></value>
       </keywordList>
@@ -11720,7 +11730,7 @@ def my_form_open(dialog, layer, feature):
       <ymax>{{ bbox.3 }}</ymax>
       </extent>
       <id>{{ job_name.split|join:"_" }}_amenities_polygons_any{{ provider.slug}}{{ job_date_time }}_{{ file_details.file_ext|slugify }}</id>
-      <datasource>{% if file_details.file_ext == '.zip'%}/vsizip/{% endif %}./data/{{ provider.slug}}/{{ job_name.split|join:"_" }}-{{ provider.slug}}-{{ job_date_time|slice:":8" }}{{file_details.file_ext}}|layername=amenities_polygons</datasource>
+      <datasource>{% if file_details.file_ext == '.zip'%}/vsizip/{% endif %}./{{ file_details.file_path }}|layername=amenities_polygons</datasource>
       <keywordList>
         <value></value>
       </keywordList>
@@ -12543,7 +12553,7 @@ def my_form_open(dialog, layer, feature):
       <ymax>{{ bbox.3 }}</ymax>
       </extent>
       <id>{{ job_name.split|join:"_" }}_amenities_polygons_any{{ provider.slug}}{{ job_date_time }}_{{ file_details.file_ext|slugify }}</id>
-      <datasource>{% if file_details.file_ext == '.zip'%}/vsizip/{% endif %}./data/{{ provider.slug}}/{{ job_name.split|join:"_" }}-{{ provider.slug}}-{{ job_date_time|slice:":8" }}{{file_details.file_ext}}|layername=amenities_polygons</datasource>
+      <datasource>{% if file_details.file_ext == '.zip'%}/vsizip/{% endif %}./{{ file_details.file_path }}|layername=amenities_polygons</datasource>
       <keywordList>
         <value></value>
       </keywordList>
@@ -15142,7 +15152,7 @@ def my_form_open(dialog, layer, feature):
       <ymax>{{ bbox.3 }}</ymax>
       </extent>
       <id>{{ job_name.split|join:"_" }}_amenities_polygons_any_{{ provider.slug}}{{ job_date_time }}_{{ file_details.file_ext|slugify }}</id>
-      <datasource>{% if file_details.file_ext == '.zip'%}/vsizip/{% endif %}./data/{{ provider.slug}}/{{ job_name.split|join:"_" }}-{{ provider.slug}}-{{ job_date_time|slice:":8" }}{{file_details.file_ext}}|layername=amenities_polygons</datasource>
+      <datasource>{% if file_details.file_ext == '.zip'%}/vsizip/{% endif %}./{{ file_details.file_path }}|layername=amenities_polygons</datasource>
       <keywordList>
         <value></value>
       </keywordList>
@@ -15583,7 +15593,7 @@ def my_form_open(dialog, layer, feature):
       <ymax>{{ bbox.3 }}</ymax>
       </extent>
       <id>{{ job_name.split|join:"_" }}_aviation_lines_any_{{ provider.slug}}{{ job_date_time }}_{{ file_details.file_ext|slugify }}</id>
-      <datasource>{% if file_details.file_ext == '.zip'%}/vsizip/{% endif %}./data/{{ provider.slug}}/{{ job_name.split|join:"_" }}-{{ provider.slug}}-{{ job_date_time|slice:":8" }}{{file_details.file_ext}}|layername=aviation_lines</datasource>
+      <datasource>{% if file_details.file_ext == '.zip'%}/vsizip/{% endif %}./{{ file_details.file_path }}|layername=aviation_lines</datasource>
       <keywordList>
         <value></value>
       </keywordList>
@@ -15972,7 +15982,7 @@ def my_form_open(dialog, layer, feature):
       <ymax>{{ bbox.3 }}</ymax>
       </extent>
       <id>{{ job_name.split|join:"_" }}_aviation_points_any_{{ provider.slug}}{{ job_date_time }}_{{ file_details.file_ext|slugify }}</id>
-      <datasource>{% if file_details.file_ext == '.zip'%}/vsizip/{% endif %}./data/{{ provider.slug}}/{{ job_name.split|join:"_" }}-{{ provider.slug}}-{{ job_date_time|slice:":8" }}{{file_details.file_ext}}|layername=aviation_points|subset="aeroway" = 'aerodrome'</datasource>
+      <datasource>{% if file_details.file_ext == '.zip'%}/vsizip/{% endif %}./{{ file_details.file_path }}|layername=aviation_points|subset="aeroway" = 'aerodrome'</datasource>
       <keywordList>
         <value></value>
       </keywordList>
@@ -16318,7 +16328,7 @@ def my_form_open(dialog, layer, feature):
       <ymax>{{ bbox.3 }}</ymax>
       </extent>
       <id>{{ job_name.split|join:"_" }}_aviation_polygons_any_{{ provider.slug}}{{ job_date_time }}_{{ file_details.file_ext|slugify }}</id>
-      <datasource>{% if file_details.file_ext == '.zip'%}/vsizip/{% endif %}./data/{{ provider.slug}}/{{ job_name.split|join:"_" }}-{{ provider.slug}}-{{ job_date_time|slice:":8" }}{{file_details.file_ext}}|layername=aviation_polygons</datasource>
+      <datasource>{% if file_details.file_ext == '.zip'%}/vsizip/{% endif %}./{{ file_details.file_path }}|layername=aviation_polygons</datasource>
       <keywordList>
         <value></value>
       </keywordList>
@@ -16718,7 +16728,7 @@ def my_form_open(dialog, layer, feature):
       <ymax>{{ bbox.3 }}</ymax>
       </extent>
       <id>{{ job_name.split|join:"_" }}_buildings_polygons_any_{{ provider.slug}}{{ job_date_time }}_{{ file_details.file_ext|slugify }}</id>
-      <datasource>{% if file_details.file_ext == '.zip'%}/vsizip/{% endif %}./data/{{ provider.slug}}/{{ job_name.split|join:"_" }}-{{ provider.slug}}-{{ job_date_time|slice:":8" }}{{file_details.file_ext}}|layername=buildings_polygons</datasource>
+      <datasource>{% if file_details.file_ext == '.zip'%}/vsizip/{% endif %}./{{ file_details.file_path }}|layername=buildings_polygons</datasource>
       <keywordList>
         <value></value>
       </keywordList>
@@ -17051,7 +17061,7 @@ def my_form_open(dialog, layer, feature):
       <ymax>{{ bbox.3 }}</ymax>
       </extent>
       <id>{{ job_name.split|join:"_" }}_land_polygons_{{ provider.slug}}{{ job_date_time }}_{{ file_details.file_ext|slugify }}</id>
-      <datasource>{% if file_details.file_ext == '.zip'%}/vsizip/{% endif %}./data/{{ provider.slug}}/{{ job_name.split|join:"_" }}-{{ provider.slug}}-{{ job_date_time|slice:":8" }}{{file_details.file_ext}}|layername=land_polygons</datasource>
+      <datasource>{% if file_details.file_ext == '.zip'%}/vsizip/{% endif %}./{{ file_details.file_path }}|layername=land_polygons</datasource>
       <keywordList>
         <value></value>
       </keywordList>
@@ -17354,7 +17364,7 @@ def my_form_open(dialog, layer, feature):
       <ymax>{{ bbox.3 }}</ymax>
       </extent>
       <id>{{ job_name.split|join:"_" }}_landuse_polygons_any_{{ provider.slug}}{{ job_date_time }}_{{ file_details.file_ext|slugify }}</id>
-      <datasource>{% if file_details.file_ext == '.zip'%}/vsizip/{% endif %}./data/{{ provider.slug}}/{{ job_name.split|join:"_" }}-{{ provider.slug}}-{{ job_date_time|slice:":8" }}{{file_details.file_ext}}|layername=landuse_polygons</datasource>
+      <datasource>{% if file_details.file_ext == '.zip'%}/vsizip/{% endif %}./{{ file_details.file_path }}|layername=landuse_polygons</datasource>
       <keywordList>
         <value></value>
       </keywordList>
@@ -18105,7 +18115,7 @@ def my_form_open(dialog, layer, feature):
       <ymax>{{ bbox.3 }}</ymax>
       </extent>
       <id>{{ job_name.split|join:"_" }}_leisure_polygons_any_{{ provider.slug}}{{ job_date_time }}_{{ file_details.file_ext|slugify }}</id>
-      <datasource>{% if file_details.file_ext == '.zip'%}/vsizip/{% endif %}./data/{{ provider.slug}}/{{ job_name.split|join:"_" }}-{{ provider.slug}}-{{ job_date_time|slice:":8" }}{{file_details.file_ext}}|layername=leisure_polygons</datasource>
+      <datasource>{% if file_details.file_ext == '.zip'%}/vsizip/{% endif %}./{{ file_details.file_path }}|layername=leisure_polygons</datasource>
       <keywordList>
         <value></value>
       </keywordList>
@@ -18457,7 +18467,7 @@ def my_form_open(dialog, layer, feature):
       <ymax>{{ bbox.3 }}</ymax>
       </extent>
       <id>{{ job_name.split|join:"_" }}_natural_polygons_grassland_{{ provider.slug}}{{ job_date_time }}_{{ file_details.file_ext|slugify }}</id>
-      <datasource>{% if file_details.file_ext == '.zip'%}/vsizip/{% endif %}./data/{{ provider.slug}}/{{ job_name.split|join:"_" }}-{{ provider.slug}}-{{ job_date_time|slice:":8" }}{{file_details.file_ext}}|layername=natural_polygons|subset="natural" = 'grassland'</datasource>
+      <datasource>{% if file_details.file_ext == '.zip'%}/vsizip/{% endif %}./{{ file_details.file_path }}|layername=natural_polygons|subset="natural" = 'grassland'</datasource>
       <keywordList>
         <value></value>
       </keywordList>
@@ -18778,7 +18788,7 @@ def my_form_open(dialog, layer, feature):
       <ymax>{{ bbox.3 }}</ymax>
       </extent>
       <id>{{ job_name.split|join:"_" }}_natural_polygons_water_{{ provider.slug}}{{ job_date_time }}_{{ file_details.file_ext|slugify }}</id>
-      <datasource>{% if file_details.file_ext == '.zip'%}/vsizip/{% endif %}./data/{{ provider.slug}}/{{ job_name.split|join:"_" }}-{{ provider.slug}}-{{ job_date_time|slice:":8" }}{{file_details.file_ext}}|layername=natural_polygons|subset="natural" = "water" OR "waterway" = "riverbank"</datasource>
+      <datasource>{% if file_details.file_ext == '.zip'%}/vsizip/{% endif %}./{{ file_details.file_path }}|layername=natural_polygons|subset="natural" = "water" OR "waterway" = "riverbank"</datasource>
       <keywordList>
         <value></value>
       </keywordList>
@@ -19101,7 +19111,7 @@ def my_form_open(dialog, layer, feature):
       <ymax>{{ bbox.3 }}</ymax>
       </extent>
       <id>{{ job_name.split|join:"_" }}_places_points_any_{{ provider.slug}}{{ job_date_time }}_{{ file_details.file_ext|slugify }}</id>
-      <datasource>{% if file_details.file_ext == '.zip'%}/vsizip/{% endif %}./data/{{ provider.slug}}/{{ job_name.split|join:"_" }}-{{ provider.slug}}-{{ job_date_time|slice:":8" }}{{file_details.file_ext}}|layername=places_points</datasource>
+      <datasource>{% if file_details.file_ext == '.zip'%}/vsizip/{% endif %}./{{ file_details.file_path }}|layername=places_points</datasource>
       <keywordList>
         <value></value>
       </keywordList>
@@ -19616,7 +19626,7 @@ def my_form_open(dialog, layer, feature):
       <ymax>{{ bbox.3 }}</ymax>
       </extent>
       <id>{{ job_name.split|join:"_" }}_rail_lines_any_{{ provider.slug}}{{ job_date_time }}_{{ file_details.file_ext|slugify }}</id>
-      <datasource>{% if file_details.file_ext == '.zip'%}/vsizip/{% endif %}./data/{{ provider.slug}}/{{ job_name.split|join:"_" }}-{{ provider.slug}}-{{ job_date_time|slice:":8" }}{{file_details.file_ext}}|layername=rail_lines</datasource>
+      <datasource>{% if file_details.file_ext == '.zip'%}/vsizip/{% endif %}./{{ file_details.file_path }}|layername=rail_lines</datasource>
       <keywordList>
         <value></value>
       </keywordList>
@@ -19994,7 +20004,7 @@ def my_form_open(dialog, layer, feature):
       <ymax>{{ bbox.3 }}</ymax>
       </extent>
       <id>{{ job_name.split|join:"_" }}_roads_lines_any_{{ provider.slug}}{{ job_date_time }}_{{ file_details.file_ext|slugify }}</id>
-      <datasource>{% if file_details.file_ext == '.zip'%}/vsizip/{% endif %}./data/{{ provider.slug}}/{{ job_name.split|join:"_" }}-{{ provider.slug}}-{{ job_date_time|slice:":8" }}{{file_details.file_ext}}|layername=roads_lines</datasource>
+      <datasource>{% if file_details.file_ext == '.zip'%}/vsizip/{% endif %}./{{ file_details.file_path }}|layername=roads_lines</datasource>
       <keywordList>
         <value></value>
       </keywordList>
@@ -21975,7 +21985,7 @@ def my_form_open(dialog, layer, feature):
       <ymax>{{ bbox.3 }}</ymax>
       </extent>
       <id>{{ job_name.split|join:"_" }}_waterways_lines_any_{{ provider.slug}}{{ job_date_time }}_{{ file_details.file_ext|slugify }}</id>
-      <datasource>{% if file_details.file_ext == '.zip'%}/vsizip/{% endif %}./data/{{ provider.slug}}/{{ job_name.split|join:"_" }}-{{ provider.slug}}-{{ job_date_time|slice:":8" }}{{file_details.file_ext}}|layername=waterways_lines</datasource>
+      <datasource>{% if file_details.file_ext == '.zip'%}/vsizip/{% endif %}./{{ file_details.file_path }}|layername=waterways_lines</datasource>
       <keywordList>
         <value></value>
       </keywordList>
@@ -22421,12 +22431,12 @@ def my_form_open(dialog, layer, feature):
         <xmax>{{ bbox.2 }}</xmax>
         <ymax>{{ bbox.3 }}</ymax>
       </extent>
-      <id>{{ job_name }}_{{ provider.slug }}_{{ job_date_time }}{{ file_details.file_ext }}</id>
-      <datasource>{% if file_details.file_ext == '.zip'%}/vsizip/{% endif %}./data/{{ provider.slug }}/{{ job_name.split|join:"_" }}-{{ provider.slug }}-{{ job_date_time|slice:":8" }}{{file_details.file_ext}}</datasource>
+      <id>{{ job_name }}_{{ provider.slug }}_{{ job_date_time }}_{{ file_details.file_ext|slugify }}</id>
+      <datasource>{% if file_details.file_ext == '.zip'%}/vsizip/{% endif %}./{{ file_details.file_path }}</datasource>
       <keywordList>
         <value></value>
       </keywordList>
-      <layername>{{ job_name.split|join:"_" }}-{{ provider.name }}-{{ job_date_time|slice:":8" }}{{ file_details.file_ext|slugify }}</layername>
+      <layername>{{ job_name.split|join:"_" }}-{{ provider.name }}-{{ job_date_time|slice:":8" }}-{{ file_details.file_ext|slugify }}</layername>
       <srs>
         <spatialrefsys>
           <proj4>+proj=longlat +datum=WGS84 +no_defs</proj4>
@@ -22497,7 +22507,7 @@ def my_form_open(dialog, layer, feature):
     </maplayer>
     {% endfor %}
     {% endif %}
-    {% if provider.file_type == "raster" %}
+    {% if provider.type == "raster" %}
     {% for file_details in provider.files %}
     <maplayer minimumScale="0" maximumScale="1e+08" type="raster" hasScaleBasedVisibilityFlag="0">
       <extent>
@@ -22506,12 +22516,12 @@ def my_form_open(dialog, layer, feature):
         <xmax>{{ bbox.2 }}</xmax>
         <ymax>{{ bbox.3 }}</ymax>
       </extent>
-      <id>{{ job_name }}_{{ provider.slug }}_{{ job_date_time }}{{ file_details.file_ext }}</id>
-      <datasource>{% if file_details.file_ext == '.zip'%}/vsizip/{% endif %}./data/{{ provider.slug }}/{{ job_name.split|join:"_" }}-{{ provider.slug }}-{{ job_date_time|slice:":8" }}{{file_details.file_ext}}</datasource>
+      <id>{{ job_name }}_{{ provider.slug }}_{{ job_date_time }}_{{ file_details.file_ext|slugify }}</id>
+      <datasource>{% if file_details.file_ext == '.zip'%}/vsizip/{% endif %}./{{ file_details.file_path }}</datasource>
       <keywordList>
         <value></value>
       </keywordList>
-      <layername>{{ job_name.split|join:"_" }}-{{ provider.name }}-{{ job_date_time|slice:":8" }}{{ file_details.file_ext|slugify }}</layername>
+      <layername>{{ job_name.split|join:"_" }}-{{ provider.name }}-{{ job_date_time|slice:":8" }}-{{ file_details.file_ext|slugify }}</layername>
       <srs>
         <spatialrefsys>
           <proj4>+proj=longlat +datum=WGS84 +no_defs</proj4>

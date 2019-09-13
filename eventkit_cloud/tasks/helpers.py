@@ -430,7 +430,8 @@ def get_metadata(data_provider_task_uid):
         if license_file:
             include_files += [license_file]
         metadata['include_files'] = include_files
-
+    import json
+    logger.error(json.dumps(metadata))
     return metadata
 
 
