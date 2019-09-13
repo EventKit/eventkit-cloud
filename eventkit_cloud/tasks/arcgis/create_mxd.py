@@ -3,7 +3,6 @@
 # This file is used to create an MXD file based on a datapack.  It needs to be run via the python application that is
 # packaged with arcgis.  For many users this is the default python, for other users they may have to specify this location
 # for example ('C:\Python27\ArcGIS10.5\python create_mxd.py').
-print("Creating an MXD file for your data...")
 
 import os
 import logging
@@ -20,6 +19,9 @@ except NameError:
 
 logger = logging.getLogger('create_mxd')
 
+logger.warning("Creating an MXD file for your data...")
+
+
 if os.getenv('LOG_LEVEL'):
     logger.setLevel(os.getenv('LOG_LEVEL'))
 
@@ -35,7 +37,7 @@ VERSIONS = ["10.6", "10.5.1", "10.5", "10.4.1", "10.4"]
 try:
     import arcpy
 except Exception as e:
-    print(e)
+    logger.warning(e)
     input(
         "Could not import ArcPY.  ArcGIS 10.4 or 10.5 is required to run this script. "
         "Please ensure that it is installed and activated. "
@@ -45,7 +47,7 @@ except Exception as e:
 
 version = arcpy.GetInstallInfo().get('Version')
 if arcpy.GetInstallInfo().get('Version') not in SUPPORTED_VERSIONS:
-    print((
+    logger.warning((
         "This script only supports versions {0}.  "
         "It might work for {1} but it will likely not support all of the datasets.".format(
             SUPPORTED_VERSIONS, [version for version in VERSIONS if version not in SUPPORTED_VERSIONS])))
@@ -64,21 +66,21 @@ def update_mxd_from_metadata(file_name, metadata, verify=False):
         for file_info in layer_info['files']:
             # As of arcgis 10.5.1 shapefiles can't be imported as zips.
             if file_info['file_ext'] in ['.zip']:
-                print("This script can't automatically add zipped shapefiles.  You can try to use the osm layer in the template folder then update the source data after extracting the shapefiles.")
+                logger.warning("This script can't automatically add zipped shapefiles.  You can try to use the osm layer in the template folder then update the source data after extracting the shapefiles.")
                 continue
             file_path = os.path.abspath(os.path.join(BASE_DIR, file_info['file_path']))
             # If possible calculate the statistics now so that they are correct when opening arcmap.
             try:
-                print(("Calculating statistics for the file {0}...".format(file_path)))
+                logger.warning(("Calculating statistics for the file {0}...".format(file_path)))
                 arcpy.CalculateStatistics_management(file_path)
             except Exception as e:
-                print(e)
+                logger.warning(e)
             layer_file = get_layer_file(layer_info['type'], version)
             if not layer_file:
-                print((
+                logger.warning((
                     "Skipping layer {0} because the file type is not supported for ArcMap {1}".format(layer_name, version)))
                 if version == '10.5':
-                    print("However with your version of ArcMap you can still drag and drop this layer onto the Map.")
+                    logger.warning("However with your version of ArcMap you can still drag and drop this layer onto the Map.")
                 continue
             if file_info['file_ext'] in ['.kml','.kmz']:
                 kml_layer = os.path.splitext(os.path.basename(file_path))[0]
@@ -89,16 +91,16 @@ def update_mxd_from_metadata(file_name, metadata, verify=False):
                 except Exception as e:
                     # This could fail for various reasons including that the file already exists.  If KMLs are very important to your workflow please contact us
                     # and we can make this more robust.
-                    print("Could not create a new KML layer file and gdb, it may already exist.")
+                    logger.warning("Could not create a new KML layer file and gdb, it may already exist.")
                     layer_from_file = arcpy.mapping.Layer(layer_file)
                 layer_from_file.name = layer_info['name'] + file_info['file_ext'].replace('.','_')
-                print(('Adding layer: {0}...'.format(layer_from_file.name)))
+                logger.warning(('Adding layer: {0}...'.format(layer_from_file.name)))
                 arcpy.mapping.AddLayer(df, layer_from_file, "TOP")
                 del layer_from_file
             else:
                 layer_from_file = arcpy.mapping.Layer(layer_file)
                 layer_from_file.name = layer_info['name'] + file_info['file_ext'].replace('.','_')
-                print(('Adding layer: {0}...'.format(layer_from_file.name)))
+                logger.warning(('Adding layer: {0}...'.format(layer_from_file.name)))
                 arcpy.mapping.AddLayer(df, layer_from_file, "TOP")
                 # Get instance of layer from MXD, not the template file.
                 del layer_from_file
@@ -130,7 +132,7 @@ def get_mxd_template(version):
         template_file_name = "template-10-4.mxd"
     template_file = os.path.abspath(os.path.join(BASE_DIR, "arcgis", "templates", template_file_name))
     if not os.path.isfile(template_file):
-        print('This script requires an mxd template file which was not found.')
+        logger.warning('This script requires an mxd template file which was not found.')
         raise Exception("File Not Found: {0}".format(template_file))
     return template_file
 
@@ -144,7 +146,7 @@ def get_layer_file(type, version):
     """
     layer_basename = "{0}-{1}.lyr".format(type, version.replace('.', '-'))
     layer_file = os.path.abspath(os.path.join(BASE_DIR, "arcgis", "templates", layer_basename))
-    print(("Fetching layer template: {0}".format(layer_file)))
+    logger.warning(("Fetching layer template: {0}".format(layer_file)))
     if os.path.isfile(layer_file):
         return layer_file
     return None
@@ -161,7 +163,7 @@ def get_version():
             return version
         raise Exception("UNSUPPORTED VERSION")
     except:
-        print(('Unable to determine ArcGIS version.  This script only supports versions {0}'.format(
+        logger.warning(('Unable to determine ArcGIS version.  This script only supports versions {0}'.format(
             str(SUPPORTED_VERSIONS))))
         raise
 
@@ -184,13 +186,12 @@ def update_layer(layer, file_path, type, verify=False):
             try:
                 # Try to update the extents based on the layers
                 logger.debug("Updating layers from {0} to {1}".format(lyr.workspacePath, file_path))
-                # For files that aren't geopackages we want the workspace path to be the directory not the DB name.
                 if type == 'raster':
                     lyr.replaceDataSource(os.path.dirname(file_path), "RASTER_WORKSPACE", os.path.basename(file_path), verify)
                 elif type == 'elevation':
                     lyr.replaceDataSource(os.path.dirname(file_path), "NONE", os.path.basename(file_path), verify)
                 else:
-                    lyr.findAndReplaceWorkspacePath(lyr.workspacePath, file_path, False)
+                    lyr.findAndReplaceWorkspacePath(lyr.workspacePath, file_path, verify)
                 if lyr.isFeatureLayer:
                     logger.debug(arcpy.RecalculateFeatureClassExtent_management(lyr).getMessages())
             except AttributeError:
@@ -209,7 +210,7 @@ def create_mxd(mxd=None, metadata=None, verify=False):
     # with get_temp_mxd(metadata, verify=verify) as temp_mxd_file:
         # copy temp file to permanent file if specified.
     if mxd:
-        print(("writing file to {0}".format(mxd)))
+        logger.warning(("writing file to {0}".format(mxd)))
         shutil.copy(template_file, mxd)
         # return mxd
     update_mxd_from_metadata(mxd, metadata, verify=verify)
@@ -249,5 +250,5 @@ if __name__ == "__main__":
         mxd_output = os.path.join(os.path.dirname(__file__), '{0}.mxd'.format(metadata['name']))
         create_mxd(mxd=mxd_output, metadata=metadata, verify=True)
     except Exception as e:
-        print(e)
+        logger.warning(e)
     input("Press enter to exit.")

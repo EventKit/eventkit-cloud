@@ -516,9 +516,9 @@ def get_band_statistics(file_path, band=1):
     """
     try:
         gdal.UseExceptions()
-        geotiff = gdal.Open(file_path)
-        band = geotiff.GetRasterBand(1)
-        return band.GetStatistics(True, True)
+        image_file = gdal.Open(file_path)
+        band = image_file.GetRasterBand(1)
+        return band.GetStatistics(False, True)
     except Exception as e:
         logger.error(e)
         logger.error("Could not get statistics for {0}:{1}".format(file_path, band))
