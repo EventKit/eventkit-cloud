@@ -14,7 +14,6 @@ export interface State {
     providerName: string;
     providerDescription: string;
     providerDialogOpen: boolean;
-    projectionsDialogOpen: boolean;
 }
 
 export class DataPackGeneralTable extends React.Component<Props, State> {
@@ -22,13 +21,10 @@ export class DataPackGeneralTable extends React.Component<Props, State> {
         super(props);
         this.handleProviderOpen = this.handleProviderOpen.bind(this);
         this.handleProviderClose = this.handleProviderClose.bind(this);
-        this.handleProjectionsOpen = this.handleProjectionsOpen.bind(this);
-        this.handleProjectionsClose = this.handleProjectionsClose.bind(this);
         this.state = {
             providerName: '',
             providerDescription: '',
             providerDialogOpen: false,
-            projectionsDialogOpen: false,
         };
     }
 
@@ -41,14 +37,6 @@ export class DataPackGeneralTable extends React.Component<Props, State> {
         const providerDescription = propsProvider.service_description.toString();
         const providerName = propsProvider.name.toString();
         this.setState({ providerDescription, providerName, providerDialogOpen: true });
-    }
-
-    private handleProjectionsClose() {
-        this.setState({ projectionsDialogOpen: false });
-    }
-
-    private handleProjectionsOpen() {
-        this.setState({ projectionsDialogOpen: true });
     }
 
     render() {
@@ -68,6 +56,11 @@ export class DataPackGeneralTable extends React.Component<Props, State> {
                 verticalAlign: 'middle',
                 marginRight: '10px',
             },
+            projectionInfoLine: {
+                width: '100%',
+                marginRight: '8px',
+                display: 'inline-block',
+            }
         };
 
         return (
@@ -114,30 +107,12 @@ export class DataPackGeneralTable extends React.Component<Props, State> {
                 />
                 <CustomTableRow
                     className="qa-DataPackGeneralTable-projection"
-                    title="Projection"
-                    data={
-                        <div>
-                            EPSG:4326 - World Geodetic System 1984 (WGS84)
-                            <Info
-                                className="qa-DataPackGeneralTable-projection-icon"
-                                onClick={this.handleProjectionsOpen}
-                                style={styles.tableRowInfoIcon}
-                            />
-                            <BaseDialog
-                                className="qa-DataPackGeneralTable-BaseDialog-projection"
-                                show={this.state.projectionsDialogOpen}
-                                title="Projection Information"
-                                onClose={this.handleProjectionsClose}
-                            >
-                                <div style={{ paddingBottom: '10px', wordWrap: 'break-word' }}>
-                                    All geospatial data provided by EventKit are in the
-                                        World Geodetic System 1984 (WGS 84)projection.
-                                        This projection is also commonly known by its EPSG code: 4326.
-                                        Additional projection support will be added in subsequent versions.
-                                </div>
-                            </BaseDialog>
-                        </div>
-                    }
+                    title="Projections"
+                    data={this.props.dataPack.job.projections.map((projection) => (
+                        <span key={projection.srid} style={styles.projectionInfoLine}>
+                            EPSG:{projection.srid} - {projection.name}
+                        </span>
+                    ))}
                 />
             </div>
         );
