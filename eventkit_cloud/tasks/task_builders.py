@@ -6,7 +6,7 @@ import os
 from celery import chain  # required for tests
 from django.db import DatabaseError
 
-from eventkit_cloud.jobs.models import DataProviderTask
+from eventkit_cloud.jobs.models import DataProviderTask, ExportFormat
 from eventkit_cloud.tasks import TaskStates
 from eventkit_cloud.tasks.export_tasks import reprojection_task
 from eventkit_cloud.tasks.helpers import normalize_name, get_metadata
@@ -109,7 +109,7 @@ class TaskChainBuilder(object):
 
         if export_tasks:
             subtasks = []
-            for format_ignored, task in export_tasks.items():
+            for current_format, task in export_tasks.items():
                 subtasks.append(task.get('obj').s(
                     run_uid=run.uid, stage_dir=stage_dir, job_name=job_name,
                     task_uid=task.get('task_uid'), user_details=user_details, locking_task_key=data_provider_task_record.uid
@@ -118,6 +118,13 @@ class TaskChainBuilder(object):
                 for projection in projections:
                     # Source data is already in 4326, no need to reproject.
                     if projection == 4326:
+                        continue
+
+                    # If the format does not support this projection, skip.
+                    supported_projections = ExportFormat.objects.get(
+                        slug=current_format).supported_projections.all().values_list('srid', flat=True)
+                    if projection not in supported_projections:
+                        logger.debug(f"Skipping task, {current_format} does not support {projection}.")
                         continue
 
                     task_name = f"{task.get('obj').name} - EPSG:{projection}"
