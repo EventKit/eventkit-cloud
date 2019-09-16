@@ -582,7 +582,7 @@ class TestExportTasks(ExportTaskBase):
             wait_for_providers_task(run_uid=mock_run_uid, callback_task=callback_task, apply_args=apply_args)
 
     @patch('eventkit_cloud.tasks.export_tasks.get_arcgis_metadata')
-    @patch('eventkit_cloud.tasks.helpers.get_metadata')
+    @patch('eventkit_cloud.tasks.export_tasks.get_metadata')
     @patch('eventkit_cloud.tasks.export_tasks.zip_files')
     @patch('eventkit_cloud.tasks.export_tasks.get_human_readable_metadata_document')
     @patch('eventkit_cloud.tasks.export_tasks.get_style_files')
