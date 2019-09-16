@@ -393,7 +393,7 @@ def convert(file_format, in_file=None, out_file=None, task_uid=None, projection=
     extra_parameters = ""
     if is_raster:
         cmd_template = Template(
-            "gdalwarp -of $fmt -overwrite $type $in_ds $out_ds -s_srs EPSG:4326 -t_srs EPSG:$projection $extra_parameters")
+            "gdalwarp -overwrite $extra_parameters -of $fmt $type $in_ds $out_ds -s_srs EPSG:4326 -t_srs EPSG:$projection")
         # Geopackage raster only supports byte band type, so check for that
         if file_format.lower() == 'gpkg':
             band_type = "-ot byte"
@@ -401,7 +401,7 @@ def convert(file_format, in_file=None, out_file=None, task_uid=None, projection=
             extra_parameters = "-co ICORDS=G"
     else:
         cmd_template = Template(
-            "ogr2ogr -overwrite -f '$fmt' $out_ds $in_ds -s_srs EPSG:4326 -t_srs EPSG:$projection $extra_parameters")
+            "ogr2ogr -overwrite $extra_parameters -f '$fmt' $out_ds $in_ds -s_srs EPSG:4326 -t_srs EPSG:$projection")
 
     cmd = cmd_template.safe_substitute({'fmt': file_format,
                                         'type': band_type,

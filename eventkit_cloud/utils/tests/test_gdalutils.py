@@ -178,8 +178,8 @@ class TestGdalUtils(TestCase):
         with self.assertRaises(Exception):
             convert(dataset=None)
 
-        # No-op (same source and destination format)
-        in_dataset = "/path/to/old_dataset"
+        # No-op (same source and destination)
+        in_dataset = "/path/to/dataset"
         out_dataset = "/path/to/dataset"
         fmt = "gpkg"
         get_meta_mock.return_value = {'driver': 'gpkg', 'is_raster': True}
@@ -188,15 +188,19 @@ class TestGdalUtils(TestCase):
         self.task_process().start_process.assert_not_called()
 
         # Raster geopackage from geotiff
+        extra_parameters = ""
         in_dataset = "/path/to/old_dataset"
         out_dataset = "/path/to/dataset"
         fmt = "gpkg"
         band_type = "-ot byte"
-        expected_cmd = "gdal_translate -of {0} {1} {2} {3}".format(
+        projection = "EPSG:4326"
+        expected_cmd = "gdalwarp -overwrite {0} -of {1} {2} {3} {4} -s_srs {5} -t_srs {5}".format(
+            extra_parameters,
             fmt,
             band_type,
             in_dataset,
-            out_dataset
+            out_dataset,
+            projection,
         )
         get_meta_mock.return_value = {'driver': 'gtiff', 'is_raster': True, 'nodata': None}
         self.task_process.return_value = Mock(exitcode=0)
@@ -207,11 +211,13 @@ class TestGdalUtils(TestCase):
         # Geotiff from raster geopackage
         fmt = "gtiff"
         band_type = ""
-        expected_cmd = "gdal_translate -of {0} {1} {2} {3}".format(
+        expected_cmd = "gdalwarp -overwrite {0} -of {1} {2} {3} {4} -s_srs {5} -t_srs {5}".format(
+            extra_parameters,
             fmt,
             band_type,
             in_dataset,
-            out_dataset
+            out_dataset,
+            projection
         )
         get_meta_mock.return_value = {'driver': 'gpkg', 'is_raster': True}
         convert(file_format=fmt, in_file=in_dataset, out_file=out_dataset, task_uid=self.task_uid)
@@ -220,10 +226,12 @@ class TestGdalUtils(TestCase):
 
         # Vector
         fmt = "gpkg"
-        expected_cmd = "ogr2ogr -overwrite -f {0} {1} {2}".format(
+        expected_cmd = "ogr2ogr -overwrite {0} -f '{1}' {2} {3} -s_srs {4} -t_srs {4}".format(
+            extra_parameters,
             fmt,
             out_dataset,
-            in_dataset
+            in_dataset,
+            projection
         )
         get_meta_mock.return_value = {'driver': 'geojson', 'is_raster': False}
         convert(file_format=fmt, in_file=in_dataset, out_file=out_dataset, task_uid=self.task_uid)
