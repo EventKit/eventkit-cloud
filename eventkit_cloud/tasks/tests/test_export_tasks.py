@@ -185,7 +185,7 @@ class TestExportTasks(ExportTaskBase):
                                              out_file=expected_output_path, task_uid=str(saved_export_task.uid))
 
         self.assertEqual(expected_output_path, result['result'])
-        self.assertEqual(expected_output_path, result['gpkg'])
+        self.assertEqual(expected_output_path, result['source'])
 
     @patch('celery.app.task.Task.request')
     @patch('eventkit_cloud.tasks.export_tasks.OGR')

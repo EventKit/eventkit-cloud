@@ -457,7 +457,7 @@ def osm_data_collection_task(
             gpkg_filepath = gdalutils.clip_dataset(boundary=selection, in_dataset=gpkg_filepath, fmt=None)
 
         result['result'] = gpkg_filepath
-        result['gpkg'] = gpkg_filepath
+        result['source'] = gpkg_filepath
 
         result = add_metadata_task(result=result, job_uid=run.job.uid, provider_slug=provider_slug)
 
@@ -480,7 +480,7 @@ def add_metadata_task(self, result=None, job_uid=None, provider_slug=None, user_
 
     provider = DataProvider.objects.get(slug=provider_slug)
     result = result or {}
-    input_gpkg = parse_result(result, 'gpkg')
+    input_gpkg = parse_result(result, 'source')
     date_time = timezone.now()
     bbox = job.extents
     metadata_values = {"fileIdentifier": '{0}-{1}-{2}'.format(job.name, provider.slug, default_format_time(date_time)),
@@ -503,7 +503,7 @@ def add_metadata_task(self, result=None, job_uid=None, provider_slug=None, user_
     geopackage.add_file_metadata(input_gpkg, metadata)
 
     result['result'] = input_gpkg
-    result['gpkg'] = input_gpkg
+    result['source'] = input_gpkg
     return result
 
 
@@ -614,7 +614,7 @@ def geopackage_export_task(self, result=None, run_uid=None, task_uid=None, stage
 
     result['file_format'] = 'gpkg'
     result['result'] = gpkg
-    result['gpkg'] = gpkg
+    result['source'] = gpkg
     return result
 
 
@@ -696,7 +696,7 @@ def reprojection_task(self, result=None, run_uid=None, task_uid=None, stage_dir=
     else:
         file_extension = file_format
 
-    in_dataset = parse_result(result, 'gpkg')
+    in_dataset = parse_result(result, 'source')
     out_dataset = os.path.join(stage_dir, '{0}-{1}.{2}'.format(job_name, projection, file_extension))
 
     if file_format == 'ESRI Shapefile':
@@ -774,7 +774,7 @@ def wfs_export_task(self, result=None, layer=None, config=None, run_uid=None, ta
         ogr = OGR(task_uid=task_uid)
         out = ogr.convert(file_format='GPKG', in_file="WFS:\"{}\"".format(url), out_file=gpkg, params=params)
         result['result'] = out
-        result['gpkg'] = out
+        result['source'] = out
         # Check for geopackage contents; gdal wfs driver fails silently
         if not geopackage.check_content_exists(out):
             raise Exception("Empty response: Unknown layer name '{}' or invalid AOI bounds".format(layer))
@@ -804,7 +804,7 @@ def wcs_export_task(self, result=None, layer=None, config=None, run_uid=None, ta
                                     user_details=user_details, eta=eta)
         out = wcs_conv.convert()
         result['result'] = out
-        result['geotiff'] = out
+        result['source'] = out
 
         return result
     except Exception as e:
@@ -843,7 +843,7 @@ def arcgis_feature_service_export_task(self, result=None, task_uid=None,
         ogr = OGR(task_uid=task_uid)
         out = ogr.convert(file_format='GPKG', in_file=service_url, out_file=gpkg, params=params)
         result['result'] = out
-        result['gpkg'] = out
+        result['source'] = out
         return result
     except Exception as e:
         logger.error('Raised exception in arcgis feature service export, %s', str(e))
@@ -865,7 +865,7 @@ def bounds_export_task(self, result={}, run_uid=None, task_uid=None, stage_dir=N
 
     run = ExportRun.objects.get(uid=run_uid)
 
-    result_gpkg = parse_result(result, 'gpkg')
+    result_gpkg = parse_result(result, 'source')
     bounds = run.job.the_geom.geojson or run.job.bounds_geojson
 
     gpkg = os.path.join(stage_dir, '{0}_bounds.gpkg'.format(provider_slug))
@@ -874,7 +874,7 @@ def bounds_export_task(self, result={}, run_uid=None, task_uid=None, stage_dir=N
     )
 
     result['result'] = gpkg
-    result['gpkg'] = result_gpkg
+    result['source'] = result_gpkg
     return result
 
 
@@ -905,7 +905,7 @@ def mapproxy_export_task(self, result=None, layer=None, config=None, run_uid=Non
         gpkg = w2g.convert()
         result['file_format'] = 'gpkg'
         result['result'] = gpkg
-        result['gpkg'] = gpkg
+        result['source'] = gpkg
         add_metadata_task(result=result, job_uid=run.job.uid, provider_slug=task.export_provider_task.slug)
 
         return result
