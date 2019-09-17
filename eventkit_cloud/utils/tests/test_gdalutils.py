@@ -193,14 +193,14 @@ class TestGdalUtils(TestCase):
         out_dataset = "/path/to/dataset"
         fmt = "gpkg"
         band_type = "-ot byte"
-        projection = "EPSG:4326"
+        in_projection = "EPSG:4326"
         expected_cmd = "gdalwarp -overwrite {0} -of {1} {2} {3} {4} -s_srs {5} -t_srs {5}".format(
             extra_parameters,
             fmt,
             band_type,
             in_dataset,
             out_dataset,
-            projection,
+            in_projection,
         )
         get_meta_mock.return_value = {'driver': 'gtiff', 'is_raster': True, 'nodata': None}
         self.task_process.return_value = Mock(exitcode=0)
@@ -217,7 +217,7 @@ class TestGdalUtils(TestCase):
             band_type,
             in_dataset,
             out_dataset,
-            projection
+            in_projection
         )
         get_meta_mock.return_value = {'driver': 'gpkg', 'is_raster': True}
         convert(file_format=fmt, in_file=in_dataset, out_file=out_dataset, task_uid=self.task_uid)
@@ -231,12 +231,53 @@ class TestGdalUtils(TestCase):
             fmt,
             out_dataset,
             in_dataset,
-            projection
+            in_projection
         )
         get_meta_mock.return_value = {'driver': 'geojson', 'is_raster': False}
         convert(file_format=fmt, in_file=in_dataset, out_file=out_dataset, task_uid=self.task_uid)
         self.task_process().start_process.assert_called_with(expected_cmd, executable='/bin/bash', shell=True,
                                                              stderr=-1, stdout=-1)
+
+
+        # Test that extra_parameters are added when converting to NITF.
+        fmt = "nitf"
+        extra_parameters = "-co ICORDS=G"
+        out_projection = "EPSG:3857"
+        band_type = ""
+        expected_cmd = "gdalwarp -overwrite {0} -of {1} {2} {3} {4} -s_srs {5} -t_srs {6}".format(
+            extra_parameters,
+            fmt,
+            band_type,
+            in_dataset,
+            out_dataset,
+            in_projection,
+            out_projection
+        )
+        get_meta_mock.return_value = {'driver': 'gpkg', 'is_raster': True}
+        convert(file_format=fmt, in_file=in_dataset,
+                out_file=out_dataset, task_uid=self.task_uid, projection=3857)
+        self.task_process().start_process.assert_called_with(expected_cmd, executable='/bin/bash', shell=True,
+                                                             stderr=-1, stdout=-1)
+        # Test converting to a new projection
+        fmt = "gpkg"
+        extra_parameters = ""
+        out_projection = "EPSG:3857"
+        band_type = "-ot byte"
+        expected_cmd = "gdalwarp -overwrite {0} -of {1} {2} {3} {4} -s_srs {5} -t_srs {6}".format(
+            extra_parameters,
+            fmt,
+            band_type,
+            in_dataset,
+            out_dataset,
+            in_projection,
+            out_projection
+        )
+        get_meta_mock.return_value = {'driver': 'gpkg', 'is_raster': True}
+        convert(file_format=fmt, in_file=in_dataset,
+                out_file=out_dataset, task_uid=self.task_uid, projection=3857)
+        self.task_process().start_process.assert_called_with(expected_cmd, executable='/bin/bash', shell=True,
+                                                             stderr=-1, stdout=-1)
+
 
     def test_get_distance(self,):
         expected_distance = 972.38
