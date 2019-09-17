@@ -507,7 +507,7 @@ def add_metadata_task(self, result=None, job_uid=None, provider_slug=None, user_
     return result
 
 
-@app.task(name='ESRI Shapefile Format', bind=True, base=FormatTask)
+@app.task(name='ESRI Shapefile (.shp)', bind=True, base=FormatTask)
 def shp_export_task(self, result=None, run_uid=None, task_uid=None, stage_dir=None, job_name=None, user_details=None,
                     *args, **kwargs):
     """
@@ -530,7 +530,7 @@ def shp_export_task(self, result=None, run_uid=None, task_uid=None, stage_dir=No
         raise
 
 
-@app.task(name='KML Format', bind=True, base=FormatTask)
+@app.task(name='Keyhole Markup Language (.kml)', bind=True, base=FormatTask)
 def kml_export_task(self, result=None, run_uid=None, task_uid=None, stage_dir=None, job_name=None, user_details=None,
                     *args, **kwargs):
     """
@@ -598,7 +598,7 @@ def output_selection_geojson_task(self, result=None, task_uid=None, selection=No
     return result
 
 
-@app.task(name='Geopackage Format', bind=True, base=FormatTask)
+@app.task(name='Geopackage (.gpkg)', bind=True, base=FormatTask)
 def geopackage_export_task(self, result=None, run_uid=None, task_uid=None, stage_dir=None, job_name=None,
                            user_details=None, *args, **kwargs):
     """
@@ -618,7 +618,7 @@ def geopackage_export_task(self, result=None, run_uid=None, task_uid=None, stage
     return result
 
 
-@app.task(name='Geotiff Format (.tif)', bind=True, base=FormatTask)
+@app.task(name='Geotiff (.tif)', bind=True, base=FormatTask)
 def geotiff_export_task(self, result=None, run_uid=None, task_uid=None, stage_dir=None, job_name=None,
                         user_details=None, *args, **kwargs):
     """
