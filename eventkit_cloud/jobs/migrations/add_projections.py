@@ -13,19 +13,6 @@ class Migration(migrations.Migration):
         Projection.objects.create(
             name='WGS 84 / Pseudo-Mercator', srid=3857)
 
-    def insert_supported_projections(apps, schema_editor):
-        ExportFormat = apps.get_model('jobs', 'ExportFormat')
-        Projection = apps.get_model('jobs', 'Projection')
-        projection_4326 = Projection.objects.get(srid=4326)
-        projection_3857 = Projection.objects.get(srid=3857)
-
-        ExportFormat.objects.get(slug='hfa').supported_projections.add(projection_4326, projection_3857)
-        ExportFormat.objects.get(slug='nitf').supported_projections.add(projection_4326)
-        ExportFormat.objects.get(slug='gtiff').supported_projections.add(projection_4326, projection_3857)
-        ExportFormat.objects.get(slug='kml').supported_projections.add(projection_4326, projection_3857)
-        ExportFormat.objects.get(slug='shp').supported_projections.add(projection_4326, projection_3857)
-        ExportFormat.objects.get(slug='gpkg').supported_projections.add(projection_4326, projection_3857)
-
     dependencies = [
         ('jobs', 'add_supported_format_settings'),
     ]
@@ -51,11 +38,5 @@ class Migration(migrations.Migration):
             name='projections',
             field=models.ManyToManyField(related_name='projections', to='jobs.Projection'),
         ),
-        migrations.AddField(
-            model_name='exportformat',
-            name='supported_projections',
-            field=models.ManyToManyField(related_name='supported_projections', to='jobs.Projection'),
-        ),
         migrations.RunPython(insert_default_projections),
-        migrations.RunPython(insert_supported_projections),
     ]
