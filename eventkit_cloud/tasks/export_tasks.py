@@ -1051,11 +1051,12 @@ def zip_files(include_files, file_path=None, static_files=None, *args, **kwargs)
         raise Exception("zip_file_task called with no include_files.")
 
     if not file_path:
-        logger.error("zip_file_task called no file path.")
-        raise Exception("zip_file_task called no file path.")
+        logger.error("zip_file_task called with no file path.")
+        raise Exception("zip_file_task called with no file path.")
 
     files = [filename for filename in include_files if os.path.splitext(filename)[-1] not in BLACKLISTED_ZIP_EXTS]
 
+    logger.debug("Opening the zipfile.")
     with ZipFile(file_path, 'a', compression=ZIP_DEFLATED, allowZip64=True) as zipfile:
         if static_files:
             for absolute_file_path, relative_file_path in static_files.items():
@@ -1100,6 +1101,7 @@ def zip_files(include_files, file_path=None, static_files=None, *args, **kwargs)
             else:
                 # Put the files into directories based on their provider_slug
                 # prepend with `data`
+
                 download_filename = get_download_filename(
                     name,
                     timezone.now(),
@@ -1110,12 +1112,10 @@ def zip_files(include_files, file_path=None, static_files=None, *args, **kwargs)
                     provider_slug,
                     download_filename
                 )
-
             zipfile.write(
                 filepath,
                 arcname=filename
             )
-
         if zipfile.testzip():
             raise Exception("The zipped file was corrupted.")
 

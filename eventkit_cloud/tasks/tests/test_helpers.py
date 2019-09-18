@@ -161,9 +161,13 @@ class TestHelpers(TestCase):
                 "example_slug": {
                     "copyright": expected_copyright,
                     "description": expected_data_provider_desc,
-                    "file_path": "data/{}/{}-{}-{}{}".format(expected_provider_slug, split_file[0], expected_provider_slug, expected_date, split_file[1]),
-                    "file_type": split_file[1],
-                    "full_file_path": os.path.join(stage_dir, expected_provider_slug, sample_file),
+                    "files": [{"file_path": "data/{}/{}-{}-{}{}".format(expected_provider_slug, split_file[0],
+                                                                        expected_provider_slug, expected_date,
+                                                                        split_file[1]),
+                               "file_ext": split_file[1],
+                               "full_file_path": os.path.join(stage_dir, expected_provider_slug,
+                                                              sample_file),
+                               }],
                     "last_update": expected_last_update,
                     "metadata": expected_metadata_url,
                     "name": expected_provider_task_name,
@@ -175,7 +179,7 @@ class TestHelpers(TestCase):
             "date": expected_date,
             "description": expected_job_desc,
             "has_elevation": False,
-            "has_raster": True,
+            "has_raster": False,
             "include_files": [
                 os.path.join(stage_dir, expected_provider_slug, sample_file),
                 expected_license_file
@@ -194,22 +198,28 @@ class TestHelpers(TestCase):
         example_metadata = {
             'stuff': 'test',
             'include_files': 'files',
-            'data_sources':
-                {'osm':
-                    {
-                        'data': 'here',
-                        'full_file_path': 'here'
-                    }
+            'data_sources': {
+                'osm': {
+                    'files': [
+                        {
+                            'data': 'here',
+                            'full_file_path': 'here'
+                        }
+                    ]
                 }
+            }
         }
         expected_metadata = {
             'stuff': 'test',
-            'data_sources':
-                {'osm':
-                    {
-                        'data': 'here',
-                    }
+            'data_sources': {
+                'osm':  {
+                    'files': [
+                        {
+                            'data': 'here',
+                        }
+                    ]
                 }
+            }
         }
         self.assertEqual(expected_metadata, get_arcgis_metadata(example_metadata))
 
