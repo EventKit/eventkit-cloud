@@ -164,12 +164,13 @@ class TestExportTasks(ExportTaskBase):
         celery_uid = str(uuid.uuid4())
         type(mock_request).id = PropertyMock(return_value=celery_uid)
         job_name = self.job.name.lower()
+        projection = 4326
         expected_output_path = os.path.join(os.path.join(settings.EXPORT_STAGING_ROOT.rstrip('\/'), str(self.run.uid)),
-                                            '{}.gpkg'.format(job_name))
+                                            '{0}-{1}.gpkg'.format(job_name, projection))
         expected_provider_slug = "slug"
         mock_convert.return_value = expected_output_path
 
-        previous_task_result = {'result': expected_output_path}
+        previous_task_result = {'source': expected_output_path}
         stage_dir = settings.EXPORT_STAGING_ROOT + str(self.run.uid) + '/'
         export_provider_task = DataProviderTaskRecord.objects.create(run=self.run,
                                                                      status=TaskStates.PENDING.value,
@@ -180,7 +181,7 @@ class TestExportTasks(ExportTaskBase):
         geopackage_export_task.update_task_state(task_status=TaskStates.RUNNING.value,
                                                  task_uid=str(saved_export_task.uid))
         result = geopackage_export_task.run(run_uid=self.run.uid, result=previous_task_result, task_uid=str(saved_export_task.uid),
-                                            stage_dir=stage_dir, job_name=job_name)
+                                            stage_dir=stage_dir, job_name=job_name, projection=projection)
         mock_convert.assert_called_once_with(file_format='gpkg', in_file=expected_output_path,
                                              out_file=expected_output_path, task_uid=str(saved_export_task.uid))
 
