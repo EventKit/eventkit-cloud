@@ -87,8 +87,11 @@ class TestSupport(TestCase):
 
         # layer is actually an arc layer object, but string is used here for tests.
         example_layer = "layer"
+        new_file_name = 'path'
+        new_file_dir = '/new'
+        new_file_path = F"{new_file_dir}/{new_file_name}"
         old_file_path = "/example/path"
-        new_file_path = "/new/path"
+        example_type = "osm"
 
         mock_layer = MagicMock()
         mock_layer.supports.return_value = True
@@ -99,6 +102,17 @@ class TestSupport(TestCase):
         verify = True
 
         self.arcpy.mapping.ListLayers.return_value = [mock_layer, mock_layer2]
-        update_layer(example_layer, new_file_path, verify=verify)
+        update_layer(example_layer, new_file_path, example_type, verify=verify)
         mock_layer.findAndReplaceWorkspacePath.assert_called_once_with(old_file_path, new_file_path, verify)
         self.arcpy.RecalculateFeatureClassExtent_management.assert_called_once()
+
+        example_type = "elevation"
+        update_layer(example_layer, new_file_path, example_type, verify=verify)
+        mock_layer.replaceDataSource.assert_called_once_with(new_file_dir, "NONE", new_file_name,
+                                                             verify)
+        mock_layer.replaceDataSource.reset_mock()
+
+        example_type = "raster"
+        update_layer(example_layer, new_file_path, example_type, verify=verify)
+        mock_layer.replaceDataSource.assert_called_once_with(new_file_dir, "RASTER_WORKSPACE",
+                                                             new_file_name, verify)

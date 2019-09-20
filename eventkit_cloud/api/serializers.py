@@ -604,10 +604,15 @@ class ExportFormatSerializer(serializers.ModelSerializer):
         view_name='api:formats-detail',
         lookup_field='slug'
     )
+    supported_projections = serializers.SerializerMethodField(read_only=True)
 
     class Meta:
         model = ExportFormat
-        fields = ('uid', 'url', 'slug', 'name', 'description')
+        fields = ('uid', 'url', 'slug', 'name', 'description', 'supported_projections')
+
+    @staticmethod
+    def get_supported_projections(obj):
+        return obj.supported_projections.all().values('uid', 'name', 'srid', 'description')
 
 class DataProviderSerializer(serializers.ModelSerializer):
     model_url = serializers.HyperlinkedIdentityField(
