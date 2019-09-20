@@ -33,7 +33,7 @@ from eventkit_cloud.tasks.helpers import normalize_name, get_archive_data_path, 
     get_download_filename, get_run_staging_dir, get_provider_staging_dir, get_run_download_dir, Directory, \
     default_format_time, progressive_kill, get_style_files, generate_qgs_style, create_license_file, \
     get_human_readable_metadata_document, pickle_exception, get_data_type_from_provider, get_arcgis_metadata, \
-    get_message_count, clean_config
+    get_message_count, clean_config, get_metadata
 from eventkit_cloud.utils.auth_requests import get_cred
 from eventkit_cloud.utils import (
     overpass, pbf, s3, mapproxy, wcs, geopackage, gdalutils
@@ -362,7 +362,7 @@ class FormatTask(ExportTask):
 @gdalutils.retry
 def osm_data_collection_pipeline(
         export_task_record_uid, stage_dir, job_name='no_job_name_specified', url=None, slug=None,
-        bbox=None, user_details=None, config=None, eta=None):
+        bbox=None, user_details=None, config=None, eta=None, projection=4326):
     """
     Collects data from OSM & produces a thematic gpkg as a subtask of the task referenced by export_provider_task_id.
     bbox expected format is an iterable of the form [ long0, lat0, long1, lat1 ]
@@ -385,7 +385,7 @@ def osm_data_collection_pipeline(
     pbf_filepath = pbf.OSMToPBF(osm=osm_filename, pbffile=pbf_filename, task_uid=export_task_record_uid).convert()
 
     # --- Generate thematic gpkg from PBF
-    geopackage_filepath = os.path.join(stage_dir, '{}.gpkg'.format(job_name))
+    geopackage_filepath = os.path.join(stage_dir, '{0}-{1}.gpkg'.format(job_name, projection))
 
     if config is None:
         logger.error("No configuration was provided for OSM export")
@@ -457,7 +457,7 @@ def osm_data_collection_task(
             gpkg_filepath = gdalutils.clip_dataset(boundary=selection, in_dataset=gpkg_filepath, fmt=None)
 
         result['result'] = gpkg_filepath
-        result['geopackage'] = gpkg_filepath
+        result['source'] = gpkg_filepath
 
         result = add_metadata_task(result=result, job_uid=run.job.uid, provider_slug=provider_slug)
 
@@ -480,7 +480,7 @@ def add_metadata_task(self, result=None, job_uid=None, provider_slug=None, user_
 
     provider = DataProvider.objects.get(slug=provider_slug)
     result = result or {}
-    input_gpkg = parse_result(result, 'geopackage')
+    input_gpkg = parse_result(result, 'source')
     date_time = timezone.now()
     bbox = job.extents
     metadata_values = {"fileIdentifier": '{0}-{1}-{2}'.format(job.name, provider.slug, default_format_time(date_time)),
@@ -503,47 +503,50 @@ def add_metadata_task(self, result=None, job_uid=None, provider_slug=None, user_
     geopackage.add_file_metadata(input_gpkg, metadata)
 
     result['result'] = input_gpkg
-    result['geopackage'] = input_gpkg
+    result['source'] = input_gpkg
     return result
 
 
-@app.task(name='ESRI Shapefile Format', bind=True, base=FormatTask)
+@app.task(name='ESRI Shapefile (.shp)', bind=True, base=FormatTask)
 def shp_export_task(self, result=None, run_uid=None, task_uid=None, stage_dir=None, job_name=None, user_details=None,
-                    *args, **kwargs):
+                    projection=4326, *args, **kwargs):
     """
     Class defining SHP export function.
     """
     result = result or {}
-    gpkg = os.path.join(stage_dir, '{0}.gpkg'.format(job_name))
-    shapefile = os.path.join(stage_dir, '{0}_shp'.format(job_name))
+    gpkg = parse_result(result, 'source')
+    shapefile = os.path.join(stage_dir, '{0}-{1}_shp'.format(job_name, projection))
 
     try:
         ogr = OGR(task_uid=task_uid)
         out = ogr.convert(file_format='ESRI Shapefile', in_file=gpkg, out_file=shapefile,
                           params="-lco 'ENCODING=UTF-8' -overwrite -skipfailures")
+        result['file_format'] = 'ESRI Shapefile'
         result['result'] = out
-        result['geopackage'] = gpkg
+        result['shp'] = out
         return result
     except Exception as e:
         logger.error('Exception while converting {} -> {}: {}'.format(gpkg, shapefile, str(e)))
         raise
 
 
-@app.task(name='KML Format', bind=True, base=FormatTask)
+@app.task(name='Keyhole Markup Language (.kml)', bind=True, base=FormatTask)
 def kml_export_task(self, result=None, run_uid=None, task_uid=None, stage_dir=None, job_name=None, user_details=None,
-                    *args, **kwargs):
+                    projection=4326, *args, **kwargs):
     """
     Class defining KML export function.
     """
     result = result or {}
 
-    gpkg = os.path.join(stage_dir, '{0}.gpkg'.format(job_name))
-    kmlfile = os.path.join(stage_dir, '{0}.kml'.format(job_name))
+    gpkg = parse_result(result, 'source')
+    kmlfile = os.path.join(stage_dir, '{0}-{1}.kml'.format(job_name, projection))
     try:
         ogr = OGR(task_uid=task_uid)
         out = ogr.convert(file_format='KML', in_file=gpkg, out_file=kmlfile)
+        result['file_extension'] = 'kmz'
+        result['file_format'] = 'libkml'
         result['result'] = out
-        result['geopackage'] = gpkg
+        result['kmz'] = out
         return result
     except Exception as e:
         logger.error('Raised exception in kml export, %s', str(e))
@@ -552,19 +555,20 @@ def kml_export_task(self, result=None, run_uid=None, task_uid=None, stage_dir=No
 
 @app.task(name='SQLITE Format', bind=True, base=FormatTask)
 def sqlite_export_task(self, result=None, run_uid=None, task_uid=None, stage_dir=None, job_name=None,
-                       user_details=None, *args, **kwargs):
+                       user_details=None, projection=4326, *args, **kwargs):
     """
     Class defining SQLITE export function.
     """
     result = result or {}
 
-    gpkg = os.path.join(stage_dir, '{0}.gpkg'.format(job_name))
-    sqlitefile = os.path.join(stage_dir, '{0}.sqlite'.format(job_name))
+    gpkg = parse_result(result, 'source')
+    sqlitefile = os.path.join(stage_dir, '{0}-{1}.sqlite'.format(job_name, projection))
     try:
         ogr = OGR(task_uid=task_uid)
         out = ogr.convert(file_format='SQLite', in_file=gpkg, out_file=sqlitefile)
+        result['file_format'] = 'sqlite'
         result['result'] = out
-        result['geopackage'] = gpkg
+        result['sqlite'] = out
         return result
     except Exception as e:
         logger.error('Raised exception in sqlite export, %s', str(e))
@@ -573,13 +577,13 @@ def sqlite_export_task(self, result=None, run_uid=None, task_uid=None, stage_dir
 
 @app.task(name='Area of Interest (.geojson)', bind=True, base=ExportTask)
 def output_selection_geojson_task(self, result=None, task_uid=None, selection=None, stage_dir=None, provider_slug=None,
-                                  *args, **kwargs):
+                                  projection=4326, *args, **kwargs):
     """
     Class defining geopackage export function.
     """
     result = result or {}
 
-    geojson_file = os.path.join(stage_dir, "{0}_selection.geojson".format(provider_slug))
+    geojson_file = os.path.join(stage_dir, "{0}-{1}_selection.geojson".format(provider_slug, projection))
     if selection:
 
         # Test if json.
@@ -595,42 +599,36 @@ def output_selection_geojson_task(self, result=None, task_uid=None, selection=No
     return result
 
 
-@app.task(name='Geopackage Format', bind=True, base=FormatTask)
-def geopackage_export_task(self, result={}, run_uid=None, task_uid=None,
-                           user_details=None, *args, **kwargs):
+@app.task(name='Geopackage (.gpkg)', bind=True, base=FormatTask)
+def geopackage_export_task(self, result=None, run_uid=None, task_uid=None, stage_dir=None, job_name=None,
+                           user_details=None, projection=4326, *args, **kwargs):
     """
     Class defining geopackage export function.
     """
-    from eventkit_cloud.tasks.models import ExportRun, ExportTaskRecord
-
     result = result or {}
-    run = ExportRun.objects.get(uid=run_uid)
-    task = ExportTaskRecord.objects.get(uid=task_uid)
 
-    selection = parse_result(result, 'selection')
-    if selection:
-        gpkg = parse_result(result, 'result')
-        gdalutils.clip_dataset(boundary=selection, in_dataset=gpkg, fmt=None)
+    gpkg_in_dataset = parse_result(result, 'source')
+    gpkg_out_dataset = os.path.join(stage_dir, '{0}-{1}.gpkg'.format(job_name, projection))
 
-    add_metadata_task(result=result, job_uid=run.job.uid, provider_slug=task.export_provider_task.slug)
-    gpkg = parse_result(result, 'result')
-    gpkg = gdalutils.convert(file_format='gpkg', in_file=gpkg, task_uid=task_uid)
+    gpkg = gdalutils.convert(
+            file_format='gpkg', in_file=gpkg_in_dataset, out_file=gpkg_out_dataset, task_uid=task_uid)
 
+    result['file_format'] = 'gpkg'
     result['result'] = gpkg
-    result['geopackage'] = gpkg
+    result['source'] = gpkg
     return result
 
 
-@app.task(name='Geotiff Format (.tif)', bind=True, base=FormatTask)
+@app.task(name='Geotiff (.tif)', bind=True, base=FormatTask)
 def geotiff_export_task(self, result=None, run_uid=None, task_uid=None, stage_dir=None, job_name=None,
-                        user_details=None, *args, **kwargs):
+                        user_details=None, projection=4326, *args, **kwargs):
     """
     Class defining geopackage export function.
     """
     result = result or {}
 
-    gtiff_in_dataset = parse_result(result, 'result')
-    gtiff_out_dataset = os.path.join(stage_dir, '{0}.tif'.format(job_name))
+    gtiff_in_dataset = parse_result(result, 'source')
+    gtiff_out_dataset = os.path.join(stage_dir, '{0}-{1}.tif'.format(job_name, projection))
     selection = parse_result(result, 'selection')
     if selection:
         gtiff = gdalutils.clip_dataset(boundary=selection, in_dataset=gtiff_in_dataset,
@@ -639,24 +637,27 @@ def geotiff_export_task(self, result=None, run_uid=None, task_uid=None, stage_di
         gtiff = gdalutils.convert(
             file_format='gtiff', in_file=gtiff_in_dataset, out_file=gtiff_out_dataset, task_uid=task_uid)
 
+    result['file_extension'] = 'tif'
+    result['file_format'] = 'gtiff'
     result['result'] = gtiff
-    result['geotiff'] = gtiff
+    result['gtiff'] = gtiff
     return result
 
 
 @app.task(name='National Imagery Transmission Format (.nitf)', bind=True, base=FormatTask)
 def nitf_export_task(self, result=None, run_uid=None, task_uid=None, stage_dir=None, job_name=None,
-                        user_details=None, *args, **kwargs):
+                        user_details=None, projection=4326, *args, **kwargs):
     """
     Class defining nitf export function.
     """
     result = result or {}
 
-    nitf_in_dataset = parse_result(result, 'result')
-    nitf_out_dataset = os.path.join(stage_dir, '{0}.nitf'.format(job_name))
+    nitf_in_dataset = parse_result(result, 'source')
+    nitf_out_dataset = os.path.join(stage_dir, '{0}-{1}.nitf'.format(job_name, projection))
     nitf = gdalutils.convert(
         file_format='nitf', in_file=nitf_in_dataset, out_file=nitf_out_dataset, task_uid=task_uid)
 
+    result['file_format'] = 'nitf'
     result['result'] = nitf
     result['nitf'] = nitf
     return result
@@ -664,19 +665,48 @@ def nitf_export_task(self, result=None, run_uid=None, task_uid=None, stage_dir=N
 
 @app.task(name='Erdas Imagine HFA (.img)', bind=True, base=FormatTask)
 def hfa_export_task(self, result=None, run_uid=None, task_uid=None, stage_dir=None, job_name=None,
-                     user_details=None, *args, **kwargs):
+                     user_details=None, projection=4326, *args, **kwargs):
     """
     Class defining Erdas Imagine HFA (.img) export function.
     """
     result = result or {}
 
-    hfa_in_dataset = parse_result(result, 'result')
-    hfa_out_dataset = os.path.join(stage_dir, '{0}.img'.format(job_name))
+    hfa_in_dataset = parse_result(result, 'source')
+    hfa_out_dataset = os.path.join(stage_dir, '{0}-{1}.img'.format(job_name, projection))
     hfa = gdalutils.convert(
         file_format='hfa', in_file=hfa_in_dataset, out_file=hfa_out_dataset, task_uid=task_uid)
 
+    result['file_format'] = 'hfa'
     result['result'] = hfa
     result['hfa'] = hfa
+    return result
+
+
+@app.task(name='Reprojection Task', bind=True, base=FormatTask)
+def reprojection_task(self, result=None, run_uid=None, task_uid=None, stage_dir=None, job_name=None,
+                        user_details=None, projection=None, *args, **kwargs):
+    """
+    Class defining a task that will reproject all file formats to the chosen projections.
+    """
+    result = result or {}
+
+    file_format = parse_result(result, 'file_format')
+
+    if parse_result(result, 'file_extension'):
+        file_extension = parse_result(result, 'file_extension')
+    else:
+        file_extension = file_format
+
+    in_dataset = parse_result(result, 'source')
+    out_dataset = os.path.join(stage_dir, '{0}-{1}.{2}'.format(job_name, projection, file_extension))
+
+    if file_format == 'ESRI Shapefile':
+        out_dataset = os.path.join(stage_dir, '{0}-{1}_shp'.format(job_name, projection))
+
+    reprojection = gdalutils.convert(
+        file_format=file_format, in_file=in_dataset, out_file=out_dataset, task_uid=task_uid, projection=projection)
+
+    result['result'] = reprojection
     return result
 
 
@@ -709,13 +739,13 @@ def clip_export_task(self, result=None, run_uid=None, task_uid=None, stage_dir=N
 @app.task(name='WFSExport', bind=True, base=ExportTask, abort_on_error=True)
 def wfs_export_task(self, result=None, layer=None, config=None, run_uid=None, task_uid=None, stage_dir=None,
                     job_name=None, bbox=None, service_url=None, name=None, service_type=None, user_details=None,
-                    *args, **kwargs):
+                    projection=4326, *args, **kwargs):
     """
     Class defining geopackage export for WFS service.
     """
     result = result or {}
 
-    gpkg = os.path.join(stage_dir, '{0}.gpkg'.format(job_name))
+    gpkg = os.path.join(stage_dir, '{0}-{1}.gpkg'.format(job_name, projection))
 
     # Strip out query string parameters that might conflict
     service_url = re.sub(r"(?i)(?<=[?&])(version|service|request|typename|srsname)=.*?(&|$)", "",
@@ -745,7 +775,7 @@ def wfs_export_task(self, result=None, layer=None, config=None, run_uid=None, ta
         ogr = OGR(task_uid=task_uid)
         out = ogr.convert(file_format='GPKG', in_file="WFS:\"{}\"".format(url), out_file=gpkg, params=params)
         result['result'] = out
-        result['geopackage'] = out
+        result['source'] = out
         # Check for geopackage contents; gdal wfs driver fails silently
         if not geopackage.check_content_exists(out):
             raise Exception("Empty response: Unknown layer name '{}' or invalid AOI bounds".format(layer))
@@ -758,14 +788,14 @@ def wfs_export_task(self, result=None, layer=None, config=None, run_uid=None, ta
 @app.task(name='WCS Export', bind=True, base=ExportTask, abort_on_error=True, acks_late=True)
 def wcs_export_task(self, result=None, layer=None, config=None, run_uid=None, task_uid=None, stage_dir=None,
                     job_name=None, bbox=None, service_url=None, name=None, service_type=None, user_details=None,
-                    *args, **kwargs):
+                    projection=4326, *args, **kwargs):
     """
     Class defining export for WCS services
     """
     from eventkit_cloud.tasks.models import ExportTaskRecord
 
     result = result or {}
-    out = os.path.join(stage_dir, '{0}.tif'.format(job_name))
+    out = os.path.join(stage_dir, '{0}-{1}.tif'.format(job_name, projection))
 
     eta = ETA(task_uid=task_uid)
     task = ExportTaskRecord.objects.get(uid=task_uid)
@@ -775,7 +805,7 @@ def wcs_export_task(self, result=None, layer=None, config=None, run_uid=None, ta
                                     user_details=user_details, eta=eta)
         out = wcs_conv.convert()
         result['result'] = out
-        result['geotiff'] = out
+        result['source'] = out
 
         return result
     except Exception as e:
@@ -786,12 +816,12 @@ def wcs_export_task(self, result=None, layer=None, config=None, run_uid=None, ta
 @app.task(name='ArcFeatureServiceExport', bind=True, base=FormatTask)
 def arcgis_feature_service_export_task(self, result=None, task_uid=None,
                                        stage_dir=None, job_name=None, bbox=None, service_url=None,
-                                       *args, **kwargs):
+                                       projection=4326, *args, **kwargs):
     """
     Class defining sqlite export for ArcFeatureService service.
     """
     result = result or {}
-    gpkg = os.path.join(stage_dir, '{0}.gpkg'.format(job_name))
+    gpkg = os.path.join(stage_dir, '{0}-{1}.gpkg'.format(job_name, projection))
     try:
         if not os.path.exists(os.path.dirname(gpkg)):
             os.makedirs(os.path.dirname(gpkg), 6600)
@@ -814,7 +844,7 @@ def arcgis_feature_service_export_task(self, result=None, task_uid=None,
         ogr = OGR(task_uid=task_uid)
         out = ogr.convert(file_format='GPKG', in_file=service_url, out_file=gpkg, params=params)
         result['result'] = out
-        result['geopackage'] = out
+        result['source'] = out
         return result
     except Exception as e:
         logger.error('Raised exception in arcgis feature service export, %s', str(e))
@@ -823,7 +853,7 @@ def arcgis_feature_service_export_task(self, result=None, task_uid=None,
 
 @app.task(name='Area of Interest (.gpkg)', bind=True, base=ExportTask)
 def bounds_export_task(self, result={}, run_uid=None, task_uid=None, stage_dir=None, provider_slug=None,
-                       *args, **kwargs):
+                       projection=4326, *args, **kwargs):
     """
     Class defining geopackage export function.
     """
@@ -836,23 +866,23 @@ def bounds_export_task(self, result={}, run_uid=None, task_uid=None, stage_dir=N
 
     run = ExportRun.objects.get(uid=run_uid)
 
-    result_gpkg = parse_result(result, 'geopackage')
+    result_gpkg = parse_result(result, 'source')
     bounds = run.job.the_geom.geojson or run.job.bounds_geojson
 
-    gpkg = os.path.join(stage_dir, '{0}_bounds.gpkg'.format(provider_slug))
+    gpkg = os.path.join(stage_dir, '{0}-{1}_bounds.gpkg'.format(provider_slug, projection))
     gpkg = geopackage.add_geojson_to_geopackage(
         geojson=bounds, gpkg=gpkg, layer_name='bounds', task_uid=task_uid, user_details=user_details
     )
 
     result['result'] = gpkg
-    result['geopackage'] = result_gpkg
+    result['source'] = result_gpkg
     return result
 
 
 @app.task(name='Raster export (.gpkg)', bind=True, base=FormatTask, abort_on_error=True, acks_late=True)
 def mapproxy_export_task(self, result=None, layer=None, config=None, run_uid=None, task_uid=None,
                          stage_dir=None, job_name=None, bbox=None, service_url=None, level_from=None,
-                         level_to=None, name=None, service_type=None, *args, **kwargs):
+                         level_to=None, name=None, service_type=None, projection=4326, *args, **kwargs):
     """
     Class defining geopackage export for external raster service.
     """
@@ -866,7 +896,7 @@ def mapproxy_export_task(self, result=None, layer=None, config=None, run_uid=Non
 
     selection = parse_result(result, 'selection')
 
-    gpkgfile = os.path.join(stage_dir, '{0}.gpkg'.format(job_name))
+    gpkgfile = os.path.join(stage_dir, '{0}-{1}.gpkg'.format(job_name, projection))
     try:
         w2g = mapproxy.MapproxyGeopackage(gpkgfile=gpkgfile, bbox=bbox,
                                           service_url=service_url, name=name, layer=layer,
@@ -874,8 +904,9 @@ def mapproxy_export_task(self, result=None, layer=None, config=None, run_uid=Non
                                           level_to=level_to, service_type=service_type,
                                           task_uid=task_uid, selection=selection)
         gpkg = w2g.convert()
+        result['file_format'] = 'gpkg'
         result['result'] = gpkg
-        result['geopackage'] = gpkg
+        result['source'] = gpkg
         add_metadata_task(result=result, job_uid=run.job.uid, provider_slug=task.export_provider_task.slug)
 
         return result
@@ -912,7 +943,6 @@ def wait_for_run(run=None, uid=None):
     if run.status:
         while(TaskStates[run.status] not in TaskStates.get_finished_states() and
                 TaskStates[run.status] not in TaskStates.get_incomplete_states()):
-            print(run.status)
             time.sleep(10)
             run.refresh_from_db()
 
@@ -944,7 +974,6 @@ def create_zip_task(result=None, data_provider_task_uid=None, *args, **kwargs):
     :return: The run files, or a single zip file if data_provider_task_uid is passed.
     """
     from eventkit_cloud.tasks.models import DataProviderTaskRecord
-    from eventkit_cloud.tasks.helpers import get_metadata
 
     if not result:
         result = {}
@@ -1023,11 +1052,12 @@ def zip_files(include_files, file_path=None, static_files=None, *args, **kwargs)
         raise Exception("zip_file_task called with no include_files.")
 
     if not file_path:
-        logger.error("zip_file_task called no file path.")
-        raise Exception("zip_file_task called no file path.")
+        logger.error("zip_file_task called with no file path.")
+        raise Exception("zip_file_task called with no file path.")
 
     files = [filename for filename in include_files if os.path.splitext(filename)[-1] not in BLACKLISTED_ZIP_EXTS]
 
+    logger.debug("Opening the zipfile.")
     with ZipFile(file_path, 'a', compression=ZIP_DEFLATED, allowZip64=True) as zipfile:
         if static_files:
             for absolute_file_path, relative_file_path in static_files.items():
@@ -1072,6 +1102,7 @@ def zip_files(include_files, file_path=None, static_files=None, *args, **kwargs)
             else:
                 # Put the files into directories based on their provider_slug
                 # prepend with `data`
+
                 download_filename = get_download_filename(
                     name,
                     timezone.now(),
@@ -1082,12 +1113,10 @@ def zip_files(include_files, file_path=None, static_files=None, *args, **kwargs)
                     provider_slug,
                     download_filename
                 )
-
             zipfile.write(
                 filepath,
                 arcname=filename
             )
-
         if zipfile.testzip():
             raise Exception("The zipped file was corrupted.")
 
