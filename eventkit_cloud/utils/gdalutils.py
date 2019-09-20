@@ -364,7 +364,7 @@ def clip_dataset(boundary=None, in_dataset=None, out_dataset=None, fmt=None, tab
 
 
 @retry
-def convert(file_format, in_file=None, out_file=None, task_uid=None):
+def convert(file_format, in_file=None, out_file=None, task_uid=None, projection=None):
     """
     Uses gdalwarp or ogr2ogr to convert a raster or vector dataset into another format.
     If the dataset is already in the output format, returns the unaltered original.
@@ -374,35 +374,43 @@ def convert(file_format, in_file=None, out_file=None, task_uid=None):
     :param task_uid: A task uid to update
     :return: Converted dataset, same filename as input
     """
-
     if not in_file:
         raise Exception("Could not open input file: {0}".format(in_file))
 
     meta = get_meta(in_file)
     driver, is_raster = meta['driver'], meta['is_raster']
 
-    if not file_format or not driver or driver.lower() == file_format.lower():
+    if in_file == out_file:
         return in_file
 
     if out_file is None:
         out_file = in_file
 
+    if projection is None:
+        projection = 4326
+
     band_type = ""
+    extra_parameters = ""
     if is_raster:
-        cmd_template = Template("gdal_translate -of $fmt $type $in_ds $out_ds")
+        cmd_template = Template(
+            "gdalwarp -overwrite $extra_parameters -of $fmt $type $in_ds $out_ds -s_srs EPSG:4326 -t_srs EPSG:$projection")
         # Geopackage raster only supports byte band type, so check for that
         if file_format.lower() == 'gpkg':
             band_type = "-ot byte"
+        if file_format.lower() == 'nitf':
+            extra_parameters = "-co ICORDS=G"
     else:
-        cmd_template = Template("ogr2ogr -overwrite -f $fmt $out_ds $in_ds")
+        cmd_template = Template(
+            "ogr2ogr -overwrite $extra_parameters -f '$fmt' $out_ds $in_ds -s_srs EPSG:4326 -t_srs EPSG:$projection")
 
     cmd = cmd_template.safe_substitute({'fmt': file_format,
                                         'type': band_type,
                                         'in_ds': in_file,
-                                        'out_ds': out_file})
+                                        'out_ds': out_file,
+                                        'projection': projection,
+                                        'extra_parameters': extra_parameters})
 
     logger.debug("GDAL convert cmd: %s", cmd)
-    logger.info(f"GDAL COMMAND {cmd}")
 
     task_process = TaskProcess(task_uid=task_uid)
     task_process.start_process(cmd, shell=True, executable="/bin/bash",

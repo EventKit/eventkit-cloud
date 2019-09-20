@@ -319,6 +319,7 @@ def get_metadata(data_provider_task_uid):
     ],
     "name": "test",
     "project": "Test",
+    "projections": [4326, 3857]
     "run_uid": "7fadf34e-58f9-4bb8-ab57-adc1015c4269",
     "url": "http://cloud.eventkit.test/status/2010025c-6d61-4a0b-8d5d-ff9c657259eb"
     }
@@ -331,6 +332,10 @@ def get_metadata(data_provider_task_uid):
     data_provider_task = DataProviderTaskRecord.objects.get(uid=data_provider_task_uid)
 
     run = data_provider_task.run
+
+    projections = []
+    for projection in run.job.projections.all():
+        projections.append(projection.srid)
 
     if data_provider_task.name == 'run':
         provider_tasks = run.provider_tasks.filter(~Q(name='run'))
@@ -347,6 +352,7 @@ def get_metadata(data_provider_task_uid):
                 'url': "{0}/status/{1}".format(getattr(settings, "SITE_URL"), str(run.job.uid)),
                 'description': run.job.description,
                 'project': run.job.event,
+                'projections': projections,
                 'date': timezone.now().strftime("%Y%m%d"),
                 'run_uid': str(run.uid),
                 'data_sources': {},
