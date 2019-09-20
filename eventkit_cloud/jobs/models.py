@@ -87,6 +87,18 @@ class UserLicense(TimeStampedModelMixin):
         return '{0}: {1}'.format(self.user.username, self.license.name)
 
 
+class Projection(UIDMixin, TimeStampedModelMixin):
+    """
+    Model for a Projection.
+    """
+    name = models.CharField(max_length=100)
+    srid = models.IntegerField(unique=True)
+    description = models.CharField(max_length=255, null=True, blank=True)
+
+    def __str__(self):
+        return '{0}'.format(self.name)
+
+
 class ExportFormat(UIDMixin, TimeStampedModelMixin):
     """
     Model for a ExportFormat.
@@ -96,6 +108,7 @@ class ExportFormat(UIDMixin, TimeStampedModelMixin):
     description = models.CharField(max_length=255)
     cmd = models.TextField(max_length=1000)
     objects = models.Manager()
+    supported_projections = models.ManyToManyField(Projection, related_name='supported_projections')
 
     class Meta:  # pragma: no cover
         managed = True
@@ -271,6 +284,7 @@ class Job(UIDMixin, TimeStampedModelMixin):
     include_zipfile = models.BooleanField(default=False)
     json_tags = JSONField(default=dict)
     last_export_run = models.ForeignKey('tasks.ExportRun', on_delete=models.CASCADE, null=True, related_name='last_export_run')
+    projections = models.ManyToManyField(Projection, related_name='projections')
 
     class Meta:  # pragma: no cover
         managed = True

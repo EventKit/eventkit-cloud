@@ -83,6 +83,7 @@ describe('exportInfo reducer', () => {
             formats: ['gpkg'],
             providerEstimates: {},
             exportOptions: {},
+            projections: [],
         });
     });
 
@@ -95,6 +96,8 @@ describe('exportInfo reducer', () => {
                 providers: [],
                 areaStr: '',
                 layers: '',
+                projections: [],
+                exportOptions: {},
             },
             {
                 type: 'UPDATE_EXPORT_INFO',
@@ -114,6 +117,8 @@ describe('exportInfo reducer', () => {
             providers: ['provider'],
             areaStr: 'string',
             layers: 'layer',
+            projections: [],
+            exportOptions: {},
         });
     });
 
@@ -133,6 +138,7 @@ describe('exportInfo reducer', () => {
             datapackDescription: '',
             projectName: '',
             providers: [],
+            projections: [],
             areaStr: '',
             formats: ['gpkg'],
             providerEstimates: {},

@@ -158,20 +158,19 @@ class TestExportTasks(ExportTaskBase):
         self.assertIsNotNone(run_task)
         self.assertEqual(TaskStates.RUNNING.value, run_task.status)
 
-    @patch('eventkit_cloud.tasks.export_tasks.add_metadata_task')
     @patch('eventkit_cloud.utils.gdalutils.convert')
-    @patch('eventkit_cloud.utils.gdalutils.clip_dataset')
     @patch('celery.app.task.Task.request')
-    def test_run_gpkg_export_task(self, mock_request, mock_clip, mock_convert, mock_add_metadata_task):
+    def test_run_gpkg_export_task(self, mock_request, mock_convert):
         celery_uid = str(uuid.uuid4())
         type(mock_request).id = PropertyMock(return_value=celery_uid)
         job_name = self.job.name.lower()
+        projection = 4326
         expected_output_path = os.path.join(os.path.join(settings.EXPORT_STAGING_ROOT.rstrip('\/'), str(self.run.uid)),
-                                            '{}.gpkg'.format(job_name))
+                                            '{0}-{1}.gpkg'.format(job_name, projection))
         expected_provider_slug = "slug"
         mock_convert.return_value = expected_output_path
 
-        previous_task_result = {'result': expected_output_path}
+        previous_task_result = {'source': expected_output_path}
         stage_dir = settings.EXPORT_STAGING_ROOT + str(self.run.uid) + '/'
         export_provider_task = DataProviderTaskRecord.objects.create(run=self.run,
                                                                      status=TaskStates.PENDING.value,
@@ -182,29 +181,12 @@ class TestExportTasks(ExportTaskBase):
         geopackage_export_task.update_task_state(task_status=TaskStates.RUNNING.value,
                                                  task_uid=str(saved_export_task.uid))
         result = geopackage_export_task.run(run_uid=self.run.uid, result=previous_task_result, task_uid=str(saved_export_task.uid),
-                                            stage_dir=stage_dir, job_name=job_name)
-        mock_add_metadata_task.assert_called_once_with(result=result, job_uid=self.run.job.uid, provider_slug=expected_provider_slug)
-        mock_clip.assert_not_called()
-        mock_convert.assert_called_once_with(dataset=expected_output_path, fmt='gpkg',
-                                             task_uid=str(saved_export_task.uid))
-        mock_convert.reset_mock()
-        self.assertEqual(expected_output_path, result['result'])
-        # test the tasks update_task_state method
-        run_task = ExportTaskRecord.objects.get(celery_uid=celery_uid)
-        self.assertIsNotNone(run_task)
-        self.assertEqual(TaskStates.RUNNING.value, run_task.status)
+                                            stage_dir=stage_dir, job_name=job_name, projection=projection)
+        mock_convert.assert_called_once_with(file_format='gpkg', in_file=expected_output_path,
+                                             out_file=expected_output_path, task_uid=str(saved_export_task.uid))
 
-        mock_clip.return_value = expected_output_path
-        expected_geojson = "test.geojson"
-        previous_task_result = {'result': expected_output_path, "selection": expected_geojson}
-        result = geopackage_export_task.run(run_uid=self.run.uid, result=previous_task_result,
-                                            task_uid=str(saved_export_task.uid), stage_dir=stage_dir, job_name=job_name)
-        mock_clip.assert_called_once_with(boundary=expected_geojson, in_dataset=expected_output_path,
-                                          fmt=None)
-        mock_convert.assert_called_once_with(dataset=expected_output_path, fmt='gpkg',
-                                             task_uid=str(saved_export_task.uid))
         self.assertEqual(expected_output_path, result['result'])
-        self.assertEqual(expected_output_path, result['geopackage'])
+        self.assertEqual(expected_output_path, result['source'])
 
     @patch('celery.app.task.Task.request')
     @patch('eventkit_cloud.tasks.export_tasks.OGR')
@@ -601,7 +583,7 @@ class TestExportTasks(ExportTaskBase):
             wait_for_providers_task(run_uid=mock_run_uid, callback_task=callback_task, apply_args=apply_args)
 
     @patch('eventkit_cloud.tasks.export_tasks.get_arcgis_metadata')
-    @patch('eventkit_cloud.tasks.helpers.get_metadata')
+    @patch('eventkit_cloud.tasks.export_tasks.get_metadata')
     @patch('eventkit_cloud.tasks.export_tasks.zip_files')
     @patch('eventkit_cloud.tasks.export_tasks.get_human_readable_metadata_document')
     @patch('eventkit_cloud.tasks.export_tasks.get_style_files')

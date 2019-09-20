@@ -15,6 +15,7 @@ import sys
 from osgeo import gdal, ogr, osr
 
 from eventkit_cloud.tasks.task_process import TaskProcess
+from eventkit_cloud.utils.generic import requires_zip, create_zip_file, get_zip_name
 from django.conf import settings
 
 logger = logging.getLogger(__name__)
@@ -363,41 +364,51 @@ def clip_dataset(boundary=None, in_dataset=None, out_dataset=None, fmt=None, tab
 
 
 @retry
-def convert(dataset=None, fmt=None, task_uid=None):
+def convert(file_format, in_file=None, out_file=None, task_uid=None, projection=None):
     """
     Uses gdalwarp or ogr2ogr to convert a raster or vector dataset into another format.
     If the dataset is already in the output format, returns the unaltered original.
-    :param dataset: Raster or vector file to be converted
-    :param fmt: Short format (e.g. gpkg, gtiff) to convert into
+    :param in_file: Raster or vector file to be converted
+    :param out_file: Raster or vector file to be output
+    :param file_format: Short format (e.g. gpkg, gtiff) to convert into
     :param task_uid: A task uid to update
     :return: Converted dataset, same filename as input
     """
+    if not in_file:
+        raise Exception("Could not open input file: {0}".format(in_file))
 
-    if not dataset:
-        raise Exception("Could not open input file: {0}".format(dataset))
-
-    meta = get_meta(dataset)
+    meta = get_meta(in_file)
     driver, is_raster = meta['driver'], meta['is_raster']
 
-    if not fmt or not driver or driver.lower() == fmt.lower():
-        return dataset
+    if in_file == out_file:
+        return in_file
 
-    in_ds = os.path.join(os.path.dirname(dataset), "old_{0}".format(os.path.basename(dataset)))
-    os.rename(dataset, in_ds)
+    if out_file is None:
+        out_file = in_file
+
+    if projection is None:
+        projection = 4326
 
     band_type = ""
+    extra_parameters = ""
     if is_raster:
-        cmd_template = Template("gdalwarp -overwrite -of $fmt $type $in_ds $out_ds")
+        cmd_template = Template(
+            "gdalwarp -overwrite $extra_parameters -of $fmt $type $in_ds $out_ds -s_srs EPSG:4326 -t_srs EPSG:$projection")
         # Geopackage raster only supports byte band type, so check for that
-        if fmt.lower() == 'gpkg':
+        if file_format.lower() == 'gpkg':
             band_type = "-ot byte"
+        if file_format.lower() == 'nitf':
+            extra_parameters = "-co ICORDS=G"
     else:
-        cmd_template = Template("ogr2ogr -overwrite -f $fmt $out_ds $in_ds")
+        cmd_template = Template(
+            "ogr2ogr -overwrite $extra_parameters -f '$fmt' $out_ds $in_ds -s_srs EPSG:4326 -t_srs EPSG:$projection")
 
-    cmd = cmd_template.safe_substitute({'fmt': fmt,
+    cmd = cmd_template.safe_substitute({'fmt': file_format,
                                         'type': band_type,
-                                        'in_ds': in_ds,
-                                        'out_ds': dataset})
+                                        'in_ds': in_file,
+                                        'out_ds': out_file,
+                                        'projection': projection,
+                                        'extra_parameters': extra_parameters})
 
     logger.debug("GDAL convert cmd: %s", cmd)
 
@@ -408,9 +419,11 @@ def convert(dataset=None, fmt=None, task_uid=None):
     if task_process.exitcode != 0:
         logger.error('{0}'.format(task_process.stderr))
         raise Exception("Conversion process failed with return code {0}".format(task_process.exitcode))
+    if requires_zip(file_format):
+        logger.debug("Requires zip: {0}".format(out_file))
+        out_file = create_zip_file(out_file, get_zip_name(out_file))
 
-    return dataset
-
+    return out_file
 
 def get_dimensions(bbox, scale):
     """
@@ -511,9 +524,9 @@ def get_band_statistics(file_path, band=1):
     """
     try:
         gdal.UseExceptions()
-        geotiff = gdal.Open(file_path)
-        band = geotiff.GetRasterBand(1)
-        return band.GetStatistics(True, True)
+        image_file = gdal.Open(file_path)
+        band = image_file.GetRasterBand(1)
+        return band.GetStatistics(False, True)
     except Exception as e:
         logger.error(e)
         logger.error("Could not get statistics for {0}:{1}".format(file_path, band))

@@ -7,10 +7,11 @@ export interface Props {
     adminPermissions: boolean;
     onRerun: (uid: string) => void;
     onClone: (cartDetails: Eventkit.FullRun, providerArray: Eventkit.Provider[],
-              exportOptions: Eventkit.Store.ProviderExportOptions) => void;
+              exportOptions: Eventkit.Map<Eventkit.Store.ProviderExportOptions>) => void;
     onDelete: (uid: string) => void;
     dataPack: Eventkit.FullRun;
     job: Eventkit.Job;
+    providers: Eventkit.Provider[];
 }
 
 export interface State {
@@ -78,23 +79,29 @@ export class DataPackOptions extends React.Component<Props, State> {
 
     private handleClone() {
         const providerArray = [];
-        let zooms = {};
-        this.props.dataPack.provider_tasks.forEach((provider) => {
-            if (provider.display === true) {
-                let providerTask = this.props.job.provider_tasks.find((providerTask) =>
+        const exportOptions = {};
+        this.props.dataPack.provider_tasks.forEach((providerTask) => {
+            if (providerTask.display === true) {
+                // Map the provider task to its Provider to ensure we have all needed data for the Provider.
+                const fullProvider = this.props.providers.find((provider) => providerTask.slug === provider.slug);
+                const dataProviderTask = this.props.job.provider_tasks.find((jobProviderTask) =>
                     // Currently `provider` is the provider name
                     // The backend should be updated in the future to make it point to a uuid or the slug
                     // this change will need to happen here as well
-                    provider.name === providerTask.provider
+                    providerTask.name === jobProviderTask.provider
                 );
-                zooms[provider.slug] = {
-                    minZoom: (providerTask) ? providerTask.min_zoom : null,
-                    maxZoom: (providerTask) ? providerTask.max_zoom : null,
-                };
-                providerArray.push(provider);
+                exportOptions[providerTask.slug] = {
+                    minZoom: (dataProviderTask) ? dataProviderTask.min_zoom : null,
+                    maxZoom: (dataProviderTask) ? dataProviderTask.max_zoom : null,
+                    formats: (dataProviderTask) ? dataProviderTask.formats : null,
+                } as Eventkit.Store.ProviderExportOptions;
+                // Cannot clone a provider without the full set of info.
+                if (fullProvider) {
+                    providerArray.push(fullProvider);
+                }
             }
         });
-        this.props.onClone(this.props.dataPack, providerArray, zooms);
+        this.props.onClone(this.props.dataPack, providerArray, exportOptions);
         this.setState({ showCloneDialog: false });
     }
 

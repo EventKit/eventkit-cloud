@@ -508,11 +508,12 @@ function mapDispatchToProps(dispatch) {
             dispatch(clearReRunInfo())
         ),
         cloneExport: (cartDetails: Eventkit.FullRun, providerArray: Eventkit.Provider[],
-                      exportOptions: Eventkit.Store.ProviderExportOptions) => {
+                      exportOptions: Eventkit.Map<Eventkit.Store.ProviderExportOptions>) => {
             const featureCollection = {
                 type: 'FeatureCollection',
                 features: [cartDetails.job.extent],
             };
+            const projections = cartDetails.job.projections.map(projection => projection.srid);
             dispatch(updateAoiInfo({
                 geojson: featureCollection,
                 originalGeojson: featureCollection,
@@ -523,12 +524,13 @@ function mapDispatchToProps(dispatch) {
                 buffer: 0,
             }));
             dispatch(updateExportInfo({
+                exportOptions,
+                projections,
                 exportName: cartDetails.job.name,
                 datapackDescription: cartDetails.job.description,
                 projectName: cartDetails.job.event,
                 providers: providerArray,
                 layers: 'Geopackage',
-                exportOptions: exportOptions,
             }));
             history.push('/create');
         },

@@ -90,6 +90,7 @@ declare namespace Eventkit {
         relationship: Permissions.Level;
         permissions: Permissions;
         provider_tasks: DataProviderTask[];
+        projections: Projection[];
     }
 
     interface Run {
@@ -139,6 +140,14 @@ declare namespace Eventkit {
         zip: boolean;
         display: boolean;
         export_provider_type: number;
+        supported_formats: Format[];
+    }
+
+    interface Format {
+        uid: string;
+        name: string;
+        slug: string;
+        description: string;
     }
 
     interface UserData {
@@ -156,7 +165,7 @@ declare namespace Eventkit {
 
     interface User {
         user: UserData;
-        accepted_licenses: { [s: string]: boolean};
+        accepted_licenses: { [s: string]: boolean };
         groups: number[];
     }
 
@@ -179,6 +188,16 @@ declare namespace Eventkit {
         actor: object;
         target: object;
         action_object: object;
+    }
+
+    interface Map<T> {
+        [id: string]: T;
+    }
+
+    interface Projection {
+        srid: number;
+        name: string;
+        description: string;
     }
 
     interface Theme {
@@ -350,11 +369,10 @@ declare namespace Eventkit {
             error: any;
         }
 
-        export interface ProviderExportOptions {
-            [id: string]: {
-                minZoom: number;
-                maxZoom: number;
-            }
+        interface ProviderExportOptions {
+            minZoom: number;
+            maxZoom: number;
+            formats: string[];
         }
 
         interface ExportInfo {
@@ -365,7 +383,8 @@ declare namespace Eventkit {
             projectName: string;
             providers: Provider[];
             providerEstimates: {};
-            exportOptions: ProviderExportOptions;
+            exportOptions: Map<ProviderExportOptions>;
+            projections: number[];  // Expecting projection srid
         }
 
         interface AoiInfo {

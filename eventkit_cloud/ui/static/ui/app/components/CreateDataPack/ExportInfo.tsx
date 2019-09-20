@@ -3,22 +3,19 @@ import * as React from 'react';
 import {createStyles, Theme, withStyles, withTheme} from '@material-ui/core/styles';
 import {connect} from 'react-redux';
 import axios from 'axios';
-import {getCookie, isZoomLevelInRange} from '../../utils/generic'
+import {getCookie, isZoomLevelInRange} from '../../utils/generic';
 import Joyride, {Step} from 'react-joyride';
 import List from '@material-ui/core/List';
 import Paper from '@material-ui/core/Paper';
 import Popover from '@material-ui/core/Popover';
 import Checkbox from '@material-ui/core/Checkbox';
 import Typography from '@material-ui/core/Typography';
-import ActionCheckCircle from '@material-ui/icons/CheckCircle';
-import Info from '@material-ui/icons/Info';
 import NavigationRefresh from '@material-ui/icons/Refresh';
 import CustomScrollbar from '../CustomScrollbar';
 import DataProvider, {ProviderData} from './DataProvider';
 import MapCard from '../common/MapCard';
 import {updateExportInfo} from '../../actions/datacartActions';
 import {stepperNextDisabled, stepperNextEnabled} from '../../actions/uiActions';
-import BaseDialog from '../Dialog/BaseDialog';
 import CustomTextField from '../CustomTextField';
 import CustomTableRow from '../CustomTableRow';
 import {joyride} from '../../joyride.config';
@@ -88,8 +85,7 @@ const jss = (theme: Eventkit.Theme & Theme) => createStyles({
         paddingBottom: '30px',
     },
     projections: {
-        padding: '0px 10px',
-        display: 'flex',
+        display: 'block',
         lineHeight: '24px',
     },
     selectAll: {
@@ -136,10 +132,10 @@ export interface Props {
     theme: Eventkit.Theme & Theme;
     classes: { [className: string]: string };
     onUpdateEstimate?: () => void;
+    projections: Eventkit.Projection[];
 }
 
 export interface State {
-    projectionsDialogOpen: boolean;
     steps: Step[];
     isRunning: boolean;
     providers: ProviderData[];
@@ -156,7 +152,6 @@ export class ExportInfo extends React.Component<Props, State> {
     constructor(props: Props) {
         super(props);
         this.state = {
-            projectionsDialogOpen: false,
             steps: [],
             isRunning: false,
             // we make a local copy of providers for editing
@@ -169,10 +164,9 @@ export class ExportInfo extends React.Component<Props, State> {
         this.hasRequiredFields = this.hasRequiredFields.bind(this);
         this.hasDisallowedSelection = this.hasDisallowedSelection.bind(this);
         this.callback = this.callback.bind(this);
-        this.handleProjectionsClose = this.handleProjectionsClose.bind(this);
-        this.handleProjectionsOpen = this.handleProjectionsOpen.bind(this);
         this.onChangeCheck = this.onChangeCheck.bind(this);
         this.onSelectAll = this.onSelectAll.bind(this);
+        this.onSelectProjection = this.onSelectProjection.bind(this);
         this.onRefresh = this.onRefresh.bind(this);
         this.getAvailability = this.getAvailability.bind(this);
         this.checkAvailability = this.checkAvailability.bind(this);
@@ -195,10 +189,9 @@ export class ExportInfo extends React.Component<Props, State> {
         // calculate the area of the AOI
         const areaStr = getSqKmString(this.props.geojson);
 
-        this.props.updateExportInfo({
-            ...this.props.exportInfo,
+        const updatedInfo = {
             areaStr,
-        });
+        } as Eventkit.Store.ExportInfo;
 
         // make requests to check provider availability
         if (this.state.providers) {
@@ -207,6 +200,13 @@ export class ExportInfo extends React.Component<Props, State> {
 
         const steps = joyride.ExportInfo as any[];
         this.joyrideAddSteps(steps);
+
+        if (this.props.projections.find((projection) => projection.srid === 4326)) {
+            if (this.props.exportInfo.projections && this.props.exportInfo.projections.length ===0) {
+                updatedInfo.projections = [4326];
+            }
+        }
+        this.props.updateExportInfo(updatedInfo);
     }
 
     componentDidUpdate(prevProps: Props) {
@@ -239,7 +239,6 @@ export class ExportInfo extends React.Component<Props, State> {
         // but the TextField (v0.18.7) does not size vertically to the defaultValue prop, only the value prop.
         // If we use value we cannot debounce the input because the user should see it as they type.
         this.props.updateExportInfo({
-            ...this.props.exportInfo,
             exportName: e.target.value,
         });
     }
@@ -249,7 +248,6 @@ export class ExportInfo extends React.Component<Props, State> {
         // but the TextField (v0.18.7) does not size vertically to the defaultValue prop, only the value prop.
         // If we use value we cannot debounce the input because the user should see it as they type.
         this.props.updateExportInfo({
-            ...this.props.exportInfo,
             datapackDescription: e.target.value,
         });
     }
@@ -259,7 +257,6 @@ export class ExportInfo extends React.Component<Props, State> {
         // but the TextField (v0.18.7) does not size vertically to the defaultValue prop, only the value prop.
         // If we use value we cannot debounce the input because the user should see it as they type.
         this.props.updateExportInfo({
-            ...this.props.exportInfo,
             projectName: e.target.value,
         });
     }
@@ -289,7 +286,6 @@ export class ExportInfo extends React.Component<Props, State> {
         }
         // update the state with the new array of options
         this.props.updateExportInfo({
-            ...this.props.exportInfo,
             providers,
         });
     }
@@ -299,13 +295,38 @@ export class ExportInfo extends React.Component<Props, State> {
         let providers = [];
         if (e.target.checked) {
             // set providers to the list of ALL providers
-            providers = [...this.props.providers];
+            providers = [...this.props.providers.filter(provider => provider.display)];
         }
 
         // update the state with the new array of options
         this.props.updateExportInfo({
-            ...this.props.exportInfo,
             providers,
+        });
+    }
+
+    private onSelectProjection(event) {
+        // Selecting projections for the DataPack, here srid is spatial reference ID
+        const selectedSrids = this.props.exportInfo.projections || [];
+
+        let index;
+        // check if the check box is checked or unchecked
+        // `target` is the checkbox, and the `name` field is set to the projection srid
+        const selectedSrid = Number(event.target.name);
+        if (event.target.checked) {
+            // add the format to the array
+            if (selectedSrids.indexOf(selectedSrid) <= 0) {
+                selectedSrids.push(selectedSrid);
+            }
+        } else {
+            // or remove the value from the unchecked checkbox from the array
+            index = selectedSrids.indexOf(selectedSrid);
+            if (index >= 0) {
+                selectedSrids.splice(index, 1);
+            }
+        }
+        // update the state with the new array of options
+        this.props.updateExportInfo({
+            projections: selectedSrids,
         });
     }
 
@@ -332,8 +353,8 @@ export class ExportInfo extends React.Component<Props, State> {
             headers: {'X-CSRFToken': csrfmiddlewaretoken},
         }).then((response) => {
             // The backend currently returns the response as a string, it needs to be parsed before being used.
-            const data = typeof (response.data == "object") ? response.data : JSON.parse(response.data);
-            newProvider.availability = data;
+            const availabilityData = (typeof(response.data) === "object") ? response.data : JSON.parse(response.data);
+            newProvider.availability = availabilityData;
             newProvider.availability.slug = provider.slug;
             return newProvider;
         }).catch(() => {
@@ -380,7 +401,6 @@ export class ExportInfo extends React.Component<Props, State> {
             newProvider.estimate = estimate;
             // record the estimate found for this provider.
             this.props.updateExportInfo({
-                ...this.props.exportInfo,
                 providerEstimates: {
                     ...this.props.exportInfo.providerEstimates,
                     [provider.id]: estimate
@@ -446,14 +466,6 @@ export class ExportInfo extends React.Component<Props, State> {
         });
     }
 
-    private handleProjectionsClose() {
-        this.setState({projectionsDialogOpen: false});
-    }
-
-    private handleProjectionsOpen() {
-        this.setState({projectionsDialogOpen: true});
-    }
-
     private handlePopoverOpen(e: React.MouseEvent<any>) {
         this.setState({refreshPopover: e.currentTarget});
     }
@@ -464,10 +476,18 @@ export class ExportInfo extends React.Component<Props, State> {
 
     private hasRequiredFields(exportInfo: Eventkit.Store.ExportInfo) {
         // if the required fields are populated return true, else return false
+        const { exportOptions } = exportInfo;
+        const formatsAreSelected = exportInfo.providers.map((provider) => {
+            return !!exportOptions[provider.slug]
+                && exportOptions[provider.slug].formats
+                && exportOptions[provider.slug].formats.length > 0;
+        });
         return exportInfo.exportName
             && exportInfo.datapackDescription
             && exportInfo.projectName
-            && exportInfo.providers.length > 0;
+            && exportInfo.providers.length > 0
+            && exportInfo.projections.length > 0
+            && formatsAreSelected.every(selected => selected === true);
     }
 
     private hasDisallowedSelection(exportInfo: Eventkit.Store.ExportInfo) {
@@ -528,8 +548,16 @@ export class ExportInfo extends React.Component<Props, State> {
     }
 
     render() {
+        const {colors} = this.props.theme.eventkit;
         const {classes} = this.props;
         const {steps, isRunning} = this.state;
+
+        // Move EPSG:4326 (if present -- it should always be) to the front so it displays first.
+        let projections = [...this.props.projections];
+        const indexOf4326 = projections.map(projection => projection.srid).indexOf(4326);
+        if (indexOf4326 >= 1) {
+            projections = [projections.splice(indexOf4326, 1)[0], ...projections];
+        }
 
         return (
             <div id="root" className={`qa-ExportInfo-root ${classes.root}`}>
@@ -604,12 +632,17 @@ export class ExportInfo extends React.Component<Props, State> {
                                 </div>
                             </div>
                             <div className={classes.heading}>
-                                <div id="layersHeader" className="qa-ExportInfo-layersHeader"
-                                     style={{marginRight: '5px'}}>
+                                <div
+                                    id="layersHeader"
+                                    className="qa-ExportInfo-layersHeader"
+                                    style={{marginRight: '5px'}}
+                                >
                                     Select Data Sources
                                 </div>
-                                <div id="layersSubheader"
-                                     style={{fontWeight: 'normal', fontSize: '12px', fontStyle: 'italic'}}>
+                                <div
+                                    id="layersSubheader"
+                                    style={{fontWeight: 'normal', fontSize: '12px', fontStyle: 'italic'}}
+                                >
                                     (You must choose <strong>at least one</strong>)
                                 </div>
                             </div>
@@ -617,7 +650,8 @@ export class ExportInfo extends React.Component<Props, State> {
                                 <Checkbox
                                     classes={{root: classes.checkbox, checked: classes.checked}}
                                     name="SelectAll"
-                                    checked={this.props.exportInfo.providers.length === this.props.providers.length}
+                                    checked={this.props.exportInfo.providers.length === this.props.providers.filter(
+                                        provider => provider.display).length}
                                     onChange={this.onSelectAll}
                                     style={{width: '24px', height: '24px'}}
                                 />
@@ -684,18 +718,17 @@ export class ExportInfo extends React.Component<Props, State> {
                                     style={{width: '100%', fontSize: '16px'}}
                                 >
                                     {this.getProviders().map((provider, ix) => (
-                                        <li key={provider.slug + "-DataProviderList"}>
-                                            <DataProvider
-                                                geojson={this.props.geojson}
-                                                provider={provider}
-                                                onChange={this.onChangeCheck}
-                                                checked={this.props.exportInfo.providers.map(x => x.name)
-                                                    .indexOf(provider.name) !== -1}
-                                                alt={ix % 2 === 0}
-                                                renderEstimate={this.context.config.SERVE_ESTIMATES}
-                                                checkProvider={this.checkProvider}
-                                            />
-                                        </li>
+                                        <DataProvider
+                                            key={provider.slug + "-DataProviderList"}
+                                            geojson={this.props.geojson}
+                                            provider={provider}
+                                            onChange={this.onChangeCheck}
+                                            checked={this.props.exportInfo.providers.map(x => x.name)
+                                                .indexOf(provider.name) !== -1}
+                                            alt={ix % 2 === 0}
+                                            renderEstimate={this.context.config.SERVE_ESTIMATES}
+                                            checkProvider={this.checkProvider}
+                                        />
                                     ))}
                                 </List>
                             </div>
@@ -708,38 +741,27 @@ export class ExportInfo extends React.Component<Props, State> {
                             </div>
                             <div className={classes.sectionBottom}>
                                 <div id="Projections" className={`qa-ExportInfo-projections ${classes.projections}`}>
-                                    <Checkbox
-                                        className="qa-ExportInfo-CheckBox-projection"
-                                        name="EPSG:4326"
-                                        checked
-                                        style={{width: '24px', height: '24px'}}
-                                        disabled
-                                        checkedIcon={<ActionCheckCircle
-                                            className="qa-ExportInfo-ActionCheckCircle-projection"/>}
-                                    />
-                                    <span style={{padding: '0px 15px', display: 'flex', flexWrap: 'wrap'}}>
-                                        EPSG:4326 - World Geodetic System 1984 (WGS84)
-                                    </span>
-                                    <Info
-                                        className={`qa-ExportInfo-Info-projection ${classes.infoIcon}`}
-                                        onClick={this.handleProjectionsOpen}
-                                        color="primary"
-                                    />
-                                    <BaseDialog
-                                        show={this.state.projectionsDialogOpen}
-                                        title="Projection Information"
-                                        onClose={this.handleProjectionsClose}
-                                    >
+                                    {projections.map((projection, ix) => (
                                         <div
-                                            style={{paddingBottom: '10px', wordWrap: 'break-word'}}
-                                            className="qa-ExportInfo-dialog-projection"
+                                            key={projection.srid}
+                                            style={{
+                                                display: 'flex',
+                                                padding: '16px 10px',
+                                                backgroundColor: (ix % 2 === 0) ? colors.secondary : colors.white}}
                                         >
-                                            All geospatial data provided by EventKit are in the
-                                            World Geodetic System 1984 (WGS 84) projection.
-                                            This projection is also commonly known by its EPSG code: 4326.
-                                            Additional projection support will be added in subsequent versions.
+                                            <Checkbox
+                                                className="qa-ExportInfo-CheckBox-projection"
+                                                classes={{root: classes.checkbox, checked: classes.checked}}
+                                                name={`${projection.srid}`}
+                                                checked={this.props.exportInfo.projections.indexOf(projection.srid) !== -1}
+                                                style={{width: '24px', height: '24px'}}
+                                                onChange={this.onSelectProjection}
+                                            />
+                                            <span style={{padding: '0px 15px', display: 'flex', flexWrap: 'wrap'}}>
+                                                EPSG:{projection.srid} - {projection.name}
+                                            </span>
                                         </div>
-                                    </BaseDialog>
+                                    ))}
                                 </div>
                             </div>
                             <div id="aoiHeader" className={`qa-ExportInfo-AoiHeader ${classes.heading}`}>
@@ -781,6 +803,7 @@ function mapStateToProps(state) {
         exportInfo: state.exportInfo,
         providers: state.providers,
         nextEnabled: state.stepperNextEnabled,
+        projections: [...state.projections],
     };
 }
 

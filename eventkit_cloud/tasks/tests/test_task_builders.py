@@ -21,7 +21,7 @@ logger = logging.getLogger(__name__)
 
 
 class TestTaskBuilder(TestCase):
-    fixtures = ('insert_provider_types', 'osm_provider', 'test_providers')
+    fixtures = ('osm_provider', 'test_providers')
 
     def setUp(self, ):
         self.path = os.path.dirname(os.path.realpath(__file__))

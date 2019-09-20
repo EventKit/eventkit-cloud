@@ -1,4 +1,3 @@
-
 import { types } from '../actions/datacartActions';
 
 export const initialState = {
@@ -26,6 +25,7 @@ export const initialState = {
         formats: ['gpkg'],
         providerEstimates: {},
         exportOptions: {},
+        projections: [],
     },
     updatePermission: {
         updating: null,
@@ -74,6 +74,16 @@ export function exportInfoReducer(state = initialState.exportInfo, action) {
                 ...state,
                 ...action.exportInfo,
             };
+        case types.UPDATE_EXPORT_OPTIONS:
+            return {
+                ...state,
+                exportOptions: {
+                    ...state.exportOptions,
+                    [action.providerSlug]: {
+                        ...action.providerOptions,
+                    },
+                },
+            };
         case types.CLEAR_EXPORT_INFO:
             return {
                 exportName: '',
@@ -84,6 +94,7 @@ export function exportInfoReducer(state = initialState.exportInfo, action) {
                 formats: ['gpkg'],
                 providerEstimates: {},
                 exportOptions: {},
+                projections: [],
             };
         default:
             return state;

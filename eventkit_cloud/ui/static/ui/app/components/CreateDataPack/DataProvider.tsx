@@ -18,6 +18,7 @@ import {updateExportInfo} from '../../actions/datacartActions';
 import {MapView} from "../common/MapView";
 import debounce from 'lodash/debounce';
 import * as PropTypes from "prop-types";
+import FormatSelector from "./FormatSelector";
 
 const jss = (theme: Theme & Eventkit.Theme) => createStyles({
     container: {
@@ -90,6 +91,7 @@ export interface ProviderData extends Eventkit.Provider {
 interface Props {
     geojson: GeoJSON.FeatureCollection;
     exportInfo: Eventkit.Store.ExportInfo;
+    providerOptions: any;
     updateExportInfo: (args: any) => void;
     provider: ProviderData;
     checkProvider: (args: any) => void;
@@ -151,21 +153,22 @@ export class DataProvider extends React.Component<Props, State> {
     private setZoom(minZoom: number, maxZoom: number) {
         // update the state with the new array of options
         const {provider} = this.props;
-        const {exportOptions} = this.props.exportInfo;
+        let providerOptions = {...this.props.providerOptions};
 
-        let lastMin;
-        let lastMax;
-        if (exportOptions[provider.slug]) {
-            lastMin = exportOptions[provider.slug].minZoom;
-            lastMax = exportOptions[provider.slug].maxZoom;
-            if (!isZoomLevelInRange(lastMin, provider)) {
-                lastMin = provider.level_from;
-            }
-            if (!isZoomLevelInRange(lastMax, provider)) {
-                lastMax = provider.level_to;
-            }
+        // Check if a value was already set, we will fall back to this if the new values are invalid
+        // If no values have been set, or the values are somehow invalid,
+        // we will instead fall back to the min/max for the provider (from/to)
+        let lastMin = providerOptions.minZoom;
+        let lastMax = providerOptions.maxZoom;
+        if (!isZoomLevelInRange(lastMin, provider)) {
+            lastMin = provider.level_from;
+        }
+        if (!isZoomLevelInRange(lastMax, provider)) {
+            lastMax = provider.level_to;
         }
 
+
+        // Check the parameters, if they are invalid, fall back to lastMin and or lastMax
         if (!isZoomLevelInRange(minZoom, provider)) {
             minZoom = lastMin;
         }
@@ -174,14 +177,14 @@ export class DataProvider extends React.Component<Props, State> {
         }
 
         const updatedExportOptions = {
-            ...exportOptions,
+            ...this.props.exportInfo.exportOptions,
             [provider.slug]: {
+                ...providerOptions,
                 minZoom,
                 maxZoom,
             }
         };
         this.props.updateExportInfo({
-            ...this.props.exportInfo,
             exportOptions: updatedExportOptions,
         });
 
@@ -223,7 +226,6 @@ export class DataProvider extends React.Component<Props, State> {
     }
 
     render() {
-
         const {colors} = this.props.theme.eventkit;
         const {classes, provider} = this.props;
         const {exportOptions} = this.props.exportInfo;
@@ -352,6 +354,29 @@ export class DataProvider extends React.Component<Props, State> {
             </ListItem>
         ));
 
+        nestedItems.push((
+            <ListItem
+                className={`qa-DataProvider-ListItem-provFormats ${classes.sublistItem}`}
+                key={nestedItems.length}
+                dense
+                disableGutters
+            >
+                <div className={classes.prewrap}>
+                    <span>
+                        <strong>Select Format(s)</strong>
+                        <div><em>Cartography only available with GeoPackage.</em></div>
+                    </span>
+
+                    <div style={{marginTop: '10px'}}>
+                        <FormatSelector
+                            formats={provider.supported_formats}
+                            provider={provider}
+                        />
+                    </div>
+                </div>
+            </ListItem>
+        ));
+
         // Only set this if we want to display the estimate
         let secondary;
         if (this.props.renderEstimate) {
@@ -414,8 +439,9 @@ DataProvider.defaultProps = {
     renderEstimate: false
 };
 
-function mapStateToProps(state) {
+function mapStateToProps(state, ownProps) {
     return {
+        providerOptions: state.exportInfo.exportOptions[ownProps.provider.slug] || {} as Eventkit.Store.ProviderExportOptions,
         exportInfo: state.exportInfo,
         geojson: state.aoiInfo.geojson,
     };

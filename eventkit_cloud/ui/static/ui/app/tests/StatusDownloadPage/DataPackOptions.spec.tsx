@@ -35,7 +35,7 @@ describe('DataPackOptions component', () => {
             description: 'test',
             url: 'http://cloud.eventkit.test/api/jobs/67890',
             formats: [
-                'Geopackage',
+                'gpkg',
             ],
             permissions: {
                 value: 'PRIVATE',
@@ -45,12 +45,24 @@ describe('DataPackOptions component', () => {
             provider_tasks: [{
                 provider: 'test1',
                 formats: [
-                    'Geopackage',
+                    'gpkg',
                 ],
                 min_zoom: 0,
                 max_zoom: 3,
             }]
         },
+        providers: [{
+            uid: '123',
+            slug: 'test1',
+            name: 'test1',
+            max_selection: '10000',
+            type: 'wmts',
+            service_description: 'test description',
+            license: {
+                text: 'test license text',
+                name: 'test license',
+            },
+        }],
         ...(global as any).eventkit_test_props,
     });
 
@@ -150,11 +162,12 @@ describe('DataPackOptions component', () => {
             'test1': {
                 minZoom: 0,
                 maxZoom: 3,
+                formats: ['gpkg'],
             }
         };
         instance.handleClone();
         expect(props.onClone.calledOnce).toBe(true);
-        expect(props.onClone.calledWith(props.dataPack, [props.dataPack.provider_tasks[0]], exportInfo)).toBe(true);
+        expect(props.onClone.calledWith(props.dataPack, [props.providers[0]], exportInfo)).toBe(true);
         expect(stateStub.calledOnce).toBe(true);
         expect(stateStub.calledWith({ showCloneDialog: false })).toBe(true);
         stateStub.restore();

@@ -3,6 +3,7 @@ export const types = {
     UPDATE_AOI_INFO: 'UPDATE_AOI_INFO',
     CLEAR_AOI_INFO: 'CLEAR_AOI_INFO',
     UPDATE_EXPORT_INFO: 'UPDATE_EXPORT_INFO',
+    UPDATE_EXPORT_OPTIONS: 'UPDATE_EXPORT_OPTIONS',
     CLEAR_EXPORT_INFO: 'CLEAR_EXPORT_INFO',
     SUBMITTING_JOB: 'SUBMITTING_JOB',
     JOB_SUBMITTED_SUCCESS: 'JOB_SUBMITTED_SUCCESS',
@@ -34,6 +35,14 @@ export function updateExportInfo(exportInfo) {
     return {
         type: types.UPDATE_EXPORT_INFO,
         exportInfo,
+    };
+}
+
+export function updateExportOptions({ providerSlug, providerOptions }) {
+    return {
+        type: types.UPDATE_EXPORT_OPTIONS,
+        providerSlug,
+        providerOptions,
     };
 }
 

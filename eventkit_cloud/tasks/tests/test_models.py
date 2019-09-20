@@ -22,7 +22,7 @@ class TestExportRun(TestCase):
     Test cases for ExportRun model
     """
 
-    fixtures = ('insert_provider_types.json', 'osm_provider.json',)
+    fixtures = ('osm_provider.json',)
 
     @classmethod
     def setUpTestData(cls):

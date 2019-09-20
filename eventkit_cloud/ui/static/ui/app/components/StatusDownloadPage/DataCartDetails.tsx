@@ -148,6 +148,7 @@ export class DataCartDetails extends React.Component<Props, State> {
                         onDelete={this.props.onRunDelete}
                         dataPack={this.props.cartDetails}
                         job={this.props.job}
+                        providers={this.props.providers}
                         adminPermissions={this.props.cartDetails.job.relationship === 'ADMIN'}
                     />
                 </div>

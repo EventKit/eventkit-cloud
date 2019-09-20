@@ -158,17 +158,14 @@ export function getJobDetails(jobuid) {
 }
 
 export function isZoomLevelInRange(zoomLevel, provider: Eventkit.Provider) {
-    if ((!zoomLevel && zoomLevel !== 0) || (zoomLevel < provider.level_from && zoomLevel > provider.level_to))  {
-        return false;
-    }
-    return true;
+    return !((!zoomLevel && zoomLevel !== 0) || (zoomLevel < provider.level_from && zoomLevel > provider.level_to));
 }
 
 // Not an exhaustive list, just what I'm aware of right now.
-const typesSupportingZoomLevels = [ 'tms', 'wmts', 'wms', 'arcgis-raster'];
+const typesSupportingZoomLevels = ['tms', 'wmts', 'wms', 'arcgis-raster'];
 export function supportsZoomLevels(provider: Eventkit.Provider) {
-    if (typesSupportingZoomLevels.indexOf(provider.type.toLowerCase()) >= 0) {
-        return true;
+    if (provider.type === null || provider.type === undefined) {
+        return false;
     }
-    return false;
+    return typesSupportingZoomLevels.indexOf(provider.type.toLowerCase()) >= 0;
 }
