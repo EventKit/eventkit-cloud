@@ -75,7 +75,7 @@ describe('DataProvider component', () => {
 
     it('should render input controls', () => {
         expect(wrapper.find('.qa-FormatSelector-Container')).toHaveLength(1);
-        expect(wrapper.find(Checkbox)).toHaveLength(2);
+        expect(wrapper.find(Checkbox)).toHaveLength(3);
     });
 
     it('should default to not selected', () => {
@@ -91,13 +91,8 @@ describe('DataProvider component', () => {
                 minZoom: 0, maxZoom: 1, formats: ['gpkg', 'shp', 'no3857']
             }
         });
-        let indeterminateCount = 0;
         wrapper.find(Checkbox).forEach(node => {
             expect(node.props().checked).toBe(true);
-            if (node.props.checkedIcon === (<IndeterminateCheckBoxIcon/>)) {
-                indeterminateCount++;
-            }
         });
-        expect(indeterminateCount).toBe(1);
     });
 });
