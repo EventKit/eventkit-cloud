@@ -49,6 +49,7 @@ describe('DataProvider component', () => {
         exportInfo: {
             exportOptions: {123: {minZoom: 0, maxZoom: 1}}
         },
+        selectedProjections: [4326],
         checked: false,
         onChange: sinon.spy(),
         alt: false,
@@ -118,6 +119,7 @@ describe('DataProvider component', () => {
                 },
                 availability: {},
                 estimate: {},
+                supported_formats: formats,
             };
             setup({provider});
             expect(wrapper.find('div.slug-sliderDiv')).toHaveLength(0);

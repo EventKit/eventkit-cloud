@@ -3,7 +3,6 @@ import Checkbox from '@material-ui/core/Checkbox';
 import {mount} from 'enzyme';
 import {FormatSelector} from "../../components/CreateDataPack/FormatSelector";
 import {Compatibility} from '../../utils/enums';
-import IndeterminateCheckBoxIcon from '@material-ui/icons/IndeterminateCheckBox';
 
 const getFormatCompatibility = (format) => ({
     shp: Compatibility.Full,
