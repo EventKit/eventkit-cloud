@@ -3,6 +3,29 @@ import * as sinon from 'sinon';
 import {shallow} from 'enzyme';
 import {DataProvider} from '../../components/CreateDataPack/DataProvider';
 
+const formats = [
+    {
+        uid: 'ed48a7c1-1fc3-463e-93b3-e93eb3861a5a',
+        url: 'http://cloud.eventkit.test/api/formats/shp',
+        slug: 'shp',
+        name: 'ESRI Shapefile Format',
+        description: 'Esri Shapefile (OSM Schema)',
+    },
+    {
+        uid: '978ab89c-caf7-4296-9a0c-836fc679ea07',
+        url: 'http://cloud.eventkit.test/api/formats/gpkg',
+        slug: 'gpkg',
+        name: 'Geopackage',
+        description: 'GeoPackage',
+    },
+    {
+        uid: '',
+        url: 'http://cloud.eventkit.test/api/formats/no3857',
+        slug: 'no3857',
+        name: 'No 3857',
+        description: 'Format not supporting 3857',
+    }];
+
 describe('DataProvider component', () => {
     let wrapper;
     let instance;
@@ -21,6 +44,7 @@ describe('DataProvider component', () => {
             },
             availability: {},
             estimate: {},
+            supported_formats: formats,
         },
         exportInfo: {
             exportOptions: {123: {minZoom: 0, maxZoom: 1}}

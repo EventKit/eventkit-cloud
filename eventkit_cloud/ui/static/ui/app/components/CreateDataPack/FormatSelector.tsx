@@ -3,6 +3,9 @@ import {createStyles, Theme, withStyles, withTheme} from '@material-ui/core/styl
 import Checkbox from '@material-ui/core/Checkbox';
 import {connect} from "react-redux";
 import {updateExportOptions} from '../../actions/datacartActions';
+import CheckBoxIcon from '@material-ui/icons/CheckBox';
+import IndeterminateCheckBoxIcon from '@material-ui/icons/IndeterminateCheckBox';
+import {Compatibility} from '../../utils/enums';
 
 const jss = (theme: Theme & Eventkit.Theme) => createStyles({
     container: {
@@ -55,6 +58,7 @@ interface Props {
     provider: Eventkit.Provider;
     providerOptions: Eventkit.Store.ProviderExportOptions;
     updateExportOptions: (providerSlug: string, providerOptions: any) => void;
+    getFormatCompatibility: (format: Eventkit.Format) => Compatibility;
     theme: Eventkit.Theme & Theme;
     classes: {
         container: string;
@@ -118,36 +122,57 @@ export class FormatSelector extends React.Component<Props, {}> {
             {...providerOptions, formats: selectedFormats});
     }
 
-    render() {
-        const {colors} = this.props.theme.eventkit;
-        const {formats, classes} = this.props;
-        const {providerOptions} = this.props;
+    getCheckBox(format) {
+        const {classes, providerOptions} = this.props;
         const selectedFormats = providerOptions.formats || [];
 
+        const compatibility = this.props.getFormatCompatibility(format);
+        let checkedIcon;
+        let errorMessage;
+        if (compatibility === Compatibility.Full) {
+            checkedIcon = (<CheckBoxIcon/>);
+        } else {
+            checkedIcon = (<IndeterminateCheckBoxIcon/>);
+            if (compatibility === Compatibility.None) {
+                errorMessage = 'Not available in selected projection(s)';
+            }
+        }
         return (
-                <div className={`qa-FormatSelector-Container`} key={this.props.provider.slug}>
+            <div className={classes.container}>
+                <Checkbox
+                    className="qa-FormatSelector-CheckBox-format"
+                    classes={{root: classes.checkbox, checked: classes.checked}}
+                    name={format.slug}
+                    checked={selectedFormats.indexOf(format.slug) >= 0}
+                    checkedIcon={checkedIcon}
+                    onChange={this.handleChange}
+                />
+                <div
+                    className={classes.listItem}
+                >
+                    <div className={classes.listItemText}>{format.name}</div>
+                    {(errorMessage) &&
+                        <div style={{color: 'red'}}>{errorMessage}</div>
+                    }
+                </div>
+            </div>
+        );
+    }
+
+    render() {
+        const {formats} = this.props;
+
+        return (
+            <div className={`qa-FormatSelector-Container`} key={this.props.provider.slug}>
                 {formats.map((format) => (
                     <div
                         key={format.slug}
                         className={`qa-FormatSelector-ListItem`}
                     >
-                        <div className={classes.container}>
-                            <Checkbox
-                                className="qa-FormatSelector-CheckBox-format"
-                                classes={{root: classes.checkbox, checked: classes.checked}}
-                                name={format.slug}
-                                checked={selectedFormats.indexOf(format.slug) >= 0}
-                                onChange={this.handleChange}
-                            />
-                            <div
-                                className={classes.listItem}
-                            >
-                                <div className={classes.listItemText}>{format.name}</div>
-                            </div>
-                        </div>
+                        {this.getCheckBox(format)}
                     </div>
                 ))}
-                </div>
+            </div>
         );
     }
 }

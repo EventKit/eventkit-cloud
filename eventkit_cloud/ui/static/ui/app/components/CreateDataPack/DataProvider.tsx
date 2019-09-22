@@ -10,7 +10,7 @@ import ExpandLess from '@material-ui/icons/ExpandLess';
 import ExpandMore from '@material-ui/icons/ExpandMore';
 import ProviderStatusIcon from './ProviderStatusIcon';
 import BaseDialog from '../Dialog/BaseDialog';
-import {getDuration, formatMegaBytes, isZoomLevelInRange, supportsZoomLevels} from '../../utils/generic';
+import {formatMegaBytes, getDuration, isZoomLevelInRange, supportsZoomLevels} from '../../utils/generic';
 import {Typography} from "@material-ui/core";
 import ZoomLevelSlider from "./ZoomLevelSlider";
 import {connect} from "react-redux";
@@ -19,6 +19,9 @@ import {MapView} from "../common/MapView";
 import debounce from 'lodash/debounce';
 import * as PropTypes from "prop-types";
 import FormatSelector from "./FormatSelector";
+import {Compatibility} from '../../utils/enums';
+import IndeterminateCheckBoxIcon from '@material-ui/icons/IndeterminateCheckBox';
+import CheckBoxIcon from "@material-ui/core/SvgIcon/SvgIcon";
 
 const jss = (theme: Theme & Eventkit.Theme) => createStyles({
     container: {
@@ -100,6 +103,7 @@ interface Props {
     alt: boolean;
     theme: Eventkit.Theme & Theme;
     renderEstimate: boolean;
+    selectedProjections: number[];
     classes: {
         container: string;
         listItem: string;
@@ -118,6 +122,7 @@ interface State {
     open: boolean;
     licenseDialogOpen: boolean;
     zoomLevel: number;
+    formatCompatibility: { [formatSlug: string]: Compatibility };
 }
 
 export class DataProvider extends React.Component<Props, State> {
@@ -135,9 +140,16 @@ export class DataProvider extends React.Component<Props, State> {
         this.handleLicenseClose = this.handleLicenseClose.bind(this);
         this.handleExpand = this.handleExpand.bind(this);
         this.setZoom = this.setZoom.bind(this);
+        this.getFormatCompatibility = this.getFormatCompatibility.bind(this);
+        this.checkFormatCompatibility = this.checkFormatCompatibility.bind(this);
+        this.getCheckedIcon = this.getCheckedIcon.bind(this);
+
         this.estimateDebouncer = () => { /* do nothing while not mounted */
         };
+
+        const formatCompatibility = {};
         this.state = {
+            formatCompatibility,
             open: false,
             licenseDialogOpen: false,
             zoomLevel: this.props.provider.level_to,
@@ -150,10 +162,41 @@ export class DataProvider extends React.Component<Props, State> {
         }, 1000);
     }
 
+    componentDidUpdate(prevProps) {
+        if (this.props.selectedProjections.length !== prevProps.selectedProjections.length) {
+            this.checkFormatCompatibility();
+        }
+    }
+
+    getFormatCompatibility(format: Eventkit.Format) {
+        return this.state.formatCompatibility[format.slug.toLowerCase()];
+    }
+
+    checkFormatCompatibility() {
+        const {selectedProjections} = this.props;
+        const formatCompatibility = {...this.state.formatCompatibility};
+
+        const formatSlugs = this.props.provider.supported_formats.map(format => format.slug.toLowerCase());
+        const epsg4326Selected = selectedProjections.indexOf(4326) >= 0;
+
+        if (formatSlugs.indexOf('nitf') >= 0) {
+            if (epsg4326Selected && selectedProjections.length === 1) {
+                formatCompatibility.nitf = Compatibility.Full;
+            } else if (epsg4326Selected) {
+                formatCompatibility.nitf = Compatibility.Partial;
+            } else {
+                formatCompatibility.nitf = Compatibility.None;
+            }
+        }
+        formatCompatibility[formatSlugs[0]] = Compatibility.Partial;
+        formatCompatibility[formatSlugs[1]] = Compatibility.None;
+        this.setState({formatCompatibility});
+    }
+
     private setZoom(minZoom: number, maxZoom: number) {
         // update the state with the new array of options
         const {provider} = this.props;
-        let providerOptions = {...this.props.providerOptions};
+        const providerOptions = {...this.props.providerOptions};
 
         // Check if a value was already set, we will fall back to this if the new values are invalid
         // If no values have been set, or the values are somehow invalid,
@@ -213,7 +256,7 @@ export class DataProvider extends React.Component<Props, State> {
         let sizeEstimate;
         let durationEstimate;
         // func that will return nf (not found) when the provided estimate is undefined
-        const get = (estimate, nf = 'unknown' ) =>  (estimate) ? estimate.toString() : nf ;
+        const get = (estimate, nf = 'unknown') => (estimate) ? estimate.toString() : nf;
 
         if (providerEstimate.size) {
             sizeEstimate = formatMegaBytes(providerEstimate.size.value);
@@ -223,6 +266,19 @@ export class DataProvider extends React.Component<Props, State> {
             durationEstimate = getDuration(estimateInSeconds);
         }
         return `${get(sizeEstimate)} / ${get(durationEstimate)}`;
+    }
+
+    private getCheckedIcon() {
+        // If every format is fully compatible with every projection, this value will be true.
+        // This means we can display a normal checkbox, otherwise we indicate there is an issue
+        // by using an indeterminate icon for the checkbox.
+        const fullCompatibility = this.props.provider.supported_formats.map(
+            (format) => this.getFormatCompatibility(format) === Compatibility.Full).every(value => !!value);
+
+        if (fullCompatibility) {
+            return (<CheckBoxIcon/>);
+        }
+        return (<IndeterminateCheckBoxIcon/>);
     }
 
     render() {
@@ -370,6 +426,7 @@ export class DataProvider extends React.Component<Props, State> {
                     <div style={{marginTop: '10px'}}>
                         <FormatSelector
                             formats={provider.supported_formats}
+                            getFormatCompatibility={this.getFormatCompatibility}
                             provider={provider}
                         />
                     </div>
@@ -405,6 +462,7 @@ export class DataProvider extends React.Component<Props, State> {
                             classes={{root: classes.checkbox, checked: classes.checked}}
                             name={provider.name}
                             checked={this.props.checked}
+                            checkedIcon={this.getCheckedIcon()}
                             onChange={this.props.onChange}
                         />
                         <ListItemText
@@ -444,6 +502,7 @@ function mapStateToProps(state, ownProps) {
         providerOptions: state.exportInfo.exportOptions[ownProps.provider.slug] || {} as Eventkit.Store.ProviderExportOptions,
         exportInfo: state.exportInfo,
         geojson: state.aoiInfo.geojson,
+        selectedProjections: state.exportInfo.projections,
     };
 }
 
