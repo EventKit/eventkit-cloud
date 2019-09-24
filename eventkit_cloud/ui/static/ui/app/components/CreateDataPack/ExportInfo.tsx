@@ -175,6 +175,7 @@ export class ExportInfo extends React.Component<Props, State> {
         this.checkProvider = this.checkProvider.bind(this);
         this.handlePopoverOpen = this.handlePopoverOpen.bind(this);
         this.handlePopoverClose = this.handlePopoverClose.bind(this);
+        this.clearEstimate = this.clearEstimate.bind(this);
 
         this.joyride = React.createRef();
     }
@@ -446,6 +447,17 @@ export class ExportInfo extends React.Component<Props, State> {
             });
             return newProvider;
         }
+    }
+
+    private clearEstimate(provider: ProviderData) {
+        const newProvider = {...provider} as ProviderData;
+        newProvider.estimate = null;
+        this.setState((prevState) => {
+            // make a copy of state providers and replace the one we updated
+            const providers = [...prevState.providers];
+            providers.splice(providers.indexOf(provider), 1, newProvider);
+            return {providers};
+        });
     }
 
     private checkProviders(providers: ProviderData[]) {
@@ -728,6 +740,7 @@ export class ExportInfo extends React.Component<Props, State> {
                                             alt={ix % 2 === 0}
                                             renderEstimate={this.context.config.SERVE_ESTIMATES}
                                             checkProvider={this.checkProvider}
+                                            clearEstimate={this.clearEstimate}
                                         />
                                     ))}
                                 </List>
