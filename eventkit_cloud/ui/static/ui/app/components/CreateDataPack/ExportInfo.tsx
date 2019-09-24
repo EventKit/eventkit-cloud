@@ -3,7 +3,7 @@ import * as React from 'react';
 import {createStyles, Theme, withStyles, withTheme} from '@material-ui/core/styles';
 import {connect} from 'react-redux';
 import axios from 'axios';
-import {getCookie, isZoomLevelInRange} from '../../utils/generic';
+import {getCookie, isZoomLevelInRange, unsupportedFormats} from '../../utils/generic';
 import Joyride, {Step} from 'react-joyride';
 import List from '@material-ui/core/List';
 import Paper from '@material-ui/core/Paper';
@@ -21,6 +21,8 @@ import CustomTableRow from '../CustomTableRow';
 import {joyride} from '../../joyride.config';
 import {getSqKmString} from '../../utils/generic';
 import {featureToBbox, WGS84} from '../../utils/mapUtils';
+import BaseDialog from "../Dialog/BaseDialog";
+import AlertWarning from '@material-ui/icons/Warning';
 
 const jss = (theme: Eventkit.Theme & Theme) => createStyles({
     underlineStyle: {
@@ -140,6 +142,9 @@ export interface State {
     isRunning: boolean;
     providers: ProviderData[];
     refreshPopover: null | HTMLElement;
+    projectionCompatibilityOpen: boolean;
+    projectionCompatibilitySrid: number;  // Which projection is shown in the compatibility warning box
+    selectedFormats: Eventkit.Format[];
 }
 
 export class ExportInfo extends React.Component<Props, State> {
@@ -157,7 +162,11 @@ export class ExportInfo extends React.Component<Props, State> {
             // we make a local copy of providers for editing
             providers: props.providers,
             refreshPopover: null,
-        };
+            projectionCompatibilityOpen: false,
+            projectionCompatibilitySrid: null,
+            selectedFormats: [],
+        }
+        ;
         this.onNameChange = this.onNameChange.bind(this);
         this.onDescriptionChange = this.onDescriptionChange.bind(this);
         this.onProjectChange = this.onProjectChange.bind(this);
@@ -175,7 +184,8 @@ export class ExportInfo extends React.Component<Props, State> {
         this.checkProvider = this.checkProvider.bind(this);
         this.handlePopoverOpen = this.handlePopoverOpen.bind(this);
         this.handlePopoverClose = this.handlePopoverClose.bind(this);
-
+        this.handleProjectionCompatibilityOpen = this.handleProjectionCompatibilityOpen.bind(this);
+        this.handleProjectionCompatibilityClose = this.handleProjectionCompatibilityClose.bind(this);
         this.joyride = React.createRef();
     }
 
@@ -202,7 +212,7 @@ export class ExportInfo extends React.Component<Props, State> {
         this.joyrideAddSteps(steps);
 
         if (this.props.projections.find((projection) => projection.srid === 4326)) {
-            if (this.props.exportInfo.projections && this.props.exportInfo.projections.length ===0) {
+            if (this.props.exportInfo.projections && this.props.exportInfo.projections.length === 0) {
                 updatedInfo.projections = [4326];
             }
         }
@@ -211,10 +221,12 @@ export class ExportInfo extends React.Component<Props, State> {
 
     componentDidUpdate(prevProps: Props) {
         // if currently in walkthrough, we want to be able to show the green forward button, so ignore these statements
+        const {exportInfo} = this.props;
+
         if (!this.props.walkthroughClicked) {
             // if required fields are fulfilled enable next
-            if (this.hasRequiredFields(this.props.exportInfo) &&
-                !this.hasDisallowedSelection(this.props.exportInfo)) {
+            if (this.hasRequiredFields(exportInfo) &&
+                !this.hasDisallowedSelection(exportInfo)) {
                 if (!this.props.nextEnabled) {
                     this.props.setNextEnabled();
                 }
@@ -222,8 +234,7 @@ export class ExportInfo extends React.Component<Props, State> {
                 // if not and next is enabled it should be disabled
                 this.props.setNextDisabled();
             }
-        }
-        if (this.props.walkthroughClicked && !prevProps.walkthroughClicked && !this.state.isRunning) {
+        } else if (this.props.walkthroughClicked && !prevProps.walkthroughClicked && !this.state.isRunning) {
             this.joyride.current.reset(true);
             this.setState({isRunning: true});
         }
@@ -232,6 +243,39 @@ export class ExportInfo extends React.Component<Props, State> {
             this.setState({providers: this.props.providers});
             this.checkProviders(this.props.providers);
         }
+    }
+
+    private handleProjectionCompatibilityOpen(projection: Eventkit.Projection) {
+        // exportInfo.providers is the list of selected providers, i.e. what will be included in the DataPack.
+        // this.props.providers is the list of available providers.
+        const {exportOptions, providers} = this.props.exportInfo;
+        const selectedFormats = [] as Eventkit.Format[];
+        providers.forEach((provider) => {
+            // Calculate a list of all slugs selected so far to compare against
+            // Different providers may select the same format
+            const selectedSlugs = selectedFormats.map(format => format.slug);
+            // Check exportOptions for options specific to this provider, try to find the selected formats for it.
+            const formats = (!!exportOptions[provider.slug]) ? exportOptions[provider.slug].formats : null;
+            if (!!formats) {
+                // if the formats are valid, map the slugs to their objects.
+                formats.forEach((selectedFormatSlug) => {
+                    const fullFormat = provider.supported_formats.find(format => format.slug === selectedFormatSlug);
+                    if (fullFormat && selectedSlugs.indexOf(selectedFormatSlug) < 0) {
+                        // Only add the format if it isn't already in the list
+                        selectedFormats.push(fullFormat);
+                    }
+                });
+            }
+        });
+        this.setState({
+            selectedFormats,
+            projectionCompatibilitySrid: projection.srid,
+            projectionCompatibilityOpen: true,
+        });
+    }
+
+    private handleProjectionCompatibilityClose() {
+        this.setState({projectionCompatibilityOpen: false});
     }
 
     private onNameChange(e: React.ChangeEvent<HTMLInputElement>) {
@@ -353,7 +397,7 @@ export class ExportInfo extends React.Component<Props, State> {
             headers: {'X-CSRFToken': csrfmiddlewaretoken},
         }).then((response) => {
             // The backend currently returns the response as a string, it needs to be parsed before being used.
-            const availabilityData = (typeof(response.data) === "object") ? response.data : JSON.parse(response.data);
+            const availabilityData = (typeof (response.data) === "object") ? response.data : JSON.parse(response.data);
             newProvider.availability = availabilityData;
             newProvider.availability.slug = provider.slug;
             return newProvider;
@@ -476,7 +520,7 @@ export class ExportInfo extends React.Component<Props, State> {
 
     private hasRequiredFields(exportInfo: Eventkit.Store.ExportInfo) {
         // if the required fields are populated return true, else return false
-        const { exportOptions } = exportInfo;
+        const {exportOptions} = exportInfo;
         const formatsAreSelected = exportInfo.providers.map((provider) => {
             return !!exportOptions[provider.slug]
                 && exportOptions[provider.slug].formats
@@ -747,7 +791,8 @@ export class ExportInfo extends React.Component<Props, State> {
                                             style={{
                                                 display: 'flex',
                                                 padding: '16px 10px',
-                                                backgroundColor: (ix % 2 === 0) ? colors.secondary : colors.white}}
+                                                backgroundColor: (ix % 2 === 0) ? colors.secondary : colors.white
+                                            }}
                                         >
                                             <Checkbox
                                                 className="qa-ExportInfo-CheckBox-projection"
@@ -760,8 +805,36 @@ export class ExportInfo extends React.Component<Props, State> {
                                             <span style={{padding: '0px 15px', display: 'flex', flexWrap: 'wrap'}}>
                                                 EPSG:{projection.srid} - {projection.name}
                                             </span>
+                                            <AlertWarning
+                                                className={`qa-Projection-Warning-Icon`}
+                                                onClick={() => {
+                                                    this.handleProjectionCompatibilityOpen(projection);
+                                                }}
+                                                style={{
+                                                    cursor: 'pointer', verticalAlign: 'middle',
+                                                    marginLeft: '5px', height: '18px', width: '18px',
+                                                    color: 'rgba(255, 162, 0, 0.87)'
+                                                }}
+                                            />
                                         </div>
                                     ))}
+                                    <BaseDialog
+                                        show={this.state.projectionCompatibilityOpen}
+                                        title="Format and Projection Conflict"
+                                        onClose={this.handleProjectionCompatibilityClose}
+                                    >
+                                        <div
+                                            style={{paddingBottom: '10px', wordWrap: 'break-word'}}
+                                            className="qa-ExportInfo-dialog-projection"
+                                        >
+                                            {unsupportedFormats(this.state.projectionCompatibilitySrid, this.state.selectedFormats).map((format) => (
+                                                <div>
+                                                    {format.slug}
+                                                </div>
+                                            ))
+                                            }
+                                        </div>
+                                    </BaseDialog>
                                 </div>
                             </div>
                             <div id="aoiHeader" className={`qa-ExportInfo-AoiHeader ${classes.heading}`}>

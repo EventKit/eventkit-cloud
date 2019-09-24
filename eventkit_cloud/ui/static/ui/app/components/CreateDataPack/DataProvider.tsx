@@ -10,7 +10,13 @@ import ExpandLess from '@material-ui/icons/ExpandLess';
 import ExpandMore from '@material-ui/icons/ExpandMore';
 import ProviderStatusIcon from './ProviderStatusIcon';
 import BaseDialog from '../Dialog/BaseDialog';
-import {formatMegaBytes, getDuration, isZoomLevelInRange, supportsZoomLevels} from '../../utils/generic';
+import {
+    formatMegaBytes,
+    getDuration,
+    isZoomLevelInRange,
+    supportsZoomLevels,
+    unsupportedFormats
+} from '../../utils/generic';
 import {Typography} from "@material-ui/core";
 import ZoomLevelSlider from "./ZoomLevelSlider";
 import {connect} from "react-redux";
@@ -175,21 +181,29 @@ export class DataProvider extends React.Component<Props, State> {
     checkFormatCompatibility() {
         const {selectedProjections} = this.props;
         const formatCompatibility = {...this.state.formatCompatibility};
+        const formats = this.props.provider.supported_formats;
 
-        const formatSlugs = this.props.provider.supported_formats.map(format => format.slug.toLowerCase());
-        const epsg4326Selected = selectedProjections.indexOf(4326) >= 0;
-
-        if (formatSlugs.indexOf('nitf') >= 0) {
-            if (epsg4326Selected && selectedProjections.length === 1) {
-                formatCompatibility.nitf = Compatibility.Full;
-            } else if (epsg4326Selected) {
-                formatCompatibility.nitf = Compatibility.Partial;
+        const compatibilityMap = {};
+        formats.forEach(format => {
+            compatibilityMap[format.slug] = 0;
+        });
+        selectedProjections.forEach((srid) => {
+            const unsupported = unsupportedFormats(srid, formats);
+            unsupported.forEach((format) => {
+                const notSupportedCount = compatibilityMap[format.slug];
+                compatibilityMap[format.slug] = notSupportedCount + 1;
+            });
+        });
+        Object.keys(compatibilityMap).forEach((formatSlug) => {
+            const notSupportedCount = compatibilityMap[formatSlug];
+            if (notSupportedCount >= selectedProjections.length) {
+                formatCompatibility[formatSlug] = Compatibility.None;
+            } else if (notSupportedCount > 0) {
+                formatCompatibility[formatSlug] = Compatibility.Partial;
             } else {
-                formatCompatibility.nitf = Compatibility.None;
+                formatCompatibility[formatSlug] = Compatibility.Full;
             }
-        }
-        formatCompatibility[formatSlugs[0]] = Compatibility.Partial;
-        formatCompatibility[formatSlugs[1]] = Compatibility.None;
+        });
         this.setState({formatCompatibility});
     }
 
@@ -502,7 +516,7 @@ function mapStateToProps(state, ownProps) {
         providerOptions: state.exportInfo.exportOptions[ownProps.provider.slug] || {} as Eventkit.Store.ProviderExportOptions,
         exportInfo: state.exportInfo,
         geojson: state.aoiInfo.geojson,
-        selectedProjections: state.exportInfo.projections,
+        selectedProjections: [...state.exportInfo.projections],
     };
 }
 
