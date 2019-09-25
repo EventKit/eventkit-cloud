@@ -297,8 +297,8 @@ export class DataProvider extends React.Component<Props, State> {
                 >
                     <MapView
                         id={this.props.provider.id + "-map"}
-                        url={this.context.config.BASEMAP_URL}
-                        copyright={this.context.config.BASEMAP_COPYRIGHT}
+                        url={this.props.provider.preview_url}
+                        copyright={this.props.provider.service_copyright}
                         geojson={this.props.geojson}
                         setZoom={this.setZoom}
                         zoom={currentMaxZoom}

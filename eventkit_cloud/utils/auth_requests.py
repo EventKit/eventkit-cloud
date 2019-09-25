@@ -6,6 +6,7 @@ import re
 import urllib.request, urllib.error, urllib.parse
 from functools import wraps
 from tempfile import NamedTemporaryFile
+from django.conf import settings
 
 import requests
 from mapproxy.client import http as mapproxy_http
@@ -197,9 +198,11 @@ def patch_mapproxy_opener_cache(slug=None, cred_var=None):
     # Source: https://github.com/mapproxy/mapproxy/blob/1.11.0/mapproxy/client/http.py#L133
 
     def _new_call(self, ssl_ca_certs, url, username, password, insecure=False):
+
         if ssl_ca_certs not in self._opener or slug not in self._opener:
-            if not isinstance(os.getenv('SSL_VERIFICATION', True), bool):
-                ssl_ca_certs = os.getenv('SSL_VERIFICATION')
+            ssl_verify = getattr(settings, "SSL_VERIFICATION", True)
+            if not isinstance(ssl_verify, bool):
+                ssl_ca_certs = ssl_verify
             https_handler = mapproxy_http.build_https_handler(ssl_ca_certs, insecure)
             passman = urllib.request.HTTPPasswordMgrWithDefaultRealm()
             handlers = [urllib.request.HTTPCookieProcessor,

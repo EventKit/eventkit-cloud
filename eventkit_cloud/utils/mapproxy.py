@@ -133,9 +133,9 @@ class MapproxyGeopackage(object):
         # If user provides a cache setup then use that and substitute in the geopackage file for the placeholder.
         conf_dict['caches'] = conf_dict.get('caches', {})
         try:
-            conf_dict['caches']['cache']['cache']['filename'] = self.gpkgfile
+            conf_dict['caches']['default']['cache']['filename'] = self.gpkgfile
         except KeyError:
-            conf_dict['caches']['cache'] = get_cache_template(["{0}".format(self.layer)],
+            conf_dict['caches']['default'] = get_cache_template(["{0}".format(self.layer)],
                                                               [grids for grids in conf_dict.get('grids')],
                                                               self.gpkgfile, table_name=self.layer)
 
@@ -143,12 +143,14 @@ class MapproxyGeopackage(object):
         conf_dict['services'] = ['demo']
 
         # disable SSL cert checks
+
         ssl_verify = getattr(settings, "SSL_VERIFICATION", True)
-        if not ssl_verify:
-            conf_dict['globals'] = {'http': {'ssl_no_cert_checks': True}}
+        if isinstance(ssl_verify, bool):
+            conf_dict['globals'] = {'http': {'ssl_no_cert_checks': ssl_verify}}
+        else:
+            conf_dict['globals'] = {'http': {'ssl_ca_certs': ssl_verify}}
 
         # Add autoconfiguration to base_config
-        # default = load_default_config()
         mapproxy_config = load_default_config()
         load_config(mapproxy_config, config_dict=conf_dict)
 
@@ -187,7 +189,8 @@ class MapproxyGeopackage(object):
         #  Customizations...
         mapproxy.seed.seeder.exp_backoff = get_custom_exp_backoff(max_repeat=int(conf_dict.get('max_repeat', 5)))
         mapproxy.cache.geopackage.GeopackageCache.load_tile_metadata = load_tile_metadata
-        logger.info("Beginning seeding to {0}".format(self.gpkgfile))
+
+        logger.error("Beginning seeding to {0}".format(self.gpkgfile))
         try:
             conf = yaml.load(self.config) or dict()
             cert_var = conf.get("cert_var")
