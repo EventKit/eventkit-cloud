@@ -8,4 +8,3 @@ dependencies:
    # The eventkit-cloud recipe is in conda/recipes/eventkit-cloud/meta.yaml.
   - pip:
     - -r requirements-dev.txt
-    - webtest
