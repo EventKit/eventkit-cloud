@@ -92,7 +92,7 @@ services:
       - RUNS_CONCURRENCY=1
       - CONTAINER_CODE_PATH
       - DEV_MACHINE_CODE_PATH
-      extra_hosts:
+    extra_hosts:
       - "${SITE_NAME}:${SITE_IP}"
     command: /home/eventkit/miniconda3/envs/eventkit-cloud/lib/python3.6/site-packages/scripts/run-celery.sh
   celery-beat:
