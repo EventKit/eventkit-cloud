@@ -4,11 +4,11 @@ import {mount} from 'enzyme';
 import {FormatSelector} from "../../components/CreateDataPack/FormatSelector";
 import {Compatibility} from '../../utils/enums';
 
-const getFormatCompatibility = (format) => ({
+const getFormatCompatibility = (slug) => ({
     shp: Compatibility.Full,
     gpkg: Compatibility.Full,
     no3857: Compatibility.None,
-}[format.slug.toLowerCase()]);
+}[slug.toLowerCase()]);
 
 const formats = [
     {

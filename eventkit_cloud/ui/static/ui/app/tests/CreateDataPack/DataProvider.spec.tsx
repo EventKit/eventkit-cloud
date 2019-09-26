@@ -47,9 +47,23 @@ describe('DataProvider component', () => {
             supported_formats: formats,
         },
         exportInfo: {
-            exportOptions: {123: {minZoom: 0, maxZoom: 1}}
+            exportOptions: {123: {minZoom: 0, maxZoom: 1, formats: ['gpkg']}}
         },
+        providerOptions: {minZoom: 0, maxZoom: 1, formats: ['gpkg']},
         selectedProjections: [4326],
+        compatibilityInfo: {
+            formats: {
+                gpkg: {
+                    projections: [],
+                },
+                shp: {
+                    projections: [],
+                },
+                no3857: {
+                    projections: [3857],
+                }
+            }
+        },
         checked: false,
         onChange: sinon.spy(),
         alt: false,

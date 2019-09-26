@@ -6,6 +6,7 @@ import {updateExportOptions} from '../../actions/datacartActions';
 import CheckBoxIcon from '@material-ui/icons/CheckBox';
 import IndeterminateCheckBoxIcon from '@material-ui/icons/IndeterminateCheckBox';
 import {Compatibility} from '../../utils/enums';
+import {CompatibilityInfo} from "./ExportInfo";
 
 const jss = (theme: Theme & Eventkit.Theme) => createStyles({
     container: {
@@ -59,6 +60,7 @@ interface Props {
     providerOptions: Eventkit.Store.ProviderExportOptions;
     updateExportOptions: (providerSlug: string, providerOptions: any) => void;
     getFormatCompatibility: (format: Eventkit.Format) => Compatibility;
+    compatibilityInfo: CompatibilityInfo;
     theme: Eventkit.Theme & Theme;
     classes: {
         container: string;
@@ -100,7 +102,7 @@ export class FormatSelector extends React.Component<Props, {}> {
 
     handleChange(event) {
         const providerOptions = {...this.props.providerOptions};
-        const selectedFormats = providerOptions.formats || [];
+        const selectedFormats = [...providerOptions.formats] || [];
 
         let index;
         // check if the check box is checked or unchecked
@@ -126,7 +128,7 @@ export class FormatSelector extends React.Component<Props, {}> {
         const {classes, providerOptions} = this.props;
         const selectedFormats = providerOptions.formats || [];
 
-        const compatibility = this.props.getFormatCompatibility(format);
+        const compatibility = this.props.getFormatCompatibility(format.slug);
         let checkedIcon;
         let errorMessage;
         if (compatibility === Compatibility.Full) {

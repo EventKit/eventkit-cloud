@@ -120,6 +120,20 @@ const jss = (theme: Eventkit.Theme & Theme) => createStyles({
     checked: {},
 });
 
+// Use this to keep track of incompatibilities in the user selected DataPack options
+export interface CompatibilityInfo {
+    formats: {
+        [slug: string]: {
+            projections: number[]; // Map format slugs to the projection SRID's that it is NOT compatible with.
+        }
+    };
+    projections: {
+        [srid: number]: {
+            formats: Eventkit.Format[]; // Map projection SRID's to the format it is NOT compatible with.
+        }
+    };
+}
+
 export interface Props {
     geojson: GeoJSON.FeatureCollection;
     exportInfo: Eventkit.Store.ExportInfo;
@@ -135,6 +149,7 @@ export interface Props {
     classes: { [className: string]: string };
     onUpdateEstimate?: () => void;
     projections: Eventkit.Projection[];
+    formats: Eventkit.Format[];
 }
 
 export interface State {
@@ -143,8 +158,9 @@ export interface State {
     providers: ProviderData[];
     refreshPopover: null | HTMLElement;
     projectionCompatibilityOpen: boolean;
-    projectionCompatibilitySrid: number;  // Which projection is shown in the compatibility warning box
-    selectedFormats: Eventkit.Format[];
+    displaySrid: number;  // Which projection is shown in the compatibility warning box
+    selectedFormats: string[];
+    compatibilityInfo: CompatibilityInfo;
 }
 
 export class ExportInfo extends React.Component<Props, State> {
@@ -163,8 +179,12 @@ export class ExportInfo extends React.Component<Props, State> {
             providers: props.providers,
             refreshPopover: null,
             projectionCompatibilityOpen: false,
-            projectionCompatibilitySrid: null,
+            displaySrid: null,
             selectedFormats: [],
+            compatibilityInfo: {
+                formats: {},
+                projections: {},
+            } as CompatibilityInfo,
         }
         ;
         this.onNameChange = this.onNameChange.bind(this);
@@ -186,6 +206,10 @@ export class ExportInfo extends React.Component<Props, State> {
         this.handlePopoverClose = this.handlePopoverClose.bind(this);
         this.handleProjectionCompatibilityOpen = this.handleProjectionCompatibilityOpen.bind(this);
         this.handleProjectionCompatibilityClose = this.handleProjectionCompatibilityClose.bind(this);
+        this.calculateCompatibility = this.calculateCompatibility.bind(this);
+        this.checkSelectedFormats = this.checkSelectedFormats.bind(this);
+        this.projectionHasErrors = this.projectionHasErrors.bind(this);
+        this.getProjectionDialog = this.getProjectionDialog.bind(this);
         this.joyride = React.createRef();
     }
 
@@ -219,9 +243,10 @@ export class ExportInfo extends React.Component<Props, State> {
         this.props.updateExportInfo(updatedInfo);
     }
 
-    componentDidUpdate(prevProps: Props) {
+    componentDidUpdate(prevProps: Props, prevState: State) {
         // if currently in walkthrough, we want to be able to show the green forward button, so ignore these statements
         const {exportInfo} = this.props;
+        let nextState = {};
 
         if (!this.props.walkthroughClicked) {
             // if required fields are fulfilled enable next
@@ -234,7 +259,8 @@ export class ExportInfo extends React.Component<Props, State> {
                 // if not and next is enabled it should be disabled
                 this.props.setNextDisabled();
             }
-        } else if (this.props.walkthroughClicked && !prevProps.walkthroughClicked && !this.state.isRunning) {
+        }
+        if (this.props.walkthroughClicked && !prevProps.walkthroughClicked && !this.state.isRunning) {
             this.joyride.current.reset(true);
             this.setState({isRunning: true});
         }
@@ -243,33 +269,94 @@ export class ExportInfo extends React.Component<Props, State> {
             this.setState({providers: this.props.providers});
             this.checkProviders(this.props.providers);
         }
+
+        const selectedProjections = [...exportInfo.projections];
+        const prevSelectedProjections = [...prevProps.exportInfo.projections];
+        if (!ExportInfo.elementsEqual(selectedProjections, prevSelectedProjections)) {
+            nextState = {
+                ...nextState,
+                ...this.calculateCompatibility()
+            };
+        }
+        nextState = {
+            ...nextState,
+            ...this.checkSelectedFormats(prevState)
+        };
+        if (Object.keys(nextState).length > 0) {
+            this.setState({...nextState});
+        }
+    }
+
+    static elementsEqual(array1, array2) {
+        if (array1.length !== array2.length) {
+            return false;
+        }
+        // This code will only run if the arrays are the same length
+        array1.sort();
+        array2.sort();
+        let valuesEqual = true;
+        array1.forEach((projection, ix) => {
+            if (projection !== array2[ix]) {
+                valuesEqual = false;
+                return;
+            }
+        });
+        return valuesEqual;
+    }
+
+    private calculateCompatibility() {
+        const {formats} = this.props;
+        const selectedProjections = this.props.exportInfo.projections;
+
+        const formatMap = {};
+        const projectionMap = {};
+        formats.forEach(format => {
+            formatMap[format.slug] = {projections: []};
+        });
+        selectedProjections.map((projectionSrid) => {
+            const unsupported = unsupportedFormats(projectionSrid, formats);
+            projectionMap[projectionSrid] = {formats: unsupported};
+            unsupported.forEach((format) => {
+                formatMap[format.slug].projections.push(projectionSrid);
+            });
+        });
+        return {
+            compatibilityInfo: {
+                ...this.state.compatibilityInfo,
+                formats: formatMap,
+                projections: projectionMap,
+            }
+        };
+    }
+
+    private checkSelectedFormats(prevState: State) {
+        // exportInfo.providers is the list of selected providers, i.e. what will be included in the DataPack.
+        // this.props.providers is the list of available providers.
+        const exportOptions = this.props.exportInfo.exportOptions;
+        const providers = [...this.props.exportInfo.providers];
+        const getFormats = (formatArray) => {
+            providers.forEach((provider) => {
+                const providerOptions = exportOptions[provider.slug];
+                if (providerOptions) {
+                    providerOptions.formats.forEach(formatSlug => {
+                        if (formatArray.indexOf(formatSlug) < 0) {
+                            formatArray.push(formatSlug);
+                        }
+                    });
+                }
+            });
+        };
+        const selectedFormats = [] as string[];
+        getFormats(selectedFormats);
+        if (!ExportInfo.elementsEqual(selectedFormats, prevState.selectedFormats)) {
+            return {selectedFormats};
+        }
     }
 
     private handleProjectionCompatibilityOpen(projection: Eventkit.Projection) {
-        // exportInfo.providers is the list of selected providers, i.e. what will be included in the DataPack.
-        // this.props.providers is the list of available providers.
-        const {exportOptions, providers} = this.props.exportInfo;
-        const selectedFormats = [] as Eventkit.Format[];
-        providers.forEach((provider) => {
-            // Calculate a list of all slugs selected so far to compare against
-            // Different providers may select the same format
-            const selectedSlugs = selectedFormats.map(format => format.slug);
-            // Check exportOptions for options specific to this provider, try to find the selected formats for it.
-            const formats = (!!exportOptions[provider.slug]) ? exportOptions[provider.slug].formats : null;
-            if (!!formats) {
-                // if the formats are valid, map the slugs to their objects.
-                formats.forEach((selectedFormatSlug) => {
-                    const fullFormat = provider.supported_formats.find(format => format.slug === selectedFormatSlug);
-                    if (fullFormat && selectedSlugs.indexOf(selectedFormatSlug) < 0) {
-                        // Only add the format if it isn't already in the list
-                        selectedFormats.push(fullFormat);
-                    }
-                });
-            }
-        });
         this.setState({
-            selectedFormats,
-            projectionCompatibilitySrid: projection.srid,
+            // selectedFormats,
+            displaySrid: projection.srid,
             projectionCompatibilityOpen: true,
         });
     }
@@ -350,7 +437,7 @@ export class ExportInfo extends React.Component<Props, State> {
 
     private onSelectProjection(event) {
         // Selecting projections for the DataPack, here srid is spatial reference ID
-        const selectedSrids = this.props.exportInfo.projections || [];
+        const selectedSrids = [...this.props.exportInfo.projections] || [];
 
         let index;
         // check if the check box is checked or unchecked
@@ -591,10 +678,44 @@ export class ExportInfo extends React.Component<Props, State> {
         return providers;
     }
 
+    private projectionHasErrors(srid: number) {
+        const projectionInfo = this.state.compatibilityInfo.projections[srid];
+        if (!!projectionInfo) {
+            return projectionInfo.formats.some(format => this.state.selectedFormats.indexOf(format.slug) >= 0);
+        }
+        return false;
+    }
+
+    private getProjectionDialog() {
+        const compatibilityInfo = this.state.compatibilityInfo.projections[this.state.displaySrid];
+        const formats = compatibilityInfo.formats.filter(format => {
+            return this.state.selectedFormats.indexOf(format.slug) >= 0;
+        });
+        return (<BaseDialog
+            show={this.state.projectionCompatibilityOpen}
+            title={`Format and Projection Conflict - EPSG:${this.state.displaySrid}`}
+            onClose={this.handleProjectionCompatibilityClose}
+        >
+            <div
+                style={{paddingBottom: '10px', wordWrap: 'break-word'}}
+                className="qa-ExportInfo-dialog-projection"
+            >
+                <p><strong>This projection does not support the following format(s):</strong></p>
+                <div style={{marginBottom: '10px'}}>
+                    {formats.map(format => (
+                        <div key={format.slug}>
+                            {format.name}
+                        </div>
+                    ))}
+                </div>
+            </div>
+        </BaseDialog>);
+    }
+
     render() {
         const {colors} = this.props.theme.eventkit;
         const {classes} = this.props;
-        const {steps, isRunning} = this.state;
+        const {projectionCompatibilityOpen, steps, isRunning} = this.state;
 
         // Move EPSG:4326 (if present -- it should always be) to the front so it displays first.
         let projections = [...this.props.projections];
@@ -772,6 +893,7 @@ export class ExportInfo extends React.Component<Props, State> {
                                             alt={ix % 2 === 0}
                                             renderEstimate={this.context.config.SERVE_ESTIMATES}
                                             checkProvider={this.checkProvider}
+                                            compatibilityInfo={this.state.compatibilityInfo}
                                         />
                                     ))}
                                 </List>
@@ -805,6 +927,7 @@ export class ExportInfo extends React.Component<Props, State> {
                                             <span style={{padding: '0px 15px', display: 'flex', flexWrap: 'wrap'}}>
                                                 EPSG:{projection.srid} - {projection.name}
                                             </span>
+                                            {this.projectionHasErrors(projection.srid) &&
                                             <AlertWarning
                                                 className={`qa-Projection-Warning-Icon`}
                                                 onClick={() => {
@@ -816,25 +939,12 @@ export class ExportInfo extends React.Component<Props, State> {
                                                     color: 'rgba(255, 162, 0, 0.87)'
                                                 }}
                                             />
-                                        </div>
-                                    ))}
-                                    <BaseDialog
-                                        show={this.state.projectionCompatibilityOpen}
-                                        title="Format and Projection Conflict"
-                                        onClose={this.handleProjectionCompatibilityClose}
-                                    >
-                                        <div
-                                            style={{paddingBottom: '10px', wordWrap: 'break-word'}}
-                                            className="qa-ExportInfo-dialog-projection"
-                                        >
-                                            {unsupportedFormats(this.state.projectionCompatibilitySrid, this.state.selectedFormats).map((format) => (
-                                                <div>
-                                                    {format.slug}
-                                                </div>
-                                            ))
                                             }
                                         </div>
-                                    </BaseDialog>
+                                    ))}
+                                    {projectionCompatibilityOpen &&
+                                    this.getProjectionDialog()
+                                    }
                                 </div>
                             </div>
                             <div id="aoiHeader" className={`qa-ExportInfo-AoiHeader ${classes.heading}`}>
@@ -877,6 +987,7 @@ function mapStateToProps(state) {
         providers: state.providers,
         nextEnabled: state.stepperNextEnabled,
         projections: [...state.projections],
+        formats: [...state.formats],
     };
 }
 

@@ -10,13 +10,7 @@ import ExpandLess from '@material-ui/icons/ExpandLess';
 import ExpandMore from '@material-ui/icons/ExpandMore';
 import ProviderStatusIcon from './ProviderStatusIcon';
 import BaseDialog from '../Dialog/BaseDialog';
-import {
-    formatMegaBytes,
-    getDuration,
-    isZoomLevelInRange,
-    supportsZoomLevels,
-    unsupportedFormats
-} from '../../utils/generic';
+import {formatMegaBytes, getDuration, isZoomLevelInRange, supportsZoomLevels} from '../../utils/generic';
 import {Typography} from "@material-ui/core";
 import ZoomLevelSlider from "./ZoomLevelSlider";
 import {connect} from "react-redux";
@@ -27,7 +21,8 @@ import * as PropTypes from "prop-types";
 import FormatSelector from "./FormatSelector";
 import {Compatibility} from '../../utils/enums';
 import IndeterminateCheckBoxIcon from '@material-ui/icons/IndeterminateCheckBox';
-import CheckBoxIcon from "@material-ui/core/SvgIcon/SvgIcon";
+import CheckBoxIcon from "@material-ui/icons/CheckBox";
+import {CompatibilityInfo} from "./ExportInfo";
 
 const jss = (theme: Theme & Eventkit.Theme) => createStyles({
     container: {
@@ -110,6 +105,7 @@ interface Props {
     theme: Eventkit.Theme & Theme;
     renderEstimate: boolean;
     selectedProjections: number[];
+    compatibilityInfo: CompatibilityInfo;
     classes: {
         container: string;
         listItem: string;
@@ -128,7 +124,6 @@ interface State {
     open: boolean;
     licenseDialogOpen: boolean;
     zoomLevel: number;
-    formatCompatibility: { [formatSlug: string]: Compatibility };
 }
 
 export class DataProvider extends React.Component<Props, State> {
@@ -147,15 +142,11 @@ export class DataProvider extends React.Component<Props, State> {
         this.handleExpand = this.handleExpand.bind(this);
         this.setZoom = this.setZoom.bind(this);
         this.getFormatCompatibility = this.getFormatCompatibility.bind(this);
-        this.checkFormatCompatibility = this.checkFormatCompatibility.bind(this);
         this.getCheckedIcon = this.getCheckedIcon.bind(this);
 
         this.estimateDebouncer = () => { /* do nothing while not mounted */
         };
-
-        const formatCompatibility = {};
         this.state = {
-            formatCompatibility,
             open: false,
             licenseDialogOpen: false,
             zoomLevel: this.props.provider.level_to,
@@ -168,43 +159,18 @@ export class DataProvider extends React.Component<Props, State> {
         }, 1000);
     }
 
-    componentDidUpdate(prevProps) {
-        if (this.props.selectedProjections.length !== prevProps.selectedProjections.length) {
-            this.checkFormatCompatibility();
+    getFormatCompatibility(formatSlug: string) {
+        const formatInfo = this.props.compatibilityInfo.formats[formatSlug.toLowerCase()];
+        if (!formatInfo) {
+            return Compatibility.Partial;
         }
-    }
-
-    getFormatCompatibility(format: Eventkit.Format) {
-        return this.state.formatCompatibility[format.slug.toLowerCase()];
-    }
-
-    checkFormatCompatibility() {
-        const {selectedProjections} = this.props;
-        const formatCompatibility = {...this.state.formatCompatibility};
-        const formats = this.props.provider.supported_formats;
-
-        const compatibilityMap = {};
-        formats.forEach(format => {
-            compatibilityMap[format.slug] = 0;
-        });
-        selectedProjections.forEach((srid) => {
-            const unsupported = unsupportedFormats(srid, formats);
-            unsupported.forEach((format) => {
-                const notSupportedCount = compatibilityMap[format.slug];
-                compatibilityMap[format.slug] = notSupportedCount + 1;
-            });
-        });
-        Object.keys(compatibilityMap).forEach((formatSlug) => {
-            const notSupportedCount = compatibilityMap[formatSlug];
-            if (notSupportedCount >= selectedProjections.length) {
-                formatCompatibility[formatSlug] = Compatibility.None;
-            } else if (notSupportedCount > 0) {
-                formatCompatibility[formatSlug] = Compatibility.Partial;
-            } else {
-                formatCompatibility[formatSlug] = Compatibility.Full;
-            }
-        });
-        this.setState({formatCompatibility});
+        const incompatibleProjections = this.props.compatibilityInfo.formats[formatSlug.toLowerCase()].projections.length;
+        if (incompatibleProjections >= this.props.selectedProjections.length) {
+            return Compatibility.None;
+        } else if (incompatibleProjections > 0) {
+            return Compatibility.Partial;
+        }
+        return Compatibility.Full;
     }
 
     private setZoom(minZoom: number, maxZoom: number) {
@@ -223,7 +189,6 @@ export class DataProvider extends React.Component<Props, State> {
         if (!isZoomLevelInRange(lastMax, provider)) {
             lastMax = provider.level_to;
         }
-
 
         // Check the parameters, if they are invalid, fall back to lastMin and or lastMax
         if (!isZoomLevelInRange(minZoom, provider)) {
@@ -286,8 +251,13 @@ export class DataProvider extends React.Component<Props, State> {
         // If every format is fully compatible with every projection, this value will be true.
         // This means we can display a normal checkbox, otherwise we indicate there is an issue
         // by using an indeterminate icon for the checkbox.
-        const fullCompatibility = this.props.provider.supported_formats.map(
-            (format) => this.getFormatCompatibility(format) === Compatibility.Full).every(value => !!value);
+        const selectedFormats = this.props.providerOptions.formats;
+        if (!selectedFormats) {
+            // When no formats are selected, the provider isn't ready to be packed up
+            return (<IndeterminateCheckBoxIcon/>);
+        }
+        const fullCompatibility = selectedFormats.map(
+            (formatSlug) => this.getFormatCompatibility(formatSlug) === Compatibility.Full).every(value => !!value);
 
         if (fullCompatibility) {
             return (<CheckBoxIcon/>);
@@ -442,6 +412,7 @@ export class DataProvider extends React.Component<Props, State> {
                             formats={provider.supported_formats}
                             getFormatCompatibility={this.getFormatCompatibility}
                             provider={provider}
+                            compatibilityInfo={this.props.compatibilityInfo}
                         />
                     </div>
                 </div>
