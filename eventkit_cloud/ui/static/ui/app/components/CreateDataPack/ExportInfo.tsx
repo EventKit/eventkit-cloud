@@ -185,8 +185,8 @@ export class ExportInfo extends React.Component<Props, State> {
                 formats: {},
                 projections: {},
             } as CompatibilityInfo,
-        }
-        ;
+        };
+
         this.onNameChange = this.onNameChange.bind(this);
         this.onDescriptionChange = this.onDescriptionChange.bind(this);
         this.onProjectChange = this.onProjectChange.bind(this);
@@ -290,6 +290,8 @@ export class ExportInfo extends React.Component<Props, State> {
     }
 
     static elementsEqual(array1, array2) {
+        // To compare too arrays for equality, we check length for an early exit,
+        // otherwise we sort them then compare element by element.
         if (array1.length !== array2.length) {
             return false;
         }
@@ -297,8 +299,8 @@ export class ExportInfo extends React.Component<Props, State> {
         array1.sort();
         array2.sort();
         let valuesEqual = true;
-        array1.forEach((projection, ix) => {
-            if (projection !== array2[ix]) {
+        array1.forEach((item, index) => {
+            if (item !== array2[index]) {
                 valuesEqual = false;
                 return;
             }
