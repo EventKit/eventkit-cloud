@@ -99,6 +99,7 @@ interface Props {
     updateExportInfo: (args: any) => void;
     provider: ProviderData;
     checkProvider: (args: any) => void;
+    clearEstimate: (provider: ProviderData) => void;
     checked: boolean;
     onChange: (event: React.ChangeEvent<HTMLInputElement>) => void;
     alt: boolean;
@@ -211,7 +212,7 @@ export class DataProvider extends React.Component<Props, State> {
         });
 
         if (minZoom !== lastMin || maxZoom !== lastMax) {
-            // Only trigger an estimate update if the value is new.
+            this.props.clearEstimate(this.props.provider);
             this.estimateDebouncer(this.props.provider);
         }
     }
@@ -422,11 +423,12 @@ export class DataProvider extends React.Component<Props, State> {
         // Only set this if we want to display the estimate
         let secondary;
         if (this.props.renderEstimate) {
-            if (this.formatEstimate(provider.estimate)) {
+            const estimate = this.formatEstimate(provider.estimate);
+            if (estimate) {
                 secondary =
-                    <Typography style={{fontSize: "0.7em"}}>{this.formatEstimate(provider.estimate)}</Typography>;
+                    <Typography style={{fontSize: "0.7em"}}>{estimate}</Typography>;
             } else {
-                secondary = <CircularProgress size={10}/>;
+                secondary = <CircularProgress style={{display: 'grid'}} size={11}/>;
             }
         }
 

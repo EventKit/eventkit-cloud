@@ -39,6 +39,7 @@ describe('DataPackPage component', () => {
         deleteRun: sinon.spy(),
         getFormats: sinon.spy(),
         getProviders: sinon.spy(),
+        getProjections: sinon.spy(),
         runDeletion: {
             deleting: false,
             deleted: false,
@@ -411,6 +412,7 @@ describe('DataPackPage component', () => {
         const search = 'search_text';
         const providers = ['test_provider'];
         const formats = ['test_format'];
+        const projections = [4326];
         const geojson = { data: {} };
         const permissions = { value: 'SHARED', groups: {}, members: {} };
         const expectedParams = [{
@@ -423,6 +425,7 @@ describe('DataPackPage component', () => {
             search,
             providers,
             formats,
+            projections,
             geojson,
             permissions,
             isAuto: false,
@@ -434,6 +437,7 @@ describe('DataPackPage component', () => {
             permissions,
             providers,
             formats,
+            projections,
             geojson_geometry: geojson,
         });
         props.getRuns.resetHistory();

@@ -296,9 +296,11 @@ def get_metadata(data_provider_task_uid):
         "osm": {
             "copyright": None,
             "description": "OpenStreetMap vector data provided in a custom thematic schema. \r\n\t\r\n\tData is grouped into separate tables (e.g. water, roads...).",
-            "file_path": "data/osm/test-osm-20181101.gpkg",
-            "file_type": ".gpkg",
-            "full_file_path": "/var/lib/eventkit/exports_stage/7fadf34e-58f9-4bb8-ab57-adc1015c4269/osm/test.gpkg",
+            "files": [{"file_path": "data/osm/test-osm-20181101.gpkg",
+                       "file_ext": ".gpkg",
+                       "full_file_path": "/var/lib/eventkit/exports_stage/7fadf34e-58f9-4bb8-ab57-adc1015c4269/osm/test.gpkg",
+                       "band_stats":
+                       "ramp_shader_steps":}]
             "last_update": "2018-10-29T04:35:02Z\n",
             "metadata": "https://overpass-server.com/overpass/interpreter",
             "name": "OpenStreetMap Data (Themes)",
@@ -317,6 +319,7 @@ def get_metadata(data_provider_task_uid):
     ],
     "name": "test",
     "project": "Test",
+    "projections": [4326, 3857]
     "run_uid": "7fadf34e-58f9-4bb8-ab57-adc1015c4269",
     "url": "http://cloud.eventkit.test/status/2010025c-6d61-4a0b-8d5d-ff9c657259eb"
     }
@@ -329,6 +332,10 @@ def get_metadata(data_provider_task_uid):
     data_provider_task = DataProviderTaskRecord.objects.get(uid=data_provider_task_uid)
 
     run = data_provider_task.run
+
+    projections = []
+    for projection in run.job.projections.all():
+        projections.append(projection.srid)
 
     if data_provider_task.name == 'run':
         provider_tasks = run.provider_tasks.filter(~Q(name='run'))
@@ -345,6 +352,7 @@ def get_metadata(data_provider_task_uid):
                 'url': "{0}/status/{1}".format(getattr(settings, "SITE_URL"), str(run.job.uid)),
                 'description': run.job.description,
                 'project': run.job.event,
+                'projections': projections,
                 'date': timezone.now().strftime("%Y%m%d"),
                 'run_uid': str(run.uid),
                 'data_sources': {},
@@ -359,9 +367,30 @@ def get_metadata(data_provider_task_uid):
 
         data_provider = DataProvider.objects.get(slug=provider_task.slug)
         provider_type = data_provider.export_provider_type.type_name
-        metadata['data_sources'][provider_task.slug] = {"name": provider_task.name}
         if TaskStates[provider_task.status] not in TaskStates.get_incomplete_states():
             provider_staging_dir = get_provider_staging_dir(run.uid, provider_task.slug)
+            conf = yaml.load(data_provider.config) or dict()
+            cert_var = conf.get('cert_var', data_provider.slug)
+            metadata['data_sources'][provider_task.slug] = {'uid': str(provider_task.uid),
+                                                            'slug': provider_task.slug,
+                                                            'name': provider_task.name,
+                                                            'files': [],
+                                                            'type': get_data_type_from_provider(provider_task.slug),
+                                                            'description': str(
+                                                                data_provider.service_description).replace('\r\n',
+                                                                                                           '\n').replace(
+                                                                '\n', '\r\n\t'),
+                                                            'last_update': get_last_update(data_provider.url,
+                                                                                           provider_type,
+                                                                                           cert_var=cert_var),
+                                                            'metadata': get_metadata_url(data_provider.url,
+                                                                                         provider_type),
+                                                            'copyright': data_provider.service_copyright}
+            if metadata['data_sources'][provider_task.slug].get('type') == 'raster':
+                metadata['has_raster'] = True
+            if metadata['data_sources'][provider_task.slug].get('type') == 'elevation':
+                metadata['has_elevation'] = True
+
             for export_task in provider_task.tasks.all():
                 try:
                     filename = export_task.result.filename
@@ -369,10 +398,8 @@ def get_metadata(data_provider_task_uid):
                     continue
                 full_file_path = os.path.join(provider_staging_dir, filename)
                 file_ext = os.path.splitext(filename)[1]
-                # Exclude zip files created by prepare_file_for zip and the selection geojson
-                # also within the QGIS style sheet it is currently assumed that GPKG files are Imagery and
-                # GeoTIFF are elevation.  This will need to be updated in the future.
-                if file_ext in ['.gpkg', '.tif']:
+                # Only include files relavant to the user that we can actually add to the carto.
+                if export_task.display and ("project file" not in export_task.name.lower()):
                     download_filename = get_download_filename(os.path.splitext(os.path.basename(filename))[0],
                                                               timezone.now(),
                                                               file_ext,
@@ -382,41 +409,20 @@ def get_metadata(data_provider_task_uid):
                         download_filename
                     )
 
-                    conf = yaml.load(data_provider.config) or dict()
-                    cert_var = conf.get('cert_var', data_provider.slug)
-                    metadata['data_sources'][provider_task.slug] = {'uid': str(provider_task.uid),
-                                                                    'slug': provider_task.slug,
-                                                                    'name': provider_task.name,
-                                                                    'file_path': filepath,
-                                                                    'full_file_path': full_file_path,
-                                                                    'file_type': file_ext,
-                                                                    'type': get_data_type_from_provider(
-                                                                        provider_task.slug),
-                                                                    'description': str(
-                            data_provider.service_description).replace('\r\n', '\n').replace(
-                            '\n', '\r\n\t'),
-                                                                    'last_update': get_last_update(data_provider.url,
-                                                                                                   provider_type,
-                                                                                                   cert_var=cert_var),
-                                                                    'metadata': get_metadata_url(data_provider.url,
-                                                                                                 provider_type),
-                                                                    'copyright': data_provider.service_copyright}
-                    if provider_task.slug not in ['osm', 'nome']:
-                        if file_ext == '.gpkg':
-                            metadata['has_raster'] = True
-                        if file_ext == '.tif':
-                            metadata['has_elevation'] = True
-                    if os.path.splitext(full_file_path)[1] == '.tif':
+                    file_data = {'file_path': filepath, 'full_file_path': full_file_path, 'file_ext': file_ext}
+                    if metadata['data_sources'][provider_task.slug].get('type') == 'elevation':
                         # Get statistics to update ranges in template.
                         band_stats = get_band_statistics(full_file_path)
                         logger.info("Band Stats {0}: {1}".format(full_file_path, band_stats))
-                        metadata['data_sources'][provider_task.slug]["band_stats"] = band_stats
+                        file_data["band_stats"] = band_stats
                         # Calculate the value for each elevation step (of 16)
                         try:
                             steps = linspace(band_stats[0], band_stats[1], num=16)
-                            metadata['data_sources'][provider_task.slug]["ramp_shader_steps"] = list(map(int, steps))
+                            file_data["ramp_shader_steps"] = list(map(int, steps))
                         except TypeError:
-                            metadata['data_sources'][provider_task.slug]["ramp_shader_steps"] = None
+                            file_data["ramp_shader_steps"] = None
+
+                    metadata['data_sources'][provider_task.slug]['files'] += [file_data]
 
                 if not os.path.isfile(full_file_path):
                     logger.error("Could not find file {0} for export {1}.".format(full_file_path, export_task.name))
@@ -430,7 +436,8 @@ def get_metadata(data_provider_task_uid):
         if license_file:
             include_files += [license_file]
         metadata['include_files'] = include_files
-
+    import json
+    logger.error(json.dumps(metadata))
     return metadata
 
 
@@ -445,20 +452,21 @@ def get_arcgis_metadata(metadata):
     # remove files which reference the server directories.
     arcgis_metadata.pop('include_files')
     for data_source, data_source_values in arcgis_metadata['data_sources'].items():
-        data_source_values.pop('full_file_path')
+        for file_details in data_source_values['files']:
+            file_details.pop('full_file_path', "")
 
     return arcgis_metadata
 
 
-def get_data_type_from_provider(provider_slug):
+def get_data_type_from_provider(provider_slug: str) -> str:
     from eventkit_cloud.jobs.models import DataProvider
-    # NOTE TIF here is a place holder until we figure out how to support other formats.
     data_types = {'wms': 'raster',
                   'tms': 'raster',
                   'wmts': 'raster',
-                  'wcs': 'tif',
+                  'wcs': 'elevation',
                   'wfs': 'vector',
                   'osm': 'osm',
+                  'osm-generic': 'vector',
                   'arcgis-feature': 'vector',
                   'arcgis-raster': 'raster'}
     data_provider = DataProvider.objects.get(slug=provider_slug)
@@ -467,6 +475,7 @@ def get_data_type_from_provider(provider_slug):
     if data_provider.slug.lower() == 'nome':
         type_mapped = 'nome'
     return type_mapped
+
 
 def get_all_rabbitmq_objects(api_url, rabbit_class):
     """
@@ -498,6 +507,7 @@ def get_message_count(queue_name):
                 return queue.get("messages")
             except Exception as e:
                 logger.info(e)
+
 
 def clean_config(config):
     """

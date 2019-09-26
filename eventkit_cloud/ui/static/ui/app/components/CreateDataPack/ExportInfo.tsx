@@ -210,6 +210,8 @@ export class ExportInfo extends React.Component<Props, State> {
         this.checkSelectedFormats = this.checkSelectedFormats.bind(this);
         this.projectionHasErrors = this.projectionHasErrors.bind(this);
         this.getProjectionDialog = this.getProjectionDialog.bind(this);
+        this.clearEstimate = this.clearEstimate.bind(this);
+
         this.joyride = React.createRef();
     }
 
@@ -579,6 +581,17 @@ export class ExportInfo extends React.Component<Props, State> {
         }
     }
 
+    private clearEstimate(provider: ProviderData) {
+        const newProvider = {...provider} as ProviderData;
+        newProvider.estimate = null;
+        this.setState((prevState) => {
+            // make a copy of state providers and replace the one we updated
+            const providers = [...prevState.providers];
+            providers.splice(providers.indexOf(provider), 1, newProvider);
+            return {providers};
+        });
+    }
+
     private checkProviders(providers: ProviderData[]) {
         providers.forEach((provider) => {
             this.checkProvider(provider);
@@ -894,6 +907,7 @@ export class ExportInfo extends React.Component<Props, State> {
                                             renderEstimate={this.context.config.SERVE_ESTIMATES}
                                             checkProvider={this.checkProvider}
                                             compatibilityInfo={this.state.compatibilityInfo}
+                                            clearEstimate={this.clearEstimate}
                                         />
                                     ))}
                                 </List>

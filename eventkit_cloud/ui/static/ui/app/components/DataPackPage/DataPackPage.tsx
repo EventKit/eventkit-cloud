@@ -32,6 +32,7 @@ import history from '../../utils/history';
 import { Breakpoint } from '@material-ui/core/styles/createBreakpoints';
 import isEqual from 'lodash/isEqual';
 import {getFormats} from "../../actions/formatActions";
+import {getProjections} from "../../actions/projectionActions";
 
 interface Props {
     runIds: string[];
@@ -49,6 +50,7 @@ interface Props {
     deleteRun: () => void;
     getProviders: () => void;
     getFormats: () => void;
+    getProjections: () => void;
     runDeletion: {
         deleted: boolean;
         deleting: boolean;
@@ -71,6 +73,7 @@ interface Props {
     setView: (view: string) => void;
     providers: Eventkit.Provider[];
     formats: Eventkit.Format[];
+    projections: Eventkit.Projection[];
     updateDataCartPermissions: () => void;
     updatePermissions: {
         updating: boolean;
@@ -96,6 +99,7 @@ interface State {
     };
     providers: any;
     formats: any;
+    projections: any;
     pageLoading: boolean;
     loading: boolean;
     geojson_geometry: null | GeoJSON.Geometry;
@@ -151,6 +155,7 @@ export class DataPackPage extends React.Component<Props, State> {
             },
             providers: {},
             formats: {},
+            projections: {},
             pageLoading: props.runsFetched === null,
             loading: true,
             geojson_geometry: null,
@@ -178,6 +183,8 @@ export class DataPackPage extends React.Component<Props, State> {
     componentDidMount() {
         this.props.getProviders();
         this.props.getFormats();
+        this.props.getProjections();
+
         this.makeRunRequest();
         this.fetch = window.setInterval(this.autoRunRequest, 10000);
         // make sure no geojson upload is in the state
@@ -381,6 +388,7 @@ export class DataPackPage extends React.Component<Props, State> {
             maxDate: this.state.maxDate,
             providers: this.state.providers,
             formats: this.state.formats,
+            projections: this.state.projections,
             geojson: this.state.geojson_geometry,
             permissions: this.state.permissions,
             isAuto,
@@ -726,6 +734,7 @@ export class DataPackPage extends React.Component<Props, State> {
                         open={this.state.open}
                         providers={this.props.providers}
                         formats={this.props.formats}
+                        projections={this.props.projections}
                     />
 
                     {this.state.pageLoading ?
@@ -762,6 +771,7 @@ function mapStateToProps(state) {
         drawer: state.drawer,
         providers: state.providers,
         formats: state.formats,
+        projections: state.projections,
         importGeom: state.importGeom,
         geocode: state.geocode,
         updatePermissions: state.updatePermission,
@@ -781,6 +791,9 @@ function mapDispatchToProps(dispatch) {
         },
         getFormats: () => {
             dispatch(getFormats());
+        },
+        getProjections: () => {
+            dispatch(getProjections());
         },
         getGeocode: (query: object) => {
             dispatch(getGeocode(query));

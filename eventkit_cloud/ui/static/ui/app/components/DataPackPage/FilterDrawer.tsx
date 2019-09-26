@@ -7,6 +7,7 @@ import FilterHeader from './FilterHeader';
 import CustomScrollbar from '../CustomScrollbar';
 import ProvidersFilter from './ProvidersFilter';
 import FormatsFilter from "./FormatsFilter";
+import ProjectionsFilter from "./ProjectionsFilter";
 
 export interface Props {
     onFilterApply: (state: State) => void;
@@ -14,6 +15,7 @@ export interface Props {
     open: boolean;
     providers: Eventkit.Provider[];
     formats: Eventkit.Format[];
+    projections: Eventkit.Projection[];
 }
 
 export interface State {
@@ -27,6 +29,7 @@ export interface State {
     };
     providers: { [slug: string]: boolean };
     formats: { [slug: string]: boolean };
+    projections: { [srid: number]: boolean };
 }
 
 export class FilterDrawer extends React.Component<Props, State> {
@@ -38,6 +41,7 @@ export class FilterDrawer extends React.Component<Props, State> {
         this.handlePermissionsChange = this.handlePermissionsChange.bind(this);
         this.handleProvidersChange = this.handleProvidersChange.bind(this);
         this.handleFormatsChange = this.handleFormatsChange.bind(this);
+        this.handleProjectionsChange = this.handleProjectionsChange.bind(this);
         this.handleStatusChange = this.handleStatusChange.bind(this);
         this.handleMinDate = this.handleMinDate.bind(this);
         this.handleMaxDate = this.handleMaxDate.bind(this);
@@ -60,6 +64,7 @@ export class FilterDrawer extends React.Component<Props, State> {
             },
             providers: {},
             formats: {},
+            projections: {},
         };
     }
 
@@ -102,6 +107,17 @@ export class FilterDrawer extends React.Component<Props, State> {
         }
 
         this.setState({ formats });
+    }
+
+    private handleProjectionsChange(srid: number, isSelected: boolean) {
+        const { projections } = this.state;
+        if (isSelected) {
+            projections[srid] = true;
+        } else {
+            delete projections[srid];
+        }
+
+        this.setState({ projections });
     }
 
     private handleMinDate(date: string) {
@@ -158,6 +174,11 @@ export class FilterDrawer extends React.Component<Props, State> {
                         onChange={this.handleProvidersChange}
                         providers={this.props.providers}
                         selected={this.state.providers}
+                    />
+                    <ProjectionsFilter
+                        projections={this.props.projections}
+                        selected={this.state.projections}
+                        onChange={this.handleProjectionsChange}
                     />
                     <FormatsFilter
                         onChange={this.handleFormatsChange}

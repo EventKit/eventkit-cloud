@@ -135,13 +135,13 @@ export function formatMegaBytes(megabytes) {
     // format a size so that it is reasonably displayed.
     // megabytes = 40 => 40 MB
     // megabytes = 1337 => 1.34 GB
-    let units = ['MB', 'GB', 'TB']; // More can be added, obviously
+    const units = ['MB', 'GB', 'TB']; // More can be added, obviously
     let order = 0;
-    megabytes = Number(megabytes);
-    while (megabytes / 10 ** ((order + 1) * 3) >= 1) {
+    const mb = Number(megabytes);
+    while (mb / (10 ** ((order + 1) * 3)) >= 1) {
         order += 1;
     }
-    return `${Number(megabytes / 10 ** (order * 3)).toFixed(2)} ${units[order]}`
+    return `${Number(mb / (10 ** (order * 3))).toFixed(2)} ${units[order]}`;
 }
 
 export function getCookie(name) {
