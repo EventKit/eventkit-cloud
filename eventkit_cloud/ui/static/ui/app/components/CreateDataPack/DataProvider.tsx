@@ -163,7 +163,7 @@ export class DataProvider extends React.Component<Props, State> {
     getFormatCompatibility(formatSlug: string) {
         const formatInfo = this.props.compatibilityInfo.formats[formatSlug.toLowerCase()];
         if (!formatInfo) {
-            return Compatibility.Partial;
+            return Compatibility.Full;
         }
         const incompatibleProjections = this.props.compatibilityInfo.formats[formatSlug.toLowerCase()].projections.length;
         if (incompatibleProjections >= this.props.selectedProjections.length) {
