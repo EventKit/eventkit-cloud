@@ -146,7 +146,8 @@ class MapproxyGeopackage(object):
 
         ssl_verify = getattr(settings, "SSL_VERIFICATION", True)
         if isinstance(ssl_verify, bool):
-            conf_dict['globals'] = {'http': {'ssl_no_cert_checks': ssl_verify}}
+            if not ssl_verify:
+                conf_dict['globals'] = {'http': {'ssl_no_cert_checks': ssl_verify}}
         else:
             conf_dict['globals'] = {'http': {'ssl_ca_certs': ssl_verify}}
 

@@ -1,15 +1,14 @@
 # -*- coding: utf-8 -*-
 """UI view definitions."""
 from logging import getLogger
-
-from django.http import HttpResponse
 from django.core.cache import cache
 from django.conf import settings
+from django.http.request import HttpRequest
+from django.http.response import HttpResponse
 import yaml
 
 from eventkit_cloud.utils import auth_requests
 from eventkit_cloud.jobs.models import DataProvider
-from eventkit_cloud.utils.auth_requests import cert_var_to_cert
 from mapproxy.config.config import load_config, load_default_config
 from mapproxy.config.loader import ProxyConfiguration, ConfigurationError, validate_references
 from mapproxy.wsgiapp import MapProxyApp
@@ -21,12 +20,18 @@ from webtest import TestApp
 logger = getLogger(__file__)
 
 
-def map(request, slug, path):
+def map(request: HttpRequest, slug: str, path: str) -> HttpResponse:
+    """
+    Makes a proxy request to mapproxy used to get map tiles.
+    :param request: The httprequest.
+    :param slug: A string matching the slug of a DataProvider.
+    :param path: The rest of the url context (i.e. the path to the tile some_service/0/0/0.png).
+    :return: The HttpResponse.
+    """
 
     start_time = time.time()
 
     conf_dict = cache.get_or_set(F"base-config-{slug}", lambda: get_conf_dict(slug), 360)
-
 
     # TODO: place this somewhere else consolidate settings.
     base_config = {"services": {"demo": None,
@@ -65,17 +70,17 @@ def map(request, slug, path):
     response = HttpResponse(mp_response.body, status=mp_response.status_int)
     for header, value in mp_response.headers.iteritems():
         response[header] = value
-    request_time = time.time()
-    logger.info(params)
-    logger.info(F"Config Time: {config_time-start_time}")
-    logger.info(F"App Time: {app_time-config_time}")
-    logger.info(F"Request Time: {request_time-app_time}")
-    logger.info(F"Total Time: {request_time-start_time}")
 
     return response
 
 
-def get_conf_dict(slug):
+def get_conf_dict(slug: str) -> dict:
+    """
+    Takes a slug value for a DataProvider and returns a mapproxy configuration as a dict.
+    :param slug: A string matching the slug of a DataProvider
+    :return: a dict.
+    """
+
     try:
         provider = cache.get_or_set(F"DataProvider-{slug}", lambda: DataProvider.objects.get(slug=slug), 360)
     except Exception:
@@ -88,13 +93,12 @@ def get_conf_dict(slug):
         conf_dict.pop("layers", "")
         ssl_verify = getattr(settings, "SSL_VERIFICATION", True)
         if isinstance(ssl_verify, bool):
-            conf_dict['globals'] = {'http': {'ssl_no_cert_checks': ssl_verify}}
+            if not ssl_verify:
+                conf_dict['globals'] = {'http': {'ssl_no_cert_checks': ssl_verify}}
         else:
             conf_dict['globals'] = {'http': {'ssl_ca_certs': ssl_verify}}
-        logger.error(F"SSL VERIFY: {ssl_verify}")
-        conf_dict['globals'] = {'http': {'client_timeout': 120}}
-        conf_dict['globals']['cache'] = {'lock_dir': "./locks",
-                                         'tile_lock_dir': "./locks"}
+        conf_dict.update({'globals': {'cache': {'lock_dir': "./locks",
+                                                'tile_lock_dir': "./locks"}}})
     except Exception as e:
         logger.error(e)
         raise Exception(F"Unable to load a mapproxy configuration for slug {slug}")

@@ -36,17 +36,17 @@ EXPORT_TASKS = {
 }
 
 # where exports are staged for processing
-EXPORT_STAGING_ROOT = None
+EXPORT_STAGING_ROOT = os.getenv('EXPORT_STAGING_ROOT', '/var/lib/eventkit/exports_stage/')
+TILE_CACHE_DIR = os.getenv('TILE_CACHE_DIR', '/var/lib/eventkit/tile_cache/')
 if os.getenv("VCAP_SERVICES"):
     for service, listings in json.loads(os.getenv("VCAP_SERVICES")).items():
         if 'nfs' in service:
             try:
                 EXPORT_STAGING_ROOT = os.path.join(listings[0]['volume_mounts'][0]['container_dir'], 'eventkit_stage')
+                TILE_CACHE_DIR = os.path.join(listings[0]['volume_mounts'][0]['container_dir'], 'tile_cache')
             except (KeyError, TypeError) as e:
                 print(e)
                 continue
-if not EXPORT_STAGING_ROOT:
-    EXPORT_STAGING_ROOT = os.getenv('EXPORT_STAGING_ROOT', '/var/lib/eventkit/exports_stage/')
 
 # where exports are stored for public download
 EXPORT_DOWNLOAD_ROOT = os.getenv('EXPORT_DOWNLOAD_ROOT', '/var/lib/eventkit/exports_download/')
