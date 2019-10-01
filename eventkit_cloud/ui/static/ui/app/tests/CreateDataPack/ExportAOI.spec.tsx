@@ -167,7 +167,7 @@ describe('ExportAOI component', () => {
         expect(readSpy.called).toBe(true);
         expect(readSpy.calledWith(props.aoiInfo.geojson, {
             dataProjection: WGS84,
-            featureProjection: WEB_MERCATOR,
+            featureProjection: WGS84,
         })).toBe(true);
         expect(addSpy.calledOnce).toBe(true);
         expect(fitSpy.calledOnce).toBe(true);

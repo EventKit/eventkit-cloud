@@ -1,3 +1,4 @@
+import * as PropTypes from 'prop-types';
 import * as React from 'react';
 import { withTheme, Theme } from '@material-ui/core/styles';
 import moment from 'moment';
@@ -7,7 +8,8 @@ import DataPackStatusTable from './DataPackStatusTable';
 import DataPackOptions from './DataPackOptions';
 import DataPackGeneralTable from './DataPackGeneralTable';
 import { DataCartInfoTable } from './DataCartInfoTable';
-import DataPackAoiInfo from './DataPackAoiInfo';
+import { MapView } from "../common/MapView";
+import { getSqKmString } from "../../utils/generic"
 
 export interface Props {
     cartDetails: Eventkit.FullRun;
@@ -32,10 +34,15 @@ export interface State {
 }
 
 export class DataCartDetails extends React.Component<Props, State> {
+    static contextTypes = {
+        config: PropTypes.object,
+    };
+
     static defaultProps = {
         updatingExpiration: false,
         updatingPermission: false,
     };
+
     constructor(props: Props) {
         super(props);
         this.setDates = this.setDates.bind(this);
@@ -165,7 +172,24 @@ export class DataCartDetails extends React.Component<Props, State> {
                     <div className="qa-DataCartDetails-div-aoi" style={styles.subHeading}>
                         Selected Area of Interest (AOI)
                     </div>
-                    <DataPackAoiInfo extent={this.props.cartDetails.job.extent} />
+                    <div>
+                        <CustomTableRow
+                            className="qa-DataPackAoiInfo-area"
+                            title="Area"
+                            data={getSqKmString(this.props.cartDetails.job.extent)}
+                            dataStyle={{wordBreak: 'break-all'}}
+                        />
+                        <div className="qa-DataPackAoiInfo-div-map" style={{maxHeight: '400px', marginTop: '10px'}}>
+                            <MapView
+                                id={"summaryMap"}
+                                url={this.context.config.BASEMAP_URL}
+                                copyright={this.context.config.BASEMAP_COPYRIGHT}
+                                geojson={this.props.cartDetails.job.extent}
+                                minZoom={2}
+                                maxZoom={20}
+                            />
+                        </div>
+                    </div>
                 </div>
                 <div style={styles.container} className="qa-DataCartDetails-div-exportInfoContainer" id="ExportInfo">
                     <div className="qa-DataCartDetails-div-exportInfo" style={styles.subHeading}>

@@ -284,22 +284,24 @@ export function unwrapPoint([x, y]) {
 export function featureToBbox(feature, projection) {
     let featProjection = projection;
     if (!featProjection) {
-        featProjection = WEB_MERCATOR;
+        featProjection = WGS84;
     }
     const reader = new GeoJSON();
     const geometry = reader.readGeometry(feature.geometry, { featureProjection: featProjection });
     return geometry.getExtent();
 }
 
+// This may not be needed anymore
 export function deserialize(serialized) {
     if (serialized && serialized.length === 4) {
-        return proj.transformExtent(serialized, WGS84, WEB_MERCATOR);
+        return serialized;
+        // return proj.transformExtent(serialized, WGS84, WEB_MERCATOR);
     }
     return null;
 }
 
-export function serialize(ext) {
-    const bbox = proj.transformExtent(ext, WEB_MERCATOR, WGS84);
+export function serialize(bbox) {
+    // const bbox = proj.transformExtent(ext, WEB_MERCATOR, WGS84);
     const p1 = unwrapPoint(bbox.slice(0, 2));
     const p2 = unwrapPoint(bbox.slice(2, 4));
     return p1.concat(p2).map(truncate);
@@ -326,7 +328,6 @@ export function isGeoJSONValid(featureCollection) {
 
 export function createGeoJSONGeometry(ol3Geometry) {
     const geom = ol3Geometry.clone();
-    geom.transform(WEB_MERCATOR, WGS84);
     const coords = geom.getCoordinates();
     const geojsonGeom = {
         type: geom.getType(),
@@ -359,7 +360,7 @@ export function zoomToFeature(feature, map) {
     if (geom.getType() !== 'Point') {
         map.getView().fit(geom);
     } else if (feature.getProperties().bbox) {
-        map.getView().fit(proj.transformExtent(feature.getProperties().bbox, WGS84, WEB_MERCATOR));
+        map.getView().fit(feature.getProperties().bbox);
     } else {
         map.getView().setCenter(geom.getCoordinates());
     }
@@ -493,7 +494,7 @@ export function allHaveArea(featureCollection) {
     const reader = new GeoJSON();
     const features = reader.readFeatures(featureCollection, {
         dataProjection: WGS84,
-        featureProjection: WEB_MERCATOR,
+        featureProjection: WGS84,
     });
 
     if (!features.length) {
@@ -577,4 +578,14 @@ export function zoomSliderCleanup(zoomSlider) {
 
     window.removeEventListener('mousemove', zoomSlider.eventkitZoomSliderDrag);
     window.removeEventListener('mouseup', zoomSlider.eventKitZoomSliderDragEnd);
+}
+
+export function getResolutions(levels, startingResolution){
+    //default to EPSG:4326 resolution supporting 2 tiles at level 0.
+    const startResolution = startingResolution ? startingResolution : 0.703125;
+    let resolutions = new Array(levels);
+        for (let i = 0; i < resolutions.length; ++i) {
+            resolutions[i] = startResolution / Math.pow(2, i);
+    };
+    return resolutions;
 }

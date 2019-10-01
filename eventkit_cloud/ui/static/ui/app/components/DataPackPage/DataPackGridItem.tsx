@@ -38,6 +38,7 @@ import DataPackShareDialog from '../DataPackShareDialog/DataPackShareDialog';
 import { makeFullRunSelector } from '../../selectors/runSelector';
 import ProviderDialog from '../Dialog/ProviderDialog';
 import history from '../../utils/history';
+import {MapView} from "../common/MapView";
 
 const jss = (theme: any) => createStyles({
     cardTitle: {
@@ -155,7 +156,6 @@ export class DataPackGridItem extends React.Component<Props, State> {
     private map;
     constructor(props) {
         super(props);
-        this.initMap = this.initMap.bind(this);
         this.toggleExpanded = this.toggleExpanded.bind(this);
         this.showDeleteDialog = this.showDeleteDialog.bind(this);
         this.hideDeleteDialog = this.hideDeleteDialog.bind(this);
@@ -174,21 +174,6 @@ export class DataPackGridItem extends React.Component<Props, State> {
         };
     }
 
-    componentDidMount() {
-        this.initMap();
-    }
-
-    componentDidUpdate(prevProps, prevState) {
-        if (prevState.expanded !== this.state.expanded) {
-            if (this.state.expanded) {
-                this.initMap();
-            } else {
-                this.map.setTarget(null);
-                this.map = null;
-            }
-        }
-    }
-
     private getMapId() {
         let mapId = '';
         if (!isUndefined(this.props.gridName)) {
@@ -201,56 +186,6 @@ export class DataPackGridItem extends React.Component<Props, State> {
         mapId = `map${mapId}`;
 
         return mapId;
-    }
-
-    private initMap() {
-        this.map = new Map({
-            target: this.getMapId(),
-            layers: [
-                new Tile({
-                    source: new XYZ({
-                        url: this.context.config.BASEMAP_URL,
-                        wrapX: true,
-                        attributions: this.context.config.BASEMAP_COPYRIGHT,
-                    }),
-                }),
-            ],
-            view: new View({
-                projection: 'EPSG:3857',
-                center: [110, 0],
-                zoom: 2,
-                minZoom: 2,
-                maxZoom: 22,
-            }),
-            interactions: interaction.defaults({ mouseWheelZoom: false }),
-            controls: [
-                new Attribution({
-                    className: ['ol-attribution', ol3mapCss['ol-attribution']].join(' '),
-                    collapsible: false,
-                    collapsed: false,
-                }),
-                new Zoom({
-                    className: [ol3mapCss.olZoom, ol3mapCss.olControlTopLeft].join(' '),
-                }),
-                new ScaleLine({
-                    className: ol3mapCss.olScaleLine,
-                }),
-            ],
-        });
-
-        const source = new VectorSource({ wrapX: true });
-
-        const geojson = new GeoJSONFormat();
-        const feature = geojson.readFeature(this.props.run.job.extent, {
-            featureProjection: 'EPSG:3857',
-            dataProjection: 'EPSG:4326',
-        });
-        source.addFeature(feature);
-        const layer = new VectorLayer({
-            source,
-        });
-        this.map.addLayer(layer);
-        this.map.getView().fit(source.getExtent(), this.map.getSize());
     }
 
     private handleProviderClose() {
@@ -278,17 +213,6 @@ export class DataPackGridItem extends React.Component<Props, State> {
     private handleDelete() {
         this.hideDeleteDialog();
         this.props.onRunDelete(this.props.run.uid);
-    }
-
-    private mapContainerRef(element) {
-        if (!element) {
-            return;
-        }
-
-        // Absorb touch move events.
-        element.addEventListener('touchmove', e => {
-            e.stopPropagation();
-        });
     }
 
     private handleShareOpen() {
@@ -477,10 +401,13 @@ export class DataPackGridItem extends React.Component<Props, State> {
                     </CardContent>
                     <Collapse in={this.state.expanded}>
                         <CardContent className="qa-DataPackGridItem-CardMedia" style={{ padding: '0px' }}>
-                            <div
+                            <MapView
                                 id={this.getMapId()}
-                                style={{ padding: '0px 2px', backgroundColor: 'none', maxHeight: '200px' }}
-                                ref={this.mapContainerRef}
+                                url={this.context.config.BASEMAP_URL}
+                                copyright={this.context.config.BASEMAP_COPYRIGHT}
+                                geojson = {this.props.run.job.extent}
+                                minZoom={2}
+                                maxZoom={20}
                             />
                         </CardContent>
                     </Collapse>
