@@ -34,12 +34,12 @@ export const WEB_MERCATOR = 'EPSG:3857';
 /**
  * Convert a jsts geometry to an openlayers3 geometry
  * @param {jstsGeom} a JSTS geometry in EPSG:4326
- * @return {olGeom} an openlayers3 geometry in EPSG:3857
+ * @return {olGeom} an openlayers3 geometry in EPSG:4326
  */
 export function jstsGeomToOlGeom(jstsGeom) {
     const writer = new GeoJSONWriter();
     const olReader = new GeoJSON();
-    const olGeom = olReader.readGeometry(writer.write(jstsGeom)).transform('EPSG:4326', 'EPSG:3857');
+    const olGeom = olReader.readGeometry(writer.write(jstsGeom));
     return olGeom;
 }
 
@@ -295,13 +295,11 @@ export function featureToBbox(feature, projection) {
 export function deserialize(serialized) {
     if (serialized && serialized.length === 4) {
         return serialized;
-        // return proj.transformExtent(serialized, WGS84, WEB_MERCATOR);
     }
     return null;
 }
 
 export function serialize(bbox) {
-    // const bbox = proj.transformExtent(ext, WEB_MERCATOR, WGS84);
     const p1 = unwrapPoint(bbox.slice(0, 2));
     const p2 = unwrapPoint(bbox.slice(2, 4));
     return p1.concat(p2).map(truncate);

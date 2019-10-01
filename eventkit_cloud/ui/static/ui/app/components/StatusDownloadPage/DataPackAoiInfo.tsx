@@ -98,7 +98,7 @@ export class DataPackAoiInfo extends React.Component<Props, {}> {
                     data={getSqKmString(this.props.extent)}
                     dataStyle={{ wordBreak: 'break-all' }}
                 />
-                <div style={{maxHeight: '400px', marginTop: '10px'}}>
+                <div className="qa-DataPackAoiInfo-div-map" style={{maxHeight: '400px', marginTop: '10px'}}>
                     <MapView
                         id={"summaryMap"}
                         url={this.context.config.BASEMAP_URL}

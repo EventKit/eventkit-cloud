@@ -332,12 +332,9 @@ describe('ExportAOI component', () => {
     });
 
     it('handleResetMap should get the world extent and fit the view to it', () => {
-        const transformSpy = sinon.spy(proj, 'transformExtent');
         const fitSpy = sinon.spy(View.prototype, 'fit');
         instance.handleResetMap();
-        expect(transformSpy.calledOnce).toBe(true);
         expect(fitSpy.calledOnce).toBe(true);
-        transformSpy.restore();
         fitSpy.restore();
     });
 
@@ -566,7 +563,7 @@ describe('ExportAOI component', () => {
             [101.0, 1.0],
             [100.0, 1.0],
             [100.0, 0.0],
-        ]]).transform(WGS84, WEB_MERCATOR);
+        ]]);
         const getCoordSpy = sinon.spy(geom, 'getCoordinates');
         const setCoordSpy = sinon.spy(geom, 'setCoordinates');
         const feat = new Feature({
@@ -608,7 +605,7 @@ describe('ExportAOI component', () => {
                     [101.0, 1.0],
                     [100.0, 1.0],
                     [100.0, 0.0],
-                ]]).transform(WGS84, WEB_MERCATOR),
+                ]])
             }),
         };
         instance.handleDrawEnd(event);
@@ -631,7 +628,7 @@ describe('ExportAOI component', () => {
             [101.0, 1.0],
             [100.0, 1.0],
             [100.0, 0.0],
-        ]]).transform(WGS84, WEB_MERCATOR);
+        ]]);
         const feat = new Feature({
             geometry: geom,
         });
@@ -669,7 +666,7 @@ describe('ExportAOI component', () => {
                     [100.0, 0.0],
                     [100.0, 0.0],
                     [100.0, 0.0],
-                ]]).transform(WGS84, WEB_MERCATOR),
+                ]]),
             }),
         };
         instance.handleDrawEnd(event);
@@ -1197,7 +1194,7 @@ describe('ExportAOI component', () => {
         expect(readSpy.calledOnce).toBe(true);
         expect(readSpy.calledWith(geojson, {
             dataProjection: 'EPSG:4326',
-            featureProjection: 'EPSG:3857',
+            featureProjection: 'EPSG:4326',
         })).toBe(true);
         expect(clearSpy.calledOnce).toBe(true);
         expect(addSpy.calledOnce).toBe(true);

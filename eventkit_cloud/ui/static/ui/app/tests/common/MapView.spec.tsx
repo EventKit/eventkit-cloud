@@ -100,4 +100,13 @@ describe('MapCard component', () => {
         expect(fitSpy.calledOnce).toBe(true);
         expect(getSizeSpy.calledOnce).toBe(true);
     });
+
+    it('absorbs touch move events on the map', () => {
+        const element = {
+            addEventListener: sinon.spy(),
+        };
+        instance.mapContainerRef(element);
+        expect(element.addEventListener.callCount).toBe(1);
+        expect(element.addEventListener.calledWith('touchmove')).toBe(true);
+    });
 });

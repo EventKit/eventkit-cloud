@@ -37,7 +37,7 @@ class TestGeopackage(TransactionTestCase):
                      remove_zoom_levels, mock_check_zoom_levels, mock_set_gpkg_contents_bounds,
                      patch_https):
         gpkgfile = '/var/lib/eventkit/test.gpkg'
-        config = "layers:\r\n - name: default\r\n   title: imagery\r\n   sources: [default]\r\n\r\nsources:\r\n  default:\r\n    type: tile\r\n    grid: default\r\n    url: http://a.tile.openstreetmap.fr/hot/%(z)s/%(x)s/%(y)s.png\r\n\r\ngrids:\r\n  default:\r\n    srs: EPSG:3857\r\n    tile_size: [256, 256]\r\n    origin: nw"
+        config = "layers:\r\n - name: default\r\n   title: imagery\r\n   sources: [default]\r\n\r\nsources:\r\n  default:\r\n    type: tile\r\n    grid: default\r\n    url: http://a.tile.openstreetmap.fr/hot/%(z)s/%(x)s/%(y)s.png\r\n\r\ngrids:\r\n  default:\r\n    srs: WGS84:3857\r\n    tile_size: [256, 256]\r\n    origin: nw"
         json_config = real_yaml.load(config)
         mapproxy_config = load_default_config()
         bbox = [-2, -2, 2, 2]

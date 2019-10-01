@@ -22,7 +22,7 @@ describe('mapUtils', () => {
         expect(jstsGeom.getCoordinate()).toEqual({ x: -20, y: 0, z: undefined });
         const olGeom = utils.jstsGeomToOlGeom(jstsGeom);
         expect(olGeom instanceof Point).toBe(true);
-        const expected = proj.transform([-20, 0], 'EPSG:4326', 'EPSG:3857');
+        const expected = [-20, 0];
         expect(olGeom.getCoordinates()).toEqual(expected);
     });
 
@@ -310,22 +310,14 @@ describe('mapUtils', () => {
                 ],
             },
         };
-        const bbox = proj.transformExtent([
+        const bbox = [
             20.214843749999996,
             51.33061163769853,
             23.027343749999996,
             53.212612189941574,
-        ], utils.WGS84, utils.WEB_MERCATOR);
+        ];
 
         expect(utils.featureToBbox(feature)).toEqual(bbox);
-    });
-
-    it('deserialize should transform the bbox to ESPG:3857 or return null if its not a bbox', () => {
-        expect(utils.deserialize()).toBe(null);
-        expect(utils.deserialize([-3, -3, 3])).toBe(null);
-        const bbox = [-90, -45, 90, 45];
-        const expected = proj.transformExtent(bbox, utils.WGS84, utils.WEB_MERCATOR);
-        expect(utils.deserialize(bbox)).toEqual(expected);
     });
 
     it('serialize should transform to wgs84 and return a rounded bbox extent', () => {
@@ -343,10 +335,10 @@ describe('mapUtils', () => {
             180,
             83.27771,
         ];
-        // transform it to EPSG:3857
-        const webMercator = utils.deserialize(bbox);
 
-        const serialized = utils.serialize(webMercator);
+        const deserialized = utils.deserialize(bbox);
+
+        const serialized = utils.serialize(deserialized);
         expect(serialized).toEqual(expected);
     });
 
@@ -404,7 +396,7 @@ describe('mapUtils', () => {
 
     it('createGeoJSON should take an ol3 geom and return a feature collection containing a feature with that geom', () => {
         const extentSpy = sinon.spy(Point.prototype, 'getExtent');
-        const coords = proj.transform([-1, 1], utils.WGS84, utils.WEB_MERCATOR);
+        const coords = [-1, 1];
         const geom = new Point(coords);
         const expected = {
             type: 'FeatureCollection',
@@ -424,19 +416,15 @@ describe('mapUtils', () => {
     });
 
     it('createGeoJSONGeometry should take a ol3 geom and return the geom in geojson format', () => {
-        const coords = proj.transform([-1, 1], utils.WGS84, utils.WEB_MERCATOR);
+        const coords = [-1, 1];
         const geom = new Point(coords);
         const expected = { type: 'Point', coordinates: [-1, 1] };
         const cloneSpy = sinon.spy(Point.prototype, 'clone');
-        const transformSpy = sinon.spy(Point.prototype, 'transform');
         const coordsSpy = sinon.spy(Point.prototype, 'getCoordinates');
         expect(utils.createGeoJSONGeometry(geom)).toEqual(expected);
         expect(cloneSpy.calledOnce).toBe(true);
-        expect(transformSpy.calledOnce).toBe(true);
-        expect(transformSpy.calledWith(utils.WEB_MERCATOR, utils.WGS84)).toBe(true);
         expect(coordsSpy.calledOnce).toBe(true);
         cloneSpy.restore();
-        transformSpy.restore();
         coordsSpy.restore();
     });
 
@@ -477,15 +465,10 @@ describe('mapUtils', () => {
         const feature = new Feature({ geometry: new Point([1, 1]) });
         feature.setProperties({ bbox: [1, 1, 1, 1] });
         const fitSpy = sinon.spy();
-        const transformStub = sinon.stub(proj, 'transformExtent')
-            .callsFake(ext => (ext));
         const map = { getView: sinon.spy(() => ({ fit: fitSpy })) };
         utils.zoomToFeature(feature, map);
-        expect(transformStub.calledOnce).toBe(true);
-        expect(transformStub.calledWith([1, 1, 1, 1], utils.WGS84, utils.WEB_MERCATOR)).toBe(true);
         expect(fitSpy.calledOnce).toBe(true);
         expect(fitSpy.calledWith([1, 1, 1, 1])).toBe(true);
-        transformStub.restore();
     });
 
     it('zoomToFeature should center on geom if it is a point type', () => {
