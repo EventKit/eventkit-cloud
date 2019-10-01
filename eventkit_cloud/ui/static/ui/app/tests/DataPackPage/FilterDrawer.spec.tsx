@@ -35,12 +35,23 @@ describe('FilterDrawer component', () => {
             uid: '12346',
         }
     ];
+    const projections = [
+        {
+            srid: 4326,
+            name: 'EPSG:4326',
+        },
+        {
+            srid: 3857,
+            name: 'EPSG:3857',
+        }
+    ];
     const getProps = () => ({
         onFilterApply: sinon.spy(),
         onFilterClear: sinon.spy(),
         open: true,
         providers,
         formats,
+        projections,
         groups: [
             { id: 'group1', name: 'group1', members: ['user1', 'user2', 'user3'] },
             { id: 'group2', name: 'group2', members: ['user1', 'user2'] },
@@ -94,6 +105,7 @@ describe('FilterDrawer component', () => {
             },
             providers: { osm: true },
             formats: { fmt1: true },
+            projections: { 4326: true },
         };
         wrapper.setState(initialState);
         const stateStub = sinon.stub(instance, 'setState');
@@ -112,6 +124,7 @@ describe('FilterDrawer component', () => {
             },
             providers: {},
             formats: {},
+            projections: {},
         };
         expect(wrapper.state()).toEqual(initialState);
         instance.handleFilterClear();
