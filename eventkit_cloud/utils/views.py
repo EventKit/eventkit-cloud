@@ -13,7 +13,6 @@ from mapproxy.config.config import load_config, load_default_config
 from mapproxy.config.loader import ProxyConfiguration, ConfigurationError, validate_references
 from mapproxy.wsgiapp import MapProxyApp
 from urllib.parse import parse_qs
-import time
 
 from webtest import TestApp
 
@@ -25,12 +24,9 @@ def map(request: HttpRequest, slug: str, path: str) -> HttpResponse:
     Makes a proxy request to mapproxy used to get map tiles.
     :param request: The httprequest.
     :param slug: A string matching the slug of a DataProvider.
-    :param path: The rest of the url context (i.e. the path to the tile some_service/0/0/0.png).
+    :param path: The rest of the url context (i.e. tgit sqhe path to the tile some_service/0/0/0.png).
     :return: The HttpResponse.
     """
-
-    start_time = time.time()
-
     conf_dict = cache.get_or_set(F"base-config-{slug}", lambda: get_conf_dict(slug), 360)
 
     # TODO: place this somewhere else consolidate settings.
@@ -56,12 +52,9 @@ def map(request: HttpRequest, slug: str, path: str) -> HttpResponse:
 
     cred_var = conf_dict.get("cred_var")
     auth_requests.patch_mapproxy_opener_cache(slug=slug, cred_var=cred_var)
-    config_time = time.time()
 
     app = MapProxyApp(mapproxy_configuration.configured_services(), mapproxy_config)
     mapproxy_app = TestApp(app)
-
-    app_time = time.time()
 
     params = parse_qs(request.META['QUERY_STRING'])
 
