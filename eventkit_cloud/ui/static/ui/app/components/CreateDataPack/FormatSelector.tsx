@@ -52,6 +52,11 @@ const jss = (theme: Theme & Eventkit.Theme) => createStyles({
         cursor: 'pointer',
         color: theme.eventkit.colors.primary,
     },
+    errorMessage: {
+        color: 'red',
+        minHeight: '17px',
+        fontSize: '12px',
+    },
 });
 
 interface Props {
@@ -62,18 +67,7 @@ interface Props {
     getFormatCompatibility: (format: Eventkit.Format) => Compatibility;
     compatibilityInfo: CompatibilityInfo;
     theme: Eventkit.Theme & Theme;
-    classes: {
-        container: string;
-        listItem: string;
-        listItemText: string;
-        sublistItem: string;
-        checkbox: string;
-        checked: string;
-        name: string;
-        expand: string;
-        license: string;
-        prewrap: string;
-    };
+    classes: { [className: string]: string };
 }
 
 export class FormatSelector extends React.Component<Props, {}> {
@@ -151,11 +145,10 @@ export class FormatSelector extends React.Component<Props, {}> {
                 />
                 <div
                     className={classes.listItem}
+                    style={{marginBottom: '0px'}}
                 >
                     <div className={classes.listItemText}>{format.name}</div>
-                    {(errorMessage) &&
-                        <div style={{color: 'red'}}>{errorMessage}</div>
-                    }
+                    <div className={classes.errorMessage}>{errorMessage}</div>
                 </div>
             </div>
         );
