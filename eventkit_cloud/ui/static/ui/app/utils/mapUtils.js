@@ -1,4 +1,3 @@
-import proj from 'ol/proj';
 import extent from 'ol/extent';
 import GeoJSON from 'ol/format/geojson';
 import VectorLayer from 'ol/layer/vector';
@@ -578,12 +577,12 @@ export function zoomSliderCleanup(zoomSlider) {
     window.removeEventListener('mouseup', zoomSlider.eventKitZoomSliderDragEnd);
 }
 
-export function getResolutions(levels, startingResolution){
-    //default to EPSG:4326 resolution supporting 2 tiles at level 0.
-    const startResolution = startingResolution ? startingResolution : 0.703125;
-    let resolutions = new Array(levels);
-        for (let i = 0; i < resolutions.length; ++i) {
-            resolutions[i] = startResolution / Math.pow(2, i);
-    };
+export function getResolutions(levels, startingResolution) {
+    // Default to EPSG:4326 resolution supporting 2 tiles at level 0.
+    const startResolution = startingResolution || 0.703125;
+    const resolutions = new Array(levels);
+    for (let i = 0; i < resolutions.length; i + 1) {
+        resolutions[i] = startResolution / (2 ** i);
+    }
     return resolutions;
 }
