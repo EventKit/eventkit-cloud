@@ -27,7 +27,6 @@ class TestUtilViews(TestCase):
     # @patch('eventkit_cloud.utils.views.DataProvider')
     @patch('eventkit_cloud.utils.views.cache')
     def test_conf_dict(self, mock_cache: MagicMock):
-        ssl_verify: bool = True
         slug: str = 'slug'
         config_yaml: str = 'services: [stuff]'
         expected_config: dict = {'services': ['stuff'],
@@ -37,6 +36,4 @@ class TestUtilViews(TestCase):
         mock_cache.get_or_set.return_value = mock_data_provider
         returned_conf = get_conf_dict(slug)
         mock_cache.get_or_set.assert_called_once_with(F"DataProvider-{slug}", ANY, 360)
-        # print(mock_data_provider.mock_calls)
-        # mock_data_provider.objects.get.assert_called_once_with(slug=slug)
         self.assertEquals(returned_conf, expected_config)

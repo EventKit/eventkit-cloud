@@ -6,6 +6,7 @@ from django.conf import settings
 from django.http.request import HttpRequest
 from django.http.response import HttpResponse
 import yaml
+import os
 
 from eventkit_cloud.utils import auth_requests
 from eventkit_cloud.jobs.models import DataProvider
@@ -31,12 +32,14 @@ def map(request: HttpRequest, slug: str, path: str) -> HttpResponse:
 
     # TODO: place this somewhere else consolidate settings.
     base_config = {"services": {"demo": None,
+                                "tms": None,
                                 "wmts": None,
                                 },
                    "caches": {slug: {"default": {"type": "file"},
                                      "sources": ["default"],
                                      "grids": ["default"]}},
-                   "layers": [{"name": slug, "title": slug, "sources": [slug]}]
+                   "layers": [{"name": slug, "title": slug, "sources": [slug]}],
+                   "globals": {"cache": {"base_dir": getattr(settings, "TILE_CACHE_DIR")}}
                    }
     try:
         mapproxy_config = load_default_config()

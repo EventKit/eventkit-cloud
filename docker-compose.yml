@@ -9,7 +9,7 @@ services:
       # using the root directory here will break mapproxy tile locks.
       - ./scripts:/var/lib/eventkit/scripts
       - ./eventkit_cloud:/var/lib/eventkit/eventkit_cloud
-      - ./maange.py:/var/lib/eventkit/eventkit_cloud/manage.py
+      - ./manage.py:/var/lib/eventkit/manage.py
       - /var/lib/eventkit/node_modules/
     user: eventkit
     depends_on:
@@ -55,6 +55,7 @@ services:
       - GEOCODING_AUTH_CERT
       - GEOCODING_AUTH_KEY
       - PROVIDER_CHECK_INTERVAL
+      - TILE_CACHE_DIR
     extra_hosts:
       - "${SITE_NAME}:${SITE_IP}"
   celery:
