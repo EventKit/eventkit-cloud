@@ -4,7 +4,7 @@ has no support for inline styles :(
  */
 
 .typeahead {
-    left: 0px;
+    left: 50px;
     top: 0px;
     height: 50px;
     width: calc(100% - 50px);

@@ -1,11 +1,11 @@
 import * as PropTypes from 'prop-types';
 import * as React from 'react';
-import { withTheme, Theme } from '@material-ui/core/styles';
-import withWidth, { isWidthUp } from '@material-ui/core/withWidth';
-import { connect } from 'react-redux';
+import {withTheme, Theme} from '@material-ui/core/styles';
+import withWidth, {isWidthUp} from '@material-ui/core/withWidth';
+import {connect} from 'react-redux';
 import axios from 'axios';
 import debounce from 'lodash/debounce';
-import Joyride, { Step } from 'react-joyride';
+import Joyride, {Step} from 'react-joyride';
 
 import Map from 'ol/map';
 import View from 'ol/view';
@@ -37,22 +37,25 @@ import InvalidDrawWarning from '../MapTools/InvalidDrawWarning';
 import DropZone from '../MapTools/DropZone';
 import BufferDialog from './BufferDialog';
 import RevertDialog from './RevertDialog';
-import { updateAoiInfo, clearAoiInfo, clearExportInfo } from '../../actions/datacartActions';
-import { stepperNextDisabled, stepperNextEnabled } from '../../actions/uiActions';
-import { getGeocode } from '../../actions/geocodeActions';
-import { processGeoJSONFile, resetGeoJSONFile } from '../../actions/fileActions';
+import {updateAoiInfo, clearAoiInfo, clearExportInfo} from '../../actions/datacartActions';
+import {stepperNextDisabled, stepperNextEnabled} from '../../actions/uiActions';
+import {getGeocode} from '../../actions/geocodeActions';
+import {processGeoJSONFile, resetGeoJSONFile} from '../../actions/fileActions';
 import {
     generateDrawLayer, generateDrawBoxInteraction, generateDrawFreeInteraction,
     isGeoJSONValid, createGeoJSON, clearDraw,
     MODE_DRAW_BBOX, MODE_NORMAL, MODE_DRAW_FREE, zoomToFeature, unwrapCoordinates,
     isViewOutsideValidExtent, goToValidExtent, isBox, isVertex, bufferGeojson, allHaveArea,
-    getDominantGeometry } from '../../utils/mapUtils';
+    getDominantGeometry
+} from '../../utils/mapUtils';
 
-import { getSqKm } from '../../utils/generic';
+import {getSqKm} from '../../utils/generic';
 import ZoomLevelLabel from '../MapTools/ZoomLevelLabel';
 import globe from '../../../images/globe-americas.svg';
-import { joyride } from '../../joyride.config';
-import { Breakpoint } from '@material-ui/core/styles/createBreakpoints';
+import {joyride} from '../../joyride.config';
+import {Breakpoint} from '@material-ui/core/styles/createBreakpoints';
+import Tabs from "@material-ui/core/Tabs";
+import Tab from "@material-ui/core/Tab";
 
 export const WGS84 = 'EPSG:4326';
 export const WEB_MERCATOR = 'EPSG:3857';
@@ -78,6 +81,7 @@ export interface Props {
     onWalkthroughReset: () => void;
     theme: Eventkit.Theme & Theme;
     width: Breakpoint;
+    baseMapUrl: string;
 }
 
 export interface State {
@@ -105,10 +109,12 @@ export class ExportAOI extends React.Component<Props, State> {
     static contextTypes = {
         config: PropTypes.object,
     };
+    static defaultProps = {baseMapUrl: ''};
 
     private bufferFunction: (val: any) => void;
     private drawLayer;
     private map;
+    private baseLayer;
     private drawBoxInteraction;
     private drawFreeInteraction;
     private markerLayer;
@@ -119,6 +125,7 @@ export class ExportAOI extends React.Component<Props, State> {
     private bufferFeatures;
     private bounceBack: boolean;
     private joyride: Joyride;
+
     constructor(props: Props) {
         super(props);
         this.setButtonSelected = this.setButtonSelected.bind(this);
@@ -150,7 +157,9 @@ export class ExportAOI extends React.Component<Props, State> {
         this.resetAoi = this.resetAoi.bind(this);
         this.updateZoomLevel = this.updateZoomLevel.bind(this);
         this.shouldEnableNext = this.shouldEnableNext.bind(this);
-        this.bufferFunction = () => { /* do nothing */ };
+        this.getBaseLayer = this.getBaseLayer.bind(this);
+        this.bufferFunction = () => { /* do nothing */
+        };
         this.state = {
             toolbarIcons: {
                 box: 'DEFAULT',
@@ -178,7 +187,7 @@ export class ExportAOI extends React.Component<Props, State> {
         this.bufferFunction = debounce((val) => {
             const valid = this.handleBufferChange(val);
             if (valid !== this.state.validBuffer) {
-                this.setState({ validBuffer: valid });
+                this.setState({validBuffer: valid});
             }
         }, 10);
 
@@ -209,14 +218,28 @@ export class ExportAOI extends React.Component<Props, State> {
 
         if (this.props.walkthroughClicked && !prevProps.walkthroughClicked && this.state.isRunning === false) {
             this.joyride.reset(true);
-            this.setState({ isRunning: true });
+            this.setState({isRunning: true});
         }
 
         this.map.updateSize();
+
+        if (this.props.baseMapUrl !== prevProps.baseMapUrl) {
+            const newSource = new XYZ({
+                url: (!!this.props.baseMapUrl) ? this.props.baseMapUrl : this.context.config.BASEMAP_URL,
+                wrapX: true,
+                attributions: this.context.config.BASEMAP_COPYRIGHT,
+            });
+
+            this.baseLayer.setSource(newSource);
+        }
+    }
+
+    private getBaseLayer() {
+
     }
 
     private setButtonSelected(iconName: string) {
-        const icons = { ...this.state.toolbarIcons };
+        const icons = {...this.state.toolbarIcons};
         Object.keys(icons).forEach((key) => {
             if (key === iconName) {
                 icons[key] = 'SELECTED';
@@ -224,15 +247,15 @@ export class ExportAOI extends React.Component<Props, State> {
                 icons[key] = 'INACTIVE';
             }
         });
-        this.setState({ toolbarIcons: icons });
+        this.setState({toolbarIcons: icons});
     }
 
     private setAllButtonsDefault() {
-        const icons = { ...this.state.toolbarIcons };
+        const icons = {...this.state.toolbarIcons};
         Object.keys(icons).forEach((key) => {
             icons[key] = 'DEFAULT';
         });
-        this.setState({ toolbarIcons: icons });
+        this.setState({toolbarIcons: icons});
     }
 
     private setMapView() {
@@ -266,17 +289,17 @@ export class ExportAOI extends React.Component<Props, State> {
 
     private toggleImportModal(show: boolean) {
         if (show !== undefined) {
-            this.setState({ showImportModal: show });
+            this.setState({showImportModal: show});
         } else {
-            this.setState({ showImportModal: !this.state.showImportModal });
+            this.setState({showImportModal: !this.state.showImportModal});
         }
     }
 
     private showInvalidDrawWarning(show: boolean) {
         if (show !== undefined) {
-            this.setState({ showInvalidDrawWarning: show });
+            this.setState({showInvalidDrawWarning: show});
         } else {
-            this.setState({ showInvalidDrawWarning: !this.state.showInvalidDrawWarning });
+            this.setState({showInvalidDrawWarning: !this.state.showInvalidDrawWarning});
         }
     }
 
@@ -346,7 +369,7 @@ export class ExportAOI extends React.Component<Props, State> {
     }
 
     private handleGeoJSONUpload(importGeom: Eventkit.Store.ImportGeom) {
-        const { featureCollection, filename } = importGeom;
+        const {featureCollection, filename} = importGeom;
         clearDraw(this.drawLayer);
         const reader = new GeoJSONFormat();
         const features = reader.readFeatures(featureCollection, {
@@ -390,7 +413,7 @@ export class ExportAOI extends React.Component<Props, State> {
             this.drawFreeInteraction.setActive(true);
         }
         // update the state
-        this.setState({ mode });
+        this.setState({mode});
     }
 
     private handleDrawEnd(event: any) {
@@ -402,7 +425,7 @@ export class ExportAOI extends React.Component<Props, State> {
         const geojson = createGeoJSON(geometry) as GeoJSON.FeatureCollection;
         // Since this is a controlled draw we make the assumption
         // that there is only one feature in the collection
-        const { bbox } = geojson.features[0];
+        const {bbox} = geojson.features[0];
         // make sure the user didnt create a polygon with no area
         if (bbox[0] !== bbox[2] && bbox[1] !== bbox[3]) {
             if (this.state.mode === MODE_DRAW_FREE) {
@@ -458,12 +481,12 @@ export class ExportAOI extends React.Component<Props, State> {
 
         this.markerLayer.setStyle(new Style({
             image: new Circle({
-                fill: new Fill({ color: this.props.theme.eventkit.colors.text_primary }),
-                stroke: new Stroke({ color: this.props.theme.eventkit.colors.warning, width: 1.25 }),
+                fill: new Fill({color: this.props.theme.eventkit.colors.text_primary}),
+                stroke: new Stroke({color: this.props.theme.eventkit.colors.warning, width: 1.25}),
                 radius: 5,
             }),
-            fill: new Fill({ color: this.props.theme.eventkit.colors.text_primary }),
-            stroke: new Stroke({ color: '#3399CC', width: 1.25 }),
+            fill: new Fill({color: this.props.theme.eventkit.colors.text_primary}),
+            stroke: new Stroke({color: '#3399CC', width: 1.25}),
         }));
         this.bufferLayer.setStyle(new Style({
             stroke: new Stroke({
@@ -485,6 +508,14 @@ export class ExportAOI extends React.Component<Props, State> {
         img.alt = 'globe';
         img.height = 16;
         img.width = 16;
+        // Order matters here
+        this.baseLayer = new Tile({
+            source: new XYZ({
+                url: (!!this.props.baseMapUrl) ? this.props.baseMapUrl : this.context.config.BASEMAP_URL,
+                wrapX: true,
+                attributions: this.context.config.BASEMAP_COPYRIGHT,
+            }),
+        });
         this.map = new Map({
             controls: [
                 new ScaleLine({
@@ -515,14 +546,7 @@ export class ExportAOI extends React.Component<Props, State> {
                 pinchRotate: false,
             }),
             layers: [
-                // Order matters here
-                new Tile({
-                    source: new XYZ({
-                        url: this.context.config.BASEMAP_URL,
-                        wrapX: true,
-                        attributions: this.context.config.BASEMAP_COPYRIGHT,
-                    }),
-                }),
+                this.baseLayer,
             ],
             target: 'map',
             view: new View({
@@ -555,7 +579,7 @@ export class ExportAOI extends React.Component<Props, State> {
     private updateZoomLevel() {
         const lvl = Math.floor(this.map.getView().getZoom());
         if (lvl !== this.state.zoomLevel) {
-            this.setState({ zoomLevel: lvl });
+            this.setState({zoomLevel: lvl});
         }
     }
 
@@ -634,12 +658,12 @@ export class ExportAOI extends React.Component<Props, State> {
     }
 
     private moveEvent(evt: any) {
-        const { map } = evt;
-        const { pixel } = evt;
+        const {map} = evt;
+        const {pixel} = evt;
         if (this.markerLayer.getSource().getFeatures().length > 0) {
             clearDraw(this.markerLayer);
         }
-        const opts = { layerFilter: layer => (layer === this.drawLayer) };
+        const opts = {layerFilter: layer => (layer === this.drawLayer)};
         if (map.hasFeatureAtPixel(pixel, opts)) {
             const mapFeatures = map.getFeaturesAtPixel(pixel, opts);
             for (const feature of mapFeatures) {
@@ -661,9 +685,9 @@ export class ExportAOI extends React.Component<Props, State> {
     }
 
     private downEvent(evt: any) {
-        const { map } = evt;
-        const { pixel } = evt;
-        const opts = { layerFilter: layer => (layer === this.drawLayer) };
+        const {map} = evt;
+        const {pixel} = evt;
+        const opts = {layerFilter: layer => (layer === this.drawLayer)};
         if (map.hasFeatureAtPixel(pixel, opts)) {
             const mapFeatures = map.getFeaturesAtPixel(pixel, opts);
             for (const feature of mapFeatures) {
@@ -698,7 +722,7 @@ export class ExportAOI extends React.Component<Props, State> {
     }
 
     private bufferMapFeature() {
-        const { bufferFeatures } = this;
+        const {bufferFeatures} = this;
         if (!bufferFeatures) {
             return false;
         }
@@ -725,7 +749,7 @@ export class ExportAOI extends React.Component<Props, State> {
 
     private handleBufferClick() {
         this.bufferMapFeature();
-        this.setState({ showBuffer: false, validBuffer: true });
+        this.setState({showBuffer: false, validBuffer: true});
         this.bufferFeatures = null;
     }
 
@@ -734,28 +758,28 @@ export class ExportAOI extends React.Component<Props, State> {
         // but it gives you the option to await the state change to be complete
         return new Promise(async (resolve) => {
             // resolve only when setState is completed
-            this.setState({ showBuffer: true }, resolve);
+            this.setState({showBuffer: true}, resolve);
         });
     }
 
     private closeBufferDialog() {
-        this.setState({ showBuffer: false, validBuffer: true });
+        this.setState({showBuffer: false, validBuffer: true});
         this.bufferFeatures = null;
-        this.props.updateAoiInfo({ ...this.props.aoiInfo, buffer: 0 });
+        this.props.updateAoiInfo({...this.props.aoiInfo, buffer: 0});
         clearDraw(this.bufferLayer);
     }
 
     private handleBufferChange(value: string) {
         const buffer = Number(value);
         if (buffer <= 10000 && buffer >= 0) {
-            this.props.updateAoiInfo({ ...this.props.aoiInfo, buffer });
-            const { geojson } = this.props.aoiInfo;
+            this.props.updateAoiInfo({...this.props.aoiInfo, buffer});
+            const {geojson} = this.props.aoiInfo;
             if (Object.keys(geojson).length === 0) {
                 return false;
             }
             const reader = new GeoJSONFormat();
             const bufferedFeatureCollection = bufferGeojson(geojson, buffer, true);
-            this.bufferFeatures = { ...bufferedFeatureCollection };
+            this.bufferFeatures = {...bufferedFeatureCollection};
             const newFeatures = reader.readFeatures(bufferedFeatureCollection, {
                 dataProjection: 'EPSG:4326',
                 featureProjection: 'EPSG:3857',
@@ -771,15 +795,15 @@ export class ExportAOI extends React.Component<Props, State> {
     }
 
     private openResetDialog() {
-        this.setState({ showReset: true });
+        this.setState({showReset: true});
     }
 
     private closeResetDialog() {
-        this.setState({ showReset: false });
+        this.setState({showReset: false});
     }
 
     private resetAoi() {
-        const { originalGeojson } = this.props.aoiInfo;
+        const {originalGeojson} = this.props.aoiInfo;
 
         const reader = new GeoJSONFormat();
         const newFeatures = reader.readFeatures(originalGeojson, {
@@ -793,7 +817,7 @@ export class ExportAOI extends React.Component<Props, State> {
             geojson: originalGeojson,
             buffer: 0,
         });
-        this.setState({ showReset: false });
+        this.setState({showReset: false});
         if (this.shouldEnableNext(originalGeojson)) {
             this.props.setNextEnabled();
         } else {
@@ -803,7 +827,7 @@ export class ExportAOI extends React.Component<Props, State> {
 
     private shouldEnableNext(geojson: GeoJSON.FeatureCollection) {
         const area = allHaveArea(geojson);
-        const { max } = this.props.limits;
+        const {max} = this.props.limits;
         if (!max || !area) {
             return area;
         }
@@ -822,7 +846,7 @@ export class ExportAOI extends React.Component<Props, State> {
         }
 
         this.setState((currentState: State) => {
-            const nextState = { ...currentState };
+            const nextState = {...currentState};
             nextState.steps = nextState.steps.concat(newSteps);
             return nextState;
         });
@@ -841,7 +865,7 @@ export class ExportAOI extends React.Component<Props, State> {
             // part of an attempt to re-render a step and we want to immediately go forward again.
             // ** See the very long comment at end of function for more details **
             this.bounceBack = false;
-            this.setState({ stepIndex: index + 1 });
+            this.setState({stepIndex: index + 1});
             return;
         }
 
@@ -856,13 +880,13 @@ export class ExportAOI extends React.Component<Props, State> {
                 this.props.clearExportInfo();
                 this.setAllButtonsDefault();
                 if (this.state.showBuffer) {
-                    this.setState({ showBuffer: false });
+                    this.setState({showBuffer: false});
                 }
                 this.handleResetMap();
-                this.setState({ fakeData: false });
+                this.setState({fakeData: false});
             }
 
-            this.setState({ isRunning: false, stepIndex: 0 });
+            this.setState({isRunning: false, stepIndex: 0});
             this.props.onWalkthroughReset();
             this.joyride.reset(true);
         } else {
@@ -870,7 +894,7 @@ export class ExportAOI extends React.Component<Props, State> {
                 //  if there is no aoi we load some fake data
                 if (this.props.aoiInfo.description === null) {
                     this.drawFakeBbox();
-                    this.setState({ fakeData: true });
+                    this.setState({fakeData: true});
                 } else { // otherwise just zoom to whats already there
                     this.handleZoomToSelection();
                 }
@@ -903,10 +927,10 @@ export class ExportAOI extends React.Component<Props, State> {
                     await this.openBufferDialog();
                     // once the dialog is open we go back to the previous step which will then forward to this step again,
                     // causing the tour step to render correctly this time
-                    this.setState({ stepIndex: index - 1 });
+                    this.setState({stepIndex: index - 1});
                 } else {
                     // If we are not accounting for the stupid buffer issue, just go the the proper step index
-                    this.setState({ stepIndex: index + (action === 'back' ? -1 : 1) });
+                    this.setState({stepIndex: index + (action === 'back' ? -1 : 1)});
                 }
             }
         }
@@ -946,8 +970,8 @@ export class ExportAOI extends React.Component<Props, State> {
     }
 
     render() {
-        const { theme } = this.props;
-        const { steps, isRunning } = this.state;
+        const {theme} = this.props;
+        const {steps, isRunning} = this.state;
 
         const mapStyle = {
             left: undefined,
@@ -970,7 +994,9 @@ export class ExportAOI extends React.Component<Props, State> {
             <div>
                 <Joyride
                     callback={this.callback}
-                    ref={(instance) => { this.joyride = instance; }}
+                    ref={(instance) => {
+                        this.joyride = instance;
+                    }}
                     steps={steps}
                     stepIndex={this.state.stepIndex}
                     autoStart
@@ -1002,7 +1028,9 @@ export class ExportAOI extends React.Component<Props, State> {
                         toolbarIcons={this.state.toolbarIcons}
                         getGeocode={this.props.getGeocode}
                         setAllButtonsDefault={this.setAllButtonsDefault}
-                        setSearchAOIButtonSelected={() => { this.setButtonSelected('search'); }}
+                        setSearchAOIButtonSelected={() => {
+                            this.setButtonSelected('search');
+                        }}
                     />
                     <DrawAOIToolbar
                         toolbarIcons={this.state.toolbarIcons}
@@ -1010,10 +1038,18 @@ export class ExportAOI extends React.Component<Props, State> {
                         handleCancel={this.handleCancel}
                         setMapView={this.setMapView}
                         setAllButtonsDefault={this.setAllButtonsDefault}
-                        setBoxButtonSelected={() => { this.setButtonSelected('box'); }}
-                        setFreeButtonSelected={() => { this.setButtonSelected('free'); }}
-                        setMapViewButtonSelected={() => { this.setButtonSelected('mapView'); }}
-                        setImportButtonSelected={() => { this.setButtonSelected('import'); }}
+                        setBoxButtonSelected={() => {
+                            this.setButtonSelected('box');
+                        }}
+                        setFreeButtonSelected={() => {
+                            this.setButtonSelected('free');
+                        }}
+                        setMapViewButtonSelected={() => {
+                            this.setButtonSelected('mapView');
+                        }}
+                        setImportButtonSelected={() => {
+                            this.setButtonSelected('import');
+                        }}
                         setImportModalState={this.toggleImportModal}
                     />
                     <ZoomLevelLabel

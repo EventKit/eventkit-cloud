@@ -37,7 +37,7 @@ div.map {
 
 .olZoom {
     z-index: 3;
-    top: 50px;
+    bottom: 15px;
     left: 10px;
     color: #66a3ff;
     background-color: white;
@@ -68,7 +68,7 @@ div.map {
 
 .olZoomToExtent {
     z-index: 3;
-    top: 15px;
+    bottom: 50px;
     left: 10px;
     color: #66a3ff;
     background-color: white;   
