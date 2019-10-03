@@ -78,7 +78,6 @@ describe('ExportInfo component', () => {
             },
             providers: [],
             projections,
-            getProjections: sinon.spy(),
             formats,
             nextEnabled: true,
             walkthroughClicked: false,
@@ -180,7 +179,7 @@ describe('ExportInfo component', () => {
         };
         nextProps.nextEnabled = false;
         wrapper.setProps(nextProps);
-        expect(nextProps.setNextEnabled.calledOnce).toBe(true);
+        expect(nextProps.setNextEnabled.callCount).toBe(3);
     });
 
     it('componentDidUpdate should setNextDisabled', () => {
