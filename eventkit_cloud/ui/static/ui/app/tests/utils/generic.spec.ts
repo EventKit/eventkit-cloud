@@ -47,7 +47,8 @@ describe('test generic utils', () => {
         const geojson = { type: 'FeatureCollection', features: [] };
         const feature = new Feature();
         const getArea = () => 5000000;
-        feature.getGeometry = () => ({ getArea });
+        const transform = (from: string, to: string) => ({ getArea });
+        feature.getGeometry = () => ({ transform });
         const readStub = sinon.stub(GeoJSON.prototype, 'readFeatures').returns([feature]);
         const area = utils.getSqKm(geojson);
         expect(area).toEqual(5);

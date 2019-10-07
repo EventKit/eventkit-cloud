@@ -14,6 +14,7 @@ import Zoom from 'ol/control/zoom';
 import CustomTableRow from '../CustomTableRow';
 import { getSqKmString } from '../../utils/generic';
 import ol3mapCss from '../../styles/ol3map.css';
+import {MapView} from "../common/MapView";
 
 export interface Props {
     extent: object;
@@ -53,7 +54,7 @@ export class DataPackAoiInfo extends React.Component<Props, {}> {
             layers: [base],
             target: 'summaryMap',
             view: new View({
-                projection: 'EPSG:3857',
+                projection: 'EPSG:4326',
                 center: [110, 0],
                 zoom: 2,
                 minZoom: 2,
@@ -76,7 +77,7 @@ export class DataPackAoiInfo extends React.Component<Props, {}> {
         const source = new VectorSource({ wrapX: true });
         const geojson = new GeoJSON();
         const features = geojson.readFeatures(this.props.extent, {
-            featureProjection: 'EPSG:3857',
+            featureProjection: 'EPSG:4326',
             dataProjection: 'EPSG:4326',
         });
         source.addFeatures(features);
@@ -97,7 +98,16 @@ export class DataPackAoiInfo extends React.Component<Props, {}> {
                     data={getSqKmString(this.props.extent)}
                     dataStyle={{ wordBreak: 'break-all' }}
                 />
-                <div className="qa-DataPackAoiInfo-div-map" id="summaryMap" style={{ maxHeight: '400px', marginTop: '10px' }} />
+                <div className="qa-DataPackAoiInfo-div-map" style={{maxHeight: '400px', marginTop: '10px'}}>
+                    <MapView
+                        id={"summaryMap"}
+                        url={this.context.config.BASEMAP_URL}
+                        copyright={this.context.config.BASEMAP_COPYRIGHT}
+                        geojson={this.props.extent}
+                        minZoom={2}
+                        maxZoom={20}
+                    />
+                </div>
             </div>
         );
     }

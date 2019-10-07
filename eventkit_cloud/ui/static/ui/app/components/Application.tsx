@@ -19,7 +19,7 @@ import { getNotifications, getNotificationsUnreadCount } from '../actions/notifi
 import NotificationsDropdown from './Notification/NotificationsDropdown';
 import Loadable from 'react-loadable';
 import { connectedReduxRedirect } from 'redux-auth-wrapper/history4/redirect';
-import { Redirect, Route, RouteComponentProps, Switch } from 'react-router';
+import { Redirect, Route, RouteComponentProps } from 'react-router';
 import { routerActions } from 'connected-react-router';
 import PageLoading from './common/PageLoading';
 import '../styles/bootstrap/css/bootstrap.css';

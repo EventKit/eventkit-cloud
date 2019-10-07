@@ -1,4 +1,3 @@
-import proj from 'ol/proj';
 import extent from 'ol/extent';
 import GeoJSON from 'ol/format/geojson';
 import VectorLayer from 'ol/layer/vector';
@@ -34,12 +33,12 @@ export const WEB_MERCATOR = 'EPSG:3857';
 /**
  * Convert a jsts geometry to an openlayers3 geometry
  * @param {jstsGeom} a JSTS geometry in EPSG:4326
- * @return {olGeom} an openlayers3 geometry in EPSG:3857
+ * @return {olGeom} an openlayers3 geometry in EPSG:4326
  */
 export function jstsGeomToOlGeom(jstsGeom) {
     const writer = new GeoJSONWriter();
     const olReader = new GeoJSON();
-    const olGeom = olReader.readGeometry(writer.write(jstsGeom)).transform('EPSG:4326', 'EPSG:3857');
+    const olGeom = olReader.readGeometry(writer.write(jstsGeom));
     return olGeom;
 }
 
@@ -284,22 +283,22 @@ export function unwrapPoint([x, y]) {
 export function featureToBbox(feature, projection) {
     let featProjection = projection;
     if (!featProjection) {
-        featProjection = WEB_MERCATOR;
+        featProjection = WGS84;
     }
     const reader = new GeoJSON();
     const geometry = reader.readGeometry(feature.geometry, { featureProjection: featProjection });
     return geometry.getExtent();
 }
 
+// This may not be needed anymore
 export function deserialize(serialized) {
     if (serialized && serialized.length === 4) {
-        return proj.transformExtent(serialized, WGS84, WEB_MERCATOR);
+        return serialized;
     }
     return null;
 }
 
-export function serialize(ext) {
-    const bbox = proj.transformExtent(ext, WEB_MERCATOR, WGS84);
+export function serialize(bbox) {
     const p1 = unwrapPoint(bbox.slice(0, 2));
     const p2 = unwrapPoint(bbox.slice(2, 4));
     return p1.concat(p2).map(truncate);
@@ -326,7 +325,6 @@ export function isGeoJSONValid(featureCollection) {
 
 export function createGeoJSONGeometry(ol3Geometry) {
     const geom = ol3Geometry.clone();
-    geom.transform(WEB_MERCATOR, WGS84);
     const coords = geom.getCoordinates();
     const geojsonGeom = {
         type: geom.getType(),
@@ -359,7 +357,7 @@ export function zoomToFeature(feature, map) {
     if (geom.getType() !== 'Point') {
         map.getView().fit(geom);
     } else if (feature.getProperties().bbox) {
-        map.getView().fit(proj.transformExtent(feature.getProperties().bbox, WGS84, WEB_MERCATOR));
+        map.getView().fit(feature.getProperties().bbox);
     } else {
         map.getView().setCenter(geom.getCoordinates());
     }
@@ -493,7 +491,7 @@ export function allHaveArea(featureCollection) {
     const reader = new GeoJSON();
     const features = reader.readFeatures(featureCollection, {
         dataProjection: WGS84,
-        featureProjection: WEB_MERCATOR,
+        featureProjection: WGS84,
     });
 
     if (!features.length) {
@@ -577,4 +575,14 @@ export function zoomSliderCleanup(zoomSlider) {
 
     window.removeEventListener('mousemove', zoomSlider.eventkitZoomSliderDrag);
     window.removeEventListener('mouseup', zoomSlider.eventKitZoomSliderDragEnd);
+}
+
+export function getResolutions(levels, startingResolution) {
+    // Default to EPSG:4326 resolution supporting 2 tiles at level 0.
+    const startResolution = startingResolution || 0.703125;
+    const resolutions = new Array(levels);
+    for (let i = 0; i < resolutions.length; i += 1) {
+        resolutions[i] = startResolution / (2 ** i);
+    }
+    return resolutions;
 }

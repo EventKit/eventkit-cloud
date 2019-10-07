@@ -4,9 +4,12 @@ services:
     build:
       context: .
       dockerfile: config/Dockerfile
-    image: eventkit/eventkit-base:1.3.0
+    image: eventkit/eventkit-base:1.5.0
     volumes:
-      - ./:/var/lib/eventkit/
+      # using the root directory here will break mapproxy tile locks.
+      - ./scripts:/var/lib/eventkit/scripts
+      - ./eventkit_cloud:/var/lib/eventkit/eventkit_cloud
+      - ./manage.py:/var/lib/eventkit/manage.py
       - /var/lib/eventkit/node_modules/
     user: eventkit
     depends_on:
@@ -52,10 +55,11 @@ services:
       - GEOCODING_AUTH_CERT
       - GEOCODING_AUTH_KEY
       - PROVIDER_CHECK_INTERVAL
+      - TILE_CACHE_DIR
     extra_hosts:
       - "${SITE_NAME}:${SITE_IP}"
   celery:
-    image: eventkit/eventkit-base:1.3.0
+    image: eventkit/eventkit-base:1.5.0
     volumes:
       - ./:/var/lib/eventkit/
       - ./scripts/run-celery.sh:/home/eventkit/miniconda3/envs/eventkit-cloud/lib/python3.6/site-packages/scripts/run-celery.sh
@@ -93,7 +97,7 @@ services:
       - "${SITE_NAME}:${SITE_IP}"
     command: /home/eventkit/miniconda3/envs/eventkit-cloud/lib/python3.6/site-packages/scripts/run-celery.sh
   celery-beat:
-    image: eventkit/eventkit-base:1.3.0
+    image: eventkit/eventkit-base:1.5.0
     volumes:
       - ./:/var/lib/eventkit/
       - ./scripts/run-celery-beat.sh:/home/eventkit/miniconda3/envs/eventkit-cloud/lib/python3.6/site-packages/scripts/run-celery-beat.sh
@@ -170,7 +174,7 @@ services:
       - SITE_NAME=${SITE_NAME}
       - LOG_LEVEL=warn
   flower:
-    image: eventkit/eventkit-base:1.3.0
+    image: eventkit/eventkit-base:1.5.0
     volumes:
       - ./:/var/lib/eventkit/
     user: eventkit

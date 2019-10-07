@@ -23,6 +23,7 @@ describe('DataPackFeaturedItem component', () => {
                     description: 'Test1 description',
                 },
                 expiration: '2017-03-24T15:52:35.637258Z',
+                extent: { type: 'FeatureCollection', features: [] }
             },
             gridName: 'test',
             index: 0,
@@ -45,10 +46,6 @@ describe('DataPackFeaturedItem component', () => {
     function wrapShallow(element) {
         return shallow(<div>{element}</div>).childAt(0);
     }
-
-    beforeAll(() => {
-        sinon.stub(DataPackFeaturedItem.prototype, 'initMap');
-    });
 
     beforeEach(setup);
 
@@ -78,12 +75,6 @@ describe('DataPackFeaturedItem component', () => {
         expect(wrapper.find(CardContent).childAt(0).text()).toBe(instance.props.run.job.description);
     });
 
-    it('inits map on component mount', () => {
-        instance.initMap = sinon.spy();
-        instance.componentDidMount();
-        expect(instance.initMap.callCount).toBe(1);
-    });
-
     it('gets the correct map id', () => {
         expect(instance.getMapId()).toBe(`${instance.props.gridName}_${instance.props.run.uid}_${instance.props.index}_map`);
         wrapper.setProps({ gridName: undefined });
@@ -94,12 +85,5 @@ describe('DataPackFeaturedItem component', () => {
         expect(instance.getMapId()).toBe(`${instance.props.gridName}_${instance.props.run.uid}_map`);
     });
 
-    it('absorbs touch move events on the map', () => {
-        const element = {
-            addEventListener: sinon.spy(),
-        };
-        instance.mapContainerRef(element);
-        expect(element.addEventListener.callCount).toBe(1);
-        expect(element.addEventListener.calledWith('touchmove')).toBe(true);
-    });
+
 });

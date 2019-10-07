@@ -561,7 +561,7 @@ describe('MapView component', () => {
         props.runs.forEach((run) => {
             expect(readerSpy.calledWith(run.job.extent, {
                 dataProjection: 'EPSG:4326',
-                featureProjection: 'EPSG:3857',
+                featureProjection: 'EPSG:4326',
             })).toBe(true);
             expect(idSpy.calledWith(run.uid)).toBe(true);
             expect(propSpy.calledWith(run)).toBe(true);
@@ -1110,7 +1110,6 @@ describe('MapView component', () => {
         const clearSpy = sinon.spy(utils, 'clearDraw');
         const warningSpy = sinon.spy(instance, 'showInvalidDrawWarning');
         const readSpy = sinon.spy(GeoJSON.prototype, 'readFeature');
-        const transformSpy = sinon.spy(Polygon.prototype, 'transform');
         const addSpy = sinon.spy(VectorSource.prototype, 'addFeature');
         const createSpy = sinon.spy(utils, 'createGeoJSON');
         expect(instance.handleSearch(result)).toBe(true);
@@ -1120,14 +1119,11 @@ describe('MapView component', () => {
         expect(warningSpy.calledWith(false)).toBe(true);
         expect(readSpy.calledOnce).toBe(true);
         expect(readSpy.calledWith(result)).toBe(true);
-        expect(transformSpy.called).toBe(true);
-        expect(transformSpy.calledWith('EPSG:4326', 'EPSG:3857')).toBe(true);
         expect(addSpy.calledOnce).toBe(true);
         expect(createSpy.calledOnce).toBe(true);
         expect(props.onMapFilter.calledOnce).toBe(true);
         clearSpy.restore();
         readSpy.restore();
-        transformSpy.restore();
         addSpy.restore();
         createSpy.restore();
     });
@@ -1534,7 +1530,7 @@ describe('MapView component', () => {
         warningSpy.restore();
     });
 
-    it('hanldeDrag should transform a bbox and update its coordinates then move the vertex marker', () => {
+    it('handleDrag should transform a bbox and update its coordinates then move the vertex marker', () => {
         const feature = new Feature({
             geometry: new Polygon([[
                 [100.0, 0.0],

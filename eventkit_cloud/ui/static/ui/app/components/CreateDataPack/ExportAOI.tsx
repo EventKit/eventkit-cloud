@@ -9,7 +9,6 @@ import Joyride, {Step} from 'react-joyride';
 
 import Map from 'ol/map';
 import View from 'ol/view';
-import proj from 'ol/proj';
 import extent from 'ol/extent';
 import VectorSource from 'ol/source/vector';
 import GeoJSONFormat from 'ol/format/geojson';
@@ -46,7 +45,7 @@ import {
     isGeoJSONValid, createGeoJSON, clearDraw,
     MODE_DRAW_BBOX, MODE_NORMAL, MODE_DRAW_FREE, zoomToFeature, unwrapCoordinates,
     isViewOutsideValidExtent, goToValidExtent, isBox, isVertex, bufferGeojson, allHaveArea,
-    getDominantGeometry
+    getDominantGeometry, getResolutions
 } from '../../utils/mapUtils';
 
 import {getSqKm} from '../../utils/generic';
@@ -54,8 +53,7 @@ import ZoomLevelLabel from '../MapTools/ZoomLevelLabel';
 import globe from '../../../images/globe-americas.svg';
 import {joyride} from '../../joyride.config';
 import {Breakpoint} from '@material-ui/core/styles/createBreakpoints';
-import Tabs from "@material-ui/core/Tabs";
-import Tab from "@material-ui/core/Tab";
+import TileGrid from "ol/tilegrid/tilegrid";
 
 export const WGS84 = 'EPSG:4326';
 export const WEB_MERCATOR = 'EPSG:3857';
@@ -196,7 +194,7 @@ export class ExportAOI extends React.Component<Props, State> {
             const reader = new GeoJSONFormat();
             const features = reader.readFeatures(this.props.aoiInfo.geojson, {
                 dataProjection: WGS84,
-                featureProjection: WEB_MERCATOR,
+                featureProjection: WGS84,
             });
             this.drawLayer.getSource().addFeatures(features);
             this.map.getView().fit(this.drawLayer.getSource().getExtent());
@@ -314,7 +312,7 @@ export class ExportAOI extends React.Component<Props, State> {
     }
 
     private handleResetMap() {
-        const worldExtent = proj.transformExtent([-180, -90, 180, 90], WGS84, WEB_MERCATOR);
+        const worldExtent = [-180, -90, 180, 90];
         this.map.getView().fit(worldExtent, this.map.getSize());
     }
 
@@ -337,7 +335,6 @@ export class ExportAOI extends React.Component<Props, State> {
         clearDraw(this.drawLayer);
         this.showInvalidDrawWarning(false);
         const searchFeature = (new GeoJSONFormat()).readFeature(result);
-        searchFeature.getGeometry().transform(WGS84, WEB_MERCATOR);
         this.drawLayer.getSource().addFeature(searchFeature);
         const geojson: GeoJSON.FeatureCollection = {
             type: 'FeatureCollection',
@@ -374,7 +371,7 @@ export class ExportAOI extends React.Component<Props, State> {
         const reader = new GeoJSONFormat();
         const features = reader.readFeatures(featureCollection, {
             dataProjection: WGS84,
-            featureProjection: WEB_MERCATOR,
+            featureProjection: WGS84,
         });
         this.drawLayer.getSource().addFeatures(features);
         this.map.getView().fit(this.drawLayer.getSource().getExtent());
@@ -508,14 +505,26 @@ export class ExportAOI extends React.Component<Props, State> {
         img.alt = 'globe';
         img.height = 16;
         img.width = 16;
+
+        const zoomLevels = 20;
+        const resolutions = getResolutions(zoomLevels, null);
+        const tileGrid = new TileGrid({
+            extent: [-180, -90, 180, 90],
+            resolutions,
+        });
         // Order matters here
+        // Above comment assumed to refer to the order of the parameters to XYZ()
+        // Comment moved with code, originally offered no further explanation.
         this.baseLayer = new Tile({
             source: new XYZ({
+                projection: 'EPSG:4326',
                 url: (!!this.props.baseMapUrl) ? this.props.baseMapUrl : this.context.config.BASEMAP_URL,
                 wrapX: true,
                 attributions: this.context.config.BASEMAP_COPYRIGHT,
+                tileGrid,
             }),
         });
+
         this.map = new Map({
             controls: [
                 new ScaleLine({
@@ -533,10 +542,7 @@ export class ExportAOI extends React.Component<Props, State> {
                     className: css.olZoomToExtent,
                     label: img,
                     extent: [
-                        -14251567.50789682,
-                        -10584983.780136958,
-                        14251787.50789682,
-                        10584983.780136958,
+                        -180, -90, 180, 90
                     ],
                 }),
             ],
@@ -550,11 +556,11 @@ export class ExportAOI extends React.Component<Props, State> {
             ],
             target: 'map',
             view: new View({
-                projection: 'EPSG:3857',
-                center: [110, 0],
+                projection: 'EPSG:4326',
+                center: [0, 0],
                 zoom: this.state.zoomLevel,
                 minZoom: 2,
-                maxZoom: 22,
+                maxZoom: zoomLevels,
             }),
         });
 
@@ -593,7 +599,7 @@ export class ExportAOI extends React.Component<Props, State> {
             const geo = new GeoJSONFormat();
             const geojson = geo.writeFeaturesObject(this.drawLayer.getSource().getFeatures(), {
                 dataProjection: WGS84,
-                featureProjection: WEB_MERCATOR,
+                featureProjection: WGS84,
             });
             if (isGeoJSONValid(geojson)) {
                 this.props.updateAoiInfo({
@@ -709,7 +715,7 @@ export class ExportAOI extends React.Component<Props, State> {
         const reader = new GeoJSONFormat();
         const features = reader.readFeatures(this.props.aoiInfo.geojson, {
             dataProjection: 'EPSG:4326',
-            featureProjection: 'EPSG:3857',
+            featureProjection: 'EPSG:4326',
         });
         if (features.length === 1) {
             zoomToFeature(features[0], this.map);
@@ -729,7 +735,7 @@ export class ExportAOI extends React.Component<Props, State> {
         const reader = new GeoJSONFormat();
         const newFeatures = reader.readFeatures(bufferFeatures, {
             dataProjection: 'EPSG:4326',
-            featureProjection: 'EPSG:3857',
+            featureProjection: 'EPSG:4326',
         });
         clearDraw(this.drawLayer);
         clearDraw(this.bufferLayer);
@@ -782,7 +788,7 @@ export class ExportAOI extends React.Component<Props, State> {
             this.bufferFeatures = {...bufferedFeatureCollection};
             const newFeatures = reader.readFeatures(bufferedFeatureCollection, {
                 dataProjection: 'EPSG:4326',
-                featureProjection: 'EPSG:3857',
+                featureProjection: 'EPSG:4326',
             });
             clearDraw(this.bufferLayer);
             if (buffer !== 0 && newFeatures.length === 0) {
@@ -808,7 +814,7 @@ export class ExportAOI extends React.Component<Props, State> {
         const reader = new GeoJSONFormat();
         const newFeatures = reader.readFeatures(originalGeojson, {
             dataProjection: 'EPSG:4326',
-            featureProjection: 'EPSG:3857',
+            featureProjection: 'EPSG:4326',
         });
         clearDraw(this.drawLayer);
         this.drawLayer.getSource().addFeatures(newFeatures);
@@ -949,7 +955,6 @@ export class ExportAOI extends React.Component<Props, State> {
             ],
         ];
         const polygon = new Polygon(coords);
-        polygon.transform('EPSG:4326', 'EPSG:3857');
         const feature = new Feature({
             geometry: polygon,
         });

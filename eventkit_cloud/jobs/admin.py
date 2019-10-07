@@ -121,7 +121,7 @@ class DataProviderForm(forms.ModelForm):
 
         service_type = self.cleaned_data.get('export_provider_type').type_name
 
-        if service_type in ['wms', 'wmts', 'tms']:
+        if service_type in ['wms', 'wmts', 'tms', 'arcgis-raster']:
             from eventkit_cloud.utils.mapproxy import MapproxyGeopackage, \
                                                  ConfigurationError
             service = MapproxyGeopackage(layer=self.cleaned_data.get('layer'), service_type=self.cleaned_data.get('export_provider_type'), config=config)

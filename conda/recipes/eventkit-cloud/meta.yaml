@@ -29,7 +29,7 @@ requirements:
     - boto3 =1.9.141
     - celery =4.2.1
     - certifi =2019.3.9
-    - django =2.2.3
+    - django =2.2.5
     - dj-database-url =0.4.2
     - django-auth-ldap =1.7.0
     - django-celery-beat =1.4.0
@@ -58,6 +58,7 @@ requirements:
     - Shapely =1.6.4
     - simplejson =3.16.0
     - sqlparse =0.3.0
+    - webtest =2.0.33
     - whitenoise =4.1.2
   run:
     - python =3.6
@@ -71,7 +72,7 @@ requirements:
     - boto3 =1.9.141
     - celery =4.2.1
     - certifi =2019.3.9
-    - django =2.2.3
+    - django =2.2.5
     - dj-database-url =0.4.2
     - django-auth-ldap =1.7.0
     - django-celery-beat =1.4.0
@@ -100,6 +101,7 @@ requirements:
     - Shapely =1.6.4
     - simplejson =3.16.0
     - sqlparse =0.3.0
+    - webtest =2.0.33
     - whitenoise =4.1.2
 
 about:

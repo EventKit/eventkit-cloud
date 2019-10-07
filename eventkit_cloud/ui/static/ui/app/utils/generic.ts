@@ -1,6 +1,8 @@
 import axios from 'axios';
 import numeral from 'numeral';
 import GeoJSON from 'ol/format/geojson';
+import BufferOp from "jsts/org/locationtech/jts/operation/buffer/BufferOp";
+import {transformJSTSGeometry} from "./mapUtils";
 
 export function getHeaderPageInfo(response) {
     let nextPage = false;
@@ -21,7 +23,7 @@ export function getHeaderPageInfo(response) {
         [, range] = response.headers['content-range'].split('-');
     }
 
-    return { nextPage, range };
+    return {nextPage, range};
 }
 
 export function isMgrsString(c) {
@@ -74,12 +76,12 @@ export function getFeaturesFromGeojson(json) {
     const Geojson = new GeoJSON();
     if (json.type === 'FeatureCollection') {
         return Geojson.readFeatures(json, {
-            featureProjection: 'EPSG:3857',
+            featureProjection: 'EPSG:4326',
             dataProjection: 'EPSG:4326',
         });
     } else if (json.type === 'Feature') {
         return [Geojson.readFeature(json, {
-            featureProjection: 'EPSG:3857',
+            featureProjection: 'EPSG:4326',
             dataProjection: 'EPSG:4326',
         })];
     }
@@ -95,7 +97,7 @@ export function getSqKm(geojson) {
 
     features.forEach((feature) => {
         try {
-            area += feature.getGeometry().getArea() / 1000000;
+            area += feature.getGeometry().transform("EPSG:4326", "EPSG:3857").getArea() / 1000000;
         } catch (e) {
             area += 0;
         }
@@ -109,14 +111,14 @@ export function getSqKmString(geojson) {
     return `${areaStr} sq km`;
 }
 
-export function getDuration(seconds, capEstimate=true) {
+export function getDuration(seconds, capEstimate = true) {
     // returns a string duration formatted like  1d 5h 30m (1 day 5 hours 30 minutes)
     // this is calculated based on the number of seconds supplied
     let remainingSeconds = seconds;
     const secondsInDay = 60 * 60 * 24;
     const secondsInHour = 60 * 60;
 
-    if(capEstimate && seconds >= secondsInDay)
+    if (capEstimate && seconds >= secondsInDay)
         return `At least 1 day`;
 
     let days: any = Math.floor(remainingSeconds / secondsInDay);
@@ -163,9 +165,36 @@ export function isZoomLevelInRange(zoomLevel, provider: Eventkit.Provider) {
 
 // Not an exhaustive list, just what I'm aware of right now.
 const typesSupportingZoomLevels = ['tms', 'wmts', 'wms', 'arcgis-raster'];
+
 export function supportsZoomLevels(provider: Eventkit.Provider) {
     if (provider.type === null || provider.type === undefined) {
         return false;
     }
     return typesSupportingZoomLevels.indexOf(provider.type.toLowerCase()) >= 0;
+}
+
+// This maps special case formats that only support certain projections
+const formatCompatibilityMap = {
+    nitf: [4326],
+};
+// This maps special case formats that do not support certain projections
+// Use this when a format can support any projection except a specific set.
+const formatIncompatibilityMap = {};
+
+// Takes a list of formats, and returns any formats that are incompotible with the specified projection (passed by srid)
+export function unsupportedFormats(projection: number, formats: Eventkit.Format[]) {
+    const incompatibleFormats = [];
+    formats.forEach((format) => {
+        // A format should not be listed in BOTH the compatabilty and incompatibility map.
+        const supportedProjections = formatCompatibilityMap[format.slug.toLowerCase()];
+        const unsupportedProjections = formatIncompatibilityMap[format.slug.toLowerCase()];
+        if (supportedProjections && supportedProjections.indexOf(projection) === -1) {
+            // If the format ONLY supports certain projections, and this projection is not in that list
+            incompatibleFormats.push(format);
+        } else if (unsupportedProjections && unsupportedProjections.indexOf(projection) >= 0) {
+            // If the format DOES NOT support a specific set of projections, and this projection is in that list
+            incompatibleFormats.push(format);
+        }
+    });
+    return incompatibleFormats;
 }

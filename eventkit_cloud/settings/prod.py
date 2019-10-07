@@ -37,16 +37,20 @@ EXPORT_TASKS = {
 
 # where exports are staged for processing
 EXPORT_STAGING_ROOT = None
+TILE_CACHE_DIR = None
 if os.getenv("VCAP_SERVICES"):
     for service, listings in json.loads(os.getenv("VCAP_SERVICES")).items():
         if 'nfs' in service:
             try:
                 EXPORT_STAGING_ROOT = os.path.join(listings[0]['volume_mounts'][0]['container_dir'], 'eventkit_stage')
+                TILE_CACHE_DIR = os.path.join(listings[0]['volume_mounts'][0]['container_dir'], 'tile_cache')
             except (KeyError, TypeError) as e:
                 print(e)
                 continue
 if not EXPORT_STAGING_ROOT:
     EXPORT_STAGING_ROOT = os.getenv('EXPORT_STAGING_ROOT', '/var/lib/eventkit/exports_stage/')
+if not TILE_CACHE_DIR:
+    TILE_CACHE_DIR = os.getenv('TILE_CACHE_DIR', '/var/lib/eventkit/tile_cache/')
 
 # where exports are stored for public download
 EXPORT_DOWNLOAD_ROOT = os.getenv('EXPORT_DOWNLOAD_ROOT', '/var/lib/eventkit/exports_download/')
@@ -352,14 +356,17 @@ LOGGING = {
 
 # SSL_VERIFICATION should point to a CA certificate file (.pem), if not then REQUESTS_CA_BUNDLE should be set also.
 # If wishing to disable verification (not recommended), set SSL_VERIFICATION to False.
-ssl_verification_settings = os.getenv('SSL_VERIFICATION', "false")
-SSL_VERIFICATION = bool(strtobool(ssl_verification_settings.lower()))
+ssl_verification_settings = os.getenv('SSL_VERIFICATION', 'true')
 if os.path.isfile(ssl_verification_settings):
     SSL_VERIFICATION = ssl_verification_settings
     if not os.getenv('REQUESTS_CA_BUNDLE'):
         os.environ['REQUESTS_CA_BUNDLE'] = SSL_VERIFICATION
 else:
-    SSL_VERIFICATION = True
+    try:
+        SSL_VERIFICATION = bool(strtobool(ssl_verification_settings.lower()))
+    except ValueError:
+        SSL_VERIFICATION = True
+
 
 LAND_DATA_URL = os.getenv('LAND_DATA_URL', "https://osmdata.openstreetmap.de/download/land-polygons-split-3857.zip")
 
