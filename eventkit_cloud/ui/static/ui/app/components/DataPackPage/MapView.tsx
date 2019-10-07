@@ -28,6 +28,7 @@ import Stroke from 'ol/style/stroke';
 import GeoJSONFormat from 'ol/format/geojson';
 import VectorLayer from 'ol/layer/vector';
 import Tile from 'ol/layer/tile';
+import TileGrid from 'ol/tilegrid/tilegrid';
 import Attribution from 'ol/control/attribution';
 import ScaleLine from 'ol/control/scaleline';
 import Zoom from 'ol/control/zoom';
@@ -47,10 +48,9 @@ import { generateDrawLayer, generateDrawBoxInteraction, generateDrawFreeInteract
     isGeoJSONValid, createGeoJSON, createGeoJSONGeometry, clearDraw,
     MODE_DRAW_BBOX, MODE_DRAW_FREE, MODE_NORMAL, zoomToFeature, featureToPoint,
     isViewOutsideValidExtent, goToValidExtent, unwrapCoordinates, unwrapExtent,
-    isBox, isVertex } from '../../utils/mapUtils';
+    isBox, isVertex, getResolutions } from '../../utils/mapUtils';
 import ZoomLevelLabel from '../MapTools/ZoomLevelLabel';
 import globe from '../../../images/globe-americas.svg';
-import withRef from '../../utils/withRef';
 import { makeAllRunsSelector } from '../../selectors/runSelector';
 import { Breakpoint } from '@material-ui/core/styles/createBreakpoints';
 
@@ -431,7 +431,7 @@ export class MapView extends React.Component<Props, State> {
             if (run !== undefined) {
                 const runFeature = reader.readFeature(run.job.extent, {
                     dataProjection: 'EPSG:4326',
-                    featureProjection: 'EPSG:3857',
+                    featureProjection: 'EPSG:4326',
                 });
                 runFeature.setId(run.uid);
                 runFeature.setProperties(run);
@@ -452,6 +452,13 @@ export class MapView extends React.Component<Props, State> {
         img.alt = 'globe';
         img.height = 16;
         img.width = 16;
+        // const startResolution = 0.703125; // Allows 4326 data with 2 tiles from lvl 0.
+        const zoomLevels = 20;
+        const resolutions = getResolutions(zoomLevels, null);
+        let tileGrid = new TileGrid({
+            extent: [-180, -90, 180, 90],
+            resolutions: resolutions
+        });
         return new Map({
             controls: [
                 new ScaleLine({
@@ -469,10 +476,7 @@ export class MapView extends React.Component<Props, State> {
                     className: css.olZoomToExtent,
                     label: img,
                     extent: [
-                        -14251567.50789682,
-                        -10584983.780136958,
-                        14251787.50789682,
-                        10584983.780136958,
+                        -180,-90, 180, 90
                     ],
                 }),
                 new OverviewMap({
@@ -490,6 +494,8 @@ export class MapView extends React.Component<Props, State> {
             layers: [
                 new Tile({
                     source: new XYZ({
+                        projection: 'EPSG:4326',
+                        tileGrid: tileGrid,
                         url: this.context.config.BASEMAP_URL,
                         wrapX: true,
                         attributions: this.context.config.BASEMAP_COPYRIGHT,
@@ -498,11 +504,11 @@ export class MapView extends React.Component<Props, State> {
             ],
             target: 'map',
             view: new View({
-                projection: 'EPSG:3857',
-                center: [110, 0],
+                projection: 'EPSG:4326',
+                center: [0, 0],
                 zoom: this.state.zoomLevel,
                 minZoom: 2,
-                maxZoom: 22,
+                maxZoom: zoomLevels,
             }),
         });
     }
@@ -716,7 +722,6 @@ export class MapView extends React.Component<Props, State> {
         clearDraw(this.drawLayer);
         this.showInvalidDrawWarning(false);
         const searchFeature = (new GeoJSONFormat()).readFeature(result);
-        searchFeature.getGeometry().transform('EPSG:4326', 'EPSG:3857');
         this.drawLayer.getSource().addFeature(searchFeature);
         const geojson = createGeoJSON(searchFeature.getGeometry()) as GeoJSON.FeatureCollection;
         this.props.onMapFilter(geojson);
@@ -777,7 +782,7 @@ export class MapView extends React.Component<Props, State> {
         const reader = new GeoJSONFormat();
         const features = reader.readFeatures(featureCollection, {
             dataProjection: 'EPSG:4326',
-            featureProjection: 'EPSG:3857',
+            featureProjection: 'EPSG:4326',
         });
         this.drawLayer.getSource().addFeatures(features);
         this.props.onMapFilter(featureCollection);
@@ -800,7 +805,7 @@ export class MapView extends React.Component<Props, State> {
             geom.setCoordinates(unwrappedCoords);
             const geojson = new GeoJSONFormat().writeFeaturesObject(this.drawLayer.getSource().getFeatures(), {
                 dataProjection: 'EPSG:4326',
-                featureProjection: 'EPSG:3857',
+                featureProjection: 'EPSG:4326',
             });
             if (isGeoJSONValid(geojson)) {
                 this.props.onMapFilter(geojson);

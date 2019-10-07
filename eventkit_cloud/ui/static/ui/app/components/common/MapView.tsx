@@ -1,6 +1,4 @@
-import * as PropTypes from 'prop-types';
 import * as React from 'react';
-import {withTheme, Theme} from '@material-ui/core/styles';
 import Map from 'ol/map';
 import View from 'ol/view';
 import interaction from 'ol/interaction';
@@ -12,14 +10,9 @@ import Tile from 'ol/layer/tile';
 import ScaleLine from 'ol/control/scaleline';
 import Attribution from 'ol/control/attribution';
 import Zoom from 'ol/control/zoom';
-import Card from '@material-ui/core/Card';
-import CardContent from '@material-ui/core/CardContent';
-import CardActions from '@material-ui/core/CardActions';
-import Collapse from '@material-ui/core/Collapse';
-import ExpandLess from '@material-ui/icons/ExpandLess';
-import ExpandMore from '@material-ui/icons/ExpandMore';
 import ol3mapCss from '../../styles/ol3map.css';
-import {MapCard} from "./MapCard";
+import {getResolutions} from "../../utils/mapUtils";
+import TileGrid from "ol/tilegrid/tilegrid";
 
 export interface Props {
     geojson: object;
@@ -30,6 +23,7 @@ export interface Props {
     minZoom?: number;
     maxZoom?: number;
     id?: string;
+    moveable?: boolean;
 }
 
 export class MapView extends React.Component<Props> {
@@ -38,6 +32,7 @@ export class MapView extends React.Component<Props> {
     private mapDiv: string;
     private minZoom: number;
     private maxZoom: number;
+    private ref: (element: HTMLElement)=>void;
 
     constructor(props: Props) {
         super(props);
@@ -50,6 +45,10 @@ export class MapView extends React.Component<Props> {
         if (!this.map) {
             this.initializeOpenLayers();
         }
+
+        if (!this.props.moveable) {
+            this.ref = this.mapContainerRef;
+        }
     }
 
     componentDidUpdate(prevProps: Readonly<Props>, prevState: Readonly<{}>, snapshot?: any): void {
@@ -58,17 +57,35 @@ export class MapView extends React.Component<Props> {
         }
     }
 
+    mapContainerRef(element: HTMLElement) {
+        if (!element) {
+            return;
+        }
+        // Absorb touch move events.
+        element.addEventListener('touchmove', (e: TouchEvent) => {
+            e.stopPropagation();
+        });
+    }
+
     componentWillUnmount() {
         this.map.setTarget(null);
         this.map = null;
     }
 
     private initializeOpenLayers() {
+        const zoomLevels = 20;
+        const resolutions = getResolutions(zoomLevels, null);
+        let tileGrid = new TileGrid({
+            extent: [-180, -90, 180, 90],
+            resolutions: resolutions
+        });
         const base = new Tile({
             source: new XYZ({
+                projection: 'EPSG:4326',
                 url: this.props.url,
                 wrapX: true,
                 attributions: this.props.copyright,
+                tileGrid: tileGrid,
             }),
         });
         this.map = new Map({
@@ -81,8 +98,8 @@ export class MapView extends React.Component<Props> {
             layers: [base],
             target: this.mapDiv,
             view: new View({
-                projection: 'EPSG:3857',
-                center: [110, 0],
+                projection: 'EPSG:4326',
+                center: [0, 0],
                 zoom: this.props.zoom || this.maxZoom,
                 minZoom: this.minZoom,
                 maxZoom: this.maxZoom,
@@ -105,7 +122,7 @@ export class MapView extends React.Component<Props> {
         const source = new VectorSource();
         const geojson = new GeoJSON();
         const features = geojson.readFeatures(this.props.geojson, {
-            featureProjection: 'EPSG:3857',
+            featureProjection: 'EPSG:4326',
             dataProjection: 'EPSG:4326',
         });
         source.addFeatures(features);
@@ -128,7 +145,7 @@ export class MapView extends React.Component<Props> {
 
     render() {
         return (
-            <div id={this.mapDiv} style={{width: '100%'}}/>
+            <div style={{ height: '100%', width: '100%' }} id={this.mapDiv} ref={this.mapContainerRef}/>
         );
     }
 }

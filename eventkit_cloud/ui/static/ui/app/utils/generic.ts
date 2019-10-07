@@ -1,6 +1,8 @@
 import axios from 'axios';
 import numeral from 'numeral';
 import GeoJSON from 'ol/format/geojson';
+import BufferOp from "jsts/org/locationtech/jts/operation/buffer/BufferOp";
+import {transformJSTSGeometry} from "./mapUtils";
 
 export function getHeaderPageInfo(response) {
     let nextPage = false;
@@ -74,12 +76,12 @@ export function getFeaturesFromGeojson(json) {
     const Geojson = new GeoJSON();
     if (json.type === 'FeatureCollection') {
         return Geojson.readFeatures(json, {
-            featureProjection: 'EPSG:3857',
+            featureProjection: 'EPSG:4326',
             dataProjection: 'EPSG:4326',
         });
     } else if (json.type === 'Feature') {
         return [Geojson.readFeature(json, {
-            featureProjection: 'EPSG:3857',
+            featureProjection: 'EPSG:4326',
             dataProjection: 'EPSG:4326',
         })];
     }
@@ -95,7 +97,7 @@ export function getSqKm(geojson) {
 
     features.forEach((feature) => {
         try {
-            area += feature.getGeometry().getArea() / 1000000;
+            area += feature.getGeometry().transform("EPSG:4326", "EPSG:3857").getArea() / 1000000;
         } catch (e) {
             area += 0;
         }

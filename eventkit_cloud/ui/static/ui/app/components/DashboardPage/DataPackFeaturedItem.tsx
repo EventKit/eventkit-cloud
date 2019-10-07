@@ -22,6 +22,7 @@ import ScaleLine from 'ol/control/scaleline';
 import ol3mapCss from '../../styles/ol3map.css';
 import { makeFullRunSelector } from '../../selectors/runSelector';
 import { Breakpoint } from '@material-ui/core/styles/createBreakpoints';
+import {MapView} from "../common/MapView";
 
 const jss = (theme: Eventkit.Theme & Theme) => createStyles({
     card: {
@@ -155,22 +156,9 @@ export class DataPackFeaturedItem extends React.Component<Props, {}> {
         config: PropTypes.object,
     };
 
-    private map: any;
     constructor(props: Props) {
         super(props);
-        this.initMap = this.initMap.bind(this);
         this.getMapId = this.getMapId.bind(this);
-        this.mapContainerRef = this.mapContainerRef.bind(this);
-    }
-
-    componentDidMount() {
-        this.initMap();
-    }
-
-    componentDidUpdate(prevProps: Props) {
-        if (prevProps.width !== this.props.width || prevProps.height !== this.props.height) {
-            this.map.updateSize();
-        }
     }
 
     private getMapId() {
@@ -187,67 +175,6 @@ export class DataPackFeaturedItem extends React.Component<Props, {}> {
         return mapId;
     }
 
-    private initMap() {
-        this.map = new Map({
-            target: this.getMapId(),
-            layers: [
-                new Tile({
-                    source: new XYZ({
-                        url: this.context.config.BASEMAP_URL,
-                        wrapX: true,
-                        attributions: this.context.config.BASEMAP_COPYRIGHT,
-                    }),
-                }),
-            ],
-            view: new View({
-                projection: 'EPSG:3857',
-                center: [110, 0],
-                zoom: 2,
-                minZoom: 2,
-                maxZoom: 22,
-            }),
-            interactions: interaction.defaults({ mouseWheelZoom: false }),
-            controls: [
-                new Attribution({
-                    className: ['ol-attribution', ol3mapCss['ol-attribution']].join(' '),
-                    collapsible: false,
-                    collapsed: false,
-                }),
-                new Zoom({
-                    className: [ol3mapCss.olZoom, ol3mapCss.olControlTopLeft].join(' '),
-                }),
-                new ScaleLine({
-                    className: ol3mapCss.olScaleLine,
-                }),
-            ],
-        });
-
-        const source = new VectorSource({ wrapX: true });
-
-        const geojson = new GeoJSON();
-        const feature = geojson.readFeature(this.props.run.job.extent, {
-            featureProjection: 'EPSG:3857',
-            dataProjection: 'EPSG:4326',
-        });
-        source.addFeature(feature);
-        const layer = new VectorLayer({
-            source,
-        });
-        this.map.addLayer(layer);
-        this.map.getView().fit(source.getExtent(), this.map.getSize());
-    }
-
-    private mapContainerRef(element: HTMLElement) {
-        if (!element) {
-            return;
-        }
-
-        // Absorb touch move events.
-        element.addEventListener('touchmove', (e: TouchEvent) => {
-            e.stopPropagation();
-        });
-    }
-
     render() {
         const { classes } = this.props;
 
@@ -258,11 +185,16 @@ export class DataPackFeaturedItem extends React.Component<Props, {}> {
                 key={this.props.run.uid}
             >
                 <div className={classes.content} style={{ height: this.props.height }}>
-                    <div
-                        id={this.getMapId()}
-                        className={classes.map}
-                        ref={this.mapContainerRef}
-                    />
+                    <div className={classes.map}>
+                        <MapView
+                            id={this.getMapId()}
+                            url={this.context.config.BASEMAP_URL}
+                            copyright={this.context.config.BASEMAP_COPYRIGHT}
+                            geojson={this.props.run.job.extent}
+                            minZoom={2}
+                            maxZoom={20}
+                        />
+                    </div>
                     <div className={classes.info}>
                         <CardHeader
                             className={classes.cardHeader}

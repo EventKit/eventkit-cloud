@@ -30,6 +30,7 @@ function getRuns() {
             },
             provider_tasks: [],
             expiration: '2017-03-24T15:52:35.637258Z',
+            extent: { type: 'FeatureCollection', features: [] }
         },
         {
             uid: 'c7466114-8c0c-4160-8383-351414b11e37',
@@ -88,7 +89,6 @@ describe('DataPackGridItem component', () => {
     let props;
     let wrapper;
     let instance;
-    let initMap;
 
     const setup = (override = {}, options = {}) => {
         props = { ...getProps(), ...override };
@@ -102,10 +102,6 @@ describe('DataPackGridItem component', () => {
         instance = wrapper.instance();
     };
 
-    beforeAll(() => {
-        initMap = sinon.stub(DataPackGridItem.prototype, 'initMap');
-    });
-
     beforeEach(setup);
 
     it('should display general run information', () => {
@@ -115,12 +111,6 @@ describe('DataPackGridItem component', () => {
         expect(wrapper.find(CardContent).first().html()).toContain('Test1 description');
         expect(wrapper.find(CardActions)).toHaveLength(1);
         expect(wrapper.find(DataPackShareDialog)).toHaveLength(1);
-    });
-
-    it('should call initMap when component has mounted', () => {
-        initMap.reset();
-        instance.componentDidMount();
-        expect(initMap.calledOnce).toBe(true);
     });
 
     it('should display information specific to a unpublished & owned run', () => {
@@ -138,19 +128,6 @@ describe('DataPackGridItem component', () => {
         wrapper.setProps({ run: getRuns()[1] });
         expect(wrapper.find(SocialGroup)).toHaveLength(1);
         expect(wrapper.find(CardActions).find('p').html()).toContain('notAdmin');
-    });
-
-    it('should not display a map when the card is not expanded', () => {
-        const targetSpy = sinon.spy();
-        instance.map = { setTarget: targetSpy };
-        const updateSpy = sinon.spy(instance, 'componentDidUpdate');
-        instance.initMap = sinon.spy();
-        wrapper.setState({ expanded: false });
-        expect(updateSpy.called).toBe(true);
-        expect(targetSpy.calledOnce).toBe(true);
-        expect(instance.map).toBe(null);
-        expect(instance.initMap.called).toBe(false);
-        updateSpy.restore();
     });
 
     it('toggleExpanded should set expanded state to its negatation', () => {
