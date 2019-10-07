@@ -581,7 +581,7 @@ export function getResolutions(levels, startingResolution) {
     // Default to EPSG:4326 resolution supporting 2 tiles at level 0.
     const startResolution = startingResolution || 0.703125;
     const resolutions = new Array(levels);
-    for (let i = 0; i < resolutions.length; i + 1) {
+    for (let i = 0; i < resolutions.length; i++) {
         resolutions[i] = startResolution / (2 ** i);
     }
     return resolutions;
