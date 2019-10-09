@@ -4,20 +4,17 @@ import CustomScrollbar from "../CustomScrollbar";
 import Divider from '@material-ui/core/Divider';
 import List from '@material-ui/core/List';
 import ListItem from '@material-ui/core/ListItem';
-import {createStyles, Theme, withStyles, withTheme} from "@material-ui/core";
+import {createStyles, Theme, withStyles, withTheme, Grid} from "@material-ui/core";
 import {connect} from "react-redux";
-import {ExportSummary} from "./ExportSummary";
 import ButtonBase from "@material-ui/core/ButtonBase";
-import ArrowDropDownIcon from '@material-ui/icons/ArrowDropDown';
+import DropDown from '@material-ui/icons/ArrowDropDown';
+import Close from '@material-ui/icons/Close';
 
 import RadioGroup from "@material-ui/core/RadioGroup";
 import Radio from "@material-ui/core/Radio";
-import FormControlLabel from "@material-ui/core/FormControlLabel";
-import Tabs from "@material-ui/core/Tabs";
-import Tab from "@material-ui/core/Tab";
+import {Tab, Tabs} from "@material-ui/core";
 import * as PropTypes from "prop-types";
 import Paper from "@material-ui/core/Paper";
-import Checkbox from "@material-ui/core/Checkbox";
 import Typography from "@material-ui/core/Typography";
 import ListItemText from "@material-ui/core/ListItemText";
 import Button from "@material-ui/core/Button";
@@ -51,8 +48,26 @@ const jss = (theme: Theme & Eventkit.Theme) => createStyles({
         paddingRight: '10px',
         paddingBottom: '5px',
     },
+    tabs: {
+        width: '100%',
+    },
+    tabHeader: {
+        display: 'flex',
+        right: '0px',
+        top: '0',
+        position: 'absolute',
+        marginTop: '2px',
+    },
+    tab: {
+        backgroundColor: 'lightGrey',
+        color: 'black',
+        '&$selected': {
+            backgroundColor: theme.eventkit.colors.secondary,
+            color: theme.eventkit.colors.primary,
+        }
+    },
     scrollBar: {
-        height: 'calc(100% - 75px)',
+        height: 'calc(100% - 100px)',
         width: '250px',
     },
     subHeading: {
@@ -87,8 +102,18 @@ const jss = (theme: Theme & Eventkit.Theme) => createStyles({
         },
     },
     checked: {},
+    selected: {},
+    stickyRow: {
+        position: 'absolute',
+        height: '50px',
+        width: '100%',
+        display: 'grid',
+    },
     button: {
         color: theme.eventkit.colors.white,
+        position: 'absolute',
+        right: '10px',
+        top: '10px',
     },
 });
 
@@ -100,7 +125,6 @@ export interface BaseMapSource {
 }
 
 export interface Props {
-    open: boolean;
     providers: Eventkit.Provider[];
     sources: BaseMapSource[];
     updateBaseMap: (mapUrl: string) => void;
@@ -108,6 +132,7 @@ export interface Props {
 }
 
 export interface State {
+    selectedTab: any;
     selectedBaseMap: string;
     open: boolean;
     sources: BaseMapSource[];
@@ -124,6 +149,7 @@ export class MapDrawer extends React.Component<Props, State> {
         this.updateBaseMap = this.updateBaseMap.bind(this);
 
         this.state = {
+            selectedTab: '',
             selectedBaseMap: undefined,
             open: true,
             sources: [
@@ -145,9 +171,38 @@ export class MapDrawer extends React.Component<Props, State> {
         this.props.updateBaseMap(newBaseMapUrl);
     }
 
+    handleChange = (event, newValue) => {
+        if (this.state.selectedTab === newValue) {
+            this.setState({selectedTab: false});
+        } else {
+            this.setState({selectedTab: newValue});
+        }
+    };
+
+    getIcon = (tabName) => {
+        const {selectedTab} = this.state;
+        const containerStyle = {height: '40px', width: '40px', display: 'flex'};
+        if (selectedTab === tabName) {
+            return (
+                <div style={containerStyle}>
+                    <Close
+                        style={{margin: 'auto'}}
+                    />
+                </div>);
+        } else {
+            return (
+                <div style={containerStyle}>
+                    <DropDown
+                        style={{margin: 'auto', height: '40px', width: '40px'}}
+                        color="primary"
+                    />
+                </div>);
+        }
+    };
+
     render() {
         const {classes} = this.props;
-        const {selectedBaseMap} = this.state;
+        const {selectedTab, selectedBaseMap} = this.state;
         const sources = [
             ...this.state.sources,
             ...this.props.providers.filter(provider => !!provider.preview_url).map(provider => {
@@ -157,102 +212,104 @@ export class MapDrawer extends React.Component<Props, State> {
                     type: provider.type,
                 } as BaseMapSource;
             })];
-        if (sources.length > 0) {
-            let x = [] as BaseMapSource[];
-            for (let i = 0; i < 25; ++i) {
-                const source = {...sources[0]};
-                source.url = source.url + 'cvbnxcvbcvb' + i;
-                source.name = source.name + 'dfghdfghdfghdghdgfghdgfhdhjhgjfghjffghjfghd dghdhdhdghdfghdf gdfghdfhdfgh' + i;
-                x.push(source);
-            }
-            sources.push(...x);
-        }
+
         return (
             <div
                 className={classes.container}
             >
                 <Paper
                     style={{
-                        paddingLeft: '10px',
-                        height: '30px',
+                        height: 'auto',
                     }}
                     square={true}
                 >
-                    <div style={{height: '30px', right: '0px', position: 'absolute'}}>
-                        <strong>BASEMAPS</strong>
-                        <ButtonBase
-                            onClick={() => {
-                                this.setState({open: !this.state.open});
+                    <Tabs
+                        className={classes.tabs}
+                        value={selectedTab}
+                        onChange={this.handleChange}
+                        variant="fullWidth"
+                    >
+                        <Tab
+                            value="basemap"
+                            classes={{
+                                root: classes.tab,
+                                selected: classes.selected,
                             }}
-                        >
-                            <ArrowDropDownIcon
-                                color="primary"
-                            />
-                        </ButtonBase>
-                    </div>
+                            label={(
+                                <div className={classes.tabHeader}>
+                                <strong
+                                    style={{fontSize: '18px', color: 'secondary', margin: 'auto 0'}}
+                                >
+                                    BASEMAPS
+                                </strong>
+                                {this.getIcon('basemap')}
+                            </div>)}
+                        />
+                    </Tabs>
                 </Paper>
                 <Drawer
                     className="qa-MapDrawer-Drawer"
                     variant="persistent"
                     anchor="right"
-                    open={this.state.open}
+                    open={selectedTab === 'basemap'}
                     PaperProps={{
                         className: classes.drawerPaper,
                         style: {visibility: this.state.open ? 'visible' as 'visible' : 'hidden' as 'hidden'},
                     }}
                 >
                     <div className={classes.scrollBar}>
-                    <CustomScrollbar>
-                        <div className={classes.subHeading}><strong>Select a basemap</strong></div>
-                        <List style={{paddingRight: '10px', paddingLeft: '10px'}}>
-                            <RadioGroup
-                                value={(!!selectedBaseMap) ? selectedBaseMap : undefined}
-                                onChange={(e, value) => this.updateBaseMap(value)}
-                            >
-                                {sources.map((source, ix) =>
-                                    (
-                                        <div key={ix}>
-                                            <ListItem className={classes.listItem}>
-                                                <Radio
-                                                    checked={this.state.selectedBaseMap === source.url}
-                                                    value={source.url}
-                                                    classes={{root: classes.checkbox, checked: classes.checked}}
-                                                />
-                                                <ListItemText
-                                                    className={classes.listItem}
-                                                    disableTypography
-                                                    primary={
-                                                        <Typography
-                                                            className={classes.buttonLabel}
-                                                        >
-                                                            {source.name}
-                                                        </Typography>
-                                                    }
-                                                    secondary={
-                                                        <Typography
-                                                            className={classes.buttonLabelSecondary}
-                                                        >
-                                                            {source.type.toUpperCase()}
-                                                        </Typography>
-                                                    }
-                                                />
-                                            </ListItem>
-                                            {/*<Divider/>*/}
-                                        </div>
-                                    ))
-                                }
-                            </RadioGroup>
-                        </List>
-                    </CustomScrollbar>
+                        <CustomScrollbar>
+                            <div className={classes.subHeading}><strong>Select a basemap</strong></div>
+                            <List style={{paddingRight: '10px', paddingLeft: '10px'}}>
+                                <RadioGroup
+                                    value={(!!selectedBaseMap) ? selectedBaseMap : undefined}
+                                    onChange={(e, value) => this.updateBaseMap(value)}
+                                >
+                                    {sources.map((source, ix) =>
+                                        (
+                                            <div key={ix}>
+                                                <ListItem className={classes.listItem}>
+                                                    <Radio
+                                                        checked={this.state.selectedBaseMap === source.url}
+                                                        value={source.url}
+                                                        classes={{root: classes.checkbox, checked: classes.checked}}
+                                                    />
+                                                    <ListItemText
+                                                        className={classes.listItem}
+                                                        disableTypography
+                                                        primary={
+                                                            <Typography
+                                                                className={classes.buttonLabel}
+                                                            >
+                                                                {source.name}
+                                                            </Typography>
+                                                        }
+                                                        secondary={
+                                                            <Typography
+                                                                className={classes.buttonLabelSecondary}
+                                                            >
+                                                                {source.type.toUpperCase()}
+                                                            </Typography>
+                                                        }
+                                                    />
+                                                </ListItem>
+                                                {/*<Divider/>*/}
+                                            </div>
+                                        ))
+                                    }
+                                </RadioGroup>
+                            </List>
+                        </CustomScrollbar>
                     </div>
-                    <Paper
-                        square={true}
-                        style={{bottom: '25px', position: 'absolute', height: '50px', width: '100%'}}
+                    <Divider/>
+                    <div
+                        className={classes.stickyRow}
                     >
                         <Button
                             className={classes.button}
                             color="primary"
                             variant="contained"
+                            disabled={!selectedBaseMap}
                             onClick={() => {
                                 // Send empty string to clear base map url.
                                 this.updateBaseMap('');
@@ -260,7 +317,7 @@ export class MapDrawer extends React.Component<Props, State> {
                         >
                             Reset
                         </Button>
-                    </Paper>
+                    </div>
                 </Drawer>
             </div>
         );

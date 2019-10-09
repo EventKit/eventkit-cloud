@@ -113,6 +113,7 @@ export class ExportAOI extends React.Component<Props, State> {
     private drawLayer;
     private map;
     private baseLayer;
+    private tileGrid;
     private drawBoxInteraction;
     private drawFreeInteraction;
     private markerLayer;
@@ -223,9 +224,11 @@ export class ExportAOI extends React.Component<Props, State> {
 
         if (this.props.baseMapUrl !== prevProps.baseMapUrl) {
             const newSource = new XYZ({
+                projection: 'EPSG:4326',
                 url: (!!this.props.baseMapUrl) ? this.props.baseMapUrl : this.context.config.BASEMAP_URL,
                 wrapX: true,
                 attributions: this.context.config.BASEMAP_COPYRIGHT,
+                tileGrid: this.tileGrid,
             });
 
             this.baseLayer.setSource(newSource);
@@ -508,7 +511,7 @@ export class ExportAOI extends React.Component<Props, State> {
 
         const zoomLevels = 20;
         const resolutions = getResolutions(zoomLevels, null);
-        const tileGrid = new TileGrid({
+        this.tileGrid = new TileGrid({
             extent: [-180, -90, 180, 90],
             resolutions,
         });
@@ -521,7 +524,7 @@ export class ExportAOI extends React.Component<Props, State> {
                 url: (!!this.props.baseMapUrl) ? this.props.baseMapUrl : this.context.config.BASEMAP_URL,
                 wrapX: true,
                 attributions: this.context.config.BASEMAP_COPYRIGHT,
-                tileGrid,
+                tileGrid: this.tileGrid,
             }),
         });
 
