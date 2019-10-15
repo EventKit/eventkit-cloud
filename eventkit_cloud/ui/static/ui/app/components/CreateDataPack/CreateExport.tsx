@@ -88,7 +88,6 @@ export class CreateExport extends React.Component<Props, State> {
                     baseMapUrl={this.state.selectedBaseMap}
                 />
                 <MapDrawer
-                    open={true}
                     updateBaseMap={this.updateBaseMap}
                 />
                 <div>

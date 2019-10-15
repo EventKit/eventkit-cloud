@@ -53,9 +53,12 @@ const jss = (theme: Theme & Eventkit.Theme) => createStyles({
         zIndex: 1,
     },
     spinnerContainer: {
-        zIndex: 2,  // Make sure spinner can float above the text box.
+        zIndex: 3,  // Make sure spinner can float above the text box.
         right: '0px',
         width: '50px',
+        position: 'absolute',
+        marginTop: '10px',
+        marginRight: '10px',
     },
     spinner: {
         float: 'right',
@@ -211,7 +214,7 @@ export class SearchAOIToolbar extends React.Component<Props, State> {
                         renderMenu={renderer}
                         className="qa-SearchAOIToolbar-typeahead"
                     >
-                        {this.props.geocode.fetching || true ?
+                        {this.props.geocode.fetching ?
                             <div className={classes.spinnerContainer}>
                                 <CircularProgress
                                     size={25}
