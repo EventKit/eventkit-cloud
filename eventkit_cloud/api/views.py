@@ -37,7 +37,7 @@ from eventkit_cloud.api.serializers import (
     ExportTaskRecordSerializer, JobSerializer, RegionMaskSerializer, DataProviderTaskRecordSerializer,
     RegionSerializer, ListJobSerializer, ProviderTaskSerializer, DataProviderSerializer, LicenseSerializer,
     UserDataSerializer, GroupSerializer, UserJobActivitySerializer, NotificationSerializer, GroupUserSerializer,
-    LogSerializer
+    AuditEventSerializer
 )
 from eventkit_cloud.api.validators import validate_bbox_params, validate_search_bbox
 from eventkit_cloud.core.helpers import sendnotification, NotificationVerb, NotificationLevel
@@ -673,17 +673,19 @@ class ProjectionViewSet(viewsets.ReadOnlyModelViewSet):
     lookup_field = 'srid'
     ordering = ['srid']
 
-class LogViewSet(viewsets.ReadOnlyModelViewSet):
+
+class AuditEventViewSet(viewsets.ReadOnlyModelViewSet):
     """
     A simple ViewSet for listing or retrieving projections.
     """
-    serializer_class = LogSerializer
+    serializer_class = AuditEventSerializer
     permission_classes = (permissions.IsAdminUser,)
     queryset = AuditEvent.objects.all()
     filter_class = LogFilter
     lookup_field = 'id'
     ordering = ['datetime']
     search_fields = ('username', 'datetime', 'ip', 'email', 'event')
+
 
 class LicenseViewSet(viewsets.ReadOnlyModelViewSet):
     """

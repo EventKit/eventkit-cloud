@@ -213,7 +213,7 @@ class ProjectionSerializer(serializers.ModelSerializer):
         fields = ('uid', 'srid', 'name', 'description')
 
 
-class LogSerializer(serializers.ModelSerializer):
+class AuditEventSerializer(serializers.ModelSerializer):
     """Return a representation of the ExportFormat model."""
 
     class Meta:
