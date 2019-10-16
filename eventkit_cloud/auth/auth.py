@@ -9,6 +9,7 @@ import pytz
 import requests
 from django.conf import settings
 from django.contrib.auth import logout as auth_logout
+from django.contrib.auth import authenticate
 from django.contrib.auth.models import User
 from django.shortcuts import redirect
 
@@ -44,7 +45,7 @@ def auto_logout(get_response):
 
 def fetch_user_from_token(access_token):
     """
-    
+
     :param access_token: Uses OAuth token to retrieve user data from the resource server.
     :return: User object.
     """
@@ -81,7 +82,7 @@ def get_user(user_data, orig_data=None):
     A helper function for retrieving or creating a user given a user_data dictionary.
     :param user_data: A dict containg user data.
     :param orig_data: The original dictionary returned from the OAuth response, not modified to fit our User model.
-    :return: 
+    :return:
     """
     oauth = OAuth.objects.filter(identification=user_data.get('identification')).first()
     if not oauth:
@@ -96,8 +97,12 @@ def get_user(user_data, orig_data=None):
         try:
             user = User.objects.create(**user_data)
         except Exception as e:
+            # Call authenticate here to log the failed attempt.
+            authenticate(username=identification)
             logger.error("The user data provided could not be used to create a user, "
-                         "it most likely caused by OAUTH_PROFILE_SCHEMA containing an invalid key.")
+                         "it most likely caused by OAUTH_PROFILE_SCHEMA containing an invalid key, or a change"
+                         "to their identification key.")
+            logger.error(F"USER DATA: {user_data}")
             raise e
         try:
             OAuth.objects.create(user=user, identification=identification, commonname=commonname, user_info=orig_data)
@@ -111,13 +116,16 @@ def get_user(user_data, orig_data=None):
         user_data['commonname'] = commonname
         return user
     else:
+        # If logging back in, update their info.
+        oauth.user_info = orig_data or oauth.user_info
+        oauth.save()
         return oauth.user
 
 
 def get_user_data_from_schema(data):
     """
     Uses schema provided in settings to get user_data.
-    :param data: user profile data from oauth_service 
+    :param data: user profile data from oauth_service
     :return: a dict of user_data.
     """
     user_data = dict()
@@ -172,7 +180,6 @@ def request_access_token(auth_code):
             raise Unauthorized('OAuth server rejected auth code')
         logger.error('OAuth server returned HTTP {0}'.format(status_code), err.response.text)
         raise OAuthError(status_code)
-
     access = response.json()
     access_token = access.get(settings.OAUTH_TOKEN_KEY)
     if not access_token:

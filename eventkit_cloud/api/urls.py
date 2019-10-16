@@ -9,7 +9,7 @@ from eventkit_cloud.api.views import (
     ExportFormatViewSet, ExportRunViewSet, ProjectionViewSet,
     ExportTaskViewSet, JobViewSet, RegionViewSet, DataProviderViewSet, SwaggerSchemaView,
     DataProviderTaskViewSet, UserDataViewSet, GroupViewSet, LicenseViewSet,
-    UserJobActivityViewSet, NotificationViewSet, EstimatorView
+    UserJobActivityViewSet, NotificationViewSet, EstimatorView, LogViewSet
 )
 
 import notifications.urls
@@ -31,6 +31,7 @@ router.register(r'user/activity/jobs', UserJobActivityViewSet, base_name='user_j
 router.register(r'groups', GroupViewSet, base_name='groups')
 router.register(r'notifications', NotificationViewSet, base_name='notifications')
 router.register(r'projections', ProjectionViewSet, base_name='projections')
+router.register(r'logs', LogViewSet, base_name='logs')
 
 schema_view = SwaggerSchemaView.as_view()
 

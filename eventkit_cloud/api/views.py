@@ -10,7 +10,6 @@ from django.contrib.auth.models import User, Group
 from django.contrib.gis.geos import GEOSException, GEOSGeometry
 from django.db import transaction
 from django.db.models import Q
-from django.shortcuts import get_object_or_404
 from django.utils.translation import ugettext as _
 from django_filters.rest_framework import DjangoFilterBackend
 from notifications.models import Notification
@@ -25,7 +24,10 @@ from rest_framework.schemas.generators import SchemaGenerator, distribute_links
 
 from rest_framework.serializers import ValidationError
 
-from eventkit_cloud.api.filters import ExportRunFilter, JobFilter, UserFilter, GroupFilter, UserJobActivityFilter
+from audit_logging.models import AuditEvent
+
+from eventkit_cloud.api.filters import ExportRunFilter, JobFilter, UserFilter, GroupFilter, UserJobActivityFilter, \
+    LogFilter
 from eventkit_cloud.api.pagination import LinkHeaderPagination
 from eventkit_cloud.api.permissions import IsOwnerOrReadOnly
 from eventkit_cloud.api.renderers import HOTExportApiRenderer, PlainTextRenderer, CustomSwaggerUIRenderer, \
@@ -34,7 +36,8 @@ from eventkit_cloud.api.serializers import (
     ExportFormatSerializer, ExportRunSerializer, ProjectionSerializer,
     ExportTaskRecordSerializer, JobSerializer, RegionMaskSerializer, DataProviderTaskRecordSerializer,
     RegionSerializer, ListJobSerializer, ProviderTaskSerializer, DataProviderSerializer, LicenseSerializer,
-    UserDataSerializer, GroupSerializer, UserJobActivitySerializer, NotificationSerializer, GroupUserSerializer
+    UserDataSerializer, GroupSerializer, UserJobActivitySerializer, NotificationSerializer, GroupUserSerializer,
+    LogSerializer
 )
 from eventkit_cloud.api.validators import validate_bbox_params, validate_search_bbox
 from eventkit_cloud.core.helpers import sendnotification, NotificationVerb, NotificationLevel
@@ -49,8 +52,6 @@ from eventkit_cloud.tasks.task_factory import create_run, get_invalid_licenses, 
 from eventkit_cloud.utils.gdalutils import get_area
 from eventkit_cloud.utils.provider_check import perform_provider_check
 from eventkit_cloud.utils.stats.aoi_estimators import AoiEstimator
-
-from requests.structures import CaseInsensitiveDict
 
 # Get an instance of a logger
 logger = logging.getLogger(__name__)
@@ -671,6 +672,18 @@ class ProjectionViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = Projection.objects.all()
     lookup_field = 'srid'
     ordering = ['srid']
+
+class LogViewSet(viewsets.ReadOnlyModelViewSet):
+    """
+    A simple ViewSet for listing or retrieving projections.
+    """
+    serializer_class = LogSerializer
+    permission_classes = (permissions.IsAdminUser,)
+    queryset = AuditEvent.objects.all()
+    filter_class = LogFilter
+    lookup_field = 'id'
+    ordering = ['datetime']
+    search_fields = ('username', 'datetime', 'ip', 'email', 'event')
 
 class LicenseViewSet(viewsets.ReadOnlyModelViewSet):
     """
