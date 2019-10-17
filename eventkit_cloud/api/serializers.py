@@ -214,7 +214,7 @@ class ProjectionSerializer(serializers.ModelSerializer):
 
 
 class AuditEventSerializer(serializers.ModelSerializer):
-    """Return a representation of the ExportFormat model."""
+    """Return a representation of the AuditEvent model."""
 
     class Meta:
         model = AuditEvent

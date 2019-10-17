@@ -676,7 +676,7 @@ class ProjectionViewSet(viewsets.ReadOnlyModelViewSet):
 
 class AuditEventViewSet(viewsets.ReadOnlyModelViewSet):
     """
-    A simple ViewSet for listing or retrieving projections.
+    A simple ViewSet for listing or retrieving AuditEvents.
     """
     serializer_class = AuditEventSerializer
     permission_classes = (permissions.IsAdminUser,)
