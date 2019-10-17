@@ -154,14 +154,6 @@ export class MapDrawer extends React.Component<Props, State> {
             open: true,
             sources: [
                 ...props.sources,
-                // Map providers into base map sources
-                ...props.providers.filter(provider => !!provider.preview_url).map(provider => {
-                    return {
-                        url: provider.preview_url,
-                        name: provider.name,
-                        type: provider.type,
-                    };
-                })
             ]
         };
     }

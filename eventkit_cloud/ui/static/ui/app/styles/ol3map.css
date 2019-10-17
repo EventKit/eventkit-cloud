@@ -172,10 +172,10 @@ div.map {
 }
 
 .ol-custom-overviewmap:not(.ol-collapsed) {
-    left: 10px;
+    left: 50px;
     right: auto;
     right: initial;
-    bottom: 25px;
+    bottom: 15px;
 }
 
 .ol-custom-overviewmap:not(.ol-collapsed) > div {
