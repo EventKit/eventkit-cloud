@@ -5,10 +5,12 @@ import logging
 import django_filters
 from django.contrib.auth.models import User, Group
 from django.db.models import Q
+from django.db import models
 
 from eventkit_cloud.core.models import GroupPermission
 from eventkit_cloud.jobs.models import Job, VisibilityState, UserJobActivity
 from eventkit_cloud.tasks.models import ExportRun
+from audit_logging.models import AuditEvent
 
 logger = logging.getLogger(__name__)
 
@@ -134,3 +136,17 @@ class UserJobActivityFilter(django_filters.FilterSet):
     class Meta:
             model = UserJobActivity
             fields = ('activity',)
+
+
+class LogFilter(django_filters.FilterSet):
+    class Meta:
+        model = AuditEvent
+        fields = {
+            'datetime': ('lte', 'gte')
+        }
+
+    filter_overrides = {
+        models.DateTimeField: {
+            'filter_class': django_filters.IsoDateTimeFilter
+        },
+    }
