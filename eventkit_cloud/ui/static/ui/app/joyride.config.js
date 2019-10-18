@@ -238,7 +238,7 @@ export const joyride = {
         },
         {
             title: 'Additional Options',
-            text: 'Click here for additional information and options for the Data Source.' ,
+            text: 'Click here for additional information and options for the Data Source.',
             selector: '.qa-DataProvider-ListItem-Expand',
             position: 'bottom',
             scrollToId: 'ExpandButton',
@@ -246,8 +246,8 @@ export const joyride = {
         },
         {
             title: 'Zoom Level Selection',
-            text: 'Use The zoom bar to zoom in on the map.  That zoom level will be used to limit the data that is exported. ' +
-                'Updating the map will update the estimated data size.' ,
+            text: 'Use The zoom bar to zoom in on the map.  That zoom level will be used to limit the data that is exported. '
+                + 'Updating the map will update the estimated data size.',
             selector: '.qa-DataProvider-ListItem-zoomSelection',
             position: 'bottom',
             scrollToId: 'ZoomSelection',
@@ -255,8 +255,8 @@ export const joyride = {
         },
         {
             title: 'File Format Selection',
-            text: 'Different formats can be selected.  Data source types might have different options depending on if the source is ' +
-                'elevation, raster, or vector data.' ,
+            text: 'Different formats can be selected.  Data source types might have different options depending on if the source is '
+                + 'elevation, raster, or vector data.',
             selector: '.qa-DataProvider-ListItem-provFormats',
             position: 'bottom',
             scrollToId: 'FormatSelection',
@@ -264,8 +264,8 @@ export const joyride = {
         },
         {
             title: 'Projection',
-            text: 'EventKit can output in different projections. ' +
-                'Additional projection support can be added in subsequent versions of EventKit.',
+            text: 'EventKit can output in different projections. '
+                + 'Additional projection support can be added in subsequent versions of EventKit.',
             selector: '.qa-ExportInfo-projections',
             position: 'left',
             scrollToId: 'Projections',

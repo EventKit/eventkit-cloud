@@ -323,7 +323,11 @@ export class DataProvider extends React.Component<Props, State> {
         }
         if (supportsZoomLevels(this.props.provider)) {
             nestedItems.push(
-                <div className={`qa-DataProvider-ListItem-zoomSelection`} id={'ZoomSelection'}>
+                <div
+                    className={`qa-DataProvider-ListItem-zoomSelection`}
+                    id={'ZoomSelection'}
+                    key={nestedItems.length}
+                >
                     <div
                         className={`qa-DataProvider-ListItem-zoomSlider ${this.props.provider.slug + '-sliderDiv'}`}
                         key={this.props.provider.slug + '-sliderDiv'}
