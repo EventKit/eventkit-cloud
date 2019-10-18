@@ -25,7 +25,9 @@ const jss = (theme: Theme & Eventkit.Theme) => createStyles({
         height: 'calc(100vh - 180px)',
         right: '0px',
         position: 'absolute',
-        width: '250px',
+        width: 'calc(100% - 1000px)',
+        minWidth: '200px',
+        maxWidth: '250px',
     },
     drawerPaper: {
         backgroundColor: '#fff',
