@@ -264,9 +264,8 @@ export const joyride = {
         },
         {
             title: 'Projection',
-            text: `At this time, EventKit shows one projection, World Geodetic System 1984 (WGS 84) projection.
-                This projection is also commonly known by its EPSG code: 4326.
-                Additional projection support will be added in subsequent versions of EventKit.`,
+            text: 'EventKit can output in different projections. ' +
+                'Additional projection support can be added in subsequent versions of EventKit.',
             selector: '.qa-ExportInfo-projections',
             position: 'left',
             scrollToId: 'Projections',
