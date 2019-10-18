@@ -237,6 +237,32 @@ export const joyride = {
             style: JoyRideStyles.tooltipStyle,
         },
         {
+            title: 'Additional Options',
+            text: 'Click here for additional information and options for the Data Source.' ,
+            selector: '.qa-DataProvider-ListItem-Expand',
+            position: 'bottom',
+            scrollToId: 'ExpandButton',
+            style: JoyRideStyles.tooltipStyle,
+        },
+        {
+            title: 'Zoom Level Selection',
+            text: 'Use The zoom bar to zoom in on the map.  That zoom level will be used to limit the data that is exported. ' +
+                'Updating the map will update the estimated data size.' ,
+            selector: '.qa-DataProvider-ListItem-zoomSelection',
+            position: 'bottom',
+            scrollToId: 'ZoomSelection',
+            style: JoyRideStyles.tooltipStyle,
+        },
+        {
+            title: 'File Format Selection',
+            text: 'Different formats can be selected.  Data source types might have different options depending on if the source is ' +
+                'elevation, raster, or vector data.' ,
+            selector: '.qa-DataProvider-ListItem-provFormats',
+            position: 'bottom',
+            scrollToId: 'FormatSelection',
+            style: JoyRideStyles.tooltipStyle,
+        },
+        {
             title: 'Projection',
             text: `At this time, EventKit shows one projection, World Geodetic System 1984 (WGS 84) projection.
                 This projection is also commonly known by its EPSG code: 4326.

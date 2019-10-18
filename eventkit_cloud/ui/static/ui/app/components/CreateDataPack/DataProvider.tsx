@@ -107,6 +107,7 @@ interface Props {
     renderEstimate: boolean;
     selectedProjections: number[];
     compatibilityInfo: CompatibilityInfo;
+    open: boolean;
     classes: {
         container: string;
         listItem: string;
@@ -158,6 +159,12 @@ export class DataProvider extends React.Component<Props, State> {
         this.estimateDebouncer = debounce((val) => {
             this.props.checkProvider(val);
         }, 1000);
+    }
+
+    componentDidUpdate(prevProps: Readonly<Props>, prevState: Readonly<State>, snapshot?: any): void {
+        if(this.props.open){
+            this.state.open;
+        }
     }
 
     getFormatCompatibility(formatSlug: string) {
@@ -225,7 +232,7 @@ export class DataProvider extends React.Component<Props, State> {
         this.setState({licenseDialogOpen: false});
     }
 
-    private handleExpand() {
+    handleExpand() {
         this.setState(state => ({open: !state.open}));
     }
 
@@ -316,36 +323,35 @@ export class DataProvider extends React.Component<Props, State> {
         }
         if (supportsZoomLevels(this.props.provider)) {
             nestedItems.push(
-                <div
-                    className={`qa-DataProvider-ListItem-zoomSlider ${this.props.provider.slug + '-sliderDiv'}`}
-                    key={this.props.provider.slug + '-sliderDiv'}
-                    style={{padding: '10px 40px'}}
-                >
-                    <ZoomLevelSlider
-                        updateZoom={this.setZoom}
-                        zoom={currentMaxZoom}
-                        maxZoom={provider.level_to}
-                        minZoom={provider.level_from}
-                    />
-                </div>
-            );
-
-            nestedItems.push(
-                <div
-                    className={`qa-DataProvider-ListItem-zoomMap ${this.props.provider.slug + '-mapDiv'}`}
-                    key={this.props.provider.slug + '-mapDiv'}
-                    style={{padding: '10px 40px'}}
-                >
-                    <MapView
-                        id={this.props.provider.id + "-map"}
-                        url={this.props.provider.preview_url || this.context.config.BASEMAP_URL}
-                        copyright={this.props.provider.service_copyright}
-                        geojson={this.props.geojson}
-                        setZoom={this.setZoom}
-                        zoom={currentMaxZoom}
-                        minZoom={this.props.provider.level_from}
-                        maxZoom={this.props.provider.level_to}
-                    />
+                <div className={`qa-DataProvider-ListItem-zoomSelection`} id={'ZoomSelection'}>
+                    <div
+                        className={`qa-DataProvider-ListItem-zoomSlider ${this.props.provider.slug + '-sliderDiv'}`}
+                        key={this.props.provider.slug + '-sliderDiv'}
+                        style={{padding: '10px 40px'}}
+                    >
+                        <ZoomLevelSlider
+                            updateZoom={this.setZoom}
+                            zoom={currentMaxZoom}
+                            maxZoom={provider.level_to}
+                            minZoom={provider.level_from}
+                        />
+                    </div>
+                    <div
+                        className={`qa-DataProvider-ListItem-zoomMap ${this.props.provider.slug + '-mapDiv'}`}
+                        key={this.props.provider.slug + '-mapDiv'}
+                        style={{padding: '10px 40px'}}
+                    >
+                        <MapView
+                            id={this.props.provider.id + "-map"}
+                            url={this.props.provider.preview_url || this.context.config.BASEMAP_URL}
+                            copyright={this.props.provider.service_copyright}
+                            geojson={this.props.geojson}
+                            setZoom={this.setZoom}
+                            zoom={currentMaxZoom}
+                            minZoom={this.props.provider.level_from}
+                            maxZoom={this.props.provider.level_to}
+                        />
+                    </div>
                 </div>
             );
         } else {
@@ -464,9 +470,19 @@ export class DataProvider extends React.Component<Props, State> {
                             availability={provider.availability}
                         />
                         {this.state.open ?
-                            <ExpandLess className={classes.expand} onClick={this.handleExpand} color="primary"/>
+                            <ExpandLess
+                                id="ExpandButton"
+                                className={`qa-DataProvider-ListItem-Expand ${classes.expand}`}
+                                onClick={this.handleExpand}
+                                color="primary"
+                            />
                             :
-                            <ExpandMore className={classes.expand} onClick={this.handleExpand} color="primary"/>
+                            <ExpandMore
+                                id="ExpandButton"
+                                className={`qa-DataProvider-ListItem-Expand ${classes.expand}`}
+                                onClick={this.handleExpand}
+                                color="primary"
+                            />
                         }
                     </div>
                 </ListItem>
@@ -501,7 +517,9 @@ function mapDispatchToProps(dispatch) {
     };
 }
 
-export default withTheme()(withStyles<any, any>(jss)(connect(
+export default withStyles<any, any>(jss, { withTheme: true })(connect(
     mapStateToProps,
     mapDispatchToProps,
-)(DataProvider)));
+    null,
+    {forwardRef: true}
+)(DataProvider));
