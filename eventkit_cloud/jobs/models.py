@@ -14,7 +14,7 @@ from django.db.models.fields import CharField
 from django.utils import timezone
 from enum import Enum
 
-from eventkit_cloud.core.models import TimeStampedModelMixin, UIDMixin
+from eventkit_cloud.core.models import TimeStampedModelMixin, UIDMixin, DownloadableMixin
 
 logger = logging.getLogger(__name__)
 
@@ -29,6 +29,18 @@ def get_upload_path(instance, *args):
     path = 'export/config/{0}/{1}'.format(configtype, instance.filename)
     logger.debug('Saving export config to /media/{0}'.format(path))
     return path
+
+
+class MapImageSnapshot(DownloadableMixin, UIDMixin):
+    """
+    A MapImageSnapshot is an image snapshot capturing a map in a particular state or time.
+    """
+
+    class Meta:
+        db_table = 'MapImageSnapshot'
+
+    def __str__(self):
+        return 'MapImageSnapshot ({}), {}'.format(self.uid, self.filename)
 
 
 class LowerCaseCharField(CharField):
@@ -169,6 +181,9 @@ class DataProvider(UIDMixin, TimeStampedModelMixin):
     license = models.ForeignKey(License, related_name='+', null=True, blank=True, default=None, on_delete=models.CASCADE)
     zip = models.BooleanField(default=False)
     display = models.BooleanField(default=False)
+    thumbnail = models.ForeignKey(MapImageSnapshot, blank=True, null=True, on_delete=models.CASCADE,
+                                  help_text="A thumbnail image generated to give a high level"
+                                            " preview of what a provider's data looks like.")
 
     class Meta:  # pragma: no cover
         managed = True

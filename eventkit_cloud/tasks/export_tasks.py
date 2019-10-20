@@ -139,7 +139,6 @@ def make_file_downloadable(filepath, run_uid, provider_slug=None, skip_copy=Fals
         @direct: If true, return the direct download URL and skip the Downloadable tracking step
         @return A url to reach filepath.
     """
-
     staging_dir = get_run_staging_dir(run_uid)
     if provider_slug:
         staging_dir = get_provider_staging_dir(run_uid, provider_slug)
@@ -164,7 +163,6 @@ def make_file_downloadable(filepath, run_uid, provider_slug=None, skip_copy=Fals
         download_filepath = os.path.join(run_download_dir, download_filename)
         if not skip_copy:
             shutil.copy(filepath, download_filepath)
-
     return download_url
 
 

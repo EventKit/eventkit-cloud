@@ -84,6 +84,21 @@ class UIDMixin(models.Model):
     class Meta:
         abstract = True
 
+
+class DownloadableMixin(models.Model):
+    """
+    Mixin for models that have a downloadable product.
+    """
+    filename = models.CharField(max_length=508, blank=True, editable=False)
+    size = models.FloatField(null=True, editable=False)
+    download_url = models.URLField(
+        verbose_name='URL to export task result output.',
+        max_length=508
+    )
+
+    class Meta:
+        abstract = True
+
 class GroupPermissionLevel(Enum):
     NONE = "NONE"
     MEMBER = "MEMBER"

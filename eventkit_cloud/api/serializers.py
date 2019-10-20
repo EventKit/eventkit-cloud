@@ -621,13 +621,14 @@ class DataProviderSerializer(serializers.ModelSerializer):
     )
     type = serializers.SerializerMethodField(read_only=True)
     supported_formats = serializers.SerializerMethodField(read_only=True)
+    thumbnail_url = serializers.SerializerMethodField(read_only=True)
     license = LicenseSerializer(required=False)
 
     class Meta:
         model = DataProvider
         extra_kwargs = {'url': {'write_only': True}, 'user': {'write_only': True}, 'config': {'write_only': True}}
         read_only_fields = ('uid',)
-        fields = '__all__'
+        exclude = ('thumbnail', )
 
     @staticmethod
     def create(validated_data, **kwargs):
@@ -650,6 +651,20 @@ class DataProviderSerializer(serializers.ModelSerializer):
     @staticmethod
     def get_supported_formats(obj):
         return obj.export_provider_type.supported_formats.all().values('uid', 'name', 'slug', 'description')
+
+    def get_thumbnail_url(self, obj):
+        from urllib.parse import urlsplit, ParseResult
+        thumbnail = obj.thumbnail
+        if thumbnail is not None:
+            request = urlsplit(self.context['request'].build_absolute_uri())
+            if urlsplit(thumbnail.download_url).netloc.lower() != request.netloc.lower():
+                return thumbnail.download_url
+            return ParseResult(scheme=request.scheme,
+                               netloc=request.netloc,
+                               path=f'{thumbnail.download_url}',
+                               params='', query='', fragment='').geturl()
+        else:
+            return ''
 
 
 class ListJobSerializer(serializers.Serializer):
