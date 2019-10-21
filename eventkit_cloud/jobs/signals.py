@@ -16,7 +16,6 @@ from eventkit_cloud.utils.s3 import delete_from_s3
 
 import os
 
-
 logger = logging.getLogger(__name__)
 
 
@@ -69,17 +68,31 @@ def provider_pre_save(sender, instance, **kwargs):
     """
     if instance.preview_url:
         try:
-            if instance.thumbnail is None:
+            # First check to see if this DataProvider should update the thumbnail
+            # This should only be needed if it is a new entry, or the preview_url has changed,
+            is_thumbnail_fresh = True
+            try:
+                provider = sender.objects.get(uid=instance.uid)
+            except sender.DoesNotExist:
+                is_thumbnail_fresh = False
+            else:
+                # The last preview url doesn't match the current or we still don't have a thumbnail.
+                if instance.preview_url != provider.preview_url or instance.thumbnail is None:
+                    is_thumbnail_fresh = False
+
+            if not is_thumbnail_fresh:
                 provider_image_dir = get_provider_image_dir(instance.uid)
                 make_dirs(provider_image_dir)
-
-                filepath = save_thumbnail(instance.preview_url, os.path.join(provider_image_dir,
-                                                                 get_provider_thumbnail_name(instance.slug)))
+                # Return a file system path to the image.
+                filepath = save_thumbnail(instance.preview_url,
+                                          os.path.join(provider_image_dir, get_provider_thumbnail_name(instance.slug)))
+                # Return a MapImageSnapshot representing the thumbnail
                 thumbnail_snapshot = make_thumbnail_downloadable(filepath, instance.uid)
                 instance.thumbnail = thumbnail_snapshot
-            else:
-                instance.thumbnail = None
-                instance.thumbnail.delete()
         except Exception as e:
+            import traceback
+            traceback.print_exc()
+            # Catch exceptions broadly and log them, we do not want to prevent saving provider's if
+            # a thumbnail creation error occurs.
             logger.error(f'Could not save thumbnail for DataProvider: {instance.slug}')
             logger.exception(e)

@@ -6,7 +6,8 @@ import List from '@material-ui/core/List';
 import ListItem from '@material-ui/core/ListItem';
 import {createStyles, Theme, withStyles, withTheme, Grid} from "@material-ui/core";
 import {connect} from "react-redux";
-import ButtonBase from "@material-ui/core/ButtonBase";
+import CardMedia from '@material-ui/core/CardMedia';
+import Card from '@material-ui/core/Card';
 import DropDown from '@material-ui/icons/ArrowDropDown';
 import Close from '@material-ui/icons/Close';
 
@@ -59,6 +60,8 @@ const jss = (theme: Theme & Eventkit.Theme) => createStyles({
         top: '0',
         position: 'absolute',
         marginTop: '2px',
+        height: '100%',
+        paddingLeft: '2px',
     },
     tab: {
         backgroundColor: 'lightGrey',
@@ -117,6 +120,11 @@ const jss = (theme: Theme & Eventkit.Theme) => createStyles({
         right: '10px',
         top: '10px',
     },
+    thumbnail: {
+        height: '30px',
+        width: '90px',
+        marginRight: '5px',
+    }
 });
 
 // This should be used to facilitate user added base map sources (sources not derived from providers)
@@ -124,6 +132,7 @@ export interface BaseMapSource {
     url: string;
     name: string;
     type: string;
+    thumbnail_url: string;
 }
 
 export interface Props {
@@ -204,6 +213,7 @@ export class MapDrawer extends React.Component<Props, State> {
                     url: provider.preview_url,
                     name: provider.name,
                     type: provider.type,
+                    thumbnail_url: provider.thumbnail_url,
                 } as BaseMapSource;
             })];
 
@@ -219,7 +229,7 @@ export class MapDrawer extends React.Component<Props, State> {
                 >
                     <Tabs
                         className={classes.tabs}
-                        value={selectedTab}
+                        value={(selectedTab) ? selectedTab : false}
                         onChange={this.handleChange}
                         variant="fullWidth"
                     >
@@ -230,14 +240,14 @@ export class MapDrawer extends React.Component<Props, State> {
                                 selected: classes.selected,
                             }}
                             label={(
-                                <div className={classes.tabHeader}>
+                                <Card className={classes.tabHeader}>
                                 <strong
                                     style={{fontSize: '18px', color: 'secondary', margin: 'auto 0'}}
                                 >
                                     BASEMAPS
                                 </strong>
                                 {this.getIcon('basemap')}
-                            </div>)}
+                            </Card>)}
                         />
                     </Tabs>
                 </Paper>
@@ -268,6 +278,12 @@ export class MapDrawer extends React.Component<Props, State> {
                                                         value={source.url}
                                                         classes={{root: classes.checkbox, checked: classes.checked}}
                                                     />
+                                                    {source.thumbnail_url &&
+                                                        <CardMedia
+                                                            className={classes.thumbnail}
+                                                            image={source.thumbnail_url}
+                                                        />
+                                                    }
                                                     <ListItemText
                                                         className={classes.listItem}
                                                         disableTypography

@@ -10,6 +10,7 @@ import pickle
 import json
 import logging
 
+from django.conf import settings
 from django.contrib.auth.models import User, Group
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.gis.geos import GEOSGeometry
@@ -40,6 +41,7 @@ from eventkit_cloud.tasks.models import (
     FileProducingTaskResult,
     DataProviderTaskRecord,
 )
+from eventkit_cloud.utils.s3 import get_presigned_url
 
 try:
     from collections import OrderedDict
@@ -665,10 +667,8 @@ class DataProviderSerializer(serializers.ModelSerializer):
         thumbnail = obj.thumbnail
         if thumbnail is not None:
             request = urlsplit(self.context['request'].build_absolute_uri())
-            thumb_netloc = urlsplit(thumbnail.download_url).netloc.lower()
-            if thumb_netloc and thumb_netloc != request.netloc.lower():
-                # When the netloc for the URL is different from the hostname, it's external (s3)
-                return thumbnail.download_url
+            if getattr(settings, 'USE_S3', False):
+                url = get_presigned_url(thumbnail.download_url)
             # Otherwise, grab the hostname from the request and tack on the relative url.
             return ParseResult(scheme=request.scheme,
                                netloc=request.netloc,
