@@ -8,6 +8,8 @@ from io import BytesIO
 
 from django.conf import settings
 from eventkit_cloud.utils import s3
+from eventkit_cloud.jobs.models import MapImageSnapshot
+from eventkit_cloud.jobs.helpers import get_provider_image_download_dir
 
 from mapproxy.grid import tile_grid
 
@@ -74,44 +76,29 @@ def save_thumbnail(base_url, filepath):
     """
     thumbnail = get_wmts_snapshot_image(base_url, zoom_level=0)
 
-    full_filepath = filepath + '.jpg'
+    full_filepath = f'{filepath}.jpg'
     thumbnail.thumbnail((90, 45))
     thumbnail.save(full_filepath)
     return full_filepath
 
 
-def make_image_downloadable(filepath, run_uid, provider_slug=None, skip_copy=False, download_filename=None,
-                           size=None, direct=False):
-    """ Construct the filesystem location and url needed to download the file at filepath.
-        Copy filepath to the filesystem location required for download.
-        @provider_slug is specific to ExportTasks, not needed for FinalizeHookTasks
-        @skip_copy: It looks like sometimes (At least for OverpassQuery) we don't want the file copied,
-            generally can be ignored
-        @direct: If true, return the direct download URL and skip the Downloadable tracking step
-        @return A url to reach filepath.
-    """
-    staging_dir = get_run_staging_dir(run_uid)
-    if provider_slug:
-        staging_dir = get_provider_staging_dir(run_uid, provider_slug)
-    run_download_dir = get_run_download_dir(run_uid)
-    run_download_url = get_run_download_url(run_uid)
-
+def make_thumbnail_downloadable(filepath, provider_uid, download_filename=None):
     filename = os.path.basename(filepath)
     if download_filename is None:
         download_filename = filename
 
+    filesize = os.stat(filepath).st_size
+    thumbnail_snapshot = MapImageSnapshot.objects.create(download_url='', filename=filepath, size=filesize)
     if getattr(settings, "USE_S3", False):
         download_url = s3.upload_to_s3(
-            run_uid,
-            os.path.join(staging_dir, filename),
+            thumbnail_snapshot.uid,
+            filepath,
             download_filename,
         )
+        os.remove(filepath)
     else:
-        make_dirs(run_download_dir)
+        download_url = os.path.join(get_provider_image_download_dir(provider_uid), download_filename)
+    thumbnail_snapshot.download_url = download_url
+    thumbnail_snapshot.save()
 
-        download_url = os.path.join(run_download_url, download_filename)
-
-        download_filepath = os.path.join(run_download_dir, download_filename)
-        if not skip_copy:
-            shutil.copy(filepath, download_filepath)
-    return download_url
+    return thumbnail_snapshot

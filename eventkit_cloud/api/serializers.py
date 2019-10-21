@@ -657,8 +657,11 @@ class DataProviderSerializer(serializers.ModelSerializer):
         thumbnail = obj.thumbnail
         if thumbnail is not None:
             request = urlsplit(self.context['request'].build_absolute_uri())
-            if urlsplit(thumbnail.download_url).netloc.lower() != request.netloc.lower():
+            thumb_netloc = urlsplit(thumbnail.download_url).netloc.lower()
+            if thumb_netloc and thumb_netloc != request.netloc.lower():
+                # When the netloc for the URL is different from the hostname, it's external (s3)
                 return thumbnail.download_url
+            # Otherwise, grab the hostname from the request and tack on the relative url.
             return ParseResult(scheme=request.scheme,
                                netloc=request.netloc,
                                path=f'{thumbnail.download_url}',

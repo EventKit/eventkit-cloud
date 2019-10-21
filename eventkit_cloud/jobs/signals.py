@@ -8,7 +8,9 @@ from django.dispatch.dispatcher import receiver
 from eventkit_cloud.core.models import JobPermission, JobPermissionLevel
 from eventkit_cloud.jobs.models import Job, DataProvider, MapImageSnapshot
 from eventkit_cloud.jobs.helpers import get_provider_image_dir, get_provider_thumbnail_name
-from eventkit_cloud.utils.image_snapshot import make_image_downloadable, save_thumbnail
+from eventkit_cloud.utils.image_snapshot import make_thumbnail_downloadable, save_thumbnail
+
+from eventkit_cloud.tasks.export_tasks import make_dirs
 
 from eventkit_cloud.utils.s3 import delete_from_s3
 
@@ -52,7 +54,7 @@ def mapimagesnapshot_delete(sender, instance, *args, **kwargs):
     if getattr(settings, 'USE_S3', False):
         delete_from_s3(download_url=instance.download_url)
     url_parts = instance.download_url.split('/')
-    full_file_download_path = '/'.join([settings.SNAPSHOT_DOWNLOAD_ROOT.rstrip('/'), url_parts[-2], url_parts[-1]])
+    full_file_download_path = '/'.join([settings.IMAGES_ROOT.rstrip('/'), url_parts[-2], url_parts[-1]])
     try:
         os.remove(full_file_download_path)
         logger.info("The file {0} was deleted.".format(full_file_download_path))
@@ -63,17 +65,21 @@ def mapimagesnapshot_delete(sender, instance, *args, **kwargs):
 @receiver(pre_save, sender=DataProvider)
 def provider_pre_save(sender, instance, **kwargs):
     """
-    This method is executed whenever a Job  object is created.
-
-    If created is true, assign the user as an ADMIN for this job
+    This method is executed whenever a DataProvider is created or updated.
     """
-    import random
     if instance.preview_url:
-        if instance.thumbnail is None or random.randint(0, 10) < 8:
-            provider_image_dir = get_provider_image_dir(os.path.join(instance.uid))
-            filepath = save_thumbnail(base_url, provider_image_dir)
-            download_url = make_image_downloadable(filepath, '')
-            filesize = os.stat(filepath).st_size
-            thumbnail_snapshot = MapImageSnapshot.objects.create(download_url=download_url, filename=filepath, size=filesize)
-            thumbnail_snapshot.save()
-            instance.thumbnail = thumbnail_snapshot
+        try:
+            if instance.thumbnail is None:
+                provider_image_dir = get_provider_image_dir(instance.uid)
+                make_dirs(provider_image_dir)
+
+                filepath = save_thumbnail(instance.preview_url, os.path.join(provider_image_dir,
+                                                                 get_provider_thumbnail_name(instance.slug)))
+                thumbnail_snapshot = make_thumbnail_downloadable(filepath, instance.uid)
+                instance.thumbnail = thumbnail_snapshot
+            else:
+                instance.thumbnail = None
+                instance.thumbnail.delete()
+        except Exception as e:
+            logger.error(f'Could not save thumbnail for DataProvider: {instance.slug}')
+            logger.exception(e)

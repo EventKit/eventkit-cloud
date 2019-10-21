@@ -181,7 +181,7 @@ class DataProvider(UIDMixin, TimeStampedModelMixin):
     license = models.ForeignKey(License, related_name='+', null=True, blank=True, default=None, on_delete=models.CASCADE)
     zip = models.BooleanField(default=False)
     display = models.BooleanField(default=False)
-    thumbnail = models.ForeignKey(MapImageSnapshot, blank=True, null=True, on_delete=models.CASCADE,
+    thumbnail = models.ForeignKey(MapImageSnapshot, blank=True, null=True, on_delete=models.SET_NULL,
                                   help_text="A thumbnail image generated to give a high level"
                                             " preview of what a provider's data looks like.")
 
