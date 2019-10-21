@@ -47,9 +47,8 @@ def job_post_save(sender, instance, created, **kwargs):
 @receiver(pre_delete, sender=MapImageSnapshot)
 def mapimagesnapshot_delete(sender, instance, *args, **kwargs):
     """
-    Delete associated files when deleting the FileProducingTaskResult.
+    Delete associated file when deleting a MapImageSnapshot.
     """
-    # The url should be constructed as [download context, run_uid, filename]
     if getattr(settings, 'USE_S3', False):
         delete_from_s3(download_url=instance.download_url)
     url_parts = instance.download_url.split('/')
