@@ -496,6 +496,28 @@ describe('ExportInfo component', () => {
         stateSpy.restore();
     });
 
+    it('opens the dataprovider drawer when openDrawer is called', () => {
+        instance.state = {providerDrawerIsOpen: null};
+        instance.dataProvider = {current: {state: {open: false}}};
+        const stateSpy = sinon.stub(instance, 'setState');
+        const handleDataProviderExpandSpy = sinon.stub(instance, 'handleDataProviderExpand');
+        expect(stateSpy.calledWith({isRunning: false}));
+        expect(handleDataProviderExpandSpy.wasCalled);
+        stateSpy.restore();
+        handleDataProviderExpandSpy.restore();
+    });
+
+    it('closes the dataprovider drawer when resetDrawer is called', () => {
+        instance.state = {providerDrawerIsOpen: false};
+        instance.dataProvider = {current: {state: {open: true}}};
+        const stateSpy = sinon.stub(instance, 'setState');
+        const handleDataProviderExpandSpy = sinon.stub(instance, 'handleDataProviderExpand');
+        expect(stateSpy.calledWith({providerDrawerIsOpen: null}));
+        expect(handleDataProviderExpandSpy.wasCalled);
+        stateSpy.restore();
+        handleDataProviderExpandSpy.restore();
+    });
+
     it('callback function should stop tour if close is clicked', () => {
         const callbackData = {
             action: 'close',
@@ -511,9 +533,12 @@ describe('ExportInfo component', () => {
         };
         instance.joyride = {current: {reset: sinon.spy()}};
         const stateSpy = sinon.stub(instance, 'setState');
+        const resetDrawerSpy = sinon.stub(instance, 'resetDrawer');
         instance.callback(callbackData);
         expect(stateSpy.calledWith({isRunning: false}));
+        expect(resetDrawerSpy.wasCalled);
         stateSpy.restore();
+        resetDrawerSpy.restore();
     });
 
     it('callback should set location hash', () => {
@@ -533,7 +558,7 @@ describe('ExportInfo component', () => {
     it('callback should call setNextEnabled', () => {
         const data = {
             action: 'something',
-            index: 5,
+            index: 9,
             step: {},
             type: 'tooltip:before',
         };

@@ -23,6 +23,7 @@ import {getSqKmString} from '../../utils/generic';
 import {featureToBbox, WGS84} from '../../utils/mapUtils';
 import BaseDialog from "../Dialog/BaseDialog";
 import AlertWarning from '@material-ui/icons/Warning';
+import {RefObject} from "react";
 
 const jss = (theme: Eventkit.Theme & Theme) => createStyles({
     underlineStyle: {
@@ -161,6 +162,8 @@ export interface State {
     displaySrid: number;  // Which projection is shown in the compatibility warning box
     selectedFormats: string[];
     compatibilityInfo: CompatibilityInfo;
+    providerDrawerIsOpen: boolean;
+    stepIndex: number;
 }
 
 export class ExportInfo extends React.Component<Props, State> {
@@ -169,6 +172,10 @@ export class ExportInfo extends React.Component<Props, State> {
     };
 
     joyride;
+    dataProvider;
+    private bounceBack: boolean;
+    // joyride: React.RefObject<Joyride>;
+    // dataProvider: React.RefObject<typeof DataProvider>;
 
     constructor(props: Props) {
         super(props);
@@ -185,6 +192,8 @@ export class ExportInfo extends React.Component<Props, State> {
                 formats: {},
                 projections: {},
             } as CompatibilityInfo,
+            providerDrawerIsOpen: false,
+            stepIndex: 0
         };
 
         this.onNameChange = this.onNameChange.bind(this);
@@ -211,8 +220,10 @@ export class ExportInfo extends React.Component<Props, State> {
         this.projectionHasErrors = this.projectionHasErrors.bind(this);
         this.getProjectionDialog = this.getProjectionDialog.bind(this);
         this.clearEstimate = this.clearEstimate.bind(this);
-
+        this.dataProvider = React.createRef();
         this.joyride = React.createRef();
+        // this.dataProvider = React.createRef<typeof DataProvider>();
+        // this.joyride = React.createRef<Joyride>();
     }
 
     componentDidMount() {
@@ -367,6 +378,10 @@ export class ExportInfo extends React.Component<Props, State> {
 
     private handleProjectionCompatibilityClose() {
         this.setState({projectionCompatibilityOpen: false});
+    }
+
+    private handleDataProviderExpand() {
+       this.dataProvider.current.handleExpand();
     }
 
     private onNameChange(e: React.ChangeEvent<HTMLInputElement>) {
@@ -666,22 +681,50 @@ export class ExportInfo extends React.Component<Props, State> {
         });
     }
 
+    private openDrawer() {
+        const isOpen: boolean = this.dataProvider.current.state.open;
+        if (this.state.providerDrawerIsOpen == null) {
+            this.setState({providerDrawerIsOpen: isOpen});
+        }
+        if (!isOpen) {
+            this.handleDataProviderExpand();
+        }
+    }
+
+    private resetDrawer() {
+        if (this.dataProvider.current.state.open !== this.state.providerDrawerIsOpen) {
+            this.handleDataProviderExpand();
+        }
+        this.setState({providerDrawerIsOpen: null});
+    }
+
     private callback(data: any) {
-        const {action, step, type} = data;
+        const {
+            action,
+            type,
+            step,
+        } = data;
+
         this.props.setNextDisabled();
+
         if (action === 'close' || action === 'skip' || type === 'finished') {
+            this.resetDrawer();
             this.setState({isRunning: false});
             this.props.onWalkthroughReset();
             this.joyride.current.reset(true);
             window.location.hash = '';
-        }
+        } else {
+            if (data.index === 9 && data.type === 'tooltip:before') {
+                this.props.setNextEnabled();
+            }
 
+            if ((step.selector === '.qa-DataProvider-ListItem-zoomSelection' && type === 'step:before') ||
+                (step.selector === '.qa-DataProvider-ListItem-provFormats' && type === 'step:before')) {
+              this.openDrawer();
+            }
+        }
         if (step && step.scrollToId) {
             window.location.hash = step.scrollToId;
-        }
-
-        if (data.index === 5 && data.type === 'tooltip:before') {
-            this.props.setNextEnabled();
         }
     }
 
@@ -910,6 +953,8 @@ export class ExportInfo extends React.Component<Props, State> {
                                             checkProvider={this.checkProvider}
                                             compatibilityInfo={this.state.compatibilityInfo}
                                             clearEstimate={this.clearEstimate}
+                                            // Get reference to handle logic for joyride.
+                                            innerRef={ ix === 0 ? this.dataProvider : null}
                                         />
                                     ))}
                                 </List>
