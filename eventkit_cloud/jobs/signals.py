@@ -89,8 +89,6 @@ def provider_pre_save(sender, instance, **kwargs):
                 thumbnail_snapshot = make_thumbnail_downloadable(filepath, instance.uid)
                 instance.thumbnail = thumbnail_snapshot
         except Exception as e:
-            import traceback
-            traceback.print_exc()
             # Catch exceptions broadly and log them, we do not want to prevent saving provider's if
             # a thumbnail creation error occurs.
             logger.error(f'Could not save thumbnail for DataProvider: {instance.slug}')
