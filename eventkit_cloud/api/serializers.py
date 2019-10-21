@@ -14,6 +14,7 @@ from django.contrib.auth.models import User, Group
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.gis.geos import GEOSGeometry
 from django.utils.translation import ugettext as _
+from audit_logging.models import AuditEvent
 from notifications.models import Notification
 from rest_framework import serializers
 from rest_framework_gis import serializers as geo_serializers
@@ -38,7 +39,6 @@ from eventkit_cloud.tasks.models import (
     ExportTaskException,
     FileProducingTaskResult,
     DataProviderTaskRecord,
-    prefetch_export_runs
 )
 
 try:
@@ -211,6 +211,14 @@ class ProjectionSerializer(serializers.ModelSerializer):
     class Meta:
         model = Projection
         fields = ('uid', 'srid', 'name', 'description')
+
+
+class AuditEventSerializer(serializers.ModelSerializer):
+    """Return a representation of the AuditEvent model."""
+
+    class Meta:
+        model = AuditEvent
+        fields = '__all__'
 
 
 class SimpleJobSerializer(serializers.Serializer):

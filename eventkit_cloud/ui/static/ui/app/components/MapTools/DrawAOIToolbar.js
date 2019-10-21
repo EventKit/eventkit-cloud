@@ -14,7 +14,7 @@ export class DrawAOIToolbar extends Component {
                 width: '50px',
                 height: '230px',
                 top: '70px',
-                right: '10px',
+                left: '10px',
                 backgroundColor: '#fff',
                 ...this.props.containerStyle,
             },
@@ -67,7 +67,7 @@ export class DrawAOIToolbar extends Component {
 
 DrawAOIToolbar.defaultProps = {
     containerStyle: {},
-    title: 'TOOLS',
+    title: 'AOI TOOLS',
 };
 
 DrawAOIToolbar.propTypes = {

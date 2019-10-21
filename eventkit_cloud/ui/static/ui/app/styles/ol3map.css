@@ -37,7 +37,7 @@ div.map {
 
 .olZoom {
     z-index: 3;
-    top: 50px;
+    bottom: 15px;
     left: 10px;
     color: #66a3ff;
     background-color: white;
@@ -68,7 +68,7 @@ div.map {
 
 .olZoomToExtent {
     z-index: 3;
-    top: 15px;
+    bottom: 75px;
     left: 10px;
     color: #66a3ff;
     background-color: white;   
@@ -172,10 +172,10 @@ div.map {
 }
 
 .ol-custom-overviewmap:not(.ol-collapsed) {
-    left: 10px;
+    left: 50px;
     right: auto;
     right: initial;
-    bottom: 25px;
+    bottom: 15px;
 }
 
 .ol-custom-overviewmap:not(.ol-collapsed) > div {

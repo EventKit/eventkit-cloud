@@ -151,7 +151,7 @@ describe('BreadcrumbStepper component', () => {
     it('should render step 1 with disabled next arrow by default', () => {
         expect(wrapper.find(NavigationArrowBack)).toHaveLength(1);
         expect(wrapper.find(ExportAOI)).toHaveLength(1);
-        expect(wrapper.childAt(0).childAt(0).childAt(0).childAt(0).text()).toEqual('STEP 1 OF 3:  Define Area of Interest');
+        expect(wrapper.childAt(0).childAt(0).childAt(0).childAt(0).text()).toEqual('STEP 1 OF 3: Define Area of Interest');
         expect(wrapper.find(Button)).toHaveLength(1);
         expect(wrapper.find(Button).props().disabled).toEqual(true);
         expect(wrapper.find(NavigationArrowForward)).toHaveLength(1);
@@ -231,13 +231,13 @@ describe('BreadcrumbStepper component', () => {
 
     it('getStepLabel should return the correct label for each stepIndex', () => {
         let elem = mount(wrapper.instance().getStepLabel(0));
-        expect(elem.text()).toEqual(expect.stringContaining('STEP 1 OF 3:  Define Area of Interest'));
+        expect(elem.text()).toEqual(expect.stringContaining('STEP 1 OF 3: Define Area of Interest'));
 
         elem = mount(wrapper.instance().getStepLabel(1));
-        expect(elem.text()).toEqual(expect.stringContaining('STEP 2 OF 3:  Select Data & Formats'));
+        expect(elem.text()).toEqual(expect.stringContaining('STEP 2 OF 3: Select Data & Formats'));
 
         elem = mount(wrapper.instance().getStepLabel(2));
-        expect(elem.text()).toEqual(expect.stringContaining('STEP 3 OF 3:  Review & Submit'));
+        expect(elem.text()).toEqual(expect.stringContaining('STEP 3 OF 3: Review & Submit'));
 
         elem = mount(wrapper.instance().getStepLabel(3));
         expect(elem.text()).toEqual('STEPPER ERROR');

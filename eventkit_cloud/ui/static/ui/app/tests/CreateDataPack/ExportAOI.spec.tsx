@@ -83,6 +83,7 @@ describe('ExportAOI component', () => {
             max: 100000,
             sizes: [5, 10, 100000],
         },
+        baseMapUrl: '',
         ...(global as any).eventkit_test_props,
     });
 
@@ -208,7 +209,7 @@ describe('ExportAOI component', () => {
         const updateSpy = sinon.spy(instance, 'componentDidUpdate');
         expect(updateSpy.called).toBe(false);
         expect(updateMapSpy.called).toBe(false);
-        instance.componentDidUpdate();
+        instance.setState({});
         wrapper.update();
         expect(updateSpy.calledOnce).toBe(true);
         expect(updateMapSpy.calledOnce).toBe(true);

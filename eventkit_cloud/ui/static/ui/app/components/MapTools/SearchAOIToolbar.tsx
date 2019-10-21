@@ -12,19 +12,20 @@ const jss = (theme: Theme & Eventkit.Theme) => createStyles({
     container: {
         zIndex: 2,
         position: 'absolute',
-        width: 'calc(100% - 60px)',
-        minWidth: '300px',
+        width: 'calc(100% - 500px)',
+        minWidth: '250px',
         maxWidth: '700px',
         height: '50px',
         top: '1em',
-        right: '10px',
+        left: '10px',
         backgroundColor: theme.eventkit.colors.secondary,
     },
     buttonContainer: {
         position: 'absolute',
-        right: '0px',
+        left: '0px',
         width: '50px',
         height: '50px',
+        borderRight: '1px solid rgba(112, 114, 116, 1)',
     },
     error: {
         color: theme.eventkit.colors.warning,
@@ -45,11 +46,22 @@ const jss = (theme: Theme & Eventkit.Theme) => createStyles({
         position: 'absolute',
         width: '50px',
         height: '100%',
-        right: '0px',
+        left: '0px',
         display: 'flex',
         justifyContent: 'center',
         alignItems: 'center',
         zIndex: 1,
+    },
+    spinnerContainer: {
+        zIndex: 3,  // Make sure spinner can float above the text box.
+        right: '0px',
+        width: '50px',
+        position: 'absolute',
+        marginTop: '10px',
+        marginRight: '10px',
+    },
+    spinner: {
+        float: 'right',
     },
 });
 
@@ -69,7 +81,9 @@ interface Props {
         error: string;
         empty: string;
         loading: string;
-    }
+        spinnerContainer: string;
+        spinner: string;
+    };
 }
 
 interface State {
@@ -199,18 +213,19 @@ export class SearchAOIToolbar extends React.Component<Props, State> {
                         minLength={2}
                         renderMenu={renderer}
                         className="qa-SearchAOIToolbar-typeahead"
-                    />
+                    >
+                        {this.props.geocode.fetching ?
+                            <div className={classes.spinnerContainer}>
+                                <CircularProgress
+                                    size={25}
+                                    color="primary"
+                                    className={classes.spinner}
+                                />
+                            </div>
+                            : null
+                        }
+                    </Typeahead>
                 </div>
-                {this.props.geocode.fetching ?
-                    <div className={classes.buttonContainer}
-                    style={{paddingTop:'12px', right: '34px'}}>
-                        <CircularProgress
-                            size={25}
-                            color="primary"
-                        />
-                    </div>
-                    : null
-                }
                 <div className={classes.buttonContainer}>
                     <SearchAOIButton
                         buttonState={this.props.toolbarIcons.search}

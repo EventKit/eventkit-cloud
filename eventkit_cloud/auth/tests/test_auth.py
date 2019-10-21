@@ -41,6 +41,16 @@ class TestAuth(TestCase):
         user = get_user(user_data)
         self.assertIsInstance(user, User)
 
+        # get existing user but identification changed
+        changed_identification = "test_ident2"
+        with patch('eventkit_cloud.auth.auth.authenticate') as mock_authenticate:
+            with self.assertRaises(Exception):
+                user_data = {"username": "test1", "email": "test1@email.com",
+                             "identification": changed_identification, "commonname": "test_common"}
+                user = get_user(user_data)
+                self.assertIsInstance(user, User)
+            mock_authenticate.called_once_with(username=changed_identification)
+
     @override_settings(OAUTH_TOKEN_URL="http://example.url/token",
                        OAUTH_CLIENT_ID="ID_CODE",
                        OAUTH_CLIENT_SECRET="SECRET_CODE",

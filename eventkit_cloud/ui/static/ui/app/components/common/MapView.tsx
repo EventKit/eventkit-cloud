@@ -114,7 +114,7 @@ export class MapView extends React.Component<Props> {
                     collapsed: false,
                 }),
                 new Zoom({
-                    className: [ol3mapCss.olZoom, ol3mapCss.olControlTopLeft].join(' '),
+                    className: [ol3mapCss.olZoom].join(' '),
                 }),
             ],
         });

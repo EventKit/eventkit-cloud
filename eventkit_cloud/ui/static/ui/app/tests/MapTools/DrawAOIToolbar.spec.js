@@ -31,7 +31,7 @@ describe('DrawAOIToolbar component', () => {
         const wrapper = shallow(<DrawAOIToolbar {...props} />);
         expect(wrapper.find('#container')).toHaveLength(1);
         expect(wrapper.find('.qa-DrawAOIToolbar-div-title')).toHaveLength(1);
-        expect(wrapper.find('.qa-DrawAOIToolbar-div-title').text()).toEqual('TOOLS');
+        expect(wrapper.find('.qa-DrawAOIToolbar-div-title').text()).toEqual('AOI TOOLS');
         expect(wrapper.find(DrawBoxButton)).toHaveLength(1);
         expect(wrapper.find(DrawFreeButton)).toHaveLength(1);
         expect(wrapper.find(MapViewButton)).toHaveLength(1);
