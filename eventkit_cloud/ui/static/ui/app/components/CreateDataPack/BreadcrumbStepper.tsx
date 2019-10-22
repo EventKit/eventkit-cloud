@@ -1,8 +1,8 @@
 import * as React from 'react';
-import { Route } from 'react-router';
+import {Route} from 'react-router';
 import history from '../../utils/history';
-import { connect } from 'react-redux';
-import { withTheme, Theme } from '@material-ui/core/styles';
+import {connect} from 'react-redux';
+import {withTheme, Theme} from '@material-ui/core/styles';
 import isEqual from 'lodash/isEqual';
 import Divider from '@material-ui/core/Divider';
 import Warning from '@material-ui/icons/Warning';
@@ -13,20 +13,20 @@ import NavigationCheck from '@material-ui/icons/Check';
 import ExportAOI from './ExportAOI';
 import ExportInfo from './ExportInfo';
 import ExportSummary from './ExportSummary';
-import { flattenFeatureCollection } from '../../utils/mapUtils';
+import {flattenFeatureCollection} from '../../utils/mapUtils';
 import {getDuration, formatMegaBytes, isZoomLevelInRange} from '../../utils/generic';
 import {
     submitJob, clearAoiInfo, clearExportInfo, clearJobInfo,
 } from '../../actions/datacartActions';
-import { stepperNextDisabled } from '../../actions/uiActions';
-import { getFormats } from '../../actions/formatActions';
-import { getProviders } from '../../actions/providerActions';
-import { getNotifications, getNotificationsUnreadCount } from '../../actions/notificationsActions';
+import {stepperNextDisabled} from '../../actions/uiActions';
+import {getFormats} from '../../actions/formatActions';
+import {getProviders} from '../../actions/providerActions';
+import {getNotifications, getNotificationsUnreadCount} from '../../actions/notificationsActions';
 import {updateExportInfo} from '../../actions/datacartActions';
 import BaseDialog from '../Dialog/BaseDialog';
 import ConfirmDialog from '../Dialog/ConfirmDialog';
 import PageLoading from '../common/PageLoading';
-import { Location } from 'history';
+import {Location} from 'history';
 import {Typography} from "@material-ui/core";
 import * as PropTypes from "prop-types";
 import Info from '@material-ui/icons/Info';
@@ -70,6 +70,7 @@ export interface Props {
     theme: Eventkit.Theme & Theme;
     getProjections: () => void;
     projections: Eventkit.Projection[];
+    baseMapUrl: string;
 }
 
 export interface State {
@@ -164,7 +165,7 @@ export class BreadcrumbStepper extends React.Component<Props, State> {
 
         if (!isEqual(this.props.aoiInfo, prevProps.aoiInfo) ||
             !isEqual(this.props.exportInfo, prevProps.exportInfo)) {
-            this.setState({ modified: true });
+            this.setState({modified: true});
         }
 
         if (this.context.config.SERVE_ESTIMATES) {
@@ -209,23 +210,27 @@ export class BreadcrumbStepper extends React.Component<Props, State> {
             max,
             sizes: sizes.sort((a, b) => a - b),
         };
-        this.setState({ limits });
+        this.setState({limits});
     }
 
     private handleEstimateExplanationClosed() {
-        this.setState({ estimateExplanationOpen: false });
+        this.setState({estimateExplanationOpen: false});
     }
 
     private handleEstimateExplanationOpen() {
-        this.setState({ estimateExplanationOpen: true });
+        this.setState({estimateExplanationOpen: true});
     }
 
     private getErrorMessage(title: string, detail: string, ix: number) {
         return (
             <div className="BreadcrumbStepper-error-container" key={`${title}-${detail}`}>
-                { ix > 0 ? <Divider style={{ marginBottom: '10px' }} /> : null }
+                {ix > 0 ? <Divider style={{marginBottom: '10px'}}/> : null}
                 <p className="BreadcrumbStepper-error-title">
-                    <Warning style={{ fill: this.props.theme.eventkit.colors.warning, verticalAlign: 'bottom', marginRight: '10px' }} />
+                    <Warning style={{
+                        fill: this.props.theme.eventkit.colors.warning,
+                        verticalAlign: 'bottom',
+                        marginRight: '10px'
+                    }}/>
                     <strong>
                         {title}
                     </strong>
@@ -239,7 +244,7 @@ export class BreadcrumbStepper extends React.Component<Props, State> {
 
     private getEstimate(textStyle) {
         return (
-            <div style={{display: 'flex', }}>
+            <div style={{display: 'flex',}}>
                 <Typography style={{...textStyle, width: 'auto', fontSize: '.8em'}}>
                     <strong style={{fontSize: '.9em'}}>ETA</strong>: {this.formatEstimate()}
                 </Typography>
@@ -247,8 +252,10 @@ export class BreadcrumbStepper extends React.Component<Props, State> {
                     className={`qa-Estimate-Info-Icon`}
                     onClick={this.handleEstimateExplanationOpen}
                     color="primary"
-                    style={{cursor: 'pointer', verticalAlign: 'middle',
-                        marginLeft: '10px', height: '18px', width: '18px', }}
+                    style={{
+                        cursor: 'pointer', verticalAlign: 'middle',
+                        marginLeft: '10px', height: '18px', width: '18px',
+                    }}
                 />
                 <BaseDialog
                     show={this.state.estimateExplanationOpen}
@@ -256,16 +263,20 @@ export class BreadcrumbStepper extends React.Component<Props, State> {
                     onClose={this.handleEstimateExplanationClosed}
                 >
                     <div
-                        style={{ paddingBottom: '10px', wordWrap: 'break-word' }}
+                        style={{paddingBottom: '10px', wordWrap: 'break-word'}}
                         className="qa-ExportInfo-dialog-projection"
                     >
                         <p>
-                            EventKit calculates estimates intelligently by examining previous DataPack jobs. These numbers
+                            EventKit calculates estimates intelligently by examining previous DataPack jobs. These
+                            numbers
                             represent the sum total estimate for all selected DataSources.
                         </p>
-                        <p>Estimates for a Data Source are calculated by looking at the size of and time to complete previous DataPacks
-                            created using the specified Data Source(s). These estimates can vary based on availability of
-                            data for past jobs and the specified AOI. Larger AOIs will tend to take a longer time to complete
+                        <p>Estimates for a Data Source are calculated by looking at the size of and time to complete
+                            previous DataPacks
+                            created using the specified Data Source(s). These estimates can vary based on availability
+                            of
+                            data for past jobs and the specified AOI. Larger AOIs will tend to take a longer time to
+                            complete
                             and result in larger DataPacks.
                         </p>
 
@@ -280,7 +291,7 @@ export class BreadcrumbStepper extends React.Component<Props, State> {
         let sizeEstimate;
         let durationEstimate;
         // function that will return nf (not found) when the provided estimate is undefined
-        const get = (estimate, nf= 'unknown') => (estimate) ? estimate.toString() : nf;
+        const get = (estimate, nf = 'unknown') => (estimate) ? estimate.toString() : nf;
 
         if (this.state.sizeEstimate !== -1) {
             sizeEstimate = formatMegaBytes(this.state.sizeEstimate);
@@ -334,7 +345,7 @@ export class BreadcrumbStepper extends React.Component<Props, State> {
             timeEstimate = -1;
         } else if (timeEstimate > maxAcceptableTime) {
             timeEstimate = maxAcceptableTime;
- }
+        }
         if (sizeEstimate === 0) {
             sizeEstimate = -1;
         }
@@ -364,7 +375,7 @@ export class BreadcrumbStepper extends React.Component<Props, State> {
                 return (
                     <div className="qa-BreadcrumbStepper-step1Label" style={labelStyle}>
                         <Typography style={{...textStyle, lineHeight: '50px'}}>
-                        STEP 1 OF 3:  Define Area of Interest
+                            STEP 1 OF 3: Define Area of Interest
                         </Typography>
                     </div>
                 );
@@ -372,10 +383,10 @@ export class BreadcrumbStepper extends React.Component<Props, State> {
                 return (
                     <div className="qa-BreadcrumbStepper-step2Label" style={labelStyle}>
                         <Typography style={{...textStyle, display: 'inline'}}>
-                        STEP 2 OF 3:  Select Data & Formats
+                            STEP 2 OF 3: Select Data & Formats
                         </Typography>
                         {renderEstimate &&
-                            this.getEstimate(textStyle)
+                        this.getEstimate(textStyle)
                         }
                     </div>
                 );
@@ -383,17 +394,17 @@ export class BreadcrumbStepper extends React.Component<Props, State> {
                 return (
                     <div className="qa-BreadcrumbStepper-step3Label" style={labelStyle}>
                         <Typography style={{...textStyle, display: 'inline'}}>
-                        STEP 3 OF 3:  Review & Submit
+                            STEP 3 OF 3: Review & Submit
                         </Typography>
                         {renderEstimate &&
-                            this.getEstimate(textStyle)
+                        this.getEstimate(textStyle)
                         }
                     </div>
                 );
             default:
                 return (
                     <div className="qa-BreadcrumbStepper-stepErrorLabel" style={labelStyle}>
-                    STEPPER ERROR
+                        STEPPER ERROR
                     </div>
                 );
         }
@@ -407,6 +418,7 @@ export class BreadcrumbStepper extends React.Component<Props, State> {
                         limits={this.state.limits}
                         walkthroughClicked={this.props.walkthroughClicked}
                         onWalkthroughReset={this.props.onWalkthroughReset}
+                        baseMapUrl={this.props.baseMapUrl}
                     />
                 );
             case 1:
@@ -475,7 +487,7 @@ export class BreadcrumbStepper extends React.Component<Props, State> {
                     </Button>
                 );
             default:
-                return <div />;
+                return <div/>;
         }
     }
 
@@ -504,7 +516,7 @@ export class BreadcrumbStepper extends React.Component<Props, State> {
                         onClick={this.handleNext}
                         style={btnStyle}
                     >
-                        <NavigationArrowForward />
+                        <NavigationArrowForward/>
                     </Button>
                 );
             case 2:
@@ -518,11 +530,11 @@ export class BreadcrumbStepper extends React.Component<Props, State> {
                         onClick={this.submitDatapack}
                         style={btnStyle}
                     >
-                        <NavigationCheck className="qa-BreadcrumbStepper-NavigationCheck" />
+                        <NavigationCheck className="qa-BreadcrumbStepper-NavigationCheck"/>
                     </Button>
                 );
             default:
-                return <div />;
+                return <div/>;
         }
     }
 
@@ -535,12 +547,12 @@ export class BreadcrumbStepper extends React.Component<Props, State> {
 
         // We must have started making changes. Save the route we're trying to navigate to and show a warning.
         this.leaveRoute = info.pathname;
-        this.setState({ showLeaveWarningDialog: true });
+        this.setState({showLeaveWarningDialog: true});
         return false;
     }
 
     private submitDatapack() {
-        this.setState({ modified: false });
+        this.setState({modified: false});
         this.showLoading();
         // wait a moment before calling handleSubmit because
         // flattenFeatureCollection may lock up the browser
@@ -550,8 +562,8 @@ export class BreadcrumbStepper extends React.Component<Props, State> {
 
     private handleSubmit() {
         const providerTasks = [];
-        const { exportOptions } = this.props.exportInfo;
-        const {providers, projections } = this.props.exportInfo;
+        const {exportOptions} = this.props.exportInfo;
+        const {providers, projections} = this.props.exportInfo;
 
 
         providers.forEach((provider) => {
@@ -594,36 +606,36 @@ export class BreadcrumbStepper extends React.Component<Props, State> {
     }
 
     private handleNext() {
-        const { stepIndex } = this.state;
-        this.setState({ stepIndex: stepIndex + 1 });
+        const {stepIndex} = this.state;
+        this.setState({stepIndex: stepIndex + 1});
     }
 
     private handlePrev() {
-        const { stepIndex } = this.state;
+        const {stepIndex} = this.state;
         if (stepIndex > 0) {
-            this.setState({ stepIndex: stepIndex - 1 });
+            this.setState({stepIndex: stepIndex - 1});
         }
     }
 
     private showError(error: any) {
-        this.setState({ showError: true, error });
+        this.setState({showError: true, error});
         this.props.clearJobInfo();
     }
 
     private hideError() {
-        this.setState({ showError: false });
+        this.setState({showError: false});
     }
 
     private showLoading() {
-        this.setState({ loading: true });
+        this.setState({loading: true});
     }
 
     private hideLoading() {
-        this.setState({ loading: false });
+        this.setState({loading: false});
     }
 
     private handleLeaveWarningDialogCancel() {
-        this.setState({ showLeaveWarningDialog: false });
+        this.setState({showLeaveWarningDialog: false});
         this.leaveRoute = null;
     }
 
@@ -632,10 +644,10 @@ export class BreadcrumbStepper extends React.Component<Props, State> {
     }
 
     render() {
-        const { colors } = this.props.theme.eventkit;
+        const {colors} = this.props.theme.eventkit;
         let message = [];
         if (this.state.error) {
-            const responseError = { ...this.state.error };
+            const responseError = {...this.state.error};
             const errors = [...responseError.errors];
             message = errors.map((error, ix) => (
                 this.getErrorMessage(error.title, error.detail, ix)
@@ -646,10 +658,10 @@ export class BreadcrumbStepper extends React.Component<Props, State> {
         }
 
         return (
-            <div className="qa-BreadcrumbStepper-div-content" style={{ backgroundColor: colors.background }}>
-                <div className="qa-BreadcrumbStepper-div-stepLabel" style={{ width: '100%', height: '50px' }}>
+            <div className="qa-BreadcrumbStepper-div-content" style={{backgroundColor: colors.background}}>
+                <div className="qa-BreadcrumbStepper-div-stepLabel" style={{width: '100%', height: '50px'}}>
                     {this.getStepLabel(this.state.stepIndex)}
-                    <div className="qa-BreadcrumbStepper-div-buttons" style={{ float: 'right', padding: '5px' }}>
+                    <div className="qa-BreadcrumbStepper-div-buttons" style={{float: 'right', padding: '5px'}}>
                         {this.getPreviousButtonContent(this.state.stepIndex)}
                         {this.getButtonContent(this.state.stepIndex)}
                     </div>
@@ -662,18 +674,18 @@ export class BreadcrumbStepper extends React.Component<Props, State> {
                 >
                     <div>{message}</div>
                 </BaseDialog>
-                    <ConfirmDialog
+                <ConfirmDialog
                     show={this.state.showLeaveWarningDialog}
                     title="ARE YOU SURE?"
                     onCancel={this.handleLeaveWarningDialogCancel}
                     onConfirm={this.handleLeaveWarningDialogConfirm}
                     confirmLabel="Yes, I'm Sure"
                     isDestructive
-                    >
+                >
                     <strong>You haven&apos;t finished creating this DataPack yet. Any settings will be lost.</strong>
                 </ConfirmDialog>
-                { this.state.loading ?
-                    <PageLoading background="transparent" />
+                {this.state.loading ?
+                    <PageLoading background="transparent"/>
                     :
                     null
                 }
@@ -695,6 +707,7 @@ function mapStateToProps(state) {
         projections: state.projections,
     };
 }
+
 function mapDispatchToProps(dispatch) {
     return {
         submitJob: (data) => {

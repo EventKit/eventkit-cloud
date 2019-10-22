@@ -32,10 +32,10 @@ export class SearchAOIButton extends Component {
             buttonGeneral: {
                 height: '50px',
                 width: '50px',
-                borderLeft: '1px solid #e6e6e6',
+                borderRight: '1px solid #e6e6e6',
+                borderLeft: 'none',
                 borderBottom: 'none',
                 borderTop: 'none',
-                borderRight: 'none',
                 margin: '0px',
                 padding: '0px',
                 backgroundColor: colors.white,
