@@ -23,7 +23,6 @@ import Button from "@material-ui/core/Button";
 const jss = (theme: Theme & Eventkit.Theme) => createStyles({
     container: {
         zIndex: 4,
-        height: 'calc(100vh - 180px)',
         right: '0px',
         position: 'absolute',
         width: 'calc(100% - 1000px)',
@@ -39,7 +38,7 @@ const jss = (theme: Theme & Eventkit.Theme) => createStyles({
         width: '250px',
         right: '0px',
         left: 'auto',
-        height: '100%',
+        height: 'calc(100vh - 180px)',
         boxShadow: '0px 1px 5px 0px rgba(0,0,0,0.2), 0px 2px 2px 0px rgba(0,0,0,0.14), 0px 3px 1px -2px rgba(0,0,0,0.12)',
     },
     drawerHeader: {
