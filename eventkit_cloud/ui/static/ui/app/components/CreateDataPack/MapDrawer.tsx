@@ -145,7 +145,6 @@ export interface Props {
 export interface State {
     selectedTab: any;
     selectedBaseMap: string;
-    open: boolean;
     sources: BaseMapSource[];
 }
 
@@ -162,7 +161,6 @@ export class MapDrawer extends React.Component<Props, State> {
         this.state = {
             selectedTab: '',
             selectedBaseMap: undefined,
-            open: true,
             sources: [
                 ...props.sources,
             ]
@@ -258,7 +256,7 @@ export class MapDrawer extends React.Component<Props, State> {
                     open={selectedTab === 'basemap'}
                     PaperProps={{
                         className: classes.drawerPaper,
-                        style: {visibility: this.state.open ? 'visible' as 'visible' : 'hidden' as 'hidden'},
+                        style: {visibility: selectedTab === 'basemap' ? 'visible' as 'visible' : 'hidden' as 'hidden'},
                     }}
                 >
                     <div className={classes.scrollBar}>
