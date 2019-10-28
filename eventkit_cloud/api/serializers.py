@@ -668,7 +668,7 @@ class DataProviderSerializer(serializers.ModelSerializer):
         if thumbnail is not None:
             request = urlsplit(self.context['request'].build_absolute_uri())
             if getattr(settings, 'USE_S3', False):
-                url = get_presigned_url(thumbnail.download_url)
+                return get_presigned_url(thumbnail.download_url)
             # Otherwise, grab the hostname from the request and tack on the relative url.
             return ParseResult(scheme=request.scheme,
                                netloc=request.netloc,

@@ -12,8 +12,8 @@ const jss = (theme: Theme & Eventkit.Theme) => createStyles({
     container: {
         zIndex: 2,
         position: 'absolute',
-        width: 'calc(100% - 500px)',
-        minWidth: '250px',
+        width: 'calc(100% - 60px)',
+        minWidth: '300px',
         maxWidth: '700px',
         height: '50px',
         top: '1em',

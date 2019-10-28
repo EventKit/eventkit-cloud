@@ -65,6 +65,7 @@ def provider_pre_save(sender, instance, **kwargs):
     """
     This method is executed whenever a DataProvider is created or updated.
     """
+    instance.thumbnail = None
     if instance.preview_url:
         try:
             # First check to see if this DataProvider should update the thumbnail
