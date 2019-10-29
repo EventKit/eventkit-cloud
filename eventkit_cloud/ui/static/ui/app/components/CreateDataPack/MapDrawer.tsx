@@ -164,9 +164,9 @@ export class MapDrawer extends React.Component<Props, State> {
         };
     }
 
-    private updateBaseMap(newBaseMapId: number) {
+    private updateBaseMap(newBaseMapId: number, sources) {
         this.setState({selectedBaseMap: newBaseMapId});
-        const baseMapUrl = (newBaseMapId !== -1) ? this.state.sources[newBaseMapId].url : '';
+        const baseMapUrl = (newBaseMapId !== -1) ? sources[newBaseMapId].url : '';
         this.props.updateBaseMap(baseMapUrl);
     }
 
@@ -263,7 +263,7 @@ export class MapDrawer extends React.Component<Props, State> {
                             <List style={{paddingRight: '10px', paddingLeft: '10px'}}>
                                 <RadioGroup
                                     value={selectedBaseMap.toString()}
-                                    onChange={(e, value) => this.updateBaseMap(Number(value))}
+                                    onChange={(e, value) => this.updateBaseMap(Number(value), sources)}
                                 >
                                     {sources.map((source, ix) =>
                                         (
@@ -318,7 +318,7 @@ export class MapDrawer extends React.Component<Props, State> {
                             disabled={!selectedBaseMap}
                             onClick={() => {
                                 // Send empty string to clear base map url.
-                                this.updateBaseMap(-1);
+                                this.updateBaseMap(-1, sources);
                             }}
                         >
                             Reset
