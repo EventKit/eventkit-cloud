@@ -1,4 +1,5 @@
 import os
+import shutil
 import requests
 import logging
 import copy
@@ -9,7 +10,8 @@ from io import BytesIO
 from django.conf import settings
 from eventkit_cloud.utils import s3
 from eventkit_cloud.jobs.models import MapImageSnapshot
-from eventkit_cloud.jobs.helpers import get_provider_image_download_dir
+from eventkit_cloud.jobs.helpers import get_provider_image_download_dir, get_provider_image_download_path
+from eventkit_cloud.tasks.export_tasks import make_dirs
 
 from mapproxy.grid import tile_grid
 
@@ -97,7 +99,11 @@ def make_thumbnail_downloadable(filepath, provider_uid, download_filename=None):
         )
         os.remove(filepath)
     else:
-        download_url = os.path.join(get_provider_image_download_dir(provider_uid), download_filename)
+        download_path = os.path.join(get_provider_image_download_dir(provider_uid), download_filename)
+        download_url = os.path.join(get_provider_image_download_path(provider_uid), download_filename)
+        make_dirs(download_path)
+        shutil.copy(filepath, download_path)
+
     thumbnail_snapshot.download_url = download_url
     thumbnail_snapshot.save()
 

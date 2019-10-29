@@ -52,7 +52,7 @@ def mapimagesnapshot_delete(sender, instance, *args, **kwargs):
     if getattr(settings, 'USE_S3', False):
         delete_from_s3(download_url=instance.download_url)
     url_parts = instance.download_url.split('/')
-    full_file_download_path = '/'.join([settings.IMAGES_ROOT.rstrip('/'), url_parts[-2], url_parts[-1]])
+    full_file_download_path = '/'.join([settings.IMAGES_DOWNLOAD_ROOT.rstrip('/'), url_parts[-2], url_parts[-1]])
     try:
         os.remove(full_file_download_path)
         logger.info("The file {0} was deleted.".format(full_file_download_path))
@@ -66,10 +66,6 @@ def provider_pre_save(sender, instance, **kwargs):
     This method is executed whenever a DataProvider is created or updated.
     """
     if instance.preview_url:
-        if instance.thumbnail:
-            thumb = instance.thumbnail
-            instance.thumbnail = None
-            thumb.delete()
         try:
             # First check to see if this DataProvider should update the thumbnail
             # This should only be needed if it is a new entry, or the preview_url has changed,
@@ -91,6 +87,11 @@ def provider_pre_save(sender, instance, **kwargs):
                                           os.path.join(provider_image_dir, get_provider_thumbnail_name(instance.slug)))
                 # Return a MapImageSnapshot representing the thumbnail
                 thumbnail_snapshot = make_thumbnail_downloadable(filepath, instance.uid)
+
+                if instance.thumbnail:
+                    prev_thumb = instance.thumbnail
+                    instance.thumbnail = None
+                    prev_thumb.delete()
                 instance.thumbnail = thumbnail_snapshot
         except Exception as e:
             # Catch exceptions broadly and log them, we do not want to prevent saving provider's if
