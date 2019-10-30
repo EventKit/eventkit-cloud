@@ -1,6 +1,7 @@
 import os
 import shutil
-import requests
+from requests import Response
+from webtest.response import TestResponse
 import logging
 import copy
 
@@ -12,6 +13,9 @@ from eventkit_cloud.utils import s3
 from eventkit_cloud.jobs.models import MapImageSnapshot
 from eventkit_cloud.jobs.helpers import get_provider_image_download_dir, get_provider_image_download_path
 from eventkit_cloud.tasks.export_tasks import make_dirs
+from eventkit_cloud.utils.mapproxy import create_mapproxy_app
+from urllib.parse import urlparse
+from typing import Union
 
 from mapproxy.grid import tile_grid
 
@@ -48,8 +52,20 @@ def get_wmts_snapshot_image(base_url, zoom_level, bbox=None):
 
     # Grab a tile and read it to get the size we will be working with.
     # This is WMTS, all subsequent tiles will be the same size
-    request = requests.get(base_url.format(x=0, y=0, z=0))
-    tile = Image.open(BytesIO(request.content))
+    if getattr(settings, "SITE_NAME") in base_url:
+        # If the request is local, use a mapproxy app here instead of making a network request to the view.
+        parsed_url = urlparse(base_url)  # base_url = https://test/map/slug/one/two?q1=1&q2=2
+        split_path = parsed_url.path.lstrip('/').split('/')  # ['map','slug','one','two']
+        slug = split_path[1]
+        map_path = split_path[2:]
+        base_url = F"/{'/'.join(map_path)}?{parsed_url.query}"  # /one/two?q1=1&q2=2
+        mapproxy_app = create_mapproxy_app(slug)
+        requests = mapproxy_app
+    else:
+        # Ensure proper requests is loaded
+        import requests
+    response = requests.get(base_url.format(x=0, y=0, z=0))
+    tile = get_tile(response)
     size_x, size_y = tile.size  # These should be the same
 
     # Create the image we will paste all other tiles into.
@@ -59,14 +75,23 @@ def get_wmts_snapshot_image(base_url, zoom_level, bbox=None):
         for _col in range(dim_col):
             # Capture the coords for this tile.
             tile_coords = tiles[tile_count]
-            request = requests.get(base_url.format(x=tile_coords[0], y=tile_coords[1], z=zoom_level))
-            tile = Image.open(BytesIO(request.content))
+            response = requests.get(base_url.format(x=tile_coords[0], y=tile_coords[1], z=zoom_level))
+            tile = get_tile(response)
             # Paste this tile into the corresponding position relative to the overall image.
             # Tiles will inserted one after the other, left to right, top to bottom.
             snapshot.paste(im=tile, box=(size_x * _col, size_y * _row))
             tile_count += 1
     return snapshot
 
+
+def get_tile(response: Union[Response, TestResponse]) -> Image:
+    """
+    A wrapper to get content from requests response, or webop response.
+    :param response:
+    :return:
+    """
+    content = getattr(response, "content", None) or getattr(response, "body", None)
+    return Image.open(BytesIO(content))
 
 def save_thumbnail(base_url, filepath):
     """
@@ -101,7 +126,7 @@ def make_thumbnail_downloadable(filepath, provider_uid, download_filename=None):
     else:
         download_path = os.path.join(get_provider_image_download_dir(provider_uid), download_filename)
         download_url = os.path.join(get_provider_image_download_path(provider_uid), download_filename)
-        make_dirs(download_path)
+        make_dirs(os.path.split(download_path)[0])
         shutil.copy(filepath, download_path)
 
     thumbnail_snapshot.download_url = download_url
