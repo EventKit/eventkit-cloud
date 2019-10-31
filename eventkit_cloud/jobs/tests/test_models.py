@@ -7,7 +7,7 @@ from django.contrib.gis.db.models.functions import Area
 from django.contrib.gis.db.models.functions import Intersection
 from django.contrib.gis.gdal import DataSource
 from django.contrib.gis.geos import GEOSGeometry, Polygon, MultiPolygon
-from django.test import TestCase
+from django.test import TestCase, override_settings
 from mock import patch
 
 from eventkit_cloud.jobs.models import (
@@ -312,10 +312,13 @@ class TestDataProvider(TestCase):
         self.export_provider = DataProvider.objects.get(slug='osm-generic')
 
     @patch('os.makedirs')
+    @patch('eventkit_cloud.jobs.signals.make_thumbnail_downloadable')
     @patch('eventkit_cloud.jobs.signals.save_thumbnail')
-    def test_snapshot_signal(self, save_thumbnail, makedirs):
+    def test_snapshot_signal(self, mock_save_thumbnail, mock_make_thumbnail_downloadable, makedirs):
         """Test that triggering a save on a provider with a preview_url will attach a MapImageSnapshot."""
-        save_thumbnail.return_value = '/var/lib/downloads/images/test_thumb.jpg'
+        mock_save_thumbnail.return_value = '/var/lib/downloads/images/test_thumb.jpg'
+        # An "random id number for the MapImageSnapshot key
+        mock_make_thumbnail_downloadable.return_value = 1
         stat = os.stat
 
         # We don't want to interfere with any other os.stat functions
@@ -333,4 +336,7 @@ class TestDataProvider(TestCase):
             mock_stat.return_value = StatMock()
             self.export_provider.preview_url = 'http://url.com'
             self.export_provider.save()
-            self.assertIsNotNone(self.export_provider.thumbnail)
+            makedirs.assert_called()
+            mock_make_thumbnail_downloadable.assert_called()
+            print(mock_save_thumbnail.mock_calls)
+            print(self.export_provider.thumbnail)
