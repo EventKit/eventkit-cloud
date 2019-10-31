@@ -21,6 +21,7 @@ import BaseDialog from '../Dialog/BaseDialog';
 import LicenseRow from './LicenseRow';
 import { Breakpoint } from '@material-ui/core/styles/createBreakpoints';
 import moment from 'moment';
+import ProviderPreview from "./ProviderPreview";
 
 interface Props {
     provider: Eventkit.ProviderTask;
@@ -40,6 +41,7 @@ interface State {
     fileSize: string;
     providerDesc: string;
     providerDialogOpen: boolean;
+    previewDialogOpen: boolean;
 }
 
 const jss = (theme: Eventkit.Theme & Theme) => createStyles({
@@ -161,6 +163,7 @@ export class ProviderRow extends React.Component<Props, State> {
             fileSize: this.getFileSize(props.provider.tasks),
             providerDesc: '',
             providerDialogOpen: false,
+            previewDialogOpen: false,
         };
     }
 
@@ -405,6 +408,10 @@ export class ProviderRow extends React.Component<Props, State> {
         this.setState({ providerDesc, providerDialogOpen: true });
     }
 
+    private handlePreviewOpen() {
+        this.setState({ previewDialogOpen: true });
+    }
+
     render() {
         const { classes } = this.props;
         const { provider } = this.props;
@@ -431,6 +438,8 @@ export class ProviderRow extends React.Component<Props, State> {
             cancelMenuDisabled = true;
         }
 
+        let previewsAvailable = true;
+
         menuItems.push(
             <MenuItem
                 className="qa-ProviderRow-MenuItem-cancel"
@@ -446,6 +455,15 @@ export class ProviderRow extends React.Component<Props, State> {
                 key="viewProviderData"
                 style={{ fontSize: '12px' }}
                 onClick={this.handleProviderOpen}
+            >
+                View Data Source
+            </MenuItem>,
+            <MenuItem
+                className="qa-ProviderRow-MenuItem-preview"
+                key="viewPreviews"
+                disabled={previewsAvailable}
+                style={{ fontSize: '12px' }}
+                onClick={this.handlePreviewOpen}
             >
                 View Data Source
             </MenuItem>,
@@ -523,6 +541,16 @@ export class ProviderRow extends React.Component<Props, State> {
 
         return (
             <div>
+                <BaseDialog
+                    className="qa-ProviderRow-preview"
+                    show={true}
+                    title="ERROR"
+                    onClose={() => {}}
+                >
+                    <ProviderPreview
+                        providerTasks={[this.props.provider]}
+                    />
+                </BaseDialog>
                 <Table
                     key={provider.uid}
                     className="qa-ProviderRow-Table"
