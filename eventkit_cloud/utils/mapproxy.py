@@ -7,13 +7,13 @@ from django.conf import settings
 from django.db import connections
 from django.core.cache import cache
 import mapproxy
+from mapproxy.config.config import load_config, load_default_config
+from mapproxy.config.loader import ProxyConfiguration, ConfigurationError, validate_references
 from mapproxy.seed import seeder
 from mapproxy.seed.config import SeedingConfiguration
 from mapproxy.seed.util import ProgressLog, exp_backoff, timestamp, ProgressStore
-from mapproxy.config.config import load_config, load_default_config
-from mapproxy.config.loader import ProxyConfiguration, ConfigurationError, validate_references
 from mapproxy.wsgiapp import MapProxyApp
-
+from mapproxy.cache import geopackage as geopackage_cache
 from webtest import TestApp
 
 import os
@@ -192,7 +192,9 @@ class MapproxyGeopackage(object):
         conf_dict, seed_configuration, mapproxy_configuration = self.get_check_config()
         #  Customizations...
         mapproxy.seed.seeder.exp_backoff = get_custom_exp_backoff(max_repeat=int(conf_dict.get('max_repeat', 5)))
-        mapproxy.cache.geopackage.GeopackageCache.load_tile_metadata = load_tile_metadata
+        from mapproxy.cache import geopackage
+        mapproxy.cache.geopackage
+        geopackage_cache.GeopackageCache.load_tile_metadata = load_tile_metadata
 
         logger.error("Beginning seeding to {0}".format(self.gpkgfile))
         try:

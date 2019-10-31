@@ -93,6 +93,7 @@ def get_tile(response: Union[Response, TestResponse]) -> Image:
     content = getattr(response, "content", None) or getattr(response, "body", None)
     return Image.open(BytesIO(content))
 
+
 def save_thumbnail(base_url, filepath):
     """
     Grab a high level snapshot of a map in EPSG:4326.
@@ -101,10 +102,11 @@ def save_thumbnail(base_url, filepath):
     :param filepath: name for the file to be saved as.
     :return: Full filepath on success
     """
+    thumbnail_size = (90, 45)
     thumbnail = get_wmts_snapshot_image(base_url, zoom_level=0)
 
     full_filepath = f'{filepath}.jpg'
-    thumbnail.thumbnail((90, 45))
+    thumbnail.thumbnail(thumbnail_size)
     thumbnail.save(full_filepath)
     return full_filepath
 
