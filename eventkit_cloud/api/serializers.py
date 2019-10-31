@@ -188,6 +188,7 @@ class DataProviderTaskRecordSerializer(serializers.ModelSerializer):
         view_name='api:provider_tasks-detail',
         lookup_field='uid'
     )
+    preview_url = serializers.SerializerMethodField()
 
     def get_tasks(self, obj):
         request = self.context['request']
@@ -196,10 +197,26 @@ class DataProviderTaskRecordSerializer(serializers.ModelSerializer):
         else:
             return ExportTaskRecordSerializer(obj.tasks, many=True, required=False, context=self.context).data
 
+    def get_preview_url(self, obj):
+        from urllib.parse import urlsplit, ParseResult
+        preview = obj.preview
+        if preview is not None:
+            request = urlsplit(self.context['request'].build_absolute_uri())
+            if getattr(settings, 'USE_S3', False):
+                return get_presigned_url(preview.download_url)
+            # Otherwise, grab the hostname from the request and tack on the relative url.
+            return ParseResult(scheme=request.scheme,
+                               netloc=request.netloc,
+                               path=f'{preview.download_url}',
+                               params='', query='', fragment='').geturl()
+        else:
+            return ''
+
+
     class Meta:
         model = DataProviderTaskRecord
         fields = ('uid', 'url', 'name', 'started_at', 'finished_at', 'duration',
-                  'tasks', 'status', 'display', 'slug', 'estimated_size', 'estimated_duration')
+                  'tasks', 'status', 'display', 'slug', 'estimated_size', 'estimated_duration', 'preview_url')
 
 
 class DataProviderListSerializer(serializers.BaseSerializer):

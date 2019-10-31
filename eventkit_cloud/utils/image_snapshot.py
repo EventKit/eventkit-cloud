@@ -12,6 +12,7 @@ from eventkit_cloud.utils import s3
 from eventkit_cloud.jobs.models import MapImageSnapshot
 from eventkit_cloud.jobs.helpers import get_provider_image_download_dir, get_provider_image_download_path
 from eventkit_cloud.tasks.export_tasks import make_dirs
+from eventkit_cloud.utils.helpers import get_download_paths, get_relative_path_from_staging
 
 from mapproxy.grid import tile_grid
 
@@ -101,10 +102,50 @@ def make_thumbnail_downloadable(filepath, provider_uid, download_filename=None):
     else:
         download_path = os.path.join(get_provider_image_download_dir(provider_uid), download_filename)
         download_url = os.path.join(get_provider_image_download_path(provider_uid), download_filename)
-        make_dirs(download_path)
+        make_dirs(os.path.split(download_path)[0])
         shutil.copy(filepath, download_path)
 
     thumbnail_snapshot.download_url = download_url
+    thumbnail_snapshot.save()
+
+    return thumbnail_snapshot
+
+
+def make_snapshot_downloadable(staging_filepath, relative_path=None, download_filename=None, copy=False):
+    """
+    Move an image from a staging location to a download location.
+
+    :param staging_filepath: Where the image is initially situated.
+    :param relative_path: Where the file should be moved to for download (ignored when USE_S3 is true)
+    :param download_filename: optional rename of the original file.
+    :param copy: if true the file will be copied instead of moved.
+    :return:
+    """
+    filename = os.path.basename(staging_filepath)
+    if download_filename is None:
+        download_filename = filename
+
+    filesize = os.stat(staging_filepath).st_size
+    thumbnail_snapshot = MapImageSnapshot.objects.create(download_url='', filename=filename, size=filesize)
+    if getattr(settings, "USE_S3", False):
+        download_url = s3.upload_to_s3(
+            thumbnail_snapshot.uid,
+            staging_filepath,
+            download_filename,
+        )
+    else:
+        if relative_path is None:
+            relative_path = os.path.split(get_relative_path_from_staging(staging_filepath))[0]
+        download_path, download_url = get_download_paths(relative_path)
+        make_dirs(download_path)
+        # Source location (from) gets moved/copied to the destination (to)
+        from_to = [staging_filepath, os.path.join(download_path, filename)]
+        if copy:
+            shutil.copy(*from_to)
+        else:
+            shutil.move(*from_to)
+
+    thumbnail_snapshot.download_url = os.path.join(download_url, filename)
     thumbnail_snapshot.save()
 
     return thumbnail_snapshot

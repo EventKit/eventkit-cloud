@@ -178,6 +178,7 @@ class ExportTask(UserDetailsBase):
     def __call__(self, *args, **kwargs):
 
         from eventkit_cloud.tasks.models import FileProducingTaskResult, ExportTaskRecord
+        from eventkit_cloud.jobs.models import DataProvider
         task_uid = kwargs.get('task_uid')
 
         try:
@@ -188,6 +189,13 @@ class ExportTask(UserDetailsBase):
             except IndexError:
                 task_state_result = None
             self.update_task_state(result=task_state_result, task_uid=task_uid)
+
+            try:
+                provider_slug = task.export_provider_task.slug
+                provider = DataProvider.objects.get(slug=provider_slug)
+                logger.info(f'slug found: {provider_slug}')
+            except DataProvider.DoesNotExist as e:
+                logger.info(f'slug not found {provider_slug}')
 
             if not TaskStates.CANCELED.value in [task.status, task.export_provider_task.status]:
                 retval = super(ExportTask, self).__call__(*args, **kwargs)
@@ -1339,6 +1347,42 @@ def cancel_synchronous_task_chain(data_provider_task_uid=None):
                 queue="{0}.cancel".format(export_task.worker),
                 priority=TaskPriority.CANCEL.value,
                 routing_key="{0}.cancel".format(export_task.worker))
+
+
+@app.task(name='Create preview', base=UserDetailsBase)
+def create_datapack_preview(result=None, run_uid=None, task_uid=None,
+                            stage_dir=None, task_record_uid=None, *args, **kwargs):
+    """
+    Attempts to add a MapImageSnapshot (Preview Image) to a provider task.
+    """
+    result = result or {}
+    try:
+        from eventkit_cloud.tasks.models import ExportRun, DataProviderTaskRecord
+        from eventkit_cloud.jobs.models import DataProviderTask
+        from eventkit_cloud.utils.image_snapshot import get_wmts_snapshot_image, make_snapshot_downloadable
+
+        provider_task = DataProviderTask.objects.select_related('provider').get(uid=task_uid)
+        provider = provider_task.provider
+
+        provider_task_record = DataProviderTaskRecord.objects.get(uid=task_record_uid)
+
+        export_run = ExportRun.objects.get(uid=run_uid)
+        job = export_run.job
+
+        filepath = os.path.join(stage_dir, "{0}_preview.jpg".format(provider.slug))
+        make_dirs(stage_dir)
+        logger.info(f'save to endoz: {filepath}')
+        preview = get_wmts_snapshot_image(provider.preview_url, provider_task.max_zoom, bbox=job.extents)
+        preview.save(filepath)
+
+        snapshot = make_snapshot_downloadable(filepath, copy=True)
+        provider_task_record.preview = snapshot
+        provider_task_record.save()
+        # result['result'] = filepath
+
+    except Exception as e:
+        logger.exception(e)
+
 
 
 @app.task(name='Cancel Export Provider Task', base=UserDetailsBase)
