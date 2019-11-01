@@ -1,6 +1,6 @@
 import * as React from 'react';
-import { withTheme, withStyles, Theme } from '@material-ui/core/styles';
-import withWidth, { isWidthUp } from '@material-ui/core/withWidth';
+import {withTheme, withStyles, Theme} from '@material-ui/core/styles';
+import withWidth, {isWidthUp} from '@material-ui/core/withWidth';
 import Table from '@material-ui/core/Table';
 import TableBody from '@material-ui/core/TableBody';
 import TableRow from '@material-ui/core/TableRow';
@@ -10,7 +10,8 @@ import Info from '@material-ui/icons/Info';
 import CloudDownload from '@material-ui/icons/CloudDownload';
 import ProviderRow from './ProviderRow';
 import BaseDialog from '../Dialog/BaseDialog';
-import { Breakpoint } from '@material-ui/core/styles/createBreakpoints';
+import {Breakpoint} from '@material-ui/core/styles/createBreakpoints';
+import ProviderPreview from "./ProviderPreview";
 
 const jss = (theme: Eventkit.Theme & Theme) => ({
     btn: {
@@ -25,6 +26,10 @@ const jss = (theme: Eventkit.Theme & Theme) => ({
             backgroundColor: theme.eventkit.colors.secondary_dark,
             color: theme.eventkit.colors.grey,
         },
+    },
+    preview: {
+        height: '1000px',
+        width: '1000px'
     },
 });
 
@@ -42,6 +47,7 @@ export interface Props {
 export interface State {
     infoOpen: boolean;
     selectedProviders: { [slug: string]: boolean };
+    providerPreviewOpen: boolean;
 }
 
 export class DataPackDetails extends React.Component<Props, State> {
@@ -52,6 +58,7 @@ export class DataPackDetails extends React.Component<Props, State> {
         this.state = {
             infoOpen: false,
             selectedProviders: {},
+            providerPreviewOpen: true,
         };
     }
 
@@ -66,29 +73,29 @@ export class DataPackDetails extends React.Component<Props, State> {
                 selectedProviders[provider.uid] = false;
             }
         });
-        this.setState({ selectedProviders });
+        this.setState({selectedProviders});
     }
 
     private getCloudDownloadIcon() {
-        const { colors } = this.props.theme.eventkit;
+        const {colors} = this.props.theme.eventkit;
         if (!this.props.zipFileProp) {
             return (
                 <CloudDownload
                     className="qa-DataPackDetails-CloudDownload-disabled"
-                    style={{ fill: colors.grey, verticalAlign: 'middle', marginRight: '5px' }}
+                    style={{fill: colors.grey, verticalAlign: 'middle', marginRight: '5px'}}
                 />
             );
         }
         return (
             <CloudDownload
                 className="qa-DataPackDetails-CloudDownload-enabled"
-                style={{ fill: colors.primary, verticalAlign: 'middle', marginRight: '5px' }}
+                style={{fill: colors.primary, verticalAlign: 'middle', marginRight: '5px'}}
             />
         );
     }
 
     private getTextFontSize() {
-        const { width } = this.props;
+        const {width} = this.props;
         if (!isWidthUp('sm', width)) {
             return '10px';
         } else if (!isWidthUp('md', width)) {
@@ -120,15 +127,15 @@ export class DataPackDetails extends React.Component<Props, State> {
     }
 
     private handleInfoOpen() {
-        this.setState({ infoOpen: true });
+        this.setState({infoOpen: true});
     }
 
     private handleInfoClose() {
-        this.setState({ infoOpen: false });
+        this.setState({infoOpen: false});
     }
 
     render() {
-        const { colors } = this.props.theme.eventkit;
+        const {colors} = this.props.theme.eventkit;
 
         const tableCellWidth = this.getTableCellWidth();
         const toggleCellWidth = this.getToggleCellWidth();
@@ -167,16 +174,16 @@ export class DataPackDetails extends React.Component<Props, State> {
             },
         };
 
-        const { classes } = this.props;
+        const {classes} = this.props;
 
         return (
             <div>
                 <div className="qa-DataPackDetails-heading" style={styles.subHeading}>
-                   Download Options
+                    Download Options
                 </div>
                 <Table
                     className="qa-DataPackDetails-Table"
-                    style={{ width: '100%', tableLayout: 'fixed' }}
+                    style={{width: '100%', tableLayout: 'fixed'}}
                 >
                     <TableBody
                         className="qa-DataPackDetails-TableHeader"
@@ -191,9 +198,9 @@ export class DataPackDetails extends React.Component<Props, State> {
                                     href={this.props.zipFileProp}
                                     variant="contained"
                                     className="qa-DataPackDetails-Button-zipButton"
-                                    classes={{ root: classes.btn }}
+                                    classes={{root: classes.btn}}
                                     disabled={!this.isZipFileCompleted()}
-                                    style={{ fontSize: textFontSize, lineHeight: 'initial' }}
+                                    style={{fontSize: textFontSize, lineHeight: 'initial'}}
                                 >
                                     {this.getCloudDownloadIcon()}
                                     {this.props.zipFileProp ? 'DOWNLOAD DATAPACK (.ZIP)' : 'CREATING DATAPACK ZIP'}
@@ -210,14 +217,16 @@ export class DataPackDetails extends React.Component<Props, State> {
                                     title="DataPack Information"
                                     onClose={this.handleInfoClose}
                                 >
-                                    <div style={{ paddingBottom: '10px', wordWrap: 'break-word' }}>
-                                        For convenience, EventKit bundles all the individual data sources into a single download
-                                         (formatted as a .zip file).
-                                         Additionally, this file contains GIS application files (QGIS and ArcMap),
-                                         cartographic styles, metadata, and associated documents.
-                                         See the Page Tour for more details about other elements of the Status and Download page.
-                                         Detailed information about how to use the DataPacks in QGIS and ArcMap are in
-                                         the About EventKit page and in the metadata of the DataPack.
+                                    <div style={{paddingBottom: '10px', wordWrap: 'break-word'}}>
+                                        For convenience, EventKit bundles all the individual data sources into a single
+                                        download
+                                        (formatted as a .zip file).
+                                        Additionally, this file contains GIS application files (QGIS and ArcMap),
+                                        cartographic styles, metadata, and associated documents.
+                                        See the Page Tour for more details about other elements of the Status and
+                                        Download page.
+                                        Detailed information about how to use the DataPacks in QGIS and ArcMap are in
+                                        the About EventKit page and in the metadata of the DataPack.
                                     </div>
                                 </BaseDialog>
                             </TableCell>
@@ -241,12 +250,24 @@ export class DataPackDetails extends React.Component<Props, State> {
                             </TableCell>
                             <TableCell
                                 className="qa-DataPackDetails-TableCell-empty"
-                                style={{ ...styles.genericColumn, width: toggleCellWidth }}
+                                style={{...styles.genericColumn, width: toggleCellWidth}}
                             />
                         </TableRow>
                     </TableBody>
                 </Table>
                 <div className="qa-DataPackDetails-providers" id="Providers">
+                    <BaseDialog
+                        bodyStyle={{height: 'calc(80vh - 200px)', width: '100%'}}
+                        innerMaxHeight={1000}
+                        show={this.state.providerPreviewOpen}
+                        onClose={() => {
+                            this.setState({providerPreviewOpen: false})
+                        }}
+                    >
+                        <ProviderPreview
+                            providerTasks={this.props.providerTasks}
+                        />
+                    </BaseDialog>
                     {providers.map((provider, ix) => (
                         <ProviderRow
                             backgroundColor={ix % 2 === 0 ? colors.secondary : colors.white}

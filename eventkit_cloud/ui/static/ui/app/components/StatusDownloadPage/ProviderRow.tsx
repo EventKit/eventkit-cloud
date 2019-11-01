@@ -541,16 +541,6 @@ export class ProviderRow extends React.Component<Props, State> {
 
         return (
             <div>
-                <BaseDialog
-                    className="qa-ProviderRow-preview"
-                    show={true}
-                    title="ERROR"
-                    onClose={() => {}}
-                >
-                    <ProviderPreview
-                        providerTasks={[this.props.provider]}
-                    />
-                </BaseDialog>
                 <Table
                     key={provider.uid}
                     className="qa-ProviderRow-Table"

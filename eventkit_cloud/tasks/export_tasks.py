@@ -1359,7 +1359,7 @@ def create_datapack_preview(result=None, run_uid=None, task_uid=None,
     try:
         from eventkit_cloud.tasks.models import ExportRun, DataProviderTaskRecord
         from eventkit_cloud.jobs.models import DataProviderTask
-        from eventkit_cloud.utils.image_snapshot import get_wmts_snapshot_image, make_snapshot_downloadable
+        from eventkit_cloud.utils.image_snapshot import get_wmts_snapshot_image, make_snapshot_downloadable, fit_to_area
 
         provider_task = DataProviderTask.objects.select_related('provider').get(uid=task_uid)
         provider = provider_task.provider
@@ -1373,15 +1373,17 @@ def create_datapack_preview(result=None, run_uid=None, task_uid=None,
         make_dirs(stage_dir)
         logger.info(f'save to endoz: {filepath}')
         preview = get_wmts_snapshot_image(provider.preview_url, provider_task.max_zoom, bbox=job.extents)
+        fit_to_area(preview)
         preview.save(filepath)
 
         snapshot = make_snapshot_downloadable(filepath, copy=True)
         provider_task_record.preview = snapshot
         provider_task_record.save()
-        # result['result'] = filepath
+        result['result'] = filepath
 
     except Exception as e:
         logger.exception(e)
+    return result
 
 
 

@@ -15,7 +15,7 @@ from eventkit_cloud.jobs.helpers import get_provider_image_download_dir, get_pro
 from eventkit_cloud.tasks.export_tasks import make_dirs
 from eventkit_cloud.utils.helpers import get_download_paths, get_relative_path_from_staging
 from eventkit_cloud.utils.mapproxy import create_mapproxy_app
-from urllib.parse import urlparse
+from urllib.parse import urlparse, urlsplit
 from typing import Union
 
 from mapproxy.grid import tile_grid
@@ -57,6 +57,7 @@ def get_wmts_snapshot_image(base_url, zoom_level, bbox=None):
         # If the request is local, use a mapproxy app here instead of making a network request to the view.
         parsed_url = urlparse(base_url)  # base_url = https://test/map/slug/one/two?q1=1&q2=2
         split_path = parsed_url.path.lstrip('/').split('/')  # ['map','slug','one','two']
+        logger.info(split_path)
         slug = split_path[1]
         map_path = split_path[2:]
         base_url = F"/{'/'.join(map_path)}?{parsed_url.query}"  # /one/two?q1=1&q2=2
@@ -110,6 +111,18 @@ def save_thumbnail(base_url, filepath):
     thumbnail.thumbnail(thumbnail_size)
     thumbnail.save(full_filepath)
     return full_filepath
+
+
+def fit_to_area(image, pixels_x=500, pixels_y=250):
+    cur_size_x, cur_size_y = image.size
+    if cur_size_x < cur_size_y:
+        if pixels_x > pixels_y:
+            _temp = pixels_y
+            pixels_y = pixels_x
+            pixels_x = _temp
+
+    image.thumbnail(size=(pixels_x, pixels_y))
+    return image
 
 
 def make_thumbnail_downloadable(filepath, provider_uid, download_filename=None):
