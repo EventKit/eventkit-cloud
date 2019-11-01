@@ -87,7 +87,6 @@ export class FormatSelector extends React.Component<Props, {}> {
         const providerOptions = {...this.props.providerOptions};
 
         if (!providerOptions.formats) {
-
             this.props.updateExportOptions(this.props.provider.slug,
                 {
                     ...providerOptions,
