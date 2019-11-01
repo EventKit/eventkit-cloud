@@ -7,6 +7,7 @@ import CheckBoxIcon from '@material-ui/icons/CheckBox';
 import IndeterminateCheckBoxIcon from '@material-ui/icons/IndeterminateCheckBox';
 import {Compatibility} from '../../utils/enums';
 import {CompatibilityInfo} from "./ExportInfo";
+import {getDefaultFormat} from "../../utils/generic";
 
 const jss = (theme: Theme & Eventkit.Theme) => createStyles({
     container: {
@@ -84,13 +85,14 @@ export class FormatSelector extends React.Component<Props, {}> {
         // If this is the first time hitting this page, the datacart will be in a default state
         // with no formats selected. We want GPKG to be selected by default.
         const providerOptions = {...this.props.providerOptions};
-        let formats;
+
         if (!providerOptions.formats) {
-            if (this.props.formats.map(format => format.slug).indexOf('gpkg') >= 0) {
-                formats = ['gpkg'];
-            }
+
             this.props.updateExportOptions(this.props.provider.slug,
-                {...providerOptions, formats});
+                {
+                    ...providerOptions,
+                    formats: getDefaultFormat(this.props.provider)
+                });
         }
     }
 

@@ -198,3 +198,22 @@ export function unsupportedFormats(projection: number, formats: Eventkit.Format[
     });
     return incompatibleFormats;
 }
+
+
+export function getDefaultFormat(provider: Eventkit.Provider) {
+    const supportedFormats = provider.supported_formats;
+
+    let defaultFormatsList = [];
+    if (provider.type.toLowerCase() === 'wcs') {
+        if (supportedFormats.map(format => format.slug).indexOf('gpkg') >= 0) {
+            defaultFormatsList.push('gpkg');
+        } else if (supportedFormats.map(format => format.slug).indexOf('gtiff') >= 0) {
+            defaultFormatsList.push('gtiff');
+        }
+    } else {
+        if (supportedFormats.map(format => format.slug).indexOf('gpkg') >= 0) {
+            defaultFormatsList.push('gpkg');
+        }
+    }
+    return defaultFormatsList;
+}
