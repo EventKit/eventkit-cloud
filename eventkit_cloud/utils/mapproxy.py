@@ -192,8 +192,6 @@ class MapproxyGeopackage(object):
         conf_dict, seed_configuration, mapproxy_configuration = self.get_check_config()
         #  Customizations...
         mapproxy.seed.seeder.exp_backoff = get_custom_exp_backoff(max_repeat=int(conf_dict.get('max_repeat', 5)))
-        from mapproxy.cache import geopackage
-        mapproxy.cache.geopackage
         geopackage_cache.GeopackageCache.load_tile_metadata = load_tile_metadata
 
         logger.error("Beginning seeding to {0}".format(self.gpkgfile))
