@@ -1,5 +1,9 @@
 node() {
 
+    stage('Clean Up Workspace') {
+        cleanWs()
+    }
+
     stage("Add Repo"){
         checkout scm
         postStatus(getPendingStatus("The build is starting..."))
