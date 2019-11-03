@@ -8,6 +8,7 @@ from django.contrib.auth.models import Group, User
 from django.contrib.gis.geos import GEOSGeometry, Polygon
 from django.test import TestCase
 from mock import patch, Mock
+import yaml
 
 from eventkit_cloud.jobs.models import ExportFormat, Job, DatamodelPreset
 from eventkit_cloud.utils.overpass import Overpass
@@ -42,7 +43,7 @@ class TestOverpass(TestCase):
         self.job.formats = self.formats
         self.job.save()
         self.osm = self.path + '/files/query.osm'
-        self.query = '[maxsize:2147483648][timeout:1600];(relation(6.25,-10.85,6.4,-10.62);way(6.25,-10.85,6.4,-10.62);node(6.25,-10.85,6.4,-10.62));<;(._;>;);out body;'
+        self.query = '[maxsize:2147483648][timeout:1600];relation(6.25,-10.85,6.4,-10.62);way(6.25,-10.85,6.4,-10.62);node(6.25,-10.85,6.4,-10.62);<;(._;>;);out body;'
 
     def test_get_query(self,):
         overpass = Overpass(
@@ -51,6 +52,21 @@ class TestOverpass(TestCase):
         )
         q = overpass.get_query()
         self.assertEqual(q, self.query)
+
+    def test_custom_query(self,):
+        example_max_size = 10000
+        example_timeout = 10000
+        example_template = "$maxsize-$timeout-$bbox"
+        expected_query = F"{example_max_size}-{example_timeout}-{self.bbox[1]},{self.bbox[0]},{self.bbox[3]},{self.bbox[2]}"
+        config = yaml.dump({'overpass_query': example_template})
+        with self.settings(OVERPASS_MAX_SIZE=example_max_size, OVERPASS_TIMEOUT=example_timeout):
+            overpass = Overpass(
+                stage_dir=self.path + '/files/',
+                bbox=self.bbox, job_name='testjob',
+                config=config
+            )
+        query = overpass.get_query()
+        self.assertEqual(query, expected_query)
 
     @patch('django.db.connection.close')
     @patch('eventkit_cloud.tasks.models.ExportTaskRecord')
@@ -63,9 +79,9 @@ class TestOverpass(TestCase):
         mock_export_task_instance_id = 1
         op = Overpass(
             stage_dir=self.path + '/files/', task_uid=mock_export_task_instance_id,
-            bbox=self.bbox, job_name='testjob', slug='testslug',
+            bbox=self.bbox, job_name='testjob', slug='testslug'
         )
-        q = op.get_query()
+        overpass_query = op.get_query()
         out = self.path + '/files/query.osm'
         mock_response = mock.Mock()
         sample_data = ['<osm>some data</osm>'.encode()]
@@ -76,7 +92,7 @@ class TestOverpass(TestCase):
         op.run_query()
         mock_post.assert_called_once_with(self.url,
                                           cert_var='testslug',
-                                          data=q,
+                                          data=overpass_query,
                                           stream=True,
                                           verify=verify_ssl)
         mock_close.assert_called()

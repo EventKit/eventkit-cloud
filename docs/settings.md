@@ -49,7 +49,7 @@ To configure the email address that will send out any error messages add:
 <pre>EMAIL_HOST_USER='email@email.com'
 EMAIL_HOST_PASSWORD='email-password'</pre>
 
-#### Overpass API (deprecated)
+#### Overpass API
 To use your own instance of an Overpass API add:
 <pre>OVERPASS_API_URL='my-overpass-site.com/api/interpreter'</pre>
 
