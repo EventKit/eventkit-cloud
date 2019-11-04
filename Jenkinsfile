@@ -1,5 +1,9 @@
 node() {
 
+    stage('Clean Up Workspace') {
+        cleanWs()
+    }
+
     stage("Add Repo"){
         checkout scm
         postStatus(getPendingStatus("The build is starting..."))
@@ -63,7 +67,6 @@ END
     stage("Run unit tests"){
         try{
             postStatus(getPendingStatus("Running the unit tests..."))
-            sh "chown -R \$USER ."
             sh "docker-compose run --rm -T -u \$USER eventkit manage.py test -v=2 --noinput eventkit_cloud"
             sh "docker-compose run --rm -T  webpack npm test"
             postStatus(getSuccessStatus("All tests passed!"))
