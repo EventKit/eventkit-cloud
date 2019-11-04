@@ -34,7 +34,8 @@ export class NotificationsPage extends React.Component {
 
     componentDidUpdate(prevProps) {
         if (this.props.notificationsStatus.fetched && !prevProps.notificationsStatus.fetched) {
-            this.setState({
+            // reconsider setting state in componentDidUpdate in the future
+            this.setState({  // eslint-disable-line
                 loadingPage: false,
                 loading: false,
             });
@@ -48,7 +49,8 @@ export class NotificationsPage extends React.Component {
         if (Number(this.context.config.NOTIFICATIONS_PAGE_SIZE) !== this.itemsPerPage) {
             if (this.context.config.NOTIFICATIONS_PAGE_SIZE) {
                 this.itemsPerPage = Number(this.context.config.NOTIFICATIONS_PAGE_SIZE);
-                this.setState({ pageSize: this.itemsPerPage }, this.refresh);
+                // reconsider setting state in componentDidUpdate in the future
+                this.setState({ pageSize: this.itemsPerPage }, this.refresh); // eslint-disable-line
             }
         }
     }
