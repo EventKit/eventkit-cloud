@@ -25,10 +25,10 @@ END
         }
     }
 
-    stage("Remove volumes"){
+    //stage("Remove volumes"){
     // have to remove the volumes from docker because they mount stuff in jenkins
-        removeVolumes()
-    }
+    //    removeVolumes()
+    //}
 
     stage("Build"){
         try{
@@ -63,7 +63,8 @@ END
     stage("Run unit tests"){
         try{
             postStatus(getPendingStatus("Running the unit tests..."))
-            sh "docker-compose run --rm -T  eventkit manage.py test -v=2 --noinput eventkit_cloud"
+            sh "chown -R \$USER ."
+            sh "docker-compose run --rm -T -u \$USER eventkit manage.py test -v=2 --noinput eventkit_cloud"
             sh "docker-compose run --rm -T  webpack npm test"
             postStatus(getSuccessStatus("All tests passed!"))
             sh "docker-compose down"
