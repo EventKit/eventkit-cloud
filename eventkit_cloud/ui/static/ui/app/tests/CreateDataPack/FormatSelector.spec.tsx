@@ -53,6 +53,7 @@ describe('DataProvider component', () => {
             },
             availability: {},
             estimate: {},
+            supported_formats: [formats[0], formats[1]],
         },
         formats,
         getFormatCompatibility,
@@ -75,13 +76,6 @@ describe('DataProvider component', () => {
     it('should render input controls', () => {
         expect(wrapper.find('.qa-FormatSelector-Container')).toHaveLength(1);
         expect(wrapper.find(Checkbox)).toHaveLength(3);
-    });
-
-    it('should default to not selected', () => {
-
-        wrapper.find(Checkbox).forEach(node => {
-            expect(node.props().checked).toBe(false);
-        });
     });
 
     it('should list as checked when formats are in the store', () => {
