@@ -52,7 +52,9 @@ class Overpass(object):
 
         # extract all nodes / ways and relations within the bounding box
         # see: http://wiki.openstreetmap.org/wiki/Overpass_API/Overpass_QL
-        self.default_template = Template('[maxsize:$maxsize][timeout:$timeout];(relation($bbox);way($bbox);node($bbox));<;(._;>;);out body;')
+        conf: dict = yaml.load(self.config) or dict()
+        self.default_template = '[maxsize:$maxsize][timeout:$timeout];relation($bbox);way($bbox);node($bbox);<;(._;>;);out body;'
+        self.default_template = Template(conf.get('overpass_query', self.default_template))
 
         # dump out all osm data for the specified bounding box
         max_size = settings.OVERPASS_MAX_SIZE

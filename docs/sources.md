@@ -46,7 +46,7 @@ and select "Add Data Provider".
 
 If the Service Type is WMS, WMTS, TMS, or ArcGIS Raster, then EventKit will use MapProxy. 
 
-Everything else uses GDAL/OGR.
+Everything else uses GDAL/OGR, or basic REST requests.
 
 
 ##### MapProxy Configuration
@@ -64,8 +64,6 @@ EventKit will use MapProxy to help validate your entry to help find errors.
 
 In addition there are two keys you can add to the examples to adjust how many times a request is attempted and how many concurrent workers mapproxy will use.
 Those options are `concurrency` and `max_repeat`.
-
-
 
 WMTS/TMS Full Example: 
 <pre>
@@ -138,6 +136,38 @@ Params are just the WCS params passed directly to the request.
 Scale is in meters and adjusts the amount of pixels requested.
 
 Coverages will request one layer or many. If many are added then they will just append and overwrite the previous request. 
+
+##### Overpass Configuration
+
+You can configure the OSM schema by adding a yaml file. A default one should be loaded with eventkit. 
+Should you want to customize it or create your own the schema is in a yaml format:
+```yaml
+<table_name>:
+  types:
+    -<geometries>
+  select:
+    -<column names from attributes tags>
+  where: <sql query>
+```
+For example the following configuration:
+```yaml
+amenities:
+  types:
+    - points
+    - polygons
+  select:
+    - amenity
+    - name
+  where: amenity IS NOT NULL
+```
+Would create tables called amentities_points and amenities_polygons.
+Each table would select all geometries where amenitiy is not null and it would include the columns
+amenity and name. 
+
+You can change the default overpass query in the configuration section by adding: 
+```yaml
+overpass_query: <Some overpass query>
+```
 
 #### Data Authentication
 If the data source is secure then some additional information will need to be provided, please see the Data Authentication section in the [settings readme](./settings.md)
