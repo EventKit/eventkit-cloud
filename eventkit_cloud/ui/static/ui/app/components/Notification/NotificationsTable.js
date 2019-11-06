@@ -36,8 +36,8 @@ export class NotificationsTable extends React.Component {
                     delete selected[uid];
                 }
             });
-
-            this.setState({ selected });
+            // Lint check is disabled here, but we should reconsider these things.
+            this.setState({ selected }); // eslint-disable-line
         }
     }
 
