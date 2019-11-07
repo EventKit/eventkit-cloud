@@ -11,6 +11,8 @@ services:
       - ./eventkit_cloud:/var/lib/eventkit/eventkit_cloud
       - ./manage.py:/var/lib/eventkit/manage.py
       - /var/lib/eventkit/node_modules/
+      - ./exports_download:/var/lib/eventkit/exports_download
+      - ./exports_stage:/var/lib/eventkit/exports_stage
     user: eventkit
     depends_on:
       - postgis

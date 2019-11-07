@@ -52,8 +52,13 @@ if not EXPORT_STAGING_ROOT:
 if not TILE_CACHE_DIR:
     TILE_CACHE_DIR = os.getenv('TILE_CACHE_DIR', '/var/lib/eventkit/tile_cache/')
 
+# where map image snapshots are stored (e.g. thumbnails)
+IMAGES_STAGING = os.path.join(EXPORT_STAGING_ROOT, 'images')
+
 # where exports are stored for public download
 EXPORT_DOWNLOAD_ROOT = os.getenv('EXPORT_DOWNLOAD_ROOT', '/var/lib/eventkit/exports_download/')
+
+IMAGES_DOWNLOAD_ROOT = os.path.join(EXPORT_DOWNLOAD_ROOT, 'images')
 
 # the root url for export downloads
 EXPORT_MEDIA_ROOT = os.getenv('EXPORT_MEDIA_ROOT', '/downloads/')

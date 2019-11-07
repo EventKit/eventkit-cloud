@@ -7,12 +7,12 @@ from django.contrib.gis.db.models.functions import Area
 from django.contrib.gis.db.models.functions import Intersection
 from django.contrib.gis.gdal import DataSource
 from django.contrib.gis.geos import GEOSGeometry, Polygon, MultiPolygon
-from django.test import TestCase
+from django.test import TestCase, override_settings
 from mock import patch
 
 from eventkit_cloud.jobs.models import (
-    ExportFormat, ExportProfile, Job, Region, DataProvider, DataProviderTask
-, DatamodelPreset)
+    ExportFormat, ExportProfile, Job, Region,
+    DataProvider, DataProviderTask, DatamodelPreset, MapImageSnapshot)
 
 logger = logging.getLogger(__name__)
 
@@ -300,3 +300,43 @@ class TestExportProfile(TestCase):
         self.assertEqual(self.group.export_profile, profile)
         self.assertEqual('DefaultExportProfile', profile.name)
         self.assertEqual(2500000, profile.max_extent)
+
+
+class TestDataProvider(TestCase):
+    """
+    Test cases for DataProvider model
+    """
+    fixtures = ('osm_provider.json', 'datamodel_presets.json')
+
+    def setUp(self):
+        self.export_provider = DataProvider.objects.get(slug='osm-generic')
+
+    @patch('os.makedirs')
+    @patch('eventkit_cloud.jobs.signals.make_thumbnail_downloadable')
+    @patch('eventkit_cloud.jobs.signals.save_thumbnail')
+    def test_snapshot_signal(self, mock_save_thumbnail, mock_make_thumbnail_downloadable, makedirs):
+        """Test that triggering a save on a provider with a preview_url will attach a MapImageSnapshot."""
+        mock_save_thumbnail.return_value = '/var/lib/downloads/images/test_thumb.jpg'
+        # An "random id number for the MapImageSnapshot key
+        mock_make_thumbnail_downloadable.return_value = 1
+        stat = os.stat
+
+        # We don't want to interfere with any other os.stat functions
+        # This is a simple way of doing that without setting up a property mock.
+        class StatMock:
+            def __init__(self):
+                self.st_size = 64
+
+            def __getattr__(self, item):
+                if item.lower() != 'st_size':
+                    return getattr(stat, item)
+                return self.st_size
+
+        with patch('os.stat') as mock_stat:
+            mock_stat.return_value = StatMock()
+            self.export_provider.preview_url = 'http://url.com'
+            self.export_provider.save()
+            makedirs.assert_called()
+            mock_make_thumbnail_downloadable.assert_called()
+            print(mock_save_thumbnail.mock_calls)
+            print(self.export_provider.thumbnail)

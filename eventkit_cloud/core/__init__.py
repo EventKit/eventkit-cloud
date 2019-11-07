@@ -13,5 +13,5 @@ def create_staging_dir():
         except OSError:
             logger.error("Could not create the EXPORT_STAGING_ROOT directory: {0}".format(settings.EXPORT_STAGING_ROOT))
 
-create_staging_dir()
 
+create_staging_dir()

@@ -10,6 +10,7 @@ import pickle
 import json
 import logging
 
+from django.conf import settings
 from django.contrib.auth.models import User, Group
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.gis.geos import GEOSGeometry
@@ -40,6 +41,7 @@ from eventkit_cloud.tasks.models import (
     FileProducingTaskResult,
     DataProviderTaskRecord,
 )
+from eventkit_cloud.utils.s3 import get_presigned_url
 
 try:
     from collections import OrderedDict
@@ -629,13 +631,14 @@ class DataProviderSerializer(serializers.ModelSerializer):
     )
     type = serializers.SerializerMethodField(read_only=True)
     supported_formats = serializers.SerializerMethodField(read_only=True)
+    thumbnail_url = serializers.SerializerMethodField(read_only=True)
     license = LicenseSerializer(required=False)
 
     class Meta:
         model = DataProvider
         extra_kwargs = {'url': {'write_only': True}, 'user': {'write_only': True}, 'config': {'write_only': True}}
         read_only_fields = ('uid',)
-        fields = '__all__'
+        exclude = ('thumbnail', )
 
     @staticmethod
     def create(validated_data, **kwargs):
@@ -658,6 +661,21 @@ class DataProviderSerializer(serializers.ModelSerializer):
     @staticmethod
     def get_supported_formats(obj):
         return obj.export_provider_type.supported_formats.all().values('uid', 'name', 'slug', 'description')
+
+    def get_thumbnail_url(self, obj):
+        from urllib.parse import urlsplit, ParseResult
+        thumbnail = obj.thumbnail
+        if thumbnail is not None:
+            request = urlsplit(self.context['request'].build_absolute_uri())
+            if getattr(settings, 'USE_S3', False):
+                return get_presigned_url(thumbnail.download_url)
+            # Otherwise, grab the hostname from the request and tack on the relative url.
+            return ParseResult(scheme=request.scheme,
+                               netloc=request.netloc,
+                               path=f'{thumbnail.download_url}',
+                               params='', query='', fragment='').geturl()
+        else:
+            return ''
 
 
 class ListJobSerializer(serializers.Serializer):

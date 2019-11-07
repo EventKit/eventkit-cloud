@@ -6,9 +6,9 @@ import yaml as real_yaml
 from django.conf import settings
 from django.test import TransactionTestCase
 from mapproxy.config.config import load_default_config
-from mock import Mock, patch, MagicMock
+from mock import Mock, patch, MagicMock, ANY
 
-from eventkit_cloud.utils.mapproxy import (MapproxyGeopackage,
+from eventkit_cloud.utils.mapproxy import (MapproxyGeopackage, get_conf_dict,
                                            get_cache_template, CustomLogger, check_zoom_levels)
 
 logger = logging.getLogger(__name__)
@@ -125,6 +125,19 @@ class TestHelpers(TransactionTestCase):
         mock_sql.connect().__enter__().execute.assert_called_once_with(
             '\nINSERT OR REPLACE INTO gpkg_tile_matrix (table_name, zoom_level, matrix_width, matrix_height, tile_width, tile_height, pixel_x_size, pixel_y_size) \nVALUES(?, ?, ?, ?, ?, ?, ?, ?)',
             ('tiles', 2, 4, 2, 256, 256, 0.3515625, 0.3515625))
+
+    @patch('eventkit_cloud.utils.mapproxy.cache')
+    def test_conf_dict(self, mock_cache: MagicMock):
+        slug: str = 'slug'
+        config_yaml: str = 'services: [stuff]'
+        expected_config: dict = {'services': ['stuff'],
+                                 'globals': {'cache': {'lock_dir': "./locks",
+                                                       'tile_lock_dir': "./locks"}}}
+        mock_data_provider = Mock(config=config_yaml)
+        mock_cache.get_or_set.return_value = mock_data_provider
+        returned_conf = get_conf_dict(slug)
+        mock_cache.get_or_set.assert_called_once_with(F"DataProvider-{slug}", ANY, 360)
+        self.assertEquals(returned_conf, expected_config)
 
 
 class TestLogger(TransactionTestCase):

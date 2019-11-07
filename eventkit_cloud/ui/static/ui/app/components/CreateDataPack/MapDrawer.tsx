@@ -6,7 +6,8 @@ import List from '@material-ui/core/List';
 import ListItem from '@material-ui/core/ListItem';
 import {createStyles, Theme, withStyles, withTheme, Grid} from "@material-ui/core";
 import {connect} from "react-redux";
-import ButtonBase from "@material-ui/core/ButtonBase";
+import CardMedia from '@material-ui/core/CardMedia';
+import Card from '@material-ui/core/Card';
 import DropDown from '@material-ui/icons/ArrowDropDown';
 import Close from '@material-ui/icons/Close';
 
@@ -22,10 +23,9 @@ import Button from "@material-ui/core/Button";
 const jss = (theme: Theme & Eventkit.Theme) => createStyles({
     container: {
         zIndex: 4,
-        height: 'calc(100vh - 180px)',
         right: '0px',
         position: 'absolute',
-        width: 'calc(100% - 1000px)',
+        width: '100%',
         minWidth: '200px',
         maxWidth: '250px',
     },
@@ -36,9 +36,7 @@ const jss = (theme: Theme & Eventkit.Theme) => createStyles({
         overflowY: 'hidden',
         overflowX: 'hidden',
         width: '250px',
-        right: '0px',
-        left: 'auto',
-        height: '100%',
+        height: 'calc(100vh - 180px)',
         boxShadow: '0px 1px 5px 0px rgba(0,0,0,0.2), 0px 2px 2px 0px rgba(0,0,0,0.14), 0px 3px 1px -2px rgba(0,0,0,0.12)',
     },
     drawerHeader: {
@@ -59,6 +57,8 @@ const jss = (theme: Theme & Eventkit.Theme) => createStyles({
         top: '0',
         position: 'absolute',
         marginTop: '2px',
+        height: '100%',
+        paddingLeft: '2px',
     },
     tab: {
         backgroundColor: 'lightGrey',
@@ -117,6 +117,11 @@ const jss = (theme: Theme & Eventkit.Theme) => createStyles({
         right: '10px',
         top: '10px',
     },
+    thumbnail: {
+        height: '30px',
+        width: '90px',
+        marginRight: '5px',
+    }
 });
 
 // This should be used to facilitate user added base map sources (sources not derived from providers)
@@ -124,19 +129,19 @@ export interface BaseMapSource {
     url: string;
     name: string;
     type: string;
+    thumbnail_url: string;
 }
 
 export interface Props {
     providers: Eventkit.Provider[];
     sources: BaseMapSource[];
-    updateBaseMap: (mapUrl: string) => void;
+    updateBaseMap: (mapId: string) => void;
     classes: { [className: string]: string };
 }
 
 export interface State {
     selectedTab: any;
-    selectedBaseMap: string;
-    open: boolean;
+    selectedBaseMap: number;
     sources: BaseMapSource[];
 }
 
@@ -152,17 +157,17 @@ export class MapDrawer extends React.Component<Props, State> {
 
         this.state = {
             selectedTab: '',
-            selectedBaseMap: undefined,
-            open: true,
+            selectedBaseMap: -1,
             sources: [
                 ...props.sources,
             ]
         };
     }
 
-    private updateBaseMap(newBaseMapUrl: string) {
-        this.setState({selectedBaseMap: newBaseMapUrl});
-        this.props.updateBaseMap(newBaseMapUrl);
+    private updateBaseMap(newBaseMapId: number, sources) {
+        this.setState({selectedBaseMap: newBaseMapId});
+        const baseMapUrl = (newBaseMapId !== -1) ? sources[newBaseMapId].url : '';
+        this.props.updateBaseMap(baseMapUrl);
     }
 
     handleChange = (event, newValue) => {
@@ -204,6 +209,7 @@ export class MapDrawer extends React.Component<Props, State> {
                     url: provider.preview_url,
                     name: provider.name,
                     type: provider.type,
+                    thumbnail_url: provider.thumbnail_url,
                 } as BaseMapSource;
             })];
 
@@ -219,7 +225,7 @@ export class MapDrawer extends React.Component<Props, State> {
                 >
                     <Tabs
                         className={classes.tabs}
-                        value={selectedTab}
+                        value={(selectedTab) ? selectedTab : false}
                         onChange={this.handleChange}
                         variant="fullWidth"
                     >
@@ -230,14 +236,14 @@ export class MapDrawer extends React.Component<Props, State> {
                                 selected: classes.selected,
                             }}
                             label={(
-                                <div className={classes.tabHeader}>
-                                <strong
-                                    style={{fontSize: '18px', color: 'secondary', margin: 'auto 0'}}
-                                >
-                                    BASEMAPS
-                                </strong>
-                                {this.getIcon('basemap')}
-                            </div>)}
+                                <Card className={classes.tabHeader}>
+                                    <strong
+                                        style={{fontSize: '18px', color: 'secondary', margin: 'auto 0'}}
+                                    >
+                                        BASEMAPS
+                                    </strong>
+                                    {this.getIcon('basemap')}
+                                </Card>)}
                         />
                     </Tabs>
                 </Paper>
@@ -248,7 +254,7 @@ export class MapDrawer extends React.Component<Props, State> {
                     open={selectedTab === 'basemap'}
                     PaperProps={{
                         className: classes.drawerPaper,
-                        style: {visibility: this.state.open ? 'visible' as 'visible' : 'hidden' as 'hidden'},
+                        style: {visibility: selectedTab === 'basemap' ? 'visible' as 'visible' : 'hidden' as 'hidden'},
                     }}
                 >
                     <div className={classes.scrollBar}>
@@ -256,18 +262,24 @@ export class MapDrawer extends React.Component<Props, State> {
                             <div className={classes.subHeading}><strong>Select a basemap</strong></div>
                             <List style={{paddingRight: '10px', paddingLeft: '10px'}}>
                                 <RadioGroup
-                                    value={(!!selectedBaseMap) ? selectedBaseMap : undefined}
-                                    onChange={(e, value) => this.updateBaseMap(value)}
+                                    value={selectedBaseMap.toString()}
+                                    onChange={(e, value) => this.updateBaseMap(Number(value), sources)}
                                 >
                                     {sources.map((source, ix) =>
                                         (
                                             <div key={ix}>
                                                 <ListItem className={classes.listItem}>
                                                     <Radio
-                                                        checked={this.state.selectedBaseMap === source.url}
-                                                        value={source.url}
+                                                        checked={this.state.selectedBaseMap === ix}
+                                                        value={ix}
                                                         classes={{root: classes.checkbox, checked: classes.checked}}
                                                     />
+                                                    {source.thumbnail_url &&
+                                                    <CardMedia
+                                                        className={classes.thumbnail}
+                                                        image={source.thumbnail_url}
+                                                    />
+                                                    }
                                                     <ListItemText
                                                         className={classes.listItem}
                                                         disableTypography
@@ -306,7 +318,7 @@ export class MapDrawer extends React.Component<Props, State> {
                             disabled={!selectedBaseMap}
                             onClick={() => {
                                 // Send empty string to clear base map url.
-                                this.updateBaseMap('');
+                                this.updateBaseMap(-1, sources);
                             }}
                         >
                             Reset
@@ -324,4 +336,4 @@ function mapStateToProps(state) {
     };
 }
 
-export default withStyles<any, any>(jss)(connect(mapStateToProps)(MapDrawer));
+export default (withStyles<any, any>(jss)(connect(mapStateToProps)(MapDrawer)));
