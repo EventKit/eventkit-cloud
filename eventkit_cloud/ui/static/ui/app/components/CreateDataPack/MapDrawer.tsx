@@ -207,7 +207,8 @@ export class MapDrawer extends React.Component<Props, State> {
         const {selectedTab, selectedBaseMap} = this.state;
         const sources = [
             ...this.state.sources,
-            ...this.props.providers.filter(provider => !!provider.preview_url).map(provider => {
+            // Filter for providers with a preview_url AND marked to display
+            ...this.props.providers.filter(provider => !!provider.preview_url && !!provider.display).map(provider => {
                 return {
                     url: provider.preview_url,
                     name: provider.name,
