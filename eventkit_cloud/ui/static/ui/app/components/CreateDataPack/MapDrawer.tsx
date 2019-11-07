@@ -279,9 +279,6 @@ export class MapDrawer extends React.Component<Props, State> {
                                                             value={ix}
                                                             classes={{root: classes.checkbox, checked: classes.checked}}
                                                         />
-                                                        {/*<div className={classes.buttonLabelSecondary}>*/}
-                                                        {/*    {source.type.toUpperCase()}*/}
-                                                        {/*</div>*/}
                                                     </span>
                                                     <div>
                                                         <div style={{display: 'flex'}}>
