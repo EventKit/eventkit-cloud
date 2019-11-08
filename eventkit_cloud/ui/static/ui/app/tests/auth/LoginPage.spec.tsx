@@ -24,17 +24,6 @@ describe('LoginPage component', () => {
         expect(wrapper.find('.qa-LoginPage-browser-text')).toHaveLength(1);
     });
 
-    it('should render the version number', () => {
-        const wrapper = getWrapper({ VERSION: '1.3.0' });
-        expect(wrapper.find('.qa-LoginPage-version')).toHaveLength(1);
-        expect(wrapper.find('.qa-LoginPage-version').text()).toEqual('EventKit Version 1.3.0');
-    });
-
-    it('should not render the version number', () => {
-        const wrapper = getWrapper({});
-        expect(wrapper.find('.qa-LoginPage-version')).toHaveLength(0);
-    });
-
     it('should render a login paper and disclaimer paper', () => {
         const wrapper = getWrapper(loginConfig);
         expect(wrapper.find(CustomScrollbar)).toHaveLength(2);

@@ -78,8 +78,10 @@ const jss = (theme: Theme & Eventkit.Theme) => createStyles({
         marginLeft: '10px',
     },
     listItem: {
-        padding: '0',
         marginBottom: '8px',
+    },
+    noPadding: {
+        padding: '0',
     },
     buttonLabel: {
         alignContent: 'flex-start',
@@ -118,8 +120,9 @@ const jss = (theme: Theme & Eventkit.Theme) => createStyles({
         top: '10px',
     },
     thumbnail: {
-        height: '30px',
-        width: '90px',
+        flexShrink: 0,
+        height: '35px',
+        width: '70px',
         marginRight: '5px',
     }
 });
@@ -269,38 +272,39 @@ export class MapDrawer extends React.Component<Props, State> {
                                     {sources.map((source, ix) =>
                                         (
                                             <div key={ix}>
-                                                <ListItem className={classes.listItem}>
-                                                    <Radio
-                                                        checked={this.state.selectedBaseMap === ix}
-                                                        value={ix}
-                                                        classes={{root: classes.checkbox, checked: classes.checked}}
-                                                    />
-                                                    {source.thumbnail_url &&
-                                                    <CardMedia
-                                                        className={classes.thumbnail}
-                                                        image={source.thumbnail_url}
-                                                    />
-                                                    }
-                                                    <ListItemText
-                                                        className={classes.listItem}
-                                                        disableTypography
-                                                        primary={
-                                                            <Typography
-                                                                className={classes.buttonLabel}
-                                                            >
-                                                                {source.name}
-                                                            </Typography>
-                                                        }
-                                                        secondary={
-                                                            <Typography
-                                                                className={classes.buttonLabelSecondary}
-                                                            >
-                                                                {source.type.toUpperCase()}
-                                                            </Typography>
-                                                        }
-                                                    />
+                                                <ListItem className={`${classes.listItem} ${classes.noPadding}`}>
+                                                    <span style={{marginRight: '2px'}}>
+                                                        <Radio
+                                                            checked={this.state.selectedBaseMap === ix}
+                                                            value={ix}
+                                                            classes={{root: classes.checkbox, checked: classes.checked}}
+                                                        />
+                                                    </span>
+                                                    <div>
+                                                        <div style={{display: 'flex'}}>
+                                                            {source.thumbnail_url &&
+                                                            <CardMedia
+                                                                className={classes.thumbnail}
+                                                                image={source.thumbnail_url}
+                                                            />
+                                                            }
+                                                            <ListItemText
+                                                                className={classes.noPadding}
+                                                                disableTypography
+                                                                primary={
+                                                                    <Typography
+                                                                        className={classes.buttonLabel}
+                                                                    >
+                                                                        {source.name}
+                                                                    </Typography>
+                                                                }
+                                                            />
+                                                        </div>
+                                                        <div className={classes.buttonLabelSecondary}>
+                                                            {source.type.toUpperCase()}
+                                                        </div>
+                                                    </div>
                                                 </ListItem>
-                                                {/*<Divider/>*/}
                                             </div>
                                         ))
                                     }
@@ -308,7 +312,6 @@ export class MapDrawer extends React.Component<Props, State> {
                             </List>
                         </CustomScrollbar>
                     </div>
-                    <Divider/>
                     <div
                         className={classes.stickyRow}
                     >
@@ -316,7 +319,7 @@ export class MapDrawer extends React.Component<Props, State> {
                             className={classes.button}
                             color="primary"
                             variant="contained"
-                            disabled={!selectedBaseMap}
+                            disabled={selectedBaseMap === -1 || (!selectedBaseMap && selectedBaseMap !== 0)}
                             onClick={() => {
                                 // Send empty string to clear base map url.
                                 this.updateBaseMap(-1, sources);
