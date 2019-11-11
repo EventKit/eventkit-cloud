@@ -73,6 +73,18 @@ def get_provider_staging_dir(run_uid, provider_slug):
     return os.path.join(run_staging_dir, provider_slug)
 
 
+def get_provider_staging_preview(run_uid, provider_slug):
+    """
+    The provider staging dir is where all files are stored while they are being processed.
+    It is a unique space to ensure that files aren't being improperly modified.
+    :param run_uid: The unique id for the run.
+    :param provider_slug: The unique value to store the directory for the provider data.
+    :return: The path to the provider directory.
+    """
+    run_staging_dir = get_run_staging_dir(run_uid)
+    return os.path.join(run_staging_dir, "{0}_preview.jpg".format(provider_slug))
+
+
 def get_download_filename(name, time, ext, additional_descriptors=None):
     """
     This provides specific formatting for the names of the downloadable files.
@@ -390,6 +402,9 @@ def get_metadata(data_provider_task_uid):
                 metadata['has_raster'] = True
             if metadata['data_sources'][provider_task.slug].get('type') == 'elevation':
                 metadata['has_elevation'] = True
+
+            if provider_task.preview is not None:
+                include_files += [get_provider_staging_preview(run.uid, provider_task.slug)]
 
             for export_task in provider_task.tasks.all():
                 try:
