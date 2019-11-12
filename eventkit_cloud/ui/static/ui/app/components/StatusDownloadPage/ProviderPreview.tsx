@@ -1,53 +1,43 @@
 import React from 'react';
-import Card from '@material-ui/core/Card';
-import CardHeader from '@material-ui/core/CardHeader';
-import CardMedia from '@material-ui/core/CardMedia';
+import {Button, ButtonBase, IconButton} from '@material-ui/core';
+import ArrowLeft from '@material-ui/icons/KeyboardArrowLeft';
+import ArrowRight from '@material-ui/icons/KeyboardArrowRight';
 import {withTheme, withStyles, createStyles, Theme} from '@material-ui/core/styles';
 import SwipeableViews from 'react-swipeable-views';
 
 
 const jss = (theme: Eventkit.Theme & Theme) => createStyles({
-    numberStyle: {
-        border: '2px solid #fff',
-        borderRadius: '50%',
-        width: '12px',
-        height: '12px',
-        textAlign: 'center',
-        fontSize: '12px',
-        display: 'inline-block',
-        marginLeft: '10px',
-        backgroundColor: '#fff',
-        color: '#4598bf',
-        cursor: 'pointer',
+    container: {
+        display: 'flex',
+        height: '100%',
+        width: '100%'
     },
-    containerCard: {
-        height: '800px',
-        width: '800ox',
-        backgroundColor: '#dcdcdc'
-    },
-    nextImgArrow: {
-        width: '48px',
-        height: '48px',
-        minWidth: 'none',
-        color: '#4598bf',
-        textAlign: 'center',
-    },
-    nextImgDiv: {
+    button: {
+        zIndex: 1,
+        top: '0',
+        bottom: '0',
+        left: '0',
+        right: '0',
         position: 'absolute',
+        margin: 'auto',
+        color: theme.eventkit.colors.secondary,
+    },
+    iconStyle: {
         width: '48px',
         height: '48px',
-        minWidth: 'none',
-        borderRadius: '50%',
-        color: '#4598bf',
-        top: 'calc(50% - 24px)',
-        backgroundColor: 'rgba(69, 152, 191, 0.2)'
-    }
+        backgroundColor: theme.eventkit.colors.primary,
+    },
+    img: {
+        margin: 'auto',
+        maxWidth: '100%'
+    },
 });
 
 
 interface Props {
     providerTasks: Eventkit.ProviderTask[];
     classes: { [className: string]: string };
+    selectedProvider?: string;
 }
 
 interface State {
@@ -60,34 +50,28 @@ export class ProviderPreview extends React.Component<Props, State> {
         super(props);
         this.nextStep = this.nextStep.bind(this);
         this.previousStep = this.previousStep.bind(this);
-        this.goToStep = this.goToStep.bind(this);
         this.setArrowVisibility = this.setArrowVisibility.bind(this);
         this.state = {
-            step: 0,
+            step: (!!props.selectedProvider) ? props.providerTasks.map(
+                provider => provider.slug).indexOf(props.selectedProvider) : 0,
             arrowsVisible: false
         }
     };
 
     nextStep() {
-        if (this.state.step + 1 < this.props.providerTasks.length) {
-            this.setState({step: this.state.step + 1});
-        } else {
-            this.setState({step: 0});
+        let step = this.state.step + 1;
+        if (step >= this.props.providerTasks.filter(providerTask => !!providerTask.preview_url).length) {
+            step = 0;
         }
+        this.setState({step});
     }
 
     previousStep() {
-        if (this.state.step > 0) {
-            this.setState({step: this.state.step - 1});
-        } else {
-            this.setState({step: this.props.providerTasks.length - 1});
+        let step = this.state.step - 1;
+        if (step < 0) {
+            step = this.props.providerTasks.filter(providerTask => !!providerTask.preview_url).length - 1;
         }
-    }
-
-    goToStep(step) {
-        if (step < this.props.providerTasks.length && step >= 0) {
-            this.setState({step: step});
-        }
+        this.setState({step});
     }
 
     setArrowVisibility(visible) {
@@ -96,16 +80,54 @@ export class ProviderPreview extends React.Component<Props, State> {
 
     render() {
         const {classes} = this.props;
+        const {step} = this.state;
 
         return (
-            <div style={{margin: '10px 0px', display: 'flex'}}>
-                <CardMedia
+            <div
+                className={classes.container}
+                onMouseEnter={() => {
+                    this.setArrowVisibility(true)
+                }}
+                onMouseLeave={() => {
+                    this.setArrowVisibility(false)
+                }}
+            >
+                <IconButton
+                    className={classes.button}
                     style={{
-                        padding: '0px 10px 10px 10px', height: '500px', width: '250px',
-                        margin: 'auto'
+                        right: 'unset',
+                        visibility: this.state.arrowsVisible ? 'visible' as 'visible' : 'hidden' as 'hidden'
                     }}
-                    image={this.props.providerTasks[this.state.step].preview_url}
-                />
+                    onClick={(event) => {
+                        this.nextStep()
+                    }}>
+                    <ArrowLeft className={classes.iconStyle}/>
+                </IconButton>
+                <SwipeableViews index={step} onChangeIndex={index => {
+                    this.setState({step: index})
+                }}>
+                    {this.props.providerTasks.filter(providerTask => !!providerTask.preview_url).map((providerTask, ix) =>
+                        (
+                            <div className={classes.container} key={ix}>
+                                <img
+                                    className={classes.img}
+                                    src={providerTask.preview_url}
+                                />
+                            </div>
+                        )
+                    )}
+                </SwipeableViews>
+                <IconButton
+                    className={classes.button}
+                    style={{
+                        left: 'unset',
+                        visibility: this.state.arrowsVisible ? 'visible' as 'visible' : 'hidden' as 'hidden'
+                    }}
+                    onClick={(event) => {
+                        this.previousStep()
+                    }}>
+                    <ArrowRight className={classes.iconStyle}/>
+                </IconButton>
             </div>
         );
     };

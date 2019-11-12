@@ -32,6 +32,8 @@ class Directory(Enum):
     TEMPLATES = 'templates'
 
 
+PREVIEW_TAIL = 'preview.jpg'
+
 def get_run_staging_dir(run_uid):
     """
     The run staging dir is where all files are stored while they are being processed.
@@ -82,7 +84,7 @@ def get_provider_staging_preview(run_uid, provider_slug):
     :return: The path to the provider directory.
     """
     run_staging_dir = get_run_staging_dir(run_uid)
-    return os.path.join(run_staging_dir, "{0}_preview.jpg".format(provider_slug))
+    return os.path.join(run_staging_dir, provider_slug, PREVIEW_TAIL)
 
 
 def get_download_filename(name, time, ext, additional_descriptors=None):

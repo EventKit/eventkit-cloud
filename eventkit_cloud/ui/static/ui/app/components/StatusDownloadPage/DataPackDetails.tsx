@@ -29,8 +29,11 @@ const jss = (theme: Eventkit.Theme & Theme) => ({
     },
     preview: {
         height: '1000px',
-        width: '1000px'
+        width: '1000px',
     },
+    dialog: {
+        margin: '10px',
+    }
 });
 
 export interface Props {
@@ -48,6 +51,7 @@ export interface State {
     infoOpen: boolean;
     selectedProviders: { [slug: string]: boolean };
     providerPreviewOpen: boolean;
+    selectedProvider?: Eventkit.ProviderTask;
 }
 
 export class DataPackDetails extends React.Component<Props, State> {
@@ -55,10 +59,12 @@ export class DataPackDetails extends React.Component<Props, State> {
         super(props);
         this.handleInfoOpen = this.handleInfoOpen.bind(this);
         this.handleInfoClose = this.handleInfoClose.bind(this);
+        this.selectPreview = this.selectPreview.bind(this);
+        this.getPreviewDialogTitle = this.getPreviewDialogTitle.bind(this);
         this.state = {
             infoOpen: false,
             selectedProviders: {},
-            providerPreviewOpen: true,
+            providerPreviewOpen: false,
         };
     }
 
@@ -134,6 +140,38 @@ export class DataPackDetails extends React.Component<Props, State> {
         this.setState({infoOpen: false});
     }
 
+    private selectPreview(providerTask: Eventkit.ProviderTask) {
+        this.setState({
+            selectedProvider: providerTask,
+            providerPreviewOpen: true,
+        });
+    }
+
+    private getPreviewDialogTitle() {
+        const {job} = this.props;
+        const {selectedProvider} = this.state;
+
+        let jobElement = (<span>loading...</span>);
+        if (!!job) {
+            jobElement = (
+                <span>{job.name}</span>
+            );
+        }
+
+        let providerElement = (<span/>);
+        if (!!selectedProvider) {
+            providerElement = (
+                <span> > {selectedProvider.name}</span>
+            );
+        }
+
+        return (
+          <div>
+              Preview: <span style={{fontWeight: 'normal', fontSize: '14px'}}>{jobElement}{providerElement}</span>
+          </div>
+        );
+    }
+
     render() {
         const {colors} = this.props.theme.eventkit;
 
@@ -175,6 +213,7 @@ export class DataPackDetails extends React.Component<Props, State> {
         };
 
         const {classes} = this.props;
+        const {selectedProvider} = this.state;
 
         return (
             <div>
@@ -257,7 +296,9 @@ export class DataPackDetails extends React.Component<Props, State> {
                 </Table>
                 <div className="qa-DataPackDetails-providers" id="Providers">
                     <BaseDialog
-                        bodyStyle={{height: 'calc(80vh - 200px)', width: '100%'}}
+                        title={this.getPreviewDialogTitle()}
+                        bodyStyle={{height: 'auto', width: '100%', maxHeight: 'calc(80vh - 200px)'}}
+                        dialogStyle={{margin: '10px', width: '100%'}}
                         innerMaxHeight={1000}
                         show={this.state.providerPreviewOpen}
                         onClose={() => {
@@ -266,6 +307,7 @@ export class DataPackDetails extends React.Component<Props, State> {
                     >
                         <ProviderPreview
                             providerTasks={this.props.providerTasks}
+                            selectedProvider={(!!selectedProvider) ? selectedProvider.slug : ''}
                         />
                     </BaseDialog>
                     {providers.map((provider, ix) => (
@@ -276,6 +318,7 @@ export class DataPackDetails extends React.Component<Props, State> {
                             provider={provider}
                             job={this.props.job}
                             selectedProviders={this.state.selectedProviders}
+                            selectProvider={this.selectPreview}
                             providers={this.props.providers}
                         />
                     ))}

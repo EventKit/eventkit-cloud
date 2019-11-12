@@ -33,7 +33,7 @@ from eventkit_cloud.tasks.helpers import normalize_name, get_archive_data_path, 
     get_download_filename, get_run_staging_dir, get_provider_staging_dir, get_run_download_dir, Directory, \
     default_format_time, progressive_kill, get_style_files, generate_qgs_style, create_license_file, \
     get_human_readable_metadata_document, pickle_exception, get_data_type_from_provider, get_arcgis_metadata, \
-    get_message_count, clean_config, get_metadata, get_provider_staging_preview
+    get_message_count, clean_config, get_metadata, get_provider_staging_preview, PREVIEW_TAIL
 from eventkit_cloud.utils.auth_requests import get_cred
 from eventkit_cloud.utils import (
     overpass, pbf, s3, mapproxy, wcs, geopackage, gdalutils
@@ -1105,6 +1105,17 @@ def zip_files(include_files, file_path=None, static_files=None, *args, **kwargs)
                     name,
                     ext
                 ))
+            elif filepath.endswith(PREVIEW_TAIL):
+                download_filename = get_download_filename(
+                    'preview',
+                    timezone.now(),
+                    ext,
+                    additional_descriptors=provider_slug,
+                )
+                filename = get_archive_data_path(
+                    provider_slug,
+                    download_filename
+                )
             else:
                 # Put the files into directories based on their provider_slug
                 # prepend with `data`
@@ -1371,7 +1382,6 @@ def create_datapack_preview(result=None, run_uid=None, task_uid=None,
 
         filepath = get_provider_staging_preview(export_run.uid, provider.slug)
         make_dirs(stage_dir)
-        logger.info(f'save to endoz: {filepath}')
         preview = get_wmts_snapshot_image(provider.preview_url, provider_task.max_zoom, bbox=job.extents)
         fit_to_area(preview)
         preview.save(filepath)
