@@ -57,7 +57,6 @@ def get_wmts_snapshot_image(base_url, zoom_level, bbox=None):
         # If the request is local, use a mapproxy app here instead of making a network request to the view.
         parsed_url = urlparse(base_url)  # base_url = https://test/map/slug/one/two?q1=1&q2=2
         split_path = parsed_url.path.lstrip('/').split('/')  # ['map','slug','one','two']
-        logger.info(split_path)
         slug = split_path[1]
         map_path = split_path[2:]
         base_url = F"/{'/'.join(map_path)}?{parsed_url.query}"  # /one/two?q1=1&q2=2
