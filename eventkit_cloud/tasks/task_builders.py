@@ -185,9 +185,9 @@ class TaskChainBuilder(object):
                                                               level_to=max_zoom,
                                                               service_type=service_type,
                                                               service_url=provider_task.provider.url,
-                                                              config=provider_task.provider.config).set(
-            queue=queue_routing_key_name,
-            routing_key=queue_routing_key_name)
+                                                              config=provider_task.provider.config)
+        primary_export_task_signature = primary_export_task_signature.set(queue=queue_routing_key_name,
+                                                                          routing_key=queue_routing_key_name)
 
         if format_tasks:
             tasks = chain(primary_export_task_signature, format_tasks)
