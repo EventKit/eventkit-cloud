@@ -190,13 +190,6 @@ class ExportTask(UserDetailsBase):
                 task_state_result = None
             self.update_task_state(result=task_state_result, task_uid=task_uid)
 
-            try:
-                provider_slug = task.export_provider_task.slug
-                provider = DataProvider.objects.get(slug=provider_slug)
-                logger.info(f'slug found: {provider_slug}')
-            except DataProvider.DoesNotExist as e:
-                logger.info(f'slug not found {provider_slug}')
-
             if not TaskStates.CANCELED.value in [task.status, task.export_provider_task.status]:
                 retval = super(ExportTask, self).__call__(*args, **kwargs)
 
