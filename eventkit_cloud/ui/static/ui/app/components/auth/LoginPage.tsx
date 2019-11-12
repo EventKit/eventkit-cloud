@@ -108,16 +108,6 @@ export class LoginPage extends React.Component<Props, {}> {
                             : null
                         }
                         <div style={mobile && this.context.config.LOGIN_DISCLAIMER ? styles.mobileFooter : styles.desktopFooter}>
-                            { version ?
-                                <div
-                                    style={styles.footerText}
-                                    className="qa-LoginPage-version"
-                                >
-                                    EventKit Version {version}
-                                </div>
-                                :
-                                null
-                            }
                             <div style={styles.footerText} className="qa-LoginPage-browser-text">
                                 Supported Browsers: Chrome, Firefox, Opera, and Edge
                             </div>

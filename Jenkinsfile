@@ -1,5 +1,9 @@
 node() {
 
+    stage('Clean Up Workspace') {
+        cleanWs()
+    }
+
     stage("Add Repo"){
         checkout scm
         postStatus(getPendingStatus("The build is starting..."))
@@ -26,7 +30,7 @@ END
     }
 
     stage("Remove volumes"){
-    // have to remove the volumes from docker because they mount stuff in jenkins
+     // have to remove the volumes from docker because they mount stuff in jenkins
         removeVolumes()
     }
 
@@ -63,8 +67,8 @@ END
     stage("Run unit tests"){
         try{
             postStatus(getPendingStatus("Running the unit tests..."))
-            sh "docker-compose run --rm -T  eventkit manage.py test -v=2 --noinput eventkit_cloud"
-            sh "docker-compose run --rm -T  webpack npm test"
+            sh "docker-compose run --rm -T eventkit manage.py test -v=2 --noinput eventkit_cloud"
+            sh "docker-compose run --rm -T webpack npm test"
             postStatus(getSuccessStatus("All tests passed!"))
             sh "docker-compose down"
         }catch(Exception e) {
@@ -140,8 +144,7 @@ data = {}
 with open('docker-compose.yml', 'r') as yaml_file:
     data = yaml.load(yaml_file)
 for service in data.get('services'):
-    if data['services'][service].get('volumes'):
-        data['services'][service].pop('volumes')
+    data['services'][service].pop('volumes', "")
 with open('docker-compose.yml', 'w') as outfile:
     yaml.dump(data, outfile, default_flow_style=False)
 END

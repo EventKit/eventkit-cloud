@@ -352,7 +352,7 @@ export class ExportInfo extends React.Component<Props, State> {
         const getFormats = (formatArray) => {
             providers.forEach((provider) => {
                 const providerOptions = exportOptions[provider.slug];
-                if (providerOptions) {
+                if (providerOptions && !!providerOptions.formats) {
                     providerOptions.formats.forEach(formatSlug => {
                         if (formatArray.indexOf(formatSlug) < 0) {
                             formatArray.push(formatSlug);
