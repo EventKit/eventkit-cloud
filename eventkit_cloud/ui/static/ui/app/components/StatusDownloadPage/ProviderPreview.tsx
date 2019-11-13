@@ -38,6 +38,7 @@ interface Props {
     providerTasks: Eventkit.ProviderTask[];
     classes: { [className: string]: string };
     selectedProvider?: string;
+    selectProvider: (providerTask: Eventkit.ProviderTask) => void;
 }
 
 interface State {
@@ -51,6 +52,7 @@ export class ProviderPreview extends React.Component<Props, State> {
         this.nextStep = this.nextStep.bind(this);
         this.previousStep = this.previousStep.bind(this);
         this.setArrowVisibility = this.setArrowVisibility.bind(this);
+        this.setProvider = this.setProvider.bind(this);
         this.state = {
             step: (!!props.selectedProvider) ? props.providerTasks.map(
                 provider => provider.slug).indexOf(props.selectedProvider) : 0,
@@ -63,7 +65,7 @@ export class ProviderPreview extends React.Component<Props, State> {
         if (step >= this.props.providerTasks.filter(providerTask => !!providerTask.preview_url).length) {
             step = 0;
         }
-        this.setState({step});
+        this.setProvider(step);
     }
 
     previousStep() {
@@ -71,16 +73,24 @@ export class ProviderPreview extends React.Component<Props, State> {
         if (step < 0) {
             step = this.props.providerTasks.filter(providerTask => !!providerTask.preview_url).length - 1;
         }
-        this.setState({step});
+        this.setProvider(step);
     }
 
     setArrowVisibility(visible) {
         this.setState({arrowsVisible: visible});
     }
 
+    setProvider(stepIndex: number) {
+        this.setState({step: stepIndex});
+        return this.props.selectProvider(this.props.providerTasks.filter(providerTask => !!providerTask.preview_url)[stepIndex]);
+    }
+
     render() {
         const {classes} = this.props;
         const {step} = this.state;
+        const providerPreviews = this.props.providerTasks.filter(providerTask => !!providerTask.preview_url);
+
+        const buttonsVisible = this.state.arrowsVisible && providerPreviews.length > 1;
 
         return (
             <div
@@ -94,9 +104,10 @@ export class ProviderPreview extends React.Component<Props, State> {
             >
                 <IconButton
                     className={classes.button}
+                    disabled={providerPreviews.length <= 1}
                     style={{
                         right: 'unset',
-                        visibility: this.state.arrowsVisible ? 'visible' as 'visible' : 'hidden' as 'hidden'
+                        visibility: buttonsVisible ? 'visible' as 'visible' : 'hidden' as 'hidden'
                     }}
                     onClick={(event) => {
                         this.nextStep()
@@ -104,9 +115,9 @@ export class ProviderPreview extends React.Component<Props, State> {
                     <ArrowLeft className={classes.iconStyle}/>
                 </IconButton>
                 <SwipeableViews index={step} onChangeIndex={index => {
-                    this.setState({step: index})
+                    this.setProvider(index);
                 }}>
-                    {this.props.providerTasks.filter(providerTask => !!providerTask.preview_url).map((providerTask, ix) =>
+                    {providerPreviews.map((providerTask, ix) =>
                         (
                             <div className={classes.container} key={ix}>
                                 <img
@@ -116,12 +127,15 @@ export class ProviderPreview extends React.Component<Props, State> {
                             </div>
                         )
                     )}
+                    <div className={classes.container} key={-1}>
+                        <div className={classes.img}> empty</div>
+                    </div>
                 </SwipeableViews>
                 <IconButton
                     className={classes.button}
                     style={{
                         left: 'unset',
-                        visibility: this.state.arrowsVisible ? 'visible' as 'visible' : 'hidden' as 'hidden'
+                        visibility: buttonsVisible ? 'visible' as 'visible' : 'hidden' as 'hidden'
                     }}
                     onClick={(event) => {
                         this.previousStep()

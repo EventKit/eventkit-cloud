@@ -166,9 +166,9 @@ export class DataPackDetails extends React.Component<Props, State> {
         }
 
         return (
-          <div>
+          <span>
               Preview: <span style={{fontWeight: 'normal', fontSize: '14px'}}>{jobElement}{providerElement}</span>
-          </div>
+          </span>
         );
     }
 
@@ -308,6 +308,7 @@ export class DataPackDetails extends React.Component<Props, State> {
                         <ProviderPreview
                             providerTasks={this.props.providerTasks}
                             selectedProvider={(!!selectedProvider) ? selectedProvider.slug : ''}
+                            selectProvider={this.selectPreview}
                         />
                     </BaseDialog>
                     {providers.map((provider, ix) => (
