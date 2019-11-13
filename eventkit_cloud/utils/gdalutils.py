@@ -399,6 +399,8 @@ def convert(file_format, in_file=None, out_file=None, task_uid=None, projection=
             band_type = "-ot byte"
         if file_format.lower() == 'nitf':
             extra_parameters = "-co ICORDS=G"
+        if file_format.lower() == 'gtiff':
+            extra_parameters = "-co COMPRESS=JPEG"
     else:
         cmd_template = Template(
             "ogr2ogr -overwrite $extra_parameters -f '$fmt' $out_ds $in_ds -s_srs EPSG:4326 -t_srs EPSG:$projection")
@@ -409,6 +411,7 @@ def convert(file_format, in_file=None, out_file=None, task_uid=None, projection=
                                         'out_ds': out_file,
                                         'projection': projection,
                                         'extra_parameters': extra_parameters})
+    logger.info(cmd)
 
     logger.debug("GDAL convert cmd: %s", cmd)
 

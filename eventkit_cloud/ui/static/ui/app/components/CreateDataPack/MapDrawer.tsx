@@ -1,10 +1,9 @@
 import * as React from 'react';
 import Drawer from '@material-ui/core/Drawer';
 import CustomScrollbar from "../CustomScrollbar";
-import Divider from '@material-ui/core/Divider';
 import List from '@material-ui/core/List';
 import ListItem from '@material-ui/core/ListItem';
-import {createStyles, Theme, withStyles, withTheme, Grid} from "@material-ui/core";
+import {createStyles, Theme, withStyles, withTheme, Grid, Icon} from "@material-ui/core";
 import {connect} from "react-redux";
 import CardMedia from '@material-ui/core/CardMedia';
 import Card from '@material-ui/core/Card';
@@ -19,6 +18,7 @@ import Paper from "@material-ui/core/Paper";
 import Typography from "@material-ui/core/Typography";
 import ListItemText from "@material-ui/core/ListItemText";
 import Button from "@material-ui/core/Button";
+
 
 const jss = (theme: Theme & Eventkit.Theme) => createStyles({
     container: {
@@ -246,7 +246,10 @@ export class MapDrawer extends React.Component<Props, State> {
                                     >
                                         BASEMAPS
                                     </strong>
-                                    {this.getIcon('basemap')}
+                                    {/*{this.getIcon('basemap')}*/}
+                                    <Icon classes={{root: classes.iconRoot}}>
+                                        <img className={classes.imageIcon} src="../../../images/icn_basemap.svg"/>
+                                    </Icon>
                                 </Card>)}
                         />
                     </Tabs>
