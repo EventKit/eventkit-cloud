@@ -258,8 +258,11 @@ def is_envelope(geojson_path):
         # Unparseable JSON or unreadable file: play it safe
         return False
 
+# TODO: deduplicate clip_dataset and convert.
+
 @retry
-def clip_dataset(boundary=None, in_dataset=None, out_dataset=None, fmt=None, table=None, task_uid=None):
+def clip_dataset(boundary=None, in_dataset=None, out_dataset=None, fmt=None,
+                 table=None, task_uid=None, params: str = ""):
     """
     Uses gdalwarp or ogr2ogr to clip a supported dataset file to a mask.
     :param boundary: A geojson file or bbox (xmin, ymin, xmax, ymax) to serve as a cutline
@@ -268,6 +271,7 @@ def clip_dataset(boundary=None, in_dataset=None, out_dataset=None, fmt=None, tab
     :param fmt: Short name of output driver to use (defaults to input format)
     :param table: Table name in database for in_dataset
     :param task_uid: A task uid to update
+    :param params: Additional options to pass to the convert method (e.g. "-co SOMETHING")
     :return: Filename of clipped dataset
     """
     if not boundary:
@@ -297,14 +301,14 @@ def clip_dataset(boundary=None, in_dataset=None, out_dataset=None, fmt=None, tab
     # Overwrite is added to the commands in the event that the dataset is retried.  In general we want these to
     # act idempotently.
     if table:
-        cmd_template = Template("ogr2ogr -skipfailures -nlt PROMOTE_TO_MULTI -overwrite -f $fmt -clipsrc $boundary $out_ds $in_ds $table")
+        cmd_template = Template("ogr2ogr -skipfailures $extra_parameters -nlt PROMOTE_TO_MULTI -overwrite -f $fmt -clipsrc $boundary $out_ds $in_ds $table")
     elif meta['is_raster']:
-        cmd_template = Template("gdalwarp -overwrite -cutline $boundary -crop_to_cutline $dstalpha -of $fmt $type $in_ds $out_ds")
+        cmd_template = Template("gdalwarp -overwrite $extra_parameters -cutline $boundary -crop_to_cutline $dstalpha -of $fmt $type $in_ds $out_ds")
         # Geopackage raster only supports byte band type, so check for that
         if fmt.lower() == 'gpkg':
             band_type = "-ot byte"
     else:
-        cmd_template = Template("ogr2ogr -skipfailures -nlt PROMOTE_TO_MULTI -overwrite -f $fmt -clipsrc $boundary $out_ds $in_ds")
+        cmd_template = Template("ogr2ogr -skipfailures $extra_parameters -nlt PROMOTE_TO_MULTI -overwrite -f $fmt -clipsrc $boundary $out_ds $in_ds")
 
     temp_boundfile = None
     if isinstance(boundary, list):
@@ -336,14 +340,16 @@ def clip_dataset(boundary=None, in_dataset=None, out_dataset=None, fmt=None, tab
                                                 'type': band_type,
                                                 'in_ds': in_dataset,
                                                 'out_ds': out_dataset,
-                                                'table': table})
+                                                'table': table,
+                                                'extra_parameters': params})
         else:
             cmd = cmd_template.safe_substitute({'boundary': boundary,
                                                 'fmt': fmt,
                                                 'dstalpha': dstalpha,
                                                 'type': band_type,
                                                 'in_ds': in_dataset,
-                                                'out_ds': out_dataset})
+                                                'out_ds': out_dataset,
+                                                'extra_parameters': params})
 
         logger.debug("GDAL clip cmd: %s", cmd)
 
@@ -364,7 +370,8 @@ def clip_dataset(boundary=None, in_dataset=None, out_dataset=None, fmt=None, tab
 
 
 @retry
-def convert(file_format, in_file=None, out_file=None, task_uid=None, projection=None):
+def convert(file_format, in_file=None, out_file=None, task_uid=None, projection: int = None, params: str = "",
+            use_translate=False):
     """
     Uses gdalwarp or ogr2ogr to convert a raster or vector dataset into another format.
     If the dataset is already in the output format, returns the unaltered original.
@@ -372,6 +379,9 @@ def convert(file_format, in_file=None, out_file=None, task_uid=None, projection=
     :param out_file: Raster or vector file to be output
     :param file_format: Short format (e.g. gpkg, gtiff) to convert into
     :param task_uid: A task uid to update
+    :param projection: A projection as an int referencing an EPSG code (e.g. 4326 = EPSG:4326)
+    :param params: Additional options to pass to the convert method (e.g. "-co SOMETHING")
+    :param use_translate: If true will convert file using gdal_translate instead of gdalwarp.
     :return: Converted dataset, same filename as input
     """
     if not in_file:
@@ -390,15 +400,17 @@ def convert(file_format, in_file=None, out_file=None, task_uid=None, projection=
         projection = 4326
 
     band_type = ""
-    extra_parameters = ""
+    # Geopackage raster only supports byte band type, so check for that
+    if file_format.lower() == 'gpkg':
+        band_type = "-ot byte"
+
     if is_raster:
-        cmd_template = Template(
-            "gdalwarp -overwrite $extra_parameters -of $fmt $type $in_ds $out_ds -s_srs EPSG:4326 -t_srs EPSG:$projection")
-        # Geopackage raster only supports byte band type, so check for that
-        if file_format.lower() == 'gpkg':
-            band_type = "-ot byte"
-        if file_format.lower() == 'nitf':
-            extra_parameters = "-co ICORDS=G"
+        if use_translate:
+            cmd_template = Template(
+                "gdal_translate $extra_parameters -of $fmt $type $in_ds $out_ds -s_srs EPSG:4326 -t_srs EPSG:$projection")
+        else:
+            cmd_template = Template(
+                "gdalwarp -overwrite $extra_parameters -of $fmt $type $in_ds $out_ds -s_srs EPSG:4326 -t_srs EPSG:$projection")
     else:
         cmd_template = Template(
             "ogr2ogr -overwrite $extra_parameters -f '$fmt' $out_ds $in_ds -s_srs EPSG:4326 -t_srs EPSG:$projection")
@@ -408,9 +420,10 @@ def convert(file_format, in_file=None, out_file=None, task_uid=None, projection=
                                         'in_ds': in_file,
                                         'out_ds': out_file,
                                         'projection': projection,
-                                        'extra_parameters': extra_parameters})
+                                        'extra_parameters': params})
 
     logger.debug("GDAL convert cmd: %s", cmd)
+    logger.error("GDAL convert cmd: %s", cmd)
 
     task_process = TaskProcess(task_uid=task_uid)
     task_process.start_process(cmd, shell=True, executable="/bin/bash",

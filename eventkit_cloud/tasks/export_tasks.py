@@ -618,8 +618,8 @@ def geopackage_export_task(self, result=None, run_uid=None, task_uid=None, stage
 
 
 @app.task(name='Geotiff (.tif)', bind=True, base=FormatTask)
-def geotiff_export_task(self, result=None, run_uid=None, task_uid=None, stage_dir=None, job_name=None,
-                        user_details=None, projection=4326, *args, **kwargs):
+def geotiff_export_task(self, result=None, task_uid=None, stage_dir=None, job_name=None,
+                        projection=4326, compress=False, *args, **kwargs):
     """
     Class defining geopackage export function.
     """
@@ -628,12 +628,18 @@ def geotiff_export_task(self, result=None, run_uid=None, task_uid=None, stage_di
     gtiff_in_dataset = parse_result(result, 'source')
     gtiff_out_dataset = os.path.join(stage_dir, '{0}-{1}.tif'.format(job_name, projection))
     selection = parse_result(result, 'selection')
+    gtiff = gtiff_in_dataset
     if selection:
         gtiff = gdalutils.clip_dataset(boundary=selection, in_dataset=gtiff_in_dataset,
                                        out_dataset=gtiff_out_dataset, fmt='gtiff', task_uid=task_uid)
-    else:
-        gtiff = gdalutils.convert(
-            file_format='gtiff', in_file=gtiff_in_dataset, out_file=gtiff_out_dataset, task_uid=task_uid)
+    # Reduce the overall size of geotiffs.  Note this compression could result in the loss of data.
+    # If refactoring ensure that a pipeline like WCS does not apply geotiff conversion using this.
+    params = ""
+    if compress:
+        params = "-co COMPRESS=JPEG -co PHOTOMETRIC=YCBCR -co TILED=YES -b 1 -b 2 -b 3"
+    gtiff = gdalutils.convert(
+        file_format='gtiff', in_file=gtiff, out_file=gtiff_out_dataset, task_uid=task_uid,
+        params=params, use_translate=compress)
 
     result['file_extension'] = 'tif'
     result['file_format'] = 'gtiff'
@@ -652,8 +658,10 @@ def nitf_export_task(self, result=None, run_uid=None, task_uid=None, stage_dir=N
 
     nitf_in_dataset = parse_result(result, 'source')
     nitf_out_dataset = os.path.join(stage_dir, '{0}-{1}.nitf'.format(job_name, projection))
+
+    params = "-co ICORDS=G"
     nitf = gdalutils.convert(
-        file_format='nitf', in_file=nitf_in_dataset, out_file=nitf_out_dataset, task_uid=task_uid)
+        file_format='nitf', in_file=nitf_in_dataset, out_file=nitf_out_dataset, task_uid=task_uid, params=params)
 
     result['file_format'] = 'nitf'
     result['result'] = nitf

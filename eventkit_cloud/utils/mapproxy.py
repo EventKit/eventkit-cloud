@@ -291,7 +291,7 @@ def isclose(a, b, rel_tol=1e-09, abs_tol=0.0):
 def check_zoom_levels(gpkg, mapproxy_configuration):
 
     try:
-        grid = mapproxy_configuration.caches.get('cache').conf.get('grids')[0]
+        grid = mapproxy_configuration.caches.get('default').conf.get('grids')[0]
         tile_size = mapproxy_configuration.grids.get(grid).conf.get('tile_size')
         tile_grid = mapproxy_configuration.grids.get(grid).tile_grid()
         for table_name in get_tile_table_names(gpkg):
