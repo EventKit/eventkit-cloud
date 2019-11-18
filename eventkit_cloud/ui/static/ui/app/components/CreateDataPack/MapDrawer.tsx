@@ -3,38 +3,35 @@ import Drawer from '@material-ui/core/Drawer';
 import CustomScrollbar from "../CustomScrollbar";
 import List from '@material-ui/core/List';
 import ListItem from '@material-ui/core/ListItem';
-import {createStyles, Theme, withStyles, withTheme, Grid, Icon} from "@material-ui/core";
+import {createStyles, Theme, withStyles, withTheme, Grid, Icon, Divider} from "@material-ui/core";
 import {connect} from "react-redux";
 import CardMedia from '@material-ui/core/CardMedia';
 import Card from '@material-ui/core/Card';
-import DropDown from '@material-ui/icons/ArrowDropDown';
-import Close from '@material-ui/icons/Close';
 
 import RadioGroup from "@material-ui/core/RadioGroup";
 import Radio from "@material-ui/core/Radio";
 import {Tab, Tabs} from "@material-ui/core";
 import * as PropTypes from "prop-types";
-import Paper from "@material-ui/core/Paper";
 import Typography from "@material-ui/core/Typography";
 import ListItemText from "@material-ui/core/ListItemText";
 import Button from "@material-ui/core/Button";
+import Clear from '@material-ui/icons/Clear';
 
 
 const jss = (theme: Theme & Eventkit.Theme) => createStyles({
     container: {
-        zIndex: 4,
-        right: '0px',
+        zIndex: 5,
+        display: 'flex',
+    },
+    flexContainer: {
+        display: 'flex',
         position: 'absolute',
-        width: '100%',
-        minWidth: '200px',
-        maxWidth: '250px',
+        right: '0',
     },
     drawerPaper: {
         backgroundColor: '#fff',
         top: 'auto',
         position: 'absolute',
-        overflowY: 'hidden',
-        overflowX: 'hidden',
         width: '250px',
         height: 'calc(100vh - 180px)',
         boxShadow: '0px 1px 5px 0px rgba(0,0,0,0.2), 0px 2px 2px 0px rgba(0,0,0,0.14), 0px 3px 1px -2px rgba(0,0,0,0.12)',
@@ -48,34 +45,49 @@ const jss = (theme: Theme & Eventkit.Theme) => createStyles({
         paddingRight: '10px',
         paddingBottom: '5px',
     },
-    tabs: {
-        width: '100%',
-    },
     tabHeader: {
-        display: 'flex',
         right: '0px',
         top: '0',
         position: 'absolute',
-        marginTop: '2px',
         height: '100%',
-        paddingLeft: '2px',
+        borderRadius: '0px',
+    },
+    tabs: {
+        position: 'absolute',
+        marginLeft: '-55px',
+        width: '55px',
+        visibility: 'visible',
+        borderTopRightRadius: '0px',
+        borderTopLeftRadius: '5px',
+        borderBottomLeftRadius: '5px',
+        borderBottomRightRadius: '0px',
+        height: 'auto',
+        backgroundColor: theme.eventkit.colors.secondary,
     },
     tab: {
-        backgroundColor: 'lightGrey',
-        color: 'black',
+        opacity: 1,
+        minWidth: '0',
+        borderTopRightRadius: '0px',
+        borderTopLeftRadius: '2px',
+        borderBottomLeftRadius: '2px',
+        borderBottomRightRadius: '0px',
+        backgroundColor: 'lightgrey',
+        '& img': {
+            boxShadow: '0px 1px 3px 0px rgba(0,0,0,0.2), 0px 1px 1px 0px rgba(0,0,0,0.14), 0px 2px 1px -1px rgba(0,0,0,0.12)',
+        },
         '&$selected': {
-            backgroundColor: theme.eventkit.colors.secondary,
-            color: theme.eventkit.colors.primary,
+            '& img': {
+                backgroundColor: theme.eventkit.colors.secondary,
+            }
         }
     },
     scrollBar: {
         height: 'calc(100% - 100px)',
         width: '250px',
     },
-    subHeading: {
-        marginBottom: '10px',
-        marginTop: '5px',
-        marginLeft: '10px',
+    heading: {
+        marginBottom: '15px',
+        marginLeft: '15px',
     },
     listItem: {
         marginBottom: '8px',
@@ -105,6 +117,12 @@ const jss = (theme: Theme & Eventkit.Theme) => createStyles({
             color: theme.eventkit.colors.success,
         },
     },
+    clear: {
+        marginLeft: 'auto',
+        cursor: 'pointer',
+        width: '32px',
+        height: '32px',
+    },
     checked: {},
     selected: {},
     stickyRow: {
@@ -124,8 +142,22 @@ const jss = (theme: Theme & Eventkit.Theme) => createStyles({
         height: '35px',
         width: '70px',
         marginRight: '5px',
+    },
+    imageIcon: {
+        width: '48px',
+        height: '48px',
     }
 });
+
+export const VerticalTabs = withStyles(theme => ({
+    flexContainer: {
+        flexDirection: 'column'
+    },
+    indicator: {
+        display: 'none',
+    }
+}))(Tabs);
+
 
 // This should be used to facilitate user added base map sources (sources not derived from providers)
 export interface BaseMapSource {
@@ -159,7 +191,7 @@ export class MapDrawer extends React.Component<Props, State> {
         this.updateBaseMap = this.updateBaseMap.bind(this);
 
         this.state = {
-            selectedTab: '',
+            selectedTab: false,
             selectedBaseMap: -1,
             sources: [
                 ...props.sources,
@@ -181,27 +213,6 @@ export class MapDrawer extends React.Component<Props, State> {
         }
     };
 
-    getIcon = (tabName) => {
-        const {selectedTab} = this.state;
-        const containerStyle = {height: '40px', width: '40px', display: 'flex'};
-        if (selectedTab === tabName) {
-            return (
-                <div style={containerStyle}>
-                    <Close
-                        style={{margin: 'auto'}}
-                    />
-                </div>);
-        } else {
-            return (
-                <div style={containerStyle}>
-                    <DropDown
-                        style={{margin: 'auto', height: '40px', width: '40px'}}
-                        color="primary"
-                    />
-                </div>);
-        }
-    };
-
     render() {
         const {classes} = this.props;
         const {selectedTab, selectedBaseMap} = this.state;
@@ -217,65 +228,64 @@ export class MapDrawer extends React.Component<Props, State> {
                 } as BaseMapSource;
             })];
 
+        const drawerOpen = !!selectedTab;
+
         return (
             <div
                 className={classes.container}
             >
-                <Paper
-                    style={{
-                        height: 'auto',
-                    }}
-                    square={true}
+                <div
+                    className={classes.flexContainer}
+                    style={{zIndex: 5, marginRight: (drawerOpen) ? '250px' : '0px'}}
                 >
-                    <Tabs
-                        className={classes.tabs}
-                        value={(selectedTab) ? selectedTab : false}
-                        onChange={this.handleChange}
-                        variant="fullWidth"
+                    <Drawer
+                        className="qa-MapDrawer-Drawer"
+                        variant="persistent"
+                        anchor="right"
+                        open={drawerOpen}
+                        style={{flexShrink: 0}}
+                        PaperProps={{
+                            className: classes.drawerPaper,
+                            // style: {visibility: selectedTab === 'basemap' ? 'visible' as 'visible' : 'hidden' as 'hidden'},
+                        }}
                     >
-                        <Tab
-                            value="basemap"
-                            classes={{
-                                root: classes.tab,
-                                selected: classes.selected,
-                            }}
-                            label={(
-                                <Card className={classes.tabHeader}>
-                                    <strong
-                                        style={{fontSize: '18px', color: 'secondary', margin: 'auto 0'}}
+                        <VerticalTabs
+
+                            className={classes.tabs}
+                            value={(selectedTab) ? selectedTab : false}
+                            onChange={this.handleChange}
+                        >
+                            <Tab
+                                value="basemap"
+                                classes={{
+                                    root: classes.tab,
+                                    selected: classes.selected,
+                                }}
+                                label={(
+                                    <Card className={classes.tabHeader}>
+                                        <Icon classes={{root: classes.iconRoot}}>
+                                            <img className={classes.imageIcon} src="../../../images/icn_basemap.svg"/>
+                                        </Icon>
+                                    </Card>)}
+                            />
+                        </VerticalTabs>
+                        <div style={{display: 'flex'}}>
+                            <div className={classes.heading}><strong>Select a basemap</strong></div>
+                            <Clear className={classes.clear} color="primary" onClick={(event) => {
+                                this.setState({selectedTab: false})
+                            }}/>
+                        </div>
+                        <div className={classes.scrollBar}>
+                            <CustomScrollbar>
+                                <List style={{paddingRight: '10px', paddingLeft: '10px'}}>
+                                    <RadioGroup
+                                        value={selectedBaseMap.toString()}
+                                        onChange={(e, value) => this.updateBaseMap(Number(value), sources)}
                                     >
-                                        BASEMAPS
-                                    </strong>
-                                    {/*{this.getIcon('basemap')}*/}
-                                    <Icon classes={{root: classes.iconRoot}}>
-                                        <img className={classes.imageIcon} src="../../../images/icn_basemap.svg"/>
-                                    </Icon>
-                                </Card>)}
-                        />
-                    </Tabs>
-                </Paper>
-                <Drawer
-                    className="qa-MapDrawer-Drawer"
-                    variant="persistent"
-                    anchor="right"
-                    open={selectedTab === 'basemap'}
-                    PaperProps={{
-                        className: classes.drawerPaper,
-                        style: {visibility: selectedTab === 'basemap' ? 'visible' as 'visible' : 'hidden' as 'hidden'},
-                    }}
-                >
-                    <div className={classes.scrollBar}>
-                        <CustomScrollbar>
-                            <div className={classes.subHeading}><strong>Select a basemap</strong></div>
-                            <List style={{paddingRight: '10px', paddingLeft: '10px'}}>
-                                <RadioGroup
-                                    value={selectedBaseMap.toString()}
-                                    onChange={(e, value) => this.updateBaseMap(Number(value), sources)}
-                                >
-                                    {sources.map((source, ix) =>
-                                        (
-                                            <div key={ix}>
-                                                <ListItem className={`${classes.listItem} ${classes.noPadding}`}>
+                                        {sources.map((source, ix) =>
+                                            (
+                                                <div key={ix}>
+                                                    <ListItem className={`${classes.listItem} ${classes.noPadding}`}>
                                                     <span style={{marginRight: '2px'}}>
                                                         <Radio
                                                             checked={this.state.selectedBaseMap === ix}
@@ -283,55 +293,56 @@ export class MapDrawer extends React.Component<Props, State> {
                                                             classes={{root: classes.checkbox, checked: classes.checked}}
                                                         />
                                                     </span>
-                                                    <div>
-                                                        <div style={{display: 'flex'}}>
-                                                            {source.thumbnail_url &&
-                                                            <CardMedia
-                                                                className={classes.thumbnail}
-                                                                image={source.thumbnail_url}
-                                                            />
-                                                            }
-                                                            <ListItemText
-                                                                className={classes.noPadding}
-                                                                disableTypography
-                                                                primary={
-                                                                    <Typography
-                                                                        className={classes.buttonLabel}
-                                                                    >
-                                                                        {source.name}
-                                                                    </Typography>
+                                                        <div>
+                                                            <div style={{display: 'flex'}}>
+                                                                {source.thumbnail_url &&
+                                                                <CardMedia
+                                                                    className={classes.thumbnail}
+                                                                    image={source.thumbnail_url}
+                                                                />
                                                                 }
-                                                            />
+                                                                <ListItemText
+                                                                    className={classes.noPadding}
+                                                                    disableTypography
+                                                                    primary={
+                                                                        <Typography
+                                                                            className={classes.buttonLabel}
+                                                                        >
+                                                                            {source.name}
+                                                                        </Typography>
+                                                                    }
+                                                                />
+                                                            </div>
+                                                            <div className={classes.buttonLabelSecondary}>
+                                                                {source.type.toUpperCase()}
+                                                            </div>
                                                         </div>
-                                                        <div className={classes.buttonLabelSecondary}>
-                                                            {source.type.toUpperCase()}
-                                                        </div>
-                                                    </div>
-                                                </ListItem>
-                                            </div>
-                                        ))
-                                    }
-                                </RadioGroup>
-                            </List>
-                        </CustomScrollbar>
-                    </div>
-                    <div
-                        className={classes.stickyRow}
-                    >
-                        <Button
-                            className={classes.button}
-                            color="primary"
-                            variant="contained"
-                            disabled={selectedBaseMap === -1 || (!selectedBaseMap && selectedBaseMap !== 0)}
-                            onClick={() => {
-                                // Send empty string to clear base map url.
-                                this.updateBaseMap(-1, sources);
-                            }}
+                                                    </ListItem>
+                                                </div>
+                                            ))
+                                        }
+                                    </RadioGroup>
+                                </List>
+                            </CustomScrollbar>
+                        </div>
+                        <div
+                            className={classes.stickyRow}
                         >
-                            Reset
-                        </Button>
-                    </div>
-                </Drawer>
+                            <Button
+                                className={classes.button}
+                                color="primary"
+                                variant="contained"
+                                disabled={selectedBaseMap === -1 || (!selectedBaseMap && selectedBaseMap !== 0)}
+                                onClick={() => {
+                                    // Send empty string to clear base map url.
+                                    this.updateBaseMap(-1, sources);
+                                }}
+                            >
+                                Reset
+                            </Button>
+                        </div>
+                    </Drawer>
+                </div>
             </div>
         );
     }
