@@ -71,8 +71,8 @@ export class BaseDialog extends Component {
 
         // display passed in title and a clear button which calls props.onClose
         const title = (
-            <div className="qa-BaseDialog-div" style={{display: 'flex'}}>
-                <strong style={{width: '100%'}}>{this.props.title ? this.props.title : ''}</strong>
+            <div className="qa-BaseDialog-div" style={{ display: 'flex' }}>
+                <strong style={{ width: '100%' }}>{this.props.title ? this.props.title : ''}</strong>
                 <Clear style={styles.clear} color="primary" onClick={this.props.onClose} />
             </div>
         );
@@ -114,7 +114,7 @@ BaseDialog.defaultProps = {
     buttonStyle: {},
     overlayStyle: {},
     className: 'qa-BaseDialog-Dialog',
-    innerMaxHeight: 400
+    innerMaxHeight: 400,
 };
 
 BaseDialog.propTypes = {
