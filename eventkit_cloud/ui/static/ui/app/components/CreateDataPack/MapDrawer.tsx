@@ -86,8 +86,8 @@ const jss = (theme: Theme & Eventkit.Theme) => createStyles({
         width: '250px',
     },
     heading: {
-        marginBottom: '15px',
-        marginLeft: '15px',
+        margin: 'auto 15px',
+        fontSize: '18px',
     },
     listItem: {
         marginBottom: '8px',
@@ -227,7 +227,8 @@ export class MapDrawer extends React.Component<Props, State> {
                     thumbnail_url: provider.thumbnail_url,
                 } as BaseMapSource;
             })];
-
+        sources.push(...sources, ...sources, ...sources, ...sources);
+        sources.push(...sources, ...sources);
         const drawerOpen = !!selectedTab;
 
         return (
@@ -270,14 +271,15 @@ export class MapDrawer extends React.Component<Props, State> {
                             />
                         </VerticalTabs>
                         <div style={{display: 'flex'}}>
-                            <div className={classes.heading}><strong>Select a basemap</strong></div>
+                            <strong className={classes.heading}>Select a basemap</strong>
                             <Clear className={classes.clear} color="primary" onClick={(event) => {
                                 this.setState({selectedTab: false})
                             }}/>
                         </div>
+                        <Divider style={{margin: '0 5px 0 5px'}}/>
                         <div className={classes.scrollBar}>
                             <CustomScrollbar>
-                                <List style={{paddingRight: '10px', paddingLeft: '10px'}}>
+                                <List style={{padding: '10px'}}>
                                     <RadioGroup
                                         value={selectedBaseMap.toString()}
                                         onChange={(e, value) => this.updateBaseMap(Number(value), sources)}
@@ -325,6 +327,7 @@ export class MapDrawer extends React.Component<Props, State> {
                                 </List>
                             </CustomScrollbar>
                         </div>
+                        <Divider style={{margin: '0 5px 0 5px'}}/>
                         <div
                             className={classes.stickyRow}
                         >
