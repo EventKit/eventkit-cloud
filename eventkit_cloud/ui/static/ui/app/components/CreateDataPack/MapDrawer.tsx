@@ -227,8 +227,6 @@ export class MapDrawer extends React.Component<Props, State> {
                     thumbnail_url: provider.thumbnail_url,
                 } as BaseMapSource;
             })];
-        sources.push(...sources, ...sources, ...sources, ...sources);
-        sources.push(...sources, ...sources);
         const drawerOpen = !!selectedTab;
 
         return (
@@ -265,7 +263,11 @@ export class MapDrawer extends React.Component<Props, State> {
                                 label={(
                                     <Card className={classes.tabHeader}>
                                         <Icon classes={{root: classes.iconRoot}}>
-                                            <img className={classes.imageIcon} src="../../../images/icn_basemap.svg"/>
+                                            <img
+                                                className={classes.imageIcon}
+                                                src="../../../images/icn_basemap.svg"
+                                                alt="Basemap"
+                                            />
                                         </Icon>
                                     </Card>)}
                             />
