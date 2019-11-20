@@ -26,13 +26,14 @@ class OAuthAdmin(admin.ModelAdmin):
         actions.pop('delete_selected', None)
         return actions
 
+class OAuthInline(admin.StackedInline):
+    model = OAuth
 
 class UserLicenseInline(admin.TabularInline):
     model = UserLicense
     extra = 0
 
-
-UserAdmin.inlines = [UserLicenseInline]
+UserAdmin.inlines = [OAuthInline, UserLicenseInline]
 UserAdmin.readonly_fields += 'last_login', 'date_joined'
 
 
