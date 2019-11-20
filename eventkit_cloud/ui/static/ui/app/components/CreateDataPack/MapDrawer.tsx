@@ -267,6 +267,7 @@ export class MapDrawer extends React.Component<Props, State> {
                                                 className={classes.imageIcon}
                                                 src="../../../images/icn_basemap.svg"
                                                 alt="Basemap"
+                                                title="Basemap"
                                             />
                                         </Icon>
                                     </Card>)}
