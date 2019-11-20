@@ -286,10 +286,7 @@ def clip_dataset(boundary=None, in_dataset=None, out_dataset=None, fmt=None,
     # don't operate on the original file.  If the renamed file already exists,
     # then don't try to rename, since that file may not exist if this is a retry.
     if out_dataset == in_dataset:
-        in_dataset = os.path.join(os.path.dirname(out_dataset), "old_{0}".format(os.path.basename(out_dataset)))
-        if not os.path.isfile(in_dataset):
-            logger.info("Renaming '{}' to '{}'".format(out_dataset, in_dataset))
-            os.rename(out_dataset, in_dataset)
+        in_dataset = rename_duplicate(in_dataset)
 
     meta = get_meta(in_dataset)
 
@@ -390,11 +387,23 @@ def convert(file_format, in_file=None, out_file=None, task_uid=None, projection:
     meta = get_meta(in_file)
     driver, is_raster = meta['driver'], meta['is_raster']
 
-    if in_file == out_file:
+    if (in_file == out_file) and not (params or projection):
         return in_file
 
     if out_file is None:
         out_file = in_file
+        if not out_file:
+            out_file = in_file
+
+    logger.error(params)
+    logger.error(projection)
+    if out_file == in_file:
+        # Don't try to convert without convert params or new projection.
+        if not (params or projection):
+            return in_file
+        else:
+            # Don't operate on the original file.
+            in_file = rename_duplicate(in_file)
 
     if projection is None:
         projection = 4326
@@ -407,7 +416,7 @@ def convert(file_format, in_file=None, out_file=None, task_uid=None, projection:
     if is_raster:
         if use_translate:
             cmd_template = Template(
-                "gdal_translate $extra_parameters -of $fmt $type $in_ds $out_ds -s_srs EPSG:4326 -t_srs EPSG:$projection")
+                "gdal_translate $extra_parameters -of $fmt $type $in_ds $out_ds")
         else:
             cmd_template = Template(
                 "gdalwarp -overwrite $extra_parameters -of $fmt $type $in_ds $out_ds -s_srs EPSG:4326 -t_srs EPSG:$projection")
@@ -437,6 +446,7 @@ def convert(file_format, in_file=None, out_file=None, task_uid=None, projection:
         out_file = create_zip_file(out_file, get_zip_name(out_file))
 
     return out_file
+
 
 def get_dimensions(bbox, scale):
     """
@@ -544,3 +554,13 @@ def get_band_statistics(file_path, band=1):
         logger.error(e)
         logger.error("Could not get statistics for {0}:{1}".format(file_path, band))
         return None
+
+
+def rename_duplicate(original_file : str) -> str:
+    returned_file = os.path.join(os.path.dirname(original_file), "old_{0}".format(os.path.basename(original_file)))
+    # If the renamed file already exists,
+    # then don't try to rename, since that file may not exist if this is a retry.
+    if not os.path.isfile(returned_file):
+        logger.info("Renaming '{}' to '{}'".format(original_file, returned_file))
+        os.rename(original_file, returned_file)
+    return returned_file

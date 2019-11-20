@@ -629,22 +629,31 @@ def geotiff_export_task(self, result=None, task_uid=None, stage_dir=None, job_na
     gtiff_out_dataset = os.path.join(stage_dir, '{0}-{1}.tif'.format(job_name, projection))
     selection = parse_result(result, 'selection')
     gtiff = gtiff_in_dataset
+    ## Clip the dataset.
+    # This happens if geotiff is the FIRST step in the pipeline as opposed to GPKG.
     if selection:
-        gtiff = gdalutils.clip_dataset(boundary=selection, in_dataset=gtiff_in_dataset,
+        gtiff_out_dataset = gdalutils.clip_dataset(boundary=selection, in_dataset=gtiff,
                                        out_dataset=gtiff_out_dataset, fmt='gtiff', task_uid=task_uid)
+
+
+    # Convert to the correct projection
+    gtiff_out_dataset = gdalutils.convert(
+        file_format='gtiff', in_file=gtiff_out_dataset, out_file=gtiff_out_dataset, task_uid=task_uid,
+        projection=projection)
+
     # Reduce the overall size of geotiffs.  Note this compression could result in the loss of data.
     # If refactoring ensure that a pipeline like WCS does not apply geotiff conversion using this.
     params = ""
     if compress:
         params = "-co COMPRESS=JPEG -co PHOTOMETRIC=YCBCR -co TILED=YES -b 1 -b 2 -b 3"
-    gtiff = gdalutils.convert(
-        file_format='gtiff', in_file=gtiff, out_file=gtiff_out_dataset, task_uid=task_uid,
-        params=params, use_translate=compress)
+        gtiff_out_dataset = gdalutils.convert(
+            file_format='gtiff', in_file=gtiff_out_dataset, out_file=gtiff_out_dataset, task_uid=task_uid,
+            params=params, use_translate=compress)
 
     result['file_extension'] = 'tif'
     result['file_format'] = 'gtiff'
-    result['result'] = gtiff
-    result['gtiff'] = gtiff
+    result['result'] = gtiff_out_dataset
+    result['gtiff'] = gtiff_out_dataset
     return result
 
 
