@@ -355,6 +355,15 @@ export class MapView extends React.Component<Props, State> {
             } else if (this.state.mode === MODE_DRAW_BBOX) {
                 const geojsonGeometry: GeoJSON.GeometryObject = createGeoJSONGeometry(geom);
                 this.props.onMapFilter(geojsonGeometry);
+                this.props.updateAoiInfo({
+                    ...this.props.aoiInfo,
+                        geojson,
+                        originalGeojson: geojson,
+                        geomType: 'Polygon',
+                        title: 'Custom Polygon',
+                        description: 'Draw',
+                        selectionType: 'free',
+                });
             }
             this.updateMode(MODE_NORMAL);
             window.setTimeout(() => {
@@ -1119,7 +1128,7 @@ export class MapView extends React.Component<Props, State> {
 
 const makeMapStateToProps = () => {
     const getRuns = makeAllRunsSelector();
-    const mapStateToProps = (state) => (
+    const mapStateToProps = (state, props) => (
         {
             aoiInfo: state.aoiInfo,
             runs: getRuns(state),
