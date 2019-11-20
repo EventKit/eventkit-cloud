@@ -1021,6 +1021,7 @@ export class ExportAOI extends React.Component<Props, State> {
                     run={isRunning}
                 />
                 <div id="map" className={css.map} style={mapStyle}>
+                { this.props.aoiInfo }
                     <AoiInfobar
                         aoiInfo={this.props.aoiInfo}
                         showRevert={!!this.props.aoiInfo.buffer}
