@@ -144,16 +144,6 @@ export class ZoomLevelSlider extends React.Component<Props, State> {
                 <strong className={classes.zoomHeader}>Zoom</strong>
                 <div style={{display: 'block'}}>
                     <div style={{display: 'flex', position: 'relative', margin: '0 30px'}}>
-                        {/*<Slider*/}
-                        {/*    className={classes.slider}*/}
-                        {/*    value={minZoom}*/}
-                        {/*    aria-labelledby="label"*/}
-                        {/*    // onChange={(e, v) => this.setState({minZoom: Number(v)})}*/}
-                        {/*    onDragEnd={() => this.updateMin(null, minZoom)}*/}
-                        {/*    min={this.props.minMinZoom}*/}
-                        {/*    max={this.props.maxMaxZoom}*/}
-                        {/*    step={1}*/}
-                        {/*/>*/}
                         <Slider
                             className={classes.slider}
                             value={maxZoom}
