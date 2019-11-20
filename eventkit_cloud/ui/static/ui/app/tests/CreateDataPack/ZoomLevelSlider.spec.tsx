@@ -40,7 +40,7 @@ describe('ZoomLevelSlider component', () => {
     beforeEach(setup);
 
     it('should render input controls', () => {
-        expect(wrapper.find(TextField)).toHaveLength(1);
+        expect(wrapper.find(TextField)).toHaveLength(2);
         expect(wrapper.find(Slider)).toHaveLength(1);
     });
 });
