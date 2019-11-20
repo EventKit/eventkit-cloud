@@ -280,10 +280,14 @@ export class DataProvider extends React.Component<Props, State> {
         // Take the current zoom from the current zoomLevels if they exist and the value is valid,
         // otherwise set it to the max allowable level.
         let currentMaxZoom = provider.level_to;
+        let currentMinZoom = provider.level_from;
         if (exportOptions[provider.slug]) {
-            const {maxZoom} = exportOptions[provider.slug];
+            const {maxZoom, minZoom} = exportOptions[provider.slug];
             if (maxZoom || maxZoom === 0) {
                 currentMaxZoom = maxZoom;
+            }
+            if (minZoom || minZoom === 0) {
+                currentMinZoom = minZoom;
             }
         }
 
@@ -335,9 +339,10 @@ export class DataProvider extends React.Component<Props, State> {
                     >
                         <ZoomLevelSlider
                             updateZoom={this.setZoom}
-                            zoom={currentMaxZoom}
-                            maxZoom={provider.level_to}
-                            minZoom={provider.level_from}
+                            maxZoom={currentMaxZoom}
+                            minZoom={currentMinZoom}
+                            maxMaxZoom={provider.level_to}
+                            minMinZoom={provider.level_from}
                         />
                     </div>
                     <div

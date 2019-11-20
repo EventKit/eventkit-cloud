@@ -1,16 +1,18 @@
 import * as React from 'react';
-import {createStyles, Theme, withStyles, withTheme} from '@material-ui/core/styles';
-import Slider from "@material-ui/lab/Slider";
-import TextField from "@material-ui/core/TextField";
+import {
+    createStyles, Theme, withStyles, withTheme,
+} from '@material-ui/core/styles';
+import Slider from '@material-ui/lab/Slider';
+import TextField from '@material-ui/core/TextField';
+
 
 const jss = (theme: Theme & Eventkit.Theme) => createStyles({
     container: {
         width: '100%',
     },
     slider: {
-        // position: 'absolute',
+        position: 'absolute',
         width: '100%',
-        bottom: 0,
         padding: '10px 0px',
         borderRight: '1px solid #ccc',
         borderLeft: '1px solid #ccc',
@@ -37,27 +39,70 @@ interface Props {
     updateZoom: (min: number, max: number) => void;
     maxZoom: number;
     minZoom: number;
-    zoom: number;
+    maxMaxZoom: number;
+    minMinZoom: number;
     theme: Eventkit.Theme & Theme;
     classes: { [className: string]: string };
 }
 
-export class ZoomLevelSlider extends React.Component<Props, {}> {
+interface State {
+    maxZoom: number;
+    minZoom: number;
+}
 
+export class ZoomLevelSlider extends React.Component<Props, State> {
     static defaultProps;
 
     constructor(props: Props) {
         super(props);
 
-        this.state = {};
+        this.state = {
+            minZoom: props.minZoom,
+            maxZoom: props.maxZoom,
+        };
 
-        this.handleChange = this.handleChange.bind(this);
+        this.updateMax = this.updateMax.bind(this);
+        this.updateMin = this.updateMin.bind(this);
     }
 
-    handleChange = (event, value) => {
+    componentDidUpdate(prevProps: Readonly<Props>): void {
+        const {minZoom, maxZoom} = this.props;
+        const prevMinZoom = prevProps.minZoom;
+        const prevMaxZoom = prevProps.maxZoom;
+        if (minZoom !== prevMinZoom) {
+            // Deprecated rule
+            // eslint-disable-next-line react/no-did-update-set-state
+            this.setState({minZoom});
+        }
+        if (maxZoom !== prevMaxZoom) {
+            // Deprecated rule
+            // eslint-disable-next-line react/no-did-update-set-state
+            this.setState({maxZoom});
+        }
+    }
+
+    updateMax = (event, value) => {
         const zoomValue = Number(value);
-        if (zoomValue >= this.props.minZoom && zoomValue <= this.props.maxZoom) {
-            this.props.updateZoom(null, zoomValue);
+        if (zoomValue >= this.props.minMinZoom && zoomValue <= this.props.maxMaxZoom) {
+            if (zoomValue < this.props.minZoom) {
+                this.props.updateZoom(zoomValue, this.props.minZoom);
+            } else {
+                this.props.updateZoom(null, zoomValue);
+            }
+        } else {
+            // Send null for min and max zoom to force the prop to reupdate with the last valid value
+            this.props.updateZoom(null, null);
+        }
+    };
+
+    updateMin = (event, value) => {
+        const zoomValue = Number(value);
+        if (zoomValue >= this.props.minMinZoom && zoomValue <= this.props.maxMaxZoom) {
+            if (zoomValue > this.props.maxZoom) {
+                this.props.updateZoom(this.props.maxZoom, zoomValue);
+            } else {
+                this.props.updateZoom(zoomValue, null);
+            }
         } else {
             // Send null for min and max zoom to force the prop to reupdate with the last valid value
             this.props.updateZoom(null, null);
@@ -65,40 +110,67 @@ export class ZoomLevelSlider extends React.Component<Props, {}> {
     };
 
     render() {
-        const { classes } = this.props;
+        const {classes} = this.props;
+        const {minZoom, maxZoom} = this.state;
 
         return (
             <div className={classes.container}>
-                <span style={{ fontSize: '16px' }}>0 to </span>
                 <TextField
                     className={classes.textField}
                     type="number"
                     name="zoom-value"
-                    value={this.props.zoom}
-                    onChange={e => this.handleChange(e, e.target.value)}
+                    value={minZoom}
+                    disabled
+                    onChange={e => this.updateMin(e, e.target.value)}
                     // MUI uses the case of the i to distinguish between Input component and input html element
+                    InputProps={{style: {bottom: '5px'}}}
                     // eslint-disable-next-line react/jsx-no-duplicate-props
-                    InputProps={{ style: { bottom: '5px' } }}
-                    inputProps={{ style: { textAlign: 'center', fontWeight: 'bold', fontSize: '16px' } }}
+                    inputProps={{style: {textAlign: 'center', fontWeight: 'bold', fontSize: '16px'}}}
                 />
-                <span style={{ fontSize: '16px' }}>Selected Zoom</span>
-                <br />
+                <span style={{fontSize: '16px'}}> to </span>
+                <TextField
+                    className={classes.textField}
+                    type="number"
+                    name="zoom-value"
+                    value={maxZoom}
+                    onChange={e => this.updateMax(e, e.target.value)}
+                    // MUI uses the case of the i to distinguish between Input component and input html element
+                    InputProps={{style: {bottom: '5px'}}}
+                    // eslint-disable-next-line react/jsx-no-duplicate-props
+                    inputProps={{style: {textAlign: 'center', fontWeight: 'bold', fontSize: '16px'}}}
+                />
+                <span style={{fontSize: '16px'}}>Selected Zoom</span>
+                <br/>
                 <strong className={classes.zoomHeader}>Zoom</strong>
-                <div>
-                    <Slider
-                        className={classes.slider}
-                        value={this.props.zoom}
-                        aria-labelledby="label"
-                        onChange={this.handleChange}
-                        max={this.props.maxZoom}
-                        step={1}
-                    />
-                    <div id="labels" style={{ display: 'flex', justifyContent: 'space-between' }}>
-                        <span style={{ textAlign: 'left' }}>
+                <div style={{display: 'block'}}>
+                    <div style={{display: 'flex', position: 'relative', margin: '0 30px'}}>
+                        {/*<Slider*/}
+                        {/*    className={classes.slider}*/}
+                        {/*    value={minZoom}*/}
+                        {/*    aria-labelledby="label"*/}
+                        {/*    // onChange={(e, v) => this.setState({minZoom: Number(v)})}*/}
+                        {/*    onDragEnd={() => this.updateMin(null, minZoom)}*/}
+                        {/*    min={this.props.minMinZoom}*/}
+                        {/*    max={this.props.maxMaxZoom}*/}
+                        {/*    step={1}*/}
+                        {/*/>*/}
+                        <Slider
+                            className={classes.slider}
+                            value={maxZoom}
+                            aria-labelledby="label"
+                            onChange={(e, v) => this.setState({maxZoom: Number(v)})}
+                            onDragEnd={() => this.updateMax(null, maxZoom)}
+                            min={this.props.minMinZoom}
+                            max={this.props.maxMaxZoom}
+                            step={1}
+                        />
+                    </div>
+                    <div id="labels" style={{display: 'flex', justifyContent: 'space-between'}}>
+                        <span style={{textAlign: 'left'}}>
                             {this.props.minZoom}
                         </span>
-                        <span style={{ textAlign: 'right' }}>
-                            {this.props.maxZoom}
+                        <span style={{textAlign: 'right'}}>
+                            {this.props.maxMaxZoom}
                         </span>
                     </div>
                 </div>
