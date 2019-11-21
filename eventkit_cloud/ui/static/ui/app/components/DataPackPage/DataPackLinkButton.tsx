@@ -28,11 +28,18 @@ export class DataPackLinkButton extends React.Component<Props, {}> {
 
         return (
             <Link
+                className="datapack-link-create"
+                style={
+                    {
+                        display: 'grid',
+                        textDecoration: 'none'
+                    }
+                }
                 to="/create"
                 href="/create"
             >
                 <Button
-                    className={`qa-Drawer-Link-create`}
+                    className={`datapack-button-create`}
                     // activeClassName={classes.activeLink}
                     style={styles.button}
                     variant="contained"

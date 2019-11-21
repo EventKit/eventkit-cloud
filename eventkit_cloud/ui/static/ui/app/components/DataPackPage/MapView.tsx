@@ -1135,7 +1135,7 @@ const makeMapStateToProps = () => {
         }
     );
     return mapStateToProps;
-}
+};
 
 function mapDispatchToProps(dispatch) {
     return {
