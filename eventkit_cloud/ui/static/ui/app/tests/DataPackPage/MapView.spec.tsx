@@ -174,6 +174,26 @@ function getRuns() {
     }];
 }
 
+const geojson = {
+    type: 'FeatureCollection',
+    features: [{
+        type: 'Feature',
+        geometry: {
+            type: 'Polygon',
+            coordinates: [
+                [
+                    [100.0, 0.0],
+                    [101.0, 0.0],
+                    [101.0, 1.0],
+                    [100.0, 1.0],
+                    [100.0, 0.0],
+                ],
+            ],
+        },
+        bbox: [100.0, 0.0, 101.0, 1.0],
+    }],
+};
+
 describe('MapView component', () => {
     const getProps = () => ({
         runs: getRuns(),
@@ -195,6 +215,16 @@ describe('MapView component', () => {
         resetGeoJSONFile: sinon.spy(),
         onMapFilter: sinon.spy(),
         providers,
+        aoiInfo: {
+            geojson: {},
+            originalGeojson: {},
+            geomType: null,
+            title: null,
+            description: null,
+            selectionType: null,
+        },
+        updateAoiInfo: sinon.spy(),
+        clearAoiInfo: sinon.spy(),
         ...(global as any).eventkit_test_props,
     });
 

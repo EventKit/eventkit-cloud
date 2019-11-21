@@ -28,7 +28,7 @@ export class DataPackLinkButton extends React.Component<Props, {}> {
 
         return (
             <Link
-                className="datapack-link-create"
+                className={`datapack-link-create`}
                 style={
                     {
                         display: 'grid',
