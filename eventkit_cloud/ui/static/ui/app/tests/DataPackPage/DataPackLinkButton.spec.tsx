@@ -19,7 +19,6 @@ beforeEach(setup);
 
 describe('DataPackLinkButton component', () => {
     it('should render a linked button', () => {
-        // const wrapper = shallow(<DataPackLinkButton {...(global as any).eventkit_test_props} />);
         expect(wrapper.find(Link)).toHaveLength(1);
         expect(wrapper.find(Link).props().to).toEqual(`/create`);
         expect(wrapper.find(Button).html()).toContain('Create DataPack');

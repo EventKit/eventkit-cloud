@@ -16,6 +16,7 @@ import Polygon from 'ol/geom/polygon';
 import VectorSource from 'ol/source/vector';
 import Style from 'ol/style/style';
 import GeoJSON from 'ol/format/geojson';
+import GeoJSONFormat from 'ol/format/geojson';
 
 import DataPackListItem from '../../components/DataPackPage/DataPackListItem';
 import LoadButtons from '../../components/common/LoadButtons';
@@ -227,7 +228,7 @@ describe('MapView component', () => {
         clearAoiInfo: sinon.spy(),
         ...(global as any).eventkit_test_props,
     });
-
+    
     let props;
     let wrapper;
     let instance;
@@ -1303,8 +1304,9 @@ describe('MapView component', () => {
         expect(createSpy.calledOnce).toBe(true);
         expect(createSpy.calledWith(geom)).toBe(true);
         expect(addSpy.calledOnce).toBe(true);
-        expect(validSpy.calledOnce).toBe(true);
         expect(validSpy.calledWith(utils.createGeoJSON(geom))).toBe(true);
+        expect(validSpy.calledOnce).toBe(true);
+        expect(props.updateAoiInfo.calledOnce).toBe(true);
         expect(createGeomSpy.calledOnce).toBe(true);
         expect(createGeomSpy.calledWith(geom)).toBe(true);
         expect(props.onMapFilter.calledOnce).toBe(true);
