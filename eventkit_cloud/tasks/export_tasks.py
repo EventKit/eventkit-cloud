@@ -643,7 +643,6 @@ def geotiff_export_task(self, result=None, task_uid=None, stage_dir=None, job_na
 
     # Reduce the overall size of geotiffs.  Note this compression could result in the loss of data.
     # If refactoring ensure that a pipeline like WCS does not apply geotiff conversion using this.
-    params = ""
     if compress:
         params = "-co COMPRESS=JPEG -co PHOTOMETRIC=YCBCR -co TILED=YES -b 1 -b 2 -b 3"
         gtiff_out_dataset = gdalutils.convert(
@@ -699,7 +698,7 @@ def hfa_export_task(self, result=None, run_uid=None, task_uid=None, stage_dir=No
 
 @app.task(name='Reprojection Task', bind=True, base=FormatTask)
 def reprojection_task(self, result=None, run_uid=None, task_uid=None, stage_dir=None, job_name=None,
-                        user_details=None, projection=None, *args, **kwargs):
+                        user_details=None, projection=None, compress=False, *args, **kwargs):
     """
     Class defining a task that will reproject all file formats to the chosen projections.
     """
@@ -720,6 +719,11 @@ def reprojection_task(self, result=None, run_uid=None, task_uid=None, stage_dir=
 
     reprojection = gdalutils.convert(
         file_format=file_format, in_file=in_dataset, out_file=out_dataset, task_uid=task_uid, projection=projection)
+    if compress and file_format == 'gtiff':
+        params = "-co COMPRESS=JPEG -co PHOTOMETRIC=YCBCR -co TILED=YES -b 1 -b 2 -b 3"
+        reprojection = gdalutils.convert(
+            file_format=file_format, in_file=reprojection, out_file=out_dataset, task_uid=task_uid,
+            params=params, use_translate=compress)
 
     result['result'] = reprojection
     return result
