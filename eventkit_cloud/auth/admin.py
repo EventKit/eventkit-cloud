@@ -15,6 +15,9 @@ logger = logging.getLogger(__name__)
 
 class OAuthAdmin(admin.ModelAdmin):
 
+    search_fields = ['user__username', 'identification', 'commonname', 'user_info']
+    list_display = ['user', 'identification', 'commonname']
+
     def has_delete_permission(self, request, obj=None):
         return False
 
@@ -23,13 +26,14 @@ class OAuthAdmin(admin.ModelAdmin):
         actions.pop('delete_selected', None)
         return actions
 
+class OAuthInline(admin.StackedInline):
+    model = OAuth
 
 class UserLicenseInline(admin.TabularInline):
     model = UserLicense
     extra = 0
 
-
-UserAdmin.inlines = [UserLicenseInline]
+UserAdmin.inlines = [OAuthInline, UserLicenseInline]
 UserAdmin.readonly_fields += 'last_login', 'date_joined'
 
 
