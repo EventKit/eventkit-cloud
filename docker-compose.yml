@@ -13,6 +13,7 @@ services:
       - /var/lib/eventkit/node_modules/
       - ./exports_download:/var/lib/eventkit/exports_download
       - ./exports_stage:/var/lib/eventkit/exports_stage
+      - ./setup.cfg:/var/lib/eventkit/setup.cfg
     user: eventkit
     depends_on:
       - postgis

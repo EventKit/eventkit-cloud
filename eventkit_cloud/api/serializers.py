@@ -21,7 +21,11 @@ from rest_framework import serializers
 from rest_framework_gis import serializers as geo_serializers
 
 from . import validators
-from eventkit_cloud.core.models import GroupPermission, GroupPermissionLevel, JobPermission
+from eventkit_cloud.core.models import (
+    GroupPermission,
+    GroupPermissionLevel,
+    JobPermission,
+)
 from eventkit_cloud.jobs.models import (
     ExportFormat,
     Projection,
@@ -33,7 +37,8 @@ from eventkit_cloud.jobs.models import (
     DataProviderTask,
     License,
     UserLicense,
-    UserJobActivity)
+    UserJobActivity,
+)
 from eventkit_cloud.tasks.models import (
     ExportRun,
     ExportTaskRecord,
@@ -53,22 +58,31 @@ except ImportError:
 logger = logging.getLogger(__name__)
 
 
+def validate(data):
+    """
+    Validates the data submitted during DataProviderTask creation.
+
+    See api/validators.py for validation code.
+    """
+    # selection = validators.validate_licenses(self.context['request'].data, user=self.context['request'].user)
+    return data
+
+
 class ProviderTaskSerializer(serializers.ModelSerializer):
     formats = serializers.SlugRelatedField(
         many=True,
         queryset=ExportFormat.objects.all(),
-        slug_field='slug',
-        error_messages={'non_field_errors': _('Select an export format.')}
+        slug_field="slug",
+        error_messages={"non_field_errors": _("Select an export format.")},
     )
     provider = serializers.CharField()
 
     class Meta:
         model = DataProviderTask
-        fields = ('provider', 'formats', 'min_zoom', 'max_zoom')
+        fields = ("provider", "formats", "min_zoom", "max_zoom")
 
     @staticmethod
-    def create(validated_data, **kwargs):
-        from eventkit_cloud.api.views import get_models
+    def create(validated_data):
         """Creates an export DataProviderTask."""
         formats = validated_data.pop("formats")
         provider_model = DataProvider.objects.get(name=validated_data.get("provider"))
@@ -82,39 +96,31 @@ class ProviderTaskSerializer(serializers.ModelSerializer):
     @staticmethod
     def update(instance, validated_data, **kwargs):
         """Not implemented.
-        :param **kwargs:
+        :param validated_data:
+        :param instance:
         """
         raise NotImplementedError
-
-    def validate(self, data, **kwargs):
-        """
-        Validates the data submitted during DataProviderTask creation.
-
-        See api/validators.py for validation code.
-        :param **kwargs:
-        """
-        # selection = validators.validate_licenses(self.context['request'].data, user=self.context['request'].user)
-        return data
 
 
 class FileProducingTaskResultSerializer(serializers.ModelSerializer):
     """Serialize FileProducingTaskResult models."""
+
     url = serializers.SerializerMethodField()
     size = serializers.SerializerMethodField()
     uid = serializers.UUIDField(read_only=True)
 
     def __init__(self, *args, **kwargs):
         super(FileProducingTaskResultSerializer, self).__init__(*args, **kwargs)
-        if self.context.get('no_license'):
-            self.fields.pop('url')
+        if self.context.get("no_license"):
+            self.fields.pop("url")
 
     class Meta:
         model = FileProducingTaskResult
-        fields = ('uid', 'filename', 'size', 'url', 'deleted')
+        fields = ("uid", "filename", "size", "url", "deleted")
 
     def get_url(self, obj):
-        request = self.context['request']
-        return request.build_absolute_uri('/download?uid={}'.format(obj.uid))
+        request = self.context["request"]
+        return request.build_absolute_uri("/download?uid={}".format(obj.uid))
 
     @staticmethod
     def get_size(obj):
@@ -126,16 +132,17 @@ class FileProducingTaskResultSerializer(serializers.ModelSerializer):
 
 class ExportTaskExceptionSerializer(serializers.ModelSerializer):
     """Serialize ExportTaskExceptions."""
+
     exception = serializers.SerializerMethodField()
 
     class Meta:
         model = ExportTaskException
-        fields = ('exception',)
+        fields = ("exception",)
 
     @staticmethod
     def get_exception(obj):
         # set a default (incase not found)
-        exc_info = ["","Exception info not found or unreadable."]
+        exc_info = ["", "Exception info not found or unreadable."]
         try:
             exc_info = pickle.loads(obj.exception.encode()).exc_info
         except Exception as te:
@@ -146,24 +153,37 @@ class ExportTaskExceptionSerializer(serializers.ModelSerializer):
 
 class ExportTaskRecordSerializer(serializers.ModelSerializer):
     """Serialize ExportTasks models."""
+
     result = serializers.SerializerMethodField()
     errors = serializers.SerializerMethodField()
     url = serializers.HyperlinkedIdentityField(
-        view_name='api:tasks-detail',
-        lookup_field='uid'
+        view_name="api:tasks-detail", lookup_field="uid"
     )
 
     class Meta:
         model = ExportTaskRecord
         fields = (
-            'uid', 'url', 'name', 'status', 'progress', 'estimated_finish', 'started_at', 'finished_at', 'duration',
-            'result', 'errors', 'display')
+            "uid",
+            "url",
+            "name",
+            "status",
+            "progress",
+            "estimated_finish",
+            "started_at",
+            "finished_at",
+            "duration",
+            "result",
+            "errors",
+            "display",
+        )
 
     def get_result(self, obj):
         """Serialize the FileProducingTaskResult for this ExportTaskRecord."""
         try:
             result = obj.result
-            serializer = FileProducingTaskResultSerializer(result, many=False, context=self.context)
+            serializer = FileProducingTaskResultSerializer(
+                result, many=False, context=self.context
+            )
             return serializer.data
         except FileProducingTaskResult.DoesNotExist:
             return None  # no result yet
@@ -172,39 +192,59 @@ class ExportTaskRecordSerializer(serializers.ModelSerializer):
         """Serialize the ExportTaskExceptions for this ExportTaskRecord."""
         try:
             errors = obj.exceptions
-            serializer = ExportTaskExceptionSerializer(errors, many=True, context=self.context)
+            serializer = ExportTaskExceptionSerializer(
+                errors, many=True, context=self.context
+            )
             return serializer.data
         except ExportTaskException.DoesNotExist:
             return None
 
+
+def to_representation(obj):
+    return obj.uid
+
+
 class ExportTaskListSerializer(serializers.BaseSerializer):
-    def to_representation(self, obj):
-        return obj.uid
+    pass
 
 
 class DataProviderTaskRecordSerializer(serializers.ModelSerializer):
     tasks = serializers.SerializerMethodField()
     url = serializers.HyperlinkedIdentityField(
-        view_name='api:provider_tasks-detail',
-        lookup_field='uid'
+        view_name="api:provider_tasks-detail", lookup_field="uid"
     )
 
     def get_tasks(self, obj):
-        request = self.context['request']
-        if request.query_params.get('slim'):
-            return ExportTaskListSerializer(obj.tasks, many=True, required=False, context=self.context).data
+        request = self.context["request"]
+        if request.query_params.get("slim"):
+            return ExportTaskListSerializer(
+                obj.tasks, many=True, required=False, context=self.context
+            ).data
         else:
-            return ExportTaskRecordSerializer(obj.tasks, many=True, required=False, context=self.context).data
+            return ExportTaskRecordSerializer(
+                obj.tasks, many=True, required=False, context=self.context
+            ).data
 
     class Meta:
         model = DataProviderTaskRecord
-        fields = ('uid', 'url', 'name', 'started_at', 'finished_at', 'duration',
-                  'tasks', 'status', 'display', 'slug', 'estimated_size', 'estimated_duration')
+        fields = (
+            "uid",
+            "url",
+            "name",
+            "started_at",
+            "finished_at",
+            "duration",
+            "tasks",
+            "status",
+            "display",
+            "slug",
+            "estimated_size",
+            "estimated_duration",
+        )
 
 
 class DataProviderListSerializer(serializers.BaseSerializer):
-    def to_representation(self, obj):
-        return obj.uid
+    pass
 
 
 class ProjectionSerializer(serializers.ModelSerializer):
@@ -212,7 +252,7 @@ class ProjectionSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Projection
-        fields = ('uid', 'srid', 'name', 'description')
+        fields = ("uid", "srid", "name", "description")
 
 
 class AuditEventSerializer(serializers.ModelSerializer):
@@ -220,7 +260,7 @@ class AuditEventSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = AuditEvent
-        fields = '__all__'
+        fields = "__all__"
 
 
 class SimpleJobSerializer(serializers.Serializer):
@@ -234,12 +274,10 @@ class SimpleJobSerializer(serializers.Serializer):
     event = serializers.CharField()
     description = serializers.CharField()
     url = serializers.HyperlinkedIdentityField(
-        view_name='api:jobs-detail',
-        lookup_field='uid'
+        view_name="api:jobs-detail", lookup_field="uid"
     )
     extent = serializers.SerializerMethodField()
     original_selection = serializers.SerializerMethodField(read_only=True)
-    # bounds = serializers.SerializerMethodField()
     published = serializers.BooleanField()
     visibility = serializers.CharField()
     featured = serializers.BooleanField()
@@ -253,45 +291,15 @@ class SimpleJobSerializer(serializers.Serializer):
         return obj.uid
 
     @staticmethod
-    def get_extent(obj):
-        """Return the Job's extent as a GeoJSON Feature."""
-        uid = str(obj.uid)
-        name = obj.name
-        geom = obj.the_geom
-        geometry = json.loads(GEOSGeometry(geom).geojson)
-        feature = OrderedDict()
-        feature['type'] = 'Feature'
-        feature['properties'] = {'uid': uid, 'name': name}
-        feature['geometry'] = geometry
-        return feature
-
-    @staticmethod
-    def get_original_selection(obj):
-        geom_collection = obj.original_selection
-        if not geom_collection:
-            return None
-        feature_collection = OrderedDict()
-        feature_collection['type'] = 'FeatureCollection'
-        feature_collection['features'] = []
-        for geom in geom_collection:
-            geojson_geom = json.loads(geom.geojson)
-            feature = OrderedDict()
-            feature['type'] = 'Feature'
-            feature['geometry'] = geojson_geom
-            feature_collection['features'].append(feature)
-        return feature_collection
-
-    @staticmethod
     def get_permissions(obj):
         permissions = JobPermission.jobpermissions(obj)
-        permissions['value'] = obj.visibility
+        permissions["value"] = obj.visibility
         return permissions
 
     def get_relationship(self, obj):
-        request = self.context['request']
+        request = self.context["request"]
         user = request.user
         return JobPermission.get_user_permissions(user, obj.uid)
-
 
     @staticmethod
     def get_formats(obj):
@@ -309,18 +317,44 @@ class LicenseSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = License
-        fields = (
-            'slug', 'name', 'text'
-        )
+        fields = ("slug", "name", "text")
 
 
+def get_created_at(obj):
+    if not obj.deleted:
+        return obj.created_at
+
+
+def get_started_at(obj):
+    if not obj.deleted:
+        return obj.started_at
+
+
+def get_finished_at(obj):
+    if not obj.deleted:
+        return obj.finished_at
+
+
+def get_duration(obj):
+    if not obj.deleted:
+        return obj.duration
+
+
+def get_status(obj):
+    if not obj.deleted:
+        return obj.status
+
+
+def get_expiration(obj):
+    if not obj.deleted:
+        return obj.expiration
 
 
 class ExportRunSerializer(serializers.ModelSerializer):
     """Serialize ExportRun."""
+
     url = serializers.HyperlinkedIdentityField(
-        view_name='api:runs-detail',
-        lookup_field='uid'
+        view_name="api:runs-detail", lookup_field="uid"
     )
     job = serializers.SerializerMethodField()  # nest the job details
     provider_tasks = serializers.SerializerMethodField()
@@ -331,17 +365,27 @@ class ExportRunSerializer(serializers.ModelSerializer):
     started_at = serializers.SerializerMethodField()
     finished_at = serializers.SerializerMethodField()
     duration = serializers.SerializerMethodField()
-    user = serializers.SerializerMethodField()
     status = serializers.SerializerMethodField()
-    expiration = serializers.SerializerMethodField()
 
     class Meta:
         model = ExportRun
         fields = (
-            'uid', 'url', 'created_at', 'updated_at', 'started_at', 'finished_at', 'duration', 'user',
-            'status', 'job', 'provider_tasks', 'zipfile_url', 'expiration', 'deleted'
+            "uid",
+            "url",
+            "created_at",
+            "updated_at",
+            "started_at",
+            "finished_at",
+            "duration",
+            "user",
+            "status",
+            "job",
+            "provider_tasks",
+            "zipfile_url",
+            "expiration",
+            "deleted",
         )
-        read_only_fields = ('created_at', 'updated_at')
+        read_only_fields = ("created_at", "updated_at")
 
     @staticmethod
     def get_user(obj):
@@ -350,62 +394,48 @@ class ExportRunSerializer(serializers.ModelSerializer):
 
     def get_provider_tasks(self, obj):
         if not obj.deleted:
-            request = self.context['request']
-            if request.query_params.get('slim'):
-                return DataProviderListSerializer(obj.provider_tasks, many=True, context=self.context).data
+            request = self.context["request"]
+            if request.query_params.get("slim"):
+                return DataProviderListSerializer(
+                    obj.provider_tasks, many=True, context=self.context
+                ).data
             else:
-                return DataProviderTaskRecordSerializer(obj.provider_tasks, many=True, context=self.context).data
+                return DataProviderTaskRecordSerializer(
+                    obj.provider_tasks, many=True, context=self.context
+                ).data
 
     def get_zipfile_url(self, obj):
-        request = self.context['request']
-        if obj.provider_tasks.filter(name='run'):
-            task_downloadable = obj.provider_tasks.get(name='run').tasks.filter(name__icontains='zip')[0].result
+        request = self.context["request"]
+        if obj.provider_tasks.filter(name="run"):
+            task_downloadable = (
+                obj.provider_tasks.get(name="run")
+                .tasks.filter(name__icontains="zip")[0]
+                .result
+            )
             if task_downloadable:
-                return request.build_absolute_uri('/download?uid={}'.format(task_downloadable.uid))
+                return request.build_absolute_uri(
+                    "/download?uid={}".format(task_downloadable.uid)
+                )
         return ""
-
-    def get_created_at(self, obj):
-        if not obj.deleted:
-            return obj.created_at
-
-    def get_started_at(self, obj):
-        if not obj.deleted:
-            return obj.started_at
-
-    def get_finished_at(self, obj):
-        if not obj.deleted:
-            return obj.finished_at
-
-    def get_duration(self, obj):
-        if not obj.deleted:
-            return obj.duration
-
-    def get_status(self, obj):
-        if not obj.deleted:
-            return obj.status
 
     def get_job(self, obj):
         data = SimpleJobSerializer(obj.job, context=self.context).data
         if not obj.deleted:
             return data
         else:
-            return {'uid': data['uid'], 'name': data['name']}
-
-    def get_expiration(self, obj):
-        if not obj.deleted:
-            return obj.expiration
+            return {"uid": data["uid"], "name": data["name"]}
 
 
 class GroupPermissionSerializer(serializers.ModelSerializer):
     class Meta:
         model = GroupPermission
-        fields = ('group', 'user', 'permission')
+        fields = ("group", "user", "permission")
 
 
 class JobPermissionSerializer(serializers.ModelSerializer):
     class Meta:
         model = JobPermission
-        fields = ('job', 'content_type', 'object_id', 'permission')
+        fields = ("job", "content_type", "object_id", "permission")
 
 
 class GroupSerializer(serializers.ModelSerializer):
@@ -414,51 +444,67 @@ class GroupSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Group
-        fields = ('id', 'name', 'members', 'administrators')
+        fields = ("id", "name", "members", "administrators")
 
     @staticmethod
     def get_group_permissions(instance):
-        return GroupPermission.objects.filter(group=instance).prefetch_related('user', 'group')
+        return GroupPermission.objects.filter(group=instance).prefetch_related(
+            "user", "group"
+        )
 
     def get_members(self, instance):
-        qs = self.get_group_permissions(instance).filter(permission=GroupPermissionLevel.MEMBER.value)
+        qs = self.get_group_permissions(instance).filter(
+            permission=GroupPermissionLevel.MEMBER.value
+        )
         return [permission.user.username for permission in qs]
 
     def get_administrators(self, instance):
-        qs = self.get_group_permissions(instance).filter(permission=GroupPermissionLevel.ADMIN.value)
+        qs = self.get_group_permissions(instance).filter(
+            permission=GroupPermissionLevel.ADMIN.value
+        )
         return [permission.user.username for permission in qs]
 
     @staticmethod
     def get_identification(instance):
-        if hasattr(instance, 'oauth'):
+        if hasattr(instance, "oauth"):
             return instance.oauth.identification
         else:
             return None
+
 
 class GroupUserSerializer(serializers.ModelSerializer):
     members = serializers.SerializerMethodField()
 
     class Meta:
         model = Group
-        fields = ('name', 'members')
+        fields = ("name", "members")
 
     def get_members(self, instance):
-        request = self.context['request']
+        request = self.context["request"]
         limit = 1000
-        if request.query_params.get('limit'):
-            limit = int(request.query_params.get('limit'))
-        gp_admins = GroupPermission.objects.filter(group=instance)\
-            .filter(permission=GroupPermissionLevel.ADMIN.value)[:limit]
+        if request.query_params.get("limit"):
+            limit = int(request.query_params.get("limit"))
+        gp_admins = GroupPermission.objects.filter(group=instance).filter(
+            permission=GroupPermissionLevel.ADMIN.value
+        )[:limit]
         admins = [gp.user for gp in gp_admins]
         members = []
-        gp_members = GroupPermission.objects.filter(group=instance)\
-            .filter(permission=GroupPermissionLevel.MEMBER.value).exclude(user__in=admins)[:limit - gp_admins.count()]
+        gp_members = (
+            GroupPermission.objects.filter(group=instance)
+            .filter(permission=GroupPermissionLevel.MEMBER.value)
+            .exclude(user__in=admins)[: limit - gp_admins.count()]
+        )
         for gp in gp_members:
             if gp.user not in admins:
                 members.append(gp.user)
 
-        return [self.user_representation(user, GroupPermissionLevel.ADMIN.value) for user in admins]\
-               + [self.user_representation(user, GroupPermissionLevel.MEMBER.value) for user in members]
+        return [
+            self.user_representation(user, GroupPermissionLevel.ADMIN.value)
+            for user in admins
+        ] + [
+            self.user_representation(user, GroupPermissionLevel.MEMBER.value)
+            for user in members
+        ]
 
     @staticmethod
     def user_representation(user, permission_lvl):
@@ -484,20 +530,34 @@ class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = (
-            'username', 'first_name', 'last_name', 'email', 'last_login', 'date_joined', 'identification', 'commonname'
+            "username",
+            "first_name",
+            "last_name",
+            "email",
+            "last_login",
+            "date_joined",
+            "identification",
+            "commonname",
         )
-        read_only_fields = ('username', 'first_name', 'last_name', 'email', 'last_login', 'date_joined')
+        read_only_fields = (
+            "username",
+            "first_name",
+            "last_name",
+            "email",
+            "last_login",
+            "date_joined",
+        )
 
     @staticmethod
     def get_identification(instance):
-        if hasattr(instance, 'oauth'):
+        if hasattr(instance, "oauth"):
             return instance.oauth.identification
         else:
             return None
 
     @staticmethod
     def get_commonname(instance):
-        if hasattr(instance, 'oauth'):
+        if hasattr(instance, "oauth"):
             return instance.oauth.commonname
         else:
             return None
@@ -507,22 +567,18 @@ class UserDataSerializer(serializers.Serializer):
     """
         Return a GeoJSON representation of the user data.
     """
+
     user = serializers.SerializerMethodField()
     accepted_licenses = serializers.SerializerMethodField()
     groups = serializers.SerializerMethodField()
 
     class Meta:
-        fields = (
-            'user',
-            'accepted_licenses'
-        )
-        read_only_fields = (
-            'user',
-        )
+        fields = ("user", "accepted_licenses")
+        read_only_fields = ("user",)
 
     def get_accepted_licenses(self, instance):
         licenses = dict()
-        request = self.context['request']
+        request = self.context["request"]
         if request.user != instance:
             return licenses
         user_licenses = UserLicense.objects.filter(user=instance)
@@ -532,7 +588,6 @@ class UserDataSerializer(serializers.Serializer):
             else:
                 licenses[license.slug] = False
         return licenses
-
 
     @staticmethod
     def get_user(instance):
@@ -551,18 +606,28 @@ class UserDataSerializer(serializers.Serializer):
 
     @staticmethod
     def get_groups(instance):
-        group_ids = [perm.group.id for perm in
-                     GroupPermission.objects.filter(user=instance).filter(permission="MEMBER")]
+        group_ids = [
+            perm.group.id
+            for perm in GroupPermission.objects.filter(user=instance).filter(
+                permission="MEMBER"
+            )
+        ]
         return group_ids
 
-    def update(self, instance, validated_data):
-        if self.context.get('request').data.get('accepted_licenses'):
-            for slug, selected in self.context.get('request').data.get('accepted_licenses').items():
-                user_license = UserLicense.objects.filter(user=instance, license=License.objects.get(slug=slug))
+    def update(self, instance):
+        if self.context.get("request").data.get("accepted_licenses"):
+            for slug, selected in (
+                self.context.get("request").data.get("accepted_licenses").items()
+            ):
+                user_license = UserLicense.objects.filter(
+                    user=instance, license=License.objects.get(slug=slug)
+                )
                 if user_license and not selected:
                     user_license.delete()
                 if not user_license and selected:
-                    UserLicense.objects.create(user=instance, license=License.objects.get(slug=slug))
+                    UserLicense.objects.create(
+                        user=instance, license=License.objects.get(slug=slug)
+                    )
         return instance
 
     def create(self, validated_data, **kwargs):
@@ -574,22 +639,22 @@ class RegionMaskSerializer(geo_serializers.GeoFeatureModelSerializer):
 
     class Meta:
         model = RegionMask
-        geo_field = 'the_geom'
-        fields = ('the_geom',)
+        geo_field = "the_geom"
+        fields = ("the_geom",)
 
 
 class RegionSerializer(geo_serializers.GeoFeatureModelSerializer):
     """Serializer returning GeoJSON representation of Regions."""
+
     url = serializers.HyperlinkedIdentityField(
-        view_name='api:regions-detail',
-        lookup_field='uid'
+        view_name="api:regions-detail", lookup_field="uid"
     )
     id = serializers.SerializerMethodField()
 
     class Meta:
         model = Region
-        geo_field = 'the_geom'
-        fields = ('id', 'uid', 'name', 'description', 'url', 'the_geom')
+        geo_field = "the_geom"
+        fields = ("id", "uid", "name", "description", "url", "the_geom")
 
     @staticmethod
     def get_id(obj):
@@ -598,36 +663,38 @@ class RegionSerializer(geo_serializers.GeoFeatureModelSerializer):
 
 class SimpleRegionSerializer(serializers.ModelSerializer):
     """Serializer for returning Region model data without geometry."""
+
     url = serializers.HyperlinkedIdentityField(
-        view_name='api:regions-detail',
-        lookup_field='uid'
+        view_name="api:regions-detail", lookup_field="uid"
     )
 
     class Meta:
         model = Region
-        fields = ('uid', 'name', 'description', 'url')
+        fields = ("uid", "name", "description", "url")
 
 
 class ExportFormatSerializer(serializers.ModelSerializer):
     """Return a representation of the ExportFormat model."""
+
     url = serializers.HyperlinkedIdentityField(
-        view_name='api:formats-detail',
-        lookup_field='slug'
+        view_name="api:formats-detail", lookup_field="slug"
     )
     supported_projections = serializers.SerializerMethodField(read_only=True)
 
     class Meta:
         model = ExportFormat
-        fields = ('uid', 'url', 'slug', 'name', 'description', 'supported_projections')
+        fields = ("uid", "url", "slug", "name", "description", "supported_projections")
 
     @staticmethod
     def get_supported_projections(obj):
-        return obj.supported_projections.all().values('uid', 'name', 'srid', 'description')
+        return obj.supported_projections.all().values(
+            "uid", "name", "srid", "description"
+        )
+
 
 class DataProviderSerializer(serializers.ModelSerializer):
     model_url = serializers.HyperlinkedIdentityField(
-        view_name='api:providers-detail',
-        lookup_field='slug'
+        view_name="api:providers-detail", lookup_field="slug"
     )
     type = serializers.SerializerMethodField(read_only=True)
     supported_formats = serializers.SerializerMethodField(read_only=True)
@@ -636,16 +703,19 @@ class DataProviderSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = DataProvider
-        extra_kwargs = {'url': {'write_only': True}, 'user': {'write_only': True}, 'config': {'write_only': True}}
-        read_only_fields = ('uid',)
-        exclude = ('thumbnail', )
+        extra_kwargs = {
+            "url": {"write_only": True},
+            "user": {"write_only": True},
+            "config": {"write_only": True},
+        }
+        read_only_fields = ("uid",)
+        exclude = ("thumbnail",)
 
     @staticmethod
-    def create(validated_data, **kwargs):
-        # try to get existing export Provider
-        url = validated_data.get('url')
-        user = validated_data.get('user')
-        license_data = validated_data.pop('license', None)
+    def create(validated_data):
+        url = validated_data.get("url")
+        user = validated_data.get("user")
+        license_data = validated_data.pop("license", None)
         if license_data:
             License.objects.create(**license_data)
 
@@ -660,22 +730,29 @@ class DataProviderSerializer(serializers.ModelSerializer):
 
     @staticmethod
     def get_supported_formats(obj):
-        return obj.export_provider_type.supported_formats.all().values('uid', 'name', 'slug', 'description')
+        return obj.export_provider_type.supported_formats.all().values(
+            "uid", "name", "slug", "description"
+        )
 
     def get_thumbnail_url(self, obj):
         from urllib.parse import urlsplit, ParseResult
+
         thumbnail = obj.thumbnail
         if thumbnail is not None:
-            request = urlsplit(self.context['request'].build_absolute_uri())
-            if getattr(settings, 'USE_S3', False):
+            request = urlsplit(self.context["request"].build_absolute_uri())
+            if getattr(settings, "USE_S3", False):
                 return get_presigned_url(thumbnail.download_url)
             # Otherwise, grab the hostname from the request and tack on the relative url.
-            return ParseResult(scheme=request.scheme,
-                               netloc=request.netloc,
-                               path=f'{thumbnail.download_url}',
-                               params='', query='', fragment='').geturl()
+            return ParseResult(
+                scheme=request.scheme,
+                netloc=request.netloc,
+                path="{thumbnail.download_url}",
+                params="",
+                query="",
+                fragment="",
+            ).geturl()
         else:
-            return ''
+            return ""
 
 
 class ListJobSerializer(serializers.Serializer):
@@ -693,8 +770,7 @@ class ListJobSerializer(serializers.Serializer):
 
     uid = serializers.SerializerMethodField()
     url = serializers.HyperlinkedIdentityField(
-        view_name='api:jobs-detail',
-        lookup_field='uid'
+        view_name="api:jobs-detail", lookup_field="uid"
     )
     name = serializers.CharField()
     description = serializers.CharField()
@@ -722,9 +798,9 @@ class ListJobSerializer(serializers.Serializer):
         geom = obj.the_geom
         geometry = json.loads(GEOSGeometry(geom).geojson)
         feature = OrderedDict()
-        feature['type'] = 'Feature'
-        feature['properties'] = {'uid': uid, 'name': name}
-        feature['geometry'] = geometry
+        feature["type"] = "Feature"
+        feature["properties"] = {"uid": uid, "name": name}
+        feature["geometry"] = geometry
         return feature
 
     @staticmethod
@@ -733,14 +809,14 @@ class ListJobSerializer(serializers.Serializer):
         if not geom_collection:
             return None
         feature_collection = OrderedDict()
-        feature_collection['type'] = 'FeatureCollection'
-        feature_collection['features'] = []
+        feature_collection["type"] = "FeatureCollection"
+        feature_collection["features"] = []
         for geom in geom_collection:
             geojson_geom = json.loads(geom.geojson)
             feature = OrderedDict()
-            feature['type'] = 'Feature'
-            feature['geometry'] = geojson_geom
-            feature_collection['features'].append(feature)
+            feature["type"] = "Feature"
+            feature["geometry"] = geojson_geom
+            feature_collection["features"].append(feature)
         return feature_collection
 
     @staticmethod
@@ -748,14 +824,14 @@ class ListJobSerializer(serializers.Serializer):
         return obj.user.username
 
     def get_relationship(self, obj):
-        request = self.context['request']
+        request = self.context["request"]
         user = request.user
         return JobPermission.get_user_permissions(user, obj.uid)
 
     @staticmethod
     def get_permissions(obj):
         permissions = JobPermission.jobpermissions(obj)
-        permissions['value'] = obj.visibility
+        permissions["value"] = obj.visibility
         return permissions
 
 
@@ -770,119 +846,96 @@ class JobSerializer(serializers.Serializer):
 
     uid = serializers.UUIDField(read_only=True)
     url = serializers.HyperlinkedIdentityField(
-        view_name='api:jobs-detail',
-        lookup_field='uid'
+        view_name="api:jobs-detail", lookup_field="uid"
     )
-    name = serializers.CharField(
-        max_length=100,
-    )
-    description = serializers.CharField(
-        max_length=255,
-    )
-    event = serializers.CharField(
-        max_length=100,
-        allow_blank=True,
-        required=False
-    )
+    name = serializers.CharField(max_length=100,)
+    description = serializers.CharField(max_length=255,)
+    event = serializers.CharField(max_length=100, allow_blank=True, required=False)
     created_at = serializers.DateTimeField(read_only=True)
     updated_at = serializers.DateTimeField(read_only=True)
     owner = serializers.SerializerMethodField(read_only=True)
     permissions = serializers.SerializerMethodField(read_only=True)
     relationship = serializers.SerializerMethodField(read_only=True)
     exports = serializers.SerializerMethodField()
-    preset = serializers.PrimaryKeyRelatedField(queryset=DatamodelPreset.objects.all(), required=False)
+    preset = serializers.PrimaryKeyRelatedField(
+        queryset=DatamodelPreset.objects.all(), required=False
+    )
     published = serializers.BooleanField(required=False)
     visibility = serializers.CharField(required=False)
     featured = serializers.BooleanField(required=False)
     region = SimpleRegionSerializer(read_only=True)
     extent = serializers.SerializerMethodField(read_only=True)
     original_selection = serializers.SerializerMethodField(read_only=True)
-    user = serializers.HiddenField(
-        default=serializers.CurrentUserDefault()
-    )
+    user = serializers.HiddenField(default=serializers.CurrentUserDefault())
     tags = serializers.SerializerMethodField()
     include_zipfile = serializers.BooleanField(required=False, default=False)
 
     @staticmethod
-    def create(validated_data, **kwargs):
+    def create(validated_data):
         """Creates an export Job.
-        :param **kwargs:
+        :param validated_data:
         """
         return Job.objects.create(**validated_data)
 
     @staticmethod
     def update(instance, validated_data, **kwargs):
         """Not implemented as Jobs are cloned rather than updated.
-        :param **kwargs:
+        :param validated_data:
+        :param instance:
         """
         raise NotImplementedError
 
-    def validate(self, data, **kwargs):
+    def validate(self, data):
         """
         Validates the data submitted during Job creation.
 
         See api/validators.py for validation code.
         """
-        user = data['user']
-        selection = validators.validate_selection(self.context['request'].data, user=user)
-        data['the_geom'] = selection
-        original_selection = validators.validate_original_selection(self.context['request'].data)
-        data['original_selection'] = original_selection
-        data.pop('provider_tasks')
+        user = data["user"]
+        selection = validators.validate_selection(
+            self.context["request"].data, user=user
+        )
+        data["the_geom"] = selection
+        original_selection = validators.validate_original_selection(
+            self.context["request"].data
+        )
+        data["original_selection"] = original_selection
+        data.pop("provider_tasks")
 
         return data
-
-    @staticmethod
-    def get_extent(obj):
-        """Return the export extent as a GeoJSON Feature."""
-        uid = str(obj.uid)
-        name = obj.name
-        geom = obj.the_geom
-        geometry = json.loads(GEOSGeometry(geom).geojson)
-        feature = OrderedDict()
-        feature['type'] = 'Feature'
-        feature['properties'] = {'uid': uid, 'name': name}
-        feature['geometry'] = geometry
-        return feature
-
-    @staticmethod
-    def get_original_selection(obj):
-        geom_collection = obj.original_selection
-        if not geom_collection:
-            return None
-        feature_collection = OrderedDict()
-        feature_collection['type'] = 'FeatureCollection'
-        feature_collection['features'] = []
-        for geom in geom_collection:
-            geojson_geom = json.loads(geom.geojson)
-            feature = OrderedDict()
-            feature['type'] = 'Feature'
-            feature['geometry'] = geojson_geom
-            feature_collection['features'].append(feature)
-        return feature_collection
 
     def get_exports(self, obj):
         """Return the export formats selected for this export."""
         exports = []
         for provider_task in obj.provider_tasks.all():
-            serializer = ExportFormatSerializer(provider_task.formats, many=True,
-                                                context={'request': self.context['request']})
-            exports.append({"provider": provider_task.provider.name, "formats": serializer.data})
+            serializer = ExportFormatSerializer(
+                provider_task.formats,
+                many=True,
+                context={"request": self.context["request"]},
+            )
+            exports.append(
+                {"provider": provider_task.provider.name, "formats": serializer.data}
+            )
         return exports
 
     def get_provider_tasks(self, obj):
         """Return the export formats selected for this export."""
         exports = []
         for provider_task in obj.provider_tasks.all():
-            serializer = ProviderTaskSerializer(provider_task.formats, many=True,
-                                                context={'request': self.context['request']})
+            serializer = ProviderTaskSerializer(
+                provider_task.formats,
+                many=True,
+                context={"request": self.context["request"]},
+            )
             exports.append({provider_task.provider.name: serializer.data})
         return exports
 
     def get_providers(self, obj):
         """Return the export formats selected for this export."""
         providers = [provider_format for provider_format in obj.providers.all()]
-        serializer = DataProviderSerializer(providers, many=True, context={'request': self.context['request']})
+        serializer = DataProviderSerializer(
+            providers, many=True, context={"request": self.context["request"]}
+        )
         return serializer.data
 
     @staticmethod
@@ -896,14 +949,14 @@ class JobSerializer(serializers.Serializer):
         return obj.user.username
 
     def get_relationship(self, obj):
-        request = self.context['request']
+        request = self.context["request"]
         user = request.user
         return JobPermission.get_user_permissions(user, obj.uid)
 
     @staticmethod
     def get_permissions(obj):
         permissions = JobPermission.jobpermissions(obj)
-        permissions['value'] = obj.visibility
+        permissions["value"] = obj.visibility
         return permissions
 
 
@@ -912,25 +965,30 @@ class UserJobActivitySerializer(serializers.ModelSerializer):
 
     class Meta:
         model = UserJobActivity
-        fields = ('last_export_run', 'type', 'created_at')
+        fields = ("last_export_run", "type", "created_at")
 
     def get_last_export_run(self, obj):
         if obj.job.last_export_run:
-            serializer = ExportRunSerializer(obj.job.last_export_run, context={'request': self.context['request']})
+            serializer = ExportRunSerializer(
+                obj.job.last_export_run, context={"request": self.context["request"]}
+            )
             return serializer.data
         else:
             return None
 
 
 class GenericNotificationRelatedSerializer(serializers.BaseSerializer):
-
     def to_representation(self, referenced_object):
         if isinstance(referenced_object, User):
             serializer = UserSerializer(referenced_object)
         elif isinstance(referenced_object, Job):
-            serializer = NotificationJobSerializer(referenced_object, context={'request': self.context['request']})
+            serializer = NotificationJobSerializer(
+                referenced_object, context={"request": self.context["request"]}
+            )
         elif isinstance(referenced_object, ExportRun):
-            serializer = NotificationRunSerializer(referenced_object, context={'request': self.context['request']})
+            serializer = NotificationRunSerializer(
+                referenced_object, context={"request": self.context["request"]}
+            )
         elif isinstance(referenced_object, Group):
             serializer = GroupSerializer(referenced_object)
         return serializer.data
@@ -944,27 +1002,43 @@ class NotificationSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Notification
-        fields = ('unread', 'deleted', 'level', 'verb', 'description', 'id', 'timestamp',
-                  'recipient_id', 'actor', 'target', 'action_object')
+        fields = (
+            "unread",
+            "deleted",
+            "level",
+            "verb",
+            "description",
+            "id",
+            "timestamp",
+            "recipient_id",
+            "actor",
+            "target",
+            "action_object",
+        )
 
     def get_related_object(self, obj, related_type=None):
         if not related_type:
             return None
-        type_id = getattr(obj, '{}_content_type_id'.format(related_type))
+        type_id = getattr(obj, "{}_content_type_id".format(related_type))
         if type_id:
-            return {'type': str(ContentType.objects.get(id=type_id).model),
-                    'id': getattr(obj, '{0}_object_id'.format(related_type)),
-                    'details': GenericNotificationRelatedSerializer(getattr(obj, related_type),
-                                                                    context={'request': self.context['request']}).data}
+            return {
+                "type": str(ContentType.objects.get(id=type_id).model),
+                "id": getattr(obj, "{0}_object_id".format(related_type)),
+                "details": GenericNotificationRelatedSerializer(
+                    getattr(obj, related_type),
+                    context={"request": self.context["request"]},
+                ).data,
+            }
 
     def get_actor(self, obj):
-        return self.get_related_object(obj, 'actor')
+        return self.get_related_object(obj, "actor")
 
     def get_target(self, obj):
-        return self.get_related_object(obj, 'target')
+        return self.get_related_object(obj, "target")
 
     def get_action_object(self, obj):
-        return self.get_related_object(obj, 'action_object')
+        return self.get_related_object(obj, "action_object")
+
 
 class NotificationJobSerializer(serializers.Serializer):
     """Return a slimmed down representation of a Job model."""
@@ -984,8 +1058,10 @@ class NotificationJobSerializer(serializers.Serializer):
     def get_uid(obj):
         return obj.uid
 
+
 class NotificationRunSerializer(serializers.ModelSerializer):
     """Return a slimmed down representation of a ExportRun model."""
+
     job = serializers.SerializerMethodField()  # nest the job details
     user = serializers.SerializerMethodField()
     expiration = serializers.SerializerMethodField()
@@ -994,49 +1070,33 @@ class NotificationRunSerializer(serializers.ModelSerializer):
     finished_at = serializers.SerializerMethodField()
     duration = serializers.SerializerMethodField()
     status = serializers.SerializerMethodField()
-    expiration = serializers.SerializerMethodField()
 
     class Meta:
         model = ExportRun
 
         fields = (
-            'uid', 'created_at', 'updated_at', 'started_at', 'finished_at', 'duration', 'user',
-            'status', 'job', 'expiration', 'deleted'
+            "uid",
+            "created_at",
+            "updated_at",
+            "started_at",
+            "finished_at",
+            "duration",
+            "user",
+            "status",
+            "job",
+            "expiration",
+            "deleted",
         )
-        read_only_fields = ('created_at', 'updated_at')
+        read_only_fields = ("created_at", "updated_at")
 
     @staticmethod
     def get_user(obj):
         if not obj.deleted:
             return obj.user.username
 
-    def get_created_at(self, obj):
-        if not obj.deleted:
-            return obj.created_at
-
-    def get_started_at(self, obj):
-        if not obj.deleted:
-            return obj.started_at
-
-    def get_finished_at(self, obj):
-        if not obj.deleted:
-            return obj.finished_at
-
-    def get_duration(self, obj):
-        if not obj.deleted:
-            return obj.duration
-
-    def get_status(self, obj):
-        if not obj.deleted:
-            return obj.status
-
     def get_job(self, obj):
         data = NotificationJobSerializer(obj.job, context=self.context).data
         if not obj.deleted:
             return data
         else:
-            return {'uid': data['uid'], 'name': data['name']}
-
-    def get_expiration(self, obj):
-        if not obj.deleted:
-            return obj.expiration
+            return {"uid": data["uid"], "name": data["name"]}

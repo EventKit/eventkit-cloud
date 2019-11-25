@@ -11,6 +11,7 @@ WORKDIR /var/lib/eventkit
 COPY --chown=eventkit ./requirements-dev.txt /var/lib/eventkit/requirements-dev.txt
 COPY --chown=eventkit ./environment-dev.yml /var/lib/eventkit/environment-dev.yml
 COPY --chown=eventkit ./conda /var/lib/eventkit/conda
+COPY --chown=eventkit ./setup.cfg /var/lib/eventkit/setup.cfg
 
 ENV PATH="/home/eventkit/miniconda3/bin:$PATH"
 
