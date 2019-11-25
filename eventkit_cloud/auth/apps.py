@@ -2,6 +2,7 @@
 
 from django.apps import AppConfig
 
+
 class AuthConfig(AppConfig):
-    name = 'eventkit_cloud.auth'
-    label = 'eventkit_cloud.auth'
+    name = "eventkit_cloud.auth"
+    label = "eventkit_cloud.auth"

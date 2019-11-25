@@ -16,17 +16,31 @@ class Migration(migrations.Migration):
 
     operations = [
         migrations.CreateModel(
-            name='OAuth',
+            name="OAuth",
             fields=[
-                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('identification', models.CharField(max_length=200, unique=True)),
-                ('commonname', models.CharField(max_length=100)),
-                ('user_info', django.contrib.postgres.fields.jsonb.JSONField(default={})),
-                ('user', models.OneToOneField(on_delete=django.db.models.deletion.CASCADE, to=settings.AUTH_USER_MODEL)),
+                (
+                    "id",
+                    models.AutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("identification", models.CharField(max_length=200, unique=True)),
+                ("commonname", models.CharField(max_length=100)),
+                (
+                    "user_info",
+                    django.contrib.postgres.fields.jsonb.JSONField(default={}),
+                ),
+                (
+                    "user",
+                    models.OneToOneField(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        to=settings.AUTH_USER_MODEL,
+                    ),
+                ),
             ],
-            options={
-                'managed': True,
-                'db_table': 'auth_oauth',
-            },
+            options={"managed": True, "db_table": "auth_oauth", },
         ),
     ]

@@ -1,5 +1,3 @@
-
-
 import json
 import logging
 from datetime import datetime, timedelta
@@ -32,10 +30,13 @@ def auto_logout(get_response):
             if time_passed >= timedelta(0, settings.AUTO_LOGOUT_SECONDS, 0):
                 # Force logout and redirect to login page.
                 auth_logout(request)
-                response = redirect('login')
+                response = redirect("login")
                 if settings.SESSION_USER_LAST_ACTIVE_AT in request.session:
                     del request.session[settings.SESSION_USER_LAST_ACTIVE_AT]
-                response.delete_cookie(settings.AUTO_LOGOUT_COOKIE_NAME, domain=settings.SESSION_COOKIE_DOMAIN)
+                response.delete_cookie(
+                    settings.AUTO_LOGOUT_COOKIE_NAME,
+                    domain=settings.SESSION_COOKIE_DOMAIN,
+                )
                 return response
 
         return get_response(request)
@@ -53,22 +54,28 @@ def fetch_user_from_token(access_token):
     logger.debug('Sending request: access_token="{0}"'.format(access_token))
     try:
         response = requests.get(
-            '{0}'.format(settings.OAUTH_PROFILE_URL),
-            headers={
-                'Authorization': 'Bearer {0}'.format(access_token),
-            },
+            "{0}".format(settings.OAUTH_PROFILE_URL),
+            headers={"Authorization": "Bearer {0}".format(access_token), },
         )
-        logger.debug('Received response: {0}'.format(response.text))
+        logger.debug("Received response: {0}".format(response.text))
         response.raise_for_status()
     except requests.ConnectionError as err:
-        logger.error('Could not reach OAuth Resource Server: {0}'.format(err))
+        logger.error("Could not reach OAuth Resource Server: {0}".format(err))
         raise OAuthServerUnreachable()
     except requests.HTTPError as err:
         status_code = err.response.status_code
         if status_code == 401:
-            logger.error('OAuth Resource Server rejected access token: {0}'.format(err.response.text))
-            raise Unauthorized('OAuth Resource Server rejected access token')
-        logger.error('OAuth Resource Server returned HTTP {0} {1}'.format(status_code, err.response.text))
+            logger.error(
+                "OAuth Resource Server rejected access token: {0}".format(
+                    err.response.text
+                )
+            )
+            raise Unauthorized("OAuth Resource Server rejected access token")
+        logger.error(
+            "OAuth Resource Server returned HTTP {0} {1}".format(
+                status_code, err.response.text
+            )
+        )
         raise OAuthError(status_code)
 
     orig_data = response.json()
@@ -84,13 +91,13 @@ def get_user(user_data, orig_data=None):
     :param orig_data: The original dictionary returned from the OAuth response, not modified to fit our User model.
     :return:
     """
-    oauth = OAuth.objects.filter(identification=user_data.get('identification')).first()
+    oauth = OAuth.objects.filter(identification=user_data.get("identification")).first()
     if not oauth:
         if orig_data is None:
             orig_data = {}
         try:
-            identification = user_data.pop('identification')
-            commonname = user_data.pop('commonname')
+            identification = user_data.pop("identification")
+            commonname = user_data.pop("commonname")
         except KeyError as ke:
             logger.error("Required field not provided.")
             raise ke
@@ -99,21 +106,30 @@ def get_user(user_data, orig_data=None):
         except Exception as e:
             # Call authenticate here to log the failed attempt.
             authenticate(username=identification)
-            logger.error("The user data provided could not be used to create a user, "
-                         "it most likely caused by OAUTH_PROFILE_SCHEMA containing an invalid key, or a change"
-                         "to their identification key.")
-            logger.error(F"USER DATA: {user_data}")
+            logger.error(
+                "The user data provided could not be used to create a user, "
+                "it most likely caused by OAUTH_PROFILE_SCHEMA containing an invalid key, or a change"
+                "to their identification key."
+            )
+            logger.error("USER DATA: {user_data}")
             raise e
         try:
-            OAuth.objects.create(user=user, identification=identification, commonname=commonname, user_info=orig_data)
+            OAuth.objects.create(
+                user=user,
+                identification=identification,
+                commonname=commonname,
+                user_info=orig_data,
+            )
         except Exception as e:
-            logger.error("The user data provided by the resource server could not be used to create a user, "
-                         "it most likely caused by OAUTH_PROFILE_SCHEMA mapping is incorrect and/or not providing "
-                         "a valid identification and commonname.")
+            logger.error(
+                "The user data provided by the resource server could not be used to create a user, "
+                "it most likely caused by OAUTH_PROFILE_SCHEMA mapping is incorrect and/or not providing "
+                "a valid identification and commonname."
+            )
             user.delete()
             raise e
-        user_data['identification'] = identification
-        user_data['commonname'] = commonname
+        user_data["identification"] = identification
+        user_data["commonname"] = commonname
         return user
     else:
         # If logging back in, update their info.
@@ -132,17 +148,25 @@ def get_user_data_from_schema(data):
     try:
         mapping = json.loads(settings.OAUTH_PROFILE_SCHEMA)
     except AttributeError:
-        logger.error("AN OAUTH_PROFILE_SCHEMA was not added to the environment variables.")
+        logger.error(
+            "AN OAUTH_PROFILE_SCHEMA was not added to the environment variables."
+        )
         raise
     except ValueError:
-        raise Error("An invalid json string was added to OAUTH_PROFILE_SCHEMA, please ensure names and values are "
-                    "quoted properly, that quotes are terminated, and that it is surrounded by braces.")
+        raise Error(
+            "An invalid json string was added to OAUTH_PROFILE_SCHEMA, please ensure names and values are "
+            "quoted properly, that quotes are terminated, and that it is surrounded by braces."
+        )
     except TypeError:
-        raise Error("AN OAUTH_PROFILE_SCHEMA was added to the environment but it is empty.  Please add a valid "
-                    "mapping.")
+        raise Error(
+            "AN OAUTH_PROFILE_SCHEMA was added to the environment but it is empty.  Please add a valid "
+            "mapping."
+        )
     if not mapping:
-        raise Error("AN OAUTH_PROFILE_SCHEMA was added to the environment but it an empty json object.  Please add a "
-                    "valid mapping.")
+        raise Error(
+            "AN OAUTH_PROFILE_SCHEMA was added to the environment but it an empty json object.  Please add a "
+            "valid mapping."
+        )
     for key, value_list in mapping.items():
         if type(value_list) is not list:
             value_list = [value_list]
@@ -163,34 +187,45 @@ def request_access_token(auth_code):
             settings.OAUTH_TOKEN_URL,
             auth=(settings.OAUTH_CLIENT_ID, settings.OAUTH_CLIENT_SECRET),
             data={
-                'grant_type': 'authorization_code',
-                'code': auth_code,
-                'redirect_uri': settings.OAUTH_REDIRECT_URI,
+                "grant_type": "authorization_code",
+                "code": auth_code,
+                "redirect_uri": settings.OAUTH_REDIRECT_URI,
             },
         )
-        logger.debug('Received response: {0}'.format(response.text))
+        logger.debug("Received response: {0}".format(response.text))
         response.raise_for_status()
     except requests.ConnectionError as err:
-        logger.error('Could not reach Token Server: {0}'.format(err))
+        logger.error("Could not reach Token Server: {0}".format(err))
         raise OAuthServerUnreachable()
     except requests.HTTPError as err:
         status_code = err.response.status_code
         if status_code == 401:
-            logger.error('OAuth server rejected user auth code: {0}'.format(err.response.text))
-            raise Unauthorized('OAuth server rejected auth code')
-        logger.error('OAuth server returned HTTP {0}'.format(status_code), err.response.text)
+            logger.error(
+                "OAuth server rejected user auth code: {0}".format(err.response.text)
+            )
+            raise Unauthorized("OAuth server rejected auth code")
+        logger.error(
+            "OAuth server returned HTTP {0}".format(status_code), err.response.text
+        )
         raise OAuthError(status_code)
     access = response.json()
     access_token = access.get(settings.OAUTH_TOKEN_KEY)
     if not access_token:
-        logger.error('OAuth server response missing `{0}`.  Response Text:\n{1}'.format(settings.OAUTH_TOKEN_KEY, response.text))
-        raise InvalidOauthResponse('missing `{0}`'.format(settings.OAUTH_TOKEN_KEY), response.text)
+        logger.error(
+            "OAuth server response missing `{0}`.  Response Text:\n{1}".format(
+                settings.OAUTH_TOKEN_KEY, response.text
+            )
+        )
+        raise InvalidOauthResponse(
+            "missing `{0}`".format(settings.OAUTH_TOKEN_KEY), response.text
+        )
     return access_token
 
 
 #
 # Errors
 #
+
 
 class Error(Exception):
     def __init__(self, message):
@@ -199,21 +234,25 @@ class Error(Exception):
 
 class OAuthServerUnreachable(Error):
     def __init__(self):
-        super(Error, self).__init__('OAuth Server is unreachable')
+        super(Error, self).__init__("OAuth Server is unreachable")
 
 
 class OAuthError(Error):
     def __init__(self, status_code):
-        super(Error, self).__init__('OAuth Server responded with HTTP {0}'.format(status_code))
+        super(Error, self).__init__(
+            "OAuth Server responded with HTTP {0}".format(status_code)
+        )
         self.status_code = status_code
 
 
 class InvalidOauthResponse(Error):
     def __init__(self, message, response_text):
-        super(Error, self).__init__('OAuth Server returned invalid response: {0}'.format(message))
+        super(Error, self).__init__(
+            "OAuth Server returned invalid response: {0}".format(message)
+        )
         self.response_text = response_text
 
 
 class Unauthorized(Error):
     def __init__(self, message):
-        super(Error, self).__init__('Unauthorized: {0}'.format(message))
+        super(Error, self).__init__("Unauthorized: {0}".format(message))
