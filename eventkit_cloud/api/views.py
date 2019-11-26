@@ -641,7 +641,7 @@ class JobViewSet(viewsets.ModelViewSet):
         perms, job_ids = JobPermission.userjobs(
             request.user, JobPermissionLevel.ADMIN.value
         )
-        if not job.id in job_ids:
+        if job.id not in job_ids:
             return Response(
                 [{"detail": "ADMIN permission is required to update this job."}],
                 status.HTTP_400_BAD_REQUEST,
@@ -672,9 +672,9 @@ class JobViewSet(viewsets.ModelViewSet):
         if "permissions" in payload:
             serializer = JobSerializer(job, context={"request": request})
             current_permissions = serializer.get_permissions(job)
-            if not "members" in payload["permissions"]:
+            if "members" not in payload["permissions"]:
                 payload["permissions"]["members"] = current_permissions["members"]
-            if not "groups" in payload["permissions"]:
+            if "groups" not in payload["permissions"]:
                 payload["permissions"]["groups"] = current_permissions["groups"]
             users = payload["permissions"]["members"]
             groups = payload["permissions"]["groups"]
@@ -695,7 +695,7 @@ class JobViewSet(viewsets.ModelViewSet):
                             status.HTTP_400_BAD_REQUEST,
                         )
                     perm = set[key]
-                    if not perm in JobPermissionLevel.__members__:
+                    if perm not in JobPermissionLevel.__members__:
                         return Response(
                             [{"detail": "invalid permission value : %s" % perm}],
                             status.HTTP_400_BAD_REQUEST,
@@ -754,7 +754,7 @@ class JobViewSet(viewsets.ModelViewSet):
         return super(JobViewSet, self).update(self, request, uid, *args, **kwargs)
 
     @list_route(
-        methods=["post",]
+        methods=["post", ]
     )
     def filter(self, request, *args, **kwargs):
         """
@@ -769,7 +769,7 @@ class JobViewSet(viewsets.ModelViewSet):
 
         """
 
-        if not "permissions" in request.data:
+        if "permissions" not in request.data:
             return Response(
                 [{"detail": "missing permissions attribute"}],
                 status.HTTP_400_BAD_REQUEST,
@@ -796,7 +796,7 @@ class JobViewSet(viewsets.ModelViewSet):
         )
         logger.info("JOB IDS %s %s" % (job.id, job_ids))
 
-        if not job.id in job_ids:
+        if job.id not in job_ids:
             return Response(
                 [{"detail": "ADMIN permission is required to delete this job."}],
                 status.HTTP_400_BAD_REQUEST,
@@ -939,7 +939,8 @@ class DataProviderViewSet(viewsets.ReadOnlyModelViewSet):
         Checks the status of a data provider to confirm that it is available.
 
         * slug: The DataProvider object slug.
-        * return: The HTTP response of the data provider health check, in cases where there is no error. If the data provider does not exist, returns status 400 bad request.
+        * return: The HTTP response of the data provider health check, in cases where there is no error. If the data
+        provider does not exist, returns status 400 bad request.
         """
         try:
             geojson = self.request.data.get("geojson", None)
@@ -1034,7 +1035,8 @@ class ExportRunViewSet(viewsets.ModelViewSet):
 
     * `user`: The user who created the job.
 
-    * `status`: The current run status (can include any number of the following: COMPLETED, SUBMITTED, INCOMPLETE, or FAILED).
+    * `status`: The current run status (can include any number of the following: COMPLETED, SUBMITTED, INCOMPLETE, or
+    FAILED).
         * Example = `/api/runs?status=SUBMITTED,INCOMPLETE,FAILED`
 
     * `job_uid`: The uid of a particular job.
@@ -1052,13 +1054,15 @@ class ExportRunViewSet(viewsets.ModelViewSet):
 
     An example request using some of the parameters.
 
-    `/api/runs?user=test_user&status=FAILED,COMPLETED&min_date=2017-05-20&max_date=2017-12-21&published=True&ordering=-job__name`
+    `/api/runs?user=test_user&status=FAILED,COMPLETED&min_date=2017-05-20&max_date=2017-12-21&published=True&ordering=
+    -job__name`
 
     **filter:**
 
     Accessed at `/runs/filter`.
 
-    Accepts GET and POST. Support all the url params of 'list' with the addition of advanced features like `search_term`, `bbox`, and `geojson`.
+    Accepts GET and POST. Support all the url params of 'list' with the addition of advanced features like `
+    search_term`, `bbox`, and `geojson`.
 
     * `search_term`: A value to search the job name, description and event text for.
 
@@ -1157,7 +1161,7 @@ class ExportRunViewSet(viewsets.ModelViewSet):
         perms, job_ids = JobPermission.userjobs(
             request.user, JobPermissionLevel.ADMIN.value
         )
-        if not job.id in job_ids:
+        if job.id not in job_ids:
             return Response(
                 [{"detail": "ADMIN permission is required to delete this DataPack."}],
                 status.HTTP_400_BAD_REQUEST,
@@ -1200,14 +1204,14 @@ class ExportRunViewSet(viewsets.ModelViewSet):
     def filter(self, request, *args, **kwargs):
         """
         Lists the ExportRuns and provides advanced filtering options like search_term, bbox, and geojson geometry.
-        Accepts GET and POST request. POST is required if you want to filter by a geojson geometry contained in the request data
+        Accepts GET and POST request. POST is required if you want to filter by a geojson geometry contained in the
+        request data
         :param request: the http request
         :param args:
         :param kwargs:
         :return: the serialized runs
         """
 
-        deleted = request.data.get("deleted", False)
         queryset = self.filter_queryset(self.get_queryset())
 
         if "permissions" in request.data:
@@ -1295,7 +1299,7 @@ class ExportRunViewSet(viewsets.ModelViewSet):
         """
 
         payload = request.data
-        if not "expiration" in payload:
+        if "expiration" not in payload:
             return Response({"success": False}, status=status.HTTP_400_BAD_REQUEST)
 
         expiration = payload["expiration"]
@@ -1512,9 +1516,10 @@ class UserDataViewSet(viewsets.GenericViewSet):
         """
         Update user data.
 
-        User data cannot currently be updated via this API menu however UserLicense data can, by sending a patch message,
-        with the licenses data that the user agrees to.  Users will need to agree to all of the licenses prior to being allowed to
-        download data.
+        User data cannot currently be updated via this API menu however UserLicense data can, by sending a patch
+        message,
+        with the licenses data that the user agrees to.  Users will need to agree to all of the licenses prior to
+        being allowed to download data.
 
         Request data can be posted as `application/json`.
 
@@ -1602,7 +1607,7 @@ class UserDataViewSet(viewsets.GenericViewSet):
         for group in groups:
             serializer = GroupSerializer(group)
             for username in serializer.get_members(group):
-                if not username in targetnames:
+                if username not in targetnames:
                     targetnames.append(username)
 
         users = User.objects.filter(username__in=targetnames).all()
@@ -1994,7 +1999,7 @@ class GroupViewSet(viewsets.ModelViewSet):
             permissionlabel = item[0]
             permission = item[1]
 
-            if not permissionlabel in request.data:
+            if permissionlabel not in request.data:
                 continue
 
             user_ids = [
@@ -2008,7 +2013,7 @@ class GroupViewSet(viewsets.ModelViewSet):
             ]
             targetusers = request.data[permissionlabel]
 
-            ## Add new users for this permission level
+            # Add new users for this permission level
             newusers = list(set(targetusers) - set(currentusers))
             users = User.objects.filter(username__in=newusers).all()
             verb = NotificationVerb.ADDED_TO_GROUP.value
@@ -2029,7 +2034,7 @@ class GroupViewSet(viewsets.ModelViewSet):
                     permission,
                 )
 
-            ## Remove existing users for this permission level
+            # Remove existing users for this permission level
 
             removedusers = list(set(currentusers) - set(targetusers))
             users = User.objects.filter(username__in=removedusers).all()
@@ -2327,7 +2332,6 @@ def get_job_ids_via_permissions(permissions):
         usernames = permissions["members"]
 
     groups = Group.objects.filter(name__in=groupnames)
-    payload = {}
     master_job_list = []
     initialized = False
     for group in groups:

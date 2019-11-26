@@ -76,7 +76,8 @@ def eventkit_exception_handler(exc, context):
 
 def parse_provider_tasks(error):
     """
-    Parse out provider tasks depending on what kind of object it is and isolate the message about a specific form field if necessary.
+    Parse out provider tasks depending on what kind of object it is and isolate the message about a specific form
+    field if necessary.
     :param error:
     :return:
     """

@@ -21,7 +21,8 @@ class HOTExportApiRenderer(BrowsableAPIRenderer):
         return context
 
 
-# alot of the code here is pulled right out of swagger-rest-framework to minimize the need for it as a production dependency
+# alot of the code here is pulled right out of swagger-rest-framework to minimize the need for it as a production
+# dependency
 
 
 def get_swagger_settings():
@@ -123,7 +124,6 @@ class CustomOpenAPIRenderer(BaseRenderer):
 
     def render(self, data, accepted_media_type=None, renderer_context=None):
         try:
-            import coreapi
             from openapi_codec import OpenAPICodec
 
             OpenAPICodec.encode = self.encode
