@@ -137,8 +137,8 @@ def get_user(user_data, orig_data=None):
         oauth.save()
         return oauth.user
 
-
-def get_user_data_from_schema(data):
+# TODO: make less complex
+def get_user_data_from_schema(data): # NOQA
     """
     Uses schema provided in settings to get user_data.
     :param data: user profile data from oauth_service

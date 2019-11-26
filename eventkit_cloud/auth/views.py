@@ -40,7 +40,8 @@ def oauth(request):
             if request.META.get("HTTP_REFERER"):
                 params += [
                     (
-                        "state", base64.b64encode(request.META.get("HTTP_REFERER").encode()),
+                        "state",
+                        base64.b64encode(request.META.get("HTTP_REFERER").encode()),
                     )
                 ]
             encoded_params = urlencode(params)
