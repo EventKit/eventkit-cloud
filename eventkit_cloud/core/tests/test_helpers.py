@@ -12,7 +12,6 @@ logger = logging.getLogger(__name__)
 
 
 class TestCoreHelpers(TestCase):
-
     def test_get_id(self):
 
         username = "test"

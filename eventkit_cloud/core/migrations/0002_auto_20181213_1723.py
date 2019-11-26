@@ -10,26 +10,32 @@ class Migration(migrations.Migration):
     initial = True
 
     dependencies = [
-        ('jobs', '0001_initial'),
-        ('core', '0001_initial'),
-        ('auth', '0009_alter_user_last_name_max_length'),
+        ("jobs", "0001_initial"),
+        ("core", "0001_initial"),
+        ("auth", "0009_alter_user_last_name_max_length"),
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='jobpermission',
-            name='job',
-            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='jobs.Job'),
+            model_name="jobpermission",
+            name="job",
+            field=models.ForeignKey(
+                on_delete=django.db.models.deletion.CASCADE, to="jobs.Job"
+            ),
         ),
         migrations.AddField(
-            model_name='grouppermission',
-            name='group',
-            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='auth.Group'),
+            model_name="grouppermission",
+            name="group",
+            field=models.ForeignKey(
+                on_delete=django.db.models.deletion.CASCADE, to="auth.Group"
+            ),
         ),
         migrations.AddField(
-            model_name='grouppermission',
-            name='user',
-            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to=settings.AUTH_USER_MODEL),
+            model_name="grouppermission",
+            name="user",
+            field=models.ForeignKey(
+                on_delete=django.db.models.deletion.CASCADE, to=settings.AUTH_USER_MODEL
+            ),
         ),
     ]
