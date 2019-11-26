@@ -12,7 +12,7 @@ from django.shortcuts import redirect
 from eventkit_cloud.auth.auth import request_access_token, fetch_user_from_token
 from eventkit_cloud.core.helpers import get_id
 
-from urllib.parse import urlparse, parse_qs, urlencode
+from urllib.parse import urlencode
 
 import base64
 

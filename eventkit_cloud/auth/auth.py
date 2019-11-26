@@ -55,7 +55,7 @@ def fetch_user_from_token(access_token):
     try:
         response = requests.get(
             "{0}".format(settings.OAUTH_PROFILE_URL),
-            headers={"Authorization": "Bearer {0}".format(access_token),},
+            headers={"Authorization": "Bearer {0}".format(access_token), },
         )
         logger.debug("Received response: {0}".format(response.text))
         response.raise_for_status()
