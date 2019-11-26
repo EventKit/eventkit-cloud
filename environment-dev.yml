@@ -1,7 +1,6 @@
 name: eventkit-cloud
 channels:
   - local
-  - https://eventkit_readonly:eventkit-readonly@nexus.devops.geointservices.io/content/repositories/eventkit-Releases/
 dependencies:
   - python=3.6
   - postgresql
