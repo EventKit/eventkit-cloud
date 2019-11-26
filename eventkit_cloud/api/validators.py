@@ -164,8 +164,8 @@ def validate_original_selection(data):
         logger.error(geos_exception)
         return GeometryCollection()
 
-
-def validate_selection(data, user=None):
+# TODO: make less complex
+def validate_selection(data, user=None): # NOQA
     """
     Validates the extents by calculating the geodesic area of the extents,
     then checking the resulting area against the max_extent for the user.

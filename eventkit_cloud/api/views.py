@@ -244,7 +244,8 @@ class JobViewSet(viewsets.ModelViewSet):
                 logger.debug(e.detail)
                 return Response(e.detail, status=status.HTTP_400_BAD_REQUEST)
 
-    def create(self, request, *args, **kwargs):
+    # TODO: make less complex
+    def create(self, request, *args, **kwargs): # NOQA
         """
         Create a Job from the supplied request data.
 
@@ -608,7 +609,8 @@ class JobViewSet(viewsets.ModelViewSet):
                 [{"detail": _("Failed to run Export")}], status.HTTP_400_BAD_REQUEST
             )
 
-    @transaction.atomic
+    # TODO: make less complex
+    @transaction.atomic # NOQA
     def partial_update(self, request, uid=None, *args, **kwargs):
         """
            Update one or more attributes for the given job
@@ -1195,7 +1197,8 @@ class ExportRunViewSet(viewsets.ModelViewSet):
             )
             return Response(serializer.data, status=status.HTTP_200_OK)
 
-    @list_route(methods=["post", "get"])
+    # TODO: make less complex
+    @list_route(methods=["post", "get"]) # NOQA
     def filter(self, request, *args, **kwargs):
         """
         Lists the ExportRuns and provides advanced filtering options like search_term, bbox, and geojson geometry.
@@ -1244,8 +1247,7 @@ class ExportRunViewSet(viewsets.ModelViewSet):
         if search_term is not None:
             queryset = queryset.filter(
                 (
-                    Q(job__name__icontains=search_term) |
-                    Q(job__description__icontains=search_term) |
+                    Q(job__name__icontains=search_term) | Q(job__description__icontains=search_term) |
                     Q(job__event__icontains=search_term)
                 )
             )
@@ -1922,7 +1924,8 @@ class GroupViewSet(viewsets.ModelViewSet):
         # instance.soft_delete(user=request.user)
         # return Response(status=status.HTTP_204_NO_CONTENT)
 
-    @transaction.atomic
+    # TODO: make less complex
+    @transaction.atomic # NOQA
     def partial_update(self, request, id=None, *args, **kwargs):
         """
         Change the group's name, members, and administrators
