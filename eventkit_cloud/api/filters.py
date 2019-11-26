@@ -18,8 +18,8 @@ logger = logging.getLogger(__name__)
 class ListFilter(django_filters.Filter):
     def filter(self, qs, value):
         if value:
-            value_list = value.split(',')
-            lookup = '{}__in'.format(self.field_name)
+            value_list = value.split(",")
+            lookup = "{}__in".format(self.field_name)
             return self.get_method(qs)(**{lookup: value_list}).distinct()
         else:
             return qs
@@ -27,23 +27,40 @@ class ListFilter(django_filters.Filter):
 
 class JobFilter(django_filters.FilterSet):
     """Filter export results according to a range of critera."""
+
     name = django_filters.CharFilter(field_name="name", lookup_expr="icontains")
-    description = django_filters.CharFilter(field_name="description", lookup_expr="icontains")
+    description = django_filters.CharFilter(
+        field_name="description", lookup_expr="icontains"
+    )
     event = django_filters.CharFilter(field_name="event", lookup_expr="icontains")
     start = django_filters.IsoDateTimeFilter(field_name="created_at", lookup_expr="gte")
     end = django_filters.IsoDateTimeFilter(field_name="created_at", lookup_expr="lte")
     region = django_filters.CharFilter(field_name="region__name")
     user = django_filters.CharFilter(field_name="user__username", lookup_expr="exact")
-    feature = django_filters.CharFilter(field_name="tags__name", lookup_expr="icontains")
+    feature = django_filters.CharFilter(
+        field_name="tags__name", lookup_expr="icontains"
+    )
     visibility = django_filters.CharFilter(field_name="visibility", lookup_expr="exact")
-    featured = django_filters.BooleanFilter(field_name="featured", widget=django_filters.widgets.BooleanWidget())
-    user_private = django_filters.CharFilter(method='user_private_filter')
+    featured = django_filters.BooleanFilter(
+        field_name="featured", widget=django_filters.widgets.BooleanWidget()
+    )
+    user_private = django_filters.CharFilter(method="user_private_filter")
 
     class Meta:
         model = Job
-        fields = ('name', 'description', 'event', 'start', 'end', 'region',
-                  'user', 'user_private', 'feature', 'visibility')
-        order_by = ('-created_at',)
+        fields = (
+            "name",
+            "description",
+            "event",
+            "start",
+            "end",
+            "region",
+            "user",
+            "user_private",
+            "feature",
+            "visibility",
+        )
+        order_by = ("-created_at",)
 
     @staticmethod
     def user_private_filter(queryset, value):
@@ -55,35 +72,63 @@ class JobFilter(django_filters.FilterSet):
         Return exports for all other users and where the export is published.
         """
         return queryset.filter(
-            (Q(user__username=value) | (~Q(user__username=value) & Q(visiblity=VisibilityState.PUBLIC.value)))
+            (
+                Q(user__username=value)
+                | (~Q(user__username=value) & Q(visiblity=VisibilityState.PUBLIC.value))
+            )
         )
 
 
 class ExportRunFilter(django_filters.FilterSet):
     """Filter export runs by status."""
+
     user = django_filters.CharFilter(field_name="user__username", lookup_expr="exact")
     status = ListFilter(field_name="status")
     job_uid = django_filters.CharFilter(field_name="job__uid", lookup_expr="exact")
-    min_date = django_filters.IsoDateTimeFilter(field_name="started_at", lookup_expr="gte")
-    max_date = django_filters.IsoDateTimeFilter(field_name="started_at", lookup_expr="lte")
-    started_at = django_filters.IsoDateTimeFilter(field_name="started_at", lookup_expr="exact")
-    visibility = django_filters.CharFilter(field_name="job__visibility", lookup_expr="exact")
-    featured = django_filters.BooleanFilter(field_name="job__featured", widget=django_filters.widgets.BooleanWidget())
+    min_date = django_filters.IsoDateTimeFilter(
+        field_name="started_at", lookup_expr="gte"
+    )
+    max_date = django_filters.IsoDateTimeFilter(
+        field_name="started_at", lookup_expr="lte"
+    )
+    started_at = django_filters.IsoDateTimeFilter(
+        field_name="started_at", lookup_expr="exact"
+    )
+    visibility = django_filters.CharFilter(
+        field_name="job__visibility", lookup_expr="exact"
+    )
+    featured = django_filters.BooleanFilter(
+        field_name="job__featured", widget=django_filters.widgets.BooleanWidget()
+    )
     providers = ListFilter(field_name="job__provider_tasks__provider__slug")
-    formats = ListFilter(field_name="job__provider_tasks__formats__slug", lookup_expr="exact")
+    formats = ListFilter(
+        field_name="job__provider_tasks__formats__slug", lookup_expr="exact"
+    )
     projections = ListFilter(field_name="job__projections__srid", lookup_expr="exact")
 
     class Meta:
         model = ExportRun
-        fields = ('user', 'status', 'job_uid', 'min_date', 'max_date',
-                  'started_at', 'visibility', 'providers', 'formats', 'projections')
+        fields = (
+            "user",
+            "status",
+            "job_uid",
+            "min_date",
+            "max_date",
+            "started_at",
+            "visibility",
+            "providers",
+            "formats",
+            "projections",
+        )
 
 
 class UserFilter(django_filters.FilterSet):
     min_date = django_filters.DateFilter(field_name="date_joined", lookup_expr="gte")
     max_date = django_filters.DateFilter(field_name="date_joined", lookup_expr="lte")
-    started_at = django_filters.IsoDateTimeFilter(field_name="date_joined", lookup_expr="exact")
-    groups = django_filters.CharFilter(method='group_filter')
+    started_at = django_filters.IsoDateTimeFilter(
+        field_name="date_joined", lookup_expr="exact"
+    )
+    groups = django_filters.CharFilter(method="group_filter")
 
     class Meta:
         model = User
@@ -117,7 +162,8 @@ class UserFilter(django_filters.FilterSet):
             perms = GroupPermission.objects.filter(group__in=groups)
             for perm in perms:
                 user = perm.user
-                if not user.id in target_users: target_users.append(user.id)
+                if not user.id in target_users:
+                    target_users.append(user.id)
 
         return queryset.filter(id__in=target_users)
 
@@ -127,26 +173,22 @@ class GroupFilter(django_filters.FilterSet):
 
     class Meta:
         model = Group
-        fields = ('id', 'name')
+        fields = ("id", "name")
 
 
 class UserJobActivityFilter(django_filters.FilterSet):
     activity = django_filters.CharFilter(field_name="activity")
 
     class Meta:
-            model = UserJobActivity
-            fields = ('activity',)
+        model = UserJobActivity
+        fields = ("activity",)
 
 
 class LogFilter(django_filters.FilterSet):
     class Meta:
         model = AuditEvent
-        fields = {
-            'datetime': ('lte', 'gte')
-        }
+        fields = {"datetime": ("lte", "gte")}
 
     filter_overrides = {
-        models.DateTimeField: {
-            'filter_class': django_filters.IsoDateTimeFilter
-        },
+        models.DateTimeField: {"filter_class": django_filters.IsoDateTimeFilter},
     }
