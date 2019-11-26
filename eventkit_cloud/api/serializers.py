@@ -73,7 +73,6 @@ class ProviderTaskSerializer(serializers.ModelSerializer):
 
     @staticmethod
     def create(validated_data, **kwargs):
-        from eventkit_cloud.api.views import get_models
 
         """Creates an export DataProviderTask."""
         formats = validated_data.pop("formats")

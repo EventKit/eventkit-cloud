@@ -162,7 +162,7 @@ class UserFilter(django_filters.FilterSet):
             perms = GroupPermission.objects.filter(group__in=groups)
             for perm in perms:
                 user = perm.user
-                if not user.id in target_users:
+                if user.id not in target_users:
                     target_users.append(user.id)
 
         return queryset.filter(id__in=target_users)
