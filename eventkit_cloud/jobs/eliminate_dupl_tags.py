@@ -4,11 +4,10 @@ import json
 import os
 
 import django
+from eventkit_cloud.jobs.models import DatamodelPreset
 
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'eventkit_cloud.settings.prod')
 django.setup()
-
-from eventkit_cloud.jobs.models import DatamodelPreset
 
 osm = DatamodelPreset.objects.get(name='osm')
 hdm = DatamodelPreset.objects.get(name='hdm')
@@ -48,7 +47,10 @@ def merge_dups(dmp):
     print('Reduced {}->{} tags'.format(previous_count, new_count))
     return dmp_tags
 
+
 unique_osm = merge_dups(osm)
+
+
 print('osm tags:')
 print(json.dumps(list(unique_osm.values())))
 print()

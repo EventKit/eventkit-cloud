@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-import json
 import logging
 import os
 import shutil
@@ -10,7 +9,6 @@ import requests
 from django.conf import settings
 from django.urls import reverse
 from django.test import TestCase
-from django.utils import timezone
 
 from eventkit_cloud.jobs.models import DataProvider, DataProviderType, Job
 from eventkit_cloud.tasks import TaskStates
@@ -53,10 +51,13 @@ class TestJob(TestCase):
         self.client.get(self.create_export_url)
         self.csrftoken = self.client.cookies['csrftoken']
         self.selection = {"type": "FeatureCollection", "features": [{"type": "Feature", "properties": {},
-                                                              "geometry": {"type": "Polygon", "coordinates": [
-                                                                  [[31.128165, 29.971509], [31.128521, 29.971509],
-                                                                   [31.128521, 29.971804], [31.128165, 29.971804],
-                                                                   [31.128165, 29.971509]]]}}]}
+                                                                     "geometry": {"type": "Polygon", "coordinates": [
+                                                                         [[31.128165, 29.971509],
+                                                                          [31.128521, 29.971509],
+                                                                          [31.128521, 29.971804],
+                                                                          [31.128165, 29.971804],
+                                                                          [31.128165, 29.971509]]]}}]
+                          }
 
     def tearDown(self):
         if os.path.exists(self.download_dir):
@@ -84,8 +85,8 @@ class TestJob(TestCase):
 
         provider_url = self.base_url + reverse('api:provider_tasks-list') + '/{0}'.format(export_provider_task.uid)
         response = self.client.patch(provider_url,
-                                    headers={'X-CSRFToken': self.csrftoken,
-                                             'referer': self.create_export_url})
+                                     headers={'X-CSRFToken': self.csrftoken,
+                                              'referer': self.create_export_url})
         self.assertEqual(200, response.status_code)
         self.assertEqual({'success': True}, response.json())
         self.orm_job = Job.objects.get(uid=job_json.get('uid'))
@@ -122,16 +123,6 @@ class TestJob(TestCase):
 
     def test_osm_sqlite(self):
         """
-        This test is to ensure that an OSM will export a sqlite file.
-        :return:
-        """
-        job_data = {"csrfmiddlewaretoken": self.csrftoken, "name": "TestSQLITE", "description": "Test Description",
-                    "event": "TestProject", "selection": self.selection, "tags": [],
-                    "provider_tasks": [{"provider": "OpenStreetMap Data (Generic)", "formats": ["sqlite"]}]}
-        self.assertTrue(self.run_job(job_data))
-
-    def test_osm_sqlite(self):
-        """
         This test is to ensure that an OSM job will export a sqlite file.
         :returns:
         """
@@ -140,16 +131,6 @@ class TestJob(TestCase):
                     "event": "TestProject", "selection": self.selection, "tags": [],
                     "provider_tasks": [{"provider": "OpenStreetMap Data (Themes)", "formats": ["sqlite"]}]}
         self.assertTrue(self.run_job(job_data, run_timeout=DEFAULT_TIMEOUT))
-
-    def test_osm_shp(self):
-        """
-        This test is to ensure that an OSM job will export a shp.
-        :returns:
-        """
-        job_data = {"csrfmiddlewaretoken": self.csrftoken, "name": "TestSHP", "description": "Test Description",
-                    "event": "TestProject", "selection": self.selection, "tags": [],
-                    "provider_tasks": [{"provider": "OpenStreetMap Data (Generic)", "formats": ["shp"]}]}
-        self.assertTrue(self.run_job(job_data))
 
     def test_osm_shp(self):
         """
@@ -166,22 +147,10 @@ class TestJob(TestCase):
         This test is to ensure that an OSM job will export a kml file.
         :returns:
         """
-        job_data = {"csrfmiddlewaretoken": self.csrftoken, "name": "TestKML", "description": "Test Description",
-                    "event": "TestProject", "selection": self.selection, "tags": [],
-                    "provider_tasks": [{"provider": "OpenStreetMap Data (Generic)", "formats": ["kml"]}]}
-        self.assertTrue(self.run_job(job_data))
-
-
-    def test_osm_kml(self):
-        """
-        This test is to ensure that an OSM job will export a kml file.
-        :returns:
-        """
         job_data = {"csrfmiddlewaretoken": self.csrftoken, "name": "TestThematicKML", "description": "Test Description",
                     "event": "TestProject", "selection": self.selection, "tags": [],
                     "provider_tasks": [{"provider": "OpenStreetMap Data (Themes)", "formats": ["kml"]}]}
         self.assertTrue(self.run_job(job_data))
-
 
     def test_wms_gpkg(self):
         """
@@ -308,8 +277,7 @@ class TestJob(TestCase):
         """
         provider_tasks = []
         for data_provider in get_all_providers():
-            provider_tasks += [{"provider": data_provider,
-                            "formats": ["gpkg"]}]
+            provider_tasks += [{"provider": data_provider, "formats": ["gpkg"]}]
         job_data = {"csrfmiddlewaretoken": self.csrftoken, "name": "Pyramids of Queens",
                     "description": "An Integration Test ", "event": "Integration Tests",
                     "include_zipfile": True,
@@ -381,7 +349,8 @@ class TestJob(TestCase):
                                              headers={'X-CSRFToken': self.csrftoken, 'Referer': self.create_export_url})
         self.assertTrue(delete_response)
 
-    def run_job(self, data, wait_for_run=True, run_timeout=DEFAULT_TIMEOUT):
+    # TODO: make less complex
+    def run_job(self, data, wait_for_run=True, run_timeout=DEFAULT_TIMEOUT): # NOQA
         # include zipfile
         data['include_zipfile'] = True
 
@@ -399,8 +368,7 @@ class TestJob(TestCase):
 
         run = self.wait_for_run(job.get('uid'), run_timeout=run_timeout)
         self.orm_job = orm_job = Job.objects.get(uid=job.get('uid'))
-        self.orm_run = orm_run = orm_job.runs.last()
-        date = timezone.now().strftime('%Y%m%d')
+        self.orm_run = orm_job.runs.last()
 
         # Get the filename for the zip, to ensure that it exists.
         for provider_task in run['provider_tasks']:
@@ -508,7 +476,9 @@ def get_providers_list():
         "updated_at": "2016-10-06T17:45:46.213Z",
         "name": "eventkit-integration-test-wmts",
         "slug": "eventkit-integration-test-wmts",
-        "url": "https://basemap.nationalmap.gov/arcgis/rest/services/USGSShadedReliefOnly/MapServer/WMTS?SERVICE=WMTS&REQUEST=GetTile&VERSION=1.0.0&LAYER=USGSShadedReliefOnly&TILEMATRIXSET=WEBMERCATOR&TILEMATRIX=%(z)s&TILEROW=%(y)s&TILECOL=%(x)s&FORMAT=image%%2Fpng",
+        "url": "https://basemap.nationalmap.gov/arcgis/rest/services/USGSShadedReliefOnly/MapServer/WMTS?SERVICE="
+               "WMTS&REQUEST=GetTile&VERSION=1.0.0&LAYER=USGSShadedReliefOnly&TILEMATRIXSET=WEBMERCATOR&TILEMATRIX=%"
+               "(z)s&TILEROW=%(y)s&TILECOL=%(x)s&FORMAT=image%%2Fpng",
         "layer": "imagery",
         "export_provider_type": DataProviderType.objects.using('default').get(type_name='wmts'),
         "level_from": 0,
@@ -518,7 +488,9 @@ def get_providers_list():
                   "  imagery_wmts:\r\n"
                   "    type: tile\r\n"
                   "    grid: webmercator\r\n"
-                  "    url: https://basemap.nationalmap.gov/arcgis/rest/services/USGSShadedReliefOnly/MapServer/WMTS?SERVICE=WMTS&REQUEST=GetTile&VERSION=1.0.0&LAYER=USGSShadedReliefOnly&TILEMATRIXSET=WEBMERCATOR&TILEMATRIX=%(z)s&TILEROW=%(y)s&TILECOL=%(x)s&FORMAT=image%%2Fpng\r\n\r\n"
+                  "    url: https://basemap.nationalmap.gov/arcgis/rest/services/USGSShadedReliefOnly/MapServer/"
+                  "WMTS?SERVICE=WMTS&REQUEST=GetTile&VERSION=1.0.0&LAYER=USGSShadedReliefOnly&TILEMATRIXSET="
+                  "WEBMERCATOR&TILEMATRIX=%(z)s&TILEROW=%(y)s&TILECOL=%(x)s&FORMAT=image%%2Fpng\r\n\r\n"
                   "grids:\r\n  webmercator:\r\n    srs: EPSG:3857\r\n    tile_size: [256, 256]\r\n    origin: nw"
 
     }, {
@@ -547,7 +519,8 @@ def get_providers_list():
         "updated_at": "2016-10-13T17:23:26.890Z",
         "name": "eventkit-integration-test-wfs",
         "slug": "eventkit-integration-test-wfs",
-        "url": "http://geonode.state.gov/geoserver/wfs?SERVICE=WFS&VERSION=1.0.0&REQUEST=GetFeature&TYPENAME=geonode:Eurasia_Oceania_LSIB7a_gen_polygons&SRSNAME=EPSG:4326",
+        "url": "http://geonode.state.gov/geoserver/wfs?SERVICE=WFS&VERSION=1.0.0&REQUEST=GetFeature&TYPENAME=geonode:"
+               "Eurasia_Oceania_LSIB7a_gen_polygons&SRSNAME=EPSG:4326",
         "layer": "geonode:Eurasia_Oceania_LSIB7a_gen_polygons",
         "export_provider_type": DataProviderType.objects.using('default').get(type_name='wfs'),
         "level_from": 0,
@@ -567,18 +540,6 @@ def get_providers_list():
         "config": ""
 
     }
-    #     , {
-    #     "created_at": "2016-10-21T14:30:27.066Z",
-    #     "updated_at": "2016-10-21T14:30:27.066Z",
-    #     "name": "eventkit-integration-test-arc-fs",
-    #     "slug": "eventkit-integration-test-arc-fs",
-    #     "url": "http://services1.arcgis.com/0IrmI40n5ZYxTUrV/ArcGIS/rest/services/ONS_Boundaries_02/FeatureServer/0/query?where=objectid%3Dobjectid&outfields=*&f=json",
-    #     "layer": "0",
-    #     "export_provider_type": DataProviderType.objects.using('default').get(type_name='arcgis-feature'),
-    #     "level_from": 0,
-    #     "level_to": 2,
-    #     "config": ""
-    # }
     ]
 
 

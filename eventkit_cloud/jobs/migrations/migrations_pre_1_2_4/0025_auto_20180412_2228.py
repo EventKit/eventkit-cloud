@@ -15,16 +15,23 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='dataprovider',
             name='max_selection',
-            field=models.DecimalField(decimal_places=3, default=250, help_text='This is the maximum area in square kilometers that can be exported from this provider in a single DataPack.', max_digits=12, verbose_name='Max selection area'),
+            field=models.DecimalField(decimal_places=3, default=250, help_text='This is the maximum area in square '
+                                                                               'kilometers that can be exported from '
+                                                                               'this provider in a single DataPack.',
+                                      max_digits=12, verbose_name='Max selection area'),
         ),
         migrations.AlterField(
             model_name='dataprovider',
             name='level_from',
-            field=models.IntegerField(blank=True, default=0, help_text='This determines the starting zoom level the tile export will seed from.', null=True, verbose_name='Seed from level'),
+            field=models.IntegerField(blank=True, default=0, help_text='This determines the starting zoom level the '
+                                                                       'tile export will seed from.',
+                                      null=True, verbose_name='Seed from level'),
         ),
         migrations.AlterField(
             model_name='dataprovider',
             name='level_to',
-            field=models.IntegerField(blank=True, default=10, help_text='This determines the highest zoom level the tile export will seed to.', null=True, verbose_name='Seed to level'),
+            field=models.IntegerField(blank=True, default=10, help_text='This determines the highest zoom level the '
+                                                                        'tile export will seed to.',
+                                      null=True, verbose_name='Seed to level'),
         ),
     ]

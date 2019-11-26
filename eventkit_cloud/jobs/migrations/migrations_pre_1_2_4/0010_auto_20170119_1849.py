@@ -15,11 +15,15 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='exportprovider',
             name='preview_url',
-            field=models.CharField(blank=True, default='', help_text='This url will be served to the front end for displaying in the map.', max_length=1000, null=True, verbose_name='Preview URL'),
+            field=models.CharField(blank=True, default='', help_text='This url will be served to the front end for '
+                                                                     'displaying in the map.', max_length=1000,
+                                   null=True, verbose_name='Preview URL'),
         ),
         migrations.AddField(
             model_name='exportprovider',
             name='service_copyright',
-            field=models.CharField(blank=True, default='', help_text='This information is used to display relevant copyright information.', max_length=2000, null=True, verbose_name='Copyright'),
+            field=models.CharField(blank=True, default='', help_text='This information is used to display relevant '
+                                                                     'copyright information.', max_length=2000,
+                                   null=True, verbose_name='Copyright'),
         ),
     ]

@@ -80,7 +80,7 @@ class JobAdmin(OSMGeoAdmin):
             url(r'^select/$', self.admin_site.admin_view(self.select_exports)),
             url(r'^update/$', self.admin_site.admin_view(self.update_exports),
                 name="update_regions"),
-                         ]
+        ]
         return update_urls + urls
 
 
@@ -123,7 +123,7 @@ class DataProviderForm(forms.ModelForm):
 
         if service_type in ['wms', 'wmts', 'tms', 'arcgis-raster']:
             from eventkit_cloud.utils.mapproxy import MapproxyGeopackage, \
-                                                 ConfigurationError
+                ConfigurationError
             service = MapproxyGeopackage(layer=self.cleaned_data.get('layer'), service_type=self.cleaned_data.get('export_provider_type'), config=config)
             try:
                 service.get_check_config()

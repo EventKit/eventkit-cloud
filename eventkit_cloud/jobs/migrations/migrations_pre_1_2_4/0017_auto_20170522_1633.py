@@ -15,6 +15,8 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='exportprovider',
             name='service_description',
-            field=models.TextField(blank=True, default='', help_text='This information is used to provide information about the service.', null=True, verbose_name='Description'),
+            field=models.TextField(blank=True, default='', help_text='This information is used to provide information '
+                                                                     'about the service.', null=True,
+                                   verbose_name='Description'),
         ),
     ]

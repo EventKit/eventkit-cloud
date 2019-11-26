@@ -102,11 +102,14 @@ class Migration(migrations.Migration):
                  models.CharField(blank=True, default='', max_length=1000, null=True, verbose_name='Service URL')),
                 ('layer', models.CharField(blank=True, max_length=100, null=True, verbose_name='Service Layer')),
                 ('level_from', models.IntegerField(verbose_name="Seed from level", default=0, null=True, blank=True,
-                                                   help_text="This determines the starting zoom level a tile export will seed from")),
+                                                   help_text="This determines the starting zoom level a tile export "
+                                                             "will seed from")),
                 ('level_to', models.IntegerField(verbose_name="Seed to level", default=10, null=True, blank=True,
-                                                 help_text="This determine what zoom level your tile export will seed to")),
+                                                 help_text="This determine what zoom level your tile export will seed "
+                                                           "to")),
                 ('config', models.TextField(blank=True, default='',
-                                            help_text='This is an optional field which is needed if the service requires authentication.',
+                                            help_text='This is an optional field which is needed if the service '
+                                                      'requires authentication.',
                                             null=True, verbose_name='Mapproxy Configuration')),
             ],
             options={
@@ -142,11 +145,16 @@ class Migration(migrations.Migration):
                 ('feature_save', models.BooleanField(db_index=True, default=False)),
                 ('feature_pub', models.BooleanField(db_index=True, default=False)),
                 ('the_geom', django.contrib.gis.db.models.fields.MultiPolygonField(default='', srid=4326,
-                                                                              verbose_name='Extent for export')),
+                                                                                   verbose_name='Extent for export')),
                 ('the_geom_webmercator', django.contrib.gis.db.models.fields.MultiPolygonField(default='', srid=3857,
-                                                                                          verbose_name='Mercator extent for export')),
-                ('the_geog', django.contrib.gis.db.models.fields.MultiPolygonField(default='', geography=True, srid=4326,
-                                                                              verbose_name='Geographic extent for export')),
+                                                                                               verbose_name='Mercator '
+                                                                                                            'extent '
+                                                                                                            'for '
+                                                                                                            'export')),
+                ('the_geog', django.contrib.gis.db.models.fields.MultiPolygonField(default='', geography=True,
+                                                                                   srid=4326,
+                                                                                   verbose_name='Geographic extent for '
+                                                                                           'export')),
                 ('configs', models.ManyToManyField(blank=True, related_name='configs', to='jobs.ExportConfig')),
             ],
             options={
@@ -174,11 +182,16 @@ class Migration(migrations.Migration):
                 ('name', models.CharField(db_index=True, max_length=100)),
                 ('description', models.CharField(blank=True, max_length=1000)),
                 ('the_geom', django.contrib.gis.db.models.fields.MultiPolygonField(default='', srid=4326,
-                                                                              verbose_name='HOT Export Region')),
+                                                                                   verbose_name='HOT Export Region')),
                 ('the_geom_webmercator', django.contrib.gis.db.models.fields.MultiPolygonField(default='', srid=3857,
-                                                                                          verbose_name='Mercator extent for export region')),
-                ('the_geog', django.contrib.gis.db.models.fields.MultiPolygonField(default='', geography=True, srid=4326,
-                                                                              verbose_name='Geographic extent for export region')),
+                                                                                               verbose_name='Mercator '
+                                                                                                       'extent for '
+                                                                                                       'export '
+                                                                                                       'region')),
+                ('the_geog', django.contrib.gis.db.models.fields.MultiPolygonField(default='', geography=True,
+                                                                                   srid=4326,
+                                                                                   verbose_name='Geographic extent for '
+                                                                                           'export region')),
             ],
             options={
                 'db_table': 'regions',

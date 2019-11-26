@@ -15,6 +15,8 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='exportprovider',
             name='service_description',
-            field=models.CharField(blank=True, default='', help_text='This information is used to provide information about the service.', max_length=4000, null=True, verbose_name='Description'),
+            field=models.CharField(blank=True, default='', help_text='This information is used to provide information '
+                                                                     'about the service.', max_length=4000, null=True,
+                                   verbose_name='Description'),
         ),
     ]

@@ -24,7 +24,9 @@ class Migration(migrations.Migration):
             name='RegionMask',
             fields=[
                 ('id', models.IntegerField(primary_key=True, serialize=False)),
-                ('the_geom', django.contrib.gis.db.models.fields.MultiPolygonField(srid=4326, verbose_name='Mask for export regions')),
+                ('the_geom', django.contrib.gis.db.models.fields.MultiPolygonField(srid=4326,
+                                                                                   verbose_name='Mask for export '
+                                                                                                'regions')),
             ],
             options={
                 'managed': False,
@@ -53,15 +55,56 @@ class Migration(migrations.Migration):
                 ('uid', models.UUIDField(db_index=True, default=uuid.uuid4, editable=False, unique=True)),
                 ('name', models.CharField(max_length=100, unique=True, verbose_name='Service Name')),
                 ('slug', eventkit_cloud.jobs.models.LowerCaseCharField(default='', max_length=40, unique=True)),
-                ('url', models.CharField(blank=True, default='', help_text='The SERVICE_URL is used as the endpoint for WFS, OSM, and WCS services. It is also used to check availability for all OGC services. If you are adding a TMS service, please provide a link to a single tile, but with the coordinate numbers replaced by {z}, {y}, and {x}. Example: https://tiles.your-geospatial-site.com/tiles/default/{z}/{y}/{x}.png', max_length=1000, null=True, verbose_name='Service URL')),
-                ('preview_url', models.CharField(blank=True, default='', help_text='This url will be served to the front end for displaying in the map.', max_length=1000, null=True, verbose_name='Preview URL')),
-                ('service_copyright', models.CharField(blank=True, default='', help_text='This information is used to display relevant copyright information.', max_length=2000, null=True, verbose_name='Copyright')),
-                ('service_description', models.TextField(blank=True, default='', help_text='This information is used to provide information about the service.', null=True, verbose_name='Description')),
+                ('url', models.CharField(blank=True, default='', help_text='The SERVICE_URL is used as the endpoint '
+                                                                           'for WFS, OSM, and WCS services. It is also '
+                                                                           'used to check availability for all OGC '
+                                                                           'services. If you are adding a TMS service, '
+                                                                           'please provide a link to a single tile, '
+                                                                           'but with the coordinate numbers replaced '
+                                                                           'by {z}, {y}, and {x}. Example: '
+                                                                           'https://tiles.your-geospatial-site.com/'
+                                                                           'tiles/default/{z}/{y}/{x}.png',
+                                         max_length=1000, null=True, verbose_name='Service URL')),
+                ('preview_url', models.CharField(blank=True, default='', help_text='This url will be served to the '
+                                                                                   'front end for displaying in the '
+                                                                                   'map.', max_length=1000, null=True,
+                                                 verbose_name='Preview URL')),
+                ('service_copyright', models.CharField(blank=True, default='', help_text='This information is used to '
+                                                                                         'display relevant copyright '
+                                                                                         'information.',
+                                                       max_length=2000, null=True, verbose_name='Copyright')),
+                ('service_description', models.TextField(blank=True, default='', help_text='This information is used '
+                                                                                           'to provide information '
+                                                                                           'about the service.',
+                                                         null=True, verbose_name='Description')),
                 ('layer', models.CharField(blank=True, max_length=100, null=True, verbose_name='Service Layer')),
-                ('max_selection', models.DecimalField(decimal_places=3, default=250, help_text='This is the maximum area in square kilometers that can be exported from this provider in a single DataPack.', max_digits=12, verbose_name='Max selection area')),
-                ('level_from', models.IntegerField(blank=True, default=0, help_text='This determines the starting zoom level the tile export will seed from.', null=True, verbose_name='Seed from level')),
-                ('level_to', models.IntegerField(blank=True, default=10, help_text='This determines the highest zoom level the tile export will seed to.', null=True, verbose_name='Seed to level')),
-                ('config', models.TextField(blank=True, default='', help_text="WMS, TMS, WMTS, and ArcGIS-Raster require a MapProxy YAML configuration\n                              with a Sources key of imagery and a Service Layer name of imagery; the validator also\n                              requires a layers section, but this isn't used.\n                              OSM Services also require a YAML configuration.", null=True, verbose_name='Configuration')),
+                ('max_selection', models.DecimalField(decimal_places=3, default=250, help_text='This is the maximum '
+                                                                                               'area in square '
+                                                                                               'kilometers that can be '
+                                                                                               'exported from this '
+                                                                                               'provider in a single '
+                                                                                               'DataPack.',
+                                                      max_digits=12, verbose_name='Max selection area')),
+                ('level_from', models.IntegerField(blank=True, default=0, help_text='This determines the starting zoom '
+                                                                                    'level the tile export will seed '
+                                                                                    'from.', null=True,
+                                                   verbose_name='Seed from level')),
+                ('level_to', models.IntegerField(blank=True, default=10, help_text='This determines the highest zoom '
+                                                                                   'level the tile export will seed '
+                                                                                   'to.', null=True,
+                                                 verbose_name='Seed to level')),
+                ('config', models.TextField(blank=True, default='', help_text="WMS, TMS, WMTS, and ArcGIS-Raster "
+                                                                              "require a MapProxy YAML configuration\n"
+                                                                              "                              with a "
+                                                                              "Sources key of imagery and a Service "
+                                                                              "Layer name of imagery; the validator "
+                                                                              "also\n                              "
+                                                                              "requires a layers section, but this "
+                                                                              "isn't used.\n"
+                                                                              "                              OSM "
+                                                                              "Services also require a YAML "
+                                                                              "configuration.", null=True,
+                                            verbose_name='Configuration')),
                 ('zip', models.BooleanField(default=False)),
                 ('display', models.BooleanField(default=False)),
             ],
@@ -146,12 +189,31 @@ class Migration(migrations.Migration):
                 ('description', models.CharField(db_index=True, max_length=1000)),
                 ('event', models.CharField(blank=True, db_index=True, default='', max_length=100)),
                 ('published', models.BooleanField(db_index=True, default=False)),
-                ('visibility', models.CharField(choices=[('PRIVATE', 'PRIVATE'), ('PUBLIC', 'PUBLIC'), ('SHARED', 'SHARED')], default='PRIVATE', max_length=10)),
+                ('visibility', models.CharField(choices=[('PRIVATE', 'PRIVATE'), ('PUBLIC', 'PUBLIC'),
+                                                         ('SHARED', 'SHARED')], default='PRIVATE', max_length=10)),
                 ('featured', models.BooleanField(db_index=True, default=False)),
-                ('the_geom', django.contrib.gis.db.models.fields.MultiPolygonField(default='', srid=4326, verbose_name='Extent for export')),
-                ('the_geom_webmercator', django.contrib.gis.db.models.fields.MultiPolygonField(default='', srid=3857, verbose_name='Mercator extent for export')),
-                ('the_geog', django.contrib.gis.db.models.fields.MultiPolygonField(default='', geography=True, srid=4326, verbose_name='Geographic extent for export')),
-                ('original_selection', django.contrib.gis.db.models.fields.GeometryCollectionField(blank=True, default=django.contrib.gis.geos.collections.GeometryCollection(), null=True, srid=4326, verbose_name='The original map selection')),
+                ('the_geom', django.contrib.gis.db.models.fields.MultiPolygonField(default='', srid=4326,
+                                                                                   verbose_name='Extent for export')),
+                ('the_geom_webmercator', django.contrib.gis.db.models.fields.MultiPolygonField(default='', srid=3857,
+                                                                                               verbose_name='Mercator '
+                                                                                                            'extent '
+                                                                                                            'for '
+                                                                                                            'export')),
+                ('the_geog', django.contrib.gis.db.models.fields.MultiPolygonField(default='', geography=True,
+                                                                                   srid=4326, verbose_name='Geographic '
+                                                                                                           'extent for '
+                                                                                                           'export')),
+                ('original_selection', django.contrib.gis.db.models.fields.GeometryCollectionField(blank=True,
+                                                                                                   default=django.
+                                                                                                   contrib.gis.geos.
+                                                                                                   collections.
+                                                                                                   GeometryCollection(),
+                                                                                                   null=True,
+                                                                                                   srid=4326,
+                                                                                                   verbose_name='The '
+                                                                                                                'original '
+                                                                                                                'map '
+                                                                                                                'selection')),
                 ('include_zipfile', models.BooleanField(default=False)),
                 ('json_tags', django.contrib.postgres.fields.jsonb.JSONField(default=dict)),
             ],
@@ -183,9 +245,18 @@ class Migration(migrations.Migration):
                 ('uid', models.UUIDField(db_index=True, default=uuid.uuid4, editable=False, unique=True)),
                 ('name', models.CharField(db_index=True, max_length=100)),
                 ('description', models.CharField(blank=True, max_length=1000)),
-                ('the_geom', django.contrib.gis.db.models.fields.MultiPolygonField(default='', srid=4326, verbose_name='HOT Export Region')),
-                ('the_geom_webmercator', django.contrib.gis.db.models.fields.MultiPolygonField(default='', srid=3857, verbose_name='Mercator extent for export region')),
-                ('the_geog', django.contrib.gis.db.models.fields.MultiPolygonField(default='', geography=True, srid=4326, verbose_name='Geographic extent for export region')),
+                ('the_geom', django.contrib.gis.db.models.fields.MultiPolygonField(default='', srid=4326,
+                                                                                   verbose_name='HOT Export Region')),
+                ('the_geom_webmercator', django.contrib.gis.db.models.fields.MultiPolygonField(default='', srid=3857,
+                                                                                               verbose_name='Mercator '
+                                                                                                            'extent for'
+                                                                                                            ' export '
+                                                                                                            'region')),
+                ('the_geog', django.contrib.gis.db.models.fields.MultiPolygonField(default='', geography=True,
+                                                                                   srid=4326, verbose_name='Geographic '
+                                                                                                           'extent for '
+                                                                                                           'export '
+                                                                                                           'region')),
             ],
             options={
                 'managed': True,
@@ -199,7 +270,8 @@ class Migration(migrations.Migration):
                 ('type', models.CharField(max_length=100)),
                 ('created_at', models.DateTimeField(default=django.utils.timezone.now, editable=False)),
                 ('job', models.ForeignKey(null=True, on_delete=django.db.models.deletion.CASCADE, to='jobs.Job')),
-                ('user', models.ForeignKey(null=True, on_delete=django.db.models.deletion.CASCADE, to=settings.AUTH_USER_MODEL)),
+                ('user', models.ForeignKey(null=True, on_delete=django.db.models.deletion.CASCADE,
+                                           to=settings.AUTH_USER_MODEL)),
             ],
         ),
         migrations.CreateModel(

@@ -28,6 +28,8 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='dataprovider',
             name='thumbnail',
-            field=models.ForeignKey(blank=True, help_text="A thumbnail image generated to give a high level preview of what a provider's data looks like.", null=True, on_delete=django.db.models.deletion.SET_NULL, to='jobs.MapImageSnapshot'),
+            field=models.ForeignKey(blank=True, help_text="A thumbnail image generated to give a high level preview of "
+                                                          "what a provider's data looks like.", null=True,
+                                    on_delete=django.db.models.deletion.SET_NULL, to='jobs.MapImageSnapshot'),
         ),
     ]

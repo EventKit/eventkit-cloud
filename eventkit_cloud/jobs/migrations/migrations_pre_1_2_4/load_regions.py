@@ -33,7 +33,7 @@ class Migration(migrations.Migration):
         the_geog = convert_polygon(GEOSGeometry(geom.wkt))
         the_geom_webmercator = the_geom.transform(ct=3857, clone=True)
         Region.objects.create(name="Burma", description="Burmese export region", the_geom=the_geom,
-                                       the_geog=the_geog, the_geom_webmercator=the_geom_webmercator)
+                              the_geog=the_geog, the_geom_webmercator=the_geom_webmercator)
 
         ds = DataSource(os.path.dirname(os.path.realpath(__file__)) + '/central_asia.geojson')
         layer = ds[0]
@@ -42,8 +42,8 @@ class Migration(migrations.Migration):
         the_geog = convert_polygon(GEOSGeometry(geom.wkt))
         the_geom_webmercator = the_geom.transform(ct=3857, clone=True)
         Region.objects.create(name="Central Asia/Middle East",
-                                       description="Central Asia/Middle East export region", the_geom=the_geom,
-                                       the_geog=the_geog, the_geom_webmercator=the_geom_webmercator)
+                              description="Central Asia/Middle East export region", the_geom=the_geom,
+                              the_geog=the_geog, the_geom_webmercator=the_geom_webmercator)
 
         ds = DataSource(os.path.dirname(os.path.realpath(__file__)) + '/indonesia.geojson')
         layer = ds[0]
@@ -52,8 +52,8 @@ class Migration(migrations.Migration):
         the_geog = convert_polygon(GEOSGeometry(geom.wkt))
         the_geom_webmercator = the_geom.transform(ct=3857, clone=True)
         Region.objects.create(name="Indonesia, Sri Lanka, and Bangladesh",
-                                       description="Indonesia, Sri Lanka, and Bangladesh export region",
-                                       the_geom=the_geom, the_geog=the_geog, the_geom_webmercator=the_geom_webmercator)
+                              description="Indonesia, Sri Lanka, and Bangladesh export region",
+                              the_geom=the_geom, the_geog=the_geog, the_geom_webmercator=the_geom_webmercator)
 
         ds = DataSource(os.path.dirname(os.path.realpath(__file__)) + '/philippines.geojson')
         layer = ds[0]
@@ -62,7 +62,7 @@ class Migration(migrations.Migration):
         the_geog = convert_polygon(GEOSGeometry(geom.wkt))
         the_geom_webmercator = the_geom.transform(ct=3857, clone=True)
         Region.objects.create(name="Philippines", description="Philippines export region",
-                                       the_geom=the_geom, the_geog=the_geog, the_geom_webmercator=the_geom_webmercator)
+                              the_geom=the_geom, the_geog=the_geog, the_geom_webmercator=the_geom_webmercator)
 
         ds = DataSource(os.path.dirname(os.path.realpath(__file__)) + '/south_america.geojson')
         layer = ds[0]
@@ -71,8 +71,8 @@ class Migration(migrations.Migration):
         the_geog = convert_polygon(GEOSGeometry(geom.wkt))
         the_geom_webmercator = the_geom.transform(ct=3857, clone=True)
         Region.objects.create(name="South and Central America",
-                                       description="South and Central America export region", the_geom=the_geom,
-                                       the_geog=the_geog, the_geom_webmercator=the_geom_webmercator)
+                              description="South and Central America export region", the_geom=the_geom,
+                              the_geog=the_geog, the_geom_webmercator=the_geom_webmercator)
         del ds
 
     dependencies = [

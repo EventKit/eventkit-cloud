@@ -15,31 +15,37 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='dataprovider',
             name='export_provider_type',
-            field=models.ForeignKey(null=True, on_delete=django.db.models.deletion.CASCADE, to='jobs.DataProviderType', verbose_name='Service Type'),
+            field=models.ForeignKey(null=True, on_delete=django.db.models.deletion.CASCADE, to='jobs.DataProviderType',
+                                    verbose_name='Service Type'),
         ),
         migrations.AlterField(
             model_name='dataprovider',
             name='license',
-            field=models.ForeignKey(blank=True, default=None, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='+', to='jobs.License'),
+            field=models.ForeignKey(blank=True, default=None, null=True, on_delete=django.db.models.deletion.CASCADE,
+                                    related_name='+', to='jobs.License'),
         ),
         migrations.AlterField(
             model_name='dataprovider',
             name='user',
-            field=models.ForeignKey(blank=True, default=None, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='+', to=settings.AUTH_USER_MODEL),
+            field=models.ForeignKey(blank=True, default=None, null=True, on_delete=django.db.models.deletion.CASCADE,
+                                    related_name='+', to=settings.AUTH_USER_MODEL),
         ),
         migrations.AlterField(
             model_name='job',
             name='last_export_run',
-            field=models.ForeignKey(null=True, on_delete=django.db.models.deletion.CASCADE, related_name='last_export_run', to='tasks.ExportRun'),
+            field=models.ForeignKey(null=True, on_delete=django.db.models.deletion.CASCADE,
+                                    related_name='last_export_run', to='tasks.ExportRun'),
         ),
         migrations.AlterField(
             model_name='job',
             name='preset',
-            field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, to='jobs.DatamodelPreset'),
+            field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE,
+                                    to='jobs.DatamodelPreset'),
         ),
         migrations.AlterField(
             model_name='job',
             name='user',
-            field=models.ForeignKey(null=True, on_delete=django.db.models.deletion.CASCADE, related_name='owner', to=settings.AUTH_USER_MODEL),
+            field=models.ForeignKey(null=True, on_delete=django.db.models.deletion.CASCADE,
+                                    related_name='owner', to=settings.AUTH_USER_MODEL),
         ),
     ]

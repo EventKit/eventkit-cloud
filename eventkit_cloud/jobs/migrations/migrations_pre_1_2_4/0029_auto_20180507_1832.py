@@ -3,7 +3,7 @@
 
 import django.utils.timezone
 from django.conf import settings
-from django.db import migrations, models, connection, transaction
+from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
@@ -21,13 +21,15 @@ class Migration(migrations.Migration):
                 ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
                 ('type', models.CharField(max_length=100)),
                 ('created_at', models.DateTimeField(default=django.utils.timezone.now, editable=False)),
-                ('user', models.ForeignKey(null=True, on_delete=django.db.models.deletion.CASCADE, to=settings.AUTH_USER_MODEL)),
+                ('user', models.ForeignKey(null=True, on_delete=django.db.models.deletion.CASCADE,
+                                           to=settings.AUTH_USER_MODEL)),
                 ('job', models.ForeignKey(null=True, on_delete=django.db.models.deletion.CASCADE, to='jobs.Job'))
             ],
         ),
         migrations.AddField(
             model_name='job',
             name='last_export_run',
-            field=models.ForeignKey(null=True, on_delete=django.db.models.deletion.CASCADE, related_name='last_export_run', to='tasks.ExportRun'),
+            field=models.ForeignKey(null=True, on_delete=django.db.models.deletion.CASCADE,
+                                    related_name='last_export_run', to='tasks.ExportRun'),
         ),
     ]

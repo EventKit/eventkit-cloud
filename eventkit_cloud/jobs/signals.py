@@ -96,5 +96,5 @@ def provider_pre_save(sender, instance, **kwargs):
         except Exception as e:
             # Catch exceptions broadly and log them, we do not want to prevent saving provider's if
             # a thumbnail creation error occurs.
-            logger.error(f'Could not save thumbnail for DataProvider: {instance.slug}')
+            logger.error('Could not save thumbnail for DataProvider: {instance.slug}')
             logger.exception(e)

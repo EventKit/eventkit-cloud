@@ -7,12 +7,12 @@ from django.contrib.gis.db.models.functions import Area
 from django.contrib.gis.db.models.functions import Intersection
 from django.contrib.gis.gdal import DataSource
 from django.contrib.gis.geos import GEOSGeometry, Polygon, MultiPolygon
-from django.test import TestCase, override_settings
+from django.test import TestCase
 from mock import patch
 
 from eventkit_cloud.jobs.models import (
     ExportFormat, ExportProfile, Job, Region,
-    DataProvider, DataProviderTask, DatamodelPreset, MapImageSnapshot)
+    DataProvider, DataProviderTask, DatamodelPreset)
 
 logger = logging.getLogger(__name__)
 
@@ -206,7 +206,7 @@ class TestJobRegionIntersection(TestCase):
         bbox = Polygon.from_bbox((36.90, 13.54, 48.52, 20.24))  # overlaps africa / central asia
         the_geom = GEOSGeometry(bbox, srid=4326)
         self.job = Job.objects.create(name='TestJob', description='Test description', user=self.user,
-                                      the_geom=the_geom )
+                                      the_geom=the_geom)
         self.uid = self.job.uid
         # add the formats to the job
         self.job.formats = self.formats

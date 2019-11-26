@@ -17,6 +17,10 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='job',
             name='original_selection',
-            field=django.contrib.gis.db.models.fields.GeometryCollectionField(blank=True, default=django.contrib.gis.geos.collections.GeometryCollection(), null=True, srid=4326, verbose_name='The original map selection'),
+            field=django.contrib.gis.db.models.fields.GeometryCollectionField(blank=True, default=django.contrib.gis
+                                                                              .geos.collections.GeometryCollection(),
+                                                                              null=True, srid=4326,
+                                                                              verbose_name='The original map '
+                                                                                           'selection'),
         ),
     ]

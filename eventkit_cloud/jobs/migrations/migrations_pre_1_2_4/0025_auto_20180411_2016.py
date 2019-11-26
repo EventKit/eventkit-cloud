@@ -35,11 +35,20 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='dataprovider',
             name='url',
-            field=models.CharField(blank=True, default='', help_text='The SERVICE_URL is used as the endpoint for WFS, OSM, and WCS services. It is also used to check availability for all OGC services. If you are adding a TMS service, please provide a link to a single tile, but with the coordinate numbers replaced by {z}, {y}, and {x}. Example: https://tiles.your-geospatial-site.com/tiles/default/{z}/{y}/{x}.png', max_length=1000, null=True, verbose_name='Service URL'),
+            field=models.CharField(blank=True, default='', help_text='The SERVICE_URL is used as the endpoint for WFS,'
+                                                                     ' OSM, and WCS services. It is also used to check '
+                                                                     'availability for all OGC services. If you are '
+                                                                     'adding a TMS service, please provide a link to a '
+                                                                     'single tile, but with the coordinate numbers '
+                                                                     'replaced by {z}, {y}, and {x}. Example: '
+                                                                     'https://tiles.your-geospatial-site.com/tiles/'
+                                                                     'default/{z}/{y}/{x}.png',
+                                   max_length=1000, null=True, verbose_name='Service URL'),
         ),
         migrations.AddField(
             model_name='dataproviderstatus',
             name='related_provider',
-            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='data_provider_status', to='jobs.DataProvider'),
+            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='data_provider_status',
+                                    to='jobs.DataProvider'),
         ),
     ]

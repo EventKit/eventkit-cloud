@@ -159,9 +159,11 @@ class DataProvider(UIDMixin, TimeStampedModelMixin):
     preview_url = models.CharField(verbose_name="Preview URL", max_length=1000, null=True, default='', blank=True,
                                    help_text="This url will be served to the front end for displaying in the map.")
     service_copyright = models.CharField(verbose_name="Copyright", max_length=2000, null=True, default='', blank=True,
-                                   help_text="This information is used to display relevant copyright information.")
+                                         help_text="This information is used to display relevant copyright "
+                                                   "information.")
     service_description = models.TextField(verbose_name="Description", null=True, default='', blank=True,
-                                           help_text="This information is used to provide information about the service.")
+                                           help_text="This information is used to provide information about the "
+                                                     "service.")
     layer = models.CharField(verbose_name="Service Layer", max_length=100, null=True, blank=True)
     export_provider_type = models.ForeignKey(DataProviderType, verbose_name="Service Type", null=True, on_delete=models.CASCADE)
     max_selection = models.DecimalField(verbose_name="Max selection area", default=250, max_digits=12, decimal_places=3,
@@ -262,8 +264,8 @@ class DataProviderTask(models.Model):
 
 class VisibilityState(Enum):
     PRIVATE = "PRIVATE"
-    PUBLIC  = "PUBLIC"
-    SHARED  = "SHARED"
+    PUBLIC = "PUBLIC"
+    SHARED = "SHARED"
 
 
 class Job(UIDMixin, TimeStampedModelMixin):
@@ -295,7 +297,8 @@ class Job(UIDMixin, TimeStampedModelMixin):
     the_geom = models.MultiPolygonField(verbose_name='Extent for export', srid=4326, default='')
     the_geom_webmercator = models.MultiPolygonField(verbose_name='Mercator extent for export', srid=3857, default='')
     the_geog = models.MultiPolygonField(verbose_name='Geographic extent for export', geography=True, default='')
-    original_selection = models.GeometryCollectionField(verbose_name='The original map selection', srid=4326, default=GeometryCollection(), null=True, blank=True)
+    original_selection = models.GeometryCollectionField(verbose_name='The original map selection', srid=4326,
+                                                        default=GeometryCollection(), null=True, blank=True)
     include_zipfile = models.BooleanField(default=False)
     json_tags = JSONField(default=dict)
     last_export_run = models.ForeignKey('tasks.ExportRun', on_delete=models.CASCADE, null=True, related_name='last_export_run')
