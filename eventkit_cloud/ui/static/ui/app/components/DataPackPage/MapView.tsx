@@ -52,6 +52,7 @@ import { generateDrawLayer, generateDrawBoxInteraction, generateDrawFreeInteract
 import ZoomLevelLabel from '../MapTools/ZoomLevelLabel';
 import globe from '../../../images/globe-americas.svg';
 import { makeAllRunsSelector } from '../../selectors/runSelector';
+import {updateAoiInfo, clearAoiInfo, clearExportInfo} from '../../actions/datacartActions';
 import { Breakpoint } from '@material-ui/core/styles/createBreakpoints';
 
 export const RED_STYLE = new Style({
@@ -101,6 +102,9 @@ export interface Props {
     onMapFilter: (geojson: GeoJSON.FeatureCollection | GeoJSON.GeometryObject) => void;
     theme: Eventkit.Theme & Theme;
     width: Breakpoint;
+    aoiInfo: Eventkit.Store.AoiInfo;
+    updateAoiInfo: (args: any) => void;
+    clearAoiInfo: () => void;
 }
 
 export interface State {
@@ -336,12 +340,30 @@ export class MapView extends React.Component<Props, State> {
                 if (isGeoJSONValid(geojson)) {
                     const geojsonGeometry = createGeoJSONGeometry(geom);
                     this.props.onMapFilter(geojsonGeometry);
+                    this.props.updateAoiInfo({
+                        ...this.props.aoiInfo,
+                            geojson,
+                            originalGeojson: geojson,
+                            geomType: 'Polygon',
+                            title: 'Custom Polygon',
+                            description: 'Draw',
+                            selectionType: 'free',
+                    });
                 } else {
                     this.showInvalidDrawWarning(true);
                 }
             } else if (this.state.mode === MODE_DRAW_BBOX) {
                 const geojsonGeometry: GeoJSON.GeometryObject = createGeoJSONGeometry(geom);
                 this.props.onMapFilter(geojsonGeometry);
+                this.props.updateAoiInfo({
+                    ...this.props.aoiInfo,
+                        geojson,
+                        originalGeojson: geojson,
+                        geomType: 'Polygon',
+                        title: 'Custom Polygon',
+                        description: 'Draw',
+                        selectionType: 'free',
+                });
             }
             this.updateMode(MODE_NORMAL);
             window.setTimeout(() => {
@@ -1108,10 +1130,23 @@ const makeMapStateToProps = () => {
     const getRuns = makeAllRunsSelector();
     const mapStateToProps = (state, props) => (
         {
+            aoiInfo: state.aoiInfo,
             runs: getRuns(state),
         }
     );
     return mapStateToProps;
 };
 
-export default withWidth()(withTheme()(connect(makeMapStateToProps, null, null, { forwardRef: true })(MapView)));
+function mapDispatchToProps(dispatch) {
+    return {
+        updateAoiInfo: (aoiInfo) => {
+            dispatch(updateAoiInfo(aoiInfo));
+        },
+        clearAoiInfo: () => {
+            dispatch(clearAoiInfo());
+        }
+    };
+}
+
+// connect signature -> (mapStateToProps?, mapDispatchToProps?, mergeProps?, options?)
+export default withWidth()(withTheme()(connect(makeMapStateToProps, mapDispatchToProps, null, { forwardRef: true })(MapView)));
