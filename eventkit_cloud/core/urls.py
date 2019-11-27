@@ -19,12 +19,11 @@ admin.autodiscover()
 urlpatterns = []
 
 urlpatterns += [
-    re_path(r'^', include(auth_urls)),
-    re_path(r'^', include(api_urls)),
-    re_path(r'^', include(task_urls)),
-    re_path(r'^', include(util_urls)),
-    re_path(r'^', include(ui_urls), name='index'),
-    re_path(r'^admin/', admin.site.urls),
-    re_path(r'^api/', include('rest_framework.urls', namespace='rest_framework')),
+    re_path(r"^", include(auth_urls)),
+    re_path(r"^", include(api_urls)),
+    re_path(r"^", include(task_urls)),
+    re_path(r"^", include(util_urls)),
+    re_path(r"^", include(ui_urls), name="index"),
+    re_path(r"^admin/", admin.site.urls),
+    re_path(r"^api/", include("rest_framework.urls", namespace="rest_framework")),
 ]
-

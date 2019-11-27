@@ -7,8 +7,15 @@ from eventkit_cloud.core.models import GroupPermission, JobPermission
 
 # http://djangoweekly.com/blog/post/viewbrowse-all-django-admin-edits-recent-actions-listing
 class LogEntryAdmin(admin.ModelAdmin):
-    readonly_fields = ('content_type', 'user', 'action_time', 'object_id', 'object_repr', 'action_flag',
-                       'change_message')
+    readonly_fields = (
+        "content_type",
+        "user",
+        "action_time",
+        "object_id",
+        "object_repr",
+        "action_flag",
+        "change_message",
+    )
 
     def has_delete_permission(self, request, obj=None):
         return False
@@ -18,7 +25,7 @@ class LogEntryAdmin(admin.ModelAdmin):
 
     def get_action(self, request):
         actions = super(LogEntryAdmin, self).get_actions(request)
-        actions.pop('delete_selected', None)
+        actions.pop("delete_selected", None)
         return actions
 
 
