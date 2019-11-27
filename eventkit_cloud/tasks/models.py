@@ -140,6 +140,7 @@ class DataProviderTaskRecord(UIDMixin, TimeStampedModelMixin, TimeTrackingModelM
     """
     The DataProviderTaskRecord stores the task information for a specific provider.
     """
+    from eventkit_cloud.jobs.models import MapImageSnapshot
     name = models.CharField(max_length=100, blank=True)
     slug = LowerCaseCharField(max_length=40, default='')
     run = models.ForeignKey(ExportRun, related_name='provider_tasks', on_delete=models.CASCADE)
@@ -147,6 +148,8 @@ class DataProviderTaskRecord(UIDMixin, TimeStampedModelMixin, TimeTrackingModelM
     display = models.BooleanField(default=False)
     estimated_size = models.FloatField(null=True, blank=True)
     estimated_duration = models.FloatField(null=True, blank=True)
+    preview = models.ForeignKey(MapImageSnapshot, blank=True, null=True, on_delete=models.SET_NULL,
+                                help_text="A preview for a provider task.")
 
     class Meta:
         ordering = ['name']
