@@ -753,9 +753,7 @@ class JobViewSet(viewsets.ModelViewSet):
         """
         return super(JobViewSet, self).update(self, request, uid, *args, **kwargs)
 
-    @list_route(
-        methods=["post", ]
-    )
+    @list_route(methods=["post"])
     def filter(self, request, *args, **kwargs):
         """
              Return all jobs that are readable by every
