@@ -18,14 +18,6 @@ class OAuthAdmin(admin.ModelAdmin):
     search_fields = ['user__username', 'identification', 'commonname', 'user_info']
     list_display = ['user', 'identification', 'commonname']
 
-    def has_delete_permission(self, request, obj=None):
-        return False
-
-    def get_actions(self, request):
-        actions = super(OAuthAdmin, self).get_actions(request)
-        actions.pop('delete_selected', None)
-        return actions
-
 class OAuthInline(admin.StackedInline):
     model = OAuth
 
