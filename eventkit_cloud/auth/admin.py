@@ -1,5 +1,3 @@
-
-
 import logging
 
 from django.contrib import admin
@@ -15,26 +13,29 @@ logger = logging.getLogger(__name__)
 
 class OAuthAdmin(admin.ModelAdmin):
 
-    search_fields = ['user__username', 'identification', 'commonname', 'user_info']
-    list_display = ['user', 'identification', 'commonname']
+    search_fields = ["user__username", "identification", "commonname", "user_info"]
+    list_display = ["user", "identification", "commonname"]
 
     def has_delete_permission(self, request, obj=None):
         return False
 
     def get_actions(self, request):
         actions = super(OAuthAdmin, self).get_actions(request)
-        actions.pop('delete_selected', None)
+        actions.pop("delete_selected", None)
         return actions
+
 
 class OAuthInline(admin.StackedInline):
     model = OAuth
+
 
 class UserLicenseInline(admin.TabularInline):
     model = UserLicense
     extra = 0
 
+
 UserAdmin.inlines = [OAuthInline, UserLicenseInline]
-UserAdmin.readonly_fields += 'last_login', 'date_joined'
+UserAdmin.readonly_fields += "last_login", "date_joined"
 
 
 admin.site.unregister(Token)
