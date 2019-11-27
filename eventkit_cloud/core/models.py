@@ -6,9 +6,12 @@ import uuid
 
 from django.contrib.auth.models import User, Group
 from django.contrib.gis.db import models
+from django.contrib.contenttypes.fields import GenericForeignKey
+from django.contrib.contenttypes.models import ContentType
 from django.utils import timezone
 from enum import Enum
 from notifications.models import Notification
+
 
 Notification.old_str_func = Notification.__str__
 
@@ -130,9 +133,7 @@ class GroupPermission(TimeStampedModelMixin):
         return "{0}: {1}: {2}".format(self.user, self.group.name, self.permission)
 
 
-from eventkit_cloud.tasks.models import Job
-from django.contrib.contenttypes.fields import GenericForeignKey
-from django.contrib.contenttypes.models import ContentType
+from eventkit_cloud.tasks.models import Job # NOQA
 
 
 class JobPermissionLevel(Enum):
@@ -160,7 +161,6 @@ class JobPermission(TimeStampedModelMixin):
     def jobpermissions(job):
         permissions = {"groups": {}, "members": {}}
         for jp in JobPermission.objects.filter(job=job):
-            item = None
             if jp.content_type == ContentType.objects.get_for_model(User):
                 user = User.objects.get(pk=jp.object_id)
                 permissions["members"][user.username] = jp.permission
