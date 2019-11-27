@@ -339,10 +339,10 @@ export class DataProvider extends React.Component<Props, State> {
                     >
                         <ZoomLevelSlider
                             updateZoom={this.setZoom}
-                            maxZoom={currentMaxZoom}
-                            minZoom={currentMinZoom}
-                            maxMaxZoom={provider.level_to}
-                            minMinZoom={provider.level_from}
+                            selectedMaxZoom={currentMaxZoom}
+                            selectedMinZoom={currentMinZoom}
+                            maxZoom={provider.level_to}
+                            minZoom={provider.level_from}
                         />
                     </div>
                     <div

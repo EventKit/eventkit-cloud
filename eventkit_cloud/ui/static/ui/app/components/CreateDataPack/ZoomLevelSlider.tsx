@@ -37,10 +37,10 @@ const jss = (theme: Theme & Eventkit.Theme) => createStyles({
 
 interface Props {
     updateZoom: (min: number, max: number) => void;
+    selectedMaxZoom: number;
+    selectedMinZoom: number;
     maxZoom: number;
     minZoom: number;
-    maxMaxZoom: number;
-    minMinZoom: number;
     theme: Eventkit.Theme & Theme;
     classes: { [className: string]: string };
 }
@@ -57,8 +57,8 @@ export class ZoomLevelSlider extends React.Component<Props, State> {
         super(props);
 
         this.state = {
-            minZoom: props.minZoom,
-            maxZoom: props.maxZoom,
+            minZoom: props.selectedMinZoom,
+            maxZoom: props.selectedMaxZoom,
         };
 
         this.updateMax = this.updateMax.bind(this);
@@ -67,8 +67,8 @@ export class ZoomLevelSlider extends React.Component<Props, State> {
 
     componentDidUpdate(prevProps: Readonly<Props>): void {
         const {minZoom, maxZoom} = this.props;
-        const prevMinZoom = prevProps.minZoom;
-        const prevMaxZoom = prevProps.maxZoom;
+        const prevMinZoom = prevProps.selectedMinZoom;
+        const prevMaxZoom = prevProps.selectedMaxZoom;
         if (minZoom !== prevMinZoom) {
             // Deprecated rule
             // eslint-disable-next-line react/no-did-update-set-state
@@ -83,8 +83,8 @@ export class ZoomLevelSlider extends React.Component<Props, State> {
 
     updateMax = (event, value) => {
         const zoomValue = Number(value);
-        if (zoomValue >= this.props.minMinZoom && zoomValue <= this.props.maxMaxZoom) {
-            if (zoomValue < this.props.minZoom) {
+        if (zoomValue >= this.props.minZoom && zoomValue <= this.props.maxZoom) {
+            if (zoomValue < this.props.selectedMinZoom) {
                 this.props.updateZoom(zoomValue, this.props.minZoom);
             } else {
                 this.props.updateZoom(null, zoomValue);
@@ -97,9 +97,9 @@ export class ZoomLevelSlider extends React.Component<Props, State> {
 
     updateMin = (event, value) => {
         const zoomValue = Number(value);
-        if (zoomValue >= this.props.minMinZoom && zoomValue <= this.props.maxMaxZoom) {
-            if (zoomValue > this.props.maxZoom) {
-                this.props.updateZoom(this.props.maxZoom, zoomValue);
+        if (zoomValue >= this.props.minZoom && zoomValue <= this.props.maxZoom) {
+            if (zoomValue > this.props.selectedMaxZoom) {
+                this.props.updateZoom(this.props.selectedMaxZoom, zoomValue);
             } else {
                 this.props.updateZoom(zoomValue, null);
             }
@@ -150,8 +150,8 @@ export class ZoomLevelSlider extends React.Component<Props, State> {
                             aria-labelledby="label"
                             onChange={(e, v) => this.setState({maxZoom: Number(v)})}
                             onDragEnd={() => this.updateMax(null, maxZoom)}
-                            min={this.props.minMinZoom}
-                            max={this.props.maxMaxZoom}
+                            min={this.props.minZoom}
+                            max={this.props.maxZoom}
                             step={1}
                         />
                     </div>
@@ -160,7 +160,7 @@ export class ZoomLevelSlider extends React.Component<Props, State> {
                             {this.props.minZoom}
                         </span>
                         <span style={{textAlign: 'right'}}>
-                            {this.props.maxMaxZoom}
+                            {this.props.maxZoom}
                         </span>
                     </div>
                 </div>
