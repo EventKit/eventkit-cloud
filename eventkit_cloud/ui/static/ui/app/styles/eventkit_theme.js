@@ -1,6 +1,7 @@
 import topo_light from '../../images/topoBackground.png';
 import topo_dark from '../../images/ek_topo_pattern.png';
 import logo from '../../images/eventkit-logo.1.png';
+import basemap from '../../images/icn_basemap.svg';
 
 export const breakpoints = {
     values: {
@@ -40,6 +41,7 @@ export const images = {
     topo_dark,
     topo_light,
     logo,
+    basemap,
 };
 
 // define a global theme for the application

@@ -307,6 +307,7 @@ INSERT OR REPLACE INTO gpkg_tile_matrix (table_name, zoom_level, matrix_width, m
 VALUES(?, ?, ?, ?, ?, ?, ?, ?)""", (table_name, actual_zoom_level, grid_sizes[0], grid_sizes[1], tile_size[0], tile_size[1], res, res))
     except Exception as e:
         logger.error('Problem in check_zoom_levels: {}'.format(e))
+        logger.error('Check provider MapProxy configuration.')
 
 
 def get_concurrency(conf_dict):

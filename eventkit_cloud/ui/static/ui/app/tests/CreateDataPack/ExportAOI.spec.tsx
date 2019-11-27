@@ -395,7 +395,8 @@ describe('ExportAOI component', () => {
         expect(readSpy.calledOnce).toBe(true);
         expect(transformSpy.called).toBe(true);
         expect(addSpy.calledOnce).toBe(true);
-        expect(props.updateAoiInfo.calledOnce).toBe(true);
+        
+        
         expect(zoomSpy.calledOnce).toBe(true);
         expect(props.setNextEnabled.calledOnce).toBe(true);
         clearSpy.restore();
