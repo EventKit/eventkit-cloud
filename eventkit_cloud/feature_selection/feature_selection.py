@@ -58,7 +58,7 @@ This theme includes the following OpenStreetMap keys:
 (c) OpenStreetMap contributors.
 
 This file is made available under the Open Database License: http://opendatacommons.org/licenses/odbl/1.0/.
- Any rights in individual contents of the database are licensed under the Database Contents 
+ Any rights in individual contents of the database are licensed under the Database Contents
  License: http://opendatacommons.org/licenses/dbcl/1.0/
 """
 
@@ -246,9 +246,9 @@ class FeatureSelection(object):
             )
         )
         sqls.append(
-            "INSERT INTO gpkg_contents VALUES ('{0}', 'features', '{0}', '', '2017-04-08T01:35:16.576Z', null, null, null, null, '4326')".format(
-                table_name
-            )
+            "INSERT INTO gpkg_contents VALUES "
+            "('{0}', 'features', '{0}', '', '2017-04-08T01:35:16.576Z', "
+            "null, null, null, null, '4326')".format(table_name)
         )
         sqls.append(
             "\nINSERT INTO gpkg_geometry_columns VALUES ('{0}', 'geom', '{1}', '4326', '0', '0')".format(

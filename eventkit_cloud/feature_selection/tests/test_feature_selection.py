@@ -21,7 +21,7 @@ column1 http://wiki.openstreetmap.org/wiki/Key:column1
 (c) OpenStreetMap contributors.
 
 This file is made available under the Open Database License: http://opendatacommons.org/licenses/odbl/1.0/.
- Any rights in individual contents of the database are licensed under the Database Contents 
+ Any rights in individual contents of the database are licensed under the Database Contents
  License: http://opendatacommons.org/licenses/dbcl/1.0/
 """
 
@@ -76,7 +76,7 @@ class TestFeatureSelection(unittest.TestCase):
     def test_key_union_and_filters(self):
         y = '''
         waterways:
-            types: 
+            types:
                 - lines
                 - polygons
             select:
@@ -143,7 +143,7 @@ class TestFeatureSelection(unittest.TestCase):
         y = '''
         roads:
             types:
-                - lines 
+                - lines
             select:
                 - highway
         '''
@@ -179,7 +179,7 @@ class TestFeatureSelection(unittest.TestCase):
     def test_minimal_yaml(self):
         # the shortest valid feature selection
         y = '''
-        all: 
+        all:
             select:
                 - name
         '''
@@ -190,7 +190,7 @@ class TestFeatureSelection(unittest.TestCase):
     def test_unspecified_yaml(self):
         # top level is a list and not a dict
         y = '''
-        - all: 
+        - all:
             select:
                 - name
         '''
@@ -201,7 +201,7 @@ class TestFeatureSelection(unittest.TestCase):
     def test_dash_spacing_yaml(self):
         # top level is a list and not a dict
         y = '''
-        all: 
+        all:
           select:
             -name
         '''
@@ -211,7 +211,7 @@ class TestFeatureSelection(unittest.TestCase):
     def test_no_select_yaml(self):
         # top level is a list and not a dict
         y = '''
-        all: 
+        all:
           -select:
             - name
         '''
@@ -222,7 +222,7 @@ class TestFeatureSelection(unittest.TestCase):
     # refer to https://taginfo.openstreetmap.org/keys
     def test_valid_invalid_key_yaml(self):
         y = '''
-        all: 
+        all:
           select:
             - has space
             - has_underscore
@@ -232,7 +232,7 @@ class TestFeatureSelection(unittest.TestCase):
         f = FeatureSelection(y)
         self.assertTrue(f.valid)
         y = '''
-        all: 
+        all:
           select:
             - na?me
         '''
@@ -240,7 +240,7 @@ class TestFeatureSelection(unittest.TestCase):
         self.assertFalse(f.valid)
         self.assertEqual(f.errors[0],"Invalid OSM key: na?me")
         y = '''
-        all: 
+        all:
           select:
             -
         '''
@@ -266,7 +266,7 @@ class TestFeatureSelection(unittest.TestCase):
             types:
                 - polygons
             select:
-                - column1 
+                - column1
             where: column2 IS NOT NULL
         other:
             types:
@@ -283,7 +283,7 @@ class TestFeatureSelection(unittest.TestCase):
         y = '''
         buildings:
             select:
-                - column1 
+                - column1
             where: column2 IS NOT NULL
         other:
             select:
