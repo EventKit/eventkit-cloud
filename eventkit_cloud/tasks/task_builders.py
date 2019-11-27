@@ -8,7 +8,7 @@ from django.db import DatabaseError
 
 from eventkit_cloud.jobs.models import DataProviderTask, ExportFormat
 from eventkit_cloud.tasks import TaskStates
-from eventkit_cloud.tasks.export_tasks import reprojection_task
+from eventkit_cloud.tasks.export_tasks import reprojection_task, create_datapack_preview
 from eventkit_cloud.tasks.helpers import normalize_name, get_metadata
 from eventkit_cloud.tasks.models import ExportTaskRecord, DataProviderTaskRecord
 from eventkit_cloud.utils.stats.aoi_estimators import AoiEstimator
@@ -108,11 +108,18 @@ class TaskChainBuilder(object):
         queue_group = os.getenv("CELERY_GROUP_NAME", worker)
 
         if export_tasks:
-            subtasks = []
+            subtasks = list()
+            if provider_task.provider.preview_url:
+                subtasks.append(create_datapack_preview.s(
+                    run_uid=run.uid, stage_dir=stage_dir, task_uid=provider_task.uid, user_details=user_details,
+                    task_record_uid=data_provider_task_record.uid
+                ).set(queue=queue_group, routing_key=queue_group))
+
             for current_format, task in export_tasks.items():
                 subtasks.append(task.get('obj').s(
                     run_uid=run.uid, stage_dir=stage_dir, job_name=job_name,
-                    task_uid=task.get('task_uid'), user_details=user_details, locking_task_key=data_provider_task_record.uid
+                    task_uid=task.get('task_uid'), user_details=user_details,
+                    locking_task_key=data_provider_task_record.uid
                 ).set(queue=queue_group, routing_key=queue_group))
                 projections = get_metadata(data_provider_task_record.uid)['projections']
                 for projection in projections:
@@ -139,6 +146,7 @@ class TaskChainBuilder(object):
                         task_uid=projection_task.uid, user_details=user_details,
                         locking_task_key=data_provider_task_record.uid, projection=projection
                     ).set(queue=queue_group, routing_key=queue_group))
+
             format_tasks = chain(subtasks)
         else:
             format_tasks = None
@@ -177,14 +185,16 @@ class TaskChainBuilder(object):
                                                               level_to=max_zoom,
                                                               service_type=service_type,
                                                               service_url=provider_task.provider.url,
-                                                              config=provider_task.provider.config).set(queue=queue_routing_key_name,
-                                                                                                        routing_key=queue_routing_key_name)
-
+                                                              config=provider_task.provider.config)
+        primary_export_task_signature = primary_export_task_signature.set(queue=queue_routing_key_name,
+                                                                          routing_key=queue_routing_key_name)
 
         if format_tasks:
             tasks = chain(primary_export_task_signature, format_tasks)
         else:
             tasks = primary_export_task_signature
+
+        tasks = chain(tasks, )
 
         return data_provider_task_record.uid, tasks
 

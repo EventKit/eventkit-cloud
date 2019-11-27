@@ -181,8 +181,9 @@ class TestHelpers(TestCase):
             "has_elevation": False,
             "has_raster": False,
             "include_files": [
+                os.path.join(stage_dir, expected_provider_slug, 'preview.jpg'),
                 os.path.join(stage_dir, expected_provider_slug, sample_file),
-                expected_license_file
+                expected_license_file,
             ],
             "name": expected_job_name,
             "project": expected_project_name,
