@@ -11,6 +11,10 @@ from django.contrib.contenttypes.models import ContentType
 from django.utils import timezone
 from enum import Enum
 from notifications.models import Notification
+import logging
+
+
+logger = logging.getLogger(__name__)
 
 
 Notification.old_str_func = Notification.__str__
@@ -162,12 +166,22 @@ class JobPermission(TimeStampedModelMixin):
         permissions = {"groups": {}, "members": {}}
         for jp in JobPermission.objects.filter(job=job):
             if jp.content_type == ContentType.objects.get_for_model(User):
-                user = User.objects.get(pk=jp.object_id)
-                permissions["members"][user.username] = jp.permission
+                try:
+                    user = User.objects.get(pk=jp.object_id)
+                    permissions['members'][user.username] = jp.permission
+                except User.DoesNotExist as e:
+                    logger.error(e)
+                    logger.error(
+                        "The user id: {jp.object_id} is associated with the job: {job}, but the user doesn't exist.")
             else:
-                group = Group.objects.get(pk=jp.object_id)
-                permissions["groups"][group.name] = jp.permission
-
+                try:
+                    group = Group.objects.get(pk=jp.object_id)
+                    permissions['groups'][group.name] = jp.permission
+                except Group.DoesNotExist as e:
+                    logger.error(e)
+                    logger.error(
+                        "The user id: {jp.object_id} is associated with the job: {job}, but the user doesn't exist.")
+                    
         return permissions
 
     @staticmethod
@@ -299,6 +313,7 @@ class JobPermission(TimeStampedModelMixin):
         )
 
     def __unicode__(self):
-        return "{0} - {1}: {2}: {3}".format(
-            self.content_type, self.object_id, self.job, self.permission
-        )
+        return '{0} - {1}: {2}: {3}'.format(self.content_type, self.object_id, self.job, self.permission)
+
+def remove_permissions(model, id):
+    JobPermission.objects.filter(content_type=ContentType.objects.get_for_model(model),object_id=id).delete()

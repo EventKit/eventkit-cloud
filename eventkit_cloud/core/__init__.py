@@ -3,6 +3,7 @@ import os
 
 from django.conf import settings
 
+default_app_config = 'eventkit_cloud.core.apps.EventKitCore'
 logger = logging.getLogger(__name__)
 
 
