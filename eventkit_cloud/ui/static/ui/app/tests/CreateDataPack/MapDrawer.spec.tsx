@@ -2,9 +2,8 @@ import * as React from 'react';
 import * as sinon from 'sinon';
 import {shallow} from 'enzyme';
 import Drawer from '@material-ui/core/Drawer';
-import {BaseMapSource, MapDrawer} from "../../components/CreateDataPack/MapDrawer";
+import {BaseMapSource, MapDrawer, VerticalTabs} from "../../components/CreateDataPack/MapDrawer";
 import CustomScrollbar from "../../components/CustomScrollbar";
-import {Tabs} from "@material-ui/core";
 import Tab from "@material-ui/core/Tab";
 import ListItem from '@material-ui/core/ListItem';
 
@@ -76,7 +75,7 @@ describe('FilterDrawer component', () => {
 
     it('should render all the basic components', () => {
         expect(wrapper.find(CustomScrollbar)).toHaveLength(1);
-        expect(wrapper.find(Tabs)).toHaveLength(1);
+        expect(wrapper.find(VerticalTabs)).toHaveLength(1);
         expect(wrapper.find(Tab)).toHaveLength(1);
         expect(wrapper.find(Drawer)).toHaveLength(wrapper.find(Tab).length);
         // Of the 3 providers, only one should be displayed
