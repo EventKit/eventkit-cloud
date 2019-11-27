@@ -103,16 +103,16 @@ class TestHelpers(TransactionTestCase):
     def test_check_zoom_levels(self, mock_get_tables, mock_get_zoom_levels, mock_tile_matrix, mock_sql):
         from mapproxy.config.loader import ProxyConfiguration
         example_geopackage = '/test/example.gpkg'
-        grid_name = 'geodetic'
+        grid_name = 'default'
         tile_size = (256, 256)
         table_name = 'tiles'
         zoom_levels_table = [0,1,2]
         # tile_matrix is abbreviated, for clarity.
         tile_matrix = [{"table_name": table_name, "zoom_level": 0},
                             {"table_name": table_name, "zoom_level": 1}]
-        configuration = {'caches': {'cache': {'cache': {'type': 'geopackage', 'filename': example_geopackage},
+        configuration = {'caches': {'default': {'cache': {'type': 'geopackage', 'filename': example_geopackage},
                                               'grids': [grid_name]}},
-                       'grids': {'geodetic': {'srs': 'EPSG:4326', 'tile_size': tile_size, 'origin': 'nw'}}}
+                       'grids': {'default': {'srs': 'EPSG:4326', 'tile_size': tile_size, 'origin': 'nw'}}}
 
         mapproxy_configuration = ProxyConfiguration(configuration)
         mock_get_tables.return_value = (table_name,)

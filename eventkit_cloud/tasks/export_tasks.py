@@ -628,17 +628,16 @@ def geotiff_export_task(self, result=None, task_uid=None, stage_dir=None, job_na
     gtiff_in_dataset = parse_result(result, 'source')
     gtiff_out_dataset = os.path.join(stage_dir, '{0}-{1}.tif'.format(job_name, projection))
     selection = parse_result(result, 'selection')
-    gtiff = gtiff_in_dataset
     ## Clip the dataset.
     # This happens if geotiff is the FIRST step in the pipeline as opposed to GPKG.
     if selection:
-        gtiff_out_dataset = gdalutils.clip_dataset(boundary=selection, in_dataset=gtiff,
+        gtiff_out_dataset = gdalutils.clip_dataset(boundary=selection, in_dataset=gtiff_in_dataset,
                                        out_dataset=gtiff_out_dataset, fmt='gtiff', task_uid=task_uid)
-
+        gtiff_in_dataset = gtiff_out_dataset
 
     # Convert to the correct projection
     gtiff_out_dataset = gdalutils.convert(
-        file_format='gtiff', in_file=gtiff_out_dataset, out_file=gtiff_out_dataset, task_uid=task_uid,
+        file_format='gtiff', in_file=gtiff_in_dataset, out_file=gtiff_out_dataset, task_uid=task_uid,
         projection=projection)
 
     # Reduce the overall size of geotiffs.  Note this compression could result in the loss of data.
