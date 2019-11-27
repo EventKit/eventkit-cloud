@@ -15,8 +15,9 @@ class LinkHeaderPagination(PageNumberPagination):
 
     More information at http://www.django-rest-framework.org/api-guide/pagination/#header-based-pagination
     """
+
     page_size = 10  # default page size
-    page_size_query_param = 'page_size'
+    page_size_query_param = "page_size"
 
     def get_paginated_response(self, data):
         """Return the paginated response."""
@@ -30,13 +31,16 @@ class LinkHeaderPagination(PageNumberPagination):
         elif previous_url is not None:
             link = '<{previous_url}>; rel="prev"'
         else:
-            link = ''
+            link = ""
             status_code = status.HTTP_200_OK
         link = link.format(next_url=next_url, previous_url=previous_url)
         start_idx = self.page.start_index()
         end_idx = self.page.end_index()
         total = self.page.paginator.count
-        content_range_header = 'results {0}-{1}/{2}'.format(start_idx, end_idx, total)
-        headers = {'Link': link, 'Content-Range': content_range_header} if link else {
-            'Content-Range': content_range_header}
+        content_range_header = "results {0}-{1}/{2}".format(start_idx, end_idx, total)
+        headers = (
+            {"Link": link, "Content-Range": content_range_header}
+            if link
+            else {"Content-Range": content_range_header}
+        )
         return Response(data, headers=headers, status=status_code)
