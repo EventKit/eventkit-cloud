@@ -2,18 +2,18 @@ import json
 import os
 
 import django
+from eventkit_cloud.jobs.models import DatamodelPreset
 
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "eventkit_cloud.settings.prod")
 django.setup()
-
-from eventkit_cloud.jobs.models import DatamodelPreset
 
 osm = DatamodelPreset.objects.get(name="osm")
 hdm = DatamodelPreset.objects.get(name="hdm")
 
 
 def merge_dups(dmp):
-    # Takes a DatamodelPreset instance and returns a dict of the form {(key, value): {key: <key>, value: <value>, geom: []}
+    # Takes a DatamodelPreset instance and returns a dict of the form {(key, value): {key: <key>, value: <value>,
+    # geom: []}
     # This is indended to make it easy to eliminate duplicates in the json_tags field of DatamodelPreset instances.
     previous_count = len(dmp.json_tags)
     dmp_tags = dict()

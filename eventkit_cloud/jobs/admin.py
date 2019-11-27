@@ -66,7 +66,7 @@ class JobAdmin(OSMGeoAdmin):
         # noinspection PyProtectedMember
         return render_to_response(
             self.update_template,
-            {"regions": regions, "selected": selected, "opts": self.model._meta,},
+            {"regions": regions, "selected": selected, "opts": self.model._meta, },
             context_instance=RequestContext(request),
         )
 
