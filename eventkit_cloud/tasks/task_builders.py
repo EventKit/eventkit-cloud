@@ -66,7 +66,7 @@ class TaskChainBuilder(object):
 
         # If WCS we will want geotiff...
         if 'wcs' in primary_export_task.name.lower():
-            formats += ['geotiff']
+            formats += ['gtiff']
             compress = False
         else:
             compress = True
