@@ -169,99 +169,40 @@ class DataProvider(UIDMixin, TimeStampedModelMixin):
     """
 
     name = models.CharField(verbose_name="Service Name", unique=True, max_length=100)
-    slug = LowerCaseCharField(max_length=40, unique=True, default="")
-    url = models.CharField(
-        verbose_name="Service URL",
-        max_length=1000,
-        null=True,
-        default="",
-        blank=True,
-        help_text="The SERVICE_URL is used as the endpoint for WFS, OSM, and WCS services. It is "
-        "also used to check availability for all OGC services. If you are adding a TMS "
-        "service, please provide a link to a single tile, but with the coordinate numbers "
-        "replaced by {z}, {y}, and {x}. Example: https://tiles.your-geospatial-site.com/"
-        "tiles/default/{z}/{y}/{x}.png",
-    )
-    preview_url = models.CharField(
-        verbose_name="Preview URL",
-        max_length=1000,
-        null=True,
-        default="",
-        blank=True,
-        help_text="This url will be served to the front end for displaying in the map.",
-    )
-    service_copyright = models.CharField(
-        verbose_name="Copyright",
-        max_length=2000,
-        null=True,
-        default="",
-        blank=True,
-        help_text="This information is used to display relevant copyright information.",
-    )
-    service_description = models.TextField(
-        verbose_name="Description",
-        null=True,
-        default="",
-        blank=True,
-        help_text="This information is used to provide information about the service.",
-    )
-    layer = models.CharField(
-        verbose_name="Service Layer", max_length=100, null=True, blank=True
-    )
-    export_provider_type = models.ForeignKey(
-        DataProviderType,
-        verbose_name="Service Type",
-        null=True,
-        on_delete=models.CASCADE,
-    )
-    max_selection = models.DecimalField(
-        verbose_name="Max selection area",
-        default=250,
-        max_digits=12,
-        decimal_places=3,
-        help_text="This is the maximum area in square kilometers that can be exported "
-        "from this provider in a single DataPack.",
-    )
-    level_from = models.IntegerField(
-        verbose_name="Seed from level",
-        default=0,
-        null=True,
-        blank=True,
-        help_text="This determines the starting zoom level the tile export will seed from.",
-    )
-    level_to = models.IntegerField(
-        verbose_name="Seed to level",
-        default=10,
-        null=True,
-        blank=True,
-        help_text="This determines the highest zoom level the tile export will seed to.",
-    )
-    config = models.TextField(
-        default="",
-        null=True,
-        blank=True,
-        verbose_name="Configuration",
-        help_text="""WMS, TMS, WMTS, and ArcGIS-Raster require a MapProxy YAML configuration
+
+    slug = LowerCaseCharField(max_length=40, unique=True, default='')
+    url = models.CharField(verbose_name="Service URL", max_length=1000, null=True, default='', blank=True,
+                           help_text='The SERVICE_URL is used as the endpoint for WFS, OSM, and WCS services. It is '
+                                     'also used to check availability for all OGC services. If you are adding a TMS '
+                                     'service, please provide a link to a single tile, but with the coordinate numbers '
+                                     'replaced by {z}, {y}, and {x}. Example: https://tiles.your-geospatial-site.com/'
+                                     'tiles/default/{z}/{y}/{x}.png')
+    preview_url = models.CharField(verbose_name="Preview URL", max_length=1000, null=True, default='', blank=True,
+                                   help_text="This url will be served to the front end for displaying in the map.")
+    service_copyright = models.CharField(verbose_name="Copyright", max_length=2000, null=True, default='', blank=True,
+                                         help_text="This information is used to display relevant copyright information.")
+    service_description = models.TextField(verbose_name="Description", null=True, default='', blank=True,
+                                           help_text="This information is used to provide information about the service.")
+    layer = models.CharField(verbose_name="Service Layer", max_length=100, null=True, blank=True)
+    export_provider_type = models.ForeignKey(DataProviderType, verbose_name="Service Type", null=True,
+                                             on_delete=models.CASCADE)
+    max_selection = models.DecimalField(verbose_name="Max selection area", default=250, max_digits=12, decimal_places=3,
+                                        help_text="This is the maximum area in square kilometers that can be exported "
+                                                  "from this provider in a single DataPack.")
+    level_from = models.IntegerField(verbose_name="Seed from level", default=0, null=True, blank=True,
+                                     help_text="This determines the starting zoom level the tile export will seed from.")
+    level_to = models.IntegerField(verbose_name="Seed to level", default=10, null=True, blank=True,
+                                   help_text="This determines the highest zoom level the tile export will seed to.")
+    config = models.TextField(default='', null=True, blank=True,
+                              verbose_name="Configuration",
+                              help_text="""WMS, TMS, WMTS, and ArcGIS-Raster require a MapProxy YAML configuration
                               with a Sources key of imagery and a Service Layer name of imagery; the validator also
                               requires a layers section, but this isn't used.
-                              OSM Services also require a YAML configuration.""",
-    )
-    user = models.ForeignKey(
-        User,
-        related_name="+",
-        null=True,
-        default=None,
-        blank=True,
-        on_delete=models.CASCADE,
-    )
-    license = models.ForeignKey(
-        License,
-        related_name="+",
-        null=True,
-        blank=True,
-        default=None,
-        on_delete=models.CASCADE,
-    )
+                              OSM Services also require a YAML configuration.""")
+    user = models.ForeignKey(User, related_name='+', null=True, default=None, blank=True, on_delete=models.CASCADE)
+    license = models.ForeignKey(License, related_name='+', null=True, blank=True, default=None,
+                                on_delete=models.CASCADE)
+
     zip = models.BooleanField(default=False)
     display = models.BooleanField(default=False)
     thumbnail = models.ForeignKey(
@@ -321,15 +262,11 @@ class Region(UIDMixin, TimeStampedModelMixin):
 
     name = models.CharField(max_length=100, db_index=True)
     description = models.CharField(max_length=1000, blank=True)
-    the_geom = models.MultiPolygonField(
-        verbose_name="HOT Export Region", srid=4326, default=""
-    )
-    the_geom_webmercator = models.MultiPolygonField(
-        verbose_name="Mercator extent for export region", srid=3857, default=""
-    )
-    the_geog = models.MultiPolygonField(
-        verbose_name="Geographic extent for export region", geography=True, default=""
-    )
+
+    the_geom = models.MultiPolygonField(verbose_name='HOT Export Region', srid=4326, default='')
+    the_geom_webmercator = models.MultiPolygonField(verbose_name='Mercator extent for export region', srid=3857,
+                                                    default='')
+    the_geog = models.MultiPolygonField(verbose_name='Geographic extent for export region', geography=True, default='')
 
     class Meta:  # pragma: no cover
         managed = True
@@ -407,31 +344,17 @@ class Job(UIDMixin, TimeStampedModelMixin):
         max_length=10, choices=visibility_choices, default=VisibilityState.PRIVATE.value
     )
     featured = models.BooleanField(default=False, db_index=True)  # datapack is featured
-    the_geom = models.MultiPolygonField(
-        verbose_name="Extent for export", srid=4326, default=""
-    )
-    the_geom_webmercator = models.MultiPolygonField(
-        verbose_name="Mercator extent for export", srid=3857, default=""
-    )
-    the_geog = models.MultiPolygonField(
-        verbose_name="Geographic extent for export", geography=True, default=""
-    )
-    original_selection = models.GeometryCollectionField(
-        verbose_name="The original map selection",
-        srid=4326,
-        default=GeometryCollection(),
-        null=True,
-        blank=True,
-    )
+
+    the_geom = models.MultiPolygonField(verbose_name='Extent for export', srid=4326, default='')
+    the_geom_webmercator = models.MultiPolygonField(verbose_name='Mercator extent for export', srid=3857, default='')
+    the_geog = models.MultiPolygonField(verbose_name='Geographic extent for export', geography=True, default='')
+    original_selection = models.GeometryCollectionField(verbose_name='The original map selection', srid=4326,
+                                                        default=GeometryCollection(), null=True, blank=True)
     include_zipfile = models.BooleanField(default=False)
     json_tags = JSONField(default=dict)
-    last_export_run = models.ForeignKey(
-        "tasks.ExportRun",
-        on_delete=models.CASCADE,
-        null=True,
-        related_name="last_export_run",
-    )
-    projections = models.ManyToManyField(Projection, related_name="projections")
+    last_export_run = models.ForeignKey('tasks.ExportRun', on_delete=models.CASCADE, null=True,
+                                        related_name='last_export_run')
+    projections = models.ManyToManyField(Projection, related_name='projections')
 
     class Meta:  # pragma: no cover
         managed = True
@@ -447,7 +370,7 @@ class Job(UIDMixin, TimeStampedModelMixin):
         return "{0}".format(self.name)
 
     @property
-    def overpass_extents(self,):
+    def overpass_extents(self, ):
         """
         Return the export extents in order required by Overpass API.
         """
@@ -459,11 +382,11 @@ class Job(UIDMixin, TimeStampedModelMixin):
         return overpass_extents
 
     @property
-    def extents(self,):
+    def extents(self, ):
         return GEOSGeometry(self.the_geom).extent  # (w,s,e,n)
 
     @property
-    def filters(self,):
+    def filters(self, ):
         """
         Return key=value pairs for each tag in this export.
 
@@ -477,7 +400,7 @@ class Job(UIDMixin, TimeStampedModelMixin):
         return filters
 
     @property
-    def categorised_tags(self,):
+    def categorised_tags(self, ):
         """
         Return tags mapped according to their geometry types.
         """
@@ -498,10 +421,10 @@ class Job(UIDMixin, TimeStampedModelMixin):
         }
 
     @property
-    def bounds_geojson(self,):
-        return serialize(
-            "geojson", [self], geometry_field="the_geom", fields=("name", "the_geom")
-        )
+    def bounds_geojson(self, ):
+        return serialize('geojson', [self],
+                         geometry_field='the_geom',
+                         fields=('name', 'the_geom'))
 
 
 class RegionMask(models.Model):

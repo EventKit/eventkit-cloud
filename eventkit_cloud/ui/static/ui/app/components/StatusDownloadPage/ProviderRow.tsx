@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { withTheme, withStyles, createStyles, Theme } from '@material-ui/core/styles';
+import {withTheme, withStyles, createStyles, Theme} from '@material-ui/core/styles';
 import withWidth from '@material-ui/core/withWidth';
 import Table from '@material-ui/core/Table';
 import TableBody from '@material-ui/core/TableBody';
@@ -19,13 +19,14 @@ import TaskError from './TaskError';
 import ProviderError from './ProviderError';
 import BaseDialog from '../Dialog/BaseDialog';
 import LicenseRow from './LicenseRow';
-import { Breakpoint } from '@material-ui/core/styles/createBreakpoints';
+import {Breakpoint} from '@material-ui/core/styles/createBreakpoints';
 import moment from 'moment';
 
 interface Props {
     provider: Eventkit.ProviderTask;
     job: Eventkit.Job;
     selectedProviders: { [uid: string]: boolean };
+    selectProvider: (providerTask: Eventkit.ProviderTask) => void;
     onProviderCancel: (uid: string) => void;
     providers: Eventkit.Provider[];
     backgroundColor: string;
@@ -36,10 +37,11 @@ interface Props {
 
 interface State {
     openTable: boolean;
-    selectedRows: {[uid: string]: boolean };
+    selectedRows: { [uid: string]: boolean };
     fileSize: string;
     providerDesc: string;
     providerDialogOpen: boolean;
+    previewDialogOpen: boolean;
 }
 
 const jss = (theme: Eventkit.Theme & Theme) => createStyles({
@@ -161,25 +163,26 @@ export class ProviderRow extends React.Component<Props, State> {
             fileSize: this.getFileSize(props.provider.tasks),
             providerDesc: '',
             providerDialogOpen: false,
+            previewDialogOpen: false,
         };
     }
 
-    static defaultProps = { selectedProviders: {} };
+    static defaultProps = {selectedProviders: {}};
 
     componentWillMount() {
         // set state on the provider
         const rows = {};
-        const { uid } = this.props.provider;
+        const {uid} = this.props.provider;
         rows[uid] = false;
-        this.setState({ selectedRows: rows });
+        this.setState({selectedRows: rows});
     }
 
     componentDidUpdate(prevProps: Props) {
         if (this.props.provider.status !== prevProps.provider.status) {
-            this.setState({ fileSize: this.getFileSize(this.props.provider.tasks) });
+            this.setState({fileSize: this.getFileSize(this.props.provider.tasks)});
         }
         if (this.props.selectedProviders !== this.state.selectedRows) {
-            this.setState({ selectedRows: this.props.selectedProviders });
+            this.setState({selectedRows: this.props.selectedProviders});
         }
     }
 
@@ -247,23 +250,23 @@ export class ProviderRow extends React.Component<Props, State> {
     }
 
     private getTaskStatus(task: Eventkit.Task) {
-        const { colors } = this.props.theme.eventkit;
+        const {colors} = this.props.theme.eventkit;
         switch (task.status) {
             case 'SUCCESS':
                 return (
                     <Check
                         className="qa-ProviderRow-Check-taskStatus"
-                        style={{ fill: colors.success, verticalAlign: 'middle', marginBottom: '2px' }}
+                        style={{fill: colors.success, verticalAlign: 'middle', marginBottom: '2px'}}
                     />
                 );
             case 'FAILED':
-                return <TaskError task={task} />;
+                return <TaskError task={task}/>;
             case 'PENDING':
                 return 'WAITING';
             case 'RUNNING':
                 return (
                     <span className="qa-ProviderRow-span-taskStatus">
-                        <LinearProgress variant="determinate" value={task.progress} />
+                        <LinearProgress variant="determinate" value={task.progress}/>
                         {task.progress === 100 ? '' : `${task.progress.toFixed(1)} %`}
                     </span>
                 );
@@ -284,18 +287,18 @@ export class ProviderRow extends React.Component<Props, State> {
     }
 
     private getProviderStatus(provider: Eventkit.ProviderTask) {
-        const { colors } = this.props.theme.eventkit;
+        const {colors} = this.props.theme.eventkit;
 
         switch (provider.status) {
             case 'COMPLETED':
                 return (
                     <Check
                         className="qa-ProviderRow-Check-providerStatus"
-                        style={{ fill: colors.success, verticalAlign: 'middle', marginBottom: '2px' }}
+                        style={{fill: colors.success, verticalAlign: 'middle', marginBottom: '2px'}}
                     />
                 );
             case 'INCOMPLETE':
-                return <ProviderError provider={provider} key={provider.uid} />;
+                return <ProviderError provider={provider} key={provider.uid}/>;
             case 'PENDING':
                 return 'WAITING';
             case 'RUNNING':
@@ -329,13 +332,13 @@ export class ProviderRow extends React.Component<Props, State> {
     }
 
     private getTaskLink(task: Eventkit.Task) {
-        const { colors } = this.props.theme.eventkit;
+        const {colors} = this.props.theme.eventkit;
 
         if (!Object.prototype.hasOwnProperty.call(task.result, 'url')) {
             return (
                 <span
                     className="qa-ProviderRow-span-taskLinkDisabled"
-                    style={{ color: colors.grey }}
+                    style={{color: colors.grey}}
                 >
                     {task.name}
                 </span>
@@ -346,9 +349,13 @@ export class ProviderRow extends React.Component<Props, State> {
                 className="qa-ProviderRow-a-taskLinkenabled"
                 role="button"
                 tabIndex={0}
-                onClick={() => { this.handleSingleDownload(task.result.url); }}
-                onKeyPress={() => { this.handleSingleDownload(task.result.url); }}
-                style={{ color: colors.primary, cursor: 'pointer' }}
+                onClick={() => {
+                    this.handleSingleDownload(task.result.url);
+                }}
+                onKeyPress={() => {
+                    this.handleSingleDownload(task.result.url);
+                }}
+                style={{color: colors.primary, cursor: 'pointer'}}
             >
                 {task.name}
             </span>
@@ -356,7 +363,7 @@ export class ProviderRow extends React.Component<Props, State> {
     }
 
     private getTaskDownloadIcon(task: Eventkit.Task) {
-        const { colors } = this.props.theme.eventkit;
+        const {colors} = this.props.theme.eventkit;
 
         if (!Object.prototype.hasOwnProperty.call(task.result, 'url')) {
             return (
@@ -374,7 +381,9 @@ export class ProviderRow extends React.Component<Props, State> {
         return (
             <CloudDownload
                 className="qa-ProviderRow-CloudDownload-taskLinkEnabled"
-                onClick={() => { this.handleSingleDownload(task.result.url); }}//
+                onClick={() => {
+                    this.handleSingleDownload(task.result.url);
+                }}//
                 key={task.result.url}
                 style={{
                     marginLeft: '10px',
@@ -387,7 +396,7 @@ export class ProviderRow extends React.Component<Props, State> {
     }
 
     private handleToggle() {
-        this.setState({ openTable: !this.state.openTable });
+        this.setState({openTable: !this.state.openTable});
     }
 
     private handleSingleDownload(url: string) {
@@ -395,20 +404,20 @@ export class ProviderRow extends React.Component<Props, State> {
     }
 
     private handleProviderClose() {
-        this.setState({ providerDialogOpen: false });
+        this.setState({providerDialogOpen: false});
     }
 
     private handleProviderOpen() {
-        const { provider } = this.props;
+        const {provider} = this.props;
         const propsProvider = this.props.providers.find(x => x.slug === provider.slug);
         const providerDesc = propsProvider.service_description;
-        this.setState({ providerDesc, providerDialogOpen: true });
+        this.setState({providerDesc, providerDialogOpen: true});
     }
 
     render() {
-        const { classes } = this.props;
-        const { provider } = this.props;
-        const { job } = this.props;
+        const {classes} = this.props;
+        const {provider} = this.props;
+        const {job} = this.props;
 
         const dataProviderTask = job && job.provider_tasks.find(obj => obj.provider === provider.name);
         const propsProvider = this.props.providers.find(obj => obj.slug === provider.slug);
@@ -418,7 +427,7 @@ export class ProviderRow extends React.Component<Props, State> {
         const max_zoom = dataProviderTask && dataProviderTask.max_zoom || propsProvider && propsProvider.level_to;
 
         const licenseData = propsProvider && propsProvider.license ?
-            <LicenseRow name={propsProvider.license.name} text={propsProvider.license.text} />
+            <LicenseRow name={propsProvider.license.name} text={propsProvider.license.text}/>
             :
             null;
 
@@ -436,18 +445,32 @@ export class ProviderRow extends React.Component<Props, State> {
                 className="qa-ProviderRow-MenuItem-cancel"
                 key="cancel"
                 disabled={cancelMenuDisabled}
-                style={{ fontSize: '12px' }}
-                onClick={() => { this.props.onProviderCancel(provider.uid); }}
+                style={{fontSize: '12px'}}
+                onClick={() => {
+                    this.props.onProviderCancel(provider.uid);
+                }}
             >
                 Cancel
             </MenuItem>,
             <MenuItem
                 className="qa-ProviderRow-MenuItem-viewDataSources"
                 key="viewProviderData"
-                style={{ fontSize: '12px' }}
+                style={{fontSize: '12px'}}
                 onClick={this.handleProviderOpen}
             >
                 View Data Source
+            </MenuItem>,
+            <MenuItem
+                className="qa-ProviderRow-MenuItem-preview"
+                key="viewPreviews"
+                disabled={!this.props.provider.preview_url}
+                style={{fontSize: '12px'}}
+                onClick={(event) => {
+                    // provider IS a ProviderTask
+                    this.props.selectProvider(this.props.provider)
+                }}
+            >
+                View Data Preview
             </MenuItem>,
         );
 
@@ -456,7 +479,7 @@ export class ProviderRow extends React.Component<Props, State> {
         let tableData;
         if (this.state.openTable) {
             tableData = (
-                <Table style={{ tableLayout: 'fixed' }}>
+                <Table style={{tableLayout: 'fixed'}}>
                     <TableBody
                         className="qa-ProviderRow-TableBody"
                     >
@@ -464,54 +487,54 @@ export class ProviderRow extends React.Component<Props, State> {
                         <TableRow
                             className="qa-ProviderRow-TableRow-task"
                         >
-                            <TableCell classes={{ root: classes.insetColumn }} />
+                            <TableCell classes={{root: classes.insetColumn}}/>
 
                             <TableCell
                                 className="qa-ProviderRow-TableCell-zoomLevels"
-                                classes={{ root: classes.zoomLevelColumn }}
+                                classes={{root: classes.zoomLevelColumn}}
                             >
                                 Zoom Levels {min_zoom} - {max_zoom}
                             </TableCell>
-                            <TableCell classes={{ root: classes.sizeColumnn }}/>
-                            <TableCell classes={{ root: classes.estimatedFinishColumn }}/>
-                            <TableCell classes={{ root: classes.taskStatusColumn }}/>
-                            <TableCell classes={{ root: classes.menuColumn }} />
-                            <TableCell classes={{ root: classes.arrowColumn }} />
+                            <TableCell classes={{root: classes.sizeColumnn}}/>
+                            <TableCell classes={{root: classes.estimatedFinishColumn}}/>
+                            <TableCell classes={{root: classes.taskStatusColumn}}/>
+                            <TableCell classes={{root: classes.menuColumn}}/>
+                            <TableCell classes={{root: classes.arrowColumn}}/>
                         </TableRow>
                         {tasks.map(task => (
                             <TableRow
                                 className="qa-ProviderRow-TableRow-task"
                                 key={task.uid}
                             >
-                                <TableCell classes={{ root: classes.insetColumn }} />
+                                <TableCell classes={{root: classes.insetColumn}}/>
                                 <TableCell
                                     className="qa-ProviderRow-TableCell-taskLinks"
-                                    classes={{ root: classes.taskLinkColumn}}
+                                    classes={{root: classes.taskLinkColumn}}
                                 >
                                     {this.getTaskLink(task)}
                                     {this.getTaskDownloadIcon(task)}
                                 </TableCell>
                                 <TableCell
                                     className="qa-ProviderRow-TableCell-size"
-                                    classes={{ root: classes.sizeColumnn}}
+                                    classes={{root: classes.sizeColumnn}}
                                 >
                                     {task.result == null ? '' : task.result.size}
                                 </TableCell>
                                 <TableCell
                                     className="qa-ProviderRow-TableCell-estimatedFinish"
-                                    classes={{ root: classes.estimatedFinishColumn }}
+                                    classes={{root: classes.estimatedFinishColumn}}
                                     style={{fontSize: '.85em'}}
                                 >
                                     {this.getEstimatedFinish(task)}
                                 </TableCell>
                                 <TableCell
                                     className="qa-ProviderRow-TableCell-status"
-                                    classes={{ root: classes.taskStatusColumn }}
+                                    classes={{root: classes.taskStatusColumn}}
                                 >
                                     {this.getTaskStatus(task)}
                                 </TableCell>
-                                <TableCell classes={{ root: classes.menuColumn }} />
-                                <TableCell classes={{ root: classes.arrowColumn }} />
+                                <TableCell classes={{root: classes.menuColumn}}/>
+                                <TableCell classes={{root: classes.arrowColumn}}/>
                             </TableRow>
                         ))}
                     </TableBody>
@@ -526,7 +549,7 @@ export class ProviderRow extends React.Component<Props, State> {
                 <Table
                     key={provider.uid}
                     className="qa-ProviderRow-Table"
-                    style={{ width: '100%', backgroundColor: this.props.backgroundColor, tableLayout: 'fixed' }}
+                    style={{width: '100%', backgroundColor: this.props.backgroundColor, tableLayout: 'fixed'}}
                 >
                     <TableHead
                         className="qa-ProviderRow-TableHead"
@@ -534,31 +557,31 @@ export class ProviderRow extends React.Component<Props, State> {
                         <TableRow className="qa-ProviderRow-TableRow-provider">
                             <TableCell
                                 className="qa-ProviderRow-TableCell-providerName"
-                                classes={{ root: classes.providerColumn }}
+                                classes={{root: classes.providerColumn}}
                             >
                                 {provider.name}
                             </TableCell>
                             <TableCell
                                 className="qa-ProviderRow-TableCell-fileSize"
-                                classes={{ root: classes.fileSizeColumn }}
+                                classes={{root: classes.fileSizeColumn}}
                             >
                                 {this.state.fileSize == null ? '' : `${this.state.fileSize} MB`}
                             </TableCell>
                             <TableCell
                                 className="qa-ProviderRow-TableCell-estimatedFinish"
-                                classes={{ root: classes.estimatedFinishColumn }}
+                                classes={{root: classes.estimatedFinishColumn}}
                             >
                                 {this.getLastEstimatedFinish(tasks)}
                             </TableCell>
                             <TableCell
                                 className="qa-ProviderRow-TableCell-providerStatus"
-                                classes={{ root: classes.providerStatusColumn }}
+                                classes={{root: classes.providerStatusColumn}}
                             >
                                 {this.getProviderStatus(this.props.provider)}
                             </TableCell>
                             <TableCell
                                 className="qa-ProviderRow-TableCell-menu"
-                                classes={{ root: classes.menuColumn }}
+                                classes={{root: classes.menuColumn}}
                             >
                                 {menuItems.length > 0 ?
                                     <IconMenu
@@ -581,16 +604,16 @@ export class ProviderRow extends React.Component<Props, State> {
                             </TableCell>
                             <TableCell
                                 className="qa-ProviderRow-TableCell-arrows"
-                                classes={{ root: classes.arrowColumn }}
+                                classes={{root: classes.arrowColumn}}
                             >
                                 <IconButton
                                     disableTouchRipple
                                     onClick={this.handleToggle}
                                 >
                                     {this.state.openTable ?
-                                        <ArrowUp className="qa-ProviderRow-ArrowUp" color="primary" />
+                                        <ArrowUp className="qa-ProviderRow-ArrowUp" color="primary"/>
                                         :
-                                        <ArrowDown className="qa-ProviderRow-ArrowDown" color="primary" />
+                                        <ArrowDown className="qa-ProviderRow-ArrowDown" color="primary"/>
                                     }
                                 </IconButton>
                             </TableCell>
