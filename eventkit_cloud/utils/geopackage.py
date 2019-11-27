@@ -539,7 +539,7 @@ def set_gpkg_contents_bounds(gpkg, table_name, bbox):
         if not conn.execute(
                 "UPDATE gpkg_contents SET min_x = {0}, min_y = {1}, max_x = {2}, max_y = {3} WHERE table_name = '{4}';".format(
                     bbox[0], bbox[1], bbox[2], bbox[3], table_name)).rowcount:
-            raise Exception("Unable to set bounds for {1} in {2}".format(table_name, gpkg))
+            raise Exception("Unable to set bounds for {0} in {1}".format(table_name, gpkg))
 
 
 def get_table_tile_matrix_information(gpkg, table_name):

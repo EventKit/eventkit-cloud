@@ -67,7 +67,6 @@ describe('ProviderRow component', () => {
             uid: 'bc9a834a-727a-4779-8679-2500880a8526',
             name: 'OpenStreetMap Data (Themes)',
             slug: 'osm',
-            preview_url: '',
             service_copyright: '',
             service_description: 'provider description',
             layer: null,
@@ -76,6 +75,7 @@ describe('ProviderRow component', () => {
             zip: false,
             display: true,
             export_provider_type: 2,
+            preview_url: 'non empty string',
         },
     ];
 
@@ -95,6 +95,7 @@ describe('ProviderRow component', () => {
         onSelectionToggle: sinon.spy(),
         onProviderCancel: sinon.spy(),
         classes: {},
+        selectProvider: sinon.spy(),
         ...(global as any).eventkit_test_props,
     });
 
@@ -113,7 +114,7 @@ describe('ProviderRow component', () => {
         expect(wrapper.find(IconMenu)).toHaveLength(1);
         expect(wrapper.find(IconButton)).toHaveLength(1);
         expect(wrapper.find(IconButton).find(ArrowDown)).toHaveLength(1);
-        expect(wrapper.find(MenuItem)).toHaveLength(2);
+        expect(wrapper.find(MenuItem)).toHaveLength(3);
         expect(wrapper.find(BaseDialog)).toHaveLength(1);
     });
 
@@ -153,6 +154,14 @@ describe('ProviderRow component', () => {
         wrapper.find(IconMenu).childAt(1).simulate('click');
         expect(handleStub.calledOnce).toBe(true);
         handleStub.restore();
+    });
+
+    it('View preview MenuItem should call selectProvider', () => {
+        const props = getProps();
+        props.selectProvider = sinon.spy();
+        const wrapper = shallow(<ProviderRow {...props} />);
+        wrapper.find(IconMenu).childAt(2).simulate('click');
+        expect(props.selectProvider.calledOnce).toBe(true);
     });
 
     it('getTaskDownloadIcon should return an icon that calls handleSingleDownload', () => {
