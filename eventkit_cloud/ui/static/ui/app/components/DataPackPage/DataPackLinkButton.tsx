@@ -1,6 +1,7 @@
 import * as React from 'react';
 import { withTheme, Theme } from '@material-ui/core/styles';
-import Button from '@material-ui/core/Button';
+import { Link } from 'react-router-dom';
+import { Button } from '@material-ui/core';
 
 export interface Props {
     theme: Eventkit.Theme & Theme;
@@ -26,15 +27,28 @@ export class DataPackLinkButton extends React.Component<Props, {}> {
         };
 
         return (
-            <Button
-                className="qa-DataPackLinkButton-Button"
-                color="primary"
-                variant="contained"
+            <Link
+                className={`datapack-link-create`}
+                style={
+                    {
+                        display: 'grid',
+                        textDecoration: 'none'
+                    }
+                }
+                to="/create"
                 href="/create"
-                style={styles.button}
             >
-                Create DataPack
-            </Button>
+                <Button
+                    className={`datapack-button-create`}
+                    // activeClassName={classes.activeLink}
+                    style={styles.button}
+                    variant="contained"
+                    color="primary"
+                >
+                    {/*<ContentAddBox className={classes.icon} />*/}
+                    Create DataPack
+                </Button>
+            </Link>
         );
     }
 }
