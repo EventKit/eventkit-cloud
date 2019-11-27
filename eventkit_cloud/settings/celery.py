@@ -4,7 +4,6 @@ import os
 import socket
 
 from celery.schedules import crontab
-from kombu import Exchange, Queue
 
 from eventkit_cloud.celery import app
 from eventkit_cloud.settings.contrib import *  # NOQA

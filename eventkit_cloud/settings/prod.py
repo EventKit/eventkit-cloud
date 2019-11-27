@@ -2,8 +2,13 @@
 
 
 import dj_database_url
+import os
+import json
+import socket
 
 from eventkit_cloud.settings.celery import *  # NOQA
+from eventkit_cloud.settings.celery import INSTALLED_APPS
+from eventkit_cloud.settings.celery import MIDDLEWARE
 from distutils.util import strtobool
 
 BASE_DIR = os.path.abspath(os.path.dirname(__file__))
@@ -99,8 +104,6 @@ JOB_MAX_EXTENT = int(
 # maximum number of runs to hold for each export
 EXPORT_MAX_RUNS = 1
 
-import socket
-
 HOSTNAME = os.getenv("HOSTNAME", socket.gethostname())
 if os.getenv("VCAP_APPLICATION"):
     env = json.loads(os.getenv("VCAP_APPLICATION"))
@@ -179,7 +182,8 @@ if os.getenv("OAUTH_AUTHORIZATION_URL"):
     # first_name, last_name
 
     # Example:
-    # OAUTH_PROFILE_SCHEMA = {"identification": "ID", "username": "username", "email": "email", "first_name": "firstname"...}
+    # OAUTH_PROFILE_SCHEMA = {"identification": "ID", "username": "username", "email": "email", "first_name":
+    # "firstname"...}
     OAUTH_PROFILE_SCHEMA = os.getenv("OAUTH_PROFILE_SCHEMA")
     OAUTH_PROFILE_URL = os.getenv("OAUTH_PROFILE_URL")
 
@@ -357,7 +361,7 @@ MAPPROXY_CONCURRENCY = os.getenv("MAPPROXY_CONCURRENCY", 1)
 LOGGING = {
     "version": 1,
     "disable_existing_loggers": False,
-    "handlers": {"console": {"class": "logging.StreamHandler",},},
+    "handlers": {"console": {"class": "logging.StreamHandler", }, },
     "loggers": {
         "django": {
             "handlers": ["console"],
@@ -365,12 +369,12 @@ LOGGING = {
             "level": os.getenv("DJANGO_LOG_LEVEL", "WARN"),
         },
         "eventkit_cloud": {
-            "handlers": ["console",],
+            "handlers": ["console", ],
             "propagate": True,
             "level": os.getenv("LOG_LEVEL", "INFO"),
         },
         "audit_logging": {
-            "handlers": ["console",],
+            "handlers": ["console", ],
             "propagate": True,
             "level": os.getenv("LOG_LEVEL", "INFO"),
         },
