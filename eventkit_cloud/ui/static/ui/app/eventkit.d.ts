@@ -66,6 +66,7 @@ declare namespace Eventkit {
         slug: string;
         license: License;
         service_description: string;
+        preview_url: string;
     }
 
     interface DataProviderTask {

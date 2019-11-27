@@ -63,6 +63,7 @@ export class DataPackGeneralTable extends React.Component<Props, State> {
             }
         };
 
+        // @ts-ignore
         return (
             <div className="qa-DataPackGeneralTable">
                 <CustomTableRow
