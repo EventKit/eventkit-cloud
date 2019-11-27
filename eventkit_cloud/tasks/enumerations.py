@@ -16,7 +16,13 @@ class TaskStates(Enum):
 
     @staticmethod
     def get_finished_states():
-        return [TaskStates.COMPLETED, TaskStates.INCOMPLETE, TaskStates.CANCELED, TaskStates.SUCCESS, TaskStates.FAILED]
+        return [
+            TaskStates.COMPLETED,
+            TaskStates.INCOMPLETE,
+            TaskStates.CANCELED,
+            TaskStates.SUCCESS,
+            TaskStates.FAILED,
+        ]
 
     @staticmethod
     def get_incomplete_states():

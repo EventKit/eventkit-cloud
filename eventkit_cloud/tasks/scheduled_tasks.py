@@ -30,7 +30,7 @@ logger = get_task_logger(__name__)
 #     expired_jobs.delete()
 
 
-@app.task(name='Expire Runs')
+@app.task(name="Expire Runs")
 def expire_runs():
     """
     Checks all runs.
@@ -39,6 +39,7 @@ def expire_runs():
     and 2 days before schedule expiration time.
     """
     from eventkit_cloud.tasks.models import ExportRun
+
     site_url = getattr(settings, "SITE_URL")
     runs = ExportRun.objects.all()
 
@@ -48,7 +49,7 @@ def expire_runs():
         if not email:
             break
         uid = run.job.uid
-        url = '{0}/status/{1}'.format(site_url.rstrip('/'), uid)
+        url = "{0}/status/{1}".format(site_url.rstrip("/"), uid)
         notified = run.notified
         now = timezone.now()
         # if expired delete the run:
@@ -57,14 +58,20 @@ def expire_runs():
 
         # if two days left and most recent notification was at the 7 day mark email user
         elif expiration - now <= timezone.timedelta(days=2):
-            if not notified or (notified and notified < expiration - timezone.timedelta(days=2)):
-                send_warning_email(date=expiration, url=url, addr=email, job_name=run.job.name)
+            if not notified or (
+                notified and notified < expiration - timezone.timedelta(days=2)
+            ):
+                send_warning_email(
+                    date=expiration, url=url, addr=email, job_name=run.job.name
+                )
                 run.notified = now
                 run.save()
 
         # if one week left and no notification yet email the user
         elif expiration - now <= timezone.timedelta(days=7) and not notified:
-            send_warning_email(date=expiration, url=url, addr=email, job_name=run.job.name)
+            send_warning_email(
+                date=expiration, url=url, addr=email, job_name=run.job.name
+            )
             run.notified = now
             run.save()
 
@@ -78,10 +85,12 @@ def pcf_scale_celery(max_instances):
     from eventkit_cloud.utils.pcf import PcfClient
     from eventkit_cloud.tasks.models import ExportRun
 
-    if os.getenv('CELERY_TASK_APP'):
-        app_name = os.getenv('CELERY_TASK_APP')
+    if os.getenv("CELERY_TASK_APP"):
+        app_name = os.getenv("CELERY_TASK_APP")
     else:
-        app_name = json.loads(os.getenv("VCAP_APPLICATION", "{}")).get("application_name")
+        app_name = json.loads(os.getenv("VCAP_APPLICATION", "{}")).get(
+            "application_name"
+        )
 
     client = PcfClient()
     client.login()
@@ -93,36 +102,38 @@ def pcf_scale_celery(max_instances):
         logger.info("Already at max instances, skipping.")
         return
 
-    default_command = ("python manage.py runinitial && echo 'Starting celery workers' && "
-    "celery worker -A eventkit_cloud --concurrency=$CONCURRENCY --loglevel=$LOG_LEVEL -n runs@%h -Q runs "
-    "& exec celery worker -A eventkit_cloud --concurrency=$CONCURRENCY --loglevel=$LOG_LEVEL -n worker@%h -Q $CELERY_GROUP_NAME "
-    "& exec celery worker -A eventkit_cloud --loglevel=$LOG_LEVEL -n celery@%h -Q celery "
-    "& exec celery worker -A eventkit_cloud --loglevel=$LOG_LEVEL -n cancel@%h -Q $HOSTNAME.cancel "
-    "& exec celery worker -A eventkit_cloud --concurrency=2 -n finalize@%h -Q $CELERY_GROUP_NAME.finalize "
-    "& exec celery worker -A eventkit_cloud --concurrency=1 --loglevel=$LOG_LEVEL -n osm@%h -Q $CELERY_GROUP_NAME.osm ")
+    default_command = (
+        "python manage.py runinitial && echo 'Starting celery workers' && "
+        "celery worker -A eventkit_cloud --concurrency=$CONCURRENCY --loglevel=$LOG_LEVEL -n runs@%h -Q runs "
+        "& exec celery worker -A eventkit_cloud --concurrency=$CONCURRENCY --loglevel=$LOG_LEVEL -n worker@%h -Q $CELERY_GROUP_NAME "
+        "& exec celery worker -A eventkit_cloud --loglevel=$LOG_LEVEL -n celery@%h -Q celery "
+        "& exec celery worker -A eventkit_cloud --loglevel=$LOG_LEVEL -n cancel@%h -Q $HOSTNAME.cancel "
+        "& exec celery worker -A eventkit_cloud --concurrency=2 -n finalize@%h -Q $CELERY_GROUP_NAME.finalize "
+        "& exec celery worker -A eventkit_cloud --concurrency=1 --loglevel=$LOG_LEVEL -n osm@%h -Q $CELERY_GROUP_NAME.osm "
+    )
 
-    command = os.getenv('CELERY_TASK_COMMAND',  default_command)
+    command = os.getenv("CELERY_TASK_COMMAND", default_command)
 
     message_count = get_message_count("runs")
     if message_count > 0:
-        logger.info(F"Sending task to {app_name} with command {command}")
+        logger.info(f"Sending task to {app_name} with command {command}")
         client.run_task(command, app_name=app_name)
         return
 
     celery_group_name = os.getenv("CELERY_GROUP_NAME", socket.gethostname())
-    broker_api_url = getattr(settings, 'BROKER_API_URL')
+    broker_api_url = getattr(settings, "BROKER_API_URL")
     queue_class = "queues"
     total_pending_messages = 0
 
     # If there are queues with work and no workers, spawn a new worker instance
     for queue in get_all_rabbitmq_objects(broker_api_url, queue_class):
-        queue_name = queue.get('name')
-        pending_messages = queue.get('messages')
+        queue_name = queue.get("name")
+        pending_messages = queue.get("messages")
         total_pending_messages = total_pending_messages + pending_messages
         if celery_group_name in queue_name or queue_name == "celery":
             logger.info(f"Queue {queue_name} has {pending_messages} pending messages.")
             if pending_messages > 0 and running_tasks_count < 1:
-                logger.info(F"Sending task to {app_name} with command {command}")
+                logger.info(f"Sending task to {app_name} with command {command}")
                 client.run_task(command, app_name=app_name)
                 return
 
@@ -136,7 +147,7 @@ def shutdown_celery_workers():
     hostnames = []
     workers = ["runs", "worker", "celery", "cancel", "finalize", "osm"]
     for worker in workers:
-        hostnames.append(F"{worker}@{socket.gethostname()}")
+        hostnames.append(f"{worker}@{socket.gethostname()}")
 
     logger.info("Queue is at zero, shutting down.")
     app.control.broadcast("shutdown", destination=hostnames)
@@ -149,11 +160,13 @@ def check_provider_availability():
 
     for provider in DataProvider.objects.all():
         status = json.loads(perform_provider_check(provider, None))
-        data_provider_status = DataProviderStatus.objects.create(related_provider=provider)
+        data_provider_status = DataProviderStatus.objects.create(
+            related_provider=provider
+        )
         data_provider_status.last_check_time = datetime.datetime.now()
-        data_provider_status.status = status['status']
-        data_provider_status.status_type = status['type']
-        data_provider_status.message = status['message']
+        data_provider_status.status = status["status"]
+        data_provider_status.status_type = status["type"]
+        data_provider_status.message = status["message"]
         data_provider_status.save()
 
 
@@ -170,14 +183,12 @@ def send_warning_email(date=None, url=None, addr=None, job_name=None):
     subject = "Your EventKit DataPack is set to expire."
     to = [addr]
     from_email = getattr(
-        settings,
-        'DEFAULT_FROM_EMAIL',
-        'Eventkit Team <eventkit.team@gmail.com>'
+        settings, "DEFAULT_FROM_EMAIL", "Eventkit Team <eventkit.team@gmail.com>"
     )
-    ctx = {'url': url, 'date': str(date), 'job_name': job_name}
+    ctx = {"url": url, "date": str(date), "job_name": job_name}
 
-    text = get_template('email/expiration_warning.txt').render(ctx)
-    html = get_template('email/expiration_warning.html').render(ctx)
+    text = get_template("email/expiration_warning.txt").render(ctx)
+    html = get_template("email/expiration_warning.html").render(ctx)
     try:
         msg = EmailMultiAlternatives(subject, text, to=to, from_email=from_email)
         msg.attach_alternative(html, "text/html")
@@ -186,9 +197,9 @@ def send_warning_email(date=None, url=None, addr=None, job_name=None):
         logger.error("Encountered an error when sending status email: {}".format(e))
 
 
-@app.task(name='Clean Up Queues')
+@app.task(name="Clean Up Queues")
 def clean_up_queues():
-    broker_api_url = getattr(settings, 'BROKER_API_URL')
+    broker_api_url = getattr(settings, "BROKER_API_URL")
     queue_class = "queues"
     exchange_class = "exchanges"
 
@@ -201,14 +212,14 @@ def clean_up_queues():
             logger.error("Could not establish a rabbitmq channel")
             return
         for queue in get_all_rabbitmq_objects(broker_api_url, queue_class):
-            queue_name = queue.get('name')
+            queue_name = queue.get("name")
             try:
                 channel.queue_delete(queue_name, if_unused=True, if_empty=True)
                 logger.info("Removed queue: {}".format(queue_name))
             except Exception as e:
                 logger.info(e)
         for exchange in get_all_rabbitmq_objects(broker_api_url, exchange_class):
-            exchange_name = exchange.get('name')
+            exchange_name = exchange.get("name")
             try:
                 channel.exchange_delete(exchange_name, if_unused=True)
                 logger.info("Removed exchange: {}".format(exchange_name))

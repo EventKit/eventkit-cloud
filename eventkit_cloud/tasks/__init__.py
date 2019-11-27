@@ -11,7 +11,7 @@ import logging
 
 logger = logging.getLogger(__file__)
 
-default_app_config = 'eventkit_cloud.tasks.apps.EventKitTasks'
+default_app_config = "eventkit_cloud.tasks.apps.EventKitTasks"
 
 DEFAULT_CACHE_EXPIRTATION = 86400  # expire in a day
 
@@ -35,7 +35,7 @@ def get_cache_key(obj=None, attribute=None, uid=None, model_name=None):
     else:
         uid = uid
         try:
-            model = django_apps.get_model('tasks', model_name)
+            model = django_apps.get_model("tasks", model_name)
         except LookupError:
             logger.error("There is no such model {0}".format(model_name))
             raise
@@ -47,12 +47,27 @@ def get_cache_key(obj=None, attribute=None, uid=None, model_name=None):
     return cache_key
 
 
-def set_cache_value(obj=None, uid=None, attribute=None, value=None,
-                    model_name=None, expiration=DEFAULT_CACHE_EXPIRTATION):
-    return cache.set(get_cache_key(obj=obj, attribute=attribute, uid=str(uid), model_name=model_name),
-                     value,
-                     timeout=expiration)
+def set_cache_value(
+    obj=None,
+    uid=None,
+    attribute=None,
+    value=None,
+    model_name=None,
+    expiration=DEFAULT_CACHE_EXPIRTATION,
+):
+    return cache.set(
+        get_cache_key(
+            obj=obj, attribute=attribute, uid=str(uid), model_name=model_name
+        ),
+        value,
+        timeout=expiration,
+    )
 
 
 def get_cache_value(obj=None, uid=None, attribute=None, model_name=None, default=None):
-    return cache.get(get_cache_key(obj=obj, attribute=attribute, uid=str(uid), model_name=model_name), default)
+    return cache.get(
+        get_cache_key(
+            obj=obj, attribute=attribute, uid=str(uid), model_name=model_name
+        ),
+        default,
+    )

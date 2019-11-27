@@ -13,7 +13,6 @@ from numpy import linspace
 import yaml
 
 
-
 from django.conf import settings
 from django.template.loader import render_to_string
 from django.utils import timezone
@@ -27,12 +26,13 @@ logger = logging.getLogger()
 
 
 class Directory(Enum):
-    ARCGIS = 'arcgis'
-    DATA = 'data'
-    TEMPLATES = 'templates'
+    ARCGIS = "arcgis"
+    DATA = "data"
+    TEMPLATES = "templates"
 
 
-PREVIEW_TAIL = 'preview.jpg'
+PREVIEW_TAIL = "preview.jpg"
+
 
 def get_run_staging_dir(run_uid):
     """
@@ -41,7 +41,7 @@ def get_run_staging_dir(run_uid):
     :param run_uid: The unique value to store the directory for the run data.
     :return: The path to the run directory.
     """
-    return os.path.join(settings.EXPORT_STAGING_ROOT.rstrip('\/'), str(run_uid))
+    return os.path.join(settings.EXPORT_STAGING_ROOT.rstrip("\/"), str(run_uid))
 
 
 def get_run_download_dir(run_uid):
@@ -51,7 +51,7 @@ def get_run_download_dir(run_uid):
     :param run_uid: The unique value to store the directory for the run data.
     :return: The path to the run directory.
     """
-    return os.path.join(settings.EXPORT_DOWNLOAD_ROOT.rstrip('\/'), str(run_uid))
+    return os.path.join(settings.EXPORT_DOWNLOAD_ROOT.rstrip("\/"), str(run_uid))
 
 
 def get_run_download_url(run_uid):
@@ -60,7 +60,7 @@ def get_run_download_url(run_uid):
     :param run_uid: The unique identifier for the run data.
     :return: The url context. (e.g. /downloads/123e4567-e89b-12d3-a456-426655440000)
     """
-    return "{0}/{1}".format(settings.EXPORT_MEDIA_ROOT.rstrip('\/'), str(run_uid))
+    return "{0}/{1}".format(settings.EXPORT_MEDIA_ROOT.rstrip("\/"), str(run_uid))
 
 
 def get_provider_staging_dir(run_uid, provider_slug):
@@ -100,11 +100,8 @@ def get_download_filename(name, time, ext, additional_descriptors=None):
     # Allow numbers or strings.
     if not isinstance(additional_descriptors, (list, tuple)):
         additional_descriptors = [str(additional_descriptors)]
-    return '{0}-{1}-{2}{3}'.format(
-        name,
-        '-'.join(additional_descriptors),
-        default_format_time(time),
-        ext
+    return "{0}-{1}-{2}{3}".format(
+        name, "-".join(additional_descriptors), default_format_time(time), ext
     )
 
 
@@ -129,9 +126,9 @@ def default_format_time(date_time):
 
 def normalize_name(name):
     # Remove all non-word characters
-    s = re.sub(r"[^\w\s]", '', name)
+    s = re.sub(r"[^\w\s]", "", name)
     # Replace all whitespace with a single underscore
-    s = re.sub(r"\s+", '_', s)
+    s = re.sub(r"\s+", "_", s)
     return s.lower()
 
 
@@ -140,9 +137,9 @@ def get_style_files():
 
     :return: A list of all of the static files used for styles (e.g. icons)
     """
-    style_dir = os.path.join(os.path.dirname(__file__), 'static', 'tasks', 'styles')
+    style_dir = os.path.join(os.path.dirname(__file__), "static", "tasks", "styles")
     files = get_file_paths(style_dir)
-    arcgis_dir = os.path.join(os.path.dirname(__file__), 'arcgis')
+    arcgis_dir = os.path.join(os.path.dirname(__file__), "arcgis")
     files = get_file_paths(arcgis_dir, files)
     return files
 
@@ -151,16 +148,19 @@ def create_license_file(provider_task):
     # checks a DataProviderTaskRecord's license file and adds it to the file list if it exists
     from eventkit_cloud.jobs.models import DataProvider
     from eventkit_cloud.tasks.helpers import normalize_name
+
     data_provider_license = DataProvider.objects.get(slug=provider_task.slug).license
 
     # DataProviders are not required to have a license
     if data_provider_license is None:
         return
 
-    license_file_path = os.path.join(get_provider_staging_dir(provider_task.run.uid, provider_task.slug),
-                                     '{0}.txt'.format(normalize_name(data_provider_license.name)))
+    license_file_path = os.path.join(
+        get_provider_staging_dir(provider_task.run.uid, provider_task.slug),
+        "{0}.txt".format(normalize_name(data_provider_license.name)),
+    )
 
-    with open(license_file_path, 'wb') as license_file:
+    with open(license_file_path, "wb") as license_file:
         license_file.write(data_provider_license.text.encode())
 
     return license_file_path
@@ -177,30 +177,45 @@ def generate_qgs_style(metadata):
     """
 
     from eventkit_cloud.tasks.helpers import normalize_name
-    stage_dir = os.path.join(settings.EXPORT_STAGING_ROOT, str(metadata['run_uid']))
 
-    job_name = normalize_name(metadata['name'].lower())
+    stage_dir = os.path.join(settings.EXPORT_STAGING_ROOT, str(metadata["run_uid"]))
 
-    provider_details = [provider_detail for provider_slug, provider_detail in metadata['data_sources'].items()]
+    job_name = normalize_name(metadata["name"].lower())
+
+    provider_details = [
+        provider_detail
+        for provider_slug, provider_detail in metadata["data_sources"].items()
+    ]
 
     if len(provider_details) == 1:
-        style_file_name = '{0}-{1}-{2}.qgs'.format(job_name,
-                                                   normalize_name(provider_details[0]['slug']),
-                                                   default_format_time(timezone.now()))
+        style_file_name = "{0}-{1}-{2}.qgs".format(
+            job_name,
+            normalize_name(provider_details[0]["slug"]),
+            default_format_time(timezone.now()),
+        )
     else:
-        style_file_name = '{0}-{1}.qgs'.format(job_name, default_format_time(timezone.now()))
+        style_file_name = "{0}-{1}.qgs".format(
+            job_name, default_format_time(timezone.now())
+        )
 
     style_file = os.path.join(stage_dir, style_file_name)
 
-    with open(style_file, 'wb') as open_file:
-        open_file.write(render_to_string('styles/Style.qgs',
-                                         context={'job_name': job_name,
-                                                  'job_date_time': '{0}'.format(
-                                                      timezone.now().strftime("%Y%m%d%H%M%S%f")[:-3]),
-                                                  'provider_details': provider_details,
-                                                  'bbox': metadata['bbox'],
-                                                  'has_raster': metadata['has_raster'],
-                                                  'has_elevation': metadata['has_elevation']}).encode())
+    with open(style_file, "wb") as open_file:
+        open_file.write(
+            render_to_string(
+                "styles/Style.qgs",
+                context={
+                    "job_name": job_name,
+                    "job_date_time": "{0}".format(
+                        timezone.now().strftime("%Y%m%d%H%M%S%f")[:-3]
+                    ),
+                    "provider_details": provider_details,
+                    "bbox": metadata["bbox"],
+                    "has_raster": metadata["has_raster"],
+                    "has_elevation": metadata["has_elevation"],
+                },
+            ).encode()
+        )
     return style_file
 
 
@@ -211,15 +226,20 @@ def get_human_readable_metadata_document(metadata):
     :return: A filepath to a txt document.
     """
     from eventkit_cloud.tasks.helpers import normalize_name
-    stage_dir = os.path.join(settings.EXPORT_STAGING_ROOT, str(metadata['run_uid']))
 
-    metadata_file = os.path.join(stage_dir, '{0}_ReadMe.txt'.format(normalize_name(metadata['name'])))
+    stage_dir = os.path.join(settings.EXPORT_STAGING_ROOT, str(metadata["run_uid"]))
 
-    with open(metadata_file, 'wb') as open_file:
+    metadata_file = os.path.join(
+        stage_dir, "{0}_ReadMe.txt".format(normalize_name(metadata["name"]))
+    )
+
+    with open(metadata_file, "wb") as open_file:
         open_file.write(
-            render_to_string('styles/metadata.txt',
-                             context={'metadata': metadata}).replace('\r\n', '\n').replace('\n',
-                                                                                           '\r\n').encode())
+            render_to_string("styles/metadata.txt", context={"metadata": metadata})
+            .replace("\r\n", "\n")
+            .replace("\n", "\r\n")
+            .encode()
+        )
     return metadata_file
 
 
@@ -231,7 +251,7 @@ def get_last_update(url, type, cert_var=None):
     :param cert_var: Optionally a slug if the service requires credentials.
     :return: The timestamp as a string.
     """
-    if type == 'osm':
+    if type == "osm":
         return get_osm_last_update(url, cert_var=cert_var)
 
 
@@ -242,8 +262,8 @@ def get_metadata_url(url, type):
     :param type: The type of services (e.g. osm)
     :return: The timestamp as a string.
     """
-    if type in ['wcs', 'wms', 'wmts']:
-        return "{0}?request=GetCapabilities".format(url.split('?')[0])
+    if type in ["wcs", "wms", "wmts"]:
+        return "{0}?request=GetCapabilities".format(url.split("?")[0])
     else:
         return url
 
@@ -256,11 +276,15 @@ def get_osm_last_update(url, cert_var=None):
     :return: The default timestamp as a string (2018-06-18T13:09:59Z)
     """
     try:
-        timestamp_url = "{0}timestamp".format(url.rstrip('/').rstrip('interpreter'))
+        timestamp_url = "{0}timestamp".format(url.rstrip("/").rstrip("interpreter"))
         response = auth_requests.get(timestamp_url, cert_var=cert_var)
         if response:
             return response.content.decode()
-        raise Exception("Get OSM last update failed with {0}: {1}".format(response.status_code, response.content))
+        raise Exception(
+            "Get OSM last update failed with {0}: {1}".format(
+                response.status_code, response.content
+            )
+        )
     except Exception as e:
         logger.warning(e)
         logger.warning("Could not get the timestamp from the overpass url.")
@@ -351,8 +375,8 @@ def get_metadata(data_provider_task_uid):
     for projection in run.job.projections.all():
         projections.append(projection.srid)
 
-    if data_provider_task.name == 'run':
-        provider_tasks = run.provider_tasks.filter(~Q(name='run'))
+    if data_provider_task.name == "run":
+        provider_tasks = run.provider_tasks.filter(~Q(name="run"))
     else:
         provider_tasks = [data_provider_task]
 
@@ -362,18 +386,20 @@ def get_metadata(data_provider_task_uid):
 
     # A dict is used here to ensure that just one file per provider is added,
     # this should be updated when multiple formats are supported.
-    metadata = {'name': normalize_name(run.job.name),
-                'url': "{0}/status/{1}".format(getattr(settings, "SITE_URL"), str(run.job.uid)),
-                'description': run.job.description,
-                'project': run.job.event,
-                'projections': projections,
-                'date': timezone.now().strftime("%Y%m%d"),
-                'run_uid': str(run.uid),
-                'data_sources': {},
-                "bbox": run.job.extents,
-                'aoi': run.job.bounds_geojson,
-                'has_raster': False,
-                'has_elevation': False}
+    metadata = {
+        "name": normalize_name(run.job.name),
+        "url": "{0}/status/{1}".format(getattr(settings, "SITE_URL"), str(run.job.uid)),
+        "description": run.job.description,
+        "project": run.job.event,
+        "projections": projections,
+        "date": timezone.now().strftime("%Y%m%d"),
+        "run_uid": str(run.uid),
+        "data_sources": {},
+        "bbox": run.job.extents,
+        "aoi": run.job.bounds_geojson,
+        "has_raster": False,
+        "has_elevation": False,
+    }
 
     for provider_task in provider_tasks:
         if TaskStates[provider_task.status] in TaskStates.get_incomplete_states():
@@ -384,29 +410,31 @@ def get_metadata(data_provider_task_uid):
         if TaskStates[provider_task.status] not in TaskStates.get_incomplete_states():
             provider_staging_dir = get_provider_staging_dir(run.uid, provider_task.slug)
             conf = yaml.load(data_provider.config) or dict()
-            cert_var = conf.get('cert_var', data_provider.slug)
-            metadata['data_sources'][provider_task.slug] = {'uid': str(provider_task.uid),
-                                                            'slug': provider_task.slug,
-                                                            'name': provider_task.name,
-                                                            'files': [],
-                                                            'type': get_data_type_from_provider(provider_task.slug),
-                                                            'description': str(
-                                                                data_provider.service_description).replace('\r\n',
-                                                                                                           '\n').replace(
-                                                                '\n', '\r\n\t'),
-                                                            'last_update': get_last_update(data_provider.url,
-                                                                                           provider_type,
-                                                                                           cert_var=cert_var),
-                                                            'metadata': get_metadata_url(data_provider.url,
-                                                                                         provider_type),
-                                                            'copyright': data_provider.service_copyright}
-            if metadata['data_sources'][provider_task.slug].get('type') == 'raster':
-                metadata['has_raster'] = True
-            if metadata['data_sources'][provider_task.slug].get('type') == 'elevation':
-                metadata['has_elevation'] = True
+            cert_var = conf.get("cert_var", data_provider.slug)
+            metadata["data_sources"][provider_task.slug] = {
+                "uid": str(provider_task.uid),
+                "slug": provider_task.slug,
+                "name": provider_task.name,
+                "files": [],
+                "type": get_data_type_from_provider(provider_task.slug),
+                "description": str(data_provider.service_description)
+                .replace("\r\n", "\n")
+                .replace("\n", "\r\n\t"),
+                "last_update": get_last_update(
+                    data_provider.url, provider_type, cert_var=cert_var
+                ),
+                "metadata": get_metadata_url(data_provider.url, provider_type),
+                "copyright": data_provider.service_copyright,
+            }
+            if metadata["data_sources"][provider_task.slug].get("type") == "raster":
+                metadata["has_raster"] = True
+            if metadata["data_sources"][provider_task.slug].get("type") == "elevation":
+                metadata["has_elevation"] = True
 
             if provider_task.preview is not None:
-                include_files += [get_provider_staging_preview(run.uid, provider_task.slug)]
+                include_files += [
+                    get_provider_staging_preview(run.uid, provider_task.slug)
+                ]
 
             for export_task in provider_task.tasks.all():
                 try:
@@ -416,21 +444,33 @@ def get_metadata(data_provider_task_uid):
                 full_file_path = os.path.join(provider_staging_dir, filename)
                 file_ext = os.path.splitext(filename)[1]
                 # Only include files relavant to the user that we can actually add to the carto.
-                if export_task.display and ("project file" not in export_task.name.lower()):
-                    download_filename = get_download_filename(os.path.splitext(os.path.basename(filename))[0],
-                                                              timezone.now(),
-                                                              file_ext,
-                                                              additional_descriptors=provider_task.slug)
+                if export_task.display and (
+                    "project file" not in export_task.name.lower()
+                ):
+                    download_filename = get_download_filename(
+                        os.path.splitext(os.path.basename(filename))[0],
+                        timezone.now(),
+                        file_ext,
+                        additional_descriptors=provider_task.slug,
+                    )
                     filepath = get_archive_data_path(
-                        provider_task.slug,
-                        download_filename
+                        provider_task.slug, download_filename
                     )
 
-                    file_data = {'file_path': filepath, 'full_file_path': full_file_path, 'file_ext': file_ext}
-                    if metadata['data_sources'][provider_task.slug].get('type') == 'elevation':
+                    file_data = {
+                        "file_path": filepath,
+                        "full_file_path": full_file_path,
+                        "file_ext": file_ext,
+                    }
+                    if (
+                        metadata["data_sources"][provider_task.slug].get("type")
+                        == "elevation"
+                    ):
                         # Get statistics to update ranges in template.
                         band_stats = get_band_statistics(full_file_path)
-                        logger.info("Band Stats {0}: {1}".format(full_file_path, band_stats))
+                        logger.info(
+                            "Band Stats {0}: {1}".format(full_file_path, band_stats)
+                        )
                         file_data["band_stats"] = band_stats
                         # Calculate the value for each elevation step (of 16)
                         try:
@@ -439,21 +479,29 @@ def get_metadata(data_provider_task_uid):
                         except TypeError:
                             file_data["ramp_shader_steps"] = None
 
-                    metadata['data_sources'][provider_task.slug]['files'] += [file_data]
+                    metadata["data_sources"][provider_task.slug]["files"] += [file_data]
 
                 if not os.path.isfile(full_file_path):
-                    logger.error("Could not find file {0} for export {1}.".format(full_file_path, export_task.name))
+                    logger.error(
+                        "Could not find file {0} for export {1}.".format(
+                            full_file_path, export_task.name
+                        )
+                    )
                     continue
                 # Exclude zip files created by zip_export_provider
-                if not (full_file_path.endswith(".zip") and export_task.name == create_zip_task.name):
+                if not (
+                    full_file_path.endswith(".zip")
+                    and export_task.name == create_zip_task.name
+                ):
                     include_files += [full_file_path]
 
         # add the license for this provider if there are other files already
         license_file = create_license_file(provider_task)
         if license_file:
             include_files += [license_file]
-        metadata['include_files'] = include_files
+        metadata["include_files"] = include_files
     import json
+
     logger.error(json.dumps(metadata))
     return metadata
 
@@ -467,30 +515,33 @@ def get_arcgis_metadata(metadata):
     arcgis_metadata = copy.deepcopy(metadata)
 
     # remove files which reference the server directories.
-    arcgis_metadata.pop('include_files')
-    for data_source, data_source_values in arcgis_metadata['data_sources'].items():
-        for file_details in data_source_values['files']:
-            file_details.pop('full_file_path', "")
+    arcgis_metadata.pop("include_files")
+    for data_source, data_source_values in arcgis_metadata["data_sources"].items():
+        for file_details in data_source_values["files"]:
+            file_details.pop("full_file_path", "")
 
     return arcgis_metadata
 
 
 def get_data_type_from_provider(provider_slug: str) -> str:
     from eventkit_cloud.jobs.models import DataProvider
-    data_types = {'wms': 'raster',
-                  'tms': 'raster',
-                  'wmts': 'raster',
-                  'wcs': 'elevation',
-                  'wfs': 'vector',
-                  'osm': 'osm',
-                  'osm-generic': 'vector',
-                  'arcgis-feature': 'vector',
-                  'arcgis-raster': 'raster'}
+
+    data_types = {
+        "wms": "raster",
+        "tms": "raster",
+        "wmts": "raster",
+        "wcs": "elevation",
+        "wfs": "vector",
+        "osm": "osm",
+        "osm-generic": "vector",
+        "arcgis-feature": "vector",
+        "arcgis-raster": "raster",
+    }
     data_provider = DataProvider.objects.get(slug=provider_slug)
     type_name = data_provider.export_provider_type.type_name
     type_mapped = data_types.get(type_name)
-    if data_provider.slug.lower() == 'nome':
-        type_mapped = 'nome'
+    if data_provider.slug.lower() == "nome":
+        type_mapped = "nome"
     return type_mapped
 
 
@@ -501,7 +552,7 @@ def get_all_rabbitmq_objects(api_url, rabbit_class):
     :return: An array of dicts with the desired objects.
     """
 
-    queues_url = "{}/{}".format(api_url.rstrip('/'), rabbit_class)
+    queues_url = "{}/{}".format(api_url.rstrip("/"), rabbit_class)
     response = requests.get(queues_url)
     if response.ok:
         return response.json()
@@ -515,7 +566,7 @@ def get_message_count(queue_name):
     :param queue_name: The queue that you want to check messages for.
     :return: An integer count of pending messages.
     """
-    broker_api_url = getattr(settings, 'BROKER_API_URL')
+    broker_api_url = getattr(settings, "BROKER_API_URL")
     queue_class = "queues"
 
     for queue in get_all_rabbitmq_objects(broker_api_url, queue_class):
@@ -532,7 +583,13 @@ def clean_config(config):
     :param config: A yaml structured string.
     :return:
     """
-    service_keys = ["cert_var", "cert_cred", "concurrency", "max_repeat", "overpass_query"]
+    service_keys = [
+        "cert_var",
+        "cert_cred",
+        "concurrency",
+        "max_repeat",
+        "overpass_query",
+    ]
 
     conf = yaml.load(config) or dict()
 
