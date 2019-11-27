@@ -20,7 +20,9 @@ column1 http://wiki.openstreetmap.org/wiki/Key:column1
 
 (c) OpenStreetMap contributors.
 
-This file is made available under the Open Database License: http://opendatacommons.org/licenses/odbl/1.0/. Any rights in individual contents of the database are licensed under the Database Contents License: http://opendatacommons.org/licenses/dbcl/1.0/
+This file is made available under the Open Database License: http://opendatacommons.org/licenses/odbl/1.0/.
+ Any rights in individual contents of the database are licensed under the Database Contents 
+ License: http://opendatacommons.org/licenses/dbcl/1.0/
 """
 
 class TestFeatureSelection(unittest.TestCase):
@@ -125,8 +127,17 @@ class TestFeatureSelection(unittest.TestCase):
         '''
         f = FeatureSelection(y)
         create_sqls, index_sqls = f.sqls
-        self.assertEqual(create_sqls[0],'CREATE TABLE buildings_points(\nfid INTEGER PRIMARY KEY AUTOINCREMENT,\ngeom POINT,\nosm_id TEXT,"name" TEXT,"addr:housenumber" TEXT\n);\nINSERT INTO buildings_points(geom, osm_id,"name","addr:housenumber") select geom, osm_id,"name","addr:housenumber" from points WHERE ("name" IS NOT NULL OR "addr:housenumber" IS NOT NULL);\n')
-        self.assertEqual(create_sqls[1],'CREATE TABLE buildings_polygons(\nfid INTEGER PRIMARY KEY AUTOINCREMENT,\ngeom MULTIPOLYGON,\nosm_id TEXT,osm_way_id TEXT,"name" TEXT,"addr:housenumber" TEXT\n);\nINSERT INTO buildings_polygons(geom, osm_id,osm_way_id,"name","addr:housenumber") select geom, osm_id,osm_way_id,"name","addr:housenumber" from multipolygons WHERE ("name" IS NOT NULL OR "addr:housenumber" IS NOT NULL);\n')
+        self.assertEqual(create_sqls[0],'CREATE TABLE buildings_points(\nfid INTEGER PRIMARY KEY AUTOINCREMENT,'
+                                        '\ngeom POINT,\nosm_id TEXT,"name" TEXT,"addr:housenumber" TEXT\n);\n'
+                                        'INSERT INTO buildings_points(geom, osm_id,"name","addr:housenumber") '
+                                        'select geom, osm_id,"name","addr:housenumber" from points '
+                                        'WHERE ("name" IS NOT NULL OR "addr:housenumber" IS NOT NULL);\n')
+        self.assertEqual(create_sqls[1],'CREATE TABLE buildings_polygons(\nfid INTEGER PRIMARY KEY AUTOINCREMENT,\ngeom '
+                                        'MULTIPOLYGON,\nosm_id TEXT,osm_way_id TEXT,"name" TEXT,"addr:housenumber" '
+                                        'TEXT\n);\nINSERT INTO buildings_polygons(geom, osm_id,osm_way_id,"name",'
+                                        '"addr:housenumber") select geom, osm_id,osm_way_id,"name","addr:housenumber" '
+                                        'from multipolygons WHERE ("name" IS NOT NULL OR "addr:housenumber" '
+                                        'IS NOT NULL);\n')
 
     def test_zindex(self):
         y = '''
@@ -138,7 +149,11 @@ class TestFeatureSelection(unittest.TestCase):
         '''
         f = FeatureSelection(y)
         create_sqls, index_sqls = f.sqls
-        self.assertEqual(create_sqls[0],'CREATE TABLE roads_lines(\nfid INTEGER PRIMARY KEY AUTOINCREMENT,\ngeom MULTILINESTRING,\nosm_id TEXT,"highway" TEXT,"z_index" TEXT\n);\nINSERT INTO roads_lines(geom, osm_id,"highway","z_index") select geom, osm_id,"highway","z_index" from lines WHERE ("highway" IS NOT NULL);\n')
+        self.assertEqual(create_sqls[0],'CREATE TABLE roads_lines(\nfid INTEGER PRIMARY KEY AUTOINCREMENT,\ngeom '
+                                        'MULTILINESTRING,\nosm_id TEXT,"highway" TEXT,"z_index" TEXT\n);\n'
+                                        'INSERT INTO roads_lines(geom, osm_id,"highway","z_index") '
+                                        'select geom, osm_id,"highway","z_index" from lines '
+                                        'WHERE ("highway" IS NOT NULL);\n')
 
 
     def test_unsafe_yaml(self):

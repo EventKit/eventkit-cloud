@@ -57,7 +57,9 @@ This theme includes the following OpenStreetMap keys:
 
 (c) OpenStreetMap contributors.
 
-This file is made available under the Open Database License: http://opendatacommons.org/licenses/odbl/1.0/. Any rights in individual contents of the database are licensed under the Database Contents License: http://opendatacommons.org/licenses/dbcl/1.0/
+This file is made available under the Open Database License: http://opendatacommons.org/licenses/odbl/1.0/.
+ Any rights in individual contents of the database are licensed under the Database Contents 
+ License: http://opendatacommons.org/licenses/dbcl/1.0/
 """
 
 BANNED_THEME_NAMES = [
@@ -158,8 +160,6 @@ class FeatureSelection(object):
                 self._doc = loaded_doc
                 return self._doc
         except (ConstructorError, ScannerError, ParserError) as e:
-            line = e.problem_mark.line
-            column = e.problem_mark.column
             self._errors.append(e.problem)
 
     @property
