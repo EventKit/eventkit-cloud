@@ -51,9 +51,12 @@ def retry(f):
                 if getattr(settings, 'TESTING', False):
                     # Don't wait/retry when running tests.
                     break
-
                 attempts -= 1
-                time.sleep(MAX_DB_CONNECTION_DELAY)
+                if 'canceled' in str(e).lower():
+                    # If task was canceled (as opposed to fail) don't retry.
+                    attempts=0
+                else:
+                    time.sleep(MAX_DB_CONNECTION_DELAY)
                 if attempts:
                     logger.error("Retrying {0} times.".format(str(attempts)))
         raise exc
