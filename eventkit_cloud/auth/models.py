@@ -14,10 +14,10 @@ class OAuth(models.Model):
 
     class Meta:  # pragma: no cover
         managed = True
-        db_table = 'auth_oauth'
+        db_table = "auth_oauth"
 
     def __str__(self):
-        return '{0}'.format(self.commonname)
+        return "{0}".format(self.commonname)
 
 
 def delete(self):

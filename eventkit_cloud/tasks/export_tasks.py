@@ -183,6 +183,8 @@ class ExportTask(UserDetailsBase):
 
         try:
             task = ExportTaskRecord.objects.get(uid=task_uid)
+            task.worker = socket.gethostname()
+            task.save()
 
             try:
                 task_state_result = args[0]
@@ -1253,7 +1255,7 @@ def finalize_run_task(result=None, run_uid=None, stage_dir=None, apply_args=None
     run.status = TaskStates.COMPLETED.value
     verb = NotificationVerb.RUN_COMPLETED.value
     notification_level = NotificationLevel.SUCCESS.value
-    provider_tasks = run.provider_tasks.all()
+    provider_tasks = run.provider_tasks.exclude(slug= "run")
 
     # mark run as incomplete if any tasks fail
     if any(getattr(TaskStates, task.status, None) in TaskStates.get_incomplete_states() for task in provider_tasks):
@@ -1345,7 +1347,6 @@ def cancel_synchronous_task_chain(data_provider_task_uid=None):
         if TaskStates[export_task.status] == TaskStates.PENDING.value:
             export_task.status = TaskStates.CANCELED.value
             export_task.save()
-            queue_group = os.getenv("CELERY_GROUP_NAME", export_task.worker)
             kill_task.apply_async(
                 kwargs={"task_pid": export_task.pid, "celery_uid": export_task.celery_uid},
                 queue="{0}.cancel".format(export_task.worker),
