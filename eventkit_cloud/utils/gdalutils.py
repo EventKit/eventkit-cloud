@@ -274,21 +274,24 @@ def clip_dataset(boundary=None, in_dataset=None, out_dataset=None, fmt=None,
     :param params: Additional options to pass to the convert method (e.g. "-co SOMETHING")
     :return: Filename of clipped dataset
     """
+    # Strip optional file prefixes
+    file_prefix, in_dataset_file = strip_prefixes(in_dataset)
+
     if not boundary:
         raise Exception("Could not open boundary mask file: {0}".format(boundary))
 
-    if not in_dataset:
-        raise Exception("Could not open input dataset: {0}".format(in_dataset))
+    if not in_dataset_file:
+        raise Exception("No provided in dataset: {0}".format(in_dataset_file))
 
     if not out_dataset:
-        out_dataset = in_dataset
+        out_dataset = in_dataset_file
 
     # don't operate on the original file.  If the renamed file already exists,
     # then don't try to rename, since that file may not exist if this is a retry.
-    if out_dataset == in_dataset:
-        in_dataset = rename_duplicate(in_dataset)
-
-    meta = get_meta(in_dataset)
+    if out_dataset == in_dataset_file:
+        in_dataset_file = rename_duplicate(in_dataset_file)
+        in_dataset = F"{file_prefix}{in_dataset_file}"
+    meta = get_meta(in_dataset_file)
 
     if not fmt:
         fmt = meta['driver'] or 'gpkg'
@@ -326,7 +329,7 @@ def clip_dataset(boundary=None, in_dataset=None, out_dataset=None, fmt=None,
             boundary = temp_boundfile.name
 
     try:
-        if meta.get('nodata') is None and not is_envelope(in_dataset):
+        if meta.get('nodata') is None and not is_envelope(in_dataset_file):
             dstalpha = "-dstalpha"
         else:
             dstalpha = ""
@@ -351,7 +354,6 @@ def clip_dataset(boundary=None, in_dataset=None, out_dataset=None, fmt=None,
         logger.debug("GDAL clip cmd: %s", cmd)
 
         task_process = TaskProcess(task_uid=task_uid)
-
         task_process.start_process(cmd, shell=True, executable="/bin/bash",
                                            stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
@@ -360,6 +362,7 @@ def clip_dataset(boundary=None, in_dataset=None, out_dataset=None, fmt=None,
             temp_boundfile.close()
 
     if task_process.exitcode != 0:
+        logger.error('{0}'.format(task_process.stdout))
         logger.error('{0}'.format(task_process.stderr))
         raise Exception("Cutline process failed with return code {0}".format(task_process.exitcode))
 
@@ -381,29 +384,32 @@ def convert(file_format, in_file=None, out_file=None, task_uid=None, projection:
     :param use_translate: If true will convert file using gdal_translate instead of gdalwarp.
     :return: Converted dataset, same filename as input
     """
-    if not in_file:
-        raise Exception("Could not open input file: {0}".format(in_file))
+    # Strip optional file prefixes
+    file_prefix, in_dataset_file = strip_prefixes(in_file)
 
-    meta = get_meta(in_file)
+    if not in_dataset_file:
+        raise Exception("No provided input file: {0}".format(in_dataset_file))
+
+    meta = get_meta(in_dataset_file)
     driver, is_raster = meta['driver'], meta['is_raster']
 
-    if (in_file == out_file) and not (params or projection):
-        return in_file
+    if (in_dataset_file == out_file) and not (params or projection):
+        return in_dataset_file
 
     if out_file is None:
-        out_file = in_file
+        out_file = in_dataset_file
         if not out_file:
-            out_file = in_file
+            out_file = in_dataset_file
 
-    logger.error(params)
-    logger.error(projection)
-    if out_file == in_file:
+    if out_file == in_dataset_file:
         # Don't try to convert without convert params or new projection.
         if not (params or projection):
-            return in_file
+            return in_dataset_file
         else:
             # Don't operate on the original file.
-            in_file = rename_duplicate(in_file)
+            in_dataset_file = rename_duplicate(in_dataset_file)
+
+    in_file = F"{file_prefix}{in_dataset_file}"
 
     if projection is None:
         projection = 4326
@@ -432,13 +438,13 @@ def convert(file_format, in_file=None, out_file=None, task_uid=None, projection:
                                         'extra_parameters': params})
 
     logger.debug("GDAL convert cmd: %s", cmd)
-    logger.error("GDAL convert cmd: %s", cmd)
 
     task_process = TaskProcess(task_uid=task_uid)
     task_process.start_process(cmd, shell=True, executable="/bin/bash",
                                stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
     if task_process.exitcode != 0:
+        logger.error('{0}'.format(task_process.stdout))
         logger.error('{0}'.format(task_process.stderr))
         raise Exception("Conversion process failed with return code {0}".format(task_process.exitcode))
     if requires_zip(file_format):
@@ -558,9 +564,24 @@ def get_band_statistics(file_path, band=1):
 
 def rename_duplicate(original_file : str) -> str:
     returned_file = os.path.join(os.path.dirname(original_file), "old_{0}".format(os.path.basename(original_file)))
-    # If the renamed file already exists,
-    # then don't try to rename, since that file may not exist if this is a retry.
+    # if the original and renamed files both exist, we can remove the renamed version, and then rename the file.
+    if os.path.isfile(returned_file) and os.path.isfile(original_file):
+        os.remove(returned_file)
+    # If the original file doesn't exist but the renamed version does, then something failed after a rename, and
+    # this is now retrying the operation.
     if not os.path.isfile(returned_file):
         logger.info("Renaming '{}' to '{}'".format(original_file, returned_file))
         os.rename(original_file, returned_file)
     return returned_file
+
+
+def strip_prefixes(dataset : str) ->  (str, str):
+    prefixes=["GTIFF_RAW:"]
+    removed_prefix = ""
+    output_dataset = dataset
+    for prefix in prefixes:
+        cleaned_dataset = output_dataset.lstrip(prefix)
+        if cleaned_dataset != output_dataset:
+            removed_prefix = prefix
+        output_dataset = cleaned_dataset
+    return removed_prefix, output_dataset

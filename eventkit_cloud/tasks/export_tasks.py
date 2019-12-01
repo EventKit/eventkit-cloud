@@ -634,12 +634,6 @@ def geotiff_export_task(self, result=None, task_uid=None, stage_dir=None, job_na
     if selection:
         gtiff_out_dataset = gdalutils.clip_dataset(boundary=selection, in_dataset=gtiff_in_dataset,
                                        out_dataset=gtiff_out_dataset, fmt='gtiff', task_uid=task_uid)
-        gtiff_in_dataset = gtiff_out_dataset
-
-    # Convert to the correct projection
-    gtiff_out_dataset = gdalutils.convert(
-        file_format='gtiff', in_file=gtiff_in_dataset, out_file=gtiff_out_dataset, task_uid=task_uid,
-        projection=projection)
 
     # Reduce the overall size of geotiffs.  Note this compression could result in the loss of data.
     # If refactoring ensure that a pipeline like WCS does not apply geotiff conversion using this.
@@ -717,13 +711,18 @@ def reprojection_task(self, result=None, run_uid=None, task_uid=None, stage_dir=
     if file_format == 'ESRI Shapefile':
         out_dataset = os.path.join(stage_dir, '{0}-{1}_shp'.format(job_name, projection))
 
+    if "tif" in os.path.splitext(in_dataset)[1]:
+        in_dataset = F"GTIFF_RAW:{in_dataset}"
+
     reprojection = gdalutils.convert(
         file_format=file_format, in_file=in_dataset, out_file=out_dataset, task_uid=task_uid, projection=projection)
-    if compress and file_format == 'gtiff':
+
+    if file_format == 'gtiff' and compress:
         params = "-co COMPRESS=JPEG -co PHOTOMETRIC=YCBCR -co TILED=YES -b 1 -b 2 -b 3"
         reprojection = gdalutils.convert(
             file_format=file_format, in_file=reprojection, out_file=out_dataset, task_uid=task_uid,
             params=params, use_translate=compress)
+
 
     result['result'] = reprojection
     return result
@@ -818,6 +817,7 @@ def wcs_export_task(self, result=None, layer=None, config=None, run_uid=None, ta
 
     eta = ETA(task_uid=task_uid)
     task = ExportTaskRecord.objects.get(uid=task_uid)
+
     try:
         wcs_conv = wcs.WCSConverter(config=config, out=out, bbox=bbox, service_url=service_url, layer=layer, debug=True,
                                     name=name, task_uid=task_uid, fmt="gtiff", slug=task.export_provider_task.slug,
@@ -825,7 +825,6 @@ def wcs_export_task(self, result=None, layer=None, config=None, run_uid=None, ta
         out = wcs_conv.convert()
         result['result'] = out
         result['source'] = out
-
         return result
     except Exception as e:
         logger.error('Raised exception in WCS service export: %s', str(e))
@@ -956,7 +955,7 @@ def pick_up_run_task(self, result=None, run_uid=None, user_details=None, *args, 
         run.save()
         logger.error(str(e))
         raise
-    wait_for_run(run=run, uid=run_uid)
+    # wait_for_run(run=run, uid=run_uid)
 
 def wait_for_run(run=None, uid=None):
     if run.status:
