@@ -198,12 +198,12 @@ class TestExportTasks(ExportTaskBase):
         geotiff_export_task(result=example_result, task_uid=task_uid, stage_dir='stage', job_name='job')
         mock_gdalutils.convert.return_value = expected_outfile
         mock_gdalutils.convert.assert_called_once_with(file_format='gtiff', in_file=example_geotiff,
-                                                       out_file=expected_outfile, projection=4326, task_uid='1234')
+                                                       out_file=expected_outfile, task_uid='1234')
         mock_gdalutils.reset_mock()
         geotiff_export_task(result=example_result, task_uid=task_uid, stage_dir='stage', job_name='job', compress=True)
         params = "-co COMPRESS=JPEG -co PHOTOMETRIC=YCBCR -co TILED=YES -b 1 -b 2 -b 3"
         mock_gdalutils.convert.assert_has_calls([call(file_format='gtiff', in_file=example_geotiff,
-                                                      out_file=expected_outfile, projection=4326, task_uid='1234'),
+                                                      out_file=expected_outfile, task_uid='1234'),
                                                  call(file_format='gtiff', in_file=expected_outfile,
                                                       out_file=expected_outfile,
                                                       params=params, task_uid='1234', use_translate=True)
@@ -215,7 +215,7 @@ class TestExportTasks(ExportTaskBase):
         geotiff_export_task(result=example_result, task_uid=task_uid, stage_dir='stage', job_name='job',
                             compress=True)
         mock_gdalutils.convert.assert_has_calls([call(file_format='gtiff', in_file=expected_outfile,
-                                                       out_file=expected_outfile, task_uid='1234', projection=4326),
+                                                       out_file=expected_outfile, task_uid='1234'),
                                                  call(file_format='gtiff', in_file=expected_outfile,
                                                       out_file=expected_outfile,
                                                       params=params, task_uid='1234', use_translate=True)

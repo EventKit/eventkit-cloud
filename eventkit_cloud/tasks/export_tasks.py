@@ -634,7 +634,15 @@ def geotiff_export_task(self, result=None, task_uid=None, stage_dir=None, job_na
     if selection:
         gtiff_out_dataset = gdalutils.clip_dataset(boundary=selection, in_dataset=gtiff_in_dataset,
                                        out_dataset=gtiff_out_dataset, fmt='gtiff', task_uid=task_uid)
+        gtiff_in_dataset = gtiff_out_dataset
 
+    if "tif" in os.path.splitext(gtiff_in_dataset[0]):
+        gtiff_in_dataset = F"GTIFF_RAW:{gtiff_in_dataset}"
+
+    # Convert to the correct projection
+    gtiff_out_dataset = gdalutils.convert(
+        file_format='gtiff', in_file=gtiff_in_dataset, out_file=gtiff_out_dataset, task_uid=task_uid)
+    
     # Reduce the overall size of geotiffs.  Note this compression could result in the loss of data.
     # If refactoring ensure that a pipeline like WCS does not apply geotiff conversion using this.
     if compress:
