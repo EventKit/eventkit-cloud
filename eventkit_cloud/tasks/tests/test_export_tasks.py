@@ -15,15 +15,14 @@ from django.test import TestCase, TransactionTestCase
 from django.utils import timezone
 from mock import Mock, PropertyMock, patch, MagicMock, call, ANY
 
-
 from eventkit_cloud.celery import TaskPriority, app
 from eventkit_cloud.jobs.models import DatamodelPreset, Job
-from eventkit_cloud.tasks.export_tasks import (
+from eventkit_cloud.tasks.export_tasks import (ExportTask,
     LockingTask, export_task_error_handler, finalize_run_task,
     kml_export_task, mapproxy_export_task, geopackage_export_task,
     shp_export_task, arcgis_feature_service_export_task, update_progress,
     pick_up_run_task, cancel_export_provider_task, kill_task, bounds_export_task, parse_result, finalize_export_provider_task,
-    FormatTask, wait_for_providers_task, create_zip_task, default_format_time
+    FormatTask, wait_for_providers_task, create_zip_task, default_format_time, geotiff_export_task
 )
 from eventkit_cloud.tasks import TaskStates, zip_files
 from eventkit_cloud.tasks.models import (
@@ -187,6 +186,40 @@ class TestExportTasks(ExportTaskBase):
 
         self.assertEqual(expected_output_path, result['result'])
         self.assertEqual(expected_output_path, result['source'])
+
+    @patch('eventkit_cloud.tasks.export_tasks.gdalutils')
+    def test_geotiff_export_task(self, mock_gdalutils):
+        # TODO: This can be setup as a way to test the other ExportTasks without all the boilerplate.
+        ExportTask.__call__ = lambda *args, **kwargs: celery.Task.__call__(*args, **kwargs)
+        example_geotiff = "example.tif"
+        example_result = {"source": example_geotiff}
+        task_uid = '1234'
+        expected_outfile = 'stage/job-4326.tif'
+        geotiff_export_task(result=example_result, task_uid=task_uid, stage_dir='stage', job_name='job')
+        mock_gdalutils.convert.return_value = expected_outfile
+        mock_gdalutils.convert.assert_called_once_with(file_format='gtiff', in_file=example_geotiff,
+                                                       out_file=expected_outfile, task_uid='1234')
+        mock_gdalutils.reset_mock()
+        geotiff_export_task(result=example_result, task_uid=task_uid, stage_dir='stage', job_name='job', compress=True)
+        params = "-co COMPRESS=JPEG -co PHOTOMETRIC=YCBCR -co TILED=YES -b 1 -b 2 -b 3"
+        mock_gdalutils.convert.assert_has_calls([call(file_format='gtiff', in_file=example_geotiff,
+                                                      out_file=expected_outfile, task_uid='1234'),
+                                                 call(file_format='gtiff', in_file=expected_outfile,
+                                                      out_file=expected_outfile,
+                                                      params=params, task_uid='1234', use_translate=True)
+                                                 ])
+        mock_gdalutils.reset_mock()
+        example_result = {"source": example_geotiff,
+                          "selection": "selection"}
+        mock_gdalutils.clip_dataset.return_value = expected_outfile
+        geotiff_export_task(result=example_result, task_uid=task_uid, stage_dir='stage', job_name='job',
+                            compress=True)
+        mock_gdalutils.convert.assert_has_calls([call(file_format='gtiff', in_file=expected_outfile,
+                                                       out_file=expected_outfile, task_uid='1234'),
+                                                 call(file_format='gtiff', in_file=expected_outfile,
+                                                      out_file=expected_outfile,
+                                                      params=params, task_uid='1234', use_translate=True)
+                                                 ])
 
     @patch('celery.app.task.Task.request')
     @patch('eventkit_cloud.tasks.export_tasks.OGR')
