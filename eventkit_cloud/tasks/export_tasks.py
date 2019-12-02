@@ -220,6 +220,8 @@ class ExportTask(UserDetailsBase):
 
         try:
             task = ExportTaskRecord.objects.get(uid=task_uid)
+            task.worker = socket.gethostname()
+            task.save()
 
             try:
                 task_state_result = args[0]
@@ -832,49 +834,45 @@ def geopackage_export_task(
     return result
 
 
-@app.task(name="Geotiff (.tif)", bind=True, base=FormatTask)
-def geotiff_export_task(
-    self,
-    result=None,
-    run_uid=None,
-    task_uid=None,
-    stage_dir=None,
-    job_name=None,
-    user_details=None,
-    projection=4326,
-    *args,
-    **kwargs,
-):
+@app.task(name='Geotiff (.tif)', bind=True, base=FormatTask)
+def geotiff_export_task(self, result=None, task_uid=None, stage_dir=None, job_name=None,
+                        projection=4326, compress=False, *args, **kwargs):
+
     """
     Class defining geopackage export function.
     """
     result = result or {}
 
-    gtiff_in_dataset = parse_result(result, "source")
-    gtiff_out_dataset = os.path.join(
-        stage_dir, "{0}-{1}.tif".format(job_name, projection)
-    )
-    selection = parse_result(result, "selection")
+    gtiff_in_dataset = parse_result(result, 'source')
+    gtiff_out_dataset = os.path.join(stage_dir, '{0}-{1}.tif'.format(job_name, projection))
+    selection = parse_result(result, 'selection')
+    ## Clip the dataset.
+    # This happens if geotiff is the FIRST step in the pipeline as opposed to GPKG.
     if selection:
-        gtiff = gdalutils.clip_dataset(
-            boundary=selection,
-            in_dataset=gtiff_in_dataset,
-            out_dataset=gtiff_out_dataset,
-            fmt="gtiff",
-            task_uid=task_uid,
-        )
-    else:
-        gtiff = gdalutils.convert(
-            file_format="gtiff",
-            in_file=gtiff_in_dataset,
-            out_file=gtiff_out_dataset,
-            task_uid=task_uid,
-        )
+        gtiff_out_dataset = gdalutils.clip_dataset(boundary=selection, in_dataset=gtiff_in_dataset,
+                                       out_dataset=gtiff_out_dataset, fmt='gtiff', task_uid=task_uid)
+        gtiff_in_dataset = gtiff_out_dataset
 
-    result["file_extension"] = "tif"
-    result["file_format"] = "gtiff"
-    result["result"] = gtiff
-    result["gtiff"] = gtiff
+    if "tif" in os.path.splitext(gtiff_in_dataset[0]):
+        gtiff_in_dataset = F"GTIFF_RAW:{gtiff_in_dataset}"
+
+    # Convert to the correct projection
+    gtiff_out_dataset = gdalutils.convert(
+        file_format='gtiff', in_file=gtiff_in_dataset, out_file=gtiff_out_dataset, task_uid=task_uid)
+    
+    # Reduce the overall size of geotiffs.  Note this compression could result in the loss of data.
+    # If refactoring ensure that a pipeline like WCS does not apply geotiff conversion using this.
+    if compress:
+        params = "-co COMPRESS=JPEG -co PHOTOMETRIC=YCBCR -co TILED=YES -b 1 -b 2 -b 3"
+        gtiff_out_dataset = gdalutils.convert(
+            file_format='gtiff', in_file=gtiff_out_dataset, out_file=gtiff_out_dataset, task_uid=task_uid,
+            params=params, use_translate=compress)
+
+    result['file_extension'] = 'tif'
+    result['file_format'] = 'gtiff'
+    result['result'] = gtiff_out_dataset
+    result['gtiff'] = gtiff_out_dataset
+
     return result
 
 
@@ -898,16 +896,12 @@ def nitf_export_task(
     """
     result = result or {}
 
-    nitf_in_dataset = parse_result(result, "source")
-    nitf_out_dataset = os.path.join(
-        stage_dir, "{0}-{1}.nitf".format(job_name, projection)
-    )
+    nitf_in_dataset = parse_result(result, 'source')
+    nitf_out_dataset = os.path.join(stage_dir, '{0}-{1}.nitf'.format(job_name, projection))
+
+    params = "-co ICORDS=G"
     nitf = gdalutils.convert(
-        file_format="nitf",
-        in_file=nitf_in_dataset,
-        out_file=nitf_out_dataset,
-        task_uid=task_uid,
-    )
+        file_format='nitf', in_file=nitf_in_dataset, out_file=nitf_out_dataset, task_uid=task_uid, params=params)
 
     result["file_format"] = "nitf"
     result["result"] = nitf
@@ -949,20 +943,10 @@ def hfa_export_task(
     result["hfa"] = hfa
     return result
 
+@app.task(name='Reprojection Task', bind=True, base=FormatTask)
+def reprojection_task(self, result=None, run_uid=None, task_uid=None, stage_dir=None, job_name=None,
+                        user_details=None, projection=None, compress=False, *args, **kwargs):
 
-@app.task(name="Reprojection Task", bind=True, base=FormatTask)
-def reprojection_task(
-    self,
-    result=None,
-    run_uid=None,
-    task_uid=None,
-    stage_dir=None,
-    job_name=None,
-    user_details=None,
-    projection=None,
-    *args,
-    **kwargs,
-):
     """
     Class defining a task that will reproject all file formats to the chosen projections.
     """
@@ -985,6 +969,9 @@ def reprojection_task(
             stage_dir, "{0}-{1}_shp".format(job_name, projection)
         )
 
+    if "tif" in os.path.splitext(in_dataset)[1]:
+        in_dataset = F"GTIFF_RAW:{in_dataset}"
+
     reprojection = gdalutils.convert(
         file_format=file_format,
         in_file=in_dataset,
@@ -993,7 +980,15 @@ def reprojection_task(
         projection=projection,
     )
 
-    result["result"] = reprojection
+    if file_format == 'gtiff' and compress:
+        params = "-co COMPRESS=JPEG -co PHOTOMETRIC=YCBCR -co TILED=YES -b 1 -b 2 -b 3"
+        reprojection = gdalutils.convert(
+            file_format=file_format, in_file=reprojection, out_file=out_dataset, task_uid=task_uid,
+            params=params, use_translate=compress)
+
+
+    result['result'] = reprojection
+
     return result
 
 
@@ -1144,6 +1139,7 @@ def wcs_export_task(
 
     eta = ETA(task_uid=task_uid)
     task = ExportTaskRecord.objects.get(uid=task_uid)
+
     try:
         wcs_conv = wcs.WCSConverter(
             config=config,
@@ -1160,8 +1156,9 @@ def wcs_export_task(
             eta=eta,
         )
         out = wcs_conv.convert()
-        result["result"] = out
-        result["source"] = out
+
+        result['result'] = out
+        result['source'] = out
 
         return result
     except Exception as e:
@@ -1361,7 +1358,7 @@ def pick_up_run_task(
         run.save()
         logger.error(str(e))
         raise
-    wait_for_run(run=run, uid=run_uid)
+    # wait_for_run(run=run, uid=run_uid)
 
 
 def wait_for_run(run=None, uid=None):
@@ -1711,7 +1708,7 @@ def finalize_run_task(
     run.status = TaskStates.COMPLETED.value
     verb = NotificationVerb.RUN_COMPLETED.value
     notification_level = NotificationLevel.SUCCESS.value
-    provider_tasks = run.provider_tasks.all()
+    provider_tasks = run.provider_tasks.exclude(slug= "run")
 
     # mark run as incomplete if any tasks fail
     if any(

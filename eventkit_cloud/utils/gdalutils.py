@@ -51,9 +51,12 @@ def retry(f):
                 if getattr(settings, 'TESTING', False):
                     # Don't wait/retry when running tests.
                     break
-
                 attempts -= 1
-                time.sleep(MAX_DB_CONNECTION_DELAY)
+                if 'canceled' in str(e).lower():
+                    # If task was canceled (as opposed to fail) don't retry.
+                    attempts=0
+                else:
+                    time.sleep(MAX_DB_CONNECTION_DELAY)
                 if attempts:
                     logger.error("Retrying {0} times.".format(str(attempts)))
         raise exc
@@ -258,8 +261,11 @@ def is_envelope(geojson_path):
         # Unparseable JSON or unreadable file: play it safe
         return False
 
+# TODO: deduplicate clip_dataset and convert.
+
 @retry
-def clip_dataset(boundary=None, in_dataset=None, out_dataset=None, fmt=None, table=None, task_uid=None):
+def clip_dataset(boundary=None, in_dataset=None, out_dataset=None, fmt=None,
+                 table=None, task_uid=None, params: str = ""):
     """
     Uses gdalwarp or ogr2ogr to clip a supported dataset file to a mask.
     :param boundary: A geojson file or bbox (xmin, ymin, xmax, ymax) to serve as a cutline
@@ -268,26 +274,27 @@ def clip_dataset(boundary=None, in_dataset=None, out_dataset=None, fmt=None, tab
     :param fmt: Short name of output driver to use (defaults to input format)
     :param table: Table name in database for in_dataset
     :param task_uid: A task uid to update
+    :param params: Additional options to pass to the convert method (e.g. "-co SOMETHING")
     :return: Filename of clipped dataset
     """
+    # Strip optional file prefixes
+    file_prefix, in_dataset_file = strip_prefixes(in_dataset)
+
     if not boundary:
         raise Exception("Could not open boundary mask file: {0}".format(boundary))
 
-    if not in_dataset:
-        raise Exception("Could not open input dataset: {0}".format(in_dataset))
+    if not in_dataset_file:
+        raise Exception("No provided in dataset: {0}".format(in_dataset_file))
 
     if not out_dataset:
-        out_dataset = in_dataset
+        out_dataset = in_dataset_file
 
     # don't operate on the original file.  If the renamed file already exists,
     # then don't try to rename, since that file may not exist if this is a retry.
-    if out_dataset == in_dataset:
-        in_dataset = os.path.join(os.path.dirname(out_dataset), "old_{0}".format(os.path.basename(out_dataset)))
-        if not os.path.isfile(in_dataset):
-            logger.info("Renaming '{}' to '{}'".format(out_dataset, in_dataset))
-            os.rename(out_dataset, in_dataset)
-
-    meta = get_meta(in_dataset)
+    if out_dataset == in_dataset_file:
+        in_dataset_file = rename_duplicate(in_dataset_file)
+        in_dataset = F"{file_prefix}{in_dataset_file}"
+    meta = get_meta(in_dataset_file)
 
     if not fmt:
         fmt = meta['driver'] or 'gpkg'
@@ -297,14 +304,14 @@ def clip_dataset(boundary=None, in_dataset=None, out_dataset=None, fmt=None, tab
     # Overwrite is added to the commands in the event that the dataset is retried.  In general we want these to
     # act idempotently.
     if table:
-        cmd_template = Template("ogr2ogr -skipfailures -nlt PROMOTE_TO_MULTI -overwrite -f $fmt -clipsrc $boundary $out_ds $in_ds $table")
+        cmd_template = Template("ogr2ogr -skipfailures $extra_parameters -nlt PROMOTE_TO_MULTI -overwrite -f $fmt -clipsrc $boundary $out_ds $in_ds $table")
     elif meta['is_raster']:
-        cmd_template = Template("gdalwarp -overwrite -cutline $boundary -crop_to_cutline $dstalpha -of $fmt $type $in_ds $out_ds")
+        cmd_template = Template("gdalwarp -overwrite $extra_parameters -cutline $boundary -crop_to_cutline $dstalpha -of $fmt $type $in_ds $out_ds")
         # Geopackage raster only supports byte band type, so check for that
         if fmt.lower() == 'gpkg':
             band_type = "-ot byte"
     else:
-        cmd_template = Template("ogr2ogr -skipfailures -nlt PROMOTE_TO_MULTI -overwrite -f $fmt -clipsrc $boundary $out_ds $in_ds")
+        cmd_template = Template("ogr2ogr -skipfailures $extra_parameters -nlt PROMOTE_TO_MULTI -overwrite -f $fmt -clipsrc $boundary $out_ds $in_ds")
 
     temp_boundfile = None
     if isinstance(boundary, list):
@@ -325,7 +332,7 @@ def clip_dataset(boundary=None, in_dataset=None, out_dataset=None, fmt=None, tab
             boundary = temp_boundfile.name
 
     try:
-        if meta.get('nodata') is None and not is_envelope(in_dataset):
+        if meta.get('nodata') is None and not is_envelope(in_dataset_file):
             dstalpha = "-dstalpha"
         else:
             dstalpha = ""
@@ -336,19 +343,20 @@ def clip_dataset(boundary=None, in_dataset=None, out_dataset=None, fmt=None, tab
                                                 'type': band_type,
                                                 'in_ds': in_dataset,
                                                 'out_ds': out_dataset,
-                                                'table': table})
+                                                'table': table,
+                                                'extra_parameters': params})
         else:
             cmd = cmd_template.safe_substitute({'boundary': boundary,
                                                 'fmt': fmt,
                                                 'dstalpha': dstalpha,
                                                 'type': band_type,
                                                 'in_ds': in_dataset,
-                                                'out_ds': out_dataset})
+                                                'out_ds': out_dataset,
+                                                'extra_parameters': params})
 
         logger.debug("GDAL clip cmd: %s", cmd)
 
         task_process = TaskProcess(task_uid=task_uid)
-
         task_process.start_process(cmd, shell=True, executable="/bin/bash",
                                            stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
@@ -357,6 +365,7 @@ def clip_dataset(boundary=None, in_dataset=None, out_dataset=None, fmt=None, tab
             temp_boundfile.close()
 
     if task_process.exitcode != 0:
+        logger.error('{0}'.format(task_process.stdout))
         logger.error('{0}'.format(task_process.stderr))
         raise Exception("Cutline process failed with return code {0}".format(task_process.exitcode))
 
@@ -364,7 +373,8 @@ def clip_dataset(boundary=None, in_dataset=None, out_dataset=None, fmt=None, tab
 
 
 @retry
-def convert(file_format, in_file=None, out_file=None, task_uid=None, projection=None):
+def convert(file_format, in_file=None, out_file=None, task_uid=None, projection: int = None, params: str = "",
+            use_translate=False):
     """
     Uses gdalwarp or ogr2ogr to convert a raster or vector dataset into another format.
     If the dataset is already in the output format, returns the unaltered original.
@@ -372,33 +382,53 @@ def convert(file_format, in_file=None, out_file=None, task_uid=None, projection=
     :param out_file: Raster or vector file to be output
     :param file_format: Short format (e.g. gpkg, gtiff) to convert into
     :param task_uid: A task uid to update
+    :param projection: A projection as an int referencing an EPSG code (e.g. 4326 = EPSG:4326)
+    :param params: Additional options to pass to the convert method (e.g. "-co SOMETHING")
+    :param use_translate: If true will convert file using gdal_translate instead of gdalwarp.
     :return: Converted dataset, same filename as input
     """
-    if not in_file:
-        raise Exception("Could not open input file: {0}".format(in_file))
+    # Strip optional file prefixes
+    file_prefix, in_dataset_file = strip_prefixes(in_file)
 
-    meta = get_meta(in_file)
+    if not in_dataset_file:
+        raise Exception("No provided input file: {0}".format(in_dataset_file))
+
+    meta = get_meta(in_dataset_file)
     driver, is_raster = meta['driver'], meta['is_raster']
 
-    if in_file == out_file:
-        return in_file
+    if (in_dataset_file == out_file) and not (params or projection):
+        return in_dataset_file
 
     if out_file is None:
-        out_file = in_file
+        out_file = in_dataset_file
+        if not out_file:
+            out_file = in_dataset_file
+
+    if out_file == in_dataset_file:
+        # Don't try to convert without convert params or new projection.
+        if not (params or projection):
+            return in_dataset_file
+        else:
+            # Don't operate on the original file.
+            in_dataset_file = rename_duplicate(in_dataset_file)
+
+    in_file = F"{file_prefix}{in_dataset_file}"
 
     if projection is None:
         projection = 4326
 
     band_type = ""
-    extra_parameters = ""
+    # Geopackage raster only supports byte band type, so check for that
+    if file_format.lower() == 'gpkg':
+        band_type = "-ot byte"
+
     if is_raster:
-        cmd_template = Template(
-            "gdalwarp -overwrite $extra_parameters -of $fmt $type $in_ds $out_ds -s_srs EPSG:4326 -t_srs EPSG:$projection")
-        # Geopackage raster only supports byte band type, so check for that
-        if file_format.lower() == 'gpkg':
-            band_type = "-ot byte"
-        if file_format.lower() == 'nitf':
-            extra_parameters = "-co ICORDS=G"
+        if use_translate:
+            cmd_template = Template(
+                "gdal_translate $extra_parameters -of $fmt $type $in_ds $out_ds")
+        else:
+            cmd_template = Template(
+                "gdalwarp -overwrite $extra_parameters -of $fmt $type $in_ds $out_ds -s_srs EPSG:4326 -t_srs EPSG:$projection")
     else:
         cmd_template = Template(
             "ogr2ogr -overwrite $extra_parameters -f '$fmt' $out_ds $in_ds -s_srs EPSG:4326 -t_srs EPSG:$projection")
@@ -408,7 +438,7 @@ def convert(file_format, in_file=None, out_file=None, task_uid=None, projection=
                                         'in_ds': in_file,
                                         'out_ds': out_file,
                                         'projection': projection,
-                                        'extra_parameters': extra_parameters})
+                                        'extra_parameters': params})
 
     logger.debug("GDAL convert cmd: %s", cmd)
 
@@ -417,6 +447,7 @@ def convert(file_format, in_file=None, out_file=None, task_uid=None, projection=
                                stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
     if task_process.exitcode != 0:
+        logger.error('{0}'.format(task_process.stdout))
         logger.error('{0}'.format(task_process.stderr))
         raise Exception("Conversion process failed with return code {0}".format(task_process.exitcode))
     if requires_zip(file_format):
@@ -424,6 +455,7 @@ def convert(file_format, in_file=None, out_file=None, task_uid=None, projection=
         out_file = create_zip_file(out_file, get_zip_name(out_file))
 
     return out_file
+
 
 def get_dimensions(bbox, scale):
     """
@@ -531,3 +563,28 @@ def get_band_statistics(file_path, band=1):
         logger.error(e)
         logger.error("Could not get statistics for {0}:{1}".format(file_path, band))
         return None
+
+
+def rename_duplicate(original_file : str) -> str:
+    returned_file = os.path.join(os.path.dirname(original_file), "old_{0}".format(os.path.basename(original_file)))
+    # if the original and renamed files both exist, we can remove the renamed version, and then rename the file.
+    if os.path.isfile(returned_file) and os.path.isfile(original_file):
+        os.remove(returned_file)
+    # If the original file doesn't exist but the renamed version does, then something failed after a rename, and
+    # this is now retrying the operation.
+    if not os.path.isfile(returned_file):
+        logger.info("Renaming '{}' to '{}'".format(original_file, returned_file))
+        os.rename(original_file, returned_file)
+    return returned_file
+
+
+def strip_prefixes(dataset : str) ->  (str, str):
+    prefixes=["GTIFF_RAW:"]
+    removed_prefix = ""
+    output_dataset = dataset
+    for prefix in prefixes:
+        cleaned_dataset = output_dataset.lstrip(prefix)
+        if cleaned_dataset != output_dataset:
+            removed_prefix = prefix
+        output_dataset = cleaned_dataset
+    return removed_prefix, output_dataset
