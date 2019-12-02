@@ -1,5 +1,3 @@
-
-
 from logging import getLogger
 
 from django.core.management import BaseCommand
@@ -10,12 +8,12 @@ logger = getLogger(__name__)
 
 
 class Command(BaseCommand):
-    help = 'Updates celery workers to accept no more tasks and waits for tasks to complete.'
+    help = "Updates celery workers to accept no more tasks and waits for tasks to complete."
 
     def handle(self, *args, **options):
-        print('Waiting for workers to finish up...', end='')
+        print("Waiting for workers to finish up...", end="")
         self.finish_worker_tasks()
-        print('done')
+        print("done")
 
     @staticmethod
     def finish_worker_tasks():
@@ -23,10 +21,14 @@ class Command(BaseCommand):
         # Leave worker & cancel queues alone so workers will finish up those tasks
         default_q = app.conf.task_default_queue
         # Get the worker node name from the list of nodes
-        worker_nodename = [node_name for node_name in list(app.control.inspect().ping().keys()) if 'worker' in node_name][0]
+        worker_nodename = [
+            node_name
+            for node_name in list(app.control.inspect().ping().keys())
+            if "worker" in node_name
+        ][0]
 
         r = app.control.cancel_consumer(default_q, reply=True)
-        logger.info('cancel_consumer({}): {}'.format(default_q, r))
+        logger.info("cancel_consumer({}): {}".format(default_q, r))
 
         while True:
             # these return dicts of format {<queue_name>: <task_list>}
@@ -37,7 +39,9 @@ class Command(BaseCommand):
             n_scheduled = len(scheduled[worker_nodename])
             n_active = len(active[worker_nodename])
 
-            msg = 'Waiting for {} scheduled and {} active tasks'.format(n_scheduled, n_active)
+            msg = "Waiting for {} scheduled and {} active tasks".format(
+                n_scheduled, n_active
+            )
             logger.info(msg)
             if n_scheduled == 0 and n_active == 0:
                 break
