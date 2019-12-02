@@ -104,7 +104,7 @@ def read_json_file(fp):
 
 def unzip_file(fp, dir):
     """
-    :param fp: Path to a zip file 
+    :param fp: Path to a zip file
     :param dir: Directory where the files should be unzipped to
     :return: True if successful
     """
@@ -188,13 +188,13 @@ def is_lat_lon(query):
         (?:
             (?P<lon_sign>[\+-]?)    # longitude may begin with + or -
             (?:
-                (?P<lon>180(?:(?:\.0{1,20})?)|(?:[0-9]|[1-9][0-9]|1[0-7][0-9])(?:(?:\.[0-9]{1,20})?)) # match valid longitude values
+                (?P<lon>180(?:(?:\.0{1,20})?)|(?:[0-9]|[1-9][0-9]|1[0-7][0-9])(?:(?:\.[0-9]{1,20})?)) # match valid longitude values 
                 [\s]?               # there may or may not be a space following the digits when E or W are included
                 (?P<lon_dir>[EW]?)  # E or W may be used instead of + or -
             )
             $                       # after longitude should be the end of the string
         )
-    """,
+    """, # NOQA
         re.VERBOSE,
     )
 
