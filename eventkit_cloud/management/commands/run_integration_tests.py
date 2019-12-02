@@ -24,4 +24,3 @@ class Command(BaseCommand):
         result = unittest.TextTestRunner(verbosity=2).run(suite)
         if result.errors or result.failures:
             exit(1)
-
