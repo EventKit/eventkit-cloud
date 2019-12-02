@@ -47,7 +47,8 @@ class ReverseGeocodeAdapter(metaclass=ABCMeta):
     @abstractmethod
     def get_payload(self, query):
         """
-        This takes some query (e.g. "38, -77"), and returns a dict representing query parameters that a specific api will expect.
+        This takes some query (e.g. "38, -77"), and returns a dict representing query parameters that a specific
+        api will expect.
         :param query: A string
         :return: A dict of API specific query paramters.
             Input:

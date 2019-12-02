@@ -9,7 +9,7 @@ from mapproxy import srs as mapproxy_srs
 from eventkit_cloud.jobs.models import DataProvider
 from eventkit_cloud.utils.stats.geomutils import get_area_bbox
 
-from enum import Enum, auto
+from enum import Enum
 
 logger = logging.getLogger(__name__)
 

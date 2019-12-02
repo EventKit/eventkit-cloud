@@ -292,7 +292,7 @@ class EventKitClient(object):
 
     def check_provider(self, provider_slug):
         """
-        :param provider_slug: The providuer slug (e.g. osm) to test. 
+        :param provider_slug: The providuer slug (e.g. osm) to test.
         :return: True if provider status check is success or warn, else False.
         """ ""
 
@@ -319,7 +319,7 @@ def parse_duration(duration):
     if duration:
         # Based off https://stackoverflow.com/questions/4628122/how-to-construct-a-timedelta-object-from-a-simple-string
         timedelta_regex = re.compile(
-            r"^((?P<days>[\.\d]+?)\sday[s]?\,\s*)?((?P<hours>[\.\d]+?):)?((?P<minutes>[\.\d]+?):)?((?P<seconds>[\.\d]+?))?$"
+            r"^((?P<days>[\.\d]+?)\sday[s]?\,\s*)?((?P<hours>[\.\d]+?):)?((?P<minutes>[\.\d]+?):)?((?P<seconds>[\.\d]+?))?$" # NOQA
         )
 
         parts = timedelta_regex.match(duration)

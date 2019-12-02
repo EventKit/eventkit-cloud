@@ -182,7 +182,7 @@ class WCSConverter(object):
         coverages = str(coverages).split(",")
         if not coverages:
             logger.error(
-                "No coverages were specified for this provider, please specify `coverages` under service or `COVERAGE` under params."
+                "No coverages were specified for this provider, please specify `coverages` under service or `COVERAGE` under params." # NOQA
             )
             raise Exception("Data source incorrectly configured.")
         logger.info("Getting Dimensions...")

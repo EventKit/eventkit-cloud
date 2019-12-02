@@ -46,7 +46,8 @@ class GeocodeAdapter(metaclass=ABCMeta):
     @abstractmethod
     def get_payload(self, query):
         """
-        This takes some query (e.g. "Boston"), and returns a dict representing query parameters that a specific api will expect.
+        This takes some query (e.g. "Boston"), and returns a dict representing query parameters that a specific api
+        will expect.
         :param query: A string
         :return: A dict of API specific query paramters.
             Input:

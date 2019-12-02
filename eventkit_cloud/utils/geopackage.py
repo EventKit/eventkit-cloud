@@ -4,7 +4,7 @@ import os
 import subprocess
 from string import Template
 
-from eventkit_cloud.tasks.task_process import TaskProcess
+from eventkit_cloud.tasks.task_process import TaskProcess # NOQA
 from osgeo import gdal, osr
 import sqlite3
 
@@ -21,7 +21,8 @@ UPDATE 'multipolygons' SET geom=GeomFromGPB(geom);
 
 UPDATE points SET geom = (SELECT ST_Intersection(boundary.geom,p.geom) FROM boundary,points p WHERE points.fid = p.fid);
 UPDATE lines SET geom = (SELECT ST_Intersection(boundary.geom,l.geom) FROM boundary,lines l WHERE lines.fid = l.fid);
-UPDATE multipolygons SET geom = (SELECT ST_Intersection(boundary.geom,m.geom) FROM boundary,multipolygons m WHERE multipolygons.fid = m.fid);
+UPDATE multipolygons SET geom = (SELECT ST_Intersection(boundary.geom,m.geom) FROM boundary,multipolygons m
+WHERE multipolygons.fid = m.fid);
 
 DELETE FROM points where geom IS NULL;
 DELETE FROM lines where geom IS NULL;
@@ -66,7 +67,8 @@ DROP TABLE rtree_multipolygons_geom;
 DROP TABLE rtree_other_relations_geom;
 DROP TABLE rtree_points_geom;
 
-INSERT INTO gpkg_contents VALUES ('boundary', 'features', 'boundary', '', '2017-04-08T01:35:16.576Z', null, null, null, null, '4326');
+INSERT INTO gpkg_contents VALUES ('boundary', 'features', 'boundary', '', '2017-04-08T01:35:16.576Z', null, null,
+null, null, '4326');
 INSERT INTO gpkg_geometry_columns VALUES ('boundary', 'geom', 'MULTIPOLYGON', '4326', '0', '0');
 DELETE FROM gpkg_contents WHERE table_name="multilinestrings";
 DELETE FROM gpkg_geometry_columns WHERE table_name="multilinestrings";
@@ -163,7 +165,10 @@ osm_user=no
 osm_changeset=no
 
 # keys to report as OGR fields
-#attributes=access,addr:housename,addr:housenumber,addr:interpolation,admin_level,aerialway,barrier,bridge,boundary,construction,covered,cutting,denomination,disused,embankment,foot,generator:source,highway,junction,layer,lock,motorcar,name,natural,oneway,poi,population,railway,ref,religion,route,service,surface,toll,tower:type,tunnel,waterway,width,wood
+#attributes=access,addr:housename,addr:housenumber,addr:interpolation,admin_level,aerialway,barrier,bridge,boundary,
+construction,covered,cutting,denomination,disused,embankment,foot,generator:source,highway,junction,layer,lock,
+motorcar,name,natural,oneway,poi,population,railway,ref,religion,route,service,surface,toll,tower:type,tunnel,
+waterway,width,wood
 # keys that should NOT be reported in the "other_tags" field
 ignore=area,created_by,converted_by,source,time,ele,note,openGeoDB:,fixme,FIXME
 # uncomment to avoid creation of "other_tags" field
@@ -181,7 +186,8 @@ osm_user=no
 osm_changeset=no
 
 # keys to report as OGR fields
-#attributes=admin_level,aeroway,amenity,boundary,harbour,historic,landuse,leisure,man_made,military,name,natural,power,place,shop,sport,tourism,type,water,waterway,wetland,unocha:pcode
+#attributes=admin_level,aeroway,amenity,boundary,harbour,historic,landuse,leisure,man_made,military,name,natural,
+power,place,shop,sport,tourism,type,water,waterway,wetland,unocha:pcode
 # keys that should NOT be reported in the "other_tags" field
 ignore=area,created_by,converted_by,time,ele,note,openGeoDB:,fixme,FIXME
 # uncomment to avoid creation of "other_tags" field
@@ -437,7 +443,8 @@ class Geopackage(object):
                 if "highway" in key_union:
                     cur.executescript(
                         """
-                        UPDATE {table} SET z_index = 3 WHERE highway IN ('path', 'track', 'footway', 'minor', 'road', 'service', 'unclassified', 'residential');
+                        UPDATE {table} SET z_index = 3 WHERE highway IN ('path', 'track', 'footway', 'minor',
+                        'road', 'service', 'unclassified', 'residential');
                         UPDATE {table} SET z_index = 4 WHERE highway IN ('tertiary_link', 'tertiary');
                         UPDATE {table} SET z_index = 6 WHERE highway IN ('secondary_link', 'secondary');
                         UPDATE {table} SET z_index = 7 WHERE highway IN ('primary_link', 'primary');
@@ -455,7 +462,8 @@ class Geopackage(object):
                     )
                 if "layer" in key_union:
                     cur.execute(
-                        "UPDATE {table} SET z_index = z_index + 10 * cast(layer AS SMALLINT) WHERE layer IS NOT NULL".format(
+                        "UPDATE {table} SET z_index = z_index + 10 * cast(layer AS SMALLINT) WHERE layer IS NOT NULL"
+                        .format(
                             table=table_name
                         )
                     )
@@ -589,7 +597,8 @@ def get_table_gpkg_contents_information(gpkg, table_name):
     """
     with sqlite3.connect(gpkg) as conn:
         result = conn.execute(
-            "SELECT table_name, data_type, identifier, description, last_change, min_x, min_y, max_x, max_y, srs_id FROM gpkg_contents WHERE table_name = '{0}';".format(
+            "SELECT table_name, data_type, identifier, description, last_change, min_x, min_y, max_x, max_y, srs_id "
+            "FROM gpkg_contents WHERE table_name = '{0}';".format(
                 table_name
             )
         )
@@ -618,7 +627,8 @@ def set_gpkg_contents_bounds(gpkg, table_name, bbox):
     """
     with sqlite3.connect(gpkg) as conn:
         if not conn.execute(
-            "UPDATE gpkg_contents SET min_x = {0}, min_y = {1}, max_x = {2}, max_y = {3} WHERE table_name = '{4}';".format(
+            "UPDATE gpkg_contents SET min_x = {0}, min_y = {1}, max_x = {2}, max_y = {3} WHERE table_name = '{4}';"
+            .format(
                 bbox[0], bbox[1], bbox[2], bbox[3], table_name
             )
         ).rowcount:
@@ -633,7 +643,8 @@ def set_gpkg_contents_bounds(gpkg, table_name, bbox):
 def get_table_tile_matrix_information(gpkg, table_name):
     with sqlite3.connect(gpkg) as conn:
         result = conn.execute(
-            "SELECT table_name, zoom_level, matrix_width, matrix_height, tile_width, tile_height, pixel_x_size, pixel_y_size FROM gpkg_tile_matrix WHERE table_name = '{0}' ORDER BY zoom_level;".format(
+            "SELECT table_name, zoom_level, matrix_width, matrix_height, tile_width, tile_height, pixel_x_size, "
+            "pixel_y_size FROM gpkg_tile_matrix WHERE table_name = '{0}' ORDER BY zoom_level;".format(
                 table_name
             )
         )
@@ -759,7 +770,8 @@ def get_table_info(gpkg, table):
     of the user data tables.
 
     :param gpkg: Path to geopackage file.
-    :return: The type of the first value in  if the zoom levels in the data tables match the zoom levels in the gpkg_tile_matrix_table
+    :return: The type of the first value in  if the zoom levels in the data tables match the zoom levels in the
+    gpkg_tile_matrix_table
     """
     with sqlite3.connect(gpkg) as conn:
         logger.debug("PRAGMA table_info({0});".format(table))
@@ -769,7 +781,8 @@ def get_table_info(gpkg, table):
 
 def create_table_from_existing(gpkg, old_table, new_table):
     """
-    Creates a new gpkg table, from an existing table.  This assumed the original table is from a gpkg and as such has a primary key column.
+    Creates a new gpkg table, from an existing table.  This assumed the original table is from a gpkg and as
+    such has a primary key column.
 
     :param gpkg:
     :param old_table:
@@ -876,13 +889,15 @@ def add_file_metadata(gpkg, metadata):
     with sqlite3.connect(gpkg) as conn:
         command = (
             "INSERT OR IGNORE INTO gpkg_metadata (md_scope, md_standard_uri, mime_type, metadata)"
-            "VALUES ('dataset', 'http://schemas.opengis.net/iso/19139/20070417/resources/Codelist/gmxCodelists.xml#MD_ScopeCode', 'text/xml', ?);"
+            "VALUES ('dataset', 'http://schemas.opengis.net/iso/19139/20070417/resources/Codelist/"
+            "gmxCodelists.xml#MD_ScopeCode', 'text/xml', ?);"
         )
         logger.debug(command)
         conn.execute(command, (metadata,))
 
         command = """
-INSERT OR IGNORE INTO gpkg_metadata_reference (reference_scope, table_name, column_name, row_id_value, timestamp, md_file_id, md_parent_id)
+INSERT OR IGNORE INTO gpkg_metadata_reference (reference_scope, table_name, column_name, row_id_value,
+ timestamp, md_file_id, md_parent_id)
 VALUES ('geopackage', NULL, NULL, NULL, strftime('%Y-%m-%dT%H:%M:%fZ','now'), 1, null);
                  """
         logger.debug(command)

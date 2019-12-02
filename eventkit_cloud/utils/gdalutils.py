@@ -9,8 +9,6 @@ import time
 from string import Template
 from tempfile import NamedTemporaryFile
 from functools import wraps
-import sys
-
 
 from osgeo import gdal, ogr, osr
 
@@ -334,18 +332,18 @@ def clip_dataset(
     # act idempotently.
     if table:
         cmd_template = Template(
-            "ogr2ogr -skipfailures $extra_parameters -nlt PROMOTE_TO_MULTI -overwrite -f $fmt -clipsrc $boundary $out_ds $in_ds $table"
+            "ogr2ogr -skipfailures $extra_parameters -nlt PROMOTE_TO_MULTI -overwrite -f $fmt -clipsrc $boundary $out_ds $in_ds $table" # NOQA
         )
     elif meta["is_raster"]:
         cmd_template = Template(
-            "gdalwarp -overwrite $extra_parameters -cutline $boundary -crop_to_cutline $dstalpha -of $fmt $type $in_ds $out_ds"
+            "gdalwarp -overwrite $extra_parameters -cutline $boundary -crop_to_cutline $dstalpha -of $fmt $type $in_ds $out_ds" # NOQA
         )
         # Geopackage raster only supports byte band type, so check for that
         if fmt.lower() == "gpkg":
             band_type = "-ot byte"
     else:
         cmd_template = Template(
-            "ogr2ogr -skipfailures $extra_parameters -nlt PROMOTE_TO_MULTI -overwrite -f $fmt -clipsrc $boundary $out_ds $in_ds"
+            "ogr2ogr -skipfailures $extra_parameters -nlt PROMOTE_TO_MULTI -overwrite -f $fmt -clipsrc $boundary $out_ds $in_ds" # NOQA
         )
 
     temp_boundfile = None
@@ -457,7 +455,7 @@ def convert(
         raise Exception("No provided input file: {0}".format(in_dataset_file))
 
     meta = get_meta(in_dataset_file)
-    driver, is_raster = meta["driver"], meta["is_raster"]
+    is_raster = meta["is_raster"]
 
     if (in_dataset_file == out_file) and not (params or projection):
         return in_dataset_file
@@ -492,7 +490,8 @@ def convert(
             )
         else:
             cmd_template = Template(
-                "gdalwarp -overwrite $extra_parameters -of $fmt $type $in_ds $out_ds -s_srs EPSG:4326 -t_srs EPSG:$projection"
+                "gdalwarp -overwrite $extra_parameters -of $fmt $type $in_ds $out_ds -s_srs EPSG:4326 "
+                "-t_srs EPSG:$projection"
             )
     else:
         cmd_template = Template(

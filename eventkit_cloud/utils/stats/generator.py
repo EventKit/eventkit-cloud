@@ -35,7 +35,9 @@ def get_statistics(
     :return: The statistics object
     """
     cache_key = "DATA_STATISTICS_BY_{}".format(grouping)
-    compute_stats = lambda: json.dumps(compute_statistics(group_providers_by(grouping)))
+
+    def compute_stats():
+        return json.dumps(compute_statistics(group_providers_by(grouping)))
     if force:
         logger.info("Force Statistics Recompute.")
         stats = compute_stats()

@@ -362,7 +362,8 @@ def check_zoom_levels(gpkg, mapproxy_configuration):
                     with sqlite3.connect(gpkg) as conn:
                         conn.execute(
                             """
-INSERT OR REPLACE INTO gpkg_tile_matrix (table_name, zoom_level, matrix_width, matrix_height, tile_width, tile_height, pixel_x_size, pixel_y_size) 
+INSERT OR REPLACE INTO gpkg_tile_matrix (table_name, zoom_level, matrix_width, matrix_height, tile_width, tile_height,
+pixel_x_size, pixel_y_size)
 VALUES(?, ?, ?, ?, ?, ?, ?, ?)""",
                             (
                                 table_name,
@@ -394,7 +395,7 @@ def create_mapproxy_app(slug: str):
 
     # TODO: place this somewhere else consolidate settings.
     base_config = {
-        "services": {"demo": None, "tms": None, "wmts": None,},
+        "services": {"demo": None, "tms": None, "wmts": None, },
         "caches": {
             slug: {
                 "default": {"type": "file"},
