@@ -26,7 +26,7 @@ def download_file(url, download_dir=None):
     file_location = os.path.join(download_dir, os.path.basename(url))
     r = requests.get(url, stream=True)
     if r.status_code == 200:
-        with open(file_location, 'wb') as f:
+        with open(file_location, "wb") as f:
             for chunk in r:
                 f.write(chunk)
         return file_location
@@ -40,7 +40,7 @@ def extract_zip(zipfile_path, extract_dir=None):
 
     logger.info("Extracting {0} to {1}...".format(zipfile_path, extract_dir))
 
-    zip_ref = zipfile.ZipFile(zipfile_path, 'r')
+    zip_ref = zipfile.ZipFile(zipfile_path, "r")
     zip_ref.extractall(extract_dir)
     logger.info("Finished Extracting.")
     zip_ref.close()
@@ -62,7 +62,7 @@ def load_land_vectors(db_conn=None, url=None):
     if db_conn:
         database = dj_database_url.config(default=db_conn)
     else:
-        database = settings.DATABASES['feature_data']
+        database = settings.DATABASES["feature_data"]
 
     logger.info("Downloading land data: {0}".format(url))
     download_filename = download_file(url)
@@ -76,14 +76,18 @@ def load_land_vectors(db_conn=None, url=None):
     else:
         file_name = download_filename
 
-    cmd = 'ogr2ogr -s_srs EPSG:3857 -t_srs EPSG:4326 -f "PostgreSQL" ' \
-          'PG:"host={host} user={user} password={password} dbname={name} port={port}" ' \
-          '{file} land_polygons'.format(host=database['HOST'],
-                                        user=database['USER'],
-                                        password=database['PASSWORD'].replace('$', '\$'),
-                                        name=database['NAME'],
-                                        port=database['PORT'],
-                                        file=file_name)
+    cmd = (
+        'ogr2ogr -s_srs EPSG:3857 -t_srs EPSG:4326 -f "PostgreSQL" '
+        'PG:"host={host} user={user} password={password} dbname={name} port={port}" '
+        "{file} land_polygons".format(
+            host=database["HOST"],
+            user=database["USER"],
+            password=database["PASSWORD"].replace("$", "\$"),
+            name=database["NAME"],
+            port=database["PORT"],
+            file=file_name,
+        )
+    )
     logger.info("Loading land data...")
     exit_code = subprocess.call(cmd, shell=True)
 
@@ -122,7 +126,14 @@ class NotificationVerb(Enum):
 
 def sendnotification(actor, recipient, verb, action_object, target, level, description):
     try:
-        notify.send(actor, recipient=recipient, verb=verb, action_object=action_object, target=target,
-                             level=level, description=description)
+        notify.send(
+            actor,
+            recipient=recipient,
+            verb=verb,
+            action_object=action_object,
+            target=target,
+            level=level,
+            description=description,
+        )
     except Exception as err:
         logger.debug("notify send error ignored: %s" % err)
