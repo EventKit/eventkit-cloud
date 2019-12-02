@@ -104,12 +104,14 @@ class TestGdalUtils(TestCase):
             clip_dataset(boundary=None, in_dataset=None)
 
         # Raster geopackage
+        extra_parameters = ""
         geojson_file = "/path/to/geojson"
         dataset = "/path/to/dataset"
         in_dataset = "/path/to/old_dataset"
         fmt = "gpkg"
         band_type = "-ot byte"
-        expected_cmd = "gdalwarp -overwrite -cutline {} -crop_to_cutline {} -of {} {} {} {}".format(
+        expected_cmd = "gdalwarp -overwrite {} -cutline {} -crop_to_cutline {} -of {} {} {} {}".format(
+            extra_parameters,
             geojson_file,
             "-dstalpha",
             fmt,
@@ -127,7 +129,8 @@ class TestGdalUtils(TestCase):
         # Geotiff
         fmt = "gtiff"
         band_type = ""
-        expected_cmd = "gdalwarp -overwrite -cutline {} -crop_to_cutline {} -of {} {} {} {}".format(
+        expected_cmd = "gdalwarp -overwrite {} -cutline {} -crop_to_cutline {} -of {} {} {} {}".format(
+            extra_parameters,
             geojson_file,
             "",
             fmt,
@@ -140,9 +143,9 @@ class TestGdalUtils(TestCase):
         clip_dataset(boundary=geojson_file, in_dataset=in_dataset, out_dataset=dataset, fmt=fmt, task_uid=self.task_uid)
         self.task_process().start_process.assert_called_with(expected_cmd, executable='/bin/bash', shell=True,
                                                              stderr=-1, stdout=-1)
-
         # Geotiff with non-envelope polygon cutline
-        expected_cmd = "gdalwarp -overwrite -cutline {} -crop_to_cutline {} -of {} {} {} {}".format(
+        expected_cmd = "gdalwarp -overwrite {} -cutline {} -crop_to_cutline {} -of {} {} {} {}".format(
+            extra_parameters,
             geojson_file,
             "-dstalpha",
             fmt,
@@ -157,7 +160,8 @@ class TestGdalUtils(TestCase):
 
         # Vector
         fmt = "gpkg"
-        expected_cmd = "ogr2ogr -skipfailures -nlt PROMOTE_TO_MULTI -overwrite -f {0} -clipsrc {1} {2} {3}".format(
+        expected_cmd = "ogr2ogr -skipfailures {} -nlt PROMOTE_TO_MULTI -overwrite -f {} -clipsrc {} {} {}".format(
+            extra_parameters,
             fmt,
             geojson_file,
             dataset,
@@ -254,7 +258,7 @@ class TestGdalUtils(TestCase):
             out_projection
         )
         get_meta_mock.return_value = {'driver': 'gpkg', 'is_raster': True}
-        convert(file_format=fmt, in_file=in_dataset,
+        convert(file_format=fmt, in_file=in_dataset, params=extra_parameters,
                 out_file=out_dataset, task_uid=self.task_uid, projection=3857)
         self.task_process().start_process.assert_called_with(expected_cmd, executable='/bin/bash', shell=True,
                                                              stderr=-1, stdout=-1)

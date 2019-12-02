@@ -66,14 +66,17 @@ class TaskChainBuilder(object):
 
         # If WCS we will want geotiff...
         if 'wcs' in primary_export_task.name.lower():
-            formats += ['geotiff']
+            formats += ['gtiff']
+            compress = False
+        else:
+            compress = True
 
         # build a list of celery tasks based on the export formats...
-        for format in formats:
+        for file_format in formats:
             try:
-                export_tasks[format] = {'obj': create_format_task(format), 'task_uid': None}
+                export_tasks[file_format] = {'obj': create_format_task(file_format), 'task_uid': None}
             except KeyError as e:
-                logger.debug('KeyError: export_tasks[{}] - {}'.format(format, e))
+                logger.debug('KeyError: export_tasks[{}] - {}'.format(file_format, e))
             except ImportError as e:
                 msg = 'Error importing export task: {0}'.format(e)
                 logger.debug(msg)
@@ -92,7 +95,7 @@ class TaskChainBuilder(object):
                                                                           estimated_size=estimated_size,
                                                                           estimated_duration=estimated_duration)
 
-        for format, task in export_tasks.items():
+        for file_format, task in export_tasks.items():
             # Exports are in 4326 by default, include that in the name.
             task_name = f"{task.get('obj').name} - EPSG:4326"
             export_task = create_export_task_record(
@@ -100,7 +103,7 @@ class TaskChainBuilder(object):
                 export_provider_task=data_provider_task_record, worker=worker,
                 display=getattr(task.get('obj'), "display", False)
             )
-            export_tasks[format]['task_uid'] = export_task.uid
+            export_tasks[file_format]['task_uid'] = export_task.uid
 
         """
         Create a celery chain which gets the data & runs export formats
@@ -117,7 +120,7 @@ class TaskChainBuilder(object):
 
             for current_format, task in export_tasks.items():
                 subtasks.append(task.get('obj').s(
-                    run_uid=run.uid, stage_dir=stage_dir, job_name=job_name,
+                    run_uid=run.uid, stage_dir=stage_dir, job_name=job_name, compress=compress,
                     task_uid=task.get('task_uid'), user_details=user_details,
                     locking_task_key=data_provider_task_record.uid
                 ).set(queue=queue_group, routing_key=queue_group))
@@ -142,7 +145,7 @@ class TaskChainBuilder(object):
                     )
 
                     subtasks.append(reprojection_task.s(
-                        run_uid=run.uid, stage_dir=stage_dir, job_name=job_name,
+                        run_uid=run.uid, stage_dir=stage_dir, job_name=job_name, compress=compress,
                         task_uid=projection_task.uid, user_details=user_details,
                         locking_task_key=data_provider_task_record.uid, projection=projection
                     ).set(queue=queue_group, routing_key=queue_group))
@@ -183,6 +186,7 @@ class TaskChainBuilder(object):
                                                               layer=provider_task.provider.layer,
                                                               level_from=min_zoom,
                                                               level_to=max_zoom,
+                                                              compress=compress,
                                                               service_type=service_type,
                                                               service_url=provider_task.provider.url,
                                                               config=provider_task.provider.config)
