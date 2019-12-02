@@ -42,19 +42,29 @@ class OGR(object):
             params = ""
 
         cmd = "ogr2ogr -f '{format}' {params} {out_file} {in_file}".format(
-                format=file_format, in_file=in_file, out_file=out_file, params=params)
+            format=file_format, in_file=in_file, out_file=out_file, params=params
+        )
 
-        logger.info('Running: {}'.format(cmd))
+        logger.info("Running: {}".format(cmd))
         task_process = TaskProcess(task_uid=self.task_uid)
-        task_process.start_process(cmd, shell=True, executable='/bin/bash',
-                                   stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        task_process.start_process(
+            cmd,
+            shell=True,
+            executable="/bin/bash",
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+        )
         if task_process.exitcode != 0:
-            logger.error('%s', task_process.stderr)
-            raise Exception("ogr2ogr process failed with returncode: {0}".format(task_process.exitcode))
+            logger.error("%s", task_process.stderr)
+            raise Exception(
+                "ogr2ogr process failed with returncode: {0}".format(
+                    task_process.exitcode
+                )
+            )
         if requires_zip(file_format):
             logger.debug("Requires zip: {0}".format(out_file))
             out_file = create_zip_file(out_file, get_zip_name(out_file))
-        logger.debug('ogr2ogr returned: {0}'.format(task_process.exitcode))
+        logger.debug("ogr2ogr returned: {0}".format(task_process.exitcode))
         return out_file
 
 
@@ -63,19 +73,19 @@ def execute_spatialite_script(db, sql_script, user_details=None):
     from audit_logging.file_logging import logging_open  # NOQA
 
     if user_details is None:
-        user_details = {'username': 'unknown-execute_spatialite_script'}
+        user_details = {"username": "unknown-execute_spatialite_script"}
 
     conn = sqlite3.connect(db)
     # load spatialite extension
     enable_spatialite(conn)
     try:
         cur = conn.cursor()
-        with logging_open(sql_script, 'r', user_details=user_details) as sql_file:
+        with logging_open(sql_script, "r", user_details=user_details) as sql_file:
             sql = sql_file.read()
             cur.executescript(sql)
         conn.commit()
     except Exception as e:
-        logger.error('Problem running spatialite script: {}'.format(e))
+        logger.error("Problem running spatialite script: {}".format(e))
         raise
     finally:
         cur.close()

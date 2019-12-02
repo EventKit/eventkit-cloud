@@ -24,7 +24,7 @@ def map(request: HttpRequest, slug: str, path: str) -> HttpResponse:
     """
 
     mapproxy_app = create_mapproxy_app(slug)
-    params = parse_qs(request.META['QUERY_STRING'])
+    params = parse_qs(request.META["QUERY_STRING"])
 
     mp_response = mapproxy_app.get(path, params, request.headers)
 

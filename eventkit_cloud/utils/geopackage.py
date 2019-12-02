@@ -14,7 +14,7 @@ from eventkit_cloud.utils.ogr import OGR
 
 LOG = logging.getLogger(__name__)
 
-SPATIAL_SQL = '''
+SPATIAL_SQL = """
 UPDATE 'points' SET geom=GeomFromGPB(geom);
 UPDATE 'lines' SET geom=GeomFromGPB(geom);
 UPDATE 'multipolygons' SET geom=GeomFromGPB(geom);
@@ -76,9 +76,9 @@ DELETE FROM gpkg_extensions WHERE table_name="multilinestrings";
 DELETE FROM gpkg_extensions WHERE table_name="other_relations";
 DELETE FROM gpkg_geometry_columns WHERE table_name="multilinestrings";
 DELETE FROM gpkg_geometry_columns WHERE table_name="other_relations";
-'''
+"""
 
-INI_TEMPLATE = '''
+INI_TEMPLATE = """
 # Configuration file for OSM import
 
 # put here the name of keys for ways that are assumed to be polygons if they are closed
@@ -188,7 +188,7 @@ ignore=area,created_by,converted_by,time,ele,note,openGeoDB:,fixme,FIXME
 other_tags=no
 # uncomment to create "all_tags" field. "all_tags" and "other_tags" are exclusive
 #all_tags=yes
-'''
+"""
 
 
 class OSMConfig(object):
@@ -199,7 +199,9 @@ class OSMConfig(object):
     See: http://www.gdal.org/drv_osm.html
     """
 
-    def __init__(self, stage_dir, points=[], lines=[], polygons=[], output_filename="osmconf.ini"):
+    def __init__(
+        self, stage_dir, points=[], lines=[], polygons=[], output_filename="osmconf.ini"
+    ):
         """
         Initialize the OSMConfig utility.
 
@@ -223,11 +225,11 @@ class OSMConfig(object):
             the path to the export configuration file.
         """
         result = INI_TEMPLATE.format(
-            points_attributes=','.join(self.points),
-            lines_attributes=','.join(self.lines),
-            multipolygons_attributes=','.join(self.polygons)
+            points_attributes=",".join(self.points),
+            lines_attributes=",".join(self.lines),
+            multipolygons_attributes=",".join(self.polygons),
         )
-        with open(self.output_ini, 'wb') as f:
+        with open(self.output_ini, "wb") as f:
             f.write(result.encode())
         return self.output_ini
 
@@ -237,15 +239,26 @@ class Geopackage(object):
     Parse a OSM file (.osm or .pbf) dumped from overpass query.
     Creates an output GeoPackage file to be used in export pipeline.
     """
+
     name = "geopackage"
-    description = 'GeoPackage (OSM Schema)'
+    description = "GeoPackage (OSM Schema)"
 
     @property
     def results(self):
         return [self.output_gpkg]
 
-    def __init__(self, input_pbf, output_gpkg, stage_dir, feature_selection, aoi_geom, tempdir=None, per_theme=False,
-                 progress=None, export_task_record_uid=None):
+    def __init__(
+        self,
+        input_pbf,
+        output_gpkg,
+        stage_dir,
+        feature_selection,
+        aoi_geom,
+        tempdir=None,
+        per_theme=False,
+        progress=None,
+        export_task_record_uid=None,
+    ):
         """
         Initialize the OSMParser.
 
@@ -268,12 +281,14 @@ class Geopackage(object):
         OSM_CONFIG_FILE determines which OSM keys should be translated into OGR layer fields.
         See osmconf.ini for details. See gdal config options at http://www.gdal.org/drv_osm.html
         """
-        self.ogr_cmd = Template("""
+        self.ogr_cmd = Template(
+            """
             ogr2ogr -f GPKG $gpkg $osm \
             --config OSM_CONFIG_FILE $osmconf \
             --config OGR_INTERLEAVED_READING YES \
             --config OSM_MAX_TMPFILE_SIZE 100 -gt 65536
-        """)
+        """
+        )
 
         # Enable GDAL/OGR exceptions
         gdal.UseExceptions()
@@ -295,15 +310,18 @@ class Geopackage(object):
         if self.is_complete:
             LOG.debug("Skipping Geopackage, file exists")
             return
-        keys_points = self.feature_selection.key_union('points')
-        keys_lines = self.feature_selection.key_union('lines')
-        keys_polygons = self.feature_selection.key_union('polygons')
-        osmconf = OSMConfig(self.stage_dir, points=keys_points, lines=keys_lines, polygons=keys_polygons)
+        keys_points = self.feature_selection.key_union("points")
+        keys_lines = self.feature_selection.key_union("lines")
+        keys_polygons = self.feature_selection.key_union("polygons")
+        osmconf = OSMConfig(
+            self.stage_dir, points=keys_points, lines=keys_lines, polygons=keys_polygons
+        )
         conf = osmconf.create_osm_conf()
-        ogr_cmd = self.ogr_cmd.safe_substitute({'gpkg': self.output_gpkg,
-                                                'osm': self.input_pbf, 'osmconf': conf})
-        LOG.debug('Running: %s' % ogr_cmd)
-        subprocess.check_call(ogr_cmd, shell=True, executable='/bin/bash')
+        ogr_cmd = self.ogr_cmd.safe_substitute(
+            {"gpkg": self.output_gpkg, "osm": self.input_pbf, "osmconf": conf}
+        )
+        LOG.debug("Running: %s" % ogr_cmd)
+        subprocess.check_call(ogr_cmd, shell=True, executable="/bin/bash")
 
         """
         Create the default osm gpkg schema
@@ -312,20 +330,31 @@ class Geopackage(object):
         conn.enable_load_extension(True)
         cur = conn.cursor()
         cur.execute("select load_extension('mod_spatialite')")
-        cur.execute("CREATE TABLE boundary (id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, geom GEOMETRY)");
-        cur.execute("INSERT INTO boundary (geom) VALUES (GeomFromWKB(?,4326));", (self.aoi_geom.wkb,))
-        update_progress(self.export_task_record_uid, 30, subtask_percentage, subtask_start, eta=eta)
+        cur.execute(
+            "CREATE TABLE boundary (id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, geom GEOMETRY)"
+        )
+        cur.execute(
+            "INSERT INTO boundary (geom) VALUES (GeomFromWKB(?,4326));",
+            (self.aoi_geom.wkb,),
+        )
+        update_progress(
+            self.export_task_record_uid, 30, subtask_percentage, subtask_start, eta=eta
+        )
 
         cur.executescript(SPATIAL_SQL)
         self.update_zindexes(cur, self.feature_selection)
-        update_progress(self.export_task_record_uid, 42, subtask_percentage, subtask_start, eta=eta)
+        update_progress(
+            self.export_task_record_uid, 42, subtask_percentage, subtask_start, eta=eta
+        )
 
         # add themes
         create_sqls, index_sqls = self.feature_selection.sqls
         for query in create_sqls:
             LOG.debug(query)
             cur.executescript(query)
-        update_progress(self.export_task_record_uid, 50, subtask_percentage, subtask_start, eta=eta)
+        update_progress(
+            self.export_task_record_uid, 50, subtask_percentage, subtask_start, eta=eta
+        )
 
         for query in index_sqls:
             LOG.debug(query)
@@ -348,17 +377,24 @@ class Geopackage(object):
                 conn.enable_load_extension(True)
                 cur = conn.cursor()
                 cur.execute("attach database ? as 'geopackage'", (self.output_gpkg,))
-                cur.execute("create table gpkg_spatial_ref_sys as select * from geopackage.gpkg_spatial_ref_sys")
-                cur.execute("create table gpkg_contents as select * from geopackage.gpkg_contents where 0")
                 cur.execute(
-                    "create table gpkg_geometry_columns as select * from geopackage.gpkg_geometry_columns where 0")
+                    "create table gpkg_spatial_ref_sys as select * from geopackage.gpkg_spatial_ref_sys"
+                )
+                cur.execute(
+                    "create table gpkg_contents as select * from geopackage.gpkg_contents where 0"
+                )
+                cur.execute(
+                    "create table gpkg_geometry_columns as select * from geopackage.gpkg_geometry_columns where 0"
+                )
                 for geom_type in self.feature_selection.geom_types(theme):
                     for stmt in self.feature_selection.create_sql(theme, geom_type):
                         cur.executescript(stmt)
                 conn.commit()
                 conn.close()
 
-        update_progress(self.export_task_record_uid, 100, subtask_percentage, subtask_start, eta=eta)
+        update_progress(
+            self.export_task_record_uid, 100, subtask_percentage, subtask_start, eta=eta
+        )
 
     @property
     def is_complete(self):
@@ -370,7 +406,12 @@ class Geopackage(object):
             results_list = []
             for theme in self.feature_selection.themes:
                 results_list.append(
-                    Artifact([os.path.join(self.stage_dir, slugify(theme)) + ".gpkg"], Geopackage.name, theme=theme))
+                    Artifact(
+                        [os.path.join(self.stage_dir, slugify(theme)) + ".gpkg"],
+                        Geopackage.name,
+                        theme=theme,
+                    )
+                )
             return results_list
         else:
             return [Artifact([self.output_gpkg], Geopackage.name)]
@@ -378,44 +419,66 @@ class Geopackage(object):
     def update_zindexes(self, cur, feature_selection):
         # arguably, determing Z-index should require all 5 of these OSM keys
         # to construct a consistent z-index.
-        for geom_type in ['point', 'line', 'polygon']:
-            key_union = feature_selection.key_union(geom_type + 's')  # boo
-            MAPPING = {
-                'point': 'points',
-                'line': 'lines',
-                'polygon': 'multipolygons'
-            }
+        for geom_type in ["point", "line", "polygon"]:
+            key_union = feature_selection.key_union(geom_type + "s")  # boo
+            MAPPING = {"point": "points", "line": "lines", "polygon": "multipolygons"}
             table_name = MAPPING[geom_type]
-            if any([x in key_union for x in ['highway', 'railway', 'layer', 'bridge', 'tunnel']]):
-                cur.execute("ALTER TABLE {table} ADD COLUMN z_index SMALLINT DEFAULT 0;".format(table=table_name))
+            if any(
+                [
+                    x in key_union
+                    for x in ["highway", "railway", "layer", "bridge", "tunnel"]
+                ]
+            ):
+                cur.execute(
+                    "ALTER TABLE {table} ADD COLUMN z_index SMALLINT DEFAULT 0;".format(
+                        table=table_name
+                    )
+                )
                 if "highway" in key_union:
-                    cur.executescript("""
+                    cur.executescript(
+                        """
                         UPDATE {table} SET z_index = 3 WHERE highway IN ('path', 'track', 'footway', 'minor', 'road', 'service', 'unclassified', 'residential');
                         UPDATE {table} SET z_index = 4 WHERE highway IN ('tertiary_link', 'tertiary');
                         UPDATE {table} SET z_index = 6 WHERE highway IN ('secondary_link', 'secondary');
                         UPDATE {table} SET z_index = 7 WHERE highway IN ('primary_link', 'primary');
                         UPDATE {table} SET z_index = 8 WHERE highway IN  ('trunk_link', 'trunk');
                         UPDATE {table} SET z_index = 9 WHERE highway IN  ('motorway_link', 'motorway');
-                    """.format(table=table_name))
+                    """.format(
+                            table=table_name
+                        )
+                    )
                 if "railway" in key_union:
                     cur.execute(
-                        "UPDATE {table} SET z_index = z_index + 5 WHERE railway IS NOT NULL".format(table=table_name))
+                        "UPDATE {table} SET z_index = z_index + 5 WHERE railway IS NOT NULL".format(
+                            table=table_name
+                        )
+                    )
                 if "layer" in key_union:
                     cur.execute(
                         "UPDATE {table} SET z_index = z_index + 10 * cast(layer AS SMALLINT) WHERE layer IS NOT NULL".format(
-                            table=table_name))
+                            table=table_name
+                        )
+                    )
                 if "bridge" in key_union:
-                    cur.execute("UPDATE {table} SET z_index = z_index + 10 WHERE bridge IN ('yes', 'true', 1)".format(
-                        table=table_name))
+                    cur.execute(
+                        "UPDATE {table} SET z_index = z_index + 10 WHERE bridge IN ('yes', 'true', 1)".format(
+                            table=table_name
+                        )
+                    )
                 if "tunnel" in key_union:
-                    cur.execute("UPDATE {table} SET z_index = z_index - 10 WHERE tunnel IN ('yes', 'true', 1)".format(
-                        table=table_name))
+                    cur.execute(
+                        "UPDATE {table} SET z_index = z_index - 10 WHERE tunnel IN ('yes', 'true', 1)".format(
+                            table=table_name
+                        )
+                    )
 
 
 logger = logging.getLogger(__name__)
 
 
-def add_geojson_to_geopackage(geojson=None, gpkg=None, layer_name=None, task_uid=None, user_details=None):
+def add_geojson_to_geopackage(
+    geojson=None, gpkg=None, layer_name=None, task_uid=None, user_details=None
+):
     """Uses an ogr2ogr script to upload a geojson file.
         Args:
             geojson: A geojson string.
@@ -427,21 +490,32 @@ def add_geojson_to_geopackage(geojson=None, gpkg=None, layer_name=None, task_uid
         """
     # This is just to make it easier to trace when user_details haven't been sent
     if user_details is None:
-        user_details = {'username': 'unknown-add_geojson_to_geopackage'}
+        user_details = {"username": "unknown-add_geojson_to_geopackage"}
 
     if not geojson or not gpkg:
         raise Exception(
-            "A valid geojson: {0} was not provided\nor a geopackage: {1} was not accessible.".format(geojson, gpkg))
+            "A valid geojson: {0} was not provided\nor a geopackage: {1} was not accessible.".format(
+                geojson, gpkg
+            )
+        )
 
-    geojson_file = os.path.join(os.path.dirname(gpkg),
-                                "{0}.geojson".format(os.path.splitext(os.path.basename(gpkg))[0]))
+    geojson_file = os.path.join(
+        os.path.dirname(gpkg),
+        "{0}.geojson".format(os.path.splitext(os.path.basename(gpkg))[0]),
+    )
 
     from audit_logging.file_logging import logging_open
-    with logging_open(geojson_file, 'w', user_details=user_details) as open_file:
+
+    with logging_open(geojson_file, "w", user_details=user_details) as open_file:
         open_file.write(geojson)
 
     ogr = OGR(task_uid=task_uid)
-    gpkg = ogr.convert(file_format='GPKG', in_file=gpkg, out_file=geojson_file, params="-nln {0}".format(layer_name))
+    gpkg = ogr.convert(
+        file_format="GPKG",
+        in_file=gpkg,
+        out_file=geojson_file,
+        params="-nln {0}".format(layer_name),
+    )
 
     return gpkg
 
@@ -461,7 +535,8 @@ def is_alnum(data):
     @return: if data is only alphanumeric or '_' chars.
     """
     import re
-    if re.match(r'[\w:]+$', data):
+
+    if re.match(r"[\w:]+$", data):
         return True
     return False
 
@@ -499,7 +574,9 @@ def get_tile_table_names(gpkg):
     :return: List of tile user data table names in geopackage.
     """
     with sqlite3.connect(gpkg) as conn:
-        result = conn.execute("SELECT table_name FROM gpkg_contents WHERE data_type = 'tiles';")
+        result = conn.execute(
+            "SELECT table_name FROM gpkg_contents WHERE data_type = 'tiles';"
+        )
         return [table for (table,) in result]
 
 
@@ -513,18 +590,22 @@ def get_table_gpkg_contents_information(gpkg, table_name):
     with sqlite3.connect(gpkg) as conn:
         result = conn.execute(
             "SELECT table_name, data_type, identifier, description, last_change, min_x, min_y, max_x, max_y, srs_id FROM gpkg_contents WHERE table_name = '{0}';".format(
-                table_name))
+                table_name
+            )
+        )
         table_information = result.fetchone()
-        return {"table_name": table_information[0],
-                "data_type": table_information[1],
-                "identifier": table_information[2],
-                "description": table_information[3],
-                "last_change": table_information[4],
-                "min_x": table_information[5],
-                "min_y": table_information[6],
-                "max_x": table_information[7],
-                "max_y": table_information[8],
-                "srs_id": table_information[9]}
+        return {
+            "table_name": table_information[0],
+            "data_type": table_information[1],
+            "identifier": table_information[2],
+            "description": table_information[3],
+            "last_change": table_information[4],
+            "min_x": table_information[5],
+            "min_y": table_information[6],
+            "max_x": table_information[7],
+            "max_y": table_information[8],
+            "srs_id": table_information[9],
+        }
 
 
 def set_gpkg_contents_bounds(gpkg, table_name, bbox):
@@ -537,9 +618,15 @@ def set_gpkg_contents_bounds(gpkg, table_name, bbox):
     """
     with sqlite3.connect(gpkg) as conn:
         if not conn.execute(
-                "UPDATE gpkg_contents SET min_x = {0}, min_y = {1}, max_x = {2}, max_y = {3} WHERE table_name = '{4}';".format(
-                    bbox[0], bbox[1], bbox[2], bbox[3], table_name)).rowcount:
-            logger.error("Unable to set bounds for the table `{0}` in {1}".format(table_name, gpkg))
+            "UPDATE gpkg_contents SET min_x = {0}, min_y = {1}, max_x = {2}, max_y = {3} WHERE table_name = '{4}';".format(
+                bbox[0], bbox[1], bbox[2], bbox[3], table_name
+            )
+        ).rowcount:
+            logger.error(
+                "Unable to set bounds for the table `{0}` in {1}".format(
+                    table_name, gpkg
+                )
+            )
             raise Exception("Unable to set the bounds in the geopackage.")
 
 
@@ -547,17 +634,23 @@ def get_table_tile_matrix_information(gpkg, table_name):
     with sqlite3.connect(gpkg) as conn:
         result = conn.execute(
             "SELECT table_name, zoom_level, matrix_width, matrix_height, tile_width, tile_height, pixel_x_size, pixel_y_size FROM gpkg_tile_matrix WHERE table_name = '{0}' ORDER BY zoom_level;".format(
-                table_name))
+                table_name
+            )
+        )
         tile_matrix_information = []
         for table_information in result:
-            tile_matrix_information += [{"table_name": table_information[0],
-                                         "zoom_level": table_information[1],
-                                         "matrix_width": table_information[2],
-                                         "matrix_height": table_information[3],
-                                         "tile_width": table_information[4],
-                                         "tile_height": table_information[5],
-                                         "pixel_x_size": table_information[6],
-                                         "pixel_y_size": table_information[7]}]
+            tile_matrix_information += [
+                {
+                    "table_name": table_information[0],
+                    "zoom_level": table_information[1],
+                    "matrix_width": table_information[2],
+                    "matrix_height": table_information[3],
+                    "tile_width": table_information[4],
+                    "tile_height": table_information[5],
+                    "pixel_x_size": table_information[6],
+                    "pixel_y_size": table_information[7],
+                }
+            ]
     return tile_matrix_information
 
 
@@ -570,7 +663,9 @@ def get_zoom_levels_table(gpkg, table):
     """
     with sqlite3.connect(gpkg) as conn:
         if is_alnum(table):
-            result = conn.execute("SELECT DISTINCT zoom_level FROM '{0}';".format(table))
+            result = conn.execute(
+                "SELECT DISTINCT zoom_level FROM '{0}';".format(table)
+            )
             return [zoom_level for (zoom_level,) in result]
     return False
 
@@ -599,10 +694,18 @@ def remove_zoom_level(gpkg, table, zoom_level):
     """
     with sqlite3.connect(gpkg) as conn:
         if is_alnum(table):
-            if conn.execute("DELETE FROM gpkg_tile_matrix "
-                            "WHERE table_name = '{0}' AND zoom_level = '{1}';".format(table, zoom_level)).rowcount:
+            if conn.execute(
+                "DELETE FROM gpkg_tile_matrix "
+                "WHERE table_name = '{0}' AND zoom_level = '{1}';".format(
+                    table, zoom_level
+                )
+            ).rowcount:
                 return True
-        raise Exception("Unable to remove zoom level {0} for {1} from {2}".format(zoom_level, table, gpkg))
+        raise Exception(
+            "Unable to remove zoom level {0} for {1} from {2}".format(
+                zoom_level, table, gpkg
+            )
+        )
 
 
 def get_tile_matrix_table_zoom_levels(gpkg, table_name):
@@ -615,8 +718,10 @@ def get_tile_matrix_table_zoom_levels(gpkg, table_name):
     """
     with sqlite3.connect(gpkg) as conn:
         if is_alnum(table_name):
-            result = conn.execute("SELECT zoom_level "
-                                  "FROM gpkg_tile_matrix WHERE table_name = '{0}';".format(table_name))
+            result = conn.execute(
+                "SELECT zoom_level "
+                "FROM gpkg_tile_matrix WHERE table_name = '{0}';".format(table_name)
+            )
             return [zoom_level for (zoom_level,) in result]
     return False
 
@@ -641,7 +746,9 @@ def check_zoom_levels(gpkg):
     :return: True if the zoom levels in the data tables match the zoom levels in the gpkg_tile_matrix_table
     """
     for table in get_table_names(gpkg):
-        if not get_tile_matrix_table_zoom_levels(gpkg, table) == get_zoom_levels_table(gpkg, table):
+        if not get_tile_matrix_table_zoom_levels(gpkg, table) == get_zoom_levels_table(
+            gpkg, table
+        ):
             return False
     return True
 
@@ -669,17 +776,29 @@ def create_table_from_existing(gpkg, old_table, new_table):
     :param new_table:
     :return:
     """
-    columns = [('id', 'INTEGER PRIMARY KEY AUTOINCREMENT')]
+    columns = [("id", "INTEGER PRIMARY KEY AUTOINCREMENT")]
     for (cid, name, type, notnull, dflt_value, pk) in get_table_info(gpkg, old_table):
         if pk:
-            columns = [(name, 'INTEGER PRIMARY KEY AUTOINCREMENT')]
+            columns = [(name, "INTEGER PRIMARY KEY AUTOINCREMENT")]
         else:
             columns += [(name, type)]
     with sqlite3.connect(gpkg) as conn:
-        logger.debug("CREATE TABLE {0} ({1});".format(new_table, ','.join(
-            ["{0} {1}".format(column[0], column[1]) for column in columns])))
-        conn.execute("CREATE TABLE {0} ({1});".format(new_table, ','.join(
-            ["{0} {1}".format(column[0], column[1]) for column in columns])))
+        logger.debug(
+            "CREATE TABLE {0} ({1});".format(
+                new_table,
+                ",".join(
+                    ["{0} {1}".format(column[0], column[1]) for column in columns]
+                ),
+            )
+        )
+        conn.execute(
+            "CREATE TABLE {0} ({1});".format(
+                new_table,
+                ",".join(
+                    ["{0} {1}".format(column[0], column[1]) for column in columns]
+                ),
+            )
+        )
 
 
 def create_metadata_tables(gpkg):
@@ -716,7 +835,7 @@ def create_metadata_tables(gpkg):
         """
         INSERT OR IGNORE INTO gpkg_extensions(table_name, column_name, extension_name, definition, scope)
             VALUES (NULL, NULL, "gpkg_metadata", "http://www.geopackage.org/spec/#extension_metadata", "read-write");
-        """
+        """,
     ]
     with sqlite3.connect(gpkg) as conn:
         for command in commands:
@@ -755,8 +874,10 @@ def add_file_metadata(gpkg, metadata):
     create_metadata_tables(gpkg)
 
     with sqlite3.connect(gpkg) as conn:
-        command = "INSERT OR IGNORE INTO gpkg_metadata (md_scope, md_standard_uri, mime_type, metadata)" \
-                  "VALUES ('dataset', 'http://schemas.opengis.net/iso/19139/20070417/resources/Codelist/gmxCodelists.xml#MD_ScopeCode', 'text/xml', ?);"
+        command = (
+            "INSERT OR IGNORE INTO gpkg_metadata (md_scope, md_standard_uri, mime_type, metadata)"
+            "VALUES ('dataset', 'http://schemas.opengis.net/iso/19139/20070417/resources/Codelist/gmxCodelists.xml#MD_ScopeCode', 'text/xml', ?);"
+        )
         logger.debug(command)
         conn.execute(command, (metadata,))
 
