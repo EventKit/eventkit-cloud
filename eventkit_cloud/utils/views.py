@@ -1,13 +1,9 @@
 # -*- coding: utf-8 -*-
 """UI view definitions."""
 from logging import getLogger
-from django.core.cache import cache
-from django.conf import settings
 from django.http.request import HttpRequest
 from django.http.response import HttpResponse
-import yaml
 
-from eventkit_cloud.jobs.models import DataProvider
 from urllib.parse import parse_qs
 from eventkit_cloud.utils.mapproxy import create_mapproxy_app
 

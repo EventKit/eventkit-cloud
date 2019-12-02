@@ -321,7 +321,7 @@ def get_cache_template(sources, grids, geopackage, table_name="tiles"):
 def get_seed_template(bbox=None, level_from=None, level_to=None, coverage_file=None):
     bbox = bbox or [-180, -89, 180, 89]
     seed_template = {
-        "coverages": {"geom": {"srs": "EPSG:4326",}},
+        "coverages": {"geom": {"srs": "EPSG:4326", }},
         "seeds": {
             "seed": {
                 "coverages": ["geom"],

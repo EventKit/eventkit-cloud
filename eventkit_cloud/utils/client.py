@@ -292,7 +292,6 @@ class EventKitClient(object):
 
     def check_provider(self, provider_slug):
         """
-        
         :param provider_slug: The providuer slug (e.g. osm) to test. 
         :return: True if provider status check is success or warn, else False.
         """ ""

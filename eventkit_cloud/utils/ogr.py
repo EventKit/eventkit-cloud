@@ -2,13 +2,10 @@
 
 
 import logging
-import os
 import subprocess
 import sqlite3
-from zipfile import ZipFile, ZIP_DEFLATED
 
 from eventkit_cloud.tasks.task_process import TaskProcess
-from eventkit_cloud.tasks.helpers import cd, get_file_paths
 from eventkit_cloud.utils.generic import create_zip_file, get_zip_name, requires_zip
 
 

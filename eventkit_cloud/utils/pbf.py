@@ -83,7 +83,7 @@ if __name__ == "__main__":
     args = parser.parse_args()
     config = {}
     for k, v in list(vars(args).items()):
-        if v == None:
+        if v is None:
             continue
         else:
             config[k] = v

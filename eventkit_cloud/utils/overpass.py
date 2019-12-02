@@ -63,7 +63,8 @@ class Overpass(object):
         # extract all nodes / ways and relations within the bounding box
         # see: http://wiki.openstreetmap.org/wiki/Overpass_API/Overpass_QL
         conf: dict = yaml.load(self.config) or dict()
-        self.default_template = "[maxsize:$maxsize][timeout:$timeout];relation($bbox);way($bbox);node($bbox);<;(._;>;);out body;"
+        self.default_template = \
+            "[maxsize:$maxsize][timeout:$timeout];relation($bbox);way($bbox);node($bbox);<;(._;>;);out body;"
         self.default_template = Template(
             conf.get("overpass_query", self.default_template)
         )
@@ -231,7 +232,7 @@ if __name__ == "__main__":
     args = parser.parse_args()
     configuration = {}
     for k, v in list(vars(args).items()):
-        if v == None:
+        if v is None:
             continue
         else:
             configuration[k] = v

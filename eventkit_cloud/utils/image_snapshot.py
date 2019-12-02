@@ -21,7 +21,7 @@ from eventkit_cloud.utils.helpers import (
     get_relative_path_from_staging,
 )
 from eventkit_cloud.utils.mapproxy import create_mapproxy_app
-from urllib.parse import urlparse, urlsplit
+from urllib.parse import urlparse
 from typing import Union
 
 from mapproxy.grid import tile_grid
