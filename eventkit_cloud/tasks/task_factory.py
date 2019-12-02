@@ -34,7 +34,6 @@ from eventkit_cloud.tasks import TaskStates
 from eventkit_cloud.tasks.helpers import (
     get_run_staging_dir,
     get_provider_staging_dir,
-    get_style_files,
 )
 from eventkit_cloud.tasks.models import ExportRun, DataProviderTaskRecord
 from eventkit_cloud.tasks.task_builders import (
@@ -65,8 +64,8 @@ class TaskFactory:
 
     def parse_tasks(self, worker=None, run_uid=None, user_details=None):
         """
-        This handles all of the logic for taking the information about what individual celery tasks and groups them under
-        specific providers.
+        This handles all of the logic for taking the information about what individual celery tasks and groups
+        them under specific providers.
 
         Each Provider (e.g. OSM) gets a chain:  OSM_TASK -> FORMAT_TASKS = PROVIDER_SUBTASK_CHAIN
         They need to be finalized (was the task successful?) to update the database state:
@@ -75,16 +74,17 @@ class TaskFactory:
         We also have an optional chain of tasks that get processed after the providers are run:
             AD_HOC_TASK1 -> AD_HOC_TASK2 -> FINALIZE_RUN_TASK = FINALIZE_RUN_TASK_COLLECTION
 
-        If the PROVIDER_SUBTASK_CHAIN fails it needs to be cleaned up.  The clean up task also calls the finalize provider
-        task. This is because when a task fails the failed task will call an on_error (link_error) task and never return.
-        task. This is because when a task fails the failed task will call an on_error (link_error) task and never return.
+        If the PROVIDER_SUBTASK_CHAIN fails it needs to be cleaned up.  The clean up task also calls the
+        finalize provider task. This is because when a task fails the failed task will call an on_error (link_error)
+        task and never return.
             PROVIDER_SUBTASK_CHAIN -> FINALIZE_PROVIDER_TASK
                    |
                    v
                 CLEAN_UP_FAILURE_TASK -> FINALIZE_PROVIDER_TASK
 
-        Now there needs to be someway for the finalize tasks to be called.  Since we now have several a possible forked path,
-        we need each path to check the state of the providers to see if they are all finished before moving on.
+        Now there needs to be someway for the finalize tasks to be called.  Since we now have several a possible
+        forked path, we need each path to check the state of the providers to see if they are all finished before
+        moving on.
         It would be great if celery would implicitly handled that, but it doesn't ever merge the forked paths.
         So we add a WAIT_FOR_PROVIDERS task to check state once the providers are ready they call the final tasks.
 
@@ -270,7 +270,7 @@ def create_run(job_uid, user=None):
             perms, job_ids = JobPermission.userjobs(
                 user, JobPermissionLevel.ADMIN.value
             )
-            if not job.id in job_ids:
+            if job.id not in job_ids:
                 raise Unauthorized(
                     "The user: {0} is not authorized to create a run based on the job: {1}.".format(
                         job.user.username, job.name

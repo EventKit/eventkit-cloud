@@ -83,7 +83,6 @@ def pcf_scale_celery(max_instances):
     Scales up celery instances when necessary.
     """
     from eventkit_cloud.utils.pcf import PcfClient
-    from eventkit_cloud.tasks.models import ExportRun
 
     if os.getenv("CELERY_TASK_APP"):
         app_name = os.getenv("CELERY_TASK_APP")
@@ -105,11 +104,13 @@ def pcf_scale_celery(max_instances):
     default_command = (
         "python manage.py runinitial && echo 'Starting celery workers' && "
         "celery worker -A eventkit_cloud --concurrency=$CONCURRENCY --loglevel=$LOG_LEVEL -n runs@%h -Q runs "
-        "& exec celery worker -A eventkit_cloud --concurrency=$CONCURRENCY --loglevel=$LOG_LEVEL -n worker@%h -Q $CELERY_GROUP_NAME "
+        "& exec celery worker -A eventkit_cloud --concurrency=$CONCURRENCY --loglevel=$LOG_LEVEL -n worker@%h -Q "
+        "$CELERY_GROUP_NAME "
         "& exec celery worker -A eventkit_cloud --loglevel=$LOG_LEVEL -n celery@%h -Q celery "
         "& exec celery worker -A eventkit_cloud --loglevel=$LOG_LEVEL -n cancel@%h -Q $HOSTNAME.cancel "
         "& exec celery worker -A eventkit_cloud --concurrency=2 -n finalize@%h -Q $CELERY_GROUP_NAME.finalize "
-        "& exec celery worker -A eventkit_cloud --concurrency=1 --loglevel=$LOG_LEVEL -n osm@%h -Q $CELERY_GROUP_NAME.osm "
+        "& exec celery worker -A eventkit_cloud --concurrency=1 --loglevel=$LOG_LEVEL -n osm@%h -Q "
+        "$CELERY_GROUP_NAME.osm "
     )
 
     command = os.getenv("CELERY_TASK_COMMAND", default_command)

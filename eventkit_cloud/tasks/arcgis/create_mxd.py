@@ -1,6 +1,6 @@
 # This file is used to create an MXD file based on a datapack.  It needs to be run via the python application that is
-# packaged with arcgis.  For many users this is the default python, for other users they may have to specify this location
-# for example ('C:\Python27\ArcGIS10.5\python create_mxd.py').
+# packaged with arcgis.  For many users this is the default python, for other users they may have to specify this
+# location for example ('C:\Python27\ArcGIS10.5\python create_mxd.py').
 
 import os
 import logging
@@ -72,7 +72,8 @@ def update_mxd_from_metadata(file_name, metadata, verify=False):
             # As of arcgis 10.5.1 shapefiles can't be imported as zips.
             if file_info["file_ext"] in [".zip"]:
                 logger.warning(
-                    "This script can't automatically add zipped shapefiles.  You can try to use the osm layer in the template folder then update the source data after extracting the shapefiles."
+                    "This script can't automatically add zipped shapefiles.  You can try to use the osm layer in the "
+                    "template folder then update the source data after extracting the shapefiles."
                 )
                 continue
             file_path = os.path.abspath(os.path.join(BASE_DIR, file_info["file_path"]))
@@ -109,7 +110,8 @@ def update_mxd_from_metadata(file_name, metadata, verify=False):
                         output_data=kml_layer,
                     )
                 except Exception as e:
-                    # This could fail for various reasons including that the file already exists.  If KMLs are very important to your workflow please contact us
+                    # This could fail for various reasons including that the file already exists.  If KMLs are very
+                    # important to your workflow please contact us
                     # and we can make this more robust.
                     logger.warning(
                         "Could not create a new KML layer file and gdb, it may already exist."
@@ -296,8 +298,10 @@ if __name__ == "__main__":
     #  parser = argparse.ArgumentParser(description='Process some integers.')
     #  parser.add_argument('--mxd', help='an mxd file to write the result to')
     #  parser.add_argument('--gpkg', help='a gpkg of data')
-    #  parser.add_argument('--verify', default=False, type=bool, help='verify if the mxd is valid after adding the gpkg')
-    #  parser.add_argument('--metadata', default='metadata.json', type=bool, help='a metadata file to provide information')
+    #  parser.add_argument('--verify', default=False, type=bool, help='verify if the mxd is
+    #  valid after adding the gpkg')
+    #  parser.add_argument('--metadata', default='metadata.json', type=bool, help='a metadata file to
+    #  provide information')
 
     #  args = parser.parse_args()
     try:

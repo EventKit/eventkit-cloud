@@ -1,4 +1,3 @@
-from contextlib import contextmanager
 import copy
 from enum import Enum
 import logging
@@ -20,7 +19,7 @@ from django.db.models import Q
 
 from eventkit_cloud.utils import auth_requests
 from eventkit_cloud.utils.gdalutils import get_band_statistics
-from eventkit_cloud.utils.generic import cd, get_file_paths
+from eventkit_cloud.utils.generic import cd, get_file_paths # NOQA
 
 logger = logging.getLogger()
 
@@ -333,10 +332,12 @@ def get_metadata(data_provider_task_uid):
     "data_sources": {
         "osm": {
             "copyright": None,
-            "description": "OpenStreetMap vector data provided in a custom thematic schema. \r\n\t\r\n\tData is grouped into separate tables (e.g. water, roads...).",
+            "description": "OpenStreetMap vector data provided in a custom thematic schema. \r\n\t\r\n\tData is
+            grouped into separate tables (e.g. water, roads...).",
             "files": [{"file_path": "data/osm/test-osm-20181101.gpkg",
                        "file_ext": ".gpkg",
-                       "full_file_path": "/var/lib/eventkit/exports_stage/7fadf34e-58f9-4bb8-ab57-adc1015c4269/osm/test.gpkg",
+                       "full_file_path": "/var/lib/eventkit/exports_stage/7fadf34e-58f9-4bb8-ab57-adc1015c4269
+                       /osm/test.gpkg",
                        "band_stats":
                        "ramp_shader_steps":}]
             "last_update": "2018-10-29T04:35:02Z\n",

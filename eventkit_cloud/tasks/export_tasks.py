@@ -46,10 +46,8 @@ from eventkit_cloud.tasks.helpers import (
     progressive_kill,
     get_style_files,
     generate_qgs_style,
-    create_license_file,
     get_human_readable_metadata_document,
     pickle_exception,
-    get_data_type_from_provider,
     get_arcgis_metadata,
     get_message_count,
     clean_config,
@@ -128,14 +126,6 @@ class LockingTask(UserDetailsBase):
 
         lock_key = kwargs.get("locking_task_key")
         worker = kwargs.get("worker")
-        queue_group = os.getenv("CELERY_GROUP_NAME", worker)
-        task_settings = {
-            "interval": 4,
-            "max_retries": 10,
-            "queue": queue_group,
-            "routing_key": queue_group,
-            "priority": TaskPriority.RUN_TASK.value,
-        }
 
         if lock_key:
             self.lock_expiration = 5
@@ -225,7 +215,6 @@ class ExportTask(UserDetailsBase):
             FileProducingTaskResult,
             ExportTaskRecord,
         )
-        from eventkit_cloud.jobs.models import DataProvider
 
         task_uid = kwargs.get("task_uid")
 
@@ -238,7 +227,7 @@ class ExportTask(UserDetailsBase):
                 task_state_result = None
             self.update_task_state(result=task_state_result, task_uid=task_uid)
 
-            if not TaskStates.CANCELED.value in [
+            if TaskStates.CANCELED.value not in [
                 task.status,
                 task.export_provider_task.status,
             ]:
@@ -1823,7 +1812,6 @@ def cancel_synchronous_task_chain(data_provider_task_uid=None):
         if TaskStates[export_task.status] == TaskStates.PENDING.value:
             export_task.status = TaskStates.CANCELED.value
             export_task.save()
-            queue_group = os.getenv("CELERY_GROUP_NAME", export_task.worker)
             kill_task.apply_async(
                 kwargs={
                     "task_pid": export_task.pid,
@@ -1952,7 +1940,6 @@ def cancel_export_provider_task(
             task_result.soft_delete()
 
         if int(export_task.pid) > 0 and export_task.worker:
-            queue_group = os.getenv("CELERY_GROUP_NAME", export_task.worker)
             kill_task.apply_async(
                 kwargs={
                     "task_pid": export_task.pid,

@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
 
 
-from eventkit_cloud.tasks.debug_tasks import *
-from eventkit_cloud.tasks.export_tasks import *
-from eventkit_cloud.tasks.scheduled_tasks import *
+from eventkit_cloud.tasks.debug_tasks import * # NOQA
+from eventkit_cloud.tasks.export_tasks import * # NOQA
+from eventkit_cloud.tasks.scheduled_tasks import * # NOQA
 from django.core.cache import cache
 from django.apps import apps as django_apps
 

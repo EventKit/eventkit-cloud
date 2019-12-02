@@ -3,12 +3,10 @@
 
 import logging
 
-from django.core.cache import cache
 from django.contrib.auth.models import User
 from django.contrib.contenttypes.models import ContentType
 from django.db import models
 from django.utils import timezone
-from django.http import HttpRequest
 
 from eventkit_cloud.core.helpers import (
     sendnotification,
@@ -24,7 +22,6 @@ from eventkit_cloud.jobs.models import Job, LowerCaseCharField, DataProvider
 from eventkit_cloud.tasks.enumerations import TaskStates
 from eventkit_cloud.tasks import (
     DEFAULT_CACHE_EXPIRTATION,
-    get_cache_key,
     get_cache_value,
     set_cache_value,
 )
