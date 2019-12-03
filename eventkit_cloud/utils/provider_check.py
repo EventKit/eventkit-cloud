@@ -440,11 +440,11 @@ class OWSProviderCheck(ProviderCheck):
             xmll = xmll.replace("![cdata[", "![CDATA[")
 
             # Strip namespaces from tags (from http://bugs.python.org/issue18304)
-            it = ET.iterparse(StringIO(xmll))
-            for _, el in it:
-                if "}" in el.tag:
-                    el.tag = el.tag.split("}", 1)[1]
-            root = it.root
+            iterator = ET.iterparse(StringIO(xmll))
+            for event, element in iterator:
+                if '}' in element.tag:
+                    element.tag = element.tag.split('}', 1)[1]
+            root = iterator.root
             layer_element = self.find_layer(root)
 
             if layer_element is None:

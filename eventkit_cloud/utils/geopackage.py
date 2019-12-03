@@ -249,10 +249,6 @@ class Geopackage(object):
     name = "geopackage"
     description = "GeoPackage (OSM Schema)"
 
-    @property
-    def results(self):
-        return [self.output_gpkg]
-
     def __init__(
         self,
         input_pbf,
