@@ -18,6 +18,7 @@ import FeaturedFlag from './FeaturedFlag';
 import DataPackShareDialog from '../DataPackShareDialog/DataPackShareDialog';
 import { makeFullRunSelector } from '../../selectors/runSelector';
 import history from '../../utils/history';
+import {SvgIconProps} from "@material-ui/core/SvgIcon/SvgIcon";
 
 export interface Props {
     run: Eventkit.Run;
@@ -179,13 +180,12 @@ export class DataPackListItem extends React.Component<Props, State> {
         const onMouseLeave = this.props.onHoverEnd ? () => { this.props.onHoverEnd(this.props.run.uid); } : null;
         const onClick = this.props.onClick ? () => { this.props.onClick(this.props.run.uid); } : null;
 
-        let status = <NavigationCheck className="qa-DataPackListItem-NavigationCheck" style={styles.completeIcon} />;
-        if (this.props.run.status === 'SUBMITTED') {
+        let status = <AlertError className="qa-DataPackListItem-AlertError" style={styles.errorIcon} />;
+        if (this.props.run.status === 'COMPLETED') {
+            status = <NotificationSync className="qa-DataPackListItem-NotificationSync" style={styles.completeIcon} />;
+        } else if (this.props.run.status === 'RUNNING') {
             status = <NotificationSync className="qa-DataPackListItem-NotificationSync" style={styles.runningIcon} />;
-        } else if (this.props.run.status === 'INCOMPLETE') {
-            status = <AlertError className="qa-DataPackListItem-AlertError" style={styles.errorIcon} />;
         }
-
         return (
             <div style={styles.gridItem}>
                 <Card

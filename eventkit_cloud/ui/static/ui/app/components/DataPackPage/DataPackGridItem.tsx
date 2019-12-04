@@ -278,11 +278,11 @@ export class DataPackGridItem extends React.Component<Props, State> {
             },
         };
 
-        let status = <NavigationCheck style={styles.completeIcon} />;
-        if (this.props.run.status === 'SUBMITTED') {
-            status = <NotificationSync style={styles.runningIcon} />;
-        } else if (this.props.run.status === 'INCOMPLETE') {
-            status = <AlertError style={styles.errorIcon} />;
+        let status = <AlertError className="qa-DataPackListItem-AlertError" style={styles.errorIcon} />;
+        if (this.props.run.status === 'COMPLETED') {
+            status = <NotificationSync className="qa-DataPackListItem-NotificationSync" style={styles.completeIcon} />;
+        } else if (this.props.run.status === 'RUNNING') {
+            status = <NotificationSync className="qa-DataPackListItem-NotificationSync" style={styles.runningIcon} />;
         }
 
         return (
