@@ -89,57 +89,7 @@ describe('DataPackTableItem component', () => {
             provider_tasks: providerTasks,
             zipfile_url: 'http://cloud.eventkit.test/downloads/68/TestGPKG-WMTS-TestProject-eventkit-20170310.zip',
             expiration: '2017-03-24T15:52:35.637258Z',
-        }
-        // {
-        //     uid: '6870234f-d876-467c-a332-65fdf0399a0d',
-        //     url: 'http://cloud.eventkit.test/api/runs/6870234f-d876-467c-a332-65fdf0399a0d',
-        //     started_at: '2017-03-10T15:52:35.637331Z',
-        //     finished_at: '2017-03-10T15:52:39.837Z',
-        //     duration: '0:00:04.199825',
-        //     user: 'admin',
-        //     status: 'RUNNING',
-        //     job: {
-        //         uid: '7643f806-1484-4446-b498-7ddaa65d011a',
-        //         name: 'Test1',
-        //         event: 'Test1 event',
-        //         description: 'Test1 description',
-        //         url: 'http://cloud.eventkit.test/api/jobs/7643f806-1484-4446-b498-7ddaa65d011a',
-        //         extent: {},
-        //         permissions: {
-        //             value: 'PRIVATE',
-        //             groups: {},
-        //             members: {},
-        //         },
-        //     },
-        //     provider_tasks: providerTasks,
-        //     zipfile_url: 'http://cloud.eventkit.test/downloads/68/TestGPKG-WMTS-TestProject-eventkit-20170310.zip',
-        //     expiration: '2017-03-24T15:52:35.637258Z',
-        // },
-        // {
-        //     uid: '6870234f-d876-467c-a332-65fdf0399a0d',
-        //     url: 'http://cloud.eventkit.test/api/runs/6870234f-d876-467c-a332-65fdf0399a0d',
-        //     started_at: '2017-03-10T15:52:35.637331Z',
-        //     finished_at: '2017-03-10T15:52:39.837Z',
-        //     duration: '0:00:04.199825',
-        //     user: 'admin',
-        //     status: 'INCOMPLETE',
-        //     job: {
-        //         uid: '7643f806-1484-4446-b498-7ddaa65d011a',
-        //         name: 'Test1',
-        //         event: 'Test1 event',
-        //         description: 'Test1 description',
-        //         url: 'http://cloud.eventkit.test/api/jobs/7643f806-1484-4446-b498-7ddaa65d011a',
-        //         extent: {},
-        //         permissions: {
-        //             value: 'PRIVATE',
-        //             groups: {},
-        //             members: {},
-        //         },
-        //     },
-        //     provider_tasks: providerTasks,
-        //     zipfile_url: 'http://cloud.eventkit.test/downloads/68/TestGPKG-WMTS-TestProject-eventkit-20170310.zip',
-        //     expiration: '2017-03-24T15:52:35.637258Z',
-        // }
+    }
 
     const getProps = () => ({
         run,
@@ -189,7 +139,7 @@ describe('DataPackTableItem component', () => {
         expect(wrapper.find(TableCell).at(5).html()).toContain('Not Admin');
         props.run.status = 'SUBMITTED';
         wrapper.setProps(props);
-        expect(wrapper.find(TableCell).at(3).find(NotificationSync)).toHaveLength(1);
+        expect(wrapper.find(TableCell).at(3).find(NavigationCheck)).toHaveLength(1);
     });
 
     it('getOwnerText should return "My DataPack" if run user and logged in user match, else return run user', () => {
@@ -295,14 +245,17 @@ describe('DataPackTableItem component', () => {
         it('getStatusIcon should return a Sync icon', () => {
             const syncIcon = wrapper.instance().getStatusIcon('RUNNING');
             expect(syncIcon).toEqual(
-                <NotificationSync className="qa-DataPackTableItem-NotificationSync" style={{color: '#f4d225'}}/>);
+                <NotificationSync
+                    className="qa-DataPackTableItem-NotificationSync"
+                    style={{color: '#f4d225'}}
+                />);
         });
         it('getStatusIcon should return a Check icon', () => {
             const checkIcon = wrapper.instance().getStatusIcon('COMPLETED');
             expect(checkIcon).toEqual((
                 <NavigationCheck
                     className="qa-DataPackTableItem-NavigationCheck"
-                    style={{color: '#55ba63', height: '22px'}}
+                    style={{color: '#55ba63'}}
                 />
             ));
         });

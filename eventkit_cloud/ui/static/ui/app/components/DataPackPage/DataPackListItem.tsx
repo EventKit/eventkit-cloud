@@ -94,6 +94,18 @@ export class DataPackListItem extends React.Component<Props, State> {
         const permissions = { ...perms };
         this.props.onRunShare(this.props.run.job.uid, permissions);
     }
+    private getStatusIcon(status: Eventkit.Run['status']) {
+        const { colors } = this.props.theme.eventkit;
+        if (status === 'COMPLETED' || status === 'SUBMITTED') {
+            return <NavigationCheck className="qa-DataPackTableItem-NavigationCheck" style={{ color: colors.success }} />;
+        } else if (status === 'RUNNING') {
+            return <NotificationSync className="qa-DataPackTableItem-NotificationSync" style={{color: colors.running}}/>;
+        }
+        return <AlertError
+                className="qa-DataPackTableItem-AlertError"
+                style={{ color: colors.warning, opacity: 0.6, height: '22px' }}
+        />;
+    }
 
     render() {
         const { colors } = this.props.theme.eventkit;
@@ -179,13 +191,6 @@ export class DataPackListItem extends React.Component<Props, State> {
         const onMouseEnter = this.props.onHoverStart ? () => { this.props.onHoverStart(this.props.run.uid); } : null;
         const onMouseLeave = this.props.onHoverEnd ? () => { this.props.onHoverEnd(this.props.run.uid); } : null;
         const onClick = this.props.onClick ? () => { this.props.onClick(this.props.run.uid); } : null;
-
-        let status = <AlertError className="qa-DataPackListItem-AlertError" style={styles.errorIcon} />;
-        if (this.props.run.status === 'COMPLETED') {
-            status = <NotificationSync className="qa-DataPackListItem-NotificationSync" style={styles.completeIcon} />;
-        } else if (this.props.run.status === 'RUNNING') {
-            status = <NotificationSync className="qa-DataPackListItem-NotificationSync" style={styles.runningIcon} />;
-        }
         return (
             <div style={styles.gridItem}>
                 <Card
@@ -296,7 +301,7 @@ export class DataPackListItem extends React.Component<Props, State> {
 
                                             <Lock className="qa-DataPackListItem-Lock" style={styles.unpublishedIcon} />
                                         }
-                                        {status}
+                                        {this.getStatusIcon(this.props.run.status)}
                                     </div>
                                 </div>
                             </div>
