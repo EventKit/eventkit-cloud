@@ -31,7 +31,7 @@ def main():
     parser.add_argument('--certificate', default='',
                         help='The path to a certificate to use for authentication')
     parser.add_argument('--full', default='',
-                        help='The path to a certificate to use for authentication')
+                        help='True to run a full system check.')
 
     args = parser.parse_args()
     user = password = None
@@ -76,7 +76,14 @@ def main():
 
         for provider in providers:
             if provider.get('display'):
-                provider_tasks += [{"provider": provider.get('name'), "formats": ["gpkg"]}]
+                # Check if level 0 because job api won't recogonize
+                level = provider.get('level_from')
+                if not level:
+                    level = 1
+                provider_tasks += [{"provider": provider.get('name'),
+                                    "formats": ["gpkg"],
+                                    "min_zoom": level,
+                                    "max_zoom": level}]
         feature = {"type": "FeatureCollection", "features": [{"type": "Feature", "properties": {},
                                                               "geometry": {"type": "Polygon", "coordinates": [
                                                                   [[31.128165, 29.971509], [31.128521, 29.971509],
@@ -96,7 +103,17 @@ def main():
         client.wait_for_run(run_uid)
         print("Run {} successfully finished.".format(run_uid))
         print("Attempting to delete the run {}.".format(run_uid))
-        client.delete_run(run_uid)
+        run = client.get_runs({"job_uid": job_uid})[0]
+        attempts = 3
+        while run and attempts:
+            client.delete_run(run_uid)
+            run = client.get_runs({"job_uid": job_uid})[0]
+            if not run:
+                break
+            else:
+                attempts -= 1
+        if run:
+            raise Exception("Successfully deleted the run {}.".format(run_uid))
         print("Successfully deleted the run {}.".format(run_uid))
     else:
         print('Running status checks...')
