@@ -39,6 +39,7 @@ from eventkit_cloud.utils import (
     overpass, pbf, s3, mapproxy, wcs, geopackage, gdalutils
 )
 from eventkit_cloud.utils.ogr import OGR
+from eventkit_cloud.utils.pcf import PcfClient
 from eventkit_cloud.utils.stats.eta_estimator import ETA
 
 
@@ -272,6 +273,28 @@ class ExportTask(UserDetailsBase):
             einfo = ExceptionInfo()
             result = self.task_failure(e, task_uid, args, kwargs, einfo)
             return result
+
+    def after_return(self, status, retval, task_id, args, kwargs, einfo):
+        """
+        This will only run in the PCF environment to shut down unused workers.
+        """
+        PCF_SCALING = os.getenv("PCF_SCALING", False)
+        if PCF_SCALING:
+            if os.getenv('CELERY_TASK_APP'):
+                app_name = os.getenv('CELERY_TASK_APP')
+            else:
+                app_name = json.loads(os.getenv("VCAP_APPLICATION", "{}")).get("application_name")
+
+            client = PcfClient()
+            client.login()
+
+            hostname = self.request.hostname
+            queue_name = hostname.split("@")[0]
+            messages = get_message_count(queue_name)
+            running_tasks_by_queue = client.get_running_tasks(app_name, queue_name)
+
+            if running_tasks_by_queue >= messages:
+                app.control.shutdown(destination=hostname)
 
     @transaction.atomic
     def task_failure(self, exc, task_id, args, kwargs, einfo):

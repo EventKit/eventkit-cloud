@@ -111,7 +111,6 @@ def pcf_scale_celery(max_tasks_memory):
 
     broker_api_url = getattr(settings, 'BROKER_API_URL')
     queue_class = "queues"
-    total_pending_messages = 0
 
     client = PcfClient()
     client.login()
@@ -127,30 +126,17 @@ def pcf_scale_celery(max_tasks_memory):
         pending_messages = queue.get('messages', 0)
         if celery_group_name in queue_name or queue_name == "celery":
             logger.info(f"Queue {queue_name} has {pending_messages} pending messages.")
-            if pending_messages > 0: # TODO: This should only spin up if there are messages not already being worked.
+            running_tasks_by_queue = client.get_running_tasks(app_name, queue_name)
+            if pending_messages > running_tasks_by_queue:
                 if running_tasks_memory < max_tasks_memory:
                     command = celery_tasks[queue_name]["command"] + cancel_queue_command
                     disk = celery_tasks[queue_name]["disk"]
                     memory = celery_tasks[queue_name]["memory"]
                     logger.info(f"Sending task to {app_name} with command {command} with {disk} disk and {memory} memory")
-                    client.run_task(command=command, disk_in_mb=disk, memory_in_mb=memory, app_name=app_name)
-                    running_tasks_memory += memory # Should we add this here or just get the total memory again from pcf?
+                    client.run_task(name=queue_name, command=command, disk_in_mb=disk, memory_in_mb=memory, app_name=app_name)
+                    running_tasks_memory += memory
                 else:
                     logger.info(f"Already at max memory usage, skipping scale with {pending_messages} total pending messages left in {queue_name} queue.")
-            else:
-                #TODO: Fix this to only shut down the specific queue based workers.
-                shutdown_celery_workers.apply_async(queue=celery_group_name)
-
-#TODO: Fix this to only shut down the specific queue based workers.
-@app.task(name="Shutdown Celery Workers")
-def shutdown_celery_workers():
-    hostnames = []
-    workers = ["runs", "worker", "celery", "cancel", "finalize", "osm"]
-    for worker in workers:
-        hostnames.append(F"{worker}@{socket.gethostname()}")
-
-    logger.info("Queue is at zero, shutting down.")
-    app.control.broadcast("shutdown", destination=hostnames)
 
 
 @app.task(name="Check Provider Availability")

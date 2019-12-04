@@ -116,7 +116,7 @@ class PcfClient(object):
             raise Exception("Error the app {0} does not exist in {1}.".format(app_name, self.space_name))
         return app_info['resources'][app_index]["metadata"]["guid"]
 
-    def run_task(self, command, disk_in_mb=None, memory_in_mb=None, app_name=None):
+    def run_task(self, name, command, disk_in_mb=None, memory_in_mb=None, app_name=None):
         app_name = os.getenv("PCF_APP",
                              json.loads(os.getenv("VCAP_APPLICATION", "{}")).get('application_name')) or app_name
         if not app_name:
@@ -129,6 +129,7 @@ class PcfClient(object):
         if not memory_in_mb:
             memory_in_mb = os.getenv("CELERY_TASK_MEMORY", "2048")
         payload = {
+            "name": name,
             "command": command,
             "disk_in_mb": disk_in_mb,
             "memory_in_mb": memory_in_mb,
@@ -139,7 +140,7 @@ class PcfClient(object):
                                           "Content-Type": "application/json",
                                           "Accept": "application/json"}).json()
 
-    def get_running_tasks(self, app_name=None):
+    def get_running_tasks(self, app_name=None, names=None):
         app_name = os.getenv("PCF_APP",
                              json.loads(os.getenv("VCAP_APPLICATION", "{}")).get('application_name')) or app_name
         if not app_name:
@@ -147,9 +148,15 @@ class PcfClient(object):
         app_guid = self.get_app_guid(app_name)
         if not app_guid:
             raise Exception("An application guid could not be recovered for app {0}.".format(app_name))
-        payload = {
-            "states": PcfTaskStates.RUNNING.value,
-        }
+        if names:
+            payload = {
+                "names": names,
+                "states": PcfTaskStates.RUNNING.value,
+            }
+        else:
+            payload = {
+                "states": PcfTaskStates.RUNNING.value,
+            }
         url = "{0}/v3/apps/{1}/tasks".format(self.api_url.rstrip('/'), app_guid)
         return self.session.get(url, params=payload,
                                  headers={"Authorization": "bearer {0}".format(self.token),
