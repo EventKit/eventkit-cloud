@@ -89,12 +89,12 @@ def pcf_scale_celery(max_tasks_memory):
         celery_group_name: {
             "command": "celery worker -A eventkit_cloud --concurrency=$CONCURRENCY --loglevel=$LOG_LEVEL -n worker@%h -Q $CELERY_GROUP_NAME ",
             "disk": 4096,
-            "memory": 512
+            "memory": 1024
         },
         "celery": {
             "command": "celery worker -A eventkit_cloud --loglevel=$LOG_LEVEL -n celery@%h -Q celery ",
             "disk": 4096,
-            "memory": 512
+            "memory": 1024
         },
         f"{celery_group_name}.osm": {
             "command": "celery worker -A eventkit_cloud --concurrency=1 --loglevel=$LOG_LEVEL -n osm@%h -Q $CELERY_GROUP_NAME.osm ",
@@ -104,7 +104,7 @@ def pcf_scale_celery(max_tasks_memory):
         f"{celery_group_name}.finalize": {
             "command": "celery worker -A eventkit_cloud --concurrency=2 -n finalize@%h -Q $CELERY_GROUP_NAME.finalize ",
             "disk": 4096,
-            "memory": 512
+            "memory": 1024
         }
     }
     cancel_queue_command = "& exec celery worker -A eventkit_cloud --loglevel=$LOG_LEVEL -n cancel@%h -Q $HOSTNAME.cancel"
