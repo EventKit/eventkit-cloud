@@ -522,7 +522,9 @@ def get_message_count(queue_name):
                 return queue.get("messages", 0)
             except Exception as e:
                 logger.info(e)
-
+        else:
+            logger.info(f"Cannot find queue named {queue_name}, returning 0")
+            return 0
 
 def clean_config(config):
     """

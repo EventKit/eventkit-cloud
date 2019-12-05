@@ -292,8 +292,9 @@ class ExportTask(UserDetailsBase):
             queue_name = hostname.split("@")[0]
             messages = get_message_count(queue_name)
             running_tasks_by_queue = client.get_running_tasks(app_name, queue_name)
+            running_tasks_by_queue_count = running_tasks_by_queue["pagination"]["total_results"]
 
-            if running_tasks_by_queue >= messages:
+            if running_tasks_by_queue_count >= messages:
                 app.control.shutdown(destination=hostname)
 
     @transaction.atomic
@@ -667,7 +668,7 @@ def geotiff_export_task(self, result=None, task_uid=None, stage_dir=None, job_na
     # Convert to the correct projection
     gtiff_out_dataset = gdalutils.convert(
         file_format='gtiff', in_file=gtiff_in_dataset, out_file=gtiff_out_dataset, task_uid=task_uid)
-    
+
     # Reduce the overall size of geotiffs.  Note this compression could result in the loss of data.
     # If refactoring ensure that a pipeline like WCS does not apply geotiff conversion using this.
     if compress:
