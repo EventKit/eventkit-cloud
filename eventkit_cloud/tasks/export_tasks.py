@@ -288,14 +288,15 @@ class ExportTask(UserDetailsBase):
             client = PcfClient()
             client.login()
 
-            hostname = self.request.hostname
-            queue_name = hostname.split("@")[0]
+            hostnames = []
+            hostnames.append(self.request.hostname)
+            queue_name = self.request.hostname.split("@")[0]
             messages = get_message_count(queue_name)
             running_tasks_by_queue = client.get_running_tasks(app_name, queue_name)
             running_tasks_by_queue_count = running_tasks_by_queue["pagination"]["total_results"]
 
             if running_tasks_by_queue_count >= messages:
-                app.control.shutdown(destination=hostname)
+                app.control.shutdown(destination=hostnames)
 
     @transaction.atomic
     def task_failure(self, exc, task_id, args, kwargs, einfo):
