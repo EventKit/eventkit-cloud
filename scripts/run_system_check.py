@@ -108,12 +108,12 @@ def main():
         while run and attempts:
             client.delete_run(run_uid)
             run = client.get_runs({"job_uid": job_uid})[0]
-            if not run:
+            if run['deleted']:
                 break
             else:
                 attempts -= 1
-        if run:
-            raise Exception("Successfully deleted the run {}.".format(run_uid))
+        if not run['deleted']:
+            raise Exception("Failed to delete the run {}.".format(run_uid))
         print("Successfully deleted the run {}.".format(run_uid))
     else:
         print('Running status checks...')
