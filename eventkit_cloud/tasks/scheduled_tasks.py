@@ -127,16 +127,20 @@ def pcf_scale_celery(max_tasks_memory):
         if celery_group_name in queue_name or queue_name == "celery":
             logger.info(f"Queue {queue_name} has {pending_messages} pending messages.")
             running_tasks_by_queue = client.get_running_tasks(app_name, queue_name)
-            if pending_messages > running_tasks_by_queue:
+            running_tasks_by_queue_count = running_tasks_by_queue["pagination"]["total_results"]
+            if pending_messages > running_tasks_by_queue_count:
                 if running_tasks_memory < max_tasks_memory:
                     command = celery_tasks[queue_name]["command"] + cancel_queue_command
                     disk = celery_tasks[queue_name]["disk"]
                     memory = celery_tasks[queue_name]["memory"]
-                    logger.info(f"Sending task to {app_name} with command {command} with {disk} disk and {memory} memory")
-                    client.run_task(name=queue_name, command=command, disk_in_mb=disk, memory_in_mb=memory, app_name=app_name)
+                    logger.info(
+                        f"Sending task to {app_name} with command {command} with {disk} disk and {memory} memory")
+                    client.run_task(name=queue_name, command=command, disk_in_mb=disk,
+                                    memory_in_mb=memory, app_name=app_name)
                     running_tasks_memory += memory
                 else:
-                    logger.info(f"Already at max memory usage, skipping scale with {pending_messages} total pending messages left in {queue_name} queue.")
+                    logger.info(
+                        f"Already at max memory usage, skipping scale with {pending_messages} total pending messages left in {queue_name} queue.")
 
 
 @app.task(name="Check Provider Availability")
