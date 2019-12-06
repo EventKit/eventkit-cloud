@@ -77,7 +77,7 @@ class EventKitClient(object):
         response = self.client.get(self.runs_url, params=params)
         if not response.ok:
             logger.info(response.content.decode())
-            raise Exception("Could not search for runs with params: {}".formtat(params))
+            raise Exception("Could not search for runs with params: {}".format(params))
         return response.json()
 
     def create_job(self, **kwargs):
