@@ -34,7 +34,6 @@ from eventkit_cloud.tasks.helpers import normalize_name, get_archive_data_path, 
     default_format_time, progressive_kill, get_style_files, generate_qgs_style, create_license_file, \
     get_human_readable_metadata_document, pickle_exception, get_data_type_from_provider, get_arcgis_metadata, \
     get_message_count, clean_config, get_metadata, get_provider_staging_preview, PREVIEW_TAIL
-from eventkit_cloud.tasks.util_tasks import shutdown_celery_workers
 from eventkit_cloud.utils.auth_requests import get_cred
 from eventkit_cloud.utils import (
     overpass, pbf, s3, mapproxy, wcs, geopackage, gdalutils
@@ -278,6 +277,7 @@ class ExportTask(UserDetailsBase):
         """
         This will only run in the PCF environment to shut down unused workers.
         """
+        from eventkit_cloud.tasks.util_tasks import shutdown_celery_workers
         PCF_SCALING = os.getenv("PCF_SCALING", False)
         if PCF_SCALING:
             queue_name = self.request.delivery_info["routing_key"]

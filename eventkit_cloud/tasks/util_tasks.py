@@ -4,11 +4,13 @@ import os
 
 from celery import Task
 from celery.app import app_or_default
+from celery.utils.log import get_task_logger
 
 from eventkit_cloud.celery import app
 from eventkit_cloud.tasks.helpers import get_message_count
 from eventkit_cloud.tasks.models import DataProviderTaskRecord
 from eventkit_cloud.utils.pcf import PcfClient
+
 
 # Get an instance of a logger
 logger = get_task_logger(__name__)
