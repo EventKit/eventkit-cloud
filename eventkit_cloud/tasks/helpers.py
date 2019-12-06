@@ -13,7 +13,6 @@ from numpy import linspace
 import yaml
 
 
-
 from django.conf import settings
 from django.template.loader import render_to_string
 from django.utils import timezone
@@ -33,6 +32,7 @@ class Directory(Enum):
 
 
 PREVIEW_TAIL = 'preview.jpg'
+
 
 def get_run_staging_dir(run_uid):
     """
@@ -522,9 +522,10 @@ def get_message_count(queue_name):
                 return queue.get("messages", 0)
             except Exception as e:
                 logger.info(e)
-        else:
-            logger.info(f"Cannot find queue named {queue_name}, returning 0")
-            return 0
+
+    logger.info(f"Cannot find queue named {queue_name}, returning 0 messages.")
+    return 0
+
 
 def clean_config(config):
     """
