@@ -73,9 +73,9 @@ export class DataPackTableItem extends React.Component<Props, State> {
 
     private getStatusIcon(status: Eventkit.Run['status']) {
         const { colors } = this.props.theme.eventkit;
-        if (status === 'COMPLETED' || status === 'SUBMITTED') {
+        if (status === 'COMPLETED') {
             return <NavigationCheck className="qa-DataPackTableItem-NavigationCheck" style={{ color: colors.success }} />;
-        } else if (status === 'RUNNING') {
+        } else if (status === 'RUNNING' || status === 'SUBMITTED') {
             return <NotificationSync className="qa-DataPackTableItem-NotificationSync" style={{color: colors.running}}/>;
         }
         return <AlertError

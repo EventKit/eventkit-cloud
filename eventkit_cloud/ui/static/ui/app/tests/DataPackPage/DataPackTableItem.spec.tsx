@@ -139,7 +139,7 @@ describe('DataPackTableItem component', () => {
         expect(wrapper.find(TableCell).at(5).html()).toContain('Not Admin');
         props.run.status = 'SUBMITTED';
         wrapper.setProps(props);
-        expect(wrapper.find(TableCell).at(3).find(NavigationCheck)).toHaveLength(1);
+        expect(wrapper.find(TableCell).at(3).find(NotificationSync)).toHaveLength(1);
     });
 
     it('getOwnerText should return "My DataPack" if run user and logged in user match, else return run user', () => {
