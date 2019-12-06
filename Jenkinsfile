@@ -58,7 +58,7 @@ END
         try{
             postStatus(getPendingStatus("Running the linters..."))
             sh "docker-compose run --rm -T  webpack npm run eslint"
-            sh "docker-compose run --rm eventkit black --exclude=migrations\|tests --check eventkit_cloud"
+            sh "docker-compose run --rm eventkit black --check eventkit_cloud"
             sh "docker-compose run --rm eventkit flake8 eventkit_cloud"
         }catch(Exception e) {
             sh "docker-compose logs --tail=50 webpack"

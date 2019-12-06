@@ -11,8 +11,9 @@ WORKDIR /var/lib/eventkit
 COPY --chown=eventkit ./requirements-dev.txt /var/lib/eventkit/requirements-dev.txt
 COPY --chown=eventkit ./environment-dev.yml /var/lib/eventkit/environment-dev.yml
 COPY --chown=eventkit ./conda /var/lib/eventkit/conda
-COPY --chown=eventkit ./setup.cfg /var/lib/eventkit/pytest.ini
-COPY --chown=eventkit ./setup.cfg /var/lib/eventkit/setup.cfg
+COPY --chown=eventkit ./pytest.ini /var/lib/eventkit/pytest.ini
+COPY --chown=eventkit ./config /var/lib/eventkit/config/setup.cfg
+COPY --chown=eventkit ./config /var/lib/eventkit/config/pyproject.toml
 
 ENV PATH="/home/eventkit/miniconda3/bin:$PATH"
 
