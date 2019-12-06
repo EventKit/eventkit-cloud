@@ -297,7 +297,7 @@ class ExportTask(UserDetailsBase):
             running_tasks_by_queue = client.get_running_tasks(app_name, queue_name)
             running_tasks_by_queue_count = running_tasks_by_queue["pagination"]["total_results"]
 
-            if running_tasks_by_queue_count >= messages:
+            if running_tasks_by_queue_count > messages:
                 logger.info(f"No work remaining on this queue, shutting down {workers}")
                 app.control.shutdown(destination=workers)
 
