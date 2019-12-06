@@ -228,6 +228,18 @@ export class DataPackGridItem extends React.Component<Props, State> {
         const permissions = { ...perms };
         this.props.onRunShare(this.props.run.job.uid, permissions);
     }
+    private getStatusIcon(status: Eventkit.Run['status']) {
+        const { colors } = this.props.theme.eventkit;
+        if (status === 'COMPLETED') {
+            return <NavigationCheck className="qa-DataPackTableItem-NavigationCheck" style={{ color: colors.success }} />;
+        } else if (status === 'RUNNING' || status === 'SUBMITTED') {
+            return <NotificationSync className="qa-DataPackTableItem-NotificationSync" style={{color: colors.running}}/>;
+        }
+        return <AlertError
+                className="qa-DataPackTableItem-AlertError"
+                style={{ color: colors.warning, opacity: 0.6, height: '22px' }}
+        />;
+    }
 
     render() {
         const { colors } = this.props.theme.eventkit;
@@ -277,13 +289,6 @@ export class DataPackGridItem extends React.Component<Props, State> {
                 right: '0px',
             },
         };
-
-        let status = <NavigationCheck style={styles.completeIcon} />;
-        if (this.props.run.status === 'SUBMITTED') {
-            status = <NotificationSync style={styles.runningIcon} />;
-        } else if (this.props.run.status === 'INCOMPLETE') {
-            status = <AlertError style={styles.errorIcon} />;
-        }
 
         return (
             <div style={styles.gridItem} key={this.props.run.uid}>
@@ -413,7 +418,7 @@ export class DataPackGridItem extends React.Component<Props, State> {
                     </Collapse>
                     <CardActions className="qa-DataPackGridItem-CardActions" style={{ height: '45px', padding: '8px' }}>
                         <div style={{ width: '100%' }}>
-                            {status}
+                            {this.getStatusIcon(this.props.run.status)}
                             {this.props.run.user === this.props.userData.user.username ?
                                 <p style={styles.ownerLabel}>My DataPack</p>
                                 :
