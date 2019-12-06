@@ -144,7 +144,7 @@ def pcf_scale_celery(max_tasks_memory):
                         f"Already at max memory usage, skipping scale with {pending_messages} total pending messages left in {queue_name} queue.")
 
 
-@app.task(name="Check Provider Availability", base=EventKitBaseTask)
+@app.task(name="Check Provider Availability", base=EventKitBaseTask, expires=os.getenv("PROVIDER_CHECK_INTERVAL", "30"))
 def check_provider_availability():
     from eventkit_cloud.jobs.models import DataProvider, DataProviderStatus
     from eventkit_cloud.utils.provider_check import perform_provider_check
