@@ -18,6 +18,7 @@ import FeaturedFlag from './FeaturedFlag';
 import DataPackShareDialog from '../DataPackShareDialog/DataPackShareDialog';
 import { makeFullRunSelector } from '../../selectors/runSelector';
 import history from '../../utils/history';
+import {SvgIconProps} from "@material-ui/core/SvgIcon/SvgIcon";
 
 export interface Props {
     run: Eventkit.Run;
@@ -92,6 +93,18 @@ export class DataPackListItem extends React.Component<Props, State> {
         this.handleShareClose();
         const permissions = { ...perms };
         this.props.onRunShare(this.props.run.job.uid, permissions);
+    }
+    private getStatusIcon(status: Eventkit.Run['status']) {
+        const { colors } = this.props.theme.eventkit;
+        if (status === 'COMPLETED') {
+            return <NavigationCheck className="qa-DataPackTableItem-NavigationCheck" style={{ color: colors.success }} />;
+        } else if (status === 'RUNNING' || status === 'SUBMITTED') {
+            return <NotificationSync className="qa-DataPackTableItem-NotificationSync" style={{color: colors.running}}/>;
+        }
+        return <AlertError
+                className="qa-DataPackTableItem-AlertError"
+                style={{ color: colors.warning, opacity: 0.6, height: '22px' }}
+        />;
     }
 
     render() {
@@ -178,14 +191,6 @@ export class DataPackListItem extends React.Component<Props, State> {
         const onMouseEnter = this.props.onHoverStart ? () => { this.props.onHoverStart(this.props.run.uid); } : null;
         const onMouseLeave = this.props.onHoverEnd ? () => { this.props.onHoverEnd(this.props.run.uid); } : null;
         const onClick = this.props.onClick ? () => { this.props.onClick(this.props.run.uid); } : null;
-
-        let status = <NavigationCheck className="qa-DataPackListItem-NavigationCheck" style={styles.completeIcon} />;
-        if (this.props.run.status === 'SUBMITTED') {
-            status = <NotificationSync className="qa-DataPackListItem-NotificationSync" style={styles.runningIcon} />;
-        } else if (this.props.run.status === 'INCOMPLETE') {
-            status = <AlertError className="qa-DataPackListItem-AlertError" style={styles.errorIcon} />;
-        }
-
         return (
             <div style={styles.gridItem}>
                 <Card
@@ -296,7 +301,7 @@ export class DataPackListItem extends React.Component<Props, State> {
 
                                             <Lock className="qa-DataPackListItem-Lock" style={styles.unpublishedIcon} />
                                         }
-                                        {status}
+                                        {this.getStatusIcon(this.props.run.status)}
                                     </div>
                                 </div>
                             </div>
