@@ -288,8 +288,8 @@ class ExportTask(UserDetailsBase):
             client = PcfClient()
             client.login()
 
-            hostnames = []
-            hostnames.append(self.request.hostname)
+            queue_type, hostname = self.request.hostname.split("@")
+            workers = [f"{queue_type}@{hostname}", f"cancel@{hostname}"]
 
             # In our current setup the queue name always mirrors the routing_key, if this changes this logic will break.
             queue_name = self.request.delivery_info["routing_key"]
@@ -298,8 +298,8 @@ class ExportTask(UserDetailsBase):
             running_tasks_by_queue_count = running_tasks_by_queue["pagination"]["total_results"]
 
             if running_tasks_by_queue_count >= messages:
-                logger.info(f"No work remaining on this queue, shutting down {hostnames}")
-                app.control.shutdown(destination=hostnames)
+                logger.info(f"No work remaining on this queue, shutting down {workers}")
+                app.control.shutdown(destination=workers)
 
     @transaction.atomic
     def task_failure(self, exc, task_id, args, kwargs, einfo):
