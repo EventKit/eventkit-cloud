@@ -34,12 +34,12 @@ from eventkit_cloud.tasks.helpers import normalize_name, get_archive_data_path, 
     default_format_time, progressive_kill, get_style_files, generate_qgs_style, create_license_file, \
     get_human_readable_metadata_document, pickle_exception, get_data_type_from_provider, get_arcgis_metadata, \
     get_message_count, clean_config, get_metadata, get_provider_staging_preview, PREVIEW_TAIL
+from eventkit_cloud.tasks.util_tasks import shutdown_celery_workers
 from eventkit_cloud.utils.auth_requests import get_cred
 from eventkit_cloud.utils import (
     overpass, pbf, s3, mapproxy, wcs, geopackage, gdalutils
 )
 from eventkit_cloud.utils.ogr import OGR
-from eventkit_cloud.utils.pcf import PcfClient
 from eventkit_cloud.utils.stats.eta_estimator import ETA
 
 
@@ -280,26 +280,9 @@ class ExportTask(UserDetailsBase):
         """
         PCF_SCALING = os.getenv("PCF_SCALING", False)
         if PCF_SCALING:
-            if os.getenv('CELERY_TASK_APP'):
-                app_name = os.getenv('CELERY_TASK_APP')
-            else:
-                app_name = json.loads(os.getenv("VCAP_APPLICATION", "{}")).get("application_name")
-
-            client = PcfClient()
-            client.login()
-
-            queue_type, hostname = self.request.hostname.split("@")
-            workers = [f"{queue_type}@{hostname}", f"cancel@{hostname}"]
-
-            # In our current setup the queue name always mirrors the routing_key, if this changes this logic will break.
             queue_name = self.request.delivery_info["routing_key"]
-            messages = get_message_count(queue_name)
-            running_tasks_by_queue = client.get_running_tasks(app_name, queue_name)
-            running_tasks_by_queue_count = running_tasks_by_queue["pagination"]["total_results"]
+            shutdown_celery_workers.s(self.request).apply_async(queue=queue_name)
 
-            if running_tasks_by_queue_count > messages:
-                logger.info(f"No work remaining on this queue, shutting down {workers}")
-                app.control.shutdown(destination=workers)
 
     @transaction.atomic
     def task_failure(self, exc, task_id, args, kwargs, einfo):
