@@ -73,14 +73,15 @@ export class DataPackTableItem extends React.Component<Props, State> {
 
     private getStatusIcon(status: Eventkit.Run['status']) {
         const { colors } = this.props.theme.eventkit;
-        if (status === 'SUBMITTED') {
-            return <NotificationSync className="qa-DataPackTableItem-NotificationSync" style={{ color: colors.running }} />;
-        } else if (status === 'INCOMPLETE') {
-            return (
-                <AlertError className="qa-DataPackTableItem-AlertError" style={{ color: colors.warning, opacity: 0.6, height: '22px' }} />
-            );
+        if (status === 'COMPLETED') {
+            return <NavigationCheck className="qa-DataPackTableItem-NavigationCheck" style={{ color: colors.success }} />;
+        } else if (status === 'RUNNING' || status === 'SUBMITTED') {
+            return <NotificationSync className="qa-DataPackTableItem-NotificationSync" style={{color: colors.running}}/>;
         }
-        return <NavigationCheck className="qa-DataPackTableItem-NavigationCheck" style={{ color: colors.success, height: '22px' }} />;
+        return <AlertError
+                className="qa-DataPackTableItem-AlertError"
+                style={{ color: colors.warning, opacity: 0.6, height: '22px' }}
+        />;
     }
 
     private handleMenuButtonClick(e: React.MouseEvent<HTMLElement>) {
