@@ -1,8 +1,8 @@
 import * as PropTypes from 'prop-types';
 import * as React from 'react';
-import { connect } from 'react-redux';
-import { withTheme, Theme } from '@material-ui/core/styles';
-import withWidth, { isWidthUp } from '@material-ui/core/withWidth';
+import {connect} from 'react-redux';
+import {withTheme, Theme} from '@material-ui/core/styles';
+import withWidth, {isWidthUp} from '@material-ui/core/withWidth';
 import GridList from '@material-ui/core/GridList';
 import Dot from '@material-ui/icons/FiberManualRecord';
 import axios from 'axios';
@@ -34,7 +34,6 @@ import ScaleLine from 'ol/control/scaleline';
 import Zoom from 'ol/control/zoom';
 import ZoomToExtent from 'ol/control/zoomtoextent';
 import OverviewMap from 'ol/control/overviewmap';
-
 import css from '../../styles/ol3map.css';
 import DataPackListItem from './DataPackListItem';
 import LoadButtons from '../common/LoadButtons';
@@ -44,16 +43,18 @@ import SearchAOIToolbar from '../MapTools/SearchAOIToolbar';
 import DrawAOIToolbar from '../MapTools/DrawAOIToolbar';
 import InvalidDrawWarning from '../MapTools/InvalidDrawWarning';
 import DropZone from '../MapTools/DropZone';
-import { generateDrawLayer, generateDrawBoxInteraction, generateDrawFreeInteraction,
+import {
+    generateDrawLayer, generateDrawBoxInteraction, generateDrawFreeInteraction,
     isGeoJSONValid, createGeoJSON, createGeoJSONGeometry, clearDraw,
     MODE_DRAW_BBOX, MODE_DRAW_FREE, MODE_NORMAL, zoomToFeature, featureToPoint,
     isViewOutsideValidExtent, goToValidExtent, unwrapCoordinates, unwrapExtent,
-    isBox, isVertex, getResolutions } from '../../utils/mapUtils';
+    isBox, isVertex, getResolutions
+} from '../../utils/mapUtils';
 import ZoomLevelLabel from '../MapTools/ZoomLevelLabel';
 import globe from '../../../images/globe-americas.svg';
-import { makeAllRunsSelector } from '../../selectors/runSelector';
+import {makeAllRunsSelector} from '../../selectors/runSelector';
 import {updateAoiInfo, clearAoiInfo, clearExportInfo} from '../../actions/datacartActions';
-import { Breakpoint } from '@material-ui/core/styles/createBreakpoints';
+import {Breakpoint} from '@material-ui/core/styles/createBreakpoints';
 
 export const RED_STYLE = new Style({
     stroke: new Stroke({
@@ -148,6 +149,8 @@ export class MapView extends React.Component<Props, State> {
         config: PropTypes.object,
     };
 
+    static PROJECTION = 'EPSG:4326';
+
     constructor(props) {
         super(props);
         this.initMap = this.initMap.bind(this);
@@ -200,7 +203,7 @@ export class MapView extends React.Component<Props, State> {
     componentDidMount() {
         this.map = this.initMap();
         this.initOverlay();
-        this.source = new VectorSource({ wrapX: true });
+        this.source = new VectorSource({wrapX: true});
         this.layer = new VectorLayer({
             source: this.source,
             style: this.defaultStyleFunction,
@@ -210,12 +213,12 @@ export class MapView extends React.Component<Props, State> {
 
         this.markerLayer.setStyle(new Style({
             image: new Circle({
-                fill: new Fill({ color: 'rgba(255,255,255,0.4)' }),
-                stroke: new Stroke({ color: this.props.theme.eventkit.colors.warning, width: 1.25 }),
+                fill: new Fill({color: 'rgba(255,255,255,0.4)'}),
+                stroke: new Stroke({color: this.props.theme.eventkit.colors.warning, width: 1.25}),
                 radius: 5,
             }),
-            fill: new Fill({ color: 'rgba(255,255,255,0.4)' }),
-            stroke: new Stroke({ color: this.props.theme.eventkit.colors.primary, width: 1.25 }),
+            fill: new Fill({color: 'rgba(255,255,255,0.4)'}),
+            stroke: new Stroke({color: this.props.theme.eventkit.colors.primary, width: 1.25}),
         }));
 
         this.drawBoxInteraction = generateDrawBoxInteraction(this.drawLayer);
@@ -294,12 +297,12 @@ export class MapView extends React.Component<Props, State> {
             if (mapFeature.getProperties().uid) {
                 features.push(mapFeature);
             }
-        }, { hitTolerance: 3 });
+        }, {hitTolerance: 3});
         if (features.length) {
             if (features.length === 1) {
                 this.handleClick(features[0].getId());
             } else {
-                this.setState({ groupedFeatures: features, disableMapClick: true });
+                this.setState({groupedFeatures: features, disableMapClick: true});
                 // disable scroll zoom while popup is open
                 let zoom = null;
                 this.map.getInteractions().forEach((mapInteraction) => {
@@ -319,7 +322,7 @@ export class MapView extends React.Component<Props, State> {
 
     onDrawStart() {
         clearDraw(this.drawLayer);
-        this.setState({ disableMapClick: true });
+        this.setState({disableMapClick: true});
     }
 
     onDrawEnd(event) {
@@ -331,23 +334,23 @@ export class MapView extends React.Component<Props, State> {
         const geojson = createGeoJSON(geom);
         // Since this is a controlled draw we make the assumption
         // that there is only one feature in the collection
-        const { bbox } = geojson.features[0];
+        const {bbox} = geojson.features[0];
         // make sure the user didnt create a polygon with no area
         if (bbox[0] !== bbox[2] && bbox[1] !== bbox[3]) {
             if (this.state.mode === MODE_DRAW_FREE) {
-                const drawFeature = new Feature({ geometry: geom });
+                const drawFeature = new Feature({geometry: geom});
                 this.drawLayer.getSource().addFeature(drawFeature);
                 if (isGeoJSONValid(geojson)) {
                     const geojsonGeometry = createGeoJSONGeometry(geom);
                     this.props.onMapFilter(geojsonGeometry);
                     this.props.updateAoiInfo({
                         ...this.props.aoiInfo,
-                            geojson,
-                            originalGeojson: geojson,
-                            geomType: 'Polygon',
-                            title: 'Custom Polygon',
-                            description: 'Draw',
-                            selectionType: 'free',
+                        geojson,
+                        originalGeojson: geojson,
+                        geomType: 'Polygon',
+                        title: 'Custom Polygon',
+                        description: 'Draw',
+                        selectionType: 'free',
                     });
                 } else {
                     this.showInvalidDrawWarning(true);
@@ -357,17 +360,17 @@ export class MapView extends React.Component<Props, State> {
                 this.props.onMapFilter(geojsonGeometry);
                 this.props.updateAoiInfo({
                     ...this.props.aoiInfo,
-                        geojson,
-                        originalGeojson: geojson,
-                        geomType: 'Polygon',
-                        title: 'Custom Polygon',
-                        description: 'Draw',
-                        selectionType: 'free',
+                    geojson,
+                    originalGeojson: geojson,
+                    geomType: 'Polygon',
+                    title: 'Custom Polygon',
+                    description: 'Draw',
+                    selectionType: 'free',
                 });
             }
             this.updateMode(MODE_NORMAL);
             window.setTimeout(() => {
-                this.setState({ disableMapClick: false });
+                this.setState({disableMapClick: false});
             }, 300);
         }
     }
@@ -387,7 +390,7 @@ export class MapView extends React.Component<Props, State> {
     }
 
     setButtonSelected(iconName) {
-        const icons = { ...this.state.toolbarIcons };
+        const icons = {...this.state.toolbarIcons};
         Object.keys(icons).forEach((key) => {
             if (key === iconName) {
                 icons[key] = 'SELECTED';
@@ -395,15 +398,15 @@ export class MapView extends React.Component<Props, State> {
                 icons[key] = 'INACTIVE';
             }
         });
-        this.setState({ toolbarIcons: icons });
+        this.setState({toolbarIcons: icons});
     }
 
     setAllButtonsDefault() {
-        const icons = { ...this.state.toolbarIcons };
+        const icons = {...this.state.toolbarIcons};
         Object.keys(icons).forEach((key) => {
             icons[key] = 'DEFAULT';
         });
-        this.setState({ toolbarIcons: icons });
+        this.setState({toolbarIcons: icons});
     }
 
     setMapView() {
@@ -428,7 +431,7 @@ export class MapView extends React.Component<Props, State> {
     updateZoomLevel() {
         const lvl = Math.floor(this.map.getView().getZoom());
         if (lvl !== this.state.zoomLevel) {
-            this.setState({ zoomLevel: lvl });
+            this.setState({zoomLevel: lvl});
         }
     }
 
@@ -452,8 +455,8 @@ export class MapView extends React.Component<Props, State> {
             const run = this.props.runs.find(r => r.uid === id);
             if (run !== undefined) {
                 const runFeature = reader.readFeature(run.job.extent, {
-                    dataProjection: 'EPSG:4326',
-                    featureProjection: 'EPSG:4326',
+                    dataProjection: MapView.PROJECTION,  // The projection of the data being read.
+                    featureProjection: MapView.PROJECTION, // The projection of the data being created.
                 });
                 runFeature.setId(run.uid);
                 runFeature.setProperties(run);
@@ -498,7 +501,7 @@ export class MapView extends React.Component<Props, State> {
                     className: css.olZoomToExtent,
                     label: img,
                     extent: [
-                        -180,-90, 180, 90
+                        -180, -90, 180, 90
                     ],
                 }),
                 new OverviewMap({
@@ -506,6 +509,9 @@ export class MapView extends React.Component<Props, State> {
                     collapsible: true,
                     collapsed: !isWidthUp('md', this.props.width),
                     tipLabel: '',
+                    view: new View({
+                        projection: MapView.PROJECTION,
+                    }),
                 }),
             ],
             interactions: interaction.defaults({
@@ -516,7 +522,7 @@ export class MapView extends React.Component<Props, State> {
             layers: [
                 new Tile({
                     source: new XYZ({
-                        projection: 'EPSG:4326',
+                        projection: MapView.PROJECTION,
                         tileGrid: tileGrid,
                         url: this.context.config.BASEMAP_URL,
                         wrapX: true,
@@ -526,7 +532,7 @@ export class MapView extends React.Component<Props, State> {
             ],
             target: 'map',
             view: new View({
-                projection: 'EPSG:4326',
+                projection: MapView.PROJECTION,
                 center: [0, 0],
                 zoom: this.state.zoomLevel,
                 minZoom: 2,
@@ -556,7 +562,7 @@ export class MapView extends React.Component<Props, State> {
         this.map.addInteraction(new MouseWheelZoom());
         this.overlay.setPosition(undefined);
         window.setTimeout(() => {
-            this.setState({ disableMapClick: false });
+            this.setState({disableMapClick: false});
         }, 300);
         return false;
     }
@@ -566,7 +572,7 @@ export class MapView extends React.Component<Props, State> {
         if (runId) {
             const mapFeature = this.source.getFeatureById(runId) || null;
             if (mapFeature) {
-                this.setState({ showPopup: false });
+                this.setState({showPopup: false});
                 // if there is another feature already selected it needs to be deselected
                 if (this.state.selectedFeature && this.state.selectedFeature !== mapFeature.getId()) {
                     const oldFeature = this.source.getFeatureById(this.state.selectedFeature);
@@ -575,11 +581,11 @@ export class MapView extends React.Component<Props, State> {
                 // if clicked on feature is already selected it should be deselected
                 if (this.state.selectedFeature && this.state.selectedFeature === mapFeature.getId()) {
                     this.setFeatureNotSelected(mapFeature);
-                    this.setState({ selectedFeature: null });
+                    this.setState({selectedFeature: null});
                 } else {
                     // if not already selected the feature should then be selected
                     this.setFeatureSelected(mapFeature);
-                    this.setState({ selectedFeature: mapFeature.getId(), showPopup: true });
+                    this.setState({selectedFeature: mapFeature.getId(), showPopup: true});
 
                     // if the feature in not in current view, center the view on selected feature
                     // make sure we are comparing only unwrapped extents to avoid uneeded centering when map is wrapped
@@ -611,8 +617,8 @@ export class MapView extends React.Component<Props, State> {
 
     // animates a circle expanding out from the geometry in question
     animate(event, geom, start) {
-        const { vectorContext } = event;
-        const { frameState } = event;
+        const {vectorContext} = event;
+        const {frameState} = event;
         const point = new Point(extent.getCenter(geom.getExtent()));
 
         const ext = geom.getExtent();
@@ -765,17 +771,17 @@ export class MapView extends React.Component<Props, State> {
 
     toggleImportModal(show) {
         if (show !== undefined) {
-            this.setState({ showImportModal: show });
+            this.setState({showImportModal: show});
         } else {
-            this.setState({ showImportModal: !this.state.showImportModal });
+            this.setState({showImportModal: !this.state.showImportModal});
         }
     }
 
     showInvalidDrawWarning(show) {
         if (show !== undefined) {
-            this.setState({ showInvalidDrawWarning: show });
+            this.setState({showInvalidDrawWarning: show});
         } else {
-            this.setState({ showInvalidDrawWarning: !this.state.showInvalidDrawWarning });
+            this.setState({showInvalidDrawWarning: !this.state.showInvalidDrawWarning});
         }
     }
 
@@ -796,15 +802,15 @@ export class MapView extends React.Component<Props, State> {
             this.drawFreeInteraction.setActive(true);
         }
         // update the state
-        this.setState({ mode }, callback);
+        this.setState({mode}, callback);
     }
 
     handleGeoJSONUpload(featureCollection) {
         clearDraw(this.drawLayer);
         const reader = new GeoJSONFormat();
         const features = reader.readFeatures(featureCollection, {
-            dataProjection: 'EPSG:4326',
-            featureProjection: 'EPSG:4326',
+            dataProjection: MapView.PROJECTION,
+            featureProjection: MapView.PROJECTION,
         });
         this.drawLayer.getSource().addFeatures(features);
         this.props.onMapFilter(featureCollection);
@@ -826,8 +832,8 @@ export class MapView extends React.Component<Props, State> {
             const unwrappedCoords = unwrapCoordinates(coords, this.map.getView().getProjection());
             geom.setCoordinates(unwrappedCoords);
             const geojson = new GeoJSONFormat().writeFeaturesObject(this.drawLayer.getSource().getFeatures(), {
-                dataProjection: 'EPSG:4326',
-                featureProjection: 'EPSG:4326',
+                dataProjection: MapView.PROJECTION,
+                featureProjection: MapView.PROJECTION,
             });
             if (isGeoJSONValid(geojson)) {
                 this.props.onMapFilter(geojson);
@@ -880,12 +886,12 @@ export class MapView extends React.Component<Props, State> {
     }
 
     handleMove(evt) {
-        const { map } = evt;
-        const { pixel } = evt;
+        const {map} = evt;
+        const {pixel} = evt;
         if (this.markerLayer.getSource().getFeatures().length > 0) {
             clearDraw(this.markerLayer);
         }
-        const opts = { layerFilter: layer => (layer === this.drawLayer) };
+        const opts = {layerFilter: layer => (layer === this.drawLayer)};
         if (map.hasFeatureAtPixel(pixel, opts)) {
             const mapFeatures = map.getFeaturesAtPixel(pixel, opts);
             for (const feature of mapFeatures) {
@@ -907,9 +913,9 @@ export class MapView extends React.Component<Props, State> {
     }
 
     handleDown(evt) {
-        const { map } = evt;
-        const { pixel } = evt;
-        const opts = { layerFilter: layer => (layer === this.drawLayer) };
+        const {map} = evt;
+        const {pixel} = evt;
+        const opts = {layerFilter: layer => (layer === this.drawLayer)};
         if (map.hasFeatureAtPixel(pixel, opts)) {
             const mapFeatures = map.getFeaturesAtPixel(pixel, opts);
             for (const feature of mapFeatures) {
@@ -928,7 +934,7 @@ export class MapView extends React.Component<Props, State> {
     }
 
     render() {
-        const { colors } = this.props.theme.eventkit;
+        const {colors} = this.props.theme.eventkit;
 
         const spacing = isWidthUp('sm', this.props.width) ? '10px' : '2px';
         const styles = {
@@ -1008,15 +1014,17 @@ export class MapView extends React.Component<Props, State> {
         const selectedFeature = this.state.selectedFeature ?
             this.source.getFeatureById(this.state.selectedFeature) : null;
         return (
-            <div style={{ height: 'calc(100vh - 236px)' }}>
-                <CustomScrollbar style={styles.list} ref={(instance) => { this.scrollbar = instance; }}>
+            <div style={{height: 'calc(100vh - 236px)'}}>
+                <CustomScrollbar style={styles.list} ref={(instance) => {
+                    this.scrollbar = instance;
+                }}>
                     <div style={styles.root}>
                         <GridList
                             className="qa-MapView-GridList"
                             cellHeight="auto"
                             cols={1}
                             spacing={0}
-                            style={{ width: '100%' }}
+                            style={{width: '100%'}}
                         >
                             {this.props.runIds.map(id => (
                                 <DataPackListItem
@@ -1035,7 +1043,8 @@ export class MapView extends React.Component<Props, State> {
                     {load}
                 </CustomScrollbar>
                 <div style={styles.map}>
-                    <div className="qa-MapView-div-map" style={{ width: '100%', height: '100%', position: 'relative' }} id="map">
+                    <div className="qa-MapView-div-map" style={{width: '100%', height: '100%', position: 'relative'}}
+                         id="map">
                         <SearchAOIToolbar
                             handleSearch={this.checkForSearchUpdate}
                             handleCancel={this.handleCancel}
@@ -1043,7 +1052,9 @@ export class MapView extends React.Component<Props, State> {
                             toolbarIcons={this.state.toolbarIcons}
                             getGeocode={this.props.getGeocode}
                             setAllButtonsDefault={this.setAllButtonsDefault}
-                            setSearchAOIButtonSelected={() => { this.setButtonSelected('search'); }}
+                            setSearchAOIButtonSelected={() => {
+                                this.setButtonSelected('search');
+                            }}
                         />
                         <DrawAOIToolbar
                             toolbarIcons={this.state.toolbarIcons}
@@ -1051,10 +1062,18 @@ export class MapView extends React.Component<Props, State> {
                             handleCancel={this.handleCancel}
                             setMapView={this.setMapView}
                             setAllButtonsDefault={this.setAllButtonsDefault}
-                            setBoxButtonSelected={() => { this.setButtonSelected('box'); }}
-                            setFreeButtonSelected={() => { this.setButtonSelected('free'); }}
-                            setMapViewButtonSelected={() => { this.setButtonSelected('mapView'); }}
-                            setImportButtonSelected={() => { this.setButtonSelected('import'); }}
+                            setBoxButtonSelected={() => {
+                                this.setButtonSelected('box');
+                            }}
+                            setFreeButtonSelected={() => {
+                                this.setButtonSelected('free');
+                            }}
+                            setMapViewButtonSelected={() => {
+                                this.setButtonSelected('mapView');
+                            }}
+                            setImportButtonSelected={() => {
+                                this.setButtonSelected('import');
+                            }}
                             setImportModalState={this.toggleImportModal}
                             title="FILTERS"
                         />
@@ -1083,7 +1102,7 @@ export class MapView extends React.Component<Props, State> {
                             onKeyPress={this.handleOlPopupClose}
                         />
                         <div className="qa-MapView-div-popupContent" id="popup-content">
-                            <p style={{ color: colors.grey }}>Select One:</p>
+                            <p style={{color: colors.grey}}>Select One:</p>
                             <CustomScrollbar autoHeight autoHeightMin={20} autoHeightMax={200}>
                                 {this.state.groupedFeatures.map(groupFeature => (
                                     <span
@@ -1098,9 +1117,9 @@ export class MapView extends React.Component<Props, State> {
                                             this.handleClick(groupFeature.getId());
                                             this.closer.onclick();
                                         }}
-                                        style={{ display: 'block', cursor: 'pointer' }}
+                                        style={{display: 'block', cursor: 'pointer'}}
                                     >
-                                        <Dot style={styles.dot} /> {groupFeature.getProperties().name}
+                                        <Dot style={styles.dot}/> {groupFeature.getProperties().name}
                                     </span>
                                 ))}
                             </CustomScrollbar>
@@ -1149,4 +1168,4 @@ function mapDispatchToProps(dispatch) {
 }
 
 // connect signature -> (mapStateToProps?, mapDispatchToProps?, mergeProps?, options?)
-export default withWidth()(withTheme()(connect(makeMapStateToProps, mapDispatchToProps, null, { forwardRef: true })(MapView)));
+export default withWidth()(withTheme()(connect(makeMapStateToProps, mapDispatchToProps, null, {forwardRef: true})(MapView)));
