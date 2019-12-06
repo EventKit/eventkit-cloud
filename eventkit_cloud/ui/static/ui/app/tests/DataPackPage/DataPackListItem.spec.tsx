@@ -4,6 +4,9 @@ import { shallow } from 'enzyme';
 import Card from '@material-ui/core/Card';
 import { DataPackListItem } from '../../components/DataPackPage/DataPackListItem';
 import DataPackShareDialog from '../../components/DataPackShareDialog/DataPackShareDialog';
+import NotificationSync from "@material-ui/icons/Sync";
+import NavigationCheck from "@material-ui/icons/Check";
+import AlertError from "@material-ui/icons/Error";
 
 describe('DataPackListItem component', () => {
     const run = {
@@ -140,5 +143,33 @@ describe('DataPackListItem component', () => {
         expect(wrapper.find(DataPackShareDialog).props().show).toBe(false);
         wrapper.setState({ shareDialogOpen: true });
         expect(wrapper.find(DataPackShareDialog).props().show).toBe(true);
+    });
+    describe('getStatusIcon should return correct icon and icon styles', () => {
+        it('getStatusIcon should return a Sync icon', () => {
+            const syncIcon = wrapper.instance().getStatusIcon('RUNNING');
+            expect(syncIcon).toEqual(
+                <NotificationSync
+                    className="qa-DataPackTableItem-NotificationSync"
+                    style={{color: '#f4d225'}}
+                />);
+        });
+        it('getStatusIcon should return a Check icon', () => {
+            const checkIcon = wrapper.instance().getStatusIcon('COMPLETED');
+            expect(checkIcon).toEqual((
+                <NavigationCheck
+                    className="qa-DataPackTableItem-NavigationCheck"
+                    style={{color: '#55ba63'}}
+                />
+            ));
+        });
+        it('getStatusIcon should return an Error icon', () => {
+            const errorIcon = wrapper.instance().getStatusIcon('INCOMPLETE');
+            expect(errorIcon).toEqual((
+                <AlertError
+                    className="qa-DataPackTableItem-AlertError"
+                    style={{color: '#ce4427', opacity: 0.6, height: '22px'}}
+                />
+                ));
+        });
     });
 });
