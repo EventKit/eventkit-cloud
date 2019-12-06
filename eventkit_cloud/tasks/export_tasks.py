@@ -10,7 +10,6 @@ import time
 import traceback
 from zipfile import ZipFile, ZIP_DEFLATED
 
-from audit_logging.celery_support import UserDetailsBase
 from celery import signature
 from celery.result import AsyncResult
 from celery.utils.log import get_task_logger
@@ -34,6 +33,7 @@ from eventkit_cloud.tasks.helpers import normalize_name, get_archive_data_path, 
     default_format_time, progressive_kill, get_style_files, generate_qgs_style, create_license_file, \
     get_human_readable_metadata_document, pickle_exception, get_data_type_from_provider, get_arcgis_metadata, \
     get_message_count, clean_config, get_metadata, get_provider_staging_preview, PREVIEW_TAIL
+from eventkit_cloud.tasks.task_base import EventKitBaseTask
 from eventkit_cloud.utils.auth_requests import get_cred
 from eventkit_cloud.utils import (
     overpass, pbf, s3, mapproxy, wcs, geopackage, gdalutils
@@ -51,7 +51,7 @@ logger = get_task_logger(__name__)
 # http://docs.celeryproject.org/en/latest/tutorials/task-cookbook.html
 # https://github.com/celery/celery/issues/3270
 
-class LockingTask(UserDetailsBase):
+class LockingTask(EventKitBaseTask):
     """
     Base task with lock to prevent multiple execution of tasks with ETA.
     It happens with multiple workers for tasks with any delay (countdown, ETA). Its a bug
@@ -167,7 +167,7 @@ def make_file_downloadable(filepath, run_uid, provider_slug=None, skip_copy=Fals
 
 
 # ExportTaskRecord abstract base class and subclasses.
-class ExportTask(UserDetailsBase):
+class ExportTask(EventKitBaseTask):
     """
     Abstract base class for export tasks.
     """
@@ -272,16 +272,6 @@ class ExportTask(UserDetailsBase):
             einfo = ExceptionInfo()
             result = self.task_failure(e, task_uid, args, kwargs, einfo)
             return result
-
-    def after_return(self, status, retval, task_id, args, kwargs, einfo):
-        """
-        This will only run in the PCF environment to shut down unused workers.
-        """
-        from eventkit_cloud.tasks.util_tasks import shutdown_celery_workers
-        PCF_SCALING = os.getenv("PCF_SCALING", False)
-        if PCF_SCALING:
-            queue_name = self.request.delivery_info["routing_key"]
-            shutdown_celery_workers.s(self.request).apply_async(queue=queue_name)
 
 
     @transaction.atomic
@@ -481,7 +471,7 @@ def osm_data_collection_task(
     return result
 
 
-@app.task(name="Add Metadata", bind=True, base=UserDetailsBase, abort_on_error=False)
+@app.task(name="Add Metadata", bind=True, base=EventKitBaseTask, abort_on_error=False)
 def add_metadata_task(self, result=None, job_uid=None, provider_slug=None, user_details=None, *args, **kwargs):
     """
     Task to create metadata to a geopackage.
@@ -749,7 +739,7 @@ def reprojection_task(self, result=None, run_uid=None, task_uid=None, stage_dir=
     return result
 
 
-@app.task(name='Clip Export', bind=True, base=UserDetailsBase)
+@app.task(name='Clip Export', bind=True, base=EventKitBaseTask)
 def clip_export_task(self, result=None, run_uid=None, task_uid=None, stage_dir=None, job_name=None, user_details=None,
                      *args, **kwargs):
     """
@@ -986,7 +976,7 @@ def wait_for_run(run=None, uid=None):
             run.refresh_from_db()
 
 # This could be improved by using Redis or Memcached to help manage state.
-@app.task(name='Wait For Providers', base=UserDetailsBase, acks_late=True)
+@app.task(name='Wait For Providers', base=EventKitBaseTask, acks_late=True)
 def wait_for_providers_task(result=None, apply_args=None, run_uid=None, callback_task=None, *args, **kwargs):
     from eventkit_cloud.tasks.models import ExportRun
 
@@ -1046,7 +1036,7 @@ def create_zip_task(result=None, data_provider_task_uid=None, *args, **kwargs):
     return result
 
 
-@app.task(name='Finalize Export Provider Task', base=UserDetailsBase)
+@app.task(name='Finalize Export Provider Task', base=EventKitBaseTask)
 def finalize_export_provider_task(result=None, data_provider_task_uid=None,
                                   status=None, *args, **kwargs):
     """
@@ -1173,7 +1163,7 @@ def zip_files(include_files, file_path=None, static_files=None, *args, **kwargs)
     return file_path
 
 
-class FinalizeRunBase(UserDetailsBase):
+class FinalizeRunBase(EventKitBaseTask):
     name = 'Finalize Export Run'
 
     def run(self, result=None, run_uid=None, stage_dir=None):
@@ -1392,7 +1382,7 @@ def cancel_synchronous_task_chain(data_provider_task_uid=None):
                 routing_key="{0}.cancel".format(export_task.worker))
 
 
-@app.task(name='Create preview', base=UserDetailsBase)
+@app.task(name='Create preview', base=EventKitBaseTask)
 def create_datapack_preview(result=None, run_uid=None, task_uid=None,
                             stage_dir=None, task_record_uid=None, *args, **kwargs):
     """
@@ -1429,7 +1419,7 @@ def create_datapack_preview(result=None, run_uid=None, task_uid=None,
 
 
 
-@app.task(name='Cancel Export Provider Task', base=UserDetailsBase)
+@app.task(name='Cancel Export Provider Task', base=EventKitBaseTask)
 def cancel_export_provider_task(result=None, data_provider_task_uid=None, canceling_username=None, delete=False,
                                 error=False, *args, **kwargs):
     """
@@ -1499,7 +1489,7 @@ def cancel_export_provider_task(result=None, data_provider_task_uid=None, cancel
     return result
 
 
-@app.task(name='Cancel Run', base=UserDetailsBase)
+@app.task(name='Cancel Run', base=EventKitBaseTask)
 def cancel_run(result=None, export_run_uid=None, canceling_username=None, delete=False, *args, **kwargs):
     from eventkit_cloud.tasks.models import ExportRun
 
@@ -1515,7 +1505,7 @@ def cancel_run(result=None, export_run_uid=None, canceling_username=None, delete
     return result
 
 
-@app.task(name='Kill Task', base=UserDetailsBase)
+@app.task(name='Kill Task', base=EventKitBaseTask)
 def kill_task(result=None, task_pid=None, celery_uid=None, *args, **kwargs):
     """
     Asks a worker to kill a task.
