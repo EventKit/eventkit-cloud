@@ -12,6 +12,7 @@ from eventkit_cloud.utils.pcf import PcfClient
 # Get an instance of a logger
 logger = get_task_logger(__name__)
 
+
 @app.task(name="PCF Shutdown Celery Workers")
 def pcf_shutdown_celery_workers(queue_name, queue_type, hostname):
     """
@@ -37,5 +38,10 @@ def pcf_shutdown_celery_workers(queue_name, queue_type, hostname):
     running_tasks_by_queue_count = running_tasks_by_queue["pagination"]["total_results"]
 
     if running_tasks_by_queue_count > messages:
-        logger.info(f"No work remaining on this queue, shutting down {workers}")
+        logger.info(f"No work remaining on the {queue_name} queue, shutting down {workers}")
         app.control.shutdown(destination=workers)
+    else:
+        logger.info(
+            f"There are {running_tasks_by_queue_count} running tasks for \
+            {queue_name} and {messages} on the queue, skipping shutdown."
+        )
