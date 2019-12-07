@@ -14,4 +14,4 @@ class EventKitBaseTask(UserDetailsBase):
             # In our current setup the queue name always mirrors the routing_key, if this changes this logic will break.
             queue_name = self.request.delivery_info["routing_key"]
 
-            pcf_shutdown_celery_workers.s(queue_name, queue_type, hostname).apply_async(queue=queue_name)
+            pcf_shutdown_celery_workers.s(queue_name, queue_type, hostname).apply_async(queue="scale")
