@@ -12,7 +12,9 @@ def get_provider_image_dir(provider_uid):
 
     :param provider_uid: uid from the DataProvider model.
     """
-    return os.path.join(settings.IMAGES_STAGING.rstrip('\/'), 'providers', str(provider_uid))
+    return os.path.join(
+        settings.IMAGES_STAGING.rstrip("\/"), "providers", str(provider_uid)
+    )
 
 
 def get_provider_thumbnail_name(provider_slug):
@@ -21,7 +23,7 @@ def get_provider_thumbnail_name(provider_slug):
 
     :param provider_slug: slug (or identifier) for the specified DataProvider
     """
-    return f'{provider_slug}_thmb'
+    return f"{provider_slug}_thmb"
 
 
 def get_provider_image_download_dir(provider_uid):
@@ -30,7 +32,9 @@ def get_provider_image_download_dir(provider_uid):
 
     :param provider_uid: uid from the DataProvider model.
     """
-    return os.path.join(settings.IMAGES_DOWNLOAD_ROOT.rstrip('\/'), 'providers', str(provider_uid))
+    return os.path.join(
+        settings.IMAGES_DOWNLOAD_ROOT.rstrip("\/"), "providers", str(provider_uid)
+    )
 
 
 def get_provider_image_download_path(provider_uid):
@@ -39,4 +43,9 @@ def get_provider_image_download_path(provider_uid):
 
     :param provider_uid: uid from the DataProvider model.
     """
-    return os.path.join(settings.EXPORT_MEDIA_ROOT.rstrip('\/'), 'images', 'providers', str(provider_uid))
+    return os.path.join(
+        settings.EXPORT_MEDIA_ROOT.rstrip("\/"),
+        "images",
+        "providers",
+        str(provider_uid),
+    )
