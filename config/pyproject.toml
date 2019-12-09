@@ -1,4 +1,4 @@
 [tool.black]
 line-length = 120
-exclude = '/(\migrations|\tests)/'
+exclude = '/(\migrations| \tests)'
 
