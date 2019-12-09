@@ -422,7 +422,7 @@ def osm_data_collection_pipeline(
     return geopackage_filepath
 
 
-@app.task(name="OSM (.gpkg)", bind=True, base=FormatTask, abort_on_error=True, acks_late=True)
+@app.task(name="OSM (.gpkg)", bind=True, base=FormatTask, abort_on_error=True)
 def osm_data_collection_task(
         self, result=None, stage_dir=None, run_uid=None, provider_slug=None, overpass_url=None, task_uid=None,
         job_name='no_job_name_specified', bbox=None, user_details=None,
