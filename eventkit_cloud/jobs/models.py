@@ -6,7 +6,12 @@ import logging
 import uuid
 
 from django.contrib.auth.models import Group, User
-from django.contrib.gis.geos import GEOSGeometry, GeometryCollection, Polygon, MultiPolygon
+from django.contrib.gis.geos import (
+    GEOSGeometry,
+    GeometryCollection,
+    Polygon,
+    MultiPolygon,
+)
 from django.contrib.postgres.fields.jsonb import JSONField
 from django.core.serializers import serialize
 from django.contrib.gis.db import models
@@ -14,7 +19,11 @@ from django.db.models.fields import CharField
 from django.utils import timezone
 from enum import Enum
 
-from eventkit_cloud.core.models import TimeStampedModelMixin, UIDMixin, DownloadableMixin
+from eventkit_cloud.core.models import (
+    TimeStampedModelMixin,
+    UIDMixin,
+    DownloadableMixin,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -26,8 +35,8 @@ def get_upload_path(instance, *args):
     """
     configtype = instance.config_type.lower()
     # sanitize the filename here..
-    path = 'export/config/{0}/{1}'.format(configtype, instance.filename)
-    logger.debug('Saving export config to /media/{0}'.format(path))
+    path = "export/config/{0}/{1}".format(configtype, instance.filename)
+    logger.debug("Saving export config to /media/{0}".format(path))
     return path
 
 
@@ -37,10 +46,10 @@ class MapImageSnapshot(DownloadableMixin, UIDMixin):
     """
 
     class Meta:
-        db_table = 'MapImageSnapshot'
+        db_table = "MapImageSnapshot"
 
     def __str__(self):
-        return 'MapImageSnapshot ({}), {}'.format(self.uid, self.filename)
+        return "MapImageSnapshot ({}), {}".format(self.uid, self.filename)
 
 
 class LowerCaseCharField(CharField):
@@ -63,11 +72,12 @@ class DatamodelPreset(TimeStampedModelMixin):
     Model provides admin interface to presets.
     These were previously provided by files like hdm_presets.xml / osm_presets.xml.
     """
+
     name = models.CharField(max_length=10)
     json_tags = JSONField(default=list)
 
     class Meta:
-        db_table = 'datamodel_preset'
+        db_table = "datamodel_preset"
 
     def __str__(self):
         return self.name
@@ -80,75 +90,86 @@ class License(TimeStampedModelMixin):
     """
     Model to hold license information to be used with DataProviders.
     """
-    slug = LowerCaseCharField(max_length=40, unique=True, default='')
+
+    slug = LowerCaseCharField(max_length=40, unique=True, default="")
     name = models.CharField(max_length=100, db_index=True)
     text = models.TextField(default="")
 
     def __str__(self):
-        return '{0}'.format(self.name)
+        return "{0}".format(self.name)
 
 
 class UserLicense(TimeStampedModelMixin):
     """
     Model to hold which licenses a User acknowledges.
     """
+
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     license = models.ForeignKey(License, on_delete=models.CASCADE)
 
     def __str__(self):
-        return '{0}: {1}'.format(self.user.username, self.license.name)
+        return "{0}: {1}".format(self.user.username, self.license.name)
 
 
 class Projection(UIDMixin, TimeStampedModelMixin):
     """
     Model for a Projection.
     """
+
     name = models.CharField(max_length=100)
     srid = models.IntegerField(unique=True)
     description = models.CharField(max_length=255, null=True, blank=True)
 
     def __str__(self):
-        return '{0}'.format(self.name)
+        return "{0}".format(self.name)
 
 
 class ExportFormat(UIDMixin, TimeStampedModelMixin):
     """
     Model for a ExportFormat.
     """
+
     name = models.CharField(max_length=100)
-    slug = LowerCaseCharField(max_length=20, unique=True, default='')
+    slug = LowerCaseCharField(max_length=20, unique=True, default="")
     description = models.CharField(max_length=255)
     cmd = models.TextField(max_length=1000)
     objects = models.Manager()
-    supported_projections = models.ManyToManyField(Projection, related_name='supported_projections')
+    supported_projections = models.ManyToManyField(
+        Projection, related_name="supported_projections"
+    )
 
     class Meta:  # pragma: no cover
         managed = True
-        db_table = 'export_formats'
+        db_table = "export_formats"
 
     def __str__(self):
-        return '{0}'.format(self.name)
+        return "{0}".format(self.name)
 
 
 class DataProviderType(TimeStampedModelMixin):
     """
     Model to hold types and supported exports for providers.
     """
+
     id = models.AutoField(primary_key=True, editable=False)
-    type_name = models.CharField(verbose_name="Type Name", max_length=40, unique=True, default='')
-    supported_formats = models.ManyToManyField(ExportFormat,
-                                               verbose_name="Supported Export Formats",
-                                               blank=True)
+    type_name = models.CharField(
+        verbose_name="Type Name", max_length=40, unique=True, default=""
+    )
+    supported_formats = models.ManyToManyField(
+        ExportFormat, verbose_name="Supported Export Formats", blank=True
+    )
 
     def __str__(self):
-        return '{0}'.format(self.type_name)
+        return "{0}".format(self.type_name)
 
 
 class DataProvider(UIDMixin, TimeStampedModelMixin):
     """
     Model for a DataProvider.
     """
+
     name = models.CharField(verbose_name="Service Name", unique=True, max_length=100)
+
     slug = LowerCaseCharField(max_length=40, unique=True, default='')
     url = models.CharField(verbose_name="Service URL", max_length=1000, null=True, default='', blank=True,
                            help_text='The SERVICE_URL is used as the endpoint for WFS, OSM, and WCS services. It is '
@@ -181,40 +202,49 @@ class DataProvider(UIDMixin, TimeStampedModelMixin):
     user = models.ForeignKey(User, related_name='+', null=True, default=None, blank=True, on_delete=models.CASCADE)
     license = models.ForeignKey(License, related_name='+', null=True, blank=True, default=None,
                                 on_delete=models.CASCADE)
+
     zip = models.BooleanField(default=False)
     display = models.BooleanField(default=False)
-    thumbnail = models.ForeignKey(MapImageSnapshot, blank=True, null=True, on_delete=models.SET_NULL,
-                                  help_text="A thumbnail image generated to give a high level"
-                                            " preview of what a provider's data looks like.")
+    thumbnail = models.ForeignKey(
+        MapImageSnapshot,
+        blank=True,
+        null=True,
+        on_delete=models.SET_NULL,
+        help_text="A thumbnail image generated to give a high level"
+        " preview of what a provider's data looks like.",
+    )
 
     class Meta:  # pragma: no cover
         managed = True
-        db_table = 'export_provider'
+        db_table = "export_provider"
 
     def save(self, *args, **kwargs):
         if not self.slug:
-            self.slug = self.name.replace(' ', '_').lower()
+            self.slug = self.name.replace(" ", "_").lower()
             if len(self.slug) > 40:
                 self.slug = self.slug[0:39]
         super(DataProvider, self).save(*args, **kwargs)
 
     def __str__(self):
-        return '{0}'.format(self.name)
+        return "{0}".format(self.name)
 
 
 class DataProviderStatus(UIDMixin, TimeStampedModelMixin):
     """
     Model that remembers the last recorded status of a data provider.
     """
+
     status = models.CharField(max_length=10, blank=True)
     status_type = models.CharField(max_length=25, blank=True)
     message = models.CharField(max_length=150, blank=True)
     last_check_time = models.DateTimeField(null=True)
-    related_provider = models.ForeignKey(DataProvider, on_delete=models.CASCADE, related_name='data_provider_status')
+    related_provider = models.ForeignKey(
+        DataProvider, on_delete=models.CASCADE, related_name="data_provider_status"
+    )
 
     class Meta:
-        verbose_name_plural = 'data provider statuses'
-        ordering = ['-last_check_time']
+        verbose_name_plural = "data provider statuses"
+        ordering = ["-last_check_time"]
 
 
 class Region(UIDMixin, TimeStampedModelMixin):
@@ -223,13 +253,16 @@ class Region(UIDMixin, TimeStampedModelMixin):
     """
 
     def __init__(self, *args, **kwargs):
-        kwargs['the_geom'] = convert_polygon(kwargs.get('the_geom')) or ''
-        kwargs['the_geom_webmercator'] = convert_polygon(kwargs.get('the_geom_webmercator')) or ''
-        kwargs['the_geog'] = convert_polygon(kwargs.get('the_geog')) or ''
+        kwargs["the_geom"] = convert_polygon(kwargs.get("the_geom")) or ""
+        kwargs["the_geom_webmercator"] = (
+            convert_polygon(kwargs.get("the_geom_webmercator")) or ""
+        )
+        kwargs["the_geog"] = convert_polygon(kwargs.get("the_geog")) or ""
         super(Region, self).__init__(*args, **kwargs)
 
     name = models.CharField(max_length=100, db_index=True)
     description = models.CharField(max_length=1000, blank=True)
+
     the_geom = models.MultiPolygonField(verbose_name='HOT Export Region', srid=4326, default='')
     the_geom_webmercator = models.MultiPolygonField(verbose_name='Mercator extent for export region', srid=3857,
                                                     default='')
@@ -237,10 +270,10 @@ class Region(UIDMixin, TimeStampedModelMixin):
 
     class Meta:  # pragma: no cover
         managed = True
-        db_table = 'regions'
+        db_table = "regions"
 
     def __str__(self):
-        return '{0}'.format(self.name)
+        return "{0}".format(self.name)
 
     def save(self, *args, **kwargs):
         self.the_geom = convert_polygon(self.the_geom)
@@ -253,15 +286,20 @@ class DataProviderTask(models.Model):
     """
     Model for a set of tasks assigned to a provider for a job.
     """
+
     id = models.AutoField(primary_key=True, editable=False)
-    uid = models.UUIDField(unique=True, default=uuid.uuid4, editable=False, db_index=True)
-    provider = models.ForeignKey(DataProvider, on_delete=models.CASCADE, related_name='provider')
-    formats = models.ManyToManyField(ExportFormat, related_name='formats')
+    uid = models.UUIDField(
+        unique=True, default=uuid.uuid4, editable=False, db_index=True
+    )
+    provider = models.ForeignKey(
+        DataProvider, on_delete=models.CASCADE, related_name="provider"
+    )
+    formats = models.ManyToManyField(ExportFormat, related_name="formats")
     min_zoom = models.IntegerField(blank=True, null=True)
     max_zoom = models.IntegerField(blank=True, null=True)
 
     def __str__(self):
-        return '{0} - {1}'.format(str(self.uid), self.provider)
+        return "{0} - {1}".format(str(self.uid), self.provider)
 
 
 class VisibilityState(Enum):
@@ -281,21 +319,32 @@ class Job(UIDMixin, TimeStampedModelMixin):
         visibility_choices.append((value.value, value.value))
 
     def __init__(self, *args, **kwargs):
-        kwargs['the_geom'] = convert_polygon(kwargs.get('the_geom')) or ''
-        kwargs['the_geom_webmercator'] = convert_polygon(kwargs.get('the_geom_webmercator')) or ''
-        kwargs['the_geog'] = convert_polygon(kwargs.get('the_geog')) or ''
+        kwargs["the_geom"] = convert_polygon(kwargs.get("the_geom")) or ""
+        kwargs["the_geom_webmercator"] = (
+            convert_polygon(kwargs.get("the_geom_webmercator")) or ""
+        )
+        kwargs["the_geog"] = convert_polygon(kwargs.get("the_geog")) or ""
         super(Job, self).__init__(*args, **kwargs)
 
-    user = models.ForeignKey(User, on_delete=models.CASCADE, null=True, related_name='owner')
+    user = models.ForeignKey(
+        User, on_delete=models.CASCADE, null=True, related_name="owner"
+    )
     name = models.CharField(max_length=100, db_index=True)
     description = models.CharField(max_length=1000, db_index=True)
-    event = models.CharField(max_length=100, db_index=True, default='', blank=True)
+    event = models.CharField(max_length=100, db_index=True, default="", blank=True)
     region = models.ForeignKey(Region, null=True, blank=True, on_delete=models.CASCADE)
-    provider_tasks = models.ManyToManyField(DataProviderTask, related_name='provider_tasks')
-    preset = models.ForeignKey(DatamodelPreset, on_delete=models.CASCADE, null=True, blank=True)
+    provider_tasks = models.ManyToManyField(
+        DataProviderTask, related_name="provider_tasks"
+    )
+    preset = models.ForeignKey(
+        DatamodelPreset, on_delete=models.CASCADE, null=True, blank=True
+    )
     published = models.BooleanField(default=False, db_index=True)  # publish export
-    visibility = models.CharField(max_length=10, choices=visibility_choices, default=VisibilityState.PRIVATE.value)
+    visibility = models.CharField(
+        max_length=10, choices=visibility_choices, default=VisibilityState.PRIVATE.value
+    )
     featured = models.BooleanField(default=False, db_index=True)  # datapack is featured
+
     the_geom = models.MultiPolygonField(verbose_name='Extent for export', srid=4326, default='')
     the_geom_webmercator = models.MultiPolygonField(verbose_name='Mercator extent for export', srid=3857, default='')
     the_geog = models.MultiPolygonField(verbose_name='Geographic extent for export', geography=True, default='')
@@ -309,7 +358,7 @@ class Job(UIDMixin, TimeStampedModelMixin):
 
     class Meta:  # pragma: no cover
         managed = True
-        db_table = 'jobs'
+        db_table = "jobs"
 
     def save(self, *args, **kwargs):
         self.the_geom = convert_polygon(self.the_geom)
@@ -318,7 +367,7 @@ class Job(UIDMixin, TimeStampedModelMixin):
         super(Job, self).save(*args, **kwargs)
 
     def __str__(self):
-        return '{0}'.format(self.name)
+        return "{0}".format(self.name)
 
     @property
     def overpass_extents(self, ):
@@ -327,8 +376,9 @@ class Job(UIDMixin, TimeStampedModelMixin):
         """
         extents = GEOSGeometry(self.the_geom).extent  # (w,s,e,n)
         # overpass needs extents in order (s,w,n,e)
-        overpass_extents = '{0},{1},{2},{3}'.format(str(extents[1]), str(extents[0]),
-                                                    str(extents[3]), str(extents[2]))
+        overpass_extents = "{0},{1},{2},{3}".format(
+            str(extents[1]), str(extents[0]), str(extents[3]), str(extents[2])
+        )
         return overpass_extents
 
     @property
@@ -345,7 +395,7 @@ class Job(UIDMixin, TimeStampedModelMixin):
         # Command-line key=value filters for osmfilter
         filters = []
         for tag in self.json_tags:
-            kv = '{0}={1}'.format(tag['key'], tag['value'])
+            kv = "{0}={1}".format(tag["key"], tag["value"])
             filters.append(kv)
         return filters
 
@@ -358,13 +408,17 @@ class Job(UIDMixin, TimeStampedModelMixin):
         lines = set()
         polygons = set()
         for tag in self.json_tags:
-            if 'point' in tag['geom']:
-                points.add(tag['key'])
-            if 'line' in tag['geom']:
-                lines.add(tag['key'])
-            if 'polygon' in tag['geom']:
-                polygons.add(tag['key'])
-        return {'points': sorted(list(points)), 'lines': sorted(list(lines)), 'polygons': sorted(list(polygons))}
+            if "point" in tag["geom"]:
+                points.add(tag["key"])
+            if "line" in tag["geom"]:
+                lines.add(tag["key"])
+            if "polygon" in tag["geom"]:
+                polygons.add(tag["key"])
+        return {
+            "points": sorted(list(points)),
+            "lines": sorted(list(lines)),
+            "polygons": sorted(list(polygons)),
+        }
 
     @property
     def bounds_geojson(self, ):
@@ -379,15 +433,17 @@ class RegionMask(models.Model):
     """
 
     def __init__(self, *args, **kwargs):
-        kwargs['the_geom'] = convert_polygon(kwargs.get('the_geom')) or ''
+        kwargs["the_geom"] = convert_polygon(kwargs.get("the_geom")) or ""
         super(Region, self).__init__(*args, **kwargs)
 
     id = models.IntegerField(primary_key=True)
-    the_geom = models.MultiPolygonField(verbose_name='Mask for export regions', srid=4326)
+    the_geom = models.MultiPolygonField(
+        verbose_name="Mask for export regions", srid=4326
+    )
 
     class Meta:  # pragma: no cover
         managed = False
-        db_table = 'region_mask'
+        db_table = "region_mask"
 
     def save(self, *args, **kwargs):
         self.the_geom = convert_polygon(self.the_geom)
@@ -398,23 +454,26 @@ class ExportProfile(models.Model):
     """
     Model to hold Group export profile.
     """
-    name = models.CharField(max_length=100, blank=False, default='')
-    group = models.OneToOneField(Group, on_delete=models.CASCADE, related_name='export_profile')
+
+    name = models.CharField(max_length=100, blank=False, default="")
+    group = models.OneToOneField(
+        Group, on_delete=models.CASCADE, related_name="export_profile"
+    )
     max_extent = models.IntegerField()
 
     class Meta:  # pragma: no cover
         managed = True
-        db_table = 'export_profiles'
+        db_table = "export_profiles"
 
     def __str__(self):
-        return '{0}'.format(self.name)
+        return "{0}".format(self.name)
 
 
 class UserJobActivity(models.Model):
-    CREATED = 'created'
-    VIEWED = 'viewed'
-    UPDATED = 'updated'
-    DELETED = 'deleted'
+    CREATED = "created"
+    VIEWED = "viewed"
+    UPDATED = "updated"
+    DELETED = "deleted"
 
     user = models.ForeignKey(User, null=True, on_delete=models.CASCADE)
     job = models.ForeignKey(Job, null=True, on_delete=models.CASCADE)
@@ -422,7 +481,7 @@ class UserJobActivity(models.Model):
     created_at = models.DateTimeField(default=timezone.now, editable=False)
 
     def __str__(self):
-        return '%s %s %s %s' % (self.user, self.job, self.type, self.created_at)
+        return "%s %s %s %s" % (self.user, self.job, self.type, self.created_at)
 
 
 def convert_polygon(geom=None):
