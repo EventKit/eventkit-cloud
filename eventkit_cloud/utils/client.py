@@ -294,7 +294,7 @@ class EventKitClient(object):
         """
         :param provider_slug: The providuer slug (e.g. osm) to test.
         :return: True if provider status check is success or warn, else False.
-        """ ""
+        """
 
         url = "{}/{}/status".format(self.providers_url, provider_slug)
         response = self.client.get(url)
