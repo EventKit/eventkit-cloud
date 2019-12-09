@@ -2,7 +2,7 @@ FROM cloudfoundry/cflinuxfs3:0.82.0
 
 
 RUN groupadd -g 880 eventkit && useradd -u 8800 -g 880 -m eventkit && \
-    mkdir -p /var/lib/eventkit && chown eventkit:eventkit /var/lib/eventkit
+    mkdir -p /var/lib/eventkit/config && chown eventkit:eventkit /var/lib/eventkit
 
 USER eventkit
 
