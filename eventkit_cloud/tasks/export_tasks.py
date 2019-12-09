@@ -1246,24 +1246,6 @@ class FinalizeRunBase(EventKitBaseTask):
         except IOError or OSError:
             logger.error('Error removing {0} during export finalize'.format(stage_dir))
 
-        PCF_SCALING = os.getenv("PCF_SCALING", False)
-        if PCF_SCALING:
-            hostnames = []
-            workers = ["runs", "worker", "celery", "cancel", "finalize", "osm"]
-            for worker in workers:
-                hostnames.append(F"{worker}@{socket.gethostname()}")
-
-            try:
-                message_count = get_message_count("runs")
-                if message_count > 0:
-                    logger.info("More tasks available, continue.")
-                    return
-
-                logger.info("Queue is at zero, shutting down.")
-                app.control.broadcast("shutdown", destination=hostnames)
-            except Exception:
-                logger.info("Could not get queues, shutting down.")
-                app.control.broadcast("shutdown", destination=hostnames)
 
 # There's a celery bug with callbacks that use bind=True.  If altering this task do not use Bind.
 # @see: https://github.com/celery/celery/issues/3723
