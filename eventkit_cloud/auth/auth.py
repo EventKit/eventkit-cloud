@@ -34,8 +34,7 @@ def auto_logout(get_response):
                 if settings.SESSION_USER_LAST_ACTIVE_AT in request.session:
                     del request.session[settings.SESSION_USER_LAST_ACTIVE_AT]
                 response.delete_cookie(
-                    settings.AUTO_LOGOUT_COOKIE_NAME,
-                    domain=settings.SESSION_COOKIE_DOMAIN,
+                    settings.AUTO_LOGOUT_COOKIE_NAME, domain=settings.SESSION_COOKIE_DOMAIN,
                 )
                 return response
 
@@ -54,8 +53,7 @@ def fetch_user_from_token(access_token):
     logger.debug('Sending request: access_token="{0}"'.format(access_token))
     try:
         response = requests.get(
-            "{0}".format(settings.OAUTH_PROFILE_URL),
-            headers={"Authorization": "Bearer {0}".format(access_token), },
+            "{0}".format(settings.OAUTH_PROFILE_URL), headers={"Authorization": "Bearer {0}".format(access_token),},
         )
         logger.debug("Received response: {0}".format(response.text))
         response.raise_for_status()
@@ -65,17 +63,9 @@ def fetch_user_from_token(access_token):
     except requests.HTTPError as err:
         status_code = err.response.status_code
         if status_code == 401:
-            logger.error(
-                "OAuth Resource Server rejected access token: {0}".format(
-                    err.response.text
-                )
-            )
+            logger.error("OAuth Resource Server rejected access token: {0}".format(err.response.text))
             raise Unauthorized("OAuth Resource Server rejected access token")
-        logger.error(
-            "OAuth Resource Server returned HTTP {0} {1}".format(
-                status_code, err.response.text
-            )
-        )
+        logger.error("OAuth Resource Server returned HTTP {0} {1}".format(status_code, err.response.text))
         raise OAuthError(status_code)
 
     orig_data = response.json()
@@ -115,10 +105,7 @@ def get_user(user_data, orig_data=None):
             raise e
         try:
             OAuth.objects.create(
-                user=user,
-                identification=identification,
-                commonname=commonname,
-                user_info=orig_data,
+                user=user, identification=identification, commonname=commonname, user_info=orig_data,
             )
         except Exception as e:
             logger.error(
@@ -148,9 +135,7 @@ def get_user_data_from_schema(data):
     try:
         mapping = json.loads(settings.OAUTH_PROFILE_SCHEMA)
     except AttributeError:
-        logger.error(
-            "AN OAUTH_PROFILE_SCHEMA was not added to the environment variables."
-        )
+        logger.error("AN OAUTH_PROFILE_SCHEMA was not added to the environment variables.")
         raise
     except ValueError:
         raise Error(
@@ -159,8 +144,7 @@ def get_user_data_from_schema(data):
         )
     except TypeError:
         raise Error(
-            "AN OAUTH_PROFILE_SCHEMA was added to the environment but it is empty.  Please add a valid "
-            "mapping."
+            "AN OAUTH_PROFILE_SCHEMA was added to the environment but it is empty.  Please add a valid " "mapping."
         )
     if not mapping:
         raise Error(
@@ -186,11 +170,7 @@ def request_access_token(auth_code):
         response = requests.post(
             settings.OAUTH_TOKEN_URL,
             auth=(settings.OAUTH_CLIENT_ID, settings.OAUTH_CLIENT_SECRET),
-            data={
-                "grant_type": "authorization_code",
-                "code": auth_code,
-                "redirect_uri": settings.OAUTH_REDIRECT_URI,
-            },
+            data={"grant_type": "authorization_code", "code": auth_code, "redirect_uri": settings.OAUTH_REDIRECT_URI,},
         )
         logger.debug("Received response: {0}".format(response.text))
         response.raise_for_status()
@@ -200,25 +180,17 @@ def request_access_token(auth_code):
     except requests.HTTPError as err:
         status_code = err.response.status_code
         if status_code == 401:
-            logger.error(
-                "OAuth server rejected user auth code: {0}".format(err.response.text)
-            )
+            logger.error("OAuth server rejected user auth code: {0}".format(err.response.text))
             raise Unauthorized("OAuth server rejected auth code")
-        logger.error(
-            "OAuth server returned HTTP {0}".format(status_code), err.response.text
-        )
+        logger.error("OAuth server returned HTTP {0}".format(status_code), err.response.text)
         raise OAuthError(status_code)
     access = response.json()
     access_token = access.get(settings.OAUTH_TOKEN_KEY)
     if not access_token:
         logger.error(
-            "OAuth server response missing `{0}`.  Response Text:\n{1}".format(
-                settings.OAUTH_TOKEN_KEY, response.text
-            )
+            "OAuth server response missing `{0}`.  Response Text:\n{1}".format(settings.OAUTH_TOKEN_KEY, response.text)
         )
-        raise InvalidOauthResponse(
-            "missing `{0}`".format(settings.OAUTH_TOKEN_KEY), response.text
-        )
+        raise InvalidOauthResponse("missing `{0}`".format(settings.OAUTH_TOKEN_KEY), response.text)
     return access_token
 
 
@@ -239,17 +211,13 @@ class OAuthServerUnreachable(Error):
 
 class OAuthError(Error):
     def __init__(self, status_code):
-        super(Error, self).__init__(
-            "OAuth Server responded with HTTP {0}".format(status_code)
-        )
+        super(Error, self).__init__("OAuth Server responded with HTTP {0}".format(status_code))
         self.status_code = status_code
 
 
 class InvalidOauthResponse(Error):
     def __init__(self, message, response_text):
-        super(Error, self).__init__(
-            "OAuth Server returned invalid response: {0}".format(message)
-        )
+        super(Error, self).__init__("OAuth Server returned invalid response: {0}".format(message))
         self.response_text = response_text
 
 
