@@ -12,15 +12,13 @@ class RevokeTask(Task):
         app = app_or_default()
 
         for et in export_tasks:
-            app.control.revoke(
-                str(et.celery_uid),
-                terminate=True,
-                signal='SIGKILL'
-            )
+            app.control.revoke(str(et.celery_uid), terminate=True, signal="SIGKILL")
 
-            et.status = 'CANCELED'
+            et.status = "CANCELED"
             et.save()
 
-        pt.status = 'CANCELED'
+        pt.status = "CANCELED"
         pt.save()
+
+
 app.register_task(RevokeTask())
