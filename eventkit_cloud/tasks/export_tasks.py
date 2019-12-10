@@ -944,7 +944,7 @@ def mapproxy_export_task(self, result=None, layer=None, config=None, run_uid=Non
         raise Exception(e)
 
 
-@app.task(name='Pickup Run', bind=True)
+@app.task(name='Pickup Run', bind=True, base=EventKitBaseTask)
 def pick_up_run_task(self, result=None, run_uid=None, user_details=None, *args, **kwargs):
     """
     Generates a Celery task to assign a celery pipeline to a specific worker.
@@ -1313,7 +1313,7 @@ def finalize_run_task(result=None, run_uid=None, stage_dir=None, apply_args=None
     return result
 
 
-@app.task(name='Export Task Error Handler', bind=True)
+@app.task(name='Export Task Error Handler', bind=True, base=EventKitBaseTask)
 def export_task_error_handler(self, result=None, run_uid=None, task_id=None, stage_dir=None, *args, **kwargs):
     """
     Handles un-recoverable errors in export tasks.

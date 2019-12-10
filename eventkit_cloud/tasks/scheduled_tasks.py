@@ -31,7 +31,7 @@ logger = get_task_logger(__name__)
 #     expired_jobs.delete()
 
 
-@app.task(name='Expire Runs')
+@app.task(name='Expire Runs', base=EventKitBaseTask)
 def expire_runs():
     """
     Checks all runs.
@@ -70,7 +70,7 @@ def expire_runs():
             run.save()
 
 
-@app.task(name="PCF Scale Celery")
+@app.task(name="PCF Scale Celery", base=EventKitBaseTask)
 def pcf_scale_celery(max_tasks_memory):
     """
     Built specifically for PCF deployments.
@@ -194,8 +194,8 @@ def send_warning_email(date=None, url=None, addr=None, job_name=None):
         logger.error("Encountered an error when sending status email: {}".format(e))
 
 
-@app.task(name='Clean Up Queues')
-def clean_up_queues():
+@app.task(name='Clean Up Queues', base=EventKitBaseTask)
+def clean_up_queues(base=EventKitBaseTask):
     broker_api_url = getattr(settings, 'BROKER_API_URL')
     queue_class = "queues"
     exchange_class = "exchanges"
