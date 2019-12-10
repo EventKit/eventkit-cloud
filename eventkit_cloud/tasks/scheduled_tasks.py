@@ -13,6 +13,7 @@ from django.utils import timezone
 from eventkit_cloud.celery import app
 from eventkit_cloud.tasks.helpers import get_all_rabbitmq_objects, get_message_count
 from eventkit_cloud.tasks.task_base import EventKitBaseTask
+from eventkit_cloud.tasks.util_tasks import pcf_shutdown_celery_workers
 
 logger = get_task_logger(__name__)
 
