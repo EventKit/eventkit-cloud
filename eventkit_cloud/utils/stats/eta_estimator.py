@@ -10,6 +10,7 @@ class ETA(object):
 
     Based on mapproxy implementation for ETA
     """
+
     def __init__(self, task_uid=None, start_time=time.time(), debug_os=None):
         self.task_uid = task_uid
         self.start_time = start_time
@@ -22,10 +23,12 @@ class ETA(object):
         self.debug_os = debug_os
 
         if self.debug_os is not None:
-            self.debug_os.write('task_uid, progress, elapsed_time(sec), timestamp, est_finish,'
-                                'timestamp_utc, est_finish_utc, message\n')
+            self.debug_os.write(
+                "task_uid, progress, elapsed_time(sec), timestamp, est_finish,"
+                "timestamp_utc, est_finish_utc, message\n"
+            )
 
-    def update(self, progress, dbg_msg=''):
+    def update(self, progress, dbg_msg=""):
         """
         :param progress: A percentage in decimal [0.0-1.0]
         :param dbg_msg: Text written to the "message" column of the debug csv, iff debug_os != None
@@ -51,11 +54,18 @@ class ETA(object):
 
         if self.debug_os is not None:
             curr_time = time.time()
-            self.debug_os.write('{}, {}, {}, {}, {}, {}, {}, {}\n'.format(
-                                self.task_uid, self.progress, self.elapsed_time(current_time=curr_time),
-                                curr_time, self.eta(),
-                                datetime.datetime.fromtimestamp(curr_time, datetime.timezone.utc), self.eta_datetime(),
-                                dbg_msg))
+            self.debug_os.write(
+                "{}, {}, {}, {}, {}, {}, {}, {}\n".format(
+                    self.task_uid,
+                    self.progress,
+                    self.elapsed_time(current_time=curr_time),
+                    curr_time,
+                    self.eta(),
+                    datetime.datetime.fromtimestamp(curr_time, datetime.timezone.utc),
+                    self.eta_datetime(),
+                    dbg_msg,
+                )
+            )
 
     def eta_string(self):
         """
@@ -63,12 +73,12 @@ class ETA(object):
         """
         timestamp = self.eta()
         if timestamp is None:
-            return 'N/A'
+            return "N/A"
         try:
-            return time.strftime('%Y-%m-%d-%H:%M:%S-%Z', time.localtime(timestamp))
-        except (ValueError, OSError): # OSError since Py 3.3
+            return time.strftime("%Y-%m-%d-%H:%M:%S-%Z", time.localtime(timestamp))
+        except (ValueError, OSError):  # OSError since Py 3.3
             # raised when time is out of range (e.g. year > 2038)
-            return 'N/A'
+            return "N/A"
 
     def eta_datetime(self):
         """
@@ -88,7 +98,7 @@ class ETA(object):
             return
 
         remaining_ticks = self.ticks - self.tick_count
-        avg_tick_duration = self.tick_duration_sums/self.tick_duration_divisor
+        avg_tick_duration = self.tick_duration_sums / self.tick_duration_divisor
 
         return self.last_tick_start + (avg_tick_duration * remaining_ticks)
 
