@@ -39,8 +39,6 @@ class LinkHeaderPagination(PageNumberPagination):
         total = self.page.paginator.count
         content_range_header = "results {0}-{1}/{2}".format(start_idx, end_idx, total)
         headers = (
-            {"Link": link, "Content-Range": content_range_header}
-            if link
-            else {"Content-Range": content_range_header}
+            {"Link": link, "Content-Range": content_range_header} if link else {"Content-Range": content_range_header}
         )
         return Response(data, headers=headers, status=status_code)

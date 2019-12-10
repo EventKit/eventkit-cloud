@@ -62,10 +62,7 @@ def validate_providers(data):
         ValidationError: if there are no providers selected.
     """
     for provider_task in data.get("provider_tasks", {"provider": None}):
-        if (
-            provider_task.get("provider") is None
-            or len(provider_task.get("provider")) == 0
-        ):
+        if provider_task.get("provider") is None or len(provider_task.get("provider")) == 0:
             raise serializers.ValidationError({"provider": [_("Select a provider.")]})
 
 
@@ -119,9 +116,7 @@ def validate_bbox(extents, user=None):
         for group in user.groups.all():
             if hasattr(group, "export_profile"):
                 max_extent = (
-                    group.export_profile.max_extent
-                    if group.export_profile.max_extent > max_extent
-                    else max_extent
+                    group.export_profile.max_extent if group.export_profile.max_extent > max_extent else max_extent
                 )
     detail = OrderedDict()
     detail["id"] = _("invalid_bounds")
@@ -132,9 +127,7 @@ def validate_bbox(extents, user=None):
             area = get_geodesic_area(bbox) / 1000000
             if area > max_extent:
                 detail["id"] = _("invalid_extents")
-                detail["message"] = _("Job extents too large: %(area)s") % {
-                    "area": area
-                }
+                detail["message"] = _("Job extents too large: %(area)s") % {"area": area}
                 raise serializers.ValidationError(detail)
             return bbox
         else:
@@ -188,9 +181,7 @@ def validate_selection(data, user=None):
         for group in user.groups.all():
             if hasattr(group, "export_profile"):
                 max_extent = (
-                    group.export_profile.max_extent
-                    if group.export_profile.max_extent > max_extent
-                    else max_extent
+                    group.export_profile.max_extent if group.export_profile.max_extent > max_extent else max_extent
                 )
     detail = OrderedDict()
     detail["id"] = _("invalid_selection")
@@ -198,21 +189,13 @@ def validate_selection(data, user=None):
     try:
         if not isinstance(data.get("selection"), dict):
             detail["id"] = _("no selection")
-            detail["message"] = _(
-                "Jobs must have a geojson provided via a selection attribute.\n {0}".format(
-                    data
-                )
-            )
+            detail["message"] = _("Jobs must have a geojson provided via a selection attribute.\n {0}".format(data))
             raise serializers.ValidationError(detail)
-        geometry = data["selection"].get("geometry") or data["selection"].get(
-            "features", [{}]
-        )[0].get("geometry")
+        geometry = data["selection"].get("geometry") or data["selection"].get("features", [{}])[0].get("geometry")
         if not geometry:
             detail["id"] = _("no geometry")
             detail["message"] = _(
-                "The geojson did not have a geometry object or bbox.\n {0}".format(
-                    data.get("selection")
-                )
+                "The geojson did not have a geometry object or bbox.\n {0}".format(data.get("selection"))
             )
             raise serializers.ValidationError(detail)
         geom = GEOSGeometry(json.dumps(geometry), srid=4326)
@@ -220,9 +203,7 @@ def validate_selection(data, user=None):
             area = get_geodesic_area(geom) / 1000000
             if area > max_extent:
                 detail["id"] = _("invalid_extents")
-                detail["message"] = _("Job extents too large: %(area)s") % {
-                    "area": area
-                }
+                detail["message"] = _("Job extents too large: %(area)s") % {"area": area}
                 raise serializers.ValidationError(detail)
             return geom
         else:
@@ -233,9 +214,7 @@ def validate_selection(data, user=None):
     except GDALException as gdal_exception:
         detail["id"] = _("GDAL Error")
         detail["message"] = _(
-            "GDAL produced a an error:\n{0} \nUsing the geometry:\n{1}".format(
-                str(gdal_exception), geometry
-            )
+            "GDAL produced a an error:\n{0} \nUsing the geometry:\n{1}".format(str(gdal_exception), geometry)
         )
         raise serializers.ValidationError(detail)
 
@@ -259,16 +238,12 @@ def validate_bbox_params(data):
     lon_coords = [float(data["xmin"]), float(data["xmax"])]
     lat_coords = [float(data["ymin"]), float(data["ymax"])]
     # test lat long value order
-    if (lon_coords[0] >= 0 and lon_coords[0] > lon_coords[1]) or (
-        0 > lon_coords[0] > lon_coords[1]
-    ):
+    if (lon_coords[0] >= 0 and lon_coords[0] > lon_coords[1]) or (0 > lon_coords[0] > lon_coords[1]):
         detail["id"] = _("inverted_coordinates")
         detail["message"] = _("xmin greater than xmax.")
         raise serializers.ValidationError(detail)
 
-    if (lat_coords[0] >= 0 and lat_coords[0] > lat_coords[1]) or (
-        0 > lat_coords[0] > lat_coords[1]
-    ):
+    if (lat_coords[0] >= 0 and lat_coords[0] > lat_coords[1]) or (0 > lat_coords[0] > lat_coords[1]):
         detail["id"] = _("inverted_coordinates")
         detail["message"] = _("ymin greater than ymax.")
         raise serializers.ValidationError(detail)
@@ -277,9 +252,7 @@ def validate_bbox_params(data):
     for lon in lon_coords:
         if lon < -180 or lon > 180:
             detail["id"] = _("invalid_longitude")
-            detail["message"] = _("Invalid longitude coordinate: %(lon)s") % {
-                "lon": lon
-            }
+            detail["message"] = _("Invalid longitude coordinate: %(lon)s") % {"lon": lon}
             raise serializers.ValidationError(detail)
     for lat in lat_coords:
         if lat < -90 or lat > 90:
@@ -313,9 +286,9 @@ def validate_content_type(upload, config_type):
     if content_type not in ACCEPT_MIME_TYPES[config_type]:
         detail = OrderedDict()
         detail["id"] = _("invalid_content")
-        detail["message"] = _(
-            "Uploaded config file has invalid content: %(content_type)s"
-        ) % {"content_type": content_type}
+        detail["message"] = _("Uploaded config file has invalid content: %(content_type)s") % {
+            "content_type": content_type
+        }
         raise serializers.ValidationError(detail)
     return content_type
 
@@ -340,8 +313,6 @@ def get_geodesic_area(geom):
         for x in range(length - 1):
             p1 = coords[x]
             p2 = coords[x + 1]
-            area += math.radians(p2[0] - p1[0]) * (
-                2 + math.sin(math.radians(p1[1])) + math.sin(math.radians(p2[1]))
-            )
+            area += math.radians(p2[0] - p1[0]) * (2 + math.sin(math.radians(p1[1])) + math.sin(math.radians(p2[1])))
         area = area * 6378137 * 6378137 / 2.0
     return area

@@ -16,7 +16,6 @@ class OAuthAdmin(admin.ModelAdmin):
     search_fields = ["user__username", "identification", "commonname", "user_info"]
     list_display = ["user", "identification", "commonname"]
 
-
     def has_delete_permission(self, request, obj=None):
         return False
 

@@ -43,9 +43,7 @@ class CheckResults(Enum):
         {
             "status": "ERR",
             "type": "TIMEOUT",
-            "message": _(
-                "Your connection has timed out; the provider may be offline. Refresh to try again."
-            ),
+            "message": _("Your connection has timed out; the provider may be offline. Refresh to try again."),
         },
     )
 
@@ -53,9 +51,7 @@ class CheckResults(Enum):
         {
             "status": "ERR",
             "type": "CONNECTION",
-            "message": _(
-                "A connection to this data provider could not be established."
-            ),
+            "message": _("A connection to this data provider could not be established."),
         },
     )
 
@@ -79,9 +75,7 @@ class CheckResults(Enum):
         {
             "status": "WARN",
             "type": "SSL_EXCEPTION",
-            "message": _(
-                "Could not connect securely to provider; possibly missing client certificate"
-            ),
+            "message": _("Could not connect securely to provider; possibly missing client certificate"),
         },
     )
 
@@ -116,9 +110,7 @@ class CheckResults(Enum):
         {
             "status": "WARN",
             "type": "NO_INTERSECT",
-            "message": _(
-                "The selected AOI does not intersect the data provider's layer."
-            ),
+            "message": _("The selected AOI does not intersect the data provider's layer."),
         },
     )
 
@@ -126,10 +118,7 @@ class CheckResults(Enum):
         {
             "status": "WARN",
             "type": "NO_URL",
-            "message": _(
-                "No Service URL was found in the data provider config; "
-                "availability cannot be checked"
-            ),
+            "message": _("No Service URL was found in the data provider config; " "availability cannot be checked"),
         },
     )
 
@@ -137,19 +126,11 @@ class CheckResults(Enum):
         {
             "status": "FATAL",
             "type": "SELECTION_TOO_LARGE",
-            "message": _(
-                "The selected AOI is larger than the maximum allowed size for this data provider."
-            ),
+            "message": _("The selected AOI is larger than the maximum allowed size for this data provider."),
         },
     )
 
-    SUCCESS = (
-        {
-            "status": "SUCCESS",
-            "type": "SUCCESS",
-            "message": _("Export should proceed without issues."),
-        },
-    )
+    SUCCESS = ({"status": "SUCCESS", "type": "SUCCESS", "message": _("Export should proceed without issues."),},)
 
 
 class ProviderCheck(object):
@@ -164,13 +145,7 @@ class ProviderCheck(object):
     """
 
     def __init__(
-        self,
-        service_url,
-        layer,
-        aoi_geojson=None,
-        slug=None,
-        max_area=0,
-        config: dict = None,
+        self, service_url, layer, aoi_geojson=None, slug=None, max_area=0, config: dict = None,
     ):
         """
         Initialize this ProviderCheck object with a service URL and layer.
@@ -241,11 +216,7 @@ class ProviderCheck(object):
 
             cert_var = self.config.get("cert_var", self.slug)
             response = auth_requests.get(
-                self.service_url,
-                cert_var=cert_var,
-                params=self.query,
-                timeout=self.timeout,
-                verify=self.verify,
+                self.service_url, cert_var=cert_var, params=self.query, timeout=self.timeout, verify=self.verify,
             )
 
             self.token_dict["status"] = response.status_code
@@ -262,25 +233,18 @@ class ProviderCheck(object):
                 self.result = CheckResults.UNAVAILABLE
                 return None
 
-        except (
-            requests.exceptions.ConnectTimeout,
-            requests.exceptions.ReadTimeout,
-        ) as ex:
+        except (requests.exceptions.ConnectTimeout, requests.exceptions.ReadTimeout,) as ex:
             logger.error("Provider check timed out for URL {}".format(self.service_url))
             self.result = CheckResults.TIMEOUT
             return None
 
         except requests.exceptions.SSLError as ex:
-            logger.error(
-                "SSL connection failed for URL {}: {}".format(self.service_url, str(ex))
-            )
+            logger.error("SSL connection failed for URL {}: {}".format(self.service_url, str(ex)))
             self.result = CheckResults.SSL_EXCEPTION
             return None
 
         except requests.exceptions.ConnectionError as ex:
-            logger.error(
-                "Provider check failed for URL {}: {}".format(self.service_url, str(ex))
-            )
+            logger.error("Provider check failed for URL {}: {}".format(self.service_url, str(ex)))
             self.result = CheckResults.CONNECTION
             return None
 
@@ -335,11 +299,7 @@ class OverpassProviderCheck(ProviderCheck):
             cert_var = self.config.get("cert_var") or self.slug
 
             response = auth_requests.post(
-                url=self.service_url,
-                cert_var=cert_var,
-                data="out meta;",
-                timeout=self.timeout,
-                verify=self.verify,
+                url=self.service_url, cert_var=cert_var, data="out meta;", timeout=self.timeout, verify=self.verify,
             )
 
             self.token_dict["status"] = response.status_code
@@ -356,28 +316,18 @@ class OverpassProviderCheck(ProviderCheck):
                 self.result = CheckResults.UNAVAILABLE
                 return
 
-        except (
-            requests.exceptions.ConnectTimeout,
-            requests.exceptions.ReadTimeout,
-        ) as ex:
+        except (requests.exceptions.ConnectTimeout, requests.exceptions.ReadTimeout,) as ex:
             logger.error("Provider check timed out for URL {}".format(self.service_url))
             self.result = CheckResults.TIMEOUT
             return
 
         except requests.exceptions.SSLError as ex:
-            logger.error(
-                "Provider check failed for URL {}: {}".format(self.service_url, str(ex))
-            )
+            logger.error("Provider check failed for URL {}: {}".format(self.service_url, str(ex)))
             self.result = CheckResults.SSL_EXCEPTION
             return
 
-        except (
-            requests.exceptions.ConnectionError,
-            requests.exceptions.MissingSchema,
-        ) as ex:
-            logger.error(
-                "Provider check failed for URL {}: {}".format(self.service_url, str(ex))
-            )
+        except (requests.exceptions.ConnectionError, requests.exceptions.MissingSchema,) as ex:
+            logger.error("Provider check failed for URL {}: {}".format(self.service_url, str(ex)))
             self.result = CheckResults.CONNECTION
             return
 
@@ -400,9 +350,7 @@ class OWSProviderCheck(ProviderCheck):
         # Amended with "SERVICE" parameter by subclasses
 
         # If service or version parameters are left in query string, it can lead to a protocol error and false negative
-        self.service_url = re.sub(
-            r"(?i)(version|service|request)=.*?(&|$)", "", self.service_url
-        )
+        self.service_url = re.sub(r"(?i)(version|service|request)=.*?(&|$)", "", self.service_url)
 
         self.layer = self.layer.lower()
 
@@ -417,9 +365,7 @@ class OWSProviderCheck(ProviderCheck):
         Given a bounding box, set result to NO_INTERSECT if it doesn't intersect the DataPack's AOI.
         :param bbox: Bounding box array: [minx, miny, maxx, maxy] in EPSG:4326
         """
-        logger.debug(
-            "Data provider bbox: [minx, miny, maxx, maxy] = {}".format(str(bbox))
-        )
+        logger.debug("Data provider bbox: [minx, miny, maxx, maxy] = {}".format(str(bbox)))
         minx, miny, maxx, maxy = bbox
         bbox = Polygon.from_bbox((minx, miny, maxx, maxy))
 
@@ -435,15 +381,15 @@ class OWSProviderCheck(ProviderCheck):
             doctype = re.search(r"<!DOCTYPE[^>[]*(\[[^]]*\])?>", xml)
             if doctype is not None:
                 doctype_pos = doctype.end()
-                xmll = xml[:doctype_pos] + xml[doctype_pos + 1:].lower()
+                xmll = xml[:doctype_pos] + xml[doctype_pos + 1 :].lower()
 
             xmll = xmll.replace("![cdata[", "![CDATA[")
 
             # Strip namespaces from tags (from http://bugs.python.org/issue18304)
             iterator = ET.iterparse(StringIO(xmll))
             for event, element in iterator:
-                if '}' in element.tag:
-                    element.tag = element.tag.split('}', 1)[1]
+                if "}" in element.tag:
+                    element.tag = element.tag.split("}", 1)[1]
             root = iterator.root
             layer_element = self.find_layer(root)
 
@@ -455,9 +401,7 @@ class OWSProviderCheck(ProviderCheck):
                 self.check_intersection(bbox)
 
         except ET.ParseError as ex:
-            logger.error(
-                "Provider check failed to parse GetCapabilities XML: {}".format(str(ex))
-            )
+            logger.error("Provider check failed to parse GetCapabilities XML: {}".format(str(ex)))
             self.result = CheckResults.UNKNOWN_FORMAT
             return
 
@@ -506,9 +450,7 @@ class WCSProviderCheck(OWSProviderCheck):
         pos = envelope.getchildren()
         # Make sure there aren't any surprises
         coord_pattern = re.compile(r"^-?\d+(\.\d+)? -?\d+(\.\d+)?$")
-        if not pos or not all(
-            "pos" in p.tag and re.match(coord_pattern, p.text) for p in pos
-        ):
+        if not pos or not all("pos" in p.tag and re.match(coord_pattern, p.text) for p in pos):
             return None
 
         x1, y1 = list(map(float, pos[0].text.split(" ")))
@@ -543,12 +485,8 @@ class WFSProviderCheck(OWSProviderCheck):
 
         # Get layer names
         feature_names = [(ft, ft.find("name")) for ft in feature_types]
-        logger.debug(
-            "WFS layers offered: {}".format([n.text for f, n in feature_names if n])
-        )
-        features = [
-            f for f, n in feature_names if n is not None and self.layer == n.text
-        ]
+        logger.debug("WFS layers offered: {}".format([n.text for f, n in feature_names if n]))
+        features = [f for f, n in feature_names if n is not None and self.layer == n.text]
 
         if not features:
             self.result = CheckResults.LAYER_NOT_AVAILABLE
@@ -564,10 +502,7 @@ class WFSProviderCheck(OWSProviderCheck):
         if bbox_element is None:
             return None
 
-        bbox = [
-            float(bbox_element.attrib[point])
-            for point in ["minx", "miny", "maxx", "maxy"]
-        ]
+        bbox = [float(bbox_element.attrib[point]) for point in ["minx", "miny", "maxx", "maxy"]]
         return bbox
 
 
@@ -602,9 +537,7 @@ class WMSProviderCheck(OWSProviderCheck):
 
         # Get layer names
         layer_names = [(l, l.find("name")) for l in layers]
-        logger.debug(
-            "WMS layers offered: {}".format([n.text for l, n in layer_names if n])
-        )
+        logger.debug("WMS layers offered: {}".format([n.text for l, n in layer_names if n]))
         layer = [l for l, n in layer_names if n is not None and self.layer == n.text]
         if not layer:
             # Since layer name is not consistently available for WM(T)S, just skip layer-dependent checks
@@ -621,10 +554,7 @@ class WMSProviderCheck(OWSProviderCheck):
         if bbox_element is None:
             return None
 
-        bbox = [
-            float(bbox_element.attrib[point])
-            for point in ["minx", "miny", "maxx", "maxy"]
-        ]
+        bbox = [float(bbox_element.attrib[point]) for point in ["minx", "miny", "maxx", "maxy"]]
         return bbox
 
 
@@ -656,11 +586,7 @@ class WMTSProviderCheck(OWSProviderCheck):
 
         # Get layer names
         layer_names = [(l, l.find("title")) for l in layers]
-        logger.debug(
-            "WMTS layers offered: {}".format(
-                [n.text for l, n in layer_names if n is not None]
-            )
-        )
+        logger.debug("WMTS layers offered: {}".format([n.text for l, n in layer_names if n is not None]))
         layer = [l for l, n in layer_names if n is not None and self.layer == n.text]
         if not layer:
             # Since layer name is not consistently available for WM(T)S, just skip layer-dependent checks

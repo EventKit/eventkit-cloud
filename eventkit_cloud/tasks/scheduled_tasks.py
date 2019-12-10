@@ -58,20 +58,14 @@ def expire_runs():
 
         # if two days left and most recent notification was at the 7 day mark email user
         elif expiration - now <= timezone.timedelta(days=2):
-            if not notified or (
-                notified and notified < expiration - timezone.timedelta(days=2)
-            ):
-                send_warning_email(
-                    date=expiration, url=url, addr=email, job_name=run.job.name
-                )
+            if not notified or (notified and notified < expiration - timezone.timedelta(days=2)):
+                send_warning_email(date=expiration, url=url, addr=email, job_name=run.job.name)
                 run.notified = now
                 run.save()
 
         # if one week left and no notification yet email the user
         elif expiration - now <= timezone.timedelta(days=7) and not notified:
-            send_warning_email(
-                date=expiration, url=url, addr=email, job_name=run.job.name
-            )
+            send_warning_email(date=expiration, url=url, addr=email, job_name=run.job.name)
             run.notified = now
             run.save()
 
@@ -87,9 +81,7 @@ def pcf_scale_celery(max_instances):
     if os.getenv("CELERY_TASK_APP"):
         app_name = os.getenv("CELERY_TASK_APP")
     else:
-        app_name = json.loads(os.getenv("VCAP_APPLICATION", "{}")).get(
-            "application_name"
-        )
+        app_name = json.loads(os.getenv("VCAP_APPLICATION", "{}")).get("application_name")
 
     client = PcfClient()
     client.login()
@@ -161,9 +153,7 @@ def check_provider_availability():
 
     for provider in DataProvider.objects.all():
         status = json.loads(perform_provider_check(provider, None))
-        data_provider_status = DataProviderStatus.objects.create(
-            related_provider=provider
-        )
+        data_provider_status = DataProviderStatus.objects.create(related_provider=provider)
         data_provider_status.last_check_time = datetime.datetime.now()
         data_provider_status.status = status["status"]
         data_provider_status.status_type = status["type"]
@@ -183,9 +173,7 @@ def send_warning_email(date=None, url=None, addr=None, job_name=None):
 
     subject = "Your EventKit DataPack is set to expire."
     to = [addr]
-    from_email = getattr(
-        settings, "DEFAULT_FROM_EMAIL", "Eventkit Team <eventkit.team@gmail.com>"
-    )
+    from_email = getattr(settings, "DEFAULT_FROM_EMAIL", "Eventkit Team <eventkit.team@gmail.com>")
     ctx = {"url": url, "date": str(date), "job_name": job_name}
 
     text = get_template("email/expiration_warning.txt").render(ctx)

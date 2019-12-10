@@ -26,9 +26,7 @@ MAX_SAMPLES_PER_TARGET = 2000
 DEFAULT_CACHE_EXPIRATION = 86400  # expire in a day
 
 
-def get_statistics(
-    grouping="provider_name", force=os.getenv("FORCE_STATISTICS_RECOMPUTE", False)
-):
+def get_statistics(grouping="provider_name", force=os.getenv("FORCE_STATISTICS_RECOMPUTE", False)):
     """
     :param force: True to re-compute the desired statistics
     :param grouping: see group_providers_by
@@ -38,6 +36,7 @@ def get_statistics(
 
     def compute_stats():
         return json.dumps(compute_statistics(group_providers_by(grouping)))
+
     if force:
         logger.info("Force Statistics Recompute.")
         stats = compute_stats()
@@ -45,9 +44,7 @@ def get_statistics(
     else:
         # get_or_set needs a callable to avoid evaluating early.
         # compute stats will only be evaluated if the cache is not set.
-        stats = cache.get_or_set(
-            cache_key, compute_stats, timeout=DEFAULT_CACHE_EXPIRATION
-        )
+        stats = cache.get_or_set(cache_key, compute_stats, timeout=DEFAULT_CACHE_EXPIRATION)
 
     return json.loads(stats)
 
@@ -119,10 +116,7 @@ def compute_statistics(get_group, tile_grid=get_default_tile_grid(), filename=No
     """
     # Order by time descending to ensure more recent samples are collected first
     export_task_records = (
-        ExportTaskRecord.objects.filter(result__isnull=False)
-        .order_by("-finished_at")
-        .select_related("result")
-        .all()
+        ExportTaskRecord.objects.filter(result__isnull=False).order_by("-finished_at").select_related("result").all()
     )
 
     # Method to pull normalized data values off of the run, provider_task, or provider_task.task objects
@@ -149,16 +143,11 @@ def compute_statistics(get_group, tile_grid=get_default_tile_grid(), filename=No
     logger.debug("Prefetching geometry data from all Jobs")
     prefetch_geometry_cache(geom_cache)
 
-    logger.info(
-        "Beginning collection of statistics for %d ExportTaskRecords", total_count
-    )
+    logger.info("Beginning collection of statistics for %d ExportTaskRecords", total_count)
     for etr in export_task_records:
         if processed_count % 500 == 0:
             logger.debug(
-                "Processed %d of %d using %d completed",
-                processed_count,
-                total_count,
-                export_task_count,
+                "Processed %d of %d using %d completed", processed_count, total_count, export_task_count,
             )
         processed_count += 1
 
@@ -184,9 +173,7 @@ def compute_statistics(get_group, tile_grid=get_default_tile_grid(), filename=No
         task_stats = get_child_entry(group_stats, etr.name, default_stat)
 
         if has_tiles(etr.name):
-            affected_tile_stats = get_tile_stats(
-                group_stats, tile_grid, gce["bbox"], True, tid_cache, run.id
-            )
+            affected_tile_stats = get_tile_stats(group_stats, tile_grid, gce["bbox"], True, tid_cache, run.id)
         else:
             affected_tile_stats = []
 
@@ -198,11 +185,7 @@ def compute_statistics(get_group, tile_grid=get_default_tile_grid(), filename=No
             collect_samples(dptr, [group_stats], ["duration", "area"], accessors, area)
 
         collect_samples(
-            etr,
-            affected_tile_stats + [task_stats],
-            ["duration", "area", "size"],
-            accessors,
-            area,
+            etr, affected_tile_stats + [task_stats], ["duration", "area", "size"], accessors, area,
         )
 
         sz = accessors["size"](etr, area)
@@ -248,9 +231,7 @@ def compute_statistics(get_group, tile_grid=get_default_tile_grid(), filename=No
         if group_name in ["timestamp"]:
             continue
 
-        totals[group_name] = get_summary_stats(
-            all_stats[group_name], ("area", "duration", "size", "mpp")
-        )
+        totals[group_name] = get_summary_stats(all_stats[group_name], ("area", "duration", "size", "mpp"))
         tile_count = 0
 
         for task_name in all_stats[group_name]:
@@ -263,9 +244,7 @@ def compute_statistics(get_group, tile_grid=get_default_tile_grid(), filename=No
                 total_ys = {}
                 totals[group_name][task_name] = total_ys
                 for xz_s in y_s:
-                    total_ys[xz_s] = get_summary_stats(
-                        y_s[xz_s], ("area", "duration", "size", "mpp")
-                    )
+                    total_ys[xz_s] = get_summary_stats(y_s[xz_s], ("area", "duration", "size", "mpp"))
                     total_ys[xz_s]["tile_coord"] = y_s[xz_s]["tile_coord"]
                     tile_count += 1
             else:
@@ -274,9 +253,7 @@ def compute_statistics(get_group, tile_grid=get_default_tile_grid(), filename=No
                 )
 
         totals[group_name]["tile_count"] = tile_count
-        logger.info(
-            "Generated statistics for %d tiles for group %s", tile_count, group_name
-        )
+        logger.info("Generated statistics for %d tiles for group %s", tile_count, group_name)
 
     return totals
 
@@ -298,9 +275,7 @@ def get_child_entry(parent, key, default=None):
     return parent[key]
 
 
-def get_tile_stats(
-    parent, tile_grid, bbox, create_if_absent=False, tid_cache=None, cid=None
-):
+def get_tile_stats(parent, tile_grid, bbox, create_if_absent=False, tid_cache=None, cid=None):
     """
     Intersects the bbox with the tile grid, returning all of the corresponding objects that hold
     data samples for those tiles
@@ -317,12 +292,8 @@ def get_tile_stats(
         tile_coords = tid_cache[cid]
     else:
         # Not in cache, or not using cache, compute intersection
-        run_bbox = mapproxy_grid.grid_bbox(
-            bbox, bbox_srs=mapproxy_srs.SRS(4326), srs=tile_grid.srs
-        )
-        affected_tiles = tile_grid.get_affected_level_tiles(
-            run_bbox, tile_grid.levels - 1
-        )  # Use highest res grid
+        run_bbox = mapproxy_grid.grid_bbox(bbox, bbox_srs=mapproxy_srs.SRS(4326), srs=tile_grid.srs)
+        affected_tiles = tile_grid.get_affected_level_tiles(run_bbox, tile_grid.levels - 1)  # Use highest res grid
 
         tile_coords = []
         for tile_coord in affected_tiles[2]:
@@ -331,9 +302,7 @@ def get_tile_stats(
         if cid:
             tid_cache[cid] = tile_coords
 
-    tile_stats = list(
-        map(lambda t: get_tile_stat(parent, t, create_if_absent), tile_coords)
-    )
+    tile_stats = list(map(lambda t: get_tile_stat(parent, t, create_if_absent), tile_coords))
     if create_if_absent:
         return tile_stats  # We won't have None entries
     else:
@@ -355,11 +324,7 @@ def get_tile_stat(parent, tile_coord, create_if_absent=False):
 
     if y_id in parent:
         # Currently we only cache 1 z-level so we will only use 2-level map not 3...
-        default_val = (
-            {"duration": [], "size": [], "mpp": [], "tile_coord": tile_coord}
-            if create_if_absent
-            else None
-        )
+        default_val = {"duration": [], "size": [], "mpp": [], "tile_coord": tile_coord} if create_if_absent else None
         xz_s = get_child_entry(y_s, "{}_{}".format(x, z), default_val)
 
     return xz_s
@@ -428,9 +393,7 @@ def get_total_num_pixels(tile_grid, bbox, srs="4326", with_clipping=True):
                 i = get_bbox_intersect(grid_bbox, tile_bbox)
 
                 # Assume uniform spacing of pixels in the tile
-                tile_num_px = (
-                    get_area_bbox(i) / get_area_bbox(tile_bbox)
-                ) * px_per_tile
+                tile_num_px = (get_area_bbox(i) / get_area_bbox(tile_bbox)) * px_per_tile
                 total_pixels += tile_num_px
         else:
             num_tiles = result[1][0] * result[1][1]  # xdim * ydim
@@ -462,15 +425,9 @@ def get_summary_stats(input_item, fields):
 
             if len(value_list) >= 2:
                 st["variance"] = statistics.variance(value_list, st["mean"])
-                st["ci_90"] = get_confidence_interval(
-                    st["mean"], math.sqrt(st["variance"]), st["count"], 1.645
-                )
-                st["ci_95"] = get_confidence_interval(
-                    st["mean"], math.sqrt(st["variance"]), st["count"], 1.960
-                )
-                st["ci_99"] = get_confidence_interval(
-                    st["mean"], math.sqrt(st["variance"]), st["count"], 2.580
-                )
+                st["ci_90"] = get_confidence_interval(st["mean"], math.sqrt(st["variance"]), st["count"], 1.645)
+                st["ci_95"] = get_confidence_interval(st["mean"], math.sqrt(st["variance"]), st["count"], 1.960)
+                st["ci_99"] = get_confidence_interval(st["mean"], math.sqrt(st["variance"]), st["count"], 2.580)
 
             target[field] = st
 
@@ -560,9 +517,7 @@ def query(
         if fld and fld.get(statistic_name):  # Can be missing (e.g. 1 data sample)
             return fld[statistic_name][1]  # Get the upper bound
 
-    get_value = (
-        get_upper_ci_value if statistic_name.startswith("ci_") else get_single_value
-    )
+    get_value = get_upper_ci_value if statistic_name.startswith("ci_") else get_single_value
     stat_value = None
 
     if all_stats:
@@ -571,9 +526,7 @@ def query(
             # TODO tile_grid params should be serialized on all_stats object
             # We have some statistics specific to this group (e.g. osm, wms, etc)
             tile_grid = get_default_tile_grid()
-            req_bbox = mapproxy_grid.grid_bbox(
-                bbox, mapproxy_srs.SRS(bbox_srs), tile_grid.srs
-            )
+            req_bbox = mapproxy_grid.grid_bbox(bbox, mapproxy_srs.SRS(bbox_srs), tile_grid.srs)
             req_area = get_area_bbox(req_bbox)
 
             affected_tiles = get_tile_stats(group_stats, tile_grid, req_bbox)
@@ -589,9 +542,7 @@ def query(
                     t_val = get_value(tile_stat)
                     if t_val is not None:
                         tile_coord = tile_stat["tile_coord"]
-                        inter = get_bbox_intersect(
-                            req_bbox, tile_grid.tile_bbox(tile_coord, True)
-                        )
+                        inter = get_bbox_intersect(req_bbox, tile_grid.tile_bbox(tile_coord, True))
                         weight = get_area_bbox(inter) / req_area
 
                         stat_value += weight * t_val
@@ -613,9 +564,7 @@ def query(
                     method["tiles"] = {
                         "count": len(affected_tiles),
                         "total_weight": 100 * total_weight,
-                        "gap_fill": group_name
-                        if total_weight < gap_fill_thresh
-                        else "tile_mean",
+                        "gap_fill": group_name if total_weight < gap_fill_thresh else "tile_mean",
                     }
                 else:
                     # It's possible that none of the tiles had the stat we were looking for in which case gap_fill

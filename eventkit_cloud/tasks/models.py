@@ -33,8 +33,7 @@ logger = logging.getLogger(__name__)
 
 def get_all_users_by_permissions(permissions):
     return User.objects.filter(
-        models.Q(groups__name=permissions["groups"])
-        | models.Q(username__in=permissions["members"])
+        models.Q(groups__name=permissions["groups"]) | models.Q(username__in=permissions["members"])
     ).distinct()
 
 
@@ -85,9 +84,7 @@ class FileProducingTaskResult(UIDMixin, NotificationModelMixin):
 
     filename = models.CharField(max_length=508, blank=True, editable=False)
     size = models.FloatField(null=True, editable=False)
-    download_url = models.URLField(
-        verbose_name="URL to export task result output.", max_length=508
-    )
+    download_url = models.URLField(verbose_name="URL to export task result output.", max_length=508)
     deleted = models.BooleanField(default=False)
 
     def soft_delete(self, *args, **kwargs):
@@ -106,9 +103,7 @@ class FileProducingTaskResult(UIDMixin, NotificationModelMixin):
         return "FileProducingTaskResult ({}), {}".format(self.uid, self.filename)
 
 
-class ExportRun(
-    UIDMixin, TimeStampedModelMixin, TimeTrackingModelMixin, NotificationModelMixin
-):
+class ExportRun(UIDMixin, TimeStampedModelMixin, TimeTrackingModelMixin, NotificationModelMixin):
     """
     ExportRun is the main structure for storing export information.
 
@@ -119,17 +114,13 @@ class ExportRun(
     """
 
     job = models.ForeignKey(Job, related_name="runs", on_delete=models.CASCADE)
-    user = models.ForeignKey(
-        User, related_name="runs", default=0, on_delete=models.CASCADE
-    )
+    user = models.ForeignKey(User, related_name="runs", default=0, on_delete=models.CASCADE)
     worker = models.CharField(max_length=50, editable=False, default="", null=True)
     status = models.CharField(blank=True, max_length=20, db_index=True, default="")
     expiration = models.DateTimeField(default=timezone.now, editable=True)
     notified = models.DateTimeField(default=None, blank=True, null=True)
     deleted = models.BooleanField(default=False)
-    delete_user = models.ForeignKey(
-        User, null=True, blank=True, editable=False, on_delete=models.CASCADE
-    )
+    delete_user = models.ForeignKey(User, null=True, blank=True, editable=False, on_delete=models.CASCADE)
 
     class Meta:
         managed = True
@@ -165,19 +156,13 @@ class DataProviderTaskRecord(UIDMixin, TimeStampedModelMixin, TimeTrackingModelM
 
     name = models.CharField(max_length=100, blank=True)
     slug = LowerCaseCharField(max_length=40, default="")
-    run = models.ForeignKey(
-        ExportRun, related_name="provider_tasks", on_delete=models.CASCADE
-    )
+    run = models.ForeignKey(ExportRun, related_name="provider_tasks", on_delete=models.CASCADE)
     status = models.CharField(blank=True, max_length=20, db_index=True)
     display = models.BooleanField(default=False)
     estimated_size = models.FloatField(null=True, blank=True)
     estimated_duration = models.FloatField(null=True, blank=True)
     preview = models.ForeignKey(
-        MapImageSnapshot,
-        blank=True,
-        null=True,
-        on_delete=models.SET_NULL,
-        help_text="A preview for a provider task.",
+        MapImageSnapshot, blank=True, null=True, on_delete=models.SET_NULL, help_text="A preview for a provider task.",
     )
 
     class Meta:
@@ -195,12 +180,8 @@ class UserDownload(UIDMixin):
     """
 
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="downloads")
-    downloaded_at = models.DateTimeField(
-        verbose_name="Time of Download", default=timezone.now, editable=False
-    )
-    downloadable = models.ForeignKey(
-        FileProducingTaskResult, on_delete=models.CASCADE, related_name="downloads"
-    )
+    downloaded_at = models.DateTimeField(verbose_name="Time of Download", default=timezone.now, editable=False)
+    downloadable = models.ForeignKey(FileProducingTaskResult, on_delete=models.CASCADE, related_name="downloads")
 
     class Meta:
         ordering = ["-downloaded_at"]
@@ -216,9 +197,7 @@ class UserDownload(UIDMixin):
     def provider(self):
         # TODO: This is one of many reasons why DataProviderTaskRecord should maybe point to DataProvider
         if self.downloadable.export_task:
-            return DataProvider.objects.filter(
-                slug=self.downloadable.export_task.export_provider_task.slug
-            ).first()
+            return DataProvider.objects.filter(slug=self.downloadable.export_task.export_provider_task.slug).first()
 
 
 class ExportTaskRecord(UIDMixin, TimeStampedModelMixin, TimeTrackingModelMixin):
@@ -228,22 +207,14 @@ class ExportTaskRecord(UIDMixin, TimeStampedModelMixin, TimeTrackingModelMixin):
 
     celery_uid = models.UUIDField(null=True)  # celery task uid
     name = models.CharField(max_length=100)
-    export_provider_task = models.ForeignKey(
-        DataProviderTaskRecord, related_name="tasks", on_delete=models.CASCADE
-    )
+    export_provider_task = models.ForeignKey(DataProviderTaskRecord, related_name="tasks", on_delete=models.CASCADE)
     status = models.CharField(blank=True, max_length=20, db_index=True)
     pid = models.IntegerField(blank=True, default=-1)
     worker = models.CharField(max_length=100, blank=True, editable=False, null=True)
-    cancel_user = models.ForeignKey(
-        User, null=True, blank=True, editable=False, on_delete=models.CASCADE
-    )
+    cancel_user = models.ForeignKey(User, null=True, blank=True, editable=False, on_delete=models.CASCADE)
     display = models.BooleanField(default=False)
     result = models.OneToOneField(
-        "FileProducingTaskResult",
-        on_delete=models.CASCADE,
-        null=True,
-        blank=True,
-        related_name="export_task",
+        "FileProducingTaskResult", on_delete=models.CASCADE, null=True, blank=True, related_name="export_task",
     )
 
     class Meta:
@@ -262,9 +233,7 @@ class ExportTaskRecord(UIDMixin, TimeStampedModelMixin, TimeTrackingModelMixin):
 
     @progress.setter
     def progress(self, value, expiration=DEFAULT_CACHE_EXPIRTATION):
-        return set_cache_value(
-            obj=self, attribute="progress", value=value, expiration=expiration
-        )
+        return set_cache_value(obj=self, attribute="progress", value=value, expiration=expiration)
 
     @property
     def estimated_finish(self):
@@ -274,9 +243,7 @@ class ExportTaskRecord(UIDMixin, TimeStampedModelMixin, TimeTrackingModelMixin):
 
     @estimated_finish.setter
     def estimated_finish(self, value, expiration=DEFAULT_CACHE_EXPIRTATION):
-        return set_cache_value(
-            obj=self, attribute="estimated_finish", value=value, expiration=expiration
-        )
+        return set_cache_value(obj=self, attribute="estimated_finish", value=value, expiration=expiration)
 
 
 class ExportTaskException(TimeStampedModelMixin):
@@ -285,9 +252,7 @@ class ExportTaskException(TimeStampedModelMixin):
     """
 
     id = models.AutoField(primary_key=True, editable=False)
-    task = models.ForeignKey(
-        ExportTaskRecord, related_name="exceptions", on_delete=models.CASCADE
-    )
+    task = models.ForeignKey(ExportTaskRecord, related_name="exceptions", on_delete=models.CASCADE)
     exception = models.TextField(editable=False)
 
     class Meta:
@@ -303,9 +268,7 @@ def prefetch_export_runs(queryset_list_or_model):
         "provider_tasks__tasks__exceptions",
     ]
     if isinstance(queryset_list_or_model, models.query.QuerySet):
-        return queryset_list_or_model.select_related("user").prefetch_related(
-            *prefetch_args
-        )
+        return queryset_list_or_model.select_related("user").prefetch_related(*prefetch_args)
     elif isinstance(queryset_list_or_model, list):
         models.prefetch_related_objects(queryset_list_or_model, *prefetch_args)
     elif isinstance(queryset_list_or_model, ExportRun):

@@ -16,6 +16,4 @@ class Command(BaseCommand):
             logger.info(f"Clearing tile cache directory: {tile_cache_dir}")
             shutil.rmtree(tile_cache_dir)
         else:
-            logger.info(
-                f"The tile cache at {tile_cache_dir} does not exist or has already been removed."
-            )
+            logger.info(f"The tile cache at {tile_cache_dir} does not exist or has already been removed.")
