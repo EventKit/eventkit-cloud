@@ -9,7 +9,7 @@ from mapproxy import srs as mapproxy_srs
 from eventkit_cloud.jobs.models import DataProvider
 from eventkit_cloud.utils.stats.geomutils import get_area_bbox
 
-from enum import Enum, auto
+from enum import Enum
 
 logger = logging.getLogger(__name__)
 
@@ -22,24 +22,24 @@ class Stats(object):
     """
 
     # Average result, tends to give the best result while not underestimating
-    MEAN = 'mean'
-    CI_99 = 'ci_99'
-    CI_95 = 'ci_95'
-    CI_90 = 'ci_90'
-    MAX = 'max'
-    MIN = 'min'
+    MEAN = "mean"
+    CI_99 = "ci_99"
+    CI_95 = "ci_95"
+    CI_90 = "ci_90"
+    MAX = "max"
+    MIN = "min"
 
     class Fields(object):
         """Container class representing methods used for statistics."""
 
         # Used for raster images, megabytes per pixel
-        MPP = 'mpp'
+        MPP = "mpp"
         # Used for vector size estimates, size per km (size of result / area of result in km)
-        SIZE = 'size'
+        SIZE = "size"
         # Used for duration estimates for all types, seconds per unit area
-        DURATION = 'duration'
+        DURATION = "duration"
         # Unsure what the intention for this is, currently unused but exists.
-        AREA = 'area'
+        AREA = "area"
 
 
 class AoiEstimator(object):
@@ -49,9 +49,9 @@ class AoiEstimator(object):
         """Simple enum representing available estimate types."""
 
         # First two are the same, time and duration alias each other.
-        TIME = 'time'
-        DURATION = 'duration'
-        SIZE = 'size'
+        TIME = "time"
+        DURATION = "duration"
+        SIZE = "size"
 
         @classmethod
         def is_valid(cls, value):
@@ -71,7 +71,15 @@ class AoiEstimator(object):
             except AttributeError:
                 return False
 
-    def __init__(self, bbox, bbox_srs='4326', with_clipping=True, cap_estimates=True, min_zoom=None, max_zoom=None):
+    def __init__(
+        self,
+        bbox,
+        bbox_srs="4326",
+        with_clipping=True,
+        cap_estimates=True,
+        min_zoom=None,
+        max_zoom=None,
+    ):
         # It would be good to integrate a BBOX class to pass around instead of doing this
         # It can get cumbersome and lead to errors when the bbox srs is assumed
         self.bbox = bbox
@@ -85,7 +93,9 @@ class AoiEstimator(object):
     def get_estimate_from_slug(self, estimate_type, provider_slug):
         """Get the specified estimate type for a provider by doing a slug lookup."""
         try:
-            provider = DataProvider.objects.select_related("export_provider_type").get(slug=provider_slug)
+            provider = DataProvider.objects.select_related("export_provider_type").get(
+                slug=provider_slug
+            )
         except ObjectDoesNotExist:
             raise ValueError("Provider slug '{}' is not valid".format(provider_slug))
         return self.get_estimate(estimate_type, provider)
@@ -98,7 +108,10 @@ class AoiEstimator(object):
         :param providers: flat list of
         :return:
         """
-        return {_provider: self.get_estimate(estimate_type, _provider) for _provider in providers}
+        return {
+            _provider: self.get_estimate(estimate_type, _provider)
+            for _provider in providers
+        }
 
     def get_estimate(self, estimate_type, provider):
         if not self.Types.is_valid(estimate_type):
@@ -119,12 +132,14 @@ class AoiEstimator(object):
                 self.bbox_srs,
                 with_clipping=self._with_clipping,
                 min_zoom=self.min_zoom,
-                max_zoom=self.max_zoom
+                max_zoom=self.max_zoom,
             )
         elif is_vector(provider):
             return get_vector_estimate(provider, bbox=self.bbox, srs=self.bbox_srs)
         else:
-            logger.info(f"""Non-specific provider found with slug {provider.slug}, falling back to vector estimate""")
+            logger.info(
+                f"""Non-specific provider found with slug {provider.slug}, falling back to vector estimate"""
+            )
             return get_vector_estimate(provider, bbox=self.bbox, srs=self.bbox_srs)
 
     def _get_time_estimate(self, provider):
@@ -132,7 +147,7 @@ class AoiEstimator(object):
         return get_time_estimate(provider, bbox=self.bbox, bbox_srs=self.bbox_srs)
 
 
-def get_size_estimate_slug(slug, bbox, srs='4326', min_zoom=None, max_zoom=None):
+def get_size_estimate_slug(slug, bbox, srs="4326", min_zoom=None, max_zoom=None):
     """
     See get_size_estimate
     :param slug: slug of the DataProvider
@@ -140,14 +155,16 @@ def get_size_estimate_slug(slug, bbox, srs='4326', min_zoom=None, max_zoom=None)
     :param srs
     """
     try:
-        provider = DataProvider.objects.select_related("export_provider_type").get(slug=slug)
+        provider = DataProvider.objects.select_related("export_provider_type").get(
+            slug=slug
+        )
     except ObjectDoesNotExist:
         raise ValueError("Provider slug '{}' is not valid".format(slug))
 
     return get_size_estimate(provider, bbox, srs, min_zoom, max_zoom)
 
 
-def get_size_estimate(provider, bbox, srs='4326', min_zoom=None, max_zoom=None):
+def get_size_estimate(provider, bbox, srs="4326", min_zoom=None, max_zoom=None):
     """
     The estimate size of a data export from provider over the specified region, in MBs
     :param provider: DataProvider
@@ -172,7 +189,7 @@ def is_raster_tile_grid(provider):
     :return: True if the DataProvider exports a tilegrid of raster data
     """
     type_name = provider.export_provider_type.type_name
-    return type_name == 'wms' or type_name == 'wmts' or type_name == 'tms'
+    return type_name == "wms" or type_name == "wmts" or type_name == "tms"
 
 
 def is_raster_single(provider):
@@ -181,7 +198,7 @@ def is_raster_single(provider):
     :return: True if the DataProvider exports a single raster file
     """
     type_name = provider.export_provider_type.type_name
-    return type_name == 'wcs'
+    return type_name == "wcs"
 
 
 def is_vector(provider):
@@ -190,10 +207,12 @@ def is_vector(provider):
     :return: True if the DataProvider exports vector data (usually as geopackage)
     """
     type_name = provider.export_provider_type.type_name
-    return type_name == 'osm-generic' or type_name == 'osm' or type_name == 'wfs'
+    return type_name == "osm-generic" or type_name == "osm" or type_name == "wfs"
 
 
-def get_raster_tile_grid_size_estimate(provider, bbox, srs='4326', with_clipping=True, min_zoom=None, max_zoom=None):
+def get_raster_tile_grid_size_estimate(
+    provider, bbox, srs="4326", with_clipping=True, min_zoom=None, max_zoom=None
+):
     """
     :param provider: The DataProvider to test
     :param bbox: The bounding box of the request
@@ -205,12 +224,18 @@ def get_raster_tile_grid_size_estimate(provider, bbox, srs='4326', with_clipping
     tile_grid = ek_stats.get_provider_grid(provider, min_zoom, max_zoom)
     total_pixels = ek_stats.get_total_num_pixels(tile_grid, bbox, srs, with_clipping)
 
-    mpp, method = ek_stats.query(provider.name, field=Stats.Fields.MPP, statistic_name=Stats.MEAN,
-                                 bbox=bbox, bbox_srs=srs,
-                                 grouping='provider_name',
-                                 gap_fill_thresh=0.1, default_value=0.00000006)
-    method['mpp'] = mpp
-    method['with_clipping'] = with_clipping
+    mpp, method = ek_stats.query(
+        provider.name,
+        field=Stats.Fields.MPP,
+        statistic_name=Stats.MEAN,
+        bbox=bbox,
+        bbox_srs=srs,
+        grouping="provider_name",
+        gap_fill_thresh=0.1,
+        default_value=0.00000006,
+    )
+    method["mpp"] = mpp
+    method["with_clipping"] = with_clipping
     # max acceptable is expected maximum number of bytes for the specified amount of pixels
     # pixels * <pixels per byte> / <bytes per MB>
     max_acceptable = total_pixels * 3 / 1e6
@@ -218,7 +243,7 @@ def get_raster_tile_grid_size_estimate(provider, bbox, srs='4326', with_clipping
     return estimate if estimate < max_acceptable else max_acceptable, method
 
 
-def get_vector_estimate(provider, bbox, srs='4326'):
+def get_vector_estimate(provider, bbox, srs="4326"):
     """
     :param provider: The DataProvider to test
     :param bbox: The bounding box of the request
@@ -231,26 +256,37 @@ def get_vector_estimate(provider, bbox, srs='4326'):
     req_area = ek_stats.get_area_bbox(req_bbox)
 
     # Compute estimate
-    size_per_km, method = ek_stats.query(provider.export_provider_type.type_name,
-                                         field=Stats.Fields.SIZE, statistic_name=Stats.MEAN,
-                                         bbox=bbox, bbox_srs=srs, grouping='provider_type', gap_fill_thresh=0.1,
-                                         default_value=0)
-    method['size_per_km'] = size_per_km
+    size_per_km, method = ek_stats.query(
+        provider.export_provider_type.type_name,
+        field=Stats.Fields.SIZE,
+        statistic_name=Stats.MEAN,
+        bbox=bbox,
+        bbox_srs=srs,
+        grouping="provider_type",
+        gap_fill_thresh=0.1,
+        default_value=0,
+    )
+    method["size_per_km"] = size_per_km
     return req_area * size_per_km, method
 
 
-def get_time_estimate(provider, bbox, bbox_srs='4326'):
+def get_time_estimate(provider, bbox, bbox_srs="4326"):
     """
     :param provider: The DataProvider to test
     :param bbox: The bounding box of the request
     :param bbox_srs: The SRS of the bounding box
     :return: (estimate in seconds, object w/ metadata about how it was generated)
     """
-    duration_per_unit_area, method = ek_stats.query(provider.name,
-                                                    field=Stats.Fields.DURATION, statistic_name=Stats.MEAN,
-                                                    bbox=bbox, bbox_srs=bbox_srs,
-                                                    grouping='provider_name',
-                                                    gap_fill_thresh=0.1, default_value=0)
+    duration_per_unit_area, method = ek_stats.query(
+        provider.name,
+        field=Stats.Fields.DURATION,
+        statistic_name=Stats.MEAN,
+        bbox=bbox,
+        bbox_srs=bbox_srs,
+        grouping="provider_name",
+        gap_fill_thresh=0.1,
+        default_value=0,
+    )
 
     area = get_area_bbox(bbox)
     estimate = area * duration_per_unit_area

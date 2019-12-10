@@ -15,7 +15,7 @@ class GeocodeAdapter(metaclass=ABCMeta):
     each feature to have a name, countryName, adminName1, adminName2, and the bbox only
     """
 
-    _properties = ['name', 'province', 'region', 'country']
+    _properties = ["name", "province", "region", "country"]
 
     def __init__(self, url):
         self.url = url
@@ -46,7 +46,8 @@ class GeocodeAdapter(metaclass=ABCMeta):
     @abstractmethod
     def get_payload(self, query):
         """
-        This takes some query (e.g. "Boston"), and returns a dict representing query parameters that a specific api will expect.
+        This takes some query (e.g. "Boston"), and returns a dict representing query parameters that a specific api
+        will expect.
         :param query: A string
         :return: A dict of API specific query paramters.
             Input:
@@ -77,9 +78,13 @@ class GeocodeAdapter(metaclass=ABCMeta):
         response = requests.get(self.url, params=payload, headers=get_auth_headers())
         if response.status_code in [401, 403]:
             authenticate()
-            response = requests.get(self.url, params=payload, headers=get_auth_headers())
+            response = requests.get(
+                self.url, params=payload, headers=get_auth_headers()
+            )
             if not response.ok:
-                error_message = "EventKit was not able to authenticate to the Geocoding service."
+                error_message = (
+                    "EventKit was not able to authenticate to the Geocoding service."
+                )
                 logger.error(error_message)
                 raise AuthenticationError(error_message)
         return response
@@ -95,9 +100,8 @@ class GeocodeAdapter(metaclass=ABCMeta):
         if not self.url:
             return
         response_data = self.get_response(payload).json()
-        assert (isinstance(response_data, dict))
+        assert isinstance(response_data, dict)
         return self.create_geojson(response_data)
-
 
     def get_feature(self, feature=None, bbox=None, properties=None):
         """
@@ -112,34 +116,27 @@ class GeocodeAdapter(metaclass=ABCMeta):
         :return: A feature with properties mapped.
         """
         if not feature:
-            feature = {
-                "type": "Feature",
-                "geometry": None,
-                "properties": None
-            }
+            feature = {"type": "Feature", "geometry": None, "properties": None}
         if bbox and is_valid_bbox(bbox):
             # testing
-            feature['bbox'] = bbox
-            geometry = feature.get('geometry', {})
-            if not geometry or geometry.get('type') == 'Point':
-                feature['geometry'] = self.bbox2polygon(bbox)
+            feature["bbox"] = bbox
+            geometry = feature.get("geometry", {})
+            if not geometry or geometry.get("type") == "Point":
+                feature["geometry"] = self.bbox2polygon(bbox)
 
         return self.map_properties(feature, properties=properties)
 
     @staticmethod
     def get_feature_collection(features=None):
-        assert (isinstance(features, list))
-        max_bbox=None
+        assert isinstance(features, list)
+        max_bbox = None
         for feature in features:
-            bbox = feature.get('bbox')
+            bbox = feature.get("bbox")
             if bbox:
                 max_bbox = expand_bbox(max_bbox, bbox)
-        feature_collection = {
-            "type": "FeatureCollection",
-            "features": features
-        }
+        feature_collection = {"type": "FeatureCollection", "features": features}
         if is_valid_bbox(max_bbox):
-            feature_collection['bbox'] = max_bbox
+            feature_collection["bbox"] = max_bbox
         return feature_collection
 
     @staticmethod
@@ -148,38 +145,30 @@ class GeocodeAdapter(metaclass=ABCMeta):
             (w, s, e, n) = bbox
         except KeyError:
             return
-        coordinates = [
-            [
-                [w, s],
-                [e, s],
-                [e, n],
-                [w, n],
-                [w, s]
-            ]
-        ]
-        return {"type": "Polygon",
-                "coordinates": coordinates}
+        coordinates = [[[w, s], [e, s], [e, n], [w, n], [w, s]]]
+        return {"type": "Polygon", "coordinates": coordinates}
 
     def map_properties(self, feature, properties=None):
-        props = properties or feature.get('properties')
+        props = properties or feature.get("properties")
         if props:
             for key, value in self.property_map().items():
                 props[key] = props.get(value)
-        feature['properties'] = props
+        feature["properties"] = props
         return feature
 
 
 class GeoNames(GeocodeAdapter):
-
     def get_payload(self, query):
-        return {'maxRows': 20, 'username': 'eventkit', 'style': 'full', 'q': query}
+        return {"maxRows": 20, "username": "eventkit", "style": "full", "q": query}
 
     def create_geojson(self, response):
-        if 'geonames' not in response:
+        if "geonames" not in response:
             raise Exception("Geocoder did not return 'geonames' in the response")
         features = []
-        for result in response.get('geonames', []):
-            feature = self.get_feature(bbox=self.get_bbox(result.pop('bbox', None)), properties=result)
+        for result in response.get("geonames", []):
+            feature = self.get_feature(
+                bbox=self.get_bbox(result.pop("bbox", None)), properties=result
+            )
             features += [feature]
         return self.get_feature_collection(features=features)
 
@@ -188,69 +177,88 @@ class GeoNames(GeocodeAdapter):
         if not bbox:
             return
         try:
-            return [bbox['west'], bbox['south'], bbox['east'], bbox['north']]
+            return [bbox["west"], bbox["south"], bbox["east"], bbox["north"]]
         except KeyError:
             return None
 
     def property_map(self):
-        return {"name": "name", "province": "adminName2", "region": "adminName1", "country": "countryName"}
+        return {
+            "name": "name",
+            "province": "adminName2",
+            "region": "adminName1",
+            "country": "countryName",
+        }
 
     def add_bbox(self, update_url, data):
         return data
 
 
 class Pelias(GeocodeAdapter):
-
     def get_payload(self, query):
-        return {'text': query, 'geometries': 'point,polygon'}
+        return {"text": query, "geometries": "point,polygon"}
 
     def create_geojson(self, response):
-        if 'features' not in response:
+        if "features" not in response:
             raise Exception("Geocoder did not return 'features' in the response")
         features = []
-        for feature in response.get('features', []):
-            feature = self.get_feature(feature=feature, bbox=feature.get('bbox'))
+        for feature in response.get("features", []):
+            feature = self.get_feature(feature=feature, bbox=feature.get("bbox"))
             features += [feature]
         return self.get_feature_collection(features=features)
 
     def property_map(self):
-        return {"name": "name", "province": "county", "region": "region", "country": "country"}
+        return {
+            "name": "name",
+            "province": "county",
+            "region": "region",
+            "country": "country",
+        }
 
     def add_bbox(self, update_url, data):
         # the different gid levels that should be checked for a bbox
-        ids = ['neighbourhood_gid', 'locality_gid', 'county_gid', 'region_gid', 'country_gid']
-        search_id = ''
+        ids = [
+            "neighbourhood_gid",
+            "locality_gid",
+            "county_gid",
+            "region_gid",
+            "country_gid",
+        ]
+        search_id = ""
         for id in ids:
-            gid = data.get(id, data.get('properties', None).get(id, None))
+            gid = data.get(id, data.get("properties", None).get(id, None))
             # use the gid if it exists and its not gid of the data in question
             # (if it is the gid of the data then we should already have a bbox if its available at that level)
-            if gid and gid != data.get('gid'):
+            if gid and gid != data.get("gid"):
                 search_id = gid
                 break
 
         if search_id:
-            response = requests.get(update_url, params={'ids': search_id}).json()
-            features = response.get('features', [])
+            response = requests.get(update_url, params={"ids": search_id}).json()
+            features = response.get("features", [])
             if len(features):
                 feature = features[0]
-                bbox = feature.get('bbox', None)
+                bbox = feature.get("bbox", None)
                 if bbox:
-                    data['bbox'] = bbox
-                    data['properties']['bbox'] = bbox
+                    data["bbox"] = bbox
+                    data["properties"]["bbox"] = bbox
         return data
 
 
 class Geocode(object):
 
-    _supported_geocoders = {'geonames': GeoNames, 'pelias': Pelias}
+    _supported_geocoders = {"geonames": GeoNames, "pelias": Pelias}
 
     def __init__(self):
-        url = getattr(settings, 'GEOCODING_API_URL')
-        type = getattr(settings, 'GEOCODING_API_TYPE')
-        self.update_url = getattr(settings, 'GEOCODING_UPDATE_URL')
+        url = getattr(settings, "GEOCODING_API_URL")
+        type = getattr(settings, "GEOCODING_API_TYPE")
+        self.update_url = getattr(settings, "GEOCODING_UPDATE_URL")
         if not (url and type):
-            logger.error("Both a `GEOCODING_API_URL` and a `GEOCODING_API_TYPE` must be defined in the settings.")
-            raise Exception('A geocoder configuration was not provided, contact an administrator.')
+            logger.error(
+                "Both a `GEOCODING_API_URL` and a `GEOCODING_API_TYPE` must be defined in the settings."
+            )
+            raise Exception(
+                "A geocoder configuration was not provided, contact an administrator."
+            )
         self.geocoder = self.get_geocoder(type, url)
 
     @property
@@ -296,6 +304,5 @@ def expand_bbox(original_bbox, new_bbox):
 
 
 class AuthenticationError(Exception):
-
     def __init__(self, message):
         self.message = message

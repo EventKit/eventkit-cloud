@@ -5,5 +5,5 @@ from django.contrib.auth.decorators import login_required
 from eventkit_cloud.utils.views import map
 
 urlpatterns = [
-    re_path(r'^map\/(?P<slug>.*?)(?P<path>\/.*)$', login_required(map), name='map'),
+    re_path(r"^map\/(?P<slug>.*?)(?P<path>\/.*)$", login_required(map), name="map"),
 ]
