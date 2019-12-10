@@ -124,6 +124,7 @@ def pcf_scale_celery(max_tasks_memory):
     for task in running_tasks["resources"]:
         running_tasks_memory += task["memory_in_mb"]
 
+    # TODO: Too complex, clean up.
     # Check to see if there is work that we care about and if so, scale a queue specific worker to do it.
     for queue in get_all_rabbitmq_objects(broker_api_url, queue_class):
         queue_name = queue.get('name')
@@ -145,7 +146,9 @@ def pcf_scale_celery(max_tasks_memory):
                 else:
                     logger.info(
                         f"Already at max memory usage, skipping scale with {pending_messages} total pending messages left in {queue_name} queue.")
-            else:
+            elif running_tasks and not pending_messages:
+                pcf_shutdown_celery_workers.s(queue_name).apply_async(queue=queue_name, routing_key=queue_name)
+            elif running_tasks > pending_messages:
                 logger.info(
                     f"Already {running_tasks_by_queue_count} workers, processing {pending_messages} total pending messages left in {queue_name} queue.")
 
