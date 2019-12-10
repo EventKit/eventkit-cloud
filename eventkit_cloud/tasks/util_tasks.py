@@ -7,7 +7,6 @@ from celery.utils.log import get_task_logger
 from eventkit_cloud.celery import app
 from eventkit_cloud.tasks.helpers import get_message_count
 from eventkit_cloud.utils.pcf import PcfClient
-from eventkit_cloud.tasks.models import ExportTaskRecord
 from eventkit_cloud.tasks.enumerations import TaskStates
 
 import socket
@@ -27,6 +26,7 @@ def pcf_shutdown_celery_workers(queue_name, queue_type=None, hostname=None):
     :param queue_type: The type of queue, such as osm.
     :param hostname: The UUID based hostname of the workers.
     """
+    from eventkit_cloud.tasks.models import ExportTaskRecord # NOQA
 
     if os.getenv('CELERY_TASK_APP'):
         app_name = os.getenv('CELERY_TASK_APP')
