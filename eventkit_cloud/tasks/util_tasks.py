@@ -16,12 +16,13 @@ import socket
 logger = get_task_logger(__name__)
 
 
-@app.task(name="PCF Shutdown Celery Workers")
-def pcf_shutdown_celery_workers(queue_name, queue_type=None, hostname=None):
+@app.task(name="PCF Shutdown Celery Workers", bind=True)
+def pcf_shutdown_celery_workers(self, queue_name, queue_type=None, hostname=None):
     """
     Shuts down the celery workers assigned to a specific queue if there are no
     more tasks to pick up. Only call this task on PCF based deploys.
 
+    :param self: The Task instance.
     :param queue_name: The full name of the queue, such as GROUP_A.osm
     :param queue_type: The type of queue, such as osm.
     :param hostname: The UUID based hostname of the workers.
