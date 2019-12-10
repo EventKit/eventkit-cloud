@@ -62,13 +62,7 @@ def eventkit_exception_handler(exc, context):
     else:
         response_status = rest_framework.status.HTTP_500_INTERNAL_SERVER_ERROR
         response = Response(
-            {
-                "errors": {
-                    "status": response_status,
-                    "title": str(exc.__class__.__name__),
-                    "detail": str(exc),
-                }
-            },
+            {"errors": {"status": response_status, "title": str(exc.__class__.__name__), "detail": str(exc),}},
             status=response_status,
         )
     return response
@@ -97,9 +91,7 @@ def stringify(item):
     :return:
     """
     if hasattr(item, "__iter__") and len(item) > 1:
-        logger.error(
-            "Exceptions should have a title and description per message not multiple."
-        )
+        logger.error("Exceptions should have a title and description per message not multiple.")
         logger.error("Exception: {0}".format(str(item)))
     if isinstance(item, dict):
         return "{0}: {1}".get(next(iter(item.items())))
@@ -110,6 +102,4 @@ def stringify(item):
     elif item is None:
         return ""
     else:
-        raise Exception(
-            "Stringify doesn't support items of type {0}".format(type(item))
-        )
+        raise Exception("Stringify doesn't support items of type {0}".format(type(item)))

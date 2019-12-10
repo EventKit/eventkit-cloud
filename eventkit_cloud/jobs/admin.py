@@ -66,7 +66,7 @@ class JobAdmin(OSMGeoAdmin):
         # noinspection PyProtectedMember
         return render_to_response(
             self.update_template,
-            {"regions": regions, "selected": selected, "opts": self.model._meta, },
+            {"regions": regions, "selected": selected, "opts": self.model._meta,},
             context_instance=RequestContext(request),
         )
 
@@ -89,11 +89,7 @@ class JobAdmin(OSMGeoAdmin):
         # noinspection PyProtectedMember
         return render_to_response(
             self.update_complete_template,
-            {
-                "num_selected": len(selected.split(",")),
-                "region": region.name,
-                "opts": self.model._meta,
-            },
+            {"num_selected": len(selected.split(",")), "region": region.name, "opts": self.model._meta,},
             context_instance=RequestContext(request),
         )
 
@@ -101,11 +97,7 @@ class JobAdmin(OSMGeoAdmin):
         urls = super(JobAdmin, self).get_urls()
         update_urls = [
             url(r"^select/$", self.admin_site.admin_view(self.select_exports)),
-            url(
-                r"^update/$",
-                self.admin_site.admin_view(self.update_exports),
-                name="update_regions",
-            ),
+            url(r"^update/$", self.admin_site.admin_view(self.update_exports), name="update_regions",),
         ]
         return update_urls + urls
 
@@ -168,20 +160,14 @@ class DataProviderForm(forms.ModelForm):
 
         elif service_type in ["osm", "osm-generic"]:
             if not config:
-                raise forms.ValidationError(
-                    "Configuration is required for OSM data providers"
-                )
-            from eventkit_cloud.feature_selection.feature_selection import (
-                FeatureSelection,
-            )
+                raise forms.ValidationError("Configuration is required for OSM data providers")
+            from eventkit_cloud.feature_selection.feature_selection import FeatureSelection
 
             cleaned_config = clean_config(config)
             feature_selection = FeatureSelection(cleaned_config)
             feature_selection.valid
             if feature_selection.errors:
-                raise forms.ValidationError(
-                    "Invalid configuration: {0}".format(feature_selection.errors)
-                )
+                raise forms.ValidationError("Invalid configuration: {0}".format(feature_selection.errors))
 
         return config
 
@@ -228,17 +214,14 @@ class DataProviderStatusAdmin(admin.ModelAdmin):
     def color_status(self, obj):
         if obj.status == "SUCCESS":
             return format_html(
-                '<div style="width:100%%; height:100%%; background-color:rgba(0, 255, 0, 0.3);">%s</div>'
-                % obj.status
+                '<div style="width:100%%; height:100%%; background-color:rgba(0, 255, 0, 0.3);">%s</div>' % obj.status
             )
         elif obj.status.startswith("WARN"):
             return format_html(
-                '<div style="width:100%%; height:100%%; background-color:rgba(255, 255, 0, 0.3);">%s</div>'
-                % obj.status
+                '<div style="width:100%%; height:100%%; background-color:rgba(255, 255, 0, 0.3);">%s</div>' % obj.status
             )
         return format_html(
-            '<div style="width:100%%; height:100%%; background-color:rgba(255, 0, 0, 0.3);">%s</div>'
-            % obj.status
+            '<div style="width:100%%; height:100%%; background-color:rgba(255, 0, 0, 0.3);">%s</div>' % obj.status
         )
 
     color_status.short_description = "status"

@@ -156,9 +156,7 @@ class ExportTaskRecordSerializer(serializers.ModelSerializer):
 
     result = serializers.SerializerMethodField()
     errors = serializers.SerializerMethodField()
-    url = serializers.HyperlinkedIdentityField(
-        view_name="api:tasks-detail", lookup_field="uid"
-    )
+    url = serializers.HyperlinkedIdentityField(view_name="api:tasks-detail", lookup_field="uid")
 
     class Meta:
         model = ExportTaskRecord
@@ -181,9 +179,7 @@ class ExportTaskRecordSerializer(serializers.ModelSerializer):
         """Serialize the FileProducingTaskResult for this ExportTaskRecord."""
         try:
             result = obj.result
-            serializer = FileProducingTaskResultSerializer(
-                result, many=False, context=self.context
-            )
+            serializer = FileProducingTaskResultSerializer(result, many=False, context=self.context)
             return serializer.data
         except FileProducingTaskResult.DoesNotExist:
             return None  # no result yet
@@ -192,9 +188,7 @@ class ExportTaskRecordSerializer(serializers.ModelSerializer):
         """Serialize the ExportTaskExceptions for this ExportTaskRecord."""
         try:
             errors = obj.exceptions
-            serializer = ExportTaskExceptionSerializer(
-                errors, many=True, context=self.context
-            )
+            serializer = ExportTaskExceptionSerializer(errors, many=True, context=self.context)
             return serializer.data
         except ExportTaskException.DoesNotExist:
             return None
@@ -207,37 +201,35 @@ class ExportTaskListSerializer(serializers.BaseSerializer):
 
 class DataProviderTaskRecordSerializer(serializers.ModelSerializer):
     tasks = serializers.SerializerMethodField()
-    url = serializers.HyperlinkedIdentityField(
-        view_name="api:provider_tasks-detail", lookup_field="uid"
-    )
+    url = serializers.HyperlinkedIdentityField(view_name="api:provider_tasks-detail", lookup_field="uid")
     preview_url = serializers.SerializerMethodField()
 
     def get_tasks(self, obj):
         request = self.context["request"]
         if request.query_params.get("slim"):
-            return ExportTaskListSerializer(
-                obj.tasks, many=True, required=False, context=self.context
-            ).data
+            return ExportTaskListSerializer(obj.tasks, many=True, required=False, context=self.context).data
         else:
-            return ExportTaskRecordSerializer(
-                obj.tasks, many=True, required=False, context=self.context
-            ).data
+            return ExportTaskRecordSerializer(obj.tasks, many=True, required=False, context=self.context).data
 
     def get_preview_url(self, obj):
         from urllib.parse import urlsplit, ParseResult
+
         preview = obj.preview
         if preview is not None:
-            request = urlsplit(self.context['request'].build_absolute_uri())
-            if getattr(settings, 'USE_S3', False):
+            request = urlsplit(self.context["request"].build_absolute_uri())
+            if getattr(settings, "USE_S3", False):
                 return get_presigned_url(preview.download_url)
             # Otherwise, grab the hostname from the request and tack on the relative url.
-            return ParseResult(scheme=request.scheme,
-                               netloc=request.netloc,
-                               path=f'{preview.download_url}',
-                               params='', query='', fragment='').geturl()
+            return ParseResult(
+                scheme=request.scheme,
+                netloc=request.netloc,
+                path=f"{preview.download_url}",
+                params="",
+                query="",
+                fragment="",
+            ).geturl()
         else:
-            return ''
-
+            return ""
 
     class Meta:
         model = DataProviderTaskRecord
@@ -254,9 +246,9 @@ class DataProviderTaskRecordSerializer(serializers.ModelSerializer):
             "slug",
             "estimated_size",
             "estimated_duration",
-            "preview_url"
+            "preview_url",
         )
-        
+
 
 class DataProviderListSerializer(serializers.BaseSerializer):
     def to_representation(self, obj):
@@ -289,9 +281,7 @@ class SimpleJobSerializer(serializers.Serializer):
     name = serializers.CharField()
     event = serializers.CharField()
     description = serializers.CharField()
-    url = serializers.HyperlinkedIdentityField(
-        view_name="api:jobs-detail", lookup_field="uid"
-    )
+    url = serializers.HyperlinkedIdentityField(view_name="api:jobs-detail", lookup_field="uid")
     extent = serializers.SerializerMethodField()
     original_selection = serializers.SerializerMethodField(read_only=True)
     # bounds = serializers.SerializerMethodField()
@@ -369,9 +359,7 @@ class LicenseSerializer(serializers.ModelSerializer):
 class ExportRunSerializer(serializers.ModelSerializer):
     """Serialize ExportRun."""
 
-    url = serializers.HyperlinkedIdentityField(
-        view_name="api:runs-detail", lookup_field="uid"
-    )
+    url = serializers.HyperlinkedIdentityField(view_name="api:runs-detail", lookup_field="uid")
     job = serializers.SerializerMethodField()  # nest the job details
     provider_tasks = serializers.SerializerMethodField()
     user = serializers.SerializerMethodField()
@@ -414,26 +402,16 @@ class ExportRunSerializer(serializers.ModelSerializer):
         if not obj.deleted:
             request = self.context["request"]
             if request.query_params.get("slim"):
-                return DataProviderListSerializer(
-                    obj.provider_tasks, many=True, context=self.context
-                ).data
+                return DataProviderListSerializer(obj.provider_tasks, many=True, context=self.context).data
             else:
-                return DataProviderTaskRecordSerializer(
-                    obj.provider_tasks, many=True, context=self.context
-                ).data
+                return DataProviderTaskRecordSerializer(obj.provider_tasks, many=True, context=self.context).data
 
     def get_zipfile_url(self, obj):
         request = self.context["request"]
         if obj.provider_tasks.filter(name="run"):
-            task_downloadable = (
-                obj.provider_tasks.get(name="run")
-                .tasks.filter(name__icontains="zip")[0]
-                .result
-            )
+            task_downloadable = obj.provider_tasks.get(name="run").tasks.filter(name__icontains="zip")[0].result
             if task_downloadable:
-                return request.build_absolute_uri(
-                    "/download?uid={}".format(task_downloadable.uid)
-                )
+                return request.build_absolute_uri("/download?uid={}".format(task_downloadable.uid))
         return ""
 
     def get_created_at(self, obj):
@@ -490,20 +468,14 @@ class GroupSerializer(serializers.ModelSerializer):
 
     @staticmethod
     def get_group_permissions(instance):
-        return GroupPermission.objects.filter(group=instance).prefetch_related(
-            "user", "group"
-        )
+        return GroupPermission.objects.filter(group=instance).prefetch_related("user", "group")
 
     def get_members(self, instance):
-        qs = self.get_group_permissions(instance).filter(
-            permission=GroupPermissionLevel.MEMBER.value
-        )
+        qs = self.get_group_permissions(instance).filter(permission=GroupPermissionLevel.MEMBER.value)
         return [permission.user.username for permission in qs]
 
     def get_administrators(self, instance):
-        qs = self.get_group_permissions(instance).filter(
-            permission=GroupPermissionLevel.ADMIN.value
-        )
+        qs = self.get_group_permissions(instance).filter(permission=GroupPermissionLevel.ADMIN.value)
         return [permission.user.username for permission in qs]
 
     @staticmethod
@@ -526,9 +498,9 @@ class GroupUserSerializer(serializers.ModelSerializer):
         limit = 1000
         if request.query_params.get("limit"):
             limit = int(request.query_params.get("limit"))
-        gp_admins = GroupPermission.objects.filter(group=instance).filter(
-            permission=GroupPermissionLevel.ADMIN.value
-        )[:limit]
+        gp_admins = GroupPermission.objects.filter(group=instance).filter(permission=GroupPermissionLevel.ADMIN.value)[
+            :limit
+        ]
         admins = [gp.user for gp in gp_admins]
         members = []
         gp_members = (
@@ -540,12 +512,8 @@ class GroupUserSerializer(serializers.ModelSerializer):
             if gp.user not in admins:
                 members.append(gp.user)
 
-        return [
-            self.user_representation(user, GroupPermissionLevel.ADMIN.value)
-            for user in admins
-        ] + [
-            self.user_representation(user, GroupPermissionLevel.MEMBER.value)
-            for user in members
+        return [self.user_representation(user, GroupPermissionLevel.ADMIN.value) for user in admins] + [
+            self.user_representation(user, GroupPermissionLevel.MEMBER.value) for user in members
         ]
 
     @staticmethod
@@ -649,27 +617,18 @@ class UserDataSerializer(serializers.Serializer):
     @staticmethod
     def get_groups(instance):
         group_ids = [
-            perm.group.id
-            for perm in GroupPermission.objects.filter(user=instance).filter(
-                permission="MEMBER"
-            )
+            perm.group.id for perm in GroupPermission.objects.filter(user=instance).filter(permission="MEMBER")
         ]
         return group_ids
 
     def update(self, instance, validated_data):
         if self.context.get("request").data.get("accepted_licenses"):
-            for slug, selected in (
-                self.context.get("request").data.get("accepted_licenses").items()
-            ):
-                user_license = UserLicense.objects.filter(
-                    user=instance, license=License.objects.get(slug=slug)
-                )
+            for slug, selected in self.context.get("request").data.get("accepted_licenses").items():
+                user_license = UserLicense.objects.filter(user=instance, license=License.objects.get(slug=slug))
                 if user_license and not selected:
                     user_license.delete()
                 if not user_license and selected:
-                    UserLicense.objects.create(
-                        user=instance, license=License.objects.get(slug=slug)
-                    )
+                    UserLicense.objects.create(user=instance, license=License.objects.get(slug=slug))
         return instance
 
     def create(self, validated_data, **kwargs):
@@ -688,9 +647,7 @@ class RegionMaskSerializer(geo_serializers.GeoFeatureModelSerializer):
 class RegionSerializer(geo_serializers.GeoFeatureModelSerializer):
     """Serializer returning GeoJSON representation of Regions."""
 
-    url = serializers.HyperlinkedIdentityField(
-        view_name="api:regions-detail", lookup_field="uid"
-    )
+    url = serializers.HyperlinkedIdentityField(view_name="api:regions-detail", lookup_field="uid")
     id = serializers.SerializerMethodField()
 
     class Meta:
@@ -706,9 +663,7 @@ class RegionSerializer(geo_serializers.GeoFeatureModelSerializer):
 class SimpleRegionSerializer(serializers.ModelSerializer):
     """Serializer for returning Region model data without geometry."""
 
-    url = serializers.HyperlinkedIdentityField(
-        view_name="api:regions-detail", lookup_field="uid"
-    )
+    url = serializers.HyperlinkedIdentityField(view_name="api:regions-detail", lookup_field="uid")
 
     class Meta:
         model = Region
@@ -718,9 +673,7 @@ class SimpleRegionSerializer(serializers.ModelSerializer):
 class ExportFormatSerializer(serializers.ModelSerializer):
     """Return a representation of the ExportFormat model."""
 
-    url = serializers.HyperlinkedIdentityField(
-        view_name="api:formats-detail", lookup_field="slug"
-    )
+    url = serializers.HyperlinkedIdentityField(view_name="api:formats-detail", lookup_field="slug")
     supported_projections = serializers.SerializerMethodField(read_only=True)
 
     class Meta:
@@ -729,15 +682,11 @@ class ExportFormatSerializer(serializers.ModelSerializer):
 
     @staticmethod
     def get_supported_projections(obj):
-        return obj.supported_projections.all().values(
-            "uid", "name", "srid", "description"
-        )
+        return obj.supported_projections.all().values("uid", "name", "srid", "description")
 
 
 class DataProviderSerializer(serializers.ModelSerializer):
-    model_url = serializers.HyperlinkedIdentityField(
-        view_name="api:providers-detail", lookup_field="slug"
-    )
+    model_url = serializers.HyperlinkedIdentityField(view_name="api:providers-detail", lookup_field="slug")
     type = serializers.SerializerMethodField(read_only=True)
     supported_formats = serializers.SerializerMethodField(read_only=True)
     thumbnail_url = serializers.SerializerMethodField(read_only=True)
@@ -773,9 +722,7 @@ class DataProviderSerializer(serializers.ModelSerializer):
 
     @staticmethod
     def get_supported_formats(obj):
-        return obj.export_provider_type.supported_formats.all().values(
-            "uid", "name", "slug", "description"
-        )
+        return obj.export_provider_type.supported_formats.all().values("uid", "name", "slug", "description")
 
     def get_thumbnail_url(self, obj):
         from urllib.parse import urlsplit, ParseResult
@@ -812,9 +759,7 @@ class ListJobSerializer(serializers.Serializer):
         super(ListJobSerializer, self).update(instance, validated_data)
 
     uid = serializers.SerializerMethodField()
-    url = serializers.HyperlinkedIdentityField(
-        view_name="api:jobs-detail", lookup_field="uid"
-    )
+    url = serializers.HyperlinkedIdentityField(view_name="api:jobs-detail", lookup_field="uid")
     name = serializers.CharField()
     description = serializers.CharField()
     event = serializers.CharField()
@@ -888,9 +833,7 @@ class JobSerializer(serializers.Serializer):
     provider_tasks = ProviderTaskSerializer(many=True)
 
     uid = serializers.UUIDField(read_only=True)
-    url = serializers.HyperlinkedIdentityField(
-        view_name="api:jobs-detail", lookup_field="uid"
-    )
+    url = serializers.HyperlinkedIdentityField(view_name="api:jobs-detail", lookup_field="uid")
     name = serializers.CharField(max_length=100,)
     description = serializers.CharField(max_length=255,)
     event = serializers.CharField(max_length=100, allow_blank=True, required=False)
@@ -900,9 +843,7 @@ class JobSerializer(serializers.Serializer):
     permissions = serializers.SerializerMethodField(read_only=True)
     relationship = serializers.SerializerMethodField(read_only=True)
     exports = serializers.SerializerMethodField()
-    preset = serializers.PrimaryKeyRelatedField(
-        queryset=DatamodelPreset.objects.all(), required=False
-    )
+    preset = serializers.PrimaryKeyRelatedField(queryset=DatamodelPreset.objects.all(), required=False)
     published = serializers.BooleanField(required=False)
     visibility = serializers.CharField(required=False)
     featured = serializers.BooleanField(required=False)
@@ -934,13 +875,9 @@ class JobSerializer(serializers.Serializer):
         See api/validators.py for validation code.
         """
         user = data["user"]
-        selection = validators.validate_selection(
-            self.context["request"].data, user=user
-        )
+        selection = validators.validate_selection(self.context["request"].data, user=user)
         data["the_geom"] = selection
-        original_selection = validators.validate_original_selection(
-            self.context["request"].data
-        )
+        original_selection = validators.validate_original_selection(self.context["request"].data)
         data["original_selection"] = original_selection
         data.pop("provider_tasks")
 
@@ -980,13 +917,9 @@ class JobSerializer(serializers.Serializer):
         exports = []
         for provider_task in obj.provider_tasks.all():
             serializer = ExportFormatSerializer(
-                provider_task.formats,
-                many=True,
-                context={"request": self.context["request"]},
+                provider_task.formats, many=True, context={"request": self.context["request"]},
             )
-            exports.append(
-                {"provider": provider_task.provider.name, "formats": serializer.data}
-            )
+            exports.append({"provider": provider_task.provider.name, "formats": serializer.data})
         return exports
 
     def get_provider_tasks(self, obj):
@@ -994,9 +927,7 @@ class JobSerializer(serializers.Serializer):
         exports = []
         for provider_task in obj.provider_tasks.all():
             serializer = ProviderTaskSerializer(
-                provider_task.formats,
-                many=True,
-                context={"request": self.context["request"]},
+                provider_task.formats, many=True, context={"request": self.context["request"]},
             )
             exports.append({provider_task.provider.name: serializer.data})
         return exports
@@ -1004,9 +935,7 @@ class JobSerializer(serializers.Serializer):
     def get_providers(self, obj):
         """Return the export formats selected for this export."""
         providers = [provider_format for provider_format in obj.providers.all()]
-        serializer = DataProviderSerializer(
-            providers, many=True, context={"request": self.context["request"]}
-        )
+        serializer = DataProviderSerializer(providers, many=True, context={"request": self.context["request"]})
         return serializer.data
 
     @staticmethod
@@ -1040,9 +969,7 @@ class UserJobActivitySerializer(serializers.ModelSerializer):
 
     def get_last_export_run(self, obj):
         if obj.job.last_export_run:
-            serializer = ExportRunSerializer(
-                obj.job.last_export_run, context={"request": self.context["request"]}
-            )
+            serializer = ExportRunSerializer(obj.job.last_export_run, context={"request": self.context["request"]})
             return serializer.data
         else:
             return None
@@ -1053,13 +980,9 @@ class GenericNotificationRelatedSerializer(serializers.BaseSerializer):
         if isinstance(referenced_object, User):
             serializer = UserSerializer(referenced_object)
         elif isinstance(referenced_object, Job):
-            serializer = NotificationJobSerializer(
-                referenced_object, context={"request": self.context["request"]}
-            )
+            serializer = NotificationJobSerializer(referenced_object, context={"request": self.context["request"]})
         elif isinstance(referenced_object, ExportRun):
-            serializer = NotificationRunSerializer(
-                referenced_object, context={"request": self.context["request"]}
-            )
+            serializer = NotificationRunSerializer(referenced_object, context={"request": self.context["request"]})
         elif isinstance(referenced_object, Group):
             serializer = GroupSerializer(referenced_object)
         return serializer.data
@@ -1096,8 +1019,7 @@ class NotificationSerializer(serializers.ModelSerializer):
                 "type": str(ContentType.objects.get(id=type_id).model),
                 "id": getattr(obj, "{0}_object_id".format(related_type)),
                 "details": GenericNotificationRelatedSerializer(
-                    getattr(obj, related_type),
-                    context={"request": self.context["request"]},
+                    getattr(obj, related_type), context={"request": self.context["request"]},
                 ).data,
             }
 
