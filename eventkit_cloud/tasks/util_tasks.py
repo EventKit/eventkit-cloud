@@ -7,6 +7,8 @@ from celery.utils.log import get_task_logger
 from eventkit_cloud.celery import app
 from eventkit_cloud.tasks.helpers import get_message_count
 from eventkit_cloud.utils.pcf import PcfClient
+from eventkit_cloud.tasks.models import ExportTaskRecord
+from eventkit_cloud.tasks.enumerations import TaskStates
 
 
 # Get an instance of a logger
@@ -37,11 +39,14 @@ def pcf_shutdown_celery_workers(queue_name, queue_type, hostname):
     running_tasks_by_queue = client.get_running_tasks(app_name, queue_name)
     running_tasks_by_queue_count = running_tasks_by_queue["pagination"]["total_results"]
 
-    if running_tasks_by_queue_count > messages:
+    if running_tasks_by_queue_count > messages and not ExportTaskRecord.objects.filter(worker=hostname, status__in=TaskStates.get_not_finished_states()):
         logger.info(f"No work remaining on the {queue_name} queue, shutting down {workers}")
         app.control.shutdown(destination=workers)
+        # return value is unused but useful for storing in the celery result.
+        return {"action": "shutdown", "workers": workers}
     else:
         logger.info(
             f"There are {running_tasks_by_queue_count} running tasks for \
             {queue_name} and {messages} on the queue, skipping shutdown."
         )
+        return {"action": "skipped shutdown"}

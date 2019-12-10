@@ -88,26 +88,29 @@ def pcf_scale_celery(max_tasks_memory):
 
     celery_tasks = {
         celery_group_name: {
-            "command": "python manage.py runinitial && celery worker -A eventkit_cloud --concurrency=$CONCURRENCY --loglevel=$LOG_LEVEL -n worker@%h -Q $CELERY_GROUP_NAME ",
-            "disk": 4096,
+            "command": "celery worker -A eventkit_cloud --concurrency=$CONCURRENCY --loglevel=$LOG_LEVEL -n worker@%h -Q $CELERY_GROUP_NAME ",
+            "disk": 2048,
             "memory": 1024
         },
         "celery": {
-            "command": "python manage.py runinitial && celery worker -A eventkit_cloud --loglevel=$LOG_LEVEL -n celery@%h -Q celery ",
-            "disk": 4096,
+            "command": "celery worker -A eventkit_cloud --loglevel=$LOG_LEVEL -n celery@%h -Q celery ",
+            "disk": 2048,
             "memory": 1024
         },
         f"{celery_group_name}.osm": {
-            "command": "python manage.py runinitial && celery worker -A eventkit_cloud --concurrency=1 --loglevel=$LOG_LEVEL -n osm@%h -Q $CELERY_GROUP_NAME.osm ",
-            "disk": 4096,
+            "command": "celery worker -A eventkit_cloud --concurrency=1 --loglevel=$LOG_LEVEL -n osm@%h -Q $CELERY_GROUP_NAME.osm ",
+            "disk": 2048,
             "memory": 4096
         },
         f"{celery_group_name}.finalize": {
-            "command": "python manage.py runinitial && celery worker -A eventkit_cloud --concurrency=2 -n finalize@%h -Q $CELERY_GROUP_NAME.finalize ",
-            "disk": 4096,
+            "command": "celery worker -A eventkit_cloud --concurrency=1 --loglevel=$LOG_LEVEL -n finalize@%h -Q $CELERY_GROUP_NAME.finalize ",
+            "disk": 2048,
             "memory": 1024
         }
     }
+
+    celery_tasks = json.loads(os.getenv("CELERY_TASKS", "{}")) or celery_tasks
+
     cancel_queue_command = "& exec celery worker -A eventkit_cloud --loglevel=$LOG_LEVEL -n cancel@%h -Q $HOSTNAME.cancel"
 
     broker_api_url = getattr(settings, 'BROKER_API_URL')
@@ -125,7 +128,7 @@ def pcf_scale_celery(max_tasks_memory):
     for queue in get_all_rabbitmq_objects(broker_api_url, queue_class):
         queue_name = queue.get('name')
         pending_messages = queue.get('messages', 0)
-        if celery_group_name in queue_name or queue_name == "celery":
+        if queue_name in celery_tasks.keys():
             logger.info(f"Queue {queue_name} has {pending_messages} pending messages.")
             running_tasks_by_queue = client.get_running_tasks(app_name, queue_name)
             running_tasks_by_queue_count = running_tasks_by_queue["pagination"]["total_results"]
