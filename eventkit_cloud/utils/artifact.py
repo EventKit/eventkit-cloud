@@ -1,5 +1,5 @@
 class Artifact(object):
-    def __init__(self,parts,format_name,theme=None,basename=None):
+    def __init__(self, parts, format_name, theme=None, basename=None):
         self._parts = parts
         self._theme = theme
         self._format_name = format_name
@@ -28,4 +28,6 @@ class Artifact(object):
                 raise Exception("Basename must be specified for multipart artifact")
 
     def __repr__(self):
-        return "artifact: {0} {1} {2}".format(self._parts, self._theme, self._format_name)
+        return "artifact: {0} {1} {2}".format(
+            self._parts, self._theme, self._format_name
+        )

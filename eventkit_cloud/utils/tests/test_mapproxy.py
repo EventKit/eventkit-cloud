@@ -123,7 +123,7 @@ class TestHelpers(TransactionTestCase):
         mock_get_zoom_levels.assert_called_once_with(example_geopackage, table_name)
         mock_tile_matrix.assert_called_once_with(example_geopackage, table_name)
         mock_sql.connect().__enter__().execute.assert_called_once_with(
-            '\nINSERT OR REPLACE INTO gpkg_tile_matrix (table_name, zoom_level, matrix_width, matrix_height, tile_width, tile_height, pixel_x_size, pixel_y_size) \nVALUES(?, ?, ?, ?, ?, ?, ?, ?)',
+            '\nINSERT OR REPLACE INTO gpkg_tile_matrix (table_name, zoom_level, matrix_width, matrix_height, tile_width, tile_height,\npixel_x_size, pixel_y_size)\nVALUES(?, ?, ?, ?, ?, ?, ?, ?)',
             ('tiles', 2, 4, 2, 256, 256, 0.3515625, 0.3515625))
 
     @patch('eventkit_cloud.utils.mapproxy.cache')
