@@ -89,22 +89,22 @@ def pcf_scale_celery(max_tasks_memory):
     celery_tasks = {
         celery_group_name: {
             "command": "celery worker -A eventkit_cloud --concurrency=$CONCURRENCY --loglevel=$LOG_LEVEL -n worker@%h -Q $CELERY_GROUP_NAME ",
-            "disk": 1536,
+            "disk": 2048,
             "memory": 1024
         },
         "celery": {
             "command": "celery worker -A eventkit_cloud --concurrency=1 --loglevel=$LOG_LEVEL -n celery@%h -Q celery ",
-            "disk": 1536,
+            "disk": 2048,
             "memory": 1024
         },
         f"{celery_group_name}.osm": {
             "command": "celery worker -A eventkit_cloud --concurrency=1 --loglevel=$LOG_LEVEL -n osm@%h -Q $CELERY_GROUP_NAME.osm ",
-            "disk": 1536,
+            "disk": 2048,
             "memory": 4096
         },
         f"{celery_group_name}.finalize": {
             "command": "celery worker -A eventkit_cloud --concurrency=1 --loglevel=$LOG_LEVEL -n finalize@%h -Q $CELERY_GROUP_NAME.finalize ",
-            "disk": 1536,
+            "disk": 2048,
             "memory": 1024
         }
     }
