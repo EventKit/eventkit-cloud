@@ -38,19 +38,11 @@ def retry(f):
             try:
                 return_value = f(*args, **kwds)
                 if not return_value:
-                    logger.error(
-                        "The function {0} failed to return any values.".format(
-                            getattr(f, "__name__")
-                        )
-                    )
-                    raise Exception(
-                        "The process failed to return any data, please contact an administrator."
-                    )
+                    logger.error("The function {0} failed to return any values.".format(getattr(f, "__name__")))
+                    raise Exception("The process failed to return any data, please contact an administrator.")
                 return return_value
             except Exception as e:
-                logger.error(
-                    "The function {0} threw an error.".format(getattr(f, "__name__"))
-                )
+                logger.error("The function {0} threw an error.".format(getattr(f, "__name__")))
                 logger.error(str(e))
                 exc = e
 
@@ -138,9 +130,7 @@ def get_meta(ds_path):
     """
 
     multiprocess_queue = billiard.Queue()
-    proc = billiard.Process(
-        target=get_gdal_metadata, daemon=True, args=(ds_path, multiprocess_queue,)
-    )
+    proc = billiard.Process(target=get_gdal_metadata, daemon=True, args=(ds_path, multiprocess_queue,))
     proc.start()
     proc.join()
     return multiprocess_queue.get()
@@ -166,14 +156,7 @@ def get_gdal_metadata(ds_path, multiprocess_queue):
             ret["driver"] = ds.GetDriver().ShortName
             ret["is_raster"] = True
             if ds.RasterCount:
-                bands = list(
-                    set(
-                        [
-                            ds.GetRasterBand(i + 1).GetNoDataValue()
-                            for i in range(ds.RasterCount)
-                        ]
-                    )
-                )
+                bands = list(set([ds.GetRasterBand(i + 1).GetNoDataValue() for i in range(ds.RasterCount)]))
                 if len(bands) == 1:
                     ret["nodata"] = bands[0]
 
@@ -268,11 +251,7 @@ def is_envelope(geojson_path):
             return False  # Envelopes need exactly four valid coordinates
 
         # Envelopes will have exactly two unique coordinates, for both x and y, out of those four
-        ret = (
-            len(set([coord[0] for coord in ring]))
-            == len(set([coord[1] for coord in ring]))
-            == 2
-        )
+        ret = len(set([coord[0] for coord in ring])) == len(set([coord[1] for coord in ring])) == 2
         return ret
 
     except (IndexError, IOError, ValueError):
@@ -285,13 +264,7 @@ def is_envelope(geojson_path):
 
 @retry
 def clip_dataset(
-    boundary=None,
-    in_dataset=None,
-    out_dataset=None,
-    fmt=None,
-    table=None,
-    task_uid=None,
-    params: str = "",
+    boundary=None, in_dataset=None, out_dataset=None, fmt=None, table=None, task_uid=None, params: str = "",
 ):
     """
     Uses gdalwarp or ogr2ogr to clip a supported dataset file to a mask.
@@ -332,25 +305,23 @@ def clip_dataset(
     # act idempotently.
     if table:
         cmd_template = Template(
-            "ogr2ogr -skipfailures $extra_parameters -nlt PROMOTE_TO_MULTI -overwrite -f $fmt -clipsrc $boundary $out_ds $in_ds $table" # NOQA
+            "ogr2ogr -skipfailures $extra_parameters -nlt PROMOTE_TO_MULTI -overwrite -f $fmt -clipsrc $boundary $out_ds $in_ds $table"  # NOQA
         )
     elif meta["is_raster"]:
         cmd_template = Template(
-            "gdalwarp -overwrite $extra_parameters -cutline $boundary -crop_to_cutline $dstalpha -of $fmt $type $in_ds $out_ds" # NOQA
+            "gdalwarp -overwrite $extra_parameters -cutline $boundary -crop_to_cutline $dstalpha -of $fmt $type $in_ds $out_ds"  # NOQA
         )
         # Geopackage raster only supports byte band type, so check for that
         if fmt.lower() == "gpkg":
             band_type = "-ot byte"
     else:
         cmd_template = Template(
-            "ogr2ogr -skipfailures $extra_parameters -nlt PROMOTE_TO_MULTI -overwrite -f $fmt -clipsrc $boundary $out_ds $in_ds" # NOQA
+            "ogr2ogr -skipfailures $extra_parameters -nlt PROMOTE_TO_MULTI -overwrite -f $fmt -clipsrc $boundary $out_ds $in_ds"  # NOQA
         )
 
     temp_boundfile = None
     if isinstance(boundary, list):
-        boundary = " ".join(
-            str(i) for i in boundary
-        )  # ogr2ogr can handle bbox as params
+        boundary = " ".join(str(i) for i in boundary)  # ogr2ogr can handle bbox as params
         if not table:  # gdalwarp needs a file
             temp_boundfile = NamedTemporaryFile()
             bounds_template = Template(
@@ -359,12 +330,7 @@ def clip_dataset(
                 "max],[$xmin,$ymax],[$xmin,$ymin]]]]}"
             )
             geojson = bounds_template.safe_substitute(
-                {
-                    "xmin": boundary[0],
-                    "ymin": boundary[1],
-                    "xmax": boundary[2],
-                    "ymax": boundary[3],
-                }
+                {"xmin": boundary[0], "ymin": boundary[1], "xmax": boundary[2], "ymax": boundary[3],}
             )
             temp_boundfile.write(geojson.encode())
             temp_boundfile.flush()
@@ -405,11 +371,7 @@ def clip_dataset(
 
         task_process = TaskProcess(task_uid=task_uid)
         task_process.start_process(
-            cmd,
-            shell=True,
-            executable="/bin/bash",
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
+            cmd, shell=True, executable="/bin/bash", stdout=subprocess.PIPE, stderr=subprocess.PIPE,
         )
 
     finally:
@@ -419,9 +381,7 @@ def clip_dataset(
     if task_process.exitcode != 0:
         logger.error("{0}".format(task_process.stdout))
         logger.error("{0}".format(task_process.stderr))
-        raise Exception(
-            "Cutline process failed with return code {0}".format(task_process.exitcode)
-        )
+        raise Exception("Cutline process failed with return code {0}".format(task_process.exitcode))
 
     return out_dataset
 
@@ -485,9 +445,7 @@ def convert(
 
     if is_raster:
         if use_translate:
-            cmd_template = Template(
-                "gdal_translate $extra_parameters -of $fmt $type $in_ds $out_ds"
-            )
+            cmd_template = Template("gdal_translate $extra_parameters -of $fmt $type $in_ds $out_ds")
         else:
             cmd_template = Template(
                 "gdalwarp -overwrite $extra_parameters -of $fmt $type $in_ds $out_ds -s_srs EPSG:4326 "
@@ -513,21 +471,13 @@ def convert(
 
     task_process = TaskProcess(task_uid=task_uid)
     task_process.start_process(
-        cmd,
-        shell=True,
-        executable="/bin/bash",
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE,
+        cmd, shell=True, executable="/bin/bash", stdout=subprocess.PIPE, stderr=subprocess.PIPE,
     )
 
     if task_process.exitcode != 0:
         logger.error("{0}".format(task_process.stdout))
         logger.error("{0}".format(task_process.stderr))
-        raise Exception(
-            "Conversion process failed with return code {0}".format(
-                task_process.exitcode
-            )
-        )
+        raise Exception("Conversion process failed with return code {0}".format(task_process.exitcode))
     if requires_zip(file_format):
         logger.debug("Requires zip: {0}".format(out_file))
         out_file = create_zip_file(out_file, get_zip_name(out_file))
@@ -609,28 +559,18 @@ def merge_geotiffs(in_files, out_file, task_uid=None):
     :return: The out_file path.
     """
     cmd_template = Template("gdalwarp $in_ds $out_ds")
-    cmd = cmd_template.safe_substitute(
-        {"in_ds": " ".join(in_files), "out_ds": out_file}
-    )
+    cmd = cmd_template.safe_substitute({"in_ds": " ".join(in_files), "out_ds": out_file})
 
     logger.debug("GDAL merge cmd: {0}".format(cmd))
 
     task_process = TaskProcess(task_uid=task_uid)
     task_process.start_process(
-        cmd,
-        shell=True,
-        executable="/bin/bash",
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE,
+        cmd, shell=True, executable="/bin/bash", stdout=subprocess.PIPE, stderr=subprocess.PIPE,
     )
 
     if task_process.exitcode != 0:
         logger.error("{0}".format(task_process.stderr))
-        raise Exception(
-            "GeoTIFF merge process failed with return code {0}".format(
-                task_process.exitcode
-            )
-        )
+        raise Exception("GeoTIFF merge process failed with return code {0}".format(task_process.exitcode))
 
     return out_file
 
@@ -654,10 +594,7 @@ def get_band_statistics(file_path, band=1):
 
 
 def rename_duplicate(original_file: str) -> str:
-    returned_file = os.path.join(
-        os.path.dirname(original_file),
-        "old_{0}".format(os.path.basename(original_file)),
-    )
+    returned_file = os.path.join(os.path.dirname(original_file), "old_{0}".format(os.path.basename(original_file)),)
     # if the original and renamed files both exist, we can remove the renamed version, and then rename the file.
     if os.path.isfile(returned_file) and os.path.isfile(original_file):
         os.remove(returned_file)

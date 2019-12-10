@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
 
 
-from eventkit_cloud.tasks.debug_tasks import * # NOQA
-from eventkit_cloud.tasks.export_tasks import * # NOQA
-from eventkit_cloud.tasks.scheduled_tasks import * # NOQA
+from eventkit_cloud.tasks.debug_tasks import *  # NOQA
+from eventkit_cloud.tasks.export_tasks import *  # NOQA
+from eventkit_cloud.tasks.scheduled_tasks import *  # NOQA
 from django.core.cache import cache
 from django.apps import apps as django_apps
 
@@ -48,26 +48,12 @@ def get_cache_key(obj=None, attribute=None, uid=None, model_name=None):
 
 
 def set_cache_value(
-    obj=None,
-    uid=None,
-    attribute=None,
-    value=None,
-    model_name=None,
-    expiration=DEFAULT_CACHE_EXPIRTATION,
+    obj=None, uid=None, attribute=None, value=None, model_name=None, expiration=DEFAULT_CACHE_EXPIRTATION,
 ):
     return cache.set(
-        get_cache_key(
-            obj=obj, attribute=attribute, uid=str(uid), model_name=model_name
-        ),
-        value,
-        timeout=expiration,
+        get_cache_key(obj=obj, attribute=attribute, uid=str(uid), model_name=model_name), value, timeout=expiration,
     )
 
 
 def get_cache_value(obj=None, uid=None, attribute=None, model_name=None, default=None):
-    return cache.get(
-        get_cache_key(
-            obj=obj, attribute=attribute, uid=str(uid), model_name=model_name
-        ),
-        default,
-    )
+    return cache.get(get_cache_key(obj=obj, attribute=attribute, uid=str(uid), model_name=model_name), default,)

@@ -18,9 +18,7 @@ logger = logging.getLogger(__name__)
 
 
 @partial
-def require_email(
-    strategy, request, details, user=None, is_new=False, *args, **kwargs
-):  # pragma: no cover
+def require_email(strategy, request, details, user=None, is_new=False, *args, **kwargs):  # pragma: no cover
     logger.debug(user)
     if kwargs.get("ajax") or user and user.email:
         return
@@ -39,8 +37,7 @@ def email_validation(strategy, backend, code):  # pragma: no cover
     verification from.
     """
     signature = signing.dumps(
-        {"session_key": strategy.session.session_key, "email": code.email},
-        key=settings.SECRET_KEY,
+        {"session_key": strategy.session.session_key, "email": code.email}, key=settings.SECRET_KEY,
     )
     verify_url = "{0}?verification_code={1}&signature={2}".format(
         reverse("osm:complete", args=(backend.name,)), code.code, signature
@@ -56,9 +53,7 @@ def email_validation(strategy, backend, code):  # pragma: no cover
         subject,
         text,
         to=[code.email],
-        from_email=getattr(
-            settings, "DEFAULT_FROM_EMAIL", "Eventkit Team <eventkit.team@gmail.com>"
-        ),
+        from_email=getattr(settings, "DEFAULT_FROM_EMAIL", "Eventkit Team <eventkit.team@gmail.com>"),
     )
     msg.attach_alternative(html, "text/html")
     msg.send()
@@ -78,26 +73,17 @@ def partial_pipeline_data(backend, user=None, *args, **kwargs):  # pragma: no co
             raise InvalidEmail(backend)
 
         session_details = session.get_decoded()
-        backend.strategy.session_set(
-            "email_validation_address", session_details["email_validation_address"]
-        )
+        backend.strategy.session_set("email_validation_address", session_details["email_validation_address"])
         backend.strategy.session_set("next", session_details.get("next"))
+        backend.strategy.session_set("partial_pipeline", session_details["partial_pipeline"])
+        backend.strategy.session_set(backend.name + "_state", session_details.get(backend.name + "_state"))
         backend.strategy.session_set(
-            "partial_pipeline", session_details["partial_pipeline"]
-        )
-        backend.strategy.session_set(
-            backend.name + "_state", session_details.get(backend.name + "_state")
-        )
-        backend.strategy.session_set(
-            backend.name + "unauthorized_token_name",
-            session_details.get(backend.name + "unauthorized_token_name"),
+            backend.name + "unauthorized_token_name", session_details.get(backend.name + "unauthorized_token_name"),
         )
 
     partial = backend.strategy.session_get("partial_pipeline", None)
     if partial:
-        idx, backend_name, xargs, xkwargs = backend.strategy.partial_from_session(
-            partial
-        )
+        idx, backend_name, xargs, xkwargs = backend.strategy.partial_from_session(partial)
         if backend_name == backend.name:
             kwargs.setdefault("pipeline_index", idx)
             if user:  # don't update user if it's None
