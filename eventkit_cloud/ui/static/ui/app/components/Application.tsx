@@ -22,6 +22,8 @@ import { connectedReduxRedirect } from 'redux-auth-wrapper/history4/redirect';
 import { Redirect, Route, RouteComponentProps } from 'react-router';
 import { routerActions } from 'connected-react-router';
 import PageLoading from './common/PageLoading';
+import '../../../../../../docs/images/favicon.ico';
+import '../../../../../../docs/images/reddotfavicon.ico';
 import '../styles/bootstrap/css/bootstrap.css';
 import '../styles/openlayers/ol.css';
 import '../styles/flexboxgrid.css';
@@ -371,6 +373,9 @@ export class Application extends React.Component<Props, State> {
     }
 
     componentDidUpdate(prevProps, prevState) {
+        const domFavicon = document.getElementById('favicon');
+        const { favicon, reddotfavicon } = this.props.theme.eventkit.images;
+
         if (prevState.childContext !== this.state.childContext) {
             this.notificationsPageSize = Number(this.state.childContext.config.NOTIFICATIONS_PAGE_SIZE);
             if (this.state.loggedIn || this.props.userData) {
@@ -400,6 +405,17 @@ export class Application extends React.Component<Props, State> {
 
         if (this.props.notificationsStatus.fetched && !prevProps.notificationsStatus.fetched) {
             this.setState({ notificationsLoading: false });
+        }
+
+        if (this.props.notificationsCount > 0) {
+            domFavicon.href = reddotfavicon;
+            /* future feature using count instead of dot
+             favicon.href = `reddotfavicon${this.props.notificationsCount}.ico` */
+            console.log(favicon);
+        }
+
+        if (this.props.notificationsCount <= 0) {
+            domFavicon.href = favicon;
         }
     }
 
@@ -705,6 +721,7 @@ export class Application extends React.Component<Props, State> {
 
         return (
             <div style={{ backgroundColor: colors.black }}>
+
                 <AppBar
                     className={`qa-Application-AppBar ${classes.appBar}`}
                 >
