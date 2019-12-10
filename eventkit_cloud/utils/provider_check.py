@@ -130,7 +130,7 @@ class CheckResults(Enum):
         },
     )
 
-    SUCCESS = ({"status": "SUCCESS", "type": "SUCCESS", "message": _("Export should proceed without issues."),},)
+    SUCCESS = ({"status": "SUCCESS", "type": "SUCCESS", "message": _("Export should proceed without issues.")},)
 
 
 class ProviderCheck(object):

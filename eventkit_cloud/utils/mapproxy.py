@@ -33,7 +33,6 @@ from eventkit_cloud.utils.geopackage import (
 from eventkit_cloud.utils.gdalutils import retry
 from eventkit_cloud.utils.stats.eta_estimator import ETA
 
-
 logger = logging.getLogger(__name__)
 
 
@@ -146,8 +145,8 @@ class MapproxyGeopackage(object):
 
         if not conf_dict.get("grids"):
             conf_dict["grids"] = {
-                "default": {"srs": "EPSG:4326", "tile_size": [256, 256], "origin": "nw",},
-                "webmercator": {"srs": "EPSG:3857", "tile_size": [256, 256], "origin": "nw",},
+                "default": {"srs": "EPSG:4326", "tile_size": [256, 256], "origin": "nw"},
+                "webmercator": {"srs": "EPSG:3857", "tile_size": [256, 256], "origin": "nw"},
             }
 
         # If user provides a cache setup then use that and substitute in the geopackage file for the placeholder.
@@ -269,7 +268,7 @@ def get_cache_template(sources, grids, geopackage, table_name="tiles"):
     return {
         "sources": sources,
         "meta_size": [1, 1],
-        "cache": {"type": "geopackage", "filename": str(geopackage), "table_name": table_name or "None",},
+        "cache": {"type": "geopackage", "filename": str(geopackage), "table_name": table_name or "None"},
         "grids": [grid for grid in grids if grid == "default"] or grids,
         "format": "mixed",
         "request_format": "image/png",
@@ -279,7 +278,7 @@ def get_cache_template(sources, grids, geopackage, table_name="tiles"):
 def get_seed_template(bbox=None, level_from=None, level_to=None, coverage_file=None):
     bbox = bbox or [-180, -89, 180, 89]
     seed_template = {
-        "coverages": {"geom": {"srs": "EPSG:4326",}},
+        "coverages": {"geom": {"srs": "EPSG:4326"}},
         "seeds": {
             "seed": {
                 "coverages": ["geom"],
@@ -303,7 +302,6 @@ def isclose(a, b, rel_tol=1e-09, abs_tol=0.0):
 
 
 def check_zoom_levels(gpkg, mapproxy_configuration):
-
     try:
         grid = mapproxy_configuration.caches.get("default").conf.get("grids")[0]
         tile_size = mapproxy_configuration.grids.get(grid).conf.get("tile_size")
@@ -349,8 +347,8 @@ def create_mapproxy_app(slug: str):
 
     # TODO: place this somewhere else consolidate settings.
     base_config = {
-        "services": {"demo": None, "tms": None, "wmts": None,},
-        "caches": {slug: {"default": {"type": "file"}, "sources": ["default"], "grids": ["default"],}},
+        "services": {"demo": None, "tms": None, "wmts": None},
+        "caches": {slug: {"default": {"type": "file"}, "sources": ["default"], "grids": ["default"]}},
         "layers": [{"name": slug, "title": slug, "sources": [slug]}],
         "globals": {"cache": {"base_dir": getattr(settings, "TILE_CACHE_DIR")}},
     }

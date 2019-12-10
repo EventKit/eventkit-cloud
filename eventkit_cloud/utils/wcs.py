@@ -98,7 +98,7 @@ class WCSConverter(object):
         (wcs_xml_fd, self.wcs_xml_path) = tempfile.mkstemp()
         wcs_xml_auth_string = self.wcs_xml_auth.safe_substitute({"userpwd": ":".join(cred)}) if cred else ""
         wcs_xml_string = self.wcs_xml.safe_substitute(
-            {"url": self.service_url, "coverage": self.layer, "params": self.params, "auth": wcs_xml_auth_string,}
+            {"url": self.service_url, "coverage": self.layer, "params": self.params, "auth": wcs_xml_auth_string}
         )
         logger.debug("Creating temporary WCS XML at %s:\n%s", self.wcs_xml_path, wcs_xml_string)
         os.write(wcs_xml_fd, wcs_xml_string.encode())
@@ -119,7 +119,7 @@ class WCSConverter(object):
             )
         else:
             convert_cmd = self.cmd.safe_substitute(
-                {"out": self.out, "wcs": self.wcs_xml_path, "fmt": self.format, "type": self.band_type,}
+                {"out": self.out, "wcs": self.wcs_xml_path, "fmt": self.format, "type": self.band_type}
             )
 
         logger.debug("WCS command: %s" % convert_cmd)
@@ -153,7 +153,9 @@ class WCSConverter(object):
         coverages = str(coverages).split(",")
         if not coverages:
             logger.error(
-                "No coverages were specified for this provider, please specify `coverages` under service or `COVERAGE` under params."  # NOQA
+                "No coverages were specified for this provider, "
+                "please specify `coverages` under service or `COVERAGE` under params."
+                # NOQA
             )
             raise Exception("Data source incorrectly configured.")
         logger.info("Getting Dimensions...")

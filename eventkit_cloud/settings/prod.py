@@ -174,7 +174,6 @@ if os.getenv("OAUTH_AUTHORIZATION_URL"):
     OAUTH_PROFILE_URL = os.getenv("OAUTH_PROFILE_URL")
 
 if os.getenv("LDAP_SERVER_URI"):
-
     import ldap
     from django_auth_ldap.config import LDAPSearch
 
@@ -251,7 +250,7 @@ else:
 TEMPLATES = [
     {
         "BACKEND": "django.template.backends.django.DjangoTemplates",
-        "DIRS": ["api/templates/", "ui/templates", "tasks/templates", "ui/static/ui/js",],
+        "DIRS": ["api/templates/", "ui/templates", "tasks/templates", "ui/static/ui/js"],
         "APP_DIRS": True,
         "OPTIONS": {
             "context_processors": [
@@ -273,8 +272,7 @@ if os.getenv("MEMCACHED"):
         }
     }
 else:
-    CACHES = {"default": {"BACKEND": "django.core.cache.backends.db.DatabaseCache", "LOCATION": "eventkit_cache",}}
-
+    CACHES = {"default": {"BACKEND": "django.core.cache.backends.db.DatabaseCache", "LOCATION": "eventkit_cache"}}
 
 # session settings
 SESSION_COOKIE_NAME = "eventkit_exports_sessionid"
@@ -323,17 +321,16 @@ AWS_BUCKET_NAME = AWS_BUCKET_NAME or os.getenv("AWS_BUCKET_NAME")
 AWS_ACCESS_KEY = AWS_ACCESS_KEY or os.getenv("AWS_ACCESS_KEY")
 AWS_SECRET_KEY = AWS_SECRET_KEY or os.getenv("AWS_SECRET_KEY")
 
-
 MAPPROXY_CONCURRENCY = os.getenv("MAPPROXY_CONCURRENCY", 1)
 
 LOGGING = {
     "version": 1,
     "disable_existing_loggers": False,
-    "handlers": {"console": {"class": "logging.StreamHandler",},},
+    "handlers": {"console": {"class": "logging.StreamHandler"}},
     "loggers": {
-        "django": {"handlers": ["console"], "propagate": True, "level": os.getenv("DJANGO_LOG_LEVEL", "WARN"),},
-        "eventkit_cloud": {"handlers": ["console",], "propagate": True, "level": os.getenv("LOG_LEVEL", "INFO"),},
-        "audit_logging": {"handlers": ["console",], "propagate": True, "level": os.getenv("LOG_LEVEL", "INFO"),},
+        "django": {"handlers": ["console"], "propagate": True, "level": os.getenv("DJANGO_LOG_LEVEL", "WARN")},
+        "eventkit_cloud": {"handlers": ["console"], "propagate": True, "level": os.getenv("LOG_LEVEL", "INFO")},
+        "audit_logging": {"handlers": ["console"], "propagate": True, "level": os.getenv("LOG_LEVEL", "INFO")},
     },
 }
 
@@ -349,7 +346,6 @@ else:
         SSL_VERIFICATION = bool(strtobool(ssl_verification_settings.lower()))
     except ValueError:
         SSL_VERIFICATION = True
-
 
 LAND_DATA_URL = os.getenv("LAND_DATA_URL", "https://osmdata.openstreetmap.de/download/land-polygons-split-3857.zip",)
 
