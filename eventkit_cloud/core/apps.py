@@ -6,4 +6,4 @@ class EventKitCore(AppConfig):
     verbose_name = "Eventkit-Cloud Core"
 
     def ready(self):
-        from eventkit_cloud.core.signals import delete_user
+        from eventkit_cloud.core.signals import delete_user  # NOQA

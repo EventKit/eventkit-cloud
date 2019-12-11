@@ -53,7 +53,7 @@ def fetch_user_from_token(access_token):
     logger.debug('Sending request: access_token="{0}"'.format(access_token))
     try:
         response = requests.get(
-            "{0}".format(settings.OAUTH_PROFILE_URL), headers={"Authorization": "Bearer {0}".format(access_token),},
+            "{0}".format(settings.OAUTH_PROFILE_URL), headers={"Authorization": "Bearer {0}".format(access_token)},
         )
         logger.debug("Received response: {0}".format(response.text))
         response.raise_for_status()
@@ -170,7 +170,7 @@ def request_access_token(auth_code):
         response = requests.post(
             settings.OAUTH_TOKEN_URL,
             auth=(settings.OAUTH_CLIENT_ID, settings.OAUTH_CLIENT_SECRET),
-            data={"grant_type": "authorization_code", "code": auth_code, "redirect_uri": settings.OAUTH_REDIRECT_URI,},
+            data={"grant_type": "authorization_code", "code": auth_code, "redirect_uri": settings.OAUTH_REDIRECT_URI},
         )
         logger.debug("Received response: {0}".format(response.text))
         response.raise_for_status()
