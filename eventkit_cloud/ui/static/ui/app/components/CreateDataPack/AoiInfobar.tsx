@@ -40,7 +40,7 @@ const jss = (theme: Eventkit.Theme & Theme) => createStyles({
         margin: '0px 10px',
         pointerEvents: 'auto',
         [theme.breakpoints.only('xs')]: {
-            margin: '0px 70px 0px 10px',
+            margin: '0px 10px 0px 70px',
         },
     },
     body: {
