@@ -190,5 +190,5 @@ class PcfClient(object):
         return self.session.get(
             url,
             params=payload,
-            headers={"Authorization": "bearer {0}".format(self.token), "Accept": "application/json",},
+            headers={"Authorization": "bearer {0}".format(self.token), "Accept": "application/json"},
         ).json()

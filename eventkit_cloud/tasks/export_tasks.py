@@ -763,7 +763,7 @@ def geotiff_export_task(
     gtiff_in_dataset = parse_result(result, "source")
     gtiff_out_dataset = os.path.join(stage_dir, "{0}-{1}.tif".format(job_name, projection))
     selection = parse_result(result, "selection")
-    ## Clip the dataset.
+    # Clip the dataset.
     # This happens if geotiff is the FIRST step in the pipeline as opposed to GPKG.
     if selection:
         gtiff_out_dataset = gdalutils.clip_dataset(
@@ -1617,7 +1617,7 @@ def cancel_synchronous_task_chain(data_provider_task_uid=None):
             export_task.status = TaskStates.CANCELED.value
             export_task.save()
             kill_task.apply_async(
-                kwargs={"task_pid": export_task.pid, "celery_uid": export_task.celery_uid,},
+                kwargs={"task_pid": export_task.pid, "celery_uid": export_task.celery_uid},
                 queue="{0}.cancel".format(export_task.worker),
                 priority=TaskPriority.CANCEL.value,
                 routing_key="{0}.cancel".format(export_task.worker),
@@ -1720,7 +1720,7 @@ def cancel_export_provider_task(
 
         if int(export_task.pid) > 0 and export_task.worker:
             kill_task.apply_async(
-                kwargs={"task_pid": export_task.pid, "celery_uid": export_task.celery_uid,},
+                kwargs={"task_pid": export_task.pid, "celery_uid": export_task.celery_uid},
                 queue="{0}.cancel".format(export_task.worker),
                 priority=TaskPriority.CANCEL.value,
                 routing_key="{0}.cancel".format(export_task.worker),
