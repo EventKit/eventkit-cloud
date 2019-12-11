@@ -22,8 +22,6 @@ import { connectedReduxRedirect } from 'redux-auth-wrapper/history4/redirect';
 import { Redirect, Route, RouteComponentProps } from 'react-router';
 import { routerActions } from 'connected-react-router';
 import PageLoading from './common/PageLoading';
-import '../../../../../../docs/images/favicon.ico';
-import '../../../../../../docs/images/reddotfavicon.ico';
 import '../styles/bootstrap/css/bootstrap.css';
 import '../styles/openlayers/ol.css';
 import '../styles/flexboxgrid.css';
@@ -96,7 +94,7 @@ const jss = (theme: any) => createStyles({
         backgroundColor: theme.eventkit.colors.warning,
         zIndex: '1' as any,
         pointerEvents: 'none',
-    },
+    }
 });
 
 interface Props {
@@ -373,18 +371,18 @@ export class Application extends React.Component<Props, State> {
     }
 
     componentDidUpdate(prevProps, prevState) {
-        const domFavicon = document.getElementById('favicon');
         const { favicon, reddotfavicon } = this.props.theme.eventkit.images;
 
+        const domFavicon = document.getElementById('favicon') as HTMLInputElement;
+
         if (this.props.notificationsCount > 0) {
-            domFavicon.href = reddotfavicon;
+            domFavicon.setAttribute("href", reddotfavicon);
             /* future feature using count instead of dot
-             favicon.href = `reddotfavicon${this.props.notificationsCount}.ico` */
-            console.log(favicon);
+              domFavicon.setAttribute("href", `reddotfavicon${this.props.notificationsCount}.png`); */
         }
 
         if (this.props.notificationsCount <= 0) {
-            domFavicon.href = favicon;
+            domFavicon.setAttribute("href", favicon);
         }
 
         if (prevState.childContext !== this.state.childContext) {
@@ -721,7 +719,6 @@ export class Application extends React.Component<Props, State> {
 
         return (
             <div style={{ backgroundColor: colors.black }}>
-
                 <AppBar
                     className={`qa-Application-AppBar ${classes.appBar}`}
                 >

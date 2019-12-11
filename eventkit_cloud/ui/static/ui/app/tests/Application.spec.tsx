@@ -284,29 +284,21 @@ describe('Application component', () => {
         expect(button.props().style.backgroundColor).toBe('');
     });
 
-    it('should scale the notifications indicator up/down when unread count is positive/zero', () => {
-        const wrapper = getWrapper(getProps());
-        let indicator = wrapper.find('.qa-Application-AppBar-NotificationsIndicator');
-        expect(indicator.props().style.transform).toBe('scale(0)');
-        wrapper.setProps({
-            notificationsData: {
-                notifications: {},
-                notificationsSorted: [],
-            },
-            notificationsCount: 1,
-        });
-        indicator = wrapper.find('.qa-Application-AppBar-NotificationsIndicator');
-        expect(indicator.props().style.transform).toBe('scale(1)');
-        wrapper.setProps({
-            notificationsData: {
-                notifications: {},
-                notificationsSorted: [],
-            },
-            notificationsCount: 0,
-        });
-        indicator = wrapper.find('.qa-Application-AppBar-NotificationsIndicator');
-        expect(indicator.props().style.transform).toBe('scale(0)');
-    });
+    // it('should trigger the red-dotted favicon when unread count is greater than zero', () => {
+    //     const wrapper = getWrapper(getProps());
+    //     const indicator = wrapper.find('#favicon');
+    //     expect(indicator.props().theme.eventkit.images).toBe();
+    //     wrapper.setProps({notificationsCount: 1});
+    // )};
+    //
+    // it('should trigger the non-dotted favicon when unread count is zero', () => {
+    //     const wrapper = getWrapper(getProps());
+    //     const indicator = wrapper.find('#favicon');
+    //     expect(indicator.props().style.transform).toBe('scale(1)');
+    //     wrapper.setProps({
+    //         notificationsCount: 0
+    //     });
+    // });
 
     it('startSendingUserActivePings should return with no side effects', () => {
         const props = getProps();
