@@ -18,9 +18,9 @@ def exportrun_delete_exports(sender, instance, *args, **kwargs):
     """
     Delete the associated export files and notifications when an ExportRun is deleted.
     """
-    if getattr(settings, 'USE_S3', False):
+    if getattr(settings, "USE_S3", False):
         delete_from_s3(run_uid=str(instance.uid))
-    run_dir = '{0}/{1}'.format(settings.EXPORT_DOWNLOAD_ROOT.rstrip('/'), str(instance.uid))
+    run_dir = "{0}/{1}".format(settings.EXPORT_DOWNLOAD_ROOT.rstrip("/"), str(instance.uid))
     try:
         shutil.rmtree(run_dir, ignore_errors=True)
         logger.info("The directory {0} was deleted.".format(run_dir))
@@ -35,10 +35,10 @@ def exporttaskresult_delete_exports(sender, instance, *args, **kwargs):
     Delete associated files when deleting the FileProducingTaskResult.
     """
     # The url should be constructed as [download context, run_uid, filename]
-    if getattr(settings, 'USE_S3', False):
+    if getattr(settings, "USE_S3", False):
         delete_from_s3(download_url=instance.download_url)
-    url_parts = instance.download_url.split('/')
-    full_file_download_path = '/'.join([settings.EXPORT_DOWNLOAD_ROOT.rstrip('/'), url_parts[-2], url_parts[-1]])
+    url_parts = instance.download_url.split("/")
+    full_file_download_path = "/".join([settings.EXPORT_DOWNLOAD_ROOT.rstrip("/"), url_parts[-2], url_parts[-1]])
     try:
         os.remove(full_file_download_path)
         logger.info("The directory {0} was deleted.".format(full_file_download_path))

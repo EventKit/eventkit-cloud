@@ -18,7 +18,7 @@ def download(request):
     Logs and redirects a dataset download request
     :return: A redirect to the direct download URL provided in the URL query string
     """
-    download_uid = request.GET.get('uid')
+    download_uid = request.GET.get("uid")
     try:
         downloadable = FileProducingTaskResult.objects.get(uid=download_uid)
     except FileProducingTaskResult.DoesNotExist:
@@ -32,7 +32,7 @@ def download(request):
     user_download = UserDownload.objects.create(user=user, downloadable=downloadable)
     user_download.save()
 
-    if getattr(settings, 'USE_S3', False):
+    if getattr(settings, "USE_S3", False):
         url = get_presigned_url(downloadable.download_url)
     else:
         url = request.build_absolute_uri(downloadable.download_url)

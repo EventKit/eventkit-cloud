@@ -1,5 +1,5 @@
 class Artifact(object):
-    def __init__(self,parts,format_name,theme=None,basename=None):
+    def __init__(self, parts, format_name, theme=None, basename=None):
         self._parts = parts
         self._theme = theme
         self._format_name = format_name

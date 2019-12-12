@@ -1,5 +1,3 @@
-
-
 import socket
 from datetime import datetime, timedelta
 from time import sleep
@@ -23,14 +21,14 @@ class TestTask(Task):
 def example_task(result=None, job_num=None, task_num=None):
     print(("RUNNING TASK {0}.{1}".format(job_num, task_num)))
     sleep(1)
-    return {'result': result}
+    return {"result": result}
 
 
 @task(base=TestTask)
 def failure_task(result=None, job_num=None, task_num=None):
     print(("RUNNING TASK {0}.{1}".format(job_num, task_num)))
     raise Exception("TASK {0}.{1} HAS FAILED".format(job_num, task_num))
-    return {'result': result}
+    return {"result": result}
 
 
 @task(base=TestTask)
@@ -52,19 +50,37 @@ def pick_up_job_task(job_num=None):
 
 @task(base=TestTask)
 def create_task_factory(worker_name, job_num):
-    provider_1 = (example_task.si(job_num=job_num, task_num=1, result="File1").set(routing_key=worker_name, queue=worker_name) |
-                  example_task.si(job_num=job_num, task_num=2, result="File2").set(routing_key=worker_name, queue=worker_name) |
-                  example_task.si(job_num=job_num, task_num=3, result="File3").set(routing_key=worker_name, queue=worker_name) |
-                  example_task.si(job_num=job_num, task_num=4, result="File4").set(routing_key=worker_name, queue=worker_name) |
-                  example_task.si(job_num=job_num, task_num=5, result="File5").set(routing_key=worker_name, queue=worker_name))
-    provider_2 = example_task.si(job_num=job_num, task_num=6, result="File6").set(routing_key=worker_name, queue=worker_name)
-    provider_3 = example_task.si(job_num=job_num, task_num=7, result="File7").set(routing_key=worker_name, queue=worker_name)
+    provider_1 = (
+        example_task.si(job_num=job_num, task_num=1, result="File1").set(routing_key=worker_name, queue=worker_name)
+        | example_task.si(job_num=job_num, task_num=2, result="File2").set(routing_key=worker_name, queue=worker_name)
+        | example_task.si(job_num=job_num, task_num=3, result="File3").set(routing_key=worker_name, queue=worker_name)
+        | example_task.si(job_num=job_num, task_num=4, result="File4").set(routing_key=worker_name, queue=worker_name)
+        | example_task.si(job_num=job_num, task_num=5, result="File5").set(routing_key=worker_name, queue=worker_name)
+    )
+    provider_2 = example_task.si(job_num=job_num, task_num=6, result="File6").set(
+        routing_key=worker_name, queue=worker_name
+    )
+    provider_3 = example_task.si(job_num=job_num, task_num=7, result="File7").set(
+        routing_key=worker_name, queue=worker_name
+    )
 
-    return ((provider_1 | example_task.si(job_num=job_num, task_num=8, result="File8").set(routing_key=worker_name, queue=worker_name) | final_provider_task.si(job_num=job_num, provider_name="1").set(routing_key=worker_name, queue=worker_name)) | (
-        provider_2 | final_provider_task.si(job_num=job_num, provider_name="2").set(routing_key=worker_name, queue=worker_name)) | (
-               provider_3 | final_provider_task.si(job_num=job_num, provider_name="3").set(routing_key=worker_name, queue=worker_name))).apply_async(
-        expires=datetime.now() + timedelta(days=1),
-        queue=worker_name)
+    return (
+        (
+            provider_1
+            | example_task.si(job_num=job_num, task_num=8, result="File8").set(
+                routing_key=worker_name, queue=worker_name
+            )
+            | final_provider_task.si(job_num=job_num, provider_name="1").set(routing_key=worker_name, queue=worker_name)
+        )
+        | (
+            provider_2
+            | final_provider_task.si(job_num=job_num, provider_name="2").set(routing_key=worker_name, queue=worker_name)
+        )
+        | (
+            provider_3
+            | final_provider_task.si(job_num=job_num, provider_name="3").set(routing_key=worker_name, queue=worker_name)
+        )
+    ).apply_async(expires=datetime.now() + timedelta(days=1), queue=worker_name)
 
 
 def run_chain():

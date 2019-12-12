@@ -66,34 +66,34 @@ describe('DataPackTableItem component', () => {
         url: 'http://cloud.eventkit.test/api/provider_tasks/e261d619-2a02-4ba5-a58c-be0908f97d04',
     }];
     const run = {
-        uid: '6870234f-d876-467c-a332-65fdf0399a0d',
-        url: 'http://cloud.eventkit.test/api/runs/6870234f-d876-467c-a332-65fdf0399a0d',
-        started_at: '2017-03-10T15:52:35.637331Z',
-        finished_at: '2017-03-10T15:52:39.837Z',
-        duration: '0:00:04.199825',
-        user: 'admin',
-        status: 'COMPLETED',
-        job: {
-            uid: '7643f806-1484-4446-b498-7ddaa65d011a',
-            name: 'Test1',
-            event: 'Test1 event',
-            description: 'Test1 description',
-            url: 'http://cloud.eventkit.test/api/jobs/7643f806-1484-4446-b498-7ddaa65d011a',
-            extent: {},
-            permissions: {
-                value: 'PRIVATE',
-                groups: {},
-                members: {},
+            uid: '6870234f-d876-467c-a332-65fdf0399a0d',
+            url: 'http://cloud.eventkit.test/api/runs/6870234f-d876-467c-a332-65fdf0399a0d',
+            started_at: '2017-03-10T15:52:35.637331Z',
+            finished_at: '2017-03-10T15:52:39.837Z',
+            duration: '0:00:04.199825',
+            user: 'admin',
+            status: 'COMPLETED',
+            job: {
+                uid: '7643f806-1484-4446-b498-7ddaa65d011a',
+                name: 'Test1',
+                event: 'Test1 event',
+                description: 'Test1 description',
+                url: 'http://cloud.eventkit.test/api/jobs/7643f806-1484-4446-b498-7ddaa65d011a',
+                extent: {},
+                permissions: {
+                    value: 'PRIVATE',
+                    groups: {},
+                    members: {},
+                },
             },
-        },
-        provider_tasks: providerTasks,
-        zipfile_url: 'http://cloud.eventkit.test/downloads/68/TestGPKG-WMTS-TestProject-eventkit-20170310.zip',
-        expiration: '2017-03-24T15:52:35.637258Z',
-    };
+            provider_tasks: providerTasks,
+            zipfile_url: 'http://cloud.eventkit.test/downloads/68/TestGPKG-WMTS-TestProject-eventkit-20170310.zip',
+            expiration: '2017-03-24T15:52:35.637258Z',
+    }
 
     const getProps = () => ({
         run,
-        user: { data: { user: { username: 'admin' } } },
+        user: {data: {user: {username: 'admin'}}},
         users: [],
         groups: [],
         onRunDelete: sinon.spy(),
@@ -107,7 +107,7 @@ describe('DataPackTableItem component', () => {
     let wrapper;
     let instance;
     const setup = (overrideProps = {}) => {
-        props = { ...getProps(), ...overrideProps };
+        props = {...getProps(), ...overrideProps};
         wrapper = shallow(<DataPackTableItem {...props} />);
         instance = wrapper.instance();
     };
@@ -154,28 +154,9 @@ describe('DataPackTableItem component', () => {
 
     it('getPermissionsIcon should return either Group or Person', () => {
         let icon = wrapper.instance().getPermissionsIcon('SHARED');
-        expect(icon).toEqual(<SocialGroup className="qa-DataPackTableItem-SocialGroup" style={{ color: '#55ba63' }} />);
+        expect(icon).toEqual(<SocialGroup className="qa-DataPackTableItem-SocialGroup" style={{color: '#55ba63'}}/>);
         icon = wrapper.instance().getPermissionsIcon('PRIVATE');
-        expect(icon).toEqual(<Lock className="qa-DataPackTableItem-Lock" style={{ color: '#808080' }} />);
-    });
-
-    it('getStatusIcon should return either a Sync, Error, or Check icon depending on job status', () => {
-        let icon = wrapper.instance().getStatusIcon('SUBMITTED');
-        expect(icon).toEqual(<NotificationSync className="qa-DataPackTableItem-NotificationSync" style={{ color: '#f4d225' }} />);
-        icon = wrapper.instance().getStatusIcon('INCOMPLETE');
-        expect(icon).toEqual((
-            <AlertError
-                className="qa-DataPackTableItem-AlertError"
-                style={{ color: '#ce4427', opacity: 0.6, height: '22px' }}
-            />
-        ));
-        icon = wrapper.instance().getStatusIcon('COMPLETED');
-        expect(icon).toEqual((
-            <NavigationCheck
-                className="qa-DataPackTableItem-NavigationCheck"
-                style={{ color: '#55ba63', height: '22px' }}
-            />
-        ));
+        expect(icon).toEqual(<Lock className="qa-DataPackTableItem-Lock" style={{color: '#808080'}}/>);
     });
 
     it('handleProviderClose should set the provider dialog to closed', () => {
@@ -183,7 +164,7 @@ describe('DataPackTableItem component', () => {
         expect(stateSpy.called).toBe(false);
         wrapper.instance().handleProviderClose();
         expect(stateSpy.calledOnce).toBe(true);
-        expect(stateSpy.calledWith({ providerDialogOpen: false })).toBe(true);
+        expect(stateSpy.calledWith({providerDialogOpen: false})).toBe(true);
         stateSpy.restore();
     });
 
@@ -214,7 +195,7 @@ describe('DataPackTableItem component', () => {
         expect(stateSpy.called).toBe(false);
         wrapper.instance().hideDeleteDialog();
         expect(stateSpy.calledOnce).toBe(true);
-        expect(stateSpy.calledWith({ deleteDialogOpen: false }));
+        expect(stateSpy.calledWith({deleteDialogOpen: false}));
         stateSpy.restore();
     });
 
@@ -241,12 +222,12 @@ describe('DataPackTableItem component', () => {
         const stateSpy = sinon.stub(instance, 'setState');
         wrapper.instance().handleShareClose();
         expect(stateSpy.callCount).toBe(1);
-        expect(stateSpy.calledWithExactly({ shareDialogOpen: false }));
+        expect(stateSpy.calledWithExactly({shareDialogOpen: false}));
     });
 
     it('handleShareSave should close share dialog and call onRunShare with job id and permissions', () => {
         instance.handleShareClose = sinon.spy();
-        const permissions = { some: 'permissions' };
+        const permissions = {some: 'permissions'};
         instance.handleShareSave(permissions);
         expect(instance.handleShareClose.callCount).toBe(1);
         expect(instance.props.onRunShare.callCount).toBe(1);
@@ -256,7 +237,36 @@ describe('DataPackTableItem component', () => {
     it('should set share dialog open prop with shareDialogOpen value', () => {
         expect(wrapper.state().shareDialogOpen).toBe(false);
         expect(wrapper.find(DataPackShareDialog).props().show).toBe(false);
-        wrapper.setState({ shareDialogOpen: true });
+        wrapper.setState({shareDialogOpen: true});
         expect(wrapper.find(DataPackShareDialog).props().show).toBe(true);
+    });
+
+    describe('getStatusIcon should return correct icon and icon styles', () => {
+        it('getStatusIcon should return a Sync icon', () => {
+            const syncIcon = wrapper.instance().getStatusIcon('RUNNING');
+            expect(syncIcon).toEqual(
+                <NotificationSync
+                    className="qa-DataPackTableItem-NotificationSync"
+                    style={{color: '#f4d225'}}
+                />);
+        });
+        it('getStatusIcon should return a Check icon', () => {
+            const checkIcon = wrapper.instance().getStatusIcon('COMPLETED');
+            expect(checkIcon).toEqual((
+                <NavigationCheck
+                    className="qa-DataPackTableItem-NavigationCheck"
+                    style={{color: '#55ba63'}}
+                />
+            ));
+        });
+        it('getStatusIcon should return an Error icon', () => {
+            const errorIcon = wrapper.instance().getStatusIcon('INCOMPLETE');
+            expect(errorIcon).toEqual((
+                <AlertError
+                    className="qa-DataPackTableItem-AlertError"
+                    style={{color: '#ce4427', opacity: 0.6, height: '22px'}}
+                />
+                ));
+        });
     });
 });

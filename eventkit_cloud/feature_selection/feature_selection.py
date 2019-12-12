@@ -104,11 +104,7 @@ class FeatureSelection(object):
                 self._errors.append("YAML must be dict, not list")
                 return False
             for theme, theme_dict in loaded_doc.items():
-                if (
-                    theme in BANNED_THEME_NAMES
-                    or theme.startswith("gpkg_")
-                    or theme.startswith("rtree_")
-                ):
+                if theme in BANNED_THEME_NAMES or theme.startswith("gpkg_") or theme.startswith("rtree_"):
                     self._errors.append("Theme name reserved: {0}".format(theme))
                     return False
                 if not re.match("^[a-zA-Z0-9_ ]+$", theme):
@@ -127,9 +123,7 @@ class FeatureSelection(object):
                         self._errors.append("Invalid OSM key: {0}".format(key))
                         return False
                 if not isinstance(theme_dict["select"], list):
-                    self._errors.append(
-                        "'select' children must be list elements (e.g. '- amenity')"
-                    )
+                    self._errors.append("'select' children must be list elements (e.g. '- amenity')")
                     return False
 
                 self.keys_from_sql[theme] = set()
@@ -141,9 +135,7 @@ class FeatureSelection(object):
                     for clause in clauses:
                         s = SQLValidator(clause)
                         if not s.valid:
-                            self._errors.append(
-                                "SQL WHERE Invalid: " + ";".join(s.errors)
-                            )
+                            self._errors.append("SQL WHERE Invalid: " + ";".join(s.errors))
                             return False
 
                         # also add the keys to keys_from_sql
@@ -265,12 +257,7 @@ class FeatureSelection(object):
             key_selections = ['"{0}"'.format(key) for key in self.key_selections(theme)]
 
             # if any of these 5 keys in selection, add z_index
-            if any(
-                [
-                    x in self.key_selections(theme)
-                    for x in ["highway", "railway", "bridge", "tunnel", "layer"]
-                ]
-            ):
+            if any([x in self.key_selections(theme) for x in ["highway", "railway", "bridge", "tunnel", "layer"]]):
                 key_selections.append('"z_index"')
 
             filter_clause = self.filter_clause(theme)
@@ -288,7 +275,5 @@ class FeatureSelection(object):
                         filter_clause,
                     )
                 )
-                index_sqls.append(
-                    INDEX_TEMPLATE.format(dst_tablename, WKT_TYPE_MAP[geom_type])
-                )
+                index_sqls.append(INDEX_TEMPLATE.format(dst_tablename, WKT_TYPE_MAP[geom_type]))
         return create_sqls, index_sqls

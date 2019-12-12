@@ -40,8 +40,10 @@ class TaskProcess(object):
         export_task = ExportTaskRecord.objects.filter(uid=self.task_uid).first()
         if export_task and export_task.status == TaskStates.CANCELED.value:
             from eventkit_cloud.tasks.exceptions import CancelException
-            raise CancelException(task_name=export_task.export_provider_task.name,
-                                  user_name=export_task.cancel_user.username)
+
+            raise CancelException(
+                task_name=export_task.export_provider_task.name, user_name=export_task.cancel_user.username,
+            )
 
     def store_pid(self, pid=None):
         """
@@ -52,6 +54,7 @@ class TaskProcess(object):
             if not self.task_uid:
                 return
             from eventkit_cloud.tasks.models import ExportTaskRecord
+
             export_task = ExportTaskRecord.objects.filter(uid=self.task_uid).first()
             if export_task:
                 export_task.pid = pid

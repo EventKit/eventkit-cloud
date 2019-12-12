@@ -41,6 +41,7 @@ def expire_runs():
     and 2 days before schedule expiration time.
     """
     from eventkit_cloud.tasks.models import ExportRun
+
     site_url = getattr(settings, "SITE_URL")
     runs = ExportRun.objects.all()
 
@@ -50,7 +51,7 @@ def expire_runs():
         if not email:
             break
         uid = run.job.uid
-        url = '{0}/status/{1}'.format(site_url.rstrip('/'), uid)
+        url = "{0}/status/{1}".format(site_url.rstrip("/"), uid)
         notified = run.notified
         now = timezone.now()
         # if expired delete the run:
@@ -78,10 +79,9 @@ def pcf_scale_celery(max_tasks_memory):
     Scales up celery instances when necessary.
     """
     from eventkit_cloud.utils.pcf import PcfClient
-    from eventkit_cloud.tasks.models import ExportRun
 
-    if os.getenv('CELERY_TASK_APP'):
-        app_name = os.getenv('CELERY_TASK_APP')
+    if os.getenv("CELERY_TASK_APP"):
+        app_name = os.getenv("CELERY_TASK_APP")
     else:
         app_name = json.loads(os.getenv("VCAP_APPLICATION", "{}")).get("application_name")
 
@@ -161,9 +161,9 @@ def check_provider_availability():
         status = json.loads(perform_provider_check(provider, None))
         data_provider_status = DataProviderStatus.objects.create(related_provider=provider)
         data_provider_status.last_check_time = datetime.datetime.now()
-        data_provider_status.status = status['status']
-        data_provider_status.status_type = status['type']
-        data_provider_status.message = status['message']
+        data_provider_status.status = status["status"]
+        data_provider_status.status_type = status["type"]
+        data_provider_status.message = status["message"]
         data_provider_status.save()
 
 
@@ -179,15 +179,11 @@ def send_warning_email(date=None, url=None, addr=None, job_name=None):
 
     subject = "Your EventKit DataPack is set to expire."
     to = [addr]
-    from_email = getattr(
-        settings,
-        'DEFAULT_FROM_EMAIL',
-        'Eventkit Team <eventkit.team@gmail.com>'
-    )
-    ctx = {'url': url, 'date': str(date), 'job_name': job_name}
+    from_email = getattr(settings, "DEFAULT_FROM_EMAIL", "Eventkit Team <eventkit.team@gmail.com>")
+    ctx = {"url": url, "date": str(date), "job_name": job_name}
 
-    text = get_template('email/expiration_warning.txt').render(ctx)
-    html = get_template('email/expiration_warning.html').render(ctx)
+    text = get_template("email/expiration_warning.txt").render(ctx)
+    html = get_template("email/expiration_warning.html").render(ctx)
     try:
         msg = EmailMultiAlternatives(subject, text, to=to, from_email=from_email)
         msg.attach_alternative(html, "text/html")
@@ -211,14 +207,14 @@ def clean_up_queues(base=EventKitBaseTask):
             logger.error("Could not establish a rabbitmq channel")
             return
         for queue in get_all_rabbitmq_objects(broker_api_url, queue_class):
-            queue_name = queue.get('name')
+            queue_name = queue.get("name")
             try:
                 channel.queue_delete(queue_name, if_unused=True, if_empty=True)
                 logger.info("Removed queue: {}".format(queue_name))
             except Exception as e:
                 logger.info(e)
         for exchange in get_all_rabbitmq_objects(broker_api_url, exchange_class):
-            exchange_name = exchange.get('name')
+            exchange_name = exchange.get("name")
             try:
                 channel.exchange_delete(exchange_name, if_unused=True)
                 logger.info("Removed exchange: {}".format(exchange_name))

@@ -18,10 +18,10 @@ def _create_cache_geom_entry(job):
     bbox = orm_geom.extent
 
     cache_entry = {
-        'bbox': bbox,
-        'bbox_area': get_area_bbox(bbox),
-        'geometry': geojson,
-        'area': get_area_geojson(geojson)
+        "bbox": bbox,
+        "bbox_area": get_area_bbox(bbox),
+        "geometry": geojson,
+        "area": get_area_geojson(geojson),
     }
     return cache_entry
 
@@ -56,20 +56,21 @@ def get_area_geojson(geojson, earth_r=6371):
     :param earth_r: Earth radius in km
     :return: area of geojson ring in square kilometers
     """
+
     def rad(d):
-        return math.pi*d/180
+        return math.pi * d / 180
 
     if isinstance(geojson, str):
         geojson = json.loads(geojson)
 
-    if hasattr(geojson, 'geometry'):
-        geojson = geojson['geometry']
+    if hasattr(geojson, "geometry"):
+        geojson = geojson["geometry"]
 
-    geom_type = geojson['type'].lower()
-    if geom_type == 'polygon':
-        polys = [geojson['coordinates']]
-    elif geom_type == 'multipolygon':
-        polys = geojson['coordinates']
+    geom_type = geojson["type"].lower()
+    if geom_type == "polygon":
+        polys = [geojson["coordinates"]]
+    elif geom_type == "multipolygon":
+        polys = geojson["coordinates"]
     else:
         return RuntimeError("Invalid geometry type: %s" % geom_type)
 
@@ -80,9 +81,9 @@ def get_area_geojson(geojson, earth_r=6371):
             continue
         ring.append(ring[-2])  # convenient for circular indexing
         for i in range(len(ring) - 2):
-            a += (rad(ring[i+1][0]) - rad(ring[i-1][0])) * math.sin(rad(ring[i][1]))
+            a += (rad(ring[i + 1][0]) - rad(ring[i - 1][0])) * math.sin(rad(ring[i][1]))
 
-    area = abs(a * (earth_r**2) / 2)
+    area = abs(a * (earth_r ** 2) / 2)
     return area
 
 
@@ -92,16 +93,7 @@ def get_area_bbox(bbox):
     :return: The area of the bounding box
     """
     w, s, e, n = bbox
-    return get_area_geojson({
-        'type': 'Polygon',
-        'coordinates': [[
-            [w, s],
-            [e, s],
-            [e, n],
-            [w, n],
-            [w, s]
-        ]]
-    })
+    return get_area_geojson({"type": "Polygon", "coordinates": [[[w, s], [e, s], [e, n], [w, n], [w, s]]]})
 
 
 def get_bbox_intersect(one, two):

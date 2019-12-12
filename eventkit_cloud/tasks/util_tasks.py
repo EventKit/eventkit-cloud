@@ -36,7 +36,6 @@ def pcf_shutdown_celery_workers(self, queue_name, queue_type=None, hostname=None
 
     client = PcfClient()
     client.login()
-
     # The message was a generic shutdown sent to a specific queue_name.
     if not (hostname or queue_type):
         queue_type, hostname = self.request.hostname.split("@")
@@ -61,3 +60,5 @@ def pcf_shutdown_celery_workers(self, queue_name, queue_type=None, hostname=None
             f"Waiting on tasks: {export_tasks}"
         )
         return {"action": "skipped shutdown"}
+
+app.register_task(RevokeTask())

@@ -10,7 +10,6 @@ logger = logging.getLogger(__name__)
 
 
 class CoordinateConverter(object):
-
     def __init__(self):
         self.converter = self.get_converter()
 
@@ -40,12 +39,12 @@ class CoordinateConverter(object):
                 logger.error(error_message)
                 raise AuthenticationError(error_message)
         return response
-    
+
     def get(self, query):
         return self.get_data(query)
 
     def get_data(self, query):
-        url = getattr(settings, 'CONVERT_API_URL')
+        url = getattr(settings, "CONVERT_API_URL")
         args = {"from": "mgrs", "to": "decdeg", "q": str(query)}
         try:
             return self.get_response(url, args).json()

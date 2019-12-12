@@ -1,5 +1,3 @@
-
-
 import json
 import math
 import os
@@ -26,7 +24,7 @@ def file_to_geojson(in_memory_file):
     :param in_memory_file: A WSGI In memory file
     :return: A geojson object if available
     """
-    stage_dir = settings.EXPORT_STAGING_ROOT.rstrip('\/')
+    stage_dir = settings.EXPORT_STAGING_ROOT.rstrip("\/")
     uid = str(uuid4())
     dir = os.path.join(stage_dir, uid)
 
@@ -36,53 +34,49 @@ def file_to_geojson(in_memory_file):
 
         file_name, file_extension = os.path.splitext(file_name)
         if not file_name or not file_extension:
-            raise Exception('No file type detected')
+            raise Exception("No file type detected")
 
         # Remove all non-word characters
-        file_name = re.sub(r"[^\w\s]", '', file_name)
+        file_name = re.sub(r"[^\w\s]", "", file_name)
         # Replace all whitespace with a single underscore
-        file_name = re.sub(r"\s+", '_', file_name).lower()
+        file_name = re.sub(r"\s+", "_", file_name).lower()
 
-        in_path = os.path.join(dir, 'in_{0}{1}'.format(file_name, file_extension))
-        out_path = os.path.join(dir, 'out_{0}.geojson'.format(file_name))
+        in_path = os.path.join(dir, "in_{0}{1}".format(file_name, file_extension))
+        out_path = os.path.join(dir, "out_{0}.geojson".format(file_name))
         write_uploaded_file(in_memory_file, in_path)
 
-        if file_extension == '.zip':
+        if file_extension == ".zip":
             if unzip_file(in_path, dir):
                 has_shp = False
                 for unzipped_file in os.listdir(dir):
-                    if unzipped_file.endswith('.shp'):
+                    if unzipped_file.endswith(".shp"):
                         in_path = os.path.join(dir, unzipped_file)
                         has_shp = True
                         break
                 if not has_shp:
-                    raise Exception('Zip file does not contain a shp')
+                    raise Exception("Zip file does not contain a shp")
 
         meta = get_meta(in_path)
 
-        if not meta['driver'] or meta['is_raster']:
+        if not meta["driver"] or meta["is_raster"]:
             raise Exception("Could not find the proper driver to handle this file")
 
         cmd_template = Template("ogr2ogr -f $fmt $out_ds $in_ds")
 
-        cmd = cmd_template.safe_substitute({
-            'fmt': 'geojson',
-            'out_ds': out_path,
-            'in_ds': in_path
-        })
+        cmd = cmd_template.safe_substitute({"fmt": "geojson", "out_ds": out_path, "in_ds": in_path})
 
         try:
-            proc = subprocess.Popen(cmd, shell=True, executable='/bin/bash')
+            proc = subprocess.Popen(cmd, shell=True, executable="/bin/bash")
             proc.wait()
         except Exception as e:
             logger.debug(e)
-            raise Exception('Failed to convert file')
+            raise Exception("Failed to convert file")
 
         if os.path.exists(out_path):
             geojson = read_json_file(out_path)
             return geojson
 
-        raise Exception('An unknown error occurred while processing the file')
+        raise Exception("An unknown error occurred while processing the file")
 
     except Exception as e:
         logger.error(e)
@@ -103,25 +97,25 @@ def read_json_file(fp):
             geojson = json.load(file_geojson)
             return geojson
     except:
-        raise Exception('Unable to read the file')
+        raise Exception("Unable to read the file")
 
 
 def unzip_file(fp, dir):
     """
-    :param fp: Path to a zip file 
+    :param fp: Path to a zip file
     :param dir: Directory where the files should be unzipped to
     :return: True if successful
     """
     if not fp or not dir:
         return False
     try:
-        zip = zipfile.ZipFile(fp, 'r')
+        zip = zipfile.ZipFile(fp, "r")
         zip.extractall(dir)
         zip.close()
         return True
     except Exception as e:
         logger.debug(e)
-        raise Exception('Could not unzip file')
+        raise Exception("Could not unzip file")
 
 
 def write_uploaded_file(in_memory_file, write_path):
@@ -131,13 +125,13 @@ def write_uploaded_file(in_memory_file, write_path):
     :return: True if successful
     """
     try:
-        with open(write_path, 'wb+') as temp_file:
+        with open(write_path, "wb+") as temp_file:
             for chunk in in_memory_file.chunks():
                 temp_file.write(chunk)
         return True
     except Exception as e:
         logger.debug(e)
-        raise Exception('Could not write file to disk')
+        raise Exception("Could not write file to disk")
 
 
 def set_session_user_last_active_at(request):
@@ -154,8 +148,8 @@ def is_mgrs(query):
     :param query: A string to test against MGRS format
     :return: True if the string matches MGSR, False if not
     """
-    query = re.sub(r"\s+", '', query)
-    pattern = re.compile(r"^(\d{1,2})([C-HJ-NP-X])\s*([A-HJ-NP-Z])([A-HJ-NP-V])\s*(\d{1,5}\s*\d{1,5})$", re.I)
+    query = re.sub(r"\s+", "", query)
+    pattern = re.compile(r"^(\d{1,2})([C-HJ-NP-X])\s*([A-HJ-NP-Z])([A-HJ-NP-V])\s*(\d{1,5}\s*\d{1,5})$", re.I,)
     if pattern.match(query):
         return True
     return False
@@ -168,7 +162,8 @@ def is_lat_lon(query):
     """
     # regex for matching to lat and lon
     # ?P<name> creates a named group so that we can access the value later
-    lat_lon = re.compile(r"""
+    lat_lon = re.compile(
+        r"""
         # group to match latitude
         (?:
             ^                       # latitude MUST start at the beginning of the string
@@ -188,13 +183,15 @@ def is_lat_lon(query):
         (?:
             (?P<lon_sign>[\+-]?)    # longitude may begin with + or -
             (?:
-                (?P<lon>180(?:(?:\.0{1,20})?)|(?:[0-9]|[1-9][0-9]|1[0-7][0-9])(?:(?:\.[0-9]{1,20})?)) # match valid longitude values
+                (?P<lon>180(?:(?:\.0{1,20})?)|(?:[0-9]|[1-9][0-9]|1[0-7][0-9])(?:(?:\.[0-9]{1,20})?)) # match valid longitude values 
                 [\s]?               # there may or may not be a space following the digits when E or W are included
                 (?P<lon_dir>[EW]?)  # E or W may be used instead of + or -
             )
             $                       # after longitude should be the end of the string
         )
-    """, re.VERBOSE)
+    """,  # NOQA
+        re.VERBOSE,
+    )
 
     r = lat_lon.match(query)
     if not r:
@@ -203,22 +200,19 @@ def is_lat_lon(query):
     parsed_lat = None
     parsed_lon = None
     try:
-        parsed_lat = float(r.group('lat'))
-        parsed_lon = float(r.group('lon'))
+        parsed_lat = float(r.group("lat"))
+        parsed_lon = float(r.group("lon"))
     except ValueError as e:
         return False
 
     if math.isnan(parsed_lat) or math.isnan(parsed_lon):
         return False
 
-    if r.group('lat_sign') == '-' or r.group('lat_dir') == 'S':
+    if r.group("lat_sign") == "-" or r.group("lat_dir") == "S":
         parsed_lat = parsed_lat * -1
-    if r.group('lon_sign') == '-' or r.group('lon_dir') == 'W':
+    if r.group("lon_sign") == "-" or r.group("lon_dir") == "W":
         parsed_lon = parsed_lon * -1
 
-    parsed_coord_array = [
-        parsed_lat,
-        parsed_lon
-    ]
+    parsed_coord_array = [parsed_lat, parsed_lon]
 
     return parsed_coord_array

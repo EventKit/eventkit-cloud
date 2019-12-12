@@ -3,7 +3,9 @@ import http.client
 import logging
 import os
 import re
-import urllib.request, urllib.error, urllib.parse
+import urllib.request
+import urllib.error
+import urllib.parse
 from functools import wraps
 from tempfile import NamedTemporaryFile
 from django.conf import settings
@@ -19,26 +21,31 @@ def content_to_file(content):
     Given content for a file, constructs a decorator that creates and destroys a temporary file containing that content,
     passing it to the decorated function as the keyword argument `cert`.
     """
+
     def decorator(func):
         @wraps(func)
         def wrapper(*args, **kwargs):
             if content:
-                logger.debug("Content found for %s(%s, %s)",
-                             func.__name__,
-                             ", ".join([str(arg) for arg in args]),
-                             ", ".join(["%s=%s" % (k, v) for k, v in kwargs.items()]))
+                logger.debug(
+                    "Content found for %s(%s, %s)",
+                    func.__name__,
+                    ", ".join([str(arg) for arg in args]),
+                    ", ".join(["%s=%s" % (k, v) for k, v in kwargs.items()]),
+                )
                 with NamedTemporaryFile() as certfile:
                     certfile.write(content.encode())
                     certfile.flush()
                     return func(cert=certfile.name, *args, **kwargs)
             else:
                 return func(*args, **kwargs)
+
         logger.debug("Cert wrapped function %s", func.__name__)
         return wrapper
+
     return decorator
 
 
-def find_cert_var(cert_var: str=None):
+def find_cert_var(cert_var: str = None):
     """
     Given a provider slug, returns the contents of an environment variable consisting of the slug (lower or uppercase)
     followed by "_CERT". If no variable was found, return None.
@@ -46,13 +53,13 @@ def find_cert_var(cert_var: str=None):
     :return: Cert contents if found
     """
     if cert_var:
-        env_slug: str = cert_var.replace('-', '_')
+        env_slug: str = cert_var.replace("-", "_")
         cert: str = os.getenv(env_slug + "_CERT") or os.getenv(env_slug.upper() + "_CERT") or os.getenv(env_slug)
     else:
         cert = None
 
     if cert:
-        cert = cert.replace('\\n', '\n')
+        cert = cert.replace("\\n", "\n")
 
     return cert
 
@@ -64,10 +71,12 @@ def cert_var_to_cert(func):
     If an environment variable for that slug and cert was not found, call the function without the cert kwarg.
     To avoid unnecessary overhead in creating multiple temporary files, this decorator should generally be applied last.
     """
+
     @wraps(func)
     def wrapper(*args, **kwargs):
         cert_env = find_cert_var(kwargs.pop("cert_var", None))
         return content_to_file(cert_env)(func)(*args, **kwargs)
+
     return wrapper
 
 
@@ -83,7 +92,7 @@ def get_cred(cred_var=None, url=None, params=None):
     # Check for environment variable
     cred = None
     if cred_var:
-        env_slug = cred_var.replace('-', '_')
+        env_slug = cred_var.replace("-", "_")
         cred = os.getenv(env_slug + "_CRED") or os.getenv(env_slug.upper() + "_CRED") or os.getenv(env_slug)
     if cred is not None and ":" in cred and all(cred.split(":")):
         logger.debug("Found credentials for %s in env var", cred_var)
@@ -117,6 +126,7 @@ def handle_basic_auth(func):
     :param func: A requests method that returns an instance of requests.models.Response
     :return: result of requests function call
     """
+
     @wraps(func)
     def wrapper(url, **kwargs):
         try:
@@ -125,7 +135,9 @@ def handle_basic_auth(func):
             cred = get_cred(cred_var=cred_var, url=url, params=kwargs.get("params", None))
             if cred:
                 kwargs["auth"] = tuple(cred)
-            logger.debug("requests.%s('%s', %s)", func.__name__, url, ", ".join(["%s=%s" % (k,v) for k,v in kwargs.items()]))
+            logger.debug(
+                "requests.%s('%s', %s)", func.__name__, url, ", ".join(["%s=%s" % (k, v) for k, v in kwargs.items()]),
+            )
             response = func(url, **kwargs)
             return response
         except Exception as e:
@@ -184,7 +196,7 @@ def patch_https(slug: str = None, cert_var: str = None):
         certfile = kwargs.pop("cert", None)
         kwargs["key_file"] = certfile or kwargs.get("key_file", None)
         kwargs["cert_file"] = certfile or kwargs.get("cert_file", None)
-        logger.debug(F"Initializing new HTTPSConnection with provider={slug}, cert_var={cert_var} certfile={certfile}")
+        logger.debug(f"Initializing new HTTPSConnection with provider={slug}, cert_var={cert_var} certfile={certfile}")
         _ORIG_HTTPSCONNECTION_INIT(_self, *args, **kwargs)
 
     http.client.HTTPSConnection.__init__ = _new_init
@@ -205,14 +217,16 @@ def patch_mapproxy_opener_cache(slug=None, cred_var=None):
                 ssl_ca_certs = ssl_verify
             https_handler = mapproxy_http.build_https_handler(ssl_ca_certs, insecure)
             passman = urllib.request.HTTPPasswordMgrWithDefaultRealm()
-            handlers = [urllib.request.HTTPCookieProcessor,
-                        urllib.request.HTTPRedirectHandler(),
-                        https_handler,
-                        urllib.request.HTTPBasicAuthHandler(passman),
-                        urllib.request.HTTPDigestAuthHandler(passman)]
+            handlers = [
+                urllib.request.HTTPCookieProcessor,
+                urllib.request.HTTPRedirectHandler(),
+                https_handler,
+                urllib.request.HTTPBasicAuthHandler(passman),
+                urllib.request.HTTPDigestAuthHandler(passman),
+            ]
 
             opener = urllib.request.build_opener(*handlers)
-            opener.addheaders = [('User-agent', 'MapProxy-%s' % (mapproxy_http.version,))]
+            opener.addheaders = [("User-agent", "MapProxy-%s" % (mapproxy_http.version,))]
 
             self._opener[ssl_ca_certs or slug] = (opener, passman)
         else:

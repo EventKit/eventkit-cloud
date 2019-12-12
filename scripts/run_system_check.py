@@ -31,7 +31,7 @@ def main():
     parser.add_argument('--certificate', default='',
                         help='The path to a certificate to use for authentication')
     parser.add_argument('--full', default='',
-                        help='The path to a certificate to use for authentication')
+                        help='')
 
     args = parser.parse_args()
     user = password = None
@@ -76,7 +76,13 @@ def main():
 
         for provider in providers:
             if provider.get('display'):
-                provider_tasks += [{"provider": provider.get('name'), "formats": ["gpkg"]}]
+                level = provider.get('level_from')
+                # Check if level is 0 because job api won't recognize it as a value
+                if not level:
+                    level = 1
+                provider_tasks += [
+                    {"provider": provider.get('name'), "formats": ["gpkg"], "min_zoom": level, 'max_zoom': level}]
+
         feature = {"type": "FeatureCollection", "features": [{"type": "Feature", "properties": {},
                                                               "geometry": {"type": "Polygon", "coordinates": [
                                                                   [[31.128165, 29.971509], [31.128521, 29.971509],
@@ -91,12 +97,24 @@ def main():
                                      provider_tasks=provider_tasks, selection=feature)
         print("Successfully submitted the job.")
         job_uid = response.get('uid')
+
         run_uid = client.get_runs({"job_uid": job_uid})[0].get('uid')
         print("Waiting for run {} to finish...".format(run_uid))
         client.wait_for_run(run_uid)
         print("Run {} successfully finished.".format(run_uid))
         print("Attempting to delete the run {}.".format(run_uid))
-        client.delete_run(run_uid)
+
+        run = client.get_runs({"job_uid": job_uid})
+        attempts = 3
+        while run and attempts:
+            client.delete_run(run_uid)
+            run = client.get_runs({"job_uid": job_uid})[0]
+            if run['deleted']:
+                break
+            else:
+                attempts -= 1
+        if not run['deleted']:
+            raise Exception("Failed to delete the run {}.".format(run_uid))
         print("Successfully deleted the run {}.".format(run_uid))
     else:
         print('Running status checks...')
@@ -110,7 +128,6 @@ def main():
             raise Exception("The following providers failed status checks: {0}".format(bad_providers))
 
     print("System check completed successfully.")
-
 
 if __name__ == "__main__":
     main()
