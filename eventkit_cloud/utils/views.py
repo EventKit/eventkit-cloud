@@ -3,6 +3,7 @@
 from logging import getLogger
 from django.http.request import HttpRequest
 from django.http.response import HttpResponse
+import os
 
 from urllib.parse import parse_qs
 from eventkit_cloud.utils.mapproxy import create_mapproxy_app
@@ -20,12 +21,13 @@ def map(request: HttpRequest, slug: str, path: str) -> HttpResponse:
     """
 
     mapproxy_app = create_mapproxy_app(slug)
-    params = parse_qs(request.META["QUERY_STRING"])
 
-    mp_response = mapproxy_app.get(path, params, request.headers)
+    params = parse_qs(request.META["QUERY_STRING"])
+    script_name = f"/map/{slug}"
+    mp_response = mapproxy_app.get(path, params, request.headers, extra_environ=dict(SCRIPT_NAME=script_name))
 
     response = HttpResponse(mp_response.body, status=mp_response.status_int)
-    for header, value in mp_response.headers.iteritems():
+    for header, value in mp_response.headers.items():
         response[header] = value
 
     return response

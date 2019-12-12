@@ -15,7 +15,6 @@ from mapproxy.seed import seeder
 from mapproxy.seed.config import SeedingConfiguration
 from mapproxy.seed.util import ProgressLog, exp_backoff, timestamp, ProgressStore
 from mapproxy.wsgiapp import MapProxyApp
-from mapproxy.cache import geopackage as geopackage_cache
 from webtest import TestApp
 
 import os
@@ -79,16 +78,6 @@ def get_custom_exp_backoff(max_repeat=None):
         exp_backoff(*args, **kwargs)
 
     return custom_exp_backoff
-
-
-# This is a bug in mapproxy, https://github.com/mapproxy/mapproxy/issues/387
-def load_tile_metadata(self, tile):
-    if not self.supports_timestamp:
-        # GPKG specification does not include timestamps.
-        # This sets the timestamp of the tile to epoch (1970s)
-        tile.timestamp = -1
-    else:
-        self.load_tile(tile)
 
 
 class MapproxyGeopackage(object):
@@ -213,7 +202,6 @@ class MapproxyGeopackage(object):
         conf_dict, seed_configuration, mapproxy_configuration = self.get_check_config()
         #  Customizations...
         mapproxy.seed.seeder.exp_backoff = get_custom_exp_backoff(max_repeat=int(conf_dict.get("max_repeat", 5)))
-        geopackage_cache.GeopackageCache.load_tile_metadata = load_tile_metadata
 
         logger.error("Beginning seeding to {0}".format(self.gpkgfile))
         try:
@@ -343,11 +331,13 @@ def get_concurrency(conf_dict):
 
 
 def create_mapproxy_app(slug: str):
+    print(os.environ)
     conf_dict = cache.get_or_set(f"base-config-{slug}", lambda: get_conf_dict(slug), 360)
 
     # TODO: place this somewhere else consolidate settings.
     base_config = {
-        "services": {"demo": None, "tms": None, "wmts": None},
+        "services": {"demo": None, "tms": None,
+                     "wmts": {"featureinfo_formats": "application/json", "suffix": "json"}},
         "caches": {slug: {"default": {"type": "file"}, "sources": ["default"], "grids": ["default"]}},
         "layers": [{"name": slug, "title": slug, "sources": [slug]}],
         "globals": {"cache": {"base_dir": getattr(settings, "TILE_CACHE_DIR")}},
@@ -366,8 +356,8 @@ def create_mapproxy_app(slug: str):
 
     cred_var = conf_dict.get("cred_var")
     auth_requests.patch_mapproxy_opener_cache(slug=slug, cred_var=cred_var)
-
     app = MapProxyApp(mapproxy_configuration.configured_services(), mapproxy_config)
+
     return TestApp(app)
 
 
