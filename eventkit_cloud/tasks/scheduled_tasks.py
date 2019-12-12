@@ -147,8 +147,6 @@ def pcf_scale_celery(max_tasks_memory):
                 else:
                     logger.info(
                         f"Already at max memory usage, skipping scale with {pending_messages} total pending messages left in {queue_name} queue.")
-            elif running_tasks_by_queue_count and not pending_messages:
-                pcf_shutdown_celery_workers.s(queue_name).apply_async(queue=queue_name, routing_key=queue_name)
             elif running_tasks_by_queue_count > pending_messages:
                 logger.info(
                     f"Already {running_tasks_by_queue_count} workers, processing {pending_messages} total pending messages left in {queue_name} queue.")
