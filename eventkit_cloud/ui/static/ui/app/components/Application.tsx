@@ -280,7 +280,7 @@ const routes = (
             <Redirect to="/dashboard" />
         )} />
     </div>
-)
+);
 
 export class Application extends React.Component<Props, State> {
     private userActiveInputTypes: string[];
@@ -335,6 +335,7 @@ export class Application extends React.Component<Props, State> {
         this.handleStayLoggedIn = this.handleStayLoggedIn.bind(this);
         this.handleCloseAutoLoggedOutDialog = this.handleCloseAutoLoggedOutDialog.bind(this);
         this.handleNotificationsButtonClick = this.handleNotificationsButtonClick.bind(this);
+        this.handleFaviconOnNotificationsButtonClick = this.handleFaviconOnNotificationsButtonClick.bind(this);
         this.handleNotificationsDropdownNavigate = this.handleNotificationsDropdownNavigate.bind(this);
         this.state = {
             childContext: { config: {} },
@@ -375,13 +376,13 @@ export class Application extends React.Component<Props, State> {
 
         const domFavicon = document.getElementById('favicon') as HTMLInputElement;
 
-        if (this.props.notificationsCount > 0) {
+        if (this.props.notificationsCount && this.props.notificationsCount > 0) {
             domFavicon.setAttribute("href", reddotfavicon);
             /* future feature using count instead of dot
               domFavicon.setAttribute("href", `reddotfavicon${this.props.notificationsCount}.png`); */
         }
 
-        if (this.props.notificationsCount <= 0) {
+        if (this.props.notificationsCount && this.props.notificationsCount <= 0) {
             domFavicon.setAttribute("href", favicon);
         }
 
@@ -685,9 +686,16 @@ export class Application extends React.Component<Props, State> {
     handleNotificationsButtonClick(e) {
         e.preventDefault();
         e.stopPropagation();
+        this.handleFaviconOnNotificationsButtonClick();
         this.setState({
-            showNotificationsDropdown: !this.state.showNotificationsDropdown,
+            showNotificationsDropdown: !this.state.showNotificationsDropdown
         });
+    }
+
+    handleFaviconOnNotificationsButtonClick() {
+        const favicon = this.props.theme.eventkit.images.favicon;
+        const domFavicon = document.getElementById('favicon') as HTMLInputElement;
+        domFavicon.setAttribute("href", favicon);
     }
 
     handleNotificationsDropdownNavigate() {

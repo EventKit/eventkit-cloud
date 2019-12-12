@@ -284,12 +284,16 @@ describe('Application component', () => {
         expect(button.props().style.backgroundColor).toBe('');
     });
 
-    // it('should trigger the red-dotted favicon when unread count is greater than zero', () => {
-    //     const wrapper = getWrapper(getProps());
-    //     const indicator = wrapper.find('#favicon');
-    //     expect(indicator.props().theme.eventkit.images).toBe();
-    //     wrapper.setProps({notificationsCount: 1});
-    // )};
+    it('should trigger the red-dotted favicon when unread count is greater than zero', () => {
+        const wrapper = getWrapper(getProps());
+        const indicator = wrapper.find('#favicon');
+        const href = "/static/ui/images/favicon.png";
+        expect(indicator.getAttribute(href)[0] as HTMLInputElement).toEqual("/static/ui/images/favicon.png");
+        // const favicon = document.getElementById('favicon') as HTMLInputElement;
+        wrapper.setProps({notificationsCount: 1});
+        // expect(wrapper.props().theme.eventkit.images).toBe('reddotfavicon');
+        expect(indicator.getAttribute(href) as HTMLInputElement).toEqual("/static/ui/images/reddotfavicon.png");
+    });
     //
     // it('should trigger the non-dotted favicon when unread count is zero', () => {
     //     const wrapper = getWrapper(getProps());
