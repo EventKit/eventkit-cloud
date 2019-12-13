@@ -2,7 +2,7 @@ import * as React from 'react';
 import axios from 'axios';
 import * as sinon from 'sinon';
 import MockAdapter from 'axios-mock-adapter';
-import { createShallow } from '@material-ui/core/test-utils';
+import { createShallow, createMount } from '@material-ui/core/test-utils';
 import AppBar from '@material-ui/core/AppBar';
 import createTestStore from '../store/configureTestStore';
 import BaseDialog from '../components/Dialog/BaseDialog';
@@ -15,12 +15,21 @@ import { JSDOM } from "jsdom";
 
 const store = createTestStore({});
 
+const jsdom = new JSDOM('<!doctype html><html><link id="favicon" rel="icon" href="/static/ui/images/favicon.png" type="png"></html>');
+const { window } = jsdom;
+// tslint:disable-next-line:no-unused-expression
+global.window = window;
+// tslint:disable-next-line:no-unused-expression
+global.document = window.document;
+
 describe('Application component', () => {
     let shallow;
     let mock;
+    let mount;
 
     beforeAll(() => {
         shallow = createShallow();
+        mount = createMount();
         mock = new MockAdapter(axios, { delayResponse: 100 });
     });
 
@@ -59,7 +68,7 @@ describe('Application component', () => {
         NOTIFICATIONS_PAGE_SIZE: '12',
     };
 
-    const getWrapper = props => shallow(<Application {...props} />, {
+    const getWrapper = props => mount(<Application {...props} />, {
         context: { config },
     });
 
@@ -396,9 +405,8 @@ describe('Application component', () => {
 
     it('should trigger the red-dotted favicon when unread count is greater than zero', () => {
         const wrapper = getWrapper(getProps());
-        document.head.innerHTML = '<link id="favicon" rel="icon" href="/static/ui/images/favicon.png" type="png">';
         wrapper.setProps({notificationsCount: 0});
-        expect(document.find('#favicon').href as HTMLInputElement).toEqual("/static/ui/images/favicon.png");
+        expect(wrapper.find('#favicon').href as HTMLInputElement).toEqual("/static/ui/images/favicon.png");
         // expect(wrapper.getElementById('favicon')).toEqual("/static/ui/images/favicon.png");
 
         // document.querySelector("link[rel='icon']").href = "favicon.png";
