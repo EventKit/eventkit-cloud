@@ -497,9 +497,9 @@ export class ExportInfo extends React.Component<Props, State> {
         const csrfmiddlewaretoken = getCookie('csrftoken');
         return axios({
             url: `/api/providers/${provider.slug}/status`,
-            method: 'GET',
+            method: 'POST',
             data,
-            headers: { 'X-CSRFToken': csrfmiddlewaretoken },
+            headers: {'X-CSRFToken': csrfmiddlewaretoken},
         }).then((response) => {
             // The backend currently returns the response as a string, it needs to be parsed before being used.
             const availabilityData = (typeof (response.data) === "object") ? response.data : JSON.parse(response.data);
@@ -599,17 +599,6 @@ export class ExportInfo extends React.Component<Props, State> {
     private clearEstimate(provider: ProviderData) {
         const newProvider = {...provider} as ProviderData;
         newProvider.estimate =  null; // Set to null to signify that we are expecting data
-        this.setState((prevState) => {
-            // make a copy of state providers and replace the one we updated
-            const providers = [...prevState.providers];
-            providers.splice(providers.indexOf(provider), 1, newProvider);
-            return {providers};
-        });
-    }
-
-    private clearAvailability(provider: ProviderData) {
-        const newProvider = {...provider} as ProviderData;
-        newProvider.availability = { slug: undefined, type: undefined, status: undefined, message: undefined };
         this.setState((prevState) => {
             // make a copy of state providers and replace the one we updated
             const providers = [...prevState.providers];
@@ -974,8 +963,15 @@ export class ExportInfo extends React.Component<Props, State> {
                                             alt={ix % 2 === 0}
                                             renderEstimate={this.context.config.SERVE_ESTIMATES}
                                             checkProvider={() => {
-                                                this.checkProvider(provider);
-                                                this.props.onUpdateEstimate();
+                                                this.checkProvider(provider).then(updatedProvider => {
+                                                    this.props.updateExportInfo({
+                                                        providerEstimates: {
+                                                            ...this.props.exportInfo.providerEstimates,
+                                                            [updatedProvider.id]: updatedProvider.estimate,
+                                                        }
+                                                    });
+                                                    this.props.onUpdateEstimate();
+                                                });
                                             }}
                                             compatibilityInfo={this.state.compatibilityInfo}
                                             clearEstimate={this.clearEstimate}

@@ -462,10 +462,9 @@ class JobViewSet(viewsets.ModelViewSet):
                     return Response(error_data, status=status_code)
 
                 try:
-                    for projection in projections:
-                        current_projection = Projection.objects.get(srid=projection)
-                        job.projections.add(current_projection)
-                        job.save()
+                    projection_db_objects = Projection.objects.filter(srid__in=projections)
+                    job.projections.add(*projection_db_objects)
+                    job.save()
                 except Exception as e:
                     status_code = status.HTTP_400_BAD_REQUEST
                     error_data = {
