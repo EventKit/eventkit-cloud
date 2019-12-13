@@ -21,12 +21,9 @@ class MapQuery(ABC):
 class ArcGISQuery(MapQuery):
     def get_geojson(self, response):
         data = response.content
-        logger.error(data)
         geojson = convert_arcgis_to_geojson(json.loads(data))
-        logger.error(geojson)
         response.content = json.dumps(geojson)
         return response
-        # super().get_geojson(response)
 
 
 class OSMQuery(MapQuery):
