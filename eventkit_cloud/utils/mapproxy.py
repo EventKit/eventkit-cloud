@@ -331,17 +331,26 @@ def get_concurrency(conf_dict):
 
 
 def create_mapproxy_app(slug: str):
-    print(os.environ)
     conf_dict = cache.get_or_set(f"base-config-{slug}", lambda: get_conf_dict(slug), 360)
 
     # TODO: place this somewhere else consolidate settings.
     base_config = {
-        "services": {"demo": None, "tms": None,
-                     "wmts": {"featureinfo_formats": "application/json", "suffix": "json"}},
+        "services": {
+            "demo": None,
+            "tms": None,
+            "wmts": {
+                "featureinfo_formats": [
+                    {"mimetype": "application/json", "suffix": "json"},
+                    {"mimetype": "application/gml+xml; version=3.1", "suffix": "gml"},
+                ]
+            },
+        },
         "caches": {slug: {"default": {"type": "file"}, "sources": ["default"], "grids": ["default"]}},
         "layers": [{"name": slug, "title": slug, "sources": [slug]}],
         "globals": {"cache": {"base_dir": getattr(settings, "TILE_CACHE_DIR")}},
     }
+    if conf_dict["sources"].get("info"):
+        base_config["caches"][slug]["sources"] += ["info"]
     try:
         mapproxy_config = load_default_config()
         load_config(mapproxy_config, config_dict=conf_dict)
@@ -356,6 +365,7 @@ def create_mapproxy_app(slug: str):
 
     cred_var = conf_dict.get("cred_var")
     auth_requests.patch_mapproxy_opener_cache(slug=slug, cred_var=cred_var)
+
     app = MapProxyApp(mapproxy_configuration.configured_services(), mapproxy_config)
 
     return TestApp(app)
