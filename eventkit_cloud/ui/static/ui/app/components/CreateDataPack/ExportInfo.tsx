@@ -175,6 +175,8 @@ export class ExportInfo extends React.Component<Props, State> {
     private bounceBack: boolean;
     // joyride: React.RefObject<Joyride>;
     // dataProvider: React.RefObject<typeof DataProvider>;
+    private CancelToken = axios.CancelToken;
+    private source = this.CancelToken.source();
 
     constructor(props: Props) {
         super(props);
@@ -253,6 +255,10 @@ export class ExportInfo extends React.Component<Props, State> {
             }
         }
         this.props.updateExportInfo(updatedInfo);
+    }
+
+    componentWillUnmount(): void {
+        this.source.cancel('Exiting Page.');
     }
 
     componentDidUpdate(prevProps: Props, prevState: State) {
@@ -500,6 +506,7 @@ export class ExportInfo extends React.Component<Props, State> {
             method: 'POST',
             data,
             headers: {'X-CSRFToken': csrfmiddlewaretoken},
+            cancelToken: this.source.token,
         }).then((response) => {
             // The backend currently returns the response as a string, it needs to be parsed before being used.
             const availabilityData = (typeof (response.data) === "object") ? response.data : JSON.parse(response.data);
@@ -545,6 +552,7 @@ export class ExportInfo extends React.Component<Props, State> {
             method: 'get',
             params: data,
             headers: { 'X-CSRFToken': csrfmiddlewaretoken },
+            cancelToken: this.source.token,
         }).then((response) => {
             const estimate = response.data[0];
             updatedProviderData.estimate = estimate;
@@ -608,7 +616,6 @@ export class ExportInfo extends React.Component<Props, State> {
     }
 
     private checkProviders(providers: ProviderData[]) {
-
         Promise.all(providers.filter(provider => provider.display).map((provider) => {
             return this.checkProvider(provider);
         })).then(updatedProviders => {

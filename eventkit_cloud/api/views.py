@@ -2001,7 +2001,6 @@ class EstimatorView(views.APIView):
         srs = request.query_params.get("srs", "4326")
         min_zoom = request.query_params.get("min_zoom", None)
         max_zoom = request.query_params.get("max_zoom", None)
-
         if request.query_params.get("slugs", None):
             estimator = AoiEstimator(bbox=bbox, bbox_srs=srs, min_zoom=min_zoom, max_zoom=max_zoom)
             for slug in request.query_params.get("slugs").split(","):
