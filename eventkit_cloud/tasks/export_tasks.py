@@ -48,7 +48,6 @@ from eventkit_cloud.tasks.helpers import (
     get_human_readable_metadata_document,
     pickle_exception,
     get_arcgis_metadata,
-    get_message_count,
     clean_config,
     get_metadata,
     get_provider_staging_preview,
@@ -58,6 +57,7 @@ from eventkit_cloud.utils.auth_requests import get_cred
 from eventkit_cloud.utils import overpass, pbf, s3, mapproxy, wcs, geopackage, gdalutils
 from eventkit_cloud.utils.ogr import OGR
 from eventkit_cloud.utils.stats.eta_estimator import ETA
+from eventkit_cloud.tasks.task_base import EventKitBaseTask
 
 
 BLACKLISTED_ZIP_EXTS = [".ini", ".om5", ".osm", ".lck", ".pyc"]
@@ -68,6 +68,7 @@ logger = get_task_logger(__name__)
 
 # http://docs.celeryproject.org/en/latest/tutorials/task-cookbook.html
 # https://github.com/celery/celery/issues/3270
+
 
 class LockingTask(EventKitBaseTask):
     """
@@ -292,7 +293,6 @@ class ExportTask(EventKitBaseTask):
             result = self.task_failure(e, task_uid, args, kwargs, einfo)
             return result
 
-
     @transaction.atomic
     def task_failure(self, exc, task_id, args, kwargs, einfo):
         """
@@ -476,7 +476,7 @@ def osm_data_collection_pipeline(
     return geopackage_filepath
 
 
-@app.task(name="OSM (.gpkg)", bind=True, base=FormatTask, abort_on_error=True)
+@app.task(name="OSM (.gpkg)", bind=True, base=EventKitBaseTask, abort_on_error=True)
 def osm_data_collection_task(
     self,
     result=None,
@@ -543,7 +543,6 @@ def osm_data_collection_task(
     return result
 
 
-
 @app.task(name="Add Metadata", bind=True, base=EventKitBaseTask, abort_on_error=False)
 def add_metadata_task(self, result=None, job_uid=None, provider_slug=None, user_details=None, *args, **kwargs):
     """
@@ -583,7 +582,7 @@ def add_metadata_task(self, result=None, job_uid=None, provider_slug=None, user_
     return result
 
 
-@app.task(name="ESRI Shapefile (.shp)", bind=True, base=FormatTask)
+@app.task(name="ESRI Shapefile (.shp)", bind=True, base=EventKitBaseTask)
 def shp_export_task(
     self,
     result=None,
@@ -620,7 +619,7 @@ def shp_export_task(
         raise
 
 
-@app.task(name="Keyhole Markup Language (.kml)", bind=True, base=FormatTask)
+@app.task(name="Keyhole Markup Language (.kml)", bind=True, base=EventKitBaseTask)
 def kml_export_task(
     self,
     result=None,
@@ -653,7 +652,7 @@ def kml_export_task(
         raise Exception(e)
 
 
-@app.task(name="SQLITE Format", bind=True, base=FormatTask)
+@app.task(name="SQLITE Format", bind=True, base=EventKitBaseTask)
 def sqlite_export_task(
     self,
     result=None,
@@ -719,7 +718,7 @@ def output_selection_geojson_task(
     return result
 
 
-@app.task(name="Geopackage (.gpkg)", bind=True, base=FormatTask)
+@app.task(name="Geopackage (.gpkg)", bind=True, base=EventKitBaseTask)
 def geopackage_export_task(
     self,
     result=None,
@@ -748,7 +747,7 @@ def geopackage_export_task(
     return result
 
 
-@app.task(name="Geotiff (.tif)", bind=True, base=FormatTask)
+@app.task(name="Geotiff (.tif)", bind=True, base=EventKitBaseTask)
 def geotiff_export_task(
     self, result=None, task_uid=None, stage_dir=None, job_name=None, projection=4326, compress=False, *args, **kwargs
 ):
@@ -802,7 +801,7 @@ def geotiff_export_task(
     return result
 
 
-@app.task(name="National Imagery Transmission Format (.nitf)", bind=True, base=FormatTask)
+@app.task(name="National Imagery Transmission Format (.nitf)", bind=True, base=EventKitBaseTask)
 def nitf_export_task(
     self,
     result=None,
@@ -834,7 +833,7 @@ def nitf_export_task(
     return result
 
 
-@app.task(name="Erdas Imagine HFA (.img)", bind=True, base=FormatTask)
+@app.task(name="Erdas Imagine HFA (.img)", bind=True, base=EventKitBaseTask)
 def hfa_export_task(
     self,
     result=None,
@@ -862,7 +861,7 @@ def hfa_export_task(
     return result
 
 
-@app.task(name="Reprojection Task", bind=True, base=FormatTask)
+@app.task(name="Reprojection Task", bind=True, base=EventKitBaseTask)
 def reprojection_task(
     self,
     result=None,
@@ -918,7 +917,7 @@ def reprojection_task(
     return result
 
 
-@app.task(name='Clip Export', bind=True, base=EventKitBaseTask)
+@app.task(name="Clip Export", bind=True, base=EventKitBaseTask)
 def clip_export_task(
     self, result=None, run_uid=None, task_uid=None, stage_dir=None, job_name=None, user_details=None, *args, **kwargs,
 ):
@@ -1063,7 +1062,7 @@ def wcs_export_task(
         raise Exception(e)
 
 
-@app.task(name="ArcFeatureServiceExport", bind=True, base=FormatTask)
+@app.task(name="ArcFeatureServiceExport", bind=True, base=EventKitBaseTask)
 def arcgis_feature_service_export_task(
     self,
     result=None,
@@ -1141,7 +1140,7 @@ def bounds_export_task(
 
 
 @app.task(
-    name="Raster export (.gpkg)", bind=True, base=FormatTask, abort_on_error=True, acks_late=True,
+    name="Raster export (.gpkg)", bind=True, base=EventKitBaseTask, abort_on_error=True, acks_late=True,
 )
 def mapproxy_export_task(
     self,
@@ -1204,7 +1203,7 @@ def mapproxy_export_task(
         raise Exception(e)
 
 
-@app.task(name='Pickup Run', bind=True, base=EventKitBaseTask)
+@app.task(name="Pickup Run", bind=True, base=EventKitBaseTask)
 def pick_up_run_task(self, result=None, run_uid=None, user_details=None, *args, **kwargs):
     """
     Generates a Celery task to assign a celery pipeline to a specific worker.
@@ -1241,7 +1240,7 @@ def wait_for_run(run=None, uid=None):
 
 
 # This could be improved by using Redis or Memcached to help manage state.
-@app.task(name='Wait For Providers', base=EventKitBaseTask, acks_late=True)
+@app.task(name="Wait For Providers", base=EventKitBaseTask, acks_late=True)
 def wait_for_providers_task(result=None, apply_args=None, run_uid=None, callback_task=None, *args, **kwargs):
     from eventkit_cloud.tasks.models import ExportRun
 
@@ -1261,7 +1260,7 @@ def wait_for_providers_task(result=None, apply_args=None, run_uid=None, callback
         raise Exception("A run could not be found for uid {0}".format(run_uid))
 
 
-@app.task(name="Project File (.zip)", base=FormatTask, acks_late=True)
+@app.task(name="Project File (.zip)", base=EventKitBaseTask, acks_late=True)
 def create_zip_task(result=None, data_provider_task_uid=None, *args, **kwargs):
     """
     :param result: The celery task result value, it should be a dict with the current state.
@@ -1302,10 +1301,10 @@ def create_zip_task(result=None, data_provider_task_uid=None, *args, **kwargs):
         )
     else:
         raise Exception("Could not create a zip file because there were not files to include.")
- https://github.com/EventKit/eventkit-cloud/pull/779/conflict?name=eventkit_cloud%252Ftasks%252Fexport_tasks.py&ancestor_oid=85101fc243289bce79962e2eb8ff08800370374d&base_oid=bc26d4063957252333af4f31fce3de014d59906c&head_oid=98118982ba21754a71fb5c5a39743656f8c481ed   return result
+    return result
 
 
-@app.task(name='Finalize Export Provider Task', base=EventKitBaseTask)
+@app.task(name="Finalize Export Provider Task", base=EventKitBaseTask)
 def finalize_export_provider_task(result=None, data_provider_task_uid=None, status=None, *args, **kwargs):
     """
     Finalizes provider task.
@@ -1411,7 +1410,7 @@ def zip_files(include_files, file_path=None, static_files=None, *args, **kwargs)
 
 
 class FinalizeRunBase(EventKitBaseTask):
-    name = 'Finalize Export Run'
+    name = "Finalize Export Run"
 
     def run(self, result=None, run_uid=None, stage_dir=None):
         """
@@ -1554,7 +1553,7 @@ def finalize_run_task(result=None, run_uid=None, stage_dir=None, apply_args=None
     return result
 
 
-@app.task(name='Export Task Error Handler', bind=True, base=EventKitBaseTask)
+@app.task(name="Export Task Error Handler", bind=True, base=EventKitBaseTask)
 def export_task_error_handler(self, result=None, run_uid=None, task_id=None, stage_dir=None, *args, **kwargs):
     """
     Handles un-recoverable errors in export tasks.
@@ -1603,7 +1602,7 @@ def cancel_synchronous_task_chain(data_provider_task_uid=None):
             )
 
 
-@app.task(name='Create preview', base=EventKitBaseTask)
+@app.task(name="Create preview", base=EventKitBaseTask)
 def create_datapack_preview(
     result=None, run_uid=None, task_uid=None, stage_dir=None, task_record_uid=None, *args, **kwargs,
 ):
@@ -1644,7 +1643,7 @@ def create_datapack_preview(
     return result
 
 
-@app.task(name='Cancel Export Provider Task', base=EventKitBaseTask)
+@app.task(name="Cancel Export Provider Task", base=EventKitBaseTask)
 def cancel_export_provider_task(
     result=None, data_provider_task_uid=None, canceling_username=None, delete=False, error=False, *args, **kwargs,
 ):
@@ -1715,7 +1714,7 @@ def cancel_export_provider_task(
     return result
 
 
-@app.task(name='Cancel Run', base=EventKitBaseTask)
+@app.task(name="Cancel Run", base=EventKitBaseTask)
 def cancel_run(
     result=None, export_run_uid=None, canceling_username=None, delete=False, *args, **kwargs,
 ):
@@ -1736,7 +1735,7 @@ def cancel_run(
     return result
 
 
-  @app.task(name='Kill Task', base=EventKitBaseTask)
+@app.task(name="Kill Task", base=EventKitBaseTask)
 def kill_task(result=None, task_pid=None, celery_uid=None, *args, **kwargs):
     """
     Asks a worker to kill a task.

@@ -1,5 +1,4 @@
 import json
-import logging
 import os
 
 from celery.utils.log import get_task_logger
@@ -8,8 +7,6 @@ from eventkit_cloud.celery import app
 from eventkit_cloud.tasks.helpers import get_message_count
 from eventkit_cloud.utils.pcf import PcfClient
 from eventkit_cloud.tasks.enumerations import TaskStates
-
-import socket
 
 
 # Get an instance of a logger
@@ -27,10 +24,10 @@ def pcf_shutdown_celery_workers(self, queue_name, queue_type=None, hostname=None
     :param queue_type: The type of queue, such as osm.
     :param hostname: The UUID based hostname of the workers.
     """
-    from eventkit_cloud.tasks.models import ExportTaskRecord # NOQA
+    from eventkit_cloud.tasks.models import ExportTaskRecord  # NOQA
 
-    if os.getenv('CELERY_TASK_APP'):
-        app_name = os.getenv('CELERY_TASK_APP')
+    if os.getenv("CELERY_TASK_APP"):
+        app_name = os.getenv("CELERY_TASK_APP")
     else:
         app_name = json.loads(os.getenv("VCAP_APPLICATION", "{}")).get("application_name")
 
@@ -56,9 +53,5 @@ def pcf_shutdown_celery_workers(self, queue_name, queue_type=None, hostname=None
             f"There are {running_tasks_by_queue_count} running tasks for \
             {queue_name} and {messages} on the queue, skipping shutdown."
         )
-        logger.info(
-            f"Waiting on tasks: {export_tasks}"
-        )
+        logger.info(f"Waiting on tasks: {export_tasks}")
         return {"action": "skipped shutdown"}
-
-app.register_task(RevokeTask())

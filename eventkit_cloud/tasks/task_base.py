@@ -13,6 +13,7 @@ class EventKitBaseTask(UserDetailsBase):
         PCF_SCALING = os.getenv("PCF_SCALING", False)
         if PCF_SCALING:
             from eventkit_cloud.tasks.util_tasks import pcf_shutdown_celery_workers
+
             queue_type, hostname = self.request.hostname.split("@")
 
             # In our current setup the queue name always mirrors the routing_key, if this changes this logic will break.

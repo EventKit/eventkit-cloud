@@ -11,9 +11,8 @@ from django.template.loader import get_template
 from django.utils import timezone
 
 from eventkit_cloud.celery import app
-from eventkit_cloud.tasks.helpers import get_all_rabbitmq_objects, get_message_count
+from eventkit_cloud.tasks.helpers import get_all_rabbitmq_objects
 from eventkit_cloud.tasks.task_base import EventKitBaseTask
-from eventkit_cloud.tasks.util_tasks import pcf_shutdown_celery_workers
 
 logger = get_task_logger(__name__)
 
@@ -32,7 +31,7 @@ logger = get_task_logger(__name__)
 #     expired_jobs.delete()
 
 
-@app.task(name='Expire Runs', base=EventKitBaseTask)
+@app.task(name="Expire Runs", base=EventKitBaseTask)
 def expire_runs():
     """
     Checks all runs.
@@ -89,32 +88,34 @@ def pcf_scale_celery(max_tasks_memory):
 
     celery_tasks = {
         celery_group_name: {
-            "command": "celery worker -A eventkit_cloud --concurrency=$CONCURRENCY --loglevel=$LOG_LEVEL -n worker@%h -Q $CELERY_GROUP_NAME ",
+            "command": "celery worker -A eventkit_cloud --concurrency=$CONCURRENCY --loglevel=$LOG_LEVEL -n worker@%h -Q $CELERY_GROUP_NAME ", # NOQA
             "disk": 2048,
-            "memory": 1024
+            "memory": 1024,
         },
         "celery": {
             "command": "celery worker -A eventkit_cloud --concurrency=1 --loglevel=$LOG_LEVEL -n celery@%h -Q celery ",
             "disk": 2048,
-            "memory": 1024
+            "memory": 1024,
         },
         f"{celery_group_name}.osm": {
-            "command": "celery worker -A eventkit_cloud --concurrency=1 --loglevel=$LOG_LEVEL -n osm@%h -Q $CELERY_GROUP_NAME.osm ",
+            "command": "celery worker -A eventkit_cloud --concurrency=1 --loglevel=$LOG_LEVEL -n osm@%h -Q $CELERY_GROUP_NAME.osm ", # NOQA
             "disk": 2048,
-            "memory": 4096
+            "memory": 4096,
         },
         f"{celery_group_name}.finalize": {
-            "command": "celery worker -A eventkit_cloud --concurrency=1 --loglevel=$LOG_LEVEL -n finalize@%h -Q $CELERY_GROUP_NAME.finalize ",
+            "command": "celery worker -A eventkit_cloud --concurrency=1 --loglevel=$LOG_LEVEL -n finalize@%h -Q $CELERY_GROUP_NAME.finalize ", # NOQA
             "disk": 2048,
-            "memory": 1024
-        }
+            "memory": 1024,
+        },
     }
 
     celery_tasks = json.loads(os.getenv("CELERY_TASKS", "{}")) or celery_tasks
 
-    cancel_queue_command = "& exec celery worker -A eventkit_cloud --loglevel=$LOG_LEVEL -n cancel@%h -Q $HOSTNAME.cancel"
+    cancel_queue_command = (
+        "& exec celery worker -A eventkit_cloud --loglevel=$LOG_LEVEL -n cancel@%h -Q $HOSTNAME.cancel"
+    )
 
-    broker_api_url = getattr(settings, 'BROKER_API_URL')
+    broker_api_url = getattr(settings, "BROKER_API_URL")
     queue_class = "queues"
 
     client = PcfClient()
@@ -128,8 +129,8 @@ def pcf_scale_celery(max_tasks_memory):
     # TODO: Too complex, clean up.
     # Check to see if there is work that we care about and if so, scale a queue specific worker to do it.
     for queue in get_all_rabbitmq_objects(broker_api_url, queue_class):
-        queue_name = queue.get('name')
-        pending_messages = queue.get('messages', 0)
+        queue_name = queue.get("name")
+        pending_messages = queue.get("messages", 0)
         if queue_name in celery_tasks.keys():
             logger.info(f"Queue {queue_name} has {pending_messages} pending messages.")
             running_tasks_by_queue = client.get_running_tasks(app_name, queue_name)
@@ -140,16 +141,22 @@ def pcf_scale_celery(max_tasks_memory):
                     disk = celery_tasks[queue_name]["disk"]
                     memory = celery_tasks[queue_name]["memory"]
                     logger.info(
-                        f"Sending task to {app_name} with command {command} with {disk} disk and {memory} memory")
-                    client.run_task(name=queue_name, command=command, disk_in_mb=disk,
-                                    memory_in_mb=memory, app_name=app_name)
+                        f"Sending task to {app_name} with command {command} with {disk} disk and {memory} memory"
+                    )
+                    client.run_task(
+                        name=queue_name, command=command, disk_in_mb=disk, memory_in_mb=memory, app_name=app_name
+                    )
                     running_tasks_memory += memory
                 else:
                     logger.info(
-                        f"Already at max memory usage, skipping scale with {pending_messages} total pending messages left in {queue_name} queue.")
+                        f"Already at max memory usage, skipping scale with {pending_messages} total pending messages "
+                        f"left in {queue_name} queue."
+                    )
             elif running_tasks_by_queue_count > pending_messages:
                 logger.info(
-                    f"Already {running_tasks_by_queue_count} workers, processing {pending_messages} total pending messages left in {queue_name} queue.")
+                    f"Already {running_tasks_by_queue_count} workers, processing {pending_messages} total pending "
+                    f"messages left in {queue_name} queue."
+                )
 
 
 @app.task(name="Check Provider Availability", base=EventKitBaseTask, expires=os.getenv("PROVIDER_CHECK_INTERVAL", "30"))
@@ -192,9 +199,9 @@ def send_warning_email(date=None, url=None, addr=None, job_name=None):
         logger.error("Encountered an error when sending status email: {}".format(e))
 
 
-@app.task(name='Clean Up Queues', base=EventKitBaseTask)
+@app.task(name="Clean Up Queues", base=EventKitBaseTask)
 def clean_up_queues(base=EventKitBaseTask):
-    broker_api_url = getattr(settings, 'BROKER_API_URL')
+    broker_api_url = getattr(settings, "BROKER_API_URL")
     queue_class = "queues"
     exchange_class = "exchanges"
 

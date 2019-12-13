@@ -33,7 +33,6 @@ class Directory(Enum):
 PREVIEW_TAIL = "preview.jpg"
 
 
-
 def get_run_staging_dir(run_uid):
     """
     The run staging dir is where all files are stored while they are being processed.

@@ -179,7 +179,7 @@ class PcfClient(object):
             },
         ).json()
 
-    def get_running_tasks(self, app_name=None):
+    def get_running_tasks(self, app_name=None, names=None):
         app_name = (
             os.getenv("PCF_APP", json.loads(os.getenv("VCAP_APPLICATION", "{}")).get("application_name"),) or app_name
         )
@@ -197,7 +197,9 @@ class PcfClient(object):
             payload = {
                 "states": PcfTaskStates.RUNNING.value,
             }
-        url = "{0}/v3/apps/{1}/tasks".format(self.api_url.rstrip('/'), app_guid)
-        return self.session.get(url, params=payload,
-                                 headers={"Authorization": "bearer {0}".format(self.token),
-                                          "Accept": "application/json"}).json()
+        url = "{0}/v3/apps/{1}/tasks".format(self.api_url.rstrip("/"), app_guid)
+        return self.session.get(
+            url,
+            params=payload,
+            headers={"Authorization": "bearer {0}".format(self.token), "Accept": "application/json"},
+        ).json()
