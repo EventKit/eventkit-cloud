@@ -617,8 +617,8 @@ export class ExportInfo extends React.Component<Props, State> {
                 providerEstimates[provider.id] = provider.estimate;
             });
             this.props.updateExportInfo({ providerEstimates });
-            // Trigger a estimate update in the parent, this will cause the estimate
-            // to update if the newly returned estimate is on a selected provider.
+            // Trigger an estimate calculation update in the parent
+            // Does not re-request any data, calculates the total from available results.
             this.props.onUpdateEstimate();
         })
     }
@@ -970,6 +970,8 @@ export class ExportInfo extends React.Component<Props, State> {
                                                             [updatedProvider.id]: updatedProvider.estimate,
                                                         }
                                                     });
+                                                    // Trigger an estimate caclulation update in the parent
+                                                    // Does not re-request any data, calculates the total from available results.
                                                     this.props.onUpdateEstimate();
                                                 });
                                             }}
