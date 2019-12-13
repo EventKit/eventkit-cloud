@@ -330,7 +330,7 @@ def clip_dataset(
                 "max],[$xmin,$ymax],[$xmin,$ymin]]]]}"
             )
             geojson = bounds_template.safe_substitute(
-                {"xmin": boundary[0], "ymin": boundary[1], "xmax": boundary[2], "ymax": boundary[3],}
+                {"xmin": boundary[0], "ymin": boundary[1], "xmax": boundary[2], "ymax": boundary[3]}
             )
             temp_boundfile.write(geojson.encode())
             temp_boundfile.flush()

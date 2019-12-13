@@ -422,7 +422,7 @@ class Geopackage(object):
                     )
                 if "layer" in key_union:
                     cur.execute(
-                        "UPDATE {table} SET z_index = z_index + 10 * cast(layer AS SMALLINT) WHERE layer IS NOT NULL".format(
+                        "UPDATE {table} SET z_index = z_index + 10 * cast(layer AS SMALLINT) WHERE layer IS NOT NULL".format(  # NOQA
                             table=table_name
                         )
                     )
@@ -572,7 +572,7 @@ def set_gpkg_contents_bounds(gpkg, table_name, bbox):
     """
     with sqlite3.connect(gpkg) as conn:
         if not conn.execute(
-            "UPDATE gpkg_contents SET min_x = {0}, min_y = {1}, max_x = {2}, max_y = {3} WHERE table_name = '{4}';".format(
+            "UPDATE gpkg_contents SET min_x = {0}, min_y = {1}, max_x = {2}, max_y = {3} WHERE table_name = '{4}';".format(  # NOQA
                 bbox[0], bbox[1], bbox[2], bbox[3], table_name
             )
         ).rowcount:

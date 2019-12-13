@@ -487,12 +487,12 @@ class JobViewSet(viewsets.ModelViewSet):
                 run_uid = create_run(job_uid=job_uid, user=request.user)
             except InvalidLicense as il:
                 status_code = status.HTTP_400_BAD_REQUEST
-                error_data = {"errors": [{"status": status_code, "title": _("Invalid License"), "detail": _(str(il)),}]}
+                error_data = {"errors": [{"status": status_code, "title": _("Invalid License"), "detail": _(str(il))}]}
                 return Response(error_data, status=status_code)
                 # Run is passed to celery to start the tasks.
             except Unauthorized as ua:
                 status_code = status.HTTP_403_FORBIDDEN
-                error_data = {"errors": [{"status": status_code, "title": _("Invalid License"), "detail": _(str(ua)),}]}
+                error_data = {"errors": [{"status": status_code, "title": _("Invalid License"), "detail": _(str(ua))}]}
                 return Response(error_data, status=status_code)
 
             running = JobSerializer(job, context={"request": request})
@@ -2007,7 +2007,7 @@ class EstimatorView(views.APIView):
                 size = estimator.get_estimate_from_slug(AoiEstimator.Types.SIZE, slug)[0]
                 time = estimator.get_estimate_from_slug(AoiEstimator.Types.TIME, slug)[0]
                 payload += [
-                    {"slug": slug, "size": {"value": size, "unit": "MB"}, "time": {"value": time, "unit": "seconds"},}
+                    {"slug": slug, "size": {"value": size, "unit": "MB"}, "time": {"value": time, "unit": "seconds"}}
                 ]
 
         return Response(payload, status=status.HTTP_200_OK)
@@ -2081,7 +2081,6 @@ def geojson_to_geos(geojson_geom, srid=None):
 
 
 def get_job_ids_via_permissions(permissions):
-
     groupnames = []
     if "groups" in permissions:
         groupnames = permissions["groups"]
@@ -2115,7 +2114,6 @@ def get_job_ids_via_permissions(permissions):
 
 
 class SwaggerSchemaView(views.APIView):
-
     _ignore_model_permissions = True
     exclude_from_schema = True
     permission_classes = [AllowAny]
@@ -2151,7 +2149,7 @@ class SwaggerSchemaView(views.APIView):
                 links["users"]["members"] = coreapi.Link(
                     url=members_link.url,
                     action=members_link.action,
-                    fields=[(coreapi.Field(name="data", required=True, location="form",)),],
+                    fields=[(coreapi.Field(name="data", required=True, location="form",))],
                     description=members_link.description,
                 )
 

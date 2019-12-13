@@ -65,7 +65,7 @@ class EventKitClient(object):
             response = self.client.get(
                 "{0}/filter".format(self.runs_url),
                 params=params,
-                headers={"X-CSRFToken": self.csrftoken, "Referer": self.create_export_url,},
+                headers={"X-CSRFToken": self.csrftoken, "Referer": self.create_export_url},
             )
             if response.status_code in [404]:
                 break
