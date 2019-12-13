@@ -22,7 +22,6 @@ describe('Application component', () => {
     beforeAll(() => {
         shallow = createShallow();
         mock = new MockAdapter(axios, { delayResponse: 100 });
-        Object.defineProperty(global, 'document', {});
     });
 
     const getProps = () => ({
@@ -69,7 +68,6 @@ describe('Application component', () => {
         const wrapper = getWrapper(props);
         expect(wrapper.find(Banner)).toHaveLength(1);
         expect(wrapper.find(AppBar)).toHaveLength(1);
-        expect(wrapper.find('#favicon')).toHaveLength(1);
         expect(wrapper.find('.qa-Application-AppBar-MenuButton')).toHaveLength(1);
         expect(wrapper.find('.qa-Application-AppBar-NotificationsButton')).toHaveLength(1);
         expect(wrapper.find('.qa-Application-AppBar-NotificationsIndicator')).toHaveLength(1);
@@ -397,29 +395,19 @@ describe('Application component', () => {
     });
 
     it('should trigger the red-dotted favicon when unread count is greater than zero', () => {
-         // const dom = new JSDOM("<!doctype html><html><head></head></html>");
-         // });
-         // global.document = dom.window.document;
-         // global.window = dom.window;
+        const wrapper = getWrapper(getProps());
+        document.head.innerHTML = '<link id="favicon" rel="icon" href="/static/ui/images/favicon.png" type="png">';
+        wrapper.setProps({notificationsCount: 0});
+        expect(document.find('#favicon').href as HTMLInputElement).toEqual("/static/ui/images/favicon.png");
+        // expect(wrapper.getElementById('favicon')).toEqual("/static/ui/images/favicon.png");
 
-    const wrapper = getWrapper(getProps());
-    wrapper.setProps({notificationsCount: 0});
-    expect(wrapper.getElementById('favicon')).toEqual("/static/ui/images/favicon.png);
+        // document.querySelector("link[rel='icon']").href = "favicon.png";
 
-    wrapper.setProps({notificationsCount: 1});
-    expect(wrapper.find('#favicon')).toEqual("/static/ui/images/reddotfavicon.png");
+        // wrapper.setProps({notificationsCount: 1});
+        // expect(wrapper.find('#favicon')).toEqual("/static/ui/images/reddotfavicon.png");
     });
 
-     // it('should trigger the non-dotted favicon when unread count is zero', () => {
-    //     const wrapper = getWrapper(getProps());
-    //     const indicator = wrapper.find('#favicon');
-    //     expect(indicator.props().style.transform).toBe('scale(1)');
-    //     wrapper.setProps({
-    //         notificationsCount: 0
-    //     });
-    // });
-
-it('should open/close notifications dropdown when notifications button is clicked', () => {
+    it('should open/close notifications dropdown when notifications button is clicked', () => {
         const wrapper = getWrapper(getProps());
         const e = { preventDefault: sinon.spy(), stopPropagation: sinon.spy() };
         let dropdown = wrapper.find(NotificationsDropdown);
@@ -432,7 +420,7 @@ it('should open/close notifications dropdown when notifications button is clicke
         expect(dropdown).toHaveLength(0);
     });
 
-it('handleNotificationsDropdownNavigate should set showNotificationsDropdown false', () => {
+    it('handleNotificationsDropdownNavigate should set showNotificationsDropdown false', () => {
         const wrapper = getWrapper(getProps());
         const stateStub = sinon.stub(wrapper.instance(), 'setState');
         const ret = wrapper.instance().handleNotificationsDropdownNavigate();

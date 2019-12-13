@@ -371,19 +371,16 @@ export class Application extends React.Component<Props, State> {
     }
 
     componentDidUpdate(prevProps, prevState) {
+        const { favicon, reddotfavicon } = this.props.theme.eventkit.images;
+        const domFavicon = document.getElementById('favicon') as HTMLInputElement;
 
-        document.addEventListener("DOMContentLoaded", function() {
-            const { favicon, reddotfavicon } = this.props.theme.eventkit.images;
-            const domFavicon = document.getElementById('favicon') as HTMLInputElement;
+        if (this.props.notificationsCount && this.props.notificationsCount > 0) {
+            domFavicon.setAttribute("href", reddotfavicon);
+        }
 
-            if (this.props.notificationsCount && this.props.notificationsCount > 0) {
-                domFavicon.setAttribute("href", reddotfavicon);
-            }
-
-            if (this.props.notificationsCount == null) {
+        if (this.props.notificationsCount == null) {
                 domFavicon.setAttribute("href", favicon);
-            }
-        });
+        }
 
         if (prevState.childContext !== this.state.childContext) {
             this.notificationsPageSize = Number(this.state.childContext.config.NOTIFICATIONS_PAGE_SIZE);
@@ -718,7 +715,6 @@ export class Application extends React.Component<Props, State> {
         ));
 
         return (
-            <link id="favicon" rel="icon" href="/static/ui/images/favicon.png" type="png">
             <div style={{ backgroundColor: colors.black }}>
                 <AppBar
                     className={`qa-Application-AppBar ${classes.appBar}`}
