@@ -10,6 +10,8 @@ import Banner from '../components/Banner';
 import Drawer from '../components/Drawer';
 import { Application } from '../components/Application';
 import NotificationsDropdown from '../components/Notification/NotificationsDropdown';
+import theme from "../styles/eventkit_theme";
+import { JSDOM } from "jsdom";
 
 const store = createTestStore({});
 
@@ -20,6 +22,7 @@ describe('Application component', () => {
     beforeAll(() => {
         shallow = createShallow();
         mock = new MockAdapter(axios, { delayResponse: 100 });
+        Object.defineProperty(global, 'document', {});
     });
 
     const getProps = () => ({
@@ -49,6 +52,7 @@ describe('Application component', () => {
         getNotificationsUnreadCount: sinon.stub(),
         classes: {},
         ...(global as any).eventkit_test_props,
+        images: theme.eventkit.images
     });
 
     const config = {
@@ -65,6 +69,7 @@ describe('Application component', () => {
         const wrapper = getWrapper(props);
         expect(wrapper.find(Banner)).toHaveLength(1);
         expect(wrapper.find(AppBar)).toHaveLength(1);
+        expect(wrapper.find('#favicon')).toHaveLength(1);
         expect(wrapper.find('.qa-Application-AppBar-MenuButton')).toHaveLength(1);
         expect(wrapper.find('.qa-Application-AppBar-NotificationsButton')).toHaveLength(1);
         expect(wrapper.find('.qa-Application-AppBar-NotificationsIndicator')).toHaveLength(1);
@@ -284,26 +289,6 @@ describe('Application component', () => {
         expect(button.props().style.backgroundColor).toBe('');
     });
 
-    it('should trigger the red-dotted favicon when unread count is greater than zero', () => {
-        const wrapper = getWrapper(getProps());
-        const indicator = wrapper.find('#favicon');
-        const href = "/static/ui/images/favicon.png";
-        expect(indicator.getAttribute(href)[0] as HTMLInputElement).toEqual("/static/ui/images/favicon.png");
-        // const favicon = document.getElementById('favicon') as HTMLInputElement;
-        wrapper.setProps({notificationsCount: 1});
-        // expect(wrapper.props().theme.eventkit.images).toBe('reddotfavicon');
-        expect(indicator.getAttribute(href) as HTMLInputElement).toEqual("/static/ui/images/reddotfavicon.png");
-    });
-    //
-    // it('should trigger the non-dotted favicon when unread count is zero', () => {
-    //     const wrapper = getWrapper(getProps());
-    //     const indicator = wrapper.find('#favicon');
-    //     expect(indicator.props().style.transform).toBe('scale(1)');
-    //     wrapper.setProps({
-    //         notificationsCount: 0
-    //     });
-    // });
-
     it('startSendingUserActivePings should return with no side effects', () => {
         const props = getProps();
         const wrapper = getWrapper(props);
@@ -411,7 +396,30 @@ describe('Application component', () => {
         expect(stateStub.called).toBe(false);
     });
 
-    it('should open/close notifications dropdown when notifications button is clicked', () => {
+    it('should trigger the red-dotted favicon when unread count is greater than zero', () => {
+         // const dom = new JSDOM("<!doctype html><html><head></head></html>");
+         // });
+         // global.document = dom.window.document;
+         // global.window = dom.window;
+
+    const wrapper = getWrapper(getProps());
+    wrapper.setProps({notificationsCount: 0});
+    expect(wrapper.getElementById('favicon')).toEqual("/static/ui/images/favicon.png);
+
+    wrapper.setProps({notificationsCount: 1});
+    expect(wrapper.find('#favicon')).toEqual("/static/ui/images/reddotfavicon.png");
+    });
+
+     // it('should trigger the non-dotted favicon when unread count is zero', () => {
+    //     const wrapper = getWrapper(getProps());
+    //     const indicator = wrapper.find('#favicon');
+    //     expect(indicator.props().style.transform).toBe('scale(1)');
+    //     wrapper.setProps({
+    //         notificationsCount: 0
+    //     });
+    // });
+
+it('should open/close notifications dropdown when notifications button is clicked', () => {
         const wrapper = getWrapper(getProps());
         const e = { preventDefault: sinon.spy(), stopPropagation: sinon.spy() };
         let dropdown = wrapper.find(NotificationsDropdown);
@@ -424,7 +432,7 @@ describe('Application component', () => {
         expect(dropdown).toHaveLength(0);
     });
 
-    it('handleNotificationsDropdownNavigate should set showNotificationsDropdown false', () => {
+it('handleNotificationsDropdownNavigate should set showNotificationsDropdown false', () => {
         const wrapper = getWrapper(getProps());
         const stateStub = sinon.stub(wrapper.instance(), 'setState');
         const ret = wrapper.instance().handleNotificationsDropdownNavigate();
@@ -432,4 +440,4 @@ describe('Application component', () => {
         expect(stateStub.calledWith({ showNotificationsDropdown: false }));
         expect(ret).toBe(true);
     });
-});
+})

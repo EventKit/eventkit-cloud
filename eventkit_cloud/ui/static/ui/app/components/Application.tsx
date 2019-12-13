@@ -335,7 +335,6 @@ export class Application extends React.Component<Props, State> {
         this.handleStayLoggedIn = this.handleStayLoggedIn.bind(this);
         this.handleCloseAutoLoggedOutDialog = this.handleCloseAutoLoggedOutDialog.bind(this);
         this.handleNotificationsButtonClick = this.handleNotificationsButtonClick.bind(this);
-        this.handleFaviconOnNotificationsButtonClick = this.handleFaviconOnNotificationsButtonClick.bind(this);
         this.handleNotificationsDropdownNavigate = this.handleNotificationsDropdownNavigate.bind(this);
         this.state = {
             childContext: { config: {} },
@@ -372,19 +371,19 @@ export class Application extends React.Component<Props, State> {
     }
 
     componentDidUpdate(prevProps, prevState) {
-        const { favicon, reddotfavicon } = this.props.theme.eventkit.images;
 
-        const domFavicon = document.getElementById('favicon') as HTMLInputElement;
+        document.addEventListener("DOMContentLoaded", function() {
+            const { favicon, reddotfavicon } = this.props.theme.eventkit.images;
+            const domFavicon = document.getElementById('favicon') as HTMLInputElement;
 
-        if (this.props.notificationsCount && this.props.notificationsCount > 0) {
-            domFavicon.setAttribute("href", reddotfavicon);
-            /* future feature using count instead of dot
-              domFavicon.setAttribute("href", `reddotfavicon${this.props.notificationsCount}.png`); */
-        }
+            if (this.props.notificationsCount && this.props.notificationsCount > 0) {
+                domFavicon.setAttribute("href", reddotfavicon);
+            }
 
-        if (this.props.notificationsCount && this.props.notificationsCount <= 0) {
-            domFavicon.setAttribute("href", favicon);
-        }
+            if (this.props.notificationsCount == null) {
+                domFavicon.setAttribute("href", favicon);
+            }
+        });
 
         if (prevState.childContext !== this.state.childContext) {
             this.notificationsPageSize = Number(this.state.childContext.config.NOTIFICATIONS_PAGE_SIZE);
@@ -686,16 +685,9 @@ export class Application extends React.Component<Props, State> {
     handleNotificationsButtonClick(e) {
         e.preventDefault();
         e.stopPropagation();
-        this.handleFaviconOnNotificationsButtonClick();
         this.setState({
             showNotificationsDropdown: !this.state.showNotificationsDropdown
         });
-    }
-
-    handleFaviconOnNotificationsButtonClick() {
-        const favicon = this.props.theme.eventkit.images.favicon;
-        const domFavicon = document.getElementById('favicon') as HTMLInputElement;
-        domFavicon.setAttribute("href", favicon);
     }
 
     handleNotificationsDropdownNavigate() {
@@ -726,6 +718,7 @@ export class Application extends React.Component<Props, State> {
         ));
 
         return (
+            <link id="favicon" rel="icon" href="/static/ui/images/favicon.png" type="png">
             <div style={{ backgroundColor: colors.black }}>
                 <AppBar
                     className={`qa-Application-AppBar ${classes.appBar}`}
