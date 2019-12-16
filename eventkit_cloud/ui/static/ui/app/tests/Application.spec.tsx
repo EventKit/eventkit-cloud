@@ -11,25 +11,15 @@ import Drawer from '../components/Drawer';
 import { Application } from '../components/Application';
 import NotificationsDropdown from '../components/Notification/NotificationsDropdown';
 import theme from "../styles/eventkit_theme";
-import { JSDOM } from "jsdom";
 
 const store = createTestStore({});
-
-const jsdom = new JSDOM('<!doctype html><html><link id="favicon" rel="icon" href="/static/ui/images/favicon.png" type="png"></html>');
-const { window } = jsdom;
-// tslint:disable-next-line:no-unused-expression
-global.window = window;
-// tslint:disable-next-line:no-unused-expression
-global.document = window.document;
 
 describe('Application component', () => {
     let shallow;
     let mock;
-    let mount;
 
     beforeAll(() => {
         shallow = createShallow();
-        mount = createMount();
         mock = new MockAdapter(axios, { delayResponse: 100 });
     });
 
@@ -401,18 +391,6 @@ describe('Application component', () => {
         const e = { srcElement: { className: 'qa-NotificationMenu-MenuItem'} };
         wrapper.instance().handleClick(e);
         expect(stateStub.called).toBe(false);
-    });
-
-    it('should trigger the red-dotted favicon when unread count is greater than zero', () => {
-        const wrapper = getWrapper(getProps());
-        wrapper.setProps({notificationsCount: 0});
-        expect(wrapper.find('#favicon').href as HTMLInputElement).toEqual("/static/ui/images/favicon.png");
-        // expect(wrapper.getElementById('favicon')).toEqual("/static/ui/images/favicon.png");
-
-        // document.querySelector("link[rel='icon']").href = "favicon.png";
-
-        // wrapper.setProps({notificationsCount: 1});
-        // expect(wrapper.find('#favicon')).toEqual("/static/ui/images/reddotfavicon.png");
     });
 
     it('should open/close notifications dropdown when notifications button is clicked', () => {
