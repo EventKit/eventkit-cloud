@@ -35,9 +35,7 @@ class CoordinateConverter(object):
             authenticate()
             response = requests.get(url, params=payload, headers=get_auth_headers())
             if not response.ok:
-                error_message = (
-                    "EventKit was not able to authenticate to the Geocoding service."
-                )
+                error_message = "EventKit was not able to authenticate to the Geocoding service."
                 logger.error(error_message)
                 raise AuthenticationError(error_message)
         return response

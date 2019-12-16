@@ -33,7 +33,6 @@ from eventkit_cloud.utils.geopackage import (
 from eventkit_cloud.utils.gdalutils import retry
 from eventkit_cloud.utils.stats.eta_estimator import ETA
 
-
 logger = logging.getLogger(__name__)
 
 
@@ -49,17 +48,13 @@ class CustomLogger(ProgressLog):
     def log_step(self, progress):
         from eventkit_cloud.tasks.export_tasks import update_progress
 
-        self.eta.update(
-            progress.progress
-        )  # This may also get called by update_progress but because update_progress
+        self.eta.update(progress.progress)  # This may also get called by update_progress but because update_progress
         # is rate-limited; we also do it here to get more data points for making
         # better eta estimates
 
         if self.task_uid:
             if self.log_step_counter == 0:
-                update_progress(
-                    self.task_uid, progress=progress.progress * 100, eta=self.eta
-                )
+                update_progress(self.task_uid, progress=progress.progress * 100, eta=self.eta)
                 self.log_step_counter = self.log_step_step
             self.log_step_counter -= 1
 
@@ -71,12 +66,7 @@ class CustomLogger(ProgressLog):
             # log progress at most every 500ms
             self.out.write(
                 "[%s] %6.2f%%\t%-20s ETA: %s\r"
-                % (
-                    timestamp(),
-                    progress.progress * 100,
-                    progress.progress_str,
-                    self.eta,
-                )
+                % (timestamp(), progress.progress * 100, progress.progress_str, self.eta,)
             )
             self.out.flush()
             self._laststep = time.time()
@@ -151,22 +141,12 @@ class MapproxyGeopackage(object):
         if self.config:
             conf_dict = yaml.load(self.config) or dict()
         else:
-            raise ConfigurationError(
-                "MapProxy configuration is required for raster data providers"
-            )
+            raise ConfigurationError("MapProxy configuration is required for raster data providers")
 
         if not conf_dict.get("grids"):
             conf_dict["grids"] = {
-                "default": {
-                    "srs": "EPSG:4326",
-                    "tile_size": [256, 256],
-                    "origin": "nw",
-                },
-                "webmercator": {
-                    "srs": "EPSG:3857",
-                    "tile_size": [256, 256],
-                    "origin": "nw",
-                },
+                "default": {"srs": "EPSG:4326", "tile_size": [256, 256], "origin": "nw"},
+                "webmercator": {"srs": "EPSG:3857", "tile_size": [256, 256], "origin": "nw"},
             }
 
         # If user provides a cache setup then use that and substitute in the geopackage file for the placeholder.
@@ -198,40 +178,27 @@ class MapproxyGeopackage(object):
         load_config(mapproxy_config, config_dict=conf_dict)
 
         # Create a configuration object
-        mapproxy_configuration = ProxyConfiguration(
-            mapproxy_config, seed=seeder.seed, renderd=None
-        )
+        mapproxy_configuration = ProxyConfiguration(mapproxy_config, seed=seeder.seed, renderd=None)
 
         # # As of Mapproxy 1.9.x, datasource files covering a small area cause a bbox error.
         if self.bbox:
-            if isclose(self.bbox[0], self.bbox[2], rel_tol=0.001) or isclose(
-                self.bbox[0], self.bbox[2], rel_tol=0.001
-            ):
-                logger.warning(
-                    "Using bbox instead of selection, because the area is too small"
-                )
+            if isclose(self.bbox[0], self.bbox[2], rel_tol=0.001) or isclose(self.bbox[0], self.bbox[2], rel_tol=0.001):
+                logger.warning("Using bbox instead of selection, because the area is too small")
                 self.selection = None
 
         seed_dict = get_seed_template(
-            bbox=self.bbox,
-            level_from=self.level_from,
-            level_to=self.level_to,
-            coverage_file=self.selection,
+            bbox=self.bbox, level_from=self.level_from, level_to=self.level_to, coverage_file=self.selection,
         )
 
         # Create a seed configuration object
-        seed_configuration = SeedingConfiguration(
-            seed_dict, mapproxy_conf=mapproxy_configuration
-        )
+        seed_configuration = SeedingConfiguration(seed_dict, mapproxy_conf=mapproxy_configuration)
 
         errors = validate_references(conf_dict)
         if errors:
             logger.error("MapProxy configuration failed.")
             logger.error("Using Configuration:")
             logger.error(conf_dict)
-            raise ConfigurationError(
-                "MapProxy returned the error - {0}".format(", ".join(errors))
-            )
+            raise ConfigurationError("MapProxy returned the error - {0}".format(", ".join(errors)))
 
         return conf_dict, seed_configuration, mapproxy_configuration
 
@@ -245,9 +212,7 @@ class MapproxyGeopackage(object):
 
         conf_dict, seed_configuration, mapproxy_configuration = self.get_check_config()
         #  Customizations...
-        mapproxy.seed.seeder.exp_backoff = get_custom_exp_backoff(
-            max_repeat=int(conf_dict.get("max_repeat", 5))
-        )
+        mapproxy.seed.seeder.exp_backoff = get_custom_exp_backoff(max_repeat=int(conf_dict.get("max_repeat", 5)))
         geopackage_cache.GeopackageCache.load_tile_metadata = load_tile_metadata
 
         logger.error("Beginning seeding to {0}".format(self.gpkgfile))
@@ -260,9 +225,7 @@ class MapproxyGeopackage(object):
             auth_requests.patch_mapproxy_opener_cache(slug=self.name, cred_var=cred_var)
 
             progress_store = get_progress_store(self.gpkgfile)
-            progress_logger = CustomLogger(
-                verbose=True, task_uid=self.task_uid, progress_store=progress_store
-            )
+            progress_logger = CustomLogger(verbose=True, task_uid=self.task_uid, progress_store=progress_store)
 
             task_process = TaskProcess(task_uid=self.task_uid)
             task_process.start_process(
@@ -278,9 +241,7 @@ class MapproxyGeopackage(object):
             remove_empty_zoom_levels(self.gpkgfile)
             set_gpkg_contents_bounds(self.gpkgfile, self.layer, self.bbox)
             if task_process.exitcode != 0:
-                raise Exception(
-                    "The Raster Service failed to complete, please contact an administrator."
-                )
+                raise Exception("The Raster Service failed to complete, please contact an administrator.")
         except Exception:
             logger.error("Export failed for url {}.".format(self.service_url))
             raise
@@ -307,11 +268,7 @@ def get_cache_template(sources, grids, geopackage, table_name="tiles"):
     return {
         "sources": sources,
         "meta_size": [1, 1],
-        "cache": {
-            "type": "geopackage",
-            "filename": str(geopackage),
-            "table_name": table_name or "None",
-        },
+        "cache": {"type": "geopackage", "filename": str(geopackage), "table_name": table_name or "None"},
         "grids": [grid for grid in grids if grid == "default"] or grids,
         "format": "mixed",
         "request_format": "image/png",
@@ -321,7 +278,7 @@ def get_cache_template(sources, grids, geopackage, table_name="tiles"):
 def get_seed_template(bbox=None, level_from=None, level_to=None, coverage_file=None):
     bbox = bbox or [-180, -89, 180, 89]
     seed_template = {
-        "coverages": {"geom": {"srs": "EPSG:4326", }},
+        "coverages": {"geom": {"srs": "EPSG:4326"}},
         "seeds": {
             "seed": {
                 "coverages": ["geom"],
@@ -345,7 +302,6 @@ def isclose(a, b, rel_tol=1e-09, abs_tol=0.0):
 
 
 def check_zoom_levels(gpkg, mapproxy_configuration):
-
     try:
         grid = mapproxy_configuration.caches.get("default").conf.get("grids")[0]
         tile_size = mapproxy_configuration.grids.get(grid).conf.get("tile_size")
@@ -354,9 +310,7 @@ def check_zoom_levels(gpkg, mapproxy_configuration):
             actual_zoom_levels = get_zoom_levels_table(gpkg, table_name)
             gpkg_tile_matrix = get_table_tile_matrix_information(gpkg, table_name)
             for actual_zoom_level in actual_zoom_levels:
-                if actual_zoom_level not in [
-                    level.get("zoom_level") for level in gpkg_tile_matrix
-                ]:
+                if actual_zoom_level not in [level.get("zoom_level") for level in gpkg_tile_matrix]:
                     res = tile_grid.resolution(actual_zoom_level)
                     grid_sizes = tile_grid.grid_sizes[actual_zoom_level]
                     with sqlite3.connect(gpkg) as conn:
@@ -389,20 +343,12 @@ def get_concurrency(conf_dict):
 
 
 def create_mapproxy_app(slug: str):
-    conf_dict = cache.get_or_set(
-        f"base-config-{slug}", lambda: get_conf_dict(slug), 360
-    )
+    conf_dict = cache.get_or_set(f"base-config-{slug}", lambda: get_conf_dict(slug), 360)
 
     # TODO: place this somewhere else consolidate settings.
     base_config = {
-        "services": {"demo": None, "tms": None, "wmts": None, },
-        "caches": {
-            slug: {
-                "default": {"type": "file"},
-                "sources": ["default"],
-                "grids": ["default"],
-            }
-        },
+        "services": {"demo": None, "tms": None, "wmts": None},
+        "caches": {slug: {"default": {"type": "file"}, "sources": ["default"], "grids": ["default"]}},
         "layers": [{"name": slug, "title": slug, "sources": [slug]}],
         "globals": {"cache": {"base_dir": getattr(settings, "TILE_CACHE_DIR")}},
     }
@@ -434,9 +380,7 @@ def get_conf_dict(slug: str) -> dict:
     from eventkit_cloud.jobs.models import DataProvider  # Circular reference
 
     try:
-        provider = cache.get_or_set(
-            f"DataProvider-{slug}", lambda: DataProvider.objects.get(slug=slug), 360
-        )
+        provider = cache.get_or_set(f"DataProvider-{slug}", lambda: DataProvider.objects.get(slug=slug), 360)
     except Exception:
         raise Exception(f"Unable to find provider for slug {slug}")
 
@@ -451,9 +395,7 @@ def get_conf_dict(slug: str) -> dict:
                 conf_dict["globals"] = {"http": {"ssl_no_cert_checks": ssl_verify}}
         else:
             conf_dict["globals"] = {"http": {"ssl_ca_certs": ssl_verify}}
-        conf_dict.update(
-            {"globals": {"cache": {"lock_dir": "./locks", "tile_lock_dir": "./locks"}}}
-        )
+        conf_dict.update({"globals": {"cache": {"lock_dir": "./locks", "tile_lock_dir": "./locks"}}})
     except Exception as e:
         logger.error(e)
         raise Exception(f"Unable to load a mapproxy configuration for slug {slug}")
