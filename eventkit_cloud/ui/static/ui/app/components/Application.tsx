@@ -374,12 +374,12 @@ export class Application extends React.Component<Props, State> {
         const { favicon, reddotfavicon } = this.props.theme.eventkit.images;
         const domFavicon = document.getElementById('favicon') as HTMLInputElement;
 
-        if (this.props.notificationsCount && this.props.notificationsCount > 0) {
-            domFavicon.setAttribute("href", reddotfavicon);
-        }
-
-        if (this.props.notificationsCount == null) {
+        if (domFavicon) {
+            if (this.props.notificationsCount && this.props.notificationsCount > 0) {
+                domFavicon.setAttribute("href", reddotfavicon);
+            } else {
                 domFavicon.setAttribute("href", favicon);
+            }
         }
 
         if (prevState.childContext !== this.state.childContext) {

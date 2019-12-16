@@ -11,9 +11,6 @@ import Drawer from '../components/Drawer';
 import { Application } from '../components/Application';
 import NotificationsDropdown from '../components/Notification/NotificationsDropdown';
 import theme from "../styles/eventkit_theme";
-import {MapView} from "../components/DataPackPage/MapView";
-import * as url from "url";
-import {shallow} from "enzyme";
 
 const store = createTestStore({});
 
@@ -290,17 +287,24 @@ describe('Application component', () => {
     });
 
     it('should change favicon when viewing notifications page', () => {
+        const props = getProps();
+        const favicon = "favicon.png";
+        const reddotfavicon = "favicon.png";
+        props.theme.eventkit.images = { favicon, reddotfavicon }
         const stub = sinon.stub(document, 'getElementById');
-        const link = document.createElement('link');
-        const href = document.createAttribute('href');
-        stub.withArgs('favicon').returns(link);
-        stub.withArgs('static/ui/images/favicon.png').returns(href);
-        // do something with instance here (ie, instance.handleNotificationsButtonClick)
-        expect(stub.calledWith('favicon')).toBe(true);
-        expect(stub.calledWith('static/ui/images/favicon.png')).toBe(true);
+        const setAttribute = sinon.fake();
+        const domFavicon = {setAttribute};
+        stub.returns(domFavicon);
 
-        // expect(stub.calledWith('favicon', '/static/ui/images/reddotfavicon.png')).toBe(true);
-        // stub.restore();
+        const wrapper = getWrapper(props);
+        wrapper.instance();
+        wrapper.setProps({notificationsCount: 1})
+        wrapper.update();
+        expect(setAttribute.calledWith('href', reddotfavicon)).toBe(true);
+        wrapper.setProps({notificationsCount: 0})
+        wrapper.update();
+        expect(setAttribute.calledWith('href', favicon)).toBe(true);
+        stub.restore();
     });
 
     it('startSendingUserActivePings should return with no side effects', () => {
