@@ -11,6 +11,9 @@ import Drawer from '../components/Drawer';
 import { Application } from '../components/Application';
 import NotificationsDropdown from '../components/Notification/NotificationsDropdown';
 import theme from "../styles/eventkit_theme";
+import {MapView} from "../components/DataPackPage/MapView";
+import * as url from "url";
+import {shallow} from "enzyme";
 
 const store = createTestStore({});
 
@@ -284,6 +287,20 @@ describe('Application component', () => {
         });
         button = wrapper.find('.qa-Application-AppBar-NotificationsButton').at(0);
         expect(button.props().style.backgroundColor).toBe('');
+    });
+
+    it('should change favicon when viewing notifications page', () => {
+        const stub = sinon.stub(document, 'getElementById');
+        const link = document.createElement('link');
+        const href = document.createAttribute('href');
+        stub.withArgs('favicon').returns(link);
+        stub.withArgs('static/ui/images/favicon.png').returns(href);
+        // do something with instance here (ie, instance.handleNotificationsButtonClick)
+        expect(stub.calledWith('favicon')).toBe(true);
+        expect(stub.calledWith('static/ui/images/favicon.png')).toBe(true);
+
+        // expect(stub.calledWith('favicon', '/static/ui/images/reddotfavicon.png')).toBe(true);
+        // stub.restore();
     });
 
     it('startSendingUserActivePings should return with no side effects', () => {
