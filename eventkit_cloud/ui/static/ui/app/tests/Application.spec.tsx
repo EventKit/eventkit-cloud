@@ -2,7 +2,7 @@ import * as React from 'react';
 import axios from 'axios';
 import * as sinon from 'sinon';
 import MockAdapter from 'axios-mock-adapter';
-import { createShallow, createMount } from '@material-ui/core/test-utils';
+import { createShallow } from '@material-ui/core/test-utils';
 import AppBar from '@material-ui/core/AppBar';
 import createTestStore from '../store/configureTestStore';
 import BaseDialog from '../components/Dialog/BaseDialog';
@@ -58,7 +58,7 @@ describe('Application component', () => {
         NOTIFICATIONS_PAGE_SIZE: '12',
     };
 
-    const getWrapper = props => mount(<Application {...props} />, {
+    const getWrapper = props => shallow(<Application {...props} />, {
         context: { config },
     });
 
