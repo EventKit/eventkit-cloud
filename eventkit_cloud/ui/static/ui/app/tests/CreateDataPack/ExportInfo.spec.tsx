@@ -84,6 +84,7 @@ describe('ExportInfo component', () => {
             onWalkthroughReset: sinon.spy(),
             handlePrev: sinon.spy(),
             updateExportInfo: sinon.spy(),
+            onUpdateEstimate: sinon.spy(),
             setNextDisabled: sinon.spy(),
             setNextEnabled: sinon.spy(),
             ...(global as any).eventkit_test_props,
@@ -94,10 +95,10 @@ describe('ExportInfo component', () => {
     let props;
     let wrapper;
     let instance;
-    const setup = (overrides = {}) => {
+    const setup = (overrides = {}, serveEstimates = true) => {
         const config = {
             BASEMAP_URL: 'http://my-osm-tile-service/{z}/{x}/{y}.png',
-            SERVE_ESTIMATES: true
+            SERVE_ESTIMATES: serveEstimates
         };
         props = {...getProps(), ...overrides};
         wrapper = shallow(<ExportInfo {...props} />, {
@@ -337,6 +338,7 @@ describe('ExportInfo component', () => {
     });
 
     it('checkAvailability should setState with new provider', async () => {
+        setup({providers: [{slug: '123'}]});
         const provider = {
             slug: '123',
         };
@@ -360,6 +362,7 @@ describe('ExportInfo component', () => {
     });
 
     it('checkEstimate should setState with new provider', async () => {
+        setup({providers: [{slug: '123'}]});
         const provider = {
             slug: '123',
         };
@@ -385,6 +388,7 @@ describe('ExportInfo component', () => {
     });
 
     it('checkEstimate should not setState when SERVE_ESTIMATES is false', async () => {
+        setup({}, false);
         const provider = {
             slug: '123',
         };
@@ -405,8 +409,8 @@ describe('ExportInfo component', () => {
         ));
         const stateSpy = sinon.spy(instance, 'setState');
         await instance.checkEstimate(provider);
-        expect(stateSpy.called).toBe(true);
-        expect(wrapper.state().providers).toEqual([newProvider]);
+        expect(stateSpy.called).toBe(false);
+        expect(wrapper.state().providers).toEqual([]);
     });
 
     it('checkProviders should call checkAvailablity and checkEstimate for each provider', async () => {
