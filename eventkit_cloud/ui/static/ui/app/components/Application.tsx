@@ -94,7 +94,7 @@ const jss = (theme: any) => createStyles({
         backgroundColor: theme.eventkit.colors.warning,
         zIndex: '1' as any,
         pointerEvents: 'none',
-    },
+    }
 });
 
 interface Props {
@@ -280,7 +280,7 @@ const routes = (
             <Redirect to="/dashboard" />
         )} />
     </div>
-)
+);
 
 export class Application extends React.Component<Props, State> {
     private userActiveInputTypes: string[];
@@ -371,6 +371,17 @@ export class Application extends React.Component<Props, State> {
     }
 
     componentDidUpdate(prevProps, prevState) {
+        const { favicon, reddotfavicon } = this.props.theme.eventkit.images;
+        const domFavicon = document.getElementById('favicon') as HTMLInputElement;
+
+        if (domFavicon) {
+            if (this.props.notificationsCount && this.props.notificationsCount > 0) {
+                domFavicon.setAttribute("href", reddotfavicon);
+            } else {
+                domFavicon.setAttribute("href", favicon);
+            }
+        }
+
         if (prevState.childContext !== this.state.childContext) {
             this.notificationsPageSize = Number(this.state.childContext.config.NOTIFICATIONS_PAGE_SIZE);
             if (this.state.loggedIn || this.props.userData) {
@@ -672,7 +683,7 @@ export class Application extends React.Component<Props, State> {
         e.preventDefault();
         e.stopPropagation();
         this.setState({
-            showNotificationsDropdown: !this.state.showNotificationsDropdown,
+            showNotificationsDropdown: !this.state.showNotificationsDropdown
         });
     }
 
