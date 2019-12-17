@@ -72,7 +72,7 @@ def expire_runs():
 
 
 @app.task(name="PCF Scale Celery", base=EventKitBaseTask)
-def pcf_scale_celery(max_tasks_memory):
+def pcf_scale_celery(max_tasks_memory=4096):
     """
     Built specifically for PCF deployments.
     Scales up celery instances when necessary.
