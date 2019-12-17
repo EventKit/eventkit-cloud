@@ -47,7 +47,7 @@ if PCF_SCALING:
             "pcf-scale-celery": {
                 "task": "PCF Scale Celery",
                 "schedule": 60.0,
-                "kwargs": {"max_tasks_memory": int(os.getenv("MAX_TASKS_MEMORY", 20000))},
+                "kwargs": {"max_tasks_memory": int(os.getenv("CELERY_MAX_TASKS_MEMORY", 20000))},
                 "options": {
                     "priority": 90,
                     "queue": "scale".format(socket.gethostname()),
