@@ -1,6 +1,7 @@
 import copy
 from enum import Enum
 import logging
+from operator import itemgetter
 import os
 import pickle
 import re
@@ -420,35 +421,38 @@ def get_metadata(data_provider_task_uid):
                 except Exception:
                     continue
                 full_file_path = os.path.join(provider_staging_dir, filename)
-                file_ext = os.path.splitext(filename)[1]
-                # Only include files relavant to the user that we can actually add to the carto.
-                if export_task.display and ("project file" not in export_task.name.lower()):
-                    download_filename = get_download_filename(
-                        os.path.splitext(os.path.basename(filename))[0],
-                        timezone.now(),
-                        file_ext,
-                        additional_descriptors=provider_task.slug,
-                    )
-                    filepath = get_archive_data_path(provider_task.slug, download_filename)
+                current_files = metadata["data_sources"][provider_task.slug]["files"]
 
-                    file_data = {
-                        "file_path": filepath,
-                        "full_file_path": full_file_path,
-                        "file_ext": file_ext,
-                    }
-                    if metadata["data_sources"][provider_task.slug].get("type") == "elevation":
-                        # Get statistics to update ranges in template.
-                        band_stats = get_band_statistics(full_file_path)
-                        logger.info("Band Stats {0}: {1}".format(full_file_path, band_stats))
-                        file_data["band_stats"] = band_stats
-                        # Calculate the value for each elevation step (of 16)
-                        try:
-                            steps = linspace(band_stats[0], band_stats[1], num=16)
-                            file_data["ramp_shader_steps"] = list(map(int, steps))
-                        except TypeError:
-                            file_data["ramp_shader_steps"] = None
+                if full_file_path not in map(itemgetter("full_file_path"), current_files):
+                    file_ext = os.path.splitext(filename)[1]
+                    # Only include files relavant to the user that we can actually add to the carto.
+                    if export_task.display and ("project file" not in export_task.name.lower()):
+                        download_filename = get_download_filename(
+                            os.path.splitext(os.path.basename(filename))[0],
+                            timezone.now(),
+                            file_ext,
+                            additional_descriptors=provider_task.slug,
+                        )
+                        filepath = get_archive_data_path(provider_task.slug, download_filename)
 
-                    metadata["data_sources"][provider_task.slug]["files"] += [file_data]
+                        file_data = {
+                            "file_path": filepath,
+                            "full_file_path": full_file_path,
+                            "file_ext": file_ext,
+                        }
+                        if metadata["data_sources"][provider_task.slug].get("type") == "elevation":
+                            # Get statistics to update ranges in template.
+                            band_stats = get_band_statistics(full_file_path)
+                            logger.info("Band Stats {0}: {1}".format(full_file_path, band_stats))
+                            file_data["band_stats"] = band_stats
+                            # Calculate the value for each elevation step (of 16)
+                            try:
+                                steps = linspace(band_stats[0], band_stats[1], num=16)
+                                file_data["ramp_shader_steps"] = list(map(int, steps))
+                            except TypeError:
+                                file_data["ramp_shader_steps"] = None
+
+                        metadata["data_sources"][provider_task.slug]["files"] += [file_data]
 
                 if not os.path.isfile(full_file_path):
                     logger.error("Could not find file {0} for export {1}.".format(full_file_path, export_task.name))
