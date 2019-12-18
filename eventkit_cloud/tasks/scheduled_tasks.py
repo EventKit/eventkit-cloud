@@ -88,7 +88,7 @@ def pcf_scale_celery(max_tasks_memory=4096):
 
     celery_tasks = {
         celery_group_name: {
-            "command": "celery worker -A eventkit_cloud --concurrency=$CONCURRENCY --loglevel=$LOG_LEVEL -n worker@%h -Q $CELERY_GROUP_NAME ", # NOQA
+            "command": "celery worker -A eventkit_cloud --concurrency=$CONCURRENCY --loglevel=$LOG_LEVEL -n worker@%h -Q $CELERY_GROUP_NAME ",  # NOQA
             "disk": 2048,
             "memory": 1024,
         },
@@ -98,12 +98,12 @@ def pcf_scale_celery(max_tasks_memory=4096):
             "memory": 1024,
         },
         f"{celery_group_name}.osm": {
-            "command": "celery worker -A eventkit_cloud --concurrency=1 --loglevel=$LOG_LEVEL -n osm@%h -Q $CELERY_GROUP_NAME.osm ", # NOQA
+            "command": "celery worker -A eventkit_cloud --concurrency=1 --loglevel=$LOG_LEVEL -n osm@%h -Q $CELERY_GROUP_NAME.osm ",  # NOQA
             "disk": 2048,
             "memory": 4096,
         },
         f"{celery_group_name}.finalize": {
-            "command": "celery worker -A eventkit_cloud --concurrency=1 --loglevel=$LOG_LEVEL -n finalize@%h -Q $CELERY_GROUP_NAME.finalize ", # NOQA
+            "command": "celery worker -A eventkit_cloud --concurrency=1 --loglevel=$LOG_LEVEL -n finalize@%h -Q $CELERY_GROUP_NAME.finalize ",  # NOQA
             "disk": 2048,
             "memory": 1024,
         },
