@@ -16,6 +16,7 @@ import Typography from "@material-ui/core/Typography";
 import ListItemText from "@material-ui/core/ListItemText";
 import Button from "@material-ui/core/Button";
 import Clear from '@material-ui/icons/Clear';
+import {DisplayDataBox} from "./DisplayDataBox";
 
 
 const jss = (theme: Theme & Eventkit.Theme) => createStyles({
@@ -348,6 +349,14 @@ export class MapDrawer extends React.Component<Props, State> {
                             </Button>
                         </div>
                     </Drawer>
+                    <DisplayDataBox
+                        lat={40}
+                        long={50}
+                        layerId={7}
+                        layerName="States"
+                        displayFieldName=""
+                        value="South Dakota"
+                    />
                 </div>
             </div>
         );

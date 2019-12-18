@@ -1,5 +1,4 @@
 import * as React from "react";
-import {Props} from "./ExportAOI";
 
 export interface Props {
     lat: number;
