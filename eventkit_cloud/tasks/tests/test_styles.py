@@ -7,7 +7,7 @@ from django.conf import settings
 from django.test import TestCase
 from mock import patch, MagicMock
 
-from eventkit_cloud.tasks import TaskStates
+from eventkit_cloud.tasks.export_tasks import TaskStates
 from eventkit_cloud.tasks.helpers import generate_qgs_style, get_metadata
 
 

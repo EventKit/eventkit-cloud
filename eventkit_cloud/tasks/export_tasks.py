@@ -11,11 +11,13 @@ import traceback
 from zipfile import ZipFile, ZIP_DEFLATED
 
 from audit_logging.celery_support import UserDetailsBase
+from billiard.einfo import ExceptionInfo
 from celery import signature
 from celery.result import AsyncResult
 from celery.utils.log import get_task_logger
 from django.conf import settings
 from django.contrib.gis.geos import Polygon
+from django.contrib.auth.models import User
 from django.core.cache import caches
 from django.core.exceptions import ObjectDoesNotExist
 from django.core.mail import EmailMultiAlternatives
@@ -30,6 +32,7 @@ from eventkit_cloud.core.helpers import (
     NotificationVerb,
     NotificationLevel,
 )
+
 from eventkit_cloud.feature_selection.feature_selection import FeatureSelection
 from eventkit_cloud.tasks.enumerations import TaskStates
 from eventkit_cloud.tasks.exceptions import CancelException, DeleteException
@@ -59,6 +62,18 @@ from eventkit_cloud.utils.auth_requests import get_cred
 from eventkit_cloud.utils import overpass, pbf, s3, mapproxy, wcs, geopackage, gdalutils
 from eventkit_cloud.utils.ogr import OGR
 from eventkit_cloud.utils.stats.eta_estimator import ETA
+
+from eventkit_cloud.tasks.models import (
+    ExportTaskRecord,
+    ExportTaskException,
+    DataProviderTaskRecord,
+    FileProducingTaskResult,
+    ExportRun,
+)
+from eventkit_cloud.jobs.models import (
+    Job,
+    DataProvider,
+)
 
 
 BLACKLISTED_ZIP_EXTS = [".ini", ".om5", ".osm", ".lck", ".pyc"]
@@ -147,7 +162,7 @@ class LockingTask(UserDetailsBase):
 
 
 def make_file_downloadable(
-    filepath, run_uid, provider_slug=None, skip_copy=False, download_filename=None, size=None, direct=False,
+        filepath, run_uid, provider_slug=None, skip_copy=False, download_filename=None, size=None, direct=False,
 ):
     """ Construct the filesystem location and url needed to download the file at filepath.
         Copy filepath to the filesystem location required for download.
@@ -168,7 +183,7 @@ def make_file_downloadable(
         download_filename = filename
 
     if getattr(settings, "USE_S3", False):
-        download_url = s3.upload_to_s3(run_uid, os.path.join(staging_dir, filename), download_filename,)
+        download_url = s3.upload_to_s3(run_uid, os.path.join(staging_dir, filename), download_filename, )
     else:
         make_dirs(run_download_dir)
 
@@ -190,12 +205,6 @@ class ExportTask(UserDetailsBase):
     abort_on_error = False
 
     def __call__(self, *args, **kwargs):
-
-        from eventkit_cloud.tasks.models import (
-            FileProducingTaskResult,
-            ExportTaskRecord,
-        )
-
         task_uid = kwargs.get("task_uid")
 
         try:
@@ -306,12 +315,6 @@ class ExportTask(UserDetailsBase):
             5. run export_task_error_handler if the run should be aborted
                - this is only for initial tasks on which subsequent export tasks depend
         """
-        from eventkit_cloud.tasks.models import ExportTaskRecord
-        from eventkit_cloud.tasks.models import (
-            ExportTaskException,
-            DataProviderTaskRecord,
-        )
-
         try:
             task = ExportTaskRecord.objects.get(uid=task_id)
             task.finished_at = timezone.now()
@@ -346,7 +349,6 @@ class ExportTask(UserDetailsBase):
         """
         result = result or {}
         started = timezone.now()
-        from eventkit_cloud.tasks.models import ExportTaskRecord
 
         try:
             task = ExportTaskRecord.objects.get(uid=task_uid)
@@ -392,16 +394,16 @@ class FormatTask(ExportTask):
 
 @gdalutils.retry
 def osm_data_collection_pipeline(
-    export_task_record_uid,
-    stage_dir,
-    job_name="no_job_name_specified",
-    url=None,
-    slug=None,
-    bbox=None,
-    user_details=None,
-    config=None,
-    eta=None,
-    projection=4326,
+        export_task_record_uid,
+        stage_dir,
+        job_name="no_job_name_specified",
+        url=None,
+        slug=None,
+        bbox=None,
+        user_details=None,
+        config=None,
+        eta=None,
+        projection=4326,
 ):
     """
     Collects data from OSM & produces a thematic gpkg as a subtask of the task referenced by export_provider_task_id.
@@ -479,26 +481,24 @@ def osm_data_collection_pipeline(
 
 @app.task(name="OSM (.gpkg)", bind=True, base=FormatTask, abort_on_error=True, acks_late=True)
 def osm_data_collection_task(
-    self,
-    result=None,
-    stage_dir=None,
-    run_uid=None,
-    provider_slug=None,
-    overpass_url=None,
-    task_uid=None,
-    job_name="no_job_name_specified",
-    bbox=None,
-    user_details=None,
-    config=None,
-    *args,
-    **kwargs,
+        self,
+        result=None,
+        stage_dir=None,
+        run_uid=None,
+        provider_slug=None,
+        overpass_url=None,
+        task_uid=None,
+        job_name="no_job_name_specified",
+        bbox=None,
+        user_details=None,
+        config=None,
+        *args,
+        **kwargs,
 ):
     """
     Collects data from OSM & produces a thematic gpkg as a subtask of the task referenced by export_provider_task_id.
     bbox expected format is an iterable of the form [ long0, lat0, long1, lat1 ]
     """
-    from eventkit_cloud.tasks.models import ExportRun
-
     logger.debug("enter run for {0}".format(self.name))
     debug_os = None
 
@@ -546,13 +546,11 @@ def osm_data_collection_task(
 
 @app.task(name="Add Metadata", bind=True, base=UserDetailsBase, abort_on_error=False)
 def add_metadata_task(
-    self, result=None, job_uid=None, provider_slug=None, user_details=None, *args, **kwargs,
+        self, result=None, job_uid=None, provider_slug=None, user_details=None, *args, **kwargs,
 ):
     """
     Task to create metadata to a geopackage.
     """
-    from eventkit_cloud.jobs.models import Job, DataProvider
-
     job = Job.objects.get(uid=job_uid)
 
     provider = DataProvider.objects.get(slug=provider_slug)
@@ -587,16 +585,16 @@ def add_metadata_task(
 
 @app.task(name="ESRI Shapefile (.shp)", bind=True, base=FormatTask)
 def shp_export_task(
-    self,
-    result=None,
-    run_uid=None,
-    task_uid=None,
-    stage_dir=None,
-    job_name=None,
-    user_details=None,
-    projection=4326,
-    *args,
-    **kwargs,
+        self,
+        result=None,
+        run_uid=None,
+        task_uid=None,
+        stage_dir=None,
+        job_name=None,
+        user_details=None,
+        projection=4326,
+        *args,
+        **kwargs,
 ):
     """
     Class defining SHP export function.
@@ -624,16 +622,16 @@ def shp_export_task(
 
 @app.task(name="Keyhole Markup Language (.kml)", bind=True, base=FormatTask)
 def kml_export_task(
-    self,
-    result=None,
-    run_uid=None,
-    task_uid=None,
-    stage_dir=None,
-    job_name=None,
-    user_details=None,
-    projection=4326,
-    *args,
-    **kwargs,
+        self,
+        result=None,
+        run_uid=None,
+        task_uid=None,
+        stage_dir=None,
+        job_name=None,
+        user_details=None,
+        projection=4326,
+        *args,
+        **kwargs,
 ):
     """
     Class defining KML export function.
@@ -657,16 +655,16 @@ def kml_export_task(
 
 @app.task(name="SQLITE Format", bind=True, base=FormatTask)
 def sqlite_export_task(
-    self,
-    result=None,
-    run_uid=None,
-    task_uid=None,
-    stage_dir=None,
-    job_name=None,
-    user_details=None,
-    projection=4326,
-    *args,
-    **kwargs,
+        self,
+        result=None,
+        run_uid=None,
+        task_uid=None,
+        stage_dir=None,
+        job_name=None,
+        user_details=None,
+        projection=4326,
+        *args,
+        **kwargs,
 ):
     """
     Class defining SQLITE export function.
@@ -689,15 +687,15 @@ def sqlite_export_task(
 
 @app.task(name="Area of Interest (.geojson)", bind=True, base=ExportTask)
 def output_selection_geojson_task(
-    self,
-    result=None,
-    task_uid=None,
-    selection=None,
-    stage_dir=None,
-    provider_slug=None,
-    projection=4326,
-    *args,
-    **kwargs,
+        self,
+        result=None,
+        task_uid=None,
+        selection=None,
+        stage_dir=None,
+        provider_slug=None,
+        projection=4326,
+        *args,
+        **kwargs,
 ):
     """
     Class defining geopackage export function.
@@ -706,7 +704,6 @@ def output_selection_geojson_task(
 
     geojson_file = os.path.join(stage_dir, "{0}-{1}_selection.geojson".format(provider_slug, projection))
     if selection:
-
         # Test if json.
         json.loads(selection)
 
@@ -723,16 +720,16 @@ def output_selection_geojson_task(
 
 @app.task(name="Geopackage (.gpkg)", bind=True, base=FormatTask)
 def geopackage_export_task(
-    self,
-    result=None,
-    run_uid=None,
-    task_uid=None,
-    stage_dir=None,
-    job_name=None,
-    user_details=None,
-    projection=4326,
-    *args,
-    **kwargs,
+        self,
+        result=None,
+        run_uid=None,
+        task_uid=None,
+        stage_dir=None,
+        job_name=None,
+        user_details=None,
+        projection=4326,
+        *args,
+        **kwargs,
 ):
     """
     Class defining geopackage export function.
@@ -742,7 +739,8 @@ def geopackage_export_task(
     gpkg_in_dataset = parse_result(result, "source")
     gpkg_out_dataset = os.path.join(stage_dir, "{0}-{1}.gpkg".format(job_name, projection))
 
-    gpkg = gdalutils.convert(file_format="gpkg", in_file=gpkg_in_dataset, out_file=gpkg_out_dataset, task_uid=task_uid,)
+    gpkg = gdalutils.convert(file_format="gpkg", in_file=gpkg_in_dataset, out_file=gpkg_out_dataset,
+                             task_uid=task_uid, )
 
     result["file_format"] = "gpkg"
     result["result"] = gpkg
@@ -752,9 +750,9 @@ def geopackage_export_task(
 
 @app.task(name="Geotiff (.tif)", bind=True, base=FormatTask)
 def geotiff_export_task(
-    self, result=None, task_uid=None, stage_dir=None, job_name=None, projection=4326, compress=False, *args, **kwargs
+        self, result=None, task_uid=None, stage_dir=None, job_name=None, projection=4326, compress=False, *args,
+        **kwargs
 ):
-
     """
     Class defining geopackage export function.
     """
@@ -806,16 +804,16 @@ def geotiff_export_task(
 
 @app.task(name="National Imagery Transmission Format (.nitf)", bind=True, base=FormatTask)
 def nitf_export_task(
-    self,
-    result=None,
-    run_uid=None,
-    task_uid=None,
-    stage_dir=None,
-    job_name=None,
-    user_details=None,
-    projection=4326,
-    *args,
-    **kwargs,
+        self,
+        result=None,
+        run_uid=None,
+        task_uid=None,
+        stage_dir=None,
+        job_name=None,
+        user_details=None,
+        projection=4326,
+        *args,
+        **kwargs,
 ):
     """
     Class defining nitf export function.
@@ -838,16 +836,16 @@ def nitf_export_task(
 
 @app.task(name="Erdas Imagine HFA (.img)", bind=True, base=FormatTask)
 def hfa_export_task(
-    self,
-    result=None,
-    run_uid=None,
-    task_uid=None,
-    stage_dir=None,
-    job_name=None,
-    user_details=None,
-    projection=4326,
-    *args,
-    **kwargs,
+        self,
+        result=None,
+        run_uid=None,
+        task_uid=None,
+        stage_dir=None,
+        job_name=None,
+        user_details=None,
+        projection=4326,
+        *args,
+        **kwargs,
 ):
     """
     Class defining Erdas Imagine HFA (.img) export function.
@@ -856,7 +854,7 @@ def hfa_export_task(
 
     hfa_in_dataset = parse_result(result, "source")
     hfa_out_dataset = os.path.join(stage_dir, "{0}-{1}.img".format(job_name, projection))
-    hfa = gdalutils.convert(file_format="hfa", in_file=hfa_in_dataset, out_file=hfa_out_dataset, task_uid=task_uid,)
+    hfa = gdalutils.convert(file_format="hfa", in_file=hfa_in_dataset, out_file=hfa_out_dataset, task_uid=task_uid, )
 
     result["file_format"] = "hfa"
     result["result"] = hfa
@@ -866,19 +864,18 @@ def hfa_export_task(
 
 @app.task(name="Reprojection Task", bind=True, base=FormatTask)
 def reprojection_task(
-    self,
-    result=None,
-    run_uid=None,
-    task_uid=None,
-    stage_dir=None,
-    job_name=None,
-    user_details=None,
-    projection=None,
-    compress=False,
-    *args,
-    **kwargs,
+        self,
+        result=None,
+        run_uid=None,
+        task_uid=None,
+        stage_dir=None,
+        job_name=None,
+        user_details=None,
+        projection=None,
+        compress=False,
+        *args,
+        **kwargs,
 ):
-
     """
     Class defining a task that will reproject all file formats to the chosen projections.
     """
@@ -922,7 +919,8 @@ def reprojection_task(
 
 @app.task(name="Clip Export", bind=True, base=UserDetailsBase)
 def clip_export_task(
-    self, result=None, run_uid=None, task_uid=None, stage_dir=None, job_name=None, user_details=None, *args, **kwargs,
+        self, result=None, run_uid=None, task_uid=None, stage_dir=None, job_name=None, user_details=None, *args,
+        **kwargs,
 ):
     """
     Clips a dataset to a vector cutline and returns a dataset of the same format.
@@ -949,22 +947,22 @@ def clip_export_task(
 
 @app.task(name="WFSExport", bind=True, base=ExportTask, abort_on_error=True)
 def wfs_export_task(
-    self,
-    result=None,
-    layer=None,
-    config=None,
-    run_uid=None,
-    task_uid=None,
-    stage_dir=None,
-    job_name=None,
-    bbox=None,
-    service_url=None,
-    name=None,
-    service_type=None,
-    user_details=None,
-    projection=4326,
-    *args,
-    **kwargs,
+        self,
+        result=None,
+        layer=None,
+        config=None,
+        run_uid=None,
+        task_uid=None,
+        stage_dir=None,
+        job_name=None,
+        bbox=None,
+        service_url=None,
+        name=None,
+        service_type=None,
+        user_details=None,
+        projection=4326,
+        *args,
+        **kwargs,
 ):
     """
     Class defining geopackage export for WFS service.
@@ -974,7 +972,7 @@ def wfs_export_task(
     gpkg = os.path.join(stage_dir, "{0}-{1}.gpkg".format(job_name, projection))
 
     # Strip out query string parameters that might conflict
-    service_url = re.sub(r"(?i)(?<=[?&])(version|service|request|typename|srsname)=.*?(&|$)", "", service_url,)
+    service_url = re.sub(r"(?i)(?<=[?&])(version|service|request|typename|srsname)=.*?(&|$)", "", service_url, )
     query_str = "SERVICE=WFS&VERSION=1.0.0&REQUEST=GetFeature&TYPENAME={}&SRSNAME=EPSG:4326".format(layer)
     if "?" in service_url:
         if "&" != service_url[-1]:
@@ -997,7 +995,7 @@ def wfs_export_task(
 
     try:
         ogr = OGR(task_uid=task_uid)
-        out = ogr.convert(file_format="GPKG", in_file='WFS:"{}"'.format(url), out_file=gpkg, params=params,)
+        out = ogr.convert(file_format="GPKG", in_file='WFS:"{}"'.format(url), out_file=gpkg, params=params, )
         result["result"] = out
         result["source"] = out
         # Check for geopackage contents; gdal wfs driver fails silently
@@ -1011,28 +1009,26 @@ def wfs_export_task(
 
 @app.task(name="WCS Export", bind=True, base=ExportTask, abort_on_error=True, acks_late=True)
 def wcs_export_task(
-    self,
-    result=None,
-    layer=None,
-    config=None,
-    run_uid=None,
-    task_uid=None,
-    stage_dir=None,
-    job_name=None,
-    bbox=None,
-    service_url=None,
-    name=None,
-    service_type=None,
-    user_details=None,
-    projection=4326,
-    *args,
-    **kwargs,
+        self,
+        result=None,
+        layer=None,
+        config=None,
+        run_uid=None,
+        task_uid=None,
+        stage_dir=None,
+        job_name=None,
+        bbox=None,
+        service_url=None,
+        name=None,
+        service_type=None,
+        user_details=None,
+        projection=4326,
+        *args,
+        **kwargs,
 ):
     """
     Class defining export for WCS services
     """
-    from eventkit_cloud.tasks.models import ExportTaskRecord
-
     result = result or {}
     out = os.path.join(stage_dir, "{0}-{1}.tif".format(job_name, projection))
 
@@ -1067,16 +1063,16 @@ def wcs_export_task(
 
 @app.task(name="ArcFeatureServiceExport", bind=True, base=FormatTask)
 def arcgis_feature_service_export_task(
-    self,
-    result=None,
-    task_uid=None,
-    stage_dir=None,
-    job_name=None,
-    bbox=None,
-    service_url=None,
-    projection=4326,
-    *args,
-    **kwargs,
+        self,
+        result=None,
+        task_uid=None,
+        stage_dir=None,
+        job_name=None,
+        bbox=None,
+        service_url=None,
+        projection=4326,
+        *args,
+        **kwargs,
 ):
     """
     Class defining sqlite export for ArcFeatureService service.
@@ -1115,7 +1111,8 @@ def arcgis_feature_service_export_task(
 
 @app.task(name="Area of Interest (.gpkg)", bind=True, base=ExportTask)
 def bounds_export_task(
-    self, result={}, run_uid=None, task_uid=None, stage_dir=None, provider_slug=None, projection=4326, *args, **kwargs,
+        self, result={}, run_uid=None, task_uid=None, stage_dir=None, provider_slug=None, projection=4326, *args,
+        **kwargs,
 ):
     """
     Class defining geopackage export function.
@@ -1124,8 +1121,6 @@ def bounds_export_task(
     # This is just to make it easier to trace when user_details haven't been sent
     if user_details is None:
         user_details = {"username": "unknown-bounds_export_task"}
-
-    from eventkit_cloud.tasks.models import ExportRun
 
     run = ExportRun.objects.get(uid=run_uid)
 
@@ -1146,30 +1141,27 @@ def bounds_export_task(
     name="Raster export (.gpkg)", bind=True, base=FormatTask, abort_on_error=True, acks_late=True,
 )
 def mapproxy_export_task(
-    self,
-    result=None,
-    layer=None,
-    config=None,
-    run_uid=None,
-    task_uid=None,
-    stage_dir=None,
-    job_name=None,
-    bbox=None,
-    service_url=None,
-    level_from=None,
-    level_to=None,
-    name=None,
-    service_type=None,
-    projection=4326,
-    *args,
-    **kwargs,
+        self,
+        result=None,
+        layer=None,
+        config=None,
+        run_uid=None,
+        task_uid=None,
+        stage_dir=None,
+        job_name=None,
+        bbox=None,
+        service_url=None,
+        level_from=None,
+        level_to=None,
+        name=None,
+        service_type=None,
+        projection=4326,
+        *args,
+        **kwargs,
 ):
     """
     Class defining geopackage export for external raster service.
     """
-
-    from eventkit_cloud.tasks.models import ExportRun, ExportTaskRecord
-
     result = result or {}
     run = ExportRun.objects.get(uid=run_uid)
     task = ExportTaskRecord.objects.get(uid=task_uid)
@@ -1214,8 +1206,6 @@ def pick_up_run_task(self, result=None, run_uid=None, user_details=None, *args, 
     # This is just to make it easier to trace when user_details haven't been sent
     if user_details is None:
         user_details = {"username": "unknown-pick_up_run_task"}
-
-    from eventkit_cloud.tasks.models import ExportRun
     from eventkit_cloud.tasks.task_factory import TaskFactory
 
     run = ExportRun.objects.get(uid=run_uid)
@@ -1235,8 +1225,8 @@ def pick_up_run_task(self, result=None, run_uid=None, user_details=None, *args, 
 def wait_for_run(run=None, uid=None):
     if run.status:
         while (
-            TaskStates[run.status] not in TaskStates.get_finished_states()
-            and TaskStates[run.status] not in TaskStates.get_incomplete_states()
+                TaskStates[run.status] not in TaskStates.get_finished_states()
+                and TaskStates[run.status] not in TaskStates.get_incomplete_states()
         ):
             time.sleep(10)
             run.refresh_from_db()
@@ -1254,7 +1244,7 @@ def wait_for_providers_task(result=None, apply_args=None, run_uid=None, callback
     if run:
         provider_tasks = run.provider_tasks.filter(~Q(slug="run"))
         if all(
-            TaskStates[provider_task.status] in TaskStates.get_finished_states() for provider_task in provider_tasks
+                TaskStates[provider_task.status] in TaskStates.get_finished_states() for provider_task in provider_tasks
         ):
             callback_task.apply_async(**apply_args)
         else:
@@ -1626,7 +1616,7 @@ def cancel_synchronous_task_chain(data_provider_task_uid=None):
 
 @app.task(name="Create preview", base=UserDetailsBase)
 def create_datapack_preview(
-    result=None, run_uid=None, task_uid=None, stage_dir=None, task_record_uid=None, *args, **kwargs,
+        result=None, run_uid=None, task_uid=None, stage_dir=None, task_record_uid=None, *args, **kwargs,
 ):
     """
     Attempts to add a MapImageSnapshot (Preview Image) to a provider task.
@@ -1667,7 +1657,7 @@ def create_datapack_preview(
 
 @app.task(name="Cancel Export Provider Task", base=UserDetailsBase)
 def cancel_export_provider_task(
-    result=None, data_provider_task_uid=None, canceling_username=None, delete=False, error=False, *args, **kwargs,
+        result=None, data_provider_task_uid=None, canceling_username=None, delete=False, error=False, *args, **kwargs,
 ):
     """
     Cancels an DataProviderTaskRecord and terminates each subtasks execution.
@@ -1677,11 +1667,6 @@ def cancel_export_provider_task(
     # There is enough over use of this class (i.e. for errors, deletions, canceling) the reason is because it had all
     # the working logic for stopping future jobs, but that can probably be abstracted a bit, and then let the caller
     # manage the task state (i.e. the task should be FAILED or CANCELED).
-    from eventkit_cloud.tasks.models import DataProviderTaskRecord, ExportTaskException
-    from eventkit_cloud.tasks.exceptions import CancelException
-    from billiard.einfo import ExceptionInfo
-    from django.contrib.auth.models import User
-
     result = result or {}
     data_provider_task_record = DataProviderTaskRecord.objects.get(uid=data_provider_task_uid)
 
@@ -1738,10 +1723,8 @@ def cancel_export_provider_task(
 
 @app.task(name="Cancel Run", base=UserDetailsBase)
 def cancel_run(
-    result=None, export_run_uid=None, canceling_username=None, delete=False, *args, **kwargs,
+        result=None, export_run_uid=None, canceling_username=None, delete=False, *args, **kwargs,
 ):
-    from eventkit_cloud.tasks.models import ExportRun
-
     result = result or {}
 
     export_run = ExportRun.objects.get(uid=export_run_uid)
@@ -1762,7 +1745,6 @@ def kill_task(result=None, task_pid=None, celery_uid=None, *args, **kwargs):
     """
     Asks a worker to kill a task.
     """
-
     import celery
 
     result = result or {}
@@ -1788,7 +1770,7 @@ def kill_task(result=None, task_pid=None, celery_uid=None, *args, **kwargs):
 
 
 def update_progress(
-    task_uid, progress=None, subtask_percentage=100.0, subtask_start=0, estimated_finish=None, eta=None, msg=None,
+        task_uid, progress=None, subtask_percentage=100.0, subtask_start=0, estimated_finish=None, eta=None, msg=None,
 ):
     """
     Updates the progress of the ExportTaskRecord from the given task_uid.

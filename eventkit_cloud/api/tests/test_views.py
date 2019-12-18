@@ -24,7 +24,7 @@ from eventkit_cloud.api.views import get_models, get_provider_task, ExportRunVie
 from eventkit_cloud.core.models import GroupPermission, GroupPermissionLevel
 from eventkit_cloud.jobs.models import ExportFormat, Job, DataProvider, \
     DataProviderType, DataProviderTask, bbox_to_geojson, DatamodelPreset, License, VisibilityState, UserJobActivity
-from eventkit_cloud.tasks import TaskStates
+from eventkit_cloud.tasks.export_tasks import TaskStates
 from eventkit_cloud.tasks.models import ExportRun, ExportTaskRecord, DataProviderTaskRecord, FileProducingTaskResult
 from eventkit_cloud.tasks.task_factory import InvalidLicense
 
