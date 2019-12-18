@@ -14,7 +14,7 @@ from eventkit_cloud.tasks.task_base import EventKitBaseTask
 logger = get_task_logger(__name__)
 
 
-@app.task(name="PCF Shutdown Celery Workers", base=EventKitBaseTask, bind=True)
+@app.task(name="PCF Shutdown Celery Workers", base=EventKitBaseTask, bind=True, default_retry_delay=60)
 def pcf_shutdown_celery_workers(self, queue_name, queue_type=None, hostname=None):
     """
     Shuts down the celery workers assigned to a specific queue if there are no
@@ -55,4 +55,4 @@ def pcf_shutdown_celery_workers(self, queue_name, queue_type=None, hostname=None
             f"{queue_name} and {messages} on the queue, skipping shutdown."
         )
         logger.info(f"Waiting on tasks: {export_tasks}")
-        return {"action": "skipped shutdown"}
+        self.retry()
