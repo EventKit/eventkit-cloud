@@ -44,11 +44,12 @@ def pcf_shutdown_celery_workers(self, queue_name, queue_type=None, hostname=None
     running_tasks_by_queue_count = running_tasks_by_queue["pagination"]["total_results"]
     export_tasks = ExportTaskRecord.objects.filter(worker=hostname, status__in=TaskStates.get_not_finished_states())
 
-    if running_tasks_by_queue_count > messages and not export_tasks:
-        logger.info(f"No work remaining on the {queue_name} queue, shutting down {workers}")
-        app.control.shutdown(destination=workers)
-        # return value is unused but useful for storing in the celery result.
-        return {"action": "shutdown", "workers": workers}
+    if not export_tasks:
+        if (running_tasks_by_queue_count > messages) or (running_tasks_by_queue == 0 and messages == 0):
+            logger.info(f"No work remaining on the {queue_name} queue, shutting down {workers}")
+            app.control.shutdown(destination=workers)
+            # return value is unused but useful for storing in the celery result.
+            return {"action": "shutdown", "workers": workers}
     else:
         logger.info(
             f"There are {running_tasks_by_queue_count} running tasks for "
