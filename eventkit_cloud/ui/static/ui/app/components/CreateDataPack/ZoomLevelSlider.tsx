@@ -66,18 +66,18 @@ export class ZoomLevelSlider extends React.Component<Props, State> {
     }
 
     componentDidUpdate(prevProps: Readonly<Props>): void {
-        const {minZoom, maxZoom} = this.props;
+        const {selectedMinZoom, selectedMaxZoom} = this.props;
         const prevMinZoom = prevProps.selectedMinZoom;
         const prevMaxZoom = prevProps.selectedMaxZoom;
-        if (minZoom !== prevMinZoom) {
+        if (selectedMinZoom !== prevMinZoom) {
             // Deprecated rule
             // eslint-disable-next-line react/no-did-update-set-state
-            this.setState({minZoom});
+            this.setState({minZoom: selectedMinZoom});
         }
-        if (maxZoom !== prevMaxZoom) {
+        if (selectedMaxZoom !== prevMaxZoom) {
             // Deprecated rule
             // eslint-disable-next-line react/no-did-update-set-state
-            this.setState({maxZoom});
+            this.setState({maxZoom: selectedMaxZoom});
         }
     }
 

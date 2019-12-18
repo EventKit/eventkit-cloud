@@ -10,6 +10,7 @@ import Banner from '../components/Banner';
 import Drawer from '../components/Drawer';
 import { Application } from '../components/Application';
 import NotificationsDropdown from '../components/Notification/NotificationsDropdown';
+import theme from "../styles/eventkit_theme";
 
 const store = createTestStore({});
 
@@ -49,6 +50,7 @@ describe('Application component', () => {
         getNotificationsUnreadCount: sinon.stub(),
         classes: {},
         ...(global as any).eventkit_test_props,
+        images: theme.eventkit.images
     });
 
     const config = {
@@ -284,28 +286,25 @@ describe('Application component', () => {
         expect(button.props().style.backgroundColor).toBe('');
     });
 
-    it('should scale the notifications indicator up/down when unread count is positive/zero', () => {
-        const wrapper = getWrapper(getProps());
-        let indicator = wrapper.find('.qa-Application-AppBar-NotificationsIndicator');
-        expect(indicator.props().style.transform).toBe('scale(0)');
-        wrapper.setProps({
-            notificationsData: {
-                notifications: {},
-                notificationsSorted: [],
-            },
-            notificationsCount: 1,
-        });
-        indicator = wrapper.find('.qa-Application-AppBar-NotificationsIndicator');
-        expect(indicator.props().style.transform).toBe('scale(1)');
-        wrapper.setProps({
-            notificationsData: {
-                notifications: {},
-                notificationsSorted: [],
-            },
-            notificationsCount: 0,
-        });
-        indicator = wrapper.find('.qa-Application-AppBar-NotificationsIndicator');
-        expect(indicator.props().style.transform).toBe('scale(0)');
+    it('should change favicon when viewing notifications page', () => {
+        const props = getProps();
+        const favicon = "favicon.png";
+        const reddotfavicon = "favicon.png";
+        props.theme.eventkit.images = { favicon, reddotfavicon }
+        const stub = sinon.stub(document, 'getElementById');
+        const setAttribute = sinon.fake();
+        const domFavicon = {setAttribute};
+        stub.returns(domFavicon);
+
+        const wrapper = getWrapper(props);
+        wrapper.instance();
+        wrapper.setProps({notificationsCount: 1})
+        wrapper.update();
+        expect(setAttribute.calledWith('href', reddotfavicon)).toBe(true);
+        wrapper.setProps({notificationsCount: 0})
+        wrapper.update();
+        expect(setAttribute.calledWith('href', favicon)).toBe(true);
+        stub.restore();
     });
 
     it('startSendingUserActivePings should return with no side effects', () => {
@@ -436,4 +435,4 @@ describe('Application component', () => {
         expect(stateStub.calledWith({ showNotificationsDropdown: false }));
         expect(ret).toBe(true);
     });
-});
+})

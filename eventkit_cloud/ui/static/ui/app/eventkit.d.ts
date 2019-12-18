@@ -231,6 +231,8 @@ declare namespace Eventkit {
                 topo_dark: string;
                 topo_light: string;
                 logo: string;
+                favicon: string;
+                reddotfavicon: string
             };
         };
     }
