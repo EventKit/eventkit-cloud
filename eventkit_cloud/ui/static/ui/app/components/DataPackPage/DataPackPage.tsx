@@ -189,12 +189,6 @@ export class DataPackPage extends React.Component<Props, State> {
         this.fetch = window.setInterval(this.autoRunRequest, 10000);
         // make sure no geojson upload is in the state
         this.props.resetGeoJSONFile();
-        history.listen((location) => {
-            // do not allow the page to navigate to itself without url parameters
-            if (location.search === '' && location.pathname === '/exports') {
-                history.push({"search": queryString.stringify(this.getCurrentLocation()).search});
-            }
-        });
     }
 
     shouldComponentUpdate(p: Props, s: State) {
@@ -276,10 +270,6 @@ export class DataPackPage extends React.Component<Props, State> {
 
     private getViewRef(instance: HTMLElement) {
         this.view = instance;
-    }
-
-    private getCurrentLocation() {
-        return this.props.location;
     }
 
     private getJoyRideSteps(): any[] {
