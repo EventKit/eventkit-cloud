@@ -4,6 +4,7 @@ import logo from '../../images/eventkit-logo.1.png';
 import basemap from '../../images/icn_basemap.svg';
 import favicon from '../../images/favicon.png';
 import reddotfavicon from '../../images/reddotfavicon.png';
+import * as React from "react";
 
 export const breakpoints = {
     values: {
@@ -157,6 +158,16 @@ export const theme = {
                 width: '100%',
             },
         },
+        MuiBadge: {
+            root: {
+                color: "primary",
+                overlap:"circle",
+                anchorOrigin:{
+                    vertical: 'top',
+                    horizontal: 'right',
+                }
+            }
+        }
     },
 };
 

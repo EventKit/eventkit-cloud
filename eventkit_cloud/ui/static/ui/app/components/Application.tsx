@@ -10,6 +10,7 @@ import AppBar from '@material-ui/core/AppBar';
 import IconButton from '@material-ui/core/IconButton';
 import Menu from '@material-ui/icons/Menu';
 import Notifications from '@material-ui/icons/Notifications';
+import { Badge } from '@material-ui/core';
 import Banner from './Banner';
 import Drawer from './Drawer';
 import BaseDialog from './Dialog/BaseDialog';
@@ -26,6 +27,8 @@ import '../styles/bootstrap/css/bootstrap.css';
 import '../styles/openlayers/ol.css';
 import '../styles/flexboxgrid.css';
 import '../styles/react-joyride-compliled.css';
+import {NotificationIcon} from "./Notification/NotificationIcon";
+import theme from "../styles/eventkit_theme";
 // tslint:disable-next-line:no-var-requires
 require('../fonts/index.css');
 
@@ -84,6 +87,7 @@ const jss = (theme: any) => createStyles({
         transitionProperty: 'none',
         borderRadius: 'unset',
     },
+    // modify this for new badge ********************************************************* bring in theme.overrides.MuiBadge
     notificationsIndicator: {
         position: 'absolute',
         top: '36%',
@@ -94,6 +98,11 @@ const jss = (theme: any) => createStyles({
         backgroundColor: theme.eventkit.colors.warning,
         zIndex: '1' as any,
         pointerEvents: 'none',
+        overlap:"circle",
+        anchorOrigin:{
+            vertical: 'top',
+            horizontal: 'right',
+        }
     }
 });
 
@@ -731,25 +740,37 @@ export class Application extends React.Component<Props, State> {
                         >
                             <Menu style={{ width: '36px', height: '36px' }} />
                         </IconButton>
-                        <div style={{ display: 'inline-block', position: 'relative' }}>
-                            <IconButton
-                                className={`qa-Application-AppBar-NotificationsButton ${classes.notificationsButton}`}
-                                style={{
-                                    backgroundColor: (this.props.history.location.pathname.indexOf('/notifications') === 0) ?
-                                        colors.primary : '',
-                                }}
-                                color="secondary"
-                                onClick={this.handleNotificationsButtonClick}
-                            >
-                                <Notifications style={{ width: '38px', height: '38px' }} />
-                            </IconButton>
-                            <div
-                                className={`qa-Application-AppBar-NotificationsIndicator ${classes.notificationsIndicator}`}
-                                style={{
-                                    transition: 'transform 0.25s cubic-bezier(0.23, 1, 0.32, 1)',
-                                    transform: (this.props.notificationsCount > 0) ? 'scale(1)' : 'scale(0)',
-                                }}
-                            />
+                        <Badge
+                            // modify notificationsIndicator or bring in them.overrides.MuiBadge
+                            className={`qa-Application-AppBar-NotificationsIndicator ${classes.notificationsIndicator}`}
+                            // style={{ top: '12px', right: '12px' }}
+                            badgeContent={ this.props.notificationsCount }
+                            max={999}
+                            // color="primary"
+                            // style={theme.overrides.MuiBadge}
+                        >
+                            <div style={{ display: 'inline-block', position: 'relative' }}>
+                                <IconButton
+                                    className={`qa-Application-AppBar-NotificationsButton ${classes.notificationsButton}`}
+                                    style={{
+                                        backgroundColor: (this.props.history.location.pathname.indexOf('/notifications') === 0) ?
+                                            colors.primary : '',
+                                        padding: 0
+                                    }}
+                                    color="secondary"
+                                    onClick={this.handleNotificationsButtonClick}
+                                >
+                                    <Notifications style={{ width: '38px', height: '38px' }} />
+                                </IconButton>
+                            </div>
+                        </Badge>
+                            {/*<div*/}
+                            {/*    className={`qa-Application-AppBar-NotificationsIndicator ${classes.notificationsIndicator}`}*/}
+                            {/*    style={{*/}
+                            {/*        transition: 'transform 0.25s cubic-bezier(0.23, 1, 0.32, 1)',*/}
+                            {/*        transform: (this.props.notificationsCount > 0) ? 'scale(1)' : 'scale(0)',*/}
+                            {/*    }}*/}
+                            {/*/>*/}
                             <div>
                                 {this.state.showNotificationsDropdown ?
                                     <NotificationsDropdown
@@ -760,7 +781,7 @@ export class Application extends React.Component<Props, State> {
                                         onClickAway={this.handleClick}
                                     /> : null }
                             </div>
-                        </div>
+                        {/*</div>*/}
                     </div> : null}
                 </AppBar>
                 <Drawer
