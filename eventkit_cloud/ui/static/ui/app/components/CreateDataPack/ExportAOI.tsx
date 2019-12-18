@@ -54,6 +54,7 @@ import globe from '../../../images/globe-americas.svg';
 import {joyride} from '../../joyride.config';
 import {Breakpoint} from '@material-ui/core/styles/createBreakpoints';
 import TileGrid from "ol/tilegrid/tilegrid";
+import {DisplayDataBox} from "./DisplayDataBox";
 
 export const WGS84 = 'EPSG:4326';
 export const WEB_MERCATOR = 'EPSG:3857';
@@ -1020,7 +1021,7 @@ export class ExportAOI extends React.Component<Props, State> {
                     }}
                     run={isRunning}
                 />
-                <div id="map" className={css.map} style={mapStyle}>
+                < id="map" className={css.map} style={mapStyle}>
                     <AoiInfobar
                         aoiInfo={this.props.aoiInfo}
                         showRevert={!!this.props.aoiInfo.buffer}
@@ -1059,6 +1060,14 @@ export class ExportAOI extends React.Component<Props, State> {
                             this.setButtonSelected('import');
                         }}
                         setImportModalState={this.toggleImportModal}
+                    />
+                    <DisplayDataBox
+                        lat="x"
+                        long="y"
+                        layerId={7}
+                        layerName="States"
+                        displayFieldName=""
+                        value="South Dakota"
                     />
                     <ZoomLevelLabel
                         zoomLevel={this.state.zoomLevel}
