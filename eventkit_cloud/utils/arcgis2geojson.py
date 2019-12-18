@@ -107,7 +107,7 @@ def coordinates_contain_point(coordinates, point):
         ci = coordinates[i]
         cj = coordinates[j]
         if ((ci[1] <= point[1] < cj[1]) or (cj[1] <= point[1] < ci[1])) and (
-                point[0] < (cj[0] - ci[0]) * (point[1] - ci[1]) / (cj[1] - ci[1]) + ci[0]
+            point[0] < (cj[0] - ci[0]) * (point[1] - ci[1]) / (cj[1] - ci[1]) + ci[0]
         ):
             contains = not contains
         j = i
@@ -223,7 +223,7 @@ def convert_feature(esri_feature):
     # as a geojson property
     # Attributes is added to "ignore" because they get added explicitly.
     # Fields and fieldAliases provides schema information about the attributes and won't neatly fit into geojson.
-    keywords = ['geometry', 'geometryType', 'attributes', 'fields', 'fieldAliases']
+    keywords = ["geometry", "geometryType", "attributes", "fields", "fieldAliases"]
 
     feature = {}
 
@@ -248,15 +248,15 @@ def convert_feature(esri_feature):
 
     # RFC 7946 4
     if (
-            "spatialReference" in esri_feature
-            and "wkid" in esri_feature["spatialReference"]
-            and esri_feature["spatialReference"]["wkid"] != 4326
+        "spatialReference" in esri_feature
+        and "wkid" in esri_feature["spatialReference"]
+        and esri_feature["spatialReference"]["wkid"] != 4326
     ):
         logging.warning("Object converted in non-standard crs - " + str(esri_feature["spatialReference"]))
 
     # RFC 7946 3.2
-    if not feature.get('properies'):
-        feature['properties'] = dict()
+    if not feature.get("properies"):
+        feature["properties"] = dict()
 
     # Copy everything else.
     for field, value in esri_feature.items():
@@ -270,10 +270,10 @@ def convert_geometry(esri_geometry):
     geometry = {}
 
     if (
-            "x" in esri_geometry
-            and isinstance(esri_geometry["x"], numbers.Number)
-            and "y" in esri_geometry
-            and isinstance(esri_geometry["y"], numbers.Number)
+        "x" in esri_geometry
+        and isinstance(esri_geometry["x"], numbers.Number)
+        and "y" in esri_geometry
+        and isinstance(esri_geometry["y"], numbers.Number)
     ):
         geometry["type"] = "Point"
         geometry["coordinates"] = [esri_geometry["x"], esri_geometry["y"]]
@@ -296,14 +296,14 @@ def convert_geometry(esri_geometry):
         geometry = convert_rings_to_geojson(esri_geometry["rings"])
 
     if (
-            "xmin" in esri_geometry
-            and isinstance(esri_geometry["xmin"], numbers.Number)
-            and "ymin" in esri_geometry
-            and isinstance(esri_geometry["ymin"], numbers.Number)
-            and "xmax" in esri_geometry
-            and isinstance(esri_geometry["xmax"], numbers.Number)
-            and "ymax" in esri_geometry
-            and isinstance(esri_geometry["ymax"], numbers.Number)
+        "xmin" in esri_geometry
+        and isinstance(esri_geometry["xmin"], numbers.Number)
+        and "ymin" in esri_geometry
+        and isinstance(esri_geometry["ymin"], numbers.Number)
+        and "xmax" in esri_geometry
+        and isinstance(esri_geometry["xmax"], numbers.Number)
+        and "ymax" in esri_geometry
+        and isinstance(esri_geometry["ymax"], numbers.Number)
     ):
         geometry["type"] = "Polygon"
         geometry["coordinates"] = [
