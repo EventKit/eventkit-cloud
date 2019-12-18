@@ -1255,7 +1255,7 @@ def wait_for_providers_task(result=None, apply_args=None, run_uid=None, callback
         ):
             callback_task.apply_async(**apply_args)
         else:
-            logger.error("Waiting for other tasks to finish.")
+            logger.warning(F"The run: {run_uid} is Waiting for other tasks to finish.")
     else:
         raise Exception("A run could not be found for uid {0}".format(run_uid))
 

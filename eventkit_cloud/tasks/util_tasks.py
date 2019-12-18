@@ -7,13 +7,14 @@ from eventkit_cloud.celery import app
 from eventkit_cloud.tasks.helpers import get_message_count
 from eventkit_cloud.utils.pcf import PcfClient
 from eventkit_cloud.tasks.enumerations import TaskStates
+from eventkit_cloud.tasks.task_base import EventKitBaseTask
 
 
 # Get an instance of a logger
 logger = get_task_logger(__name__)
 
 
-@app.task(name="PCF Shutdown Celery Workers", bind=True)
+@app.task(name="PCF Shutdown Celery Workers", base=EventKitBaseTask, bind=True)
 def pcf_shutdown_celery_workers(self, queue_name, queue_type=None, hostname=None):
     """
     Shuts down the celery workers assigned to a specific queue if there are no
@@ -50,8 +51,8 @@ def pcf_shutdown_celery_workers(self, queue_name, queue_type=None, hostname=None
         return {"action": "shutdown", "workers": workers}
     else:
         logger.info(
-            f"There are {running_tasks_by_queue_count} running tasks for \
-            {queue_name} and {messages} on the queue, skipping shutdown."
+            f"There are {running_tasks_by_queue_count} running tasks for "
+            f"{queue_name} and {messages} on the queue, skipping shutdown."
         )
         logger.info(f"Waiting on tasks: {export_tasks}")
         return {"action": "skipped shutdown"}
