@@ -26,7 +26,6 @@ import '../styles/bootstrap/css/bootstrap.css';
 import '../styles/openlayers/ol.css';
 import '../styles/flexboxgrid.css';
 import '../styles/react-joyride-compliled.css';
-import {NotificationIcon} from "./Notification/NotificationIcon";
 // tslint:disable-next-line:no-var-requires
 require('../fonts/index.css');
 
@@ -87,17 +86,17 @@ const jss = (theme: any) => createStyles({
     },
     badgeNotificationsIndicator: {
         position: 'absolute',
-        right: '1%',
-        top: '17%',
-        width: '30px',
-        height: '23px',
+        right: '21%',
+        top: '22%',
+        width: '16px',
+        height: '16px',
         backgroundColor: theme.eventkit.colors.warning,
-        padding: '5px 10px',
         borderRadius: '50%',
-        max: '999',
         color: 'white',
         zIndex: '1' as any,
-        textAlign: 'left'
+        textAlign: 'center',
+        fontSize: '55%',
+        padding: '2px',
     }
 });
 
@@ -698,6 +697,17 @@ export class Application extends React.Component<Props, State> {
         return true;
     }
 
+    handleNotificationCount() {
+        if (this.props.notificationsCount > 99) {
+            return "+99";
+        }
+        if (this.props.notificationsCount > 0) {
+            return this.props.notificationsCount;
+        } else {
+            return;
+        }
+    }
+
     render() {
         const { classes } = this.props;
         const { colors, images } = this.props.theme.eventkit;
@@ -749,11 +759,6 @@ export class Application extends React.Component<Props, State> {
                                 >
                                     <Notifications style={{ width: '38px', height: '38px' }} />
                                 </IconButton>
-
-                        {/*<Badge*/}
-                        {/*    className={`qa-Application-AppBar-badgeNotificationsIndicator ${classes.badgeNotificationsIndicator}`}*/}
-                        {/*    badgeContent={ this.props.notificationsCount }*/}
-                        {/*>*/}
                         <div
                             className={`qa-Application-AppBar-badgeNotificationsIndicator ${classes.badgeNotificationsIndicator}`}
                             style={{
@@ -761,7 +766,7 @@ export class Application extends React.Component<Props, State> {
                                 transition: 'transform 0.25s cubic-bezier(0.23, 1, 0.32, 1)',
                             }}
                         >
-                            { (this.props.notificationsCount > 0) ? this.props.notificationsCount : 'scale(0)' }
+                            { this.handleNotificationCount() }
                         </div>
                             <div>
                                 {this.state.showNotificationsDropdown ?
