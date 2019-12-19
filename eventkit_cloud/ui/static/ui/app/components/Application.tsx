@@ -10,7 +10,6 @@ import AppBar from '@material-ui/core/AppBar';
 import IconButton from '@material-ui/core/IconButton';
 import Menu from '@material-ui/icons/Menu';
 import Notifications from '@material-ui/icons/Notifications';
-import { Badge } from '@material-ui/core';
 import Banner from './Banner';
 import Drawer from './Drawer';
 import BaseDialog from './Dialog/BaseDialog';
@@ -750,7 +749,7 @@ export class Application extends React.Component<Props, State> {
                                 >
                                     <Notifications style={{ width: '38px', height: '38px' }} />
                                 </IconButton>
-                            </div>
+
                         {/*<Badge*/}
                         {/*    className={`qa-Application-AppBar-badgeNotificationsIndicator ${classes.badgeNotificationsIndicator}`}*/}
                         {/*    badgeContent={ this.props.notificationsCount }*/}
@@ -762,8 +761,8 @@ export class Application extends React.Component<Props, State> {
                                 transition: 'transform 0.25s cubic-bezier(0.23, 1, 0.32, 1)',
                             }}
                         >
-                            {/* how to disable the icon when set to 0?*/}
                             { this.props.notificationsCount }
+                        </div>
                             <div>
                                 {this.state.showNotificationsDropdown ?
                                     <NotificationsDropdown
@@ -775,7 +774,6 @@ export class Application extends React.Component<Props, State> {
                                     /> : null }
                             </div>
                         </div>
-                        {/*</div>*/}
                     </div> : null}
                 </AppBar>
                 <Drawer
