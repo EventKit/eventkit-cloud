@@ -225,26 +225,22 @@ def convert_feature(esri_feature):
     # Fields and fieldAliases provides schema information about the attributes and won't neatly fit into geojson.
     keywords = ["geometry", "geometryType", "attributes", "fields", "fieldAliases"]
 
-    feature = {}
+    feature = {"type": "Feature"}
 
-    if "geometry" in esri_feature or "attributes" in esri_feature:
-        feature["type"] = "Feature"
+    if "geometry" in esri_feature:
         if "geometry" in esri_feature:
             feature["geometry"] = convert_geometry(esri_feature["geometry"])
-        else:
-            feature["geometry"] = None
 
-        if "attributes" in esri_feature:
-            feature["properties"] = esri_feature["attributes"]
-            try:
-                feature["id"] = get_id(esri_feature["attributes"])
-            except KeyError:
-                # don't set an id
-                pass
+    if "attributes" in esri_feature:
+        feature["properties"] = esri_feature["attributes"]
+        try:
+            feature["id"] = get_id(esri_feature["attributes"])
+        except KeyError:
+            # don't set an id
+            pass
 
     # RFC 7946 3.2
-    if "geometry" in feature and not (feature["geometry"]):
-        feature["geometry"] = None
+    feature["geometry"] = feature.get("geometry") or None
 
     # RFC 7946 4
     if (
@@ -255,7 +251,7 @@ def convert_feature(esri_feature):
         logging.warning("Object converted in non-standard crs - " + str(esri_feature["spatialReference"]))
 
     # RFC 7946 3.2
-    if not feature.get("properies"):
+    if not feature.get("properties"):
         feature["properties"] = dict()
 
     # Copy everything else.

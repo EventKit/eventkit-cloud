@@ -6,19 +6,16 @@ from mock import Mock
 from django.test import TestCase
 import json
 
-
 logger = logging.getLogger(__name__)
 
 
 class TestMapQuery(TestCase):
 
-
     def test_get_arcgis_geojson(self):
-
         layer_name = "test_layer"
         object_id = 10
         date = "10/10/10"
-        arcgis_result = {"results":[
+        arcgis_result = {"results": [
             {"layerId": 0,
              "layerName": layer_name,
              "attributes": {"OBJECTID": object_id,
@@ -29,7 +26,9 @@ class TestMapQuery(TestCase):
                                 "geometry": None,
                                 "properties":
                                     {"OBJECTID": object_id,
-                                     "date": date},
+                                     "date": date,
+                                     "layerId": 0,
+                                     "layerName": layer_name},
                                 "id": 10}]}
 
         response = Mock(content=json.dumps(arcgis_result))
