@@ -97,7 +97,7 @@ const jss = (theme: any) => createStyles({
         max: '999',
         color: 'white',
         zIndex: '1' as any,
-        textAlign: 'center'
+        textAlign: 'left'
     }
 });
 
@@ -761,7 +761,7 @@ export class Application extends React.Component<Props, State> {
                                 transition: 'transform 0.25s cubic-bezier(0.23, 1, 0.32, 1)',
                             }}
                         >
-                            { this.props.notificationsCount }
+                            { (this.props.notificationsCount > 0) ? this.props.notificationsCount : 'scale(0)' }
                         </div>
                             <div>
                                 {this.state.showNotificationsDropdown ?
