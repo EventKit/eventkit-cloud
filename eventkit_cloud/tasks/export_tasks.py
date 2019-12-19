@@ -1480,7 +1480,6 @@ class FinalizeRunBase(EventKitBaseTask):
         return result
 
     def after_return(self, status, retval, task_id, args, kwargs, einfo):
-        super(FinalizeRunBase, self).after_return(status, retval, task_id, args, kwargs, einfo)
         stage_dir = None if retval is None else retval.get("stage_dir")
         try:
             if stage_dir and os.path.isdir(stage_dir):
@@ -1488,6 +1487,7 @@ class FinalizeRunBase(EventKitBaseTask):
                     shutil.rmtree(stage_dir)
         except IOError or OSError:
             logger.error("Error removing {0} during export finalize".format(stage_dir))
+        super(FinalizeRunBase, self).after_return(status, retval, task_id, args, kwargs, einfo)
 
 
 # There's a celery bug with callbacks that use bind=True.  If altering this task do not use Bind.
@@ -1495,12 +1495,12 @@ class FinalizeRunBase(EventKitBaseTask):
 @app.task(name="Finalize Run Task", base=FinalizeRunBase)
 def finalize_run_task(result=None, run_uid=None, stage_dir=None, apply_args=None, *args, **kwargs):
     """
-             Finalizes export run.
+     Finalizes export run.
 
-            Cleans up staging directory.
-            Updates run with finish time.
-            Emails user notification.
-            """
+    Cleans up staging directory.
+    Updates run with finish time.
+    Emails user notification.
+    """
     from eventkit_cloud.tasks.models import ExportRun
 
     result = result or {}
