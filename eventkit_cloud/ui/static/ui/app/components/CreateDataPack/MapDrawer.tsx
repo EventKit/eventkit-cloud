@@ -16,7 +16,7 @@ import Typography from "@material-ui/core/Typography";
 import ListItemText from "@material-ui/core/ListItemText";
 import Button from "@material-ui/core/Button";
 import Clear from '@material-ui/icons/Clear';
-import {DisplayDataBox} from "./DisplayDataBox";
+import DisplayDataBox from "./DisplayDataBox";
 
 
 const jss = (theme: Theme & Eventkit.Theme) => createStyles({
@@ -173,6 +173,12 @@ export interface Props {
     sources: BaseMapSource[];
     updateBaseMap: (mapId: string) => void;
     classes: { [className: string]: string };
+    lat: number;
+    long: number;
+    layerId: number;
+    layerName: string;
+    displayFieldName: string;
+    value: string;
 }
 
 export interface State {
