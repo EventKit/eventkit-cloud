@@ -158,16 +158,6 @@ export const theme = {
                 width: '100%',
             },
         },
-        MuiBadge: {
-            root: {
-                color: "primary",
-                overlap:"circle",
-                anchorOrigin:{
-                    vertical: 'top',
-                    horizontal: 'right',
-                }
-            }
-        }
     },
 };
 

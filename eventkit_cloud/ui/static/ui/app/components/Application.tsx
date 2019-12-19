@@ -28,7 +28,6 @@ import '../styles/openlayers/ol.css';
 import '../styles/flexboxgrid.css';
 import '../styles/react-joyride-compliled.css';
 import {NotificationIcon} from "./Notification/NotificationIcon";
-import theme from "../styles/eventkit_theme";
 // tslint:disable-next-line:no-var-requires
 require('../fonts/index.css');
 
@@ -87,22 +86,19 @@ const jss = (theme: any) => createStyles({
         transitionProperty: 'none',
         borderRadius: 'unset',
     },
-    // modify this for new badge ********************************************************* bring in theme.overrides.MuiBadge
-    notificationsIndicator: {
+    badgeNotificationsIndicator: {
         position: 'absolute',
-        top: '36%',
-        right: '29%',
-        width: '14px',
-        height: '14px',
-        borderRadius: '50%',
+        right: '1%',
+        top: '17%',
+        width: '30px',
+        height: '23px',
         backgroundColor: theme.eventkit.colors.warning,
+        padding: '5px 10px',
+        borderRadius: '50%',
+        max: '999',
+        color: 'white',
         zIndex: '1' as any,
-        pointerEvents: 'none',
-        overlap:"circle",
-        anchorOrigin:{
-            vertical: 'top',
-            horizontal: 'right',
-        }
+        textAlign: 'center'
     }
 });
 
@@ -143,6 +139,7 @@ interface Props {
         menuButton: string;
         notificationsButton: string;
         notificationsIndicator: string;
+        badgeNotificationsIndicator: string;
     };
     login: (options?: object) => void;
 }
@@ -740,15 +737,6 @@ export class Application extends React.Component<Props, State> {
                         >
                             <Menu style={{ width: '36px', height: '36px' }} />
                         </IconButton>
-                        <Badge
-                            // modify notificationsIndicator or bring in them.overrides.MuiBadge
-                            className={`qa-Application-AppBar-NotificationsIndicator ${classes.notificationsIndicator}`}
-                            // style={{ top: '12px', right: '12px' }}
-                            badgeContent={ this.props.notificationsCount }
-                            max={999}
-                            // color="primary"
-                            // style={theme.overrides.MuiBadge}
-                        >
                             <div style={{ display: 'inline-block', position: 'relative' }}>
                                 <IconButton
                                     className={`qa-Application-AppBar-NotificationsButton ${classes.notificationsButton}`}
@@ -763,14 +751,19 @@ export class Application extends React.Component<Props, State> {
                                     <Notifications style={{ width: '38px', height: '38px' }} />
                                 </IconButton>
                             </div>
-                        </Badge>
-                            {/*<div*/}
-                            {/*    className={`qa-Application-AppBar-NotificationsIndicator ${classes.notificationsIndicator}`}*/}
-                            {/*    style={{*/}
-                            {/*        transition: 'transform 0.25s cubic-bezier(0.23, 1, 0.32, 1)',*/}
-                            {/*        transform: (this.props.notificationsCount > 0) ? 'scale(1)' : 'scale(0)',*/}
-                            {/*    }}*/}
-                            {/*/>*/}
+                        {/*<Badge*/}
+                        {/*    className={`qa-Application-AppBar-badgeNotificationsIndicator ${classes.badgeNotificationsIndicator}`}*/}
+                        {/*    badgeContent={ this.props.notificationsCount }*/}
+                        {/*>*/}
+                        <div
+                            className={`qa-Application-AppBar-badgeNotificationsIndicator ${classes.badgeNotificationsIndicator}`}
+                            style={{
+                                transform: (this.props.notificationsCount > 0) ? 'scale(1)' : 'scale(0)',
+                                transition: 'transform 0.25s cubic-bezier(0.23, 1, 0.32, 1)',
+                            }}
+                        >
+                            {/* how to disable the icon when set to 0?*/}
+                            { this.props.notificationsCount }
                             <div>
                                 {this.state.showNotificationsDropdown ?
                                     <NotificationsDropdown
@@ -781,6 +774,7 @@ export class Application extends React.Component<Props, State> {
                                         onClickAway={this.handleClick}
                                     /> : null }
                             </div>
+                        </div>
                         {/*</div>*/}
                     </div> : null}
                 </AppBar>
