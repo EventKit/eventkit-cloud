@@ -476,7 +476,7 @@ def osm_data_collection_pipeline(
     return geopackage_filepath
 
 
-@app.task(name="OSM (.gpkg)", bind=True, base=EventKitBaseTask, abort_on_error=True)
+@app.task(name="OSM (.gpkg)", bind=True, base=FormatTask, abort_on_error=True)
 def osm_data_collection_task(
     self,
     result=None,
@@ -582,7 +582,7 @@ def add_metadata_task(self, result=None, job_uid=None, provider_slug=None, user_
     return result
 
 
-@app.task(name="ESRI Shapefile (.shp)", bind=True, base=EventKitBaseTask)
+@app.task(name="ESRI Shapefile (.shp)", bind=True, base=FormatTask)
 def shp_export_task(
     self,
     result=None,
@@ -619,7 +619,7 @@ def shp_export_task(
         raise
 
 
-@app.task(name="Keyhole Markup Language (.kml)", bind=True, base=EventKitBaseTask)
+@app.task(name="Keyhole Markup Language (.kml)", bind=True, base=FormatTask)
 def kml_export_task(
     self,
     result=None,
@@ -652,7 +652,7 @@ def kml_export_task(
         raise Exception(e)
 
 
-@app.task(name="SQLITE Format", bind=True, base=EventKitBaseTask)
+@app.task(name="SQLITE Format", bind=True, base=FormatTask)
 def sqlite_export_task(
     self,
     result=None,
@@ -718,7 +718,7 @@ def output_selection_geojson_task(
     return result
 
 
-@app.task(name="Geopackage (.gpkg)", bind=True, base=EventKitBaseTask)
+@app.task(name="Geopackage (.gpkg)", bind=True, base=FormatTask)
 def geopackage_export_task(
     self,
     result=None,
@@ -747,7 +747,7 @@ def geopackage_export_task(
     return result
 
 
-@app.task(name="Geotiff (.tif)", bind=True, base=EventKitBaseTask)
+@app.task(name="Geotiff (.tif)", bind=True, base=FormatTask)
 def geotiff_export_task(
     self, result=None, task_uid=None, stage_dir=None, job_name=None, projection=4326, compress=False, *args, **kwargs
 ):
@@ -801,7 +801,7 @@ def geotiff_export_task(
     return result
 
 
-@app.task(name="National Imagery Transmission Format (.nitf)", bind=True, base=EventKitBaseTask)
+@app.task(name="National Imagery Transmission Format (.nitf)", bind=True, base=FormatTask)
 def nitf_export_task(
     self,
     result=None,
@@ -833,7 +833,7 @@ def nitf_export_task(
     return result
 
 
-@app.task(name="Erdas Imagine HFA (.img)", bind=True, base=EventKitBaseTask)
+@app.task(name="Erdas Imagine HFA (.img)", bind=True, base=FormatTask)
 def hfa_export_task(
     self,
     result=None,
@@ -861,7 +861,7 @@ def hfa_export_task(
     return result
 
 
-@app.task(name="Reprojection Task", bind=True, base=EventKitBaseTask)
+@app.task(name="Reprojection Task", bind=True, base=FormatTask)
 def reprojection_task(
     self,
     result=None,
@@ -1062,7 +1062,7 @@ def wcs_export_task(
         raise Exception(e)
 
 
-@app.task(name="ArcFeatureServiceExport", bind=True, base=EventKitBaseTask)
+@app.task(name="ArcFeatureServiceExport", bind=True, base=FormatTask)
 def arcgis_feature_service_export_task(
     self,
     result=None,
@@ -1140,7 +1140,7 @@ def bounds_export_task(
 
 
 @app.task(
-    name="Raster export (.gpkg)", bind=True, base=EventKitBaseTask, abort_on_error=True, acks_late=True,
+    name="Raster export (.gpkg)", bind=True, base=FormatTask, abort_on_error=True, acks_late=True,
 )
 def mapproxy_export_task(
     self,
@@ -1260,7 +1260,7 @@ def wait_for_providers_task(result=None, apply_args=None, run_uid=None, callback
         raise Exception("A run could not be found for uid {0}".format(run_uid))
 
 
-@app.task(name="Project File (.zip)", base=EventKitBaseTask, acks_late=True)
+@app.task(name="Project File (.zip)", base=FormatTask, acks_late=True)
 def create_zip_task(result=None, data_provider_task_uid=None, *args, **kwargs):
     """
     :param result: The celery task result value, it should be a dict with the current state.
@@ -1480,6 +1480,7 @@ class FinalizeRunBase(EventKitBaseTask):
         return result
 
     def after_return(self, status, retval, task_id, args, kwargs, einfo):
+        super(FinalizeRunBase, self).after_return(status, retval, task_id, args, kwargs, einfo)
         stage_dir = None if retval is None else retval.get("stage_dir")
         try:
             if stage_dir and os.path.isdir(stage_dir):
@@ -1487,8 +1488,6 @@ class FinalizeRunBase(EventKitBaseTask):
                     shutil.rmtree(stage_dir)
         except IOError or OSError:
             logger.error("Error removing {0} during export finalize".format(stage_dir))
-        super(FinalizeRunBase, self).after_return(status, retval, task_id, args, kwargs, einfo)
-
 
 # There's a celery bug with callbacks that use bind=True.  If altering this task do not use Bind.
 # @see: https://github.com/celery/celery/issues/3723

@@ -200,7 +200,7 @@ def send_warning_email(date=None, url=None, addr=None, job_name=None):
 
 
 @app.task(name="Clean Up Queues", base=EventKitBaseTask)
-def clean_up_queues(base=EventKitBaseTask):
+def clean_up_queues():
     broker_api_url = getattr(settings, "BROKER_API_URL")
     queue_class = "queues"
     exchange_class = "exchanges"
