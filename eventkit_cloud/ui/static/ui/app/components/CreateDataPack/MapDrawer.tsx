@@ -3,7 +3,7 @@ import Drawer from '@material-ui/core/Drawer';
 import CustomScrollbar from "../CustomScrollbar";
 import List from '@material-ui/core/List';
 import ListItem from '@material-ui/core/ListItem';
-import {createStyles, Theme, withStyles, withTheme, Grid, Icon, Divider} from "@material-ui/core";
+import {createStyles, Theme, withStyles, Icon, Divider} from "@material-ui/core";
 import {connect} from "react-redux";
 import CardMedia from '@material-ui/core/CardMedia';
 import Card from '@material-ui/core/Card';
@@ -173,12 +173,6 @@ export interface Props {
     sources: BaseMapSource[];
     updateBaseMap: (mapId: string) => void;
     classes: { [className: string]: string };
-    lat: number;
-    long: number;
-    layerId: number;
-    layerName: string;
-    displayFieldName: string;
-    value: string;
 }
 
 export interface State {

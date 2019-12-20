@@ -1,18 +1,16 @@
 import * as React from "react";
-import {createStyles, Theme, Typography, withStyles} from "@material-ui/core";
+import {createStyles, Theme, withStyles} from "@material-ui/core";
 import Card from '@material-ui/core/Card';
 import CardActions from '@material-ui/core/CardActions';
 import CardContent from '@material-ui/core/CardContent';
 import Button from '@material-ui/core/Button';
+import Typography from '@material-ui/core/Typography';
 
 const jss = (theme: Theme & Eventkit.Theme) => createStyles({
     card: {
         minWidth: 275,
-    },
-    bullet: {
-        display: 'inline-block',
-        margin: '0 2px',
-        transform: 'scale(0.8)',
+        // change this
+        color: theme.eventkit.colors.primary,
     },
     title: {
         fontSize: 14,
@@ -31,11 +29,10 @@ export interface Props {
     layerName: string;
     displayFieldName: string;
     value: string;
-    theme: Eventkit.Theme;
     classes: {
-        container: string;
         card: string;
         title: string;
+        pos: string;
     };
 }
 
@@ -44,11 +41,10 @@ export class DisplayDataBox extends React.Component<Props, {}> {
         super(props);
     }
     render() {
-        const colors = this.props.theme.eventkit.colors;
         const { lat, long, layerId, layerName, displayFieldName, value, classes } = this.props;
 
         return (
-            <div style={{ backgroundColor: colors.white }}>
+            <div style={{ backgroundColor: "white" }}>
                 <Card className={classes.card}>
                    <CardContent>
                         <Typography className={classes.title} color="textSecondary" gutterBottom>
