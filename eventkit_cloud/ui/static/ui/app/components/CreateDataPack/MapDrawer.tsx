@@ -195,7 +195,6 @@ export class MapDrawer extends React.Component<Props, State> {
     constructor(props: Props) {
         super(props);
         this.updateBaseMap = this.updateBaseMap.bind(this);
-        this.handleClose = this.handleClose.bind(this);
 
         this.state = {
             selectedTab: false,
@@ -246,8 +245,6 @@ export class MapDrawer extends React.Component<Props, State> {
             <div
                 className={classes.container}
             >
-
-=======
                 <div className={classes.displayDataBox}>
                     <DisplayDataBox
                         lat={40}
@@ -256,6 +253,7 @@ export class MapDrawer extends React.Component<Props, State> {
                         layerName="States"
                         displayFieldName=""
                         value="South Dakota"
+                        closeCard={this.state.closeCard}
                         handleClose={this.handleClose}
                     />
                 </div>

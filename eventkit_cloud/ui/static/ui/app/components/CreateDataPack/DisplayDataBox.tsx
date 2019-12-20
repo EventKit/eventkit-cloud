@@ -29,6 +29,7 @@ export interface Props {
     layerName: string;
     displayFieldName: string;
     value: string;
+    closeCard: boolean;
     handleClose: (event: any) => void;
     classes: {
         card: string;
@@ -37,58 +38,51 @@ export interface Props {
     };
 }
 
-export interface State {
-    closeCard: boolean;
-}
-
-export class DisplayDataBox extends React.Component<Props, State> {
+export class DisplayDataBox extends React.Component<Props, {}> {
     constructor(props: Props) {
         super(props);
-        this.close = this.close.bind(this);
-        this.state = {
-            closeCard: false,
-        };
-    }
-
-    private close(e) {
-        e.preventDefault();
-        this.setState({closeCard: !this.state.closeCard});
     }
 
     render() {
-        const { lat, long, layerId, layerName, displayFieldName, value, classes } = this.props;
+        const { lat, long, layerId, layerName, displayFieldName, value, closeCard, handleClose, classes } = this.props;
 
         return (
             <div style={{ backgroundColor: "white" }}>
-                <Card className={classes.card}>
-                   <CardContent>
-                       <Typography className={classes.title} color="textSecondary" gutterBottom>
-                            {value}
-                        </Typography>
-                       <Typography className={classes.title} color="textSecondary" gutterBottom>
-                            Date: 10/24/2019
-                        </Typography>
-                        <Typography className={classes.title} color="textSecondary" gutterBottom>
-                            Lat, Long: {lat} {long}
-                        </Typography>
-                       <Typography className={classes.title} color="textSecondary" gutterBottom>
-                            Source: {layerName}
-                        </Typography>
-                       <Typography className={classes.title} color="textSecondary" gutterBottom>
-                            Type: {displayFieldName}
-                        </Typography>
-                    </CardContent>
-                    <CardActions>
-                        <Button
-                            id="closeButton"
-                            size="small"
-                            type='button'
-                            onClick={this.close}
-                        >
-                            x
-                        </Button>
-                    </CardActions>
-                </Card>
+                { !closeCard ?
+                    <Card className={classes.card}>
+                        <CardContent>
+                            <Typography className={classes.title} color="textSecondary" gutterBottom>
+                                {value}
+                            </Typography>
+                            <Typography className={classes.title} color="textSecondary" gutterBottom>
+                                Date: 10/24/2019
+                            </Typography>
+                            <Typography className={classes.title} color="textSecondary" gutterBottom>
+                                Lat, Long: {lat} {long}
+                            </Typography>
+                            <Typography className={classes.title} color="textSecondary" gutterBottom>
+                                Source: {layerName}
+                            </Typography>
+                            <Typography className={classes.title} color="textSecondary" gutterBottom>
+                                Type: {displayFieldName}
+                            </Typography>
+                        </CardContent>
+                        <CardActions>
+                            <Button
+                                className="closeButton"
+                                size="small"
+                                type='button'
+                                onClick={(e) => {
+                                    handleClose(e);
+                                }}
+                            >
+                                x
+                            </Button>
+                        </CardActions>
+                    </Card>
+                    :
+                    null
+                }
             </div>
         );
     }

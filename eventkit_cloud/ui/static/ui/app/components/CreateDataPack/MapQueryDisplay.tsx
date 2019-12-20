@@ -4,13 +4,15 @@ import axios from "axios";
 import {getCookie} from "../../utils/generic";
 import DisplayDataBox from "./DisplayDataBox";
 
-interface featureResponse {
+interface FeatureResponse {
     lat: number;
     long: number;
     layerId: number;
     layerName: string;
     displayFieldName: string;
     value: string;
+    closeCard: boolean;
+    handleClose: (event: any) => void;
 }
 
 export interface Props {
@@ -18,7 +20,7 @@ export interface Props {
 
 export interface State {
     queryLoading: boolean;
-    displayBoxData: featureResponse;
+    displayBoxData: FeatureResponse;
 }
 
 export class MapQueryDisplay extends React.Component<Props, State> {
@@ -41,7 +43,7 @@ export class MapQueryDisplay extends React.Component<Props, State> {
         };
         let featureResult = {
 
-        } as featureResponse;
+        } as FeatureResponse;
 
         const csrfmiddlewaretoken = getCookie('csrftoken');
         // return axios({
@@ -59,7 +61,7 @@ export class MapQueryDisplay extends React.Component<Props, State> {
                 layerName: 'States',
                 displayFieldName: 'state_name',
                 value: 'South Dakota',
-            } as featureResponse;
+            } as FeatureResponse;
             return featureResult;
         }).catch(() => {
             featureResult = {
@@ -69,7 +71,7 @@ export class MapQueryDisplay extends React.Component<Props, State> {
                 layerName: undefined,
                 displayFieldName: undefined,
                 value: undefined,
-            } as featureResponse;
+            } as FeatureResponse;
             return featureResult;
         });
     }
@@ -77,7 +79,7 @@ export class MapQueryDisplay extends React.Component<Props, State> {
     private handleMapClick() {
         this.getFeatures().then(featureResponseData => {
             this.setState({displayBoxData: featureResponseData});
-        })
+        });
     }
 
     render() {
@@ -89,6 +91,6 @@ export class MapQueryDisplay extends React.Component<Props, State> {
                 />
             );
         }
-        return (<div/>)
+        return (<div/>);
     }
 }
