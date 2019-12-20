@@ -43,6 +43,23 @@ export class MapQueryDisplay extends React.Component<Props, State> {
 
         } as featureResponse;
 
+        const MOCK_DATA = {
+            type: "FeatureCollection",
+            features: [{
+                type: "Feature",
+                geometry: {
+                    type: "Point",
+                    coordinates: [125.6, 10.1],
+                }
+            }],
+            properties: {
+                layerId: 2,
+                layerName: "States",
+                displayFieldName: "state_name",
+                value: "South Dakota"
+            }
+        };
+
         const csrfmiddlewaretoken = getCookie('csrftoken');
         // return axios({
         //     url: `/api/estimate`,
@@ -53,12 +70,13 @@ export class MapQueryDisplay extends React.Component<Props, State> {
         // }).then((response) => {
         return Promise.resolve().then(response => {
             featureResult = {
-                lat: 1337,
-                long: 7331,
-                layerId: 2,
-                layerName: 'States',
-                displayFieldName: 'state_name',
-                value: 'South Dakota',
+                // Is it a safe assumption that we're only dealing with a single feature/point
+                lat: MOCK_DATA.features[0].geometry.coordinates[1],
+                long: MOCK_DATA.features[0].geometry.coordinates[0],
+                layerId: MOCK_DATA.properties.layerId,
+                layerName: MOCK_DATA.properties.layerName,
+                displayFieldName: MOCK_DATA.properties.displayFieldName,
+                value: MOCK_DATA.properties.value,
             } as featureResponse;
             return featureResult;
         }).catch(() => {
