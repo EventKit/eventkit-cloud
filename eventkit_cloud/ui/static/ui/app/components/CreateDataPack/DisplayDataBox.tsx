@@ -1,25 +1,30 @@
 import * as React from "react";
-import {createStyles, Grid, Theme, withStyles} from "@material-ui/core";
-import Card from '@material-ui/core/Card';
-import CardActions from '@material-ui/core/CardActions';
-import CardContent from '@material-ui/core/CardContent';
-import Button from '@material-ui/core/Button';
-import Typography from '@material-ui/core/Typography';
+import {createStyles, Theme, withStyles} from "@material-ui/core";
+import { Card, CardContent, Typography } from '@material-ui/core';
+import CloseIcon from '@material-ui/icons/Close';
+import Menu from "@material-ui/icons/Menu";
+import IconButton from "@material-ui/core/IconButton";
 
 const jss = (theme: Theme & Eventkit.Theme) => createStyles({
     cardDetails: {
         minWidth: 275,
         color: theme.eventkit.colors.white,
-        paddingTop: "0px",
     },
     cardDetailsBody: {
-
+        padding: '12px',
     },
     title: {
         fontSize: 14,
+        color: theme.eventkit.colors.black,
+        marginBottom: "2px",
     },
-    pos: {
-        marginBottom: 12,
+    details: {
+        fontSize: 14,
+        color: theme.eventkit.colors.grey,
+    },
+    closeButton: {
+        padding: 0,
+        fontSize: 'small',
     },
 });
 
@@ -37,9 +42,10 @@ export interface Props {
     classes: {
         card: string;
         title: string;
-        pos: string;
+        closeButton: string;
         cardDetails: string;
         cardDetailsBody: string;
+        details: string;
     };
 }
 
@@ -56,44 +62,31 @@ export class DisplayDataBox extends React.Component<Props, {}> {
                 { !closeCard ?
                     <Card>
                         <CardContent className={classes.cardDetailsBody}>
-                            <Typography className={classes.title} color="textSecondary" gutterBottom>
+                            <Typography className={classes.title} variant="h5" component="h3">
                                 {"South Dakota"}
                             </Typography>
-                            <Typography className={classes.title} color="textSecondary" gutterBottom>
+                            <Typography className={classes.details}>
                                 Lat, Long: {1337} {7331}
                             </Typography>
-                            <Typography className={classes.title} color="textSecondary" gutterBottom>
+                            <Typography className={classes.details}>
                                 Image Date: 10/24/2019
                             </Typography>
-                            <Typography className={classes.title} color="textSecondary" gutterBottom>
+                            <Typography className={classes.details}>
                                 Source: {"Layer Name"}
                             </Typography>
-                            <Typography className={classes.title} color="textSecondary" gutterBottom>
+                            <Typography className={classes.details}>
                                 Type: {"Display Field Name"}
                             </Typography>
-                            <Button
-                                className="closeButton"
-                                size="small"
+                            <IconButton
+                                className={classes.closeButton}
                                 type='button'
                                 onClick={(e) => {
                                     handleClose(e);
                                 }}
                             >
-                                x
-                            </Button>
+                                <CloseIcon style={{ fontSize: 'small', marginTop: '7px'}}/>
+                            </IconButton>
                         </CardContent>
-                        <CardActions>
-                            <Button
-                                className="closeButton"
-                                size="small"
-                                type='button'
-                                onClick={(e) => {
-                                    handleClose(e);
-                                }}
-                            >
-                                x
-                            </Button>
-                        </CardActions>
                     </Card>
                     :
                     null
