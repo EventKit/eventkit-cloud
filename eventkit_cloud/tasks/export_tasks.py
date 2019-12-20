@@ -1305,7 +1305,7 @@ def create_zip_task(result=None, data_provider_task_uid=None, *args, **kwargs):
     return result
 
 
-@app.task(name="Finalize Export Provider Task", base=EventKitBaseTask)
+@app.task(name="Finalize Export Provider Task", base=EventKitBaseTask, acks_late=True)
 def finalize_export_provider_task(result=None, data_provider_task_uid=None, status=None, *args, **kwargs):
     """
     Finalizes provider task.

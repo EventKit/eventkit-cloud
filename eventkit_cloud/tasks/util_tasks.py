@@ -7,14 +7,14 @@ from eventkit_cloud.celery import app
 from eventkit_cloud.tasks.helpers import get_message_count
 from eventkit_cloud.utils.pcf import PcfClient
 from eventkit_cloud.tasks.enumerations import TaskStates
-from eventkit_cloud.tasks.task_base import EventKitBaseTask
+from eventkit_cloud.tasks.task_base import UserDetailsBase
 
 
 # Get an instance of a logger
 logger = get_task_logger(__name__)
 
 
-@app.task(name="PCF Shutdown Celery Workers", base=EventKitBaseTask, bind=True, default_retry_delay=60)
+@app.task(name="PCF Shutdown Celery Workers", base=UserDetailsBase, bind=True, default_retry_delay=60)
 def pcf_shutdown_celery_workers(self, queue_name, queue_type=None, hostname=None):
     """
     Shuts down the celery workers assigned to a specific queue if there are no
@@ -42,12 +42,15 @@ def pcf_shutdown_celery_workers(self, queue_name, queue_type=None, hostname=None
     messages = get_message_count(queue_name)
     running_tasks_by_queue = client.get_running_tasks(app_name, queue_name)
     running_tasks_by_queue_count = running_tasks_by_queue["pagination"]["total_results"]
-    export_tasks = ExportTaskRecord.objects.filter(worker=hostname, status__in=TaskStates.get_not_finished_states())
-
+    export_tasks = ExportTaskRecord.objects.filter(worker=hostname, status__in=TaskStates.get_not_finished_states()).select_related('export_provider_task')
+    # provider_tasks = []
+    # for export_task in export_tasks:
+    #     if export_task.export_provider_task.status in TaskStates.get_not_finished_states():
+    #         provider_tasks += [export_task.export_provider_task]
     if not export_tasks:
         if (running_tasks_by_queue_count > messages) or (running_tasks_by_queue == 0 and messages == 0):
             logger.info(f"No work remaining on the {queue_name} queue, shutting down {workers}")
-            app.control.shutdown(destination=workers)
+            # app.control.broadcast('shutdown', destination=workers)
             # return value is unused but useful for storing in the celery result.
             return {"action": "shutdown", "workers": workers}
     else:
