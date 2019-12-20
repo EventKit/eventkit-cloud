@@ -16,8 +16,6 @@ import Typography from "@material-ui/core/Typography";
 import ListItemText from "@material-ui/core/ListItemText";
 import Button from "@material-ui/core/Button";
 import Clear from '@material-ui/icons/Clear';
-import DisplayDataBox from "./DisplayDataBox";
-
 
 const jss = (theme: Theme & Eventkit.Theme) => createStyles({
     container: {
@@ -182,7 +180,6 @@ export interface Props {
 export interface State {
     selectedTab: any;
     selectedBaseMap: number;
-    closeCard: boolean;
     sources: BaseMapSource[];
 }
 
@@ -199,7 +196,6 @@ export class MapDrawer extends React.Component<Props, State> {
         this.state = {
             selectedTab: false,
             selectedBaseMap: -1,
-            closeCard: false,
             sources: [
                 ...props.sources,
             ]
@@ -218,11 +214,6 @@ export class MapDrawer extends React.Component<Props, State> {
         } else {
             this.setState({selectedTab: newValue});
         }
-    }
-
-    handleClose = (event) => {
-        event.preventDefault();
-        this.setState({closeCard: !this.state.closeCard});
     }
 
     render() {
@@ -245,18 +236,6 @@ export class MapDrawer extends React.Component<Props, State> {
             <div
                 className={classes.container}
             >
-                <div className={classes.displayDataBox}>
-                    <DisplayDataBox
-                        lat={40}
-                        long={50}
-                        layerId={7}
-                        layerName="States"
-                        displayFieldName=""
-                        value="South Dakota"
-                        closeCard={this.state.closeCard}
-                        handleClose={this.handleClose}
-                    />
-                </div>
                 <div
                     className={classes.flexContainer}
                     style={{zIndex: 5, marginRight: (drawerOpen) ? '250px' : '0px'}}
@@ -372,7 +351,6 @@ export class MapDrawer extends React.Component<Props, State> {
                             </Button>
                         </div>
                     </Drawer>
-
                 </div>
             </div>
         );

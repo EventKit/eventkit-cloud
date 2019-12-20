@@ -21,6 +21,7 @@ export interface Props {
 export interface State {
     queryLoading: boolean;
     displayBoxData: FeatureResponse;
+    closeCard: boolean;
 }
 
 export class MapQueryDisplay extends React.Component<Props, State> {
@@ -33,6 +34,7 @@ export class MapQueryDisplay extends React.Component<Props, State> {
         this.state = {
             queryLoading: false,
             displayBoxData: undefined,
+            closeCard: false,
         };
     }
 
@@ -82,12 +84,19 @@ export class MapQueryDisplay extends React.Component<Props, State> {
         });
     }
 
+    handleClose = (event) => {
+        event.preventDefault();
+        this.setState({closeCard: !this.state.closeCard});
+    }
+
     render() {
         const { displayBoxData } = this.state;
         if (!!displayBoxData || true) {
             return (
                 <DisplayDataBox
                     {...displayBoxData}
+                    closeCard={ this.state.closeCard }
+                    handleClose={ this.handleClose }
                 />
             );
         }
