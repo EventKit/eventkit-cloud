@@ -88,14 +88,14 @@ const jss = (theme: any) => createStyles({
         position: 'absolute',
         right: '21%',
         top: '22%',
-        width: '16px',
+        width: '18px',
         height: '16px',
         backgroundColor: theme.eventkit.colors.warning,
         borderRadius: '50%',
         color: 'white',
         zIndex: '1' as any,
         textAlign: 'center',
-        fontSize: '55%',
+        fontSize: '53%',
         padding: '2px',
     }
 });
