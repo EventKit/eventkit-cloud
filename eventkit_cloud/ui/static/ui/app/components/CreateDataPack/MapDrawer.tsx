@@ -182,6 +182,7 @@ export interface Props {
 export interface State {
     selectedTab: any;
     selectedBaseMap: number;
+    closeCard: boolean;
     sources: BaseMapSource[];
 }
 
@@ -194,10 +195,12 @@ export class MapDrawer extends React.Component<Props, State> {
     constructor(props: Props) {
         super(props);
         this.updateBaseMap = this.updateBaseMap.bind(this);
+        this.handleClose = this.handleClose.bind(this);
 
         this.state = {
             selectedTab: false,
             selectedBaseMap: -1,
+            closeCard: false,
             sources: [
                 ...props.sources,
             ]
@@ -216,7 +219,12 @@ export class MapDrawer extends React.Component<Props, State> {
         } else {
             this.setState({selectedTab: newValue});
         }
-    };
+    }
+
+    handleClose = (event) => {
+        event.preventDefault();
+        this.setState({closeCard: !this.state.closeCard});
+    }
 
     render() {
         const {classes} = this.props;
@@ -238,6 +246,20 @@ export class MapDrawer extends React.Component<Props, State> {
             <div
                 className={classes.container}
             >
+<<<<<<< HEAD
+=======
+                <div className={classes.displayDataBox}>
+                    <DisplayDataBox
+                        lat={40}
+                        long={50}
+                        layerId={7}
+                        layerName="States"
+                        displayFieldName=""
+                        value="South Dakota"
+                        handleClose={this.handleClose}
+                    />
+                </div>
+>>>>>>> Moving handleClose function to parent for controlling logic
                 <div
                     className={classes.flexContainer}
                     style={{zIndex: 5, marginRight: (drawerOpen) ? '250px' : '0px'}}

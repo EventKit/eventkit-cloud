@@ -29,6 +29,7 @@ export interface Props {
     layerName: string;
     displayFieldName: string;
     value: string;
+    handleClose: (event: any) => void;
     classes: {
         card: string;
         title: string;
