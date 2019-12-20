@@ -246,7 +246,7 @@ export class MapDrawer extends React.Component<Props, State> {
             <div
                 className={classes.container}
             >
-<<<<<<< HEAD
+
 =======
                 <div className={classes.displayDataBox}>
                     <DisplayDataBox
@@ -259,7 +259,6 @@ export class MapDrawer extends React.Component<Props, State> {
                         handleClose={this.handleClose}
                     />
                 </div>
->>>>>>> Moving handleClose function to parent for controlling logic
                 <div
                     className={classes.flexContainer}
                     style={{zIndex: 5, marginRight: (drawerOpen) ? '250px' : '0px'}}
