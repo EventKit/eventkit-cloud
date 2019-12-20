@@ -4,13 +4,15 @@ import axios from "axios";
 import {getCookie} from "../../utils/generic";
 import DisplayDataBox from "./DisplayDataBox";
 
-interface featureResponse {
+interface FeatureResponse {
     lat: number;
     long: number;
     layerId: number;
     layerName: string;
     displayFieldName: string;
     value: string;
+    closeCard: boolean;
+    handleClose: (event: any) => void;
 }
 
 export interface Props {
@@ -18,7 +20,8 @@ export interface Props {
 
 export interface State {
     queryLoading: boolean;
-    displayBoxData: featureResponse;
+    displayBoxData: FeatureResponse;
+    closeCard: boolean;
 }
 
 export class MapQueryDisplay extends React.Component<Props, State> {
@@ -31,6 +34,7 @@ export class MapQueryDisplay extends React.Component<Props, State> {
         this.state = {
             queryLoading: false,
             displayBoxData: undefined,
+            closeCard: false,
         };
     }
 
@@ -41,7 +45,7 @@ export class MapQueryDisplay extends React.Component<Props, State> {
         };
         let featureResult = {
 
-        } as featureResponse;
+        } as FeatureResponse;
 
         const MOCK_DATA = {
             type: "FeatureCollection",
@@ -77,7 +81,7 @@ export class MapQueryDisplay extends React.Component<Props, State> {
                 layerName: MOCK_DATA.properties.layerName,
                 displayFieldName: MOCK_DATA.properties.displayFieldName,
                 value: MOCK_DATA.properties.value,
-            } as featureResponse;
+            } as FeatureResponse;
             return featureResult;
         }).catch(() => {
             featureResult = {
@@ -87,7 +91,7 @@ export class MapQueryDisplay extends React.Component<Props, State> {
                 layerName: undefined,
                 displayFieldName: undefined,
                 value: undefined,
-            } as featureResponse;
+            } as FeatureResponse;
             return featureResult;
         });
     }
@@ -95,7 +99,12 @@ export class MapQueryDisplay extends React.Component<Props, State> {
     private handleMapClick() {
         this.getFeatures().then(featureResponseData => {
             this.setState({displayBoxData: featureResponseData});
-        })
+        });
+    }
+
+    handleClose = (event) => {
+        event.preventDefault();
+        this.setState({closeCard: !this.state.closeCard});
     }
 
     render() {
@@ -104,9 +113,11 @@ export class MapQueryDisplay extends React.Component<Props, State> {
             return (
                 <DisplayDataBox
                     {...displayBoxData}
+                    closeCard={ this.state.closeCard }
+                    handleClose={ this.handleClose }
                 />
             );
         }
-        return (<div/>)
+        return (<div/>);
     }
 }

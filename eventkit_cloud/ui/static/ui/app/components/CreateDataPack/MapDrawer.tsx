@@ -16,8 +16,6 @@ import Typography from "@material-ui/core/Typography";
 import ListItemText from "@material-ui/core/ListItemText";
 import Button from "@material-ui/core/Button";
 import Clear from '@material-ui/icons/Clear';
-import DisplayDataBox from "./DisplayDataBox";
-
 
 const jss = (theme: Theme & Eventkit.Theme) => createStyles({
     container: {
@@ -216,7 +214,7 @@ export class MapDrawer extends React.Component<Props, State> {
         } else {
             this.setState({selectedTab: newValue});
         }
-    };
+    }
 
     render() {
         const {classes} = this.props;
@@ -353,7 +351,6 @@ export class MapDrawer extends React.Component<Props, State> {
                             </Button>
                         </div>
                     </Drawer>
-
                 </div>
             </div>
         );
