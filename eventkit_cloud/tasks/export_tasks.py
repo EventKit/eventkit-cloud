@@ -187,6 +187,7 @@ class ExportTask(EventKitBaseTask):
 
     # whether to abort the whole provider if this task fails.
     abort_on_error = False
+    name = "ExportTask"
 
     def __call__(self, *args, **kwargs):
 
@@ -385,7 +386,7 @@ class FormatTask(ExportTask):
     """
     A class to manage tasks which are desired output from the user, and not merely associated files or metadata.
     """
-
+    name = "FormatTask"
     display = True
 
 

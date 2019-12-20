@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 import json
-import os
 import socket
 
 from celery.schedules import crontab

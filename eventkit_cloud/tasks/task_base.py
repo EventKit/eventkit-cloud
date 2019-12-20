@@ -8,6 +8,9 @@ logger = get_task_logger(__name__)
 
 
 class EventKitBaseTask(UserDetailsBase):
+
+    name = "EventKitBaseTask"
+
     def after_return(self, status, retval, task_id, args, kwargs, einfo):
         # This will only run in the PCF environment to shut down unused workers.
         super(EventKitBaseTask, self).after_return(status, retval, task_id, args, kwargs, einfo)
@@ -20,8 +23,5 @@ class EventKitBaseTask(UserDetailsBase):
             # In our current setup the queue name always mirrors the routing_key, if this changes this logic will break.
             queue_name = self.request.delivery_info["routing_key"]
             logger.info(f"{self.name} has completed, sending pcf_shutdown_celery_workers task.")
-            if self.acks_late:
-                pcf_shutdown_celery_workers.s(queue_name, queue_type, hostname).apply_async(queue="scale")
-            else:
-                pcf_shutdown_celery_workers(queue_name, queue_type, hostname)
-
+            pcf_shutdown_celery_workers.s(queue_name, queue_type, hostname).apply_async(queue="scale",
+                                                                                        routing_key="scale")

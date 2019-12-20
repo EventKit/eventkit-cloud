@@ -93,17 +93,17 @@ def pcf_scale_celery(max_tasks_memory=4096):
             "memory": 1024,
         },
         "celery": {
-            "command": "celery worker -A eventkit_cloud --concurrency=1 --loglevel=$LOG_LEVEL -n celery@%h -Q celery ",
+            "command": "celery worker -A eventkit_cloud --concurrency=2 --loglevel=$LOG_LEVEL -n celery@%h -Q celery ",
             "disk": 2048,
             "memory": 1024,
         },
-        f"{celery_group_name}.osm": {
-            "command": "celery worker -A eventkit_cloud --concurrency=1 --loglevel=$LOG_LEVEL -n osm@%h -Q $CELERY_GROUP_NAME.osm ",  # NOQA
+        f"{celery_group_name}.large": {
+            "command": "celery worker -A eventkit_cloud --concurrency=2 --loglevel=$LOG_LEVEL -n large@%h -Q $CELERY_GROUP_NAME.large ",  # NOQA
             "disk": 2048,
             "memory": 4096,
         },
         f"{celery_group_name}.finalize": {
-            "command": "celery worker -A eventkit_cloud --concurrency=1 --loglevel=$LOG_LEVEL -n finalize@%h -Q $CELERY_GROUP_NAME.finalize ",  # NOQA
+            "command": "celery worker -A eventkit_cloud --concurrency=2 --loglevel=$LOG_LEVEL -n finalize@%h -Q $CELERY_GROUP_NAME.finalize ",  # NOQA
             "disk": 2048,
             "memory": 1024,
         },
@@ -147,16 +147,19 @@ def pcf_scale_celery(max_tasks_memory=4096):
                         name=queue_name, command=command, disk_in_mb=disk, memory_in_mb=memory, app_name=app_name
                     )
                     running_tasks_memory += memory
+                    return {"action": "scale", "queue": queue_name}
                 else:
                     logger.info(
                         f"Already at max memory usage, skipping scale with {pending_messages} total pending messages "
                         f"left in {queue_name} queue."
                     )
-            elif running_tasks_by_queue_count > pending_messages:
+                    return {"action": "skip scale", "queue": queue_name, "description": "Memory Exceeded."}
+            else:
                 logger.info(
                     f"Already {running_tasks_by_queue_count} workers, processing {pending_messages} total pending "
                     f"messages left in {queue_name} queue."
                 )
+                return {"action": "skip scale", "queue": queue_name, "description": "Workers exceed tasks."}
 
 
 @app.task(name="Check Provider Availability", base=EventKitBaseTask, expires=os.getenv("PROVIDER_CHECK_INTERVAL", "30"))

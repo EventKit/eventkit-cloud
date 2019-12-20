@@ -21,7 +21,7 @@ def pcf_shutdown_celery_workers(self, queue_name, queue_type=None, hostname=None
     more tasks to pick up. Only call this task on PCF based deploys.
 
     :param self: The Task instance.
-    :param queue_name: The full name of the queue, such as GROUP_A.osm
+    :param queue_name: The full name of the queue, such as GROUP_A.large
     :param queue_type: The type of queue, such as osm.
     :param hostname: The UUID based hostname of the workers.
     """
