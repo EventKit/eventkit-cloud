@@ -350,10 +350,6 @@ describe('DataPackPage component', () => {
         expect(instance.view).toEqual(inst);
     });
 
-    it('getCurrentLocation should return the location prop', () => {
-        expect(instance.getCurrentLocation()).toEqual(props.location);
-    });
-
     it('updateLocationQuery should call push with updated query', () => {
         wrapper.setProps({location: {...props.location, search: {}}});
         browserHistory.reset();
