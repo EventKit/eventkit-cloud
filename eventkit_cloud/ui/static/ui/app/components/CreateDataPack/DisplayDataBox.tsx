@@ -92,4 +92,4 @@ export class DisplayDataBox extends React.Component<Props, State> {
         );
     }
 }
-export default (withStyles<any, any>(jss)(DisplayDataBox));
+export default withStyles<any, any>(jss)(DisplayDataBox);

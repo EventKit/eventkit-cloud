@@ -238,16 +238,6 @@ export class MapDrawer extends React.Component<Props, State> {
             <div
                 className={classes.container}
             >
-                <div className={classes.displayDataBox}>
-                    <DisplayDataBox
-                        lat={40}
-                        long={50}
-                        layerId={7}
-                        layerName="States"
-                        displayFieldName=""
-                        value="South Dakota"
-                    />
-                </div>
                 <div
                     className={classes.flexContainer}
                     style={{zIndex: 5, marginRight: (drawerOpen) ? '250px' : '0px'}}

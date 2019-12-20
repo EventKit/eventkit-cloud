@@ -55,6 +55,8 @@ import {joyride} from '../../joyride.config';
 import {Breakpoint} from '@material-ui/core/styles/createBreakpoints';
 import TileGrid from "ol/tilegrid/tilegrid";
 
+import {MapQueryDisplay} from "./MapQueryDisplay";
+
 export const WGS84 = 'EPSG:4326';
 export const WEB_MERCATOR = 'EPSG:3857';
 
@@ -124,6 +126,7 @@ export class ExportAOI extends React.Component<Props, State> {
     private bufferFeatures;
     private bounceBack: boolean;
     private joyride: Joyride;
+    private displayBoxRef;
 
     constructor(props: Props) {
         super(props);
@@ -574,6 +577,11 @@ export class ExportAOI extends React.Component<Props, State> {
             handleUpEvent: this.upEvent,
         });
 
+        this.map.on('click', (event) => {
+                this.handleMapClickQuery();
+            }
+        );
+
         this.map.addInteraction(this.pointer);
         this.map.addInteraction(this.drawBoxInteraction);
         this.map.addInteraction(this.drawFreeInteraction);
@@ -977,6 +985,10 @@ export class ExportAOI extends React.Component<Props, State> {
         zoomToFeature(feature, this.map);
     }
 
+    private handleMapClickQuery() {
+        this.displayBoxRef.handleMapClick();
+    }
+
     render() {
         const {theme} = this.props;
         const {steps, isRunning} = this.state;
@@ -1090,6 +1102,11 @@ export class ExportAOI extends React.Component<Props, State> {
                         processGeoJSONFile={this.props.processGeoJSONFile}
                         resetGeoJSONFile={this.props.resetGeoJSONFile}
                     />
+                    <div style={{zIndex: 5, position: 'absolute', margin: 'calc(50vh)'}}>
+                        <MapQueryDisplay
+                            ref={child => {this.displayBoxRef = child}}
+                        />
+                    </div>
                 </div>
             </div>
         );
