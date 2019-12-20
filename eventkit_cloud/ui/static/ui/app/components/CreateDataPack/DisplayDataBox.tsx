@@ -36,10 +36,24 @@ export interface Props {
     };
 }
 
-export class DisplayDataBox extends React.Component<Props, {}> {
+export interface State {
+    closeCard: boolean;
+}
+
+export class DisplayDataBox extends React.Component<Props, State> {
     constructor(props: Props) {
         super(props);
+        this.close = this.close.bind(this);
+        this.state = {
+            closeCard: false,
+        };
     }
+
+    private close(e) {
+        e.preventDefault();
+        this.setState({closeCard: !this.state.closeCard});
+    }
+
     render() {
         const { lat, long, layerId, layerName, displayFieldName, value, classes } = this.props;
 
@@ -47,24 +61,31 @@ export class DisplayDataBox extends React.Component<Props, {}> {
             <div style={{ backgroundColor: "white" }}>
                 <Card className={classes.card}>
                    <CardContent>
-                        <Typography className={classes.title} color="textSecondary" gutterBottom>
-                            {lat}
-                        </Typography>
-                       <Typography className={classes.title} color="textSecondary" gutterBottom>
-                            {long}
-                        </Typography>
-                       <Typography className={classes.title} color="textSecondary" gutterBottom>
-                            {layerName}
-                        </Typography>
-                       <Typography className={classes.title} color="textSecondary" gutterBottom>
-                            {displayFieldName}
-                        </Typography>
                        <Typography className={classes.title} color="textSecondary" gutterBottom>
                             {value}
                         </Typography>
+                       <Typography className={classes.title} color="textSecondary" gutterBottom>
+                            Date: 10/24/2019
+                        </Typography>
+                        <Typography className={classes.title} color="textSecondary" gutterBottom>
+                            Lat, Long: {lat} {long}
+                        </Typography>
+                       <Typography className={classes.title} color="textSecondary" gutterBottom>
+                            Source: {layerName}
+                        </Typography>
+                       <Typography className={classes.title} color="textSecondary" gutterBottom>
+                            Type: {displayFieldName}
+                        </Typography>
                     </CardContent>
                     <CardActions>
-                        <Button size="small">X</Button>
+                        <Button
+                            id="closeButton"
+                            size="small"
+                            type='button'
+                            onClick={this.close}
+                        >
+                            x
+                        </Button>
                     </CardActions>
                 </Card>
             </div>
