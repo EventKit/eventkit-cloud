@@ -338,5 +338,3 @@ class TestDataProvider(TestCase):
             self.export_provider.save()
             makedirs.assert_called()
             mock_make_thumbnail_downloadable.assert_called()
-            print(mock_save_thumbnail.mock_calls)
-            print(self.export_provider.thumbnail)
