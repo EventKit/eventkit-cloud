@@ -21,11 +21,16 @@ const jss = (theme: Theme & Eventkit.Theme) => createStyles({
     details: {
         fontSize: 14,
         color: theme.eventkit.colors.grey,
+        display: 'inline'
     },
     closeButton: {
         padding: 0,
         fontSize: 'small',
     },
+    closeIcon: {
+        fontSize: 'small',
+        marginTop: '7px'
+    }
 });
 
 // error handling?
@@ -40,12 +45,12 @@ export interface Props {
     closeCard: boolean;
     handleClose: (event: any) => void;
     classes: {
-        card: string;
-        title: string;
-        closeButton: string;
         cardDetails: string;
         cardDetailsBody: string;
+        title: string;
         details: string;
+        closeButton: string;
+        closeIcon: string;
     };
 }
 
@@ -84,7 +89,7 @@ export class DisplayDataBox extends React.Component<Props, {}> {
                                     handleClose(e);
                                 }}
                             >
-                                <CloseIcon style={{ fontSize: 'small', marginTop: '7px'}}/>
+                                <CloseIcon className={classes.closeIcon}/>
                             </IconButton>
                         </CardContent>
                     </Card>
