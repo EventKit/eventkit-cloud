@@ -136,7 +136,6 @@ interface Props {
         img: string;
         menuButton: string;
         notificationsButton: string;
-        notificationsIndicator: string;
         badgeNotificationsIndicator: string;
     };
     login: (options?: object) => void;
