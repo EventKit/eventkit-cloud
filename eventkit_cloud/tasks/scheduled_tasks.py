@@ -11,23 +11,9 @@ from django.template.loader import get_template
 from django.utils import timezone
 
 from eventkit_cloud.celery import app
-from eventkit_cloud.tasks.helpers import get_all_rabbitmq_objects, get_message_count
+from eventkit_cloud.tasks.helpers import get_all_rabbitmq_objects
 
 logger = get_task_logger(__name__)
-
-
-# Seems redundant to expire_runs, if not needed should be deleted for 1.0.0
-# @app.task(name='Purge Unpublished Exports')
-# def PurgeUnpublishedExportsTask():
-#     """
-#     Purge unpublished export tasks after 48 hours.
-#     """
-#     from eventkit_cloud.jobs.models import Job
-#     time_limit = timezone.now() - timezone.timedelta(hours=48)
-#     expired_jobs = Job.objects.filter(created_at__lt=time_limit, published=False)
-#     count = expired_jobs.count()
-#     logger.debug('Purging {0} unpublished exports.'.format(count))
-#     expired_jobs.delete()
 
 
 @app.task(name="Expire Runs")
@@ -83,55 +69,49 @@ def pcf_scale_celery(max_instances):
     else:
         app_name = json.loads(os.getenv("VCAP_APPLICATION", "{}")).get("application_name")
 
-    client = PcfClient()
-    client.login()
-
-    running_tasks = client.get_running_tasks(app_name)
-    running_tasks_count = running_tasks["pagination"]["total_results"]
-
-    if running_tasks_count >= max_instances:
-        logger.info("Already at max instances, skipping.")
-        return
-
     default_command = (
         "python manage.py runinitial && echo 'Starting celery workers' && "
-        "celery worker -A eventkit_cloud --concurrency=$CONCURRENCY --loglevel=$LOG_LEVEL -n runs@%h -Q runs "
-        "& exec celery worker -A eventkit_cloud --concurrency=$CONCURRENCY --loglevel=$LOG_LEVEL -n worker@%h -Q "
-        "$CELERY_GROUP_NAME "
+        "celery worker -A eventkit_cloud --concurrency=$CONCURRENCY --loglevel=$LOG_LEVEL -n worker@%h -Q $CELERY_GROUP_NAME "  # NOQA
         "& exec celery worker -A eventkit_cloud --loglevel=$LOG_LEVEL -n celery@%h -Q celery "
         "& exec celery worker -A eventkit_cloud --loglevel=$LOG_LEVEL -n cancel@%h -Q $HOSTNAME.cancel "
         "& exec celery worker -A eventkit_cloud --concurrency=2 -n finalize@%h -Q $CELERY_GROUP_NAME.finalize "
-        "& exec celery worker -A eventkit_cloud --concurrency=1 --loglevel=$LOG_LEVEL -n osm@%h -Q "
-        "$CELERY_GROUP_NAME.osm "
+        "& exec celery worker -A eventkit_cloud --concurrency=1 --loglevel=$LOG_LEVEL -n osm@%h -Q $CELERY_GROUP_NAME.osm "  # NOQA
     )
 
     command = os.getenv("CELERY_TASK_COMMAND", default_command)
-
-    message_count = get_message_count("runs")
-    if message_count > 0:
-        logger.info(f"Sending task to {app_name} with command {command}")
-        client.run_task(command, app_name=app_name)
-        return
 
     celery_group_name = os.getenv("CELERY_GROUP_NAME", socket.gethostname())
     broker_api_url = getattr(settings, "BROKER_API_URL")
     queue_class = "queues"
     total_pending_messages = 0
 
-    # If there are queues with work and no workers, spawn a new worker instance
+    # Check to see if there is work that we care about and if so, scale a worker to do it.
     for queue in get_all_rabbitmq_objects(broker_api_url, queue_class):
         queue_name = queue.get("name")
-        pending_messages = queue.get("messages")
-        total_pending_messages = total_pending_messages + pending_messages
+        pending_messages = queue.get("messages", 0)
         if celery_group_name in queue_name or queue_name == "celery":
             logger.info(f"Queue {queue_name} has {pending_messages} pending messages.")
-            if pending_messages > 0 and running_tasks_count < 1:
-                logger.info(f"Sending task to {app_name} with command {command}")
-                client.run_task(command, app_name=app_name)
-                return
+            total_pending_messages = total_pending_messages + pending_messages
 
-    # If there is no work in the group, shut down the groups workers
-    if total_pending_messages == 0 and running_tasks_count > 0:
+    client = PcfClient()
+    client.login()
+
+    running_tasks = client.get_running_tasks(app_name)
+    running_tasks_count = running_tasks["pagination"]["total_results"]
+
+    # If there is work to do, and we aren't at max instances already then scale.
+    if total_pending_messages > 0:
+        if running_tasks_count < max_instances:
+            logger.info(f"Sending task to {app_name} with command {command}")
+            client.run_task(command, app_name=app_name)
+            return
+        else:
+            logger.info(
+                f"Already at max instances, skipping scale with {total_pending_messages} "
+                f"total pending messages left in queue."
+            )
+    # If there is no work in the group, shut down the remaining group workers down.
+    elif running_tasks_count > 0:
         shutdown_celery_workers.apply_async(queue=celery_group_name)
 
 
