@@ -30,7 +30,7 @@ from eventkit_cloud.tasks.export_tasks import (
     wcs_export_task,
     arcgis_feature_service_export_task,
 )
-from eventkit_cloud.tasks.export_tasks import TaskStates
+from eventkit_cloud.tasks.enumerations import TaskStates
 from eventkit_cloud.tasks.helpers import (
     get_run_staging_dir,
     get_provider_staging_dir,

@@ -7,7 +7,7 @@ from celery import chain  # required for tests
 from django.db import DatabaseError
 
 from eventkit_cloud.jobs.models import DataProviderTask, ExportFormat
-from eventkit_cloud.tasks.export_tasks import TaskStates
+from eventkit_cloud.tasks.enumerations import TaskStates
 from eventkit_cloud.tasks.export_tasks import reprojection_task, create_datapack_preview
 from eventkit_cloud.tasks.helpers import normalize_name, get_metadata
 from eventkit_cloud.tasks.models import ExportTaskRecord, DataProviderTaskRecord

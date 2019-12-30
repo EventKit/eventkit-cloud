@@ -8,6 +8,7 @@ import shutil
 import socket
 import time
 import traceback
+
 from zipfile import ZipFile, ZIP_DEFLATED
 
 from audit_logging.celery_support import UserDetailsBase
@@ -21,6 +22,7 @@ from django.contrib.auth.models import User
 from django.core.cache import caches
 from django.core.exceptions import ObjectDoesNotExist
 from django.core.mail import EmailMultiAlternatives
+from django.db import connection
 from django.db import DatabaseError, transaction
 from django.db.models import Q
 from django.template.loader import get_template, render_to_string
@@ -36,6 +38,7 @@ from eventkit_cloud.core.helpers import (
 from eventkit_cloud.feature_selection.feature_selection import FeatureSelection
 from eventkit_cloud.tasks.enumerations import TaskStates
 from eventkit_cloud.tasks.exceptions import CancelException, DeleteException
+from eventkit_cloud.tasks import set_cache_value
 from eventkit_cloud.tasks.helpers import (
     normalize_name,
     get_archive_data_path,
@@ -1203,10 +1206,11 @@ def pick_up_run_task(self, result=None, run_uid=None, user_details=None, *args, 
     """
     Generates a Celery task to assign a celery pipeline to a specific worker.
     """
+    from eventkit_cloud.tasks.task_factory import TaskFactory
+
     # This is just to make it easier to trace when user_details haven't been sent
     if user_details is None:
         user_details = {"username": "unknown-pick_up_run_task"}
-    from eventkit_cloud.tasks.task_factory import TaskFactory
 
     run = ExportRun.objects.get(uid=run_uid)
     try:
@@ -1783,10 +1787,6 @@ def update_progress(
     :param eta: The ETA estimator for this task will be used to automatically determine estimated_finish
     :param msg: Message describing the current activity of the task
     """
-
-    from django.db import connection
-    from eventkit_cloud.tasks import set_cache_value
-
     if task_uid is None:
         return
 
