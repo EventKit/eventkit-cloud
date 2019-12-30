@@ -50,7 +50,6 @@ export interface Props {
     closeCard: boolean;
     handleClose: (event: any) => void;
     classes: {
-        // card: string;
         cardDetails: string;
         cardDetailsBody: string;
         title: string;
