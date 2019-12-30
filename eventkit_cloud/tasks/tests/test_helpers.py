@@ -14,7 +14,7 @@ import signal
 from eventkit_cloud.tasks.helpers import get_style_files, get_file_paths, get_last_update, get_metadata_url, \
     get_osm_last_update, cd, get_arcgis_metadata, get_metadata, get_message_count, \
     get_all_rabbitmq_objects
-from eventkit_cloud.tasks.export_tasks import TaskStates
+from eventkit_cloud.tasks.enumerations import TaskStates
 
 from eventkit_cloud.tasks.helpers import progressive_kill
 from unittest import skip

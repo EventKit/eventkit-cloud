@@ -350,7 +350,7 @@ def get_metadata(data_provider_task_uid):
 
     from eventkit_cloud.jobs.models import DataProvider
     from eventkit_cloud.tasks.models import DataProviderTaskRecord
-    from eventkit_cloud.tasks.export_tasks import TaskStates, create_zip_task
+    from eventkit_cloud.tasks.enumerations import TaskStates, create_zip_task
 
     data_provider_task = DataProviderTaskRecord.objects.get(uid=data_provider_task_uid)
 
