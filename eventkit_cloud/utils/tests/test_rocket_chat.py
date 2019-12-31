@@ -39,7 +39,6 @@ class TestRocketChatClient(TestCase):
             self.client = RocketChat(url=self.url, auth_token=self.auth_token, user_id=self.user_id)
 
     def test_failed_message(self):
-
         self.mock_requests.get(self.profile_url, status_code=200)
         self.mock_requests.post(self.message_url, status_code=400)
 
