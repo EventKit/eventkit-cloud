@@ -145,8 +145,8 @@ const jss = (theme: Theme & Eventkit.Theme) => createStyles({
         marginRight: '5px',
     },
     imageIcon: {
-        width: '55px',
-        height: '55px',
+        width: '48px',
+        height: '48px',
     }
 });
 
