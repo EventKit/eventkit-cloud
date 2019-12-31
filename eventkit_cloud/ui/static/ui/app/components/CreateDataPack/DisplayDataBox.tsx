@@ -11,7 +11,7 @@ import IconButton from "@material-ui/core/IconButton";
 
 const jss = (theme: Theme & Eventkit.Theme) => createStyles({
     cardDetails: {
-        minWidth: 275,
+        minWidth: 255,
         color: theme.eventkit.colors.white,
         padding: '12px'
     },
@@ -22,11 +22,15 @@ const jss = (theme: Theme & Eventkit.Theme) => createStyles({
         display: 'inline'
     },
     details: {
-        fontSize: '13px !important',
+        fontSize: 13,
         color: theme.eventkit.colors.grey,
         display: 'inline-block',
+        // dispaly: 'inline-table',
         paddingRight: '5px',
         padding: 0
+    },
+    grid: {
+        paddingTop: '5px'
     },
     closeButton: {
         fontSize: 'medium',
@@ -53,6 +57,7 @@ export interface Props {
         cardDetails: string;
         title: string;
         details: string;
+        grid: string;
         closeButton: string;
         closeIcon: string;
     };
@@ -81,18 +86,18 @@ export class DisplayDataBox extends React.Component<Props, {}> {
                             >
                                 <CloseIcon className={classes.closeIcon}/>
                             </IconButton>
-                            <Grid>
-                                <Grid item xs={6} className={classes.details}>
-                                    <Typography>Lat, Long:</Typography>
-                                    <Typography>Image Date:</Typography>
-                                    <Typography>Source:</Typography>
-                                    <Typography>Type:</Typography>
+                            <Grid className={classes.grid}>
+                                <Grid item xs={3} className={classes.details}>
+                                    <Typography className={classes.details}>Lat, Long:</Typography>
+                                    <Typography className={classes.details}>Image Date:</Typography>
+                                    <Typography className={classes.details}>Source:</Typography>
+                                    <Typography className={classes.details}>Type:</Typography>
                                 </Grid>
-                                <Grid item xs={6} className={classes.details}>
-                                    <Typography>{1337}, {7331}</Typography>
-                                    <Typography>{"10/24"}</Typography>
-                                    <Typography>{"Layer Name"}</Typography>
-                                    <Typography>{"Display Field Name"}</Typography>
+                                <Grid item xs={9} className={classes.details}>
+                                    <Typography className={classes.details}><strong>{1337}, {7331}</strong></Typography>
+                                    <Typography className={classes.details}><strong>{"10/24/2019"}</strong></Typography>
+                                    <Typography className={classes.details}><strong>{"Layer Name"}</strong></Typography>
+                                    <Typography className={classes.details}><strong>{"Display Field Name"}</strong></Typography>
                                 </Grid>
                                 {/*<Grid item xs={4}>*/}
                                 {/*    <IconButton*/}
