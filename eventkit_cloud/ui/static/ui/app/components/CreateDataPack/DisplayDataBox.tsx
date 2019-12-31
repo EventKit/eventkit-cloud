@@ -15,27 +15,26 @@ const jss = (theme: Theme & Eventkit.Theme) => createStyles({
         color: theme.eventkit.colors.white,
         padding: '12px'
     },
-    // cardDetailsBody: {
-    //     padding: '12px',
-    // },
     title: {
         fontSize: 15,
         color: theme.eventkit.colors.black,
-        marginBottom: "4px",
+        marginBottom: '4px',
+        display: 'inline'
     },
     details: {
-        fontSize: 13,
+        fontSize: '13px !important',
         color: theme.eventkit.colors.grey,
         display: 'inline-block',
         paddingRight: '5px',
+        padding: 0
     },
     closeButton: {
-        padding: 0,
         fontSize: 'medium',
+        float: 'right',
+        marginBottom: '4px',
     },
     closeIcon: {
         fontSize: 'small',
-        marginTop: '10px'
     }
 });
 
@@ -52,7 +51,6 @@ export interface Props {
     handleClose: (event: any) => void;
     classes: {
         cardDetails: string;
-        cardDetailsBody: string;
         title: string;
         details: string;
         closeButton: string;
@@ -72,9 +70,18 @@ export class DisplayDataBox extends React.Component<Props, {}> {
             <div className={classes.cardDetails} >
                 { !closeCard ?
                     <Card>
-                        <CardContent className={classes.cardDetailsBody}>
+                        <CardContent>
                             <Typography className={classes.title}> {"South Dakota"} </Typography>
-                            <Grid style={{fontSize: 'small'}}>
+                            <IconButton
+                                className={classes.closeButton}
+                                type='button'
+                                onClick={(e) => {
+                                    handleClose(e);
+                                }}
+                            >
+                                <CloseIcon className={classes.closeIcon}/>
+                            </IconButton>
+                            <Grid>
                                 <Grid item xs={6} className={classes.details}>
                                     <Typography>Lat, Long:</Typography>
                                     <Typography>Image Date:</Typography>
@@ -82,22 +89,22 @@ export class DisplayDataBox extends React.Component<Props, {}> {
                                     <Typography>Type:</Typography>
                                 </Grid>
                                 <Grid item xs={6} className={classes.details}>
-                                    <Typography><strong>{1337}, {7331}</strong></Typography>
-                                    <Typography><strong>{"10/24"}</strong></Typography>
-                                    <Typography><strong>{"Layer Name"}</strong></Typography>
-                                    <Typography><strong>{"Display Field Name"}</strong></Typography>
+                                    <Typography>{1337}, {7331}</Typography>
+                                    <Typography>{"10/24"}</Typography>
+                                    <Typography>{"Layer Name"}</Typography>
+                                    <Typography>{"Display Field Name"}</Typography>
                                 </Grid>
-                                <Grid item xs={4}>
-                                    <IconButton
-                                        className={classes.closeButton}
-                                        type='button'
-                                        onClick={(e) => {
-                                            handleClose(e);
-                                        }}
-                                    >
-                                        <CloseIcon className={classes.closeIcon}/>
-                                    </IconButton>
-                                    </Grid>
+                                {/*<Grid item xs={4}>*/}
+                                {/*    <IconButton*/}
+                                {/*        className={classes.closeButton}*/}
+                                {/*        type='button'*/}
+                                {/*        onClick={(e) => {*/}
+                                {/*            handleClose(e);*/}
+                                {/*        }}*/}
+                                {/*    >*/}
+                                {/*        <CloseIcon className={classes.closeIcon}/>*/}
+                                {/*    </IconButton>*/}
+                                    {/*</Grid>*/}
                                 </Grid>
                         </CardContent>
                     </Card>
