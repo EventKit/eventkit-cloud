@@ -266,7 +266,6 @@ export class MapDrawer extends React.Component<Props, State> {
                                         <Icon classes={{root: classes.iconRoot}}>
                                             <img
                                                 className={classes.imageIcon}
-                                                // src="../../../images/icn_basemap.svg"
                                                 src={theme.eventkit.images.basemap}
                                                 alt="Basemap"
                                                 title="Basemap"
