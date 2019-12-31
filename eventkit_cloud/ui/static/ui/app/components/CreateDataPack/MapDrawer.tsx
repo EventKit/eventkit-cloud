@@ -16,6 +16,7 @@ import Typography from "@material-ui/core/Typography";
 import ListItemText from "@material-ui/core/ListItemText";
 import Button from "@material-ui/core/Button";
 import Clear from '@material-ui/icons/Clear';
+import theme from "../../styles/eventkit_theme";
 
 
 const jss = (theme: Theme & Eventkit.Theme) => createStyles({
@@ -144,8 +145,8 @@ const jss = (theme: Theme & Eventkit.Theme) => createStyles({
         marginRight: '5px',
     },
     imageIcon: {
-        width: '48px',
-        height: '48px',
+        width: '55px',
+        height: '55px',
     }
 });
 
@@ -265,7 +266,8 @@ export class MapDrawer extends React.Component<Props, State> {
                                         <Icon classes={{root: classes.iconRoot}}>
                                             <img
                                                 className={classes.imageIcon}
-                                                src="../../../images/icn_basemap.svg"
+                                                // src="../../../images/icn_basemap.svg"
+                                                src={theme.eventkit.images.basemap}
                                                 alt="Basemap"
                                                 title="Basemap"
                                             />
