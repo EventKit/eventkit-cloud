@@ -3,7 +3,7 @@ import Drawer from '@material-ui/core/Drawer';
 import CustomScrollbar from "../CustomScrollbar";
 import List from '@material-ui/core/List';
 import ListItem from '@material-ui/core/ListItem';
-import {createStyles, Theme, withStyles, Icon, Divider} from "@material-ui/core";
+import {createStyles, Theme, withStyles, withTheme, Grid, Icon, Divider} from "@material-ui/core";
 import {connect} from "react-redux";
 import CardMedia from '@material-ui/core/CardMedia';
 import Card from '@material-ui/core/Card';
@@ -16,15 +16,13 @@ import Typography from "@material-ui/core/Typography";
 import ListItemText from "@material-ui/core/ListItemText";
 import Button from "@material-ui/core/Button";
 import Clear from '@material-ui/icons/Clear';
+import theme from "../../styles/eventkit_theme";
+
 
 const jss = (theme: Theme & Eventkit.Theme) => createStyles({
     container: {
         zIndex: 5,
         display: 'flex',
-    },
-    displayDataBox: {
-        zIndex: 6,
-        margin: 'calc(60vh) auto',
     },
     flexContainer: {
         display: 'flex',
@@ -147,8 +145,8 @@ const jss = (theme: Theme & Eventkit.Theme) => createStyles({
         marginRight: '5px',
     },
     imageIcon: {
-        width: '48px',
-        height: '48px',
+        width: '55px',
+        height: '55px',
     }
 });
 
@@ -214,7 +212,7 @@ export class MapDrawer extends React.Component<Props, State> {
         } else {
             this.setState({selectedTab: newValue});
         }
-    }
+    };
 
     render() {
         const {classes} = this.props;
@@ -268,7 +266,7 @@ export class MapDrawer extends React.Component<Props, State> {
                                         <Icon classes={{root: classes.iconRoot}}>
                                             <img
                                                 className={classes.imageIcon}
-                                                src="../../../images/icn_basemap.svg"
+                                                src={theme.eventkit.images.basemap}
                                                 alt="Basemap"
                                                 title="Basemap"
                                             />

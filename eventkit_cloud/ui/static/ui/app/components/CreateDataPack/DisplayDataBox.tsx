@@ -13,10 +13,11 @@ const jss = (theme: Theme & Eventkit.Theme) => createStyles({
     cardDetails: {
         minWidth: 275,
         color: theme.eventkit.colors.white,
+        padding: '12px'
     },
-    cardDetailsBody: {
-        padding: '12px',
-    },
+    // cardDetailsBody: {
+    //     padding: '12px',
+    // },
     title: {
         fontSize: 15,
         color: theme.eventkit.colors.black,
@@ -30,11 +31,11 @@ const jss = (theme: Theme & Eventkit.Theme) => createStyles({
     },
     closeButton: {
         padding: 0,
-        fontSize: 'small',
+        fontSize: 'medium',
     },
     closeIcon: {
         fontSize: 'small',
-        marginTop: '7px'
+        marginTop: '10px'
     }
 });
 
@@ -73,14 +74,14 @@ export class DisplayDataBox extends React.Component<Props, {}> {
                     <Card>
                         <CardContent className={classes.cardDetailsBody}>
                             <Typography className={classes.title}> {"South Dakota"} </Typography>
-                            <Grid>
-                                <Grid item xs={4} className={classes.details}>
+                            <Grid style={{fontSize: 'small'}}>
+                                <Grid item xs={6} className={classes.details}>
                                     <Typography>Lat, Long:</Typography>
                                     <Typography>Image Date:</Typography>
                                     <Typography>Source:</Typography>
                                     <Typography>Type:</Typography>
                                 </Grid>
-                                <Grid item xs={4} className={classes.details}>
+                                <Grid item xs={6} className={classes.details}>
                                     <Typography><strong>{1337}, {7331}</strong></Typography>
                                     <Typography><strong>{"10/24"}</strong></Typography>
                                     <Typography><strong>{"Layer Name"}</strong></Typography>
