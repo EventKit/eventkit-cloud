@@ -1,9 +1,10 @@
+from typing import Optional
 import requests
 import json
 
 
 class RocketChat(object):
-    def __init__(self, url=None, username=None, password=None, auth_token=None, user_id=None):
+    def __init__(self, url: str, username: Optional[str]=None, password: Optional[str]=None, auth_token: Optional[str]=None, user_id: Optional[str]=None, **kwargs):
         self.base_url = url
         self.login_url = f"{self.base_url}/api/v1/login"
         self.message_url = f"{self.base_url}/api/v1/chat.postMessage"
@@ -34,7 +35,7 @@ class RocketChat(object):
             print(response.content)
             raise Exception(f"Unable to get profile.")
 
-    def post_message(self, channel, message):
+    def post_message(self, channel: str, message: str):
         data = {"channel": channel, "text": message}
         response = requests.post(self.message_url, headers=self.headers, data=json.dumps(data), verify=False)
         if not response.ok:

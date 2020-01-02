@@ -1607,17 +1607,16 @@ def export_task_error_handler(self, result=None, run_uid=None, task_id=None, sta
     msg.attach_alternative(html, "text/html")
     msg.send()
 
-    # Send administrators a message about failed DataPacks if enabled.
+    # Send failed DataPack notifications to specific channel(s) or user(s) if enabled.
     rocketchat_notifications = json.loads(os.getenv("ROCKETCHAT_NOTIFICATIONS"))
     if rocketchat_notifications:
-        auth_token = rocketchat_notifications["auth_token"]
-        user_id = rocketchat_notifications["user_id"]
-        channel = rocketchat_notifications["channel"]
+        channels = rocketchat_notifications["channels"]
         url = rocketchat_notifications["url"]
         message = f"@here A DataPack has failed during processing. {ctx['url']}"
 
-        client = RocketChat(url=url, auth_token=auth_token, user_id=user_id)
-        client.post_message(channel, message)
+        client = RocketChat(**rocketchat_notifications)
+        for channel in channels:
+            client.post_message(channel, message)
 
     return result
 

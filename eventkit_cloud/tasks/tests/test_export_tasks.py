@@ -459,11 +459,11 @@ class TestExportTasks(ExportTaskBase):
         os.environ['ROCKETCHAT_NOTIFICATIONS'] = json.dumps({
             "auth_token": "auth_token",
             "user_id": "user_id",
-            "channel": "channel",
+            "channels": ["channel"],
             "url": "http://api.example.dev"
         })
         rocketchat_notifications = json.loads(os.getenv("ROCKETCHAT_NOTIFICATIONS"))
-        channel = rocketchat_notifications["channel"]
+        channel = rocketchat_notifications["channels"][0]
         message = f"@here A DataPack has failed during processing. {url}"
         export_provider_task = DataProviderTaskRecord.objects.create(run=self.run, name='Shapefile Export')
         ExportTaskRecord.objects.create(export_provider_task=export_provider_task, uid=task_id,
@@ -474,6 +474,7 @@ class TestExportTasks(ExportTaskBase):
         isdir.assert_any_call(stage_dir)
         rmtree.assert_called_once_with(stage_dir)
         email().send.assert_called_once()
+        rocket_chat.assert_called_once_with(**rocketchat_notifications)
         rocket_chat().post_message.assert_called_once_with(channel, message)
 
     @patch('eventkit_cloud.tasks.set_cache_value')

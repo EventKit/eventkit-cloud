@@ -291,5 +291,5 @@ The max number of processes/threads the `runs` celery worker will use. This will
 
 ### RocketChat Settings
 
-Pass in this environment variable with your RocketChat settings to enable notifications about failed DataPacks to a specific channel.
-<pre>ROCKETCHAT_NOTIFICATIONS={"auth_token": "personal_access_token", "user_id": "personal_user_id", "channel": "channel_name", "url": "https://rocketchat.example.com/"}</pre>
+Pass in this environment variable with your RocketChat settings to enable notifications about failed DataPacks to specific channel(s) or user(s).
+<pre>ROCKETCHAT_NOTIFICATIONS={"auth_token": "personal_access_token", "user_id": "personal_user_id", "channels": ["#channel", "@username"], "url": "https://rocketchat.example.com/"}</pre>
