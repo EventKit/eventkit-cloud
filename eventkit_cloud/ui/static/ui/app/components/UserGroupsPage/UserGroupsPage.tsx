@@ -297,9 +297,9 @@ export class UserGroupsPage extends React.Component<Props, State> {
             changedQuery = true;
         } else {
             const keys = Object.keys(queryString.parse(this.props.location.search));
-            if (!keys.every(key => queryString.parse(this.props.location.search)[key] === queryString.parse(prevProps.location.search)[key])) {
-                changedQuery = true;
-            }
+            if (!keys.every(key => queryString.parse(this.props.location.search)[key] ===
+                queryString.parse(prevProps.location.search)[key]))
+            { changedQuery = true };
         }
         if (changedQuery) {
             this.makeUserRequest(queryString.parse(this.props.location.search));

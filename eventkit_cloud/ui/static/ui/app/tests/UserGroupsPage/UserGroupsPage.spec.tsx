@@ -630,23 +630,23 @@ describe('UserGroupsPage component', () => {
     });
 
     it('handleBatchRemoveUser should remove users and updateGroup', () => {
-        const props = getProps();
+        const props1 = getProps();
         const group = {
             id: 12,
             name: 'twelve',
             members: ['1', '2', '3'],
             administrators: ['1', '2', '3'],
         };
-        props.location.search = queryString.stringify({ groups: '12' });
-        props.groups.groups.push(group);
-        setup(props);
+        props1.location.search = queryString.stringify({ groups: '12' });
+        props1.groups.groups.push(group);
+        setup(props1);
         const users = [
             { user: { username: '1' } },
             { user: { username: '2' } },
         ];
         instance.handleBatchRemoveUser(users);
-        expect(props.updateGroup.calledOnce).toBe(true);
-        expect(props.updateGroup.calledWith(group.id, {
+        expect(props1.updateGroup.calledOnce).toBe(true);
+        expect(props1.updateGroup.calledWith(group.id, {
             members: ['3'],
             administrators: ['3'],
         })).toBe(true);

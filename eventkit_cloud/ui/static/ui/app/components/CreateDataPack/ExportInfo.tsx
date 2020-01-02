@@ -574,7 +574,7 @@ export class ExportInfo extends React.Component<Props, State> {
         this.setState((prevState) => {
             // make a copy of state providers and replace the one we updated
             const providers = [...this.state.providers];
-            const index = providers.map(provider => provider.slug).indexOf(provider.slug);
+            const index = providers.map(pr => pr.slug).indexOf(provider.slug);
             Object.assign(result, providers[index], { availability: updatedProviderData.availability });
 
             providers.splice(index, 1, result);
@@ -593,7 +593,7 @@ export class ExportInfo extends React.Component<Props, State> {
             this.setState((prevState) => {
                 // make a copy of state providers and replace the one we updated
                 const providers = [...this.state.providers];
-                const index = providers.map(provider => provider.slug).indexOf(provider.slug);
+                const index = providers.map(pr => pr.slug).indexOf(provider.slug);
                 Object.assign(result, providers[index], { estimate: updatedProviderData.estimate });
 
                 providers.splice(index, 1, result);

@@ -22,11 +22,11 @@ describe('SearchAOIToolbar button', () => {
             geocode: [],
             error: null,
         },
-        getGeocode: () => {},
-        handleSearch: () => {},
-        handleCancel: () => {},
-        setAllButtonsDefault: () => {},
-        setSearchAOIButtonSelected: () => {},
+        getGeocode: () => sinon.spy,
+        handleSearch: () => sinon.spy,
+        handleCancel: () => sinon.spy,
+        setAllButtonsDefault: () => sinon.spy,
+        setSearchAOIButtonSelected: () => sinon.spy,
         ...(global as any).eventkit_test_props,
     });
 

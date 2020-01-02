@@ -3,6 +3,7 @@ import Checkbox from '@material-ui/core/Checkbox';
 import {mount} from 'enzyme';
 import {FormatSelector} from "../../components/CreateDataPack/FormatSelector";
 import {Compatibility} from '../../utils/enums';
+import * as sinon from "sinon";
 
 const getFormatCompatibility = (slug) => ({
     shp: Compatibility.Full,
@@ -38,8 +39,7 @@ describe('DataProvider component', () => {
     let instance;
 
     const defaultProps = () => ({
-        updateExportOptions: (x, y) => {
-        },
+        updateExportOptions: (x, y) => sinon.spy,
         provider: {
             uid: '123',
             slug: 'slug',

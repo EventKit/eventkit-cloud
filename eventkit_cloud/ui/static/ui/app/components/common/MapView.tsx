@@ -75,9 +75,9 @@ export class MapView extends React.Component<Props> {
     private initializeOpenLayers() {
         const zoomLevels = 20;
         const resolutions = getResolutions(zoomLevels, null);
-        let tileGrid = new TileGrid({
+        const tileGrid = new TileGrid({
             extent: [-180, -90, 180, 90],
-            resolutions: resolutions
+            resolutions
         });
         const base = new Tile({
             source: new XYZ({
@@ -85,7 +85,7 @@ export class MapView extends React.Component<Props> {
                 url: this.props.url,
                 wrapX: true,
                 attributions: this.props.copyright,
-                tileGrid: tileGrid,
+                tileGrid,
             }),
         });
         this.map = new Map({

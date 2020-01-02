@@ -68,8 +68,8 @@ const jss = (theme: Theme & Eventkit.Theme) => createStyles({
 interface Props {
     toolbarIcons: any;
     geocode: any;
-    getGeocode: (any) => void;
-    handleSearch: (any) => any;
+    getGeocode: (query: any) => boolean;
+    handleSearch: (result: any) => boolean;
     handleCancel: () => void;
     setAllButtonsDefault: () => void;
     setSearchAOIButtonSelected: () => void;

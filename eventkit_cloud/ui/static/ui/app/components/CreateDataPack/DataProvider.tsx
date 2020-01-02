@@ -163,7 +163,7 @@ export class DataProvider extends React.Component<Props, State> {
 
     componentDidUpdate(prevProps: Readonly<Props>, prevState: Readonly<State>, snapshot?: any): void {
         if(this.props.open){
-            this.state.open;
+            this.setState({...this.state, open: true});
         }
     }
 

@@ -480,9 +480,9 @@ export class MapView extends React.Component<Props, State> {
         // const startResolution = 0.703125; // Allows 4326 data with 2 tiles from lvl 0.
         const zoomLevels = 20;
         const resolutions = getResolutions(zoomLevels, null);
-        let tileGrid = new TileGrid({
+        const tileGrid = new TileGrid({
             extent: [-180, -90, 180, 90],
-            resolutions: resolutions
+            resolutions
         });
         return new Map({
             controls: [
@@ -523,7 +523,7 @@ export class MapView extends React.Component<Props, State> {
                 new Tile({
                     source: new XYZ({
                         projection: MapView.PROJECTION,
-                        tileGrid: tileGrid,
+                        tileGrid,
                         url: this.context.config.BASEMAP_URL,
                         wrapX: true,
                         attributions: this.context.config.BASEMAP_COPYRIGHT,

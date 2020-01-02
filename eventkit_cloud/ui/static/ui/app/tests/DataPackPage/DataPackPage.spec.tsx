@@ -278,7 +278,7 @@ describe('DataPackPage component', () => {
     it('componentDidUpdate should update joyride steps', () => {
         const getStub = sinon.stub(instance, 'getJoyRideSteps');
         const addStub = sinon.stub(instance, 'joyrideAddSteps');
-        let location = { search: queryString.parse(getProps().location) };
+        const location = { search: queryString.parse(getProps().location) };
         location.search.view = 'grid';
         wrapper.setProps({ location: { search: queryString.stringify(location.search) } });
         expect(getStub.calledOnce).toBe(true);
@@ -395,7 +395,7 @@ describe('DataPackPage component', () => {
     });
 
     it('makeRunRequest should build a params object and pass it to props.getRuns', () => {
-        let location = { search: queryString.parse(getProps().location) };
+        const location = { search: queryString.parse(getProps().location) };
         location.search.page_size = '12'
         location.search.search = 'search_text';
         location.search.order = '-job__featured';
@@ -539,7 +539,7 @@ describe('DataPackPage component', () => {
         expect(updateStub.calledOnce).toBe(true);
         expect(updateStub.calledWith({ view: 'list' })).toBe(true);
 
-        let location = { search: queryString.parse(getProps().location) };
+        const location = { search: queryString.parse(getProps().location) };
         location.search.order = 'not_shared_order';
         wrapper.setProps({ location: { search: queryString.stringify(location.search) } });
         instance.changeView('map');
@@ -621,7 +621,7 @@ describe('DataPackPage component', () => {
     });
 
     it('getJoyRideSteps should return correct steps based on view', () => {
-        let location = {search: queryString.parse(getProps().location)};
+        const location = {search: queryString.parse(getProps().location)};
         location.search.view = 'map'
         wrapper.setProps({ location: { search: queryString.stringify(location.search) } });
         expect(instance.getJoyRideSteps()).toEqual(joyride.DataPackPage.map);

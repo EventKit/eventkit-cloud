@@ -56,8 +56,7 @@ describe('FilterDrawer component', () => {
     ];
     const getProps = () => ({
         providers,
-        updateBaseMap: (mapUrl: string) => {
-        },
+        updateBaseMap: (mapUrl: string) => sinon.spy,
         classes: {},
         ...(global as any).eventkit_test_props,
     });

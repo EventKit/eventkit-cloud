@@ -3,6 +3,7 @@ import { shallow } from 'enzyme';
 import { ZoomLevelSlider } from '../../components/CreateDataPack/ZoomLevelSlider';
 import {TextField} from "@material-ui/core";
 import {Slider} from "@material-ui/lab";
+import * as sinon from "sinon";
 
 describe('ZoomLevelSlider component', () => {
     let wrapper;
@@ -22,7 +23,7 @@ describe('ZoomLevelSlider component', () => {
             availability: {},
             estimate: {},
         },
-        updateZoom: (x, y) => {},
+        updateZoom: (x, y) => sinon.spy,
         providerZoom: 1,
         classes: {},
         ...(global as any).eventkit_test_props,

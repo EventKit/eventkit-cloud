@@ -156,7 +156,6 @@ export class ExportAOI extends React.Component<Props, State> {
         this.resetAoi = this.resetAoi.bind(this);
         this.updateZoomLevel = this.updateZoomLevel.bind(this);
         this.shouldEnableNext = this.shouldEnableNext.bind(this);
-        this.getBaseLayer = this.getBaseLayer.bind(this);
         this.bufferFunction = () => { /* do nothing */
         };
         this.state = {
@@ -233,10 +232,6 @@ export class ExportAOI extends React.Component<Props, State> {
 
             this.baseLayer.setSource(newSource);
         }
-    }
-
-    private getBaseLayer() {
-
     }
 
     private setButtonSelected(iconName: string) {

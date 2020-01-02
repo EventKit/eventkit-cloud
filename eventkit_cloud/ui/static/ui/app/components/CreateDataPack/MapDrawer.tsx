@@ -19,6 +19,7 @@ import Clear from '@material-ui/icons/Clear';
 import theme from "../../styles/eventkit_theme";
 
 
+// tslint:disable-next-line:no-shadowed-variable
 const jss = (theme: Theme & Eventkit.Theme) => createStyles({
     container: {
         zIndex: 5,
@@ -150,6 +151,7 @@ const jss = (theme: Theme & Eventkit.Theme) => createStyles({
     }
 });
 
+// tslint:disable-next-line:no-shadowed-variable
 export const VerticalTabs = withStyles(theme => ({
     flexContainer: {
         flexDirection: 'column'

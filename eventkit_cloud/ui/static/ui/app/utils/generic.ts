@@ -118,8 +118,9 @@ export function getDuration(seconds, capEstimate = true) {
     const secondsInDay = 60 * 60 * 24;
     const secondsInHour = 60 * 60;
 
-    if (capEstimate && seconds >= secondsInDay)
+    if (capEstimate && seconds >= secondsInDay) {
         return `At least 1 day`;
+    }
 
     let days: any = Math.floor(remainingSeconds / secondsInDay);
     remainingSeconds -= days * secondsInDay;
@@ -129,7 +130,7 @@ export function getDuration(seconds, capEstimate = true) {
 
     days = (days > 0) ? `${days}d ` : '';
     hours = (hours > 0) ? `${hours}h ` : '';
-    minutes = (minutes <= 0 && days == 0 && hours == 0) ? '<1m' : `${minutes}m`;
+    minutes = (minutes <= 0 && days === 0 && hours === 0) ? '<1m' : `${minutes}m`;
     return `${days}${hours}${minutes}`;
 }
 
@@ -147,7 +148,7 @@ export function formatMegaBytes(megabytes) {
 }
 
 export function getCookie(name) {
-    var v = document.cookie.match('(^|;) ?' + name + '=([^;]*)(;|$)');
+    const v = document.cookie.match('(^|;) ?' + name + '=([^;]*)(;|$)');
     return v ? v[2] : null;
 }
 

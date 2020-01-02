@@ -58,6 +58,7 @@
     "@types/react-redux": "7.1.0",
     "@types/react-router": "5.0.3",
     "@types/redux-auth-wrapper": "2.0.9",
+    "@types/sinon": "^7.5.1",
     "axios-mock-adapter": "1.16.0",
     "babel-eslint": "10.0.2",
     "babel-jest": "24.8.0",

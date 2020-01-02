@@ -113,8 +113,8 @@ export class ProviderDialog extends React.Component<Props, State> {
                             const dataProviderTask = job && job.provider_tasks.find(obj => obj.provider === provider.name)
 
                             // If available, get custom zoom levels from DataProviderTask otherwise use Provider defaults.
-                            const min_zoom = dataProviderTask && dataProviderTask.min_zoom || provider && provider.level_from
-                            const max_zoom = dataProviderTask && dataProviderTask.max_zoom || provider && provider.level_to
+                            const minZoom = dataProviderTask && dataProviderTask.min_zoom || provider && provider.level_from
+                            const maxZoom = dataProviderTask && dataProviderTask.max_zoom || provider && provider.level_to
 
                             return (
                                 <DropDownListItem
@@ -122,7 +122,7 @@ export class ProviderDialog extends React.Component<Props, State> {
                                     key={provider.slug}
                                     alt={ix % 2 !== 0}
                                 >
-                                    <div>Zoom Levels {min_zoom} - {max_zoom}</div>
+                                    <div>Zoom Levels {minZoom} - {maxZoom}</div>
                                     <div>{provider.service_description}</div>
                                 </DropDownListItem>
                             );

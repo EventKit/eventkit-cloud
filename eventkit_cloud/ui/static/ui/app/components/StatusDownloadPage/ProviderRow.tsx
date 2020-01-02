@@ -423,8 +423,8 @@ export class ProviderRow extends React.Component<Props, State> {
         const propsProvider = this.props.providers.find(obj => obj.slug === provider.slug);
 
         // If available, get custom zoom levels from DataProviderTask otherwise use Provider defaults.
-        const min_zoom = dataProviderTask && dataProviderTask.min_zoom || propsProvider && propsProvider.level_from;
-        const max_zoom = dataProviderTask && dataProviderTask.max_zoom || propsProvider && propsProvider.level_to;
+        const minZoom = dataProviderTask && dataProviderTask.min_zoom || propsProvider && propsProvider.level_from;
+        const maxZoom = dataProviderTask && dataProviderTask.max_zoom || propsProvider && propsProvider.level_to;
 
         const licenseData = propsProvider && propsProvider.license ?
             <LicenseRow name={propsProvider.license.name} text={propsProvider.license.text}/>
@@ -493,7 +493,7 @@ export class ProviderRow extends React.Component<Props, State> {
                                 className="qa-ProviderRow-TableCell-zoomLevels"
                                 classes={{root: classes.zoomLevelColumn}}
                             >
-                                Zoom Levels {min_zoom} - {max_zoom}
+                                Zoom Levels {minZoom} - {maxZoom}
                             </TableCell>
                             <TableCell classes={{root: classes.sizeColumnn}}/>
                             <TableCell classes={{root: classes.estimatedFinishColumn}}/>
@@ -598,7 +598,7 @@ export class ProviderRow extends React.Component<Props, State> {
                                     title={provider.name}
                                     onClose={this.handleProviderClose}
                                 >
-                                    <div>Zoom Levels {min_zoom} - {max_zoom}</div>
+                                    <div>Zoom Levels {minZoom} - {maxZoom}</div>
                                     {this.state.providerDesc}
                                 </BaseDialog>
                             </TableCell>
