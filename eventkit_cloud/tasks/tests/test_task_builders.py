@@ -115,7 +115,7 @@ class TestTaskBuilder(TestCase):
 
     @patch('eventkit_cloud.tasks.task_builders.ExportTaskRecord')
     def test_create_export_task_record(self, mock_export_task):
-        from eventkit_cloud.tasks.export_tasks import TaskStates
+        from eventkit_cloud.tasks.enumerations import TaskStates
 
         task_name = "TaskName"
         export_provider_task_name = "ExportProviderTaskName"
