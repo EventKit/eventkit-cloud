@@ -2,6 +2,7 @@ import React from 'react';
 import { createShallow } from '@material-ui/core/test-utils';
 import BaseDialog from '../../components/Dialog/BaseDialog';
 import { ConfirmDialog } from '../../components/Dialog/ConfirmDialog';
+import sinon from "sinon";
 
 describe('ConfirmDialog component', () => {
     let shallow;
@@ -11,10 +12,10 @@ describe('ConfirmDialog component', () => {
     });
 
     const getProps = () => ({
+        onCancel: sinon.spy(),
+        onConfirm: sinon.spy(),
         show: true,
         title: 'test',
-        onCancel: () => {},
-        onConfirm: () => {},
         ...global.eventkit_test_props,
     });
 

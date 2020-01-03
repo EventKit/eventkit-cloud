@@ -14,9 +14,9 @@ describe('SearchAOIButton component', () => {
 
     const getProps = () => ({
         buttonState: 'DEFAULT',
-        handleCancel: () => {},
-        setSearchAOIButtonSelected: () => {},
-        setAllButtonsDefault: () => {},
+        handleCancel: sinon.spy(),
+        setAllButtonsDefault: sinon.spy(),
+        setSearchAOIButtonSelected: sinon.spy(),
         ...global.eventkit_test_props,
     });
     it('should render its default state', () => {

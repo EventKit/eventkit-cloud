@@ -6,18 +6,18 @@ const initialState = { notifications: initial };
 const mockNotifications = {
     1: {
         id: '1',
-        unread: false,
         timestamp: '2018-05-04T17:32:04.716806Z',
+        unread: false,
     },
     2: {
         id: '2',
-        unread: true,
         timestamp: '2018-05-04T17:34:04.716806Z',
+        unread: true,
     },
     3: {
         id: '3',
-        unread: true,
         timestamp: '2018-05-04T17:36:04.716806Z',
+        unread: true,
     },
 };
 
@@ -48,18 +48,18 @@ describe('notificationsReducer', () => {
 
     it('should handle FETCHING_NOTIFICATIONS', () => {
         const action = {
-            type: types.FETCHING_NOTIFICATIONS,
             cancelSource: 'test',
+            type: types.FETCHING_NOTIFICATIONS,
         };
 
         expect(notificationsReducer(initialState.notifications, action)).toEqual({
             ...initialState.notifications,
             status: {
                 ...initialState.notifications.status,
-                fetching: true,
-                fetched: false,
-                error: null,
                 cancelSource: 'test',
+                error: null,
+                fetched: false,
+                fetching: true,
             },
         });
     });
@@ -67,30 +67,30 @@ describe('notificationsReducer', () => {
     it('should handle RECEIVED_NOTIFICATIONS', () => {
         const state = {
             ...initialState.notifications,
-            fetching: true,
             cancelSource: 'test',
+            fetching: true,
         };
         const action = {
-            type: types.RECEIVED_NOTIFICATIONS,
-            notifications: mockNotificationsArray,
             nextPage: true,
+            notifications: mockNotificationsArray,
             range: '12/24',
+            type: types.RECEIVED_NOTIFICATIONS,
         };
 
         expect(notificationsReducer(state, action)).toEqual({
             ...state,
-            status: {
-                ...state.status,
-                fetching: false,
-                fetched: true,
-                error: null,
-                cancelSource: null,
-            },
             data: {
+                nextPage: action.nextPage,
                 notifications: mockNotifications,
                 notificationsSorted: getSortedNotifications(mockNotifications),
-                nextPage: action.nextPage,
                 range: action.range,
+            },
+            status: {
+                ...state.status,
+                cancelSource: null,
+                error: null,
+                fetched: true,
+                fetching: false,
             },
         });
     });
@@ -99,30 +99,30 @@ describe('notificationsReducer', () => {
         const state = {
             ...initialState.notifications,
             status: {
-                fetching: true,
                 cancelSource: 'test',
+                fetching: true,
             },
         };
         const action = {
-            type: types.FETCH_NOTIFICATIONS_ERROR,
             error: 'oh no an error',
+            type: types.FETCH_NOTIFICATIONS_ERROR,
         };
 
         expect(notificationsReducer(state, action)).toEqual({
             ...state,
             status: {
-                fetching: false,
-                fetched: false,
-                error: action.error,
                 cancelSource: null,
+                error: action.error,
+                fetched: false,
+                fetching: false,
             },
         });
     });
 
     it('should handle MARKING_NOTIFICATIONS_AS_READ', () => {
         const action = {
-            type: types.MARKING_NOTIFICATIONS_AS_READ,
             notifications: mockNotificationsArray,
+            type: types.MARKING_NOTIFICATIONS_AS_READ,
         };
 
         const expectedNotifications = {
@@ -156,8 +156,8 @@ describe('notificationsReducer', () => {
 
     it('should handle MARKED_NOTIFICATIONS_AS_READ', () => {
         const action = {
-            type: types.MARKED_NOTIFICATIONS_AS_READ,
             notifications: mockNotificationsArray,
+            type: types.MARKED_NOTIFICATIONS_AS_READ,
         };
 
         // This action is handled preemptively, so we should see the state unchanged here.
@@ -166,8 +166,8 @@ describe('notificationsReducer', () => {
 
     it('should handle MARK_NOTIFICATIONS_AS_READ_ERROR', () => {
         const action = {
-            type: types.MARK_NOTIFICATIONS_AS_READ_ERROR,
             error: 'oh no an error',
+            type: types.MARK_NOTIFICATIONS_AS_READ_ERROR,
         };
 
         expect(notificationsReducer(mockState, action)).toEqual({
@@ -181,8 +181,8 @@ describe('notificationsReducer', () => {
 
     it('should handle MARKING_NOTIFICATIONS_AS_UNREAD', () => {
         const action = {
-            type: types.MARKING_NOTIFICATIONS_AS_UNREAD,
             notifications: mockNotificationsArray,
+            type: types.MARKING_NOTIFICATIONS_AS_UNREAD,
         };
 
         const expectedNotifications = {
@@ -216,8 +216,8 @@ describe('notificationsReducer', () => {
 
     it('should handle MARKED_NOTIFICATIONS_AS_UNREAD', () => {
         const action = {
-            type: types.MARKED_NOTIFICATIONS_AS_UNREAD,
             notifications: mockNotificationsArray,
+            type: types.MARKED_NOTIFICATIONS_AS_UNREAD,
         };
 
         // This action is handled preemptively, so we should see the state unchanged here.
@@ -226,8 +226,8 @@ describe('notificationsReducer', () => {
 
     it('should handle MARK_NOTIFICATIONS_AS_UNREAD_ERROR', () => {
         const action = {
-            type: types.MARK_NOTIFICATIONS_AS_UNREAD_ERROR,
             error: 'oh no an error',
+            type: types.MARK_NOTIFICATIONS_AS_UNREAD_ERROR,
         };
 
         expect(notificationsReducer(mockState, action)).toEqual({
@@ -275,8 +275,8 @@ describe('notificationsReducer', () => {
 
     it('should handle MARKED_ALL_NOTIFICATIONS_AS_READ', () => {
         const action = {
-            type: types.MARKED_ALL_NOTIFICATIONS_AS_READ,
             notifications: mockNotificationsArray,
+            type: types.MARKED_ALL_NOTIFICATIONS_AS_READ,
         };
 
         // This action is handled preemptively, so we should see the state unchanged here.
@@ -285,8 +285,8 @@ describe('notificationsReducer', () => {
 
     it('should handle MARK_ALL_NOTIFICATIONS_AS_READ_ERROR', () => {
         const action = {
-            type: types.MARK_ALL_NOTIFICATIONS_AS_READ_ERROR,
             error: 'oh no an error',
+            type: types.MARK_ALL_NOTIFICATIONS_AS_READ_ERROR,
         };
 
         expect(notificationsReducer(mockState, action)).toEqual({
@@ -300,20 +300,20 @@ describe('notificationsReducer', () => {
 
     it('should handle REMOVING_NOTIFICATIONS', () => {
         const action = {
-            type: types.REMOVING_NOTIFICATIONS,
             notifications: mockNotificationsArray,
+            type: types.REMOVING_NOTIFICATIONS,
         };
 
         expect(notificationsReducer(mockState, action)).toEqual({
             ...mockState,
+            data: {
+                notifications: {},
+                notificationsSorted: [],
+            },
             status: {
                 ...mockState.status,
                 deleted: false,
                 deleting: true,
-            },
-            data: {
-                notifications: {},
-                notificationsSorted: [],
             },
             unreadCount: {
                 ...mockState.unreadCount,
@@ -326,8 +326,8 @@ describe('notificationsReducer', () => {
 
     it('should handle REMOVED_NOTIFICATIONS', () => {
         const action = {
-            type: types.REMOVED_NOTIFICATIONS,
             notifications: mockNotificationsArray,
+            type: types.REMOVED_NOTIFICATIONS,
         };
 
         // This action is handled preemptively, so we should see the state unchanged here.
@@ -343,16 +343,16 @@ describe('notificationsReducer', () => {
 
     it('should handle REMOVE_NOTIFICATIONS_ERROR', () => {
         const action = {
-            type: types.REMOVE_NOTIFICATIONS_ERROR,
             error: 'oh no an error',
+            type: types.REMOVE_NOTIFICATIONS_ERROR,
         };
 
         expect(notificationsReducer(mockState, action)).toEqual({
             ...mockState,
             status: {
                 ...mockState.status,
-                deleting: false,
                 deleted: false,
+                deleting: false,
                 error: action.error,
             },
         });
@@ -368,10 +368,10 @@ describe('notificationsReducer', () => {
             unreadCount: {
                 ...initialState.notifications.unreadCount,
                 status: {
-                    fetching: true,
-                    fetched: false,
-                    error: null,
                     cancelSource: action.cancelSource,
+                    error: null,
+                    fetched: false,
+                    fetching: true,
                 },
             },
         });
@@ -382,8 +382,8 @@ describe('notificationsReducer', () => {
             ...initialState.notifications,
             unreadCount: {
                 ...initialState.notifications.unreadCount,
-                fetching: true,
                 cancelSource: 'test',
+                fetching: true,
             },
         };
         const action = {
@@ -395,14 +395,14 @@ describe('notificationsReducer', () => {
             ...state,
             unreadCount: {
                 ...state.unreadCount,
-                status: {
-                    fetching: false,
-                    fetched: true,
-                    error: null,
-                    cancelSource: null,
-                },
                 data: {
                     unreadCount: action.unreadCount,
+                },
+                status: {
+                    cancelSource: null,
+                    error: null,
+                    fetched: true,
+                    fetching: false,
                 },
             },
         });
@@ -413,13 +413,13 @@ describe('notificationsReducer', () => {
             ...initialState.notifications,
             unreadCount: {
                 ...initialState.notifications.unreadCount,
-                fetching: true,
                 cancelSource: 'test',
+                fetching: true,
             },
         };
         const action = {
-            type: types.FETCH_NOTIFICATIONS_UNREAD_COUNT_ERROR,
             error: 'oh no an error',
+            type: types.FETCH_NOTIFICATIONS_UNREAD_COUNT_ERROR,
         };
 
         expect(notificationsReducer(state, action)).toEqual({
@@ -427,10 +427,10 @@ describe('notificationsReducer', () => {
             unreadCount: {
                 ...state.unreadCount,
                 status: {
-                    fetching: false,
-                    fetched: false,
-                    error: action.error,
                     cancelSource: null,
+                    error: action.error,
+                    fetched: false,
+                    fetching: false,
                 },
             },
         });

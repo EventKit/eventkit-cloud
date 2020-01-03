@@ -20,9 +20,12 @@ describe('NotificationMenu component', () => {
 
     function defaultProps() {
         return {
+            history: {
+                push: sinon.spy(),
+            },
+            markNotificationsAsRead: sinon.spy(),
+            markNotificationsAsUnread: sinon.spy(),
             notification: {
-                id: '1',
-                verb: 'run_completed',
                 actor: {
                     details: {
                         job: {
@@ -30,18 +33,15 @@ describe('NotificationMenu component', () => {
                         },
                     },
                 },
+                id: '1',
                 timestamp: '2018-05-04T17:32:04.716806Z',
                 unread: true,
+                verb: 'run_completed',
             },
-            history: {
-                push: sinon.spy(),
-            },
-            onView: sinon.spy(),
             onMarkAsRead: sinon.spy(),
             onMarkAsUnread: sinon.spy(),
             onRemove: sinon.spy(),
-            markNotificationsAsRead: sinon.spy(),
-            markNotificationsAsUnread: sinon.spy(),
+            onView: sinon.spy(),
             removeNotifications: sinon.spy(),
             ...global.eventkit_test_props,
         };
@@ -57,7 +57,7 @@ describe('NotificationMenu component', () => {
 
         const handleMenuItemClick = instance.handleMenuItemClick;
         instance.handleMenuItemClick = sinon.stub().callsFake(() => {
-            handleMenuItemClick({ stopPropagation: () => {} });
+            handleMenuItemClick({ stopPropagation: sinon.spy() });
         });
     }
 

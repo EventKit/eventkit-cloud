@@ -16,8 +16,8 @@ describe('getFormatsReducer', () => {
         expect(reducers.getFormatsReducer(
             { formats: [] },
             {
-                type: 'FORMATS_RECEIVED',
                 formats: [{ id: 'fakeformat' }],
+                type: 'FORMATS_RECEIVED',
             },
         )).toEqual([{ id: 'fakeformat' }]);
     });

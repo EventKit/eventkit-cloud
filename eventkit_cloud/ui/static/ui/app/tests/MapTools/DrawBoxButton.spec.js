@@ -14,10 +14,10 @@ describe('DrawBoxButton component', () => {
 
     const getProps = () => ({
         buttonState: 'DEFAULT',
-        updateMode: () => {},
-        setBoxButtonSelected: () => {},
-        setAllButtonsDefault: () => {},
-        handleCancel: () => {},
+        handleCancel: sinon.spy(),
+        setAllButtonsDefault: sinon.spy(),
+        setBoxButtonSelected: sinon.spy(),
+        updateMode: sinon.spy(),
         ...global.eventkit_test_props,
     });
 

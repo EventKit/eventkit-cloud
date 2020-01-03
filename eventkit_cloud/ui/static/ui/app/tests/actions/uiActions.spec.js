@@ -6,8 +6,8 @@ describe('ui actions', () => {
     it('setPageOrder should return type SET_PAGE_ORDER and the order', () => {
         const order = 'featured';
         expect(actions.setPageOrder(order)).toEqual({
-            type: actions.types.SET_PAGE_ORDER,
             order,
+            type: actions.types.SET_PAGE_ORDER,
         });
     });
 
@@ -21,15 +21,15 @@ describe('ui actions', () => {
 
     it('stepperNextDisabled should return MAKE_STEPPER_INACTIVE and false', () => {
         expect(actions.stepperNextDisabled()).toEqual({
-            type: 'MAKE_STEPPER_INACTIVE',
             stepperNextEnabled: false,
+            type: 'MAKE_STEPPER_INACTIVE',
         });
     });
 
     it('stepperNextEnabled should return MAKE_STEPPER_ACTIVE and true', () => {
         expect(actions.stepperNextEnabled()).toEqual({
-            type: 'MAKE_STEPPER_ACTIVE',
             stepperNextEnabled: true,
+            type: 'MAKE_STEPPER_ACTIVE',
         });
     });
 

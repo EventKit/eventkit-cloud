@@ -20,9 +20,12 @@ describe('NotificationGridItem component', () => {
 
     function defaultProps() {
         return {
+            history: {
+                push: sinon.spy(),
+            },
+            markNotificationsAsRead: sinon.spy(),
+            markNotificationsAsUnread: sinon.spy(),
             notification: {
-                id: '1',
-                verb: 'run_completed',
                 actor: {
                     details: {
                         job: {
@@ -30,19 +33,16 @@ describe('NotificationGridItem component', () => {
                         },
                     },
                 },
+                id: '1',
                 timestamp: '2018-05-04T17:32:04.716806Z',
                 unread: true,
+                verb: 'run_completed',
             },
-            history: {
-                push: sinon.spy(),
-            },
-            markNotificationsAsRead: sinon.spy(),
-            markNotificationsAsUnread: sinon.spy(),
-            removeNotifications: sinon.spy(),
             onMarkAsRead: sinon.spy(),
             onMarkAsUnread: sinon.spy(),
             onRemove: sinon.spy(),
             onView: sinon.spy(),
+            removeNotifications: sinon.spy(),
             ...global.eventkit_test_props,
         };
     }

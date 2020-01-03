@@ -32,8 +32,8 @@ describe('geocodeActions', () => {
                 data: [
                     {
                         geometry: {},
-                        properties: { one: 'one', two: 'two' },
                         one: 'one',
+                        properties: { one: 'one', two: 'two' },
                         two: 'two',
                     },
                 ],

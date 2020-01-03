@@ -68,15 +68,15 @@ describe('mapUtils', () => {
     });
 
     it('convertGeoJSONtoJSTS should convert GeoJSON Point to JSTS Geometry', () => {
-        const point = { type: 'Point', coordinates: [100.0, 0.0] };
+        const point = { coordinates: [100.0, 0.0], type: 'Point' };
         const returnedGeom = utils.convertGeoJSONtoJSTS(point);
         expect(returnedGeom.getGeometryType()).toEqual('Polygon');
     });
 
     it('convertGeoJSONtoJSTS should convert GeoJSON LineString to JSTS Geometry', () => {
         const lineString = {
-            type: 'LineString',
             coordinates: [[100.0, 0.0], [101.0, 1.0]],
+            type: 'LineString',
         };
         const returnedGeom = utils.convertGeoJSONtoJSTS(lineString);
         expect(returnedGeom.getGeometryType()).toEqual('Polygon');
@@ -84,10 +84,10 @@ describe('mapUtils', () => {
 
     it('convertGeoJSONtoJSTS should convert GeoJSON Polygon(no holes) to JSTS Geometry', () => {
         const polygon = {
-            type: 'Polygon',
             coordinates: [
                 [[100.0, 0.0], [101.0, 0.0], [101.0, 1.0], [100.0, 1.0], [100.0, 0.0]],
             ],
+            type: 'Polygon',
         };
         const returnedGeom = utils.convertGeoJSONtoJSTS(polygon);
         expect(returnedGeom.getGeometryType()).toEqual('Polygon');
@@ -95,11 +95,11 @@ describe('mapUtils', () => {
 
     it('convertGeoJSONtoJSTS should convert GeoJSON Polygon(holes) to JSTS Geometry', () => {
         const polygon = {
-            type: 'Polygon',
             coordinates: [
                 [[100.0, 0.0], [101.0, 0.0], [101.0, 1.0], [100.0, 1.0], [100.0, 0.0]],
                 [[100.2, 0.2], [100.8, 0.2], [100.8, 0.8], [100.2, 0.8], [100.2, 0.2]],
             ],
+            type: 'Polygon',
         };
         const returnedGeom = utils.convertGeoJSONtoJSTS(polygon);
         expect(returnedGeom.getGeometryType()).toEqual('Polygon');
@@ -107,8 +107,8 @@ describe('mapUtils', () => {
 
     it('convertGeoJSONtoJSTS should convert GeoJSON MultiPoint to JSTS Geometry', () => {
         const multiPoint = {
-            type: 'MultiPoint',
             coordinates: [[100.0, 0.0], [101.0, 1.0]],
+            type: 'MultiPoint',
         };
         const returnedGeom = utils.convertGeoJSONtoJSTS(multiPoint);
         expect(returnedGeom.getGeometryType()).toEqual('MultiPolygon');
@@ -116,11 +116,11 @@ describe('mapUtils', () => {
 
     it('convertGeoJSONtoJSTS should convert GeoJSON MultiLineString to JSTS Geometry', () => {
         const multiLineString = {
-            type: 'MultiLineString',
             coordinates: [
                 [[100.0, 0.0], [101.0, 1.0]],
                 [[102.0, 2.0], [103.0, 3.0]],
             ],
+            type: 'MultiLineString',
         };
         const returnedGeom = utils.convertGeoJSONtoJSTS(multiLineString);
         expect(returnedGeom.getGeometryType()).toEqual('MultiPolygon');
@@ -128,12 +128,12 @@ describe('mapUtils', () => {
 
     it('convertGeoJSONtoJSTS should convert GeoJSON MultiPolygon to JSTS Geometry', () => {
         const multiPolygon = {
-            type: 'MultiPolygon',
             coordinates: [
                 [[[102.0, 2.0], [103.0, 2.0], [103.0, 3.0], [102.0, 3.0], [102.0, 2.0]]],
                 [[[100.0, 0.0], [101.0, 0.0], [101.0, 1.0], [100.0, 1.0], [100.0, 0.0]],
                     [[100.2, 0.2], [100.8, 0.2], [100.8, 0.8], [100.2, 0.8], [100.2, 0.2]]],
             ],
+            type: 'MultiPolygon',
         };
         const returnedGeom = utils.convertGeoJSONtoJSTS(multiPolygon);
         expect(returnedGeom.getGeometryType()).toEqual('MultiPolygon');
@@ -141,17 +141,17 @@ describe('mapUtils', () => {
 
     it('convertGeoJSONtoJSTS should convert GeoJSON GeometryCollection to JSTS Geometry', () => {
         const geometryCollection = {
-            type: 'GeometryCollection',
             geometries: [
                 {
-                    type: 'Point',
                     coordinates: [100.0, 0.0],
+                    type: 'Point',
                 },
                 {
-                    type: 'LineString',
                     coordinates: [[101.0, 0.0], [102.0, 1.0]],
+                    type: 'LineString',
                 },
             ],
+            type: 'GeometryCollection',
         };
         const returnedGeom = utils.convertGeoJSONtoJSTS(geometryCollection);
         expect(returnedGeom.getGeometryType()).toEqual('MultiPolygon');
@@ -159,35 +159,32 @@ describe('mapUtils', () => {
 
     it('convertGeoJSONtoJSTS should convert GeoJSON FeatureCollection to JSTS Geometry', () => {
         const featureCollection = {
-            type: 'FeatureCollection',
             features: [{
-                type: 'Feature',
                 geometry: {
-                    type: 'Point',
                     coordinates: [102.0, 0.5],
+                    type: 'Point',
                 },
                 properties: {
                     prop0: 'value0',
                 },
-            }, {
                 type: 'Feature',
+            }, {
                 geometry: {
-                    type: 'LineString',
                     coordinates: [
                         [102.0, 0.0],
                         [103.0, 1.0],
                         [104.0, 0.0],
                         [105.0, 1.0],
                     ],
+                    type: 'LineString',
                 },
                 properties: {
                     prop0: 'value0',
                     prop1: 0.0,
                 },
-            }, {
                 type: 'Feature',
+            }, {
                 geometry: {
-                    type: 'Polygon',
                     coordinates: [
                         [
                             [100.0, 0.0],
@@ -197,6 +194,7 @@ describe('mapUtils', () => {
                             [100.0, 0.0],
                         ],
                     ],
+                    type: 'Polygon',
                 },
                 properties: {
                     prop0: 'value0',
@@ -204,7 +202,9 @@ describe('mapUtils', () => {
                         this: 'that',
                     },
                 },
+                type: 'Feature',
             }],
+            type: 'FeatureCollection',
         };
         const returnedGeom = utils.convertGeoJSONtoJSTS(featureCollection);
         expect(returnedGeom.getGeometryType()).toEqual('MultiPolygon');
@@ -212,24 +212,24 @@ describe('mapUtils', () => {
 
     it('bufferGeojson should read in feature collection and buffer each feature, then return a new feature collection', () => {
         const featureCollection = {
-            type: 'FeatureCollection',
             features: [
                 {
-                    type: 'Feature',
-                    properties: { name: 'feature1' },
                     geometry: { type: 'Point', coordinates: [1, 1] },
+                    properties: { name: 'feature1' },
+                    type: 'Feature',
                 },
                 {
-                    type: 'Feature',
-                    properties: { name: 'feature2' },
                     geometry: { type: 'Point', coordinates: [2, 2] },
+                    properties: { name: 'feature2' },
+                    type: 'Feature',
                 },
                 {
-                    type: 'Feature',
-                    properties: { name: 'feature3' },
                     geometry: { type: 'Point', coordinates: [3, 3] },
+                    properties: { name: 'feature3' },
+                    type: 'Feature',
                 },
             ],
+            type: 'FeatureCollection',
         };
         const ret = utils.bufferGeojson(featureCollection, 10, false);
         expect(ret.features[0].geometry.type).toEqual('Polygon');
@@ -242,28 +242,28 @@ describe('mapUtils', () => {
 
     it('bufferGeojson should not return features with no area', () => {
         const featureCollection = {
-            type: 'FeatureCollection',
             features: [
                 {
-                    type: 'Feature',
-                    properties: { name: 'feature1' },
                     geometry: { type: 'Point', coordinates: [1, 1] },
+                    properties: { name: 'feature1' },
+                    type: 'Feature',
                 },
                 {
-                    type: 'Feature',
-                    properties: { name: 'feature2' },
                     geometry: { type: 'Point', coordinates: [2, 2] },
+                    properties: { name: 'feature2' },
+                    type: 'Feature',
                 },
                 {
-                    type: 'Feature',
-                    properties: { name: 'feature3' },
                     geometry: { type: 'Point', coordinates: [3, 3] },
+                    properties: { name: 'feature3' },
+                    type: 'Feature',
                 },
             ],
+            type: 'FeatureCollection',
         };
         const expectedCollection = {
-            type: 'FeatureCollection',
             features: [],
+            type: 'FeatureCollection',
         };
         expect(utils.bufferGeojson(featureCollection, -10, true)).toEqual(expectedCollection);
     });
@@ -293,10 +293,7 @@ describe('mapUtils', () => {
 
     it('featureToBbox should take a geojson feature and return the bbox', () => {
         const feature = {
-            type: 'Feature',
-            properties: {},
             geometry: {
-                type: 'Polygon',
                 coordinates: [
                     [
                         [21.708984375, 52.45600939264076],
@@ -308,7 +305,10 @@ describe('mapUtils', () => {
                         [21.708984375, 52.45600939264076],
                     ],
                 ],
+                type: 'Polygon',
             },
+            properties: {},
+            type: 'Feature',
         };
         const bbox = [
             20.214843749999996,
@@ -344,13 +344,9 @@ describe('mapUtils', () => {
 
     it('isGeoJSONValid should read the geom from a feature collection and return if it is valid', () => {
         const invalid = {
-            type: 'FeatureCollection',
             features: [
                 {
-                    type: 'Feature',
-                    properties: {},
                     geometry: {
-                        type: 'Polygon',
                         coordinates: [
                             [
                                 [36.2109375, 47.040182144806664],
@@ -363,20 +359,20 @@ describe('mapUtils', () => {
                                 [36.2109375, 47.040182144806664],
                             ],
                         ],
+                        type: 'Polygon',
                     },
+                    properties: {},
+                    type: 'Feature',
                 },
             ],
+            type: 'FeatureCollection',
         };
         expect(utils.isGeoJSONValid(invalid)).toBe(false);
 
         const valid = {
-            type: 'FeatureCollection',
             features: [
                 {
-                    type: 'Feature',
-                    properties: {},
                     geometry: {
-                        type: 'Polygon',
                         coordinates: [
                             [
                                 [11.953125, 26.115985925333536],
@@ -387,9 +383,13 @@ describe('mapUtils', () => {
                                 [11.953125, 26.115985925333536],
                             ],
                         ],
+                        type: 'Polygon',
                     },
+                    properties: {},
+                    type: 'Feature',
                 },
             ],
+            type: 'FeatureCollection',
         };
         expect(utils.isGeoJSONValid(valid)).toBe(true);
     });
@@ -399,16 +399,17 @@ describe('mapUtils', () => {
         const coords = [-1, 1];
         const geom = new Point(coords);
         const expected = {
-            type: 'FeatureCollection',
             features: [
                 {
-                    type: 'Feature',
                     bbox: [-1, 1, -1, 1],
                     geometry: {
-                        type: 'Point', coordinates: [-1, 1],
+                        coordinates: [-1, 1],
+                        type: 'Point',
                     },
+                    type: 'Feature',
                 },
             ],
+            type: 'FeatureCollection',
         };
         const geojson = utils.createGeoJSON(geom);
         expect(extentSpy.calledOnce).toBe(true);
@@ -416,9 +417,12 @@ describe('mapUtils', () => {
     });
 
     it('createGeoJSONGeometry should take a ol3 geom and return the geom in geojson format', () => {
+        const expected = {
+            coordinates: [-1, 1],
+            type: 'Point'
+        };
         const coords = [-1, 1];
         const geom = new Point(coords);
-        const expected = { type: 'Point', coordinates: [-1, 1] };
         const cloneSpy = sinon.spy(Point.prototype, 'clone');
         const coordsSpy = sinon.spy(Point.prototype, 'getCoordinates');
         expect(utils.createGeoJSONGeometry(geom)).toEqual(expected);
@@ -450,7 +454,7 @@ describe('mapUtils', () => {
         });
         const featureSpy = sinon.spy(Feature.prototype, 'getGeometry');
         const geomSpy = sinon.spy(Polygon.prototype, 'getType');
-        const fit = sinon.spy(() => {});
+        const fit = sinon.spy();
         const map = { getView: sinon.spy(() => ({ fit })) };
         utils.zoomToFeature(feature, map);
         expect(featureSpy.calledOnce).toBe(true);
@@ -618,20 +622,17 @@ describe('mapUtils', () => {
 
     it('allHaveArea should return false if there are no features', () => {
         const collection = {
-            type: 'FeatureCollection',
             features: [],
+            type: 'FeatureCollection',
         };
         expect(utils.allHaveArea(collection)).toBe(false);
     });
 
     it('allHaveArea should return false if polygon has no area', () => {
         const collection = {
-            type: 'FeatureCollection',
             features: [
                 {
-                    type: 'Feature',
                     geometry: {
-                        type: 'Polygon',
                         coordinates: [[
                             [0, 0],
                             [0, 0],
@@ -639,40 +640,40 @@ describe('mapUtils', () => {
                             [0, 0],
                             [0, 0],
                         ]],
+                        type: 'Polygon',
                     },
+                    type: 'Feature',
                 },
             ],
+            type: 'FeatureCollection',
         };
         expect(utils.allHaveArea(collection)).toBe(false);
     });
 
     it('allHaveArea should return false for points (no getArea func in ol)', () => {
         const collection = {
-            type: 'FeatureCollection',
             features: [
                 {
-                    type: 'Feature',
                     geometry: {
-                        type: 'Point',
                         coordinates: [
                             20.3,
                             24.9,
                         ],
+                        type: 'Point',
                     },
+                    type: 'Feature',
                 },
             ],
+            type: 'FeatureCollection',
         };
         expect(utils.allHaveArea(collection)).toBe(false);
     });
 
     it('allHaveArea should retunr true', () => {
         const collection = {
-            type: 'FeatureCollection',
             features: [
                 {
-                    type: 'Feature',
                     geometry: {
-                        type: 'Polygon',
                         coordinates: [[
                             [1, 1],
                             [2, 1],
@@ -680,119 +681,122 @@ describe('mapUtils', () => {
                             [1, 2],
                             [1, 1],
                         ]],
+                        type: 'Polygon',
                     },
+                    type: 'Feature',
                 },
             ],
+            type: 'FeatureCollection',
         };
         expect(utils.allHaveArea(collection)).toBe(true);
     });
 
     it('getDominantGeometry should return Point', () => {
         const collection = {
-            type: 'FeatureCollection',
             features: [
                 {
-                    type: 'Feature',
                     geometry: {
                         type: 'Point',
                     },
+                    type: 'Feature',
                 },
                 {
-                    type: 'Feature',
                     geometry: {
                         type: 'Point',
                     },
+                    type: 'Feature',
                 },
             ],
+            type: 'FeatureCollection',
         };
         expect(utils.getDominantGeometry(collection)).toEqual('Point');
     });
 
     it('getDominantGeometry should return Line', () => {
         const collection = {
-            type: 'FeatureCollection',
             features: [
                 {
-                    type: 'Feature',
                     geometry: {
                         type: 'PolyLine',
                     },
+                    type: 'Feature',
                 },
                 {
-                    type: 'Feature',
                     geometry: {
                         type: 'PolyLine',
                     },
+                    type: 'Feature',
                 },
             ],
+            type: 'FeatureCollection',
         };
         expect(utils.getDominantGeometry(collection)).toEqual('Line');
     });
 
     it('getDominantGeometry should return Polygon', () => {
         const collection = {
-            type: 'FeatureCollection',
             features: [
                 {
-                    type: 'Feature',
                     geometry: {
                         type: 'Polygon',
                     },
+                    type: 'Feature',
                 },
                 {
-                    type: 'Feature',
                     geometry: {
                         type: 'MultiPolygon',
                     },
+                    type: 'Feature',
                 },
             ],
+            type: 'FeatureCollection',
         };
         expect(utils.getDominantGeometry(collection)).toEqual('Polygon');
     });
 
     it('getDominantGeometry should return Collection', () => {
         const collection = {
-            type: 'FeatureCollection',
             features: [
                 {
-                    type: 'Feature',
                     geometry: {
                         type: 'Point',
                     },
+                    type: 'Feature',
                 },
                 {
-                    type: 'Feature',
                     geometry: {
                         type: 'MultiPolygon',
                     },
+                    type: 'Feature',
                 },
             ],
+            type: 'FeatureCollection',
         };
         expect(utils.getDominantGeometry(collection)).toEqual('Collection');
     });
 
     it('getDominantGeometry should return null', () => {
         const collection1 = {
-            type: 'FeatureCollection',
             features: [
                 {
-                    type: 'Feature',
                     geometry: {
                         type: 'blah',
                     },
+                    type: 'Feature',
                 },
                 {
-                    type: 'Feature',
                     geometry: {
                         type: 'blah',
                     },
+                    type: 'Feature',
                 },
             ],
+            type: 'FeatureCollection',
         };
         expect(utils.getDominantGeometry(collection1)).toEqual(null);
         const collection2 = {
-            type: 'FeatureCollection',
             features: [],
+            type: 'FeatureCollection',
         };
         expect(utils.getDominantGeometry(collection2)).toEqual(null);
     });

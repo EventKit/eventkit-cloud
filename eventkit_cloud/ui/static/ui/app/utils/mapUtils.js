@@ -52,14 +52,14 @@ export function jstsToFeatureCollection(jsts) {
     const geom = writer.write((jsts));
     if (geom.coordinates) {
         return {
-            type: 'FeatureCollection',
             features: [
                 {
-                    type: 'Feature',
-                    properties: {},
                     geometry: geom,
+                    properties: {},
+                    type: 'Feature',
                 },
             ],
+            type: 'FeatureCollection',
         };
     }
     return null;
@@ -169,15 +169,15 @@ export function bufferGeojson(featureCollection, bufferSize, bufferPolys) {
         if (geom.getArea() !== 0) {
             geojsonGeom = writer.write(geom);
             bufferedFeatures.push({
-                type: 'Feature',
-                properties: feat.properties || {},
                 geometry: { ...geojsonGeom },
+                properties: feat.properties || {},
+                type: 'Feature',
             });
         }
     });
     const bufferedFeatureCollection = {
-        type: 'FeatureCollection',
         features: bufferedFeatures,
+        type: 'FeatureCollection',
     };
     return bufferedFeatureCollection;
 }
@@ -200,12 +200,12 @@ export function generateDrawLayer() {
             wrapX: true,
         }),
         style: new Style({
+            image: new Icon({
+                src: icon,
+            }),
             stroke: new Stroke({
                 color: colors.warning,
                 width: 3,
-            }),
-            image: new Icon({
-                src: icon,
             }),
         }),
     });
@@ -214,28 +214,28 @@ export function generateDrawLayer() {
 export function generateDrawBoxInteraction(drawLayer) {
     const geomFunction = Draw.createBox();
     const draw = new Draw({
-        source: drawLayer.getSource(),
-        type: 'Circle',
-        wrapX: true,
-        geometryFunction: geomFunction,
         freehand: true,
+        geometryFunction: geomFunction,
+        source: drawLayer.getSource(),
         style: new Style({
             image: new RegularShape({
+                angle: 0,
+                points: 4,
+                radius: 15,
+                radius2: 0,
                 stroke: new Stroke({
                     color: colors.black,
                     width: 1,
                 }),
-                points: 4,
-                radius: 15,
-                radius2: 0,
-                angle: 0,
             }),
             stroke: new Stroke({
                 color: colors.warning,
-                width: 2,
                 lineDash: [5, 5],
+                width: 2,
             }),
         }),
+        type: 'Circle',
+        wrapX: true,
     });
     draw.setActive(false);
     return draw;
@@ -243,34 +243,34 @@ export function generateDrawBoxInteraction(drawLayer) {
 
 export function generateDrawFreeInteraction(drawLayer) {
     const draw = new Draw({
-        source: drawLayer.getSource(),
-        type: 'Polygon',
-        wrapX: true,
         freehand: false,
+        source: drawLayer.getSource(),
         style: new Style({
             image: new RegularShape({
+                angle: 0,
+                points: 4,
+                radius: 15,
+                radius2: 0,
                 stroke: new Stroke({
                     color: colors.black,
                     width: 1,
                 }),
-                points: 4,
-                radius: 15,
-                radius2: 0,
-                angle: 0,
             }),
             stroke: new Stroke({
                 color: colors.warning,
-                width: 2,
                 lineDash: [5, 5],
+                width: 2,
             }),
         }),
+        type: 'Polygon',
+        wrapX: true,
     });
     draw.setActive(false);
     return draw;
 }
 
-export function truncate(number) {
-    return Math.round(number * 100000) / 100000;
+export function truncate(num) {
+    return Math.round(num * 100000) / 100000;
 }
 
 export function unwrapPoint([x, y]) {
@@ -327,8 +327,8 @@ export function createGeoJSONGeometry(ol3Geometry) {
     const geom = ol3Geometry.clone();
     const coords = geom.getCoordinates();
     const geojsonGeom = {
-        type: geom.getType(),
         coordinates: coords,
+        type: geom.getType(),
     };
     return geojsonGeom;
 }
@@ -336,14 +336,14 @@ export function createGeoJSONGeometry(ol3Geometry) {
 export function createGeoJSON(ol3Geometry) {
     const bbox = serialize(ol3Geometry.getExtent());
     const geojson = {
-        type: 'FeatureCollection',
         features: [
             {
-                type: 'Feature',
                 bbox,
                 geometry: createGeoJSONGeometry(ol3Geometry),
+                type: 'Feature',
             },
         ],
+        type: 'FeatureCollection',
     };
     return geojson;
 }

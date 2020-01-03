@@ -9,8 +9,6 @@ import NotificationGridItem from '../../components/Notification/NotificationGrid
 
 const mockNotifications = {
     1: {
-        id: '1',
-        verb: 'run_started',
         actor: {
             details: {
                 job: {
@@ -18,12 +16,12 @@ const mockNotifications = {
                 },
             },
         },
+        id: '1',
         timestamp: '2018-05-04T17:32:04.716806Z',
         unread: false,
+        verb: 'run_started',
     },
     2: {
-        id: '2',
-        verb: 'run_completed',
         actor: {
             details: {
                 job: {
@@ -31,8 +29,10 @@ const mockNotifications = {
                 },
             },
         },
+        id: '2',
         timestamp: '2018-05-04T17:34:04.716806Z',
         unread: true,
+        verb: 'run_completed',
     },
 };
 
@@ -47,19 +47,19 @@ describe('NotificationsPage component', () => {
 
     function defaultProps() {
         return {
+            getNotifications: sinon.spy(),
+            history: {
+                push: sinon.spy(),
+            },
             notificationsData: {
+                nextPage: false,
                 notifications: {},
                 notificationsSorted: [],
                 range: '',
-                nextPage: false,
             },
             notificationsStatus: {
                 fetched: false,
             },
-            history: {
-                push: sinon.spy(),
-            },
-            getNotifications: sinon.spy(),
             ...global.eventkit_test_props,
         };
     }
@@ -85,13 +85,13 @@ describe('NotificationsPage component', () => {
     function loadNotifications() {
         wrapper.setProps({
             notificationsData: {
+                nextPage: true,
                 notifications: mockNotifications,
                 notificationsSorted: [
                     mockNotifications['1'],
                     mockNotifications['2'],
                 ],
                 range: '2/4',
-                nextPage: true,
             },
             notificationsStatus: {
                 fetched: true,

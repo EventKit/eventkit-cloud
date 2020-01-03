@@ -4,8 +4,8 @@ describe('auth actions', () => {
     it('setToken should return the token along with the state', () => {
         const token = 'testToken';
         expect(actions.setToken(token)).toEqual({
-            type: actions.types.SET_TOKEN,
             payload: { token },
+            type: actions.types.SET_TOKEN,
         });
     });
 

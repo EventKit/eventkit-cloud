@@ -6,8 +6,6 @@ import { NotificationsTableMenu } from '../../components/Notification/Notificati
 
 const mockNotifications = {
     1: {
-        id: '1',
-        verb: 'run_started',
         actor: {
             details: {
                 job: {
@@ -15,12 +13,12 @@ const mockNotifications = {
                 },
             },
         },
+        id: '1',
         timestamp: '2018-05-04T17:32:04.716806Z',
         unread: false,
+        verb: 'run_started',
     },
     2: {
-        id: '2',
-        verb: 'run_completed',
         actor: {
             details: {
                 job: {
@@ -28,8 +26,10 @@ const mockNotifications = {
                 },
             },
         },
+        id: '2',
         timestamp: '2018-05-04T17:34:04.716806Z',
         unread: true,
+        verb: 'run_completed',
     },
 };
 
@@ -44,19 +44,19 @@ describe('NotificationsTableMenu component', () => {
 
     function defaultProps() {
         return {
-            selectedNotifications: mockNotifications,
             history: {
                 push: sinon.spy(),
             },
-            onView: sinon.spy(),
+            markAllNotificationsAsRead: sinon.spy(),
+            markNotificationsAsRead: sinon.spy(),
+            markNotificationsAsUnread: sinon.spy(),
+            onMarkAllAsRead: sinon.spy(),
             onMarkAsRead: sinon.spy(),
             onMarkAsUnread: sinon.spy(),
             onRemove: sinon.spy(),
-            onMarkAllAsRead: sinon.spy(),
-            markNotificationsAsRead: sinon.spy(),
-            markNotificationsAsUnread: sinon.spy(),
+            onView: sinon.spy(),
             removeNotifications: sinon.spy(),
-            markAllNotificationsAsRead: sinon.spy(),
+            selectedNotifications: mockNotifications,
             ...global.eventkit_test_props,
         };
     }

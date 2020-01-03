@@ -3,68 +3,68 @@ import * as reducers from '../../reducers/geocodeReducer';
 describe('getGeocode reducer', () => {
     it('should return initial state', () => {
         expect(reducers.geocodeReducer(undefined, {})).toEqual({
-            fetching: null,
-            fetched: null,
+            cancelSource: null,
             data: [],
             error: null,
-            cancelSource: null,
+            fetched: null,
+            fetching: null,
         });
     });
 
     it('should handle FETCHING_GEOCODE', () => {
         expect(reducers.geocodeReducer(
             {
-                fetching: false,
-                fetched: false,
+                cancelSource: null,
                 data: [],
                 error: null,
-                cancelSource: null,
+                fetched: false,
+                fetching: false,
             },
             { type: 'FETCHING_GEOCODE', cancelSource: 'test' },
         )).toEqual({
-            fetching: true,
-            fetched: false,
+            cancelSource: 'test',
             data: [],
             error: null,
-            cancelSource: 'test',
+            fetched: false,
+            fetching: true,
         });
     });
 
     it('should handle RECEIVED_GEOCODE', () => {
         expect(reducers.geocodeReducer(
             {
-                fetching: false,
-                fetched: false,
+                cancelSource: 'test',
                 data: [],
                 error: null,
-                cancelSource: 'test',
+                fetched: false,
+                fetching: false,
             },
             { type: 'RECEIVED_GEOCODE', data: ['name1', 'name2'] },
         )).toEqual({
-            fetching: false,
-            fetched: true,
+            cancelSource: null,
             data: ['name1', 'name2'],
             error: null,
-            cancelSource: null,
+            fetched: true,
+            fetching: false,
         });
     });
 
     it('should handle FETCH_GEOCODE_ERROR', () => {
         expect(reducers.geocodeReducer(
             {
-                fetching: false,
-                fetched: false,
+                cancelSource: 'test',
                 data: [],
                 error: null,
-                cancelSource: 'test',
+                fetched: false,
+                fetching: false,
             },
             { type: 'FETCH_GEOCODE_ERROR', error: 'Oh no I had an error' },
         )).toEqual({
-            fetching: false,
-            fetched: false,
+            cancelSource: null,
             data: [],
             error: 'Oh no I had an error',
-            cancelSource: null,
+            fetched: false,
+            fetching: false,
         });
     });
 });

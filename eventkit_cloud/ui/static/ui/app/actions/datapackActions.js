@@ -2,46 +2,26 @@ import Normalizer from '../utils/normalizers';
 import { getHeaderPageInfo } from '../utils/generic';
 
 export const types = {
-    FETCHING_RUNS: 'FETCHING_RUNS',
-    RECEIVED_RUNS: 'RECEIVED_RUNS',
-    FETCH_RUNS_ERROR: 'FETCH_RUNS_ERROR',
-    FETCHING_FEATURED_RUNS: 'FETCHING_FEATURED_RUNS',
-    RECEIVED_FEATURED_RUNS: 'RECEIVED_FEATURED_RUNS',
-    FETCH_FEATURED_RUNS_ERROR: 'FETCH_FEATURED_RUNS_ERROR',
+    CLEAR_DATACART_DETAILS: 'CLEAR_DATACART_DETAILS',
+    DATACART_DETAILS_ERROR: 'DATACART_DETAILS_ERROR',
+    DATACART_DETAILS_RECEIVED: 'DATACART_DETAILS_RECEIVED',
     DELETING_RUN: 'DELETING_RUN',
     DELETED_RUN: 'DELETED_RUN',
     DELETE_RUN_ERROR: 'DELETE_RUN_ERROR',
+    FETCHING_RUNS: 'FETCHING_RUNS',
+    FETCH_RUNS_ERROR: 'FETCH_RUNS_ERROR',
+    FETCHING_FEATURED_RUNS: 'FETCHING_FEATURED_RUNS',
+    FETCH_FEATURED_RUNS_ERROR: 'FETCH_FEATURED_RUNS_ERROR',
+    GETTING_DATACART_DETAILS: 'GETTING_DATACART_DETAILS',
+    RECEIVED_FEATURED_RUNS: 'RECEIVED_FEATURED_RUNS',
+    RECEIVED_RUNS: 'RECEIVED_RUNS',
     UPDATING_EXPIRATION: 'UPDATING_EXPIRATION',
     UPDATE_EXPIRATION_ERROR: 'UPDATE_EXPIRATION_ERROR',
     UPDATE_EXPIRATION_SUCCESS: 'UPDATE_EXPIRATION_SUCCESS',
-    GETTING_DATACART_DETAILS: 'GETTING_DATACART_DETAILS',
-    CLEAR_DATACART_DETAILS: 'CLEAR_DATACART_DETAILS',
-    DATACART_DETAILS_RECEIVED: 'DATACART_DETAILS_RECEIVED',
-    DATACART_DETAILS_ERROR: 'DATACART_DETAILS_ERROR',
 };
 
 export function getDatacartDetails(jobuid) {
     return {
-        types: [
-            types.GETTING_DATACART_DETAILS,
-            types.DATACART_DETAILS_RECEIVED,
-            types.DATACART_DETAILS_ERROR,
-        ],
-        url: '/api/runs',
-        method: 'GET',
-        params: { job_uid: jobuid },
-        onSuccess: (response) => {
-            // get the list of runs (DataPacks) that are associated with the job UID.
-            // We take only the first one for now since multiples are currently disabled.
-            // However we leave it in an array for future proofing.
-            const runs = [];
-            if (response.data.length) {
-                runs.push({ ...response.data[0] });
-            }
-            return {
-                ids: runs.map(run => run.uid),
-            };
-        },
         batchSuccess: (response, state) => {
             // get the list of runs (DataPacks) that are associated with the job UID.
             // We take only the first one for now since multiples are currently disabled.
@@ -65,6 +45,26 @@ export function getDatacartDetails(jobuid) {
             });
             return actions;
         },
+        method: 'GET',
+        onSuccess: (response) => {
+            // get the list of runs (DataPacks) that are associated with the job UID.
+            // We take only the first one for now since multiples are currently disabled.
+            // However we leave it in an array for future proofing.
+            const runs = [];
+            if (response.data.length) {
+                runs.push({ ...response.data[0] });
+            }
+            return {
+                ids: runs.map(run => run.uid),
+            };
+        },
+        params: { job_uid: jobuid },
+        types: [
+            types.GETTING_DATACART_DETAILS,
+            types.DATACART_DETAILS_RECEIVED,
+            types.DATACART_DETAILS_ERROR,
+        ],
+        url: '/api/runs',
     };
 }
 
@@ -93,14 +93,14 @@ export function getRuns(args = {}) {
     } else {
         params.ordering = '-job__featured';
     }
-    if (args.ownerFilter !== 'all') params.user = args.ownerFilter;
-    if (status.length) params.status = status.join(',');
-    if (args.minDate) params.min_date = args.minDate;
-    if (args.maxDate) params.max_date = args.maxDate;
-    if (args.search) params.search_term = args.search.slice(0, 1000);
-    if (providers.length) params.providers = providers.join(',');
-    if (formats.length) params.formats = formats.join(',');
-    if (projections.length) params.projections = projections.join(',');
+    if (args.ownerFilter !== 'all') { params.user = args.ownerFilter };
+    if (status.length) { params.status = status.join(',') };
+    if (args.minDate) { params.min_date = args.minDate };
+    if (args.maxDate) { params.max_date = args.maxDate };
+    if (args.search) { params.search_term = args.search.slice(0, 1000) };
+    if (providers.length) { params.providers = providers.join(',') };
+    if (formats.length) { params.formats = formats.join(',') };
+    if (projections.length) { params.projections = projections.join(',') };
 
     const data = {};
     if (args.geojson) {
@@ -120,29 +120,7 @@ export function getRuns(args = {}) {
     }
 
     return {
-        types: [
-            types.FETCHING_RUNS,
-            types.RECEIVED_RUNS,
-            types.FETCH_RUNS_ERROR,
-        ],
         auto: args.isAuto,
-        cancellable: true,
-        getCancelSource: state => state.exports.allInfo.status.cancelSource,
-        url: '/api/runs/filter',
-        method: 'POST',
-        data,
-        params,
-        onSuccess: (response) => {
-            const { nextPage, range } = getHeaderPageInfo(response);
-            const orderedIds = response.data.map(run => run.uid);
-            return {
-                payload: {
-                    range,
-                    nextPage,
-                    orderedIds,
-                },
-            };
-        },
         batchSuccess: (response, state) => {
             const normalizer = new Normalizer();
             const actions = response.data.map((run) => {
@@ -158,6 +136,28 @@ export function getRuns(args = {}) {
             });
             return actions;
         },
+        cancellable: true,
+        data,
+        getCancelSource: state => state.exports.allInfo.status.cancelSource,
+        method: 'POST',
+        onSuccess: (response) => {
+            const { nextPage, range } = getHeaderPageInfo(response);
+            const orderedIds = response.data.map(run => run.uid);
+            return {
+                payload: {
+                    nextPage,
+                    orderedIds,
+                    range,
+                },
+            };
+        },
+        params,
+        types: [
+            types.FETCHING_RUNS,
+            types.RECEIVED_RUNS,
+            types.FETCH_RUNS_ERROR,
+        ],
+        url: '/api/runs/filter',
     };
 }
 
@@ -166,68 +166,68 @@ export function getFeaturedRuns(args) {
     params.page_size = args.pageSize;
     params.featured = true;
     return {
-        types: [
-            types.FETCHING_FEATURED_RUNS,
-            types.RECEIVED_FEATURED_RUNS,
-            types.FETCH_FEATURED_RUNS_ERROR,
-        ],
-        getCancelSource: state => state.exports.featuredInfo.status.cancelSource,
         auto: args.isAuto,
+        batchSuccess: (response, state) => {
+            const norm = new Normalizer();
+            const actions = response.data.map((run) => {
+                const { result, entities } = norm.normalizeRun(run);
+                return {
+                    payload: {
+                        id: result,
+                        username: state.user.data.user.username,
+                        ...entities,
+                    },
+                    type: 'ADD_FEATURED_RUN',
+                };
+            });
+            return actions;
+        },
         cancellable: args.isAuto,
-        url: '/api/runs/filter',
+        getCancelSource: state => state.exports.featuredInfo.status.cancelSource,
         method: 'POST',
-        params,
         onSuccess: (response) => {
             const { nextPage, range } = getHeaderPageInfo(response);
 
             return {
                 payload: {
                     ids: response.data.map(run => run.uid),
-                    range,
                     nextPage,
+                    range,
                 },
             };
         },
-        batchSuccess: (response, state) => {
-            const norm = new Normalizer();
-            const actions = response.data.map((run) => {
-                const { result, entities } = norm.normalizeRun(run);
-                return {
-                    type: 'ADD_FEATURED_RUN',
-                    payload: {
-                        id: result,
-                        username: state.user.data.user.username,
-                        ...entities,
-                    },
-                };
-            });
-            return actions;
-        },
+        params,
+        types: [
+            types.FETCH_FEATURED_RUNS_ERROR,
+            types.FETCHING_FEATURED_RUNS,
+            types.RECEIVED_FEATURED_RUNS,
+        ],
+        url: '/api/runs/filter',
     };
 }
 
 export function deleteRun(uid) {
     return {
-        types: [
-            types.DELETING_RUN,
-            types.DELETED_RUN,
-            types.DELETE_RUN_ERROR,
-        ],
-        url: `/api/runs/${uid}`,
         method: 'DELETE',
         onSuccess: () => ({ payload: { id: uid } }),
+        types: [
+            types.DELETE_RUN_ERROR,
+            types.DELETED_RUN,
+            types.DELETING_RUN,
+        ],
+        url: `/api/runs/${uid}`,
     };
 }
 
 export function updateExpiration(uid, expiration) {
     return {
+        data: { expiration },
+        method: 'PATCH',
         types: [
-            types.UPDATING_EXPIRATION,
-            types.UPDATE_EXPIRATION_SUCCESS,
             types.UPDATE_EXPIRATION_ERROR,
+            types.UPDATE_EXPIRATION_SUCCESS,
+            types.UPDATING_EXPIRATION,
         ],
         url: `/api/runs/${uid}`,
-        method: 'PATCH',
-        data: { expiration },
     };
 }

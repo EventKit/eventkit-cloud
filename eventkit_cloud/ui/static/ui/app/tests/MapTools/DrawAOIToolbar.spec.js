@@ -5,6 +5,7 @@ import DrawBoxButton from '../../components/MapTools/DrawBoxButton';
 import DrawFreeButton from '../../components/MapTools/DrawFreeButton';
 import MapViewButton from '../../components/MapTools/MapViewButton';
 import ImportButton from '../../components/MapTools/ImportButton';
+import sinon from "sinon";
 
 describe('DrawAOIToolbar component', () => {
     let shallow;
@@ -15,16 +16,16 @@ describe('DrawAOIToolbar component', () => {
 
     it('should render a toolbar title and 4 sub components', () => {
         const props = {
+            handleCancel: sinon.spy(),
+            setAllButtonsDefault: sinon.spy(),
+            setBoxButtonSelected: sinon.spy(),
+            setFreeButtonSelected: sinon.spy(),
+            setImportButtonSelected: sinon.spy(),
+            setImportModalState: sinon.spy(),
+            setMapView: sinon.spy(),
+            setMapViewButtonSelected: sinon.spy(),
             toolbarIcons: {},
-            updateMode: () => {},
-            handleCancel: () => {},
-            setMapView: () => {},
-            setAllButtonsDefault: () => {},
-            setBoxButtonSelected: () => {},
-            setFreeButtonSelected: () => {},
-            setMapViewButtonSelected: () => {},
-            setImportButtonSelected: () => {},
-            setImportModalState: () => {},
+            updateMode: sinon.spy(),
             ...global.eventkit_test_props,
         };
 

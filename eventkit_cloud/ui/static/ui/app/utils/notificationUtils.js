@@ -1,14 +1,14 @@
 
 export const verbs = {
-    runStarted: 'run_started',
+    addedToGroup: 'added_to_group',
+    removedAsGroupAdmin: 'removed_as_group_admin',
+    removedFromGroup: 'removed_from_group',
     runCanceled: 'run_canceled',
     runCompleted: 'run_completed',
-    runFailed: 'run_failed',
     runDeleted: 'run_deleted',
-    removedFromGroup: 'removed_from_group',
-    addedToGroup: 'added_to_group',
+    runFailed: 'run_failed',
+    runStarted: 'run_started',
     setAsGroupAdmin: 'set_as_group_admin',
-    removedAsGroupAdmin: 'removed_as_group_admin',
 };
 
 export const requiresActorDetails = [

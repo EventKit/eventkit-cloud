@@ -13,10 +13,10 @@ describe('DropZoneDialog component', () => {
     });
 
     const getProps = () => ({
+        processGeoJSONFile: sinon.spy(),
+        setAllButtonsDefault: sinon.spy(),
+        setImportModalState: sinon.spy(),
         showImportModal: false,
-        setAllButtonsDefault: () => {},
-        setImportModalState: () => {},
-        processGeoJSONFile: () => {},
         ...global.eventkit_test_props,
     });
 

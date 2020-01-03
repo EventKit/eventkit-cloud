@@ -27,97 +27,97 @@ describe('NotificationMessage component', () => {
 
     it('should correctly handle "run_started" notification', () => {
         const notification = {
-            id: '1',
-            verb: 'run_started',
             actor: {
                 details: run,
             },
+            id: '1',
+            verb: 'run_started',
         };
 
         const onLinkClick = sinon.spy();
         const wrapper = getWrapper({ notification, onLinkClick });
         expect(wrapper.find(Link).childAt(0).text()).toBe(notification.actor.details.job.name);
-        wrapper.find(Link).get(0).props.onClick({ preventDefault: () => {} });
+        wrapper.find(Link).get(0).props.onClick({ preventDefault: sinon.spy() });
         expect(onLinkClick.callCount).toBe(1);
         expect(wrapper.find('span').at(0).text()).toEqual('\xa0has started processing.');
     });
 
     it('should correctly handle "run_canceled" notification', () => {
         const notification = {
-            id: '1',
-            verb: 'run_canceled',
             actor: {
                 details: run,
             },
+            id: '1',
+            verb: 'run_canceled',
         };
 
         const onLinkClick = sinon.spy();
         const wrapper = getWrapper({ notification, onLinkClick });
         expect(wrapper.find(Link).childAt(0).text()).toBe(notification.actor.details.job.name);
-        wrapper.find(Link).get(0).props.onClick({ preventDefault: () => {} });
+        wrapper.find(Link).get(0).props.onClick({ preventDefault: sinon.spy() });
         expect(onLinkClick.callCount).toBe(1);
         expect(wrapper.find('span').at(0).text()).toEqual('\xa0has been canceled.');
     });
 
     it('should correctly handle "run_completed" notification', () => {
         const notification = {
-            id: '1',
-            verb: 'run_completed',
             actor: {
                 details: run,
             },
+            id: '1',
+            verb: 'run_completed',
         };
 
         const onLinkClick = sinon.spy();
         const wrapper = getWrapper({ notification, onLinkClick });
         expect(wrapper.find(Link).childAt(0).text()).toBe(notification.actor.details.job.name);
-        wrapper.find(Link).get(0).props.onClick({ preventDefault: () => {} });
+        wrapper.find(Link).get(0).props.onClick({ preventDefault: sinon.spy() });
         expect(onLinkClick.callCount).toBe(1);
         expect(wrapper.find('span').at(0).text()).toEqual('\xa0is complete.');
     });
 
     it('should correctly handle "run_failed" notification', () => {
         const notification = {
-            id: '1',
-            verb: 'run_failed',
             actor: {
                 details: run,
             },
+            id: '1',
+            verb: 'run_failed',
         };
 
         const onLinkClick = sinon.spy();
         const wrapper = getWrapper({ notification, onLinkClick });
         expect(wrapper.find(Link).childAt(0).text()).toBe(notification.actor.details.job.name);
-        wrapper.find(Link).get(0).props.onClick({ preventDefault: () => {} });
+        wrapper.find(Link).get(0).props.onClick({ preventDefault: sinon.spy() });
         expect(onLinkClick.callCount).toBe(1);
         expect(wrapper.find('span').at(0).text()).toEqual('\xa0failed to complete.');
     });
 
     it('should correctly handle "run_deleted" notification', () => {
         const notification = {
-            id: '1',
-            verb: 'run_deleted',
             actor: {
                 details: run,
             },
+            id: '1',
+            verb: 'run_deleted',
         };
 
         const onLinkClick = sinon.spy();
         const wrapper = getWrapper({ notification, onLinkClick });
         expect(wrapper.find(Link).childAt(0).text()).toBe(notification.actor.details.job.name);
-        wrapper.find(Link).get(0).props.onClick({ preventDefault: () => {} });
+        wrapper.find(Link).get(0).props.onClick({ preventDefault: sinon.spy() });
         expect(onLinkClick.callCount).toBe(1);
         expect(wrapper.find('span').at(0).text()).toEqual('\xa0has been deleted.');
     });
 
     it('should correctly handle "added_to_group" notification', () => {
         const notification = {
-            id: '1',
-            verb: 'added_to_group',
-            actor: {},
             action_object: {
                 details: group,
             },
+            actor: {},
+            id: '1',
+            verb: 'added_to_group',
         };
 
         const wrapper = getWrapper({ notification });
@@ -127,12 +127,12 @@ describe('NotificationMessage component', () => {
 
     it('should correctly handle "removed_from_group" notification', () => {
         const notification = {
-            id: '1',
-            verb: 'removed_from_group',
-            actor: {},
             action_object: {
                 details: group,
             },
+            actor: {},
+            id: '1',
+            verb: 'removed_from_group',
         };
 
         const wrapper = getWrapper({ notification });
@@ -142,12 +142,12 @@ describe('NotificationMessage component', () => {
 
     it('should correctly handle "set_as_group_admin" notification', () => {
         const notification = {
-            id: '1',
-            verb: 'set_as_group_admin',
-            actor: {},
             action_object: {
                 details: group,
             },
+            actor: {},
+            id: '1',
+            verb: 'set_as_group_admin',
         };
 
         const wrapper = getWrapper({ notification });
@@ -157,12 +157,12 @@ describe('NotificationMessage component', () => {
 
     it('should correctly handle "removed_as_group_admin" notification', () => {
         const notification = {
-            id: '1',
-            verb: 'removed_as_group_admin',
-            actor: {},
             action_object: {
                 details: group,
             },
+            actor: {},
+            id: '1',
+            verb: 'removed_as_group_admin',
         };
 
         const wrapper = getWrapper({ notification });
@@ -172,9 +172,9 @@ describe('NotificationMessage component', () => {
 
     it('should handle notifications with no details', () => {
         const notification = {
-            id: '1',
-            actor: {},
             action_object: {},
+            actor: {},
+            id: '1',
             verb: 'removed_as_group_admin',
         };
 
@@ -184,9 +184,9 @@ describe('NotificationMessage component', () => {
 
     it('should correctly handle unsupported notification verbs', () => {
         const notification = {
-            id: '1',
-            actor: {},
             action_object: { details: 'something' },
+            actor: {},
+            id: '1',
             verb: 'some_unsupported_verb',
         };
 

@@ -2,30 +2,30 @@ import * as reducers from '../../reducers/datacartReducer';
 
 describe('exportAoiInfo reducer', () => {
     const geojson = {
-        type: 'FeatureCollection',
         features: [
             {
-                type: 'Feature',
                 geometry: {
-                    type: 'Polygon',
                     coordinates: [
                         [[100.0, 0.0], [101.0, 0.0], [101.0, 1.0],
                             [100.0, 1.0], [100.0, 0.0]],
                     ],
+                    type: 'Polygon',
                 },
+                type: 'Feature',
             },
         ],
+        type: 'FeatureCollection',
     };
 
     it('should return initial state', () => {
         expect(reducers.exportAoiInfoReducer(undefined, {})).toEqual({
-            geojson: {},
-            originalGeojson: {},
-            geomType: null,
-            title: null,
-            description: null,
-            selectionType: null,
             buffer: 0,
+            description: null,
+            geojson: {},
+            geomType: null,
+            originalGeojson: {},
+            selectionType: null,
+            title: null,
         });
     });
 
@@ -33,41 +33,41 @@ describe('exportAoiInfo reducer', () => {
         expect(reducers.exportAoiInfoReducer(
             {},
             {
-                type: 'UPDATE_AOI_INFO',
+                buffer: 12,
+                description: 'description',
                 geojson,
                 geomType: 'Polygon',
-                title: 'title',
-                description: 'description',
                 selectionType: 'type',
-                buffer: 12,
+                title: 'title',
+                type: 'UPDATE_AOI_INFO',
             },
         )).toEqual({
+            buffer: 12,
+            description: 'description',
             geojson,
             geomType: 'Polygon',
-            title: 'title',
-            description: 'description',
             selectionType: 'type',
-            buffer: 12,
+            title: 'title',
         });
     });
 
     it('should handle CLEAR_AOI_INFO', () => {
         expect(reducers.exportAoiInfoReducer(
             {
+                description: 'test stuff',
                 geojson,
                 geomType: 'Polygon',
                 title: 'test',
-                description: 'test stuff',
             },
             { type: 'CLEAR_AOI_INFO' },
         )).toEqual({
-            geojson: {},
-            originalGeojson: {},
-            geomType: null,
-            title: null,
-            description: null,
-            selectionType: null,
             buffer: 0,
+            description: null,
+            geojson: {},
+            geomType: null,
+            originalGeojson: {},
+            selectionType: null,
+            title: null,
         });
     });
 });
@@ -75,74 +75,74 @@ describe('exportAoiInfo reducer', () => {
 describe('exportInfo reducer', () => {
     it('should return initial state', () => {
         expect(reducers.exportInfoReducer(undefined, {})).toEqual({
-            exportName: '',
-            datapackDescription: '',
-            projectName: '',
-            providers: [],
             areaStr: '',
-            formats: ['gpkg'],
-            providerEstimates: {},
+            datapackDescription: '',
+            exportName: '',
             exportOptions: {},
+            formats: ['gpkg'],
+            projectName: '',
             projections: [],
+            providerEstimates: {},
+            providers: [],
         });
     });
 
     it('should handle UPDATE_EXPORT_INFO', () => {
         expect(reducers.exportInfoReducer(
             {
-                exportName: '',
-                datapackDescription: '',
-                projectName: '',
-                providers: [],
                 areaStr: '',
-                layers: '',
-                projections: [],
+                datapackDescription: '',
+                exportName: '',
                 exportOptions: {},
+                layers: '',
+                projectName: '',
+                projections: [],
+                providers: [],
             },
             {
-                type: 'UPDATE_EXPORT_INFO',
                 exportInfo: {
-                    exportName: 'name',
+                    areaStr: 'string',
                     datapackDescription: 'description',
+                    exportName: 'name',
+                    layers: 'layer',
                     projectName: 'project',
                     providers: ['provider'],
-                    areaStr: 'string',
-                    layers: 'layer',
                 },
+                type: 'UPDATE_EXPORT_INFO',
             },
         )).toEqual({
-            exportName: 'name',
-            datapackDescription: 'description',
-            projectName: 'project',
-            providers: ['provider'],
             areaStr: 'string',
-            layers: 'layer',
-            projections: [],
+            datapackDescription: 'description',
+            exportName: 'name',
             exportOptions: {},
+            layers: 'layer',
+            projectName: 'project',
+            projections: [],
+            providers: ['provider'],
         });
     });
 
     it('should handle CLEAR_EXPORT_INFO', () => {
         expect(reducers.exportInfoReducer(
             {
-                exportName: 'name',
+                areaStr: 'string',
                 datapackDescription: 'description',
+                exportName: 'name',
+                layers: 'layer',
                 projectName: 'project',
                 providers: ['provider'],
-                areaStr: 'string',
-                layers: 'layer',
             },
             { type: 'CLEAR_EXPORT_INFO' },
         )).toEqual({
-            exportName: '',
-            datapackDescription: '',
-            projectName: '',
-            providers: [],
-            projections: [],
             areaStr: '',
-            formats: ['gpkg'],
-            providerEstimates: {},
+            datapackDescription: '',
+            exportName: '',
             exportOptions: {},
+            formats: ['gpkg'],
+            projectName: '',
+            projections: [],
+            providerEstimates: {},
+            providers: [],
         });
     });
 });
@@ -150,84 +150,84 @@ describe('exportInfo reducer', () => {
 describe('submitJobReducer', () => {
     it('should return the intial state', () => {
         expect(reducers.submitJobReducer(undefined, {})).toEqual({
-            fetching: null,
-            fetched: null,
-            jobuid: '',
             error: null,
+            fetched: null,
+            fetching: null,
+            jobuid: '',
         });
     });
 
     it('should handle SUBMITTING JOB', () => {
         expect(reducers.submitJobReducer(
             {
-                fetching: false,
-                fetched: false,
-                jobuid: '',
                 error: null,
+                fetched: false,
+                fetching: false,
+                jobuid: '',
             },
             { type: 'SUBMITTING_JOB' },
         )).toEqual({
-            fetching: true,
-            fetched: false,
-            jobuid: '',
             error: null,
+            fetched: false,
+            fetching: true,
+            jobuid: '',
         });
     });
 
     it('should handle JOB SUBMITTED SUCCESS', () => {
         expect(reducers.submitJobReducer(
             {
-                fetching: true,
-                fetched: false,
-                jobuid: '',
                 error: null,
+                fetched: false,
+                fetching: true,
+                jobuid: '',
             },
             {
-                type: 'JOB_SUBMITTED_SUCCESS',
                 jobuid: '1234',
+                type: 'JOB_SUBMITTED_SUCCESS',
             },
         )).toEqual({
-            fetching: false,
-            fetched: true,
-            jobuid: '1234',
             error: null,
+            fetched: true,
+            fetching: false,
+            jobuid: '1234',
         });
     });
 
     it('should handle JOB SUBMITTED ERROR', () => {
         expect(reducers.submitJobReducer(
             {
-                fetching: true,
-                fetched: false,
-                jobuid: '',
                 error: null,
+                fetched: false,
+                fetching: true,
+                jobuid: '',
             },
             {
-                type: 'JOB_SUBMITTED_ERROR',
                 error: 'Oh no a bad error',
+                type: 'JOB_SUBMITTED_ERROR',
             },
         )).toEqual({
-            fetching: false,
-            fetched: false,
-            jobuid: '',
             error: 'Oh no a bad error',
+            fetched: false,
+            fetching: false,
+            jobuid: '',
         });
     });
 
     it('should handle CLEAR JOB INFO', () => {
         expect(reducers.submitJobReducer(
             {
-                fetching: false,
-                fetched: true,
-                jobuid: '12345',
                 error: null,
+                fetched: true,
+                fetching: false,
+                jobuid: '12345',
             },
             { type: 'CLEAR_JOB_INFO' },
         )).toEqual({
-            fetching: false,
-            fetched: false,
-            jobuid: '',
             error: null,
+            fetched: false,
+            fetching: false,
+            jobuid: '',
         });
     });
 });
@@ -235,88 +235,89 @@ describe('submitJobReducer', () => {
 describe('rerunExport Reducer', () => {
     it('it should return the initial state', () => {
         expect(reducers.rerunExportReducer(undefined, {})).toEqual({
-            fetching: null,
-            fetched: null,
             data: [],
             error: null,
+            fetched: null,
+            fetching: null,
         });
     });
 
     it('should handle RERUNNING_EXPORT', () => {
         expect(reducers.rerunExportReducer(
             {
-                fetching: false,
-                fetched: false,
                 data: [],
                 error: null,
+                fetched: false,
+                fetching: false,
             },
             {
                 type: 'RERUNNING_EXPORT',
             },
         )).toEqual({
-            fetching: true,
-            fetched: false,
             data: '',
             error: null,
+            fetched: false,
+            fetching: true,
         });
     });
 
     it('should handle RERUN_EXPORT_SUCCESS', () => {
         expect(reducers.rerunExportReducer(
             {
-                fetching: false,
-                fetched: false,
                 data: [],
                 error: null,
+                fetched: false,
+                fetching: false,
             },
             {
-                type: 'RERUN_EXPORT_SUCCESS', exportReRun: { data: [{ thisIs: 'a fake export rerun' }] },
+                exportReRun: { data: [{ thisIs: 'a fake export rerun' }] },
+                type: 'RERUN_EXPORT_SUCCESS',
             },
         )).toEqual({
-            fetching: false,
-            fetched: true,
             data: [{ thisIs: 'a fake export rerun' }],
             error: null,
+            fetched: true,
+            fetching: false,
         });
     });
 
     it('should handle RERUN_EXPORT_ERROR', () => {
         expect(reducers.rerunExportReducer(
             {
-                fetching: false,
-                fetched: false,
                 data: [],
                 error: null,
+                fetched: false,
+                fetching: false,
             },
             {
-                type: 'RERUN_EXPORT_ERROR',
                 error: 'This is an error',
+                type: 'RERUN_EXPORT_ERROR',
             },
         )).toEqual({
-            fetching: false,
-            fetched: false,
             data: '',
             error: 'This is an error',
+            fetched: false,
+            fetching: false,
         });
     });
 
     it('should handle CLEAR_RERUN_INFO', () => {
         expect(reducers.rerunExportReducer(
             {
-                fetching: false,
-                fetched: false,
                 data: [],
                 error: null,
+                fetched: false,
+                fetching: false,
             },
             {
                 type: 'CLEAR_RERUN_INFO',
 
             },
         )).toEqual({
-            fetching: false,
-            fetched: false,
             data: '',
             error: null,
+            fetched: false,
+            fetching: false,
         });
     });
 });
@@ -324,61 +325,61 @@ describe('rerunExport Reducer', () => {
 describe('updatePermissions Reducer', () => {
     it('it should return the initial state', () => {
         expect(reducers.updatePermissionReducer(undefined, {})).toEqual({
-            updating: null,
-            updated: null,
             error: null,
+            updated: null,
+            updating: null,
         });
     });
 
     it('should handle UPDATING_PERMISSION', () => {
         expect(reducers.updatePermissionReducer(
             {
-                updating: false,
-                updated: false,
                 error: null,
+                updated: false,
+                updating: false,
             },
             {
                 type: 'UPDATING_PERMISSION',
             },
         )).toEqual({
-            updating: true,
-            updated: false,
             error: null,
+            updated: false,
+            updating: true,
         });
     });
 
     it('should handle UPDATE_PERMISSION_SUCCESS', () => {
         expect(reducers.updatePermissionReducer(
             {
-                updating: false,
-                updated: false,
                 error: null,
+                updated: false,
+                updating: false,
             },
             {
                 type: 'UPDATE_PERMISSION_SUCCESS',
             },
         )).toEqual({
-            updating: false,
-            updated: true,
             error: null,
+            updated: true,
+            updating: false,
         });
     });
 
     it('should handle UPDATE_PERMISSION_ERROR', () => {
         expect(reducers.updatePermissionReducer(
             {
-                updating: true,
-                updated: false,
                 error: null,
+                updated: false,
+                updating: true,
             },
             {
-                type: 'UPDATE_PERMISSION_ERROR',
                 error: 'This is an error',
+                type: 'UPDATE_PERMISSION_ERROR',
             },
         )).toEqual({
-            updating: false,
-            updated: false,
             error: 'This is an error',
+            updated: false,
+            updating: false,
         });
     });
 });

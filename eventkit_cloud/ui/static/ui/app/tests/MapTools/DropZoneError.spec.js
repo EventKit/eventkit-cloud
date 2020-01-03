@@ -13,13 +13,13 @@ describe('DropZoneError component', () => {
 
     const getProps = () => ({
         importGeom: {
-            processing: false,
-            processed: false,
-            geom: {},
             error: null,
+            geom: {},
+            processed: false,
+            processing: false,
         },
-        setAllButtonsDefault: () => {},
-        resetGeoJSONFile: () => {},
+        resetGeoJSONFile: sinon.spy(),
+        setAllButtonsDefault: sinon.spy(),
         ...global.eventkit_test_props,
     });
 
@@ -46,8 +46,8 @@ describe('DropZoneError component', () => {
         const stateStub = sinon.stub(wrapper.instance(), 'setState');
         wrapper.setProps(nextProps);
         expect(stateStub.calledWith({
-            showErrorMessage: true,
             errorMessage: nextProps.importGeom.error,
+            showErrorMessage: true,
         })).toEqual(true);
         expect(nextProps.setAllButtonsDefault.calledOnce).toBe(true);
     });

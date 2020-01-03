@@ -3,6 +3,7 @@ import { createShallow } from '@material-ui/core/test-utils';
 import { DropZone } from '../../components/MapTools/DropZone';
 import DropZoneDialog from '../../components/MapTools/DropZoneDialog';
 import DropZoneError from '../../components/MapTools/DropZoneError';
+import sinon from "sinon";
 
 describe('DropZone component', () => {
     let shallow;
@@ -13,11 +14,11 @@ describe('DropZone component', () => {
 
     const props = {
         importGeom: {},
+        processGeoJSONFile: sinon.spy(),
+        resetGeoJSONFile: sinon.spy(),
+        setAllButtonsDefault: sinon.spy(),
+        setImportModalState: sinon.spy(),
         showImportModal: false,
-        setAllButtonsDefault: () => {},
-        setImportModalState: () => {},
-        processGeoJSONFile: () => {},
-        resetGeoJSONFile: () => {},
         ...global.eventkit_test_props,
     };
     it('should render a div containing the dialog and error components', () => {

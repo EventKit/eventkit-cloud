@@ -55,8 +55,8 @@ describe('userStatusReducer', () => {
         expect(user.userStatusReducer(
             { ...user.user.status, patching: true },
             {
-                type: types.PATCHING_USER_ERROR,
                 error: 'This is an important error',
+                type: types.PATCHING_USER_ERROR,
             },
         )).toEqual({ ...user.user.status, error: 'This is an important error', patching: false });
     });
@@ -73,11 +73,11 @@ describe('userMetaReducer', () => {
                 ...user.user.meta,
             },
             {
-                type: types.USER_ACTIVE,
                 payload: {
                     autoLogoutAt: 111,
                     autoLogoutWarningAt: 11,
                 },
+                type: types.USER_ACTIVE,
             },
         )).toEqual({
             ...user.user.meta,
@@ -96,8 +96,8 @@ describe('userDataReducer', () => {
         expect(user.userDataReducer(
             user.user.data,
             {
-                type: types.USER_LOGGED_IN,
                 payload: { user: { username: 'admin' }, accepted_licenses: { one: true } },
+                type: types.USER_LOGGED_IN,
             },
         )).toEqual({ user: { username: 'admin' }, accepted_licenses: { one: true } });
     });
@@ -115,8 +115,8 @@ describe('userDataReducer', () => {
         expect(user.userDataReducer(
             user.user.data,
             {
-                type: types.PATCHED_USER,
                 payload: { user: { username: 'admin' }, accepted_licenses: { one: true } },
+                type: types.PATCHED_USER,
             },
         )).toEqual({ user: { username: 'admin' }, accepted_licenses: { one: true } });
     });

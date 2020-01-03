@@ -16,8 +16,8 @@ describe('getProjectionsReducer', () => {
         expect(reducers.getProjectionsReducer(
             { projections: [] },
             {
-                type: 'PROJECTIONS_RECEIVED',
                 projections: [{ id: 'fakeprojection' }],
+                type: 'PROJECTIONS_RECEIVED',
             },
         )).toEqual([{ id: 'fakeprojection' }]);
     });

@@ -2,6 +2,7 @@ import React from 'react';
 import { createShallow } from '@material-ui/core/test-utils';
 import { DeleteDataPackDialog } from '../../components/Dialog/DeleteDataPackDialog';
 import ConfirmDialog from '../../components/Dialog/ConfirmDialog';
+import sinon from "sinon";
 
 describe('DeleteDataPackDialog component', () => {
     let shallow;
@@ -11,9 +12,9 @@ describe('DeleteDataPackDialog component', () => {
     });
 
     const getProps = () => ({
+        onCancel: sinon.spy(),
+        onDelete: sinon.spy(),
         show: true,
-        onCancel: () => {},
-        onDelete: () => {},
         ...global.eventkit_test_props,
     });
 

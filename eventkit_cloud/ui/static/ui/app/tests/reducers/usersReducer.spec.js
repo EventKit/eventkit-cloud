@@ -13,14 +13,14 @@ describe('usersReducer', () => {
                 fetched: true,
             },
             {
-                type: types.FETCHING_USERS,
                 cancelSource: 'fake source',
+                type: types.FETCHING_USERS,
             },
         )).toEqual({
             ...usersState,
+            cancelSource: 'fake source',
             fetched: false,
             fetching: true,
-            cancelSource: 'fake source',
         });
     });
 
@@ -33,20 +33,20 @@ describe('usersReducer', () => {
                 total: 0,
             },
             {
-                type: types.FETCHED_USERS,
-                users,
-                total: 3,
                 nextPage: false,
                 range: '1/1',
+                total: 3,
+                type: types.FETCHED_USERS,
+                users,
             },
         )).toEqual({
             ...usersState,
             fetched: true,
             fetching: false,
-            users,
-            total: 3,
             nextPage: false,
             range: '1/1',
+            total: 3,
+            users,
         });
     });
 
@@ -58,14 +58,14 @@ describe('usersReducer', () => {
                 fetching: true,
             },
             {
-                type: types.FETCH_USERS_ERROR,
                 error,
+                type: types.FETCH_USERS_ERROR,
             },
         )).toEqual({
             ...usersState,
+            error,
             fetched: false,
             fetching: false,
-            error,
         });
     });
 });

@@ -5,23 +5,29 @@ import * as utils from '../../utils/generic';
 
 
 const apiPermissions = {
-    value: '',
     groups: [],
     members: [],
+    value: '',
 };
 
 const mockApiJobs = [{
     last_export_run: {
-        uid: '123',
-        job: { uid: '111', permissions: apiPermissions },
+        job: {
+            permissions: apiPermissions,
+            uid: '111'
+        },
         provider_tasks: [],
+        uid: '123',
     },
 },
 {
     last_export_run: {
-        uid: '456',
-        job: { uid: '222', permissions: apiPermissions },
+        job: {
+            permissions: apiPermissions,
+            uid: '222'
+        },
         provider_tasks: [],
+        uid: '456',
     },
 }];
 
@@ -35,8 +41,8 @@ describe('userActivityActions', () => {
         it('should return the correct types', () => {
             expect(actions.viewedJob().types).toEqual([
                 actions.types.VIEWED_JOB,
-                actions.types.VIEWED_JOB_SUCCESS,
                 actions.types.VIEWED_JOB_ERROR,
+                actions.types.VIEWED_JOB_SUCCESS,
             ]);
         });
 
@@ -51,9 +57,9 @@ describe('userActivityActions', () => {
     describe('getViewedJobs action', () => {
         it('should return the correct actions', () => {
             expect(actions.getViewedJobs().types).toEqual([
+                actions.types.FETCH_VIEWED_JOBS_ERROR,
                 actions.types.FETCHING_VIEWED_JOBS,
                 actions.types.RECEIVED_VIEWED_JOBS,
-                actions.types.FETCH_VIEWED_JOBS_ERROR,
             ]);
         });
 
@@ -65,8 +71,8 @@ describe('userActivityActions', () => {
         it('should return pagesize and "viewed" in the params', () => {
             const pageSize = 13;
             expect(actions.getViewedJobs({ pageSize }).params).toEqual({
-                page_size: pageSize,
                 activity: 'viewed',
+                page_size: pageSize,
                 slim: 'true',
             });
         });
@@ -81,12 +87,12 @@ describe('userActivityActions', () => {
             };
             expect(actions.getViewedJobs().onSuccess(ret)).toEqual({
                 payload: {
-                    nextPage: true,
-                    range: '1-1',
                     ids: [
                         mockApiJobs[0].last_export_run.uid,
                         mockApiJobs[1].last_export_run.uid,
                     ],
+                    nextPage: true,
+                    range: '1-1',
                 },
             });
             headerStub.restore();
@@ -99,20 +105,20 @@ describe('userActivityActions', () => {
             const s = { user: { data: { user: { username: 'test user' } } } };
             expect(actions.getViewedJobs().batchSuccess(ret, s)).toEqual([
                 {
-                    type: 'ADD_VIEWED_RUN',
                     payload: {
                         id: run1.result,
                         username: 'test user',
                         ...run1.entities,
                     },
+                    type: 'ADD_VIEWED_RUN',
                 },
                 {
-                    type: 'ADD_VIEWED_RUN',
                     payload: {
                         id: run2.result,
                         username: 'test user',
                         ...run2.entities,
                     },
+                    type: 'ADD_VIEWED_RUN',
                 },
             ]);
         });

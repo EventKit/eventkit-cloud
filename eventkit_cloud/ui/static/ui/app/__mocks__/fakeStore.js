@@ -1,6 +1,6 @@
 export const fakeStore = state => ({
-    default: () => {},
-    subscribe: () => {},
-    dispatch: () => {},
+    default: () => undefined,
+    dispatch: () => undefined,
     getState: () => ({ ...state }),
+    subscribe: () => undefined,
 });

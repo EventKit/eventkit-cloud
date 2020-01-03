@@ -13,14 +13,14 @@ describe('userGroupsReducer', () => {
                 ...state,
             },
             {
-                type: types.FETCHING_GROUPS,
                 cancelSource,
+                type: types.FETCHING_GROUPS,
             },
         )).toEqual({
             ...state,
+            cancelSource,
             fetched: false,
             fetching: true,
-            cancelSource,
         });
     });
 
@@ -29,24 +29,24 @@ describe('userGroupsReducer', () => {
         expect(userGroupsReducer(
             {
                 ...state,
-                fetching: true,
                 cancelSource: { source: 'fake source' },
+                fetching: true,
             },
             {
-                type: types.FETCHED_GROUPS,
                 groups,
-                total: 12,
-                range: '1-12',
                 nextPage: true,
+                range: '1-12',
+                total: 12,
+                type: types.FETCHED_GROUPS,
             },
         )).toEqual({
             ...state,
-            fetching: false,
             fetched: true,
+            fetching: false,
             groups,
-            total: 12,
-            range: '1-12',
             nextPage: true,
+            range: '1-12',
+            total: 12,
         });
     });
 
@@ -55,18 +55,18 @@ describe('userGroupsReducer', () => {
         expect(userGroupsReducer(
             {
                 ...state,
-                fetching: true,
                 cancelSource: { source: 'fake source' },
+                fetching: true,
             },
             {
-                type: types.FETCH_GROUPS_ERROR,
                 error,
+                type: types.FETCH_GROUPS_ERROR,
             },
         )).toEqual({
             ...state,
+            error,
             fetched: false,
             fetching: false,
-            error,
         });
     });
 
@@ -96,8 +96,8 @@ describe('userGroupsReducer', () => {
             },
         )).toEqual({
             ...state,
-            deleting: false,
             deleted: true,
+            deleting: false,
         });
     });
 
@@ -109,8 +109,8 @@ describe('userGroupsReducer', () => {
                 deleting: true,
             },
             {
-                type: types.DELETE_GROUP_ERROR,
                 error,
+                type: types.DELETE_GROUP_ERROR,
             },
         )).toEqual({
             ...state,
@@ -146,8 +146,8 @@ describe('userGroupsReducer', () => {
             },
         )).toEqual({
             ...state,
-            creating: false,
             created: true,
+            creating: false,
         });
     });
 
@@ -159,8 +159,8 @@ describe('userGroupsReducer', () => {
                 creating: true,
             },
             {
-                type: types.CREATE_GROUP_ERROR,
                 error,
+                type: types.CREATE_GROUP_ERROR,
             },
         )).toEqual({
             ...state,
@@ -196,8 +196,8 @@ describe('userGroupsReducer', () => {
             },
         )).toEqual({
             ...state,
-            updating: false,
             updated: true,
+            updating: false,
         });
     });
 
@@ -209,14 +209,14 @@ describe('userGroupsReducer', () => {
                 updating: true,
             },
             {
-                type: types.UPDATING_GROUP_ERROR,
                 error,
+                type: types.UPDATING_GROUP_ERROR,
             },
         )).toEqual({
             ...state,
+            error,
             updated: false,
             updating: false,
-            error,
         });
     });
 });

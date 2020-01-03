@@ -27,13 +27,13 @@ describe('notificationsActions', () => {
 
         it('onSuccess should return header info and notifications', () => {
             const headerStub = sinon.stub(utils, 'getHeaderPageInfo').returns({
-                range: '1-1',
                 nextPage: true,
+                range: '1-1',
             });
             const ret = { data: ['one', 'two'] };
             expect(actions.getNotifications().onSuccess(ret)).toEqual({
-                notifications: ret.data,
                 nextPage: true,
+                notifications: ret.data,
                 range: '1-1',
             });
             headerStub.restore();

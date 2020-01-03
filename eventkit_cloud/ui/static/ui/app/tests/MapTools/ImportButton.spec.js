@@ -14,10 +14,10 @@ describe('ImportButton component', () => {
 
     const getProps = () => ({
         buttonState: 'DEFAULT',
-        setImportButtonSelected: () => {},
-        setAllButtonsDefault: () => {},
-        handleCancel: () => {},
-        setImportModalState: () => {},
+        handleCancel: sinon.spy(),
+        setAllButtonsDefault: sinon.spy(),
+        setImportButtonSelected: sinon.spy(),
+        setImportModalState: sinon.spy(),
         ...global.eventkit_test_props,
     });
     it('should display the default icon', () => {

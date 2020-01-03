@@ -17,9 +17,13 @@ describe('NotificationsTableItem component', () => {
 
     function defaultProps() {
         return {
+            history: {
+                push: sinon.spy(),
+            },
+            isSelected: true,
+            markNotificationsAsRead: sinon.spy(),
+            markNotificationsAsUnread: sinon.spy(),
             notification: {
-                id: '1',
-                verb: 'run_completed',
                 actor: {
                     details: {
                         job: {
@@ -27,21 +31,17 @@ describe('NotificationsTableItem component', () => {
                         },
                     },
                 },
+                id: '1',
                 timestamp: '2018-05-04T17:32:04.716806Z',
                 unread: true,
+                verb: 'run_completed',
             },
-            isSelected: true,
-            history: {
-                push: sinon.spy(),
-            },
-            onView: sinon.spy(),
             onMarkAsRead: sinon.spy(),
             onMarkAsUnread: sinon.spy(),
             onRemove: sinon.spy(),
-            setSelected: sinon.spy(),
-            markNotificationsAsRead: sinon.spy(),
-            markNotificationsAsUnread: sinon.spy(),
+            onView: sinon.spy(),
             removeNotifications: sinon.spy(),
+            setSelected: sinon.spy(),
             ...global.eventkit_test_props,
         };
     }
@@ -77,7 +77,7 @@ describe('NotificationsTableItem component', () => {
         beforeEach(() => {
             const checkbox = wrapper.find('.qa-NotificationsTableItem-Checkbox');
             isChecked = !checkbox.props().checked;
-            const e = { stopPropagation: () => {} };
+            const e = { stopPropagation: () => sinon.spy };
             checkbox.props().onChange(e, isChecked);
         });
 

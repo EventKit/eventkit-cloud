@@ -14,10 +14,10 @@ describe('DrawFreeButton component', () => {
 
     const getProps = () => ({
         buttonState: 'DEFAULT',
-        updateMode: () => {},
-        setFreeButtonSelected: () => {},
-        setAllButtonsDefault: () => {},
-        handleCancel: () => {},
+        handleCancel: sinon.spy(),
+        setAllButtonsDefault: sinon.spy(),
+        setFreeButtonSelected: sinon.spy(),
+        updateMode: sinon.spy(),
         ...global.eventkit_test_props,
     });
 

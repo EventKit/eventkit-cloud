@@ -13,11 +13,11 @@ const group = {
 describe('notificationUtils', () => {
     it('should correctly handle "run_started" notification', () => {
         const notification = {
-            id: '1',
-            verb: 'run_started',
             actor: {
                 details: run,
             },
+            id: '1',
+            verb: 'run_started',
         };
 
         const viewPath = utils.getNotificationViewPath(notification);
@@ -26,11 +26,11 @@ describe('notificationUtils', () => {
 
     it('should correctly handle "run_started" with no run', () => {
         const notification = {
-            id: '1',
-            verb: 'run_started',
             actor: {
                 details: undefined,
             },
+            id: '1',
+            verb: 'run_started',
         };
 
         const viewPath = utils.getNotificationViewPath(notification);
@@ -39,11 +39,11 @@ describe('notificationUtils', () => {
 
     it('should correctly handle "run_canceled" notification', () => {
         const notification = {
-            id: '1',
-            verb: 'run_canceled',
             actor: {
                 details: run,
             },
+            id: '1',
+            verb: 'run_canceled',
         };
 
         const viewPath = utils.getNotificationViewPath(notification);
@@ -52,11 +52,11 @@ describe('notificationUtils', () => {
 
     it('should correctly handle "run_completed" notification', () => {
         const notification = {
-            id: '1',
-            verb: 'run_completed',
             actor: {
                 details: run,
             },
+            id: '1',
+            verb: 'run_completed',
         };
 
         const viewPath = utils.getNotificationViewPath(notification);
@@ -65,11 +65,11 @@ describe('notificationUtils', () => {
 
     it('should correctly handle "run_failed" notification', () => {
         const notification = {
-            id: '1',
-            verb: 'run_failed',
             actor: {
                 details: run,
             },
+            id: '1',
+            verb: 'run_failed',
         };
 
         const viewPath = utils.getNotificationViewPath(notification);
@@ -78,11 +78,11 @@ describe('notificationUtils', () => {
 
     it('should correctly handle "run_deleted" notification', () => {
         const notification = {
-            id: '1',
-            verb: 'run_deleted',
             actor: {
                 details: run,
             },
+            id: '1',
+            verb: 'run_deleted',
         };
 
         const viewPath = utils.getNotificationViewPath(notification);
@@ -91,12 +91,12 @@ describe('notificationUtils', () => {
 
     it('should correctly handle "added_to_group" notification', () => {
         const notification = {
-            id: '1',
-            verb: 'added_to_group',
-            actor: {},
             action_object: {
                 details: group,
             },
+            actor: {},
+            id: '1',
+            verb: 'added_to_group',
         };
 
         const viewPath = utils.getNotificationViewPath(notification);
@@ -105,12 +105,12 @@ describe('notificationUtils', () => {
 
     it('should correctly handle "added_to_group" with no group', () => {
         const notification = {
-            id: '1',
-            verb: 'added_to_group',
-            actor: {},
             action_object: {
                 details: undefined,
             },
+            actor: {},
+            id: '1',
+            verb: 'added_to_group',
         };
 
         const viewPath = utils.getNotificationViewPath(notification);
@@ -119,12 +119,12 @@ describe('notificationUtils', () => {
 
     it('should correctly handle "removed_from_group" notification', () => {
         const notification = {
-            id: '1',
-            verb: 'removed_from_group',
-            actor: {},
             action_object: {
                 details: group,
             },
+            actor: {},
+            id: '1',
+            verb: 'removed_from_group',
         };
 
         const viewPath = utils.getNotificationViewPath(notification);
@@ -133,12 +133,12 @@ describe('notificationUtils', () => {
 
     it('should correctly handle "set_as_group_admin" notification', () => {
         const notification = {
-            id: '1',
-            verb: 'set_as_group_admin',
-            actor: {},
             action_object: {
                 details: group,
             },
+            actor: {},
+            id: '1',
+            verb: 'set_as_group_admin',
         };
 
         const viewPath = utils.getNotificationViewPath(notification);
@@ -147,12 +147,12 @@ describe('notificationUtils', () => {
 
     it('should correctly handle "removed_as_group_admin" notification', () => {
         const notification = {
-            id: '1',
-            verb: 'removed_as_group_admin',
-            actor: {},
             action_object: {
                 details: group,
             },
+            actor: {},
+            id: '1',
+            verb: 'removed_as_group_admin',
         };
 
         const viewPath = utils.getNotificationViewPath(notification);
@@ -161,9 +161,9 @@ describe('notificationUtils', () => {
 
     it('should correctly handle unsupported notification verbs', () => {
         const notification = {
-            id: '1',
-            actor: {},
             action_object: { details: 'something' },
+            actor: {},
+            id: '1',
             verb: 'some_unsupported_verb',
         };
 

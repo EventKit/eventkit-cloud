@@ -12,13 +12,9 @@ describe('file actions', () => {
 
     it('processGeoJSONFile should add AOI to state if valid geojson', () => {
         const geojson = {
-            type: 'FeatureCollection',
             features: [
                 {
-                    type: 'Feature',
-                    properties: {},
                     geometry: {
-                        type: 'Polygon',
                         coordinates: [
                             [
                                 [7.2, 46.2],
@@ -28,9 +24,13 @@ describe('file actions', () => {
                                 [7.2, 46.2],
                             ],
                         ],
+                        type: 'Polygon',
                     },
+                    properties: {},
+                    type: 'Feature',
                 },
             ],
+            type: 'FeatureCollection',
         };
         const initialState = {};
         const store = createTestStore(initialState);

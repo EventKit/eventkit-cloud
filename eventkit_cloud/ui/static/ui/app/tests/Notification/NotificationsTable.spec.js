@@ -11,8 +11,6 @@ import NotificationsTableItem from '../../components/Notification/NotificationsT
 
 const mockNotifications = {
     1: {
-        id: '1',
-        verb: 'run_started',
         actor: {
             details: {
                 job: {
@@ -20,12 +18,12 @@ const mockNotifications = {
                 },
             },
         },
+        id: '1',
         timestamp: '2018-05-04T17:32:04.716806Z',
         unread: false,
+        verb: 'run_started',
     },
     2: {
-        id: '2',
-        verb: 'run_completed',
         actor: {
             details: {
                 job: {
@@ -33,8 +31,10 @@ const mockNotifications = {
                 },
             },
         },
+        id: '2',
         timestamp: '2018-05-04T17:34:04.716806Z',
         unread: true,
+        verb: 'run_completed',
     },
 };
 
@@ -49,6 +49,15 @@ describe('NotificationsTable component', () => {
 
     function defaultProps() {
         return {
+            history: {
+                push: sinon.spy(),
+            },
+            markNotificationsAsRead: sinon.spy(),
+            markNotificationsAsUnread: sinon.spy(),
+            notificationsArray: [
+                mockNotifications['1'],
+                mockNotifications['2'],
+            ],
             notificationsData: {
                 fetched: false,
                 notifications: mockNotifications,
@@ -57,20 +66,11 @@ describe('NotificationsTable component', () => {
                     mockNotifications['2'],
                 ],
             },
-            notificationsArray: [
-                mockNotifications['1'],
-                mockNotifications['2'],
-            ],
-            history: {
-                push: sinon.spy(),
-            },
-            onView: sinon.spy(),
+            onMarkAllAsRead: sinon.spy(),
             onMarkAsRead: sinon.spy(),
             onMarkAsUnread: sinon.spy(),
             onRemove: sinon.spy(),
-            onMarkAllAsRead: sinon.spy(),
-            markNotificationsAsRead: sinon.spy(),
-            markNotificationsAsUnread: sinon.spy(),
+            onView: sinon.spy(),
             removeNotifications: sinon.spy(),
             ...global.eventkit_test_props,
         };

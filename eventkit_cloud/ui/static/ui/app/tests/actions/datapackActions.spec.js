@@ -4,47 +4,47 @@ import Normalizer from '../../utils/normalizers';
 import * as utils from '../../utils/generic';
 
 const getRun = () => ({
-    uid: '6870234f-d876-467c-a332-65fdf0399a0d',
-    url: 'http://cloud.eventkit.test/api/runs/6870234f-d876-467c-a332-65fdf0399a0d',
-    started_at: '2017-03-10T15:52:35.637331Z',
+    expiration: '2017-03-24T15:52:35.637258Z',
     finished_at: '2017-03-10T15:52:39.837Z',
-    user: 'admin',
-    status: 'COMPLETED',
     job: {
-        uid: '7643f806-1484-4446-b498-7ddaa65d011a',
-        name: 'Test1',
-        event: 'Test1 event',
         description: 'Test1 description',
-        url: 'http://cloud.eventkit.test/api/jobs/7643f806-1484-4446-b498-7ddaa65d011a',
+        event: 'Test1 event',
+        name: 'Test1',
         permissions: {
-            value: 'PRIVATE',
             groups: {},
             members: {},
+            value: 'PRIVATE',
         },
+        uid: '7643f806-1484-4446-b498-7ddaa65d011a',
+        url: 'http://cloud.eventkit.test/api/jobs/7643f806-1484-4446-b498-7ddaa65d011a',
     },
-    expiration: '2017-03-24T15:52:35.637258Z',
+    started_at: '2017-03-10T15:52:35.637331Z',
+    status: 'COMPLETED',
+    uid: '6870234f-d876-467c-a332-65fdf0399a0d',
+    url: 'http://cloud.eventkit.test/api/runs/6870234f-d876-467c-a332-65fdf0399a0d',
+    user: 'admin',
 });
 
 const getApiRun = () => ({
-    uid: '6870234f-d876-467c-a332-65fdf0399a0d',
-    url: 'http://cloud.eventkit.test/api/runs/6870234f-d876-467c-a332-65fdf0399a0d',
-    started_at: '2017-03-10T15:52:35.637331Z',
+    expiration: '2017-03-24T15:52:35.637258Z',
     finished_at: '2017-03-10T15:52:39.837Z',
-    user: 'admin',
-    status: 'COMPLETED',
     job: {
-        uid: '7643f806-1484-4446-b498-7ddaa65d011a',
-        name: 'Test1',
-        event: 'Test1 event',
         description: 'Test1 description',
-        url: 'http://cloud.eventkit.test/api/jobs/7643f806-1484-4446-b498-7ddaa65d011a',
+        event: 'Test1 event',
+        name: 'Test1',
         permissions: {
-            value: 'PRIVATE',
             groups: {},
             members: {},
+            value: 'PRIVATE',
         },
+        uid: '7643f806-1484-4446-b498-7ddaa65d011a',
+        url: 'http://cloud.eventkit.test/api/jobs/7643f806-1484-4446-b498-7ddaa65d011a',
     },
-    expiration: '2017-03-24T15:52:35.637258Z',
+    started_at: '2017-03-10T15:52:35.637331Z',
+    status: 'COMPLETED',
+    uid: '6870234f-d876-467c-a332-65fdf0399a0d',
+    url: 'http://cloud.eventkit.test/api/runs/6870234f-d876-467c-a332-65fdf0399a0d',
+    user: 'admin',
 });
 
 const normalizer = new Normalizer();
@@ -72,12 +72,12 @@ describe('DataPackList actions', () => {
             const state = { user: { data: { user: { username: 'test' } } } };
             expect(actions.getDatacartDetails('').batchSuccess(rep, state)).toEqual([
                 {
-                    type: 'ADD_RUN',
                     payload: {
                         id: normalRun.result,
                         username: 'test',
                         ...normalRun.entities,
                     },
+                    type: 'ADD_RUN',
                 },
             ]);
         });
@@ -94,25 +94,25 @@ describe('DataPackList actions', () => {
 
         it('should pass in the correct params', () => {
             const args = {
-                status: { a: '1', b: '2' },
-                providers: { provider_one: {}, provider_two: {} },
-                page_size: 11,
+                maxDate: 'maxDate',
+                minDate: 'minDate',
                 ordering: 'featured',
                 ownerFilter: 'test_user',
-                minDate: 'minDate',
-                maxDate: 'maxDate',
+                page_size: 11,
+                providers: { provider_one: {}, provider_two: {} },
                 search: 'search_query',
+                status: { a: '1', b: '2' },
             };
             const params = {
-                status: 'A,B',
-                providers: 'provider_one,provider_two',
-                page_size: 11,
-                ordering: 'featured,-started_at',
-                user: 'test_user',
-                min_date: args.minDate,
                 max_date: args.maxDate,
+                min_date: args.minDate,
+                ordering: 'featured,-started_at',
+                page_size: 11,
+                providers: 'provider_one,provider_two',
                 search_term: args.search,
                 slim: 'true',
+                status: 'A,B',
+                user: 'test_user',
             };
             expect(actions.getRuns(args).params).toEqual(params);
         });
@@ -123,16 +123,16 @@ describe('DataPackList actions', () => {
                     feature: 'feature',
                 },
                 permissions: {
-                    members: { one: 'ADMIN' },
                     groups: { two: 'ADMIN' },
+                    members: { one: 'ADMIN' },
                     value: 'SHARED',
                 },
             };
             const data = {
                 geojson: JSON.stringify(args.geojson),
                 permissions: {
-                    members: Object.keys(args.permissions.members),
                     groups: Object.keys(args.permissions.groups),
+                    members: Object.keys(args.permissions.members),
                 },
             };
             expect(actions.getRuns(args).data).toEqual(data);
@@ -148,9 +148,9 @@ describe('DataPackList actions', () => {
             const rep = { data: [getApiRun()] };
             expect(actions.getRuns({}).onSuccess(rep)).toEqual({
                 payload: {
-                    range: '1-1',
                     nextPage: true,
                     orderedIds: [getApiRun().uid],
+                    range: '1-1',
                 },
             });
             expect(getStub.calledOnce).toBe(true);
@@ -162,12 +162,12 @@ describe('DataPackList actions', () => {
             const state = { user: { data: { user: { username: 'test' } } } };
             expect(actions.getRuns({}).batchSuccess(rep, state)).toEqual([
                 {
-                    type: 'ADD_RUN',
                     payload: {
                         id: normalRun.result,
                         username: 'test',
                         ...normalRun.entities,
                     },
+                    type: 'ADD_RUN',
                 },
             ]);
         });
@@ -176,9 +176,9 @@ describe('DataPackList actions', () => {
     describe('getFeaturedRuns action', () => {
         it('should have the correct types', () => {
             expect(actions.getFeaturedRuns({}).types).toEqual([
+                actions.types.FETCH_FEATURED_RUNS_ERROR,
                 actions.types.FETCHING_FEATURED_RUNS,
                 actions.types.RECEIVED_FEATURED_RUNS,
-                actions.types.FETCH_FEATURED_RUNS_ERROR,
             ]);
         });
 
@@ -192,9 +192,9 @@ describe('DataPackList actions', () => {
             const rep = { data: [getApiRun()] };
             expect(actions.getFeaturedRuns({}).onSuccess(rep)).toEqual({
                 payload: {
-                    range: '1-1',
-                    nextPage: true,
                     ids: [getApiRun().uid],
+                    nextPage: true,
+                    range: '1-1',
                 },
             });
             expect(getStub.calledOnce).toBe(true);
@@ -206,12 +206,12 @@ describe('DataPackList actions', () => {
             const state = { user: { data: { user: { username: 'test' } } } };
             expect(actions.getFeaturedRuns({}).batchSuccess(rep, state)).toEqual([
                 {
-                    type: 'ADD_FEATURED_RUN',
                     payload: {
                         id: normalRun.result,
                         username: 'test',
                         ...normalRun.entities,
                     },
+                    type: 'ADD_FEATURED_RUN',
                 },
             ]);
         });
@@ -220,9 +220,9 @@ describe('DataPackList actions', () => {
     describe('deleteRun action', () => {
         it('should have the correct types', () => {
             expect(actions.deleteRun('123').types).toEqual([
-                actions.types.DELETING_RUN,
-                actions.types.DELETED_RUN,
                 actions.types.DELETE_RUN_ERROR,
+                actions.types.DELETED_RUN,
+                actions.types.DELETING_RUN,
             ]);
         });
 
@@ -238,9 +238,9 @@ describe('DataPackList actions', () => {
     describe('updateExpiration action', () => {
         it('should have the correct types', () => {
             expect(actions.updateExpiration('123', '').types).toEqual([
-                actions.types.UPDATING_EXPIRATION,
-                actions.types.UPDATE_EXPIRATION_SUCCESS,
                 actions.types.UPDATE_EXPIRATION_ERROR,
+                actions.types.UPDATE_EXPIRATION_SUCCESS,
+                actions.types.UPDATING_EXPIRATION,
             ]);
         });
     });

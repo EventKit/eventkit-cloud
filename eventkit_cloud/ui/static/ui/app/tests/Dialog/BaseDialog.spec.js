@@ -6,11 +6,12 @@ import DialogTitle from '@material-ui/core/DialogTitle';
 import DialogContent from '@material-ui/core/DialogContent';
 import DialogActions from '@material-ui/core/DialogActions';
 import { BaseDialog } from '../../components/Dialog/BaseDialog';
+import sinon from "sinon";
 
 describe('BaseDialog component', () => {
     const getProps = () => ({
+        onClose: sinon.spy(),
         show: true,
-        onClose: () => {},
         title: '',
         ...global.eventkit_test_props,
     });
@@ -31,12 +32,12 @@ describe('BaseDialog component', () => {
             <Button
                 className="qa-BaseDialog-Button"
                 style={{ margin: '0px' }}
-                onClick={() => {}}
+                onClick={sinon.spy()}
             />,
             <Button
                 className="qa-BaseDialog-Button"
                 style={{ margin: '0px' }}
-                onClick={() => {}}
+                onClick={sinon.spy()}
             />,
         ];
         const props = getProps();

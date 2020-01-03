@@ -24,10 +24,10 @@ describe('usersActions', () => {
                 range: '1-1',
             });
             expect(actions.getUsers().onSuccess(ret)).toEqual({
-                users: ret.data,
-                total: ret.headers['total-users'],
-                range: '1-1',
                 nextPage: false,
+                range: '1-1',
+                total: ret.headers['total-users'],
+                users: ret.data,
             });
             headerStub.restore();
         });

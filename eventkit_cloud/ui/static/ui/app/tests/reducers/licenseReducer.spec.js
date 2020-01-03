@@ -22,8 +22,8 @@ describe('License Reducer', () => {
         expect(licenseReducer(
             { ...state, fetching: true },
             {
-                type: types.RECEIVED_LICENSES,
                 licenses: [{ name: 'license 1', text: 'some text', slug: '1' }],
+                type: types.RECEIVED_LICENSES,
             },
         )).toEqual({
             ...state,
@@ -37,8 +37,8 @@ describe('License Reducer', () => {
         expect(licenseReducer(
             { ...state, fetching: true },
             {
-                type: types.FETCH_LICENSES_ERROR,
                 error: 'Oh no a big scary error',
+                type: types.FETCH_LICENSES_ERROR,
             },
         )).toEqual({ ...state, fetching: false, error: 'Oh no a big scary error' });
     });

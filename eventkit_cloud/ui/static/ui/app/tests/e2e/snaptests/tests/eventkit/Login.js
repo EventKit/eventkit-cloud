@@ -1,8 +1,10 @@
- const TIMEOUT = 10000;
- const random = "" + parseInt(Math.random() * 1000000);
- const random1 = "" + parseInt(Math.random() * 1000000);
- const random2 = "" + parseInt(Math.random() * 1000000);
- const random3 = "" + parseInt(Math.random() * 1000000);
+import {radix} from "eslint/lib/built-in-rules-index";
+
+const TIMEOUT = 10000;
+ const random = "" + parseInt(Math.random() * 1000000, radix);
+ const random1 = "" + parseInt(Math.random() * 1000000, radix);
+ const random2 = "" + parseInt(Math.random() * 1000000, radix);
+ const random3 = "" + parseInt(Math.random() * 1000000, radix);
 
 
  module.exports = {

@@ -1,5 +1,6 @@
+import {radix} from "eslint/lib/built-in-rules-index";
 
-  const TIMEOUT = 10000;
+const TIMEOUT = 10000;
 
 
 
@@ -40,18 +41,16 @@ module.exports.bindHelpers = function(browser) {
     return 'var passedArgs = Array.prototype.slice.call(arguments,0); return ' + funcToExecute + '.apply(window, passedArgs);';
   };
 
-  function stringFormat(string) {
-    var replacers = Array.prototype.slice.call(arguments, 1)
+  function stringFormat(str) {
+    const replacers = Array.prototype.slice.call(arguments, 1)
 
     replacers.forEach((replacer) => {
-        string = string.replace("%s", replacer);
+        str = str.replace("%s", replacer);
     });
 
-    return string;
+    return str;
 
   };
-
-  function noop() {};
 
   browser.url = function(pathname, width, height, description) {
     browser.perform(() => comment(description));
@@ -83,24 +82,24 @@ module.exports.bindHelpers = function(browser) {
 
     var techDescription = stringFormat(" (Path matches '%s')", pathname);
 
-    var attempts = parseInt((timeout || TIMEOUT) / POLLING_RATE);
+    var attempts = parseInt((timeout || TIMEOUT) / POLLING_RATE, radix);
     var currentAttempt = 0;
 
-    function checkForPageLoadWithPathname(pathname) {
+    function checkForPageLoadWithPathname(path) {
       browser.execute(prepStringFuncForExecute(`function() {
         return {
           pathname: window.location.pathname,
           readyState: document.readyState
         };
       }`), [], function(result) {
-        if (result.value.readyState === "complete" && (pathname instanceof RegExp ? pathname.test(result.value.pathname) : result.value.pathname === pathname)) {
+        if (result.value.readyState === "complete" && (path instanceof RegExp ? path.test(result.value.pathname) : result.value.pathname === path)) {
           this.assert.ok(true, description + techDescription)
         } else if(currentAttempt === attempts) {
           this.assert.ok(false, description + techDescription)
         } else {
           currentAttempt++;
           browser.pause(POLLING_RATE);
-          checkForPageLoadWithPathname(pathname);
+          checkForPageLoadWithPathname(path);
         }
       });
     }
@@ -143,7 +142,7 @@ module.exports.bindHelpers = function(browser) {
     browser.perform(() => comment(description));
     browser.execute(prepStringFuncForExecute(`function(x, y) {
       window.scrollTo(x, y);
-    }`), [x, y], function(result) {});
+    }`), [x, y], function(result){return result});
 
     return this;
   };
@@ -164,7 +163,7 @@ module.exports.bindHelpers = function(browser) {
         el.scrollLeft = x;
         el.scrollTop = y;
       })(snptGetElement(selector, selectorType), x, y);
-    }`), [selector, selectorType, x, y], function(result) {});
+    }`), [selector, selectorType, x, y], function(result) {return result});
 
     return this;
   };
@@ -277,24 +276,23 @@ module.exports.bindHelpers = function(browser) {
       browser.assert.ok(false, stringFormat("FAILED: '%s' - Couldn't find element. %s", description, techDescription));
     });
 
-    var attempts = parseInt((timeout || TIMEOUT) / POLLING_RATE);
+    var attempts = parseInt((timeout || TIMEOUT) / POLLING_RATE, radix);
     var currentAttempt = 0;
 
-    function checkforStyle(selector, selectorType, style, value) {
+    function checkforStyle(select, selectType, styl, val) {
       browser.execute(prepStringFuncForExecute(`function(selector, selectorType, style) {
         ${snptGetElement}
         var el = snptGetElement(selector, selectorType);
         return window.getComputedStyle(el, null).getPropertyValue(style);
-      }`), [selector, selectorType, style], function(result) {
-        if (value instanceof RegExp ? value.test(result.value) : value === result.value) {
+      }`), [select, selectType, styl], function(result) {
+        if (val instanceof RegExp ? val.test(result.value) : val === result.value) {
           this.assert.ok(true, description + techDescription)
         } else if (currentAttempt === attempts) {
           this.assert.ok(false, description + techDescription)
         } else {
           currentAttempt++;
-          console.log("Attempt %s: Actual %s, Expected %s", currentAttempt, result.value, value)
           browser.pause(POLLING_RATE);
-          checkforStyle(selector, selectorType, style, value);
+          checkforStyle(select, selectType, styl, val);
         }
       });
     }
@@ -313,10 +311,10 @@ module.exports.bindHelpers = function(browser) {
       browser.assert.ok(false, stringFormat("FAILED: '%s' - Couldn't find element. %s", description, techDescription));
     });
 
-    var attempts = parseInt((timeout || TIMEOUT) / POLLING_RATE);
+    var attempts = parseInt((timeout || TIMEOUT) / POLLING_RATE, radix);
     var currentAttempt = 0;
 
-    function checkforValue(selector, selectorType, value) {
+    function checkforValue(select, selectType, val) {
       browser.execute(prepStringFuncForExecute(`function(selector, selectorType) {
 
         ${snptGetElement}
@@ -330,15 +328,15 @@ module.exports.bindHelpers = function(browser) {
             return el.value;
           }
         } else return null;
-      }`), [selector, selectorType], function(result) {
-        if (value instanceof RegExp ? value.test(result.value) : value === result.value) {
+      }`), [select, selectType], function(result) {
+        if (val instanceof RegExp ? val.test(result.value) : val === result.value) {
           this.assert.ok(true, description)
         } else if(currentAttempt === attempts) {
           this.assert.ok(false, description)
         } else {
           currentAttempt++;
           browser.pause(POLLING_RATE);
-          checkforValue(selector, selectorType, value);
+          checkforValue(select, selectType, val);
         }
       });
     }
@@ -363,22 +361,22 @@ module.exports.bindHelpers = function(browser) {
 
   };
 
-  browser._elementPresent = function(selector, selectorType = "CSS", description, timeout, onFail = noop, onSuccess = noop) {
+  browser._elementPresent = function(selector, selectType = "CSS", description, timeout) {
 
-    var attempts = parseInt((timeout || TIMEOUT) / POLLING_RATE);
+    var attempts = parseInt((timeout || TIMEOUT) / POLLING_RATE, radix);
     var currentAttempt = 0;
 
-    function checkforEl(selector) {
+    function checkforEl(select) {
       browser.execute(
         prepStringFuncForExecute(`function(selector, selectorType) {
           ${snptGetElement}
           return !!snptGetElement(selector, selectorType);
-        }`), [selector, selectorType], function(result) {
+        }`), [select, selectType], function(result) {
 
         if (!result.value && currentAttempt < attempts) {
           currentAttempt++;
           browser.pause(POLLING_RATE);
-          checkforEl(selector);
+          checkforEl(select);
         } else if (!result.value) {
           onFail();
         } else {
@@ -477,7 +475,7 @@ module.exports.bindHelpers = function(browser) {
     return this;
   };
 
-  browser._getElText = function(selector, selectorType = "CSS", onSuccess = noop) {
+  browser._getElText = function(selector, selectorType = "CSS") {
 
     browser.execute(prepStringFuncForExecute(`function(selector, selectorType) {
 
@@ -509,19 +507,19 @@ module.exports.bindHelpers = function(browser) {
       browser.assert.ok(false, stringFormat("FAILED: '%s' - Couldn't find element. %s", description, techDescription));
     });
 
-    var attempts = parseInt((timeout || TIMEOUT) / POLLING_RATE);
+    var attempts = parseInt((timeout || TIMEOUT) / POLLING_RATE, radix);
     var currentAttempt = 0;
 
-    function checkforText(selector, selectorType, assertText) {
-      browser._getElText(selector, selectorType,  function(elsText) {
-        if (assertText instanceof RegExp ? assertText.test(elsText) : assertText === elsText) {
+    function checkforText(select, selectType, text) {
+      browser._getElText(select, selectType,  function(elsText) {
+        if (text instanceof RegExp ? text.test(elsText) : text === elsText) {
           browser.assert.ok(true, description)
         } else if(currentAttempt === attempts) {
           browser.assert.ok(false, description)
         } else {
           currentAttempt++;
           browser.pause(POLLING_RATE);
-          checkforText(selector, selectorType, assertText);
+          checkforText(select, selectType, text);
         }
       });
     }
@@ -534,7 +532,7 @@ module.exports.bindHelpers = function(browser) {
 
   function comment(description) {
     if (description) {
-      console.log(description);
+      return description;
     }
   }
 

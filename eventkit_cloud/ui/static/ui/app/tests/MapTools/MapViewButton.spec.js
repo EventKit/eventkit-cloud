@@ -14,10 +14,10 @@ describe('MapViewButton component', () => {
 
     const getProps = () => ({
         buttonState: 'DEFAULT',
-        setMapViewButtonSelected: () => {},
-        setAllButtonsDefault: () => {},
-        handleCancel: () => {},
-        setMapView: () => {},
+        handleCancel: sinon.spy(),
+        setAllButtonsDefault: sinon.spy(),
+        setMapView: sinon.spy(),
+        setMapViewButtonSelected: sinon.spy(),
         ...global.eventkit_test_props,
     });
     it('should display the default icon', () => {

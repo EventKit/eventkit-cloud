@@ -5,10 +5,8 @@ import use from '../images/AboutPage/three_step_3.png';
 
 export const about = [
     {
-        type: 'InfoParagraph',
-        title: 'Overview',
         body:
-        `EventKit's mission is to save its users' time and frustration by simplifying
+            `EventKit's mission is to save its users' time and frustration by simplifying
             the process for getting deployment-ready geospatial information.
             EventKit works by configuring geospatial data web services in the application,
             and then exporting that data into a portable data format based on a custom,
@@ -16,41 +14,41 @@ export const about = [
             For EventKit v1.1, the maximum allowable size for an Area of Interest (AOI) is set to the approximate size of a large city,
             with scalability improvements coming soon.
             Reach out to us if you need to processs a larger area.`,
+        title: 'Overview',
+        type: 'InfoParagraph',
     },
     {
-        type: 'InfoParagraph',
-        title: 'What is a DataPack?',
         body:
-        `DataPacks are zipped archives (.zip) of geospatial data, cartography, and metadata.
+            `DataPacks are zipped archives (.zip) of geospatial data, cartography, and metadata.
             Each dataset is already processed. Raster data is tiled for quick rendering, and feature data, such as OSM,
             has been converted into various schemas designed to make viewing and visual analysis easier.
             The provided QGIS project file includes styling with icons and neatly groups raster data.
             Limited support for ArcGIS is also available.`,
+        title: 'What is a DataPack?',
+        type: 'InfoParagraph',
     },
     {
-        type: 'ThreeStepInfo',
-        title: 'DataPacks',
         steps: [
             { img: manage, caption: 'Manage DataPacks' },
             { img: create, caption: 'Create DataPacks' },
             { img: use, caption: 'Use with other open source geospatial software like QGIS' },
         ],
+        title: 'DataPacks',
+        type: 'ThreeStepInfo',
     },
     {
-        type: 'InfoGrid',
-        title: 'Data Providers & Formats',
         items: [
             {
-                title: 'OSM Data',
                 body: `OpenStreetMap vector data provided in a custom thematic schema.
                   Data is grouped into separate tables (e.g. water, roads...) and is styled for use in QGIS or ArcGIS.
                   Exported as a zip file.`,
+                title: 'OSM Data',
             },
         ],
+        title: 'Data Providers & Formats',
+        type: 'InfoGrid',
     },
     {
-        type: 'InfoParagraph',
-        title: 'Working in QGIS & ArcGIS',
         body: (
             <div>
                 <p>
@@ -65,66 +63,68 @@ export const about = [
                 </p>
             </div>
         ),
+        title: 'Working in QGIS & ArcGIS',
+        type: 'InfoParagraph',
     },
     {
-        type: 'InfoGrid',
-        title: 'What\'s New',
         items: [
             {
-                title: 'Product Tour',
                 body: 'Simply hit the question mark icon on any page for a walkthrough.',
+                title: 'Product Tour',
             },
             {
-                title: 'ArcGIS Support',
                 body: 'A script you’ll run locally to generate an mxd for use in ArcGIS.',
+                title: 'ArcGIS Support',
             },
             {
-                title: 'Dashboard',
                 body: 'Provides an improved view into your content along with system notifications.',
+                title: 'Dashboard',
             },
             {
-                title: 'Sharing',
                 body: 'Allows you to share DataPacks with individuals or groups (e.g., you create a group for your team).',
+                title: 'Sharing',
             },
             {
-                title: 'Data Availablity Check',
                 body: `EventKit is at the mercy of its external data providers.
                     This check pings the external service to let you know if it is available.`,
+                title: 'Data Availablity Check',
             },
             {
-                title: 'Improved Buffer',
                 body: 'Improved interface for applying a buffer to your Area of Interest.',
+                title: 'Improved Buffer',
             },
         ],
+        title: 'What\'s New',
+        type: 'InfoGrid',
     },
     {
-        type: 'InfoParagraph',
-        title: 'Roadmap',
         body: (
             <div>
                 <p>
                     The EventKit roadmap outlines the development of new features,
-                     and our next few releases include improvements across a range of topics.
-                     In general these include more datasets, formats, and projections,
-                     the ability to preview data sources, ways to pre-build,
-                     recommend, and discover new datasets, ability to process larger areas, and continued integrations into QGIS and ESRI.
+                    and our next few releases include improvements across a range of topics.
+                    In general these include more datasets, formats, and projections,
+                    the ability to preview data sources, ways to pre-build,
+                    recommend, and discover new datasets, ability to process larger areas, and continued integrations into QGIS and ESRI.
                 </p>
                 <p>
                     If you have specific features or workflows that you&apos;d like to see in EventKit,
-                     please let us know.
+                    please let us know.
                 </p>
             </div>
         ),
+        title: 'Roadmap',
+        type: 'InfoParagraph',
     },
     {
-        type: 'InfoParagraph',
-        title: 'Additional Resources',
         body: (
             <div style={{ textAlign: 'center' }}>
                 <a href="https://github.com/eventkit/eventkit-cloud">GitHub</a>
                 <br />
             </div>
         ),
+        title: 'Additional Resources',
+        type: 'InfoParagraph',
     },
 ];
 

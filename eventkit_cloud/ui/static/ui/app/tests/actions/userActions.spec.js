@@ -167,11 +167,11 @@ describe('userActions actions', () => {
         });
 
         const expectedActions = [{
-            type: actions.types.USER_ACTIVE,
             payload: {
                 autoLogoutAt: new Date(autoLogoutAtMS),
                 autoLogoutWarningAt: new Date(autoLogoutWarningAtMS),
             },
+            type: actions.types.USER_ACTIVE,
         }];
 
         const store = createTestStore({

@@ -14,8 +14,8 @@ describe('authReducer', () => {
         expect(authReducer(
             undefined,
             {
-                type: types.SET_TOKEN,
                 payload: { token },
+                type: types.SET_TOKEN,
             },
         )).toEqual({ ...initialState, token });
     });
@@ -29,8 +29,8 @@ describe('authReducer', () => {
         expect(authReducer(
             state,
             {
-                type: types.SET_TOKEN,
                 payload: { token: newToken },
+                type: types.SET_TOKEN,
             },
         )).toEqual({ ...state, token: newToken });
     });

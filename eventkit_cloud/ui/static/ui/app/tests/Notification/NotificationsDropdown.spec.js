@@ -6,8 +6,6 @@ import { NotificationsDropdown } from '../../components/Notification/Notificatio
 
 const mockNotifications = {
     1: {
-        id: '1',
-        verb: 'run_started',
         actor: {
             details: {
                 job: {
@@ -15,12 +13,12 @@ const mockNotifications = {
                 },
             },
         },
+        id: '1',
         timestamp: '2018-05-04T17:32:04.716806Z',
         unread: true,
+        verb: 'run_started',
     },
     2: {
-        id: '2',
-        verb: 'run_completed',
         actor: {
             details: {
                 job: {
@@ -28,8 +26,10 @@ const mockNotifications = {
                 },
             },
         },
+        id: '2',
         timestamp: '2018-05-04T17:34:04.716806Z',
         unread: true,
+        verb: 'run_completed',
     },
 };
 
@@ -44,17 +44,17 @@ describe('NotificationsDropdown component', () => {
 
     function defaultProps() {
         return {
-            notifications: {
-                notifications: {},
-                notificationsSorted: [],
-            },
             history: {
                 push: sinon.spy(),
             },
             loading: true,
+            markAllNotificationsAsRead: sinon.spy(),
+            notifications: {
+                notifications: {},
+                notificationsSorted: [],
+            },
             onClickAway: sinon.spy(),
             onNavigate: sinon.spy(),
-            markAllNotificationsAsRead: sinon.spy(),
             ...global.eventkit_test_props,
         };
     }
@@ -71,6 +71,7 @@ describe('NotificationsDropdown component', () => {
     function loadNotifications() {
         wrapper.setProps({
             ...instance.props,
+            loading: false,
             notifications: {
                 ...instance.props,
                 notifications: mockNotifications,
@@ -79,19 +80,18 @@ describe('NotificationsDropdown component', () => {
                     mockNotifications['2'],
                 ],
             },
-            loading: false,
         });
     }
 
     function loadNotificationsEmpty() {
         wrapper.setProps({
             ...instance.props,
+            loading: false,
             notifications: {
                 ...instance.props.notifications,
                 notifications: {},
                 notificationsSorted: [],
             },
-            loading: false,
         });
     }
 

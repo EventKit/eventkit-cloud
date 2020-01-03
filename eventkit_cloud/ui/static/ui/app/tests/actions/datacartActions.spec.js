@@ -3,54 +3,54 @@ import * as actions from '../../actions/datacartActions';
 
 describe('export actions', () => {
     const geojson = {
-        type: 'FeatureCollection',
         features: [
             {
-                type: 'Feature',
                 geometry: {
-                    type: 'Polygon',
                     coordinates: [
                         [[100.0, 0.0], [101.0, 0.0], [101.0, 1.0],
                             [100.0, 1.0], [100.0, 0.0]],
                     ],
+                    type: 'Polygon',
                 },
+                type: 'Feature',
             },
         ],
+        type: 'FeatureCollection',
     };
 
     it('updateAoiInfo should return passed in json', () => {
         expect(actions.updateAoiInfo({
+            description: 'description',
             geojson,
             geomType: 'Polygon',
             title: 'title',
-            description: 'description',
         })).toEqual({
-            type: 'UPDATE_AOI_INFO',
+            description: 'description',
             geojson,
             geomType: 'Polygon',
             title: 'title',
-            description: 'description',
+            type: 'UPDATE_AOI_INFO',
         });
     });
 
     it('updateExportInfo should return passed in json', () => {
         expect(actions.updateExportInfo({
-            exportName: 'exportName',
+            areaStr: 'areaStr',
             datapackDescription: 'datapackDescription',
+            exportName: 'exportName',
+            layers: ['layer1'],
             projectName: 'projectName',
             providers: ['provider1'],
-            areaStr: 'areaStr',
-            layers: ['layer1'],
         })).toEqual({
-            type: 'UPDATE_EXPORT_INFO',
             exportInfo: {
-                exportName: 'exportName',
+                areaStr: 'areaStr',
                 datapackDescription: 'datapackDescription',
+                exportName: 'exportName',
+                layers: ['layer1'],
                 projectName: 'projectName',
                 providers: ['provider1'],
-                areaStr: 'areaStr',
-                layers: ['layer1'],
             },
+            type: 'UPDATE_EXPORT_INFO',
         });
     });
 
@@ -63,9 +63,9 @@ describe('export actions', () => {
     describe('submitJob action', () => {
         it('should return the proper types', () => {
             expect(actions.submitJob().types).toEqual([
-                actions.types.SUBMITTING_JOB,
-                actions.types.JOB_SUBMITTED_SUCCESS,
                 actions.types.JOB_SUBMITTED_ERROR,
+                actions.types.JOB_SUBMITTED_SUCCESS,
+                actions.types.SUBMITTING_JOB,
             ]);
         });
 
@@ -95,9 +95,9 @@ describe('export actions', () => {
     describe('updateDataCartPermissions', () => {
         it('should return the correct types', () => {
             expect(actions.updateDataCartPermissions('', {}).types).toEqual([
-                actions.types.UPDATING_PERMISSION,
-                actions.types.UPDATE_PERMISSION_SUCCESS,
                 actions.types.UPDATE_PERMISSION_ERROR,
+                actions.types.UPDATE_PERMISSION_SUCCESS,
+                actions.types.UPDATING_PERMISSION,
             ]);
         });
 
@@ -113,9 +113,9 @@ describe('export actions', () => {
     describe('rerunExport', () => {
         it('should return the correct types', () => {
             expect(actions.rerunExport('').types).toEqual([
-                actions.types.RERUNNING_EXPORT,
-                actions.types.RERUN_EXPORT_SUCCESS,
                 actions.types.RERUN_EXPORT_ERROR,
+                actions.types.RERUN_EXPORT_SUCCESS,
+                actions.types.RERUNNING_EXPORT,
             ]);
         });
 
