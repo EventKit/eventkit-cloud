@@ -22,7 +22,7 @@ import { connectedReduxRedirect } from 'redux-auth-wrapper/history4/redirect';
 import { Redirect, Route, RouteComponentProps } from 'react-router';
 import { routerActions } from 'connected-react-router';
 import PageLoading from './common/PageLoading';
-import theme from "../styles/eventkit_theme";
+import theme from "../styles/eventkit_theme.js"
 import '../styles/bootstrap/css/bootstrap.css';
 import '../styles/openlayers/ol.css';
 import '../styles/flexboxgrid.css';
