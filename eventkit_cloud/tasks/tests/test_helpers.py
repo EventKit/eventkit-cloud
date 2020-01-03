@@ -14,7 +14,7 @@ import signal
 from eventkit_cloud.tasks.helpers import get_style_files, get_file_paths, get_last_update, get_metadata_url, \
     get_osm_last_update, cd, get_arcgis_metadata, get_metadata, get_message_count, \
     get_all_rabbitmq_objects
-from eventkit_cloud.tasks.export_tasks import TaskStates
+from eventkit_cloud.tasks.enumerations import TaskStates
 
 from eventkit_cloud.tasks.helpers import progressive_kill
 from unittest import skip
@@ -100,8 +100,8 @@ class TestHelpers(TestCase):
     @patch('eventkit_cloud.tasks.helpers.create_license_file')
     @patch('eventkit_cloud.tasks.helpers.get_metadata_url')
     @patch('eventkit_cloud.tasks.helpers.get_last_update')
-    @patch('eventkit_cloud.jobs.models.DataProvider')
-    @patch('eventkit_cloud.tasks.models.DataProviderTaskRecord')
+    @patch('eventkit_cloud.tasks.helpers.DataProvider')
+    @patch('eventkit_cloud.tasks.helpers.DataProviderTaskRecord')
     def test_get_metadata(self, mock_DataProviderTaskRecord, mock_DataProvider, mock_get_last_update,
                           mock_get_metadata_url, mock_create_license_file, mock_isfile):
         run_uid = '1234'
