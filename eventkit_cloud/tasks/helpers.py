@@ -1,6 +1,7 @@
 import copy
 from enum import Enum
 import logging
+from operator import itemgetter
 import os
 import pickle
 import re
@@ -20,6 +21,9 @@ from django.db.models import Q
 from eventkit_cloud.utils import auth_requests
 from eventkit_cloud.utils.gdalutils import get_band_statistics
 from eventkit_cloud.utils.generic import cd, get_file_paths  # NOQA
+
+from eventkit_cloud.jobs.models import DataProvider
+from eventkit_cloud.tasks.models import DataProviderTaskRecord
 
 logger = logging.getLogger()
 
@@ -143,7 +147,6 @@ def get_style_files():
 
 def create_license_file(provider_task):
     # checks a DataProviderTaskRecord's license file and adds it to the file list if it exists
-    from eventkit_cloud.jobs.models import DataProvider
     from eventkit_cloud.tasks.helpers import normalize_name
 
     data_provider_license = DataProvider.objects.get(slug=provider_task.slug).license
@@ -347,9 +350,8 @@ def get_metadata(data_provider_task_uid):
     }
     """
 
-    from eventkit_cloud.jobs.models import DataProvider
-    from eventkit_cloud.tasks.models import DataProviderTaskRecord
-    from eventkit_cloud.tasks.export_tasks import TaskStates, create_zip_task
+    from eventkit_cloud.tasks.enumerations import TaskStates
+    from eventkit_cloud.tasks.export_tasks import create_zip_task
 
     data_provider_task = DataProviderTaskRecord.objects.get(uid=data_provider_task_uid)
 
@@ -384,11 +386,9 @@ def get_metadata(data_provider_task_uid):
         "has_raster": False,
         "has_elevation": False,
     }
-
     for provider_task in provider_tasks:
         if TaskStates[provider_task.status] in TaskStates.get_incomplete_states():
             continue
-
         data_provider = DataProvider.objects.get(slug=provider_task.slug)
         provider_type = data_provider.export_provider_type.type_name
         if TaskStates[provider_task.status] not in TaskStates.get_incomplete_states():
@@ -420,35 +420,38 @@ def get_metadata(data_provider_task_uid):
                 except Exception:
                     continue
                 full_file_path = os.path.join(provider_staging_dir, filename)
-                file_ext = os.path.splitext(filename)[1]
-                # Only include files relavant to the user that we can actually add to the carto.
-                if export_task.display and ("project file" not in export_task.name.lower()):
-                    download_filename = get_download_filename(
-                        os.path.splitext(os.path.basename(filename))[0],
-                        timezone.now(),
-                        file_ext,
-                        additional_descriptors=provider_task.slug,
-                    )
-                    filepath = get_archive_data_path(provider_task.slug, download_filename)
+                current_files = metadata["data_sources"][provider_task.slug]["files"]
 
-                    file_data = {
-                        "file_path": filepath,
-                        "full_file_path": full_file_path,
-                        "file_ext": file_ext,
-                    }
-                    if metadata["data_sources"][provider_task.slug].get("type") == "elevation":
-                        # Get statistics to update ranges in template.
-                        band_stats = get_band_statistics(full_file_path)
-                        logger.info("Band Stats {0}: {1}".format(full_file_path, band_stats))
-                        file_data["band_stats"] = band_stats
-                        # Calculate the value for each elevation step (of 16)
-                        try:
-                            steps = linspace(band_stats[0], band_stats[1], num=16)
-                            file_data["ramp_shader_steps"] = list(map(int, steps))
-                        except TypeError:
-                            file_data["ramp_shader_steps"] = None
+                if full_file_path not in map(itemgetter("full_file_path"), current_files):
+                    file_ext = os.path.splitext(filename)[1]
+                    # Only include files relavant to the user that we can actually add to the carto.
+                    if export_task.display and ("project file" not in export_task.name.lower()):
+                        download_filename = get_download_filename(
+                            os.path.splitext(os.path.basename(filename))[0],
+                            timezone.now(),
+                            file_ext,
+                            additional_descriptors=provider_task.slug,
+                        )
+                        filepath = get_archive_data_path(provider_task.slug, download_filename)
 
-                    metadata["data_sources"][provider_task.slug]["files"] += [file_data]
+                        file_data = {
+                            "file_path": filepath,
+                            "full_file_path": full_file_path,
+                            "file_ext": file_ext,
+                        }
+                        if metadata["data_sources"][provider_task.slug].get("type") == "elevation":
+                            # Get statistics to update ranges in template.
+                            band_stats = get_band_statistics(full_file_path)
+                            logger.info("Band Stats {0}: {1}".format(full_file_path, band_stats))
+                            file_data["band_stats"] = band_stats
+                            # Calculate the value for each elevation step (of 16)
+                            try:
+                                steps = linspace(band_stats[0], band_stats[1], num=16)
+                                file_data["ramp_shader_steps"] = list(map(int, steps))
+                            except TypeError:
+                                file_data["ramp_shader_steps"] = None
+
+                        metadata["data_sources"][provider_task.slug]["files"] += [file_data]
 
                 if not os.path.isfile(full_file_path):
                     logger.error("Could not find file {0} for export {1}.".format(full_file_path, export_task.name))
@@ -485,8 +488,6 @@ def get_arcgis_metadata(metadata):
 
 
 def get_data_type_from_provider(provider_slug: str) -> str:
-    from eventkit_cloud.jobs.models import DataProvider
-
     data_types = {
         "wms": "raster",
         "tms": "raster",
