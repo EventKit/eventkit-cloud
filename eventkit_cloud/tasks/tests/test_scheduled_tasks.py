@@ -63,13 +63,12 @@ class TestExpireRunsTask(TestCase):
 
 class TestPcfScaleCeleryTask(TestCase):
 
-    @patch('eventkit_cloud.tasks.scheduled_tasks.get_message_count')
+    @patch('eventkit_cloud.tasks.scheduled_tasks.get_all_rabbitmq_objects')
     @patch('eventkit_cloud.utils.pcf.PcfClient')
-    def test_pcf_scale_celery(self, mock_pcf_client, mock_get_message_count):
+    def test_pcf_scale_celery(self, mock_pcf_client, mock_get_all_rabbitmq_objects):
         # Figure out how to test the two differnt environment variable options
         mock_pcf_client().get_running_tasks.return_value = {"pagination": {"total_results": 0}}
-        mock_get_message_count.return_value = 1
-
+        mock_get_all_rabbitmq_objects.return_value = [{"name": "celery", "messages": 1}]
         pcf_scale_celery(3)
         mock_pcf_client().run_task.assert_called_once()
 

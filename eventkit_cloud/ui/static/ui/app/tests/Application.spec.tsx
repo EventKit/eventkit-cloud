@@ -69,7 +69,7 @@ describe('Application component', () => {
         expect(wrapper.find(AppBar)).toHaveLength(1);
         expect(wrapper.find('.qa-Application-AppBar-MenuButton')).toHaveLength(1);
         expect(wrapper.find('.qa-Application-AppBar-NotificationsButton')).toHaveLength(1);
-        expect(wrapper.find('.qa-Application-AppBar-NotificationsIndicator')).toHaveLength(1);
+        expect(wrapper.find('.qa-Application-AppBar-badgeNotificationsIndicator')).toHaveLength(1);
         expect(wrapper.find(NotificationsDropdown)).toHaveLength(0);
         expect(wrapper.find(Drawer)).toHaveLength(1);
         expect(wrapper.find(BaseDialog)).toHaveLength(2);
