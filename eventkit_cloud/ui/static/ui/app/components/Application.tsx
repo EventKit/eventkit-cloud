@@ -372,9 +372,7 @@ export class Application extends React.Component<Props, State> {
     }
 
     componentDidUpdate(prevProps, prevState) {
-        const favicon = theme.eventkit.images.favicon;
-        const reddotfavicon = theme.eventkit.images.reddotfavicon;
-        // const { favicon, reddotfavicon } = theme.eventkit.images;
+        const { favicon, reddotfavicon } = theme.eventkit.images;
         const domFavicon = document.getElementById('favicon') as HTMLInputElement;
 
         if (domFavicon) {
