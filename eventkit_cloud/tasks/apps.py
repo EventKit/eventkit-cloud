@@ -1,5 +1,6 @@
 from django.apps import AppConfig
 
+
 class EventKitTasks(AppConfig):
     name = "eventkit_cloud.tasks"
     verbose_name = "Eventkit-Cloud Tasks"

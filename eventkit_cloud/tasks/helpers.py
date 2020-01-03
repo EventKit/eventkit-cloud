@@ -23,9 +23,7 @@ from eventkit_cloud.utils.gdalutils import get_band_statistics
 from eventkit_cloud.utils.generic import cd, get_file_paths  # NOQA
 
 from eventkit_cloud.jobs.models import DataProvider
-from eventkit_cloud.tasks.models import (
-    DataProviderTaskRecord,
-)
+from eventkit_cloud.tasks.models import DataProviderTaskRecord
 
 logger = logging.getLogger()
 
