@@ -28,6 +28,4 @@ class Artifact(object):
                 raise Exception("Basename must be specified for multipart artifact")
 
     def __repr__(self):
-        return "artifact: {0} {1} {2}".format(
-            self._parts, self._theme, self._format_name
-        )
+        return "artifact: {0} {1} {2}".format(self._parts, self._theme, self._format_name)

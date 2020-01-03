@@ -20,15 +20,11 @@ class Command(BaseCommand):
         # there could be a little pain upgrading to 1.2.4 but it had to happen sometime.
         if options["fake"]:
             fake_new_migrations()
-            print(
-                'After this new migrations should be applied "python manage.py migrate"'
-            )
+            print('After this new migrations should be applied "python manage.py migrate"')
         elif options["purge_celery"]:
             print("Purging celery models and migrations")
             purge_celery_migrations()
-            print(
-                'After this new migrations should be applied "python manage.py migrate"'
-            )
+            print('After this new migrations should be applied "python manage.py migrate"')
         else:
             print("Running migrations up to 1.2.3...")
             self.run_post_1_1_migrations()
@@ -38,9 +34,7 @@ class Command(BaseCommand):
     def run_post_1_1_migrations(self):
         apps = ["jobs", "tasks", "core", "auth"]
         for app in apps:
-            root = os.path.dirname(
-                os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-            )
+            root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
             migration_dir = os.path.join(root, app, "migrations")
             new_migration_backup_dir = "{}_backup".format(migration_dir)
             old_migrations_path = os.path.join(migration_dir, "migrations_pre_1_2_4")
@@ -69,9 +63,7 @@ class Command(BaseCommand):
         call_command("showmigrations")
 
         for app in apps:
-            root = os.path.dirname(
-                os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-            )
+            root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
             migration_dir = os.path.join(root, app, "migrations")
             new_migration_backup_dir = "{}_backup".format(migration_dir)
 

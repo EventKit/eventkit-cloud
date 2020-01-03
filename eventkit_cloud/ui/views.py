@@ -77,9 +77,7 @@ def auth(request):
     if (request.method == "GET") and request.user.is_authenticated:
         # If the user is already authenticated we want to return the user data (required for oauth).
         return HttpResponse(
-            JSONRenderer().render(
-                UserDataSerializer(request.user, context={"request": request}).data
-            ),
+            JSONRenderer().render(UserDataSerializer(request.user, context={"request": request}).data),
             content_type="application/json",
             status=200,
         )
@@ -96,9 +94,7 @@ def auth(request):
                 login(request, user_data)
                 set_session_user_last_active_at(request)
                 return HttpResponse(
-                    JSONRenderer().render(
-                        UserDataSerializer(user_data, context={"request": request}).data
-                    ),
+                    JSONRenderer().render(UserDataSerializer(user_data, context={"request": request}).data),
                     content_type="application/json",
                     status=200,
                 )
@@ -116,9 +112,7 @@ def logout(request):
     response = redirect("login")
     if settings.SESSION_USER_LAST_ACTIVE_AT in request.session:
         del request.session[settings.SESSION_USER_LAST_ACTIVE_AT]
-    response.delete_cookie(
-        settings.AUTO_LOGOUT_COOKIE_NAME, domain=settings.SESSION_COOKIE_DOMAIN
-    )
+    response.delete_cookie(settings.AUTO_LOGOUT_COOKIE_NAME, domain=settings.SESSION_COOKIE_DOMAIN)
     return response
 
 
@@ -127,9 +121,7 @@ def require_email(request):
     View to handle email collection for new user log in with OSM account.
     """
     backend = request.session["partial_pipeline"]["backend"]
-    return render_to_response(
-        "osm/email.html", {"backend": backend}, RequestContext(request)
-    )
+    return render_to_response("osm/email.html", {"backend": backend}, RequestContext(request))
 
 
 @require_http_methods(["GET"])
@@ -192,15 +184,9 @@ def search(request):
         if result.get("features"):
             # add the mgrs feature with the search results and return together
             result["features"] = features + result["features"]
-            return HttpResponse(
-                content=json.dumps(result), status=200, content_type="application/json"
-            )
+            return HttpResponse(content=json.dumps(result), status=200, content_type="application/json")
         # if no results just return the MGRS feature in the response
-        return HttpResponse(
-            content=json.dumps({"features": features}),
-            status=200,
-            content_type="application/json",
-        )
+        return HttpResponse(content=json.dumps({"features": features}), status=200, content_type="application/json",)
 
     elif is_lat_lon(q):
         coords = is_lat_lon(q)
@@ -238,14 +224,10 @@ def search(request):
         # if there are results add the point feature and return them together
         if result.get("features"):
             result.get("features").insert(0, point_feature)
-            return HttpResponse(
-                content=json.dumps(result), status=200, content_type="application/json"
-            )
+            return HttpResponse(content=json.dumps(result), status=200, content_type="application/json")
         # if there are no results return only the point feature
         features = {"features": [point_feature]}
-        return HttpResponse(
-            content=json.dumps(features), status=200, content_type="application/json"
-        )
+        return HttpResponse(content=json.dumps(features), status=200, content_type="application/json")
     else:
         # make call to geocode with search
         geocode = Geocode()
@@ -254,9 +236,7 @@ def search(request):
         except Exception as e:
             logger.error(e)
             return HttpResponse(content=error_string, status=500)
-        return HttpResponse(
-            content=json.dumps(result), status=200, content_type="application/json"
-        )
+        return HttpResponse(content=json.dumps(result), status=200, content_type="application/json")
 
 
 @require_http_methods(["GET"])
@@ -264,14 +244,10 @@ def geocode(request):
     geocode = Geocode()
     if request.GET.get("search"):
         result = geocode.search(request.GET.get("search"))
-        return HttpResponse(
-            content=json.dumps(result), status=200, content_type="application/json"
-        )
+        return HttpResponse(content=json.dumps(result), status=200, content_type="application/json")
     if request.GET.get("result"):
         result = geocode.add_bbox(json.loads(request.GET.get("result")))
-        return HttpResponse(
-            content=json.dumps(result), status=200, content_type="application/json"
-        )
+        return HttpResponse(content=json.dumps(result), status=200, content_type="application/json")
     else:
         return HttpResponse(status=204, content_type="application/json")
 
@@ -282,9 +258,7 @@ def convert(request):
     if getattr(settings, "CONVERT_API_URL") is not None:
         if request.GET.get("convert"):
             result = convert.get(request.GET.get("convert"))
-            return HttpResponse(
-                content=json.dumps(result), status=200, content_type="application/json"
-            )
+            return HttpResponse(content=json.dumps(result), status=200, content_type="application/json")
         else:
             return HttpResponse(status=204, content_type="application/json")
     else:
@@ -296,20 +270,11 @@ def reverse_geocode(request):
     reverseGeocode = ReverseGeocode()
     if getattr(settings, "REVERSE_GEOCODING_API_URL") is not None:
         if request.GET.get("lat") and request.GET.get("lon"):
-            result = reverseGeocode.search(
-                {
-                    "point.lat": request.GET.get("lat"),
-                    "point.lon": request.GET.get("lon"),
-                }
-            )
-            return HttpResponse(
-                content=json.dumps(result), status=200, content_type="application/json"
-            )
+            result = reverseGeocode.search({"point.lat": request.GET.get("lat"), "point.lon": request.GET.get("lon")})
+            return HttpResponse(content=json.dumps(result), status=200, content_type="application/json")
         if request.GET.get("result"):
             result = reverseGeocode.add_bbox(json.loads(request.GET.get("result")))
-            return HttpResponse(
-                content=json.dumps(result), status=200, content_type="application/json"
-            )
+            return HttpResponse(content=json.dumps(result), status=200, content_type="application/json")
         else:
             return HttpResponse(status=204, content_type="application/json")
     else:
@@ -321,9 +286,7 @@ def about(request):
     exports_url = reverse("list")
     help_url = reverse("help")
     return render_to_response(
-        "ui/about.html",
-        {"exports_url": exports_url, "help_url": help_url},
-        RequestContext(request),
+        "ui/about.html", {"exports_url": exports_url, "help_url": help_url}, RequestContext(request),
     )
 
 
@@ -351,9 +314,7 @@ def help_features(request):
 @require_http_methods(["GET"])
 def help_exports(request):
     export_url = reverse("list")
-    return render_to_response(
-        "help/help_exports.html", {"export_url": export_url}, RequestContext(request)
-    )
+    return render_to_response("help/help_exports.html", {"export_url": export_url}, RequestContext(request))
 
 
 @require_http_methods(["GET"])
@@ -365,9 +326,7 @@ def help_formats(request):
 def help_presets(request):
     configurations_url = reverse("configurations")
     return render_to_response(
-        "help/help_presets.html",
-        {"configurations_url": configurations_url},
-        RequestContext(request),
+        "help/help_presets.html", {"configurations_url": configurations_url}, RequestContext(request),
     )
 
 
@@ -388,9 +347,7 @@ def convert_to_geojson(request):
         return HttpResponse("No file supplied in the POST request", status=400)
     try:
         geojson = file_to_geojson(file)
-        return HttpResponse(
-            json.dumps(geojson), content_type="application/json", status=200
-        )
+        return HttpResponse(json.dumps(geojson), content_type="application/json", status=200)
     except Exception as e:
         logger.error(e)
         return HttpResponse(str(e), status=400)
@@ -404,9 +361,7 @@ def user_active(request):
 
     last_active_at = set_session_user_last_active_at(request)
     auto_logout_at = last_active_at + timedelta(seconds=settings.AUTO_LOGOUT_SECONDS)
-    auto_logout_warning_at = auto_logout_at - timedelta(
-        seconds=settings.AUTO_LOGOUT_WARNING_AT_SECONDS_LEFT
-    )
+    auto_logout_warning_at = auto_logout_at - timedelta(seconds=settings.AUTO_LOGOUT_WARNING_AT_SECONDS_LEFT)
     return HttpResponse(
         json.dumps(
             {

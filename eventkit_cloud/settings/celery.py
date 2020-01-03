@@ -32,20 +32,12 @@ CELERY_ACCEPT_CONTENT = ["json"]
 # configure periodic task
 
 BEAT_SCHEDULE = {
-    "expire-runs": {
-        "task": "Expire Runs",
-        "schedule": crontab(minute="0", hour="0", day_of_week="*"),
-    },
+    "expire-runs": {"task": "Expire Runs", "schedule": crontab(minute="0", hour="0", day_of_week="*")},
     "provider-statuses": {
         "task": "Check Provider Availability",
-        "schedule": crontab(
-            minute="*/{}".format(os.getenv("PROVIDER_CHECK_INTERVAL", "30"))
-        ),
+        "schedule": crontab(minute="*/{}".format(os.getenv("PROVIDER_CHECK_INTERVAL", "30"))),
     },
-    "clean-up-queues": {
-        "task": "Clean Up Queues",
-        "schedule": crontab(minute="0", hour="0", day_of_week="*"),
-    },
+    "clean-up-queues": {"task": "Clean Up Queues", "schedule": crontab(minute="0", hour="0", day_of_week="*")},
 }
 
 PCF_SCALING = os.getenv("PCF_SCALING", False)
@@ -101,6 +93,4 @@ if os.getenv("VCAP_SERVICES"):
         if BROKER_API_URL:
             break
 if not BROKER_API_URL:
-    BROKER_API_URL = os.environ.get(
-        "BROKER_API_URL", "http://guest:guest@localhost:15672/api/"
-    )
+    BROKER_API_URL = os.environ.get("BROKER_API_URL", "http://guest:guest@localhost:15672/api/")

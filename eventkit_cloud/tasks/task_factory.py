@@ -127,34 +127,22 @@ class TaskFactory:
             finalized_provider_task_chain_list = []
             # Create a task record which can hold tasks for the run (datapack)
             run_task_record = DataProviderTaskRecord.objects.create(
-                run=run,
-                name="run",
-                slug="run",
-                status=TaskStates.PENDING.value,
-                display=False,
+                run=run, name="run", slug="run", status=TaskStates.PENDING.value, display=False,
             )
             stage_dir = get_provider_staging_dir(run_dir, run_task_record.slug)
             os.makedirs(stage_dir, 6600)
             run_zip_task_chain = get_zip_task_chain(
-                data_provider_task_uid=run_task_record.uid,
-                stage_dir=get_run_staging_dir(run_uid),
-                worker=worker,
+                data_provider_task_uid=run_task_record.uid, stage_dir=get_run_staging_dir(run_uid), worker=worker,
             )
             for provider_task_record in job.provider_tasks.all():
 
-                if self.type_task_map.get(
-                    provider_task_record.provider.export_provider_type.type_name
-                ):
+                if self.type_task_map.get(provider_task_record.provider.export_provider_type.type_name):
                     # Each task builder has a primary task which pulls the source data, grab that task here...
-                    type_name = (
-                        provider_task_record.provider.export_provider_type.type_name
-                    )
+                    type_name = provider_task_record.provider.export_provider_type.type_name
 
                     primary_export_task = self.type_task_map.get(type_name)
 
-                    stage_dir = get_provider_staging_dir(
-                        run_dir, provider_task_record.provider.slug
-                    )
+                    stage_dir = get_provider_staging_dir(run_dir, provider_task_record.provider.slug)
                     os.makedirs(stage_dir, 6600)
 
                     args = {
@@ -168,19 +156,13 @@ class TaskFactory:
                         "user_details": user_details,
                     }
 
-                    (
-                        provider_task_uid,
-                        provider_subtask_chain,
-                    ) = TaskChainBuilder().build_tasks(**args)
+                    (provider_task_uid, provider_subtask_chain,) = TaskChainBuilder().build_tasks(**args)
 
                     wait_for_providers_signature = wait_for_providers_task.s(
                         run_uid=run_uid,
                         locking_task_key=run_uid,
                         callback_task=create_finalize_run_task_collection(
-                            run_uid,
-                            run_dir,
-                            run_zip_task_chain,
-                            apply_args=finalize_task_settings,
+                            run_uid, run_dir, run_zip_task_chain, apply_args=finalize_task_settings,
                         ),
                         apply_args=finalize_task_settings,
                     ).set(**wait_for_providers_settings)
@@ -208,13 +190,9 @@ class TaskFactory:
                         # add zip if required
                         if provider_task_record.provider.zip:
                             zip_export_provider_sig = get_zip_task_chain(
-                                data_provider_task_uid=provider_task_uid,
-                                stage_dir=stage_dir,
-                                worker=worker,
+                                data_provider_task_uid=provider_task_uid, stage_dir=stage_dir, worker=worker,
                             )
-                            provider_subtask_chain = chain(
-                                provider_subtask_chain, zip_export_provider_sig
-                            )
+                            provider_subtask_chain = chain(provider_subtask_chain, zip_export_provider_sig)
 
                         finalized_provider_task_chain_list.append(
                             chain(
@@ -260,16 +238,12 @@ def create_run(job_uid, user=None):
                 raise InvalidLicense(
                     "The user: {0} has not agreed to the following licenses: {1}.\n"
                     "Please use the user account page, or the user api to agree to the "
-                    "licenses prior to exporting the data.".format(
-                        job.user.username, invalid_licenses
-                    )
+                    "licenses prior to exporting the data.".format(job.user.username, invalid_licenses)
                 )
             if not user:
                 user = job.user
 
-            perms, job_ids = JobPermission.userjobs(
-                user, JobPermissionLevel.ADMIN.value
-            )
+            perms, job_ids = JobPermission.userjobs(user, JobPermissionLevel.ADMIN.value)
             if job.id not in job_ids:
                 raise Unauthorized(
                     "The user: {0} is not authorized to create a run based on the job: {1}.".format(
@@ -281,28 +255,17 @@ def create_run(job_uid, user=None):
             if run_count > 0:
                 while run_count > max_runs - 1:
                     # delete the earliest runs
-                    job.runs.filter(deleted=False).earliest(
-                        field_name="started_at"
-                    ).soft_delete(user=user)
+                    job.runs.filter(deleted=False).earliest(field_name="started_at").soft_delete(user=user)
                     run_count -= 1
 
             # add the export run to the database
             run = ExportRun.objects.create(
-                job=job,
-                user=user,
-                status="SUBMITTED",
-                expiration=(timezone.now() + timezone.timedelta(days=14)),
+                job=job, user=user, status="SUBMITTED", expiration=(timezone.now() + timezone.timedelta(days=14)),
             )  # persist the run
             job.last_export_run = run
             job.save()
             sendnotification(
-                run,
-                run.user,
-                NotificationVerb.RUN_STARTED.value,
-                None,
-                None,
-                NotificationLevel.INFO.value,
-                "",
+                run, run.user, NotificationVerb.RUN_STARTED.value, None, None, NotificationLevel.INFO.value, "",
             )
             run_uid = run.uid
             logger.debug("Saved run with id: {0}".format(str(run_uid)))
@@ -331,9 +294,7 @@ def create_task(
     if user_details is None:
         user_details = {"username": "unknown-create_task"}
 
-    export_provider_task = DataProviderTaskRecord.objects.get(
-        uid=data_provider_task_uid
-    )
+    export_provider_task = DataProviderTaskRecord.objects.get(uid=data_provider_task_uid)
     export_task = create_export_task_record(
         task_name=task.name,
         export_provider_task=export_provider_task,
@@ -358,10 +319,7 @@ def create_task(
 def get_zip_task_chain(data_provider_task_uid=None, worker=None, stage_dir=None):
     return chain(
         create_task(
-            data_provider_task_uid=data_provider_task_uid,
-            stage_dir=stage_dir,
-            worker=worker,
-            task=create_zip_task,
+            data_provider_task_uid=data_provider_task_uid, stage_dir=stage_dir, worker=worker, task=create_zip_task,
         )
     )
 
@@ -399,9 +357,7 @@ class InvalidLicense(Error):
         super(Error, self).__init__("InvalidLicense: {0}".format(message))
 
 
-def create_finalize_run_task_collection(
-    run_uid=None, run_dir=None, run_zip_task_chain=None, apply_args=None
-):
+def create_finalize_run_task_collection(run_uid=None, run_dir=None, run_zip_task_chain=None, apply_args=None):
     """ Returns a 2-tuple celery chain of tasks that need to be executed after all of the export providers in a run
         have finished, and a finalize_run_task signature for use as an errback.
         Add any additional tasks you want in hook_tasks.
@@ -410,9 +366,7 @@ def create_finalize_run_task_collection(
     apply_args = apply_args or dict()
 
     # Use .si() to ignore the result of previous tasks, we just care that finalize_run_task runs last
-    finalize_signature = finalize_run_task.si(run_uid=run_uid, stage_dir=run_dir).set(
-        **apply_args
-    )
+    finalize_signature = finalize_run_task.si(run_uid=run_uid, stage_dir=run_dir).set(**apply_args)
 
     all_task_sigs = itertools.chain([run_zip_task_chain, finalize_signature])
 
