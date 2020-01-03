@@ -22,7 +22,7 @@ import { connectedReduxRedirect } from 'redux-auth-wrapper/history4/redirect';
 import { Redirect, Route, RouteComponentProps } from 'react-router';
 import { routerActions } from 'connected-react-router';
 import PageLoading from './common/PageLoading';
-import theme from "../styles/eventkit_theme.js"
+import theme from "../styles/eventkit_theme";
 import '../styles/bootstrap/css/bootstrap.css';
 import '../styles/openlayers/ol.css';
 import '../styles/flexboxgrid.css';
@@ -372,7 +372,9 @@ export class Application extends React.Component<Props, State> {
     }
 
     componentDidUpdate(prevProps, prevState) {
-        const { favicon, reddotfavicon } = theme.eventkit.images;
+        const favicon = theme.eventkit.images.favicon;
+        const reddotfavicon = theme.eventkit.images.reddotfavicon;
+        // const { favicon, reddotfavicon } = theme.eventkit.images;
         const domFavicon = document.getElementById('favicon') as HTMLInputElement;
 
         if (domFavicon) {

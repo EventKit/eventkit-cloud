@@ -6,8 +6,8 @@ from eventkit_cloud.core.urls import urlpatterns as eventkit_cloud_urlpatterns
 
 urlpatterns = [
     url(
-        r"^favicon.ico$",
-        RedirectView.as_view(url=staticfiles_storage.url("images/favicon.ico"), permanent=False),
+        r"^favicon.png$",
+        RedirectView.as_view(url=staticfiles_storage.url("images/favicon.png"), permanent=False),
         name="favicon",
     ),
 ]
