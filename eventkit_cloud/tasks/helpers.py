@@ -22,6 +22,9 @@ from eventkit_cloud.utils import auth_requests
 from eventkit_cloud.utils.gdalutils import get_band_statistics
 from eventkit_cloud.utils.generic import cd, get_file_paths  # NOQA
 
+from eventkit_cloud.jobs.models import DataProvider
+from eventkit_cloud.tasks.models import DataProviderTaskRecord
+
 logger = logging.getLogger()
 
 
@@ -144,7 +147,6 @@ def get_style_files():
 
 def create_license_file(provider_task):
     # checks a DataProviderTaskRecord's license file and adds it to the file list if it exists
-    from eventkit_cloud.jobs.models import DataProvider
     from eventkit_cloud.tasks.helpers import normalize_name
 
     data_provider_license = DataProvider.objects.get(slug=provider_task.slug).license
@@ -348,9 +350,8 @@ def get_metadata(data_provider_task_uid):
     }
     """
 
-    from eventkit_cloud.jobs.models import DataProvider
-    from eventkit_cloud.tasks.models import DataProviderTaskRecord
-    from eventkit_cloud.tasks.export_tasks import TaskStates, create_zip_task
+    from eventkit_cloud.tasks.enumerations import TaskStates
+    from eventkit_cloud.tasks.export_tasks import create_zip_task
 
     data_provider_task = DataProviderTaskRecord.objects.get(uid=data_provider_task_uid)
 
@@ -385,11 +386,9 @@ def get_metadata(data_provider_task_uid):
         "has_raster": False,
         "has_elevation": False,
     }
-
     for provider_task in provider_tasks:
         if TaskStates[provider_task.status] in TaskStates.get_incomplete_states():
             continue
-
         data_provider = DataProvider.objects.get(slug=provider_task.slug)
         provider_type = data_provider.export_provider_type.type_name
         if TaskStates[provider_task.status] not in TaskStates.get_incomplete_states():
@@ -489,8 +488,6 @@ def get_arcgis_metadata(metadata):
 
 
 def get_data_type_from_provider(provider_slug: str) -> str:
-    from eventkit_cloud.jobs.models import DataProvider
-
     data_types = {
         "wms": "raster",
         "tms": "raster",

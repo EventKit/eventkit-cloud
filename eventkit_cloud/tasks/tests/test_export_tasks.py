@@ -25,7 +25,8 @@ from eventkit_cloud.tasks.export_tasks import (ExportTask,
     pick_up_run_task, cancel_export_provider_task, kill_task, bounds_export_task, parse_result, finalize_export_provider_task,
     FormatTask, wait_for_providers_task, create_zip_task, default_format_time, geotiff_export_task
 )
-from eventkit_cloud.tasks import TaskStates, zip_files
+from eventkit_cloud.tasks.enumerations import TaskStates
+from eventkit_cloud.tasks.export_tasks import zip_files
 from eventkit_cloud.tasks.models import (
     ExportRun,
     ExportTaskRecord,
@@ -477,7 +478,7 @@ class TestExportTasks(ExportTaskBase):
         rocket_chat.assert_called_once_with(**rocketchat_notifications)
         rocket_chat().post_message.assert_called_once_with(channel, message)
 
-    @patch('eventkit_cloud.tasks.set_cache_value')
+    @patch('eventkit_cloud.tasks.export_tasks.set_cache_value')
     @patch('django.db.connection.close')
     @patch('eventkit_cloud.tasks.models.ExportTaskRecord')
     def test_update_progress(self, export_task, mock_close, mock_set_cache_value):
