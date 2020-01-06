@@ -53,13 +53,13 @@ export class NotificationMenu extends React.Component {
         const { colors } = this.props.theme.eventkit;
 
         const styles = {
-            menuItem: {
-                fontSize: '12px',
-                lineHeight: '24px',
-            },
             icon: {
                 color: colors.text_primary,
                 marginRight: '5px',
+            },
+            menuItem: {
+                fontSize: '12px',
+                lineHeight: '24px',
             },
         };
 
@@ -74,10 +74,10 @@ export class NotificationMenu extends React.Component {
                 {viewPath
                     ? (
                         <MenuItem
-                            key="view"
                             className="qa-NotificationMenu-MenuItem-View"
-                            style={styles.menuItem}
+                            key="view"
                             onClick={this.handleView}
+                            style={styles.menuItem}
                         >
                             <OpenInNewIcon style={styles.icon} />
                             {' '}
@@ -89,10 +89,10 @@ View
                 {this.props.notification.unread
                     ? (
                         <MenuItem
-                            key="markRead"
                             className="qa-NotificationMenu-MenuItem-MarkAsRead"
-                            style={styles.menuItem}
+                            key="markRead"
                             onClick={this.handleMarkAsRead}
+                            style={styles.menuItem}
                         >
                             <FlagIcon style={styles.icon} />
                             {' '}
@@ -101,10 +101,10 @@ Mark As Read
                     )
                     : (
                         <MenuItem
-                            key="markUnread"
                             className="qa-NotificationMenu-MenuItem-MarkAsUnread"
-                            style={styles.menuItem}
+                            key="markUnread"
                             onClick={this.handleMarkAsUnread}
+                            style={styles.menuItem}
                         >
                             <FlagIcon style={styles.icon} />
                             {' '}
@@ -113,10 +113,10 @@ Mark As Unread
                     )
                 }
                 <MenuItem
-                    key="remove"
                     className="qa-NotificationMenu-MenuItem-Remove"
-                    style={styles.menuItem}
+                    key="remove"
                     onClick={this.handleRemove}
+                    style={styles.menuItem}
                 >
                     <CloseIcon style={styles.icon} />
                     {' '}
@@ -128,14 +128,14 @@ Remove
 }
 
 NotificationMenu.propTypes = {
-    notification: PropTypes.object.isRequired,
     history: PropTypes.object.isRequired,
+    markNotificationsAsRead: PropTypes.func.isRequired,
+    markNotificationsAsUnread: PropTypes.func.isRequired,
+    notification: PropTypes.object.isRequired,
     onMarkAsRead: PropTypes.func,
     onMarkAsUnread: PropTypes.func,
     onRemove: PropTypes.func,
     onView: PropTypes.func,
-    markNotificationsAsRead: PropTypes.func.isRequired,
-    markNotificationsAsUnread: PropTypes.func.isRequired,
     removeNotifications: PropTypes.func.isRequired,
     theme: PropTypes.object.isRequired,
 };

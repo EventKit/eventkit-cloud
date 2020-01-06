@@ -8,10 +8,10 @@ export const user = {
         autoLogoutWarningAt: null,
     },
     status: {
-        patched: false,
-        patching: false,
         error: null,
         isLoading: false,
+        patched: false,
+        patching: false,
     },
 };
 
@@ -37,20 +37,20 @@ export const userStatusReducer = (state = user.status, action) => {
         case types.PATCHING_USER:
             return {
                 ...state,
-                patching: true,
                 patched: false,
+                patching: true,
             };
         case types.PATCHED_USER:
             return {
                 ...state,
-                patching: false,
                 patched: true,
+                patching: false,
             };
         case types.PATCHING_USER_ERROR:
             return {
                 ...state,
-                patching: false,
                 error: action.error,
+                patching: false,
             };
         default:
             return state;
@@ -79,6 +79,6 @@ export const userDataReducer = (state = user.data, action) => {
 
 export const userReducer = combineReducers({
     data: userDataReducer,
-    status: userStatusReducer,
     meta: userMetaReducer,
+    status: userStatusReducer,
 });

@@ -10,30 +10,30 @@ export class CustomTableRow extends Component {
             container: {
                 display: 'flex',
                 flex: '0 1 auto',
-                width: '100%',
                 padding: '5px 0px',
+                width: '100%',
                 ...this.props.containerStyle,
             },
-            title: {
-                display: 'flex',
-                flex: '0 0 auto',
-                width: '140px',
-                backgroundColor: colors.secondary,
-                padding: '10px',
-                marginRight: '5px',
-                ...this.props.titleStyle,
-            },
             data: {
-                display: 'flex',
-                flex: '1 1 auto',
-                flexWrap: 'wrap',
                 alignItems: 'center',
                 backgroundColor: colors.secondary,
                 color: colors.text_primary,
+                display: 'flex',
+                flex: '1 1 auto',
+                flexWrap: 'wrap',
                 padding: '10px',
-                wordBreak: 'break-word',
                 width: '100%',
+                wordBreak: 'break-word',
                 ...this.props.dataStyle,
+            },
+            title: {
+                backgroundColor: colors.secondary,
+                display: 'flex',
+                flex: '0 0 auto',
+                marginRight: '5px',
+                padding: '10px',
+                width: '140px',
+                ...this.props.titleStyle,
             },
         };
 
@@ -54,24 +54,24 @@ export class CustomTableRow extends Component {
 }
 
 CustomTableRow.defaultProps = {
-    containerStyle: {},
-    titleStyle: {},
-    dataStyle: {},
     className: 'qa-CustomTableRow',
+    containerStyle: {},
+    dataStyle: {},
+    titleStyle: {},
 };
 
 CustomTableRow.propTypes = {
-    title: PropTypes.string.isRequired,
+    className: PropTypes.string,
+    containerStyle: PropTypes.object,
     data: PropTypes.oneOfType([
         PropTypes.string,
         PropTypes.node,
         PropTypes.arrayOf(PropTypes.node),
     ]).isRequired,
-    containerStyle: PropTypes.object,
-    titleStyle: PropTypes.object,
     dataStyle: PropTypes.object,
     theme: PropTypes.object.isRequired,
-    className: PropTypes.string,
+    title: PropTypes.string.isRequired,
+    titleStyle: PropTypes.object,
 };
 
 export default withTheme()(CustomTableRow);

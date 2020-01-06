@@ -27,23 +27,23 @@ export class ImportButton extends Component {
         const state = this.props.buttonState;
         const styles = {
             buttonName: {
-                fontSize: '8px',
-                width: '50px',
-                height: '12px',
-                color: colors.primary,
                 bottom: '0',
+                color: colors.primary,
+                fontSize: '8px',
+                height: '12px',
+                width: '50px',
             },
             drawButtonGeneral: {
-                height: '50px',
-                width: '50px',
-                borderTop: '1px solid #e6e6e6',
-                borderRight: 'none',
-                borderLeft: 'none',
-                borderBottom: 'none',
-                margin: 0,
-                padding: 0,
                 backgroundColor: colors.white,
+                borderBottom: 'none',
+                borderLeft: 'none',
+                borderRight: 'none',
+                borderTop: '1px solid #e6e6e6',
+                height: '50px',
+                margin: 0,
                 outline: 'none',
+                padding: 0,
+                width: '50px',
             },
         };
 
@@ -95,10 +95,10 @@ export class ImportButton extends Component {
 
 ImportButton.propTypes = {
     buttonState: PropTypes.string.isRequired,
-    setImportButtonSelected: PropTypes.func.isRequired,
-    setAllButtonsDefault: PropTypes.func.isRequired,
-    setImportModalState: PropTypes.func.isRequired,
     handleCancel: PropTypes.func.isRequired,
+    setAllButtonsDefault: PropTypes.func.isRequired,
+    setImportButtonSelected: PropTypes.func.isRequired,
+    setImportModalState: PropTypes.func.isRequired,
     theme: PropTypes.object.isRequired,
 };
 

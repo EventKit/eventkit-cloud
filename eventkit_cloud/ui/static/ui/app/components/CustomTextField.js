@@ -17,11 +17,11 @@ export class CustomTextField extends Component {
 
         this.styles = {
             charsRemaining: {
-                position: 'absolute',
                 bottom: '0px',
+                fontWeight: 'bold',
+                position: 'absolute',
                 right: '16px',
                 transform: 'translateY(-50%)',
-                fontWeight: 'bold',
                 ...this.props.charsRemainingStyle,
             },
         };
@@ -73,14 +73,14 @@ export class CustomTextField extends Component {
 
     render() {
         const {
+            InputProps,
             charsRemainingStyle,
-            showRemaining,
+            inputProps,
+            maxLength,
+            onBlur,
             onChange,
             onFocus,
-            onBlur,
-            inputProps,
-            InputProps,
-            maxLength,
+            showRemaining,
             theme,
             ...rest
         } = this.props;
@@ -97,12 +97,12 @@ export class CustomTextField extends Component {
                 <TextField
                     className="qa-CustomTextField-TextField"
                     id="custom-text-field"
+                    InputProps={{ ...InputProps, style: inputStyle }}
+                    inputProps={{ maxLength, ...inputProps }}
+                    onBlur={this.onBlur}
                     onChange={this.onChange}
                     onFocus={this.onFocus}
-                    onBlur={this.onBlur}
-                    inputProps={{ maxLength, ...inputProps }}
                     // eslint-disable-next-line react/jsx-no-duplicate-props
-                    InputProps={{ ...InputProps, style: inputStyle }}
                     type="text"
                     {...rest}
                 />
@@ -123,26 +123,26 @@ export class CustomTextField extends Component {
 }
 
 CustomTextField.propTypes = {
-    showRemaining: PropTypes.bool,
-    maxLength: PropTypes.number,
+    InputProps: PropTypes.object,
     charsRemainingStyle: PropTypes.object,
+    inputProps: PropTypes.object,
+    maxLength: PropTypes.number,
+    onBlur: PropTypes.func,
     onChange: PropTypes.func,
     onFocus: PropTypes.func,
-    onBlur: PropTypes.func,
-    inputProps: PropTypes.object,
-    InputProps: PropTypes.object,
+    showRemaining: PropTypes.bool,
     theme: PropTypes.object.isRequired,
 };
 
 CustomTextField.defaultProps = {
-    showRemaining: true,
-    maxLength: 100,
+    InputProps: {},
     charsRemainingStyle: {},
+    inputProps: {},
+    maxLength: 100,
+    onBlur: undefined,
     onChange: undefined,
     onFocus: undefined,
-    onBlur: undefined,
-    inputProps: {},
-    InputProps: {},
+    showRemaining: true,
 };
 
 export default

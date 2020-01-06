@@ -15,52 +15,52 @@ export class BaseDialog extends Component {
 
         // default styling with the option for overriding with custom props
         const styles = {
-            dialog: {
-                width: '70%',
-                minWidth: '300px',
-                maxWidth: '610px',
-                maxHeight: '90%',
-                ...this.props.dialogStyle,
-            },
-            title: {
-                padding: '24px 24px 20px',
-                fontWeight: 700,
-                fontSize: '18px',
-                lineHeight: '32px',
-                ...this.props.titleStyle,
-            },
-            body: {
-                padding: '0px 24px',
-                fontSize: '16px',
-                color: colors.text_primary,
-                ...this.props.bodyStyle,
-            },
             actions: {
-                margin: '20px 24px 24px',
                 flexDirection: 'row-reverse',
                 justifyContent: 'space-between',
+                margin: '20px 24px 24px',
                 ...this.props.actionsStyle,
             },
-            clear: {
-                float: 'right',
-                cursor: 'pointer',
+            body: {
+                color: colors.text_primary,
+                fontSize: '16px',
+                padding: '0px 24px',
+                ...this.props.bodyStyle,
             },
             button: {
                 color: colors.secondary,
                 fontWeight: 'bold',
                 ...this.props.buttonStyle,
             },
+            clear: {
+                cursor: 'pointer',
+                float: 'right',
+            },
+            dialog: {
+                maxHeight: '90%',
+                maxWidth: '610px',
+                minWidth: '300px',
+                width: '70%',
+                ...this.props.dialogStyle,
+            },
+            title: {
+                fontSize: '18px',
+                fontWeight: 700,
+                lineHeight: '32px',
+                padding: '24px 24px 20px',
+                ...this.props.titleStyle,
+            }
         };
 
         // the default is just a close button
         const defaultActions = [
             <Button
-                key="close"
                 className="qa-BaseDialog-Button"
+                color="primary"
+                key="close"
+                onClick={this.props.onClose}
                 style={styles.button}
                 variant="contained"
-                color="primary"
-                onClick={this.props.onClose}
             >
                 {this.props.buttonText || 'Close'}
             </Button>,
@@ -80,9 +80,9 @@ export class BaseDialog extends Component {
         return (
             <Dialog
                 className={this.props.className}
+                maxWidth="md"
                 open={this.props.show}
                 onClose={this.props.onClose}
-                maxWidth="md"
                 PaperProps={{ style: styles.dialog }}
                 style={this.props.overlayStyle}
             >
@@ -102,41 +102,41 @@ export class BaseDialog extends Component {
 }
 
 BaseDialog.defaultProps = {
-    onClose: undefined,
-    title: undefined,
     actions: undefined,
+    actionsStyle: {},
+    bodyStyle: {},
+    buttonStyle: {},
     buttonText: undefined,
     children: undefined,
-    dialogStyle: {},
-    titleStyle: {},
-    bodyStyle: {},
-    actionsStyle: {},
-    buttonStyle: {},
-    overlayStyle: {},
     className: 'qa-BaseDialog-Dialog',
+    dialogStyle: {},
     innerMaxHeight: 400,
+    onClose: undefined,
+    overlayStyle: {},
+    title: undefined,
+    titleStyle: {},
 };
 
 BaseDialog.propTypes = {
-    show: PropTypes.bool.isRequired,
-    onClose: PropTypes.func,
-    title: PropTypes.oneOfType([PropTypes.string, PropTypes.object]),
     actions: PropTypes.arrayOf(PropTypes.node),
+    actionsStyle: PropTypes.object,
+    bodyStyle: PropTypes.object,
+    buttonStyle: PropTypes.object,
+    buttonText: PropTypes.string,
     children: PropTypes.oneOfType([
         PropTypes.string,
         PropTypes.node,
         PropTypes.arrayOf(PropTypes.node),
     ]),
-    buttonText: PropTypes.string,
-    dialogStyle: PropTypes.object,
-    titleStyle: PropTypes.object,
-    bodyStyle: PropTypes.object,
-    actionsStyle: PropTypes.object,
-    buttonStyle: PropTypes.object,
-    overlayStyle: PropTypes.object,
-    theme: PropTypes.object.isRequired,
     className: PropTypes.string,
+    dialogStyle: PropTypes.object,
     innerMaxHeight: PropTypes.number,
+    onClose: PropTypes.func,
+    overlayStyle: PropTypes.object,
+    show: PropTypes.bool.isRequired,
+    theme: PropTypes.object.isRequired,
+    title: PropTypes.oneOfType([PropTypes.string, PropTypes.object]),
+    titleStyle: PropTypes.object,
 };
 
 export default withTheme()(BaseDialog);

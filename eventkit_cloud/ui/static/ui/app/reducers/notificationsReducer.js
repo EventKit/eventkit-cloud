@@ -4,27 +4,27 @@ import { types } from '../actions/notificationsActions';
 
 
 export const initialState = {
-    status: {
-        fetching: null,
-        fetched: null,
-        deleting: null,
-        deleted: null,
-        error: null,
-        cancelSource: null,
-    },
     data: {
         notifications: {},
         notificationsSorted: [],
     },
+    status: {
+        cancelSource: null,
+        deleted: null,
+        deleting: null,
+        error: null,
+        fetched: null,
+        fetching: null,
+    },
     unreadCount: {
-        status: {
-            fetching: null,
-            fetched: null,
-            error: null,
-            cancelSource: null,
-        },
         data: {
             unreadCount: 0,
+        },
+        status: {
+            cancelSource: null,
+            error: null,
+            fetched: null,
+            fetching: null,
         },
     },
 };
@@ -42,19 +42,19 @@ export function notificationsReducer(state = initialState, action) {
                 ...state,
                 status: {
                     ...state.status,
-                    fetching: true,
-                    fetched: false,
-                    error: null,
                     cancelSource: action.cancelSource,
+                    error: null,
+                    fetched: false,
+                    fetching: true,
                 },
             };
         case types.RECEIVED_NOTIFICATIONS: {
             const status = {
                 ...state.status,
-                fetching: false,
-                fetched: true,
-                error: null,
                 cancelSource: null,
+                error: null,
+                fetched: true,
+                fetching: false,
             };
 
             // assume that the notifications have not changed
@@ -90,15 +90,15 @@ export function notificationsReducer(state = initialState, action) {
             // if there are changes we update status and data
             return {
                 ...state,
-                status,
                 data: {
                     ...state.data,
+                    nextPage: action.nextPage,
                     notifications: updated,
                     notificationsSorted: getSortedNotifications(updated),
-                    nextPage: action.nextPage,
                     range: action.range,
 
                 },
+                status,
             };
         }
         case types.FETCH_NOTIFICATIONS_ERROR:
@@ -106,10 +106,10 @@ export function notificationsReducer(state = initialState, action) {
                 ...state,
                 status: {
                     ...state.status,
-                    fetching: false,
-                    fetched: false,
-                    error: action.error,
                     cancelSource: null,
+                    error: action.error,
+                    fetched: false,
+                    fetching: false,
                 },
             };
         case types.MARKING_NOTIFICATIONS_AS_READ: {
@@ -233,15 +233,15 @@ export function notificationsReducer(state = initialState, action) {
 
             return {
                 ...state,
-                status: {
-                    ...state.status,
-                    deleting: true,
-                    deleted: false,
-                },
                 data: {
                     ...state.data,
                     notifications,
                     notificationsSorted: getSortedNotifications(notifications),
+                },
+                status: {
+                    ...state.status,
+                    deleted: false,
+                    deleting: true,
                 },
                 unreadCount: {
                     ...state.unreadCount,
@@ -256,8 +256,8 @@ export function notificationsReducer(state = initialState, action) {
                 ...state,
                 status: {
                     ...state.status,
-                    deleting: false,
                     deleted: true,
+                    deleting: false,
                 },
             };
         case types.REMOVE_NOTIFICATIONS_ERROR:
@@ -277,9 +277,9 @@ export function notificationsReducer(state = initialState, action) {
                     ...state.unreadCount,
                     status: {
                         ...state.unreadCount.status,
-                        fetching: true,
-                        fetched: false,
                         cancelSource: action.cancelSource,
+                        fetched: false,
+                        fetching: true,
                     },
                 },
             };
@@ -288,14 +288,14 @@ export function notificationsReducer(state = initialState, action) {
                 ...state,
                 unreadCount: {
                     ...state.unreadCount,
-                    status: {
-                        ...state.unreadCount.status,
-                        fetching: false,
-                        fetched: true,
-                        cancelSource: null,
-                    },
                     data: {
                         unreadCount: action.unreadCount,
+                    },
+                    status: {
+                        ...state.unreadCount.status,
+                        cancelSource: null,
+                        fetched: true,
+                        fetching: false,
                     },
                 },
             };
@@ -305,10 +305,10 @@ export function notificationsReducer(state = initialState, action) {
                 unreadCount: {
                     ...state.unreadCount,
                     status: {
-                        fetching: false,
-                        fetched: false,
-                        error: action.error,
                         cancelSource: null,
+                        error: action.error,
+                        fetched: false,
+                        fetching: false,
                     },
                 },
             };

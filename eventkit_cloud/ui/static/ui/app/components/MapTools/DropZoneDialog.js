@@ -32,38 +32,38 @@ export class DropZoneDialog extends Component {
 
         const styles = {
             drop: {
-                margin: '0px auto',
-                width: '100%',
-                height: '250px',
-                textAlign: 'center',
                 border: '1px dashed',
-                fontSize: '1em',
                 color: colors.primary,
+                fontSize: '1em',
+                height: '250px',
+                margin: '0px auto',
+                textAlign: 'center',
                 verticalAlign: 'center',
+                width: '100%',
             },
             text: {
-                verticalAlign: 'center',
                 color: colors.grey,
                 height: '100px',
                 marginTop: '30px',
+                verticalAlign: 'center',
             },
         };
 
         return (
             <BaseDialog
-                show={this.props.showImportModal}
-                onClose={this.handleClear}
-                title="Import AOI"
                 actions={[]}
                 bodyStyle={{ paddingBottom: '50px' }}
                 className="qa-DropZoneDialog-BaseDialog"
+                onClose={this.handleClear}
+                show={this.props.showImportModal}
+                title="Import AOI"
             >
                 <Dropzone
-                    onDrop={this.onDrop}
-                    multiple={false}
-                    style={{}}
-                    maxSize={5000000}
                     className="qa-DropZoneDialog-Dropzone"
+                    maxSize={5000000}
+                    multiple={false}
+                    onDrop={this.onDrop}
+                    style={{}}
                 >
                     {({ getRootProps, getInputProps }) => {
                         const { ref } = getRootProps();
@@ -82,10 +82,10 @@ max
                                         <br />
                                     </span>
                                     <Button
+                                        className="qa-DropZoneDialog-Button-select"
+                                        color="primary"
                                         style={{ margin: '15px 10px' }}
                                         variant="contained"
-                                        color="primary"
-                                        className="qa-DropZoneDialog-Button-select"
                                     >
                                         <input {...getInputProps()} />
                                         <FileFileUpload color="secondary" style={{ marginRight: '5px' }} />
@@ -102,10 +102,10 @@ max
 }
 
 DropZoneDialog.propTypes = {
-    showImportModal: PropTypes.bool.isRequired,
+    processGeoJSONFile: PropTypes.func.isRequired,
     setAllButtonsDefault: PropTypes.func.isRequired,
     setImportModalState: PropTypes.func.isRequired,
-    processGeoJSONFile: PropTypes.func.isRequired,
+    showImportModal: PropTypes.bool.isRequired,
     theme: PropTypes.object.isRequired,
 };
 

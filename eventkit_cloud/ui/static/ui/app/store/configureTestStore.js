@@ -123,11 +123,10 @@ export function createStore(preloadedState, enhancer) {
 
     return {
         dispatch,
-        subscribe,
+        getActions,
         getState,
         replaceReducer,
-        getActions,
-        clearActions,
+        subscribe
     };
 }
 

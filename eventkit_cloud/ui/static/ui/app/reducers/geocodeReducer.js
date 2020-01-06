@@ -1,38 +1,38 @@
 import { types } from '../actions/geocodeActions';
 
 export const initialState = {
-    fetching: null,
-    fetched: null,
+    cancelSource: null,
     data: [],
     error: null,
-    cancelSource: null,
+    fetched: null,
+    fetching: null,
 };
 
 export function geocodeReducer(state = initialState, action) {
     switch (action.type) {
         case types.FETCHING_GEOCODE:
             return {
-                fetching: true,
-                fetched: false,
+                cancelSource: action.cancelSource,
                 data: [],
                 error: null,
-                cancelSource: action.cancelSource,
+                fetched: false,
+                fetching: true,
             };
         case types.RECEIVED_GEOCODE:
             return {
-                fetching: false,
-                fetched: true,
+                cancelSource: null,
                 data: action.data,
                 error: null,
-                cancelSource: null,
+                fetched: true,
+                fetching: false,
             };
         case types.FETCH_GEOCODE_ERROR:
             return {
-                fetching: false,
-                fetched: false,
+                cancelSource: null,
                 data: [],
                 error: action.error,
-                cancelSource: null,
+                fetched: false,
+                fetching: false,
             };
         default:
             return state;

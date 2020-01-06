@@ -9,9 +9,9 @@ import '../../styles/typeaheadStyles.css';
 export class TypeaheadMenuItem extends Component {
     createDescription(result) {
         const description = [];
-        if (result.province) description.push(result.province);
-        if (result.region) description.push(result.region);
-        if (result.country) description.push(result.country);
+        if (result.province) {description.push(result.province)};
+        if (result.region) {description.push(result.region)};
+        if (result.country) {description.push(result.country)};
         return description.join(', ');
     }
 
@@ -20,25 +20,25 @@ export class TypeaheadMenuItem extends Component {
 
         const styles = {
             icon: {
+                color: colors.text_primary,
                 height: '40px',
-                width: '40px',
                 padding: '0px',
                 verticalAlign: 'middle',
-                color: colors.text_primary,
+                width: '40px',
             },
             iconDiv: {
                 width: '45px',
+            },
+            source: {
+                background: colors.secondary,
+                borderRadius: '2px',
+                color: colors.text_primary,
+                padding: '1px 4px',
             },
             text: {
                 color: colors.text_primary,
                 minHeight: '20px',
                 whiteSpace: 'normal',
-            },
-            source: {
-                color: colors.text_primary,
-                background: colors.secondary,
-                padding: '1px 4px',
-                borderRadius: '2px',
             },
         };
 
@@ -51,9 +51,9 @@ export class TypeaheadMenuItem extends Component {
 
         return (
             <MenuItem
+                className="menuItem"
                 option={this.props.result}
                 position={this.props.index}
-                className="menuItem"
             >
                 <div className="row">
                     <div className="qa-TypeaheadMenuItem-icon-div" style={styles.iconDiv}>
@@ -79,8 +79,8 @@ export class TypeaheadMenuItem extends Component {
 }
 
 TypeaheadMenuItem.propTypes = {
-    result: PropTypes.object.isRequired,
     index: PropTypes.number.isRequired,
+    result: PropTypes.object.isRequired,
     theme: PropTypes.object.isRequired,
 };
 

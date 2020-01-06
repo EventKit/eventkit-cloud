@@ -26,26 +26,26 @@ export class MapViewButton extends Component {
         const state = this.props.buttonState;
         const styles = {
             buttonName: {
-                fontSize: '8px',
-                width: '100%',
-                height: '12px',
-                color: colors.primary,
-                position: 'relative',
                 bottom: '5px',
-                padding: '0 4px',
+                color: colors.primary,
+                fontSize: '8px',
+                height: '12px',
                 lineHeight: '8px',
+                padding: '0 4px',
+                position: 'relative',
+                width: '100%',
             },
             drawButtonGeneral: {
-                height: '50px',
-                width: '50px',
-                borderTop: '1px solid #e6e6e6',
-                borderRight: 'none',
-                borderLeft: 'none',
-                borderBottom: 'none',
-                margin: 0,
-                padding: 0,
                 backgroundColor: colors.white,
+                borderBottom: 'none',
+                borderLeft: 'none',
+                borderRight: 'none',
+                borderTop: '1px solid #e6e6e6',
+                height: '50px',
+                margin: 0,
                 outline: 'none',
+                padding: 0,
+                width: '50px',
             },
         };
 
@@ -97,10 +97,10 @@ export class MapViewButton extends Component {
 
 MapViewButton.propTypes = {
     buttonState: PropTypes.string.isRequired,
+    handleCancel: PropTypes.func.isRequired,
+    setAllButtonsDefault: PropTypes.func.isRequired,
     setMapView: PropTypes.func.isRequired,
     setMapViewButtonSelected: PropTypes.func.isRequired,
-    setAllButtonsDefault: PropTypes.func.isRequired,
-    handleCancel: PropTypes.func.isRequired,
     theme: PropTypes.object.isRequired,
 };
 

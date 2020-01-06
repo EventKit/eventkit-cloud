@@ -13,11 +13,11 @@ export class Form extends React.Component {
         this.handleSubmit = this.handleSubmit.bind(this);
         this.getErrorMessage = this.getErrorMessage.bind(this);
         this.state = {
-            username: '',
-            password: '',
             buttonDisabled: true,
             loginForm: false,
             oauthName: '',
+            password: '',
+            username: '',
         };
     }
 
@@ -56,15 +56,13 @@ export class Form extends React.Component {
     checkAuthEndpoint() {
         return axios.get('/auth').then(() => {
             this.setState({ loginForm: true });
-        }).catch(() => {
-        });
+        }).catch(this.getErrorMessage);
     }
 
     checkOAuthEndpoint() {
         return axios.get('/oauth', { params: { query: 'name' } }).then((response) => {
             this.setState({ oauthName: response.data.name });
-        }).catch(() => {
-        });
+        }).catch(this.getErrorMessage);
     }
 
     handleSubmit(event) {
@@ -83,28 +81,28 @@ export class Form extends React.Component {
 
         const styles = {
             form: {
-                verticalAlign: 'middle',
                 margin: '0 auto',
                 maxWidth: 300,
+                verticalAlign: 'middle',
             },
             heading: {
-                width: '100%',
+                color: colors.white,
                 fontSize: '20px',
                 fontWeight: 'bold',
-                color: colors.white,
                 margin: '15px auto 0px auto',
+                width: '100%',
             },
             input: {
-                borderRadius: '0px',
-                outline: 'none',
-                border: 'none',
                 backgroundColor: `${colors.secondary}33`,
-                fontSize: '16px',
-                width: '100%',
-                height: '45px',
+                border: 'none',
+                borderRadius: '0px',
                 color: colors.white,
+                fontSize: '16px',
+                height: '45px',
                 margin: '0px auto 15px auto',
+                outline: 'none',
                 padding: '10px',
+                width: '100%',
             },
         };
         let loginForm = '';
@@ -199,12 +197,12 @@ export class Form extends React.Component {
 }
 
 Form.propTypes = {
+    error: PropTypes.object.isRequired,
     handleLogin: PropTypes.func.isRequired,
     location: PropTypes.shape({
         search: PropTypes.object,
     }).isRequired,
     theme: PropTypes.object.isRequired,
-    error: PropTypes.object.isRequired,
 };
 
 function mapDispatchToProps(dispatch) {

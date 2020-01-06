@@ -25,11 +25,11 @@ export class DropZone extends Component {
 
 DropZone.propTypes = {
     importGeom: PropTypes.object.isRequired,
-    showImportModal: PropTypes.bool.isRequired,
-    setAllButtonsDefault: PropTypes.func.isRequired,
-    setImportModalState: PropTypes.func.isRequired,
     processGeoJSONFile: PropTypes.func.isRequired,
     resetGeoJSONFile: PropTypes.func.isRequired,
+    setAllButtonsDefault: PropTypes.func.isRequired,
+    setImportModalState: PropTypes.func.isRequired,
+    showImportModal: PropTypes.bool.isRequired,
 };
 
 export default DropZone;

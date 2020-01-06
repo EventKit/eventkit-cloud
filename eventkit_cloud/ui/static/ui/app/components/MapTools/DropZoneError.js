@@ -7,8 +7,8 @@ export class DropZoneError extends Component {
         super(props);
         this.handleErrorClear = this.handleErrorClear.bind(this);
         this.state = {
-            showErrorMessage: false,
             errorMessage: null,
+            showErrorMessage: false,
         };
     }
 
@@ -18,8 +18,8 @@ export class DropZoneError extends Component {
                 this.props.setAllButtonsDefault();
                 // reconsider setting state in componentDidUpdate in the future
                 this.setState({ // eslint-disable-line
-                    showErrorMessage: true,
                     errorMessage: this.props.importGeom.error,
+                    showErrorMessage: true,
                 });
             }
         }
@@ -33,9 +33,9 @@ export class DropZoneError extends Component {
     render() {
         return (
             <BaseDialog
+                onClose={this.handleErrorClear}
                 show={this.state.showErrorMessage}
                 title="Error"
-                onClose={this.handleErrorClear}
             >
                 <div className="qa-DropZoneError-error">
                     {this.state.errorMessage}
@@ -47,8 +47,8 @@ export class DropZoneError extends Component {
 
 DropZoneError.propTypes = {
     importGeom: PropTypes.object.isRequired,
-    setAllButtonsDefault: PropTypes.func.isRequired,
     resetGeoJSONFile: PropTypes.func.isRequired,
+    setAllButtonsDefault: PropTypes.func.isRequired,
 };
 
 export default DropZoneError;

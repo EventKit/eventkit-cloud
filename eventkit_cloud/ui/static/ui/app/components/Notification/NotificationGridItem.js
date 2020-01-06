@@ -32,40 +32,40 @@ export class NotificationGridItem extends Component {
         const { width } = this.props;
 
         const styles = {
-            root: {
-                display: 'flex',
-                alignItems: 'center',
-                padding: '15px',
-                fontSize: isWidthUp('sm', width) ? '18px' : '14px',
-                color: colors.text_primary,
-                transition: 'background-color 0.25s',
-                backgroundColor: (this.props.notification.unread) ? colors.selected_primary : colors.white,
-                ...this.props.paperStyle,
-            },
             content: {
-                whiteSpace: 'nowrap',
                 overflow: 'hidden',
                 textOverflow: 'ellipsis',
+                whiteSpace: 'nowrap',
+            },
+            date: {
+                alignItems: 'center',
+                display: 'flex',
+                flex: '0 0 auto',
+                fontSize: isWidthUp('sm', width) ? '12px' : '10px',
+                margin: '0 10px',
             },
             icon: {
                 flex: '0 0 auto',
                 marginRight: '10px',
             },
-            date: {
-                margin: '0 10px',
-                fontSize: isWidthUp('sm', width) ? '12px' : '10px',
-                display: 'flex',
-                alignItems: 'center',
-                flex: '0 0 auto',
-            },
             iconMenu: {
-                padding: '0',
-                width: '24px',
                 height: '24px',
+                padding: '0',
                 verticalAlign: 'middle',
+                width: '24px',
             },
             menuItem: {
                 fontSize: !isWidthUp('md', width) ? 10 : 12,
+            },
+            root: {
+                alignItems: 'center',
+                backgroundColor: (this.props.notification.unread) ? colors.selected_primary : colors.white,
+                color: colors.text_primary,
+                display: 'flex',
+                fontSize: isWidthUp('sm', width) ? '18px' : '14px',
+                padding: '15px',
+                transition: 'background-color 0.25s',
+                ...this.props.paperStyle,
             },
         };
 
@@ -99,26 +99,26 @@ export class NotificationGridItem extends Component {
 }
 
 NotificationGridItem.propTypes = {
-    style: PropTypes.object,
-    paperStyle: PropTypes.object,
-    notification: PropTypes.object.isRequired,
     history: PropTypes.object.isRequired,
+    markNotificationsAsRead: PropTypes.func.isRequired,
+    notification: PropTypes.object.isRequired,
     onMarkAsRead: PropTypes.func,
     onMarkAsUnread: PropTypes.func,
     onRemove: PropTypes.func,
     onView: PropTypes.func,
-    markNotificationsAsRead: PropTypes.func.isRequired,
+    paperStyle: PropTypes.object,
+    style: PropTypes.object,
     theme: PropTypes.object.isRequired,
     width: PropTypes.string.isRequired,
 };
 
 NotificationGridItem.defaultProps = {
-    style: {},
-    paperStyle: {},
     onMarkAsRead: () => true,
     onMarkAsUnread: () => true,
     onRemove: () => true,
     onView: () => true,
+    paperStyle: {},
+    style: {},
 };
 
 function mapDispatchToProps(dispatch) {

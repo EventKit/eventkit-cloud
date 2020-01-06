@@ -26,17 +26,17 @@ class Logout extends React.Component {
 
     render() {
         const styles = {
-            wholeDiv: {
-                width: '100%',
-                height: '100%',
-                backgroundColor: 'black',
-                marginBottom: '0px',
-            },
             root: {
-                justifyContent: 'space-around',
                 display: 'flex',
                 flexWrap: 'wrap',
                 height: 'calc(100vh - 95px)',
+                justifyContent: 'space-around',
+            },
+            wholeDiv: {
+                backgroundColor: 'black',
+                height: '100%',
+                marginBottom: '0px',
+                width: '100%',
             },
         };
         return (

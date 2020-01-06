@@ -10,25 +10,25 @@ export class ConfirmDialog extends Component {
 
         const style = {
             backgroundColor: colors.secondary,
-            fontWeight: 'bold',
             color: colors.primary,
+            fontWeight: 'bold',
         };
 
         const deleteActions = [
             <Button
-                key="confirm"
                 className="qa-ConfirmDialog-Button-ConfirmButton"
-                style={{ ...style, color: this.props.isDestructive ? colors.warning : colors.primary }}
+                key="confirm"
                 onClick={this.props.onConfirm}
+                style={{ ...style, color: this.props.isDestructive ? colors.warning : colors.primary }}
                 variant="contained"
             >
                 {this.props.confirmLabel}
             </Button>,
             <Button
-                key="cancel"
                 className="qa-ConfirmDialog-Button-CancelButton"
-                style={{ ...style, marginRight: '10px' }}
+                key="cancel"
                 onClick={this.props.onCancel}
+                style={{ ...style, marginRight: '10px' }}
                 variant="contained"
             >
                 {this.props.cancelLabel}
@@ -37,11 +37,11 @@ export class ConfirmDialog extends Component {
 
         return (
             <BaseDialog
+                actions={deleteActions}
                 className="qa-ConfirmDialog-BaseDialog"
+                onClose={this.props.onCancel}
                 show={this.props.show}
                 title={this.props.title}
-                actions={deleteActions}
-                onClose={this.props.onCancel}
             >
                 {this.props.children}
             </BaseDialog>
@@ -50,26 +50,26 @@ export class ConfirmDialog extends Component {
 }
 
 ConfirmDialog.propTypes = {
-    show: PropTypes.bool.isRequired,
-    title: PropTypes.string.isRequired,
-    onCancel: PropTypes.func.isRequired,
-    onConfirm: PropTypes.func.isRequired,
+    cancelLabel: PropTypes.string,
     children: PropTypes.oneOfType([
         PropTypes.string,
         PropTypes.node,
         PropTypes.arrayOf(PropTypes.node),
     ]),
-    cancelLabel: PropTypes.string,
     confirmLabel: PropTypes.string,
     isDestructive: PropTypes.bool,
+    onCancel: PropTypes.func.isRequired,
+    onConfirm: PropTypes.func.isRequired,
+    show: PropTypes.bool.isRequired,
     theme: PropTypes.object.isRequired,
+    title: PropTypes.string.isRequired,
 };
 
 ConfirmDialog.defaultProps = {
     cancelLabel: 'Cancel',
+    children: undefined,
     confirmLabel: 'Confirm',
     isDestructive: false,
-    children: undefined,
 };
 
 export default withTheme()(ConfirmDialog);

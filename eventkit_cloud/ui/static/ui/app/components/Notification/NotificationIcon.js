@@ -18,8 +18,8 @@ export class NotificationIcon extends Component {
 
         const styles = {
             icon: {
-                marginRight: '10px',
                 flex: '0 0 auto',
+                marginRight: '10px',
                 ...this.props.iconStyle,
             },
         };
@@ -104,17 +104,17 @@ export class NotificationIcon extends Component {
 }
 
 NotificationIcon.propTypes = {
+    iconStyle: PropTypes.object,
     notification: PropTypes.shape({
-        id: PropTypes.number,
-        verb: PropTypes.string,
-        actor: PropTypes.shape({
-            details: PropTypes.object,
-        }),
         action_object: PropTypes.shape({
             details: PropTypes.object,
         }),
+        actor: PropTypes.shape({
+            details: PropTypes.object,
+        }),
+        id: PropTypes.number,
+        verb: PropTypes.string,
     }).isRequired,
-    iconStyle: PropTypes.object,
     theme: PropTypes.object.isRequired,
 };
 

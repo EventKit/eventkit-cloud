@@ -88,6 +88,16 @@ export class NotificationsTable extends React.Component {
 
         const spacing = isWidthUp('sm') ? '10px' : '2px';
         let styles = {
+            cell: {
+                color: colors.text_primary,
+                padding: '0 15px',
+                textAlign: 'left',
+            },
+            contentHeaderColumnWrapper: {
+                alignItems: 'center',
+                display: 'flex',
+                height: '100%',
+            },
             root: {
                 display: 'flex',
                 flexWrap: 'wrap',
@@ -97,23 +107,13 @@ export class NotificationsTable extends React.Component {
                 paddingBottom: spacing,
             },
             tableHeader: {
-                height: '50px',
                 backgroundColor: colors.white,
-            },
-            cell: {
-                padding: '0 15px',
-                textAlign: 'left',
-                color: colors.text_primary,
-            },
-            contentHeaderColumnWrapper: {
-                display: 'flex',
-                alignItems: 'center',
-                height: '100%',
+                height: '50px',
             },
         };
 
         let optionsWidth = '60px';
-        if (isWidthUp('xl', width)) optionsWidth = '435px';
+        if (isWidthUp('xl', width)) {optionsWidth = '435px'};
 
         styles = {
             ...styles,
@@ -132,9 +132,9 @@ export class NotificationsTable extends React.Component {
             },
             optionsHeaderColumn: {
                 ...styles.cell,
+                padding: '0 15px 0 0',
                 textAlign: isWidthUp('xl', width) ? 'center' : 'right',
                 width: optionsWidth,
-                padding: '0 15px 0 0',
             },
         };
 
@@ -216,23 +216,23 @@ Selected
 }
 
 NotificationsTable.propTypes = {
+    history: PropTypes.object.isRequired,
     notificationsArray: PropTypes.arrayOf(PropTypes.object).isRequired,
     notificationsData: PropTypes.object.isRequired,
-    history: PropTypes.object.isRequired,
+    onMarkAllAsRead: PropTypes.func,
     onMarkAsRead: PropTypes.func,
     onMarkAsUnread: PropTypes.func,
     onRemove: PropTypes.func,
-    onMarkAllAsRead: PropTypes.func,
     onView: PropTypes.func,
     theme: PropTypes.object.isRequired,
     width: PropTypes.string.isRequired,
 };
 
 NotificationsTable.defaultProps = {
+    onMarkAllAsRead: undefined,
     onMarkAsRead: undefined,
     onMarkAsUnread: undefined,
     onRemove: undefined,
-    onMarkAllAsRead: undefined,
     onView: undefined,
 };
 

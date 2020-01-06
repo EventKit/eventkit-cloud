@@ -2,41 +2,41 @@ import { types } from '../actions/datacartActions';
 
 export const initialState = {
     aoiInfo: {
-        geojson: {},
-        originalGeojson: {},
-        geomType: null,
-        title: null,
-        description: null,
-        selectionType: null,
         buffer: 0,
-    },
-    submitJob: {
-        fetching: null,
-        fetched: null,
-        jobuid: '',
-        error: null,
+        description: null,
+        geojson: {},
+        geomType: null,
+        originalGeojson: {},
+        selectionType: null,
+        title: null,
     },
     exportInfo: {
-        exportName: '',
-        datapackDescription: '',
-        projectName: '',
-        providers: [],
         areaStr: '',
-        formats: ['gpkg'],
-        providerEstimates: {},
+        datapackDescription: '',
+        exportName: '',
         exportOptions: {},
+        formats: ['gpkg'],
+        projectName: '',
         projections: [],
-    },
-    updatePermission: {
-        updating: null,
-        updated: null,
-        error: null,
+        providerEstimates: {},
+        providers: [],
     },
     exportReRun: {
-        fetching: null,
-        fetched: null,
         data: [],
         error: null,
+        fetched: null,
+        fetching: null,
+    },
+    submitJob: {
+        error: null,
+        fetched: null,
+        fetching: null,
+        jobuid: '',
+    },
+    updatePermission: {
+        error: null,
+        updated: null,
+        updating: null,
     },
 };
 
@@ -44,23 +44,23 @@ export function exportAoiInfoReducer(state = initialState.aoiInfo, action) {
     switch (action.type) {
         case types.UPDATE_AOI_INFO:
             return {
-                geojson: action.geojson,
-                originalGeojson: action.originalGeojson,
-                geomType: action.geomType,
-                title: action.title,
-                description: action.description,
-                selectionType: action.selectionType,
                 buffer: action.buffer,
+                description: action.description,
+                geojson: action.geojson,
+                geomType: action.geomType,
+                originalGeojson: action.originalGeojson,
+                selectionType: action.selectionType,
+                title: action.title,
             };
         case types.CLEAR_AOI_INFO:
             return {
-                geojson: {},
-                originalGeojson: {},
-                geomType: null,
-                title: null,
-                description: null,
-                selectionType: null,
                 buffer: 0,
+                description: null,
+                geojson: {},
+                geomType: null,
+                originalGeojson: {},
+                selectionType: null,
+                title: null,
             };
         default:
             return state;
@@ -86,15 +86,15 @@ export function exportInfoReducer(state = initialState.exportInfo, action) {
             };
         case types.CLEAR_EXPORT_INFO:
             return {
-                exportName: '',
-                datapackDescription: '',
-                projectName: '',
-                providers: [],
                 areaStr: '',
-                formats: ['gpkg'],
-                providerEstimates: {},
+                datapackDescription: '',
+                exportName: '',
                 exportOptions: {},
+                formats: ['gpkg'],
+                projectName: '',
                 projections: [],
+                providerEstimates: {},
+                providers: [],
             };
         default:
             return state;
@@ -105,19 +105,31 @@ export function submitJobReducer(state = initialState.submitJob, action) {
     switch (action.type) {
         case types.SUBMITTING_JOB:
             return {
-                fetching: true, fetched: false, jobuid: '', error: null,
+                error: null,
+                fetched: false,
+                fetching: true,
+                jobuid: '',
             };
         case types.JOB_SUBMITTED_SUCCESS:
             return {
-                fetching: false, fetched: true, jobuid: action.jobuid, error: null,
+                error: null,
+                fetched: true,
+                fetching: false,
+                jobuid: action.jobuid,
             };
         case types.JOB_SUBMITTED_ERROR:
             return {
-                fetching: false, fetched: false, jobuid: '', error: action.error,
+                error: action.error,
+                fetched: false,
+                fetching: false,
+                jobuid: '',
             };
         case types.CLEAR_JOB_INFO:
             return {
-                fetching: false, fetched: false, jobuid: '', error: null,
+                error: null,
+                fetched: false,
+                fetching: false,
+                jobuid: '',
             };
         default:
             return state;
@@ -141,19 +153,31 @@ export function rerunExportReducer(state = initialState.exportReRun, action) {
     switch (action.type) {
         case types.RERUNNING_EXPORT:
             return {
-                fetching: true, fetched: false, data: '', error: null,
+                data: '',
+                error: null,
+                fetched: false,
+                fetching: true,
             };
         case types.RERUN_EXPORT_SUCCESS:
             return {
-                fetching: false, fetched: true, data: action.exportReRun.data, error: null,
+                data: action.exportReRun.data,
+                error: null,
+                fetched: true,
+                fetching: false,
             };
         case types.RERUN_EXPORT_ERROR:
             return {
-                fetching: false, fetched: false, data: '', error: action.error,
+                data: '',
+                error: action.error,
+                fetched: false,
+                fetching: false,
             };
         case types.CLEAR_RERUN_INFO:
             return {
-                fetching: false, fetched: false, data: '', error: null,
+                data: '',
+                error: null,
+                fetched: false,
+                fetching: false,
             };
         default:
             return state;

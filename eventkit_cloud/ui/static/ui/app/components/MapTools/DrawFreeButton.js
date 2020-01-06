@@ -26,23 +26,23 @@ export class DrawFreeButton extends Component {
         const state = this.props.buttonState;
         const styles = {
             buttonName: {
-                fontSize: '8px',
-                width: '50px',
-                height: '12px',
-                color: colors.primary,
                 bottom: '0',
+                color: colors.primary,
+                fontSize: '8px',
+                height: '12px',
+                width: '50px',
             },
             drawButtonGeneral: {
-                height: '50px',
-                width: '50px',
-                borderTop: '1px solid #e6e6e6',
-                borderRight: 'none',
-                borderLeft: 'none',
-                borderBottom: 'none',
-                margin: 0,
-                padding: 0,
                 backgroundColor: colors.white,
+                borderBottom: 'none',
+                borderLeft: 'none',
+                borderRight: 'none',
+                borderTop: '1px solid #e6e6e6',
+                height: '50px',
+                margin: 0,
                 outline: 'none',
+                padding: 0,
+                width: '50px',
             },
         };
 
@@ -60,8 +60,8 @@ export class DrawFreeButton extends Component {
             <div id="inactive_icon">
                 <ContentCreate
                     className="qa-DrawFreeButton-ContentCreate-inactive"
-                    style={{ opacity: 0.4 }}
                     color="primary"
+                    style={{ opacity: 0.4 }}
                 />
                 <div className="qa-DrawFreeButton-div-inactive" style={{ ...styles.buttonName, opacity: 0.4 }}>DRAW</div>
             </div>
@@ -94,11 +94,11 @@ export class DrawFreeButton extends Component {
 
 DrawFreeButton.propTypes = {
     buttonState: PropTypes.string.isRequired,
-    updateMode: PropTypes.func.isRequired,
-    setFreeButtonSelected: PropTypes.func.isRequired,
-    setAllButtonsDefault: PropTypes.func.isRequired,
     handleCancel: PropTypes.func.isRequired,
+    setAllButtonsDefault: PropTypes.func.isRequired,
+    setFreeButtonSelected: PropTypes.func.isRequired,
     theme: PropTypes.object.isRequired,
+    updateMode: PropTypes.func.isRequired,
 };
 
 export default withTheme()(DrawFreeButton);

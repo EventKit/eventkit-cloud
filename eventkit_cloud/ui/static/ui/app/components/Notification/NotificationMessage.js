@@ -25,18 +25,18 @@ export class NotificationMessage extends Component {
         const verb = notification.verb.toLowerCase();
 
         const styles = {
-            text: {
-                ...this.props.textStyle,
-                whiteSpace: 'nowrap',
-                fontSize: '14px',
-            },
             link: {
                 ...this.props.textStyle,
                 ...this.props.linkStyle,
                 color: colors.primary,
+                fontSize: '14px',
                 overflow: 'hidden',
                 textOverflow: 'ellipsis',
+            },
+            text: {
+                ...this.props.textStyle,
                 fontSize: '14px',
+                whiteSpace: 'nowrap',
             },
         };
 
@@ -127,13 +127,13 @@ export class NotificationMessage extends Component {
 
         const linkEl = (
             <Link
-                key={`${notification.id}-Link`}
                 className="qa-NotificationMessage-Link"
-                to={viewPath}
                 href={viewPath}
-                style={styles.link}
+                key={`${notification.id}-Link`}
                 onClick={this.handleLinkClick}
+                style={styles.link}
                 title={data}
+                to={viewPath}
             >
                 {data}
             </Link>
@@ -160,26 +160,26 @@ export class NotificationMessage extends Component {
 }
 
 NotificationMessage.propTypes = {
+    linkStyle: PropTypes.object,
     notification: PropTypes.shape({
-        id: PropTypes.number,
-        verb: PropTypes.string,
-        actor: PropTypes.shape({
-            details: PropTypes.object,
-        }),
         action_object: PropTypes.shape({
             details: PropTypes.object,
         }),
+        actor: PropTypes.shape({
+            details: PropTypes.object,
+        }),
+        id: PropTypes.number,
+        verb: PropTypes.string,
     }).isRequired,
-    textStyle: PropTypes.object,
-    linkStyle: PropTypes.object,
     onLinkClick: PropTypes.func,
+    textStyle: PropTypes.object,
     theme: PropTypes.object.isRequired,
 };
 
 NotificationMessage.defaultProps = {
-    textStyle: {},
     linkStyle: {},
     onLinkClick: () => (true),
+    textStyle: {},
 };
 
 export default

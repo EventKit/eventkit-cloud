@@ -1,30 +1,46 @@
 import { types } from '../actions/fileActions';
 
 export const initialState = {
-    processing: false,
-    processed: false,
-    featureCollection: {},
     error: null,
+    featureCollection: {},
     filename: '',
+    processed: false,
+    processing: false,
 };
 
 export function importGeomReducer(state = initialState, action) {
     switch (action.type) {
         case types.FILE_PROCESSING:
             return {
-                ...state, processing: true, processed: false, featureCollection: {}, error: null, filename: action.filename,
+                ...state,
+                error: null,
+                featureCollection: {},
+                filename: action.filename,
+                processed: false,
+                processing: true,
             };
         case types.FILE_PROCESSED:
             return {
-                ...state, processing: false, processed: true, featureCollection: action.featureCollection,
+                ...state,
+                featureCollection: action.featureCollection,
+                processed: true,
+                processing: false,
             };
         case types.FILE_ERROR:
             return {
-                processing: false, processed: false, featureCollection: {}, error: action.error, filename: '',
+                error: action.error,
+                featureCollection: {},
+                filename: '',
+                processed: false,
+                processing: false,
             };
         case types.FILE_RESET:
             return {
-                processing: false, processed: false, featureCollection: {}, error: null, filename: '',
+                error: null,
+                featureCollection: {},
+                filename: '',
+                processed: false,
+                processing: false,
             };
         default:
             return state;

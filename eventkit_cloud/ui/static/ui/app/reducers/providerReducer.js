@@ -14,8 +14,8 @@ export function getProvidersReducer(state = initialState, action) {
 }
 
 export const initialStateCancel = {
-    canceling: false,
     canceled: false,
+    canceling: false,
     error: null,
 };
 
@@ -33,10 +33,10 @@ export function cancelProviderTask(state = initialStateCancel, action) {
 }
 
 export const initialStateProviderTasks = {
-    fetching: false,
-    fetched: false,
-    error: null,
     data: {},
+    error: null,
+    fetched: false,
+    fetching: false,
 };
 
 export function providerTasksReducer(state = initialStateProviderTasks, action) {
@@ -46,16 +46,16 @@ export function providerTasksReducer(state = initialStateProviderTasks, action) 
         case types.RECEIVED_PROVIDER_TASK:
             return {
                 ...state,
-                fetching: false,
-                fetched: true,
                 data: { ...state.data, [action.uid]: action.data },
+                fetched: true,
+                fetching: false,
             };
         case types.GETTING_PROVIDER_TASK_ERROR:
             return {
                 ...state,
-                fetching: false,
-                fetched: false,
                 error: action.error,
+                fetched: false,
+                fetching: false,
             };
         default:
             return state;

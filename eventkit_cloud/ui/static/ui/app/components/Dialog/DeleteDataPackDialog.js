@@ -7,12 +7,12 @@ export class DeleteDataPackDialog extends Component {
         return (
             <ConfirmDialog
                 className="qa-DeleteDataPackDialog-ConfirmDialog"
-                show={this.props.show}
-                title="DELETE DATAPACK"
                 confirmLabel="Delete"
+                isDestructive
                 onCancel={this.props.onCancel}
                 onConfirm={this.props.onDelete}
-                isDestructive
+                show={this.props.show}
+                title="DELETE DATAPACK"
             >
                 <strong>Are you sure you want to delete this DataPack?</strong>
             </ConfirmDialog>
@@ -21,9 +21,9 @@ export class DeleteDataPackDialog extends Component {
 }
 
 DeleteDataPackDialog.propTypes = {
-    show: PropTypes.bool.isRequired,
     onCancel: PropTypes.func.isRequired,
     onDelete: PropTypes.func.isRequired,
+    show: PropTypes.bool.isRequired,
 };
 
 export default DeleteDataPackDialog;

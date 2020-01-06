@@ -57,34 +57,34 @@ export class NotificationsTableItem extends React.Component {
         const { width } = this.props;
 
         let styles = {
-            tableRow: {
-                transition: 'background-color 0.25s',
-                borderBottom: `1px solid ${colors.secondary_dark}`,
+            button: {
+                color: colors.primary,
+                fontSize: '14px',
+                textTransform: 'uppercase',
             },
             cell: {
-                padding: '0 15px',
+                borderBottom: 'none',
                 color: colors.text_primary,
                 fontSize: '16px',
                 height: '48px',
-                borderBottom: 'none',
-            },
-            optionsButtonsContainer: {
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: isWidthUp('xl', width) ? 'center' : 'flex-end',
-            },
-            button: {
-                fontSize: '14px',
-                color: colors.primary,
-                textTransform: 'uppercase',
+                padding: '0 15px',
             },
             optionButtonLabel: {
                 marginRight: '5px',
             },
+            optionsButtonsContainer: {
+                alignItems: 'center',
+                display: 'flex',
+                justifyContent: isWidthUp('xl', width) ? 'center' : 'flex-end',
+            },
+            tableRow: {
+                borderBottom: `1px solid ${colors.secondary_dark}`,
+                transition: 'background-color 0.25s',
+            },
         };
 
         let optionsWidth = '60px';
-        if (isWidthUp('xl', width)) optionsWidth = '435px';
+        if (isWidthUp('xl', width)) {optionsWidth = '435px'};
 
         styles = {
             ...styles,
@@ -94,8 +94,8 @@ export class NotificationsTableItem extends React.Component {
             },
             contentRowColumn: {
                 ...styles.cell,
-                display: 'flex',
                 alignItems: 'center',
+                display: 'flex',
             },
             dateRowColumn: {
                 ...styles.cell,
@@ -121,11 +121,11 @@ export class NotificationsTableItem extends React.Component {
                     style={styles.checkboxRowColumn}
                 >
                     <Checkbox
+                        checked={this.props.isSelected}
                         className="qa-NotificationsTableItem-Checkbox"
                         color="primary"
-                        style={{ width: '24px', height: '24px' }}
-                        checked={this.props.isSelected}
                         onChange={(e, isChecked) => this.props.setSelected(this.props.notification, isChecked)}
+                        style={{ width: '24px', height: '24px' }}
                     />
                 </TableCell>
                 <TableCell
@@ -160,7 +160,10 @@ export class NotificationsTableItem extends React.Component {
                                     style={{ display: 'flex', flex: '1' }}
                                 >
                                     <div style={{
-                                        flex: '1', textAlign: 'right', marginRight: '6px', boxSizing: 'border-box',
+                                        boxSizing: 'border-box',
+                                        flex: '1',
+                                        marginRight: '6px',
+                                        textAlign: 'right',
                                     }}
                                     >
                                         {viewPath
@@ -178,7 +181,10 @@ export class NotificationsTableItem extends React.Component {
                                         }
                                     </div>
                                     <div style={{
-                                        flex: '0 1 180px', textAlign: 'center', margin: '0 6px', boxSizing: 'border-box',
+                                        boxSizing: 'border-box',
+                                        flex: '0 1 180px',
+                                        margin: '0 6px',
+                                        textAlign: 'center',
                                     }}
                                     >
                                         {this.props.notification.unread
@@ -205,7 +211,10 @@ export class NotificationsTableItem extends React.Component {
                                         }
                                     </div>
                                     <div style={{
-                                        flex: '1', textAlign: 'left', marginLeft: '6px', boxSizing: 'border-box',
+                                        boxSizing: 'border-box',
+                                        flex: '1',
+                                        marginLeft: '6px',
+                                        textAlign: 'left',
                                     }}
                                     >
                                         <ButtonBase
@@ -222,8 +231,8 @@ export class NotificationsTableItem extends React.Component {
                             : (
                                 <NotificationMenu
                                     className="qa-NotificationsTableItem-ActionMenu"
-                                    notification={this.props.notification}
                                     history={this.props.history}
+                                    notification={this.props.notification}
                                     onMarkAsRead={this.props.onMarkAsRead}
                                     onMarkAsUnread={this.props.onMarkAsUnread}
                                     onRemove={this.props.onRemove}
@@ -239,17 +248,17 @@ export class NotificationsTableItem extends React.Component {
 }
 
 NotificationsTableItem.propTypes = {
-    notification: PropTypes.object.isRequired,
     history: PropTypes.object.isRequired,
     isSelected: PropTypes.bool.isRequired,
-    setSelected: PropTypes.func.isRequired,
+    markNotificationsAsRead: PropTypes.func.isRequired,
+    markNotificationsAsUnread: PropTypes.func.isRequired,
+    notification: PropTypes.object.isRequired,
     onMarkAsRead: PropTypes.func,
     onMarkAsUnread: PropTypes.func,
     onRemove: PropTypes.func,
     onView: PropTypes.func,
-    markNotificationsAsRead: PropTypes.func.isRequired,
-    markNotificationsAsUnread: PropTypes.func.isRequired,
     removeNotifications: PropTypes.func.isRequired,
+    setSelected: PropTypes.func.isRequired,
     theme: PropTypes.object.isRequired,
     width: PropTypes.string.isRequired,
 };

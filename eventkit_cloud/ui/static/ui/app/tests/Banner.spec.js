@@ -6,15 +6,15 @@ import Banner from '../components/Banner';
 describe('Banner component', () => {
     it('should render a div with string and style from context', () => {
         const wrapper = mount(<Banner />, {
-            context: {
-                config: {
-                    BANNER_TEXT: 'test banner',
-                    BANNER_TEXT_COLOR: 'red',
-                    BANNER_BACKGROUND_COLOR: 'green',
-                },
-            },
             childContextTypes: {
                 context: PropTypes.object,
+            },
+            context: {
+                config: {
+                    BANNER_BACKGROUND_COLOR: 'green',
+                    BANNER_TEXT: 'test banner',
+                    BANNER_TEXT_COLOR: 'red',
+                },
             },
         });
         expect(wrapper.find('div')).toHaveLength(1);
@@ -25,8 +25,8 @@ describe('Banner component', () => {
 
     it('should render div with empty string and default style when no config', () => {
         const wrapper = mount(<Banner />, {
-            context: { config: {} },
             childContextTypes: { context: PropTypes.object },
+            context: { config: {} },
         });
         expect(wrapper.find('div')).toHaveLength(1);
         expect(wrapper.find('div').text()).toEqual('');

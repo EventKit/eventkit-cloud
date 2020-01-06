@@ -22,8 +22,8 @@ export class NotificationsPage extends React.Component {
         this.handleLoadMore = this.handleLoadMore.bind(this);
         this.itemsPerPage = Number(context.config.NOTIFICATIONS_PAGE_SIZE) || 10;
         this.state = {
-            loadingPage: true,
             loading: true,
+            loadingPage: true,
             pageSize: this.itemsPerPage,
         };
     }
@@ -36,8 +36,8 @@ export class NotificationsPage extends React.Component {
         if (this.props.notificationsStatus.fetched && !prevProps.notificationsStatus.fetched) {
             // reconsider setting state in componentDidUpdate in the future
             this.setState({  // eslint-disable-line
-                loadingPage: false,
                 loading: false,
+                loadingPage: false,
             });
         }
 
@@ -92,42 +92,42 @@ export class NotificationsPage extends React.Component {
         const pageAppBarHeight = 35;
         const spacing = isWidthUp('sm') ? '10px' : '2px';
         const styles = {
-            root: {
-                position: 'relative',
-                height: `calc(100vh - ${mainAppBarHeight}px)`,
-                width: '100%',
-                backgroundImage: `url(${images.topo_dark})`,
-                color: colors.text_primary,
-            },
-            customScrollbar: {
-                height: `calc(100vh - ${mainAppBarHeight + pageAppBarHeight}px)`,
-            },
-            content: {
-                marginBottom: '12px',
-                maxWidth: '1920px',
-                margin: 'auto',
-            },
-            tableRow: {
-                marginLeft: '12px',
-                paddingRight: '6px',
-                height: '50px',
-            },
             clickable: {
                 cursor: 'pointer',
                 width: 'min-content',
             },
+            content: {
+                margin: 'auto',
+                marginBottom: '12px',
+                maxWidth: '1920px',
+            },
+            customScrollbar: {
+                height: `calc(100vh - ${mainAppBarHeight + pageAppBarHeight}px)`,
+            },
             gridList: {
-                width: '100%',
                 height: 'auto',
                 margin: '0',
                 paddingLeft: spacing,
                 paddingRight: spacing,
+                width: '100%',
             },
             noData: {
+                color: colors.text_primary,
+                fontSize: '18px',
                 margin: `0 ${10 + (this.getGridPadding() / 2)}px`,
                 padding: '22px',
-                fontSize: '18px',
+            },
+            root: {
+                backgroundImage: `url(${images.topo_dark})`,
                 color: colors.text_primary,
+                height: `calc(100vh - ${mainAppBarHeight}px)`,
+                position: 'relative',
+                width: '100%',
+            },
+            tableRow: {
+                height: '50px',
+                marginLeft: '12px',
+                paddingRight: '6px',
             },
         };
 
@@ -212,18 +212,18 @@ NotificationsPage.contextTypes = {
 };
 
 NotificationsPage.propTypes = {
+    getNotifications: PropTypes.func.isRequired,
     history: PropTypes.object.isRequired,
     notificationsData: PropTypes.object.isRequired,
     notificationsStatus: PropTypes.object.isRequired,
-    getNotifications: PropTypes.func.isRequired,
     theme: PropTypes.object.isRequired,
     width: PropTypes.string.isRequired,
 };
 
 function mapStateToProps(state) {
     return {
-        notificationsStatus: state.notifications.status,
         notificationsData: state.notifications.data,
+        notificationsStatus: state.notifications.status,
     };
 }
 

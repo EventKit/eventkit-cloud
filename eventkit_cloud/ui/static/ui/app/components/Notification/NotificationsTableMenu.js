@@ -29,8 +29,8 @@ export class NotificationsTableMenu extends React.Component {
         this.handleDelete = this.handleDelete.bind(this);
         this.handleSelection = this.handleSelection.bind(this);
         this.state = {
-            showRemoveDialog: false,
             deleteAll: 'false',
+            showRemoveDialog: false,
         };
     }
 
@@ -87,24 +87,24 @@ export class NotificationsTableMenu extends React.Component {
         const { colors } = this.props.theme.eventkit;
 
         const styles = {
-            menuButton: {
-                padding: '0',
-                width: '20px',
-                height: 'auto',
-                verticalAlign: 'middle',
-            },
-            item: {
-                fontSize: '14px',
-                color: colors.text_primary,
-            },
             icon: {
                 color: colors.text_primary,
                 marginRight: '5px',
             },
+            item: {
+                color: colors.text_primary,
+                fontSize: '14px',
+            },
             markAllAsRead: {
-                fontSize: '15px',
                 color: colors.primary,
+                fontSize: '15px',
                 textAlign: 'center',
+            },
+            menuButton: {
+                height: 'auto',
+                padding: '0',
+                verticalAlign: 'middle',
+                width: '20px',
             },
         };
 
@@ -201,31 +201,31 @@ export class NotificationsTableMenu extends React.Component {
 
 NotificationsTableMenu.propTypes = {
     allSelected: PropTypes.bool.isRequired,
-    selectedNotifications: PropTypes.object.isRequired,
+    markAllNotificationsAsRead: PropTypes.func.isRequired,
+    markNotificationsAsRead: PropTypes.func.isRequired,
+    markNotificationsAsUnread: PropTypes.func.isRequired,
+    onMarkAllAsRead: PropTypes.func,
     onMarkAsRead: PropTypes.func,
     onMarkAsUnread: PropTypes.func,
     onRemove: PropTypes.func,
-    onMarkAllAsRead: PropTypes.func,
-    markNotificationsAsRead: PropTypes.func.isRequired,
-    markNotificationsAsUnread: PropTypes.func.isRequired,
     removeNotifications: PropTypes.func.isRequired,
-    markAllNotificationsAsRead: PropTypes.func.isRequired,
+    selectedNotifications: PropTypes.object.isRequired,
     theme: PropTypes.object.isRequired,
 };
 
 NotificationsTableMenu.defaultProps = {
+    onMarkAllAsRead: () => true,
     onMarkAsRead: () => true,
     onMarkAsUnread: () => true,
     onRemove: () => true,
-    onMarkAllAsRead: () => true,
 };
 
 function mapDispatchToProps(dispatch) {
     return {
+        markAllNotificationsAsRead: () => dispatch(markAllNotificationsAsRead()),
         markNotificationsAsRead: notifications => dispatch(markNotificationsAsRead(notifications)),
         markNotificationsAsUnread: notifications => dispatch(markNotificationsAsUnread(notifications)),
         removeNotifications: notifications => dispatch(removeNotifications(notifications)),
-        markAllNotificationsAsRead: () => dispatch(markAllNotificationsAsRead()),
     };
 }
 

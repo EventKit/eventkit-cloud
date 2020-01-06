@@ -23,11 +23,11 @@ describe('loginContainer', () => {
         const props = getProps();
 
         const state = {
-            username: 'UserName',
-            password: 'Password',
             button: 'Button',
             loginForm: true,
             oauthName: '',
+            password: 'Password',
+            username: 'UserName',
         };
 
         const wrapper = shallow(<Form {...props} />);
@@ -41,11 +41,11 @@ describe('loginContainer', () => {
         const props = getProps();
 
         const state = {
-            username: 'UserName',
-            password: 'Password',
             button: 'Button',
             loginForm: false,
             oauthName: 'OAuth',
+            password: 'Password',
+            username: 'UserName',
         };
 
         const wrapper = shallow(<Form {...props} />);
@@ -59,11 +59,11 @@ describe('loginContainer', () => {
         const props = getProps();
 
         const state = {
-            username: 'UserName',
-            password: 'Password',
             buttonDisabled: false,
             loginForm: true,
             oauthName: 'OAuth',
+            password: 'Password',
+            username: 'UserName',
         };
 
         const wrapper = shallow(<Form {...props} />);
@@ -103,11 +103,11 @@ describe('loginContainer', () => {
 
     it('handleSubmit should call preventDefault and handleLogin', () => {
         const state = {
-            username: 'UserName',
-            password: 'Password',
             buttonDisabled: false,
             loginForm: true,
             oauthName: '',
+            password: 'Password',
+            username: 'UserName',
         };
         const props = getProps();
         const wrapper = shallow(<Form {...props} />);
@@ -172,11 +172,11 @@ describe('loginContainer', () => {
         const props = getProps();
 
         const state = {
-            username: 'UserName',
-            password: 'Password',
             buttonDisabled: false,
             loginForm: true,
             oauthName: '',
+            password: 'Password',
+            username: 'UserName',
         };
 
         const wrapper = shallow(<Form {...props} />);

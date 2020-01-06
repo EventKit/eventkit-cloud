@@ -27,70 +27,70 @@ export class NotificationsDropdown extends React.Component {
         const { width } = this.props;
 
         const styles = {
-            root: {
-                position: 'absolute',
-                top: '80px',
-                left: isWidthUp('md', width) ? '-2px' : '-67px',
-                width: isWidthUp('md', width) ? 'auto' : 'calc(100vw - 6px)',
-                zIndex: '100',
-                transition: 'transform 0.25s cubic-bezier(0.23, 1, 0.32, 1), opacity 0.25s cubic-bezier(0.23, 1, 0.32, 1)',
-                transformOrigin: isWidthUp('md', width) ? '37px -21px' : '101px -21px',
-                ...this.props.style,
-            },
-            pointer: {
-                position: 'absolute',
-                top: '-12px',
-                left: isWidthUp('md', width) ? '25px' : '89px',
-                width: '25px',
-                height: '25px',
-                background: colors.white,
-                transform: 'rotate(-60deg) skewX(-30deg) scale(1,.866)',
-                borderTopRightRadius: '3px',
-            },
-            paper: {
-                width: isWidthUp('md', width) ? '633px' : '100%',
-                paddingBottom: isWidthUp('md', width) ? '24px' : '18px',
-                color: colors.black,
-            },
-            header: {
-                display: 'flex',
-                alignItems: 'center',
-                padding: isWidthUp('md', width) ? '28px 28px 20px' : '18px 18px 18px',
-            },
-            headerTitle: {
-                fontSize: '22px',
-                textTransform: 'uppercase',
-                flex: '1',
-            },
-            headerLink: {
-                fontSize: '14px',
-                color: colors.primary,
-                cursor: 'pointer',
-            },
-            gridList: {
-                width: '100%',
-                padding: isWidthUp('md', width) ? '0 18px' : '0 4px',
-            },
             gridItem: {
-                padding: '10px',
-                boxShadow: 'none',
                 borderBottom: `1px solid ${colors.secondary}`,
                 borderRadius: '0',
+                boxShadow: 'none',
+                padding: '10px',
+            },
+            gridList: {
+                padding: isWidthUp('md', width) ? '0 18px' : '0 4px',
+                width: '100%',
+            },
+            header: {
+                alignItems: 'center',
+                display: 'flex',
+                padding: isWidthUp('md', width) ? '28px 28px 20px' : '18px 18px 18px',
+            },
+            headerLink: {
+                color: colors.primary,
+                cursor: 'pointer',
+                fontSize: '14px',
+            },
+            headerTitle: {
+                flex: '1',
+                fontSize: '22px',
+                textTransform: 'uppercase',
             },
             noData: {
-                textAlign: 'center',
-                fontSize: '18px',
                 color: colors.text_primary,
+                fontSize: '18px',
+                textAlign: 'center',
+            },
+            paper: {
+                color: colors.black,
+                paddingBottom: isWidthUp('md', width) ? '24px' : '18px',
+                width: isWidthUp('md', width) ? '633px' : '100%',
+            },
+            pointer: {
+                background: colors.white,
+                borderTopRightRadius: '3px',
+                height: '25px',
+                left: isWidthUp('md', width) ? '25px' : '89px',
+                position: 'absolute',
+                top: '-12px',
+                transform: 'rotate(-60deg) skewX(-30deg) scale(1,.866)',
+                width: '25px',
+            },
+            root: {
+                left: isWidthUp('md', width) ? '-2px' : '-67px',
+                position: 'absolute',
+                top: '80px',
+                transformOrigin: isWidthUp('md', width) ? '37px -21px' : '101px -21px',
+                transition: 'transform 0.25s cubic-bezier(0.23, 1, 0.32, 1), opacity 0.25s cubic-bezier(0.23, 1, 0.32, 1)',
+                width: isWidthUp('md', width) ? 'auto' : 'calc(100vw - 6px)',
+                zIndex: '100',
+                ...this.props.style,
+            },
+            viewAll: {
+                color: colors.primary,
+                cursor: 'pointer',
+                fontSize: isWidthUp('md', width) ? '22px' : '18px',
+                textTransform: 'uppercase',
             },
             viewAllContainer: {
                 marginTop: isWidthUp('md', width) ? '24px' : '18px',
                 textAlign: 'center',
-            },
-            viewAll: {
-                color: colors.primary,
-                fontSize: isWidthUp('md', width) ? '22px' : '18px',
-                textTransform: 'uppercase',
-                cursor: 'pointer',
             },
         };
 
@@ -117,22 +117,22 @@ export class NotificationsDropdown extends React.Component {
         } else if (notifications.length > 0) {
             body = (
                 <GridList
-                    className="qa-NotificationsDropdown-Grid"
                     cellHeight="auto"
-                    style={styles.gridList}
-                    spacing={0}
+                    className="qa-NotificationsDropdown-Grid"
                     cols={1}
+                    spacing={0}
+                    style={styles.gridList}
                 >
                     {notifications.map((notification, index) => (
                         <NotificationGridItem
+                            history={this.props.history}
                             key={`Notification-${notification.id}`}
+                            notification={notification}
+                            onView={this.props.onNavigate}
                             paperStyle={{
                                 ...styles.gridItem,
                                 borderTop: (index === 0) ? `1px solid ${colors.secondary}` : '',
                             }}
-                            notification={notification}
-                            history={this.props.history}
-                            onView={this.props.onNavigate}
                         />
                     ))}
                 </GridList>
@@ -158,12 +158,12 @@ export class NotificationsDropdown extends React.Component {
                                 Notifications
                             </span>
                             <span
-                                role="button"
-                                tabIndex={0}
                                 className="qa-NotificationsDropdown-Header-MarkAllAsRead"
-                                style={styles.headerLink}
                                 onClick={this.props.markAllNotificationsAsRead}
                                 onKeyPress={this.props.markAllNotificationsAsRead}
+                                role="button"
+                                style={styles.headerLink}
+                                tabIndex={0}
                             >
                                 Mark All As Read
                             </span>
@@ -171,12 +171,12 @@ export class NotificationsDropdown extends React.Component {
                         {body}
                         <div style={styles.viewAllContainer}>
                             <span
-                                role="button"
-                                tabIndex={0}
                                 className="qa-NotificationsDropdown-ViewAll"
-                                style={styles.viewAll}
                                 onClick={this.handleViewAll}
                                 onKeyPress={this.handleViewAll}
+                                role="button"
+                                style={styles.viewAll}
+                                tabIndex={0}
                             >
                                 View All
                             </span>
@@ -189,20 +189,20 @@ export class NotificationsDropdown extends React.Component {
 }
 
 NotificationsDropdown.propTypes = {
-    style: PropTypes.object,
-    notifications: PropTypes.object.isRequired,
     history: PropTypes.object.isRequired,
-    onNavigate: PropTypes.func,
     loading: PropTypes.bool.isRequired,
     markAllNotificationsAsRead: PropTypes.func.isRequired,
+    notifications: PropTypes.object.isRequired,
     onClickAway: PropTypes.func.isRequired,
+    onNavigate: PropTypes.func,
+    style: PropTypes.object,
     theme: PropTypes.object.isRequired,
     width: PropTypes.string.isRequired,
 };
 
 NotificationsDropdown.defaultProps = {
-    style: {},
     onNavigate: () => true,
+    style: {},
 };
 
 function mapDispatchToProps(dispatch) {

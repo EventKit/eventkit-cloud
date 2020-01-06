@@ -10,8 +10,8 @@ describe('CustomTextField component', () => {
     });
 
     const props = {
-        title: 'test title',
         data: 'test data',
+        title: 'test title',
         ...global.eventkit_test_props,
     };
 

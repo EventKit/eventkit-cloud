@@ -8,28 +8,28 @@ const genericInfo = {
     ids: [],
     meta: {
         nextPage: false,
-        range: '',
         order: '',
+        range: '',
         view: '',
     },
     status: {
-        fetching: null,
-        fetched: null,
-        error: null,
         cancelSource: null,
+        error: null,
+        fetched: null,
+        fetching: null,
     },
 };
 
 export const exports = {
+    allInfo: { ...genericInfo },
     data: {
-        runs: {},
         jobs: {},
         provider_tasks: {},
+        runs: {},
         tasks: {},
     },
-    orderedIds: [],
-    allInfo: { ...genericInfo },
     featuredInfo: { ...genericInfo },
+    orderedIds: [],
     ownInfo: { ids: [] },
     viewedInfo: { ...genericInfo },
 };
@@ -239,9 +239,9 @@ const orderedIdReducer = (state = exports.orderedIds, action) => {
 
 const getStatusReducer = (inputTypeMap, inputState = {}) => {
     const typeMap = {
-        FETCHING: null,
-        FETCHED: null,
         ERROR: null,
+        FETCHED: null,
+        FETCHING: null,
         ...inputTypeMap,
     };
     const statusReducer = (state = inputState, action) => {
@@ -249,23 +249,23 @@ const getStatusReducer = (inputTypeMap, inputState = {}) => {
             case typeMap.FETCHING:
                 return {
                     ...state,
-                    fetching: true,
-                    error: null,
                     cancelSource: action.cancelSource,
+                    error: null,
+                    fetching: true,
                 };
             case typeMap.FETCHED:
                 return {
-                    fetching: false,
-                    fetched: true,
-                    error: null,
                     cancelSource: null,
+                    error: null,
+                    fetched: true,
+                    fetching: false,
                 };
             case typeMap.ERROR:
                 return {
-                    fetching: false,
-                    fetched: false,
-                    error: action.error,
                     cancelSource: null,
+                    error: action.error,
+                    fetched: false,
+                    fetching: false,
                 };
             default: return state;
         }
@@ -328,9 +328,9 @@ export const allInfoReducer = combineReducers({
     ),
     status: getStatusReducer(
         {
-            FETCHING: types.FETCHING_RUNS,
-            FETCHED: types.RECEIVED_RUNS,
             ERROR: types.FETCH_RUNS_ERROR,
+            FETCHED: types.RECEIVED_RUNS,
+            FETCHING: types.FETCHING_RUNS,
         },
         exports.allInfo.status,
     ),
@@ -338,32 +338,32 @@ export const allInfoReducer = combineReducers({
 
 export const featuredInfoReducer = combineReducers({
     ids: allFeaturedIds,
-    status: getStatusReducer(
-        {
-            FETCHING: types.FETCHING_FEATURED_RUNS,
-            FETCHED: types.RECEIVED_FEATURED_RUNS,
-            ERROR: types.FETCH_FEATURED_RUNS_ERROR,
-        },
-        exports.featuredInfo.status,
-    ),
     meta: getMetaReducer(
         {
             FETCHED: types.RECEIVED_FEATURED_RUNS,
         },
         exports.featuredInfo.meta,
     ),
+    status: getStatusReducer(
+        {
+            ERROR: types.FETCH_FEATURED_RUNS_ERROR,
+            FETCHED: types.RECEIVED_FEATURED_RUNS,
+            FETCHING: types.FETCHING_FEATURED_RUNS,
+        },
+        exports.featuredInfo.status,
+    ),
 });
 
 export const viewedInfoReducer = combineReducers({
     ids: allViewedIds,
-    status: getStatusReducer({
-        FETCHING: activityTypes.FETCHING_VIEWED_JOBS,
-        FETCHED: activityTypes.RECEIVED_VIEWED_JOBS,
-        ERROR: activityTypes.FETCH_VIEWED_JOBS_ERROR,
-    }, exports.viewedInfo.status),
     meta: getMetaReducer({
         FETCHED: activityTypes.RECEIVED_VIEWED_JOBS,
     }, exports.viewedInfo.meta),
+    status: getStatusReducer({
+        ERROR: activityTypes.FETCH_VIEWED_JOBS_ERROR,
+        FETCHED: activityTypes.RECEIVED_VIEWED_JOBS,
+        FETCHING: activityTypes.FETCHING_VIEWED_JOBS,
+    }, exports.viewedInfo.status),
 });
 
 export const ownInfoReducer = combineReducers({
@@ -371,39 +371,39 @@ export const ownInfoReducer = combineReducers({
 });
 
 export const dataReducer = combineReducers({
-    runs: runsById,
     jobs: jobsById,
     provider_tasks: providerTasksById,
+    runs: runsById,
     tasks: tasksById,
 });
 
 export const runsReducer = combineReducers({
-    data: dataReducer,
-    orderedIds: orderedIdReducer,
     allInfo: allInfoReducer,
+    data: dataReducer,
     featuredInfo: featuredInfoReducer,
+    orderedIds: orderedIdReducer,
     ownInfo: ownInfoReducer,
     viewedInfo: viewedInfoReducer,
 });
 
 export const initialState = {
+    datacartDetails: {
+        ids: [],
+        status: {
+            error: null,
+            fetched: false,
+            fetching: false,
+        },
+    },
     runDeletion: {
-        deleting: false,
         deleted: false,
+        deleting: false,
         error: null,
     },
     updateExpiration: {
-        updating: false,
-        updated: false,
         error: null,
-    },
-    datacartDetails: {
-        status: {
-            fetching: false,
-            fetched: false,
-            error: null,
-        },
-        ids: [],
+        updated: false,
+        updating: false,
     },
 };
 
@@ -423,27 +423,27 @@ export function datacartDetailsStatusReducer(state = initialState.datacartDetail
     switch (action.type) {
         case types.GETTING_DATACART_DETAILS:
             return {
-                fetching: true,
-                fetched: false,
                 error: null,
+                fetched: false,
+                fetching: true,
             };
         case types.DATACART_DETAILS_RECEIVED:
             return {
-                fetching: false,
-                fetched: true,
                 error: null,
+                fetched: true,
+                fetching: false,
             };
         case types.DATACART_DETAILS_ERROR:
             return {
-                fetching: false,
-                fetched: false,
                 error: action.error,
+                fetched: false,
+                fetching: false,
             };
         case types.CLEAR_DATACART_DETAILS:
             return {
-                fetching: false,
-                fetched: false,
                 error: null,
+                fetched: false,
+                fetching: false,
             };
         default:
             return state;
@@ -451,8 +451,8 @@ export function datacartDetailsStatusReducer(state = initialState.datacartDetail
 }
 
 export const getDatacartDetailsReducer = combineReducers({
-    status: datacartDetailsStatusReducer,
     ids: datacartDetailsIdsReducer,
+    status: datacartDetailsStatusReducer,
 });
 
 export function deleteRunReducer(state = initialState.runDeletion, action) {

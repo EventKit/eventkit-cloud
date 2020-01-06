@@ -7,19 +7,19 @@ export class InvalidDrawWarning extends Component {
         const { colors } = this.props.theme.eventkit;
 
         const style = {
-            display: this.props.show ? 'initial' : 'none',
-            position: 'absolute',
-            top: '70px',
-            right: '80px',
-            width: '200px',
-            border: '1px solid transparent',
-            padding: '5px 5px 5px 10px',
             backgroundColor: colors.warning,
+            border: '1px solid transparent',
             borderColor: colors.warning,
             color: colors.white,
-            zIndex: 2,
-            opacity: 0.7,
+            display: this.props.show ? 'initial' : 'none',
             fontSize: '12px',
+            opacity: 0.7,
+            padding: '5px 5px 5px 10px',
+            position: 'absolute',
+            right: '80px',
+            top: '70px',
+            width: '200px',
+            zIndex: 2,
         };
 
         return (

@@ -27,23 +27,23 @@ export class DrawBoxButton extends Component {
         const state = this.props.buttonState;
         const styles = {
             buttonName: {
-                fontSize: '8px',
-                width: '50px',
-                height: '12px',
-                color: colors.primary,
                 bottom: '0',
+                color: colors.primary,
+                fontSize: '8px',
+                height: '12px',
+                width: '50px',
             },
             drawButtonGeneral: {
-                height: '50px',
-                width: '50px',
-                borderTop: '1px solid #e6e6e6',
-                borderRight: 'none',
-                borderLeft: 'none',
-                borderBottom: 'none',
-                margin: 0,
-                padding: 0,
                 backgroundColor: colors.white,
+                borderBottom: 'none',
+                borderLeft: 'none',
+                borderRight: 'none',
+                borderTop: '1px solid #e6e6e6',
+                height: '50px',
+                margin: 0,
                 outline: 'none',
+                padding: 0,
+                width: '50px',
             },
         };
 
@@ -61,8 +61,8 @@ export class DrawBoxButton extends Component {
             <div id="inactive_icon">
                 <ImageCropSquare
                     className="qa-DrawBoxButton-ImageCropSquare-inactive"
-                    style={{ opacity: 0.4 }}
                     color="primary"
+                    style={{ opacity: 0.4 }}
                 />
                 <div className="qa-DrawBoxButton-div-inactive" style={{ ...styles.buttonName, opacity: 0.4 }}>BOX</div>
             </div>
@@ -95,11 +95,11 @@ export class DrawBoxButton extends Component {
 
 DrawBoxButton.propTypes = {
     buttonState: PropTypes.string.isRequired,
-    updateMode: PropTypes.func.isRequired,
-    setBoxButtonSelected: PropTypes.func.isRequired,
-    setAllButtonsDefault: PropTypes.func.isRequired,
     handleCancel: PropTypes.func.isRequired,
+    setAllButtonsDefault: PropTypes.func.isRequired,
+    setBoxButtonSelected: PropTypes.func.isRequired,
     theme: PropTypes.object.isRequired,
+    updateMode: PropTypes.func.isRequired,
 };
 
 export default withTheme()(DrawBoxButton);

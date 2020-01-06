@@ -1,10 +1,10 @@
 import { types } from '../actions/licenseActions';
 
 export const initialState = {
-    fetching: null,
-    fetched: null,
-    licenses: [],
     error: null,
+    fetched: null,
+    fetching: null,
+    licenses: [],
 };
 
 export function licenseReducer(state = initialState, action) {
@@ -13,7 +13,10 @@ export function licenseReducer(state = initialState, action) {
             return { ...state, fetching: true, fetched: false };
         case types.RECEIVED_LICENSES:
             return {
-                ...state, fetching: false, fetched: true, licenses: action.licenses,
+                ...state,
+                fetched: true,
+                fetching: false,
+                licenses: action.licenses,
             };
         case types.FETCH_LICENSES_ERROR:
             return { ...state, fetching: false, error: action.error };
