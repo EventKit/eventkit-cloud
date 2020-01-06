@@ -4,7 +4,15 @@ import json
 
 
 class RocketChat(object):
-    def __init__(self, url: str, username: Optional[str]=None, password: Optional[str]=None, auth_token: Optional[str]=None, user_id: Optional[str]=None, **kwargs):
+    def __init__(
+        self,
+        url: str,
+        username: Optional[str] = None,
+        password: Optional[str] = None,
+        auth_token: Optional[str] = None,
+        user_id: Optional[str] = None,
+        **kwargs,
+    ):
         self.base_url = url
         self.login_url = f"{self.base_url}/api/v1/login"
         self.message_url = f"{self.base_url}/api/v1/chat.postMessage"
