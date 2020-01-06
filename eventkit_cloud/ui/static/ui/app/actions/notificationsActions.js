@@ -3,23 +3,23 @@ import { getHeaderPageInfo } from '../utils/generic';
 
 export const types = {
     FETCHING_NOTIFICATIONS: 'FETCHING_NOTIFICATIONS',
-    RECEIVED_NOTIFICATIONS: 'RECEIVED_NOTIFICATIONS',
-    FETCH_NOTIFICATIONS_ERROR: 'FETCH_NOTIFICATIONS_ERROR',
-    MARKING_NOTIFICATIONS_AS_READ: 'MARKING_NOTIFICATIONS_AS_READ',
-    MARKED_NOTIFICATIONS_AS_READ: 'MARKED_NOTIFICATIONS_AS_READ',
-    MARK_NOTIFICATIONS_AS_READ_ERROR: 'MARK_NOTIFICATIONS_AS_READ_ERROR',
-    MARKING_NOTIFICATIONS_AS_UNREAD: 'MARKING_NOTIFICATIONS_AS_UNREAD',
-    MARKED_NOTIFICATIONS_AS_UNREAD: 'MARKED_NOTIFICATIONS_AS_UNREAD',
-    MARK_NOTIFICATIONS_AS_UNREAD_ERROR: 'MARK_NOTIFICATIONS_AS_UNREAD_ERROR',
-    MARKING_ALL_NOTIFICATIONS_AS_READ: 'MARKING_ALL_NOTIFICATIONS_AS_READ',
-    MARKED_ALL_NOTIFICATIONS_AS_READ: 'MARKED_ALL_NOTIFICATIONS_AS_READ',
-    MARK_ALL_NOTIFICATIONS_AS_READ_ERROR: 'MARK_ALL_NOTIFICATIONS_AS_READ_ERROR',
-    REMOVING_NOTIFICATIONS: 'REMOVING_NOTIFICATIONS',
-    REMOVED_NOTIFICATIONS: 'REMOVED_NOTIFICATIONS',
-    REMOVE_NOTIFICATIONS_ERROR: 'REMOVE_NOTIFICATIONS_ERROR',
     FETCHING_NOTIFICATIONS_UNREAD_COUNT: 'FETCHING_NOTIFICATIONS_UNREAD_COUNT',
-    RECEIVED_NOTIFICATIONS_UNREAD_COUNT: 'RECEIVED_NOTIFICATIONS_UNREAD_COUNT',
+    FETCH_NOTIFICATIONS_ERROR: 'FETCH_NOTIFICATIONS_ERROR',
     FETCH_NOTIFICATIONS_UNREAD_COUNT_ERROR: 'FETCH_NOTIFICATIONS_UNREAD_COUNT_ERROR',
+    MARKED_ALL_NOTIFICATIONS_AS_READ: 'MARKED_ALL_NOTIFICATIONS_AS_READ',
+    MARKED_NOTIFICATIONS_AS_READ: 'MARKED_NOTIFICATIONS_AS_READ',
+    MARKED_NOTIFICATIONS_AS_UNREAD: 'MARKED_NOTIFICATIONS_AS_UNREAD',
+    MARKING_ALL_NOTIFICATIONS_AS_READ: 'MARKING_ALL_NOTIFICATIONS_AS_READ',
+    MARKING_NOTIFICATIONS_AS_READ: 'MARKING_NOTIFICATIONS_AS_READ',
+    MARKING_NOTIFICATIONS_AS_UNREAD: 'MARKING_NOTIFICATIONS_AS_UNREAD',
+    MARK_ALL_NOTIFICATIONS_AS_READ_ERROR: 'MARK_ALL_NOTIFICATIONS_AS_READ_ERROR',
+    MARK_NOTIFICATIONS_AS_READ_ERROR: 'MARK_NOTIFICATIONS_AS_READ_ERROR',
+    MARK_NOTIFICATIONS_AS_UNREAD_ERROR: 'MARK_NOTIFICATIONS_AS_UNREAD_ERROR',
+    RECEIVED_NOTIFICATIONS: 'RECEIVED_NOTIFICATIONS',
+    RECEIVED_NOTIFICATIONS_UNREAD_COUNT: 'RECEIVED_NOTIFICATIONS_UNREAD_COUNT',
+    REMOVE_NOTIFICATIONS_ERROR: 'REMOVE_NOTIFICATIONS_ERROR',
+    REMOVED_NOTIFICATIONS: 'REMOVED_NOTIFICATIONS',
+    REMOVING_NOTIFICATIONS: 'REMOVING_NOTIFICATIONS',
 };
 
 export function getNotifications(args = {}) {
@@ -29,25 +29,25 @@ export function getNotifications(args = {}) {
     };
 
     return {
-        types: [
-            types.FETCHING_NOTIFICATIONS,
-            types.RECEIVED_NOTIFICATIONS,
-            types.FETCH_NOTIFICATIONS_ERROR,
-        ],
-        getCancelSource: state => state.notifications.status.cancelSource,
         auto: args.isAuto,
         cancellable: args.isAuto,
-        url: '/api/notifications',
+        getCancelSource: state => state.notifications.status.cancelSource,
         method: 'GET',
-        params,
         onSuccess: (response) => {
             const { nextPage, range } = getHeaderPageInfo(response);
             return {
-                notifications: response.data,
                 nextPage,
+                notifications: response.data,
                 range,
             };
         },
+        params,
+        types: [
+            types.FETCH_NOTIFICATIONS_ERROR,
+            types.FETCHING_NOTIFICATIONS,
+            types.RECEIVED_NOTIFICATIONS,
+        ],
+        url: '/api/notifications',
     };
 }
 
@@ -59,16 +59,16 @@ export function markNotificationsAsRead(notifications) {
     });
 
     return {
-        types: [
-            types.MARKING_NOTIFICATIONS_AS_READ,
-            types.MARKED_NOTIFICATIONS_AS_READ,
-            types.MARK_NOTIFICATIONS_AS_READ_ERROR,
-        ],
+        data,
         getCancelSource: state => state.notifications.status.cancelSource,
-        url: '/api/notifications/read',
         method: 'POST',
         payload: { notifications },
-        data,
+        types: [
+            types.MARK_NOTIFICATIONS_AS_READ_ERROR,
+            types.MARKED_NOTIFICATIONS_AS_READ,
+            types.MARKING_NOTIFICATIONS_AS_READ,
+        ],
+        url: '/api/notifications/read',
     };
 }
 
@@ -80,16 +80,16 @@ export function markNotificationsAsUnread(notifications) {
     });
 
     return {
-        types: [
-            types.MARKING_NOTIFICATIONS_AS_UNREAD,
-            types.MARKED_NOTIFICATIONS_AS_UNREAD,
-            types.MARK_NOTIFICATIONS_AS_UNREAD_ERROR,
-        ],
-        getCancelSource: state => state.notifications.status.cancelSource,
-        payload: { notifications },
-        url: '/api/notifications/unread',
-        method: 'POST',
         data,
+        getCancelSource: state => state.notifications.status.cancelSource,
+        method: 'POST',
+        payload: { notifications },
+        types: [
+            types.MARK_NOTIFICATIONS_AS_UNREAD_ERROR,
+            types.MARKED_NOTIFICATIONS_AS_UNREAD,
+            types.MARKING_NOTIFICATIONS_AS_UNREAD,
+        ],
+        url: '/api/notifications/unread',
     };
 }
 
@@ -104,29 +104,29 @@ export function removeNotifications(notifications) {
     }
 
     return {
-        types: [
-            types.REMOVING_NOTIFICATIONS,
-            types.REMOVED_NOTIFICATIONS,
-            types.REMOVE_NOTIFICATIONS_ERROR,
-        ],
-        getCancelSource: state => state.notifications.status.cancelSource,
-        payload: { notifications },
-        url: '/api/notifications/delete',
-        method: 'DELETE',
         data,
+        getCancelSource: state => state.notifications.status.cancelSource,
+        method: 'DELETE',
+        payload: { notifications },
+        types: [
+            types.REMOVE_NOTIFICATIONS_ERROR,
+            types.REMOVED_NOTIFICATIONS,
+            types.REMOVING_NOTIFICATIONS,
+        ],
+        url: '/api/notifications/delete',
     };
 }
 
 export function markAllNotificationsAsRead() {
     return {
-        types: [
-            types.MARKING_ALL_NOTIFICATIONS_AS_READ,
-            types.MARKED_ALL_NOTIFICATIONS_AS_READ,
-            types.MARK_ALL_NOTIFICATIONS_AS_READ_ERROR,
-        ],
         getCancelSource: state => state.notifications.status.cancelSource,
-        url: '/api/notifications/read',
         method: 'POST',
+        types: [
+            types.MARK_ALL_NOTIFICATIONS_AS_READ_ERROR,
+            types.MARKED_ALL_NOTIFICATIONS_AS_READ,
+            types.MARKING_ALL_NOTIFICATIONS_AS_READ,
+        ],
+        url: '/api/notifications/read',
     };
 }
 
@@ -134,8 +134,8 @@ export function getNotificationsUnreadCount(args = {}) {
     return {
         types: [
             types.FETCHING_NOTIFICATIONS_UNREAD_COUNT,
-            types.RECEIVED_NOTIFICATIONS_UNREAD_COUNT,
             types.FETCH_NOTIFICATIONS_UNREAD_COUNT_ERROR,
+            types.RECEIVED_NOTIFICATIONS_UNREAD_COUNT,
         ],
         getCancelSource: state => state.notifications.unreadCount.status.cancelSource,
         auto: args.isAuto,

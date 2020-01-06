@@ -1,13 +1,13 @@
 export const types = {
-    CLOSING_DRAWER: 'CLOSING_DRAWER',
     CLOSED_DRAWER: 'CLOSED_DRAWER',
-    OPENING_DRAWER: 'OPENING_DRAWER',
-    OPENED_DRAWER: 'OPENED_DRAWER',
+    CLOSING_DRAWER: 'CLOSING_DRAWER',
     MAKE_STEPPER_ACTIVE: 'MAKE_STEPPER_ACTIVE',
     MAKE_STEPPER_INACTIVE: 'MAKE_STEPPER_INACTIVE',
+    OPENED_DRAWER: 'OPENED_DRAWER',
+    OPENING_DRAWER: 'OPENING_DRAWER',
+    RESET_STATE: 'RESET_APPLICATION_STATE',
     SET_PAGE_ORDER: 'SET_PAGE_ORDER',
     SET_PAGE_VIEW: 'SET_PAGE_VIEW',
-    RESET_STATE: 'RESET_APPLICATION_STATE',
 };
 
 export function resetState() {
@@ -18,22 +18,22 @@ export function resetState() {
 
 export function stepperNextDisabled() {
     return {
-        type: types.MAKE_STEPPER_INACTIVE,
         stepperNextEnabled: false,
+        type: types.MAKE_STEPPER_INACTIVE,
     };
 }
 
 export function stepperNextEnabled() {
     return {
-        type: types.MAKE_STEPPER_ACTIVE,
         stepperNextEnabled: true,
+        type: types.MAKE_STEPPER_ACTIVE,
     };
 }
 
 export function setPageOrder(order) {
     return {
-        type: types.SET_PAGE_ORDER,
         order,
+        type: types.SET_PAGE_ORDER,
     };
 }
 

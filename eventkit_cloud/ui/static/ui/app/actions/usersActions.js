@@ -1,10 +1,10 @@
 import { getHeaderPageInfo } from '../utils/generic';
 
 export const types = {
-    FETCHING_USERS: 'FETCHING_USERS',
-    FETCHED_USERS: 'FETCHED_USERS',
-    FETCH_USERS_ERROR: 'FETCH_USERS_ERROR',
     CLEAR_USERS: 'CLEAR_USERS',
+    FETCHED_USERS: 'FETCHED_USERS',
+    FETCHING_USERS: 'FETCHING_USERS',
+    FETCH_USERS_ERROR: 'FETCH_USERS_ERROR',
 };
 
 export function clearUsers() {
@@ -13,28 +13,28 @@ export function clearUsers() {
 
 export function getUsers(params, append = false) {
     return {
-        types: [
-            types.FETCHING_USERS,
-            types.FETCHED_USERS,
-            types.FETCH_USERS_ERROR,
-        ],
-        getCancelSource: state => state.users.cancelSource,
         cancellable: true,
-        url: '/api/users',
+        getCancelSource: state => state.users.cancelSource,
         method: 'GET',
-        params,
-        payload: { append },
         onSuccess: (response) => {
             // get the total count from the header
             const totalUsers = Number(response.headers['total-users']);
             const { nextPage, range } = getHeaderPageInfo(response);
 
             return {
-                users: response.data,
-                total: totalUsers,
-                range,
                 nextPage,
+                range,
+                total: totalUsers,
+                users: response.data,
             };
         },
+        params,
+        payload: { append },
+        types: [
+            types.FETCHING_USERS,
+            types.FETCHED_USERS,
+            types.FETCH_USERS_ERROR,
+        ],
+        url: '/api/users',
     };
 }

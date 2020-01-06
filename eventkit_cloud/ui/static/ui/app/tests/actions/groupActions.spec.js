@@ -4,8 +4,8 @@ describe('userGroups actions', () => {
     describe('getGroups action', () => {
         it('should return the correct types', () => {
             expect(actions.getGroups().types).toEqual([
-                actions.types.FETCHING_GROUPS,
                 actions.types.FETCHED_GROUPS,
+                actions.types.FETCHING_GROUPS,
                 actions.types.FETCH_GROUPS_ERROR,
             ]);
         });
@@ -29,8 +29,8 @@ describe('userGroups actions', () => {
     describe('deleteGroup action', () => {
         it('should return the correct types', () => {
             expect(actions.deleteGroup().types).toEqual([
-                actions.types.DELETING_GROUP,
                 actions.types.DELETED_GROUP,
+                actions.types.DELETING_GROUP,
                 actions.types.DELETE_GROUP_ERROR,
             ]);
         });
@@ -39,8 +39,8 @@ describe('userGroups actions', () => {
     describe('createGroup action', () => {
         it('should return the correct types', () => {
             expect(actions.createGroup().types).toEqual([
-                actions.types.CREATING_GROUP,
                 actions.types.CREATED_GROUP,
+                actions.types.CREATING_GROUP,
                 actions.types.CREATE_GROUP_ERROR,
             ]);
         });
@@ -56,8 +56,8 @@ describe('userGroups actions', () => {
     describe('updateGroup action', () => {
         it('should return the correct types', () => {
             expect(actions.updateGroup().types).toEqual([
-                actions.types.UPDATING_GROUP,
                 actions.types.UPDATED_GROUP,
+                actions.types.UPDATING_GROUP,
                 actions.types.UPDATING_GROUP_ERROR,
             ]);
         });

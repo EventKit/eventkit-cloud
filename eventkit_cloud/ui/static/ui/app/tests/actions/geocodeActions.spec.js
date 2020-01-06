@@ -5,8 +5,8 @@ describe('geocodeActions', () => {
         it('should return the correct types', () => {
             expect(actions.getGeocode().types).toEqual([
                 actions.types.FETCHING_GEOCODE,
-                actions.types.RECEIVED_GEOCODE,
                 actions.types.FETCH_GEOCODE_ERROR,
+                actions.types.RECEIVED_GEOCODE,
             ]);
         });
 

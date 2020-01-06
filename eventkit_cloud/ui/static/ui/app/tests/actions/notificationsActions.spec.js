@@ -6,9 +6,9 @@ describe('notificationsActions', () => {
     describe('getNotifications action', () => {
         it('should return the correct types', () => {
             expect(actions.getNotifications().types).toEqual([
+                actions.types.FETCH_NOTIFICATIONS_ERROR,
                 actions.types.FETCHING_NOTIFICATIONS,
                 actions.types.RECEIVED_NOTIFICATIONS,
-                actions.types.FETCH_NOTIFICATIONS_ERROR,
             ]);
         });
 
@@ -43,9 +43,9 @@ describe('notificationsActions', () => {
     describe('markNotificationsAsRead action', () => {
         it('should return the correct types', () => {
             expect(actions.markNotificationsAsRead([]).types).toEqual([
-                actions.types.MARKING_NOTIFICATIONS_AS_READ,
-                actions.types.MARKED_NOTIFICATIONS_AS_READ,
                 actions.types.MARK_NOTIFICATIONS_AS_READ_ERROR,
+                actions.types.MARKED_NOTIFICATIONS_AS_READ,
+                actions.types.MARKING_NOTIFICATIONS_AS_READ,
             ]);
         });
 
@@ -67,9 +67,9 @@ describe('notificationsActions', () => {
     describe('markNotificationsAsUnread action', () => {
         it('should return the correct types', () => {
             expect(actions.markNotificationsAsUnread([]).types).toEqual([
-                actions.types.MARKING_NOTIFICATIONS_AS_UNREAD,
-                actions.types.MARKED_NOTIFICATIONS_AS_UNREAD,
                 actions.types.MARK_NOTIFICATIONS_AS_UNREAD_ERROR,
+                actions.types.MARKED_NOTIFICATIONS_AS_UNREAD,
+                actions.types.MARKING_NOTIFICATIONS_AS_UNREAD,
             ]);
         });
 
@@ -91,9 +91,9 @@ describe('notificationsActions', () => {
     describe('removeNotifications action', () => {
         it('should return the correct types', () => {
             expect(actions.removeNotifications([]).types).toEqual([
-                actions.types.REMOVING_NOTIFICATIONS,
-                actions.types.REMOVED_NOTIFICATIONS,
                 actions.types.REMOVE_NOTIFICATIONS_ERROR,
+                actions.types.REMOVED_NOTIFICATIONS,
+                actions.types.REMOVING_NOTIFICATIONS,
             ]);
         });
 
@@ -118,9 +118,9 @@ describe('notificationsActions', () => {
     describe('markAllNotificationsAsRead action', () => {
         it('should return the correct types', () => {
             expect(actions.markAllNotificationsAsRead().types).toEqual([
-                actions.types.MARKING_ALL_NOTIFICATIONS_AS_READ,
-                actions.types.MARKED_ALL_NOTIFICATIONS_AS_READ,
                 actions.types.MARK_ALL_NOTIFICATIONS_AS_READ_ERROR,
+                actions.types.MARKED_ALL_NOTIFICATIONS_AS_READ,
+                actions.types.MARKING_ALL_NOTIFICATIONS_AS_READ,
             ]);
         });
 
@@ -134,8 +134,8 @@ describe('notificationsActions', () => {
         it('should return the correct types', () => {
             expect(actions.getNotificationsUnreadCount().types).toEqual([
                 actions.types.FETCHING_NOTIFICATIONS_UNREAD_COUNT,
-                actions.types.RECEIVED_NOTIFICATIONS_UNREAD_COUNT,
                 actions.types.FETCH_NOTIFICATIONS_UNREAD_COUNT_ERROR,
+                actions.types.RECEIVED_NOTIFICATIONS_UNREAD_COUNT,
             ]);
         });
 

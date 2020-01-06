@@ -5,19 +5,19 @@ export const types = {
     CLEAR_DATACART_DETAILS: 'CLEAR_DATACART_DETAILS',
     DATACART_DETAILS_ERROR: 'DATACART_DETAILS_ERROR',
     DATACART_DETAILS_RECEIVED: 'DATACART_DETAILS_RECEIVED',
-    DELETING_RUN: 'DELETING_RUN',
     DELETED_RUN: 'DELETED_RUN',
     DELETE_RUN_ERROR: 'DELETE_RUN_ERROR',
-    FETCHING_RUNS: 'FETCHING_RUNS',
-    FETCH_RUNS_ERROR: 'FETCH_RUNS_ERROR',
+    DELETING_RUN: 'DELETING_RUN',
     FETCHING_FEATURED_RUNS: 'FETCHING_FEATURED_RUNS',
+    FETCHING_RUNS: 'FETCHING_RUNS',
     FETCH_FEATURED_RUNS_ERROR: 'FETCH_FEATURED_RUNS_ERROR',
+    FETCH_RUNS_ERROR: 'FETCH_RUNS_ERROR',
     GETTING_DATACART_DETAILS: 'GETTING_DATACART_DETAILS',
     RECEIVED_FEATURED_RUNS: 'RECEIVED_FEATURED_RUNS',
     RECEIVED_RUNS: 'RECEIVED_RUNS',
-    UPDATING_EXPIRATION: 'UPDATING_EXPIRATION',
     UPDATE_EXPIRATION_ERROR: 'UPDATE_EXPIRATION_ERROR',
     UPDATE_EXPIRATION_SUCCESS: 'UPDATE_EXPIRATION_SUCCESS',
+    UPDATING_EXPIRATION: 'UPDATING_EXPIRATION',
 };
 
 export function getDatacartDetails(jobuid) {
@@ -35,12 +35,12 @@ export function getDatacartDetails(jobuid) {
             const actions = runs.map((run) => {
                 const { result, entities } = normalizer.normalizeRun(run);
                 return {
-                    type: 'ADD_RUN',
                     payload: {
                         id: result,
                         username: state.user.data.user.username,
                         ...entities,
                     },
+                    type: 'ADD_RUN',
                 };
             });
             return actions;
@@ -126,12 +126,12 @@ export function getRuns(args = {}) {
             const actions = response.data.map((run) => {
                 const { result, entities } = normalizer.normalizeRun(run);
                 return {
-                    type: 'ADD_RUN',
                     payload: {
                         id: result,
                         username: state.user.data.user.username,
                         ...entities,
                     },
+                    type: 'ADD_RUN',
                 };
             });
             return actions;

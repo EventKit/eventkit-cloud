@@ -128,8 +128,8 @@ describe('userActions actions', () => {
     describe('patchUser action', () => {
         it('should return the correct types', () => {
             expect(actions.patchUser().types).toEqual([
-                actions.types.PATCHING_USER,
                 actions.types.PATCHED_USER,
+                actions.types.PATCHING_USER,
                 actions.types.PATCHING_USER_ERROR,
             ]);
         });

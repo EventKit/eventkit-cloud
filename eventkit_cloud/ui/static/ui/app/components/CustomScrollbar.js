@@ -18,8 +18,8 @@ export class CustomScrollbar extends Component {
     renderThumb({ style, ...props }) {
         const thumbStyle = {
             backgroundColor: '#8A898B',
-            opacity: '0.7',
             borderRadius: '5px',
+            opacity: '0.7',
             zIndex: 99,
         };
         return (

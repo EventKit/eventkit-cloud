@@ -57,9 +57,9 @@ describe('userActivityActions', () => {
     describe('getViewedJobs action', () => {
         it('should return the correct actions', () => {
             expect(actions.getViewedJobs().types).toEqual([
-                actions.types.FETCH_VIEWED_JOBS_ERROR,
                 actions.types.FETCHING_VIEWED_JOBS,
                 actions.types.RECEIVED_VIEWED_JOBS,
+                actions.types.FETCH_VIEWED_JOBS_ERROR,
             ]);
         });
 

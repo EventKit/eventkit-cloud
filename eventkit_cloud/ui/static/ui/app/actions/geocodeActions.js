@@ -1,22 +1,22 @@
 
 export const types = {
     FETCHING_GEOCODE: 'FETCHING_GEOCODE',
-    RECEIVED_GEOCODE: 'RECEIVED_GEOCODE',
     FETCH_GEOCODE_ERROR: 'FETCH_GEOCODE_ERROR',
+    RECEIVED_GEOCODE: 'RECEIVED_GEOCODE',
 };
 
 export function getGeocode(query) {
     return {
-        types: [
-            types.FETCHING_GEOCODE,
-            types.RECEIVED_GEOCODE,
-            types.FETCH_GEOCODE_ERROR,
-        ],
-        getCancelSource: state => state.geocode.cancelSource,
         cancellable: true,
-        url: '/search',
+        getCancelSource: state => state.geocode.cancelSource,
         method: 'GET',
-        params: { query },
+        onError: (e) => {
+            let error = e.response.data;
+            if (!error) {
+                error = 'An unknown error has occured';
+            }
+            return { error };
+        },
         onSuccess: (response) => {
             const features = response.data.features || [];
             const data = [];
@@ -32,12 +32,12 @@ export function getGeocode(query) {
             });
             return { data };
         },
-        onError: (e) => {
-            let error = e.response.data;
-            if (!error) {
-                error = 'An unknown error has occured';
-            }
-            return { error };
-        },
+        params: { query },
+        types: [
+            types.FETCHING_GEOCODE,
+            types.FETCH_GEOCODE_ERROR,
+            types.RECEIVED_GEOCODE,
+        ],
+        url: '/search',
     };
 }

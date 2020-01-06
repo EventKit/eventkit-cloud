@@ -4,13 +4,13 @@ import { resetState } from './uiActions';
 import { getCookie } from '../utils/generic';
 
 export const types = {
-    USER_LOGGING_IN: 'USER_LOGGING_IN',
-    USER_LOGGED_IN: 'USER_LOGGED_IN',
-    USER_LOGGED_OUT: 'USER_LOGGED_OUT',
-    PATCHING_USER: 'PATCHING_USER',
     PATCHED_USER: 'PATCHED_USER',
+    PATCHING_USER: 'PATCHING_USER',
     PATCHING_USER_ERROR: 'PATCHING_USER_ERROR',
     USER_ACTIVE: 'USER_ACTIVE',
+    USER_LOGGED_IN: 'USER_LOGGED_IN',
+    USER_LOGGED_OUT: 'USER_LOGGED_OUT',
+    USER_LOGGING_IN: 'USER_LOGGING_IN',
 };
 
 export function logout() {
@@ -47,15 +47,15 @@ export function login(data) {
         }
 
         return axios({
-            url: '/auth',
-            method,
             data: formData,
             headers: { 'X-CSRFToken': csrftoken },
+            method,
+            url: '/auth',
         }).then((response) => {
             if (response.data) {
                 dispatch({
-                    type: types.USER_LOGGED_IN,
                     payload: response.data,
+                    type: types.USER_LOGGED_IN,
                 });
             } else {
                 dispatch({
@@ -69,13 +69,13 @@ export function login(data) {
                 });
             } else {
                 dispatch({
-                    type: types.USER_LOGGED_OUT,
                     status: {
                         error: {
                             authType: 'auth',
                             statusCode: response.response.status,
                         },
                     },
+                    type: types.USER_LOGGED_OUT,
                 });
             }
         });
@@ -84,15 +84,15 @@ export function login(data) {
 
 export function patchUser(acceptedLicenses, username) {
     return {
+        data: { accepted_licenses: acceptedLicenses },
+        method: 'PATCH',
+        onSuccess: response => ({ payload: response.data || { ERROR: 'No user response data' } }),
         types: [
-            types.PATCHING_USER,
             types.PATCHED_USER,
+            types.PATCHING_USER,
             types.PATCHING_USER_ERROR,
         ],
         url: `/api/users/${username}`,
-        method: 'PATCH',
-        data: { accepted_licenses: acceptedLicenses },
-        onSuccess: response => ({ payload: response.data || { ERROR: 'No user response data' } }),
     };
 }
 
@@ -103,12 +103,12 @@ export function userActive() {
             const autoLogoutWarningat = response.data.auto_logout_warning_at;
 
             dispatch({
-                type: types.USER_ACTIVE,
                 payload: {
                     autoLogoutAt: (autoLogoutAt) ? new Date(autoLogoutAt) : null,
                     autoLogoutWarningAt: (autoLogoutWarningat)
                         ? new Date(autoLogoutWarningat) : null,
                 },
+                type: types.USER_ACTIVE,
             });
         }).catch((error) => {
             console.warn(error.message);

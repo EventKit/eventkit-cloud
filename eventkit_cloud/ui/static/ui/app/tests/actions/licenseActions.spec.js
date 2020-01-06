@@ -4,8 +4,8 @@ describe('license actions', () => {
     it('should return the correct types', () => {
         expect(getLicenses().types).toEqual([
             types.FETCHING_LICENSES,
-            types.RECEIVED_LICENSES,
             types.FETCH_LICENSES_ERROR,
+            types.RECEIVED_LICENSES,
         ]);
     });
 

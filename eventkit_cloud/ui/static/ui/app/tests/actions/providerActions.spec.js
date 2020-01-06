@@ -5,8 +5,8 @@ describe('providerActions', () => {
         it('should return the correct types', () => {
             expect(actions.getProviders().types).toEqual([
                 actions.types.GETTING_PROVIDERS,
-                actions.types.PROVIDERS_RECEIVED,
                 actions.types.GETTING_PROVIDERS_ERROR,
+                actions.types.PROVIDERS_RECEIVED,
             ]);
         });
 
@@ -21,8 +21,8 @@ describe('providerActions', () => {
     describe('cancelProviderTask action', () => {
         it('should return the correct types', () => {
             expect(actions.cancelProviderTask().types).toEqual([
-                actions.types.CANCELING_PROVIDER_TASK,
                 actions.types.CANCELED_PROVIDER_TASK,
+                actions.types.CANCELING_PROVIDER_TASK,
                 actions.types.CANCEL_PROVIDER_TASK_ERROR,
             ]);
         });
@@ -32,8 +32,8 @@ describe('providerActions', () => {
         it('should return the correct types', () => {
             expect(actions.getProviderTask().types).toEqual([
                 actions.types.GETTING_PROVIDER_TASK,
-                actions.types.RECEIVED_PROVIDER_TASK,
                 actions.types.GETTING_PROVIDER_TASK_ERROR,
+                actions.types.RECEIVED_PROVIDER_TASK,
             ]);
         });
 

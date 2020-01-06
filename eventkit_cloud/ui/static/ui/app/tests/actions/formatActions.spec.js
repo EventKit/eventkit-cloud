@@ -3,8 +3,8 @@ import * as actions from '../../actions/formatActions';
 describe('format actions', () => {
     it('should return the correct types', () => {
         expect(actions.getFormats().types).toEqual([
-            actions.types.GETTING_FORMATS,
             actions.types.FORMATS_RECEIVED,
+            actions.types.GETTING_FORMATS,
             actions.types.GETTING_FORMATS_ERROR,
         ]);
     });
