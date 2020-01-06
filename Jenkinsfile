@@ -58,7 +58,7 @@ END
         try{
             postStatus(getPendingStatus("Running the linters..."))
             sh "docker-compose run --rm -T  webpack npm run eslint"
-            sh "docker-compose run --rm -tslint tslint --project --config /var/lib/eventkit/config/ui/tslint.json --check /var/lib/eventkit/tslint.json"
+            sh "docker-compose run --rm -tslint tslint --config /var/lib/eventkit/config/ui/tslint.json --check /var/lib/eventkit/tslint.json"
             sh "docker-compose run --rm eventkit black --config /var/lib/eventkit/config/pyproject.toml --check /home/eventkit/miniconda3/envs/eventkit-cloud/lib/python3.6/site-packages/eventkit_cloud"
             sh "docker-compose run --rm eventkit flake8 --config /var/lib/eventkit/config/setup.cfg eventkit_cloud"
         }catch(Exception e) {
