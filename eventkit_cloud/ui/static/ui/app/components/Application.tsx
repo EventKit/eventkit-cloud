@@ -85,16 +85,19 @@ const jss = (theme: any) => createStyles({
         transitionProperty: 'none',
         borderRadius: 'unset',
     },
-    notificationsIndicator: {
+    badgeNotificationsIndicator: {
         position: 'absolute',
-        top: '36%',
-        right: '29%',
-        width: '14px',
-        height: '14px',
-        borderRadius: '50%',
+        right: '21%',
+        top: '22%',
+        width: '18px',
+        height: '16px',
         backgroundColor: theme.eventkit.colors.warning,
+        borderRadius: '50%',
+        color: 'white',
         zIndex: '1' as any,
-        pointerEvents: 'none',
+        textAlign: 'center',
+        fontSize: '53%',
+        padding: '2px',
     }
 });
 
