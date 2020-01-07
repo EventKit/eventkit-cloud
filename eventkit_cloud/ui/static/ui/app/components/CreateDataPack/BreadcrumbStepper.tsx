@@ -244,9 +244,14 @@ export class BreadcrumbStepper extends React.Component<Props, State> {
 
     private getEstimate(textStyle) {
         return (
-            <div style={{display: 'flex',}}>
-                <Typography style={{...textStyle, width: 'auto', fontSize: '.8em'}}>
-                    <strong style={{fontSize: '.9em'}}>ETA</strong>: {this.formatEstimate()}
+            <div style={{display: 'inline'}}>
+                {/*was inline-flex*/}
+
+                
+                <Typography style={{
+                    ...textStyle
+                }}>
+                    <strong style={{fontSize: '17px', color: 'yellow'}}>ETA</strong>: {this.formatEstimate()}
                 </Typography>
                 <Info
                     className={`qa-Estimate-Info-Icon`}
@@ -357,7 +362,7 @@ export class BreadcrumbStepper extends React.Component<Props, State> {
             color: this.props.theme.eventkit.colors.white,
             height: '50px',
             minWidth: '200px',
-            display: 'inline-block',
+            display: 'inline-flex',
             marginLeft: '24px',
             fontSize: '16px'
         };
@@ -369,6 +374,16 @@ export class BreadcrumbStepper extends React.Component<Props, State> {
             color: this.props.theme.eventkit.colors.white,
             fontSize: '0.9em'
         };
+
+        const estimateTextStyle = {
+            height: '50px',
+            minWidth: '290px',
+            display: 'inline',
+            // marginLeft: '50%',
+            fontSize: '17px',
+            color: 'yellow',
+            width: 'auto'
+        }
 
         switch (stepIndex) {
             case 0:
@@ -386,18 +401,18 @@ export class BreadcrumbStepper extends React.Component<Props, State> {
                             STEP 2 OF 3: Select Data & Formats
                         </Typography>
                         {renderEstimate &&
-                        this.getEstimate(textStyle)
+                        this.getEstimate(estimateTextStyle)
                         }
                     </div>
                 );
             case 2:
                 return (
                     <div className="qa-BreadcrumbStepper-step3Label" style={labelStyle}>
-                        <Typography style={{...textStyle, display: 'inline'}}>
+                        <Typography style={{...textStyle}}>
                             STEP 3 OF 3: Review & Submit
                         </Typography>
                         {renderEstimate &&
-                        this.getEstimate(textStyle)
+                        this.getEstimate(estimateTextStyle)
                         }
                     </div>
                 );
