@@ -84,17 +84,20 @@ const jss = (theme: any) => createStyles({
         transitionProperty: 'none',
         borderRadius: 'unset',
     },
-    notificationsIndicator: {
+    badgeNotificationsIndicator: {
         position: 'absolute',
-        top: '36%',
-        right: '29%',
-        width: '14px',
-        height: '14px',
-        borderRadius: '50%',
+        right: '21%',
+        top: '22%',
+        width: '18px',
+        height: '16px',
         backgroundColor: theme.eventkit.colors.warning,
+        borderRadius: '50%',
+        color: 'white',
         zIndex: '1' as any,
-        pointerEvents: 'none',
-    },
+        textAlign: 'center',
+        fontSize: '53%',
+        padding: '2px',
+    }
 });
 
 interface Props {
@@ -133,7 +136,7 @@ interface Props {
         img: string;
         menuButton: string;
         notificationsButton: string;
-        notificationsIndicator: string;
+        badgeNotificationsIndicator: string;
     };
     login: (options?: object) => void;
 }
@@ -280,7 +283,7 @@ const routes = (
             <Redirect to="/dashboard" />
         )} />
     </div>
-)
+);
 
 export class Application extends React.Component<Props, State> {
     private userActiveInputTypes: string[];
@@ -371,6 +374,17 @@ export class Application extends React.Component<Props, State> {
     }
 
     componentDidUpdate(prevProps, prevState) {
+        const { favicon, reddotfavicon } = this.props.theme.eventkit.images;
+        const domFavicon = document.getElementById('favicon') as HTMLInputElement;
+
+        if (domFavicon) {
+            if (this.props.notificationsCount && this.props.notificationsCount > 0) {
+                domFavicon.setAttribute("href", reddotfavicon);
+            } else {
+                domFavicon.setAttribute("href", favicon);
+            }
+        }
+
         if (prevState.childContext !== this.state.childContext) {
             this.notificationsPageSize = Number(this.state.childContext.config.NOTIFICATIONS_PAGE_SIZE);
             if (this.state.loggedIn || this.props.userData) {
@@ -672,7 +686,7 @@ export class Application extends React.Component<Props, State> {
         e.preventDefault();
         e.stopPropagation();
         this.setState({
-            showNotificationsDropdown: !this.state.showNotificationsDropdown,
+            showNotificationsDropdown: !this.state.showNotificationsDropdown
         });
     }
 
@@ -680,6 +694,17 @@ export class Application extends React.Component<Props, State> {
         this.setState({ showNotificationsDropdown: false });
         // Allow navigation to proceed.
         return true;
+    }
+
+    handleNotificationCount() {
+        if (this.props.notificationsCount > 99) {
+            return "+99";
+        }
+        if (this.props.notificationsCount > 0) {
+            return this.props.notificationsCount;
+        } else {
+            return;
+        }
     }
 
     render() {
@@ -720,25 +745,28 @@ export class Application extends React.Component<Props, State> {
                         >
                             <Menu style={{ width: '36px', height: '36px' }} />
                         </IconButton>
-                        <div style={{ display: 'inline-block', position: 'relative' }}>
-                            <IconButton
-                                className={`qa-Application-AppBar-NotificationsButton ${classes.notificationsButton}`}
-                                style={{
-                                    backgroundColor: (this.props.history.location.pathname.indexOf('/notifications') === 0) ?
-                                        colors.primary : '',
-                                }}
-                                color="secondary"
-                                onClick={this.handleNotificationsButtonClick}
-                            >
-                                <Notifications style={{ width: '38px', height: '38px' }} />
-                            </IconButton>
-                            <div
-                                className={`qa-Application-AppBar-NotificationsIndicator ${classes.notificationsIndicator}`}
-                                style={{
-                                    transition: 'transform 0.25s cubic-bezier(0.23, 1, 0.32, 1)',
-                                    transform: (this.props.notificationsCount > 0) ? 'scale(1)' : 'scale(0)',
-                                }}
-                            />
+                            <div style={{ display: 'inline-block', position: 'relative' }}>
+                                <IconButton
+                                    className={`qa-Application-AppBar-NotificationsButton ${classes.notificationsButton}`}
+                                    style={{
+                                        backgroundColor: (this.props.history.location.pathname.indexOf('/notifications') === 0) ?
+                                            colors.primary : '',
+                                        padding: 0
+                                    }}
+                                    color="secondary"
+                                    onClick={this.handleNotificationsButtonClick}
+                                >
+                                    <Notifications style={{ width: '38px', height: '38px' }} />
+                                </IconButton>
+                        <div
+                            className={`qa-Application-AppBar-badgeNotificationsIndicator ${classes.badgeNotificationsIndicator}`}
+                            style={{
+                                transform: (this.props.notificationsCount > 0) ? 'scale(1)' : 'scale(0)',
+                                transition: 'transform 0.25s cubic-bezier(0.23, 1, 0.32, 1)',
+                            }}
+                        >
+                            { this.handleNotificationCount() }
+                        </div>
                             <div>
                                 {this.state.showNotificationsDropdown ?
                                     <NotificationsDropdown
