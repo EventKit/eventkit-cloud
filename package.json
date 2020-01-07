@@ -109,10 +109,7 @@
     "globals": {
       "ts-jest": {
         "tsConfig": true,
-        "babelConfig": true,
-        "diagnostics": {
-          "warnOnly": true
-        }
+        "babelConfig": true
       }
     }
   },
