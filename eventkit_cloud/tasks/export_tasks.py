@@ -64,6 +64,7 @@ from eventkit_cloud.tasks.helpers import (
 from eventkit_cloud.utils.auth_requests import get_cred
 from eventkit_cloud.utils import overpass, pbf, s3, mapproxy, wcs, geopackage, gdalutils
 from eventkit_cloud.utils.ogr import OGR
+from eventkit_cloud.utils.rocket_chat import RocketChat
 from eventkit_cloud.utils.stats.eta_estimator import ETA
 
 from eventkit_cloud.tasks.models import (
@@ -1595,6 +1596,18 @@ def export_task_error_handler(self, result=None, run_uid=None, task_id=None, sta
     msg = EmailMultiAlternatives(subject, text, to=to, from_email=from_email)
     msg.attach_alternative(html, "text/html")
     msg.send()
+
+    # Send failed DataPack notifications to specific channel(s) or user(s) if enabled.
+    rocketchat_notifications = json.loads(os.getenv("ROCKETCHAT_NOTIFICATIONS"))
+    if rocketchat_notifications:
+        channels = rocketchat_notifications["channels"]
+        url = rocketchat_notifications["url"]
+        message = f"@here A DataPack has failed during processing. {ctx['url']}"
+
+        client = RocketChat(**rocketchat_notifications)
+        for channel in channels:
+            client.post_message(channel, message)
+
     return result
 
 
