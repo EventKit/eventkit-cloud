@@ -6,10 +6,10 @@
         "tslint-config-prettier"
     ],
     "jsRules": {},
-    "linterOptions": {
-        "exclude": [
-            "**/*.js"
-        ]
+//    "linterOptions": {
+//        "exclude": [
+//            "**/*.js"
+//        ]
     },
     "rules": {
         "arrow-parens": false,
