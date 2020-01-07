@@ -13,22 +13,11 @@ from django.utils import timezone
 from eventkit_cloud.celery import app
 from eventkit_cloud.tasks.helpers import get_all_rabbitmq_objects
 from eventkit_cloud.tasks.task_base import EventKitBaseTask
+from eventkit_cloud.tasks.util_tasks import pcf_shutdown_celery_workers
+from audit_logging.celery_support import UserDetailsBase
+
 
 logger = get_task_logger(__name__)
-
-
-# Seems redundant to expire_runs, if not needed should be deleted for 1.0.0
-# @app.task(name='Purge Unpublished Exports')
-# def PurgeUnpublishedExportsTask():
-#     """
-#     Purge unpublished export tasks after 48 hours.
-#     """
-#     from eventkit_cloud.jobs.models import Job
-#     time_limit = timezone.now() - timezone.timedelta(hours=48)
-#     expired_jobs = Job.objects.filter(created_at__lt=time_limit, published=False)
-#     count = expired_jobs.count()
-#     logger.debug('Purging {0} unpublished exports.'.format(count))
-#     expired_jobs.delete()
 
 
 @app.task(name="Expire Runs", base=EventKitBaseTask)
@@ -71,7 +60,7 @@ def expire_runs():
             run.save()
 
 
-@app.task(name="PCF Scale Celery", base=EventKitBaseTask)
+@app.task(name="PCF Scale Celery", base=UserDetailsBase)
 def pcf_scale_celery(max_tasks_memory=4096):
     """
     Built specifically for PCF deployments.
@@ -87,10 +76,15 @@ def pcf_scale_celery(max_tasks_memory=4096):
     celery_group_name = os.getenv("CELERY_GROUP_NAME", socket.gethostname())
 
     celery_tasks = {
-        celery_group_name: {
-            "command": "celery worker -A eventkit_cloud --concurrency=$CONCURRENCY --loglevel=$LOG_LEVEL -n worker@%h -Q $CELERY_GROUP_NAME ",  # NOQA
+        f"{celery_group_name}": {
+            "command": "celery worker -A eventkit_cloud --loglevel=$LOG_LEVEL -n celery@%h -Q celery ",  # NOQA
             "disk": 2048,
-            "memory": 1024,
+            "memory": 2048,
+        },
+        f"{celery_group_name}": {
+            "command": "celery worker -A eventkit_cloud --loglevel=$LOG_LEVEL -n worker@%h -Q $CELERY_GROUP_NAME ",  # NOQA
+            "disk": 2048,
+            "memory": 2048,
         },
         f"{celery_group_name}.large": {
             "command": "celery worker -A eventkit_cloud --concurrency=1 --loglevel=$LOG_LEVEL -n large@%h -Q $CELERY_GROUP_NAME.large ",  # NOQA
@@ -102,7 +96,7 @@ def pcf_scale_celery(max_tasks_memory=4096):
     celery_tasks = json.loads(os.getenv("CELERY_TASKS", "{}")) or celery_tasks
 
     cancel_queue_command = (
-        "& exec celery worker -A eventkit_cloud --loglevel=$LOG_LEVEL -n cancel@%h -Q $HOSTNAME.cancel"
+        "& exec celery worker -A eventkit_cloud --loglevel=$LOG_LEVEL -n priority@%h -Q $HOSTNAME.priority"
     )
 
     broker_api_url = getattr(settings, "BROKER_API_URL")
@@ -116,6 +110,7 @@ def pcf_scale_celery(max_tasks_memory=4096):
     for task in running_tasks["resources"]:
         running_tasks_memory += task["memory_in_mb"]
 
+    logger.info(f"Resources used: {running_tasks_memory}")
     # TODO: Too complex, clean up.
     # Check to see if there is work that we care about and if so, scale a queue specific worker to do it.
     for queue in get_all_rabbitmq_objects(broker_api_url, queue_class):
@@ -142,6 +137,13 @@ def pcf_scale_celery(max_tasks_memory=4096):
                         f"Already at max memory usage, skipping scale with {pending_messages} total pending messages "
                         f"left in {queue_name} queue."
                     )
+            elif running_tasks_by_queue_count and not pending_messages:
+                logger.info(
+                    f"The {queue_name} has no messages, but has running_tasks_by_queue_count. Sending shutdown..."
+                )
+                pcf_shutdown_celery_workers.s(queue_name).apply_async(
+                    queue=queue_name, routing_key=queue_name
+                )
             else:
                 if running_tasks_by_queue_count:
                     logger.info(
@@ -150,7 +152,8 @@ def pcf_scale_celery(max_tasks_memory=4096):
                     )
 
 
-@app.task(name="Check Provider Availability", base=EventKitBaseTask, expires=os.getenv("PROVIDER_CHECK_INTERVAL", "30"))
+@app.task(name="Check Provider Availability", base=EventKitBaseTask,
+          expires=timezone.now() + timezone.timedelta(minutes=int(os.getenv("PROVIDER_CHECK_INTERVAL", "30"))))
 def check_provider_availability():
     from eventkit_cloud.jobs.models import DataProvider, DataProviderStatus
     from eventkit_cloud.utils.provider_check import perform_provider_check

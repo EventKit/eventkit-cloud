@@ -386,6 +386,7 @@ class FormatTask(ExportTask):
     """
     A class to manage tasks which are desired output from the user, and not merely associated files or metadata.
     """
+
     name = "FormatTask"
     display = True
 
@@ -1490,6 +1491,7 @@ class FinalizeRunBase(EventKitBaseTask):
         except IOError or OSError:
             logger.error("Error removing {0} during export finalize".format(stage_dir))
 
+
 # There's a celery bug with callbacks that use bind=True.  If altering this task do not use Bind.
 # @see: https://github.com/celery/celery/issues/3723
 @app.task(name="Finalize Run Task", base=FinalizeRunBase)
@@ -1596,13 +1598,13 @@ def cancel_synchronous_task_chain(data_provider_task_uid=None):
             export_task.save()
             kill_task.apply_async(
                 kwargs={"task_pid": export_task.pid, "celery_uid": export_task.celery_uid},
-                queue="{0}.cancel".format(export_task.worker),
+                queue="{0}.priority".format(export_task.worker),
                 priority=TaskPriority.CANCEL.value,
-                routing_key="{0}.cancel".format(export_task.worker),
+                routing_key="{0}.priority".format(export_task.worker),
             )
 
 
-@app.task(name="Create preview", base=EventKitBaseTask)
+@app.task(name="Create preview", base=EventKitBaseTask, acks_late=True)
 def create_datapack_preview(
     result=None, run_uid=None, task_uid=None, stage_dir=None, task_record_uid=None, *args, **kwargs,
 ):
@@ -1699,9 +1701,9 @@ def cancel_export_provider_task(
         if int(export_task.pid) > 0 and export_task.worker:
             kill_task.apply_async(
                 kwargs={"task_pid": export_task.pid, "celery_uid": export_task.celery_uid},
-                queue="{0}.cancel".format(export_task.worker),
+                queue="{0}.priority".format(export_task.worker),
                 priority=TaskPriority.CANCEL.value,
-                routing_key="{0}.cancel".format(export_task.worker),
+                routing_key="{0}.priority".format(export_task.worker),
             )
 
     if TaskStates[data_provider_task_record.status] not in TaskStates.get_finished_states():

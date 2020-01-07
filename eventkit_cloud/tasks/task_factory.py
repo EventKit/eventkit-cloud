@@ -111,16 +111,16 @@ class TaskFactory:
 
             queue_group = os.getenv("CELERY_GROUP_NAME", worker)
             wait_for_providers_settings = {
-                "queue": "{}.finalize".format(queue_group),
-                "routing_key": "{}.finalize".format(queue_group),
+                "queue": "{}.priority".format(queue_group),
+                "routing_key": "{}.priority".format(queue_group),
                 "priority": TaskPriority.FINALIZE_PROVIDER.value,
             }
 
             finalize_task_settings = {
                 "interval": 4,
                 "max_retries": 10,
-                "queue": "{}.finalize".format(queue_group),
-                "routing_key": "{}.finalize".format(queue_group),
+                "queue": "{}.priority".format(queue_group),
+                "routing_key": "{}.priority".format(queue_group),
                 "priority": TaskPriority.FINALIZE_RUN.value,
             }
 

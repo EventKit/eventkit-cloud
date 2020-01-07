@@ -7,7 +7,7 @@ from eventkit_cloud.celery import app
 from eventkit_cloud.tasks.helpers import get_message_count
 from eventkit_cloud.utils.pcf import PcfClient
 from eventkit_cloud.tasks.enumerations import TaskStates
-from eventkit_cloud.tasks.task_base import UserDetailsBase
+from audit_logging.celery_support import UserDetailsBase
 
 
 # Get an instance of a logger
@@ -42,21 +42,18 @@ def pcf_shutdown_celery_workers(self, queue_name, queue_type=None, hostname=None
     messages = get_message_count(queue_name)
     running_tasks_by_queue = client.get_running_tasks(app_name, queue_name)
     running_tasks_by_queue_count = running_tasks_by_queue["pagination"]["total_results"]
-    export_tasks = ExportTaskRecord.objects.filter(worker=hostname, status__in=TaskStates.get_not_finished_states()).select_related('export_provider_task')
-    # provider_tasks = []
-    # for export_task in export_tasks:
-    #     if export_task.export_provider_task.status in TaskStates.get_not_finished_states():
-    #         provider_tasks += [export_task.export_provider_task]
+    export_tasks = ExportTaskRecord.objects.filter(
+        worker=hostname, status__in=TaskStates.get_not_finished_states()
+    ).select_related("export_provider_task")
     if not export_tasks:
         if (running_tasks_by_queue_count > messages) or (running_tasks_by_queue == 0 and messages == 0):
             logger.info(f"No work remaining on the {queue_name} queue, shutting down {workers}")
-            # app.control.broadcast('shutdown', destination=workers)
+            app.control.broadcast("shutdown", destination=workers)
             # return value is unused but useful for storing in the celery result.
             return {"action": "shutdown", "workers": workers}
-    else:
-        logger.info(
-            f"There are {running_tasks_by_queue_count} running tasks for "
-            f"{queue_name} and {messages} on the queue, skipping shutdown."
-        )
-        logger.info(f"Waiting on tasks: {export_tasks}")
-        self.retry()
+    logger.info(
+        f"There are {running_tasks_by_queue_count} running tasks for "
+        f"{queue_name} and {messages} on the queue, skipping shutdown."
+    )
+    logger.info(f"Waiting on tasks: {export_tasks}")
+    self.retry(exc=Exception(f"Waiting for tasks {export_tasks} to finish before shutting down, {workers}."))
