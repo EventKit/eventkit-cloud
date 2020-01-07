@@ -14,7 +14,7 @@ const mockApiJobs = [{
     last_export_run: {
         job: {
             permissions: apiPermissions,
-            uid: '111'
+            uid: '111',
         },
         provider_tasks: [],
         uid: '123',
@@ -24,7 +24,7 @@ const mockApiJobs = [{
     last_export_run: {
         job: {
             permissions: apiPermissions,
-            uid: '222'
+            uid: '222',
         },
         provider_tasks: [],
         uid: '456',

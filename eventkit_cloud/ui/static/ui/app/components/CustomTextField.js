@@ -75,7 +75,7 @@ export class CustomTextField extends Component {
         const {
             InputProps,
             charsRemainingStyle,
-            inputProps,
+            inProps,
             maxLength,
             onBlur,
             onChange,
@@ -98,7 +98,7 @@ export class CustomTextField extends Component {
                     className="qa-CustomTextField-TextField"
                     id="custom-text-field"
                     InputProps={{ ...InputProps, style: inputStyle }}
-                    inputProps={{ maxLength, ...inputProps }}
+                    inProps={{ maxLength, ...inProps }}
                     onBlur={this.onBlur}
                     onChange={this.onChange}
                     onFocus={this.onFocus}
@@ -125,7 +125,7 @@ export class CustomTextField extends Component {
 CustomTextField.propTypes = {
     InputProps: PropTypes.object,
     charsRemainingStyle: PropTypes.object,
-    inputProps: PropTypes.object,
+    inProps: PropTypes.object,
     maxLength: PropTypes.number,
     onBlur: PropTypes.func,
     onChange: PropTypes.func,
@@ -137,7 +137,7 @@ CustomTextField.propTypes = {
 CustomTextField.defaultProps = {
     InputProps: {},
     charsRemainingStyle: {},
-    inputProps: {},
+    inProps: {},
     maxLength: 100,
     onBlur: undefined,
     onChange: undefined,

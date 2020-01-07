@@ -19,7 +19,7 @@ export function createStore(preloadedState, enhancer) {
         return enhancer(createStore)(preloadedState);
     }
 
-    let actions = [];
+    const actions = [];
     let currentReducer = () => ({});
     let currentState = preloadedState;
     let currentListeners = [];
@@ -44,10 +44,6 @@ export function createStore(preloadedState, enhancer) {
 
     function getActions() {
         return actions;
-    }
-
-    function clearActions() {
-        actions = [];
     }
 
     function subscribe(listener) {
@@ -126,7 +122,7 @@ export function createStore(preloadedState, enhancer) {
         getActions,
         getState,
         replaceReducer,
-        subscribe
+        subscribe,
     };
 }
 

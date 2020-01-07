@@ -49,14 +49,13 @@ export class BaseDialog extends Component {
                 lineHeight: '32px',
                 padding: '24px 24px 20px',
                 ...this.props.titleStyle,
-            }
+            },
         };
 
         // the default is just a close button
         const defaultActions = [
             <Button
                 className="qa-BaseDialog-Button"
-                color="primary"
                 key="close"
                 onClick={this.props.onClose}
                 style={styles.button}

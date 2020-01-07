@@ -1,11 +1,11 @@
 import React from 'react';
+import sinon from 'sinon';
 import { createShallow } from '@material-ui/core/test-utils';
 import DrawAOIToolbar from '../../components/MapTools/DrawAOIToolbar';
 import DrawBoxButton from '../../components/MapTools/DrawBoxButton';
 import DrawFreeButton from '../../components/MapTools/DrawFreeButton';
 import MapViewButton from '../../components/MapTools/MapViewButton';
 import ImportButton from '../../components/MapTools/ImportButton';
-import sinon from "sinon";
 
 describe('DrawAOIToolbar component', () => {
     let shallow;

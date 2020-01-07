@@ -1,9 +1,9 @@
 import React from 'react';
+import sinon from 'sinon';
 import { createShallow } from '@material-ui/core/test-utils';
 import { DropZone } from '../../components/MapTools/DropZone';
 import DropZoneDialog from '../../components/MapTools/DropZoneDialog';
 import DropZoneError from '../../components/MapTools/DropZoneError';
-import sinon from "sinon";
 
 describe('DropZone component', () => {
     let shallow;

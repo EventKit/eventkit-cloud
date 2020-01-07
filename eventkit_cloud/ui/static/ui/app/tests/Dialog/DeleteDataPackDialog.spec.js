@@ -1,8 +1,8 @@
 import React from 'react';
+import sinon from 'sinon';
 import { createShallow } from '@material-ui/core/test-utils';
 import { DeleteDataPackDialog } from '../../components/Dialog/DeleteDataPackDialog';
 import ConfirmDialog from '../../components/Dialog/ConfirmDialog';
-import sinon from "sinon";
 
 describe('DeleteDataPackDialog component', () => {
     let shallow;

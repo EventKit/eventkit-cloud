@@ -93,14 +93,14 @@ export function getRuns(args = {}) {
     } else {
         params.ordering = '-job__featured';
     }
-    if (args.ownerFilter !== 'all') { params.user = args.ownerFilter };
-    if (status.length) { params.status = status.join(',') };
-    if (args.minDate) { params.min_date = args.minDate };
-    if (args.maxDate) { params.max_date = args.maxDate };
-    if (args.search) { params.search_term = args.search.slice(0, 1000) };
-    if (providers.length) { params.providers = providers.join(',') };
-    if (formats.length) { params.formats = formats.join(',') };
-    if (projections.length) { params.projections = projections.join(',') };
+    if (args.ownerFilter !== 'all') { params.user = args.ownerFilter; }
+    if (status.length) { params.status = status.join(','); }
+    if (args.minDate) { params.min_date = args.minDate; }
+    if (args.maxDate) { params.max_date = args.maxDate; }
+    if (args.search) { params.search_term = args.search.slice(0, 1000); }
+    if (providers.length) { params.providers = providers.join(','); }
+    if (formats.length) { params.formats = formats.join(','); }
+    if (projections.length) { params.projections = projections.join(','); }
 
     const data = {};
     if (args.geojson) {

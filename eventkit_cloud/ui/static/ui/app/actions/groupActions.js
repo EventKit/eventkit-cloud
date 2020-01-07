@@ -71,9 +71,9 @@ export function createGroup(groupName, members) {
 export function updateGroup(groupId, options = {}) {
     const data = {};
 
-    if (options.name) {data.name = options.name};
-    if (options.members) {data.members = options.members};
-    if (options.administrators) {data.administrators = options.administrators};
+    if (options.name) { data.name = options.name; }
+    if (options.members) { data.members = options.members; }
+    if (options.administrators) { data.administrators = options.administrators; }
 
     return {
         data,

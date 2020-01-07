@@ -419,7 +419,7 @@ describe('mapUtils', () => {
     it('createGeoJSONGeometry should take a ol3 geom and return the geom in geojson format', () => {
         const expected = {
             coordinates: [-1, 1],
-            type: 'Point'
+            type: 'Point',
         };
         const coords = [-1, 1];
         const geom = new Point(coords);
