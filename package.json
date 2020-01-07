@@ -111,8 +111,7 @@
         "tsConfig": true,
         "babelConfig": true
       }
-    }
-  },
+    },
     "testURL": "http://localhost",
     "coverageDirectory": "./coverage",
     "collectCoverageFrom": [
