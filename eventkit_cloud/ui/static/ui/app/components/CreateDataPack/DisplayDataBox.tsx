@@ -89,15 +89,15 @@ export class DisplayDataBox extends React.Component<Props, {}> {
                             <Grid className={classes.grid}>
                                 <Grid item xs={3} className={classes.details}>
                                     <Typography className={classes.details}>Lat, Long:</Typography>
-                                    <Typography className={classes.details}>Date:</Typography>
-                                    <Typography className={classes.details}>Source:</Typography>
-                                    <Typography className={classes.details}>Type:</Typography>
+                                    <Typography className={classes.details}>layerName:</Typography>
+                                    <Typography className={classes.details}>displayFieldName:</Typography>
+                                    <Typography className={classes.details}>value:</Typography>
                                 </Grid>
                                 <Grid item xs={9} className={classes.details}>
-                                    <Typography className={classes.details}><strong>{1337}, {1402}</strong></Typography>
-                                    <Typography className={classes.details}><strong>{"10/24/2019"}</strong></Typography>
-                                    <Typography className={classes.details}><strong>{"Layer Name"}</strong></Typography>
-                                    <Typography className={classes.details}><strong>{"Display Field Name"}</strong></Typography>
+                                    <Typography className={classes.details}><strong>{lat}, {long}</strong></Typography>
+                                    <Typography className={classes.details}><strong>{layerName}</strong></Typography>
+                                    <Typography className={classes.details}><strong>{displayFieldName}</strong></Typography>
+                                    <Typography className={classes.details}>{value}</Typography>
                                 </Grid>
                                 {/*<Grid item xs={4}>*/}
                                 {/*    <IconButton*/}

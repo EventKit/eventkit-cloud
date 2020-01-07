@@ -16,6 +16,7 @@ interface FeatureResponse {
 }
 
 export interface Props {
+    baseMapUrl: string;
 }
 
 export interface State {
@@ -65,22 +66,21 @@ export class MapQueryDisplay extends React.Component<Props, State> {
         };
 
         const csrfmiddlewaretoken = getCookie('csrftoken');
-        // return axios({
-        //     url: `/api/estimate`,
-        //     method: 'get',
-        //     params: data,
-        //     headers: { 'X-CSRFToken': csrfmiddlewaretoken },
-        //     cancelToken: this.source.token,
-        // }).then((response) => {
-        return Promise.resolve().then(response => {
+        return axios({
+            url: `http://cloud.eventkit.test/map/usa-sample/service?FORMAT=application%2Fjson&InfoFormat=application%2Fjson&LAYER=usa-sample&REQUEST=GetFeatureInfo&SERVICE=WMTS&STYLE=default&TILECOL=28&TILEMATRIX=06&TILEMATRIXSET=default&TILEROW=16&VERSION=1.0.0&i=120&j=120`,
+            method: 'get',
+            params: data,
+            headers: { 'X-CSRFToken': csrfmiddlewaretoken },
+            cancelToken: this.source.token,
+        }).then((response) => {
             featureResult = {
                 // Is it a safe assumption that we're only dealing with a single feature/point
-                lat: MOCK_DATA.features[0].geometry.coordinates[1],
-                long: MOCK_DATA.features[0].geometry.coordinates[0],
-                layerId: MOCK_DATA.properties.layerId,
-                layerName: MOCK_DATA.properties.layerName,
-                displayFieldName: MOCK_DATA.properties.displayFieldName,
-                value: MOCK_DATA.properties.value,
+                lat: response['features'][0].geometry.coordinates[1],
+                long: response['features'][0].geometry.coordinates[0],
+                layerId: response['properties'].layerId,
+                layerName: response['properties'].layerName,
+                displayFieldName: response['properties'].displayFieldName,
+                value: response['properties'].value,
             } as FeatureResponse;
             return featureResult;
         }).catch(() => {
@@ -96,16 +96,19 @@ export class MapQueryDisplay extends React.Component<Props, State> {
         });
     }
 
-    private handleMapClick() {
-        this.getFeatures().then(featureResponseData => {
-            this.setState({displayBoxData: featureResponseData});
-        });
+    private handleMapClick(z, y, x, i, j) {
+        if (!!this.props.baseMapUrl) {
+            this.getFeatures().then(featureResponseData => {
+                this.setState({closeCard: false});
+                this.setState({ displayBoxData: featureResponseData });
+            });
+        }
     }
 
     handleClose = (event) => {
         event.preventDefault();
-        this.setState({closeCard: !this.state.closeCard});
-    }
+        this.setState({closeCard: true});
+    };
 
     render() {
         const { displayBoxData } = this.state;

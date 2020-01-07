@@ -578,7 +578,7 @@ export class ExportAOI extends React.Component<Props, State> {
         });
 
         this.map.on('click', (event) => {
-                this.handleMapClickQuery();
+                this.handleMapClickQuery(event);
             }
         );
 
@@ -985,8 +985,10 @@ export class ExportAOI extends React.Component<Props, State> {
         zoomToFeature(feature, this.map);
     }
 
-    private handleMapClickQuery() {
-        this.displayBoxRef.handleMapClick();
+    private handleMapClickQuery(event) {
+        const grid = this.baseLayer.getSource().getTileGrid();
+        const tileCoord = grid.getTileCoordForCoordAndZ(this.map.getEventCoordinate(event), this.map.getView().getZoom());
+        this.displayBoxRef.handleMapClick(tileCoord.z, tileCoord.y, tileCoord.x, 1, 1);
     }
 
     render() {
@@ -1105,6 +1107,7 @@ export class ExportAOI extends React.Component<Props, State> {
                     <div style={{zIndex: 5, position: 'absolute', margin: 'calc(50vh)'}}>
                         <MapQueryDisplay
                             ref={child => {this.displayBoxRef = child}}
+                            baseMapUrl={this.props.baseMapUrl}
                         />
                     </div>
                 </div>
