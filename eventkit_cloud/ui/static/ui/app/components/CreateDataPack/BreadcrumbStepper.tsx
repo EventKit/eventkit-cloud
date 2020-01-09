@@ -31,6 +31,8 @@ import {Typography} from "@material-ui/core";
 import * as PropTypes from "prop-types";
 import Info from '@material-ui/icons/Info';
 import {getProjections} from "../../actions/projectionActions";
+import theme from "../../styles/eventkit_theme";
+import {Breakpoint} from "@material-ui/core/styles/createBreakpoints";
 
 export interface JobData {
     name: string;
@@ -213,6 +215,64 @@ export class BreadcrumbStepper extends React.Component<Props, State> {
         this.setState({limits});
     }
 
+    private styleEstimate(allowNull=false) {
+        const textStyle = {
+            color: this.props.theme.eventkit.colors.white,
+            fontSize: '0.9em',
+        };
+
+        let check = this.checkEstimate();
+        let allowNull1 = allowNull;
+
+        if ((!check) && ( ==)) {
+            return
+        } else {
+            return (
+                <div style={{display: 'inline-flex'}}>
+                    <Typography style={{
+                        ...textStyle,
+                        color: 'yellow'
+                    }}>
+                        <strong style={{fontSize: '17px', color: 'yellow', textAlign: 'center'}}>ETA</strong>: {this.formatEstimate()}
+                    </Typography>
+                    <Info
+                        className={`qa-Estimate-Info-Icon`}
+                        onClick={this.handleEstimateExplanationOpen}
+                        color="primary"
+                        style={{
+                            cursor: 'pointer', verticalAlign: 'middle',
+                            marginLeft: '10px', height: '18px', width: '18px',
+                        }}
+                    />
+                    <BaseDialog
+                        show={this.state.estimateExplanationOpen}
+                        title="Projection Information"
+                        onClose={this.handleEstimateExplanationClosed}
+                    >
+                        <div
+                            style={{paddingBottom: '10px', wordWrap: 'break-word'}}
+                            className="qa-ExportInfo-dialog-projection"
+                        >
+                            <p>
+                                EventKit calculates estimates intelligently by examining previous DataPack jobs. These
+                                numbers
+                                represent the sum total estimate for all selected DataSources.
+                            </p>
+                            <p>Estimates for a Data Source are calculated by looking at the size of and time to complete
+                                previous DataPacks
+                                created using the specified Data Source(s). These estimates can vary based on availability
+                                of
+                                data for past jobs and the specified AOI. Larger AOIs will tend to take a longer time to
+                                complete
+                                and result in larger DataPacks.
+                            </p>
+                        </div>
+                    </BaseDialog>
+                </div>
+                )
+            }
+    }
+
     private handleEstimateExplanationClosed() {
         this.setState({estimateExplanationOpen: false});
     }
@@ -242,53 +302,10 @@ export class BreadcrumbStepper extends React.Component<Props, State> {
         );
     }
 
-    private getEstimate(textStyle) {
-        return (
-            <div style={{display: 'inline'}}>
-                {/*was inline-flex*/}
-
-                
-                <Typography style={{
-                    ...textStyle
-                }}>
-                    <strong style={{fontSize: '17px', color: 'yellow'}}>ETA</strong>: {this.formatEstimate()}
-                </Typography>
-                <Info
-                    className={`qa-Estimate-Info-Icon`}
-                    onClick={this.handleEstimateExplanationOpen}
-                    color="primary"
-                    style={{
-                        cursor: 'pointer', verticalAlign: 'middle',
-                        marginLeft: '10px', height: '18px', width: '18px',
-                    }}
-                />
-                <BaseDialog
-                    show={this.state.estimateExplanationOpen}
-                    title="Projection Information"
-                    onClose={this.handleEstimateExplanationClosed}
-                >
-                    <div
-                        style={{paddingBottom: '10px', wordWrap: 'break-word'}}
-                        className="qa-ExportInfo-dialog-projection"
-                    >
-                        <p>
-                            EventKit calculates estimates intelligently by examining previous DataPack jobs. These
-                            numbers
-                            represent the sum total estimate for all selected DataSources.
-                        </p>
-                        <p>Estimates for a Data Source are calculated by looking at the size of and time to complete
-                            previous DataPacks
-                            created using the specified Data Source(s). These estimates can vary based on availability
-                            of
-                            data for past jobs and the specified AOI. Larger AOIs will tend to take a longer time to
-                            complete
-                            and result in larger DataPacks.
-                        </p>
-
-                    </div>
-                </BaseDialog>
-            </div>
-        );
+    private checkEstimate() {
+        if ( this.state.sizeEstimate || this.state.timeEstimate) {
+            return true;
+        }
     }
 
     private formatEstimate() {
@@ -296,6 +313,7 @@ export class BreadcrumbStepper extends React.Component<Props, State> {
         let sizeEstimate;
         let durationEstimate;
         // function that will return nf (not found) when the provided estimate is undefined
+
         const get = (estimate, nf = 'unknown') => (estimate) ? estimate.toString() : nf;
 
         if (this.state.sizeEstimate !== -1) {
@@ -321,9 +339,11 @@ export class BreadcrumbStepper extends React.Component<Props, State> {
         if (sizeEstimate || durationEstimate) {
             const separator = (sizeEstimate && durationEstimate) ? ' - ' : '';
             secondary = ` ( ${get(durationEstimate, '')}${separator}${get(sizeEstimate, 'size unknown')})`;
+            // secondary = ` ( ${get(durationEstimate)}${separator}${get(sizeEstimate)}`;
             noEstimateMessage = 'Unknown Date'; // used when the size estimate is displayed but time is not.
         }
         return `${get(dateTimeEstimate, noEstimateMessage)}${get(secondary, '')}`;
+        // return `${get(dateTimeEstimate)}${get(secondary)}`;
     }
 
     private updateEstimate() {
@@ -357,6 +377,50 @@ export class BreadcrumbStepper extends React.Component<Props, State> {
         this.setState({sizeEstimate, timeEstimate});
     }
 
+    private getEstimateLabel(stepIndex: number) {
+        // capture estimate flag
+        const renderEstimate = this.context.config.SERVE_ESTIMATES;
+
+        const estimateTextStyle = {
+            color: 'yellow',
+            fontSize: '17px',
+            textAlign: 'center' as 'center',
+        };
+
+        switch (stepIndex) {
+            case 0:
+                if (!this.checkEstimate()) {
+                // if ((this.state.sizeEstimate !== -1) || (this.state.timeEstimate !== -1)) {
+                    return (
+                        <div className="qa-BreadcrumbStepper-step1Label" style={estimateTextStyle}>
+                            {renderEstimate &&
+                            this.styleEstimate(true)}
+                        </div>
+                    );
+                } else {
+                    return (
+                        <div className="qa-BreadcrumbStepper-step1Label" style={estimateTextStyle}>
+                            {this.styleEstimate(false)}
+                        </div>
+                    );
+                }
+            case 1:
+                return (
+                    <div className="qa-BreadcrumbStepper-step2Label" style={estimateTextStyle}>
+                        {renderEstimate &&
+                        this.styleEstimate(true)}
+                    </div>
+                );
+            case 2:
+                return (
+                    <div className="qa-BreadcrumbStepper-step3Label" style={estimateTextStyle}>
+                        {renderEstimate &&
+                        this.styleEstimate(true)}
+                    </div>
+                );
+        }
+    }
+
     private getStepLabel(stepIndex: number) {
         const labelStyle = {
             color: this.props.theme.eventkit.colors.white,
@@ -367,23 +431,12 @@ export class BreadcrumbStepper extends React.Component<Props, State> {
             fontSize: '16px'
         };
 
-        // capture estimate flag
-        const renderEstimate = this.context.config.SERVE_ESTIMATES;
-
         const textStyle = {
             color: this.props.theme.eventkit.colors.white,
-            fontSize: '0.9em'
+            fontSize: '0.9em',
+            width: '380px'
         };
 
-        const estimateTextStyle = {
-            height: '50px',
-            minWidth: '290px',
-            display: 'inline',
-            // marginLeft: '50%',
-            fontSize: '17px',
-            color: 'yellow',
-            width: 'auto'
-        }
 
         switch (stepIndex) {
             case 0:
@@ -400,9 +453,6 @@ export class BreadcrumbStepper extends React.Component<Props, State> {
                         <Typography style={{...textStyle, display: 'inline'}}>
                             STEP 2 OF 3: Select Data & Formats
                         </Typography>
-                        {renderEstimate &&
-                        this.getEstimate(estimateTextStyle)
-                        }
                     </div>
                 );
             case 2:
@@ -411,9 +461,6 @@ export class BreadcrumbStepper extends React.Component<Props, State> {
                         <Typography style={{...textStyle}}>
                             STEP 3 OF 3: Review & Submit
                         </Typography>
-                        {renderEstimate &&
-                        this.getEstimate(estimateTextStyle)
-                        }
                     </div>
                 );
             default:
@@ -681,6 +728,7 @@ export class BreadcrumbStepper extends React.Component<Props, State> {
                         {this.getButtonContent(this.state.stepIndex)}
                     </div>
                 </div>
+                <div className="qa-BreadcrumbStepper-div-estimateLabel">{this.getEstimateLabel(this.state.stepIndex)}</div>
                 {this.getStepContent(this.state.stepIndex)}
                 <BaseDialog
                     show={this.state.showError}
