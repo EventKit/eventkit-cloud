@@ -2,7 +2,7 @@ import * as React from 'react';
 import {Route} from 'react-router';
 import history from '../../utils/history';
 import {connect} from 'react-redux';
-import {withTheme, Theme} from '@material-ui/core/styles';
+import {Theme, withTheme} from '@material-ui/core/styles';
 import isEqual from 'lodash/isEqual';
 import Divider from '@material-ui/core/Divider';
 import Warning from '@material-ui/icons/Warning';
@@ -14,15 +14,12 @@ import ExportAOI from './ExportAOI';
 import ExportInfo from './ExportInfo';
 import ExportSummary from './ExportSummary';
 import {flattenFeatureCollection} from '../../utils/mapUtils';
-import {getDuration, formatMegaBytes, isZoomLevelInRange} from '../../utils/generic';
-import {
-    submitJob, clearAoiInfo, clearExportInfo, clearJobInfo,
-} from '../../actions/datacartActions';
+import {formatMegaBytes, getDuration, isZoomLevelInRange} from '../../utils/generic';
+import {clearAoiInfo, clearExportInfo, clearJobInfo, submitJob, updateExportInfo,} from '../../actions/datacartActions';
 import {stepperNextDisabled} from '../../actions/uiActions';
 import {getFormats} from '../../actions/formatActions';
 import {getProviders} from '../../actions/providerActions';
 import {getNotifications, getNotificationsUnreadCount} from '../../actions/notificationsActions';
-import {updateExportInfo} from '../../actions/datacartActions';
 import BaseDialog from '../Dialog/BaseDialog';
 import ConfirmDialog from '../Dialog/ConfirmDialog';
 import PageLoading from '../common/PageLoading';
@@ -213,16 +210,14 @@ export class BreadcrumbStepper extends React.Component<Props, State> {
         this.setState({limits});
     }
 
+
     private styleEstimate(allowNull=false) {
+        let check = this.checkEstimate();
         const textStyle = {
             color: this.props.theme.eventkit.colors.white,
             fontSize: '0.9em',
         };
-
-        let check = this.checkEstimate();
-        let allowNull1 = allowNull;
-
-        if ((!check) && (allowNull1 == false)) {
+        if ((!check) && (allowNull == false)) {
             return
         } else {
             return (
@@ -267,8 +262,8 @@ export class BreadcrumbStepper extends React.Component<Props, State> {
                         </div>
                     </BaseDialog>
                 </div>
-                )
-            }
+            )
+        }
     }
 
     private handleEstimateExplanationClosed() {
@@ -311,7 +306,6 @@ export class BreadcrumbStepper extends React.Component<Props, State> {
         let sizeEstimate;
         let durationEstimate;
         // function that will return nf (not found) when the provided estimate is undefined
-
         const get = (estimate, nf = 'unknown') => (estimate) ? estimate.toString() : nf;
 
         if (this.state.sizeEstimate !== -1) {
@@ -337,11 +331,9 @@ export class BreadcrumbStepper extends React.Component<Props, State> {
         if (sizeEstimate || durationEstimate) {
             const separator = (sizeEstimate && durationEstimate) ? ' - ' : '';
             secondary = ` ( ${get(durationEstimate, '')}${separator}${get(sizeEstimate, 'size unknown')})`;
-            // secondary = ` ( ${get(durationEstimate)}${separator}${get(sizeEstimate)}`;
             noEstimateMessage = 'Unknown Date'; // used when the size estimate is displayed but time is not.
         }
         return `${get(dateTimeEstimate, noEstimateMessage)}${get(secondary, '')}`;
-        // return `${get(dateTimeEstimate)}${get(secondary)}`;
     }
 
     private updateEstimate() {
@@ -384,21 +376,21 @@ export class BreadcrumbStepper extends React.Component<Props, State> {
             fontSize: '17px',
             textAlign: 'center' as 'center',
         };
+        const noEstimateMessage = 'ETA: Select providers to get estimate';
 
         switch (stepIndex) {
             case 0:
-                if (this.checkEstimate()) {
-                // if ((this.state.sizeEstimate !== -1) || (this.state.timeEstimate !== -1)) {
+                if ((!this.checkEstimate()) || this.formatEstimate() !== noEstimateMessage) {
+                    return;
+                }
+                // if ((this.state.timeEstimate !== -1 || this.state.sizeEstimate !== -1)) {
+                //     return;
+                // }
+                else {
                     return (
                         <div className="qa-BreadcrumbStepper-step1Label" style={estimateTextStyle}>
                             {renderEstimate &&
-                            this.styleEstimate(true)}
-                        </div>
-                    );
-                } else {
-                    return (
-                        <div className="qa-BreadcrumbStepper-step1Label" style={estimateTextStyle}>
-                            {this.styleEstimate(false)}
+                                this.styleEstimate(true)}
                         </div>
                     );
                 }
@@ -428,13 +420,11 @@ export class BreadcrumbStepper extends React.Component<Props, State> {
             marginLeft: '24px',
             fontSize: '16px'
         };
-
         const textStyle = {
             color: this.props.theme.eventkit.colors.white,
             fontSize: '0.9em',
             width: '380px'
         };
-
 
         switch (stepIndex) {
             case 0:
@@ -727,7 +717,7 @@ export class BreadcrumbStepper extends React.Component<Props, State> {
                     </div>
                 </div>
                 <div className="qa-BreadcrumbStepper-div-estimateLabel">{this.getEstimateLabel(this.state.stepIndex)}</div>
-                {this.getStepContent(this.state.stepIndex)}
+                <div className="qa-BreadcrumbStepper-div-stepContent">{this.getStepContent(this.state.stepIndex)}</div>
                 <BaseDialog
                     show={this.state.showError}
                     title="ERROR"
