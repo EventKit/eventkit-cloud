@@ -1,27 +1,32 @@
 import * as React from "react";
 import {BaseMapSource, MapDrawer} from "./MapDrawer";
 import axios from "axios";
-import {getCookie} from "../../utils/generic";
+import {getCookie, getFeatureUrl} from "../../utils/generic";
 import DisplayDataBox from "./DisplayDataBox";
+import {SelectedBaseMap} from "./CreateExport";
 
+// The feature response data for a given coordinate specified by lat and long
 interface FeatureResponse {
     lat: number;
     long: number;
-    layerId: number;
-    layerName: string;
-    displayFieldName: string;
-    value: string;
-    closeCard: boolean;
-    handleClose: (event: any) => void;
+    featureData: any;
+}
+
+export interface TileCoordinate {
+    z: number;
+    y: number;
+    x: number;
+    lat: number;
+    long: number;
 }
 
 export interface Props {
-    baseMapUrl: string;
+    selectedBaseMap: SelectedBaseMap;
 }
 
 export interface State {
     queryLoading: boolean;
-    displayBoxData: FeatureResponse;
+    responseData: FeatureResponse;
     closeCard: boolean;
 }
 
@@ -34,73 +39,52 @@ export class MapQueryDisplay extends React.Component<Props, State> {
 
         this.state = {
             queryLoading: false,
-            displayBoxData: undefined,
+            responseData: undefined,
             closeCard: false,
         };
     }
 
     private CancelToken = axios.CancelToken;
     private source = this.CancelToken.source();
-    private getFeatures() {
-        const data = {
-        };
-        let featureResult = {
+    private getFeatures(tileCoord: TileCoordinate, i, j) {
+        let responseData;
 
-        } as FeatureResponse;
-
-        const MOCK_DATA = {
-            type: "FeatureCollection",
-            features: [{
-                type: "Feature",
-                geometry: {
-                    type: "Point",
-                    coordinates: [125.6, 10.1],
-                }
-            }],
-            properties: {
-                layerId: 2,
-                layerName: "States",
-                displayFieldName: "state_name",
-                value: "South Dakota"
-            }
-        };
-
+        const url = getFeatureUrl(this.props.selectedBaseMap.slug, tileCoord.z, tileCoord.y, tileCoord.x, i, j);
         const csrfmiddlewaretoken = getCookie('csrftoken');
         return axios({
-            url: `http://cloud.eventkit.test/map/usa-sample/service?FORMAT=application%2Fjson&InfoFormat=application%2Fjson&LAYER=usa-sample&REQUEST=GetFeatureInfo&SERVICE=WMTS&STYLE=default&TILECOL=28&TILEMATRIX=06&TILEMATRIXSET=default&TILEROW=16&VERSION=1.0.0&i=120&j=120`,
+            url,
             method: 'get',
-            params: data,
             headers: { 'X-CSRFToken': csrfmiddlewaretoken },
             cancelToken: this.source.token,
         }).then((response) => {
-            featureResult = {
-                // Is it a safe assumption that we're only dealing with a single feature/point
-                lat: response['features'][0].geometry.coordinates[1],
-                long: response['features'][0].geometry.coordinates[0],
-                layerId: response['properties'].layerId,
-                layerName: response['properties'].layerName,
-                displayFieldName: response['properties'].displayFieldName,
-                value: response['properties'].value,
+            const feature = response.data['features'][0];
+            responseData = {
+                lat: tileCoord.lat,
+                long: tileCoord.long,
+                featureData: {
+                    layerId: feature['properties'].layerId,
+                    layerName: feature['properties'].layerName,
+                    displayFieldName: feature['properties'].displayFieldName,
+                    value: feature['properties'].value,
+                }
             } as FeatureResponse;
-            return featureResult;
+            return responseData;
         }).catch(() => {
-            featureResult = {
-                lat: undefined,
-                long: undefined,
-                layerId: -1,
-                layerName: undefined,
-                displayFieldName: undefined,
-                value: undefined,
+            this.setState({closeCard: true});
+            responseData = {
+                lat: tileCoord.lat,
+                long: tileCoord.long,
+                featureData: undefined,
             } as FeatureResponse;
-            return featureResult;
+            return responseData;
         });
     }
 
-    private handleMapClick(z, y, x, i, j) {
-        if (!!this.props.baseMapUrl) {
-            this.getFeatures().then(featureResponseData => {
+    private handleMapClick(tileCoord: TileCoordinate, i, j) {
+        if (!!this.props.selectedBaseMap.slug) {
+            this.getFeatures(tileCoord, i, j).then(featureResponseData => {
                 this.setState({closeCard: false});
-                this.setState({ displayBoxData: featureResponseData });
+                this.setState({ responseData: featureResponseData });
             });
         }
     }
@@ -111,11 +95,13 @@ export class MapQueryDisplay extends React.Component<Props, State> {
     };
 
     render() {
-        const { displayBoxData } = this.state;
-        if (!!displayBoxData || true) {
+        const { responseData } = this.state;
+        if (!!responseData) {
             return (
                 <DisplayDataBox
-                    {...displayBoxData}
+                    lat={responseData.lat}
+                    long={responseData.long}
+                    featureData={responseData.featureData}
                     closeCard={ this.state.closeCard }
                     handleClose={ this.handleClose }
                 />

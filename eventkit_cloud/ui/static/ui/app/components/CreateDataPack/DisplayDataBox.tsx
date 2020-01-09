@@ -8,6 +8,7 @@ import {
 import { Card, CardContent, Typography } from '@material-ui/core';
 import CloseIcon from '@material-ui/icons/Close';
 import IconButton from "@material-ui/core/IconButton";
+import CircularProgress from "@material-ui/core/CircularProgress";
 
 const jss = (theme: Theme & Eventkit.Theme) => createStyles({
     cardDetails: {
@@ -47,10 +48,7 @@ const jss = (theme: Theme & Eventkit.Theme) => createStyles({
 export interface Props {
     lat: number;
     long: number;
-    layerId: number;
-    layerName: string;
-    displayFieldName: string;
-    value: string;
+    featureData: any;
     closeCard: boolean;
     handleClose: (event: any) => void;
     classes: {
@@ -69,14 +67,20 @@ export class DisplayDataBox extends React.Component<Props, {}> {
     }
 
     render() {
-        const { lat, long, layerId, layerName, displayFieldName, value, closeCard, handleClose, classes } = this.props;
+        const { lat, long, closeCard, handleClose, classes } = this.props;
+        const latLong = (lat !== null && lat !== undefined && long !== null && long !== undefined) ? `${lat}, ${long}` : '---, ---';
+        if (!this.props.featureData) {
+            return (<div/>);
+        }
+        const featureKeys = Object.keys(this.props.featureData);
+        const featureValues = Object.values(this.props.featureData);
 
         return (
             <div className={classes.cardDetails} >
                 { !closeCard ?
                     <Card>
                         <CardContent>
-                            <Typography className={classes.title}> {"South Dakota"} </Typography>
+                            <Typography className={classes.title}>Query Result:</Typography>
                             <IconButton
                                 className={classes.closeButton}
                                 type='button'
@@ -89,28 +93,17 @@ export class DisplayDataBox extends React.Component<Props, {}> {
                             <Grid className={classes.grid}>
                                 <Grid item xs={3} className={classes.details}>
                                     <Typography className={classes.details}>Lat, Long:</Typography>
-                                    <Typography className={classes.details}>layerName:</Typography>
-                                    <Typography className={classes.details}>displayFieldName:</Typography>
-                                    <Typography className={classes.details}>value:</Typography>
+                                    {featureKeys.map((key, ix) => (
+                                        <Typography key={"key" + ix} className={classes.details}>{key}:</Typography>
+                                    ))}
                                 </Grid>
                                 <Grid item xs={9} className={classes.details}>
-                                    <Typography className={classes.details}><strong>{lat}, {long}</strong></Typography>
-                                    <Typography className={classes.details}><strong>{layerName}</strong></Typography>
-                                    <Typography className={classes.details}><strong>{displayFieldName}</strong></Typography>
-                                    <Typography className={classes.details}>{value}</Typography>
+                                    <Typography className={classes.details}><strong>{latLong}</strong></Typography>
+                                    {featureValues.map((value, ix) => (
+                                        <Typography key={"value" + ix} className={classes.details}>{value}</Typography>
+                                    ))}
                                 </Grid>
-                                {/*<Grid item xs={4}>*/}
-                                {/*    <IconButton*/}
-                                {/*        className={classes.closeButton}*/}
-                                {/*        type='button'*/}
-                                {/*        onClick={(e) => {*/}
-                                {/*            handleClose(e);*/}
-                                {/*        }}*/}
-                                {/*    >*/}
-                                {/*        <CloseIcon className={classes.closeIcon}/>*/}
-                                {/*    </IconButton>*/}
-                                    {/*</Grid>*/}
-                                </Grid>
+                            </Grid>
                         </CardContent>
                     </Card>
                     :

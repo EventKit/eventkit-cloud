@@ -31,6 +31,7 @@ import {Typography} from "@material-ui/core";
 import * as PropTypes from "prop-types";
 import Info from '@material-ui/icons/Info';
 import {getProjections} from "../../actions/projectionActions";
+import {SelectedBaseMap} from "./CreateExport";
 
 export interface JobData {
     name: string;
@@ -70,7 +71,7 @@ export interface Props {
     theme: Eventkit.Theme & Theme;
     getProjections: () => void;
     projections: Eventkit.Projection[];
-    baseMapUrl: string;
+    selectedBaseMap: SelectedBaseMap;
 }
 
 export interface State {
@@ -418,7 +419,7 @@ export class BreadcrumbStepper extends React.Component<Props, State> {
                         limits={this.state.limits}
                         walkthroughClicked={this.props.walkthroughClicked}
                         onWalkthroughReset={this.props.onWalkthroughReset}
-                        baseMapUrl={this.props.baseMapUrl}
+                        selectedBaseMap={this.props.selectedBaseMap}
                     />
                 );
             case 1:

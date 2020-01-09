@@ -19,6 +19,7 @@ import isValidOp from 'jsts/org/locationtech/jts/operation/valid/IsValidOp';
 import BufferParameters from 'jsts/org/locationtech/jts/operation/buffer/BufferParameters';
 import ZoomSlider from 'ol/control/zoomslider';
 import { colors } from '../styles/eventkit_theme';
+import _ol_tilegrid_ from "ol/tilegrid";
 
 const icon = require('../../images/ic_room_black_24px.svg');
 
@@ -367,6 +368,19 @@ export function featureToPoint(feature) {
     if (!feature) { return null; }
     const center = extent.getCenter(feature.getGeometry().getExtent());
     return new Point(center);
+}
+
+export function wrapX(tileGrid, tileCoord) {
+    const z = tileCoord[0];
+    const center = tileGrid.getTileCoordCenter(tileCoord);
+    const projectionExtent = tileGrid.getExtent();
+    if (!extent.containsCoordinate(projectionExtent, center)) {
+        const worldWidth = extent.getWidth(projectionExtent);
+        const worldsAway = Math.ceil((projectionExtent[0] - center[0]) / worldWidth);
+        center[0] += worldWidth * worldsAway;
+        return tileGrid.getTileCoordForCoordAndZ(center, z);
+    }
+    return tileCoord;
 }
 
 // if any coordinates are wrapped adjust them to be within the projection extent
