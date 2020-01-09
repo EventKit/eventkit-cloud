@@ -31,8 +31,6 @@ import {Typography} from "@material-ui/core";
 import * as PropTypes from "prop-types";
 import Info from '@material-ui/icons/Info';
 import {getProjections} from "../../actions/projectionActions";
-import theme from "../../styles/eventkit_theme";
-import {Breakpoint} from "@material-ui/core/styles/createBreakpoints";
 
 export interface JobData {
     name: string;
@@ -224,7 +222,7 @@ export class BreadcrumbStepper extends React.Component<Props, State> {
         let check = this.checkEstimate();
         let allowNull1 = allowNull;
 
-        if ((!check) && ( ==)) {
+        if ((!check) && (allowNull1 == false)) {
             return
         } else {
             return (
@@ -389,7 +387,7 @@ export class BreadcrumbStepper extends React.Component<Props, State> {
 
         switch (stepIndex) {
             case 0:
-                if (!this.checkEstimate()) {
+                if (this.checkEstimate()) {
                 // if ((this.state.sizeEstimate !== -1) || (this.state.timeEstimate !== -1)) {
                     return (
                         <div className="qa-BreadcrumbStepper-step1Label" style={estimateTextStyle}>
