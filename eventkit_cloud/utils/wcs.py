@@ -47,7 +47,7 @@ class WCSConverter(object):
         :param eta: ETA estimator
         :param task_uid:
         """
-        self.config = yaml.load(config) if config is not None else None
+        self.config = yaml.safe_load(config) if config is not None else None
         self.out = out
         self.bbox = bbox
         self.service_url = service_url
