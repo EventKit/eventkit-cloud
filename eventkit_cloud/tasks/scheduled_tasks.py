@@ -118,7 +118,7 @@ def pcf_scale_celery(max_instances):
 @app.task(name="Shutdown Celery Workers")
 def shutdown_celery_workers():
     hostnames = []
-    workers = ["runs", "worker", "celery", "cancel", "finalize", "osm"]
+    workers = ["worker", "celery", "cancel", "finalize", "osm"]
     for worker in workers:
         hostnames.append(f"{worker}@{socket.gethostname()}")
 
