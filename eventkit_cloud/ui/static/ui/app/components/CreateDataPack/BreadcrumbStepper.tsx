@@ -296,9 +296,8 @@ export class BreadcrumbStepper extends React.Component<Props, State> {
     }
 
     private checkEstimate() {
-        if ( this.state.sizeEstimate || this.state.timeEstimate) {
-            return true;
-        }
+        // keys = provider ids
+        return Object.keys(this.props.exportInfo.providerEstimates).length !== 0;
     }
 
     private formatEstimate() {
@@ -376,36 +375,16 @@ export class BreadcrumbStepper extends React.Component<Props, State> {
             fontSize: '17px',
             textAlign: 'center' as 'center',
         };
-        const noEstimateMessage = 'ETA: Select providers to get estimate';
 
-        switch (stepIndex) {
-            case 0:
-                if (!this.checkEstimate() || this.formatEstimate() === noEstimateMessage) {
-                    return
-                }
-                else {
-                    return (
-                        <div className="qa-BreadcrumbStepper-step1Label" style={estimateTextStyle}>
-                            {renderEstimate &&
-                                this.styleEstimate(true)}
-                        </div>
-                    );
-                }
-            case 1:
-                return (
-                    <div className="qa-BreadcrumbStepper-step2Label" style={estimateTextStyle}>
-                        {renderEstimate &&
-                        this.styleEstimate(true)}
-                    </div>
-                );
-            case 2:
-                return (
-                    <div className="qa-BreadcrumbStepper-step3Label" style={estimateTextStyle}>
-                        {renderEstimate &&
-                        this.styleEstimate(true)}
-                    </div>
-                );
+        if (stepIndex === 0 && !this.checkEstimate()) {
+                return;
         }
+        return (
+            <div className="qa-BreadcrumbStepper-step3Label" style={estimateTextStyle}>
+                {renderEstimate &&
+                this.styleEstimate(true)}
+            </div>
+        )
     }
 
     private getStepLabel(stepIndex: number) {
