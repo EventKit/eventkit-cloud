@@ -8,16 +8,21 @@ import shutil
 import socket
 import time
 import traceback
+
 from zipfile import ZipFile, ZIP_DEFLATED
 
+from audit_logging.celery_support import UserDetailsBase
+from billiard.einfo import ExceptionInfo
 from celery import signature
 from celery.result import AsyncResult
 from celery.utils.log import get_task_logger
 from django.conf import settings
 from django.contrib.gis.geos import Polygon
+from django.contrib.auth.models import User
 from django.core.cache import caches
 from django.core.exceptions import ObjectDoesNotExist
 from django.core.mail import EmailMultiAlternatives
+from django.db import connection
 from django.db import DatabaseError, transaction
 from django.db.models import Q
 from django.template.loader import get_template, render_to_string
@@ -29,9 +34,11 @@ from eventkit_cloud.core.helpers import (
     NotificationVerb,
     NotificationLevel,
 )
+
 from eventkit_cloud.feature_selection.feature_selection import FeatureSelection
 from eventkit_cloud.tasks.enumerations import TaskStates
 from eventkit_cloud.tasks.exceptions import CancelException, DeleteException
+from eventkit_cloud.tasks import set_cache_value
 from eventkit_cloud.tasks.helpers import (
     normalize_name,
     get_archive_data_path,
@@ -56,8 +63,21 @@ from eventkit_cloud.tasks.helpers import (
 from eventkit_cloud.utils.auth_requests import get_cred
 from eventkit_cloud.utils import overpass, pbf, s3, mapproxy, wcs, geopackage, gdalutils
 from eventkit_cloud.utils.ogr import OGR
+from eventkit_cloud.utils.rocket_chat import RocketChat
 from eventkit_cloud.utils.stats.eta_estimator import ETA
 from eventkit_cloud.tasks.task_base import EventKitBaseTask
+
+from eventkit_cloud.tasks.models import (
+    ExportTaskRecord,
+    ExportTaskException,
+    DataProviderTaskRecord,
+    FileProducingTaskResult,
+    ExportRun,
+)
+from eventkit_cloud.jobs.models import (
+    Job,
+    DataProvider,
+)
 
 
 BLACKLISTED_ZIP_EXTS = [".ini", ".om5", ".osm", ".lck", ".pyc"]
@@ -190,12 +210,6 @@ class ExportTask(EventKitBaseTask):
     name = "ExportTask"
 
     def __call__(self, *args, **kwargs):
-
-        from eventkit_cloud.tasks.models import (
-            FileProducingTaskResult,
-            ExportTaskRecord,
-        )
-
         task_uid = kwargs.get("task_uid")
 
         try:
@@ -306,12 +320,6 @@ class ExportTask(EventKitBaseTask):
             5. run export_task_error_handler if the run should be aborted
                - this is only for initial tasks on which subsequent export tasks depend
         """
-        from eventkit_cloud.tasks.models import ExportTaskRecord
-        from eventkit_cloud.tasks.models import (
-            ExportTaskException,
-            DataProviderTaskRecord,
-        )
-
         try:
             task = ExportTaskRecord.objects.get(uid=task_id)
             task.finished_at = timezone.now()
@@ -346,7 +354,6 @@ class ExportTask(EventKitBaseTask):
         """
         result = result or {}
         started = timezone.now()
-        from eventkit_cloud.tasks.models import ExportTaskRecord
 
         try:
             task = ExportTaskRecord.objects.get(uid=task_uid)
@@ -498,8 +505,6 @@ def osm_data_collection_task(
     Collects data from OSM & produces a thematic gpkg as a subtask of the task referenced by export_provider_task_id.
     bbox expected format is an iterable of the form [ long0, lat0, long1, lat1 ]
     """
-    from eventkit_cloud.tasks.models import ExportRun
-
     logger.debug("enter run for {0}".format(self.name))
     debug_os = None
 
@@ -550,8 +555,6 @@ def add_metadata_task(self, result=None, job_uid=None, provider_slug=None, user_
     """
     Task to create metadata to a geopackage.
     """
-    from eventkit_cloud.jobs.models import Job, DataProvider
-
     job = Job.objects.get(uid=job_uid)
 
     provider = DataProvider.objects.get(slug=provider_slug)
@@ -705,7 +708,6 @@ def output_selection_geojson_task(
 
     geojson_file = os.path.join(stage_dir, "{0}-{1}_selection.geojson".format(provider_slug, projection))
     if selection:
-
         # Test if json.
         json.loads(selection)
 
@@ -753,7 +755,6 @@ def geopackage_export_task(
 def geotiff_export_task(
     self, result=None, task_uid=None, stage_dir=None, job_name=None, projection=4326, compress=False, *args, **kwargs
 ):
-
     """
     Class defining geopackage export function.
     """
@@ -877,7 +878,6 @@ def reprojection_task(
     *args,
     **kwargs,
 ):
-
     """
     Class defining a task that will reproject all file formats to the chosen projections.
     """
@@ -1030,8 +1030,6 @@ def wcs_export_task(
     """
     Class defining export for WCS services
     """
-    from eventkit_cloud.tasks.models import ExportTaskRecord
-
     result = result or {}
     out = os.path.join(stage_dir, "{0}-{1}.tif".format(job_name, projection))
 
@@ -1124,8 +1122,6 @@ def bounds_export_task(
     if user_details is None:
         user_details = {"username": "unknown-bounds_export_task"}
 
-    from eventkit_cloud.tasks.models import ExportRun
-
     run = ExportRun.objects.get(uid=run_uid)
 
     result_gpkg = parse_result(result, "source")
@@ -1166,9 +1162,6 @@ def mapproxy_export_task(
     """
     Class defining geopackage export for external raster service.
     """
-
-    from eventkit_cloud.tasks.models import ExportRun, ExportTaskRecord
-
     result = result or {}
     run = ExportRun.objects.get(uid=run_uid)
     task = ExportTaskRecord.objects.get(uid=task_uid)
@@ -1210,12 +1203,11 @@ def pick_up_run_task(self, result=None, run_uid=None, user_details=None, *args, 
     """
     Generates a Celery task to assign a celery pipeline to a specific worker.
     """
+    from eventkit_cloud.tasks.task_factory import TaskFactory
+
     # This is just to make it easier to trace when user_details haven't been sent
     if user_details is None:
         user_details = {"username": "unknown-pick_up_run_task"}
-
-    from eventkit_cloud.tasks.models import ExportRun
-    from eventkit_cloud.tasks.task_factory import TaskFactory
 
     run = ExportRun.objects.get(uid=run_uid)
     try:
@@ -1585,6 +1577,18 @@ def export_task_error_handler(self, result=None, run_uid=None, task_id=None, sta
     msg = EmailMultiAlternatives(subject, text, to=to, from_email=from_email)
     msg.attach_alternative(html, "text/html")
     msg.send()
+
+    # Send failed DataPack notifications to specific channel(s) or user(s) if enabled.
+    rocketchat_notifications = json.loads(os.getenv("ROCKETCHAT_NOTIFICATIONS"))
+    if rocketchat_notifications:
+        channels = rocketchat_notifications["channels"]
+        url = rocketchat_notifications["url"]
+        message = f"@here A DataPack has failed during processing. {ctx['url']}"
+
+        client = RocketChat(**rocketchat_notifications)
+        for channel in channels:
+            client.post_message(channel, message)
+
     return result
 
 
@@ -1657,11 +1661,6 @@ def cancel_export_provider_task(
     # There is enough over use of this class (i.e. for errors, deletions, canceling) the reason is because it had all
     # the working logic for stopping future jobs, but that can probably be abstracted a bit, and then let the caller
     # manage the task state (i.e. the task should be FAILED or CANCELED).
-    from eventkit_cloud.tasks.models import DataProviderTaskRecord, ExportTaskException
-    from eventkit_cloud.tasks.exceptions import CancelException
-    from billiard.einfo import ExceptionInfo
-    from django.contrib.auth.models import User
-
     result = result or {}
     data_provider_task_record = DataProviderTaskRecord.objects.get(uid=data_provider_task_uid)
 
@@ -1720,8 +1719,6 @@ def cancel_export_provider_task(
 def cancel_run(
     result=None, export_run_uid=None, canceling_username=None, delete=False, *args, **kwargs,
 ):
-    from eventkit_cloud.tasks.models import ExportRun
-
     result = result or {}
 
     export_run = ExportRun.objects.get(uid=export_run_uid)
@@ -1742,7 +1739,6 @@ def kill_task(result=None, task_pid=None, celery_uid=None, *args, **kwargs):
     """
     Asks a worker to kill a task.
     """
-
     import celery
 
     result = result or {}
@@ -1781,10 +1777,6 @@ def update_progress(
     :param eta: The ETA estimator for this task will be used to automatically determine estimated_finish
     :param msg: Message describing the current activity of the task
     """
-
-    from django.db import connection
-    from eventkit_cloud.tasks import set_cache_value
-
     if task_uid is None:
         return
 

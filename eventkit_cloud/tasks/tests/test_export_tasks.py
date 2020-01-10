@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 # test cases for Export Tasks
+import json
 import pickle
 import logging
 import os
@@ -24,7 +25,8 @@ from eventkit_cloud.tasks.export_tasks import (ExportTask,
     pick_up_run_task, cancel_export_provider_task, kill_task, bounds_export_task, parse_result, finalize_export_provider_task,
     FormatTask, wait_for_providers_task, create_zip_task, default_format_time, geotiff_export_task
 )
-from eventkit_cloud.tasks import TaskStates, zip_files
+from eventkit_cloud.tasks.enumerations import TaskStates
+from eventkit_cloud.tasks.export_tasks import zip_files
 from eventkit_cloud.tasks.models import (
     ExportRun,
     ExportTaskRecord,
@@ -444,14 +446,26 @@ class TestExportTasks(ExportTaskBase):
         finalize_run_task.run(run_uid=run_uid, stage_dir=stage_dir)
         email().send.assert_called_once()
 
+    @patch('eventkit_cloud.tasks.export_tasks.RocketChat')
     @patch('eventkit_cloud.tasks.export_tasks.EmailMultiAlternatives')
     @patch('shutil.rmtree')
     @patch('os.path.isdir')
-    def test_export_task_error_handler(self, isdir, rmtree, email):
+    def test_export_task_error_handler(self, isdir, rmtree, email, rocket_chat):
         celery_uid = str(uuid.uuid4())
         task_id = str(uuid.uuid4())
         run_uid = self.run.uid
         stage_dir = settings.EXPORT_STAGING_ROOT + str(self.run.uid)
+        site_url = settings.SITE_URL
+        url = "{0}/status/{1}".format(site_url.rstrip("/"), self.run.job.uid)
+        os.environ['ROCKETCHAT_NOTIFICATIONS'] = json.dumps({
+            "auth_token": "auth_token",
+            "user_id": "user_id",
+            "channels": ["channel"],
+            "url": "http://api.example.dev"
+        })
+        rocketchat_notifications = json.loads(os.getenv("ROCKETCHAT_NOTIFICATIONS"))
+        channel = rocketchat_notifications["channels"][0]
+        message = f"@here A DataPack has failed during processing. {url}"
         export_provider_task = DataProviderTaskRecord.objects.create(run=self.run, name='Shapefile Export')
         ExportTaskRecord.objects.create(export_provider_task=export_provider_task, uid=task_id,
                                         celery_uid=celery_uid, status=TaskStates.FAILED.value,
@@ -461,8 +475,10 @@ class TestExportTasks(ExportTaskBase):
         isdir.assert_any_call(stage_dir)
         rmtree.assert_called_once_with(stage_dir)
         email().send.assert_called_once()
+        rocket_chat.assert_called_once_with(**rocketchat_notifications)
+        rocket_chat().post_message.assert_called_once_with(channel, message)
 
-    @patch('eventkit_cloud.tasks.set_cache_value')
+    @patch('eventkit_cloud.tasks.export_tasks.set_cache_value')
     @patch('django.db.connection.close')
     @patch('eventkit_cloud.tasks.models.ExportTaskRecord')
     def test_update_progress(self, export_task, mock_close, mock_set_cache_value):
