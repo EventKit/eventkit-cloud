@@ -322,6 +322,7 @@ export class ExportAOI extends React.Component<Props, State> {
     private handleResetMap() {
         const worldExtent = [-180, -90, 180, 90];
         this.map.getView().fit(worldExtent, this.map.getSize());
+        this.updateZoomLevel();
     }
 
     private checkForSearchUpdate(result: GeoJSON.Feature) {
@@ -580,6 +581,8 @@ export class ExportAOI extends React.Component<Props, State> {
             handleUpEvent: this.upEvent,
         });
 
+
+        // Hook up the click to query feature data
         this.map.on('click', (event) => {
                 this.handleMapClickQuery(event);
             }
