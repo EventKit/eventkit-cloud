@@ -380,12 +380,9 @@ export class BreadcrumbStepper extends React.Component<Props, State> {
 
         switch (stepIndex) {
             case 0:
-                if ((!this.checkEstimate()) || this.formatEstimate() !== noEstimateMessage) {
-                    return;
+                if (!this.checkEstimate() || this.formatEstimate() === noEstimateMessage) {
+                    return
                 }
-                // if ((this.state.timeEstimate !== -1 || this.state.sizeEstimate !== -1)) {
-                //     return;
-                // }
                 else {
                     return (
                         <div className="qa-BreadcrumbStepper-step1Label" style={estimateTextStyle}>
