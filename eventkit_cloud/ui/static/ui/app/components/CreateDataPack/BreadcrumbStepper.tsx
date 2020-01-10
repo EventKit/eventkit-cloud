@@ -297,7 +297,10 @@ export class BreadcrumbStepper extends React.Component<Props, State> {
 
     private checkEstimate() {
         // keys = provider ids
-        return Object.keys(this.props.exportInfo.providerEstimates).length !== 0;
+        let data = this.props.exportInfo.providerEstimates;
+        if (data) {
+            return Object.keys(data).length !== 0;
+        }
     }
 
     private formatEstimate() {
