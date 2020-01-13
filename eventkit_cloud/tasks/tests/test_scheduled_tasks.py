@@ -10,8 +10,8 @@ from django.utils import timezone
 from eventkit_cloud.jobs.models import DataProvider, DataProviderStatus
 from eventkit_cloud.jobs.models import Job
 from eventkit_cloud.tasks.models import ExportRun
-from eventkit_cloud.tasks.scheduled_tasks import expire_runs, send_warning_email, check_provider_availability, \
-    clean_up_queues, pcf_scale_celery
+from eventkit_cloud.tasks.scheduled_tasks import expire_runs_task, send_warning_email, check_provider_availability_task, \
+    clean_up_queues, pcf_scale_celery_task
 from eventkit_cloud.utils.provider_check import CheckResults
 
 import json
@@ -49,8 +49,8 @@ class TestExpireRunsTask(TestCase):
 
             mock_time.return_value = now_time
 
-            self.assertEqual('Expire Runs', expire_runs.name)
-            expire_runs.run()
+            self.assertEqual('Expire Runs', expire_runs_task.name)
+            expire_runs_task.run()
             site_url = getattr(settings, "SITE_URL", "cloud.eventkit.test")
             expected_url = '{0}/status/{1}'.format(site_url.rstrip('/'), job.uid)
             send_email.assert_any_call(date=now_time + timezone.timedelta(days=1), url=expected_url,
@@ -69,7 +69,7 @@ class TestPcfScaleCeleryTask(TestCase):
         # Figure out how to test the two differnt environment variable options
         mock_pcf_client().get_running_tasks.return_value = {"pagination": {"total_results": 0}}
         mock_get_all_rabbitmq_objects.return_value = [{"name": "celery", "messages": 1}]
-        pcf_scale_celery(3)
+        pcf_scale_celery_task(3)
         mock_pcf_client().run_task.assert_called_once()
 
 
@@ -82,7 +82,7 @@ class TestCheckProviderAvailabilityTask(TestCase):
         second_provider = DataProvider.objects.create(slug='second_provider', name='second_provider')
         DataProviderStatus.objects.create(related_provider=first_provider)
 
-        check_provider_availability()
+        check_provider_availability_task()
 
         perform_provider_check_mock.assert_has_calls([call(first_provider, None), call(second_provider, None)])
         statuses = DataProviderStatus.objects.filter(related_provider=first_provider)

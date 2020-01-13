@@ -49,8 +49,8 @@ if PCF_SCALING:
                 "kwargs": {"max_tasks_memory": int(os.getenv("CELERY_MAX_TASKS_MEMORY", 20000))},
                 "options": {
                     "priority": 90,
-                    "queue": "scale".format(socket.gethostname()),
-                    "routing_key": "scale".format(socket.gethostname()),
+                    "queue": "scale",
+                    "routing_key": "scale",
                 },
             },
         }

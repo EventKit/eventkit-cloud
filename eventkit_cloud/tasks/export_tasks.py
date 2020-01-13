@@ -20,10 +20,10 @@ from django.conf import settings
 from django.contrib.gis.geos import Polygon
 from django.contrib.auth.models import User
 from django.core.cache import caches
+
 from django.core.exceptions import ObjectDoesNotExist
 from django.core.mail import EmailMultiAlternatives
-from django.db import connection
-from django.db import DatabaseError, transaction
+from django.db import connection, DatabaseError, transaction
 from django.db.models import Q
 from django.template.loader import get_template, render_to_string
 from django.utils import timezone
@@ -66,6 +66,7 @@ from eventkit_cloud.utils.ogr import OGR
 from eventkit_cloud.utils.rocket_chat import RocketChat
 from eventkit_cloud.utils.stats.eta_estimator import ETA
 from eventkit_cloud.tasks.task_base import EventKitBaseTask
+from audit_logging.celery_support import UserDetailsBase
 
 from eventkit_cloud.tasks.models import (
     ExportTaskRecord,
@@ -88,81 +89,6 @@ logger = get_task_logger(__name__)
 
 # http://docs.celeryproject.org/en/latest/tutorials/task-cookbook.html
 # https://github.com/celery/celery/issues/3270
-
-
-class LockingTask(EventKitBaseTask):
-    """
-    Base task with lock to prevent multiple execution of tasks with ETA.
-    It happens with multiple workers for tasks with any delay (countdown, ETA). Its a bug
-    https://github.com/celery/kombu/issues/337.
-    You may override cache backend by setting `CELERY_TASK_LOCK_CACHE` in your Django settings file.
-
-    This task can also be used to ensure that a task isn't running at the same time as another task by specifying,
-    a lock_key in the task arguments.  If the lock_key is present but unavailable the task will be tried again later.
-    """
-
-    cache = caches[getattr(settings, "CELERY_TASK_LOCK_CACHE", "default")]
-    lock_expiration = 60 * 60 * 12  # 12 Hours
-    lock_key = None
-    max_retries = None
-
-    def get_lock_key(self):
-        """
-        Unique string for task as lock key
-        """
-        return "TaskLock_%s_%s_%s" % (self.__class__.__name__, self.request.id, self.request.retries,)
-
-    def acquire_lock(self, lock_key=None, value="True"):
-        """
-        Set lock.
-        :param lock_key: Location to store lock.
-        :param value: Some value to store for audit.
-        :return:
-        """
-        result = False
-        lock_key = lock_key or self.get_lock_key()
-        try:
-            result = self.cache.add(lock_key, value, self.lock_expiration)
-            # result = self.cache.add(str(self.lock_key), value, self.lock_expiration)
-            logger.info("Acquiring {0} key: {1}".format(lock_key, "succeed" if result else "failed"))
-        finally:
-            return result
-
-    def __call__(self, *args, **kwargs):
-        """
-        Checking for lock existence then call otherwise re-queue
-        """
-        retry = False
-        logger.debug("enter __call__ for {0}".format(self.request.id))
-
-        lock_key = kwargs.get("locking_task_key")
-        worker = kwargs.get("worker")
-
-        if lock_key:
-            self.lock_expiration = 5
-            self.lock_key = lock_key
-            retry = True
-        else:
-            self.lock_key = self.get_lock_key()
-
-        if self.acquire_lock(lock_key=lock_key, value=self.request.id):
-            logger.debug("Task {0} started.".format(self.request.id))
-            logger.debug("exit __call__ for {0}".format(self.request.id))
-            return super(LockingTask, self).__call__(*args, **kwargs)
-        else:
-            if retry:
-                logger.warn("Task {0} waiting for lock {1} to be free.".format(self.request.id, lock_key))
-                if worker:
-                    self.apply_async(args=args, kwargs=kwargs)
-                else:
-                    self.delay(*args, **kwargs)
-            else:
-                logger.info("Task {0} skipped due to lock".format(self.request.id))
-
-    def after_return(self, *args, **kwargs):
-        logger.debug("Task {0} releasing lock".format(self.request.id))
-        self.cache.delete(self.lock_key)
-        super(LockingTask, self).after_return(*args, **kwargs)
 
 
 def make_file_downloadable(
@@ -1198,7 +1124,7 @@ def mapproxy_export_task(
         raise Exception(e)
 
 
-@app.task(name="Pickup Run", bind=True, base=EventKitBaseTask)
+@app.task(name="Pickup Run", bind=True, base=UserDetailsBase)
 def pick_up_run_task(self, result=None, run_uid=None, user_details=None, *args, **kwargs):
     """
     Generates a Celery task to assign a celery pipeline to a specific worker.
