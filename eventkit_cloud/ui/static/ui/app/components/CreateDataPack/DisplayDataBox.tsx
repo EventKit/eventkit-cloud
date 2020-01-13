@@ -11,27 +11,31 @@ import IconButton from "@material-ui/core/IconButton";
 import CircularProgress from "@material-ui/core/CircularProgress";
 
 const jss = (theme: Theme & Eventkit.Theme) => createStyles({
-    cardDetails: {
-        minWidth: 255,
+    card: {
+        minWidth: 330,
         color: theme.eventkit.colors.white,
-        padding: '12px'
+        zIndex: 2,
+        position: 'absolute',
+        width: '100%',
+        display: 'flex',
+        bottom: '40px',
+        // [theme.breakpoints.only('xs')]: {
+        //     justifyContent: 'start',
+        // },
+    },
+    cardContent: {
+        backgroundColor: theme.eventkit.colors.white,
+        display: 'inline-block',
+        margin: '0px 10px',
+        // [theme.breakpoints.only('xs')]: {
+        //     margin: '0px 10px 0px 100px',
+        // },
     },
     title: {
         fontSize: 15,
         color: theme.eventkit.colors.black,
         marginBottom: '4px',
         display: 'inline'
-    },
-    details: {
-        fontSize: 13,
-        color: theme.eventkit.colors.grey,
-        display: 'inline-block',
-        // dispaly: 'inline-table',
-        paddingRight: '5px',
-        padding: 0
-    },
-    grid: {
-        paddingTop: '5px'
     },
     closeButton: {
         fontSize: 'medium',
@@ -40,10 +44,18 @@ const jss = (theme: Theme & Eventkit.Theme) => createStyles({
     },
     closeIcon: {
         fontSize: 'small',
+    },
+    grid: {
+        paddingTop: '5px'
+    },
+    details: {
+        fontSize: 13,
+        color: theme.eventkit.colors.grey,
+        display: 'inline-block',
+        paddingRight: '5px',
     }
 });
 
-// error handling?
 
 export interface Props {
     lat: number;
@@ -52,7 +64,8 @@ export interface Props {
     closeCard: boolean;
     handleClose: (event: any) => void;
     classes: {
-        cardDetails: string;
+        card: string;
+        cardContent: string;
         title: string;
         details: string;
         grid: string;
@@ -66,6 +79,14 @@ export class DisplayDataBox extends React.Component<Props, {}> {
         super(props);
     }
 
+    // checkCase(str) {
+    //     const splitStr = str.toLowerCase().split(' ');
+    //     for (let i = 0; i < splitStr; i++) {
+    //         splitStr[i] = splitStr[i].charAt(0).toUpperCase() + splitStr[i].substring(1);
+    //     }
+    //     return splitStr.join(' ');
+    // }
+
     render() {
         const { lat, long, closeCard, handleClose, classes } = this.props;
         const latLong = (lat !== null && lat !== undefined && long !== null && long !== undefined) ? `${lat}, ${long}` : '---, ---';
@@ -76,10 +97,10 @@ export class DisplayDataBox extends React.Component<Props, {}> {
         const featureValues = Object.values(this.props.featureData);
 
         return (
-            <div className={classes.cardDetails} >
+            <div className='qa-displayDataBox' >
                 { !closeCard ?
-                    <Card>
-                        <CardContent>
+                    <Card className={classes.card}>
+                        <CardContent className={classes.cardContent}>
                             <Typography className={classes.title}>Query Result:</Typography>
                             <IconButton
                                 className={classes.closeButton}
@@ -91,13 +112,13 @@ export class DisplayDataBox extends React.Component<Props, {}> {
                                 <CloseIcon className={classes.closeIcon}/>
                             </IconButton>
                             <Grid className={classes.grid}>
-                                <Grid item xs={3} className={classes.details}>
+                                <Grid item xs={6} className={classes.details}>
                                     <Typography className={classes.details}>Lat, Long:</Typography>
                                     {featureKeys.map((key, ix) => (
                                         <Typography key={"key" + ix} className={classes.details}>{key}:</Typography>
                                     ))}
                                 </Grid>
-                                <Grid item xs={9} className={classes.details}>
+                                <Grid item xs={6} className={classes.details}>
                                     <Typography className={classes.details}><strong>{latLong}</strong></Typography>
                                     {featureValues.map((value, ix) => (
                                         <Typography key={"value" + ix} className={classes.details}>{value}</Typography>

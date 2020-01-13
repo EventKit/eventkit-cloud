@@ -48,8 +48,8 @@ export class MapQueryDisplay extends React.Component<Props, State> {
     private source = this.CancelToken.source();
     private getFeatures(tileCoord: TileCoordinate, i, j) {
         let responseData;
-
-        const url = getFeatureUrl(this.props.selectedBaseMap.slug, tileCoord.z, tileCoord.y, tileCoord.x, i, j);
+        
+        const url = getFeatureUrl(this.props.selectedBaseMap.slug, tileCoord.z, tileCoord.y, tileCoord.x, 50, 50);
         const csrfmiddlewaretoken = getCookie('csrftoken');
         return axios({
             url,
