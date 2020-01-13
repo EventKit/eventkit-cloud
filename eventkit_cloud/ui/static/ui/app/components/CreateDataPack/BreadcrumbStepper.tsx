@@ -212,14 +212,10 @@ export class BreadcrumbStepper extends React.Component<Props, State> {
 
 
     private styleEstimate(allowNull=false) {
-        let check = this.checkEstimate();
         const textStyle = {
             color: this.props.theme.eventkit.colors.white,
             fontSize: '0.9em',
         };
-        if ((!check) && (allowNull == false)) {
-            return
-        } else {
             return (
                 <div style={{display: 'inline-flex'}}>
                     <Typography style={{
@@ -263,7 +259,6 @@ export class BreadcrumbStepper extends React.Component<Props, State> {
                     </BaseDialog>
                 </div>
             )
-        }
     }
 
     private handleEstimateExplanationClosed() {
@@ -296,7 +291,6 @@ export class BreadcrumbStepper extends React.Component<Props, State> {
     }
 
     private checkEstimate() {
-        // keys = provider ids
         let data = this.props.exportInfo.providerEstimates;
         if (data) {
             return Object.keys(data).length !== 0;
@@ -528,7 +522,7 @@ export class BreadcrumbStepper extends React.Component<Props, State> {
             transition: 'none',
             fill: this.props.theme.eventkit.colors.success,
             backgroundColor: this.props.stepperNextEnabled ?
-                this.props.theme.eventkit.colors.success : this.props.theme.eventkit.colors.secondary,
+                this.props.theme.eventkit.colors.success : this.props.theme.eventkit.colors.secondary
         };
 
         switch (stepIndex) {
@@ -688,7 +682,7 @@ export class BreadcrumbStepper extends React.Component<Props, State> {
 
         return (
             <div className="qa-BreadcrumbStepper-div-content" style={{backgroundColor: colors.background}}>
-                <div className="qa-BreadcrumbStepper-div-stepLabel" style={{width: '100%', height: '50px'}}>
+                <div className="qa-BreadcrumbStepper-div-stepLabel" style={{width: '100%', height: '50px', display: 'inline-block'}}>
                     {this.getStepLabel(this.state.stepIndex)}
                     <div className="qa-BreadcrumbStepper-div-buttons" style={{float: 'right', padding: '5px'}}>
                         {this.getPreviousButtonContent(this.state.stepIndex)}
