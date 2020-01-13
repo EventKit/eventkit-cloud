@@ -62,10 +62,7 @@ export class MapQueryDisplay extends React.Component<Props, State> {
                 lat: tileCoord.lat,
                 long: tileCoord.long,
                 featureData: {
-                    layerId: feature['properties'].layerId,
-                    layerName: feature['properties'].layerName,
-                    displayFieldName: feature['properties'].displayFieldName,
-                    value: feature['properties'].value,
+                    ...feature['properties'],
                 }
             } as FeatureResponse;
             return responseData;

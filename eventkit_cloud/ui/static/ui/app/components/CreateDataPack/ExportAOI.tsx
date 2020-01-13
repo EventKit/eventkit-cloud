@@ -993,7 +993,7 @@ export class ExportAOI extends React.Component<Props, State> {
 
     private handleMapClickQuery(event) {
         const grid = this.baseLayer.getSource().getTileGrid();
-        const zoom = this.map.getView().getZoom();
+        const zoom = Math.floor(this.map.getView().getZoom());
 
         // Coord is returned as z, x, y
         // Y is returned as a negative because of openlayers origin, needs to be flipped and offset
