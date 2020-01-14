@@ -677,7 +677,7 @@ export class BreadcrumbStepper extends React.Component<Props, State> {
 
             providerTasks.push({
                 formats,
-                provider: provider.name, max_zoom: maxZoom, min_zoom: minZoom,
+                provider: provider.slug, max_zoom: maxZoom, min_zoom: minZoom,
             });
         });
 

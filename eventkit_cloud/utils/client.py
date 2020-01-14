@@ -93,7 +93,7 @@ class EventKitClient(object):
         :param provider_tasks: A list of providers (data sources).
            Example:
               [{
-                "provider": "OpenStreetMap Data (Themes)",
+                "provider": "osm",
                 "formats": ["shp", "gpkg"]
               }]
         :return:
