@@ -29,5 +29,5 @@ def map(request: HttpRequest, slug: str, path: str) -> HttpResponse:
     if params.get("REQUEST") == ["GetFeatureInfo"]:
         map_query = get_map_query("arcgis-raster")
         response = map_query().get_geojson(response)
-    response['Content-length'] = len(response.content)
+    response["Content-length"] = len(response.content)
     return response
