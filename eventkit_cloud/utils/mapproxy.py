@@ -128,7 +128,7 @@ class MapproxyGeopackage(object):
         Create a MapProxy configuration object and verifies its validity
         """
         if self.config:
-            conf_dict = yaml.load(self.config) or dict()
+            conf_dict = yaml.safe_load(self.config) or dict()
         else:
             raise ConfigurationError("MapProxy configuration is required for raster data providers")
 
@@ -205,7 +205,7 @@ class MapproxyGeopackage(object):
 
         logger.error("Beginning seeding to {0}".format(self.gpkgfile))
         try:
-            conf = yaml.load(self.config) or dict()
+            conf = yaml.safe_load(self.config) or dict()
             cert_var = conf.get("cert_var")
             auth_requests.patch_https(slug=self.name, cert_var=cert_var)
 
@@ -386,7 +386,7 @@ def get_conf_dict(slug: str) -> dict:
 
         # Load and "clean" mapproxy config for displaying a map.
     try:
-        conf_dict = yaml.load(provider.config)
+        conf_dict = yaml.safe_load(provider.config)
         conf_dict.pop("caches", "")
         conf_dict.pop("layers", "")
         ssl_verify = getattr(settings, "SSL_VERIFICATION", True)
