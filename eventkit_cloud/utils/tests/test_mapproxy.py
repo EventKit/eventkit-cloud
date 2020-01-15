@@ -38,7 +38,7 @@ class TestGeopackage(TransactionTestCase):
                      patch_https):
         gpkgfile = '/var/lib/eventkit/test.gpkg'
         config = "layers:\r\n - name: default\r\n   title: imagery\r\n   sources: [default]\r\n\r\nsources:\r\n  default:\r\n    type: tile\r\n    grid: default\r\n    url: http://a.tile.openstreetmap.fr/hot/%(z)s/%(x)s/%(y)s.png\r\n\r\ngrids:\r\n  default:\r\n    srs: WGS84:3857\r\n    tile_size: [256, 256]\r\n    origin: nw"
-        json_config = real_yaml.load(config)
+        json_config = real_yaml.safe_load(config)
         mapproxy_config = load_default_config()
         bbox = [-2, -2, 2, 2]
         cache_template.return_value = {'sources': ['default'], 'cache': {'type': 'geopackage', 'filename': '/var/lib/eventkit/test.gpkg'}, 'grids': ['default']}

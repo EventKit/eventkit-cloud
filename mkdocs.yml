@@ -11,7 +11,7 @@ site_author: 'Joe Svrcek,Luke Rees'
 theme: 
   name: 'material'
   language: 'en'
-  favicon: 'images/favicon.ico'
+  favicon: 'images/favicon.png'
   logo: 'images/eventkit-icon-white.svg'
   font:
     text: 'Roboto'

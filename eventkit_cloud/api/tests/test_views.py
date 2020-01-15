@@ -147,7 +147,7 @@ class TestJobViewSet(APITestCase):
                 "name": "TestJob",
                 "url": 'http://testserver{0}'.format(url),
                 "description": "Test Description",
-                "exports": [{'provider': 'OpenStreetMap Data (Generic)',
+                "exports": [{'provider': 'osm-generic',
                              'formats': [
                                  {"uid": "8611792d-3d99-4c8f-a213-787bc7f3066",
                                   "url": "http://testserver/api/formats/gpkg",
@@ -220,7 +220,7 @@ class TestJobViewSet(APITestCase):
             'description': 'Test description',
             'event': 'Test Activation',
             'selection':  bbox_to_geojson([5, 16, 5.1, 16.1]),
-            'provider_tasks': [{'provider': 'OpenStreetMap Data (Generic)', 'formats': formats}],
+            'provider_tasks': [{'provider': 'osm-generic', 'formats': formats}],
             'preset': self.job.preset.id,
             'published': True,
             'tags': self.tags,
@@ -249,7 +249,7 @@ class TestJobViewSet(APITestCase):
             'description': 'Test description',
             'event': 'Test Activation',
             'selection':  bbox_to_geojson([5, 16, 5.1, 16.1]),
-            'provider_tasks': [{'provider': 'OpenStreetMap Data (Generic)', 'formats': formats}],
+            'provider_tasks': [{'provider': 'osm-generic', 'formats': formats}],
             'preset': self.job.preset.id,
             'published': True,
             'tags': self.tags,
@@ -315,7 +315,7 @@ class TestJobViewSet(APITestCase):
             'description': 'Test description',
             'event': 'Test Activation',
             'selection':  bbox_to_geojson([5, 16, 5.1, 16.1]),
-            'provider_tasks': [{'provider': 'OpenStreetMap Data (Generic)', 'formats': formats}],
+            'provider_tasks': [{'provider': 'osm-generic', 'formats': formats}],
             'preset': self.job.preset.id,
             'transform': '',
             'translation': ''
@@ -355,7 +355,7 @@ class TestJobViewSet(APITestCase):
             'description': 'Test description',
             'event': 'Test Activation',
             'selection': bbox_to_geojson([5, 16, 5.1, 16.1]),
-            'provider_tasks': [{'provider': 'OpenStreetMap Data (Generic)', 'formats': formats}],
+            'provider_tasks': [{'provider': 'osm-generic', 'formats': formats}],
             'preset': self.job.preset.id,
             'transform': '',
             'translate': '',
@@ -390,7 +390,7 @@ class TestJobViewSet(APITestCase):
             'event': 'Test Activation',
             'selection':  {},
             'preset': self.job.preset.id,
-            'provider_tasks': [{'provider': 'OpenStreetMap Data (Generic)', 'formats': formats}]
+            'provider_tasks': [{'provider': 'osm-generic', 'formats': formats}]
         }
         response = self.client.post(url, request_data, format='json')
         self.assertEqual(status.HTTP_400_BAD_REQUEST, response.status_code)
@@ -423,7 +423,7 @@ class TestJobViewSet(APITestCase):
             'description': 'Test description',
             'event': 'Test event',
             'selection': bbox_to_geojson([5, 16, 5.1, 16.1]),
-            'provider_tasks': [{'provider': 'OpenStreetMap Data (Generic)', 'formats': formats}]
+            'provider_tasks': [{'provider': 'osm-generic', 'formats': formats}]
         }
         response = self.client.post(url, data=json.dumps(request_data), content_type='application/json; version=1.0')
         self.assertEqual(status.HTTP_400_BAD_REQUEST, response.status_code)
@@ -439,7 +439,7 @@ class TestJobViewSet(APITestCase):
             'description': 'Test description',
             'event': 'Test Activation',
             'selection': bbox_to_geojson([5, 16, 5.1, 16.1]),
-            'provider_tasks': [{'provider': 'OpenStreetMap Data (Generic)'}]  # 'formats': formats}]# missing
+            'provider_tasks': [{'provider': 'osm-generic'}]  # 'formats': formats}]# missing
         }
         response = self.client.post(url, data=json.dumps(request_data), content_type='application/json; version=1.0')
         self.assertEqual(response['Content-Type'], 'application/json')
@@ -453,7 +453,7 @@ class TestJobViewSet(APITestCase):
             'description': 'Test description',
             'event': 'Test Activation',
             'selection':  bbox_to_geojson([5, 16, 5.1, 16.1]),
-            'provider_tasks': [{'provider': 'OpenStreetMap Data (Generic)', 'formats': ''}]  # invalid
+            'provider_tasks': [{'provider': 'osm-generic', 'formats': ''}]  # invalid
         }
         response = self.client.post(url, request_data, format='json')
         self.assertEqual(status.HTTP_400_BAD_REQUEST, response.status_code)
@@ -469,7 +469,7 @@ class TestJobViewSet(APITestCase):
             'event': 'Test Activation',
             'selection':  bbox_to_geojson([5, 16, 5.1, 16.1]),
             'provider_tasks': [
-                {'provider': 'OpenStreetMap Data (Generic)', 'formats': ['broken-format-one', 'broken-format-two']}]
+                {'provider': 'osm-generic', 'formats': ['broken-format-one', 'broken-format-two']}]
         }
         response = self.client.post(url, request_data, format='json')
 
@@ -487,7 +487,7 @@ class TestJobViewSet(APITestCase):
             'description': 'Test description',
             'event': 'Test Activation',
             'selection':  bbox_to_geojson([-180, -90, 180, 90]),
-            'provider_tasks': [{'provider': 'OpenStreetMap Data (Generic)', 'formats': formats}]
+            'provider_tasks': [{'provider': 'osm-generic', 'formats': formats}]
         }
 
         with self.settings(JOB_MAX_EXTENT=100000):
@@ -565,7 +565,7 @@ class TestBBoxSearch(APITestCase):
                 'description': 'Test description',
                 'event': 'Test Activation',
                 'selection': bbox_to_geojson(extent),
-                'provider_tasks': [{'provider': 'OpenStreetMap Data (Generic)', 'formats': formats}]
+                'provider_tasks': [{'provider': 'osm-generic', 'formats': formats}]
             }
             response = self.client.post(url, request_data, format='json')
             expected_user_details = {'username': 'demo', 'is_superuser': True, 'is_staff': False}
