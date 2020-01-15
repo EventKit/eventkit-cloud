@@ -457,13 +457,14 @@ class TestExportTasks(ExportTaskBase):
         stage_dir = settings.EXPORT_STAGING_ROOT + str(self.run.uid)
         site_url = settings.SITE_URL
         url = "{0}/status/{1}".format(site_url.rstrip("/"), self.run.job.uid)
-        os.environ['ROCKETCHAT_NOTIFICATIONS'] = json.dumps({
+        os.environ["ROCKETCHAT_NOTIFICATIONS"] = json.dumps({
             "auth_token": "auth_token",
             "user_id": "user_id",
             "channels": ["channel"],
             "url": "http://api.example.dev"
         })
-        rocketchat_notifications = json.loads(os.getenv("ROCKETCHAT_NOTIFICATIONS"))
+        # rocketchat_notifications = settings.ROCKETCHAT_NOTIFICATIONS
+        rocketchat_notifications = json.loads(os.getenv("ROCKETCHAT_NOTIFICATIONS", "{}"))
         channel = rocketchat_notifications["channels"][0]
         message = f"@here A DataPack has failed during processing. {url}"
         export_provider_task = DataProviderTaskRecord.objects.create(run=self.run, name='Shapefile Export')

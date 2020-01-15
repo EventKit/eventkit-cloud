@@ -40,6 +40,14 @@ EXPORT_TASKS = {
     "gpkg": "eventkit_cloud.tasks.export_tasks.geopackage_export_task",
 }
 
+
+# checks for boolean option
+def is_true(option):
+    if option and option.lower() in ['y', 'yes', 't', 'true', 1]:
+        return True
+    return False
+
+
 # where exports are staged for processing
 EXPORT_STAGING_ROOT = None
 TILE_CACHE_DIR = None
@@ -121,12 +129,11 @@ if EMAIL_HOST_PASSWORD:
     EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
 else:
     EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
-
-EMAIL_USE_TLS = bool(strtobool(os.getenv("EMAIL_USE_TLS", "false").lower()))
+EMAIL_USE_TLS = is_true(os.getenv("EMAIL_USE_TLS"))
 
 """
 Overpass Element limit
-
+rocketchat_notifications = json.loads(os.getenv("ROCKETCHAT_NOTIFICATIONS"))
 Sets the max ram allowed for overpass query
 
 http://wiki.openstreetmap.org/wiki/Overpass_API/Overpass_QL#Element_limit_.28maxsize.29
@@ -285,7 +292,7 @@ BASE_DIR = os.path.dirname(os.path.dirname(__file__))
 STATIC_URL = "/static/"
 STATIC_ROOT = os.path.join(BASE_DIR, "staticfiles")
 STATICFILES_STORAGE = "django.contrib.staticfiles.storage.StaticFilesStorage"
-SERVE_ESTIMATES = bool(strtobool(os.getenv("SERVE_ESTIMATES", "true").lower()))
+SERVE_ESTIMATES = is_true(os.getenv("SERVE_ESTIMATES"))
 UI_CONFIG = {
     "VERSION": os.getenv("VERSION", ""),
     "CONTACT_URL": os.getenv("CONTACT_URL", "mailto:eventkit.team@gmail.com"),
@@ -302,10 +309,9 @@ UI_CONFIG = {
     "SERVE_ESTIMATES": SERVE_ESTIMATES,
 }
 
-if os.getenv("USE_S3"):
-    USE_S3 = True
-else:
-    USE_S3 = False
+
+USE_S3 = is_true(os.getenv("USE_S3"))
+
 
 AWS_BUCKET_NAME = AWS_ACCESS_KEY = AWS_SECRET_KEY = None
 if os.getenv("VCAP_SERVICES"):
@@ -342,12 +348,9 @@ if os.path.isfile(ssl_verification_settings):
     if not os.getenv("REQUESTS_CA_BUNDLE"):
         os.environ["REQUESTS_CA_BUNDLE"] = SSL_VERIFICATION
 else:
-    try:
-        SSL_VERIFICATION = bool(strtobool(ssl_verification_settings.lower()))
-    except ValueError:
-        SSL_VERIFICATION = True
+    SSL_VERIFICATION = is_true(os.getenv(ssl_verification_settings))
 
-LAND_DATA_URL = os.getenv("LAND_DATA_URL", "https://osmdata.openstreetmap.de/download/land-polygons-split-3857.zip",)
+LAND_DATA_URL = os.getenv("LAND_DATA_URL", "https://osmdata.openstreetmap.de/download/land-polygons-split-3857.zip", )
 
 AUTO_LOGOUT_COOKIE_NAME = "eventkit_auto_logout"
 
@@ -357,3 +360,4 @@ if AUTO_LOGOUT_SECONDS:
     MIDDLEWARE += ["eventkit_cloud.auth.auth.auto_logout"]
 
 DJANGO_NOTIFICATIONS_CONFIG = {"SOFT_DELETE": True}
+ROCKETCHAT_NOTIFICATIONS = json.loads(os.getenv("ROCKETCHAT_NOTIFICATIONS", "{}"))

@@ -1598,7 +1598,9 @@ def export_task_error_handler(self, result=None, run_uid=None, task_id=None, sta
     msg.send()
 
     # Send failed DataPack notifications to specific channel(s) or user(s) if enabled.
-    rocketchat_notifications = json.loads(os.getenv("ROCKETCHAT_NOTIFICATIONS"))
+    # rocketchat_notifications = settings.ROCKETCHAT_NOTIFICATIONS
+    rocketchat_notifications = json.loads(os.getenv("ROCKETCHAT_NOTIFICATIONS", "{}"))
+    # rocketchat_notifications = getattr(settings, "ROCKETCHAT_NOTIFICATIONS", "{}")
     if rocketchat_notifications:
         channels = rocketchat_notifications["channels"]
         url = rocketchat_notifications["url"]
