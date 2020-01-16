@@ -34,16 +34,23 @@ class PcfClient(object):
             raise Exception("Both an org and space are required to login.")
         self.info = self.get_info()
         self.token = self.get_token()
-        self.org_guid, self.org_name = self.get_org_guid(org_name=os.getenv("PCF_ORG", self.org_name))
-        self.space_guid, self.space_name = self.get_space_guid(space_name=os.getenv("PCF_SPACE", self.space_name))
+        self.org_guid, self.org_name = self.get_org_guid(
+            org_name=os.getenv("PCF_ORG", self.org_name)
+        )
+        self.space_guid, self.space_name = self.get_space_guid(
+            space_name=os.getenv("PCF_SPACE", self.space_name)
+        )
 
     def get_info(self):
         return self.session.get(
-            "{0}/v2/info".format(self.api_url.rstrip("/")), headers={"Accept": "application/json"},
+            "{0}/v2/info".format(self.api_url.rstrip("/")),
+            headers={"Accept": "application/json"},
         ).json()
 
     def get_token(self):
-        login_url = "{0}/login".format(self.info.get("authorization_endpoint").rstrip("/"))
+        login_url = "{0}/login".format(
+            self.info.get("authorization_endpoint").rstrip("/")
+        )
         logger.debug(login_url)
         response = self.session.get(login_url)
         logger.debug(response.headers)
@@ -56,7 +63,9 @@ class PcfClient(object):
             "scope": "",
             "response_type": "token",
         }
-        url = "{0}/oauth/token".format(self.info.get("authorization_endpoint").rstrip("/"))
+        url = "{0}/oauth/token".format(
+            self.info.get("authorization_endpoint").rstrip("/")
+        )
         logger.debug(url)
         response = self.session.post(
             url,
@@ -68,10 +77,14 @@ class PcfClient(object):
             },
         )
         if response.status_code in ["401", "403"]:
-            raise Exception("The user {0} and password provided were invalid.".format(user))
+            raise Exception(
+                "The user {0} and password provided were invalid.".format(user)
+            )
         token = response.json().get("access_token")
         if not token:
-            raise Exception("Successfully logged into PCF but a token was not provided.")
+            raise Exception(
+                "Successfully logged into PCF but a token was not provided."
+            )
         return token
 
     def get_org_guid(self, org_name):
@@ -101,7 +114,9 @@ class PcfClient(object):
 
     def get_space_guid(self, space_name):
         payload = {"order-by": "name", "inline-relations-depth": 1}
-        url = "{0}/v2/organizations/{1}/spaces".format(self.api_url.rstrip("/"), self.org_guid)
+        url = "{0}/v2/organizations/{1}/spaces".format(
+            self.api_url.rstrip("/"), self.org_guid
+        )
         response = self.session.get(
             url,
             data=payload,
@@ -121,7 +136,11 @@ class PcfClient(object):
             None,
         )
         if space_index is None:
-            raise Exception("Error the space {0} does not exist in {1}.".format(space_name, self.org_name))
+            raise Exception(
+                "Error the space {0} does not exist in {1}.".format(
+                    space_name, self.org_name
+                )
+            )
         return space_info["resources"][space_index]["metadata"]["guid"], space_name
 
     def get_app_guid(self, app_name):
@@ -146,18 +165,30 @@ class PcfClient(object):
             None,
         )
         if app_index is None:
-            raise Exception("Error the app {0} does not exist in {1}.".format(app_name, self.space_name))
+            raise Exception(
+                "Error the app {0} does not exist in {1}.".format(
+                    app_name, self.space_name
+                )
+            )
         return app_info["resources"][app_index]["metadata"]["guid"]
 
     def run_task(self, command, app_name=None):
         app_name = (
-            os.getenv("PCF_APP", json.loads(os.getenv("VCAP_APPLICATION", "{}")).get("application_name"),) or app_name
+            os.getenv(
+                "PCF_APP",
+                json.loads(os.getenv("VCAP_APPLICATION", "{}")).get("application_name"),
+            )
+            or app_name
         )
         if not app_name:
             raise Exception("An application name was not provided to run_task.")
         app_guid = self.get_app_guid(app_name)
         if not app_guid:
-            raise Exception("An application guid could not be recovered for app {0}.".format(app_name))
+            raise Exception(
+                "An application guid could not be recovered for app {0}.".format(
+                    app_name
+                )
+            )
         payload = {
             "command": command,
             "disk_in_mb": os.getenv("CELERY_TASK_DISK", "2048"),
@@ -176,13 +207,23 @@ class PcfClient(object):
 
     def get_running_tasks(self, app_name=None):
         app_name = (
-            os.getenv("PCF_APP", json.loads(os.getenv("VCAP_APPLICATION", "{}")).get("application_name"),) or app_name
+            os.getenv(
+                "PCF_APP",
+                json.loads(os.getenv("VCAP_APPLICATION", "{}")).get("application_name"),
+            )
+            or app_name
         )
         if not app_name:
-            raise Exception("An application name was not provided to get_running_tasks.")
+            raise Exception(
+                "An application name was not provided to get_running_tasks."
+            )
         app_guid = self.get_app_guid(app_name)
         if not app_guid:
-            raise Exception("An application guid could not be recovered for app {0}.".format(app_name))
+            raise Exception(
+                "An application guid could not be recovered for app {0}.".format(
+                    app_name
+                )
+            )
         payload = {
             "states": PcfTaskStates.RUNNING.value,
         }
@@ -190,5 +231,8 @@ class PcfClient(object):
         return self.session.get(
             url,
             params=payload,
-            headers={"Authorization": "bearer {0}".format(self.token), "Accept": "application/json"},
+            headers={
+                "Authorization": "bearer {0}".format(self.token),
+                "Accept": "application/json",
+            },
         ).json()

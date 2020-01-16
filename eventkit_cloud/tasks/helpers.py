@@ -103,7 +103,9 @@ def get_download_filename(name, time, ext, additional_descriptors=None):
     # Allow numbers or strings.
     if not isinstance(additional_descriptors, (list, tuple)):
         additional_descriptors = [str(additional_descriptors)]
-    return "{0}-{1}-{2}{3}".format(name, "-".join(additional_descriptors), default_format_time(time), ext)
+    return "{0}-{1}-{2}{3}".format(
+        name, "-".join(additional_descriptors), default_format_time(time), ext
+    )
 
 
 def get_archive_data_path(provider_slug=None, file_name=None):
@@ -182,14 +184,21 @@ def generate_qgs_style(metadata):
 
     job_name = normalize_name(metadata["name"].lower())
 
-    provider_details = [provider_detail for provider_slug, provider_detail in metadata["data_sources"].items()]
+    provider_details = [
+        provider_detail
+        for provider_slug, provider_detail in metadata["data_sources"].items()
+    ]
 
     if len(provider_details) == 1:
         style_file_name = "{0}-{1}-{2}.qgs".format(
-            job_name, normalize_name(provider_details[0]["slug"]), default_format_time(timezone.now()),
+            job_name,
+            normalize_name(provider_details[0]["slug"]),
+            default_format_time(timezone.now()),
         )
     else:
-        style_file_name = "{0}-{1}.qgs".format(job_name, default_format_time(timezone.now()))
+        style_file_name = "{0}-{1}.qgs".format(
+            job_name, default_format_time(timezone.now())
+        )
 
     style_file = os.path.join(stage_dir, style_file_name)
 
@@ -199,7 +208,9 @@ def generate_qgs_style(metadata):
                 "styles/Style.qgs",
                 context={
                     "job_name": job_name,
-                    "job_date_time": "{0}".format(timezone.now().strftime("%Y%m%d%H%M%S%f")[:-3]),
+                    "job_date_time": "{0}".format(
+                        timezone.now().strftime("%Y%m%d%H%M%S%f")[:-3]
+                    ),
                     "provider_details": provider_details,
                     "bbox": metadata["bbox"],
                     "has_raster": metadata["has_raster"],
@@ -220,7 +231,9 @@ def get_human_readable_metadata_document(metadata):
 
     stage_dir = os.path.join(settings.EXPORT_STAGING_ROOT, str(metadata["run_uid"]))
 
-    metadata_file = os.path.join(stage_dir, "{0}_ReadMe.txt".format(normalize_name(metadata["name"])))
+    metadata_file = os.path.join(
+        stage_dir, "{0}_ReadMe.txt".format(normalize_name(metadata["name"]))
+    )
 
     with open(metadata_file, "wb") as open_file:
         open_file.write(
@@ -269,7 +282,11 @@ def get_osm_last_update(url, cert_var=None):
         response = auth_requests.get(timestamp_url, cert_var=cert_var)
         if response:
             return response.content.decode()
-        raise Exception("Get OSM last update failed with {0}: {1}".format(response.status_code, response.content))
+        raise Exception(
+            "Get OSM last update failed with {0}: {1}".format(
+                response.status_code, response.content
+            )
+        )
     except Exception as e:
         logger.warning(e)
         logger.warning("Could not get the timestamp from the overpass url.")
@@ -401,8 +418,12 @@ def get_metadata(data_provider_task_uid):
                 "name": provider_task.name,
                 "files": [],
                 "type": get_data_type_from_provider(provider_task.slug),
-                "description": str(data_provider.service_description).replace("\r\n", "\n").replace("\n", "\r\n\t"),
-                "last_update": get_last_update(data_provider.url, provider_type, cert_var=cert_var),
+                "description": str(data_provider.service_description)
+                .replace("\r\n", "\n")
+                .replace("\n", "\r\n\t"),
+                "last_update": get_last_update(
+                    data_provider.url, provider_type, cert_var=cert_var
+                ),
                 "metadata": get_metadata_url(data_provider.url, provider_type),
                 "copyright": data_provider.service_copyright,
             }
@@ -412,7 +433,9 @@ def get_metadata(data_provider_task_uid):
                 metadata["has_elevation"] = True
 
             if provider_task.preview is not None:
-                include_files += [get_provider_staging_preview(run.uid, provider_task.slug)]
+                include_files += [
+                    get_provider_staging_preview(run.uid, provider_task.slug)
+                ]
 
             for export_task in provider_task.tasks.all():
                 try:
@@ -422,27 +445,38 @@ def get_metadata(data_provider_task_uid):
                 full_file_path = os.path.join(provider_staging_dir, filename)
                 current_files = metadata["data_sources"][provider_task.slug]["files"]
 
-                if full_file_path not in map(itemgetter("full_file_path"), current_files):
+                if full_file_path not in map(
+                    itemgetter("full_file_path"), current_files
+                ):
                     file_ext = os.path.splitext(filename)[1]
                     # Only include files relavant to the user that we can actually add to the carto.
-                    if export_task.display and ("project file" not in export_task.name.lower()):
+                    if export_task.display and (
+                        "project file" not in export_task.name.lower()
+                    ):
                         download_filename = get_download_filename(
                             os.path.splitext(os.path.basename(filename))[0],
                             timezone.now(),
                             file_ext,
                             additional_descriptors=provider_task.slug,
                         )
-                        filepath = get_archive_data_path(provider_task.slug, download_filename)
+                        filepath = get_archive_data_path(
+                            provider_task.slug, download_filename
+                        )
 
                         file_data = {
                             "file_path": filepath,
                             "full_file_path": full_file_path,
                             "file_ext": file_ext,
                         }
-                        if metadata["data_sources"][provider_task.slug].get("type") == "elevation":
+                        if (
+                            metadata["data_sources"][provider_task.slug].get("type")
+                            == "elevation"
+                        ):
                             # Get statistics to update ranges in template.
                             band_stats = get_band_statistics(full_file_path)
-                            logger.info("Band Stats {0}: {1}".format(full_file_path, band_stats))
+                            logger.info(
+                                "Band Stats {0}: {1}".format(full_file_path, band_stats)
+                            )
                             file_data["band_stats"] = band_stats
                             # Calculate the value for each elevation step (of 16)
                             try:
@@ -451,13 +485,22 @@ def get_metadata(data_provider_task_uid):
                             except TypeError:
                                 file_data["ramp_shader_steps"] = None
 
-                        metadata["data_sources"][provider_task.slug]["files"] += [file_data]
+                        metadata["data_sources"][provider_task.slug]["files"] += [
+                            file_data
+                        ]
 
                 if not os.path.isfile(full_file_path):
-                    logger.error("Could not find file {0} for export {1}.".format(full_file_path, export_task.name))
+                    logger.error(
+                        "Could not find file {0} for export {1}.".format(
+                            full_file_path, export_task.name
+                        )
+                    )
                     continue
                 # Exclude zip files created by zip_export_provider
-                if not (full_file_path.endswith(".zip") and export_task.name == create_zip_task.name):
+                if not (
+                    full_file_path.endswith(".zip")
+                    and export_task.name == create_zip_task.name
+                ):
                     include_files += [full_file_path]
 
         # add the license for this provider if there are other files already

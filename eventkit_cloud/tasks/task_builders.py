@@ -62,7 +62,11 @@ class TaskChainBuilder(object):
         # This is just to make it easier to trace when user_details haven't been sent
         user_details = kwargs.get("user_details")
         if user_details is None:
-            user_details = {"username": "unknown-{0}TaskChainBuilder.run_task".format(primary_export_task.name)}
+            user_details = {
+                "username": "unknown-{0}TaskChainBuilder.run_task".format(
+                    primary_export_task.name
+                )
+            }
 
         logger.debug("Running Job with id: {0}".format(provider_task_uid))
         # pull the provider_task from the database
@@ -71,7 +75,10 @@ class TaskChainBuilder(object):
 
         job_name = normalize_name(job.name)
         # get the formats to export
-        formats = [provider_task_format.slug for provider_task_format in provider_task.formats.all()]
+        formats = [
+            provider_task_format.slug
+            for provider_task_format in provider_task.formats.all()
+        ]
         export_tasks = {}
 
         # If WCS we will want geotiff...
@@ -85,7 +92,10 @@ class TaskChainBuilder(object):
         # build a list of celery tasks based on the export formats...
         for file_format in formats:
             try:
-                export_tasks[file_format] = {"obj": create_format_task(file_format), "task_uid": None}
+                export_tasks[file_format] = {
+                    "obj": create_format_task(file_format),
+                    "task_uid": None,
+                }
             except KeyError as e:
                 logger.debug("KeyError: export_tasks[{}] - {}".format(file_format, e))
             except ImportError as e:
@@ -94,8 +104,12 @@ class TaskChainBuilder(object):
 
         # Record estimates for size and time
         estimator = AoiEstimator(run.job.extents)
-        estimated_size, meta_s = estimator.get_estimate(estimator.Types.SIZE, provider_task.provider)
-        estimated_duration, meta_t = estimator.get_estimate(estimator.Types.TIME, provider_task.provider)
+        estimated_size, meta_s = estimator.get_estimate(
+            estimator.Types.SIZE, provider_task.provider
+        )
+        estimated_duration, meta_t = estimator.get_estimate(
+            estimator.Types.TIME, provider_task.provider
+        )
 
         # run the tasks
         data_provider_task_record = DataProviderTaskRecord.objects.create(
@@ -165,7 +179,9 @@ class TaskChainBuilder(object):
                         .values_list("srid", flat=True)
                     )
                     if projection not in supported_projections:
-                        logger.debug(f"Skipping task, {current_format} does not support {projection}.")
+                        logger.debug(
+                            f"Skipping task, {current_format} does not support {projection}."
+                        )
                         continue
 
                     task_name = f"{task.get('obj').name} - EPSG:{projection}"
@@ -208,8 +224,16 @@ class TaskChainBuilder(object):
 
         # Set custom zoom levels if available, otherwise use the provider defaults.
 
-        min_zoom = provider_task.min_zoom if provider_task.min_zoom else provider_task.provider.level_from
-        max_zoom = provider_task.max_zoom if provider_task.max_zoom else provider_task.provider.level_to
+        min_zoom = (
+            provider_task.min_zoom
+            if provider_task.min_zoom
+            else provider_task.provider.level_from
+        )
+        max_zoom = (
+            provider_task.max_zoom
+            if provider_task.max_zoom
+            else provider_task.provider.level_to
+        )
 
         primary_export_task_signature = primary_export_task.s(
             name=provider_task.provider.slug,
@@ -255,7 +279,9 @@ def create_format_task(task_format):
     return CeleryExportTask
 
 
-def create_export_task_record(task_name=None, export_provider_task=None, worker=None, display=False):
+def create_export_task_record(
+    task_name=None, export_provider_task=None, worker=None, display=False
+):
     try:
         export_task = ExportTaskRecord.objects.create(
             export_provider_task=export_provider_task,

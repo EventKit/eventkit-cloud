@@ -22,7 +22,9 @@ def download(request):
     try:
         downloadable = FileProducingTaskResult.objects.get(uid=download_uid)
     except FileProducingTaskResult.DoesNotExist:
-        return HttpResponse(status=400, content="Download not found for requested id value.")
+        return HttpResponse(
+            status=400, content="Download not found for requested id value."
+        )
 
     current_user = request.user
     if current_user is None:

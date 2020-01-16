@@ -14,7 +14,9 @@ class HOTExportApiRenderer(BrowsableAPIRenderer):
     """Custom APIRenderer to remove editing forms from Browsable API."""
 
     def get_context(self, data, accepted_media_type, renderer_context):
-        context = super(HOTExportApiRenderer, self).get_context(data, accepted_media_type, renderer_context)
+        context = super(HOTExportApiRenderer, self).get_context(
+            data, accepted_media_type, renderer_context
+        )
         context["display_edit_forms"] = False
         return context
 
@@ -47,7 +49,9 @@ def get_swagger_settings():
     IMPORT_STRINGS = []
 
     swagger_settings = APISettings(
-        user_settings=getattr(settings, "SWAGGER_SETTINGS", {}), defaults=DEFAULTS, import_strings=IMPORT_STRINGS,
+        user_settings=getattr(settings, "SWAGGER_SETTINGS", {}),
+        defaults=DEFAULTS,
+        import_strings=IMPORT_STRINGS,
     )
 
     def reload_settings(*args, **kwargs):  # pragma: no cover
@@ -163,7 +167,11 @@ class CustomSwaggerUIRenderer(BaseRenderer):
 
         drs_settings = self.get_ui_settings()
         renderer_context["drs_settings"] = json.dumps(drs_settings)
-        renderer_context["spec"] = CustomOpenAPIRenderer().render(data=data, renderer_context=renderer_context).decode()
+        renderer_context["spec"] = (
+            CustomOpenAPIRenderer()
+            .render(data=data, renderer_context=renderer_context)
+            .decode()
+        )
 
     def get_auth_urls(self):
         urls = {}

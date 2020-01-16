@@ -63,15 +63,17 @@ class Overpass(object):
         # extract all nodes / ways and relations within the bounding box
         # see: http://wiki.openstreetmap.org/wiki/Overpass_API/Overpass_QL
         conf: dict = yaml.safe_load(self.config) or dict()
-        self.default_template = (
-            "[maxsize:$maxsize][timeout:$timeout];relation($bbox);way($bbox);node($bbox);<;(._;>;);out body;"
+        self.default_template = "[maxsize:$maxsize][timeout:$timeout];relation($bbox);way($bbox);node($bbox);<;(._;>;);out body;"
+        self.default_template = Template(
+            conf.get("overpass_query", self.default_template)
         )
-        self.default_template = Template(conf.get("overpass_query", self.default_template))
 
         # dump out all osm data for the specified bounding box
         max_size = settings.OVERPASS_MAX_SIZE
         timeout = settings.OVERPASS_TIMEOUT
-        self.query = self.default_template.safe_substitute({"maxsize": max_size, "timeout": timeout, "bbox": self.bbox})
+        self.query = self.default_template.safe_substitute(
+            {"maxsize": max_size, "timeout": timeout, "bbox": self.bbox}
+        )
         # set up required paths
         if raw_data_filename is None:
             raw_data_filename = "query.osm"
@@ -86,7 +88,9 @@ class Overpass(object):
         """Get the overpass query used for this extract."""
         return self.query
 
-    def run_query(self, user_details=None, subtask_percentage=100, subtask_start=0, eta=None):
+    def run_query(
+        self, user_details=None, subtask_percentage=100, subtask_start=0, eta=None
+    ):
         """
         Run the overpass query.
         subtask_percentage is the percentage of the task referenced by self.task_uid this method takes up.
@@ -117,7 +121,9 @@ class Overpass(object):
             )
             conf: dict = yaml.safe_load(self.config) or dict()
             cert_var = conf.get("cert_var") or self.slug
-            req = auth_requests.post(self.url, cert_var=cert_var, data=q, stream=True, verify=self.verify_ssl)
+            req = auth_requests.post(
+                self.url, cert_var=cert_var, data=q, stream=True, verify=self.verify_ssl
+            )
 
             try:
                 total_size = int(req.headers.get("content-length"))
@@ -136,7 +142,9 @@ class Overpass(object):
                 subtask_percentage=subtask_percentage,
                 subtask_start=subtask_start,
                 eta=eta,
-                msg="Downloading data from provider: 0 of {:.2f} MB(s)".format(total_size / float(1e6)),
+                msg="Downloading data from provider: 0 of {:.2f} MB(s)".format(
+                    total_size / float(1e6)
+                ),
             )
 
             CHUNK = 1024 * 1024 * 2  # 2MB chunks
@@ -157,7 +165,9 @@ class Overpass(object):
                     last_update += CHUNK
                     if last_update > update_interval:
                         last_update = 0
-                        progress = query_percent + (float(written_size) / float(total_size) * download_percent)
+                        progress = query_percent + (
+                            float(written_size) / float(total_size) * download_percent
+                        )
                         update_progress(
                             self.task_uid,
                             progress=progress,
@@ -191,9 +201,15 @@ class Overpass(object):
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="Runs an overpass query using the provided bounding box")
+    parser = argparse.ArgumentParser(
+        description="Runs an overpass query using the provided bounding box"
+    )
     parser.add_argument(
-        "-o", "--osm-file", required=False, dest="osm", help="The OSM file to write the query results to",
+        "-o",
+        "--osm-file",
+        required=False,
+        dest="osm",
+        help="The OSM file to write the query results to",
     )
     parser.add_argument(
         "-b",
@@ -203,9 +219,15 @@ if __name__ == "__main__":
         help="A comma separated list of coordinates in the format: miny,minx,maxy,maxx",
     )
     parser.add_argument(
-        "-u", "--url", required=False, dest="url", help="The url endpoint of the overpass interpreter",
+        "-u",
+        "--url",
+        required=False,
+        dest="url",
+        help="The url endpoint of the overpass interpreter",
     )
-    parser.add_argument("-d", "--debug", action="store_true", help="Turn on debug output")
+    parser.add_argument(
+        "-d", "--debug", action="store_true", help="Turn on debug output"
+    )
     args = parser.parse_args()
     configuration = {}
     for k, v in list(vars(args).items()):

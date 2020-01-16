@@ -63,7 +63,9 @@ def file_to_geojson(in_memory_file):
 
         cmd_template = Template("ogr2ogr -f $fmt $out_ds $in_ds")
 
-        cmd = cmd_template.safe_substitute({"fmt": "geojson", "out_ds": out_path, "in_ds": in_path})
+        cmd = cmd_template.safe_substitute(
+            {"fmt": "geojson", "out_ds": out_path, "in_ds": in_path}
+        )
 
         try:
             proc = subprocess.Popen(cmd, shell=True, executable="/bin/bash")
@@ -149,7 +151,10 @@ def is_mgrs(query):
     :return: True if the string matches MGSR, False if not
     """
     query = re.sub(r"\s+", "", query)
-    pattern = re.compile(r"^(\d{1,2})([C-HJ-NP-X])\s*([A-HJ-NP-Z])([A-HJ-NP-V])\s*(\d{1,5}\s*\d{1,5})$", re.I,)
+    pattern = re.compile(
+        r"^(\d{1,2})([C-HJ-NP-X])\s*([A-HJ-NP-Z])([A-HJ-NP-V])\s*(\d{1,5}\s*\d{1,5})$",
+        re.I,
+    )
     if pattern.match(query):
         return True
     return False

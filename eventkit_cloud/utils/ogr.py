@@ -45,11 +45,19 @@ class OGR(object):
         logger.info("Running: {}".format(cmd))
         task_process = TaskProcess(task_uid=self.task_uid)
         task_process.start_process(
-            cmd, shell=True, executable="/bin/bash", stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+            cmd,
+            shell=True,
+            executable="/bin/bash",
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
         )
         if task_process.exitcode != 0:
             logger.error("%s", task_process.stderr)
-            raise Exception("ogr2ogr process failed with returncode: {0}".format(task_process.exitcode))
+            raise Exception(
+                "ogr2ogr process failed with returncode: {0}".format(
+                    task_process.exitcode
+                )
+            )
         if requires_zip(file_format):
             logger.debug("Requires zip: {0}".format(out_file))
             out_file = create_zip_file(out_file, get_zip_name(out_file))

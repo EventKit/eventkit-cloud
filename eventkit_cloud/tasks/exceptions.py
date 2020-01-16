@@ -1,7 +1,15 @@
 class CancelException(Exception):
     """Used to indicate when a user calls for cancellation."""
 
-    def __init__(self, message=None, task_name=None, user_name="system", filename=None, *args, **kwargs):
+    def __init__(
+        self,
+        message=None,
+        task_name=None,
+        user_name="system",
+        filename=None,
+        *args,
+        **kwargs
+    ):
         """
 
         :param message: A non-default message
@@ -17,7 +25,15 @@ class CancelException(Exception):
 class DeleteException(Exception):
     """Used to indicate when a user calls for cancellation."""
 
-    def __init__(self, message=None, task_name=None, user_name=None, filename=None, *args, **kwargs):
+    def __init__(
+        self,
+        message=None,
+        task_name=None,
+        user_name=None,
+        filename=None,
+        *args,
+        **kwargs
+    ):
         """
 
         :param message: A non-default message

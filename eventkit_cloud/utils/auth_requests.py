@@ -54,7 +54,9 @@ def find_cert_var(cert_var: str = None):
     """
     if cert_var:
         env_slug: str = cert_var.replace("-", "_")
-        cert: str = os.getenv(env_slug + "_CERT") or os.getenv(env_slug.upper() + "_CERT") or os.getenv(env_slug)
+        cert: str = os.getenv(env_slug + "_CERT") or os.getenv(
+            env_slug.upper() + "_CERT"
+        ) or os.getenv(env_slug)
     else:
         cert = None
 
@@ -93,7 +95,11 @@ def get_cred(cred_var=None, url=None, params=None):
     cred = None
     if cred_var:
         env_slug = cred_var.replace("-", "_")
-        cred = os.getenv(env_slug + "_CRED") or os.getenv(env_slug.upper() + "_CRED") or os.getenv(env_slug)
+        cred = (
+            os.getenv(env_slug + "_CRED")
+            or os.getenv(env_slug.upper() + "_CRED")
+            or os.getenv(env_slug)
+        )
     if cred is not None and ":" in cred and all(cred.split(":")):
         logger.debug("Found credentials for %s in env var", cred_var)
         return cred.split(":")
@@ -132,11 +138,16 @@ def handle_basic_auth(func):
         try:
             if not kwargs.get("cert_var"):
                 cred_var = kwargs.pop("cred_var", None) or kwargs.pop("slug", None)
-            cred = get_cred(cred_var=cred_var, url=url, params=kwargs.get("params", None))
+            cred = get_cred(
+                cred_var=cred_var, url=url, params=kwargs.get("params", None)
+            )
             if cred:
                 kwargs["auth"] = tuple(cred)
             logger.debug(
-                "requests.%s('%s', %s)", func.__name__, url, ", ".join(["%s=%s" % (k, v) for k, v in kwargs.items()]),
+                "requests.%s('%s', %s)",
+                func.__name__,
+                url,
+                ", ".join(["%s=%s" % (k, v) for k, v in kwargs.items()]),
             )
             response = func(url, **kwargs)
             return response
@@ -189,14 +200,18 @@ def patch_https(slug: str = None, cert_var: str = None):
     """
     cert_var = cert_var or slug
     cert = find_cert_var(cert_var)
-    logger.debug("Patching with slug %s, cert [%s B]", slug, len(cert) if cert is not None else 0)
+    logger.debug(
+        "Patching with slug %s, cert [%s B]", slug, len(cert) if cert is not None else 0
+    )
 
     @content_to_file(cert)
     def _new_init(_self, *args, **kwargs):
         certfile = kwargs.pop("cert", None)
         kwargs["key_file"] = certfile or kwargs.get("key_file", None)
         kwargs["cert_file"] = certfile or kwargs.get("cert_file", None)
-        logger.debug(f"Initializing new HTTPSConnection with provider={slug}, cert_var={cert_var} certfile={certfile}")
+        logger.debug(
+            f"Initializing new HTTPSConnection with provider={slug}, cert_var={cert_var} certfile={certfile}"
+        )
         _ORIG_HTTPSCONNECTION_INIT(_self, *args, **kwargs)
 
     http.client.HTTPSConnection.__init__ = _new_init
@@ -226,7 +241,9 @@ def patch_mapproxy_opener_cache(slug=None, cred_var=None):
             ]
 
             opener = urllib.request.build_opener(*handlers)
-            opener.addheaders = [("User-agent", "MapProxy-%s" % (mapproxy_http.version,))]
+            opener.addheaders = [
+                ("User-agent", "MapProxy-%s" % (mapproxy_http.version,))
+            ]
 
             self._opener[ssl_ca_certs or slug] = (opener, passman)
         else:

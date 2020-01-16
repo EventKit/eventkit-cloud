@@ -93,7 +93,9 @@ def get_area_bbox(bbox):
     :return: The area of the bounding box
     """
     w, s, e, n = bbox
-    return get_area_geojson({"type": "Polygon", "coordinates": [[[w, s], [e, s], [e, n], [w, n], [w, s]]]})
+    return get_area_geojson(
+        {"type": "Polygon", "coordinates": [[[w, s], [e, s], [e, n], [w, n], [w, s]]]}
+    )
 
 
 def get_bbox_intersect(one, two):

@@ -47,7 +47,9 @@ whereCondition = Group(
     | (columnName + in_ + "(" + delimitedList(columnRval) + ")")
     | ("(" + whereExpression + ")")
 )("condition")
-whereExpression << Group(whereCondition + ZeroOrMore((and_ | or_) + whereExpression))("expression")
+whereExpression << Group(whereCondition + ZeroOrMore((and_ | or_) + whereExpression))(
+    "expression"
+)
 
 
 class SQLValidator(object):
@@ -101,9 +103,21 @@ class OsmfilterRule(object):
 
     def _rule(self, t):
         if "or" in t:
-            return "( " + self._rule(t["condition"]) + " or " + self._rule(t["expression"]) + " )"
+            return (
+                "( "
+                + self._rule(t["condition"])
+                + " or "
+                + self._rule(t["expression"])
+                + " )"
+            )
         if "and" in t:
-            return "( " + self._rule(t["condition"]) + " and " + self._rule(t["expression"]) + " )"
+            return (
+                "( "
+                + self._rule(t["condition"])
+                + " and "
+                + self._rule(t["expression"])
+                + " )"
+            )
         if "binop" in t:
             return t["columnName"] + t["binop"] + strip_quotes(t["rval"][0])
         if "in" in t:

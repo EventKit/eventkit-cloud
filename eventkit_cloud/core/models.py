@@ -21,7 +21,9 @@ Notification.old_str_func = Notification.__str__
 
 
 def normalize_unicode_str(self):
-    return str(unicodedata.normalize("NFKD", self.old_str_func()).encode("ascii", "ignore"))
+    return str(
+        unicodedata.normalize("NFKD", self.old_str_func()).encode("ascii", "ignore")
+    )
 
 
 # Modify the Notification model's __str__ method to not return a unicode string, since this seems to cause problems
@@ -87,7 +89,9 @@ class UIDMixin(models.Model):
     """
 
     id = models.AutoField(primary_key=True, editable=False)
-    uid = models.UUIDField(unique=True, default=uuid.uuid4, editable=False, db_index=True)
+    uid = models.UUIDField(
+        unique=True, default=uuid.uuid4, editable=False, db_index=True
+    )
 
     class Meta:
         abstract = True
@@ -100,7 +104,9 @@ class DownloadableMixin(models.Model):
 
     filename = models.CharField(max_length=508, blank=True, editable=False)
     size = models.FloatField(null=True, editable=False)
-    download_url = models.URLField(verbose_name="URL to export task result output.", max_length=508)
+    download_url = models.URLField(
+        verbose_name="URL to export task result output.", max_length=508
+    )
 
     class Meta:
         abstract = True
@@ -119,7 +125,10 @@ class GroupPermission(TimeStampedModelMixin):
 
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     group = models.ForeignKey(Group, on_delete=models.CASCADE)
-    permission = models.CharField(choices=[("NONE", "None"), ("MEMBER", "Member"), ("ADMIN", "Admin")], max_length=10,)
+    permission = models.CharField(
+        choices=[("NONE", "None"), ("MEMBER", "Member"), ("ADMIN", "Admin")],
+        max_length=10,
+    )
 
     def __str__(self):
         return "{0}: {1}: {2}".format(self.user, self.group.name, self.permission)
@@ -148,7 +157,9 @@ class JobPermission(TimeStampedModelMixin):
     object_id = models.PositiveIntegerField()
     content_object = GenericForeignKey("content_type", "object_id")
 
-    permission = models.CharField(choices=[("NONE", "None"), ("READ", "Read"), ("ADMIN", "Admin")], max_length=10)
+    permission = models.CharField(
+        choices=[("NONE", "None"), ("READ", "Read"), ("ADMIN", "Admin")], max_length=10
+    )
 
     @staticmethod
     def jobpermissions(job):
@@ -198,7 +209,8 @@ class JobPermission(TimeStampedModelMixin):
         for gp in GroupPermission.objects.filter(user=user):
             group_ids.append(gp.group.id)
         for jp in JobPermission.objects.filter(
-            content_type=ContentType.objects.get_for_model(Group), object_id__in=group_ids,
+            content_type=ContentType.objects.get_for_model(Group),
+            object_id__in=group_ids,
         ):
             if level == JobPermissionLevel.READ.value or jp.permission == level:
                 perms.append(jp)
@@ -242,7 +254,9 @@ class JobPermission(TimeStampedModelMixin):
 
         try:
             # Check if the user has explicit permissions to the job.
-            user_permission = jps.filter(content_type=ContentType.objects.get_for_model(User)).get(object_id=user.pk)
+            user_permission = jps.filter(
+                content_type=ContentType.objects.get_for_model(User)
+            ).get(object_id=user.pk)
         except JobPermission.DoesNotExist:
             user_permission = None
 
@@ -257,7 +271,9 @@ class JobPermission(TimeStampedModelMixin):
         # Get all the ADMIN level group permissions for the user
         users_groups = [
             gp.group.pk
-            for gp in GroupPermission.objects.filter(user=user).filter(permission=GroupPermissionLevel.ADMIN.value)
+            for gp in GroupPermission.objects.filter(user=user).filter(
+                permission=GroupPermissionLevel.ADMIN.value
+            )
         ]
 
         # Check if any of the groups the user is an admin of have group-admin permission to the job.
@@ -294,11 +310,17 @@ class JobPermission(TimeStampedModelMixin):
         return ""
 
     def __str__(self):
-        return "{0} - {1}: {2}: {3}".format(self.content_type, self.object_id, self.job, self.permission)
+        return "{0} - {1}: {2}: {3}".format(
+            self.content_type, self.object_id, self.job, self.permission
+        )
 
     def __unicode__(self):
-        return "{0} - {1}: {2}: {3}".format(self.content_type, self.object_id, self.job, self.permission)
+        return "{0} - {1}: {2}: {3}".format(
+            self.content_type, self.object_id, self.job, self.permission
+        )
 
 
 def remove_permissions(model, id):
-    JobPermission.objects.filter(content_type=ContentType.objects.get_for_model(model), object_id=id).delete()
+    JobPermission.objects.filter(
+        content_type=ContentType.objects.get_for_model(model), object_id=id
+    ).delete()

@@ -22,7 +22,9 @@ def get_file_paths(directory, paths=None):
     with cd(directory):
         for dirpath, _, filenames in os.walk("./"):
             for f in filenames:
-                paths[os.path.abspath(os.path.join(dirpath, f))] = os.path.join(dirpath, f)
+                paths[os.path.abspath(os.path.join(dirpath, f))] = os.path.join(
+                    dirpath, f
+                )
     return paths
 
 
@@ -48,7 +50,9 @@ def create_zip_file(in_file, out_file):
             file_paths = get_file_paths(in_file)
             for absolute_file_path, relative_file_path in file_paths.items():
                 if os.path.isfile(absolute_file_path):
-                    zipfile.write(absolute_file_path, arcname=os.path.basename(relative_file_path))
+                    zipfile.write(
+                        absolute_file_path, arcname=os.path.basename(relative_file_path)
+                    )
         else:
             zipfile.write(in_file)
     return out_file

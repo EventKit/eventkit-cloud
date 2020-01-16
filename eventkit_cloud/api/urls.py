@@ -39,7 +39,9 @@ router.register(r"provider_tasks", DataProviderTaskViewSet, base_name="provider_
 router.register(r"tasks", ExportTaskViewSet, base_name="tasks")
 router.register(r"regions", RegionViewSet, base_name="regions")
 router.register(r"users", UserDataViewSet, base_name="users")
-router.register(r"user/activity/jobs", UserJobActivityViewSet, base_name="user_job_activity")
+router.register(
+    r"user/activity/jobs", UserJobActivityViewSet, base_name="user_job_activity"
+)
 router.register(r"groups", GroupViewSet, base_name="groups")
 router.register(r"notifications", NotificationViewSet, base_name="notifications")
 router.register(r"projections", ProjectionViewSet, base_name="projections")

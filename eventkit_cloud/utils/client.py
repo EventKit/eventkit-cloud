@@ -14,7 +14,9 @@ DEFAULT_TIMEOUT = 60 * 30  # 60 seconds * 30 (30 minutes)
 
 
 class EventKitClient(object):
-    def __init__(self, url, username=None, password=None, certificate=None, verify=True):
+    def __init__(
+        self, url, username=None, password=None, certificate=None, verify=True
+    ):
         self.base_url = url
         self.login_url = self.base_url + "/api/login/"
         self.cert_url = self.base_url + "/oauth"
@@ -32,13 +34,22 @@ class EventKitClient(object):
             self.client.get(self.cert_url, cert=certificate)
         elif username and password:
             login_data = dict(
-                username=username, password=password, submit="Log in", csrfmiddlewaretoken=self.csrftoken, next="/",
+                username=username,
+                password=password,
+                submit="Log in",
+                csrfmiddlewaretoken=self.csrftoken,
+                next="/",
             )
             self.client.post(
-                self.login_url, data=login_data, headers=dict(Referer=self.login_url), auth=(username, password),
+                self.login_url,
+                data=login_data,
+                headers=dict(Referer=self.login_url),
+                auth=(username, password),
             )
         else:
-            raise Exception("Unable to login without a certificate or username/password.")
+            raise Exception(
+                "Unable to login without a certificate or username/password."
+            )
         response = self.client.get(self.runs_url)
         if response.status_code in [401, 403]:
             raise Exception("Invalid Credentials were provided to EventKitClient")
@@ -48,7 +59,8 @@ class EventKitClient(object):
 
     def get_providers(self,):
         response = self.client.get(
-            self.providers_url, headers={"X-CSRFToken": self.csrftoken, "Referer": self.create_export_url},
+            self.providers_url,
+            headers={"X-CSRFToken": self.csrftoken, "Referer": self.create_export_url},
         )
         if response.status_code != 200:
             logger.error("There was an error getting the providers.")
@@ -65,7 +77,10 @@ class EventKitClient(object):
             response = self.client.get(
                 "{0}/filter".format(self.runs_url),
                 params=params,
-                headers={"X-CSRFToken": self.csrftoken, "Referer": self.create_export_url},
+                headers={
+                    "X-CSRFToken": self.csrftoken,
+                    "Referer": self.create_export_url,
+                },
             )
             if response.status_code in [404]:
                 break
@@ -101,8 +116,12 @@ class EventKitClient(object):
         if not all(kwargs.values()):
             for kwarg in kwargs:
                 if not kwargs[kwarg]:
-                    logger.error("Attempted to create a job without a {0}.".format(kwarg))
-                    raise Exception("Attempted to create a job without a {0}.".format(kwarg))
+                    logger.error(
+                        "Attempted to create a job without a {0}.".format(kwarg)
+                    )
+                    raise Exception(
+                        "Attempted to create a job without a {0}.".format(kwarg)
+                    )
         data = {
             "name": kwargs.get("name"),
             "description": kwargs.get("description"),
@@ -113,10 +132,14 @@ class EventKitClient(object):
             "provider_tasks": kwargs.get("provider_tasks"),
         }
         response = self.client.post(
-            self.jobs_url, json=data, headers={"X-CSRFToken": self.csrftoken, "Referer": self.create_export_url},
+            self.jobs_url,
+            json=data,
+            headers={"X-CSRFToken": self.csrftoken, "Referer": self.create_export_url},
         )
         if response.status_code != 202:
-            logger.error("There was an error creating the job: {0}".format(kwargs.get("name")))
+            logger.error(
+                "There was an error creating the job: {0}".format(kwargs.get("name"))
+            )
             logger.error(response.content.decode())
             raise Exception("Unable to get create Job.")
         return response.json()
@@ -186,12 +209,16 @@ class EventKitClient(object):
                 totals[provider]["area_average"] = statistics.mean(areas)
             times = providers[provider].pop("times", None)
             if times:
-                totals[provider]["total"] = convert_seconds_to_hms(statistics.mean(times))
+                totals[provider]["total"] = convert_seconds_to_hms(
+                    statistics.mean(times)
+                )
             for task in providers[provider]:
                 totals[provider][task] = {}
                 times = providers[provider][task].get("times")
                 if times:
-                    totals[provider][task] = convert_seconds_to_hms(statistics.mean(times))
+                    totals[provider][task] = convert_seconds_to_hms(
+                        statistics.mean(times)
+                    )
         return totals
 
     def get_area(self, run):
@@ -202,9 +229,13 @@ class EventKitClient(object):
                 from osgeo import ogr
             except ImportError:
                 logger.error("Cannot calculate statistics without knowing the area.")
-                logger.error("This script needs a newer version of the API, or run with python that has gdal")
+                logger.error(
+                    "This script needs a newer version of the API, or run with python that has gdal"
+                )
                 raise
-            geom = ogr.CreateGeometryFromJson(json.dumps(run["job"]["extent"]["geometry"]))
+            geom = ogr.CreateGeometryFromJson(
+                json.dumps(run["job"]["extent"]["geometry"])
+            )
             geom = reproject(geom, 4326, 3857)
             return geom.GetArea() / 1000000
 
@@ -215,7 +246,9 @@ class EventKitClient(object):
 
     def delete_run(self, run_uid):
         url = "{}/{}".format(self.runs_url.rstrip("/"), run_uid)
-        response = self.client.delete(url, headers={"X-CSRFToken": self.csrftoken, "Referer": url})
+        response = self.client.delete(
+            url, headers={"X-CSRFToken": self.csrftoken, "Referer": url}
+        )
         if response.status_code != 204:
             logger.info(response.status_code)
             logger.info(response.content.decode())
@@ -231,7 +264,8 @@ class EventKitClient(object):
             run_url = self.runs_url.rstrip("/"), run_uid
             logger.info(run_url)
             response = self.client.get(
-                "{}/{}".format(self.runs_url.rstrip("/"), run_uid), headers={"X-CSRFToken": self.csrftoken},
+                "{}/{}".format(self.runs_url.rstrip("/"), run_uid),
+                headers={"X-CSRFToken": self.csrftoken},
             )
             if not response.ok:
                 logger.info(response.content.decode())
@@ -290,7 +324,9 @@ def parse_duration(duration):
 
         parts = timedelta_regex.match(duration)
         if parts is not None:
-            time_params = {name: float(param) for name, param in parts.groupdict().items() if param}
+            time_params = {
+                name: float(param) for name, param in parts.groupdict().items() if param
+            }
             return timedelta(**time_params).seconds
 
 

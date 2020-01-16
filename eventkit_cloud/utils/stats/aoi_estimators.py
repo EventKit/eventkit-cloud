@@ -72,7 +72,13 @@ class AoiEstimator(object):
                 return False
 
     def __init__(
-        self, bbox, bbox_srs="4326", with_clipping=True, cap_estimates=True, min_zoom=None, max_zoom=None,
+        self,
+        bbox,
+        bbox_srs="4326",
+        with_clipping=True,
+        cap_estimates=True,
+        min_zoom=None,
+        max_zoom=None,
     ):
         # It would be good to integrate a BBOX class to pass around instead of doing this
         # It can get cumbersome and lead to errors when the bbox srs is assumed
@@ -87,7 +93,9 @@ class AoiEstimator(object):
     def get_estimate_from_slug(self, estimate_type, provider_slug):
         """Get the specified estimate type for a provider by doing a slug lookup."""
         try:
-            provider = DataProvider.objects.select_related("export_provider_type").get(slug=provider_slug)
+            provider = DataProvider.objects.select_related("export_provider_type").get(
+                slug=provider_slug
+            )
         except ObjectDoesNotExist:
             raise ValueError("Provider slug '{}' is not valid".format(provider_slug))
         return self.get_estimate(estimate_type, provider)
@@ -100,7 +108,10 @@ class AoiEstimator(object):
         :param providers: flat list of
         :return:
         """
-        return {_provider: self.get_estimate(estimate_type, _provider) for _provider in providers}
+        return {
+            _provider: self.get_estimate(estimate_type, _provider)
+            for _provider in providers
+        }
 
     def get_estimate(self, estimate_type, provider):
         if not self.Types.is_valid(estimate_type):
@@ -126,7 +137,9 @@ class AoiEstimator(object):
         elif is_vector(provider):
             return get_vector_estimate(provider, bbox=self.bbox, srs=self.bbox_srs)
         else:
-            logger.info(f"""Non-specific provider found with slug {provider.slug}, falling back to vector estimate""")
+            logger.info(
+                f"""Non-specific provider found with slug {provider.slug}, falling back to vector estimate"""
+            )
             return get_vector_estimate(provider, bbox=self.bbox, srs=self.bbox_srs)
 
     def _get_time_estimate(self, provider):
@@ -142,7 +155,9 @@ def get_size_estimate_slug(slug, bbox, srs="4326", min_zoom=None, max_zoom=None)
     :param srs
     """
     try:
-        provider = DataProvider.objects.select_related("export_provider_type").get(slug=slug)
+        provider = DataProvider.objects.select_related("export_provider_type").get(
+            slug=slug
+        )
     except ObjectDoesNotExist:
         raise ValueError("Provider slug '{}' is not valid".format(slug))
 
@@ -195,7 +210,9 @@ def is_vector(provider):
     return type_name == "osm-generic" or type_name == "osm" or type_name == "wfs"
 
 
-def get_raster_tile_grid_size_estimate(provider, bbox, srs="4326", with_clipping=True, min_zoom=None, max_zoom=None):
+def get_raster_tile_grid_size_estimate(
+    provider, bbox, srs="4326", with_clipping=True, min_zoom=None, max_zoom=None
+):
     """
     :param provider: The DataProvider to test
     :param bbox: The bounding box of the request

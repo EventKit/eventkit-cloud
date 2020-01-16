@@ -79,9 +79,13 @@ class ReverseGeocodeAdapter(metaclass=ABCMeta):
         response = requests.get(self.url, params=payload, headers=get_auth_headers())
         if response.status_code in [401, 403]:
             authenticate()
-            response = requests.get(self.url, params=payload, headers=get_auth_headers())
+            response = requests.get(
+                self.url, params=payload, headers=get_auth_headers()
+            )
             if not response.ok:
-                error_message = "EventKit was not able to authenticate to the Geocoding service."
+                error_message = (
+                    "EventKit was not able to authenticate to the Geocoding service."
+                )
                 logger.error(error_message)
                 raise AuthenticationError(error_message)
         return response
@@ -217,7 +221,9 @@ class ReverseGeocode(object):
             logger.error(
                 "Both a `REVERSE_GEOCODING_API_URL` and a `REVERSE_GEOCODING_API_TYPE` must be defined in the settings."
             )
-            raise Exception("A geocoder configuration was not provided, contact an administrator.")
+            raise Exception(
+                "A geocoder configuration was not provided, contact an administrator."
+            )
         self.geocoder = self.get_geocoder(type, url)
 
     @property

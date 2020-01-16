@@ -22,7 +22,9 @@ class Command(BaseCommand):
         default_q = app.conf.task_default_queue
         # Get the worker node name from the list of nodes
         worker_nodename = [
-            node_name for node_name in list(app.control.inspect().ping().keys()) if "worker" in node_name
+            node_name
+            for node_name in list(app.control.inspect().ping().keys())
+            if "worker" in node_name
         ][0]
 
         r = app.control.cancel_consumer(default_q, reply=True)
@@ -37,7 +39,9 @@ class Command(BaseCommand):
             n_scheduled = len(scheduled[worker_nodename])
             n_active = len(active[worker_nodename])
 
-            msg = "Waiting for {} scheduled and {} active tasks".format(n_scheduled, n_active)
+            msg = "Waiting for {} scheduled and {} active tasks".format(
+                n_scheduled, n_active
+            )
             logger.info(msg)
             if n_scheduled == 0 and n_active == 0:
                 break

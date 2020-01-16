@@ -50,11 +50,17 @@ class OSMToPBF(object):
             print("Running: %s" % convert_cmd)
         task_process = TaskProcess(task_uid=self.task_uid)
         task_process.start_process(
-            convert_cmd, shell=True, executable="/bin/bash", stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+            convert_cmd,
+            shell=True,
+            executable="/bin/bash",
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
         )
         if task_process.exitcode != 0:
             logger.error("{0}".format(task_process.stderr))
-            logger.error("osmconvert failed with return code: {0}".format(task_process.exitcode))
+            logger.error(
+                "osmconvert failed with return code: {0}".format(task_process.exitcode)
+            )
             logger.error("osmconvert most commonly fails due to lack of memory.")
             raise Exception("Osmconvert Failed.")
 
@@ -65,9 +71,15 @@ class OSMToPBF(object):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Converts OSM XML to PBF")
-    parser.add_argument("-o", "--osm-file", required=True, dest="osm", help="The OSM file to convert")
-    parser.add_argument("-p", "--pbf-file", required=True, dest="pbf", help="The PBF file to write to")
-    parser.add_argument("-d", "--debug", action="store_true", help="Turn on debug output")
+    parser.add_argument(
+        "-o", "--osm-file", required=True, dest="osm", help="The OSM file to convert"
+    )
+    parser.add_argument(
+        "-p", "--pbf-file", required=True, dest="pbf", help="The PBF file to write to"
+    )
+    parser.add_argument(
+        "-d", "--debug", action="store_true", help="Turn on debug output"
+    )
     args = parser.parse_args()
     config = {}
     for k, v in list(vars(args).items()):

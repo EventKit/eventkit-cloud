@@ -12,7 +12,11 @@ def create_staging_dir():
         try:
             os.makedirs(settings.EXPORT_STAGING_ROOT)
         except OSError:
-            logger.error("Could not create the EXPORT_STAGING_ROOT directory: {0}".format(settings.EXPORT_STAGING_ROOT))
+            logger.error(
+                "Could not create the EXPORT_STAGING_ROOT directory: {0}".format(
+                    settings.EXPORT_STAGING_ROOT
+                )
+            )
 
 
 create_staging_dir()

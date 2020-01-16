@@ -78,9 +78,13 @@ class GeocodeAdapter(metaclass=ABCMeta):
         response = requests.get(self.url, params=payload, headers=get_auth_headers())
         if response.status_code in [401, 403]:
             authenticate()
-            response = requests.get(self.url, params=payload, headers=get_auth_headers())
+            response = requests.get(
+                self.url, params=payload, headers=get_auth_headers()
+            )
             if not response.ok:
-                error_message = "EventKit was not able to authenticate to the Geocoding service."
+                error_message = (
+                    "EventKit was not able to authenticate to the Geocoding service."
+                )
                 logger.error(error_message)
                 raise AuthenticationError(error_message)
         return response
@@ -162,7 +166,9 @@ class GeoNames(GeocodeAdapter):
             raise Exception("Geocoder did not return 'geonames' in the response")
         features = []
         for result in response.get("geonames", []):
-            feature = self.get_feature(bbox=self.get_bbox(result.pop("bbox", None)), properties=result)
+            feature = self.get_feature(
+                bbox=self.get_bbox(result.pop("bbox", None)), properties=result
+            )
             features += [feature]
         return self.get_feature_collection(features=features)
 
@@ -247,8 +253,12 @@ class Geocode(object):
         type = getattr(settings, "GEOCODING_API_TYPE")
         self.update_url = getattr(settings, "GEOCODING_UPDATE_URL")
         if not (url and type):
-            logger.error("Both a `GEOCODING_API_URL` and a `GEOCODING_API_TYPE` must be defined in the settings.")
-            raise Exception("A geocoder configuration was not provided, contact an administrator.")
+            logger.error(
+                "Both a `GEOCODING_API_URL` and a `GEOCODING_API_TYPE` must be defined in the settings."
+            )
+            raise Exception(
+                "A geocoder configuration was not provided, contact an administrator."
+            )
         self.geocoder = self.get_geocoder(type, url)
 
     @property

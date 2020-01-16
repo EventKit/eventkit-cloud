@@ -51,7 +51,8 @@ if arcpy.GetInstallInfo().get("Version") not in SUPPORTED_VERSIONS:
         (
             "This script only supports versions {0}.  "
             "It might work for {1} but it will likely not support all of the datasets.".format(
-                SUPPORTED_VERSIONS, [version for version in VERSIONS if version not in SUPPORTED_VERSIONS],
+                SUPPORTED_VERSIONS,
+                [version for version in VERSIONS if version not in SUPPORTED_VERSIONS],
             )
         )
     )
@@ -78,7 +79,9 @@ def update_mxd_from_metadata(file_name, metadata, verify=False):
             file_path = os.path.abspath(os.path.join(BASE_DIR, file_info["file_path"]))
             # If possible calculate the statistics now so that they are correct when opening arcmap.
             try:
-                logger.warning(("Calculating statistics for the file {0}...".format(file_path)))
+                logger.warning(
+                    ("Calculating statistics for the file {0}...".format(file_path))
+                )
                 arcpy.CalculateStatistics_management(file_path)
             except Exception as e:
                 logger.warning(e)
@@ -102,21 +105,29 @@ def update_mxd_from_metadata(file_name, metadata, verify=False):
                 layer_file = os.path.join(template_dir, "{}.lyr".format(kml_layer))
                 try:
                     layer_from_file = arcpy.KMLToLayer_conversion(
-                        in_kml_file=file_path, output_folder=template_dir, output_data=kml_layer,
+                        in_kml_file=file_path,
+                        output_folder=template_dir,
+                        output_data=kml_layer,
                     )
                 except Exception as e:
                     # This could fail for various reasons including that the file already exists.  If KMLs are very
                     # important to your workflow please contact us
                     # and we can make this more robust.
-                    logger.warning("Could not create a new KML layer file and gdb, it may already exist.")
+                    logger.warning(
+                        "Could not create a new KML layer file and gdb, it may already exist."
+                    )
                     layer_from_file = arcpy.mapping.Layer(layer_file)
-                layer_from_file.name = layer_info["name"] + file_info["file_ext"].replace(".", "_")
+                layer_from_file.name = layer_info["name"] + file_info[
+                    "file_ext"
+                ].replace(".", "_")
                 logger.warning(("Adding layer: {0}...".format(layer_from_file.name)))
                 arcpy.mapping.AddLayer(df, layer_from_file, "TOP")
                 del layer_from_file
             else:
                 layer_from_file = arcpy.mapping.Layer(layer_file)
-                layer_from_file.name = layer_info["name"] + file_info["file_ext"].replace(".", "_")
+                layer_from_file.name = layer_info["name"] + file_info[
+                    "file_ext"
+                ].replace(".", "_")
                 logger.warning(("Adding layer: {0}...".format(layer_from_file.name)))
                 arcpy.mapping.AddLayer(df, layer_from_file, "TOP")
                 # Get instance of layer from MXD, not the template file.
@@ -147,7 +158,9 @@ def get_mxd_template(version):
         template_file_name = "template-10-5.mxd"
     elif "10.4" in version:
         template_file_name = "template-10-4.mxd"
-    template_file = os.path.abspath(os.path.join(BASE_DIR, "arcgis", "templates", template_file_name))
+    template_file = os.path.abspath(
+        os.path.join(BASE_DIR, "arcgis", "templates", template_file_name)
+    )
     if not os.path.isfile(template_file):
         logger.warning("This script requires an mxd template file which was not found.")
         raise Exception("File Not Found: {0}".format(template_file))
@@ -162,7 +175,9 @@ def get_layer_file(type, version):
     :return: The file path to the correct layer.
     """
     layer_basename = "{0}-{1}.lyr".format(type, version.replace(".", "-"))
-    layer_file = os.path.abspath(os.path.join(BASE_DIR, "arcgis", "templates", layer_basename))
+    layer_file = os.path.abspath(
+        os.path.join(BASE_DIR, "arcgis", "templates", layer_basename)
+    )
     logger.warning(("Fetching layer template: {0}".format(layer_file)))
     if os.path.isfile(layer_file):
         return layer_file
@@ -201,25 +216,43 @@ def update_layer(layer, file_path, type, verify=False):
         if lyr.supports("DATASOURCE"):
             try:
                 logger.debug("layer: {0}".format(lyr))
-                logger.debug("removing old layer workspacePath: {0}".format(lyr.workspacePath))
+                logger.debug(
+                    "removing old layer workspacePath: {0}".format(lyr.workspacePath)
+                )
             except Exception:
                 # Skip layers that don't have paths.
                 continue
             try:
                 # Try to update the extents based on the layers
-                logger.debug("Updating layers from {0} to {1}".format(lyr.workspacePath, file_path))
+                logger.debug(
+                    "Updating layers from {0} to {1}".format(
+                        lyr.workspacePath, file_path
+                    )
+                )
                 if type == "raster":
                     lyr.replaceDataSource(
-                        os.path.dirname(file_path), "RASTER_WORKSPACE", os.path.basename(file_path), verify,
+                        os.path.dirname(file_path),
+                        "RASTER_WORKSPACE",
+                        os.path.basename(file_path),
+                        verify,
                     )
                 elif type == "elevation":
                     lyr.replaceDataSource(
-                        os.path.dirname(file_path), "NONE", os.path.basename(file_path), verify,
+                        os.path.dirname(file_path),
+                        "NONE",
+                        os.path.basename(file_path),
+                        verify,
                     )
                 else:
-                    lyr.findAndReplaceWorkspacePath(lyr.workspacePath, file_path, verify)
+                    lyr.findAndReplaceWorkspacePath(
+                        lyr.workspacePath, file_path, verify
+                    )
                 if lyr.isFeatureLayer:
-                    logger.debug(arcpy.RecalculateFeatureClassExtent_management(lyr).getMessages())
+                    logger.debug(
+                        arcpy.RecalculateFeatureClassExtent_management(
+                            lyr
+                        ).getMessages()
+                    )
             except AttributeError:
                 raise
 
@@ -254,7 +287,9 @@ def create_mxd_process(mxd=None, metadata=None, verify=False):
     :return: The contents (binary) of the mxd file.
     """
     pool = Pool()
-    result = pool.apply_async(create_mxd, kwds={"mxd": mxd, "metadata": metadata, "verify": verify})
+    result = pool.apply_async(
+        create_mxd, kwds={"mxd": mxd, "metadata": metadata, "verify": verify}
+    )
     mxd = result.get()
     return mxd
 
@@ -275,7 +310,9 @@ if __name__ == "__main__":
         with open(metadata_file, "r") as open_metadata_file:
             metadata = json.load(open_metadata_file)
 
-        mxd_output = os.path.join(os.path.dirname(__file__), "{0}.mxd".format(metadata["name"]))
+        mxd_output = os.path.join(
+            os.path.dirname(__file__), "{0}.mxd".format(metadata["name"])
+        )
         create_mxd(mxd=mxd_output, metadata=metadata, verify=True)
     except Exception as e:
         logger.warning(e)

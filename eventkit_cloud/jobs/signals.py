@@ -46,7 +46,9 @@ def job_post_save(sender, instance, created, **kwargs):
 
     if created:
         jp = JobPermission.objects.create(
-            job=instance, content_object=instance.user, permission=JobPermissionLevel.ADMIN.value,
+            job=instance,
+            content_object=instance.user,
+            permission=JobPermissionLevel.ADMIN.value,
         )
         jp.save()
 
@@ -59,12 +61,18 @@ def mapimagesnapshot_delete(sender, instance, *args, **kwargs):
     if getattr(settings, "USE_S3", False):
         delete_from_s3(download_url=instance.download_url)
     url_parts = instance.download_url.split("/")
-    full_file_download_path = "/".join([settings.IMAGES_DOWNLOAD_ROOT.rstrip("/"), url_parts[-2], url_parts[-1]])
+    full_file_download_path = "/".join(
+        [settings.IMAGES_DOWNLOAD_ROOT.rstrip("/"), url_parts[-2], url_parts[-1]]
+    )
     try:
         os.remove(full_file_download_path)
         logger.info("The file {0} was deleted.".format(full_file_download_path))
     except OSError:
-        logger.warn("The file {0} was already removed or does not exist.".format(full_file_download_path))
+        logger.warn(
+            "The file {0} was already removed or does not exist.".format(
+                full_file_download_path
+            )
+        )
 
 
 @receiver(pre_save, sender=DataProvider)
@@ -83,7 +91,10 @@ def provider_pre_save(sender, instance, **kwargs):
                 is_thumbnail_fresh = False
             else:
                 # The last preview url doesn't match the current or we still don't have a thumbnail.
-                if instance.preview_url != provider.preview_url or instance.thumbnail is None:
+                if (
+                    instance.preview_url != provider.preview_url
+                    or instance.thumbnail is None
+                ):
                     is_thumbnail_fresh = False
 
             if not is_thumbnail_fresh:
@@ -91,7 +102,10 @@ def provider_pre_save(sender, instance, **kwargs):
                 make_dirs(provider_image_dir)
                 # Return a file system path to the image.
                 filepath = save_thumbnail(
-                    instance.preview_url, os.path.join(provider_image_dir, get_provider_thumbnail_name(instance.slug)),
+                    instance.preview_url,
+                    os.path.join(
+                        provider_image_dir, get_provider_thumbnail_name(instance.slug)
+                    ),
                 )
                 # Return a MapImageSnapshot representing the thumbnail
                 thumbnail_snapshot = make_thumbnail_downloadable(filepath, instance.uid)
