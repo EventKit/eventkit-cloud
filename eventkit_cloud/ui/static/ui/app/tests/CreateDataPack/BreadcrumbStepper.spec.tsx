@@ -23,7 +23,7 @@ const providers = [
         created_at: '2017-03-24T17:44:22.940611Z',
         updated_at: '2017-03-24T17:44:22.940629Z',
         uid: 'be401b02-63d3-4080-943a-0093c1b5a914',
-        name: 'OpenStreetMap Data (Themes)',
+        name: 'OpenStreetMap Data (Generic)',
         slug: 'osm-generic',
         preview_url: '',
         service_copyright: '',
@@ -328,7 +328,7 @@ describe('BreadcrumbStepper component', () => {
             event: 'test event',
             include_zipfile: false,
             provider_tasks: [{
-                provider: 'OpenStreetMap Data (Themes)',
+                provider: 'osm-generic',
                 formats: ['gpkg'],
                 min_zoom: 0, max_zoom: 10
             }],

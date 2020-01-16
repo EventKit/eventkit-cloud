@@ -250,7 +250,7 @@ class JobViewSet(viewsets.ModelViewSet):
                     "tags" : [],
                     "projections" : [4326],
                     "provider_tasks" : [{
-                            "provider" : "OpenStreetMap Data (Themes)",
+                            "provider" : "osm",
                             "formats" : ["shp", "gpkg"]
                         }
                     ]
@@ -267,7 +267,7 @@ class JobViewSet(viewsets.ModelViewSet):
                 {
                   "provider_tasks": [
                     {
-                      "provider": "OpenStreetMap Tiles",
+                      "provider": "osm",
                       "formats": [
                         "gpkg"
                       ]
