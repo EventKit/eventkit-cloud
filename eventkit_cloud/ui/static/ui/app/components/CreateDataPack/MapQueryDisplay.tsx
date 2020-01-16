@@ -10,6 +10,7 @@ interface FeatureResponse {
     lat: number;
     long: number;
     featureData: any;
+    errorMessage?: string;
 }
 
 export interface TileCoordinate {
@@ -40,16 +41,19 @@ export class MapQueryDisplay extends React.Component<Props, State> {
         this.state = {
             queryLoading: false,
             responseData: undefined,
-            closeCard: false,
+            closeCard: true,
         };
     }
 
     private CancelToken = axios.CancelToken;
     private source = this.CancelToken.source();
     private getFeatures(tileCoord: TileCoordinate, i, j) {
-        let responseData;
+        let responseData = {
+            lat: tileCoord.lat,
+            long: tileCoord.long,
+        } as FeatureResponse;
         
-        const url = getFeatureUrl(this.props.selectedBaseMap.slug, tileCoord.z, tileCoord.y, tileCoord.x, 50, 50);
+        const url = getFeatureUrl(this.props.selectedBaseMap.slug, tileCoord.z, tileCoord.y, tileCoord.x, i, j);
         const csrfmiddlewaretoken = getCookie('csrftoken');
         return axios({
             url,
@@ -57,30 +61,27 @@ export class MapQueryDisplay extends React.Component<Props, State> {
             headers: { 'X-CSRFToken': csrfmiddlewaretoken },
             cancelToken: this.source.token,
         }).then((response) => {
+            setTimeout(() => {}, 2000);
+            if (Object.entries(response.data).length === 0) {
+                responseData.errorMessage = 'No data found at coordinates.';
+                return responseData;
+            }
             const feature = response.data['features'][0];
-            responseData = {
-                lat: tileCoord.lat,
-                long: tileCoord.long,
-                featureData: {
-                    ...feature['properties'],
-                }
-            } as FeatureResponse;
+            responseData['featureData'] = { ...feature['properties']} as FeatureResponse;
             return responseData;
-        }).catch(() => {
-            this.setState({closeCard: true});
-            responseData = {
-                lat: tileCoord.lat,
-                long: tileCoord.long,
-                featureData: undefined,
-            } as FeatureResponse;
+        }).catch((error) => {
+            responseData.errorMessage = error.message;
             return responseData;
         });
     }
 
     private handleMapClick(tileCoord: TileCoordinate, i, j) {
         if (!!this.props.selectedBaseMap.slug) {
+            this.setState({
+                closeCard: false,
+                responseData: undefined,
+            });
             this.getFeatures(tileCoord, i, j).then(featureResponseData => {
-                this.setState({closeCard: false});
                 this.setState({ responseData: featureResponseData });
             });
         }
@@ -93,17 +94,12 @@ export class MapQueryDisplay extends React.Component<Props, State> {
 
     render() {
         const { responseData } = this.state;
-        if (!!responseData) {
-            return (
-                <DisplayDataBox
-                    lat={responseData.lat}
-                    long={responseData.long}
-                    featureData={responseData.featureData}
-                    closeCard={ this.state.closeCard }
-                    handleClose={ this.handleClose }
-                />
-            );
-        }
-        return (<div/>);
+        return (
+            <DisplayDataBox
+                {...(responseData) ? responseData : {}}
+                closeCard={ this.state.closeCard }
+                handleClose={ this.handleClose }
+            />
+        );
     }
 }

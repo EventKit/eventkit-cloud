@@ -1138,9 +1138,17 @@ export class ExportAOI extends React.Component<Props, State> {
                         processGeoJSONFile={this.props.processGeoJSONFile}
                         resetGeoJSONFile={this.props.resetGeoJSONFile}
                     />
-                    <div style={{zIndex: 5, position: 'absolute', margin: 'calc(50vh)'}}>
+                    <div
+                        style={{
+                            position: 'absolute', minWidth: '200px',
+                            width: 'min-content', bottom: '50px',
+                            left: '20vw', maxWidth: '80vw',
+                        }}
+                    >
                         <MapQueryDisplay
-                            ref={child => {this.displayBoxRef = child}}
+                            ref={child => {
+                                this.displayBoxRef = child
+                            }}
                             selectedBaseMap={this.props.selectedBaseMap}
                         />
                     </div>
