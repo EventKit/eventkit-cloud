@@ -63,7 +63,6 @@ class TestGeopackage(TransactionTestCase):
         cache_template.assert_called_once_with(["imagery"], [grids for grids in json_config.get('grids')], gpkgfile, table_name='imagery')
         json_config['caches'] = {'default': {'sources': ['default'], 'cache': {'type': 'geopackage', 'filename': '/var/lib/eventkit/test.gpkg'}, 'grids': ['default']}}
         json_config['services'] = ['demo']
-        json_config['globals'] = {'http': {'ssl_no_cert_checks': False}}
 
         patch_https.assert_called_once_with(cert_var=None, slug='imagery')
         load_config.assert_called_once_with(mapproxy_config, config_dict=json_config)

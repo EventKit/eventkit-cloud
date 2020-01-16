@@ -344,7 +344,7 @@ if os.path.isfile(ssl_verification_settings):
     if not os.getenv("REQUESTS_CA_BUNDLE"):
         os.environ["REQUESTS_CA_BUNDLE"] = SSL_VERIFICATION
 else:
-    SSL_VERIFICATION = is_true(os.getenv(ssl_verification_settings))
+    SSL_VERIFICATION = is_true(ssl_verification_settings)
 
 LAND_DATA_URL = os.getenv("LAND_DATA_URL", "https://osmdata.openstreetmap.de/download/land-polygons-split-3857.zip", )
 
