@@ -9,6 +9,7 @@ import socket
 from eventkit_cloud.settings.celery import *  # NOQA
 from eventkit_cloud.settings.celery import INSTALLED_APPS
 from eventkit_cloud.settings.celery import MIDDLEWARE
+
 from distutils.util import strtobool
 
 BASE_DIR = os.path.abspath(os.path.dirname(__file__))
@@ -39,13 +40,6 @@ EXPORT_TASKS = {
     "thematic": "eventkit_cloud.tasks.export_tasks.ThematicLayersExportTask",
     "gpkg": "eventkit_cloud.tasks.export_tasks.geopackage_export_task",
 }
-
-
-# checks for boolean option
-def is_true(option):
-    if option and option.lower() in ['y', 'yes', 't', 'true', 1]:
-        return True
-    return False
 
 
 # where exports are staged for processing
@@ -129,7 +123,8 @@ if EMAIL_HOST_PASSWORD:
     EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
 else:
     EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
-EMAIL_USE_TLS = is_true(os.getenv("EMAIL_USE_TLS"))
+
+EMAIL_USE_TLS = is_true(os.getenv("EMAIL_USE_TLS", "true"))
 
 """
 Overpass Element limit
@@ -292,7 +287,7 @@ BASE_DIR = os.path.dirname(os.path.dirname(__file__))
 STATIC_URL = "/static/"
 STATIC_ROOT = os.path.join(BASE_DIR, "staticfiles")
 STATICFILES_STORAGE = "django.contrib.staticfiles.storage.StaticFilesStorage"
-SERVE_ESTIMATES = is_true(os.getenv("SERVE_ESTIMATES"))
+SERVE_ESTIMATES = is_true(os.getenv("SERVE_ESTIMATES", "true"))
 UI_CONFIG = {
     "VERSION": os.getenv("VERSION", ""),
     "CONTACT_URL": os.getenv("CONTACT_URL", "mailto:eventkit.team@gmail.com"),
@@ -327,6 +322,7 @@ AWS_BUCKET_NAME = AWS_BUCKET_NAME or os.getenv("AWS_BUCKET_NAME")
 AWS_ACCESS_KEY = AWS_ACCESS_KEY or os.getenv("AWS_ACCESS_KEY")
 AWS_SECRET_KEY = AWS_SECRET_KEY or os.getenv("AWS_SECRET_KEY")
 
+
 MAPPROXY_CONCURRENCY = os.getenv("MAPPROXY_CONCURRENCY", 1)
 
 LOGGING = {
@@ -360,4 +356,5 @@ if AUTO_LOGOUT_SECONDS:
     MIDDLEWARE += ["eventkit_cloud.auth.auth.auto_logout"]
 
 DJANGO_NOTIFICATIONS_CONFIG = {"SOFT_DELETE": True}
+
 ROCKETCHAT_NOTIFICATIONS = json.loads(os.getenv("ROCKETCHAT_NOTIFICATIONS", "{}"))

@@ -38,18 +38,10 @@ REST_FRAMEWORK = {
     "DEFAULT_VERSION": "1.0",
 }
 
-
-#  check for boolean option
-def is_false(option):
-    if option and option.lower() in ['n', 'no', 'f', 'false', 0]:
-        return False
-    return True
-
-
 SWAGGER_SETTINGS = {
     "LOGIN_URL": "rest_framework:login",
     "LOGOUT_URL": "rest_framework:logout",
-    "JSON_EDITOR": is_false(os.getenv("SWAGGER_JSON_EDITOR")),
-    "SHOW_REQUEST_HEADERS": is_false(os.getenv("SWAGGER_SHOW_REQUEST_HEADERS")),
+    "JSON_EDITOR": is_true(os.getenv("SWAGGER_JSON_EDITOR")),
+    "SHOW_REQUEST_HEADERS": is_true(os.getenv("SWAGGER_SHOW_REQUEST_HEADERS")),
     "VALIDATOR_URL": os.getenv("SWAGGER_VALIDATOR_URL", None),
 }
