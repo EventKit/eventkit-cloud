@@ -2,7 +2,7 @@ import * as React from "react";
 import {BaseMapSource, MapDrawer} from "./MapDrawer";
 import axios from "axios";
 import {getCookie, getFeatureUrl} from "../../utils/generic";
-import DisplayDataBox from "./DisplayDataBox";
+import DisplayDataBox from "./QueryDataBox";
 import {SelectedBaseMap} from "./CreateExport";
 
 // The feature response data for a given coordinate specified by lat and long

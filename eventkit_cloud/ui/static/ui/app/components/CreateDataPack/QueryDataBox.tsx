@@ -64,7 +64,7 @@ export interface Props {
     classes: { [className: string]: string };
 }
 
-export class DisplayDataBox extends React.Component<Props, {}> {
+export class QueryDataBox extends React.Component<Props, {}> {
 
     constructor(props: Props) {
         super(props);
@@ -180,4 +180,4 @@ export class DisplayDataBox extends React.Component<Props, {}> {
     }
 }
 
-export default withStyles<any, any>(jss)(DisplayDataBox);
+export default withStyles<any, any>(jss)(QueryDataBox);
