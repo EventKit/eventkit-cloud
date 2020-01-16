@@ -159,6 +159,7 @@ services:
       - ./mkdocs.yml:/build/mkdocs.yml
       - ./docs:/build/docs
       - ./site:/build/site
+    user: eventkit
     command: mkdocs build
     # run the development server: docker-compose run --rm -p 8000:8000 mkdocs mkdocs serve -a 0.0.0.0:8000
   httpd:
@@ -223,6 +224,7 @@ services:
       - ./config/ui/tsconfig.json:/var/lib/eventkit/tsconfig.json
       - ./config/ui/tslint.json:/var/lib/eventkit/tslint.json
       - ./.git:/var/lib/eventkit/.git
+    user: eventkit
     ports:
       - "8080:8080"
     expose:
