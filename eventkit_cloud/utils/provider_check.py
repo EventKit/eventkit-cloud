@@ -650,7 +650,7 @@ def perform_provider_check(provider: DataProvider, geojson):
         url = settings.OVERPASS_API_URL
 
     provider_checker = get_provider_checker(provider_type)
-    conf = yaml.load(provider.config) or dict()
+    conf = yaml.safe_load(provider.config) or dict()
     checker = provider_checker(
         service_url=url,
         layer=provider.layer,
