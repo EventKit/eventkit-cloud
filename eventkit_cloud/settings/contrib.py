@@ -41,7 +41,7 @@ REST_FRAMEWORK = {
 SWAGGER_SETTINGS = {
     "LOGIN_URL": "rest_framework:login",
     "LOGOUT_URL": "rest_framework:logout",
-    "JSON_EDITOR": is_true(os.getenv("SWAGGER_JSON_EDITOR")),
-    "SHOW_REQUEST_HEADERS": is_true(os.getenv("SWAGGER_SHOW_REQUEST_HEADERS")),
+    "JSON_EDITOR": is_true(os.getenv("SWAGGER_JSON_EDITOR")),  # noqa
+    "SHOW_REQUEST_HEADERS": is_true(os.getenv("SWAGGER_SHOW_REQUEST_HEADERS")),  # noqa
     "VALIDATOR_URL": os.getenv("SWAGGER_VALIDATOR_URL", None),
 }
