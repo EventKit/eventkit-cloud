@@ -18,10 +18,14 @@ build:
 	docker-compose build --no-cache
 
 setup:
+ifeq ($(OS),Linux)
 	sudo chmod -R g+w .
 	mkdir -p exports_download && sudo chown eventkit:eventkit exports_download
 	mkdir -p exports_stage && sudo chown eventkit:eventkit exports_stage
 	docker-compose run --rm eventkit python manage.py runinitial setup
+else
+	docker-compose run --rm eventkit python manage.py runinitial setup
+endif
 
 up:
 	docker-compose up -d
