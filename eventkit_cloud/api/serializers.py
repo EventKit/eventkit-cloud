@@ -76,7 +76,7 @@ class ProviderTaskSerializer(serializers.ModelSerializer):
 
         """Creates an export DataProviderTask."""
         formats = validated_data.pop("formats")
-        provider_model = DataProvider.objects.get(name=validated_data.get("provider"))
+        provider_model = DataProvider.objects.get(slug=validated_data.get("provider"))
         provider_task = DataProviderTask.objects.create(provider=provider_model)
         provider_task.formats.add(*formats)
         provider_task.min_zoom = validated_data.pop("min_zoom", None)
