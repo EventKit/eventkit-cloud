@@ -47,10 +47,3 @@ clean:
 fresh: clean conda-install build setup up logs
 
 refresh: clean build setup up logs
-
-linux:
-ifeq ($(OS),Linux)
-	echo $(OS)
-else
-	echo $(OS)
-endif
