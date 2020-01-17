@@ -6,10 +6,9 @@ import os
 import json
 import socket
 
-from eventkit_cloud.settings.celery import *  # NOQA
+from eventkit_cloud.settings.celery import *  # noqa
 from eventkit_cloud.settings.celery import INSTALLED_APPS
 from eventkit_cloud.settings.celery import MIDDLEWARE
-from distutils.util import strtobool
 
 BASE_DIR = os.path.abspath(os.path.dirname(__file__))
 
@@ -40,6 +39,7 @@ EXPORT_TASKS = {
     "gpkg": "eventkit_cloud.tasks.export_tasks.geopackage_export_task",
 }
 
+
 # where exports are staged for processing
 EXPORT_STAGING_ROOT = None
 TILE_CACHE_DIR = None
@@ -47,13 +47,19 @@ if os.getenv("VCAP_SERVICES"):
     for service, listings in json.loads(os.getenv("VCAP_SERVICES")).items():
         if "nfs" in service:
             try:
-                EXPORT_STAGING_ROOT = os.path.join(listings[0]["volume_mounts"][0]["container_dir"], "eventkit_stage")
-                TILE_CACHE_DIR = os.path.join(listings[0]["volume_mounts"][0]["container_dir"], "tile_cache")
+                EXPORT_STAGING_ROOT = os.path.join(
+                    listings[0]["volume_mounts"][0]["container_dir"], "eventkit_stage"
+                )
+                TILE_CACHE_DIR = os.path.join(
+                    listings[0]["volume_mounts"][0]["container_dir"], "tile_cache"
+                )
             except (KeyError, TypeError) as e:
                 print(e)
                 continue
 if not EXPORT_STAGING_ROOT:
-    EXPORT_STAGING_ROOT = os.getenv("EXPORT_STAGING_ROOT", "/var/lib/eventkit/exports_stage/")
+    EXPORT_STAGING_ROOT = os.getenv(
+        "EXPORT_STAGING_ROOT", "/var/lib/eventkit/exports_stage/"
+    )
 if not TILE_CACHE_DIR:
     TILE_CACHE_DIR = os.getenv("TILE_CACHE_DIR", "/var/lib/eventkit/tile_cache/")
 
@@ -61,7 +67,9 @@ if not TILE_CACHE_DIR:
 IMAGES_STAGING = os.path.join(EXPORT_STAGING_ROOT, "images")
 
 # where exports are stored for public download
-EXPORT_DOWNLOAD_ROOT = os.getenv("EXPORT_DOWNLOAD_ROOT", "/var/lib/eventkit/exports_download/")
+EXPORT_DOWNLOAD_ROOT = os.getenv(
+    "EXPORT_DOWNLOAD_ROOT", "/var/lib/eventkit/exports_download/"
+)
 
 IMAGES_DOWNLOAD_ROOT = os.path.join(EXPORT_DOWNLOAD_ROOT, "images")
 
@@ -70,7 +78,9 @@ EXPORT_MEDIA_ROOT = os.getenv("EXPORT_MEDIA_ROOT", "/downloads/")
 
 # url to overpass api endpoint
 # OVERPASS_API_URL = 'http://cloud.eventkit.test/overpass-api/interpreter'
-OVERPASS_API_URL = os.getenv("OVERPASS_API_URL", "http://overpass-api.de/api/interpreter")
+OVERPASS_API_URL = os.getenv(
+    "OVERPASS_API_URL", "http://overpass-api.de/api/interpreter"
+)
 GEOCODING_API_URL = os.getenv("GEOCODING_API_URL", "http://api.geonames.org/searchJSON")
 REVERSE_GEOCODING_API_URL = os.getenv("REVERSE_GEOCODING_API_URL", None)
 REVERSE_GEOCODING_API_TYPE = os.getenv("REVERSE_GEOCODING_API_TYPE", "PELIAS")
@@ -87,7 +97,9 @@ REVERSE_GEOCODE_ZOOM = 0.1
 Maximum extent of a Job
 max of (latmax-latmin) * (lonmax-lonmin)
 """
-JOB_MAX_EXTENT = int(os.getenv("JOB_MAX_EXTENT", "10000"))  # default export max extent in sq km
+JOB_MAX_EXTENT = int(
+    os.getenv("JOB_MAX_EXTENT", "10000")
+)  # default export max extent in sq km
 
 # maximum number of runs to hold for each export
 EXPORT_MAX_RUNS = 1
@@ -111,7 +123,9 @@ Admin email address
 which receives task error notifications.
 """
 TASK_ERROR_EMAIL = os.getenv("TASK_ERROR_EMAIL", "eventkit.team@gmail.com")
-DEFAULT_FROM_EMAIL = os.getenv("DEFAULT_FROM_EMAIL", "Eventkit Team <eventkit.team@gmail.com>")
+DEFAULT_FROM_EMAIL = os.getenv(
+    "DEFAULT_FROM_EMAIL", "Eventkit Team <eventkit.team@gmail.com>"
+)
 EMAIL_HOST = os.getenv("EMAIL_HOST", "smtp.gmail.com")
 EMAIL_PORT = int(os.getenv("EMAIL_PORT", 587))
 EMAIL_HOST_USER = os.getenv("EMAIL_HOST_USER", "eventkit.team@gmail.com")
@@ -122,11 +136,11 @@ if EMAIL_HOST_PASSWORD:
 else:
     EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
 
-EMAIL_USE_TLS = bool(strtobool(os.getenv("EMAIL_USE_TLS", "false").lower()))
+EMAIL_USE_TLS = is_true(os.getenv("EMAIL_USE_TLS", "true"))   # noqa
 
 """
 Overpass Element limit
-
+rocketchat_notifications = json.loads(os.getenv("ROCKETCHAT_NOTIFICATIONS"))
 Sets the max ram allowed for overpass query
 
 http://wiki.openstreetmap.org/wiki/Overpass_API/Overpass_QL#Element_limit_.28maxsize.29
@@ -190,7 +204,9 @@ if os.getenv("LDAP_SERVER_URI"):
         "last_name": "sn",
         "email": "mail",
     }
-    AUTH_LDAP_USER_SEARCH = LDAPSearch(LDAP_SEARCH_DN, ldap.SCOPE_SUBTREE, AUTH_LDAP_USER)
+    AUTH_LDAP_USER_SEARCH = LDAPSearch(
+        LDAP_SEARCH_DN, ldap.SCOPE_SUBTREE, AUTH_LDAP_USER
+    )
 
 DJANGO_MODEL_LOGIN = os.getenv("DJANGO_MODEL_LOGIN")
 AUTHENTICATION_BACKENDS += ("django.contrib.auth.backends.ModelBackend",)
@@ -225,10 +241,14 @@ if os.getenv("VCAP_SERVICES"):
         for service, listings in json.loads(os.getenv("VCAP_SERVICES")).items():
             try:
                 if ("pg_95" in service) or ("postgres" in service):
-                    DATABASES["default"] = dj_database_url.config(default=listings[0]["credentials"]["uri"])
+                    DATABASES["default"] = dj_database_url.config(
+                        default=listings[0]["credentials"]["uri"]
+                    )
                     DATABASES["default"]["CONN_MAX_AGE"] = 180
             except (KeyError, TypeError) as e:
-                print(("Could not configure information for service: {0}".format(service)))
+                print(
+                    ("Could not configure information for service: {0}".format(service))
+                )
                 print(e)
                 continue
             if DATABASES:
@@ -250,7 +270,12 @@ else:
 TEMPLATES = [
     {
         "BACKEND": "django.template.backends.django.DjangoTemplates",
-        "DIRS": ["api/templates/", "ui/templates", "tasks/templates", "ui/static/ui/js"],
+        "DIRS": [
+            "api/templates/",
+            "ui/templates",
+            "tasks/templates",
+            "ui/static/ui/js",
+        ],
         "APP_DIRS": True,
         "OPTIONS": {
             "context_processors": [
@@ -272,7 +297,12 @@ if os.getenv("MEMCACHED"):
         }
     }
 else:
-    CACHES = {"default": {"BACKEND": "django.core.cache.backends.db.DatabaseCache", "LOCATION": "eventkit_cache"}}
+    CACHES = {
+        "default": {
+            "BACKEND": "django.core.cache.backends.db.DatabaseCache",
+            "LOCATION": "eventkit_cache",
+        }
+    }
 
 # session settings
 SESSION_COOKIE_NAME = "eventkit_exports_sessionid"
@@ -285,7 +315,7 @@ BASE_DIR = os.path.dirname(os.path.dirname(__file__))
 STATIC_URL = "/static/"
 STATIC_ROOT = os.path.join(BASE_DIR, "staticfiles")
 STATICFILES_STORAGE = "django.contrib.staticfiles.storage.StaticFilesStorage"
-SERVE_ESTIMATES = bool(strtobool(os.getenv("SERVE_ESTIMATES", "true").lower()))
+SERVE_ESTIMATES = is_true(os.getenv("SERVE_ESTIMATES", "true"))   # noqa
 UI_CONFIG = {
     "VERSION": os.getenv("VERSION", ""),
     "CONTACT_URL": os.getenv("CONTACT_URL", "mailto:eventkit.team@gmail.com"),
@@ -293,7 +323,9 @@ UI_CONFIG = {
     "BANNER_BACKGROUND_COLOR": os.getenv("BANNER_BACKGROUND_COLOR", ""),
     "BANNER_TEXT_COLOR": os.getenv("BANNER_TEXT_COLOR", ""),
     "BANNER_TEXT": os.getenv("BANNER_TEXT", ""),
-    "BASEMAP_URL": os.getenv("BASEMAP_URL", "http://tile.openstreetmap.org/{z}/{x}/{y}.png"),
+    "BASEMAP_URL": os.getenv(
+        "BASEMAP_URL", "http://tile.openstreetmap.org/{z}/{x}/{y}.png"
+    ),
     "BASEMAP_COPYRIGHT": os.getenv("BASEMAP_COPYRIGHT", "© OpenStreetMap"),
     "MAX_DATAPACK_EXPIRATION_DAYS": os.getenv("MAX_DATAPACK_EXPIRATION_DAYS", "30"),
     "USER_GROUPS_PAGE_SIZE": os.getenv("USER_GROUPS_PAGE_SIZE", "20"),
@@ -302,10 +334,9 @@ UI_CONFIG = {
     "SERVE_ESTIMATES": SERVE_ESTIMATES,
 }
 
-if os.getenv("USE_S3"):
-    USE_S3 = True
-else:
-    USE_S3 = False
+
+USE_S3 = is_true(os.getenv("USE_S3"))   # noqa
+
 
 AWS_BUCKET_NAME = AWS_ACCESS_KEY = AWS_SECRET_KEY = None
 if os.getenv("VCAP_SERVICES"):
@@ -321,6 +352,7 @@ AWS_BUCKET_NAME = AWS_BUCKET_NAME or os.getenv("AWS_BUCKET_NAME")
 AWS_ACCESS_KEY = AWS_ACCESS_KEY or os.getenv("AWS_ACCESS_KEY")
 AWS_SECRET_KEY = AWS_SECRET_KEY or os.getenv("AWS_SECRET_KEY")
 
+
 MAPPROXY_CONCURRENCY = os.getenv("MAPPROXY_CONCURRENCY", 1)
 
 LOGGING = {
@@ -328,9 +360,21 @@ LOGGING = {
     "disable_existing_loggers": False,
     "handlers": {"console": {"class": "logging.StreamHandler"}},
     "loggers": {
-        "django": {"handlers": ["console"], "propagate": True, "level": os.getenv("DJANGO_LOG_LEVEL", "WARN")},
-        "eventkit_cloud": {"handlers": ["console"], "propagate": True, "level": os.getenv("LOG_LEVEL", "INFO")},
-        "audit_logging": {"handlers": ["console"], "propagate": True, "level": os.getenv("LOG_LEVEL", "INFO")},
+        "django": {
+            "handlers": ["console"],
+            "propagate": True,
+            "level": os.getenv("DJANGO_LOG_LEVEL", "WARN"),
+        },
+        "eventkit_cloud": {
+            "handlers": ["console"],
+            "propagate": True,
+            "level": os.getenv("LOG_LEVEL", "INFO"),
+        },
+        "audit_logging": {
+            "handlers": ["console"],
+            "propagate": True,
+            "level": os.getenv("LOG_LEVEL", "INFO"),
+        },
     },
 }
 
@@ -342,18 +386,22 @@ if os.path.isfile(ssl_verification_settings):
     if not os.getenv("REQUESTS_CA_BUNDLE"):
         os.environ["REQUESTS_CA_BUNDLE"] = SSL_VERIFICATION
 else:
-    try:
-        SSL_VERIFICATION = bool(strtobool(ssl_verification_settings.lower()))
-    except ValueError:
-        SSL_VERIFICATION = True
+    SSL_VERIFICATION = is_true(ssl_verification_settings)   # noqa
 
-LAND_DATA_URL = os.getenv("LAND_DATA_URL", "https://osmdata.openstreetmap.de/download/land-polygons-split-3857.zip",)
+LAND_DATA_URL = os.getenv(
+    "LAND_DATA_URL",
+    "https://osmdata.openstreetmap.de/download/land-polygons-split-3857.zip",
+)
 
 AUTO_LOGOUT_COOKIE_NAME = "eventkit_auto_logout"
 
 AUTO_LOGOUT_SECONDS = int(os.getenv("AUTO_LOGOUT_SECONDS", 0))
-AUTO_LOGOUT_WARNING_AT_SECONDS_LEFT = int(os.getenv("AUTO_LOGOUT_WARNING_AT_SECONDS_LEFT", 5 * 60))
+AUTO_LOGOUT_WARNING_AT_SECONDS_LEFT = int(
+    os.getenv("AUTO_LOGOUT_WARNING_AT_SECONDS_LEFT", 5 * 60)
+)
 if AUTO_LOGOUT_SECONDS:
     MIDDLEWARE += ["eventkit_cloud.auth.auth.auto_logout"]
 
 DJANGO_NOTIFICATIONS_CONFIG = {"SOFT_DELETE": True}
+
+ROCKETCHAT_NOTIFICATIONS = json.loads(os.getenv("ROCKETCHAT_NOTIFICATIONS", "{}"))

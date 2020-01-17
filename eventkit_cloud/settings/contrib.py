@@ -38,11 +38,10 @@ REST_FRAMEWORK = {
     "DEFAULT_VERSION": "1.0",
 }
 
-
 SWAGGER_SETTINGS = {
     "LOGIN_URL": "rest_framework:login",
     "LOGOUT_URL": "rest_framework:logout",
-    "JSON_EDITOR": False if os.getenv("SWAGGER_JSON_EDITOR", "False").lower() == "false" else True,
-    "SHOW_REQUEST_HEADERS": False if os.getenv("SWAGGER_SHOW_REQUEST_HEADERS", "False").lower() == "false" else True,
+    "JSON_EDITOR": is_true(os.getenv("SWAGGER_JSON_EDITOR")),  # noqa
+    "SHOW_REQUEST_HEADERS": is_true(os.getenv("SWAGGER_SHOW_REQUEST_HEADERS")),  # noqa
     "VALIDATOR_URL": os.getenv("SWAGGER_VALIDATOR_URL", None),
 }
