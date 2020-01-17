@@ -18,12 +18,12 @@ build:
 	docker-compose build --no-cache
 
 setup:
-ifeq ($(OS),Linux)
+ifeq ($(OS),Windows_NT)
+	docker-compose run --rm eventkit python manage.py runinitial setup
+else
 	sudo chmod -R g+w .
 	mkdir -p exports_download && sudo chown eventkit:eventkit exports_download
 	mkdir -p exports_stage && sudo chown eventkit:eventkit exports_stage
-	docker-compose run --rm eventkit python manage.py runinitial setup
-else
 	docker-compose run --rm eventkit python manage.py runinitial setup
 endif
 
@@ -47,3 +47,10 @@ clean:
 fresh: clean conda-install build setup up logs
 
 refresh: clean build setup up logs
+
+linux:
+ifeq ($(OS),Linux)
+	echo $(OS)
+else
+	echo $(OS)
+endif
