@@ -126,7 +126,6 @@ EMAIL_USE_TLS = is_true(os.getenv("EMAIL_USE_TLS", "true"))
 
 """
 Overpass Element limit
-rocketchat_notifications = json.loads(os.getenv("ROCKETCHAT_NOTIFICATIONS"))
 Sets the max ram allowed for overpass query
 
 http://wiki.openstreetmap.org/wiki/Overpass_API/Overpass_QL#Element_limit_.28maxsize.29
