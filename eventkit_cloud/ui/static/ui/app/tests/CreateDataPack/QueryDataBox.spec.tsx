@@ -41,9 +41,15 @@ describe('QueryDataBox component', () => {
 
         it('should fire the handleClose function when the close icon is clicked', () => {
             props.handleClose = sinon.spy();
+            setup();
             expect(props.handleClose.notCalled).toBe(true);
             wrapper.find(IconButton).at(0).simulate('click');
-            expect(props.handleClose.called).toBe(true);
+            expect(props.handleClose.calledOnce).toBe(true);
         });
+
+    it('should render single empty div when closeCard is true', () => {
+        setup({closeCard: true});
+        expect(wrapper.find('div')).toHaveLength(1);
+    });
     }
 );
