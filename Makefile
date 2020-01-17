@@ -6,15 +6,19 @@ flake8:
 
 lint: black flake8
 
+test:
+	docker-compose run --rm -e COVERAGE=True eventkit python manage.py test -v 3 eventkit_cloud
+	docker-compose run --rm webpack npm test
+
 conda-install:
-	cd conda
-	docker-compose build --no-cache
-	docker-compose run --rm conda
+	cd conda && docker-compose build --no-cache
+	cd conda && docker-compose run --rm conda
 
 build:
 	docker-compose build --no-cache
 
 setup:
+	sudo chmod -R g+w .
 	mkdir -p exports_download && sudo chown eventkit:eventkit exports_download
 	mkdir -p exports_stage && sudo chown eventkit:eventkit exports_stage
 	docker-compose run --rm eventkit python manage.py runinitial setup
@@ -35,3 +39,7 @@ clean:
 	docker-compose kill
 	docker container prune -f
 	docker volume prune -f
+
+fresh: clean conda-install build setup up logs
+
+refresh: clean build setup up logs
