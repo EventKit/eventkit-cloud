@@ -136,7 +136,7 @@ if EMAIL_HOST_PASSWORD:
 else:
     EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
 
-EMAIL_USE_TLS = is_true(os.getenv("EMAIL_USE_TLS", "true"))   # noqa
+EMAIL_USE_TLS = is_true(os.getenv("EMAIL_USE_TLS", "true"))
 
 """
 Overpass Element limit
@@ -315,7 +315,7 @@ BASE_DIR = os.path.dirname(os.path.dirname(__file__))
 STATIC_URL = "/static/"
 STATIC_ROOT = os.path.join(BASE_DIR, "staticfiles")
 STATICFILES_STORAGE = "django.contrib.staticfiles.storage.StaticFilesStorage"
-SERVE_ESTIMATES = is_true(os.getenv("SERVE_ESTIMATES", "true"))   # noqa
+SERVE_ESTIMATES = is_true(os.getenv("SERVE_ESTIMATES", "true"))
 UI_CONFIG = {
     "VERSION": os.getenv("VERSION", ""),
     "CONTACT_URL": os.getenv("CONTACT_URL", "mailto:eventkit.team@gmail.com"),
@@ -335,7 +335,7 @@ UI_CONFIG = {
 }
 
 
-USE_S3 = is_true(os.getenv("USE_S3"))   # noqa
+USE_S3 = is_true(os.getenv("USE_S3"))
 
 
 AWS_BUCKET_NAME = AWS_ACCESS_KEY = AWS_SECRET_KEY = None
@@ -386,7 +386,7 @@ if os.path.isfile(ssl_verification_settings):
     if not os.getenv("REQUESTS_CA_BUNDLE"):
         os.environ["REQUESTS_CA_BUNDLE"] = SSL_VERIFICATION
 else:
-    SSL_VERIFICATION = is_true(ssl_verification_settings)   # noqa
+    SSL_VERIFICATION = is_true(ssl_verification_settings)
 
 LAND_DATA_URL = os.getenv(
     "LAND_DATA_URL",
