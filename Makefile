@@ -1,3 +1,9 @@
+ifeq ($(OS),Windows_NT)     # is Windows_NT on XP, 2000, 7, Vista, 10...
+    detected_OS := Windows
+else
+    detected_OS := $(shell uname 2>/dev/null || echo Unknown)
+endif
+
 black:
 	docker-compose run --rm eventkit black --config /var/lib/eventkit/config/pyproject.toml --check eventkit_cloud
 
@@ -15,15 +21,22 @@ conda-install:
 	cd conda && docker-compose run --rm conda
 
 build:
+ifeq ($(detected_OS),Linux)
+	echo $(detected_OS)
+	sudo chmod -R g+rw .
 	docker-compose build --no-cache
+else
+	docker-compose build --no-cache
+endif
 
 setup:
-ifeq ($(OS),Windows_NT)
-	docker-compose run --rm eventkit python manage.py runinitial setup
-else
-	sudo chmod -R g+w .
+ifeq ($(detected_OS),Linux)
+	sudo chmod -R g+rw .
 	mkdir -p exports_download && sudo chown eventkit:eventkit exports_download
 	mkdir -p exports_stage && sudo chown eventkit:eventkit exports_stage
+	mkdir -p coverage && sudo chown eventkit:eventkit coverage
+	docker-compose run --rm eventkit python manage.py runinitial setup
+else
 	docker-compose run --rm eventkit python manage.py runinitial setup
 endif
 
@@ -33,11 +46,16 @@ up:
 down:
 	docker-compose down --remove-orphans
 
+restart:
+	docker-compose restart
+
 logs:
 	docker-compose logs -f celery celery-beat eventkit webpack
 
 logs-verbose:
 	docker-compose logs -f
+
+# All of the commands below this line are destructive and will completely remove your current development environment.
 
 clean:
 	docker-compose kill
