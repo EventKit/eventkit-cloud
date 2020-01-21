@@ -6,6 +6,8 @@ import requests
 from django.conf import settings
 from django.core.cache import cache
 
+from eventkit_cloud.utils import auth_requests
+
 logger = logging.getLogger(__name__)
 
 CACHE_TOKEN_TIMEOUT = 60 * 5  # 5 Minutes
@@ -31,9 +33,11 @@ def authenticate():
             # clean line endings, the service wants the public cert without line returns.
             public_cert = public_cert.replace("\n", "\\n").replace("\\n", "")
             verify = getattr(settings, "SSL_VERIFICATION", True)
+
             url = getattr(settings, "GEOCODING_AUTH_URL")
 
             s = requests.session()
+
             response = s.post(
                 url,
                 data=temp_file.name,
