@@ -111,16 +111,16 @@ class TaskFactory:
 
             queue_group = os.getenv("CELERY_GROUP_NAME", worker)
             wait_for_providers_settings = {
-                "queue": "{}.priority".format(queue_group),
-                "routing_key": "{}.priority".format(queue_group),
+                "queue": f"{queue_group}.priority",
+                "routing_key": f"{queue_group}.priority",
                 "priority": TaskPriority.FINALIZE_PROVIDER.value,
             }
 
             finalize_task_settings = {
                 "interval": 4,
                 "max_retries": 10,
-                "queue": "{}.priority".format(queue_group),
-                "routing_key": "{}.priority".format(queue_group),
+                "queue": f"{queue_group}.priority",
+                "routing_key": f"{queue_group}.priority",
                 "priority": TaskPriority.FINALIZE_RUN.value,
             }
 
@@ -286,8 +286,13 @@ def create_task(
 ):
     """
     Create a new task to export the bounds for an DataProviderTaskRecord
-    :param data_provider_task_uid: An export provider task UUID.
-    :param worker: The name of the celery worker assigned the task.
+    :param data_provider_task_uid: A uid for the dataprovidertaskrecord.
+    :param stage_dir: The directory to store temporary files.
+    :param worker: The hostname of the machine processing the task.
+    :param selection: A geojson dict for the area being processed.
+    :param task: The celery task to link to this task record.
+    :param job_name: The name of the job, provided by the user.
+    :param user_details: Some meta data relating to the user request.
     :return: A celery task signature.
     """
     # This is just to make it easier to trace when user_details haven't been sent

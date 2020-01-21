@@ -4,6 +4,7 @@ import json
 import os
 import socket
 from collections import OrderedDict
+from typing import Union
 
 from celery.utils.log import get_task_logger
 from django.conf import settings
@@ -78,55 +79,93 @@ def pcf_scale_celery_task(max_tasks_memory: int = 4096, locking_task_key: str = 
     client = PcfClient()
     client.login()
 
-    running_tasks_memory = get_running_tasks_memory(client, app_name)
-
-    logger.info(f"Running Tasks Memory used: {running_tasks_memory} MB")
     # TODO: Too complex, clean up.
     # Check to see if there is work that we care about and if so, scale a queue specific worker to do it.
-    tasks_to_run = {}
     celery_tasks = get_celery_tasks()
+
+    celery_pcf_task_details = get_celery_pcf_task_details(client, app_name, celery_tasks)
+    logger.info(f"Running Tasks Memory used: {celery_pcf_task_details['memory']} MB")
+
+    celery_tasks = order_celery_tasks(celery_tasks, celery_pcf_task_details['task_counts'])
+
     # we don't want to exceed our memory but we also don't want to prevent tasks that _can_ run from running.
     smallest_memory_required = int(min([v['memory'] for k, v in celery_tasks.items()])) or 0
     logger.info(f"smallest_memory_required: {smallest_memory_required}")
-    logger.info(f"celery_tasks: {celery_tasks}")
     logger.info(f"max_tasks_memory: {max_tasks_memory}")
-    while running_tasks_memory + smallest_memory_required <= max_tasks_memory:
-        for queue in get_all_rabbitmq_objects(broker_api_url, queue_class):
+    running_tasks_memory = celery_pcf_task_details['memory']
+    while celery_pcf_task_details['memory'] + smallest_memory_required <= max_tasks_memory:
+        queues = get_all_rabbitmq_objects(broker_api_url, queue_class)
+        queues = list_to_dict(queues, 'name')
+        if not any([queue.get("messages", 0) for queue_name, queue in queues.items()]):
+            break
+        for celery_task_name, celery_task in celery_tasks.items():
+            logger.info(celery_task)
+            queue = queues.get(celery_task_name)
+            if not queue:
+                continue
             queue_name = queue.get("name")
             pending_messages = queue.get("messages", 0)
-            logger.info(f"queue_name: {queue_name}")
-            if queue_name in celery_tasks.keys():
-                # if pending_messages:
+            if pending_messages:
                 logger.info(f"Queue {queue_name} has {pending_messages} pending messages.")
-                running_tasks_by_queue = client.get_running_tasks(app_name, queue_name)
-                running_tasks_by_queue_count = running_tasks_by_queue["pagination"].get("total_results", 0)
-                if pending_messages > running_tasks_by_queue_count:
-                    # Allow queues to have a limit, so that we don't spin up 30 priority queues.
-                    limit = celery_tasks[queue_name].get("limit")
-                    if limit:
-                        if running_tasks_by_queue_count >= limit:
-                            continue
-                    if running_tasks_memory + celery_tasks[queue_name]['memory'] <= max_tasks_memory:
-                        run_task_command(client, app_name, queue_name, celery_tasks[queue_name])
-                    # else:
-                    #     logger.info(
-                    #         f"Already at max memory usage, skipping scale with {pending_messages} total pending messages "
-                    #         f"left in {queue_name} queue."
-                    #     )
-                elif running_tasks_by_queue_count and not pending_messages:
+            # Get updated information...
+            running_tasks_by_queue = client.get_running_tasks(app_name, queue_name)
+            running_tasks_by_queue_count = running_tasks_by_queue["pagination"].get("total_results", 0)
+            if pending_messages > running_tasks_by_queue_count:
+                # Allow queues to have a limit, so that we don't spin up 30 priority queues.
+                limit = celery_task.get("limit")
+                if limit:
+                    if running_tasks_by_queue_count >= limit:
+                        continue
+                if running_tasks_memory + celery_tasks[queue_name]['memory'] <= max_tasks_memory:
+                    run_task_command(client, app_name, queue_name, celery_tasks[queue_name])
+            elif running_tasks_by_queue_count and not pending_messages:
+                logger.info(
+                    f"The {queue_name} has no messages, but has running_tasks_by_queue_count. Sending shutdown..."
+                )
+                pcf_shutdown_celery_workers.s(queue_name).apply_async(
+                    queue=queue_name, routing_key=queue_name
+                )
+            else:
+                if running_tasks_by_queue_count:
                     logger.info(
-                        f"The {queue_name} has no messages, but has running_tasks_by_queue_count. Sending shutdown..."
+                        f"Already {running_tasks_by_queue_count} workers, processing {pending_messages} total pending "
+                        f"messages left in {queue_name} queue."
                     )
-                    # pcf_shutdown_celery_workers.s(queue_name).apply_async(
-                    #     queue=queue_name, routing_key=queue_name
-                    # )
-                else:
-                    if running_tasks_by_queue_count:
-                        logger.info(
-                            f"Already {running_tasks_by_queue_count} workers, processing {pending_messages} total pending "
-                            f"messages left in {queue_name} queue."
-                        )
             running_tasks_memory = get_running_tasks_memory(client, app_name)
+
+
+def get_celery_pcf_task_details(client: PcfClient, app_name: str, celery_tasks: Union[dict, list]):
+    """
+    Gets information about currently running tasks.
+    :param client: PcfClient
+    :param app_name: The name of the celery app running the tasks.
+    :param celery_tasks: A dictionary with information about the celery tasks.
+    :return: A dict of information with task counts and resource usage.
+        example: {"task_counts": {celery': 1, "group_a": 0 ...}, "memory": 2048, "disk": 2048}
+    """
+    running_tasks = client.get_running_tasks(app_name)
+    total_memory = 0
+    total_disk = 0
+    task_counts = dict.fromkeys(celery_tasks, 0)
+    for running_task in running_tasks["resources"]:
+        total_memory += running_task['memory_in_mb']
+        total_disk += running_task['disk_in_mb']
+        running_task_name = running_task['name']
+        if running_task_name in task_counts:
+            task_counts[running_task_name] += 1
+    return {"task_counts": task_counts, "memory": total_memory, "disk": total_disk}
+
+
+def order_celery_tasks(celery_tasks, task_counts):
+    """Ensure at least one task is running."""
+    ordered_tasks = OrderedDict()
+    # Add celery tasks information that have no running tasks...
+    for celery_task_name in celery_tasks.keys():
+        if task_counts[celery_task_name] == 0:
+            ordered_tasks[celery_task_name] = celery_tasks[celery_task_name]
+    # Then add the rest.
+    ordered_tasks.update(celery_tasks)
+    return ordered_tasks
 
 
 def get_running_tasks_memory(client: PcfClient, app_name: str) -> int:
@@ -140,10 +179,6 @@ def get_running_tasks_memory(client: PcfClient, app_name: str) -> int:
 
 def run_task_command(client: PcfClient, app_name: str, queue_name: str, task: dict):
     """
-    This runs a list of tasks by taking a list of all items that need to be run, and ordering them to attempt to prevent task starvation.
-    1. Do I already have something running?
-    2. Give priority to worker nodes, and then celery nodes, since we listen to priority on those nodes already.
-
     :param client: A Pcf Client object.
     :param app_name: The name of the pcf application to send the task to.
     :param queue_name: Name of queue to scale.
@@ -162,6 +197,19 @@ def run_task_command(client: PcfClient, app_name: str, queue_name: str, task: di
         name=queue_name, command=command, disk_in_mb=disk, memory_in_mb=memory, app_name=app_name
     )
 
+
+def list_to_dict(list_to_convert, key_name):
+    """
+    USed to convert a list of dictionaries to a dictionary using some common properties (i.e. name)
+    Careful as data will be lost for duplicate entries, this assumes the list is a "set".
+    :param list_to_convert: A list of dictionaries
+    :param key_name: A value from each dict to use as the key.
+    :return: A dictionary.
+    """
+    converted_dict = dict()
+    for item in list_to_convert:
+        converted_dict[item[key_name]] = item
+    return converted_dict
 
 @app.task(name="Check Provider Availability", base=EventKitBaseTask,
           expires=timezone.now() + timezone.timedelta(minutes=int(os.getenv("PROVIDER_CHECK_INTERVAL", "30"))))
@@ -262,10 +310,10 @@ def get_celery_tasks():
             "command": "celery worker -A eventkit_cloud --loglevel=$LOG_LEVEL -n celery@%h -Q celery " + priority_queue_command,
             "disk": 2048,
             "memory": 2048,
-            "limit": 2,
+            "limit": 6,
         },
         f"{celery_group_name}.priority": {
-            "command": "celery worker -A eventkit_cloud --loglevel=$LOG_LEVEL -n priority@%h -Q $CELERY_GROUP_NAME.priority " + priority_queue_command,  # NOQA
+            "command": "celery worker -A eventkit_cloud --loglevel=$LOG_LEVEL -n priority@%h -Q $CELERY_GROUP_NAME.priority",  # NOQA
             # NOQA
             "disk": 2048,
             "memory": 2048,

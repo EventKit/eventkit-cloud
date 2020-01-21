@@ -11,7 +11,6 @@ import traceback
 
 from zipfile import ZipFile, ZIP_DEFLATED
 
-from audit_logging.celery_support import UserDetailsBase
 from billiard.einfo import ExceptionInfo
 from celery import signature
 from celery.result import AsyncResult
@@ -19,7 +18,6 @@ from celery.utils.log import get_task_logger
 from django.conf import settings
 from django.contrib.gis.geos import Polygon
 from django.contrib.auth.models import User
-from django.core.cache import caches
 
 from django.core.exceptions import ObjectDoesNotExist
 from django.core.mail import EmailMultiAlternatives

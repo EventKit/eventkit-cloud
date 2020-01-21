@@ -6,12 +6,13 @@ from django.contrib.gis.geos import GEOSGeometry, Polygon
 from django.template.loader import get_template
 from django.test import TestCase
 from django.utils import timezone
+from collections import OrderedDict
 
 from eventkit_cloud.jobs.models import DataProvider, DataProviderStatus
 from eventkit_cloud.jobs.models import Job
 from eventkit_cloud.tasks.models import ExportRun
 from eventkit_cloud.tasks.scheduled_tasks import expire_runs_task, send_warning_email, check_provider_availability_task, \
-    clean_up_queues, pcf_scale_celery_task
+    clean_up_queues_task, pcf_scale_celery_task, list_to_dict, get_celery_pcf_task_details, order_celery_tasks
 from eventkit_cloud.utils.provider_check import CheckResults
 
 import json
@@ -63,14 +64,98 @@ class TestExpireRunsTask(TestCase):
 
 class TestPcfScaleCeleryTask(TestCase):
 
+    @patch('eventkit_cloud.tasks.scheduled_tasks.get_running_tasks_memory')
     @patch('eventkit_cloud.tasks.scheduled_tasks.get_all_rabbitmq_objects')
-    @patch('eventkit_cloud.utils.pcf.PcfClient')
-    def test_pcf_scale_celery(self, mock_pcf_client, mock_get_all_rabbitmq_objects):
-        # Figure out how to test the two differnt environment variable options
-        mock_pcf_client().get_running_tasks.return_value = {"pagination": {"total_results": 0}}
-        mock_get_all_rabbitmq_objects.return_value = [{"name": "celery", "messages": 1}]
-        pcf_scale_celery_task(3)
+    @patch('eventkit_cloud.tasks.scheduled_tasks.order_celery_tasks')
+    @patch('eventkit_cloud.tasks.scheduled_tasks.get_celery_pcf_task_details')
+    @patch('eventkit_cloud.tasks.scheduled_tasks.PcfClient')
+    def test_pcf_scale_celery(self, mock_pcf_client, mock_get_celery_pcf_task_details, mock_order_celery_tasks,
+                              mock_get_all_rabbitmq_objects, mock_get_running_tasks_memory):
+
+        # Run until queues are empty.
+        example_memory_used = 2048
+        example_disk_used = 3072
+        mock_get_running_tasks_memory.return_value = example_memory_used
+        mock_pcf_client().get_running_tasks.return_value = {"pagination": {"total_results": 1}}
+        example_queues = [{"name": "celery", "messages": 2}]
+        empty_queues = [{"name": "celery", "messages": 0}]
+        mock_get_all_rabbitmq_objects.side_effect = [example_queues, empty_queues]
+        celery_task_details = {"task_counts": {"celery": 1}, "memory": example_memory_used, "disk": example_disk_used}
+        mock_get_celery_pcf_task_details.return_value = celery_task_details
+        ordered_celery_tasks = OrderedDict({
+            "queue1": {
+                "command": "celery worker -A eventkit_cloud --loglevel=$LOG_LEVEL -n worker@%h -Q queue1 ",
+                "disk": 2048,
+                "memory": 2048,
+            },
+            "celery": {
+                "command": "celery worker -A eventkit_cloud --loglevel=$LOG_LEVEL -n celery@%h -Q celery ",
+                "disk": 2048,
+                "memory": 3072,
+                "limit": 2,
+            },
+        })
+        mock_order_celery_tasks.return_value = ordered_celery_tasks
+        pcf_scale_celery_task(8000)
         mock_pcf_client().run_task.assert_called_once()
+        print(mock_pcf_client.mock_calls)
+        mock_pcf_client.reset_mock()
+
+        # pcf_scale_celery_task(8000)
+        # print(mock_pcf_client.mock_calls)
+        # mock_pcf_client().run_task.assert_called_once()
+
+        # mock_get_all_rabbitmq_objects.return_value = example_queues
+        # over_memory = 6000
+        # second_celery_task_details = {"task_counts": {"celery": 1}, "memory": over_memory, "disk": example_disk_used}
+        # mock_get_celery_pcf_task_details.side_effect = [celery_task_details, second_celery_task_details]
+        # pcf_scale_celery_task(8000)
+        # print(mock_pcf_client.mock_calls)
+        # mock_pcf_client().run_task.assert_called_once()
+        # mock_pcf_client().reset_mock()
+
+        # # Run until memory is exhausted.
+        # mock_get_all_rabbitmq_objects.return_value = example_queues
+        # over_memory = 6000
+        # second_celery_task_details = {"task_counts": {"celery": 1}, "memory": over_memory, "disk": example_disk_used}
+        # mock_get_celery_pcf_task_details.side_effect = [celery_task_details, second_celery_task_details]
+        # pcf_scale_celery_task(8000)
+        # print(mock_pcf_client.mock_calls)
+        # mock_pcf_client().run_task.assert_called_once()
+        # mock_pcf_client().reset_mock()
+
+        # # Don't run if not enough memory.
+        # mock_get_all_rabbitmq_objects.return_value = example_queues
+        # mock_get_celery_pcf_task_details.return_value = celery_task_details
+        # pcf_scale_celery_task(1000)
+        # mock_pcf_client().run_task.assert_not_called()
+        # mock_pcf_client().reset_mock()
+
+    @patch('eventkit_cloud.tasks.scheduled_tasks.PcfClient')
+    def test_get_celery_pcf_task_details(self, mock_pcf_client):
+        # Figure out how to test the two differnt environment variable options
+        example_app_name = "example_app_name"
+        celery_tasks = ["celery", "group.priority"]
+        pcf_task_resources = [{"name": "celery", "memory_in_mb": 2048, "disk_in_mb": 3072}]
+        mock_pcf_client.get_running_tasks.return_value = {"pagination": {"total_results": 1},
+                                                          "resources": pcf_task_resources}
+        expected_value = {"task_counts": {"celery": 1, "group.priority": 0}, "memory": 2048, "disk": 3072}
+
+        returned_value = get_celery_pcf_task_details(mock_pcf_client, example_app_name, celery_tasks)
+        self.assertEquals(expected_value, returned_value)
+
+    def test_order_celery_tasks(self):
+        celery_tasks = {"celery": {}, "group.priority": {}}
+        task_counts = {"celery": 1, "group.priority": 0}
+        expected_ordered_tasks = OrderedDict({"group.priority": {}, "celery": {}})
+        returned_ordered_tasks = order_celery_tasks(celery_tasks, task_counts)
+        self.assertEquals(expected_ordered_tasks, returned_ordered_tasks)
+
+    def test_list_to_dict(self):
+        example_list = [{"name": "a", "prop": 1}, {"name": "b", "prop": 2}]
+        expected_value = {"a": {"name": "a", "prop": 1}, "b": {"name": "b", "prop": 2}}
+        returned_value = list_to_dict(example_list, "name")
+        self.assertEquals(expected_value, returned_value)
 
 
 class TestCheckProviderAvailabilityTask(TestCase):
@@ -119,12 +204,12 @@ class TestCleanUpRabbit(TestCase):
 
     @patch('eventkit_cloud.tasks.scheduled_tasks.app')
     @patch('eventkit_cloud.tasks.scheduled_tasks.get_all_rabbitmq_objects')
-    def test_clean_up_queues(self, mock_get_all_rabbitmq_objects, mock_celery_app):
+    def test_clean_up_queues_task(self, mock_get_all_rabbitmq_objects, mock_celery_app):
 
         expected_queues = [{"name": "queue1"}, {"name": "queue2"}]
         expected_exchanges = [{"name": "exchange1"}, {"name": "exchange2"}]
         mock_get_all_rabbitmq_objects.side_effect = [expected_queues, expected_exchanges]
-        clean_up_queues()
+        clean_up_queues_task()
         mock_celery_app.connection.__enter__().channel().queue_delete('queue1', if_empty=True, if_unused=True),
         mock_celery_app.connection.__enter__().channel().queue_delete('queue2', if_empty=True, if_unused=True),
         mock_celery_app.connection.__enter__().channel().exchange_delete('exchange1', if_empty=True, if_unused=True),
@@ -132,8 +217,8 @@ class TestCleanUpRabbit(TestCase):
 
         with self.assertRaises(Exception):
             mock_celery_app.connection.__enter__().channel().queue_delete().return_value = Exception()
-            clean_up_queues()
+            clean_up_queues_task()
 
         with self.assertRaises(Exception):
             mock_celery_app.connection.__enter__().channel().exchange_delete().return_value = Exception()
-            clean_up_queues()
+            clean_up_queues_task()

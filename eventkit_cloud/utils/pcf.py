@@ -179,7 +179,13 @@ class PcfClient(object):
             },
         ).json()
 
-    def get_running_tasks(self, app_name=None, names=None):
+    def get_running_tasks(self, app_name: str = None, names: str = None) -> list:
+        """
+        Get running pcf tasks.
+        :param app_name: The name of the PCF app.
+        :param names:  A comma separated list of names given to the tasks when they were originally called.
+        :return: A list of the running task names.
+        """
         app_name = (
             os.getenv("PCF_APP", json.loads(os.getenv("VCAP_APPLICATION", "{}")).get("application_name"),) or app_name
         )
