@@ -23,15 +23,12 @@ class TestGeoCodeAuth(TestCase):
                        GEOCODING_AUTH_CERT="-----BEGIN CERTIFICATE----------END CERTIFICATE----------BEGIN RSA "
                                            "PRIVATE KEY----------END RSA PRIVATE KEY-----")
     def test_authenticate(self):
-        self.client.get(settings.GEOCODING_AUTH_URL)
-        session = self.client.session
-        session["data"] = settings.GEOCODING_AUTH_CERT
-        session.save()
-        self.assertEquals(session["??"], "??")
-        # cert = {settings.GEOCODING_AUTH_CERT}
-        # self.adapter.register_uri('GET', settings.GEOCODING_AUTH_URL)
-        # self.session.get(settings.GEOCODING_AUTH_URL, data=cert)
-        # self.assertEquals(self.session.post(settings.GEOCODING_AUTH_URL, data=cert, status_code=200))
+        cert = settings.GEOCODING_AUTH_CERT
+        session = requests.Session()
+        with requests_mock.mock() as m:
+            m.get(settings.GEOCODING_AUTH_URL)
+            response = session.request('POST', settings.GEOCODING_AUTH_URL, data=cert)
+        self.assertEqual(response.body, 'data')
 
     # @override_settings(GEOCODING_AUTH_URL="http://fake.url/", GEOCODING_AUTH_CERT="-----BEGIN CERTIFICATE----------END CERTIFICATE----------BEGIN RSA PRIVATE KEY----------END RSA PRIVATE KEY-----")
     # def testGetHeaders(self):
