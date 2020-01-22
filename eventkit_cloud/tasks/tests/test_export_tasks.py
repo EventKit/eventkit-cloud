@@ -19,12 +19,14 @@ from mock import Mock, PropertyMock, patch, MagicMock, call, ANY
 from eventkit_cloud.celery import TaskPriority, app
 from eventkit_cloud.jobs.models import DatamodelPreset, Job
 from eventkit_cloud.tasks.export_tasks import (ExportTask,
-    LockingTask, export_task_error_handler, finalize_run_task,
-    kml_export_task, mapproxy_export_task, geopackage_export_task,
-    shp_export_task, arcgis_feature_service_export_task, update_progress,
-    pick_up_run_task, cancel_export_provider_task, kill_task, bounds_export_task, parse_result, finalize_export_provider_task,
-    FormatTask, wait_for_providers_task, create_zip_task, default_format_time, geotiff_export_task
-)
+                                               LockingTask, export_task_error_handler, finalize_run_task,
+                                               kml_export_task, mapproxy_export_task, geopackage_export_task,
+                                               shp_export_task, arcgis_feature_service_export_task, update_progress,
+                                               pick_up_run_task, cancel_export_provider_task, kill_task,
+                                               bounds_export_task, parse_result, finalize_export_provider_task,
+                                               FormatTask, wait_for_providers_task, create_zip_task,
+                                               default_format_time, geotiff_export_task
+                                               )
 from eventkit_cloud.tasks.enumerations import TaskStates
 from eventkit_cloud.tasks.export_tasks import zip_files
 from eventkit_cloud.tasks.models import (
@@ -83,7 +85,7 @@ class TestLockingTask(TestCase):
 class ExportTaskBase(TransactionTestCase):
     fixtures = ('datamodel_presets.json',)
 
-    def setUp(self,):
+    def setUp(self, ):
         self.path = os.path.dirname(os.path.realpath(__file__))
         self.group, created = Group.objects.get_or_create(name="TestDefault")
         with patch('eventkit_cloud.jobs.signals.Group') as mock_group:
@@ -181,7 +183,8 @@ class TestExportTasks(ExportTaskBase):
                                                             name=geopackage_export_task.name)
         geopackage_export_task.update_task_state(task_status=TaskStates.RUNNING.value,
                                                  task_uid=str(saved_export_task.uid))
-        result = geopackage_export_task.run(run_uid=self.run.uid, result=previous_task_result, task_uid=str(saved_export_task.uid),
+        result = geopackage_export_task.run(run_uid=self.run.uid, result=previous_task_result,
+                                            task_uid=str(saved_export_task.uid),
                                             stage_dir=stage_dir, job_name=job_name, projection=projection)
         mock_convert.assert_called_once_with(file_format='gpkg', in_file=expected_output_path,
                                              out_file=expected_output_path, task_uid=str(saved_export_task.uid))
@@ -217,7 +220,7 @@ class TestExportTasks(ExportTaskBase):
         geotiff_export_task(result=example_result, task_uid=task_uid, stage_dir='stage', job_name='job',
                             compress=True)
         mock_gdalutils.convert.assert_has_calls([call(file_format='gtiff', in_file=expected_outfile,
-                                                       out_file=expected_outfile, task_uid='1234'),
+                                                      out_file=expected_outfile, task_uid='1234'),
                                                  call(file_format='gtiff', in_file=expected_outfile,
                                                       out_file=expected_outfile,
                                                       params=params, task_uid='1234', use_translate=True)
@@ -272,10 +275,12 @@ class TestExportTasks(ExportTaskBase):
                                                             name=mapproxy_export_task.name)
         mapproxy_export_task.update_task_state(task_status=TaskStates.RUNNING.value,
                                                task_uid=str(saved_export_task.uid))
-        result = mapproxy_export_task.run(run_uid=self.run.uid, task_uid=str(saved_export_task.uid), stage_dir=stage_dir,
+        result = mapproxy_export_task.run(run_uid=self.run.uid, task_uid=str(saved_export_task.uid),
+                                          stage_dir=stage_dir,
                                           job_name=job_name)
         service_to_gpkg.convert.assert_called_once()
-        mock_add_metadata_task.assert_called_once_with(result=result, job_uid=self.run.job.uid, provider_slug=expected_provider_slug)
+        mock_add_metadata_task.assert_called_once_with(result=result, job_uid=self.run.job.uid,
+                                                       provider_slug=expected_provider_slug)
         self.assertEqual(expected_output_path, result['result'])
         # test the tasks update_task_state method
         run_task = ExportTaskRecord.objects.get(celery_uid=celery_uid)
@@ -286,7 +291,7 @@ class TestExportTasks(ExportTaskBase):
             mapproxy_export_task.run(run_uid=self.run.uid, task_uid=str(saved_export_task.uid), stage_dir=stage_dir,
                                      job_name=job_name)
 
-    def test_task_on_failure(self,):
+    def test_task_on_failure(self, ):
         celery_uid = str(uuid.uuid4())
         # assume task is running
         export_provider_task = DataProviderTaskRecord.objects.create(run=self.run, name='Shapefile Export')
@@ -340,8 +345,9 @@ class TestExportTasks(ExportTaskBase):
             def testzip(self):
                 return None
 
-        expected_archived_files = {'data/osm/file1-osm-{0}.txt'.format(default_format_time(timezone.now())): 'osm/file1.txt',
-                                   'data/osm/file2-osm-{0}.txt'.format(default_format_time(timezone.now())): 'osm/file2.txt'}
+        expected_archived_files = {
+            'data/osm/file1-osm-{0}.txt'.format(default_format_time(timezone.now())): 'osm/file1.txt',
+            'data/osm/file2-osm-{0}.txt'.format(default_format_time(timezone.now())): 'osm/file2.txt'}
         run_uid = str(self.run.uid)
         self.run.job.include_zipfile = True
         self.run.job.event = 'test'
@@ -350,7 +356,7 @@ class TestExportTasks(ExportTaskBase):
         mock_zipfile.return_value = zipfile
         stage_dir = settings.EXPORT_STAGING_ROOT
         provider_slug = 'osm'
-        zipfile_path = os.path.join(stage_dir,'{0}'.format(run_uid), provider_slug, 'test.gpkg')
+        zipfile_path = os.path.join(stage_dir, '{0}'.format(run_uid), provider_slug, 'test.gpkg')
         include_files = ['{0}/file1.txt'.format(provider_slug), '{0}/file2.txt'.format(provider_slug)]
         mock_os_walk.return_value = [(
             os.path.join(stage_dir, run_uid, provider_slug),
@@ -360,14 +366,13 @@ class TestExportTasks(ExportTaskBase):
         date = timezone.now().strftime('%Y%m%d')
         zipfile_name = os.path.join('/downloads', '{0}'.format(run_uid), 'testjob-test-eventkit-{0}.zip'.format(date))
         s3.return_value = "www.s3.eventkit-cloud/{}".format(zipfile_name)
-        result = zip_files(include_files=include_files, file_path=zipfile_path )
+        result = zip_files(include_files=include_files, file_path=zipfile_path)
         self.assertEqual(zipfile.files, expected_archived_files)
         self.assertEqual(result, zipfile_path)
 
         zipfile.testzip = Exception("Bad Zip")
         with self.assertRaises(Exception):
             zip_files(include_files=include_files, file_path=zipfile_path)
-
 
     @patch('celery.app.task.Task.request')
     @patch('eventkit_cloud.tasks.export_tasks.geopackage')
@@ -439,7 +444,8 @@ class TestExportTasks(ExportTaskBase):
         celery_uid = str(uuid.uuid4())
         run_uid = self.run.uid
         stage_dir = settings.EXPORT_STAGING_ROOT + str(self.run.uid)
-        export_provider_task = DataProviderTaskRecord.objects.create(status=TaskStates.SUCCESS.value, run=self.run, name='Shapefile Export')
+        export_provider_task = DataProviderTaskRecord.objects.create(status=TaskStates.SUCCESS.value, run=self.run,
+                                                                     name='Shapefile Export')
         ExportTaskRecord.objects.create(export_provider_task=export_provider_task, celery_uid=celery_uid,
                                         status=TaskStates.SUCCESS.value, name='Default Shapefile Export')
         self.assertEqual('Finalize Run Task', finalize_run_task.name)
@@ -457,26 +463,32 @@ class TestExportTasks(ExportTaskBase):
         stage_dir = settings.EXPORT_STAGING_ROOT + str(self.run.uid)
         site_url = settings.SITE_URL
         url = "{0}/status/{1}".format(site_url.rstrip("/"), self.run.job.uid)
-        os.environ['ROCKETCHAT_NOTIFICATIONS'] = json.dumps({
+        os.environ["ROCKETCHAT_NOTIFICATIONS"] = json.dumps({
             "auth_token": "auth_token",
             "user_id": "user_id",
             "channels": ["channel"],
             "url": "http://api.example.dev"
         })
-        rocketchat_notifications = json.loads(os.getenv("ROCKETCHAT_NOTIFICATIONS"))
-        channel = rocketchat_notifications["channels"][0]
-        message = f"@here A DataPack has failed during processing. {url}"
-        export_provider_task = DataProviderTaskRecord.objects.create(run=self.run, name='Shapefile Export')
-        ExportTaskRecord.objects.create(export_provider_task=export_provider_task, uid=task_id,
-                                        celery_uid=celery_uid, status=TaskStates.FAILED.value,
-                                        name='Default Shapefile Export')
-        self.assertEqual('Export Task Error Handler', export_task_error_handler.name)
-        export_task_error_handler.run(run_uid=run_uid, task_id=task_id, stage_dir=stage_dir)
-        isdir.assert_any_call(stage_dir)
-        rmtree.assert_called_once_with(stage_dir)
-        email().send.assert_called_once()
-        rocket_chat.assert_called_once_with(**rocketchat_notifications)
-        rocket_chat().post_message.assert_called_once_with(channel, message)
+        with self.settings(ROCKETCHAT_NOTIFICATIONS={
+            "auth_token": "auth_token",
+            "user_id": "user_id",
+            "channels": ["channel"],
+            "url": "http://api.example.dev"
+        }):
+            rocketchat_notifications = settings.ROCKETCHAT_NOTIFICATIONS
+            channel = rocketchat_notifications["channels"][0]
+            message = f"@here A DataPack has failed during processing. {url}"
+            export_provider_task = DataProviderTaskRecord.objects.create(run=self.run, name='Shapefile Export')
+            ExportTaskRecord.objects.create(export_provider_task=export_provider_task, uid=task_id,
+                                            celery_uid=celery_uid, status=TaskStates.FAILED.value,
+                                            name='Default Shapefile Export')
+            self.assertEqual('Export Task Error Handler', export_task_error_handler.name)
+            export_task_error_handler.run(run_uid=run_uid, task_id=task_id, stage_dir=stage_dir)
+            isdir.assert_any_call(stage_dir)
+            rmtree.assert_called_once_with(stage_dir)
+            email().send.assert_called_once()
+            rocket_chat.assert_called_once_with(**rocketchat_notifications)
+            rocket_chat().post_message.assert_called_once_with(channel, message)
 
     @patch('eventkit_cloud.tasks.export_tasks.set_cache_value')
     @patch('django.db.connection.close')
@@ -494,9 +506,10 @@ class TestExportTasks(ExportTaskBase):
         estimated = timezone.now()
         update_progress(saved_export_task_uid, progress=50, estimated_finish=estimated)
         mock_close.assert_called_once()
-        mock_set_cache_value.assert_has_calls([call(uid=saved_export_task_uid, attribute='progress', model_name='ExportTaskRecord', value=50),
-                                              call(uid=saved_export_task_uid, attribute='estimated_finish',
-                                                   model_name='ExportTaskRecord', value=estimated)])
+        mock_set_cache_value.assert_has_calls(
+            [call(uid=saved_export_task_uid, attribute='progress', model_name='ExportTaskRecord', value=50),
+             call(uid=saved_export_task_uid, attribute='estimated_finish',
+                  model_name='ExportTaskRecord', value=estimated)])
 
     @patch('eventkit_cloud.tasks.export_tasks.kill_task')
     def test_cancel_task(self, mock_kill_task):
@@ -650,19 +663,19 @@ class TestExportTasks(ExportTaskBase):
 
         metadata = {
             "aoi": "AOI",
-            "bbox": [-1,-1,1,1], "data_sources": {
-            "osm": {"copyright": None,
-                    "description": "OpenStreetMap vector data provided in a custom thematic schema. \r\n\t\r\n\tData is grouped into separate tables (e.g. water, roads...).",
-                    "file_path": "data/osm/test-osm-20181101.gpkg", "file_type": ".gpkg",
-                    "full_file_path": "/var/lib/eventkit/exports_stage/7fadf34e-58f9-4bb8-ab57-adc1015c4269/osm/test.gpkg",
-                    "last_update": "2018-10-29T04:35:02Z\n",
-                    "metadata": "https://overpass-server.com/overpass/interpreter",
-                    "name": "OpenStreetMap Data (Themes)", "slug": "osm", "type": "osm",
-                    "uid": "0d08ddf6-35c1-464f-b271-75f6911c3f78"}}, "date": "20181101", "description": "Test",
+            "bbox": [-1, -1, 1, 1], "data_sources": {
+                "osm": {"copyright": None,
+                        "description": "OpenStreetMap vector data provided in a custom thematic schema. \r\n\t\r\n\tData is grouped into separate tables (e.g. water, roads...).",
+                        "file_path": "data/osm/test-osm-20181101.gpkg", "file_type": ".gpkg",
+                        "full_file_path": "/var/lib/eventkit/exports_stage/7fadf34e-58f9-4bb8-ab57-adc1015c4269/osm/test.gpkg",
+                        "last_update": "2018-10-29T04:35:02Z\n",
+                        "metadata": "https://overpass-server.com/overpass/interpreter",
+                        "name": "OpenStreetMap Data (Themes)", "slug": "osm", "type": "osm",
+                        "uid": "0d08ddf6-35c1-464f-b271-75f6911c3f78"}}, "date": "20181101", "description": "Test",
             "has_elevation": False, "has_raster": True, "include_files": [
                 human_metadata_doc, qgis_file,
-            "/var/lib/eventkit/exports_stage/7fadf34e-58f9-4bb8-ab57-adc1015c4269/osm/test.gpkg",
-            "/var/lib/eventkit/exports_stage/7fadf34e-58f9-4bb8-ab57-adc1015c4269/osm/osm_selection.geojson"],
+                "/var/lib/eventkit/exports_stage/7fadf34e-58f9-4bb8-ab57-adc1015c4269/osm/test.gpkg",
+                "/var/lib/eventkit/exports_stage/7fadf34e-58f9-4bb8-ab57-adc1015c4269/osm/osm_selection.geojson"],
             "name": "test", "project": "Test", "run_uid": "7fadf34e-58f9-4bb8-ab57-adc1015c4269",
             "url": "http://cloud.eventkit.test/status/2010025c-6d61-4a0b-8d5d-ff9c657259eb"}
         provider_task_uid = "0d08ddf6-35c1-464f-b271-75f6911c3f78"
