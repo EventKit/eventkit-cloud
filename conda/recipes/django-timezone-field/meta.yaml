@@ -15,12 +15,12 @@ build:
 
 requirements:
   host:
-    - django >=1.8
+    - django >=1.8,<3.0
     - pip
     - python
     - pytz
   run:
-    - django >=1.8
+    - django >=1.8,<3.0
     - python
     - pytz
 
