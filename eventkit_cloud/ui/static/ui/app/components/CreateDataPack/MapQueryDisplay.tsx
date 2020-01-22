@@ -14,11 +14,13 @@ interface FeatureResponse {
 }
 
 export interface TileCoordinate {
-    z: number;
-    y: number;
-    x: number;
+    z: number;  // Tile Zoom level
+    y: number;  // Tile row
+    x: number;  // Tile col
     lat: number;
     long: number;
+    i?: number;  // Click pixel x
+    j?: number;  // Click pixel y
 }
 
 export interface Props {
@@ -47,13 +49,13 @@ export class MapQueryDisplay extends React.Component<Props, State> {
 
     private CancelToken = axios.CancelToken;
     private source = this.CancelToken.source();
-    private getFeatures(tileCoord: TileCoordinate, i, j) {
+    private getFeatures(tileCoord: TileCoordinate) {
         let responseData = {
             lat: tileCoord.lat,
             long: tileCoord.long,
         } as FeatureResponse;
         
-        const url = getFeatureUrl(this.props.selectedBaseMap.slug, tileCoord.z, tileCoord.y, tileCoord.x, i, j);
+        const url = getFeatureUrl(this.props.selectedBaseMap.slug, tileCoord.z, tileCoord.y, tileCoord.x, tileCoord.i, tileCoord.j);
         const csrfmiddlewaretoken = getCookie('csrftoken');
         return axios({
             url,
@@ -75,13 +77,13 @@ export class MapQueryDisplay extends React.Component<Props, State> {
         });
     }
 
-    private handleMapClick(tileCoord: TileCoordinate, i, j) {
+    private handleMapClick(tileCoord: TileCoordinate) {
         if (!!this.props.selectedBaseMap.slug) {
             this.setState({
                 closeCard: false,
                 responseData: undefined,
             });
-            this.getFeatures(tileCoord, i, j).then(featureResponseData => {
+            this.getFeatures(tileCoord).then(featureResponseData => {
                 this.setState({ responseData: featureResponseData });
             });
         }

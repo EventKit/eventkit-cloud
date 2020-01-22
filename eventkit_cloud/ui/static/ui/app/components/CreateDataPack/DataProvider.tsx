@@ -23,6 +23,7 @@ import {Compatibility} from '../../utils/enums';
 import IndeterminateCheckBoxIcon from '@material-ui/icons/IndeterminateCheckBox';
 import CheckBoxIcon from "@material-ui/icons/CheckBox";
 import {CompatibilityInfo} from "./ExportInfo";
+import {SelectedBaseMap} from "./CreateExport";
 
 const jss = (theme: Theme & Eventkit.Theme) => createStyles({
     container: {
@@ -291,6 +292,11 @@ export class DataProvider extends React.Component<Props, State> {
             }
         }
 
+        const selectedBasemap = {
+            baseMapUrl: (this.props.provider.preview_url || this.context.config.BASEMAP_URL),
+            slug: (!!this.props.provider.preview_url) ? provider.slug : undefined,
+        } as SelectedBaseMap;
+
         // Show license if one exists.
         const nestedItems = [];
         if (provider.license) {
@@ -352,7 +358,7 @@ export class DataProvider extends React.Component<Props, State> {
                     >
                         <MapView
                             id={this.props.provider.id + "-map"}
-                            url={this.props.provider.preview_url || this.context.config.BASEMAP_URL}
+                            selectedBaseMap={selectedBasemap}
                             copyright={this.props.provider.service_copyright}
                             geojson={this.props.geojson}
                             setZoom={this.setZoom}
