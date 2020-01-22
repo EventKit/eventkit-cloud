@@ -86,16 +86,19 @@ def pcf_scale_celery_task(max_tasks_memory: int = 4096, locking_task_key: str = 
     celery_pcf_task_details = get_celery_pcf_task_details(client, app_name, celery_tasks)
     logger.info(f"Running Tasks Memory used: {celery_pcf_task_details['memory']} MB")
 
-    celery_tasks = order_celery_tasks(celery_tasks, celery_pcf_task_details['task_counts'])
+    celery_tasks = order_celery_tasks(celery_tasks, celery_pcf_task_details["task_counts"])
 
     # we don't want to exceed our memory but we also don't want to prevent tasks that _can_ run from running.
-    smallest_memory_required = int(min([v['memory'] for k, v in celery_tasks.items()])) or 0
+    smallest_memory_required = int(min([v["memory"] for k, v in celery_tasks.items()])) or 0
     logger.info(f"smallest_memory_required: {smallest_memory_required}")
     logger.info(f"max_tasks_memory: {max_tasks_memory}")
-    running_tasks_memory = celery_pcf_task_details['memory']
-    while celery_pcf_task_details['memory'] + smallest_memory_required <= max_tasks_memory:
+    running_tasks_memory = celery_pcf_task_details["memory"]
+    while running_tasks_memory + smallest_memory_required <= max_tasks_memory:
         queues = get_all_rabbitmq_objects(broker_api_url, queue_class)
-        queues = list_to_dict(queues, 'name')
+        queues = list_to_dict(queues, "name")
+        # Remember if no tasks were run, if not give up.
+        # If a task is under
+        has_run_task = False
         if not any([queue.get("messages", 0) for queue_name, queue in queues.items()]):
             break
         for celery_task_name, celery_task in celery_tasks.items():
@@ -116,22 +119,23 @@ def pcf_scale_celery_task(max_tasks_memory: int = 4096, locking_task_key: str = 
                 if limit:
                     if running_tasks_by_queue_count >= limit:
                         continue
-                if running_tasks_memory + celery_tasks[queue_name]['memory'] <= max_tasks_memory:
+                if running_tasks_memory + celery_tasks[queue_name]["memory"] <= max_tasks_memory:
                     run_task_command(client, app_name, queue_name, celery_tasks[queue_name])
+                    has_run_task = True
             elif running_tasks_by_queue_count and not pending_messages:
                 logger.info(
                     f"The {queue_name} has no messages, but has running_tasks_by_queue_count. Sending shutdown..."
                 )
-                pcf_shutdown_celery_workers.s(queue_name).apply_async(
-                    queue=queue_name, routing_key=queue_name
-                )
+                pcf_shutdown_celery_workers.s(queue_name).apply_async(queue=queue_name, routing_key=queue_name)
             else:
                 if running_tasks_by_queue_count:
                     logger.info(
                         f"Already {running_tasks_by_queue_count} workers, processing {pending_messages} total pending "
                         f"messages left in {queue_name} queue."
                     )
-            running_tasks_memory = get_running_tasks_memory(client, app_name)
+            running_tasks_memory = client.get_running_tasks_memory(app_name)
+            if not has_run_task:
+                break
 
 
 def get_celery_pcf_task_details(client: PcfClient, app_name: str, celery_tasks: Union[dict, list]):
@@ -148,9 +152,9 @@ def get_celery_pcf_task_details(client: PcfClient, app_name: str, celery_tasks: 
     total_disk = 0
     task_counts = dict.fromkeys(celery_tasks, 0)
     for running_task in running_tasks["resources"]:
-        total_memory += running_task['memory_in_mb']
-        total_disk += running_task['disk_in_mb']
-        running_task_name = running_task['name']
+        total_memory += running_task["memory_in_mb"]
+        total_disk += running_task["disk_in_mb"]
+        running_task_name = running_task["name"]
         if running_task_name in task_counts:
             task_counts[running_task_name] += 1
     return {"task_counts": task_counts, "memory": total_memory, "disk": total_disk}
@@ -168,15 +172,6 @@ def order_celery_tasks(celery_tasks, task_counts):
     return ordered_tasks
 
 
-def get_running_tasks_memory(client: PcfClient, app_name: str) -> int:
-
-    running_tasks = client.get_running_tasks(app_name)
-    running_tasks_memory = 0
-    for task in running_tasks["resources"]:
-        running_tasks_memory += task["memory_in_mb"]
-    return running_tasks_memory
-
-
 def run_task_command(client: PcfClient, app_name: str, queue_name: str, task: dict):
     """
     :param client: A Pcf Client object.
@@ -190,12 +185,8 @@ def run_task_command(client: PcfClient, app_name: str, queue_name: str, task: di
     disk = task["disk"]
     memory = task["memory"]
 
-    logger.info(
-        f"Sending task to {app_name} with command {command} with {disk} disk and {memory} memory"
-    )
-    client.run_task(
-        name=queue_name, command=command, disk_in_mb=disk, memory_in_mb=memory, app_name=app_name
-    )
+    logger.info(f"Sending task to {app_name} with command {command} with {disk} disk and {memory} memory")
+    client.run_task(name=queue_name, command=command, disk_in_mb=disk, memory_in_mb=memory, app_name=app_name)
 
 
 def list_to_dict(list_to_convert, key_name):
@@ -211,8 +202,12 @@ def list_to_dict(list_to_convert, key_name):
         converted_dict[item[key_name]] = item
     return converted_dict
 
-@app.task(name="Check Provider Availability", base=EventKitBaseTask,
-          expires=timezone.now() + timezone.timedelta(minutes=int(os.getenv("PROVIDER_CHECK_INTERVAL", "30"))))
+
+@app.task(
+    name="Check Provider Availability",
+    base=EventKitBaseTask,
+    expires=timezone.now() + timezone.timedelta(minutes=int(os.getenv("PROVIDER_CHECK_INTERVAL", "30"))),
+)
 def check_provider_availability_task():
     from eventkit_cloud.jobs.models import DataProvider, DataProviderStatus
     from eventkit_cloud.utils.provider_check import perform_provider_check
@@ -289,37 +284,40 @@ def get_celery_tasks():
     """
     celery_group_name = os.getenv("CELERY_GROUP_NAME", socket.gethostname())
 
-    priority_queue_command = (
-        " & exec celery worker -A eventkit_cloud --loglevel=$LOG_LEVEL --concurrency=1 -n priority@%h -Q $CELERY_GROUP_NAME.priority,$HOSTNAME.priority"  # NOQA
-    )
+    priority_queue_command = " & exec celery worker -A eventkit_cloud --loglevel=$LOG_LEVEL --concurrency=1 -n priority@%h -Q $CELERY_GROUP_NAME.priority,$HOSTNAME.priority"  # NOQA
 
-    celery_tasks = OrderedDict({
-        f"{celery_group_name}": {
-            "command": "celery worker -A eventkit_cloud --loglevel=$LOG_LEVEL -n worker@%h -Q $CELERY_GROUP_NAME " + priority_queue_command,
-            # NOQA
-            "disk": 2048,
-            "memory": 2048,
-        },
-        f"{celery_group_name}.large": {
-            "command": "celery worker -A eventkit_cloud --concurrency=1 --loglevel=$LOG_LEVEL -n large@%h -Q $CELERY_GROUP_NAME.large " + priority_queue_command,
-            # NOQA
-            "disk": 2048,
-            "memory": 4096,
-        },
-        "celery": {
-            "command": "celery worker -A eventkit_cloud --loglevel=$LOG_LEVEL -n celery@%h -Q celery " + priority_queue_command,
-            "disk": 2048,
-            "memory": 2048,
-            "limit": 6,
-        },
-        f"{celery_group_name}.priority": {
-            "command": "celery worker -A eventkit_cloud --loglevel=$LOG_LEVEL -n priority@%h -Q $CELERY_GROUP_NAME.priority",  # NOQA
-            # NOQA
-            "disk": 2048,
-            "memory": 2048,
-            "limit": 2,
-        },
-    })
+    celery_tasks = OrderedDict(
+        {
+            f"{celery_group_name}": {
+                "command": "celery worker -A eventkit_cloud --loglevel=$LOG_LEVEL -n worker@%h -Q $CELERY_GROUP_NAME "
+                + priority_queue_command,
+                # NOQA
+                "disk": 2048,
+                "memory": 2048,
+            },
+            f"{celery_group_name}.large": {
+                "command": "celery worker -A eventkit_cloud --concurrency=1 --loglevel=$LOG_LEVEL -n large@%h -Q $CELERY_GROUP_NAME.large "
+                + priority_queue_command,
+                # NOQA
+                "disk": 2048,
+                "memory": 4096,
+            },
+            "celery": {
+                "command": "celery worker -A eventkit_cloud --loglevel=$LOG_LEVEL -n celery@%h -Q celery "
+                + priority_queue_command,
+                "disk": 2048,
+                "memory": 2048,
+                "limit": 6,
+            },
+            f"{celery_group_name}.priority": {
+                "command": "celery worker -A eventkit_cloud --loglevel=$LOG_LEVEL -n priority@%h -Q $CELERY_GROUP_NAME.priority",  # NOQA
+                # NOQA
+                "disk": 2048,
+                "memory": 2048,
+                "limit": 2,
+            },
+        }
+    )
 
     celery_tasks = json.loads(os.getenv("CELERY_TASKS", "{}")) or celery_tasks
 

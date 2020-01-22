@@ -209,3 +209,16 @@ class PcfClient(object):
             params=payload,
             headers={"Authorization": "bearer {0}".format(self.token), "Accept": "application/json"},
         ).json()
+
+    def get_running_tasks_memory(self, app_name: str) -> int:
+        """
+        Get running tasks memory for a single app.
+        :param app_name: Name of app running tasks
+        :return: Running task memory in mb.
+        """
+
+        running_tasks = self.get_running_tasks(app_name)
+        running_tasks_memory = 0
+        for task in running_tasks["resources"]:
+            running_tasks_memory += task["memory_in_mb"]
+        return running_tasks_memory
