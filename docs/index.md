@@ -75,6 +75,9 @@ or
 By default, the Eventkit webpack is configured for development, if you need to create bundle and vendor files for production run
 <pre>docker-compose run --rm webpack npm run build</pre>
 
+#### Deploying 
+The built EventKit containers can be pushed to a platform like Kubernetes or some other container service. 
+Additionally it can be deployed on [Pivotal Cloud Foundry](https://github.com/EventKit/eventkit-cloud/blob/master/docs/pcf.md).
 
 ## For Developers
 #### Using ESLint
