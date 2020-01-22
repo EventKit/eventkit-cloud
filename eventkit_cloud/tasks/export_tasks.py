@@ -677,7 +677,7 @@ def geopackage_export_task(
 
 @app.task(name="Geotiff (.tif)", bind=True, base=FormatTask)
 def geotiff_export_task(
-    self, result=None, task_uid=None, stage_dir=None, job_name=None, projection=4326, compress=False, *args, **kwargs
+    self, result=None, task_uid=None, stage_dir=None, job_name=None, projection=4326, compress=False, *args, **kwargs,
 ):
     """
     Class defining geopackage export function.
@@ -704,7 +704,7 @@ def geotiff_export_task(
 
     # Convert to the correct projection
     gtiff_out_dataset = gdalutils.convert(
-        file_format="gtiff", in_file=gtiff_in_dataset, out_file=gtiff_out_dataset, task_uid=task_uid
+        file_format="gtiff", in_file=gtiff_in_dataset, out_file=gtiff_out_dataset, task_uid=task_uid,
     )
 
     # Reduce the overall size of geotiffs.  Note this compression could result in the loss of data.
@@ -751,7 +751,7 @@ def nitf_export_task(
 
     params = "-co ICORDS=G"
     nitf = gdalutils.convert(
-        file_format="nitf", in_file=nitf_in_dataset, out_file=nitf_out_dataset, task_uid=task_uid, params=params
+        file_format="nitf", in_file=nitf_in_dataset, out_file=nitf_out_dataset, task_uid=task_uid, params=params,
     )
 
     result["file_format"] = "nitf"
@@ -1503,10 +1503,9 @@ def export_task_error_handler(self, result=None, run_uid=None, task_id=None, sta
     msg.send()
 
     # Send failed DataPack notifications to specific channel(s) or user(s) if enabled.
-    rocketchat_notifications = json.loads(os.getenv("ROCKETCHAT_NOTIFICATIONS"))
+    rocketchat_notifications = settings.ROCKETCHAT_NOTIFICATIONS
     if rocketchat_notifications:
         channels = rocketchat_notifications["channels"]
-        url = rocketchat_notifications["url"]
         message = f"@here A DataPack has failed during processing. {ctx['url']}"
 
         client = RocketChat(**rocketchat_notifications)
