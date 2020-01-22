@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 import json
-import socket
-
+import os
 from celery.schedules import crontab
 
 from eventkit_cloud.celery import app
@@ -47,7 +46,7 @@ if PCF_SCALING:
                 "task": "PCF Scale Celery",
                 "schedule": 60.0,
                 "kwargs": {"max_tasks_memory": int(os.getenv("CELERY_MAX_TASKS_MEMORY", 20000))},
-                "options": {"priority": 90, "queue": "scale", "routing_key": "scale",},
+                "options": {"priority": 90, "queue": "scale", "routing_key": "scale"},
             },
         }
     )

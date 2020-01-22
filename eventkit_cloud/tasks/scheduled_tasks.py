@@ -279,7 +279,8 @@ def clean_up_queues_task():
 
 def get_celery_tasks():
     """
-    Sets up a dict with settings for running about running PCF tasks for celery.  Adding or modifying queues can be done here.
+    Sets up a dict with settings for running about running PCF tasks for celery.
+    Adding or modifying queues can be done here.
     :return:
     """
     celery_group_name = os.getenv("CELERY_GROUP_NAME", socket.gethostname())
@@ -296,7 +297,7 @@ def get_celery_tasks():
                 "memory": 2048,
             },
             f"{celery_group_name}.large": {
-                "command": "celery worker -A eventkit_cloud --concurrency=1 --loglevel=$LOG_LEVEL -n large@%h -Q $CELERY_GROUP_NAME.large "
+                "command": "celery worker -A eventkit_cloud --concurrency=1 --loglevel=$LOG_LEVEL -n large@%h -Q $CELERY_GROUP_NAME.large "  # NOQA
                 + priority_queue_command,
                 # NOQA
                 "disk": 2048,
