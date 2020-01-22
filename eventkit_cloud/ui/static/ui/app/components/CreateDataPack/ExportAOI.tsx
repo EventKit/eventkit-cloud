@@ -1019,7 +1019,7 @@ export class ExportAOI extends React.Component<Props, State> {
                 long: event.coordinate[0],
                 z: tileCoord[0],
                 y: tileCoord[2],
-                x: tileCoord[1]
+                x: tileCoord[1],
             } as TileCoordinate,
             tilePixel[0],
             tilePixel[1]);
@@ -1140,9 +1140,14 @@ export class ExportAOI extends React.Component<Props, State> {
                     />
                     <div
                         style={{
-                            position: 'absolute', minWidth: '200px',
-                            width: 'min-content', bottom: '50px',
-                            left: '20vw', maxWidth: '80vw',
+                            position: 'absolute',
+                            width: '100%',
+                            bottom: '40px',
+                            display: 'flex',
+                            justifyContent: 'center',
+                            [theme.breakpoints.only('xs')]: {
+                                justifyContent: 'start',
+                            },
                         }}
                     >
                         <MapQueryDisplay
