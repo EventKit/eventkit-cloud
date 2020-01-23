@@ -80,9 +80,9 @@ export interface Props {
     clearExportInfo: () => void;
     walkthroughClicked: boolean;
     onWalkthroughReset: () => void;
+    selectedBaseMap: SelectedBaseMap;
     theme: Eventkit.Theme & Theme;
     width: Breakpoint;
-    selectedBaseMap: SelectedBaseMap;
 }
 
 export interface State {
@@ -1145,9 +1145,6 @@ export class ExportAOI extends React.Component<Props, State> {
                             bottom: '40px',
                             display: 'flex',
                             justifyContent: 'center',
-                            [theme.breakpoints.only('xs')]: {
-                                justifyContent: 'start',
-                            },
                         }}
                     >
                         <MapQueryDisplay
