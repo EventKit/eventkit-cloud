@@ -8,6 +8,7 @@ import IndeterminateCheckBoxIcon from '@material-ui/icons/IndeterminateCheckBox'
 import {Compatibility} from '../../utils/enums';
 import {CompatibilityInfo} from "./ExportInfo";
 import {getDefaultFormat} from "../../utils/generic";
+import InfoDialog from "../common/InfoDialog";
 
 const jss = (theme: Theme & Eventkit.Theme) => createStyles({
     container: {
@@ -65,10 +66,14 @@ interface Props {
     provider: Eventkit.Provider;
     providerOptions: Eventkit.Store.ProviderExportOptions;
     updateExportOptions: (providerSlug: string, providerOptions: any) => void;
-    getFormatCompatibility: (format: Eventkit.Format) => Compatibility;
+    getFormatCompatibility: (format: string) => Compatibility;
     compatibilityInfo: CompatibilityInfo;
     theme: Eventkit.Theme & Theme;
     classes: { [className: string]: string };
+}
+
+interface State {
+
 }
 
 export class FormatSelector extends React.Component<Props, {}> {
@@ -119,7 +124,7 @@ export class FormatSelector extends React.Component<Props, {}> {
             {...providerOptions, formats: selectedFormats});
     }
 
-    getCheckBox(format) {
+    getCheckBox(format: Eventkit.Format) {
         const {classes, providerOptions} = this.props;
         const selectedFormats = providerOptions.formats || [];
 
@@ -150,6 +155,11 @@ export class FormatSelector extends React.Component<Props, {}> {
                 >
                     <div className={classes.listItemText}>{format.name}</div>
                     <div className={classes.errorMessage}>{errorMessage}</div>
+                    <InfoDialog
+                        title={`${format.name} Info`}
+                    >
+                        <p>{format.description}</p>
+                    </InfoDialog>
                 </div>
             </div>
         );
