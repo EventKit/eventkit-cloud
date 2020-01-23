@@ -40,6 +40,11 @@ PCF_APP_NAME=My_App_Name
 The application to run the CELERY_TASKS on when the scale task is executed.  By default this will be the 
 app that is listening to the scale queue. 
 
+```
+CELERY_MAX_TASKS_MEMORY=<integer in mb
+```
+The amount of memory that shouldn't be exceeded when running tasks.  Ideally enough memory should be set to allow all 
+queues to run at one time, about 10240 with the default settings. 
 
 #### CELERY_TASKS (optional)
 
@@ -63,28 +68,28 @@ For example the default looks something like...
         + priority_queue_command,
         # NOQA
         "disk": 2048,
-        "memory": 2048,
+        "memory": 2048
     },
     "$CELERY_GROUP_NAME.large": {
         "command": "celery worker -A eventkit_cloud --concurrency=1 --loglevel=$LOG_LEVEL -n large@%h -Q $CELERY_GROUP_NAME.large "  # NOQA
         + priority_queue_command,
         # NOQA
         "disk": 2048,
-        "memory": 4096,
+        "memory": 4096
     },
     "celery": {
         "command": "celery worker -A eventkit_cloud --loglevel=$LOG_LEVEL -n celery@%h -Q celery "
         + priority_queue_command,
         "disk": 2048,
         "memory": 2048,
-        "limit": 6,
+        "limit": 6
     },
     "$CELERY_GROUP_NAME.priority": {
         "command": "celery worker -A eventkit_cloud --loglevel=$LOG_LEVEL -n priority@%h -Q $CELERY_GROUP_NAME.priority",  # NOQA
         # NOQA
         "disk": 2048,
         "memory": 2048,
-        "limit": 2,
+        "limit": 2
     }
 }
 ```

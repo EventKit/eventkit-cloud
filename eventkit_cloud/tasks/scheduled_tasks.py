@@ -96,13 +96,11 @@ def pcf_scale_celery_task(max_tasks_memory: int = 4096, locking_task_key: str = 
     while running_tasks_memory + smallest_memory_required <= max_tasks_memory:
         queues = get_all_rabbitmq_objects(broker_api_url, queue_class)
         queues = list_to_dict(queues, "name")
-        # Remember if no tasks were run, if not give up.
-        # If a task is under
+        # If no tasks were run, give up... otherwise try to run another task.
         has_run_task = False
         if not any([queue.get("messages", 0) for queue_name, queue in queues.items()]):
             break
         for celery_task_name, celery_task in celery_tasks.items():
-            logger.info(celery_task)
             queue = queues.get(celery_task_name)
             if not queue:
                 continue
@@ -134,8 +132,8 @@ def pcf_scale_celery_task(max_tasks_memory: int = 4096, locking_task_key: str = 
                         f"messages left in {queue_name} queue."
                     )
             running_tasks_memory = client.get_running_tasks_memory(app_name)
-            if not has_run_task:
-                break
+        if not has_run_task:
+            break
 
 
 def get_celery_pcf_task_details(client: PcfClient, app_name: str, celery_tasks: Union[dict, list]):
