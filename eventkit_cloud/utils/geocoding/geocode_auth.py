@@ -39,10 +39,12 @@ def authenticate():
                 data=temp_file.name,
                 verify=verify
             ).json()
+            print(response)
 
             token = response.get("token")
             cache.set(CACHE_TOKEN_KEY, token, CACHE_TOKEN_TIMEOUT)
             return token
+
 
     except requests.exceptions.RequestException as e:
         logger.error(traceback.print_exc())

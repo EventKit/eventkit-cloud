@@ -7,7 +7,6 @@ from django.conf import settings
 
 from eventkit_cloud.utils import auth_requests
 from eventkit_cloud.utils.geocoding.geocode import AuthenticationError
-from eventkit_cloud.utils.geocoding.geocode_auth import authenticate
 
 logger = logging.getLogger(__name__)
 
@@ -81,7 +80,7 @@ class ReverseGeocodeAdapter(metaclass=ABCMeta):
         if os.getenv("GEOCODING_AUTH_CERT"):
             response = auth_requests.get(self.url, params=payload, cert_var="GEOCODING_AUTH_CERT")
         else:
-            response = auth_requests.get(self.url, params=payload)
+            response = requests.get(self.url, params=payload)
 
         if response.status_code in [401, 403]:
             error_message = "EventKit was not able to authenticate to the Geocoding service."
@@ -101,13 +100,10 @@ class ReverseGeocodeAdapter(metaclass=ABCMeta):
         """
 
         payload = self.get_payload(query)
-
         if not self.url:
             return
+
         response = self.get_response(payload)
-        if response.status_code in [401, 403]:
-            authenticate()
-            response = self.get_response(payload)
         return self.create_geojson(response)
 
     def get_feature(self, feature=None, bbox=None, properties=None):

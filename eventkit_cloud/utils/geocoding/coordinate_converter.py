@@ -6,7 +6,6 @@ from django.conf import settings
 
 from eventkit_cloud.utils import auth_requests
 from eventkit_cloud.utils.geocoding.geocode import AuthenticationError
-from eventkit_cloud.utils.geocoding.geocode_auth import authenticate
 
 logger = logging.getLogger(__name__)
 
@@ -35,7 +34,7 @@ class CoordinateConverter(object):
         if os.getenv("GEOCODING_AUTH_CERT"):
             response = auth_requests.get(url, params=payload, cert_var="GEOCODING_AUTH_CERT")
         else:
-            response = auth_requests.get(url, params=payload)
+            response = requests.get(url, params=payload)
 
         if response.status_code in [401, 403]:
             error_message = "EventKit was not able to authenticate to the Geocoding service."

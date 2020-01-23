@@ -4,9 +4,7 @@ from abc import ABCMeta, abstractmethod
 import requests
 import os
 from django.conf import settings
-
 from eventkit_cloud.utils import auth_requests
-from eventkit_cloud.utils.geocoding.geocode_auth import authenticate
 
 logger = logging.getLogger(__name__)
 
@@ -101,7 +99,9 @@ class GeocodeAdapter(metaclass=ABCMeta):
         payload = self.get_payload(query)
         if not self.url:
             return
-        response_data = self.get_response(payload).json()
+
+        response_data = self.get_response(payload)
+
         assert isinstance(response_data, dict)
         return self.create_geojson(response_data)
 
