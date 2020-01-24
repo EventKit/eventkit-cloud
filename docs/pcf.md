@@ -41,7 +41,7 @@ The application to run the CELERY_TASKS on when the scale task is executed.  By 
 app that is listening to the scale queue. 
 
 ```
-CELERY_MAX_TASKS_MEMORY=<integer in mb
+CELERY_MAX_TASKS_MEMORY=<integer in mb>
 ```
 The amount of memory that shouldn't be exceeded when running tasks.  Ideally enough memory should be set to allow all 
 queues to run at one time, about 10240 with the default settings. 
