@@ -249,42 +249,48 @@ export class ExportSummary extends React.Component<Props, State> {
                                 <CustomTableRow
                                     className="qa-ExportSummary-name"
                                     title="Name"
-                                    data={this.props.exportName}
                                     dataStyle={dataStyle}
-                                />
+                                >
+                                    {this.props.exportName}
+                                </CustomTableRow>
                                 <CustomTableRow
                                     className="qa-ExportSummary-description"
                                     title="Description"
-                                    data={this.props.datapackDescription}
                                     dataStyle={dataStyle}
-                                />
+                                >
+                                    {this.props.datapackDescription}
+                                </CustomTableRow>
                                 <CustomTableRow
                                     className="qa-ExportSummary-project"
                                     title="Project / Category"
-                                    data={this.props.projectName}
                                     dataStyle={dataStyle}
-                                />
+                                >
+                                    {this.props.projectName}
+                                </CustomTableRow>
                                 <CustomTableRow
                                     className="qa-ExportSummary-sources"
                                     title="Data Sources"
-                                    data={providers.map(provider => this.getExportInfo(provider))}
                                     dataStyle={{display: 'block'}}
-                                />
+                                >
+                                    {providers.map(provider => this.getExportInfo(provider))}
+                                </CustomTableRow>
                                 <CustomTableRow
                                     className="qa-ExportSummary-projections"
                                     title="Projection(s)"
-                                    data={this.getProjectionInfo(this.props.selectedProjections)}
                                     dataStyle={dataStyle}
-                                />
+                                >
+                                    {this.getProjectionInfo(this.props.selectedProjections)}
+                                </CustomTableRow>
                                 <div id="aoi-heading" className={`qa-ExportSummary-aoiHeading ${classes.exportHeading}`} >
                                     Area of Interest (AOI)
                                 </div>
                                 <CustomTableRow
                                     className="qa-ExportsSummary-area"
                                     title="Area"
-                                    data={this.props.areaStr}
                                     dataStyle={dataStyle}
-                                />
+                                >
+                                    {this.props.areaStr}
+                                </CustomTableRow>
                             </div>
                             <div id="aoi-map" className={`qa-ExportSummary-map ${classes.mapCard}`}>
                                 <MapCard geojson={this.props.geojson}>

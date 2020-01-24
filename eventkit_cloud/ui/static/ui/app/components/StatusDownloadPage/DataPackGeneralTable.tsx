@@ -69,52 +69,52 @@ export class DataPackGeneralTable extends React.Component<Props, State> {
                 <CustomTableRow
                     className="qa-DataPackGeneralTable-description"
                     title="Description"
-                    data={this.props.dataPack.job.description}
-                />
+                >
+                    {this.props.dataPack.job.description}
+                </CustomTableRow>
                 <CustomTableRow
                     className="qa-DataPackGeneralTable-project"
                     title="Project / Category"
-                    data={this.props.dataPack.job.event}
-                />
+                >
+                    {this.props.dataPack.job.event}
+                </CustomTableRow>
                 <CustomTableRow
                     className="qa-DataPackGeneralTable-sources"
                     title="Data Sources"
                     dataStyle={{ flexWrap: 'wrap', padding: '5px 10px 5px', display: 'grid' }}
-                    data={
-                        <div>
-                            {providerTasks.map(providerTask => (
-                                <div key={providerTask.name} style={{ margin: '5px 0px' }}>
-                                    {providerTask.name}
-                                    <Info
-                                        className="qa-DataPackGeneralTable-Info-source"
-                                        onClick={() => this.handleProviderOpen(providerTask)}
-                                        key={providerTask.description}
-                                        style={styles.tableRowInfoIcon}
-                                    />
-                                </div>
-                            ))}
-                            <BaseDialog
-                                className="qa-DataPackGeneralTable-BaseDialog-source"
-                                show={this.state.providerDialogOpen}
-                                title={this.state.providerName}
-                                onClose={this.handleProviderClose}
-                            >
-                                <div style={{ paddingTop: '20px', wordWrap: 'break-word' }}>
-                                    {this.state.providerDescription}
-                                </div>
-                            </BaseDialog>
-                        </div>
-                    }
-                />
+                >
+                        {providerTasks.map(providerTask => (
+                            <div key={providerTask.name} style={{ margin: '5px 0px' }}>
+                                {providerTask.name}
+                                <Info
+                                    className="qa-DataPackGeneralTable-Info-source"
+                                    onClick={() => this.handleProviderOpen(providerTask)}
+                                    key={providerTask.description}
+                                    style={styles.tableRowInfoIcon}
+                                />
+                            </div>
+                        ))}
+                        <BaseDialog
+                            className="qa-DataPackGeneralTable-BaseDialog-source"
+                            show={this.state.providerDialogOpen}
+                            title={this.state.providerName}
+                            onClose={this.handleProviderClose}
+                        >
+                            <div style={{ paddingTop: '20px', wordWrap: 'break-word' }}>
+                                {this.state.providerDescription}
+                            </div>
+                        </BaseDialog>
+                </CustomTableRow>
                 <CustomTableRow
                     className="qa-DataPackGeneralTable-projection"
                     title="Projections"
-                    data={this.props.dataPack.job.projections.map((projection) => (
+                >
+                    {this.props.dataPack.job.projections.map((projection) => (
                         <span key={projection.srid} style={styles.projectionInfoLine}>
                             EPSG:{projection.srid} - {projection.name}
                         </span>
                     ))}
-                />
+                </CustomTableRow>
             </div>
         );
     }
