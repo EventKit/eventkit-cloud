@@ -1,3 +1,8 @@
 exports_download
 exports_stage
-
+conda
+adhoc
+cache_data
+node_modules
+vendor
+tile_cache

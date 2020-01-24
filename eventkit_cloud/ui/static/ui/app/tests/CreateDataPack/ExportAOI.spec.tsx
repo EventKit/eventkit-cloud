@@ -7,7 +7,6 @@ import Joyride from 'react-joyride';
 
 import Map from 'ol/map';
 import View from 'ol/view';
-import proj from 'ol/proj';
 import extent from 'ol/extent';
 import GeoJSONFormat from 'ol/format/geojson';
 import Feature from 'ol/feature';
@@ -83,7 +82,6 @@ describe('ExportAOI component', () => {
             max: 100000,
             sizes: [5, 10, 100000],
         },
-        baseMapUrl: '',
         ...(global as any).eventkit_test_props,
     });
 
