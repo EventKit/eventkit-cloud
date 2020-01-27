@@ -4,6 +4,7 @@ import BaseDialog from "../Dialog/BaseDialog";
 
 interface Props {
     title?: string;
+    iconProps?: any;
 }
 
 interface State {
@@ -19,16 +20,22 @@ export class InfoDialog extends React.Component<Props, State> {
         this.state = {
             displayDialog: false,
         };
+        this.openDialog = this.openDialog.bind(this);
+    }
+
+    openDialog() {
+        this.setState({displayDialog: true})
     }
 
     render() {
-        const { title } = this.props;
+        const { title, iconProps } = this.props;
 
         return (
             <div className="InfoDialog">
                 <Info
+                    {...((!!iconProps) ? iconProps : {})}
                     className={`qa-Estimate-Info-Icon`}
-                    onClick={() =>  this.setState({displayDialog: true})}
+                    onClick={this.openDialog}
                     color="primary"
                     style={{
                         cursor: 'pointer', verticalAlign: 'middle',
@@ -38,7 +45,7 @@ export class InfoDialog extends React.Component<Props, State> {
                 <BaseDialog
                     show={this.state.displayDialog}
                     title={(!!title) ? title : undefined}
-                    onClose={() =>  this.setState({displayDialog: true})}
+                    onClose={() =>  this.setState({displayDialog: false})}
                 >
                     <div
                         style={{paddingBottom: '10px', wordWrap: 'break-word'}}

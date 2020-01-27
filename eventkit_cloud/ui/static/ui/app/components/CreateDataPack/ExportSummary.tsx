@@ -9,6 +9,8 @@ import CustomScrollbar from '../CustomScrollbar';
 import CustomTableRow from '../CustomTableRow';
 import { joyride } from '../../joyride.config';
 import {isZoomLevelInRange, supportsZoomLevels} from "../../utils/generic";
+import InfoDialog from "../common/InfoDialog";
+import {Link} from "@material-ui/core";
 
 const jss = (theme: Eventkit.Theme & Theme) => createStyles({
     root: {
@@ -71,7 +73,23 @@ const jss = (theme: Eventkit.Theme & Theme) => createStyles({
         width: '100%',
         marginRight: '8px',
         display: 'inline-block',
-    }
+    },
+    name: {
+        color: theme.eventkit.colors.primary,
+        display: 'block',
+        width: '100%',
+        overflow: 'hidden',
+        textOverflow: 'ellipsis',
+        whiteSpace: 'nowrap',
+        margin: '0px',
+        '&:hover': {
+            color: theme.eventkit.colors.primary,
+            overflow: 'visible',
+            wordWrap: 'break-word',
+            whiteSpace: 'normal',
+            backgroundColor: theme.eventkit.colors.secondary,
+        },
+    },
 });
 
 export interface Props {
@@ -88,6 +106,7 @@ export interface Props {
     classes: { [className: string]: string; };
     selectedProjections: number[];
     projections: Eventkit.Projection[];
+    formats: Eventkit.Format[];
 }
 
 export interface State {
@@ -101,6 +120,8 @@ export class ExportSummary extends React.Component<Props, State> {
     };
 
     private joyride: Joyride;
+    private infoDialogRef;
+
     constructor(props: Props) {
         super(props);
         this.state = {
@@ -205,12 +226,28 @@ export class ExportSummary extends React.Component<Props, State> {
     }
 
     render() {
-        const { classes } = this.props;
+        const { formats, classes } = this.props;
         const { steps, isRunning } = this.state;
         const dataStyle = { color: 'black' };
+        const formatSet = {};
 
         const providers = this.props.providers.filter(provider => (provider.display !== false));
         const projections = this.props.projections.filter(projection => this.props.selectedProjections.indexOf(projection.srid) !== -1);
+
+        // Get all selected formats, and map them to the sources that have selected them.
+        Object.entries(this.props.exportOptions).map(([slug, providerOptions], ix) => {
+            providerOptions.formats.map((formatSlug) => {
+                if (!formatSet.hasOwnProperty(formatSlug)) {
+                    formatSet[formatSlug] = {
+                        format: formats.find(format => format.slug === formatSlug),
+                        sources: [providers.find(provider => provider.slug === slug)]
+                    };
+                } else {
+                    formatSet[formatSlug].sources.push([providers.find(provider => provider.slug === slug)]);
+                }
+            })
+        });
+
         return (
             <div id="root" className={classes.root}>
                 <Joyride
@@ -273,6 +310,29 @@ export class ExportSummary extends React.Component<Props, State> {
                                     dataStyle={{display: 'block'}}
                                 >
                                     {providers.map(provider => this.getExportInfo(provider))}
+                                    <div style={{display: 'flex', cursor: 'pointer'}}>
+                                        <InfoDialog
+                                            title="Sources and Formats"
+                                            style={{marginRight: '5px'}}
+                                            iconProps={{style:{width: '24px'}}}
+                                            ref={(instance) => {
+                                                this.infoDialogRef = instance;
+                                            }}
+                                        >
+                                            {Object.entries(formatSet).map(([slug, object])=> (
+                                                <div>
+                                                    <h3>{(object as any).format.name}</h3>
+                                                    <p>{(object as any).format.description}</p>
+                                                </div>
+                                            ))}
+                                        </InfoDialog>
+                                        <Link
+                                            className={this.props.classes.name}
+                                            onClick={() => {this.infoDialogRef.openDialog()}}
+                                        >
+                                            Source and Format Details
+                                        </Link>
+                                    </div>
                                 </CustomTableRow>
                                 <CustomTableRow
                                     className="qa-ExportSummary-projections"
