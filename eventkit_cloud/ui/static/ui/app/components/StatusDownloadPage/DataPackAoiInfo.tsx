@@ -1,19 +1,7 @@
 import * as PropTypes from 'prop-types';
 import * as React from 'react';
-import Map from 'ol/map';
-import View from 'ol/view';
-import interaction from 'ol/interaction';
-import VectorSource from 'ol/source/vector';
-import XYZ from 'ol/source/xyz';
-import GeoJSON from 'ol/format/geojson';
-import VectorLayer from 'ol/layer/vector';
-import Tile from 'ol/layer/tile';
-import Attribution from 'ol/control/attribution';
-import ScaleLine from 'ol/control/scaleline';
-import Zoom from 'ol/control/zoom';
 import CustomTableRow from '../CustomTableRow';
 import { getSqKmString } from '../../utils/generic';
-import ol3mapCss from '../../styles/ol3map.css';
 import {MapView} from "../common/MapView";
 import {SelectedBaseMap} from "../CreateDataPack/CreateExport";
 

@@ -50,7 +50,32 @@ const jss = (theme: Theme & Eventkit.Theme) => createStyles({
         display: 'inline-block',
         whiteSpace: 'nowrap',
         paddingRight: '5px',
-    }
+    },
+    wrapper: {
+        zIndex: 2,
+        position: 'absolute',
+        width: '100%',
+        bottom: '40px',
+        display: 'flex',
+        justifyContent: 'center',
+        pointerEvents: 'none',
+        [theme.breakpoints.only('xs')]: {
+            justifyContent: 'start',
+        },
+    },
+    infobar: {
+        backgroundColor: theme.eventkit.colors.white,
+        display: 'flex',
+        margin: '0px 10px',
+        pointerEvents: 'auto',
+        [theme.breakpoints.only('xs')]: {
+            margin: '0px 10px 0px 70px',
+        },
+    },
+    body: {
+        flex: '0 1 auto',
+        padding: '15px',
+    },
 });
 
 
@@ -61,17 +86,22 @@ export interface Props {
     errorMessage?: string;
     closeCard: boolean;
     handleClose: (event: any) => void;
+    maxHeight?: number;
     classes: { [className: string]: string };
 }
 
 export class QueryDataBox extends React.Component<Props, {}> {
+
+    static defaultProps = {
+        maxHeight: 125,
+    }
 
     constructor(props: Props) {
         super(props);
     }
 
     render() {
-        const { lat, long, closeCard, handleClose, classes } = this.props;
+        const { lat, long, closeCard, handleClose, maxHeight, classes } = this.props;
         const keyAlign = "left";
         const valueAlign = "right";
 
@@ -101,7 +131,7 @@ export class QueryDataBox extends React.Component<Props, {}> {
                     </IconButton>
                     <CustomScrollbar
                         autoHeight
-                        autoHeightMax={100}
+                        autoHeightMax={90}
                     >
                         {(waitingForData) ?
                             (<div>
@@ -131,7 +161,9 @@ export class QueryDataBox extends React.Component<Props, {}> {
             )
         }
         return (
-            <Card className={classes.card}>
+            <div className={classes.wrapper}>
+                <div className={`qa-AoiInfobar-body ${classes.infobar}`}>
+                    <div className={classes.body}>
                 <Typography className={classes.title}>Query Result:</Typography>
                 <Divider/>
                 <IconButton
@@ -145,8 +177,7 @@ export class QueryDataBox extends React.Component<Props, {}> {
                 </IconButton>
                 <CustomScrollbar
                     autoHeight
-                    autoHeightMin={75}
-                    autoHeightMax={125}
+                    autoHeightMax={maxHeight}
                 >
                     <Table padding="dense">
                         <TableBody>
@@ -175,7 +206,9 @@ export class QueryDataBox extends React.Component<Props, {}> {
                         </TableBody>
                     </Table>
                 </CustomScrollbar>
-            </Card>
+                    </div>
+                </div>
+            </div>
         );
     }
 }

@@ -41,7 +41,10 @@ const jss = (theme: Theme & Eventkit.Theme) => createStyles({
     sublistItem: {
         fontWeight: 'normal',
         fontSize: '13px',
-        padding: '0px 20px 14px 49px',
+        padding: '14px 40px',
+        [theme.breakpoints.only('xs')]: {
+            padding: '10px 10px',
+        },
         borderTop: theme.eventkit.colors.secondary,
     },
     checkbox: {
@@ -72,6 +75,12 @@ const jss = (theme: Theme & Eventkit.Theme) => createStyles({
     prewrap: {
         whiteSpace: 'pre-wrap',
     },
+    listItemPadding: {
+        padding: '10px 40px',
+        [theme.breakpoints.only('xs')]: {
+            padding: '10px 15px',
+        },
+    }
 });
 
 interface EstimateData {
@@ -120,6 +129,7 @@ interface Props {
         expand: string;
         license: string;
         prewrap: string;
+        listItemPadding: string;
     };
 }
 
@@ -339,9 +349,8 @@ export class DataProvider extends React.Component<Props, State> {
                     key={nestedItems.length}
                 >
                     <div
-                        className={`qa-DataProvider-ListItem-zoomSlider ${this.props.provider.slug + '-sliderDiv'}`}
+                        className={`qa-DataProvider-ListItem-zoomSlider ${this.props.provider.slug + '-sliderDiv ' + classes.listItemPadding}`}
                         key={this.props.provider.slug + '-sliderDiv'}
-                        style={{padding: '10px 40px'}}
                     >
                         <ZoomLevelSlider
                             updateZoom={this.setZoom}
@@ -352,9 +361,8 @@ export class DataProvider extends React.Component<Props, State> {
                         />
                     </div>
                     <div
-                        className={`qa-DataProvider-ListItem-zoomMap ${this.props.provider.slug + '-mapDiv'}`}
+                        className={`qa-DataProvider-ListItem-zoomMap ${this.props.provider.slug + '-mapDiv ' + classes.listItemPadding}`}
                         key={this.props.provider.slug + '-mapDiv'}
-                        style={{padding: '10px 40px'}}
                     >
                         <MapView
                             id={this.props.provider.id + "-map"}

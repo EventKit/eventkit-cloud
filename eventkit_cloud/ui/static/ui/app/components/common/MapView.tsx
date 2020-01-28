@@ -169,9 +169,11 @@ export class MapView extends React.Component<Props, State> {
             <div style={{ height: '100%', width: '100%' }} id={this.mapDiv} ref={this.mapContainerRef}>
                 <div
                     style={{
-                        position: 'absolute', minWidth: '200px',
-                        width: 'min-content', bottom: '50px',
-                        left: '20vw', maxWidth: '80vw',
+                        position: 'absolute',
+                        width: '100%',
+                        bottom: '40px',
+                        display: 'flex',
+                        justifyContent: 'center',
                     }}
                 >
                     <MapQueryDisplay

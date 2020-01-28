@@ -1042,7 +1042,14 @@ export class ExportAOI extends React.Component<Props, State> {
                         clickZoomToSelection={this.handleZoomToSelection}
                         handleBufferClick={this.openBufferDialog}
                         limits={this.props.limits}
-                    />
+                    >
+                        <MapQueryDisplay
+                            ref={child => {
+                                this.displayBoxRef = child
+                            }}
+                            selectedBaseMap={this.props.selectedBaseMap}
+                        />
+                    </AoiInfobar>
                     <SearchAOIToolbar
                         handleSearch={this.checkForSearchUpdate}
                         handleCancel={this.handleCancel}
@@ -1104,25 +1111,6 @@ export class ExportAOI extends React.Component<Props, State> {
                         processGeoJSONFile={this.props.processGeoJSONFile}
                         resetGeoJSONFile={this.props.resetGeoJSONFile}
                     />
-                    <div
-                        style={{
-                            position: 'absolute',
-                            width: '100%',
-                            bottom: '40px',
-                            display: 'flex',
-                            justifyContent: 'center',
-                            [theme.breakpoints.only('xs')]: {
-                                justifyContent: 'start',
-                            },
-                        }}
-                    >
-                        <MapQueryDisplay
-                            ref={child => {
-                                this.displayBoxRef = child
-                            }}
-                            selectedBaseMap={this.props.selectedBaseMap}
-                        />
-                    </div>
                 </div>
             </div>
         );

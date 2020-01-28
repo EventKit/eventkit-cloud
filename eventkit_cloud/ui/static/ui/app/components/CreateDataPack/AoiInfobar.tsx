@@ -466,6 +466,7 @@ export class AoiInfobar extends React.Component<Props, State> {
                                 </MenuItem>
                             </Menu>
                         </div>
+                        {this.props.children}
                     </div>
                 </div>
             </div>
