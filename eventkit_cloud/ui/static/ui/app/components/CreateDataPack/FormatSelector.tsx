@@ -78,10 +78,6 @@ interface Props {
     classes: { [className: string]: string };
 }
 
-interface State {
-
-}
-
 export class FormatSelector extends React.Component<Props, {}> {
 
     static defaultProps;

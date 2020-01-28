@@ -321,8 +321,8 @@ export class ExportSummary extends React.Component<Props, State> {
                                         >
                                             {Object.entries(formatSet).map(([slug, object])=> (
                                                 <div>
-                                                    <h3>{(object as any).format.name}</h3>
-                                                    <p>{(object as any).format.description}</p>
+                                                    <strong style={{fontSize: '1em'}}>{(object as any).format.name}</strong>
+                                                    <p style={{fontSize: '.9em'}}>{(object as any).format.description}</p>
                                                 </div>
                                             ))}
                                         </InfoDialog>
