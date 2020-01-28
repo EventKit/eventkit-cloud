@@ -37,10 +37,6 @@ export class InfoDialog extends React.Component<Props, State> {
                     className={`qa-Estimate-Info-Icon`}
                     onClick={this.openDialog}
                     color="primary"
-                    style={{
-                        cursor: 'pointer', verticalAlign: 'middle',
-                        marginLeft: '10px', height: '18px', width: '18px',
-                    }}
                 />
                 <BaseDialog
                     show={this.state.displayDialog}

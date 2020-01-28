@@ -11,8 +11,9 @@ describe('CustomTextField component', () => {
 
     const props = {
         title: 'test title',
-        data: 'test data',
-        ...global.eventkit_test_props,
+        children: 'test data',
+        classes: {},
+        ...(global as any).eventkit_test_props,
     };
 
     const getWrapper = prop => (

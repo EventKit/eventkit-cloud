@@ -52,7 +52,7 @@ export class CustomTableRow extends Component<Props> {
         const { classes } = this.props;
         return (
             <div
-                className={this.props.className + ' ' + classes.container}
+                className={`${this.props.className  } ${  classes.container}`}
                 style={this.props.containerStyle}
             >
                 <div className={classes.title} style={this.props.titleStyle}>

@@ -27,6 +27,9 @@ const jss = (theme: Theme & Eventkit.Theme) => createStyles({
     formatItem: {
         display: 'flex',
     },
+    formatDialogIcon: {
+        marginLeft: '5px',
+    },
     sublistItem: {
         fontWeight: 'normal',
         fontSize: '.9em',
@@ -159,9 +162,9 @@ export class FormatSelector extends React.Component<Props, {}> {
                     <div className={classes.listItemText}>
                         <div className={classes.formatItem}>
                             <span>{format.name}</span>
-                            <span>
+                            <span className={classes.formatDialogIcon}>
                                 <InfoDialog
-                                    title={`${format.name} Info`}
+                                    title={`${format.name} Information`}
                                 >
                                     <p>{format.description}</p>
                                 </InfoDialog>

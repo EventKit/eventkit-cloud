@@ -312,9 +312,9 @@ export class ExportSummary extends React.Component<Props, State> {
                                     {providers.map(provider => this.getExportInfo(provider))}
                                     <div style={{display: 'flex', cursor: 'pointer'}}>
                                         <InfoDialog
-                                            title="Sources and Formats"
+                                            title="Format Details"
                                             style={{marginRight: '5px'}}
-                                            iconProps={{style:{width: '24px'}}}
+                                            iconProps={{style:{width: '24px', marginRight: '5px'}}}
                                             ref={(instance) => {
                                                 this.infoDialogRef = instance;
                                             }}
@@ -330,7 +330,7 @@ export class ExportSummary extends React.Component<Props, State> {
                                             className={this.props.classes.name}
                                             onClick={() => {this.infoDialogRef.openDialog()}}
                                         >
-                                            Source and Format Details
+                                            Format Details
                                         </Link>
                                     </div>
                                 </CustomTableRow>
