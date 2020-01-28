@@ -16,6 +16,11 @@ test:
 	docker-compose run --rm -e COVERAGE=True eventkit python manage.py test -v 3 eventkit_cloud
 	docker-compose run --rm webpack npm test
 
+initial:
+ifeq ($(detected_OS),Linux)
+	sudo useradd eventkit || echo "User eventkit already exists."
+endif
+
 conda-install:
 	cd conda && docker-compose build --no-cache
 	cd conda && docker-compose run --rm conda
@@ -58,10 +63,8 @@ logs-verbose:
 # All of the commands below this line are destructive and will completely remove your current development environment.
 
 clean:
-	docker-compose kill
-	docker container prune -f
-	docker volume prune -f
+	docker-compose down -v
 
-fresh: clean conda-install build setup up logs
+fresh: initial clean conda-install build setup up logs
 
-refresh: clean build setup up logs
+refresh: initial clean build setup up logs
