@@ -14,9 +14,14 @@ export interface Props {
     theme: Eventkit.Theme & Theme;
 }
 
+export interface SelectedBaseMap {
+    baseMapUrl: string;
+    slug?: string;
+}
+
 export interface State {
     walkthroughClicked: boolean;
-    selectedBaseMap: string;
+    selectedBaseMap: SelectedBaseMap;
 }
 
 export class CreateExport extends React.Component<Props, State> {
@@ -27,7 +32,7 @@ export class CreateExport extends React.Component<Props, State> {
         this.updateBaseMap = this.updateBaseMap.bind(this);
         this.state = {
             walkthroughClicked: false,
-            selectedBaseMap: '',
+            selectedBaseMap: {baseMapUrl: ''},
         };
     }
 
@@ -39,8 +44,8 @@ export class CreateExport extends React.Component<Props, State> {
         this.setState({walkthroughClicked: true});
     }
 
-    private updateBaseMap(mapUrl: string) {
-        this.setState({selectedBaseMap: mapUrl});
+    private updateBaseMap(baseMapUrl: string, slug?: string) {
+        this.setState({selectedBaseMap: {baseMapUrl, slug}});
     }
 
     render() {
@@ -85,7 +90,7 @@ export class CreateExport extends React.Component<Props, State> {
                     routes={this.props.routes}
                     walkthroughClicked={this.state.walkthroughClicked}
                     onWalkthroughReset={this.handleWalkthroughReset}
-                    baseMapUrl={this.state.selectedBaseMap}
+                    selectedBaseMap={this.state.selectedBaseMap}
                 />
                 <MapDrawer
                     updateBaseMap={this.updateBaseMap}
