@@ -393,7 +393,7 @@ def get_metadata(data_provider_task_uid):
         provider_type = data_provider.export_provider_type.type_name
         if TaskStates[provider_task.status] not in TaskStates.get_incomplete_states():
             provider_staging_dir = get_provider_staging_dir(run.uid, provider_task.slug)
-            conf = yaml.load(data_provider.config) or dict()
+            conf = yaml.safe_load(data_provider.config) or dict()
             cert_var = conf.get("cert_var", data_provider.slug)
             metadata["data_sources"][provider_task.slug] = {
                 "uid": str(provider_task.uid),
@@ -534,9 +534,12 @@ def get_message_count(queue_name):
     for queue in get_all_rabbitmq_objects(broker_api_url, queue_class):
         if queue.get("name") == queue_name:
             try:
-                return queue.get("messages")
+                return queue.get("messages", 0)
             except Exception as e:
                 logger.info(e)
+
+    logger.info(f"Cannot find queue named {queue_name}, returning 0 messages.")
+    return 0
 
 
 def clean_config(config):
@@ -553,7 +556,7 @@ def clean_config(config):
         "overpass_query",
     ]
 
-    conf = yaml.load(config) or dict()
+    conf = yaml.safe_load(config) or dict()
 
     for service_key in service_keys:
         conf.pop(service_key, None)

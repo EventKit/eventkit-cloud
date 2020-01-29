@@ -11,7 +11,6 @@ import traceback
 
 from zipfile import ZipFile, ZIP_DEFLATED
 
-from audit_logging.celery_support import UserDetailsBase
 from billiard.einfo import ExceptionInfo
 from celery import signature
 from celery.result import AsyncResult
@@ -19,11 +18,10 @@ from celery.utils.log import get_task_logger
 from django.conf import settings
 from django.contrib.gis.geos import Polygon
 from django.contrib.auth.models import User
-from django.core.cache import caches
+
 from django.core.exceptions import ObjectDoesNotExist
 from django.core.mail import EmailMultiAlternatives
-from django.db import connection
-from django.db import DatabaseError, transaction
+from django.db import connection, DatabaseError, transaction
 from django.db.models import Q
 from django.template.loader import get_template, render_to_string
 from django.utils import timezone
@@ -55,7 +53,6 @@ from eventkit_cloud.tasks.helpers import (
     get_human_readable_metadata_document,
     pickle_exception,
     get_arcgis_metadata,
-    get_message_count,
     clean_config,
     get_metadata,
     get_provider_staging_preview,
@@ -66,6 +63,8 @@ from eventkit_cloud.utils import overpass, pbf, s3, mapproxy, wcs, geopackage, g
 from eventkit_cloud.utils.ogr import OGR
 from eventkit_cloud.utils.rocket_chat import RocketChat
 from eventkit_cloud.utils.stats.eta_estimator import ETA
+from eventkit_cloud.tasks.task_base import EventKitBaseTask
+from audit_logging.celery_support import UserDetailsBase
 
 from eventkit_cloud.tasks.models import (
     ExportTaskRecord,
@@ -88,81 +87,6 @@ logger = get_task_logger(__name__)
 
 # http://docs.celeryproject.org/en/latest/tutorials/task-cookbook.html
 # https://github.com/celery/celery/issues/3270
-
-
-class LockingTask(UserDetailsBase):
-    """
-    Base task with lock to prevent multiple execution of tasks with ETA.
-    It happens with multiple workers for tasks with any delay (countdown, ETA). Its a bug
-    https://github.com/celery/kombu/issues/337.
-    You may override cache backend by setting `CELERY_TASK_LOCK_CACHE` in your Django settings file.
-
-    This task can also be used to ensure that a task isn't running at the same time as another task by specifying,
-    a lock_key in the task arguments.  If the lock_key is present but unavailable the task will be tried again later.
-    """
-
-    cache = caches[getattr(settings, "CELERY_TASK_LOCK_CACHE", "default")]
-    lock_expiration = 60 * 60 * 12  # 12 Hours
-    lock_key = None
-    max_retries = None
-
-    def get_lock_key(self):
-        """
-        Unique string for task as lock key
-        """
-        return "TaskLock_%s_%s_%s" % (self.__class__.__name__, self.request.id, self.request.retries,)
-
-    def acquire_lock(self, lock_key=None, value="True"):
-        """
-        Set lock.
-        :param lock_key: Location to store lock.
-        :param value: Some value to store for audit.
-        :return:
-        """
-        result = False
-        lock_key = lock_key or self.get_lock_key()
-        try:
-            result = self.cache.add(lock_key, value, self.lock_expiration)
-            # result = self.cache.add(str(self.lock_key), value, self.lock_expiration)
-            logger.info("Acquiring {0} key: {1}".format(lock_key, "succeed" if result else "failed"))
-        finally:
-            return result
-
-    def __call__(self, *args, **kwargs):
-        """
-        Checking for lock existence then call otherwise re-queue
-        """
-        retry = False
-        logger.debug("enter __call__ for {0}".format(self.request.id))
-
-        lock_key = kwargs.get("locking_task_key")
-        worker = kwargs.get("worker")
-
-        if lock_key:
-            self.lock_expiration = 5
-            self.lock_key = lock_key
-            retry = True
-        else:
-            self.lock_key = self.get_lock_key()
-
-        if self.acquire_lock(lock_key=lock_key, value=self.request.id):
-            logger.debug("Task {0} started.".format(self.request.id))
-            logger.debug("exit __call__ for {0}".format(self.request.id))
-            return super(LockingTask, self).__call__(*args, **kwargs)
-        else:
-            if retry:
-                logger.warn("Task {0} waiting for lock {1} to be free.".format(self.request.id, lock_key))
-                if worker:
-                    self.apply_async(args=args, kwargs=kwargs)
-                else:
-                    self.delay(*args, **kwargs)
-            else:
-                logger.info("Task {0} skipped due to lock".format(self.request.id))
-
-    def after_return(self, *args, **kwargs):
-        logger.debug("Task {0} releasing lock".format(self.request.id))
-        self.cache.delete(self.lock_key)
-        super(LockingTask, self).after_return(*args, **kwargs)
 
 
 def make_file_downloadable(
@@ -200,13 +124,14 @@ def make_file_downloadable(
 
 
 # ExportTaskRecord abstract base class and subclasses.
-class ExportTask(UserDetailsBase):
+class ExportTask(EventKitBaseTask):
     """
     Abstract base class for export tasks.
     """
 
     # whether to abort the whole provider if this task fails.
     abort_on_error = False
+    name = "ExportTask"
 
     def __call__(self, *args, **kwargs):
         task_uid = kwargs.get("task_uid")
@@ -393,6 +318,7 @@ class FormatTask(ExportTask):
     A class to manage tasks which are desired output from the user, and not merely associated files or metadata.
     """
 
+    name = "FormatTask"
     display = True
 
 
@@ -483,7 +409,7 @@ def osm_data_collection_pipeline(
     return geopackage_filepath
 
 
-@app.task(name="OSM (.gpkg)", bind=True, base=FormatTask, abort_on_error=True, acks_late=True)
+@app.task(name="OSM (.gpkg)", bind=True, base=FormatTask, abort_on_error=True)
 def osm_data_collection_task(
     self,
     result=None,
@@ -548,10 +474,8 @@ def osm_data_collection_task(
     return result
 
 
-@app.task(name="Add Metadata", bind=True, base=UserDetailsBase, abort_on_error=False)
-def add_metadata_task(
-    self, result=None, job_uid=None, provider_slug=None, user_details=None, *args, **kwargs,
-):
+@app.task(name="Add Metadata", bind=True, base=EventKitBaseTask, abort_on_error=False)
+def add_metadata_task(self, result=None, job_uid=None, provider_slug=None, user_details=None, *args, **kwargs):
     """
     Task to create metadata to a geopackage.
     """
@@ -753,7 +677,7 @@ def geopackage_export_task(
 
 @app.task(name="Geotiff (.tif)", bind=True, base=FormatTask)
 def geotiff_export_task(
-    self, result=None, task_uid=None, stage_dir=None, job_name=None, projection=4326, compress=False, *args, **kwargs
+    self, result=None, task_uid=None, stage_dir=None, job_name=None, projection=4326, compress=False, *args, **kwargs,
 ):
     """
     Class defining geopackage export function.
@@ -780,7 +704,7 @@ def geotiff_export_task(
 
     # Convert to the correct projection
     gtiff_out_dataset = gdalutils.convert(
-        file_format="gtiff", in_file=gtiff_in_dataset, out_file=gtiff_out_dataset, task_uid=task_uid
+        file_format="gtiff", in_file=gtiff_in_dataset, out_file=gtiff_out_dataset, task_uid=task_uid,
     )
 
     # Reduce the overall size of geotiffs.  Note this compression could result in the loss of data.
@@ -827,7 +751,7 @@ def nitf_export_task(
 
     params = "-co ICORDS=G"
     nitf = gdalutils.convert(
-        file_format="nitf", in_file=nitf_in_dataset, out_file=nitf_out_dataset, task_uid=task_uid, params=params
+        file_format="nitf", in_file=nitf_in_dataset, out_file=nitf_out_dataset, task_uid=task_uid, params=params,
     )
 
     result["file_format"] = "nitf"
@@ -919,7 +843,7 @@ def reprojection_task(
     return result
 
 
-@app.task(name="Clip Export", bind=True, base=UserDetailsBase)
+@app.task(name="Clip Export", bind=True, base=EventKitBaseTask)
 def clip_export_task(
     self, result=None, run_uid=None, task_uid=None, stage_dir=None, job_name=None, user_details=None, *args, **kwargs,
 ):
@@ -1198,7 +1122,7 @@ def mapproxy_export_task(
         raise Exception(e)
 
 
-@app.task(name="Pickup Run", bind=True)
+@app.task(name="Pickup Run", bind=True, base=UserDetailsBase)
 def pick_up_run_task(self, result=None, run_uid=None, user_details=None, *args, **kwargs):
     """
     Generates a Celery task to assign a celery pipeline to a specific worker.
@@ -1234,7 +1158,7 @@ def wait_for_run(run=None, uid=None):
 
 
 # This could be improved by using Redis or Memcached to help manage state.
-@app.task(name="Wait For Providers", base=UserDetailsBase, acks_late=True)
+@app.task(name="Wait For Providers", base=EventKitBaseTask, acks_late=True)
 def wait_for_providers_task(result=None, apply_args=None, run_uid=None, callback_task=None, *args, **kwargs):
     from eventkit_cloud.tasks.models import ExportRun
 
@@ -1249,7 +1173,7 @@ def wait_for_providers_task(result=None, apply_args=None, run_uid=None, callback
         ):
             callback_task.apply_async(**apply_args)
         else:
-            logger.error("Waiting for other tasks to finish.")
+            logger.warning(f"The run: {run_uid} is Waiting for other tasks to finish.")
     else:
         raise Exception("A run could not be found for uid {0}".format(run_uid))
 
@@ -1298,7 +1222,7 @@ def create_zip_task(result=None, data_provider_task_uid=None, *args, **kwargs):
     return result
 
 
-@app.task(name="Finalize Export Provider Task", base=UserDetailsBase)
+@app.task(name="Finalize Export Provider Task", base=EventKitBaseTask, acks_late=True)
 def finalize_export_provider_task(result=None, data_provider_task_uid=None, status=None, *args, **kwargs):
     """
     Finalizes provider task.
@@ -1403,7 +1327,7 @@ def zip_files(include_files, file_path=None, static_files=None, *args, **kwargs)
     return file_path
 
 
-class FinalizeRunBase(UserDetailsBase):
+class FinalizeRunBase(EventKitBaseTask):
     name = "Finalize Export Run"
 
     def run(self, result=None, run_uid=None, stage_dir=None):
@@ -1483,37 +1407,18 @@ class FinalizeRunBase(UserDetailsBase):
         except IOError or OSError:
             logger.error("Error removing {0} during export finalize".format(stage_dir))
 
-        PCF_SCALING = os.getenv("PCF_SCALING", False)
-        if PCF_SCALING:
-            hostnames = []
-            workers = ["runs", "worker", "celery", "cancel", "finalize", "osm"]
-            for worker in workers:
-                hostnames.append(f"{worker}@{socket.gethostname()}")
-
-            try:
-                message_count = get_message_count("runs")
-                if message_count > 0:
-                    logger.info("More tasks available, continue.")
-                    return
-
-                logger.info("Queue is at zero, shutting down.")
-                app.control.broadcast("shutdown", destination=hostnames)
-            except Exception:
-                logger.info("Could not get queues, shutting down.")
-                app.control.broadcast("shutdown", destination=hostnames)
-
 
 # There's a celery bug with callbacks that use bind=True.  If altering this task do not use Bind.
 # @see: https://github.com/celery/celery/issues/3723
 @app.task(name="Finalize Run Task", base=FinalizeRunBase)
 def finalize_run_task(result=None, run_uid=None, stage_dir=None, apply_args=None, *args, **kwargs):
     """
-             Finalizes export run.
+     Finalizes export run.
 
-            Cleans up staging directory.
-            Updates run with finish time.
-            Emails user notification.
-            """
+    Cleans up staging directory.
+    Updates run with finish time.
+    Emails user notification.
+    """
     from eventkit_cloud.tasks.models import ExportRun
 
     result = result or {}
@@ -1566,7 +1471,7 @@ def finalize_run_task(result=None, run_uid=None, stage_dir=None, apply_args=None
     return result
 
 
-@app.task(name="Export Task Error Handler", bind=True)
+@app.task(name="Export Task Error Handler", bind=True, base=EventKitBaseTask)
 def export_task_error_handler(self, result=None, run_uid=None, task_id=None, stage_dir=None, *args, **kwargs):
     """
     Handles un-recoverable errors in export tasks.
@@ -1598,10 +1503,9 @@ def export_task_error_handler(self, result=None, run_uid=None, task_id=None, sta
     msg.send()
 
     # Send failed DataPack notifications to specific channel(s) or user(s) if enabled.
-    rocketchat_notifications = json.loads(os.getenv("ROCKETCHAT_NOTIFICATIONS"))
+    rocketchat_notifications = settings.ROCKETCHAT_NOTIFICATIONS
     if rocketchat_notifications:
         channels = rocketchat_notifications["channels"]
-        url = rocketchat_notifications["url"]
         message = f"@here A DataPack has failed during processing. {ctx['url']}"
 
         client = RocketChat(**rocketchat_notifications)
@@ -1621,13 +1525,13 @@ def cancel_synchronous_task_chain(data_provider_task_uid=None):
             export_task.save()
             kill_task.apply_async(
                 kwargs={"task_pid": export_task.pid, "celery_uid": export_task.celery_uid},
-                queue="{0}.cancel".format(export_task.worker),
+                queue="{0}.priority".format(export_task.worker),
                 priority=TaskPriority.CANCEL.value,
-                routing_key="{0}.cancel".format(export_task.worker),
+                routing_key="{0}.priority".format(export_task.worker),
             )
 
 
-@app.task(name="Create preview", base=UserDetailsBase)
+@app.task(name="Create preview", base=EventKitBaseTask, acks_late=True)
 def create_datapack_preview(
     result=None, run_uid=None, task_uid=None, stage_dir=None, task_record_uid=None, *args, **kwargs,
 ):
@@ -1668,7 +1572,7 @@ def create_datapack_preview(
     return result
 
 
-@app.task(name="Cancel Export Provider Task", base=UserDetailsBase)
+@app.task(name="Cancel Export Provider Task", base=EventKitBaseTask)
 def cancel_export_provider_task(
     result=None, data_provider_task_uid=None, canceling_username=None, delete=False, error=False, *args, **kwargs,
 ):
@@ -1719,9 +1623,9 @@ def cancel_export_provider_task(
         if int(export_task.pid) > 0 and export_task.worker:
             kill_task.apply_async(
                 kwargs={"task_pid": export_task.pid, "celery_uid": export_task.celery_uid},
-                queue="{0}.cancel".format(export_task.worker),
+                queue="{0}.priority".format(export_task.worker),
                 priority=TaskPriority.CANCEL.value,
-                routing_key="{0}.cancel".format(export_task.worker),
+                routing_key="{0}.priority".format(export_task.worker),
             )
 
     if TaskStates[data_provider_task_record.status] not in TaskStates.get_finished_states():
@@ -1734,7 +1638,7 @@ def cancel_export_provider_task(
     return result
 
 
-@app.task(name="Cancel Run", base=UserDetailsBase)
+@app.task(name="Cancel Run", base=EventKitBaseTask)
 def cancel_run(
     result=None, export_run_uid=None, canceling_username=None, delete=False, *args, **kwargs,
 ):
@@ -1753,7 +1657,7 @@ def cancel_run(
     return result
 
 
-@app.task(name="Kill Task", base=UserDetailsBase)
+@app.task(name="Kill Task", base=EventKitBaseTask)
 def kill_task(result=None, task_pid=None, celery_uid=None, *args, **kwargs):
     """
     Asks a worker to kill a task.
