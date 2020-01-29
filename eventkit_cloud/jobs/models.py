@@ -19,12 +19,7 @@ from django.db.models.fields import CharField
 from django.utils import timezone
 from enum import Enum
 
-from eventkit_cloud.core.models import (
-    CachedModelMixin,
-    DownloadableMixin,
-    TimeStampedModelMixin,
-    UIDMixin
-)
+from eventkit_cloud.core.models import CachedModelMixin, DownloadableMixin, TimeStampedModelMixin, UIDMixin
 
 logger = logging.getLogger(__name__)
 
