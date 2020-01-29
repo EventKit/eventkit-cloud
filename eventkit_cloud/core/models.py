@@ -91,7 +91,7 @@ class CachedModelMixin(models.Model):
 
     def save(self, *args, **kwargs):
         super(CachedModelMixin, self).save(*args, **kwargs)
-        cache_key_props = ['pk', 'uid', 'slug']
+        cache_key_props = ["pk", "uid", "slug"]
         for cache_key_prop in cache_key_props:
             if hasattr(self, cache_key_prop):
                 cache.set(f"{type(self).__name__}-{cache_key_prop}-{getattr(self, cache_key_prop)}", self)
