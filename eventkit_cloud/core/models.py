@@ -6,13 +6,13 @@ import uuid
 
 from django.contrib.auth.models import User, Group
 from django.contrib.gis.db import models
+from django.core.cache import cache
 from django.contrib.contenttypes.fields import GenericForeignKey
 from django.contrib.contenttypes.models import ContentType
 from django.utils import timezone
 from enum import Enum
 from notifications.models import Notification
 import logging
-
 
 logger = logging.getLogger(__name__)
 
@@ -79,6 +79,22 @@ class TimeTrackingModelMixin(models.Model):
             return None  # not finished yet
         else:
             return self.finished_at
+
+
+class CachedModelMixin(models.Model):
+    """
+    Mixin for saving and updating cache
+    """
+
+    class Meta:
+        abstract = True
+
+    def save(self, *args, **kwargs):
+        super(CachedModelMixin, self).save(*args, **kwargs)
+        cache_key_props = ['pk', 'uid', 'slug']
+        for cache_key_prop in cache_key_props:
+            if hasattr(self, cache_key_prop):
+                cache.set(f"{type(self).__name__}-{cache_key_prop}-{getattr(self, cache_key_prop)}", self)
 
 
 class UIDMixin(models.Model):

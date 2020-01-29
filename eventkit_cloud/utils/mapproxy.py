@@ -17,6 +17,7 @@ from mapproxy.seed.util import ProgressLog, exp_backoff, timestamp, ProgressStor
 from mapproxy.wsgiapp import MapProxyApp
 from mapproxy.cache import geopackage as geopackage_cache
 from webtest import TestApp
+from eventkit_cloud.core.helpers import get_cached_model
 
 import os
 import sqlite3
@@ -380,7 +381,7 @@ def get_conf_dict(slug: str) -> dict:
     from eventkit_cloud.jobs.models import DataProvider  # Circular reference
 
     try:
-        provider = cache.get_or_set(f"DataProvider-{slug}", lambda: DataProvider.objects.get(slug=slug), 360)
+        provider = get_cached_model(model=DataProvider, prop="slug", value=slug)
     except Exception:
         raise Exception(f"Unable to find provider for slug {slug}")
 
