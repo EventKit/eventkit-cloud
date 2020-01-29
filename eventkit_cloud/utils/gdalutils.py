@@ -277,14 +277,15 @@ def clip_dataset(
     :param params: Additional options to pass to the convert method (e.g. "-co SOMETHING")
     :return: Filename of clipped dataset
     """
+
+    if not in_dataset:
+        raise Exception("No provided 'in' dataset")
+
     # Strip optional file prefixes
     file_prefix, in_dataset_file = strip_prefixes(in_dataset)
 
     if not boundary:
         raise Exception("Could not open boundary mask file: {0}".format(boundary))
-
-    if not in_dataset_file:
-        raise Exception("No provided in dataset: {0}".format(in_dataset_file))
 
     if not out_dataset:
         out_dataset = in_dataset_file
@@ -408,11 +409,12 @@ def convert(
     :param use_translate: If true will convert file using gdal_translate instead of gdalwarp.
     :return: Converted dataset, same filename as input
     """
+
+    if not in_file:
+        raise Exception("No provided input file")
+
     # Strip optional file prefixes
     file_prefix, in_dataset_file = strip_prefixes(in_file)
-
-    if not in_dataset_file:
-        raise Exception("No provided input file: {0}".format(in_dataset_file))
 
     meta = get_meta(in_dataset_file)
     is_raster = meta["is_raster"]

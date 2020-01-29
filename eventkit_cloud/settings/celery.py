@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 import json
 import os
-import socket
-
 from celery.schedules import crontab
 
 from eventkit_cloud.celery import app
@@ -32,12 +30,12 @@ CELERY_ACCEPT_CONTENT = ["json"]
 # configure periodic task
 
 BEAT_SCHEDULE = {
-    "expire-runs": {"task": "Expire Runs", "schedule": crontab(minute="0", hour="0", day_of_week="*")},
+    "expire-runs": {"task": "Expire Runs", "schedule": crontab(minute="0", hour="0", day_of_week="*"),},
     "provider-statuses": {
         "task": "Check Provider Availability",
         "schedule": crontab(minute="*/{}".format(os.getenv("PROVIDER_CHECK_INTERVAL", "30"))),
     },
-    "clean-up-queues": {"task": "Clean Up Queues", "schedule": crontab(minute="0", hour="0", day_of_week="*")},
+    "clean-up-queues": {"task": "Clean Up Queues", "schedule": crontab(minute="0", hour="0", day_of_week="*"),},
 }
 
 PCF_SCALING = os.getenv("PCF_SCALING", False)
@@ -47,12 +45,8 @@ if PCF_SCALING:
             "pcf-scale-celery": {
                 "task": "PCF Scale Celery",
                 "schedule": 60.0,
-                "kwargs": {"max_instances": int(os.getenv("CELERY_INSTANCES", 3))},
-                "options": {
-                    "priority": 90,
-                    "queue": "scale".format(socket.gethostname()),
-                    "routing_key": "scale".format(socket.gethostname()),
-                },
+                "kwargs": {"max_tasks_memory": int(os.getenv("CELERY_MAX_TASKS_MEMORY", 20000))},
+                "options": {"priority": 90, "queue": "scale", "routing_key": "scale"},
             },
         }
     )
