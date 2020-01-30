@@ -98,7 +98,7 @@ export class NotificationMessage extends Component {
             }
             case verbs.runExpiring: {
                 data = notification.actor.details.job.name;
-                text = `\xa0is expiring on ${ moment(notification.actor.details.expiration).format('M/D/YY') }.`;
+                text = `\xa0is expiring on ${moment(notification.actor.details.expiration).format('M/D/YY')}.`;
                 break;
             }
             case verbs.addedToGroup: {
