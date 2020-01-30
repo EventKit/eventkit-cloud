@@ -61,6 +61,7 @@ services:
       - PROVIDER_CHECK_INTERVAL
       - TILE_CACHE_DIR
       - ROCKETCHAT_NOTIFICATIONS
+      - LAND_DATA_URL
     extra_hosts:
       - "${SITE_NAME}:${SITE_IP}"
   celery:
@@ -223,6 +224,7 @@ services:
       - ./config/ui/tsconfig.json:/var/lib/eventkit/tsconfig.json
       - ./config/ui/tslint.json:/var/lib/eventkit/tslint.json
       - ./.git:/var/lib/eventkit/.git
+    user: eventkit
     ports:
       - "8080:8080"
     expose:
