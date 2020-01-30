@@ -18,7 +18,10 @@ test:
 
 initial:
 ifeq ($(detected_OS),Linux)
-	sudo useradd eventkit || echo "User eventkit already exists."
+	sudo groupadd -g 880 eventkit || echo "Group eventkit already exists."
+	sudo useradd -u 8800 -g 880 -m eventkit || echo "User eventkit already exists."
+	sudo usermod -a -G eventkit ${USER}
+	sudo chown -R ${USER}:eventkit .
 endif
 
 conda-install:
