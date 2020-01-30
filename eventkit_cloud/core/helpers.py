@@ -4,11 +4,13 @@ import os
 import shutil
 import subprocess
 import zipfile
+from enum import Enum
+from django.db import models
 
 import dj_database_url
 import requests
 from django.conf import settings
-from enum import Enum
+from django.core.cache import cache
 from notifications.signals import notify
 
 logger = logging.getLogger(__name__)
@@ -19,6 +21,14 @@ def get_id(user):
         return user.oauth.identification
     else:
         return user.username
+
+
+def get_model_by_params(model_class: models.Model, **kwargs):
+    return model_class.objects.get(**kwargs)
+
+
+def get_cached_model(model: models.Model, prop: str, value: str) -> models.Model:
+    return cache.get_or_set(f"{model.__name__}-{prop}-{value}", get_model_by_params(model, **{prop: value}), 360)
 
 
 def download_file(url, download_dir=None):
@@ -55,7 +65,6 @@ def get_vector_file(directory):
 
 
 def load_land_vectors(db_conn=None, url=None):
-
     if not url:
         url = settings.LAND_DATA_URL
 

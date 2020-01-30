@@ -1,5 +1,5 @@
 {% set name = "mapproxy" %}
-{% set version = "1.11.0" %}
+{% set version = "1.12.0" %}
 
 package:
   name: "{{ name|lower }}"
@@ -7,7 +7,7 @@ package:
 
 source:
   url: https://github.com/{{ name }}/{{ name }}/archive/{{ version }}.tar.gz
-  sha256: f051ee400b50f9a4f20467e04c736c442e0bed71cf25f7c5e878a2603114cc5f
+  sha256: 90b49345fbfc76171fefe2845e3ed16d8ae3417df047b590d58717ac97257f5e
 
 build:
   number: 0

@@ -146,8 +146,8 @@ const jss = (theme: Theme & Eventkit.Theme) => createStyles({
         marginRight: '5px',
     },
     imageIcon: {
-        width: '48px',
-        height: '48px',
+        width: '55px',
+        height: '55px',
     }
 });
 
@@ -168,12 +168,13 @@ export interface BaseMapSource {
     name: string;
     type: string;
     thumbnail_url: string;
+    slug?: string;
 }
 
 export interface Props {
     providers: Eventkit.Provider[];
     sources: BaseMapSource[];
-    updateBaseMap: (mapId: string) => void;
+    updateBaseMap: (mapId: string, slug?: string) => void;
     classes: { [className: string]: string };
 }
 
@@ -204,8 +205,17 @@ export class MapDrawer extends React.Component<Props, State> {
 
     private updateBaseMap(newBaseMapId: number, sources) {
         this.setState({selectedBaseMap: newBaseMapId});
-        const baseMapUrl = (newBaseMapId !== -1) ? sources[newBaseMapId].url : '';
-        this.props.updateBaseMap(baseMapUrl);
+        let baseMapUrl;
+        let slug;
+        if (newBaseMapId !== -1) {
+            baseMapUrl = sources[newBaseMapId].url;
+            if (!!sources[newBaseMapId].slug) {
+                slug = sources[newBaseMapId].slug;
+            }
+        } else {
+            baseMapUrl = '';
+        }
+        this.props.updateBaseMap(baseMapUrl, slug);
     }
 
     handleChange = (event, newValue) => {
@@ -228,6 +238,7 @@ export class MapDrawer extends React.Component<Props, State> {
                     name: provider.name,
                     type: provider.type,
                     thumbnail_url: provider.thumbnail_url,
+                    slug: provider.slug,
                 } as BaseMapSource;
             })];
         const drawerOpen = !!selectedTab;

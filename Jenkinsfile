@@ -16,7 +16,7 @@ import yaml
 
 data = {}
 with open('environment-dev.yml', 'r') as yaml_file:
-    data = yaml.load(yaml_file)
+    data = yaml.safe_load(yaml_file)
 data['channels'] = ['local', '$CONDA_REPO']
 
 with open('environment-dev.yml', 'w') as outfile:
@@ -145,7 +145,7 @@ def removeVolumes() {
 import yaml
 data = {}
 with open('docker-compose.yml', 'r') as yaml_file:
-    data = yaml.load(yaml_file)
+    data = yaml.safe_load(yaml_file)
 for service in data.get('services'):
     data['services'][service].pop('volumes', "")
 with open('docker-compose.yml', 'w') as outfile:

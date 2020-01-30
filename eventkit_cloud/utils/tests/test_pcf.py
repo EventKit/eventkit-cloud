@@ -132,6 +132,7 @@ class TestPcfClient(TestCase):
         mock_get_app_guid.return_value = self.app_guid
 
         example_command = "example_command"
+        example_task_name = "example_name"
         example_payload = {
             "command": example_command,
             "disk_in_mb": os.getenv("CELERY_TASK_DISK", "2048"),
@@ -140,15 +141,15 @@ class TestPcfClient(TestCase):
 
         task_url = "{0}/v3/apps/{1}/tasks".format(self.api_url.rstrip('/'), self.app_guid)
         self.mock_requests.post(task_url, text=json.dumps(example_payload))
-        task = self.client.run_task(example_command, self.app)
+        task = self.client.run_task(example_task_name, example_command, app_name=self.app)
         self.assertEqual(task, example_payload)
 
         with self.assertRaises(Exception):
-            task = self.client.run_task(example_command)
+            task = self.client.run_task(example_task_name, example_command)
 
         with self.assertRaises(Exception):
             mock_get_app_guid.return_value = None
-            task = self.client.run_task(example_command, self.app)
+            task = self.client.run_task(example_task_name, example_command, app_name=self.app)
 
     @patch("eventkit_cloud.utils.pcf.PcfClient.get_app_guid")
     def test_get_running_tasks(self, mock_get_app_guid):

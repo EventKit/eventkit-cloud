@@ -15,8 +15,8 @@ from mapproxy.seed import seeder
 from mapproxy.seed.config import SeedingConfiguration
 from mapproxy.seed.util import ProgressLog, exp_backoff, timestamp, ProgressStore
 from mapproxy.wsgiapp import MapProxyApp
-from mapproxy.cache import geopackage as geopackage_cache
 from webtest import TestApp
+from eventkit_cloud.core.helpers import get_cached_model
 
 import os
 import sqlite3
@@ -81,16 +81,6 @@ def get_custom_exp_backoff(max_repeat=None):
     return custom_exp_backoff
 
 
-# This is a bug in mapproxy, https://github.com/mapproxy/mapproxy/issues/387
-def load_tile_metadata(self, tile):
-    if not self.supports_timestamp:
-        # GPKG specification does not include timestamps.
-        # This sets the timestamp of the tile to epoch (1970s)
-        tile.timestamp = -1
-    else:
-        self.load_tile(tile)
-
-
 class MapproxyGeopackage(object):
     """
     Convert a External service to a geopackage.
@@ -139,7 +129,7 @@ class MapproxyGeopackage(object):
         Create a MapProxy configuration object and verifies its validity
         """
         if self.config:
-            conf_dict = yaml.load(self.config) or dict()
+            conf_dict = yaml.safe_load(self.config) or dict()
         else:
             raise ConfigurationError("MapProxy configuration is required for raster data providers")
 
@@ -213,11 +203,10 @@ class MapproxyGeopackage(object):
         conf_dict, seed_configuration, mapproxy_configuration = self.get_check_config()
         #  Customizations...
         mapproxy.seed.seeder.exp_backoff = get_custom_exp_backoff(max_repeat=int(conf_dict.get("max_repeat", 5)))
-        geopackage_cache.GeopackageCache.load_tile_metadata = load_tile_metadata
 
         logger.error("Beginning seeding to {0}".format(self.gpkgfile))
         try:
-            conf = yaml.load(self.config) or dict()
+            conf = yaml.safe_load(self.config) or dict()
             cert_var = conf.get("cert_var")
             auth_requests.patch_https(slug=self.name, cert_var=cert_var)
 
@@ -347,11 +336,22 @@ def create_mapproxy_app(slug: str):
 
     # TODO: place this somewhere else consolidate settings.
     base_config = {
-        "services": {"demo": None, "tms": None, "wmts": None},
+        "services": {
+            "demo": None,
+            "tms": None,
+            "wmts": {
+                "featureinfo_formats": [
+                    {"mimetype": "application/json", "suffix": "json"},
+                    {"mimetype": "application/gml+xml; version=3.1", "suffix": "gml"},
+                ]
+            },
+        },
         "caches": {slug: {"default": {"type": "file"}, "sources": ["default"], "grids": ["default"]}},
         "layers": [{"name": slug, "title": slug, "sources": [slug]}],
         "globals": {"cache": {"base_dir": getattr(settings, "TILE_CACHE_DIR")}},
     }
+    if conf_dict["sources"].get("info"):
+        base_config["caches"][slug]["sources"] += ["info"]
     try:
         mapproxy_config = load_default_config()
         load_config(mapproxy_config, config_dict=conf_dict)
@@ -368,6 +368,7 @@ def create_mapproxy_app(slug: str):
     auth_requests.patch_mapproxy_opener_cache(slug=slug, cred_var=cred_var)
 
     app = MapProxyApp(mapproxy_configuration.configured_services(), mapproxy_config)
+
     return TestApp(app)
 
 
@@ -380,13 +381,13 @@ def get_conf_dict(slug: str) -> dict:
     from eventkit_cloud.jobs.models import DataProvider  # Circular reference
 
     try:
-        provider = cache.get_or_set(f"DataProvider-{slug}", lambda: DataProvider.objects.get(slug=slug), 360)
+        provider = get_cached_model(model=DataProvider, prop="slug", value=slug)
     except Exception:
         raise Exception(f"Unable to find provider for slug {slug}")
 
         # Load and "clean" mapproxy config for displaying a map.
     try:
-        conf_dict = yaml.load(provider.config)
+        conf_dict = yaml.safe_load(provider.config)
         conf_dict.pop("caches", "")
         conf_dict.pop("layers", "")
         ssl_verify = getattr(settings, "SSL_VERIFICATION", True)

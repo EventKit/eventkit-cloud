@@ -8,6 +8,8 @@ from django.test import TransactionTestCase
 from mapproxy.config.config import load_default_config
 from mock import Mock, patch, MagicMock, ANY
 
+from eventkit_cloud.core.helpers import get_cached_model
+from eventkit_cloud.jobs.models import DataProvider
 from eventkit_cloud.utils.mapproxy import (MapproxyGeopackage, get_conf_dict,
                                            get_cache_template, CustomLogger, check_zoom_levels)
 
@@ -38,7 +40,7 @@ class TestGeopackage(TransactionTestCase):
                      patch_https):
         gpkgfile = '/var/lib/eventkit/test.gpkg'
         config = "layers:\r\n - name: default\r\n   title: imagery\r\n   sources: [default]\r\n\r\nsources:\r\n  default:\r\n    type: tile\r\n    grid: default\r\n    url: http://a.tile.openstreetmap.fr/hot/%(z)s/%(x)s/%(y)s.png\r\n\r\ngrids:\r\n  default:\r\n    srs: WGS84:3857\r\n    tile_size: [256, 256]\r\n    origin: nw"
-        json_config = real_yaml.load(config)
+        json_config = real_yaml.safe_load(config)
         mapproxy_config = load_default_config()
         bbox = [-2, -2, 2, 2]
         cache_template.return_value = {'sources': ['default'], 'cache': {'type': 'geopackage', 'filename': '/var/lib/eventkit/test.gpkg'}, 'grids': ['default']}
@@ -126,17 +128,19 @@ class TestHelpers(TransactionTestCase):
             '\nINSERT OR REPLACE INTO gpkg_tile_matrix (table_name, zoom_level, matrix_width, matrix_height, tile_width, tile_height,\npixel_x_size, pixel_y_size)\nVALUES(?, ?, ?, ?, ?, ?, ?, ?)',
             ('tiles', 2, 4, 2, 256, 256, 0.3515625, 0.3515625))
 
-    @patch('eventkit_cloud.utils.mapproxy.cache')
-    def test_conf_dict(self, mock_cache: MagicMock):
+    @patch('eventkit_cloud.utils.mapproxy.get_cached_model')
+    def test_conf_dict(self, mock_get_cached_model: MagicMock):
         slug: str = 'slug'
         config_yaml: str = 'services: [stuff]'
         expected_config: dict = {'services': ['stuff'],
                                  'globals': {'cache': {'lock_dir': "./locks",
                                                        'tile_lock_dir': "./locks"}}}
         mock_data_provider = Mock(config=config_yaml)
-        mock_cache.get_or_set.return_value = mock_data_provider
+        mock_data_provider.config = config_yaml
+
+        mock_get_cached_model.return_value = mock_data_provider
         returned_conf = get_conf_dict(slug)
-        mock_cache.get_or_set.assert_called_once_with(F"DataProvider-{slug}", ANY, 360)
+        mock_get_cached_model.assert_called_once_with(model=DataProvider, prop="slug", value=slug)
         self.assertEquals(returned_conf, expected_config)
 
 
