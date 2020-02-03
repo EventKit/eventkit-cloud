@@ -27,7 +27,7 @@ def expire_runs():
     from eventkit_cloud.tasks.models import ExportRun
 
     site_url = getattr(settings, "SITE_URL")
-    runs = ExportRun.objects.all()
+    runs = ExportRun.objects.filter(deleted=False)
 
     for run in runs:
         expiration = run.expiration
@@ -40,7 +40,7 @@ def expire_runs():
         now = timezone.now()
         # if expired delete the run:
         if expiration <= now:
-            run.delete()
+            run.soft_delete()
 
         # if two days left and most recent notification was at the 7 day mark email user
         elif expiration - now <= timezone.timedelta(days=2):
