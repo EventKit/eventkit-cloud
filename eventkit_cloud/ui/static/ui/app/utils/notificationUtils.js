@@ -5,6 +5,7 @@ export const verbs = {
     runCompleted: 'run_completed',
     runFailed: 'run_failed',
     runDeleted: 'run_deleted',
+    runExpiring: 'run_expiring',
     removedFromGroup: 'removed_from_group',
     addedToGroup: 'added_to_group',
     setAsGroupAdmin: 'set_as_group_admin',
@@ -16,6 +17,7 @@ export const requiresActorDetails = [
     verbs.runCanceled,
     verbs.runCompleted,
     verbs.runDeleted,
+    verbs.runExpiring,
     verbs.runFailed,
 ];
 
@@ -33,6 +35,7 @@ export function getNotificationViewPath(notification) {
         case verbs.runCanceled:
         case verbs.runCompleted:
         case verbs.runDeleted:
+        case verbs.runExpiring:
         case verbs.runFailed: {
             const run = notification.actor.details;
             if (!run) {
