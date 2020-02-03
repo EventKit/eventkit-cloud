@@ -122,6 +122,7 @@ class NotificationVerb(Enum):
     ADDED_TO_GROUP = "added_to_group"
     SET_AS_GROUP_ADMIN = "set_as_group_admin"
     REMOVED_AS_GROUP_ADMIN = "removed_as_group_admin"
+    RUN_EXPIRING = "run_expiring"
 
 
 def sendnotification(actor, recipient, verb, action_object, target, level, description):
