@@ -32,12 +32,12 @@ CELERY_ACCEPT_CONTENT = ["json"]
 # configure periodic task
 
 BEAT_SCHEDULE = {
-    "expire-runs": {"task": "Expire Runs", "schedule": crontab(minute="0", hour="0", day_of_week="*")},
+    "expire-runs": {"task": "Expire Runs", "schedule": crontab(minute="0", hour="0")},
     "provider-statuses": {
         "task": "Check Provider Availability",
         "schedule": crontab(minute="*/{}".format(os.getenv("PROVIDER_CHECK_INTERVAL", "30"))),
     },
-    "clean-up-queues": {"task": "Clean Up Queues", "schedule": crontab(minute="0", hour="0", day_of_week="*")},
+    "clean-up-queues": {"task": "Clean Up Queues", "schedule": crontab(minute="0", hour="0")},
 }
 
 PCF_SCALING = os.getenv("PCF_SCALING", False)

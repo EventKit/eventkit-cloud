@@ -11,7 +11,13 @@ from django.template.loader import get_template
 from django.utils import timezone
 
 from eventkit_cloud.celery import app
+from eventkit_cloud.core.helpers import (
+    sendnotification,
+    NotificationVerb,
+    NotificationLevel,
+)
 from eventkit_cloud.tasks.helpers import get_all_rabbitmq_objects
+
 
 logger = get_task_logger(__name__)
 
@@ -45,12 +51,30 @@ def expire_runs():
         # if two days left and most recent notification was at the 7 day mark email user
         elif expiration - now <= timezone.timedelta(days=2):
             if not notified or (notified and notified < expiration - timezone.timedelta(days=2)):
+                sendnotification(
+                    run,
+                    run.job.user,
+                    NotificationVerb.RUN_EXPIRING.value,
+                    None,
+                    None,
+                    NotificationLevel.WARNING.value,
+                    run.status,
+                )
                 send_warning_email(date=expiration, url=url, addr=email, job_name=run.job.name)
                 run.notified = now
                 run.save()
 
         # if one week left and no notification yet email the user
         elif expiration - now <= timezone.timedelta(days=7) and not notified:
+            sendnotification(
+                run,
+                run.job.user,
+                NotificationVerb.RUN_EXPIRING.value,
+                None,
+                None,
+                NotificationLevel.WARNING.value,
+                run.status,
+            )
             send_warning_email(date=expiration, url=url, addr=email, job_name=run.job.name)
             run.notified = now
             run.save()
