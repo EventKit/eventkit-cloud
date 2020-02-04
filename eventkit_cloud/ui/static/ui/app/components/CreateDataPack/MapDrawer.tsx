@@ -275,7 +275,6 @@ export class MapDrawer extends React.Component<Props, State> {
                     type: provider.type,
                     thumbnail_url: provider.thumbnail_url,
                     slug: provider.slug,
-                    // add footprint_url: provider.footprint_url
                 } as BaseMapSource;
             })];
         const drawerOpen = !!selectedTab;

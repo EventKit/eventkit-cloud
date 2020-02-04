@@ -113,7 +113,6 @@ describe('FilterDrawer component', () => {
     });
 
     it('should fire the handleExpandClick function when source checkbox is clicked', () => {
-        // const event = {target: {name: 'test'}};
         const mockedEvent = sinon.spy();
         const mockCallBack = sinon.spy();
 

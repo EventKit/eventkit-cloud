@@ -1,5 +1,5 @@
 import React from "react";
-import {createStyles, withStyles, FormControlLabel, Theme, Switch} from "@material-ui/core";
+import {createStyles, withStyles, FormControlLabel, Switch} from "@material-ui/core";
 import * as PropTypes from "prop-types";
 import {Props} from "./FootprintDisplay";
 import Card from "@material-ui/core/Card";
@@ -28,17 +28,14 @@ const jss = () => createStyles({
         fontSize: '12px',
         paddingRight: '3px'
     },
-});
-
-const DefaultStyleSwitch = withStyles({
-  switchBase: {
+    switchBase: {
     color: theme.eventkit.colors.white,
       '&$checked': {
         color: theme.eventkit.colors.primary,
     },
   },
-  checked: {},
-})(Switch);
+    checked: {},
+});
 
 export interface Props {
     classes: { [className: string]: string };
@@ -86,10 +83,11 @@ export class FootprintDisplay extends React.Component<Props, State> {
                     <FormControlLabel
                         className={classes.formControlLabel}
                         control={
-                            <DefaultStyleSwitch
-                                value="check"
+                            <Switch
+                                value="switch"
                                 checked={this.state.checked}
                                 onChange={this.handleCheckClick}
+                                classes={{ switchBase: classes.switchBase, checked: classes.checked }}
                             />
                         }
                         label={<Typography className={classes.formControlLabel}>Show footprints</Typography>}
