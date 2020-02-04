@@ -57,6 +57,7 @@ import TileGrid from "ol/tilegrid/tilegrid";
 
 import {MapQueryDisplay, TileCoordinate} from "./MapQueryDisplay";
 import {SelectedBaseMap} from "./CreateExport";
+import MapDisplayBar from "./MapDisplayBar";
 
 export const WGS84 = 'EPSG:4326';
 export const WEB_MERCATOR = 'EPSG:3857';
@@ -80,9 +81,9 @@ export interface Props {
     clearExportInfo: () => void;
     walkthroughClicked: boolean;
     onWalkthroughReset: () => void;
+    selectedBaseMap: SelectedBaseMap;
     theme: Eventkit.Theme & Theme;
     width: Breakpoint;
-    selectedBaseMap: SelectedBaseMap;
 }
 
 export interface State {
@@ -128,6 +129,7 @@ export class ExportAOI extends React.Component<Props, State> {
     private bounceBack: boolean;
     private joyride: Joyride;
     private displayBoxRef;
+    private infoBarRef;
 
     constructor(props: Props) {
         super(props);
@@ -584,7 +586,9 @@ export class ExportAOI extends React.Component<Props, State> {
 
         // Hook up the click to query feature data
         this.map.on('click', (event) => {
-                this.displayBoxRef.handleMapClick(getTileCoordinateFromClick(event, this.baseLayer, this.map))
+                if (this.state.mode === MODE_NORMAL && this.displayBoxRef) {
+                    this.displayBoxRef.handleMapClick(getTileCoordinateFromClick(event, this.baseLayer, this.map))
+                }
             }
         );
 
@@ -1035,21 +1039,27 @@ export class ExportAOI extends React.Component<Props, State> {
                     run={isRunning}
                 />
                 <div id="map" className={css.map} style={mapStyle}>
-                    <AoiInfobar
-                        aoiInfo={this.props.aoiInfo}
-                        showRevert={!!this.props.aoiInfo.buffer}
-                        onRevertClick={this.openResetDialog}
-                        clickZoomToSelection={this.handleZoomToSelection}
-                        handleBufferClick={this.openBufferDialog}
-                        limits={this.props.limits}
-                    >
+                    <MapDisplayBar aoiInfo={this.props.aoiInfo} queryDisplayRef={this.displayBoxRef}>
+                        <AoiInfobar
+                            aoiInfo={this.props.aoiInfo}
+                            showRevert={!!this.props.aoiInfo.buffer}
+                            onRevertClick={this.openResetDialog}
+                            clickZoomToSelection={this.handleZoomToSelection}
+                            handleBufferClick={this.openBufferDialog}
+                            limits={this.props.limits}
+                            ref={child => {
+                                this.infoBarRef = child
+                            }}
+                        />
                         <MapQueryDisplay
+                            style={{height: '150px'}}
+                            maxHeight={185}
                             ref={child => {
                                 this.displayBoxRef = child
                             }}
                             selectedBaseMap={this.props.selectedBaseMap}
                         />
-                    </AoiInfobar>
+                    </MapDisplayBar>
                     <SearchAOIToolbar
                         handleSearch={this.checkForSearchUpdate}
                         handleCancel={this.handleCancel}

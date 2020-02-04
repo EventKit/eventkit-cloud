@@ -1,8 +1,7 @@
 import * as React from "react";
-import {BaseMapSource, MapDrawer} from "./MapDrawer";
 import axios from "axios";
 import {getCookie, getFeatureUrl} from "../../utils/generic";
-import DisplayDataBox from "./QueryDataBox";
+import QueryDataBox from "./QueryDataBox";
 import {SelectedBaseMap} from "./CreateExport";
 
 // The feature response data for a given coordinate specified by lat and long
@@ -25,6 +24,9 @@ export interface TileCoordinate {
 
 export interface Props {
     selectedBaseMap: SelectedBaseMap;
+    style?: any;
+    maxHeight?: number;
+    name?: string;
 }
 
 export interface State {
@@ -39,12 +41,17 @@ export class MapQueryDisplay extends React.Component<Props, State> {
 
         this.getFeatures = this.getFeatures.bind(this);
         this.handleMapClick = this.handleMapClick.bind(this);
+        this.isQueryBoxVisible = this.isQueryBoxVisible.bind(this);
 
         this.state = {
             queryLoading: false,
             responseData: undefined,
             closeCard: true,
         };
+    }
+
+    isQueryBoxVisible() {
+        return this.state.queryLoading || !!this.state.responseData;
     }
 
     private CancelToken = axios.CancelToken;
@@ -82,9 +89,13 @@ export class MapQueryDisplay extends React.Component<Props, State> {
             this.setState({
                 closeCard: false,
                 responseData: undefined,
+                queryLoading: true,
             });
             this.getFeatures(tileCoord).then(featureResponseData => {
-                this.setState({ responseData: featureResponseData });
+                this.setState({
+                    responseData: featureResponseData,
+                    queryLoading: false,
+                });
             });
         }
     }
@@ -97,8 +108,10 @@ export class MapQueryDisplay extends React.Component<Props, State> {
     render() {
         const { responseData } = this.state;
         return (
-            <DisplayDataBox
+            <QueryDataBox
                 {...(responseData) ? responseData : {}}
+                maxHeight={this.props.maxHeight}
+                style={this.props.style}
                 closeCard={ this.state.closeCard }
                 handleClose={ this.handleClose }
             />

@@ -22,35 +22,15 @@ import { getSqKm, getSqKmString } from '../../utils/generic';
 import { allHaveArea } from '../../utils/mapUtils';
 
 const jss = (theme: Eventkit.Theme & Theme) => createStyles({
-    wrapper: {
-        zIndex: 2,
-        position: 'absolute',
-        width: '100%',
-        bottom: '40px',
-        display: 'flex',
-        justifyContent: 'center',
-        pointerEvents: 'none',
-        [theme.breakpoints.only('xs')]: {
-            justifyContent: 'start',
-        },
-    },
-    infobar: {
-        backgroundColor: theme.eventkit.colors.white,
-        display: 'flex',
-        margin: '0px 10px',
-        pointerEvents: 'auto',
-        [theme.breakpoints.only('xs')]: {
-            margin: '0px 10px 0px 70px',
-        },
-    },
     body: {
         flex: '0 1 auto',
         padding: '15px',
+        backgroundColor: theme.eventkit.colors.white,
     },
     sidebar: {
         flex: '0 0 auto',
         flexWrap: 'wrap',
-        padding: '15px',
+        padding: '15px 5px',
         display: 'block',
         backgroundColor: theme.eventkit.colors.selected_primary,
         [theme.breakpoints.down('sm')]: {
@@ -78,6 +58,9 @@ const jss = (theme: Eventkit.Theme & Theme) => createStyles({
         flexWrap: 'wrap',
         width: '100%',
         paddingBottom: '10px',
+        [theme.breakpoints.down('sm')]: {
+            display: 'none',
+        },
     },
     title: {
         width: '100%',
@@ -172,6 +155,7 @@ export interface Props {
     theme: Eventkit.Theme & Theme;
     width: Breakpoint;
     classes: { [className: string]: string };
+    ref?: any;
 }
 
 export interface State {
@@ -338,138 +322,133 @@ export class AoiInfobar extends React.Component<Props, State> {
         }
 
         return (
-            <div className="qa-AoiInfobar">
-                <div className={classes.wrapper}>
-                    <div className={`qa-AoiInfobar-body ${classes.infobar}`}>
-                        <div className={classes.body}>
-                            <div className={classes.titleBar}>
-                                <div className={`qa-AoiInfobar-title ${classes.title}`}>
-                                    <strong>AREA OF INTEREST (AOI)</strong>
-                                </div>
-                                <div className={`qa-AoiInfobar-maxSize ${classes.maxSize}`}>
-                                    <div style={{ paddingRight: '5px' }}>
-                                        {max ? `${numeral(max).format('0,0')} sq km max;` : null}
-                                    </div>
-                                </div>
-                            </div>
-                            <div className={`qa-AoiInfobar-content ${classes.content}`}>
-                                <div className={`qa-AoiInfobar-areaColumn ${classes.areaColumn}`}>
-                                    <div style={{ flex: '1 1 auto' }}><strong>{originalArea}</strong></div>
-                                    <div style={{ lineHeight: '30px', marginTop: '5px' }}>
-                                        <strong>
-                                            {numeral(getSqKm(this.props.aoiInfo.geojson)
-                                                - getSqKm(this.props.aoiInfo.originalGeojson)).format('0,0')} sq km
-                                        </strong>
-                                    </div>
-                                    <Divider style={{ marginTop: '10px', marginBottom: '10px' }} />
-                                    <div>
-                                        <strong style={{ color: overAll ? colors.warning : 'initial' }}>
-                                            {totalArea}
-                                        </strong>
-                                    </div>
-                                </div>
-                                <div className={`qa-AoiInfobar-geomColumn ${classes.geomColumn}`}>
-                                    <div className="qa-AoiInfobar-info" style={{ display: 'flex' }}>
-                                        <div style={{ paddingRight: '5px' }}>
-                                            {geometryIcon}
-                                        </div>
-                                        <div style={{ display: 'flex', flexDirection: 'column' }}>
-                                            <div style={{ flex: '1 1 auto', wordBreak: 'break-word' }} className="qa-AoiInfobar-infoTitle">
-                                                <strong>{this.props.aoiInfo.title || ''}</strong>
-                                            </div>
-                                            <div
-                                                style={{ flex: '1 1 auto', wordBreak: 'break-word' }}
-                                                className="qa-AoiInfobar-infoDescription"
-                                            >
-                                                <span className="qa-AoiInfobar-description" style={{ color: colors.grey }}>
-                                                    {this.props.aoiInfo.description}
-                                                </span>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div className="qa-AoiInfobar-buffer" style={{ marginTop: '5px' }}>
-                                        <Button
-                                            className={`qa-AoiInfobar-buffer-button ${classes.bufferButton}`}
-                                            onClick={this.props.handleBufferClick}
-                                            variant="contained"
-                                            color="primary"
-                                            disabled={!!this.props.aoiInfo.buffer}
-
-                                        >
-                                            {`Buffer (${numeral(this.props.aoiInfo.buffer).format('0,0')}m)`}
-                                        </Button>
-                                        {bufferWarning}
-                                    </div>
-                                    <Divider style={{ marginTop: '10px', marginBottom: '10px' }} />
-                                    <div style={{ position: 'relative' }}>
-                                        <strong style={{ color: overAll ? colors.warning : 'initial' }}>
-                                             TOTAL AOI
-                                        </strong>
-                                        {sizeWarning}
-                                    </div>
-                                </div>
+            <>
+                <div className={classes.body}>
+                    <div className={classes.titleBar}>
+                        <div className={`qa-AoiInfobar-title ${classes.title}`}>
+                            <strong>AREA OF INTEREST (AOI)</strong>
+                        </div>
+                        <div className={`qa-AoiInfobar-maxSize ${classes.maxSize}`}>
+                            <div style={{ paddingRight: '5px' }}>
+                                {max ? `${numeral(max).format('0,0')} sq km max;` : null}
                             </div>
                         </div>
-                        <div className={`qa-AoiInfobar-sidebar ${classes.sidebar}`}>
-                            <div style={{ width: '100%', padding: '5px 0px' }}>
-                                <button
-                                    className={`qa-AoiInfobar-button-zoom ${classes.button}`}
-                                    onClick={this.props.clickZoomToSelection}
-                                >
-                                    <ActionZoomIn
-                                        className={`qa-AoiInfobar-ActionZoomIn ${classes.searchIcon}`}
-                                    /> ZOOM TO
-                                </button>
+                    </div>
+                    <div className={`qa-AoiInfobar-content ${classes.content}`}>
+                        <div className={`qa-AoiInfobar-areaColumn ${classes.areaColumn}`}>
+                            <div style={{ flex: '1 1 auto' }}><strong>{originalArea}</strong></div>
+                            <div style={{ lineHeight: '30px', marginTop: '5px' }}>
+                                <strong>
+                                    {numeral(getSqKm(this.props.aoiInfo.geojson)
+                                        - getSqKm(this.props.aoiInfo.originalGeojson)).format('0,0')} sq km
+                                </strong>
                             </div>
-                            {this.props.showRevert ?
-                                <div style={{ width: '100%', padding: '5px 0px' }}>
-                                    <button
-                                        className={`qa-AoiInfobar-button-revert ${classes.button}`}
-                                        onClick={this.props.onRevertClick}
+                            <Divider style={{ marginTop: '10px', marginBottom: '10px' }} />
+                            <div>
+                                <strong style={{ color: overAll ? colors.warning : 'initial' }}>
+                                    {totalArea}
+                                </strong>
+                            </div>
+                        </div>
+                        <div className={`qa-AoiInfobar-geomColumn ${classes.geomColumn}`}>
+                            <div className="qa-AoiInfobar-info" style={{ display: 'flex' }}>
+                                <div style={{ paddingRight: '5px' }}>
+                                    {geometryIcon}
+                                </div>
+                                <div style={{ display: 'flex', flexDirection: 'column' }}>
+                                    <div style={{ flex: '1 1 auto', wordBreak: 'break-word' }} className="qa-AoiInfobar-infoTitle">
+                                        <strong>{this.props.aoiInfo.title || ''}</strong>
+                                    </div>
+                                    <div
+                                        style={{ flex: '1 1 auto', wordBreak: 'break-word' }}
+                                        className="qa-AoiInfobar-infoDescription"
                                     >
-                                        <ActionRestore
-                                            className={`qa-AoiInfobar-ActionRestore ${classes.searchIcon}`}
-                                        /> REVERT
-                                    </button>
+                                        <span className="qa-AoiInfobar-description" style={{ color: colors.grey }}>
+                                            {this.props.aoiInfo.description}
+                                        </span>
+                                    </div>
                                 </div>
-                                :
-                                null
-                            }
-                        </div>
-                        <div className={`qa-AoiInfobar-sidebar-mobile ${classes.mobileSidebar}`}>
-                            <IconButton
-                                color="primary"
-                                onClick={this.handleMenuOpen}
-                            >
-                                <MoreVertIcon />
-                            </IconButton>
-                            <Menu
-                                id="infobar-menu"
-                                anchorEl={this.state.menuAnchor}
-                                open={Boolean(this.state.menuAnchor)}
-                                onClose={this.handleMenuClose}
-                            >
-                                <MenuItem
-                                    onClick={this.props.clickZoomToSelection}
-                                    className={classes.menuItem}
+                            </div>
+                            <div className="qa-AoiInfobar-buffer" style={{ marginTop: '5px' }}>
+                                <Button
+                                    className={`qa-AoiInfobar-buffer-button ${classes.bufferButton}`}
+                                    onClick={this.props.handleBufferClick}
+                                    variant="contained"
+                                    color="primary"
+                                    disabled={!!this.props.aoiInfo.buffer}
+
                                 >
-                                    ZOOM TO
-                                </MenuItem>
-                                <MenuItem
-                                    onClick={this.props.onRevertClick}
-                                    className={classes.menuItem}
-                                    style={{
-                                        ...(!this.props.showRevert ? { pointerEvents: 'none', cursor: 'default', color: colors.grey } : {}),
-                                    }}
-                                >
-                                    REVERT
-                                </MenuItem>
-                            </Menu>
+                                    {`Buffer (${numeral(this.props.aoiInfo.buffer).format('0,0')}m)`}
+                                </Button>
+                                {bufferWarning}
+                            </div>
+                            <Divider style={{ marginTop: '10px', marginBottom: '10px' }} />
+                            <div style={{ position: 'relative' }}>
+                                <strong style={{ color: overAll ? colors.warning : 'initial' }}>
+                                     TOTAL AOI
+                                </strong>
+                                {sizeWarning}
+                            </div>
                         </div>
-                        {this.props.children}
                     </div>
                 </div>
-            </div>
+                <div className={`qa-AoiInfobar-sidebar ${classes.sidebar}`}>
+                    <div style={{ width: '100%', padding: '5px 0px' }}>
+                        <button
+                            className={`qa-AoiInfobar-button-zoom ${classes.button}`}
+                            onClick={this.props.clickZoomToSelection}
+                        >
+                            <ActionZoomIn
+                                className={`qa-AoiInfobar-ActionZoomIn ${classes.searchIcon}`}
+                            /> ZOOM TO
+                        </button>
+                    </div>
+                    {this.props.showRevert ?
+                        <div style={{ width: '100%', padding: '5px 0px' }}>
+                            <button
+                                className={`qa-AoiInfobar-button-revert ${classes.button}`}
+                                onClick={this.props.onRevertClick}
+                            >
+                                <ActionRestore
+                                    className={`qa-AoiInfobar-ActionRestore ${classes.searchIcon}`}
+                                /> REVERT
+                            </button>
+                        </div>
+                        :
+                        null
+                    }
+                </div>
+                <div className={`qa-AoiInfobar-sidebar-mobile ${classes.mobileSidebar}`}>
+                    <IconButton
+                        color="primary"
+                        onClick={this.handleMenuOpen}
+                    >
+                        <MoreVertIcon />
+                    </IconButton>
+                    <Menu
+                        id="infobar-menu"
+                        anchorEl={this.state.menuAnchor}
+                        open={Boolean(this.state.menuAnchor)}
+                        onClose={this.handleMenuClose}
+                    >
+                        <MenuItem
+                            onClick={this.props.clickZoomToSelection}
+                            className={classes.menuItem}
+                        >
+                            ZOOM TO
+                        </MenuItem>
+                        <MenuItem
+                            onClick={this.props.onRevertClick}
+                            className={classes.menuItem}
+                            style={{
+                                ...(!this.props.showRevert ? { pointerEvents: 'none', cursor: 'default', color: colors.grey } : {}),
+                            }}
+                        >
+                            REVERT
+                        </MenuItem>
+                    </Menu>
+                </div>
+            </>
         );
     }
 }

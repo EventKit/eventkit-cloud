@@ -3,21 +3,22 @@ import {
     createStyles,
     Table, TableCell, TableRow, TableBody,
     Theme,
-    withStyles, Paper, Divider
+    withStyles, Paper, Divider, PropTypes
 } from "@material-ui/core";
 import {Card, CardContent, Typography} from '@material-ui/core';
 import CloseIcon from '@material-ui/icons/Close';
 import IconButton from "@material-ui/core/IconButton";
 import CircularProgress from "@material-ui/core/CircularProgress";
 import CustomScrollbar from "../CustomScrollbar";
+import Alignment = PropTypes.Alignment;
 
 const jss = (theme: Theme & Eventkit.Theme) => createStyles({
     card: {
-        color: theme.eventkit.colors.white,
+        background: theme.eventkit.colors.white,
         padding: '5px 10px',
         zIndex: 2,
         position: 'relative',
-        display: 'block',
+        display: 'grid',
     },
     title: {
         fontSize: 15,
@@ -63,19 +64,6 @@ const jss = (theme: Theme & Eventkit.Theme) => createStyles({
             justifyContent: 'start',
         },
     },
-    infobar: {
-        backgroundColor: theme.eventkit.colors.white,
-        display: 'flex',
-        margin: '0px 10px',
-        pointerEvents: 'auto',
-        [theme.breakpoints.only('xs')]: {
-            margin: '0px 10px 0px 70px',
-        },
-    },
-    body: {
-        flex: '0 1 auto',
-        padding: '15px',
-    },
 });
 
 
@@ -87,83 +75,100 @@ export interface Props {
     closeCard: boolean;
     handleClose: (event: any) => void;
     maxHeight?: number;
+    style: any;
     classes: { [className: string]: string };
 }
 
 export class QueryDataBox extends React.Component<Props, {}> {
 
+    private keyAlign : Alignment = "left";
+    private valueAlign : Alignment = "right";
+
     static defaultProps = {
         maxHeight: 125,
-    }
+        style: {},
+    };
 
     constructor(props: Props) {
         super(props);
     }
 
-    render() {
-        const { lat, long, closeCard, handleClose, maxHeight, classes } = this.props;
-        const keyAlign = "left";
-        const valueAlign = "right";
-
+    getErrorBox(latLong) {
+        const { classes } = this.props;
         const waitingForData = (!this.props.featureData && !this.props.errorMessage);
 
+        if (waitingForData) {
+            return (
+                <div style={{height: 'calc(100vh)'}}>
+                    <strong className={classes.details}>Fetching data, please wait.</strong>
+                    <CircularProgress size={15} style={{ margin: '15px', marginLeft: '5px' }}/>
+                </div>
+            );
+        } else {
+            return ( // Error message found and we're not waiting for data
+                <div style={{height: 'calc(100vh)'}}>
+                    <strong className={classes.details}>{this.props.errorMessage}</strong>
+                    <Table padding="dense">
+                        <TableBody>
+                            <TableRow className={classes.tableRow}>
+                                <TableCell align={this.keyAlign} className={classes.tableCell}>
+                                    <Typography className={classes.details}>Lat, Long:</Typography>
+                                </TableCell>
+                                <TableCell align={this.valueAlign} className={classes.tableCell}>
+                                    <Typography className={classes.details}>{latLong}</Typography>
+                                </TableCell>
+                            </TableRow>
+                        </TableBody>
+                    </Table>
+                </div>
+            );
+        }
+    }
+
+    getDataDisplay(latLong) {
+        const { classes } = this.props;
+
+        return (
+            <Table padding="dense">
+                <TableBody>
+                    <TableRow className={classes.tableRow}>
+                        <TableCell align={this.keyAlign} className={classes.tableCell}>
+                            <Typography className={classes.details}>Lat, Long:</Typography>
+                        </TableCell>
+                        <TableCell align={this.valueAlign} className={classes.tableCell}>
+                            <Typography className={classes.details}>{latLong}</Typography>
+                        </TableCell>
+                    </TableRow>
+                    {Object.entries(this.props.featureData).map(([key, value], ix) => (
+                        <TableRow className={classes.tableRow} key={"row" + ix}>
+                            <TableCell align={this.keyAlign} className={classes.tableCell}>
+                                <Typography key={"key" + ix} className={classes.details}>
+                                    {key}:
+                                </Typography>
+                            </TableCell>
+                            <TableCell align={this.valueAlign} className={classes.tableCell}>
+                                <Typography key={"value" + ix} className={classes.details}>
+                                    {value}
+                                </Typography>
+                            </TableCell>
+                        </TableRow>
+                    ))}
+                </TableBody>
+        </Table>)
+    }
+
+    render() {
+        const { lat, long, closeCard, handleClose, classes } = this.props;
         if (closeCard) {
-            return (<div/>);
+            return (<div className="queryBoxClosed"/>);
         }
         // Format the lat long string now.
         const latLong = (lat !== null && lat !== undefined && long !== null && long !== undefined) ?
             `${parseFloat(lat.toFixed(6))}, ${parseFloat(long.toFixed(6))}`
             : '---, ---';
 
-        if (!!this.props.errorMessage || !this.props.featureData) {
-            return (
-                <Card className={classes.card}>
-                    <Typography className={classes.title}>Query Result:</Typography>
-                    <Divider/>
-                    <IconButton
-                        className={classes.closeButton}
-                        type='button'
-                        onClick={(e) => {
-                            handleClose(e);
-                        }}
-                    >
-                        <CloseIcon className={classes.closeIcon}/>
-                    </IconButton>
-                    <CustomScrollbar
-                        autoHeight
-                        autoHeightMax={90}
-                    >
-                        {(waitingForData) ?
-                            (<div>
-                                <strong className={classes.details}>Fetching data, please wait.</strong>
-                                <CircularProgress size={15} style={{ margin: '3px' }}/>
-                            </div>) :
-                            ( // Error message found and we're not waiting for data
-                                <div>
-                                    <strong className={classes.details}>{this.props.errorMessage}</strong>
-                                    <Table padding="dense">
-                                        <TableBody>
-                                            <TableRow className={classes.tableRow}>
-                                                <TableCell align={keyAlign} className={classes.tableCell}>
-                                                    <Typography className={classes.details}>Lat, Long:</Typography>
-                                                </TableCell>
-                                                <TableCell align={valueAlign} className={classes.tableCell}>
-                                                    <Typography className={classes.details}>{latLong}</Typography>
-                                                </TableCell>
-                                            </TableRow>
-                                        </TableBody>
-                                    </Table>
-                                </div>
-                            )
-                        }
-                    </CustomScrollbar>
-                </Card>
-            )
-        }
         return (
-            <div className={classes.wrapper}>
-                <div className={`qa-AoiInfobar-body ${classes.infobar}`}>
-                    <div className={classes.body}>
+            <div className={classes.card} style={this.props.style}>
                 <Typography className={classes.title}>Query Result:</Typography>
                 <Divider/>
                 <IconButton
@@ -177,37 +182,13 @@ export class QueryDataBox extends React.Component<Props, {}> {
                 </IconButton>
                 <CustomScrollbar
                     autoHeight
-                    autoHeightMax={maxHeight}
+                    style={{height: '100%'}}
                 >
-                    <Table padding="dense">
-                        <TableBody>
-                            <TableRow className={classes.tableRow}>
-                                <TableCell align={keyAlign} className={classes.tableCell}>
-                                    <Typography className={classes.details}>Lat, Long:</Typography>
-                                </TableCell>
-                                <TableCell align={valueAlign} className={classes.tableCell}>
-                                    <Typography className={classes.details}>{latLong}</Typography>
-                                </TableCell>
-                            </TableRow>
-                            {Object.entries(this.props.featureData).map(([key, value], ix) => (
-                                <TableRow className={classes.tableRow} key={"row" + ix}>
-                                    <TableCell align={keyAlign} className={classes.tableCell}>
-                                        <Typography key={"key" + ix} className={classes.details}>
-                                            {key}:
-                                        </Typography>
-                                    </TableCell>
-                                    <TableCell align={valueAlign} className={classes.tableCell}>
-                                        <Typography key={"value" + ix} className={classes.details}>
-                                            {value}
-                                        </Typography>
-                                    </TableCell>
-                                </TableRow>
-                            ))}
-                        </TableBody>
-                    </Table>
+                    { (!!this.props.errorMessage || !this.props.featureData) ?
+                        this.getErrorBox(latLong) :
+                        this.getDataDisplay(latLong)
+                    }
                 </CustomScrollbar>
-                    </div>
-                </div>
             </div>
         );
     }

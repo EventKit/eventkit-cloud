@@ -18,8 +18,7 @@ from mock import Mock, PropertyMock, patch, MagicMock, call, ANY
 
 from eventkit_cloud.celery import TaskPriority, app
 from eventkit_cloud.jobs.models import DatamodelPreset, Job
-from eventkit_cloud.tasks.export_tasks import (ExportTask,
-                                               LockingTask, export_task_error_handler, finalize_run_task,
+from eventkit_cloud.tasks.export_tasks import (ExportTask, export_task_error_handler, finalize_run_task,
                                                kml_export_task, mapproxy_export_task, geopackage_export_task,
                                                shp_export_task, arcgis_feature_service_export_task, update_progress,
                                                pick_up_run_task, cancel_export_provider_task, kill_task,
@@ -27,6 +26,7 @@ from eventkit_cloud.tasks.export_tasks import (ExportTask,
                                                FormatTask, wait_for_providers_task, create_zip_task,
                                                default_format_time, geotiff_export_task
                                                )
+from eventkit_cloud.tasks.task_base import LockingTask
 from eventkit_cloud.tasks.enumerations import TaskStates
 from eventkit_cloud.tasks.export_tasks import zip_files
 from eventkit_cloud.tasks.models import (
@@ -537,9 +537,9 @@ class TestExportTasks(ExportTaskBase):
         cancel_export_provider_task.run(data_provider_task_uid=export_provider_task.uid,
                                         canceling_username=user.username)
         mock_kill_task.apply_async.assert_called_once_with(kwargs={"task_pid": task_pid, "celery_uid": celery_uid},
-                                                           queue="{0}.cancel".format(worker_name),
+                                                           queue="{0}.priority".format(worker_name),
                                                            priority=TaskPriority.CANCEL.value,
-                                                           routing_key="{0}.cancel".format(worker_name))
+                                                           routing_key="{0}.priority".format(worker_name))
         export_task = ExportTaskRecord.objects.get(uid=export_task.uid)
         export_provider_task = DataProviderTaskRecord.objects.get(uid=export_provider_task.uid)
         self.assertEqual(export_task.status, TaskStates.CANCELED.value)

@@ -534,9 +534,12 @@ def get_message_count(queue_name):
     for queue in get_all_rabbitmq_objects(broker_api_url, queue_class):
         if queue.get("name") == queue_name:
             try:
-                return queue.get("messages")
+                return queue.get("messages", 0)
             except Exception as e:
                 logger.info(e)
+
+    logger.info(f"Cannot find queue named {queue_name}, returning 0 messages.")
+    return 0
 
 
 def clean_config(config):
