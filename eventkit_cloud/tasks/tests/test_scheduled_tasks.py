@@ -58,8 +58,9 @@ class TestExpireRunsTask(TestCase):
                                        addr=job.user.email, job_name=job.name)
             send_email.assert_any_call(date=now_time + timezone.timedelta(days=6), url=expected_url,
                                        addr=job.user.email, job_name=job.name)
-            self.assertEqual(3, ExportRun.objects.all().count())
-            self.assertEqual(0, Notification.objects.all().count())
+            self.assertEqual(3, ExportRun.objects.filter(deleted=False).count())
+            self.assertEqual(1, ExportRun.objects.filter(deleted=True).count())
+            self.assertEqual(2, Notification.objects.all().count())
 
 
 class TestPcfScaleCeleryTask(TestCase):

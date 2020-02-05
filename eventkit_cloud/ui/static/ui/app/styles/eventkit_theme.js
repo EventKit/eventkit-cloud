@@ -77,7 +77,7 @@ export const theme = {
     overrides: {
         MuiCheckbox: {
             colorPrimary: {
-                color: colors.primary,
+                color: colors.white,
                 '&$checked': { color: colors.primary },
                 '&$disabled': { color: colors.grey },
             },
