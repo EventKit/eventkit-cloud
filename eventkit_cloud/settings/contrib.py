@@ -1,7 +1,5 @@
 # -*- coding: utf-8 -*-
 
-import os
-
 from eventkit_cloud.settings.base import *  # NOQA
 from eventkit_cloud.settings.base import INSTALLED_APPS
 

@@ -1,12 +1,5 @@
 # -*- coding: utf-8 -*-
-import json as default_json
-import os
-
-import simplejson as json
-from django.conf import settings
-from django.shortcuts import render, resolve_url
-from rest_framework import status
-from rest_framework.renderers import BaseRenderer, JSONRenderer
+from rest_framework.renderers import BaseRenderer
 from rest_framework.renderers import BrowsableAPIRenderer
 
 

@@ -18,7 +18,6 @@ from rest_framework import exceptions
 from rest_framework import filters, permissions, status, views, viewsets, mixins
 from rest_framework.decorators import action
 from rest_framework.parsers import JSONParser
-from rest_framework.permissions import AllowAny
 from rest_framework.renderers import JSONRenderer
 from rest_framework.response import Response
 

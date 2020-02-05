@@ -48,14 +48,16 @@ router.register(r"audit_events", AuditEventViewSet, basename="audit_events")
 
 
 urlpatterns = [
-    re_path(r"^api/docs/$", TemplateView.as_view(
-        template_name='swagger-ui.html',
-        extra_context={'schema_url':'api:openapi-schema'}
-    ), name='swagger-ui'),
-    re_path(r"^api/openapi", get_schema_view(
-        title="EventKit",
-        description="Documentation for the EventKit API."
-    ), name='openapi-schema'),
+    re_path(
+        r"^api/docs/$",
+        TemplateView.as_view(template_name="swagger-ui.html", extra_context={"schema_url": "api:openapi-schema"}),
+        name="swagger-ui",
+    ),
+    re_path(
+        r"^api/openapi",
+        get_schema_view(title="EventKit", description="Documentation for the EventKit API."),
+        name="openapi-schema",
+    ),
     re_path(r"^api/", include(router.urls)),
     re_path(r"^api/", include(notifications.urls)),
     re_path(r"^api/estimate$", EstimatorView.as_view()),
