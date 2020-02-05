@@ -58,6 +58,7 @@ requirements:
     - Shapely =1.6.4
     - simplejson =3.16.0
     - sqlparse =0.3.0
+    - uritemplate =3.0.1
     - webtest =2.0.33
     - whitenoise =4.1.2
   run:
@@ -101,6 +102,7 @@ requirements:
     - Shapely =1.6.4
     - simplejson =3.16.0
     - sqlparse =0.3.0
+    - uritemplate =3.0.1
     - webtest =2.0.33
     - whitenoise =4.1.2
 
