@@ -374,18 +374,16 @@ export class DataProvider extends React.Component<Props, State> {
             );
         } else {
             nestedItems.push(
-                <>
-                    <ListItem
-                        className={`qa-DataProvider-ListItem-zoomSlider ${classes.sublistItem}`}
-                        key={nestedItems.length}
-                        dense
-                        disableGutters
-                    >
-                        <div>
-                            <em>Zoom not available for this source.</em>
-                        </div>
-                    </ListItem>
-                </>
+                <ListItem
+                    className={`qa-DataProvider-ListItem-zoomSlider ${classes.sublistItem}`}
+                    key={nestedItems.length}
+                    dense
+                    disableGutters
+                >
+                    <div>
+                        <em>Zoom not available for this source.</em>
+                    </div>
+                </ListItem>
             );
         }
 
