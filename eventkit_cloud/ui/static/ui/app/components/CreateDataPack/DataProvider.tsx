@@ -73,7 +73,7 @@ const jss = (theme: Theme & Eventkit.Theme) => createStyles({
     },
     formControlLabel: {
         paddingLeft: '10px',
-        fontSize: '12px',
+        fontSize: '16px',
         paddingRight: '3px'
     }
 });
@@ -161,7 +161,7 @@ export class DataProvider extends React.Component<Props, State> {
             open: false,
             licenseDialogOpen: false,
             zoomLevel: this.props.provider.level_to,
-            checked: true,
+            checked: false,
         };
     }
 
@@ -381,34 +381,45 @@ export class DataProvider extends React.Component<Props, State> {
             );
         } else {
             nestedItems.push(
-                <ListItem
-                    className={`qa-DataProvider-ListItem-zoomSlider ${classes.sublistItem}`}
-                    key={nestedItems.length}
-                    dense
-                    disableGutters
-                >
-                    <div>
-                        <em>Zoom not available for this source.</em>
-                    </div>
-                    {/*//////////////////////////// Add Footprint Switch Here ////////////////////////*/}
-                </ListItem>
+                <>
+                    <ListItem
+                        className={`qa-DataProvider-ListItem-zoomSlider ${classes.sublistItem}`}
+                        key={nestedItems.length}
+                        dense
+                        disableGutters
+                    >
+                        <div>
+                            <em>Zoom not available for this source.</em>
+                        </div>
+                    </ListItem>
+                    <span style={{float: 'right', marginTop: '-12px', fontSize: '16px', paddingRight: '15px'}}>
+                        <span
+                            // className={classes.formControlLabel}
+                        >
+                            Footprints
+                        </span>
+                        <Switch
+                            value="switch"
+                            checked={this.props.checked}
+                            onChange={this.handleCheckClick}
+                            classes={{ switchBase: classes.switchBase, checked: classes.checked }}
+                        />
+                    </span>
+                    {/*<FormControlLabel*/}
+                    {/*    className={classes.formControlLabel}*/}
+                    {/*    label={<Typography className={classes.formControlLabel}>Footprints</Typography>}*/}
+                    {/*    control={*/}
+                    {/*        <Switch*/}
+                    {/*            value="switch"*/}
+                    {/*            checked={this.state.checked}*/}
+                    {/*            onChange={this.handleCheckClick}*/}
+                    {/*            classes={{ switchBase: classes.switchBase, checked: classes.checked }}*/}
+                    {/*        />*/}
+                    {/*    }*/}
+                    {/*/>*/}
+                </>
             );
         }
-
-        // nestedItems.push(
-        //    <FormControlLabel
-        //         className={classes.formControlLabel}
-        //         label={<Typography className={classes.formControlLabel}>Footprints</Typography>}
-        //         control={
-        //             <Switch
-        //                 value="switch"
-        //                 checked={this.state.checked}
-        //                 onChange={this.handleCheckClick}
-        //                 classes={{ switchBase: classes.switchBase, checked: classes.checked }}
-        //             />
-        //         }
-        //     />
-        // );
 
         nestedItems.push((
             <ListItem

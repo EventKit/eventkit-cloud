@@ -157,6 +157,15 @@ export const theme = {
                 width: '100%',
             },
         },
+        MuiSwitch: {
+            bar: {
+                backgroundColor: colors.white,
+                "$checked$checked + &": {
+                    opacity: 1.0,
+                    backgroundColor: colors.primary
+                }
+            }
+        },
     },
 };
 

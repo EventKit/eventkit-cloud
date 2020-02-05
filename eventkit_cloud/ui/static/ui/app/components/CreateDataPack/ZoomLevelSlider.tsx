@@ -34,11 +34,16 @@ const jss = (theme: Theme & Eventkit.Theme) => createStyles({
         paddingTop: '10px',
         paddingBottom: '5px',
     },
+    switch: {
+        float: 'right',
+        marginTop: '-12px',
+        paddingRight: '15px'
+    },
     switchBase: {
-        color: theme.eventkit.colors.white,
-          '&$checked': {
-            color: theme.eventkit.colors.primary,
-        },
+    color: theme.eventkit.colors.white,
+      '&$checked': {
+        color: theme.eventkit.colors.primary,
+    },
   },
     checked: {},
 });
@@ -126,7 +131,7 @@ export class ZoomLevelSlider extends React.Component<Props, State> {
         return (
             <div className={classes.container}>
                 <>
-                    <div>
+                    <span>
                         <TextField
                             className={classes.textField}
                             type="number"
@@ -152,19 +157,16 @@ export class ZoomLevelSlider extends React.Component<Props, State> {
                             inputProps={{style: {textAlign: 'center', fontWeight: 'bold', fontSize: '16px'}}}
                         />
                         <span style={{fontSize: '16px'}}>Selected Zoom</span>
-                    </div>
-                <span>
-                    <FormControlLabel
-                        className={classes.formControlLabel}
-                        label={<Typography className={classes.formControlLabel}>Footprints</Typography>}
-                        control={
-                            <Switch
-                                value="switch"
-                                checked={this.props.checked}
-                                onChange={this.props.handleCheckClick}
-                                classes={{ switchBase: classes.switchBase, checked: classes.checked }}
-                            />
-                        }
+                    </span>
+                <span className={classes.switch}>
+                    <span style={{fontSize: '16px'}}>
+                        Footprints
+                    </span>
+                    <Switch
+                        value="switch"
+                        checked={this.props.checked}
+                        onChange={this.props.handleCheckClick}
+                        classes={{ switchBase: classes.switchBase, checked: classes.checked }}
                     />
                 </span>
                 <br/>

@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { shallow } from 'enzyme';
 import { ZoomLevelSlider } from '../../components/CreateDataPack/ZoomLevelSlider';
-import {TextField} from "@material-ui/core";
+import {Switch, TextField} from "@material-ui/core";
 import {Slider} from "@material-ui/lab";
 
 describe('ZoomLevelSlider component', () => {
@@ -39,8 +39,9 @@ describe('ZoomLevelSlider component', () => {
 
     beforeEach(setup);
 
-    it('should render input controls', () => {
+    it('should render input controls and footprints switch control', () => {
         expect(wrapper.find(TextField)).toHaveLength(2);
         expect(wrapper.find(Slider)).toHaveLength(1);
+        expect(wrapper.find(Switch)).toHaveLength(1);
     });
 });
