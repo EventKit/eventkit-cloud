@@ -61,6 +61,7 @@ export class NotificationIcon extends Component {
                 );
                 break;
             case verbs.runDeleted:
+            case verbs.runExpiring:
             case verbs.removedFromGroup:
             case verbs.removedAsGroupAdmin:
                 icon = (
