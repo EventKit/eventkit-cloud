@@ -19,11 +19,7 @@ from django.db.models.fields import CharField
 from django.utils import timezone
 from enum import Enum
 
-from eventkit_cloud.core.models import (
-    TimeStampedModelMixin,
-    UIDMixin,
-    DownloadableMixin,
-)
+from eventkit_cloud.core.models import CachedModelMixin, DownloadableMixin, TimeStampedModelMixin, UIDMixin
 
 logger = logging.getLogger(__name__)
 
@@ -157,7 +153,7 @@ class DataProviderType(TimeStampedModelMixin):
         return "{0}".format(self.type_name)
 
 
-class DataProvider(UIDMixin, TimeStampedModelMixin):
+class DataProvider(UIDMixin, TimeStampedModelMixin, CachedModelMixin):
     """
     Model for a DataProvider.
     """
