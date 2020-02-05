@@ -16,7 +16,7 @@ from django_filters.rest_framework import DjangoFilterBackend
 from notifications.models import Notification
 from rest_framework import exceptions
 from rest_framework import filters, permissions, status, views, viewsets, mixins
-from rest_framework.decorators import detail_route, list_route, action
+from rest_framework.decorators import action
 from rest_framework.parsers import JSONParser
 from rest_framework.permissions import AllowAny
 from rest_framework.renderers import JSONRenderer
@@ -502,7 +502,7 @@ class JobViewSet(viewsets.ModelViewSet):
         else:
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-    @detail_route(methods=["get", "post"])
+    @action(methods=["get", "post"], detail=True)
     def run(self, request, uid=None, *args, **kwargs):
         """
         Creates the run (i.e. runs the job).
@@ -681,7 +681,7 @@ class JobViewSet(viewsets.ModelViewSet):
         """
         return super(JobViewSet, self).update(self, request, uid, *args, **kwargs)
 
-    @list_route(methods=["post"])
+    @action(methods=["post"], detail=False)
     def filter(self, request, *args, **kwargs):
         """
              Return all jobs that are readable by every
@@ -791,7 +791,7 @@ class LicenseViewSet(viewsets.ReadOnlyModelViewSet):
     lookup_field = "slug"
     ordering = ["name"]
 
-    @detail_route(methods=["get"], renderer_classes=[PlainTextRenderer])
+    @action(methods=["get"], detail=True, renderer_classes=[PlainTextRenderer])
     def download(self, request, slug=None, *args, **kwargs):
         """
         Responds to a GET request with a text file of the license text
@@ -843,7 +843,7 @@ class DataProviderViewSet(viewsets.ReadOnlyModelViewSet):
         """
         return DataProvider.objects.filter(Q(user=self.request.user) | Q(user=None))
 
-    @detail_route(methods=["get", "post"])
+    @action(methods=["get", "post"], detail=True)
     def status(self, request, slug=None, *args, **kwargs):
         """
         Checks the status of a data provider to confirm that it is available.
@@ -1077,7 +1077,7 @@ class ExportRunViewSet(viewsets.ModelViewSet):
             serializer = self.get_serializer(queryset, many=True, context={"request": request})
             return Response(serializer.data, status=status.HTTP_200_OK)
 
-    @list_route(methods=["post", "get"])
+    @action(methods=["post", "get"], detail=False)
     def filter(self, request, *args, **kwargs):
         """
         Lists the ExportRuns and provides advanced filtering options like search_term, bbox, and geojson geometry.
