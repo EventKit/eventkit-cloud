@@ -11,7 +11,7 @@ import ExpandMore from '@material-ui/icons/ExpandMore';
 import ProviderStatusIcon from './ProviderStatusIcon';
 import BaseDialog from '../Dialog/BaseDialog';
 import {formatMegaBytes, getDuration, isZoomLevelInRange, supportsZoomLevels} from '../../utils/generic';
-import {Typography} from "@material-ui/core";
+import {FormControlLabel, Switch, Typography} from "@material-ui/core";
 import ZoomLevelSlider from "./ZoomLevelSlider";
 import {connect} from "react-redux";
 import {updateExportInfo} from '../../actions/datacartActions';
@@ -71,6 +71,11 @@ const jss = (theme: Theme & Eventkit.Theme) => createStyles({
     prewrap: {
         whiteSpace: 'pre-wrap',
     },
+    formControlLabel: {
+        paddingLeft: '10px',
+        fontSize: '12px',
+        paddingRight: '3px'
+    }
 });
 
 interface EstimateData {
@@ -119,6 +124,8 @@ interface Props {
         expand: string;
         license: string;
         prewrap: string;
+        switchBase: string;
+        formControlLabel: string;
     };
 }
 
@@ -126,6 +133,7 @@ interface State {
     open: boolean;
     licenseDialogOpen: boolean;
     zoomLevel: number;
+    checked: boolean;
 }
 
 export class DataProvider extends React.Component<Props, State> {
@@ -135,7 +143,7 @@ export class DataProvider extends React.Component<Props, State> {
 
     static contextTypes = {
         config: PropTypes.object,
-    };
+    };d
 
     constructor(props: Props) {
         super(props);
@@ -145,6 +153,7 @@ export class DataProvider extends React.Component<Props, State> {
         this.setZoom = this.setZoom.bind(this);
         this.getFormatCompatibility = this.getFormatCompatibility.bind(this);
         this.getCheckedIcon = this.getCheckedIcon.bind(this);
+        this.handleCheckClick = this.handleCheckClick.bind(this);
 
         this.estimateDebouncer = () => { /* do nothing while not mounted */
         };
@@ -152,6 +161,7 @@ export class DataProvider extends React.Component<Props, State> {
             open: false,
             licenseDialogOpen: false,
             zoomLevel: this.props.provider.level_to,
+            checked: true,
         };
     }
 
@@ -235,6 +245,10 @@ export class DataProvider extends React.Component<Props, State> {
     handleExpand() {
         this.setState(state => ({open: !state.open}));
     }
+
+    handleCheckClick = () => {
+        this.setState({ checked: !this.state.checked });
+    };
 
     private formatEstimate(providerEstimate) {
         if (!providerEstimate) {
@@ -332,7 +346,7 @@ export class DataProvider extends React.Component<Props, State> {
                     id={'ZoomSelection'}
                     key={nestedItems.length}
                 >
-                    <div
+                    <span
                         className={`qa-DataProvider-ListItem-zoomSlider ${this.props.provider.slug + '-sliderDiv'}`}
                         key={this.props.provider.slug + '-sliderDiv'}
                         style={{padding: '10px 40px'}}
@@ -343,8 +357,10 @@ export class DataProvider extends React.Component<Props, State> {
                             selectedMinZoom={currentMinZoom}
                             maxZoom={provider.level_to}
                             minZoom={provider.level_from}
+                            handleCheckClick={this.handleCheckClick}
+                            checked={this.state.checked}
                         />
-                    </div>
+                    </span>
                     <div
                         className={`qa-DataProvider-ListItem-zoomMap ${this.props.provider.slug + '-mapDiv'}`}
                         key={this.props.provider.slug + '-mapDiv'}
@@ -374,8 +390,25 @@ export class DataProvider extends React.Component<Props, State> {
                     <div>
                         <em>Zoom not available for this source.</em>
                     </div>
-                </ListItem>);
+                    {/*//////////////////////////// Add Footprint Switch Here ////////////////////////*/}
+                </ListItem>
+            );
         }
+
+        // nestedItems.push(
+        //    <FormControlLabel
+        //         className={classes.formControlLabel}
+        //         label={<Typography className={classes.formControlLabel}>Footprints</Typography>}
+        //         control={
+        //             <Switch
+        //                 value="switch"
+        //                 checked={this.state.checked}
+        //                 onChange={this.handleCheckClick}
+        //                 classes={{ switchBase: classes.switchBase, checked: classes.checked }}
+        //             />
+        //         }
+        //     />
+        // );
 
         nestedItems.push((
             <ListItem
