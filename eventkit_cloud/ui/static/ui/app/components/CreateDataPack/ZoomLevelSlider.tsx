@@ -37,7 +37,7 @@ const jss = (theme: Theme & Eventkit.Theme) => createStyles({
     switch: {
         float: 'right',
         marginTop: '-12px',
-        paddingRight: '15px'
+        marginRight: '-14px'
     },
     switchBase: {
     color: theme.eventkit.colors.white,

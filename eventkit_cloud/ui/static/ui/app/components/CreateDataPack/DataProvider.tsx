@@ -346,7 +346,7 @@ export class DataProvider extends React.Component<Props, State> {
                     id={'ZoomSelection'}
                     key={nestedItems.length}
                 >
-                    <span
+                    <div
                         className={`qa-DataProvider-ListItem-zoomSlider ${this.props.provider.slug + '-sliderDiv'}`}
                         key={this.props.provider.slug + '-sliderDiv'}
                         style={{padding: '10px 40px'}}
@@ -360,7 +360,7 @@ export class DataProvider extends React.Component<Props, State> {
                             handleCheckClick={this.handleCheckClick}
                             checked={this.state.checked}
                         />
-                    </span>
+                    </div>
                     <div
                         className={`qa-DataProvider-ListItem-zoomMap ${this.props.provider.slug + '-mapDiv'}`}
                         key={this.props.provider.slug + '-mapDiv'}
