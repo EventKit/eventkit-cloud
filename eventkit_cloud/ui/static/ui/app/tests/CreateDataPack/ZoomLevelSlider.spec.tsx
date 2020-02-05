@@ -4,6 +4,7 @@ import { ZoomLevelSlider } from '../../components/CreateDataPack/ZoomLevelSlider
 import {Switch, TextField} from "@material-ui/core";
 import {Slider} from "@material-ui/lab";
 
+
 describe('ZoomLevelSlider component', () => {
     let wrapper;
     let instance;

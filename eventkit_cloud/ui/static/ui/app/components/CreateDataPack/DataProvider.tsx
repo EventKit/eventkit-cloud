@@ -11,7 +11,7 @@ import ExpandMore from '@material-ui/icons/ExpandMore';
 import ProviderStatusIcon from './ProviderStatusIcon';
 import BaseDialog from '../Dialog/BaseDialog';
 import {formatMegaBytes, getDuration, isZoomLevelInRange, supportsZoomLevels} from '../../utils/generic';
-import {FormControlLabel, Switch, Typography} from "@material-ui/core";
+import {Typography} from "@material-ui/core";
 import ZoomLevelSlider from "./ZoomLevelSlider";
 import {connect} from "react-redux";
 import {updateExportInfo} from '../../actions/datacartActions';
@@ -71,11 +71,6 @@ const jss = (theme: Theme & Eventkit.Theme) => createStyles({
     prewrap: {
         whiteSpace: 'pre-wrap',
     },
-    formControlLabel: {
-        paddingLeft: '10px',
-        fontSize: '16px',
-        paddingRight: '3px'
-    }
 });
 
 interface EstimateData {
@@ -124,8 +119,6 @@ interface Props {
         expand: string;
         license: string;
         prewrap: string;
-        switchBase: string;
-        formControlLabel: string;
     };
 }
 
@@ -153,7 +146,7 @@ export class DataProvider extends React.Component<Props, State> {
         this.setZoom = this.setZoom.bind(this);
         this.getFormatCompatibility = this.getFormatCompatibility.bind(this);
         this.getCheckedIcon = this.getCheckedIcon.bind(this);
-        this.handleCheckClick = this.handleCheckClick.bind(this);
+        this.handleFootprintsCheck = this.handleFootprintsCheck.bind(this);
 
         this.estimateDebouncer = () => { /* do nothing while not mounted */
         };
@@ -246,7 +239,7 @@ export class DataProvider extends React.Component<Props, State> {
         this.setState(state => ({open: !state.open}));
     }
 
-    handleCheckClick = () => {
+    handleFootprintsCheck = () => {
         this.setState({ checked: !this.state.checked });
     };
 
@@ -357,7 +350,7 @@ export class DataProvider extends React.Component<Props, State> {
                             selectedMinZoom={currentMinZoom}
                             maxZoom={provider.level_to}
                             minZoom={provider.level_from}
-                            handleCheckClick={this.handleCheckClick}
+                            handleCheckClick={this.handleFootprintsCheck}
                             checked={this.state.checked}
                         />
                     </div>
@@ -392,31 +385,6 @@ export class DataProvider extends React.Component<Props, State> {
                             <em>Zoom not available for this source.</em>
                         </div>
                     </ListItem>
-                    <span style={{float: 'right', marginTop: '-12px', fontSize: '16px', paddingRight: '15px'}}>
-                        <span
-                            // className={classes.formControlLabel}
-                        >
-                            Footprints
-                        </span>
-                        <Switch
-                            value="switch"
-                            checked={this.props.checked}
-                            onChange={this.handleCheckClick}
-                            classes={{ switchBase: classes.switchBase, checked: classes.checked }}
-                        />
-                    </span>
-                    {/*<FormControlLabel*/}
-                    {/*    className={classes.formControlLabel}*/}
-                    {/*    label={<Typography className={classes.formControlLabel}>Footprints</Typography>}*/}
-                    {/*    control={*/}
-                    {/*        <Switch*/}
-                    {/*            value="switch"*/}
-                    {/*            checked={this.state.checked}*/}
-                    {/*            onChange={this.handleCheckClick}*/}
-                    {/*            classes={{ switchBase: classes.switchBase, checked: classes.checked }}*/}
-                    {/*        />*/}
-                    {/*    }*/}
-                    {/*/>*/}
                 </>
             );
         }

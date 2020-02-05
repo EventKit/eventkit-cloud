@@ -4,7 +4,7 @@ import {
 } from '@material-ui/core/styles';
 import Slider from '@material-ui/lab/Slider';
 import TextField from '@material-ui/core/TextField';
-import {FormControlLabel, Switch, Typography} from "@material-ui/core";
+import {Switch} from "@material-ui/core";
 
 
 const jss = (theme: Theme & Eventkit.Theme) => createStyles({
