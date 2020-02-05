@@ -72,26 +72,26 @@ export class FootprintDisplay extends React.Component<Props, State> {
             >
                 <div>
                     {/* using ListItem for future functionality that will add to this list */}
-                    <ListItemText
-                        className={classes.listItemText}
-                        primary={
-                            <Typography style={{fontSize: '12px'}}>
-                                <strong>Layers:</strong>
-                            </Typography>
-                        }
-                    />
-                    <FormControlLabel
-                        className={classes.formControlLabel}
-                        control={
-                            <Switch
-                                value="switch"
-                                checked={this.state.checked}
-                                onChange={this.handleCheckClick}
-                                classes={{ switchBase: classes.switchBase, checked: classes.checked }}
-                            />
-                        }
-                        label={<Typography className={classes.formControlLabel}>Show footprints</Typography>}
-                    />
+                        <ListItemText
+                            className={classes.listItemText}
+                            primary={(
+                                <Typography style={{fontSize: '12px'}}>
+                                    <strong>Layers:</strong>
+                                </Typography>
+                            )}
+                        />
+                        <FormControlLabel
+                            className={classes.formControlLabel}
+                            control={(
+                                <Switch
+                                    value="switch"
+                                    checked={this.state.checked}
+                                    onChange={this.handleCheckClick}
+                                    classes={{ switchBase: classes.switchBase, checked: classes.checked }}
+                                />
+                            )}
+                            label={<Typography className={classes.formControlLabel}>Show footprints</Typography>}
+                        />
                 </div>
             </Card>
         )
