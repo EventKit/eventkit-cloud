@@ -90,6 +90,19 @@ const jss = (theme: Eventkit.Theme & Theme) => createStyles({
             backgroundColor: theme.eventkit.colors.secondary,
         },
     },
+    infoItem: {
+        display: 'flex',
+        [theme.breakpoints.down('sm')]: {
+            display: 'block',
+        },
+        '& strong': {
+            marginRight: '5px',
+            whiteSpace: 'nowrap',
+            [theme.breakpoints.down('sm')]: {
+                whiteSpace: 'unset',
+            },
+        }
+    }
 });
 
 export interface Props {
@@ -312,25 +325,43 @@ export class ExportSummary extends React.Component<Props, State> {
                                     {providers.map(provider => this.getExportInfo(provider))}
                                     <div style={{display: 'flex', cursor: 'pointer'}}>
                                         <InfoDialog
-                                            title="Format Details"
+                                            title="Source and Format Details"
                                             style={{marginRight: '5px'}}
                                             iconProps={{style:{width: '24px', marginRight: '5px'}}}
                                             ref={(instance) => {
                                                 this.infoDialogRef = instance;
                                             }}
                                         >
-                                            {Object.entries(formatSet).map(([slug, object])=> (
-                                                <div>
-                                                    <strong style={{fontSize: '1em'}}>{(object as any).format.name}</strong>
-                                                    <p style={{fontSize: '.9em'}}>{(object as any).format.description}</p>
-                                                </div>
-                                            ))}
+                                            <div style={{display: 'grid', fontSize: '14px'}}>
+                                                <strong style={{fontSize: '1.5em', paddingBottom: '5p'}}>Source(s):</strong>
+                                                {providers.map((provider) => (
+                                                        <div style={{padding: '3px'}}>
+                                                            <div className={classes.infoItem}>
+                                                                <strong>
+                                                                    {provider.name}:
+                                                                </strong>
+                                                                <span>{provider.service_description}</span></div>
+                                                        </div>
+                                                    )
+                                                )}
+                                                <strong style={{fontSize: '1.5em', paddingBottom: '5px', paddingTop: '5px'}}>Format(s):</strong>
+                                                {Object.entries(formatSet).map(([slug, object])=> (
+                                                    <div style={{padding: '3px'}}>
+                                                        <div className={classes.infoItem}>
+                                                            <strong>
+                                                                {(object as any).format.name}:
+                                                            </strong>
+                                                            <span>{(object as any).format.description}</span>
+                                                        </div>
+                                                    </div>
+                                                ))}
+                                            </div>
                                         </InfoDialog>
                                         <Link
                                             className={this.props.classes.name}
                                             onClick={() => {this.infoDialogRef.openDialog()}}
                                         >
-                                            Format Details
+                                            Source and Format Details
                                         </Link>
                                     </div>
                                 </CustomTableRow>

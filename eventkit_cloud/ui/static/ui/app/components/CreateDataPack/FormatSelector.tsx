@@ -65,6 +65,19 @@ const jss = (theme: Theme & Eventkit.Theme) => createStyles({
         minHeight: '17px',
         fontSize: '12px',
     },
+    infoItem: {
+        display: 'flex',
+        [theme.breakpoints.down('sm')]: {
+            display: 'block',
+        },
+        '& strong': {
+            marginRight: '5px',
+            whiteSpace: 'nowrap',
+            [theme.breakpoints.down('sm')]: {
+                whiteSpace: 'unset',
+            },
+        }
+    }
 });
 
 interface Props {
@@ -127,7 +140,7 @@ export class FormatSelector extends React.Component<Props, {}> {
     }
 
     getCheckBox(format: Eventkit.Format) {
-        const {classes, providerOptions} = this.props;
+        const { formats, classes, providerOptions } = this.props;
         const selectedFormats = providerOptions.formats || [];
 
         const compatibility = this.props.getFormatCompatibility(format.slug);
@@ -160,9 +173,24 @@ export class FormatSelector extends React.Component<Props, {}> {
                             <span>{format.name}</span>
                             <span className={classes.formatDialogIcon}>
                                 <InfoDialog
-                                    title={`${format.name} Information`}
+                                    title={`Format Details  `}
                                 >
-                                    <p>{format.description}</p>
+                                    <div style={{ display: 'unset', fontSize: '14px' }}>
+                                        <strong style={{fontSize: '1.5em', paddingBottom: '15px'}}>
+                                            Format(s):
+                                        </strong>
+                                        {formats.map((format) => (
+                                                <div style={{ padding: '3px' }}>
+                                                    <div className={classes.infoItem}>
+                                                        <strong>
+                                                            {format.name}:
+                                                        </strong>
+                                                        <span>{format.description}</span>
+                                                    </div>
+                                                </div>
+                                            )
+                                        )}
+                                    </div>
                                 </InfoDialog>
                             </span>
                         </div>
