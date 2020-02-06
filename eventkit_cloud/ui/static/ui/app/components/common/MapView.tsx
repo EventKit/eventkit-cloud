@@ -171,7 +171,6 @@ export class MapView extends React.Component<Props, State> {
                     style={{
                         position: 'absolute',
                         width: '100%',
-                        bottom: '40px',
                         display: 'flex',
                         justifyContent: 'center',
                     }}
