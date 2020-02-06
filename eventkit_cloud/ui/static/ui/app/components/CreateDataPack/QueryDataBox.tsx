@@ -169,7 +169,7 @@ export class QueryDataBox extends React.Component<Props, {}> {
 
         return (
             <div className={classes.card} style={this.props.style}>
-                <Typography className={classes.title}>Query Result:</Typography>
+                <Typography className={classes.title}>Point of Interest:</Typography>
                 <Divider/>
                 <IconButton
                     className={classes.closeButton}

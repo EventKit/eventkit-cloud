@@ -47,9 +47,9 @@ const StyledTabs = withStyles({
 const tabJss = (theme: Eventkit.Theme & Theme) => createStyles({
     root: {
         opacity: '1.0',
-        fontSize: '14px',
+        fontSize: '18px',
         minHeight: "auto",
-        padding: 0,
+        padding: '0px 8px',
         borderTopRightRadius: '4px',
         borderTopLeftRadius: '4px',
         backgroundColor: theme.eventkit.colors.primary,
@@ -140,14 +140,14 @@ export class MapDisplayBar extends React.Component<Props, State> {
 
         return (
             <div className={`qa-MapDisplayBar`}>
-                <div className={classes.wrapper} style={{bottom: (aoiTabVisible && poiTabVisible) ? '80px' : '40px',}}>
+                <div className={classes.wrapper} style={{bottom: (aoiTabVisible && poiTabVisible) ? '70px' : '40px',}}>
                     {isWidthUp('sm', this.props.width) &&
                     <div className={`qa-qa-MapDisplayBar-container ${classes.infobar} ${classes.large}`}>
                         <AoiInfobar
                             {...this.props.aoiInfoBarProps}
                         />
                         < MapQueryDisplay
-                            style={{ height: '150px' }}
+                            style={{ height: '200px'}}
                             maxHeight={185}
                             // Passes a ref up to ExportAOI to hook in the click event to our query function.
                             ref={child => {
@@ -184,7 +184,7 @@ export class MapDisplayBar extends React.Component<Props, State> {
                             }}
                         >
                             <AoiInfobar
-                                displayTitle={!poiTabVisible}
+                                displayTitle={true}
                                 {...this.props.aoiInfoBarProps}
                             />
                         </div>
@@ -196,7 +196,7 @@ export class MapDisplayBar extends React.Component<Props, State> {
                             }}
                         >
                             <MapQueryDisplay
-                                style={{ height: '150px' }}
+                                style={{ height: '200px' }}
                                 maxHeight={185}
                                 ref={child => {
                                     this.props.setRef(child)
