@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { Theme, withStyles, createStyles } from '@material-ui/core/styles';
-import withWidth from '@material-ui/core/withWidth';
+import withWidth, {isWidthUp} from '@material-ui/core/withWidth';
 import { Breakpoint } from '@material-ui/core/styles/createBreakpoints';
 import numeral from 'numeral';
 import Button from '@material-ui/core/Button';
@@ -58,9 +58,6 @@ const jss = (theme: Eventkit.Theme & Theme) => createStyles({
         flexWrap: 'wrap',
         width: '100%',
         paddingBottom: '10px',
-        [theme.breakpoints.down('sm')]: {
-            display: 'none',
-        },
     },
     title: {
         width: '100%',
@@ -152,6 +149,7 @@ export interface Props {
     onRevertClick: () => void;
     clickZoomToSelection: () => void;
     handleBufferClick: () => void;
+    displayTitle?: boolean;
     theme: Eventkit.Theme & Theme;
     width: Breakpoint;
     classes: { [className: string]: string };
@@ -164,6 +162,9 @@ export interface State {
 }
 
 export class AoiInfobar extends React.Component<Props, State> {
+
+    static defaultProps = { displayTitle: true };
+
     constructor(props: Props) {
         super(props);
         this.showAlert = this.showAlert.bind(this);
@@ -320,14 +321,15 @@ export class AoiInfobar extends React.Component<Props, State> {
                 </div>
             );
         }
-
         return (
             <>
-                <div className={classes.body}>
+                <div className={`qa-AoiInfoBar-container ${classes.body}`}>
                     <div className={classes.titleBar}>
-                        <div className={`qa-AoiInfobar-title ${classes.title}`}>
-                            <strong>AREA OF INTEREST (AOI)</strong>
-                        </div>
+                        {this.props.displayTitle &&
+                            <div className={`qa-AoiInfobar-title ${classes.title}`}>
+                                <strong>AREA OF INTEREST (AOI)</strong>
+                            </div>
+                        }
                         <div className={`qa-AoiInfobar-maxSize ${classes.maxSize}`}>
                             <div style={{ paddingRight: '5px' }}>
                                 {max ? `${numeral(max).format('0,0')} sq km max;` : null}

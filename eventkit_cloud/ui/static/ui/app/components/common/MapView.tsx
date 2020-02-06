@@ -13,7 +13,7 @@ import Zoom from 'ol/control/zoom';
 import ol3mapCss from '../../styles/ol3map.css';
 import {getResolutions, getTileCoordinateFromClick} from "../../utils/mapUtils";
 import TileGrid from "ol/tilegrid/tilegrid";
-import {MapQueryDisplay} from "../CreateDataPack/MapQueryDisplay";
+import MapQueryDisplay from "../CreateDataPack/MapQueryDisplay";
 import {SelectedBaseMap} from "../CreateDataPack/CreateExport";
 
 export interface Props {

@@ -27,6 +27,7 @@ export interface Props {
     style?: any;
     maxHeight?: number;
     name?: string;
+    setVisibility?: (state: boolean) => void;
 }
 
 export interface State {
@@ -42,6 +43,7 @@ export class MapQueryDisplay extends React.Component<Props, State> {
         this.getFeatures = this.getFeatures.bind(this);
         this.handleMapClick = this.handleMapClick.bind(this);
         this.isQueryBoxVisible = this.isQueryBoxVisible.bind(this);
+        this.setVisibility = this.setVisibility.bind(this);
 
         this.state = {
             queryLoading: false,
@@ -84,6 +86,13 @@ export class MapQueryDisplay extends React.Component<Props, State> {
         });
     }
 
+    private setVisibility(visibility: boolean) {
+        if (!this.props.setVisibility) {
+            return;
+        }
+        this.props.setVisibility(visibility);
+    }
+
     private handleMapClick(tileCoord: TileCoordinate) {
         if (!!this.props.selectedBaseMap.slug) {
             this.setState({
@@ -91,6 +100,7 @@ export class MapQueryDisplay extends React.Component<Props, State> {
                 responseData: undefined,
                 queryLoading: true,
             });
+            this.setVisibility(true);
             this.getFeatures(tileCoord).then(featureResponseData => {
                 this.setState({
                     responseData: featureResponseData,
@@ -102,6 +112,7 @@ export class MapQueryDisplay extends React.Component<Props, State> {
 
     handleClose = (event) => {
         event.preventDefault();
+        this.setVisibility(false);
         this.setState({closeCard: true});
     };
 
@@ -118,3 +129,5 @@ export class MapQueryDisplay extends React.Component<Props, State> {
         );
     }
 }
+
+export default MapQueryDisplay;
