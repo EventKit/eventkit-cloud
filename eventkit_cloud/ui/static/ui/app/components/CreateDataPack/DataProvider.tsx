@@ -136,7 +136,7 @@ export class DataProvider extends React.Component<Props, State> {
 
     static contextTypes = {
         config: PropTypes.object,
-    };d
+    };
 
     constructor(props: Props) {
         super(props);
