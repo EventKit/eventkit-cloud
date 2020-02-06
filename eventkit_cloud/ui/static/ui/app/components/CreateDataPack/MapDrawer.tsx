@@ -3,12 +3,17 @@ import Drawer from '@material-ui/core/Drawer';
 import CustomScrollbar from "../CustomScrollbar";
 import List from '@material-ui/core/List';
 import ListItem from '@material-ui/core/ListItem';
-import {createStyles, Theme, withStyles, withTheme, Grid, Icon, Divider} from "@material-ui/core";
+import {
+    createStyles,
+    Theme,
+    withStyles,
+    Icon,
+    Divider
+} from "@material-ui/core";
 import {connect} from "react-redux";
 import CardMedia from '@material-ui/core/CardMedia';
 import Card from '@material-ui/core/Card';
 
-import RadioGroup from "@material-ui/core/RadioGroup";
 import Radio from "@material-ui/core/Radio";
 import {Tab, Tabs} from "@material-ui/core";
 import * as PropTypes from "prop-types";
@@ -17,6 +22,7 @@ import ListItemText from "@material-ui/core/ListItemText";
 import Button from "@material-ui/core/Button";
 import Clear from '@material-ui/icons/Clear';
 import theme from "../../styles/eventkit_theme";
+import FootprintDisplay from "./FootprintDisplay";
 
 
 const jss = (theme: Theme & Eventkit.Theme) => createStyles({
@@ -108,6 +114,9 @@ const jss = (theme: Theme & Eventkit.Theme) => createStyles({
         color: theme.eventkit.colors.text_primary,
         fontSize: '10px',
     },
+    footprint_options: {
+        paddingBottom: '10px'
+    },
     checkbox: {
         width: '24px',
         height: '24px',
@@ -180,6 +189,7 @@ export interface State {
     selectedTab: any;
     selectedBaseMap: number;
     sources: BaseMapSource[];
+    expandedSources: BaseMapSource[];
 }
 
 export class MapDrawer extends React.Component<Props, State> {
@@ -191,8 +201,10 @@ export class MapDrawer extends React.Component<Props, State> {
     constructor(props: Props) {
         super(props);
         this.updateBaseMap = this.updateBaseMap.bind(this);
+        this.handleExpandClick = this.handleExpandClick.bind(this);
 
         this.state = {
+            expandedSources: [],
             selectedTab: false,
             selectedBaseMap: -1,
             sources: [
@@ -205,7 +217,7 @@ export class MapDrawer extends React.Component<Props, State> {
         this.setState({selectedBaseMap: newBaseMapId});
         let baseMapUrl;
         let slug;
-        if (newBaseMapId !== -1) {
+        if (newBaseMapId && newBaseMapId !== -1) {
             baseMapUrl = sources[newBaseMapId].url;
             if (!!sources[newBaseMapId].slug) {
                 slug = sources[newBaseMapId].slug;
@@ -223,6 +235,32 @@ export class MapDrawer extends React.Component<Props, State> {
             this.setState({selectedTab: newValue});
         }
     };
+
+    handleExpandClick(event, sources) {
+        const selectedSources = [...this.props.sources] || [];
+        let index;
+        if (event && event.target.checked) {
+            let selectedSource = event;
+                if (selectedSources.indexOf(selectedSource) <=0) {
+                    selectedSources.push(selectedSource)
+                } else {
+                    index = selectedSources.indexOf(selectedSource)
+                    if (index >= 0) {
+                        selectedSources.splice(index, 1);
+                    }
+                }
+        } else {
+            return null
+        }
+        this.setState({expandedSources: selectedSources})
+        this.updateBaseMap(Number(event.target.value), sources);
+    };
+
+    showFootprintData(ix: number) {
+        if (this.state.expandedSources && this.state.selectedBaseMap === ix) {
+            return <FootprintDisplay/>
+        }
+    }
 
     render() {
         const {classes} = this.props;
@@ -261,7 +299,6 @@ export class MapDrawer extends React.Component<Props, State> {
                         }}
                     >
                         <VerticalTabs
-
                             className={classes.tabs}
                             value={(selectedTab) ? selectedTab : false}
                             onChange={this.handleChange}
@@ -295,10 +332,6 @@ export class MapDrawer extends React.Component<Props, State> {
                         <div className={classes.scrollBar}>
                             <CustomScrollbar>
                                 <List style={{padding: '10px'}}>
-                                    <RadioGroup
-                                        value={selectedBaseMap.toString()}
-                                        onChange={(e, value) => this.updateBaseMap(Number(value), sources)}
-                                    >
                                         {sources.map((source, ix) =>
                                             (
                                                 <div key={ix}>
@@ -307,7 +340,10 @@ export class MapDrawer extends React.Component<Props, State> {
                                                         <Radio
                                                             checked={this.state.selectedBaseMap === ix}
                                                             value={ix}
-                                                            classes={{root: classes.checkbox, checked: classes.checked}}
+                                                            classes={{root: classes.checkbox, checked: classes.checked,
+                                                            }}
+                                                            onClick={(e)=> this.handleExpandClick(e, sources)}
+                                                            name="source"
                                                         />
                                                     </span>
                                                         <div>
@@ -335,10 +371,14 @@ export class MapDrawer extends React.Component<Props, State> {
                                                             </div>
                                                         </div>
                                                     </ListItem>
+                                                    <div
+                                                        className={classes.footprint_options}
+                                                    >
+                                                        {this.showFootprintData(ix)}
+                                                    </div>
                                                 </div>
                                             ))
                                         }
-                                    </RadioGroup>
                                 </List>
                             </CustomScrollbar>
                         </div>
