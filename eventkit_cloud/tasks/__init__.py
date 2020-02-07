@@ -4,6 +4,7 @@
 from eventkit_cloud.tasks.debug_tasks import *
 from eventkit_cloud.tasks.export_tasks import *
 from eventkit_cloud.tasks.scheduled_tasks import *
+from eventkit_cloud.tasks.util_tasks import *
 from django.core.cache import cache
 from django.apps import apps as django_apps
 
