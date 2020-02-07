@@ -23,6 +23,7 @@ import {Compatibility} from '../../utils/enums';
 import IndeterminateCheckBoxIcon from '@material-ui/icons/IndeterminateCheckBox';
 import CheckBoxIcon from "@material-ui/icons/CheckBox";
 import {CompatibilityInfo} from "./ExportInfo";
+import InfoDialog from "../common/InfoDialog";
 
 const jss = (theme: Theme & Eventkit.Theme) => createStyles({
     container: {

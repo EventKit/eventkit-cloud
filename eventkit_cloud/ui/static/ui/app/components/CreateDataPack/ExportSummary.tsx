@@ -9,6 +9,8 @@ import CustomScrollbar from '../CustomScrollbar';
 import CustomTableRow from '../CustomTableRow';
 import { joyride } from '../../joyride.config';
 import {isZoomLevelInRange, supportsZoomLevels} from "../../utils/generic";
+import InfoDialog from "../common/InfoDialog";
+import {Link} from "@material-ui/core";
 
 const jss = (theme: Eventkit.Theme & Theme) => createStyles({
     root: {
@@ -71,6 +73,35 @@ const jss = (theme: Eventkit.Theme & Theme) => createStyles({
         width: '100%',
         marginRight: '8px',
         display: 'inline-block',
+    },
+    name: {
+        color: theme.eventkit.colors.primary,
+        display: 'block',
+        width: '100%',
+        overflow: 'hidden',
+        textOverflow: 'ellipsis',
+        whiteSpace: 'nowrap',
+        margin: '0px',
+        '&:hover': {
+            color: theme.eventkit.colors.primary,
+            overflow: 'visible',
+            wordWrap: 'break-word',
+            whiteSpace: 'normal',
+            backgroundColor: theme.eventkit.colors.secondary,
+        },
+    },
+    infoItem: {
+        display: 'flex',
+        [theme.breakpoints.down('sm')]: {
+            display: 'block',
+        },
+        '& strong': {
+            marginRight: '5px',
+            whiteSpace: 'nowrap',
+            [theme.breakpoints.down('sm')]: {
+                whiteSpace: 'unset',
+            },
+        }
     }
 });
 
@@ -88,6 +119,7 @@ export interface Props {
     classes: { [className: string]: string; };
     selectedProjections: number[];
     projections: Eventkit.Projection[];
+    formats: Eventkit.Format[];
 }
 
 export interface State {
@@ -101,6 +133,8 @@ export class ExportSummary extends React.Component<Props, State> {
     };
 
     private joyride: Joyride;
+    private infoDialogRef;
+
     constructor(props: Props) {
         super(props);
         this.state = {
@@ -205,12 +239,28 @@ export class ExportSummary extends React.Component<Props, State> {
     }
 
     render() {
-        const { classes } = this.props;
+        const { formats, classes } = this.props;
         const { steps, isRunning } = this.state;
         const dataStyle = { color: 'black' };
+        const formatSet = {};
 
         const providers = this.props.providers.filter(provider => (provider.display !== false));
         const projections = this.props.projections.filter(projection => this.props.selectedProjections.indexOf(projection.srid) !== -1);
+
+        // Get all selected formats, and map them to the sources that have selected them.
+        Object.entries(this.props.exportOptions).map(([slug, providerOptions], ix) => {
+            providerOptions.formats.map((formatSlug) => {
+                if (!formatSet.hasOwnProperty(formatSlug)) {
+                    formatSet[formatSlug] = {
+                        format: formats.find(format => format.slug === formatSlug),
+                        sources: [providers.find(provider => provider.slug === slug)]
+                    };
+                } else {
+                    formatSet[formatSlug].sources.push([providers.find(provider => provider.slug === slug)]);
+                }
+            })
+        });
+
         return (
             <div id="root" className={classes.root}>
                 <Joyride
@@ -249,42 +299,89 @@ export class ExportSummary extends React.Component<Props, State> {
                                 <CustomTableRow
                                     className="qa-ExportSummary-name"
                                     title="Name"
-                                    data={this.props.exportName}
                                     dataStyle={dataStyle}
-                                />
+                                >
+                                    {this.props.exportName}
+                                </CustomTableRow>
                                 <CustomTableRow
                                     className="qa-ExportSummary-description"
                                     title="Description"
-                                    data={this.props.datapackDescription}
                                     dataStyle={dataStyle}
-                                />
+                                >
+                                    {this.props.datapackDescription}
+                                </CustomTableRow>
                                 <CustomTableRow
                                     className="qa-ExportSummary-project"
                                     title="Project / Category"
-                                    data={this.props.projectName}
                                     dataStyle={dataStyle}
-                                />
+                                >
+                                    {this.props.projectName}
+                                </CustomTableRow>
                                 <CustomTableRow
                                     className="qa-ExportSummary-sources"
                                     title="Data Sources"
-                                    data={providers.map(provider => this.getExportInfo(provider))}
                                     dataStyle={{display: 'block'}}
-                                />
+                                >
+                                    {providers.map(provider => this.getExportInfo(provider))}
+                                    <div style={{display: 'flex', cursor: 'pointer'}}>
+                                        <InfoDialog
+                                            title="Source and Format Details"
+                                            style={{marginRight: '5px'}}
+                                            iconProps={{style:{width: '24px', marginRight: '5px'}}}
+                                            ref={(instance) => {
+                                                this.infoDialogRef = instance;
+                                            }}
+                                        >
+                                            <div style={{display: 'grid', fontSize: '14px'}}>
+                                                <strong style={{fontSize: '1.5em', paddingBottom: '5p'}}>Source(s):</strong>
+                                                {providers.map((provider) => (
+                                                        <div style={{padding: '3px'}}>
+                                                            <div className={classes.infoItem}>
+                                                                <strong>
+                                                                    {provider.name}:
+                                                                </strong>
+                                                                <span>{provider.service_description}</span></div>
+                                                        </div>
+                                                    )
+                                                )}
+                                                <strong style={{fontSize: '1.5em', paddingBottom: '5px', paddingTop: '5px'}}>Format(s):</strong>
+                                                {Object.entries(formatSet).map(([slug, object])=> (
+                                                    <div style={{padding: '3px'}}>
+                                                        <div className={classes.infoItem}>
+                                                            <strong>
+                                                                {(object as any).format.name}:
+                                                            </strong>
+                                                            <span>{(object as any).format.description}</span>
+                                                        </div>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        </InfoDialog>
+                                        <Link
+                                            className={this.props.classes.name}
+                                            onClick={() => {this.infoDialogRef.openDialog()}}
+                                        >
+                                            Source and Format Details
+                                        </Link>
+                                    </div>
+                                </CustomTableRow>
                                 <CustomTableRow
                                     className="qa-ExportSummary-projections"
                                     title="Projection(s)"
-                                    data={this.getProjectionInfo(this.props.selectedProjections)}
                                     dataStyle={dataStyle}
-                                />
+                                >
+                                    {this.getProjectionInfo(this.props.selectedProjections)}
+                                </CustomTableRow>
                                 <div id="aoi-heading" className={`qa-ExportSummary-aoiHeading ${classes.exportHeading}`} >
                                     Area of Interest (AOI)
                                 </div>
                                 <CustomTableRow
                                     className="qa-ExportsSummary-area"
                                     title="Area"
-                                    data={this.props.areaStr}
                                     dataStyle={dataStyle}
-                                />
+                                >
+                                    {this.props.areaStr}
+                                </CustomTableRow>
                             </div>
                             <div id="aoi-map" className={`qa-ExportSummary-map ${classes.mapCard}`}>
                                 <MapCard geojson={this.props.geojson}>
