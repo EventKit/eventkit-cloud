@@ -1,8 +1,9 @@
 {% set name = "eventkit-cloud" %}
+{% set version = "1.6.0" %}
 
 package:
-  name: '{{ name|lower }}'
-  version: '{{ environ.get("GIT_DESCRIBE_TAG", "0.0.0") }}'
+  name: "{{ name|lower }}"
+  version: "{{ version }}"
 
 source:
   git_url: /eventkit-cloud
