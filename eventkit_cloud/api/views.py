@@ -11,6 +11,7 @@ from django.contrib.auth.models import User, Group
 from django.contrib.gis.geos import GEOSException, GEOSGeometry
 from django.db import transaction
 from django.db.models import Q
+from django.shortcuts import redirect, render
 from django.utils.translation import ugettext as _
 from django_filters.rest_framework import DjangoFilterBackend
 from notifications.models import Notification
@@ -2107,3 +2108,10 @@ def get_job_ids_via_permissions(permissions):
         initialized = True
 
     return master_job_list
+
+
+def api_docs_view(request):
+    if request.user.is_authenticated:
+        return render(request, template_name="swagger-ui.html", context={"schema_url": "api:openapi-schema"})
+    else:
+        return redirect("/api/login?next=/api/docs")

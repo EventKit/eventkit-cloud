@@ -23,6 +23,7 @@ from eventkit_cloud.api.views import (
     NotificationViewSet,
     EstimatorView,
     AuditEventViewSet,
+    api_docs_view
 )
 
 import notifications.urls
@@ -49,10 +50,7 @@ router.register(r"audit_events", AuditEventViewSet, basename="audit_events")
 
 urlpatterns = [
     re_path(
-        r"^api/docs/$",
-        TemplateView.as_view(template_name="swagger-ui.html", extra_context={"schema_url": "api:openapi-schema"}),
-        name="swagger-ui",
-    ),
+        r"^api/docs/$", api_docs_view, name="swagger-ui"),
     re_path(
         r"^api/openapi",
         get_schema_view(title="EventKit", description="Documentation for the EventKit API."),
