@@ -9,6 +9,7 @@ import socket
 from eventkit_cloud.settings.celery import *  # noqa
 from eventkit_cloud.settings.celery import INSTALLED_APPS
 from eventkit_cloud.settings.celery import MIDDLEWARE
+from eventkit_cloud.settings.celery import is_true
 
 BASE_DIR = os.path.abspath(os.path.dirname(__file__))
 
@@ -249,7 +250,7 @@ else:
 TEMPLATES = [
     {
         "BACKEND": "django.template.backends.django.DjangoTemplates",
-        "DIRS": ["api/templates/", "ui/templates", "tasks/templates", "ui/static/ui/js",],
+        "DIRS": ["api/templates/", "ui/templates", "tasks/templates", "ui/static/ui/js", ],
         "APP_DIRS": True,
         "OPTIONS": {
             "context_processors": [
@@ -271,7 +272,7 @@ if os.getenv("MEMCACHED"):
         }
     }
 else:
-    CACHES = {"default": {"BACKEND": "django.core.cache.backends.db.DatabaseCache", "LOCATION": "eventkit_cache",}}
+    CACHES = {"default": {"BACKEND": "django.core.cache.backends.db.DatabaseCache", "LOCATION": "eventkit_cache", }}
 
 # session settings
 SESSION_COOKIE_NAME = "eventkit_exports_sessionid"
@@ -327,9 +328,9 @@ LOGGING = {
     "disable_existing_loggers": False,
     "handlers": {"console": {"class": "logging.StreamHandler"}},
     "loggers": {
-        "django": {"handlers": ["console"], "propagate": True, "level": os.getenv("DJANGO_LOG_LEVEL", "WARN"),},
-        "eventkit_cloud": {"handlers": ["console"], "propagate": True, "level": os.getenv("LOG_LEVEL", "INFO"),},
-        "audit_logging": {"handlers": ["console"], "propagate": True, "level": os.getenv("LOG_LEVEL", "INFO"),},
+        "django": {"handlers": ["console"], "propagate": True, "level": os.getenv("DJANGO_LOG_LEVEL", "WARN"), },
+        "eventkit_cloud": {"handlers": ["console"], "propagate": True, "level": os.getenv("LOG_LEVEL", "INFO"), },
+        "audit_logging": {"handlers": ["console"], "propagate": True, "level": os.getenv("LOG_LEVEL", "INFO"), },
     },
 }
 

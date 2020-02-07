@@ -11,7 +11,9 @@ from mock import Mock, patch, MagicMock, ANY
 from eventkit_cloud.core.helpers import get_cached_model
 from eventkit_cloud.jobs.models import DataProvider
 from eventkit_cloud.utils.mapproxy import (MapproxyGeopackage, get_conf_dict,
-                                           get_cache_template, CustomLogger, check_zoom_levels)
+                                           get_cache_template, CustomLogger, check_zoom_levels,
+                                           get_mapproxy_footprint_url, get_footprint_layer_name,
+                                           get_mapproxy_metadata_url)
 
 logger = logging.getLogger(__name__)
 
@@ -142,6 +144,28 @@ class TestHelpers(TransactionTestCase):
         returned_conf = get_conf_dict(slug)
         mock_get_cached_model.assert_called_once_with(model=DataProvider, prop="slug", value=slug)
         self.assertEquals(returned_conf, expected_config)
+
+    def test_get_footprint_layer_name(self):
+        example_slug = "test"
+        expected_value = f"{example_slug}-footprint"
+        returned_value = get_footprint_layer_name(example_slug)
+        self.assertEqual(expected_value, returned_value)
+
+    def test_get_mapproxy_metadata_url(self):
+        example_slug = "test"
+        url = 'http://test.test'
+        with self.settings(SITE_URL=url):
+            expected_value = f"{url}/map/{example_slug}/service"
+            returned_value = get_mapproxy_metadata_url(example_slug)
+            self.assertEqual(expected_value, returned_value)
+
+    def test_get_mapproxy_footprint_url(self):
+        example_slug = "test"
+        url = 'http://test.test'
+        with self.settings(SITE_URL=url):
+            expected_value = f"{url}/map/{get_footprint_layer_name(example_slug)}/service/{get_footprint_layer_name(example_slug)}/default/{{z}}/{{x}}/{{y}}.png"  # NOQA
+            returned_value = get_mapproxy_footprint_url(example_slug)
+            self.assertEqual(expected_value, returned_value)
 
 
 class TestLogger(TransactionTestCase):

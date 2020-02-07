@@ -4,6 +4,7 @@
 import json
 import logging
 import uuid
+import yaml
 
 from django.contrib.auth.models import Group, User
 from django.contrib.gis.geos import (
@@ -20,6 +21,7 @@ from django.utils import timezone
 from enum import Enum
 
 from eventkit_cloud.core.models import CachedModelMixin, DownloadableMixin, TimeStampedModelMixin, UIDMixin
+from eventkit_cloud.utils.mapproxy import get_mapproxy_metadata_url, get_mapproxy_footprint_url
 
 logger = logging.getLogger(__name__)
 
@@ -260,6 +262,21 @@ class DataProvider(UIDMixin, TimeStampedModelMixin, CachedModelMixin):
 
     def __str__(self):
         return "{0}".format(self.name)
+
+    @property
+    def metadata_url(self):
+        config = yaml.load(self.config)
+        url = config.get("sources", {}).get("info", {}).get("req", {}).get("url")
+        if url:
+            return get_mapproxy_metadata_url(self.slug)
+
+    @property
+    def footprint_url(self):
+        config = yaml.load(self.config)
+
+        url = config.get("sources", {}).get("footprint", {}).get("req", {}).get("url")
+        if url:
+            return get_mapproxy_footprint_url(self.slug)
 
 
 class DataProviderStatus(UIDMixin, TimeStampedModelMixin):

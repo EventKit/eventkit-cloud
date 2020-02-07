@@ -70,7 +70,7 @@ export class MapQueryDisplay extends React.Component<Props, State> {
             responseData['featureData'] = { ...feature['properties']} as FeatureResponse;
             return responseData;
         }).catch((error) => {
-            responseData.errorMessage = error.message;
+            responseData.errorMessage = error.response.data;
             return responseData;
         });
     }
