@@ -8,6 +8,7 @@ import IndeterminateCheckBoxIcon from '@material-ui/icons/IndeterminateCheckBox'
 import {Compatibility} from '../../utils/enums';
 import {CompatibilityInfo} from "./ExportInfo";
 import {getDefaultFormat} from "../../utils/generic";
+import InfoDialog from "../common/InfoDialog";
 
 const jss = (theme: Theme & Eventkit.Theme) => createStyles({
     container: {
@@ -22,6 +23,12 @@ const jss = (theme: Theme & Eventkit.Theme) => createStyles({
     },
     listItemText: {
         fontSize: 'inherit',
+    },
+    formatItem: {
+        display: 'flex',
+    },
+    formatDialogIcon: {
+        marginLeft: '5px',
     },
     sublistItem: {
         fontWeight: 'normal',
@@ -58,6 +65,19 @@ const jss = (theme: Theme & Eventkit.Theme) => createStyles({
         minHeight: '17px',
         fontSize: '12px',
     },
+    infoItem: {
+        display: 'flex',
+        [theme.breakpoints.down('sm')]: {
+            display: 'block',
+        },
+        '& strong': {
+            marginRight: '5px',
+            whiteSpace: 'nowrap',
+            [theme.breakpoints.down('sm')]: {
+                whiteSpace: 'unset',
+            },
+        }
+    }
 });
 
 interface Props {
@@ -65,7 +85,7 @@ interface Props {
     provider: Eventkit.Provider;
     providerOptions: Eventkit.Store.ProviderExportOptions;
     updateExportOptions: (providerSlug: string, providerOptions: any) => void;
-    getFormatCompatibility: (format: Eventkit.Format) => Compatibility;
+    getFormatCompatibility: (format: string) => Compatibility;
     compatibilityInfo: CompatibilityInfo;
     theme: Eventkit.Theme & Theme;
     classes: { [className: string]: string };
@@ -119,8 +139,8 @@ export class FormatSelector extends React.Component<Props, {}> {
             {...providerOptions, formats: selectedFormats});
     }
 
-    getCheckBox(format) {
-        const {classes, providerOptions} = this.props;
+    getCheckBox(format: Eventkit.Format) {
+        const { formats, classes, providerOptions } = this.props;
         const selectedFormats = providerOptions.formats || [];
 
         const compatibility = this.props.getFormatCompatibility(format.slug);
@@ -148,7 +168,33 @@ export class FormatSelector extends React.Component<Props, {}> {
                     className={classes.listItem}
                     style={{marginBottom: '0px'}}
                 >
-                    <div className={classes.listItemText}>{format.name}</div>
+                    <div className={classes.listItemText}>
+                        <div className={classes.formatItem}>
+                            <span>{format.name}</span>
+                            <span className={classes.formatDialogIcon}>
+                                <InfoDialog
+                                    title={`Format Details  `}
+                                >
+                                    <div style={{ display: 'unset', fontSize: '14px' }}>
+                                        <strong style={{fontSize: '1.5em', paddingBottom: '15px'}}>
+                                            Format(s):
+                                        </strong>
+                                        {formats.map((format) => (
+                                                <div style={{ padding: '3px' }}>
+                                                    <div className={classes.infoItem}>
+                                                        <strong>
+                                                            {format.name}:
+                                                        </strong>
+                                                        <span>{format.description}</span>
+                                                    </div>
+                                                </div>
+                                            )
+                                        )}
+                                    </div>
+                                </InfoDialog>
+                            </span>
+                        </div>
+                    </div>
                     <div className={classes.errorMessage}>{errorMessage}</div>
                 </div>
             </div>
