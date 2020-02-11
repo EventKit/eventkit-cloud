@@ -13,26 +13,29 @@ export interface Props {
 
 export class DataCartInfoTable extends React.Component<Props, {}> {
     render() {
+        const { dataPack } = this.props;
         return (
             <div>
                 <CustomTableRow
                     title="Run By"
-                    data={this.props.dataPack.user}
-                />
+                >
+                    {this.props.dataPack.user}
+                </CustomTableRow>
                 <CustomTableRow
                     title="Run Id"
-                    data={this.props.dataPack.uid}
-                />
+                >
+                    {this.props.dataPack.uid}
+                </CustomTableRow>
                 <CustomTableRow
                     title="Started"
-                    data={moment(this.props.dataPack.started_at).format('M/D/YY h:mma')}
-                />
+                >
+                    {moment(dataPack.started_at).format('M/D/YY h:mma')}
+                </CustomTableRow>
                 <CustomTableRow
                     title="Finished"
-                    data={this.props.dataPack.finished_at === null ?
-                        'Currently Processing...' : moment(this.props.dataPack.finished_at).format('M/D/YY h:mma')
-                    }
-                />
+                >
+                    {dataPack.finished_at === null ? 'Currently Processing...' : moment(dataPack.finished_at).format('M/D/YY h:mma')}
+                </CustomTableRow>
             </div>
         );
     }

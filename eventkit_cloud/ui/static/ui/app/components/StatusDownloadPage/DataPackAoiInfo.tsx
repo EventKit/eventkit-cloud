@@ -26,9 +26,10 @@ export class DataPackAoiInfo extends React.Component<Props, {}> {
                 <CustomTableRow
                     className="qa-DataPackAoiInfo-area"
                     title="Area"
-                    data={getSqKmString(this.props.extent)}
                     dataStyle={{ wordBreak: 'break-all' }}
-                />
+                >
+                    {getSqKmString(this.props.extent)}
+                </CustomTableRow>
                 <div className="qa-DataPackAoiInfo-div-map" style={{maxHeight: '400px', marginTop: '10px'}}>
                     <MapView
                         id={"summaryMap"}

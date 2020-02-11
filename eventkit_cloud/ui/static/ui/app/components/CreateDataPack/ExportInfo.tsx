@@ -1046,9 +1046,10 @@ export class ExportInfo extends React.Component<Props, State> {
                                 <CustomTableRow
                                     className="qa-ExportInfo-area"
                                     title="Area"
-                                    data={this.props.exportInfo.areaStr}
                                     containerStyle={{ fontSize: '16px' }}
-                                />
+                                >
+                                    {this.props.exportInfo.areaStr}
+                                </CustomTableRow>
                                 <div style={{ padding: '15px 0px 20px' }}>
                                     <MapCard geojson={this.props.geojson}>
                                         <span style={{ marginRight: '10px' }}>Selected Area of Interest</span>

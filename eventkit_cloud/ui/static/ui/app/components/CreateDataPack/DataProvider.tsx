@@ -24,6 +24,7 @@ import IndeterminateCheckBoxIcon from '@material-ui/icons/IndeterminateCheckBox'
 import CheckBoxIcon from "@material-ui/icons/CheckBox";
 import {CompatibilityInfo} from "./ExportInfo";
 import {SelectedBaseMap} from "./CreateExport";
+import InfoDialog from "../common/InfoDialog";
 
 const jss = (theme: Theme & Eventkit.Theme) => createStyles({
     container: {

@@ -265,6 +265,7 @@ describe('BreadcrumbStepper component', () => {
         expect(content).toEqual(<ExportSummary
             onWalkthroughReset={props.onWalkthroughReset}
             walkthroughClicked={props.walkthroughClicked}
+            formats={props.formats}
         />);
 
         content = wrapper.instance().getStepContent(3);
