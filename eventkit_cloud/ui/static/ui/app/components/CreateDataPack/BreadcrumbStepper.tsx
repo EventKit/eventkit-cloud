@@ -312,9 +312,11 @@ export class BreadcrumbStepper extends React.Component<Props, State> {
     // }
 
     private checkEstimates() {
-        let data = this.props.exportInfo.providerEstimates;
-        if (data) {
-            return Object.keys(data).length !== 0;
+        let data = this.props.exportInfo.providerInfo;
+        // Check that we have polled for provider info for at least one provider
+        if (Object.keys(data).length !== 0) {
+            // Check to see if at least one provider has retrieved estimate data
+            return Object.entries(data).some(([slug, data]) => !!data.estimates);
         }
     }
 
@@ -366,14 +368,14 @@ export class BreadcrumbStepper extends React.Component<Props, State> {
         let timeEstimate = 0;
         const maxAcceptableTime = 60 * 60 * 24 * this.props.exportInfo.providers.length;
         for (const provider of this.props.exportInfo.providers) {
-            if (provider.id in this.props.exportInfo.providerEstimates) {
-                const estimate = this.props.exportInfo.providerEstimates[provider.id];
-                if (estimate) {
-                    if (estimate.size) {
-                        sizeEstimate += estimate.size.value;
+            if (provider.slug in this.props.exportInfo.providerInfo) {
+                const estimates = this.props.exportInfo.providerInfo[provider.slug].estimates;
+                if (estimates) {
+                    if (estimates.size) {
+                        sizeEstimate += estimates.size.value;
                     }
-                    if (estimate.time) {
-                        timeEstimate += estimate.time.value;
+                    if (estimates.time) {
+                        timeEstimate += estimates.time.value;
                     }
                 }
             }
@@ -382,13 +384,8 @@ export class BreadcrumbStepper extends React.Component<Props, State> {
         // if (timeEstimate === 0 && this.handleClick) {
         //     return 'Show ESTIMATES HERE!!!!!!!!!!!!!!'
         // }
-        if (timeEstimate === 0) {
-            timeEstimate = -1;
-        } else if (timeEstimate > maxAcceptableTime) {
+        if (timeEstimate > maxAcceptableTime) {
             timeEstimate = maxAcceptableTime;
-        }
-        if (sizeEstimate === 0) {
-            sizeEstimate = -1;
         }
         this.setState({sizeEstimate, timeEstimate});
     }

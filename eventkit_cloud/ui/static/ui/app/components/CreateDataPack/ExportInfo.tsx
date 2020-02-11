@@ -12,7 +12,7 @@ import Checkbox from '@material-ui/core/Checkbox';
 import Typography from '@material-ui/core/Typography';
 import NavigationRefresh from '@material-ui/icons/Refresh';
 import CustomScrollbar from '../CustomScrollbar';
-import DataProvider, {ProviderData} from './DataProvider';
+import DataProvider from './DataProvider';
 import MapCard from '../common/MapCard';
 import {updateExportInfo} from '../../actions/datacartActions';
 import {stepperNextDisabled, stepperNextEnabled} from '../../actions/uiActions';
@@ -155,7 +155,7 @@ export interface Props {
 export interface State {
     steps: Step[];
     isRunning: boolean;
-    providers: ProviderData[];
+    providers: Eventkit.Provider[];
     refreshPopover: null | HTMLElement;
     projectionCompatibilityOpen: boolean;
     displaySrid: number;  // Which projection is shown in the compatibility warning box
@@ -497,9 +497,6 @@ export class ExportInfo extends React.Component<Props, State> {
     }
 
     private getAvailability(provider: Eventkit.Provider, data: any) {
-        // make a copy of the provider to edit
-        const updatedProviderData = { ...provider } as ProviderData;
-
         const csrfmiddlewaretoken = getCookie('csrftoken');
         return axios({
             url: `/api/providers/${provider.slug}/status`,
@@ -509,19 +506,16 @@ export class ExportInfo extends React.Component<Props, State> {
             cancelToken: this.source.token,
         }).then((response) => {
             // The backend currently returns the response as a string, it needs to be parsed before being used.
-            const availabilityData = (typeof (response.data) === "object") ? response.data : JSON.parse(response.data);
-            updatedProviderData.availability = availabilityData;
-            updatedProviderData.availability.slug = provider.slug;
-            return updatedProviderData;
+            const availabilityData = (typeof (response.data) === "object") ? response.data : JSON.parse(response.data) as Eventkit.Store.Availability;
+            availabilityData.slug = provider.slug;
+            return availabilityData;
         }).catch(() => {
-            updatedProviderData.availability = {
-                slug: undefined,
+            return {
+                slug: provider.slug,
                 status: 'WARN',
                 type: 'CHECK_FAILURE',
                 message: "An error occurred while checking this provider's availability.",
-            };
-            updatedProviderData.availability.slug = provider.slug;
-            return updatedProviderData;
+            } as Eventkit.Store.Availability;
         });
     }
 
@@ -538,8 +532,6 @@ export class ExportInfo extends React.Component<Props, State> {
                 maxZoom = providerExportOptions.maxZoom;
             }
         }
-        // make a copy of the provider to edit
-        const updatedProviderData = { ...provider } as ProviderData;
         const data = {
             slugs: provider.slug,
             srs: 4326,
@@ -554,83 +546,67 @@ export class ExportInfo extends React.Component<Props, State> {
             headers: { 'X-CSRFToken': csrfmiddlewaretoken },
             cancelToken: this.source.token,
         }).then((response) => {
-            const estimate = response.data[0];
-            updatedProviderData.estimate = estimate;
-            return updatedProviderData;
+            return response.data[0];
         }).catch(() => {
-            updatedProviderData.estimate = {
+            return {
                 size: null,
                 slug: provider.slug,
                 time: null,
             };
-            return updatedProviderData;
         });
     }
 
-    async checkAvailability(provider: ProviderData) {
+    async checkAvailability(provider: Eventkit.Provider) {
         const data = { geojson: this.props.geojson };
-        const updatedProviderData = (await this.getAvailability(provider, data));
-        const result = {} as ProviderData;
-        this.setState((prevState) => {
-            // make a copy of state providers and replace the one we updated
-            const providers = [...this.state.providers];
-            const index = providers.map(provider => provider.slug).indexOf(provider.slug);
-            Object.assign(result, providers[index], { availability: updatedProviderData.availability });
-
-            providers.splice(index, 1, result);
-            return { providers };
-        });
-        return result;
+        return (await this.getAvailability(provider, data));
     }
 
-    async checkEstimate(provider: ProviderData) {
+    async checkEstimate(provider: Eventkit.Provider) {
         // This assumes that the entire selection is the first feature, if the feature collection becomes the
         // selection then the bbox would need to be calculated for it.
         if (this.context.config.SERVE_ESTIMATES) {
             const bbox = featureToBbox(this.props.geojson.features[0], WGS84);
-            const updatedProviderData = await this.getEstimate(provider, bbox);
-            const result = {} as ProviderData;
-            this.setState((prevState) => {
-                // make a copy of state providers and replace the one we updated
-                const providers = [...this.state.providers];
-                const index = providers.map(provider => provider.slug).indexOf(provider.slug);
-                Object.assign(result, providers[index], { estimate: updatedProviderData.estimate });
-
-                providers.splice(index, 1, result);
-                return { providers };
-            });
-            return result;
+            const estimates = await this.getEstimate(provider, bbox);
+            return { time: estimates.time, size: estimates.size };
         }
-        return provider;
+        return undefined;
     }
 
-    private clearEstimate(provider: ProviderData) {
-        const newProvider = {...provider} as ProviderData;
-        newProvider.estimate =  null; // Set to null to signify that we are expecting data
-        this.setState((prevState) => {
-            // make a copy of state providers and replace the one we updated
-            const providers = [...prevState.providers];
-            providers.splice(providers.indexOf(provider), 1, newProvider);
-            return {providers};
+    private clearEstimate(provider: Eventkit.Provider) {
+        const providerInfo = { ...this.props.exportInfo.providerInfo } as Eventkit.Map<Eventkit.Store.ProviderInfo>;
+        const updatedProviderInfo = { ...providerInfo };
+
+        const providerInfoData = updatedProviderInfo[provider.slug];
+        if (!providerInfoData) {
+            return; // Error handling, nothing needs to be done
+        }
+
+        updatedProviderInfo[provider.slug] = {
+            ...providerInfoData,
+            estimates: undefined,
+        };
+
+        this.props.updateExportInfo({
+            providerInfo: updatedProviderInfo
         });
     }
 
-    private checkProviders(providers: ProviderData[]) {
+    private checkProviders(providers: Eventkit.Provider[]) {
         Promise.all(providers.filter(provider => provider.display).map((provider) => {
             return this.checkProvider(provider);
-        })).then(updatedProviders => {
-            const providerEstimates = { ...this.props.exportInfo.providerEstimates };
-            updatedProviders.map((provider) => {
-                providerEstimates[provider.id] = provider.estimate;
+        })).then(providerResults => {
+            const providerInfo = { ...this.props.exportInfo.providerInfo } as Eventkit.Map<Eventkit.Store.ProviderInfo>;
+            providerResults.map((info) => {
+                providerInfo[info.slug] = info.data;
             });
-            this.props.updateExportInfo({ providerEstimates });
+            this.props.updateExportInfo({ providerInfo });
             // Trigger an estimate calculation update in the parent
             // Does not re-request any data, calculates the total from available results.
             this.props.onUpdateEstimate();
         })
     }
 
-    async checkProvider(provider: ProviderData) {
+    async checkProvider(provider: Eventkit.Provider) {
         if (provider.display === false) {
             return;
         }
@@ -639,9 +615,11 @@ export class ExportInfo extends React.Component<Props, State> {
             this.checkEstimate(provider),
         ]).then(results => {
             return {
-                ...provider,
-                availability: results[0].availability || provider.availability,
-                estimate: results[1].estimate || provider.estimate,
+                slug: provider.slug,
+                data: {
+                    availability: results[0],
+                    estimates: results[1],
+                } as Eventkit.Store.ProviderInfo,
             }
         });
     }
@@ -675,11 +653,11 @@ export class ExportInfo extends React.Component<Props, State> {
         return exportInfo.providers.some((provider) => {
             // short-circuiting means that this shouldn't be called until provider.availability
             // is populated, but if it's not, return false
-            const providerState = this.state.providers.find(p => p.slug === provider.slug);
-            if (!providerState) {
+            const providerInfo = this.props.exportInfo.providerInfo[provider.slug];
+            if (!providerInfo) {
                 return false;
             }
-            const { availability } = providerState;
+            const { availability } = providerInfo;
             if (availability && availability.status) {
                 return availability.status.toUpperCase() === 'FATAL';
             }
@@ -970,11 +948,11 @@ export class ExportInfo extends React.Component<Props, State> {
                                             alt={ix % 2 === 0}
                                             renderEstimate={this.context.config.SERVE_ESTIMATES}
                                             checkProvider={() => {
-                                                this.checkProvider(provider).then(updatedProvider => {
+                                                this.checkProvider(provider).then(providerInfo => {
                                                     this.props.updateExportInfo({
-                                                        providerEstimates: {
-                                                            ...this.props.exportInfo.providerEstimates,
-                                                            [updatedProvider.id]: updatedProvider.estimate,
+                                                        providerInfo: {
+                                                            ...this.props.exportInfo.providerInfo,
+                                                            [provider.slug]: providerInfo.data,
                                                         }
                                                     });
                                                     // Trigger an estimate caclulation update in the parent
