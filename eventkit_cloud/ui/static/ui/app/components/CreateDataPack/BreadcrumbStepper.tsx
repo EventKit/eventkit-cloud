@@ -30,6 +30,7 @@ import Info from '@material-ui/icons/Info';
 import {getProjections} from "../../actions/projectionActions";
 import {SelectedBaseMap} from "./CreateExport";
 
+
 export interface JobData {
     name: string;
     description: string;
@@ -85,6 +86,7 @@ export interface State {
     sizeEstimate: number;
     timeEstimate: number;
     estimateExplanationOpen: boolean;
+    clicked: boolean;
 }
 
 export class BreadcrumbStepper extends React.Component<Props, State> {
@@ -118,6 +120,7 @@ export class BreadcrumbStepper extends React.Component<Props, State> {
         this.updateEstimate = this.updateEstimate.bind(this);
         this.handleEstimateExplanationOpen = this.handleEstimateExplanationOpen.bind(this);
         this.handleEstimateExplanationClosed = this.handleEstimateExplanationClosed.bind(this);
+        this.handleClick = this.handleClick.bind(this);
         this.state = {
             stepIndex: 0,
             showError: false,
@@ -131,7 +134,8 @@ export class BreadcrumbStepper extends React.Component<Props, State> {
             },
             sizeEstimate: -1,
             timeEstimate: -1,
-            estimateExplanationOpen: false
+            estimateExplanationOpen: false,
+            clicked: false,
         };
         this.leaveRoute = null;
     }
@@ -300,12 +304,12 @@ export class BreadcrumbStepper extends React.Component<Props, State> {
         );
     }
 
-    private checkProviders() {
-        let providers = this.props.exportInfo.providers;
-        if (providers) {
-            return Object.keys(providers).length !== 0;
-        }
-    }
+    // private checkProviders() {
+    //     let providers = this.props.exportInfo.providers;
+    //     if (providers) {
+    //         return Object.keys(providers).length !== 0;
+    //     }
+    // }
 
     private checkEstimates() {
         let data = this.props.exportInfo.providerEstimates;
@@ -341,12 +345,17 @@ export class BreadcrumbStepper extends React.Component<Props, State> {
         // Secondary estimate shown in parenthesis (<duration in days hours minutes> - <size>)
         let secondary;
         let noEstimateMessage = 'Select providers to get estimate';
+
         if (sizeEstimate || durationEstimate) {
             const separator = (sizeEstimate && durationEstimate) ? ' - ' : '';
             secondary = ` ( ${get(durationEstimate, '')}${separator}${get(sizeEstimate, 'size unknown')})`;
             noEstimateMessage = 'Unknown Date'; // used when the size estimate is displayed but time is not.
         }
         return `${get(dateTimeEstimate, noEstimateMessage)}${get(secondary, '')}`;
+    }
+
+    private handleClick() {
+        this.setState({clicked: !this.state.clicked})
     }
 
     private updateEstimate() {
@@ -369,6 +378,10 @@ export class BreadcrumbStepper extends React.Component<Props, State> {
                 }
             }
         }
+        // adjust logic here when timeEstimate === 0 and handleClick, show estimated time, size
+        // if (timeEstimate === 0 && this.handleClick) {
+        //     return 'Show ESTIMATES HERE!!!!!!!!!!!!!!'
+        // }
         if (timeEstimate === 0) {
             timeEstimate = -1;
         } else if (timeEstimate > maxAcceptableTime) {
