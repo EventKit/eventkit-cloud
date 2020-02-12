@@ -1,8 +1,12 @@
 from celery import Task
 from celery.app import app_or_default
 
+from audit_logging.celery_support import UserDetailsBase
+
 from eventkit_cloud.celery import app
-from eventkit_cloud.tasks.models import DataProviderTaskRecord
+from eventkit_cloud.jobs.models import DataProviderTask
+from eventkit_cloud.tasks.models import ExportRun, DataProviderTaskRecord
+from eventkit_cloud.utils.stats.aoi_estimators import AoiEstimator
 
 
 class RevokeTask(Task):
@@ -22,3 +26,18 @@ class RevokeTask(Task):
 
 
 app.register_task(RevokeTask())
+
+
+@app.task(name="Get Estimates", base=UserDetailsBase, default_retry_delay=60)
+def get_estimates_task(run_uid, data_provider_task_uid, data_provider_task_record_uid):
+
+    run = ExportRun.objects.get(uid=run_uid)
+    provider_task = DataProviderTask.objects.get(uid=data_provider_task_uid)
+
+    estimator = AoiEstimator(run.job.extents)
+    estimated_size, meta_s = estimator.get_estimate(estimator.Types.SIZE, provider_task.provider)
+    estimated_duration, meta_t = estimator.get_estimate(estimator.Types.TIME, provider_task.provider)
+    data_provider_task_record = DataProviderTaskRecord.objects.get(uid=data_provider_task_record_uid)
+    data_provider_task_record.estimated_size = estimated_size
+    data_provider_task_record.estimated_duration = estimated_duration
+    data_provider_task_record.save()
