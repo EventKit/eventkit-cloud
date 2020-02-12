@@ -29,6 +29,7 @@ import * as PropTypes from "prop-types";
 import Info from '@material-ui/icons/Info';
 import {getProjections} from "../../actions/projectionActions";
 import {SelectedBaseMap} from "./CreateExport";
+import {ProviderData} from "./DataProvider";
 
 export interface JobData {
     name: string;
@@ -118,6 +119,7 @@ export class BreadcrumbStepper extends React.Component<Props, State> {
         this.updateEstimate = this.updateEstimate.bind(this);
         this.handleEstimateExplanationOpen = this.handleEstimateExplanationOpen.bind(this);
         this.handleEstimateExplanationClosed = this.handleEstimateExplanationClosed.bind(this);
+        this.checkClonedProviderEstimates = this.checkClonedProviderEstimates.bind(this)
         this.state = {
             stepIndex: 0,
             showError: false,
@@ -213,13 +215,32 @@ export class BreadcrumbStepper extends React.Component<Props, State> {
         this.setState({limits});
     }
 
+    private checkClonedProviderEstimates(providers: ProviderData[]) {
+        // check provider array to find where provider.slug equals providerEstimates.?
+        const estimateProps = this.props.exportInfo.providerEstimates;
+        // const provider1 = this.props.providers.find(provider => provider.slug === "providerTask.slug");
+        // const provider2 = this.props.providers.find(provider => provider.slug === "estimateProps.slug");
+
+        Promise.all(providers.filter(provider => provider.display).map((provider) => {
+            return this.checkProvider(provider);
+        const providerEstimates = { ...this.props.exportInfo.providerEstimates };
+
+        this.props.providers.map((provider) => {
+            providerEstimates[provider.id] = provider.estimate;
+        });
+        }));
+    }
+
 
     private styleEstimate(allowNull=false, stepIndex) {
         const textStyle = {
             color: this.props.theme.eventkit.colors.white,
             fontSize: '0.9em',
         };
-        if (this.checkEstimates() && stepIndex !== 0) {
+        const { sizeEstimate, timeEstimate } =  this.state;
+
+        if ((stepIndex === 0 && sizeEstimate !== -1 && timeEstimate !== -1) || stepIndex !== 0) {
+        // if (this.checkEstimates() && stepIndex !== 0) {
             return (
                 <div style={{display: 'inline-flex'}}>
                     <Typography style={{
@@ -300,12 +321,12 @@ export class BreadcrumbStepper extends React.Component<Props, State> {
         );
     }
 
-    private checkProviders() {
-        let providers = this.props.exportInfo.providers;
-        if (providers) {
-            return Object.keys(providers).length !== 0;
-        }
-    }
+    // private checkProviders() {
+    //     let providers = this.props.exportInfo.providers;
+    //     if (providers) {
+    //         return Object.keys(providers).length !== 0;
+    //     }
+    // }
 
     private checkEstimates() {
         let data = this.props.exportInfo.providerEstimates;
