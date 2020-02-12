@@ -263,7 +263,7 @@ export class ExportInfo extends React.Component<Props, State> {
 
     componentDidUpdate(prevProps: Props, prevState: State) {
         // if currently in walkthrough, we want to be able to show the green forward button, so ignore these statements
-        const { exportInfo } = this.props;
+        const {exportInfo} = this.props;
         let nextState = {};
 
         if (!this.props.walkthroughClicked) {
@@ -280,11 +280,11 @@ export class ExportInfo extends React.Component<Props, State> {
         }
         if (this.props.walkthroughClicked && !prevProps.walkthroughClicked && !this.state.isRunning) {
             this.joyride.current.reset(true);
-            this.setState({ isRunning: true });
+            this.setState({isRunning: true});
         }
 
         if (this.props.providers.length !== prevProps.providers.length) {
-            this.setState({ providers: this.props.providers });
+            this.setState({providers: this.props.providers});
             this.checkProviders(this.props.providers);
         }
 
@@ -301,7 +301,7 @@ export class ExportInfo extends React.Component<Props, State> {
             ...this.checkSelectedFormats(prevState)
         };
         if (Object.keys(nextState).length > 0) {
-            this.setState({ ...nextState });
+            this.setState({...nextState});
         }
     }
 
@@ -325,17 +325,17 @@ export class ExportInfo extends React.Component<Props, State> {
     }
 
     private calculateCompatibility() {
-        const { formats } = this.props;
+        const {formats} = this.props;
         const selectedProjections = this.props.exportInfo.projections;
 
         const formatMap = {};
         const projectionMap = {};
         formats.forEach(format => {
-            formatMap[format.slug] = { projections: [] };
+            formatMap[format.slug] = {projections: []};
         });
         selectedProjections.map((projectionSrid) => {
             const unsupported = unsupportedFormats(projectionSrid, formats);
-            projectionMap[projectionSrid] = { formats: unsupported };
+            projectionMap[projectionSrid] = {formats: unsupported};
             unsupported.forEach((format) => {
                 formatMap[format.slug].projections.push(projectionSrid);
             });
@@ -369,7 +369,7 @@ export class ExportInfo extends React.Component<Props, State> {
         const selectedFormats = [] as string[];
         getFormats(selectedFormats);
         if (!ExportInfo.elementsEqual(selectedFormats, prevState.selectedFormats)) {
-            return { selectedFormats };
+            return {selectedFormats};
         }
     }
 
@@ -382,7 +382,7 @@ export class ExportInfo extends React.Component<Props, State> {
     }
 
     private handleProjectionCompatibilityClose() {
-        this.setState({ projectionCompatibilityOpen: false });
+        this.setState({projectionCompatibilityOpen: false});
     }
 
     private handleDataProviderExpand() {
@@ -489,10 +489,10 @@ export class ExportInfo extends React.Component<Props, State> {
         // make a copy of providers and set availability to empty json
         const providers = this.state.providers.map(provider => ({
             ...provider,
-            availability: { slug: undefined, type: undefined, status: undefined, message: undefined },
+            availability: {slug: undefined, type: undefined, status: undefined, message: undefined},
         }));
         // update state with the new copy of providers
-        this.setState({ providers });
+        this.setState({providers});
         this.checkProviders(providers);
     }
 
@@ -543,7 +543,7 @@ export class ExportInfo extends React.Component<Props, State> {
             url: `/api/estimate`,
             method: 'get',
             params: data,
-            headers: { 'X-CSRFToken': csrfmiddlewaretoken },
+            headers: {'X-CSRFToken': csrfmiddlewaretoken},
             cancelToken: this.source.token,
         }).then((response) => {
             return response.data[0];
@@ -557,7 +557,7 @@ export class ExportInfo extends React.Component<Props, State> {
     }
 
     async checkAvailability(provider: Eventkit.Provider) {
-        const data = { geojson: this.props.geojson };
+        const data = {geojson: this.props.geojson};
         return (await this.getAvailability(provider, data));
     }
 
@@ -567,14 +567,14 @@ export class ExportInfo extends React.Component<Props, State> {
         if (this.context.config.SERVE_ESTIMATES) {
             const bbox = featureToBbox(this.props.geojson.features[0], WGS84);
             const estimates = await this.getEstimate(provider, bbox);
-            return { time: estimates.time, size: estimates.size };
+            return {time: estimates.time, size: estimates.size, loading: false} as Eventkit.Store.Estimates;
         }
         return undefined;
     }
 
     private clearEstimate(provider: Eventkit.Provider) {
-        const providerInfo = { ...this.props.exportInfo.providerInfo } as Eventkit.Map<Eventkit.Store.ProviderInfo>;
-        const updatedProviderInfo = { ...providerInfo };
+        const providerInfo = {...this.props.exportInfo.providerInfo} as Eventkit.Map<Eventkit.Store.ProviderInfo>;
+        const updatedProviderInfo = {...providerInfo};
 
         const providerInfoData = updatedProviderInfo[provider.slug];
         if (!providerInfoData) {
@@ -595,25 +595,46 @@ export class ExportInfo extends React.Component<Props, State> {
         Promise.all(providers.filter(provider => provider.display).map((provider) => {
             return this.checkProvider(provider);
         })).then(providerResults => {
-            const providerInfo = { ...this.props.exportInfo.providerInfo } as Eventkit.Map<Eventkit.Store.ProviderInfo>;
+            const providerInfo = {...this.props.exportInfo.providerInfo} as Eventkit.Map<Eventkit.Store.ProviderInfo>;
             providerResults.map((info) => {
                 providerInfo[info.slug] = info.data;
             });
-            this.props.updateExportInfo({ providerInfo });
+            this.props.updateExportInfo({providerInfo});
             // Trigger an estimate calculation update in the parent
             // Does not re-request any data, calculates the total from available results.
             this.props.onUpdateEstimate();
         })
     }
 
+    private setProviderLoading(isLoading: boolean, provider: Eventkit.Provider) {
+        const providerInfo = {...this.props.exportInfo.providerInfo} as Eventkit.Map<Eventkit.Store.ProviderInfo>;
+        const updatedProviderInfo = {...providerInfo};
+        const providerInfoData = updatedProviderInfo[provider.slug];
+        if (!!providerInfoData) {
+            updatedProviderInfo[provider.slug] = {
+                ...providerInfoData,
+                estimates: {
+                    ...((!!providerInfoData.estimates) ? providerInfoData.estimates : {}),
+                    loading: isLoading
+                } as Eventkit.Store.Estimates
+            };
+            this.props.updateExportInfo({
+                providerInfo: updatedProviderInfo
+            });
+        }
+    }
+
     async checkProvider(provider: Eventkit.Provider) {
         if (provider.display === false) {
             return;
         }
+        this.setProviderLoading(true, provider);
+
         return Promise.all([
             this.checkAvailability(provider),
             this.checkEstimate(provider),
         ]).then(results => {
+            this.setProviderLoading(false, provider);
             return {
                 slug: provider.slug,
                 data: {
@@ -621,20 +642,20 @@ export class ExportInfo extends React.Component<Props, State> {
                     estimates: results[1],
                 } as Eventkit.Store.ProviderInfo,
             }
-        });
+        })
     }
 
     private handlePopoverOpen(e: React.MouseEvent<any>) {
-        this.setState({ refreshPopover: e.currentTarget });
+        this.setState({refreshPopover: e.currentTarget});
     }
 
     private handlePopoverClose() {
-        this.setState({ refreshPopover: null });
+        this.setState({refreshPopover: null});
     }
 
     private hasRequiredFields(exportInfo: Eventkit.Store.ExportInfo) {
         // if the required fields are populated return true, else return false
-        const { exportOptions } = exportInfo;
+        const {exportOptions} = exportInfo;
         const formatsAreSelected = exportInfo.providers.map((provider) => {
             return !!exportOptions[provider.slug]
                 && exportOptions[provider.slug].formats
@@ -657,7 +678,7 @@ export class ExportInfo extends React.Component<Props, State> {
             if (!providerInfo) {
                 return false;
             }
-            const { availability } = providerInfo;
+            const {availability} = providerInfo;
             if (availability && availability.status) {
                 return availability.status.toUpperCase() === 'FATAL';
             }
@@ -672,7 +693,7 @@ export class ExportInfo extends React.Component<Props, State> {
         }
 
         this.setState((currentState) => {
-            const nextState = { ...currentState };
+            const nextState = {...currentState};
             nextState.steps = nextState.steps.concat(newSteps);
             return nextState;
         });
@@ -681,7 +702,7 @@ export class ExportInfo extends React.Component<Props, State> {
     private openDrawer() {
         const isOpen: boolean = this.dataProvider.current.state.open;
         if (this.state.providerDrawerIsOpen == null) {
-            this.setState({ providerDrawerIsOpen: isOpen });
+            this.setState({providerDrawerIsOpen: isOpen});
         }
         if (!isOpen) {
             this.handleDataProviderExpand();
@@ -692,7 +713,7 @@ export class ExportInfo extends React.Component<Props, State> {
         if (this.dataProvider.current.state.open !== this.state.providerDrawerIsOpen) {
             this.handleDataProviderExpand();
         }
-        this.setState({ providerDrawerIsOpen: null });
+        this.setState({providerDrawerIsOpen: null});
     }
 
     private callback(data: any) {
@@ -706,7 +727,7 @@ export class ExportInfo extends React.Component<Props, State> {
 
         if (action === 'close' || action === 'skip' || type === 'finished') {
             this.resetDrawer();
-            this.setState({ isRunning: false });
+            this.setState({isRunning: false});
             this.props.onWalkthroughReset();
             this.joyride.current.reset(true);
             window.location.hash = '';
@@ -752,11 +773,11 @@ export class ExportInfo extends React.Component<Props, State> {
             onClose={this.handleProjectionCompatibilityClose}
         >
             <div
-                style={{ paddingBottom: '10px', wordWrap: 'break-word' }}
+                style={{paddingBottom: '10px', wordWrap: 'break-word'}}
                 className="qa-ExportInfo-dialog-projection"
             >
                 <p><strong>This projection does not support the following format(s):</strong></p>
-                <div style={{ marginBottom: '10px' }}>
+                <div style={{marginBottom: '10px'}}>
                     {formats.map(format => (
                         <div key={format.slug}>
                             {format.name}
@@ -768,9 +789,9 @@ export class ExportInfo extends React.Component<Props, State> {
     }
 
     render() {
-        const { colors } = this.props.theme.eventkit;
-        const { classes } = this.props;
-        const { projectionCompatibilityOpen, steps, isRunning } = this.state;
+        const {colors} = this.props.theme.eventkit;
+        const {classes} = this.props;
+        const {projectionCompatibilityOpen, steps, isRunning} = this.state;
 
         // Move EPSG:4326 (if present -- it should always be) to the front so it displays first.
         let projections = [...this.props.projections];
@@ -812,7 +833,7 @@ export class ExportInfo extends React.Component<Props, State> {
                                 >
                                     Enter General Information
                                 </div>
-                                <div style={{ marginBottom: '30px' }}>
+                                <div style={{marginBottom: '30px'}}>
                                     <CustomTextField
                                         className={`qa-ExportInfo-input-name ${classes.textField}`}
                                         id="Name"
@@ -820,7 +841,7 @@ export class ExportInfo extends React.Component<Props, State> {
                                         onChange={this.onNameChange}
                                         defaultValue={this.props.exportInfo.exportName}
                                         placeholder="Datapack Name"
-                                        InputProps={{ className: classes.input }}
+                                        InputProps={{className: classes.input}}
                                         fullWidth
                                         maxLength={100}
                                     />
@@ -832,11 +853,11 @@ export class ExportInfo extends React.Component<Props, State> {
                                         defaultValue={this.props.exportInfo.datapackDescription}
                                         placeholder="Description"
                                         multiline
-                                        inputProps={{ style: { fontSize: '16px', lineHeight: '20px' } }}
+                                        inputProps={{style: {fontSize: '16px', lineHeight: '20px'}}}
                                         fullWidth
                                         maxLength={250}
                                         // eslint-disable-next-line react/jsx-no-duplicate-props
-                                        InputProps={{ className: classes.input, style: { lineHeight: '21px' } }}
+                                        InputProps={{className: classes.input, style: {lineHeight: '21px'}}}
                                     />
                                     <CustomTextField
                                         className={`qa-ExportInfo-input-project ${classes.textField}`}
@@ -845,7 +866,7 @@ export class ExportInfo extends React.Component<Props, State> {
                                         onChange={this.onProjectChange}
                                         defaultValue={this.props.exportInfo.projectName}
                                         placeholder="Project Name"
-                                        InputProps={{ className: classes.input }}
+                                        InputProps={{className: classes.input}}
                                         fullWidth
                                         maxLength={100}
                                     />
@@ -855,25 +876,25 @@ export class ExportInfo extends React.Component<Props, State> {
                                 <div
                                     id="layersHeader"
                                     className="qa-ExportInfo-layersHeader"
-                                    style={{ marginRight: '5px' }}
+                                    style={{marginRight: '5px'}}
                                 >
                                     Select Data Sources
                                 </div>
                                 <div
                                     id="layersSubheader"
-                                    style={{ fontWeight: 'normal', fontSize: '12px', fontStyle: 'italic' }}
+                                    style={{fontWeight: 'normal', fontSize: '12px', fontStyle: 'italic'}}
                                 >
                                     (You must choose <strong>at least one</strong>)
                                 </div>
                             </div>
                             <div id="select" className={`qa-ExportInfo-selectAll ${classes.selectAll}`}>
                                 <Checkbox
-                                    classes={{ root: classes.checkbox, checked: classes.checked }}
+                                    classes={{root: classes.checkbox, checked: classes.checked}}
                                     name="SelectAll"
                                     checked={this.props.exportInfo.providers.length === this.props.providers.filter(
                                         provider => provider.display).length}
                                     onChange={this.onSelectAll}
-                                    style={{ width: '24px', height: '24px' }}
+                                    style={{width: '24px', height: '24px'}}
                                 />
                                 <span
                                     style={{
@@ -888,13 +909,13 @@ export class ExportInfo extends React.Component<Props, State> {
                                 <div className={`qa-ExportInfo-ListHeader ${classes.listHeading}`}>
                                     <div
                                         className="qa-ExportInfo-ListHeaderItem"
-                                        style={{ flex: '1 1 auto' }}
+                                        style={{flex: '1 1 auto'}}
                                     >
                                         DATA PROVIDERS
                                     </div>
                                     <div
                                         className="qa-ExportInfo-ListHeaderItem"
-                                        style={{ display: 'flex', justifyContent: 'flex-end', position: 'relative' }}
+                                        style={{display: 'flex', justifyContent: 'flex-end', position: 'relative'}}
                                     >
                                         <span>AVAILABILITY</span>
                                         <NavigationRefresh
@@ -905,9 +926,9 @@ export class ExportInfo extends React.Component<Props, State> {
                                             color="primary"
                                         />
                                         <Popover
-                                            style={{ pointerEvents: 'none' }}
+                                            style={{pointerEvents: 'none'}}
                                             PaperProps={{
-                                                style: { padding: '16px' },
+                                                style: {padding: '16px'},
                                             }}
                                             open={Boolean(this.state.refreshPopover)}
                                             anchorEl={this.state.refreshPopover}
@@ -921,8 +942,8 @@ export class ExportInfo extends React.Component<Props, State> {
                                                 horizontal: 'center',
                                             }}
                                         >
-                                            <div style={{ maxWidth: 400 }}>
-                                                <Typography variant="h6" gutterBottom style={{ fontWeight: 600 }}>
+                                            <div style={{maxWidth: 400}}>
+                                                <Typography variant="h6" gutterBottom style={{fontWeight: 600}}>
                                                     RUN AVAILABILITY CHECK AGAIN
                                                 </Typography>
                                                 <div>You may try to resolve errors by running the availability check
@@ -935,7 +956,7 @@ export class ExportInfo extends React.Component<Props, State> {
                                 <List
                                     id="ProviderList"
                                     className="qa-ExportInfo-List"
-                                    style={{ width: '100%', fontSize: '16px' }}
+                                    style={{width: '100%', fontSize: '16px'}}
                                 >
                                     {this.getProviders().map((provider, ix) => (
                                         <DataProvider
@@ -988,13 +1009,13 @@ export class ExportInfo extends React.Component<Props, State> {
                                         >
                                             <Checkbox
                                                 className="qa-ExportInfo-CheckBox-projection"
-                                                classes={{ root: classes.checkbox, checked: classes.checked }}
+                                                classes={{root: classes.checkbox, checked: classes.checked}}
                                                 name={`${projection.srid}`}
                                                 checked={this.props.exportInfo.projections.indexOf(projection.srid) !== -1}
-                                                style={{ width: '24px', height: '24px' }}
+                                                style={{width: '24px', height: '24px'}}
                                                 onChange={this.onSelectProjection}
                                             />
-                                            <span style={{ padding: '0px 15px', display: 'flex', flexWrap: 'wrap' }}>
+                                            <span style={{padding: '0px 15px', display: 'flex', flexWrap: 'wrap'}}>
                                                 EPSG:{projection.srid} - {projection.name}
                                             </span>
                                             {this.projectionHasErrors(projection.srid) &&
@@ -1024,13 +1045,13 @@ export class ExportInfo extends React.Component<Props, State> {
                                 <CustomTableRow
                                     className="qa-ExportInfo-area"
                                     title="Area"
-                                    containerStyle={{ fontSize: '16px' }}
+                                    containerStyle={{fontSize: '16px'}}
                                 >
                                     {this.props.exportInfo.areaStr}
                                 </CustomTableRow>
-                                <div style={{ padding: '15px 0px 20px' }}>
+                                <div style={{padding: '15px 0px 20px'}}>
                                     <MapCard geojson={this.props.geojson}>
-                                        <span style={{ marginRight: '10px' }}>Selected Area of Interest</span>
+                                        <span style={{marginRight: '10px'}}>Selected Area of Interest</span>
                                         <span
                                             role="button"
                                             tabIndex={0}

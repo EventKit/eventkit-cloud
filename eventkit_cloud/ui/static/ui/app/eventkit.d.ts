@@ -386,8 +386,9 @@ declare namespace Eventkit {
         }
 
         interface Estimates {
-            time: EstimateData;
-            size: EstimateData;
+            time?: EstimateData;
+            size?: EstimateData;
+            loading?: boolean;
         }
 
         interface Availability {
