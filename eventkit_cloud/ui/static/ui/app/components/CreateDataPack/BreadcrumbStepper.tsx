@@ -86,7 +86,6 @@ export interface State {
     sizeEstimate: number;
     timeEstimate: number;
     estimateExplanationOpen: boolean;
-    clicked: boolean;
 }
 
 export class BreadcrumbStepper extends React.Component<Props, State> {
@@ -120,7 +119,6 @@ export class BreadcrumbStepper extends React.Component<Props, State> {
         this.updateEstimate = this.updateEstimate.bind(this);
         this.handleEstimateExplanationOpen = this.handleEstimateExplanationOpen.bind(this);
         this.handleEstimateExplanationClosed = this.handleEstimateExplanationClosed.bind(this);
-        this.handleClick = this.handleClick.bind(this);
         this.state = {
             stepIndex: 0,
             showError: false,
@@ -135,7 +133,6 @@ export class BreadcrumbStepper extends React.Component<Props, State> {
             sizeEstimate: -1,
             timeEstimate: -1,
             estimateExplanationOpen: false,
-            clicked: false,
         };
         this.leaveRoute = null;
     }
@@ -150,7 +147,6 @@ export class BreadcrumbStepper extends React.Component<Props, State> {
         this.getEstimateLabel(0);
         this.props.getProjections();
         this.props.getFormats();
-
         // const route = this.props.routes[this.props.routes.length - 1];
         // this.props.router.setRouteLeaveHook(route, this.routeLeaveHook);
     }
@@ -223,7 +219,7 @@ export class BreadcrumbStepper extends React.Component<Props, State> {
             color: this.props.theme.eventkit.colors.white,
             fontSize: '0.9em',
         };
-        if (this.checkEstimates() && stepIndex !== 0) {
+        if (stepIndex !== 0) {
             return (
                 <div style={{display: 'inline-flex'}}>
                     <Typography style={{
@@ -304,13 +300,6 @@ export class BreadcrumbStepper extends React.Component<Props, State> {
         );
     }
 
-    // private checkProviders() {
-    //     let providers = this.props.exportInfo.providers;
-    //     if (providers) {
-    //         return Object.keys(providers).length !== 0;
-    //     }
-    // }
-
     private checkEstimates() {
         let data = this.props.exportInfo.providerInfo;
         // Check that we have polled for provider info for at least one provider
@@ -356,10 +345,6 @@ export class BreadcrumbStepper extends React.Component<Props, State> {
         return `${get(dateTimeEstimate, noEstimateMessage)}${get(secondary, '')}`;
     }
 
-    private handleClick() {
-        this.setState({clicked: !this.state.clicked})
-    }
-
     private updateEstimate() {
         if (!this.context.config.SERVE_ESTIMATES || !this.props.exportInfo.providers) {
             return;
@@ -380,13 +365,17 @@ export class BreadcrumbStepper extends React.Component<Props, State> {
                 }
             }
         }
-        // adjust logic here when timeEstimate === 0 and handleClick, show estimated time, size
-        // if (timeEstimate === 0 && this.handleClick) {
-        //     return 'Show ESTIMATES HERE!!!!!!!!!!!!!!'
+        // adjust logic here
+
+        // if (timeEstimate === 0) {
+        //     timeEstimate = -1;
         // }
         if (timeEstimate > maxAcceptableTime) {
             timeEstimate = maxAcceptableTime;
         }
+        // if (sizeEstimate === 0) {
+        //     sizeEstimate = -1;
+        // }
         this.setState({sizeEstimate, timeEstimate});
     }
 
