@@ -127,6 +127,7 @@ interface State {
     open: boolean;
     licenseDialogOpen: boolean;
     zoomLevel: number;
+    checked: boolean;
 }
 
 export class DataProvider extends React.Component<Props, State> {
@@ -146,6 +147,7 @@ export class DataProvider extends React.Component<Props, State> {
         this.setZoom = this.setZoom.bind(this);
         this.getFormatCompatibility = this.getFormatCompatibility.bind(this);
         this.getCheckedIcon = this.getCheckedIcon.bind(this);
+        this.handleFootprintsCheck = this.handleFootprintsCheck.bind(this);
 
         this.estimateDebouncer = () => { /* do nothing while not mounted */
         };
@@ -153,6 +155,7 @@ export class DataProvider extends React.Component<Props, State> {
             open: false,
             licenseDialogOpen: false,
             zoomLevel: this.props.provider.level_to,
+            checked: false,
         };
     }
 
@@ -236,6 +239,10 @@ export class DataProvider extends React.Component<Props, State> {
     handleExpand() {
         this.setState(state => ({open: !state.open}));
     }
+
+    handleFootprintsCheck = () => {
+        this.setState({ checked: !this.state.checked });
+    };
 
     private formatEstimate(providerEstimate) {
         if (!providerEstimate) {
@@ -344,6 +351,8 @@ export class DataProvider extends React.Component<Props, State> {
                             selectedMinZoom={currentMinZoom}
                             maxZoom={provider.level_to}
                             minZoom={provider.level_from}
+                            handleCheckClick={this.handleFootprintsCheck}
+                            checked={this.state.checked}
                         />
                     </div>
                     <div
@@ -375,7 +384,8 @@ export class DataProvider extends React.Component<Props, State> {
                     <div>
                         <em>Zoom not available for this source.</em>
                     </div>
-                </ListItem>);
+                </ListItem>
+            );
         }
 
         nestedItems.push((
