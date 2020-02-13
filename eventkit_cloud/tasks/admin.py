@@ -1,6 +1,7 @@
 from django.contrib import admin
 
 from eventkit_cloud.tasks.models import (
+    DataProviderTaskRecord,
     ExportRun,
     UserDownload,
     ExportTaskRecord,
@@ -11,6 +12,28 @@ import pickle
 import traceback
 
 logger = logging.getLogger(__name__)
+
+
+class DataProviderTaskRecordAdmin(admin.ModelAdmin):
+    model = DataProviderTaskRecord
+
+    readonly_fields = (
+        "name",
+        "slug",
+        "run",
+        "status",
+        "display",
+        "estimated_size",
+        "estimated_duration",
+        "preview",
+        "created_at",
+        "updated_at",
+    )
+    search_fields = ("uid", "name", "status")
+    list_display = ["uid", "name", "run", "status", "updated_at"]
+
+    def has_add_permission(self, request, obj=None):
+        return False
 
 
 class ExportTaskRecordAdmin(admin.ModelAdmin):
@@ -89,6 +112,7 @@ class UserDownloadAdmin(admin.ModelAdmin):
         return False
 
 
+admin.site.register(DataProviderTaskRecord, DataProviderTaskRecordAdmin)
 admin.site.register(ExportRun, ExportRunAdmin)
 admin.site.register(UserDownload, UserDownloadAdmin)
 admin.site.register(ExportTaskRecord, ExportTaskRecordAdmin)

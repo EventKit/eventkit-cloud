@@ -1,13 +1,16 @@
 import json
 import os
 
+from audit_logging.celery_support import UserDetailsBase
 from celery.utils.log import get_task_logger
 
 from eventkit_cloud.celery import app
-from eventkit_cloud.tasks.helpers import get_message_count
-from eventkit_cloud.utils.pcf import PcfClient
+from eventkit_cloud.jobs.models import DataProviderTask
 from eventkit_cloud.tasks.enumerations import TaskStates
-from audit_logging.celery_support import UserDetailsBase
+from eventkit_cloud.tasks.helpers import get_message_count
+from eventkit_cloud.tasks.models import ExportRun, DataProviderTaskRecord
+from eventkit_cloud.utils.pcf import PcfClient
+from eventkit_cloud.utils.stats.aoi_estimators import AoiEstimator
 
 
 # Get an instance of a logger
@@ -59,3 +62,18 @@ def pcf_shutdown_celery_workers(self, queue_name, queue_type=None, hostname=None
     )
     logger.info(f"Waiting for tasks {export_tasks} to finish before shutting down, {workers}.")
     self.retry(exc=Exception(f"Tasks still in queue."))
+
+
+@app.task(name="Get Estimates", base=UserDetailsBase, default_retry_delay=60)
+def get_estimates_task(run_uid, data_provider_task_uid, data_provider_task_record_uid):
+
+    run = ExportRun.objects.get(uid=run_uid)
+    provider_task = DataProviderTask.objects.get(uid=data_provider_task_uid)
+
+    estimator = AoiEstimator(run.job.extents)
+    estimated_size, meta_s = estimator.get_estimate(estimator.Types.SIZE, provider_task.provider)
+    estimated_duration, meta_t = estimator.get_estimate(estimator.Types.TIME, provider_task.provider)
+    data_provider_task_record = DataProviderTaskRecord.objects.get(uid=data_provider_task_record_uid)
+    data_provider_task_record.estimated_size = estimated_size
+    data_provider_task_record.estimated_duration = estimated_duration
+    data_provider_task_record.save()
