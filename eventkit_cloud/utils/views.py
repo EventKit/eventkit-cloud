@@ -40,7 +40,6 @@ def map(request: HttpRequest, slug: str, path: str) -> HttpResponse:
                 response.status_code = 500
                 response.content = "No data available."
         else:
-            logger.error(response.content)
             if provider.metadata:
                 response.content = "The service was unable to provide data for this location."
             else:

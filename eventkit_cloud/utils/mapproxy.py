@@ -434,5 +434,5 @@ def get_mapproxy_metadata_url(slug):
 
 
 def get_mapproxy_footprint_url(slug):
-    footprint_url = f"{settings.SITE_URL.rstrip('/')}/map/{get_footprint_layer_name(slug)}/service/{get_footprint_layer_name(slug)}/default/{{z}}/{{x}}/{{y}}.png"  # NOQA
+    footprint_url = f"{settings.SITE_URL.rstrip('/')}/map/{slug}/service/{get_footprint_layer_name(slug)}/default/{{z}}/{{x}}/{{y}}.png"  # NOQA
     return footprint_url
