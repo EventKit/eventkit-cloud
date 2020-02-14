@@ -6,12 +6,14 @@ import PageHeader from '../common/PageHeader';
 import BreadcrumbStepper from './BreadcrumbStepper';
 import {Route} from 'react-router';
 import MapDrawer from "./MapDrawer";
+import EstimateContainer from "./EstimateContainer";
 
 export interface Props {
     children: any;
     history: any;
     routes: Route[];
     theme: Eventkit.Theme & Theme;
+    geojson: GeoJSON.FeatureCollection;
 }
 
 export interface SelectedBaseMap {
@@ -85,12 +87,15 @@ export class CreateExport extends React.Component<Props, State> {
                 >
                     {iconElementRight}
                 </PageHeader>
-                <BreadcrumbStepper
-                    history={this.props.history}
-                    routes={this.props.routes}
-                    walkthroughClicked={this.state.walkthroughClicked}
-                    onWalkthroughReset={this.handleWalkthroughReset}
-                    selectedBaseMap={this.state.selectedBaseMap}
+                <EstimateContainer
+                    breadcrumbStepperProps={{
+                        history: this.props.history,
+                        routes: this.props.routes,
+                        walkthroughClicked: this.state.walkthroughClick,
+                        onWalkthroughReset: this.handleWalkthroughReset,
+                        selectedBaseMap: this.state.selectedBaseMap,
+                        geojson: this.props.geojson,
+                    }}
                 />
                 <MapDrawer
                     updateBaseMap={this.updateBaseMap}
