@@ -56,7 +56,7 @@ export interface Props {
     jobFetched: boolean;
     jobError: object;
     jobuid: string;
-    formats: object[];
+    formats: Eventkit.Format[];
     getFormats: () => void;
     walkthroughClicked: boolean;
     onWalkthroughReset: () => void;
@@ -477,6 +477,7 @@ export class BreadcrumbStepper extends React.Component<Props, State> {
                     <ExportSummary
                         walkthroughClicked={this.props.walkthroughClicked}
                         onWalkthroughReset={this.props.onWalkthroughReset}
+                        formats={this.props.formats}
                     />
                 );
             default:

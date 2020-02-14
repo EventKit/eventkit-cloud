@@ -34,38 +34,37 @@ export class DataPackStatusTable extends React.Component<Props, {}> {
                 <CustomTableRow
                     className="qa-DataPackTableRow-Export"
                     title="Export"
-                    data={this.props.status}
                     titleStyle={{ backgroundColor: this.props.statusColor }}
                     dataStyle={{
                         backgroundColor: this.props.statusColor,
                         color: this.props.statusFontColor,
                     }}
-                />
+                >
+                    {this.props.status}
+                </CustomTableRow>
                 <CustomTableRow
                     title="Expires"
-                    data={
-                        <ExpirationData
-                            user={this.props.user}
-                            expiration={this.props.expiration}
-                            minDate={this.props.minDate}
-                            maxDate={this.props.maxDate}
-                            adminPermissions={this.props.adminPermissions}
-                            handleExpirationChange={this.props.handleExpirationChange}
-                        />
-                    }
-                />
+                >
+                    <ExpirationData
+                        user={this.props.user}
+                        expiration={this.props.expiration}
+                        minDate={this.props.minDate}
+                        maxDate={this.props.maxDate}
+                        adminPermissions={this.props.adminPermissions}
+                        handleExpirationChange={this.props.handleExpirationChange}
+                    />
+                </CustomTableRow>
                 <CustomTableRow
                     title="Permissions"
                     dataStyle={{ flexWrap: 'wrap', padding: '5px 10px' }}
-                    data={
-                        <PermissionsData
-                            user={this.props.user}
-                            permissions={this.props.permissions}
-                            adminPermissions={this.props.adminPermissions}
-                            handlePermissionsChange={this.props.handlePermissionsChange}
-                        />
-                    }
-                />
+                >
+                    <PermissionsData
+                        user={this.props.user}
+                        permissions={this.props.permissions}
+                        adminPermissions={this.props.adminPermissions}
+                        handlePermissionsChange={this.props.handlePermissionsChange}
+                    />
+                </CustomTableRow>
             </div>
         );
     }
