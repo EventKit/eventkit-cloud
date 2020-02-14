@@ -32,7 +32,6 @@ describe('QueryDataBox component', () => {
         beforeEach(setup);
 
         it('should render all the basic components', () => {
-            expect(wrapper.find(Card)).toHaveLength(1);
             // 11 Typography's, 2 for each key value pair in feature data, one for the box header.
             expect(wrapper.find(Typography)).toHaveLength(11);
             expect(wrapper.find(IconButton)).toHaveLength(1);

@@ -45,7 +45,7 @@ import {
     isGeoJSONValid, createGeoJSON, clearDraw,
     MODE_DRAW_BBOX, MODE_NORMAL, MODE_DRAW_FREE, zoomToFeature, unwrapCoordinates,
     isViewOutsideValidExtent, goToValidExtent, isBox, isVertex, bufferGeojson, allHaveArea,
-    getDominantGeometry, getResolutions, wrapX
+    getDominantGeometry, getResolutions, wrapX, getTileCoordinateFromClick
 } from '../../utils/mapUtils';
 
 import {getSqKm} from '../../utils/generic';
@@ -57,6 +57,7 @@ import TileGrid from "ol/tilegrid/tilegrid";
 
 import {MapQueryDisplay, TileCoordinate} from "./MapQueryDisplay";
 import {SelectedBaseMap} from "./CreateExport";
+import MapDisplayBar from "./MapDisplayBar";
 
 export const WGS84 = 'EPSG:4326';
 export const WEB_MERCATOR = 'EPSG:3857';
@@ -128,6 +129,7 @@ export class ExportAOI extends React.Component<Props, State> {
     private bounceBack: boolean;
     private joyride: Joyride;
     private displayBoxRef;
+    private infoBarRef;
 
     constructor(props: Props) {
         super(props);
@@ -161,6 +163,7 @@ export class ExportAOI extends React.Component<Props, State> {
         this.updateZoomLevel = this.updateZoomLevel.bind(this);
         this.shouldEnableNext = this.shouldEnableNext.bind(this);
         this.getBaseLayer = this.getBaseLayer.bind(this);
+        this.setDisplayBofRef = this.setDisplayBofRef.bind(this);
         this.bufferFunction = () => { /* do nothing */
         };
         this.state = {
@@ -584,7 +587,9 @@ export class ExportAOI extends React.Component<Props, State> {
 
         // Hook up the click to query feature data
         this.map.on('click', (event) => {
-                this.handleMapClickQuery(event);
+                if (this.state.mode === MODE_NORMAL && this.displayBoxRef) {
+                    this.displayBoxRef.handleMapClick(getTileCoordinateFromClick(event, this.baseLayer, this.map))
+                }
             }
         );
 
@@ -1025,6 +1030,10 @@ export class ExportAOI extends React.Component<Props, State> {
             tilePixel[1]);
     }
 
+    private setDisplayBofRef(ref: any) {
+        this.displayBoxRef = ref;
+    }
+
     render() {
         const {theme} = this.props;
         const {steps, isRunning} = this.state;
@@ -1069,13 +1078,17 @@ export class ExportAOI extends React.Component<Props, State> {
                     run={isRunning}
                 />
                 <div id="map" className={css.map} style={mapStyle}>
-                    <AoiInfobar
-                        aoiInfo={this.props.aoiInfo}
-                        showRevert={!!this.props.aoiInfo.buffer}
-                        onRevertClick={this.openResetDialog}
-                        clickZoomToSelection={this.handleZoomToSelection}
-                        handleBufferClick={this.openBufferDialog}
-                        limits={this.props.limits}
+                    <MapDisplayBar
+                        aoiInfoBarProps={{
+                            aoiInfo: this.props.aoiInfo,
+                            showRevert: !!this.props.aoiInfo.buffer,
+                            onRevertClick: this.openResetDialog,
+                            clickZoomToSelection: this.handleZoomToSelection,
+                            handleBufferClick: this.openBufferDialog,
+                            limits: this.props.limits
+                        }}
+                        setRef={this.setDisplayBofRef}
+                        selectedBaseMap={this.props.selectedBaseMap}
                     />
                     <SearchAOIToolbar
                         handleSearch={this.checkForSearchUpdate}
@@ -1138,22 +1151,6 @@ export class ExportAOI extends React.Component<Props, State> {
                         processGeoJSONFile={this.props.processGeoJSONFile}
                         resetGeoJSONFile={this.props.resetGeoJSONFile}
                     />
-                    <div
-                        style={{
-                            position: 'absolute',
-                            width: '100%',
-                            bottom: '40px',
-                            display: 'flex',
-                            justifyContent: 'center',
-                        }}
-                    >
-                        <MapQueryDisplay
-                            ref={child => {
-                                this.displayBoxRef = child
-                            }}
-                            selectedBaseMap={this.props.selectedBaseMap}
-                        />
-                    </div>
                 </div>
             </div>
         );

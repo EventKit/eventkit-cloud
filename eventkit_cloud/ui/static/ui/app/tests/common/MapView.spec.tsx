@@ -52,6 +52,7 @@ describe('MapCard component', () => {
     const defaultProps = () => (
         {
             geojson,
+            selectedBaseMap: '',
             children: <span>Hello</span>,
             ...(global as any).eventkit_test_props,
         }
