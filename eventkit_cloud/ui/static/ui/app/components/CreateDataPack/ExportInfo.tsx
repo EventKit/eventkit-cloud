@@ -150,6 +150,9 @@ export interface Props {
     onUpdateEstimate?: () => void;
     projections: Eventkit.Projection[];
     formats: Eventkit.Format[];
+    getEstimate: any;
+    checkEstimate: (args: any) => void;
+    checkProvider: any;
 }
 
 export interface State {
@@ -209,9 +212,7 @@ export class ExportInfo extends React.Component<Props, State> {
         this.onRefresh = this.onRefresh.bind(this);
         this.getAvailability = this.getAvailability.bind(this);
         this.checkAvailability = this.checkAvailability.bind(this);
-        this.checkEstimate = this.checkEstimate.bind(this);
         this.checkProviders = this.checkProviders.bind(this);
-        this.checkProvider = this.checkProvider.bind(this);
         this.handlePopoverOpen = this.handlePopoverOpen.bind(this);
         this.handlePopoverClose = this.handlePopoverClose.bind(this);
         this.handleProjectionCompatibilityOpen = this.handleProjectionCompatibilityOpen.bind(this);
@@ -519,57 +520,9 @@ export class ExportInfo extends React.Component<Props, State> {
         });
     }
 
-    private getEstimate(provider: Eventkit.Provider, bbox: number[]) {
-        const providerExportOptions = this.props.exportInfo.exportOptions[provider.slug];
-        let minZoom = provider.level_from;
-        let maxZoom = provider.level_to;
-
-        if (providerExportOptions) {
-            if (isZoomLevelInRange(providerExportOptions.minZoom, provider)) {
-                minZoom = providerExportOptions.minZoom;
-            }
-            if (isZoomLevelInRange(providerExportOptions.maxZoom, provider)) {
-                maxZoom = providerExportOptions.maxZoom;
-            }
-        }
-        const data = {
-            slugs: provider.slug,
-            srs: 4326,
-            bbox: bbox.join(','), min_zoom: minZoom, max_zoom: maxZoom
-        };
-
-        const csrfmiddlewaretoken = getCookie('csrftoken');
-        return axios({
-            url: `/api/estimate`,
-            method: 'get',
-            params: data,
-            headers: {'X-CSRFToken': csrfmiddlewaretoken},
-            cancelToken: this.source.token,
-        }).then((response) => {
-            return response.data[0];
-        }).catch(() => {
-            return {
-                size: null,
-                slug: provider.slug,
-                time: null,
-            };
-        });
-    }
-
     async checkAvailability(provider: Eventkit.Provider) {
         const data = {geojson: this.props.geojson};
         return (await this.getAvailability(provider, data));
-    }
-
-    async checkEstimate(provider: Eventkit.Provider) {
-        // This assumes that the entire selection is the first feature, if the feature collection becomes the
-        // selection then the bbox would need to be calculated for it.
-        if (this.context.config.SERVE_ESTIMATES) {
-            const bbox = featureToBbox(this.props.geojson.features[0], WGS84);
-            const estimates = await this.getEstimate(provider, bbox);
-            return {time: estimates.time, size: estimates.size, loading: false} as Eventkit.Store.Estimates;
-        }
-        return undefined;
     }
 
     private clearEstimate(provider: Eventkit.Provider) {
@@ -593,7 +546,7 @@ export class ExportInfo extends React.Component<Props, State> {
 
     private checkProviders(providers: Eventkit.Provider[]) {
         Promise.all(providers.filter(provider => provider.display).map((provider) => {
-            return this.checkProvider(provider);
+            return this.props.checkProvider(provider);
         })).then(providerResults => {
             const providerInfo = {...this.props.exportInfo.providerInfo} as Eventkit.Map<Eventkit.Store.ProviderInfo>;
             providerResults.map((info) => {
@@ -603,45 +556,6 @@ export class ExportInfo extends React.Component<Props, State> {
             // Trigger an estimate calculation update in the parent
             // Does not re-request any data, calculates the total from available results.
             this.props.onUpdateEstimate();
-        })
-    }
-
-    private setProviderLoading(isLoading: boolean, provider: Eventkit.Provider) {
-        const providerInfo = {...this.props.exportInfo.providerInfo} as Eventkit.Map<Eventkit.Store.ProviderInfo>;
-        const updatedProviderInfo = {...providerInfo};
-        const providerInfoData = updatedProviderInfo[provider.slug];
-        if (!!providerInfoData) {
-            updatedProviderInfo[provider.slug] = {
-                ...providerInfoData,
-                estimates: {
-                    ...((!!providerInfoData.estimates) ? providerInfoData.estimates : {}),
-                    loading: isLoading
-                } as Eventkit.Store.Estimates
-            };
-            this.props.updateExportInfo({
-                providerInfo: updatedProviderInfo
-            });
-        }
-    }
-
-    async checkProvider(provider: Eventkit.Provider) {
-        if (provider.display === false) {
-            return;
-        }
-        this.setProviderLoading(true, provider);
-
-        return Promise.all([
-            this.checkAvailability(provider),
-            this.checkEstimate(provider),
-        ]).then(results => {
-            this.setProviderLoading(false, provider);
-            return {
-                slug: provider.slug,
-                data: {
-                    availability: results[0],
-                    estimates: results[1],
-                } as Eventkit.Store.ProviderInfo,
-            }
         })
     }
 
@@ -969,7 +883,7 @@ export class ExportInfo extends React.Component<Props, State> {
                                             alt={ix % 2 === 0}
                                             renderEstimate={this.context.config.SERVE_ESTIMATES}
                                             checkProvider={() => {
-                                                this.checkProvider(provider).then(providerInfo => {
+                                                Promise.all(this.props.checkProvider(provider)).then(providerInfo => {
                                                     this.props.updateExportInfo({
                                                         providerInfo: {
                                                             ...this.props.exportInfo.providerInfo,

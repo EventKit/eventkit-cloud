@@ -30,7 +30,6 @@ import Info from '@material-ui/icons/Info';
 import {getProjections} from "../../actions/projectionActions";
 import {SelectedBaseMap} from "./CreateExport";
 
-
 export interface JobData {
     name: string;
     description: string;
@@ -46,6 +45,7 @@ export interface JobData {
 export interface Props {
     aoiInfo: Eventkit.Store.AoiInfo;
     providers: Eventkit.Provider[];
+    geojson: GeoJSON.FeatureCollection;
     stepperNextEnabled: boolean;
     exportInfo: Eventkit.Store.ExportInfo;
     submitJob: (data: JobData) => void;
@@ -70,6 +70,10 @@ export interface Props {
     getProjections: () => void;
     projections: Eventkit.Projection[];
     selectedBaseMap: SelectedBaseMap;
+    getEstimate: any;
+    checkEstimate: (args: any) => void;
+    checkProvider: (args: any) => void;
+    setProviderLoading: any;
 }
 
 export interface State {
@@ -215,7 +219,6 @@ export class BreadcrumbStepper extends React.Component<Props, State> {
         };
         this.setState({limits});
     }
-
 
     private styleEstimate(allowNull = false, stepIndex) {
         const textStyle = {
@@ -469,6 +472,9 @@ export class BreadcrumbStepper extends React.Component<Props, State> {
                         walkthroughClicked={this.props.walkthroughClicked}
                         onWalkthroughReset={this.props.onWalkthroughReset}
                         onUpdateEstimate={this.updateEstimate}
+                        getEstimate={this.props.getEstimate}
+                        checkEstimate={this.props.checkEstimate}
+                        checkProvider={this.props.checkProvider}
                     />
                 );
             case 2:

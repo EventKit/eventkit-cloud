@@ -130,6 +130,10 @@ describe('BreadcrumbStepper component', () => {
         getNotificationsUnreadCount: sinon.spy(),
         getFormats: sinon.spy(),
         getProjections: sinon.spy(),
+        getEstimate: sinon.spy(),
+        checkEstimate: sinon.spy(),
+        checkProvider: sinon.spy(),
+        setProviderLoading: sinon.spy(),
         ...(global as any).eventkit_test_props,
     });
 
@@ -258,6 +262,10 @@ describe('BreadcrumbStepper component', () => {
                 walkthroughClicked={props.walkthroughClicked}
                 onUpdateEstimate={wrapper.instance().updateEstimate}
                 handlePrev={wrapper.instance().handlePrev}
+                getEstimate={props.getEstimate}
+                checkEstimate={props.checkEstimate}
+                checkProvider={props.checkProvider}
+                setProviderLoading={props.setProviderLoading}
             />
         );
 
