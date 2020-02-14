@@ -16,7 +16,6 @@ import VectorSource from 'ol/source/vector';
 import Draw from 'ol/interaction/draw';
 
 import { ExportAOI, WGS84, WEB_MERCATOR } from '../../components/CreateDataPack/ExportAOI';
-import AoiInfobar from '../../components/CreateDataPack/AoiInfobar';
 import SearchAOIToolbar from '../../components/MapTools/SearchAOIToolbar';
 import DrawAOIToolbar from '../../components/MapTools/DrawAOIToolbar';
 import InvalidDrawWarning from '../../components/MapTools/InvalidDrawWarning';
@@ -24,6 +23,7 @@ import DropZone from '../../components/MapTools/DropZone';
 import * as utils from '../../utils/mapUtils';
 import * as generic from '../../utils/generic';
 import ZoomLevelLabel from '../../components/MapTools/ZoomLevelLabel';
+import MapDisplayBar from "../../components/CreateDataPack/MapDisplayBar";
 
 describe('ExportAOI component', () => {
     const geojson = {
@@ -108,7 +108,7 @@ describe('ExportAOI component', () => {
 
     it('should render the basic elements', () => {
         expect(wrapper.find('#map')).toHaveLength(1);
-        expect(wrapper.find(AoiInfobar)).toHaveLength(1);
+        expect(wrapper.find(MapDisplayBar)).toHaveLength(1);
         expect(wrapper.find(SearchAOIToolbar)).toHaveLength(1);
         expect(wrapper.find(DrawAOIToolbar)).toHaveLength(1);
         expect(wrapper.find(ZoomLevelLabel)).toHaveLength(1);

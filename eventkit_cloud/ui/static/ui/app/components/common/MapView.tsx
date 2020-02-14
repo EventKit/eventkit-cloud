@@ -11,12 +11,14 @@ import ScaleLine from 'ol/control/scaleline';
 import Attribution from 'ol/control/attribution';
 import Zoom from 'ol/control/zoom';
 import ol3mapCss from '../../styles/ol3map.css';
-import {getResolutions} from "../../utils/mapUtils";
+import {getResolutions, getTileCoordinateFromClick} from "../../utils/mapUtils";
 import TileGrid from "ol/tilegrid/tilegrid";
+import MapQueryDisplay from "../CreateDataPack/MapQueryDisplay";
+import {SelectedBaseMap} from "../CreateDataPack/CreateExport";
 
 export interface Props {
     geojson: object;
-    url: string;
+    selectedBaseMap: SelectedBaseMap | string;
     zoom?: number;
     copyright?: string;
     setZoom?: (from: number, to: number) => void;
@@ -26,16 +28,29 @@ export interface Props {
     moveable?: boolean;
 }
 
-export class MapView extends React.Component<Props> {
+export interface State {
+    selectedBaseMap: SelectedBaseMap;
+}
+
+export class MapView extends React.Component<Props, State> {
 
     private map: any;
+    private layer: any;
     private mapDiv: string;
     private minZoom: number;
     private maxZoom: number;
     private ref: (element: HTMLElement)=>void;
+    private displayBoxRef;
 
     constructor(props: Props) {
+        let selectedBaseMap = props.selectedBaseMap;
+        if (typeof selectedBaseMap === 'string' || selectedBaseMap instanceof String) {
+            selectedBaseMap = { baseMapUrl: props.selectedBaseMap } as SelectedBaseMap;
+        }
         super(props);
+        this.state = {
+            selectedBaseMap,
+        };
         this.minZoom = this.props.minZoom || 0;
         this.maxZoom = this.props.maxZoom || 20;
         this.mapDiv = this.props.id || "ProviderMap";
@@ -82,7 +97,7 @@ export class MapView extends React.Component<Props> {
         const base = new Tile({
             source: new XYZ({
                 projection: 'EPSG:4326',
-                url: this.props.url,
+                url: this.state.selectedBaseMap.baseMapUrl,
                 wrapX: true,
                 attributions: this.props.copyright,
                 tileGrid: tileGrid,
@@ -141,11 +156,33 @@ export class MapView extends React.Component<Props> {
                 this.props.setZoom(null, this.map.getView().getZoom());
             }
         });
+        this.layer = base;
+        // Hook up the click to query feature data
+        this.map.on('click', (event) => {
+                this.displayBoxRef.handleMapClick(getTileCoordinateFromClick(event, this.layer, this.map))
+            }
+        );
     }
 
     render() {
         return (
-            <div style={{ height: '100%', width: '100%' }} id={this.mapDiv} ref={this.mapContainerRef}/>
+            <div style={{ height: '100%', width: '100%' }} id={this.mapDiv} ref={this.mapContainerRef}>
+                <div
+                    style={{
+                        position: 'absolute',
+                        width: '100%',
+                        display: 'flex',
+                        justifyContent: 'center',
+                    }}
+                >
+                    <MapQueryDisplay
+                        ref={child => {
+                            this.displayBoxRef = child
+                        }}
+                        selectedBaseMap={this.state.selectedBaseMap}
+                    />
+                </div>
+            </div>
         );
     }
 }

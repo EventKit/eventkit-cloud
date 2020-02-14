@@ -18,22 +18,9 @@ import AlertError from '@material-ui/icons/Error';
 import isUndefined from 'lodash/isUndefined';
 import moment from 'moment';
 
-import Map from 'ol/map';
-import View from 'ol/view';
-import interaction from 'ol/interaction';
-import VectorSource from 'ol/source/vector';
-import XYZ from 'ol/source/xyz';
-import GeoJSONFormat from 'ol/format/geojson';
-import VectorLayer from 'ol/layer/vector';
-import Tile from 'ol/layer/tile';
-import Attribution from 'ol/control/attribution';
-import Zoom from 'ol/control/zoom';
-import ScaleLine from 'ol/control/scaleline';
-
 import IconMenu from '../common/IconMenu';
 import DeleteDataPackDialog from '../Dialog/DeleteDataPackDialog';
 import FeaturedFlag from './FeaturedFlag';
-import ol3mapCss from '../../styles/ol3map.css';
 import DataPackShareDialog from '../DataPackShareDialog/DataPackShareDialog';
 import { makeFullRunSelector } from '../../selectors/runSelector';
 import ProviderDialog from '../Dialog/ProviderDialog';
@@ -408,7 +395,7 @@ export class DataPackGridItem extends React.Component<Props, State> {
                         <CardContent className="qa-DataPackGridItem-CardMedia" style={{ padding: '0px' }}>
                             <MapView
                                 id={this.getMapId()}
-                                url={this.context.config.BASEMAP_URL}
+                                selectedBaseMap={this.context.config.BASEMAP_URL}
                                 copyright={this.context.config.BASEMAP_COPYRIGHT}
                                 geojson = {this.props.run.job.extent}
                                 minZoom={2}

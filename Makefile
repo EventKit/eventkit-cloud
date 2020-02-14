@@ -16,6 +16,12 @@ test:
 	docker-compose run --rm -e COVERAGE=True eventkit python manage.py test -v 3 eventkit_cloud
 	docker-compose run --rm webpack npm test
 
+test-back:
+	docker-compose run --rm -e COVERAGE=True eventkit python manage.py test -v 3 eventkit_cloud
+
+test-front:
+	docker-compose run --rm webpack npm test
+
 initial:
 ifeq ($(detected_OS),Linux)
 	sudo groupadd -g 880 eventkit || echo "Group eventkit already exists."
