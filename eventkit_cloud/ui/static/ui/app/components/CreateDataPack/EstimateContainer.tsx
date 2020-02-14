@@ -7,6 +7,8 @@ import {updateExportInfo,} from '../../actions/datacartActions';
 import axios from "axios";
 import {connect} from "react-redux";
 import * as PropTypes from "prop-types";
+import {Route} from "react-router";
+import {SelectedBaseMap} from "./CreateExport";
 
 
 export interface Props {
@@ -14,10 +16,16 @@ export interface Props {
     providers: Eventkit.Provider[];
     geojson: GeoJSON.FeatureCollection;
     updateExportInfo: (args: any) => void;
+    breadcrumbStepperProps: any;
+    history: any;
+    routes: Route[];
+    walkthroughClicked: boolean,
+    onWalkthroughReset: () => void,
+    selectedBaseMap: SelectedBaseMap,
 }
 
 export interface State {
-    // estimateData: {};
+    loadingProviders: string[];
 }
 
 export class EstimateContainer extends React.Component<Props, State> {
@@ -34,10 +42,15 @@ export class EstimateContainer extends React.Component<Props, State> {
         this.checkEstimate = this.checkEstimate.bind(this);
         this.checkProvider = this.checkProvider.bind(this);
         this.setProviderLoading = this.setProviderLoading.bind(this);
+        this.getAvailability = this.getAvailability.bind(this);
+        this.checkAvailability = this.checkAvailability.bind(this);
+        this.state = {
+            loadingProviders: []
+        }
     }
 
     getEstimate(provider: Eventkit.Provider, bbox: number[]) {
-        const providerExportOptions = this.props.exportInfo.exportOptions[provider.slug] as Eventkit.Map<Eventkit.Store.ProviderInfo>;
+        const providerExportOptions = this.props.exportInfo.exportOptions[provider.slug] as Eventkit.Store.ProviderExportOptions;
         let minZoom = provider.level_from;
         let maxZoom = provider.level_to;
 
@@ -79,9 +92,37 @@ export class EstimateContainer extends React.Component<Props, State> {
         if (this.context.config.SERVE_ESTIMATES) {
             const bbox = featureToBbox(this.props.geojson.features[0], WGS84);
             const estimates = await this.getEstimate(provider, bbox);
-            return {time: estimates.time, size: estimates.size, loading: false} as Eventkit.Store.Estimates;
+            return {time: estimates.time, size: estimates.size} as Eventkit.Store.Estimates;
         }
         return undefined;
+    }
+
+    private getAvailability(provider: Eventkit.Provider, data: any) {
+        const csrfmiddlewaretoken = getCookie('csrftoken');
+        return axios({
+            url: `/api/providers/${provider.slug}/status`,
+            method: 'POST',
+            data,
+            headers: {'X-CSRFToken': csrfmiddlewaretoken},
+            cancelToken: this.source.token,
+        }).then((response) => {
+            // The backend currently returns the response as a string, it needs to be parsed before being used.
+            const availabilityData = (typeof (response.data) === "object") ? response.data : JSON.parse(response.data) as Eventkit.Store.Availability;
+            availabilityData.slug = provider.slug;
+            return availabilityData;
+        }).catch(() => {
+            return {
+                slug: provider.slug,
+                status: 'WARN',
+                type: 'CHECK_FAILURE',
+                message: "An error occurred while checking this provider's availability.",
+            } as Eventkit.Store.Availability;
+        });
+    }
+
+    async checkAvailability(provider: Eventkit.Provider) {
+        const data = {geojson: this.props.geojson};
+        return (await this.getAvailability(provider, data));
     }
 
     async checkProvider(provider: Eventkit.Provider) {
@@ -91,7 +132,7 @@ export class EstimateContainer extends React.Component<Props, State> {
         this.setProviderLoading(true, provider);
 
         return Promise.all([
-            // this.checkAvailability(provider),
+            this.checkAvailability(provider),
             this.checkEstimate(provider),
         ]).then(results => {
             this.setProviderLoading(false, provider);
@@ -105,40 +146,34 @@ export class EstimateContainer extends React.Component<Props, State> {
         })
     }
 
+    hasLoaded(){
+        return Object.keys(this.state.loadingProviders).length > 0;
+    }
+
     setProviderLoading(isLoading: boolean, provider: Eventkit.Provider) {
-        const providerInfo = {...this.props.exportInfo.providerInfo} as Eventkit.Map<Eventkit.Store.ProviderInfo>;
-        const updatedProviderInfo = {...providerInfo};
-        const providerInfoData = updatedProviderInfo[provider.slug];
-        if (!!providerInfoData) {
-            updatedProviderInfo[provider.slug] = {
-                ...providerInfoData,
-                estimates: {
-                    ...((!!providerInfoData.estimates) ? providerInfoData.estimates : {}),
-                    loading: isLoading
-                } as Eventkit.Store.Estimates
-            };
-            this.props.updateExportInfo({
-                providerInfo: updatedProviderInfo
-            });
-        }
+        const { loadingProviders } = this.state;
+        const slugIndex = loadingProviders.indexOf(provider.slug);
+            if (isLoading) {
+                if (slugIndex === -1) {
+                    this.setState({loadingProviders: [...loadingProviders, provider.slug]})
+                }
+                if (this.hasLoaded) {
+                    this.setState({loadingProviders: [...loadingProviders]})
+                }
+            } else {
+                const removeProvider = loadingProviders.splice(slugIndex, 1);
+                this.setState({loadingProviders: removeProvider})
+            }
     }
 
     render () {
         return (
-            <>
             <BreadcrumbStepper
-                getEstimate={this.getEstimate}
-                checkEstimate={this.checkEstimate}
+                {...this.props.breadcrumbStepperProps}
                 checkProvider={this.checkProvider}
                 setProviderLoading={this.setProviderLoading}
+                hasLoaded={this.hasLoaded}
             />
-            <ExportInfo
-                getEstimate={this.getEstimate}
-                checkEstimate={this.checkEstimate}
-                checkProvider={this.checkProvider}
-                setProviderLoading={this.setProviderLoading}
-            />
-            </>
         )
     }
 }

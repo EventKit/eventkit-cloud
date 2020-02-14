@@ -14,10 +14,6 @@ export interface Props {
     routes: Route[];
     theme: Eventkit.Theme & Theme;
     geojson: GeoJSON.FeatureCollection;
-    getEstimate: any;
-    checkEstimate: (args: any) => void;
-    checkProvider: (args: any) => void;
-    setProviderLoading: any;
 }
 
 export interface SelectedBaseMap {
@@ -91,17 +87,15 @@ export class CreateExport extends React.Component<Props, State> {
                 >
                     {iconElementRight}
                 </PageHeader>
-                <BreadcrumbStepper
-                    history={this.props.history}
-                    routes={this.props.routes}
-                    walkthroughClicked={this.state.walkthroughClicked}
-                    onWalkthroughReset={this.handleWalkthroughReset}
-                    selectedBaseMap={this.state.selectedBaseMap}
-                    geojson={this.props.geojson}
-                    getEstimate={this.props.getEstimate}
-                    checkEstimate={this.props.checkEstimate}
-                    checkProvider={this.props.checkProvider}
-                    setProviderLoading={this.props.setProviderLoading}
+                <EstimateContainer
+                    breadcrumbStepperProps={{
+                        history: this.props.history,
+                        routes: this.props.routes,
+                        walkthroughClicked: this.state.walkthroughClicked,
+                        onWalkthroughReset: this.handleWalkthroughReset,
+                        selectedBaseMap: this.state.selectedBaseMap,
+                        geojson: this.props.geojson,
+                    }}
                 />
                 <MapDrawer
                     updateBaseMap={this.updateBaseMap}

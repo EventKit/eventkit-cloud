@@ -73,7 +73,8 @@ export interface Props {
     getEstimate: any;
     checkEstimate: (args: any) => void;
     checkProvider: (args: any) => void;
-    setProviderLoading: any;
+    setProviderLoading: () => void;
+    hasLoaded: string[];
 }
 
 export interface State {
@@ -343,7 +344,7 @@ export class BreadcrumbStepper extends React.Component<Props, State> {
             const separator = (sizeEstimate && durationEstimate) ? ' - ' : '';
             secondary = ` ( ${get(durationEstimate, '')}${separator}${get(sizeEstimate, 'size unknown')})`;
 
-            return this.state.isLoading ? (<CircularProgress/>) : `${get(dateTimeEstimate)}${get(secondary, '')}`;
+            return this.props.hasLoaded ? (<CircularProgress/>) : `${get(dateTimeEstimate)}${get(secondary, '')}`;
         }
         return 'Select providers to get estimate';
     }
@@ -352,7 +353,6 @@ export class BreadcrumbStepper extends React.Component<Props, State> {
         if (!this.context.config.SERVE_ESTIMATES || !this.props.exportInfo.providers) {
             return;
         }
-        let isLoading = false;
         let sizeEstimate = 0;
         let timeEstimate = 0;
         const maxAcceptableTime = 60 * 60 * 24 * this.props.exportInfo.providers.length;
@@ -360,9 +360,8 @@ export class BreadcrumbStepper extends React.Component<Props, State> {
             if (provider.slug in this.props.exportInfo.providerInfo) {
                 const providerEstimates = this.props.exportInfo.providerInfo[provider.slug].estimates;
                 if (providerEstimates) {
-                    if (providerEstimates.loading) {
-                        isLoading = true;
-                    }
+                    this.props.setProviderLoading();
+
                     if (providerEstimates.size) {
                         sizeEstimate += providerEstimates.size.value;
                     }
@@ -376,7 +375,7 @@ export class BreadcrumbStepper extends React.Component<Props, State> {
         if (timeEstimate > maxAcceptableTime) {
             timeEstimate = maxAcceptableTime;
         }
-        this.setState({sizeEstimate, timeEstimate, isLoading});
+        this.setState({sizeEstimate, timeEstimate});
     }
 
     private areProvidersSelected() {
@@ -472,9 +471,6 @@ export class BreadcrumbStepper extends React.Component<Props, State> {
                         walkthroughClicked={this.props.walkthroughClicked}
                         onWalkthroughReset={this.props.onWalkthroughReset}
                         onUpdateEstimate={this.updateEstimate}
-                        getEstimate={this.props.getEstimate}
-                        checkEstimate={this.props.checkEstimate}
-                        checkProvider={this.props.checkProvider}
                     />
                 );
             case 2:

@@ -20,7 +20,6 @@ import CustomTextField from '../CustomTextField';
 import CustomTableRow from '../CustomTableRow';
 import {joyride} from '../../joyride.config';
 import {getSqKmString} from '../../utils/generic';
-import {featureToBbox, WGS84} from '../../utils/mapUtils';
 import BaseDialog from "../Dialog/BaseDialog";
 import AlertWarning from '@material-ui/icons/Warning';
 
@@ -150,8 +149,6 @@ export interface Props {
     onUpdateEstimate?: () => void;
     projections: Eventkit.Projection[];
     formats: Eventkit.Format[];
-    getEstimate: any;
-    checkEstimate: (args: any) => void;
     checkProvider: any;
 }
 
@@ -210,8 +207,6 @@ export class ExportInfo extends React.Component<Props, State> {
         this.onSelectAll = this.onSelectAll.bind(this);
         this.onSelectProjection = this.onSelectProjection.bind(this);
         this.onRefresh = this.onRefresh.bind(this);
-        this.getAvailability = this.getAvailability.bind(this);
-        this.checkAvailability = this.checkAvailability.bind(this);
         this.checkProviders = this.checkProviders.bind(this);
         this.handlePopoverOpen = this.handlePopoverOpen.bind(this);
         this.handlePopoverClose = this.handlePopoverClose.bind(this);
@@ -495,34 +490,6 @@ export class ExportInfo extends React.Component<Props, State> {
         // update state with the new copy of providers
         this.setState({providers});
         this.checkProviders(providers);
-    }
-
-    private getAvailability(provider: Eventkit.Provider, data: any) {
-        const csrfmiddlewaretoken = getCookie('csrftoken');
-        return axios({
-            url: `/api/providers/${provider.slug}/status`,
-            method: 'POST',
-            data,
-            headers: {'X-CSRFToken': csrfmiddlewaretoken},
-            cancelToken: this.source.token,
-        }).then((response) => {
-            // The backend currently returns the response as a string, it needs to be parsed before being used.
-            const availabilityData = (typeof (response.data) === "object") ? response.data : JSON.parse(response.data) as Eventkit.Store.Availability;
-            availabilityData.slug = provider.slug;
-            return availabilityData;
-        }).catch(() => {
-            return {
-                slug: provider.slug,
-                status: 'WARN',
-                type: 'CHECK_FAILURE',
-                message: "An error occurred while checking this provider's availability.",
-            } as Eventkit.Store.Availability;
-        });
-    }
-
-    async checkAvailability(provider: Eventkit.Provider) {
-        const data = {geojson: this.props.geojson};
-        return (await this.getAvailability(provider, data));
     }
 
     private clearEstimate(provider: Eventkit.Provider) {
@@ -883,7 +850,7 @@ export class ExportInfo extends React.Component<Props, State> {
                                             alt={ix % 2 === 0}
                                             renderEstimate={this.context.config.SERVE_ESTIMATES}
                                             checkProvider={() => {
-                                                Promise.all(this.props.checkProvider(provider)).then(providerInfo => {
+                                                this.props.checkProvider(provider).then(providerInfo => {
                                                     this.props.updateExportInfo({
                                                         providerInfo: {
                                                             ...this.props.exportInfo.providerInfo,

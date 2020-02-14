@@ -380,25 +380,24 @@ declare namespace Eventkit {
             formats: string[];
         }
 
-        interface EstimateData {
+        interface EstimateData extends Estimates {
             value: number;
             units: string;
         }
 
-        interface Estimates {
+        interface Estimates extends ProviderInfo {
             time?: EstimateData;
             size?: EstimateData;
-            loading?: boolean;
         }
 
-        interface Availability {
+        interface Availability extends ProviderInfo {
             slug: string;
             status: string;
             type: string;
             message: string;
         }
 
-        interface ProviderInfo {
+        interface ProviderInfo extends ExportInfo {
             estimates?: Estimates;
             availability?: Availability;
         }

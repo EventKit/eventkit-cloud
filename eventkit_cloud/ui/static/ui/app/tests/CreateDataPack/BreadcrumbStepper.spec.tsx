@@ -99,7 +99,7 @@ describe('BreadcrumbStepper component', () => {
             providers,
             areaStr: '',
             formats: ['gpkg'],
-            providerEstimates: {},
+            providerInfo: {},
             projections: [4326],
             exportOptions: {
                 1: {
@@ -134,6 +134,7 @@ describe('BreadcrumbStepper component', () => {
         checkEstimate: sinon.spy(),
         checkProvider: sinon.spy(),
         setProviderLoading: sinon.spy(),
+        hasLoaded: sinon.spy(),
         ...(global as any).eventkit_test_props,
     });
 
@@ -262,10 +263,6 @@ describe('BreadcrumbStepper component', () => {
                 walkthroughClicked={props.walkthroughClicked}
                 onUpdateEstimate={wrapper.instance().updateEstimate}
                 handlePrev={wrapper.instance().handlePrev}
-                getEstimate={props.getEstimate}
-                checkEstimate={props.checkEstimate}
-                checkProvider={props.checkProvider}
-                setProviderLoading={props.setProviderLoading}
             />
         );
 
