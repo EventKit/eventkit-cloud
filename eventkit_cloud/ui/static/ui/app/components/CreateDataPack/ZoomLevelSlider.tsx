@@ -4,6 +4,7 @@ import {
 } from '@material-ui/core/styles';
 import Slider from '@material-ui/lab/Slider';
 import TextField from '@material-ui/core/TextField';
+import {Switch} from "@material-ui/core";
 
 
 const jss = (theme: Theme & Eventkit.Theme) => createStyles({
@@ -33,6 +34,18 @@ const jss = (theme: Theme & Eventkit.Theme) => createStyles({
         paddingTop: '10px',
         paddingBottom: '5px',
     },
+    switch: {
+        float: 'right',
+        marginTop: '-12px',
+        marginRight: '-14px'
+    },
+    switchBase: {
+    color: theme.eventkit.colors.white,
+      '&$checked': {
+        color: theme.eventkit.colors.primary,
+    },
+  },
+    checked: {},
 });
 
 interface Props {
@@ -41,6 +54,8 @@ interface Props {
     selectedMinZoom: number;
     maxZoom: number;
     minZoom: number;
+    handleCheckClick: () => void;
+    checked: boolean;
     theme: Eventkit.Theme & Theme;
     classes: { [className: string]: string };
 }
@@ -115,32 +130,47 @@ export class ZoomLevelSlider extends React.Component<Props, State> {
 
         return (
             <div className={classes.container}>
-                <TextField
-                    className={classes.textField}
-                    type="number"
-                    name="zoom-value"
-                    value={minZoom}
-                    disabled
-                    onChange={e => this.updateMin(e, e.target.value)}
-                    // MUI uses the case of the i to distinguish between Input component and input html element
-                    InputProps={{style: {bottom: '5px'}}}
-                    // eslint-disable-next-line react/jsx-no-duplicate-props
-                    inputProps={{style: {textAlign: 'center', fontWeight: 'bold', fontSize: '16px'}}}
-                />
-                <span style={{fontSize: '16px'}}> to </span>
-                <TextField
-                    className={classes.textField}
-                    type="number"
-                    name="zoom-value"
-                    value={maxZoom}
-                    onChange={e => this.updateMax(e, e.target.value)}
-                    // MUI uses the case of the i to distinguish between Input component and input html element
-                    InputProps={{style: {bottom: '5px'}}}
-                    // eslint-disable-next-line react/jsx-no-duplicate-props
-                    inputProps={{style: {textAlign: 'center', fontWeight: 'bold', fontSize: '16px'}}}
-                />
-                <span style={{fontSize: '16px'}}>Selected Zoom</span>
+                <>
+                    <span>
+                        <TextField
+                            className={classes.textField}
+                            type="number"
+                            name="zoom-value"
+                            value={minZoom}
+                            disabled
+                            onChange={e => this.updateMin(e, e.target.value)}
+                            // MUI uses the case of the i to distinguish between Input component and input html element
+                            InputProps={{style: {bottom: '5px'}}}
+                            // eslint-disable-next-line react/jsx-no-duplicate-props
+                            inputProps={{style: {textAlign: 'center', fontWeight: 'bold', fontSize: '16px'}}}
+                        />
+                        <span style={{fontSize: '16px'}}> to </span>
+                        <TextField
+                            className={classes.textField}
+                            type="number"
+                            name="zoom-value"
+                            value={maxZoom}
+                            onChange={e => this.updateMax(e, e.target.value)}
+                            // MUI uses the case of the i to distinguish between Input component and input html element
+                            InputProps={{style: {bottom: '5px'}}}
+                            // eslint-disable-next-line react/jsx-no-duplicate-props
+                            inputProps={{style: {textAlign: 'center', fontWeight: 'bold', fontSize: '16px'}}}
+                        />
+                        <span style={{fontSize: '16px'}}>Selected Zoom</span>
+                    </span>
+                <span className={classes.switch}>
+                    <span style={{fontSize: '16px'}}>
+                        Footprints
+                    </span>
+                    <Switch
+                        value="switch"
+                        checked={this.props.checked}
+                        onChange={this.props.handleCheckClick}
+                        classes={{ switchBase: classes.switchBase, checked: classes.checked }}
+                    />
+                </span>
                 <br/>
+                </>
                 <strong className={classes.zoomHeader}>Zoom</strong>
                 <div style={{display: 'block'}}>
                     <div style={{display: 'flex', position: 'relative', margin: '0 30px'}}>
