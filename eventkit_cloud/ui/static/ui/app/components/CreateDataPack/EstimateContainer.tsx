@@ -174,6 +174,11 @@ export class EstimateContainer extends React.Component<Props, State> {
     }
 }
 
+function mapStateToProps(state) {
+    return {
+        geojson: state.aoiInfo.geojson
+    };
+}
 
 function mapDispatchToProps(dispatch) {
     return {
@@ -184,5 +189,6 @@ function mapDispatchToProps(dispatch) {
 }
 
 export default connect(
+    mapStateToProps,
     mapDispatchToProps,
 )(EstimateContainer);
