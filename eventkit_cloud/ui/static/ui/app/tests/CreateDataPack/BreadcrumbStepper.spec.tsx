@@ -263,6 +263,7 @@ describe('BreadcrumbStepper component', () => {
                 walkthroughClicked={props.walkthroughClicked}
                 onUpdateEstimate={wrapper.instance().updateEstimate}
                 handlePrev={wrapper.instance().handlePrev}
+                checkProvider={props.checkProvider}
             />
         );
 

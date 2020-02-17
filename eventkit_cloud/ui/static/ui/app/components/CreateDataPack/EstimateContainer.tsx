@@ -1,9 +1,8 @@
 import React from 'react';
 import BreadcrumbStepper from "./BreadcrumbStepper";
-import ExportInfo from "./ExportInfo";
 import {getCookie, isZoomLevelInRange} from "../../utils/generic";
 import {featureToBbox, WGS84} from '../../utils/mapUtils';
-import {updateExportInfo,} from '../../actions/datacartActions';
+import {updateExportInfo} from '../../actions/datacartActions';
 import axios from "axios";
 import {connect} from "react-redux";
 import * as PropTypes from "prop-types";
@@ -17,11 +16,6 @@ export interface Props {
     geojson: GeoJSON.FeatureCollection;
     updateExportInfo: (args: any) => void;
     breadcrumbStepperProps: any;
-    history: any;
-    routes: Route[];
-    walkthroughClicked: boolean,
-    onWalkthroughReset: () => void,
-    selectedBaseMap: SelectedBaseMap,
 }
 
 export interface State {
@@ -171,6 +165,7 @@ export class EstimateContainer extends React.Component<Props, State> {
             <BreadcrumbStepper
                 {...this.props.breadcrumbStepperProps}
                 checkProvider={this.checkProvider}
+                checkEstimate={this.checkEstimate}
                 setProviderLoading={this.setProviderLoading}
                 hasLoaded={this.hasLoaded}
             />

@@ -14,6 +14,9 @@ export interface Props {
     routes: Route[];
     theme: Eventkit.Theme & Theme;
     geojson: GeoJSON.FeatureCollection;
+    exportInfo: Eventkit.Store.ExportInfo;
+    providers: Eventkit.Provider[];
+    updateExportInfo: (args: any) => void;
 }
 
 export interface SelectedBaseMap {
@@ -96,6 +99,9 @@ export class CreateExport extends React.Component<Props, State> {
                         selectedBaseMap: this.state.selectedBaseMap,
                         geojson: this.props.geojson,
                     }}
+                    exportInfo={this.props.exportInfo}
+                    providers={this.props.providers}
+                    geojson={this.props.geojson}
                 />
                 <MapDrawer
                     updateBaseMap={this.updateBaseMap}

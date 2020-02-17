@@ -69,6 +69,7 @@ export interface Props {
     theme: Eventkit.Theme & Theme;
     getProjections: () => void;
     projections: Eventkit.Projection[];
+    breadCrumbStepperProps: any;
     selectedBaseMap: SelectedBaseMap;
     getEstimate: any;
     checkEstimate: (args: any) => void;
@@ -471,6 +472,7 @@ export class BreadcrumbStepper extends React.Component<Props, State> {
                         walkthroughClicked={this.props.walkthroughClicked}
                         onWalkthroughReset={this.props.onWalkthroughReset}
                         onUpdateEstimate={this.updateEstimate}
+                        checkProvider={this.props.checkProvider}
                     />
                 );
             case 2:
