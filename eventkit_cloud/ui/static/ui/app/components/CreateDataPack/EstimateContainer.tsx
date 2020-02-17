@@ -176,7 +176,9 @@ export class EstimateContainer extends React.Component<Props, State> {
 
 function mapStateToProps(state) {
     return {
-        geojson: state.aoiInfo.geojson
+        geojson: state.aoiInfo.geojson,
+        exportInfo: state.exportInfo,
+        providers: state.providers,
     };
 }
 

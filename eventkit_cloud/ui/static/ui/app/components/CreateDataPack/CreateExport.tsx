@@ -99,9 +99,6 @@ export class CreateExport extends React.Component<Props, State> {
                         selectedBaseMap: this.state.selectedBaseMap,
                         geojson: this.props.geojson,
                     }}
-                    exportInfo={this.props.exportInfo}
-                    providers={this.props.providers}
-                    geojson={this.props.geojson}
                 />
                 <MapDrawer
                     updateBaseMap={this.updateBaseMap}
