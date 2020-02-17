@@ -97,7 +97,7 @@ export class CreateExport extends React.Component<Props, State> {
                         walkthroughClicked: this.state.walkthroughClicked,
                         onWalkthroughReset: this.handleWalkthroughReset,
                         selectedBaseMap: this.state.selectedBaseMap,
-                        // geojson: this.props.geojson,
+                        geojson: this.props.geojson,
                     }}
                     exportInfo={this.props.exportInfo}
                     providers={this.props.providers}
