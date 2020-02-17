@@ -74,7 +74,7 @@ export interface Props {
     getEstimate: any;
     checkEstimate: (args: any) => void;
     checkProvider: (args: any) => void;
-    setProviderLoading: () => void;
+    setProviderLoading: (args: boolean, Provider) => void;
     hasLoaded: string[];
 }
 
@@ -227,7 +227,7 @@ export class BreadcrumbStepper extends React.Component<Props, State> {
             color: this.props.theme.eventkit.colors.white,
             fontSize: '0.9em',
         };
-        if (stepIndex !== 0) {
+        // if (stepIndex !== 0) {
             return (
                 <div style={{display: 'inline-flex'}}>
                     <Typography style={{
@@ -276,7 +276,7 @@ export class BreadcrumbStepper extends React.Component<Props, State> {
                     </BaseDialog>
                 </div>
             )
-        }
+        // }
     }
 
     private handleEstimateExplanationClosed() {
@@ -345,7 +345,13 @@ export class BreadcrumbStepper extends React.Component<Props, State> {
             const separator = (sizeEstimate && durationEstimate) ? ' - ' : '';
             secondary = ` ( ${get(durationEstimate, '')}${separator}${get(sizeEstimate, 'size unknown')})`;
 
-            return this.props.hasLoaded ? (<CircularProgress/>) : `${get(dateTimeEstimate)}${get(secondary, '')}`;
+            const calculatingText = 'Getting calculations...';
+            // return this.props.hasLoaded ? {calculatingText} (<CircularProgress/>) : `${get(dateTimeEstimate)}${get(secondary, '')}`;
+            if (this.props.hasLoaded.length > 0 ) {
+                return (<CircularProgress/>);
+            }
+            return `${get(dateTimeEstimate)}${get(secondary, '')}`;
+
         }
         return 'Select providers to get estimate';
     }
@@ -359,15 +365,15 @@ export class BreadcrumbStepper extends React.Component<Props, State> {
         const maxAcceptableTime = 60 * 60 * 24 * this.props.exportInfo.providers.length;
         for (const provider of this.props.exportInfo.providers) {
             if (provider.slug in this.props.exportInfo.providerInfo) {
-                const providerEstimates = this.props.exportInfo.providerInfo[provider.slug].estimates;
+                const providerEstimates = this.props.exportInfo.providerInfo[provider.slug];
                 if (providerEstimates) {
-                    this.props.setProviderLoading();
-
-                    if (providerEstimates.size) {
-                        sizeEstimate += providerEstimates.size.value;
+                    // why is this logic not working???
+                    this.props.setProviderLoading(false, provider.slug);
+                    if (providerEstimates.estimates.size) {
+                        sizeEstimate += providerEstimates.estimates.size.value;
                     }
-                    if (providerEstimates.time) {
-                        timeEstimate += providerEstimates.time.value;
+                    if (providerEstimates.estimates.time) {
+                        timeEstimate += providerEstimates.estimates.time.value;
                     }
                 }
             }

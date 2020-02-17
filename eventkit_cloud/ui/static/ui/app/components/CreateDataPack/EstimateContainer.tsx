@@ -152,12 +152,9 @@ export class EstimateContainer extends React.Component<Props, State> {
                 if (slugIndex === -1) {
                     this.setState({loadingProviders: [...loadingProviders, provider.slug]})
                 }
-                if (this.hasLoaded) {
-                    this.setState({loadingProviders: [...loadingProviders]})
-                }
             } else {
-                const removeProvider = loadingProviders.splice(slugIndex, 1);
-                this.setState({loadingProviders: removeProvider})
+                const removedProvider = loadingProviders.splice(slugIndex, 1);
+                this.setState({loadingProviders: removedProvider})
             }
     }
 
