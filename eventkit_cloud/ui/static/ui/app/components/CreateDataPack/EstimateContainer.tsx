@@ -6,8 +6,6 @@ import {updateExportInfo} from '../../actions/datacartActions';
 import axios from "axios";
 import {connect} from "react-redux";
 import * as PropTypes from "prop-types";
-import {Route} from "react-router";
-import {SelectedBaseMap} from "./CreateExport";
 
 
 export interface Props {
