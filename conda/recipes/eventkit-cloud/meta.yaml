@@ -1,8 +1,9 @@
 {% set name = "eventkit-cloud" %}
+{% set version = "1.6.0" %}
 
 package:
-  name: '{{ name|lower }}'
-  version: '{{ environ.get("GIT_DESCRIBE_TAG", "0.0.0") }}'
+  name: "{{ name|lower }}"
+  version: "{{ version }}"
 
 source:
   git_url: /eventkit-cloud
@@ -35,9 +36,9 @@ requirements:
     - django-celery-beat =1.4.0
     - django-celery-results =1.0.4
     - django-extensions =2.1.6
-    - django-filter =2.1.0
+    - django-filter =2.2.0
     - django-notifications-hq =1.5.0
-    - djangorestframework =3.9.3
+    - djangorestframework =3.11.0
     - djangorestframework-gis =0.14
     - eventlet =0.23.0
     - gunicorn =19.9.0
@@ -58,6 +59,7 @@ requirements:
     - Shapely =1.6.4
     - simplejson =3.16.0
     - sqlparse =0.3.0
+    - uritemplate =3.0.1
     - webtest =2.0.33
     - whitenoise =4.1.2
   run:
@@ -78,9 +80,9 @@ requirements:
     - django-celery-beat =1.4.0
     - django-celery-results =1.0.4
     - django-extensions =2.1.6
-    - django-filter =2.1.0
+    - django-filter =2.2.0
     - django-notifications-hq =1.5.0
-    - djangorestframework =3.9.3
+    - djangorestframework =3.11.0
     - djangorestframework-gis =0.14
     - eventlet =0.23.0
     - gunicorn =19.9.0
@@ -101,6 +103,7 @@ requirements:
     - Shapely =1.6.4
     - simplejson =3.16.0
     - sqlparse =0.3.0
+    - uritemplate =3.0.1
     - webtest =2.0.33
     - whitenoise =4.1.2
 
