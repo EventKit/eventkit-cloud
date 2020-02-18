@@ -256,9 +256,6 @@ def get_cache_template(sources, grids, geopackage, table_name="tiles"):
     """
     return {
         "sources": sources,
-        # "meta_size": [1, 1],
-        # "meta_buffer": 0,
-        # "bulk_meta_tiles": [1, 1],
         "cache": {"type": "geopackage", "filename": str(geopackage), "table_name": table_name or "None"},
         "grids": [grid for grid in grids if grid == "default"] or grids,
         "format": "mixed",
