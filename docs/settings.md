@@ -231,7 +231,7 @@ SSL can be disabled using:
 
 #### Version
 The version number will be display on the Login page and the About page.
-<pre>VERSION='1.2.1'</pre>
+<pre>VERSION='1.6.0'</pre>
 #### Contact Url
 The contact url will be displayed as a link on the About page.
 <pre>CONTACT_URL='mailto:my.team@domain.com'</pre>
