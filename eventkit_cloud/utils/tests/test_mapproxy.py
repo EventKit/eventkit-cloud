@@ -163,7 +163,7 @@ class TestHelpers(TransactionTestCase):
         example_slug = "test"
         url = 'http://test.test'
         with self.settings(SITE_URL=url):
-            expected_value = f"{url}/map/{get_footprint_layer_name(example_slug)}/service/{get_footprint_layer_name(example_slug)}/default/{{z}}/{{x}}/{{y}}.png"  # NOQA
+            expected_value = f"{url}/map/{example_slug}/service/{get_footprint_layer_name(example_slug)}/default/{{z}}/{{x}}/{{y}}.png"  # NOQA
             returned_value = get_mapproxy_footprint_url(example_slug)
             self.assertEqual(expected_value, returned_value)
 
