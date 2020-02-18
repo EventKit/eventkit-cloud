@@ -2,7 +2,6 @@
 """API url configuration."""
 
 from django.urls import include, re_path
-from django.views.generic import TemplateView
 
 from rest_framework.routers import DefaultRouter
 from rest_framework.schemas import get_schema_view
@@ -23,7 +22,7 @@ from eventkit_cloud.api.views import (
     NotificationViewSet,
     EstimatorView,
     AuditEventViewSet,
-    api_docs_view
+    api_docs_view,
 )
 
 import notifications.urls
@@ -49,8 +48,7 @@ router.register(r"audit_events", AuditEventViewSet, basename="audit_events")
 
 
 urlpatterns = [
-    re_path(
-        r"^api/docs/$", api_docs_view, name="swagger-ui"),
+    re_path(r"^api/docs/$", api_docs_view, name="swagger-ui"),
     re_path(
         r"^api/openapi",
         get_schema_view(title="EventKit", description="Documentation for the EventKit API."),
