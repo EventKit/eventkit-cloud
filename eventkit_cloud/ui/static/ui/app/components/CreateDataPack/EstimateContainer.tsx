@@ -135,10 +135,8 @@ export class EstimateContainer extends React.Component<Props, State> {
             this.setProviderLoading(false, provider);
             return {
                 slug: provider.slug,
-                data: {
-                    availability: results[0],
-                    estimates: results[1],
-                } as Eventkit.Store.ProviderInfo,
+                availability: results[0],
+                estimates: results[1]
             }
         })
     }
@@ -185,11 +183,11 @@ function mapDispatchToProps(dispatch) {
     return {
         updateExportInfo: (exportInfo) => {
             dispatch(updateExportInfo(exportInfo));
-        },
+        }
     };
 }
 
 export default connect(
     mapStateToProps,
-    mapDispatchToProps,
+    mapDispatchToProps
 )(EstimateContainer);

@@ -384,24 +384,24 @@ declare namespace Eventkit {
             formats: string[];
         }
 
-        interface EstimateData extends Estimates {
+        interface EstimateData {
             value: number;
             units: string;
         }
 
-        interface Estimates extends ProviderInfo {
+        interface Estimates {
             time?: EstimateData;
             size?: EstimateData;
         }
 
-        interface Availability extends ProviderInfo {
+        interface Availability {
             slug: string;
             status: string;
             type: string;
             message: string;
         }
 
-        interface ProviderInfo extends ExportInfo {
+        interface ProviderInfo {
             estimates?: Estimates;
             availability?: Availability;
             estimated_size?: number;
@@ -415,7 +415,7 @@ declare namespace Eventkit {
             formats: string[];
             projectName: string;
             providers: Provider[];
-            providerInfo : Map<ProviderInfo>;  // Polled info collected when setting up jobs, e.g. status or estimates
+            providerInfo: Map<ProviderInfo>;  // Polled info collected when setting up jobs, e.g. status or estimates
             exportOptions: Map<ProviderExportOptions>;
             projections: number[];  // Expecting projection srid
         }

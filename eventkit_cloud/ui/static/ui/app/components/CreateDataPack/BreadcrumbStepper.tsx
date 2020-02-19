@@ -2,7 +2,7 @@ import * as React from 'react';
 import {Route} from 'react-router';
 import history from '../../utils/history';
 import {connect} from 'react-redux';
-import {Theme, withTheme} from '@material-ui/core/styles';
+import {Theme, withStyles, withTheme} from '@material-ui/core/styles';
 import isEqual from 'lodash/isEqual';
 import Divider from '@material-ui/core/Divider';
 import Warning from '@material-ui/icons/Warning';
@@ -15,7 +15,7 @@ import ExportInfo from './ExportInfo';
 import ExportSummary from './ExportSummary';
 import {flattenFeatureCollection} from '../../utils/mapUtils';
 import {formatMegaBytes, getDuration, isZoomLevelInRange} from '../../utils/generic';
-import {clearAoiInfo, clearExportInfo, clearJobInfo, submitJob, updateExportInfo,} from '../../actions/datacartActions';
+import {clearAoiInfo, clearExportInfo, clearJobInfo, submitJob, updateExportInfo} from '../../actions/datacartActions';
 import {stepperNextDisabled} from '../../actions/uiActions';
 import {getFormats} from '../../actions/formatActions';
 import {getProviders} from '../../actions/providerActions';
@@ -75,7 +75,6 @@ export interface Props {
     breadCrumbStepperProps: any;
     selectedBaseMap: SelectedBaseMap;
     getEstimate: any;
-    checkEstimate: (args: any) => void;
     checkProvider: (args: any) => void;
     setProviderLoading: (args: boolean, Provider) => void;
     hasLoaded: string[];
@@ -315,7 +314,7 @@ export class BreadcrumbStepper extends React.Component<Props, State> {
     }
 
     private checkEstimates() {
-        let providerInfo = this.props.exportInfo.providerInfo;
+        const providerInfo = this.props.exportInfo.providerInfo;
         // Check that we have polled for provider info for at least one provider
         if (Object.keys(providerInfo).length !== 0) {
             // Check to see if at least one provider has retrieved estimate data
@@ -373,7 +372,6 @@ export class BreadcrumbStepper extends React.Component<Props, State> {
             if (provider.slug in this.props.exportInfo.providerInfo) {
                 const providerInfo = this.props.exportInfo.providerInfo[provider.slug];
                 if (providerInfo) {
-                    // why is this logic not working???
                     this.props.setProviderLoading(false, provider.slug);
                     if (providerInfo.estimated_size) {
                         sizeEstimate += providerInfo.estimated_size;
