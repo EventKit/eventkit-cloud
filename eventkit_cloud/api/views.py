@@ -11,17 +11,16 @@ from django.contrib.auth.models import User, Group
 from django.contrib.gis.geos import GEOSException, GEOSGeometry
 from django.db import transaction
 from django.db.models import Q
+from django.shortcuts import redirect, render
 from django.utils.translation import ugettext as _
 from django_filters.rest_framework import DjangoFilterBackend
 from notifications.models import Notification
 from rest_framework import exceptions
 from rest_framework import filters, permissions, status, views, viewsets, mixins
-from rest_framework.decorators import detail_route, list_route, action
+from rest_framework.decorators import action
 from rest_framework.parsers import JSONParser
-from rest_framework.permissions import AllowAny
 from rest_framework.renderers import JSONRenderer
 from rest_framework.response import Response
-from rest_framework.schemas.generators import SchemaGenerator, distribute_links
 
 from rest_framework.serializers import ValidationError
 
@@ -40,8 +39,6 @@ from eventkit_cloud.api.permissions import IsOwnerOrReadOnly
 from eventkit_cloud.api.renderers import (
     HOTExportApiRenderer,
     PlainTextRenderer,
-    CustomSwaggerUIRenderer,
-    CustomOpenAPIRenderer,
 )
 from eventkit_cloud.api.serializers import (
     ExportFormatSerializer,
@@ -505,7 +502,7 @@ class JobViewSet(viewsets.ModelViewSet):
         else:
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-    @detail_route(methods=["get", "post"])
+    @action(methods=["get", "post"], detail=True)
     def run(self, request, uid=None, *args, **kwargs):
         """
         Creates the run (i.e. runs the job).
@@ -684,7 +681,7 @@ class JobViewSet(viewsets.ModelViewSet):
         """
         return super(JobViewSet, self).update(self, request, uid, *args, **kwargs)
 
-    @list_route(methods=["post"])
+    @action(methods=["post"], detail=False)
     def filter(self, request, *args, **kwargs):
         """
              Return all jobs that are readable by every
@@ -794,7 +791,7 @@ class LicenseViewSet(viewsets.ReadOnlyModelViewSet):
     lookup_field = "slug"
     ordering = ["name"]
 
-    @detail_route(methods=["get"], renderer_classes=[PlainTextRenderer])
+    @action(methods=["get"], detail=True, renderer_classes=[PlainTextRenderer])
     def download(self, request, slug=None, *args, **kwargs):
         """
         Responds to a GET request with a text file of the license text
@@ -846,7 +843,7 @@ class DataProviderViewSet(viewsets.ReadOnlyModelViewSet):
         """
         return DataProvider.objects.filter(Q(user=self.request.user) | Q(user=None))
 
-    @detail_route(methods=["get", "post"])
+    @action(methods=["get", "post"], detail=True)
     def status(self, request, slug=None, *args, **kwargs):
         """
         Checks the status of a data provider to confirm that it is available.
@@ -1080,7 +1077,7 @@ class ExportRunViewSet(viewsets.ModelViewSet):
             serializer = self.get_serializer(queryset, many=True, context={"request": request})
             return Response(serializer.data, status=status.HTTP_200_OK)
 
-    @list_route(methods=["post", "get"])
+    @action(methods=["post", "get"], detail=False)
     def filter(self, request, *args, **kwargs):
         """
         Lists the ExportRuns and provides advanced filtering options like search_term, bbox, and geojson geometry.
@@ -2113,54 +2110,8 @@ def get_job_ids_via_permissions(permissions):
     return master_job_list
 
 
-class SwaggerSchemaView(views.APIView):
-    _ignore_model_permissions = True
-    exclude_from_schema = True
-    permission_classes = [AllowAny]
-    renderer_classes = [
-        # CoreJSONRenderer,
-        CustomOpenAPIRenderer,
-        CustomSwaggerUIRenderer,
-    ]
-
-    def get(self, request):
-        try:
-            import coreapi
-
-            generator = SchemaGenerator(title="EventKit API")
-            generator.get_schema(request=request)
-            links = generator.get_links()
-            distribute_links(links)
-            # This obviously shouldn't go here.  Need to implement better way to inject CoreAPI customizations.
-            partial_update_link = links.get("users", {}).get("partial_update")
-            if partial_update_link:
-                links["users"]["partial_update"] = coreapi.Link(
-                    url=partial_update_link.url,
-                    action=partial_update_link.action,
-                    fields=[
-                        (coreapi.Field(name="username", required=True, location="path")),
-                        (coreapi.Field(name="data", required=True, location="form",)),
-                    ],
-                    description=partial_update_link.description,
-                )
-
-            members_link = links.get("users", {}).get("members").get("create")
-            if members_link:
-                links["users"]["members"] = coreapi.Link(
-                    url=members_link.url,
-                    action=members_link.action,
-                    fields=[(coreapi.Field(name="data", required=True, location="form",))],
-                    description=members_link.description,
-                )
-
-            schema = coreapi.Document(title="EventKit API", url=request.build_absolute_uri(), content=links)
-
-            if not schema:
-                raise exceptions.ValidationError(
-                    "A schema could not be generated, please ensure that you are logged in."
-                )
-
-            return Response(schema)
-        except (ImportError, ModuleNotFoundError):
-            # CoreAPI couldn't be imported, falling back to static schema
-            return Response()
+def api_docs_view(request):
+    if request.user.is_authenticated:
+        return render(request, template_name="swagger-ui.html", context={"schema_url": "api:openapi-schema"})
+    else:
+        return redirect("/api/login?next=/api/docs")

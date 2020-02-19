@@ -46,7 +46,7 @@ const StyledTabs = withStyles({
 
 const tabJss = (theme: Eventkit.Theme & Theme) => createStyles({
     root: {
-        opacity: '1.0',
+        opacity: 1,
         fontSize: '18px',
         minHeight: "auto",
         padding: '0px 8px',
