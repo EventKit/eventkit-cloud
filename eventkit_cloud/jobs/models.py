@@ -269,8 +269,7 @@ class DataProvider(UIDMixin, TimeStampedModelMixin, CachedModelMixin):
         url = config.get("sources", {}).get("info", {}).get("req", {}).get("url")
         type = config.get("sources", {}).get("info", {}).get("type")
         if url:
-            return {"url": get_mapproxy_metadata_url(self.slug),
-                    "type": type}
+            return {"url": get_mapproxy_metadata_url(self.slug), "type": type}
 
     @property
     def footprint_url(self):
