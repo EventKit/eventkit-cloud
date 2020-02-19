@@ -3,6 +3,7 @@
 from eventkit_cloud.settings.base import *  # NOQA
 from eventkit_cloud.settings.base import INSTALLED_APPS
 
+
 # Extra installed apps
 INSTALLED_APPS += (
     # any 3rd party apps

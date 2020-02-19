@@ -1,5 +1,4 @@
 from abc import ABC
-from django.contrib.gis.geos import GEOSGeometry
 from collections import defaultdict
 from eventkit_cloud.utils.arcgis2geojson import convert as convert_arcgis_to_geojson
 import logging
@@ -13,9 +12,7 @@ class MapQuery(ABC):
         pass
 
     def get_geojson(self, response):
-        geom = GEOSGeometry(response.content)
-        if geom.valid:
-            return response
+        return response
 
 
 class ArcGISQuery(MapQuery):
@@ -36,7 +33,8 @@ class OGCQuery(MapQuery):
 
 def get_map_query(type: str) -> MapQuery:
 
+    print(f"get_map_query: {type}")
     query_map = defaultdict(lambda: MapQuery)
-    query_map["arcgis-raster"] = ArcGISQuery
+    query_map["arcgis"] = ArcGISQuery
 
-    return query_map.get(type)
+    return query_map[type]

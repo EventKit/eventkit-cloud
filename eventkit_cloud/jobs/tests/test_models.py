@@ -10,6 +10,7 @@ from django.contrib.gis.gdal import DataSource
 from django.contrib.gis.geos import GEOSGeometry, Polygon, MultiPolygon
 from django.test import TestCase
 from mock import call, patch
+import yaml
 
 from eventkit_cloud.jobs.models import (
     ExportFormat, ExportProfile, Job, Region,
@@ -343,14 +344,44 @@ class TestDataProvider(TestCase):
     @patch('eventkit_cloud.core.models.cache')
     def test_cached_model_on_save(self, mocked_cache):
         """Test that triggers a save on a provider and updates the database cache with a generic key name"""
-        uid = '6f5771ce-587d-4c77-a4cd-aaf01a305dee'
-        self.export_provider = DataProvider.objects.get(slug='osm')
-        export_provider_props = Mock(slug='osm')
         self.export_provider.save()
 
         cache_calls = [
-            call(f"DataProvider-slug-{export_provider_props.slug}", self.export_provider),
-            call(f"DataProvider-uid-{uid}", self.export_provider),
+            call(f"DataProvider-slug-{self.export_provider.slug}", self.export_provider),
+            call(f"DataProvider-uid-{self.export_provider.uid}", self.export_provider),
         ]
 
         mocked_cache.set.assert_has_calls(cache_calls, any_order=True)
+
+    @patch("eventkit_cloud.jobs.models.get_mapproxy_metadata_url")
+    def test_metadata(self, mock_get_mapproxy_metadata_url):
+        example_url = "http://test.test"
+        expected_url = "http://ek.test/metadata/"
+        expected_metadata = {"url": expected_url,
+                             "type": "arcgis"}
+        mock_get_mapproxy_metadata_url.return_value = expected_url
+        config = {'sources': {
+            "info": {
+                "type": "arcgis",
+                "req": {
+                    "url": example_url
+                }
+            }
+        }}
+        self.export_provider.config = yaml.dump(config)
+        self.assertEqual(expected_metadata, self.export_provider.metadata)
+
+        @patch("eventkit_cloud.jobs.models.get_mapproxy_footprint_url")
+        def test_footprint_url(self, mock_get_mapproxy_footprint_url):
+            example_url = "http://test.test"
+            expected_url = "http://ek.test/footprint/"
+            mock_get_mapproxy_footprint_url.return_value = expected_url
+            config = {'sources': {
+                "footprint": {
+                    "req": {
+                        "url": example_url
+                    }
+                }
+            }}
+            self.export_provider.config = yaml.dump(config)
+            self.assertEqual(expected_url, self.export_provider.footprint_url)
