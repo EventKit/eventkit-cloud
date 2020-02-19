@@ -254,13 +254,16 @@ export class MapDrawer extends React.Component<Props, State> {
 
     showFootprintData(ix: number, sources) {
         if (this.state.expandedSources && this.state.selectedBaseMap === ix) {
-            return (
-                <FootprintDisplay
-                    footprintsLayer={sources[ix].footprintsLayer}
-                    addFootprintsLayer={this.props.addFootprintsLayer}
-                    removeFootprintsLayer={this.props.removeFootprintsLayer}
-                />
-            )
+            const source = sources[ix];
+            if (!!source.footprintsLayer) {
+                return (
+                    <FootprintDisplay
+                        footprintsLayer={source.footprintsLayer}
+                        addFootprintsLayer={this.props.addFootprintsLayer}
+                        removeFootprintsLayer={this.props.removeFootprintsLayer}
+                    />
+                )
+            }
         }
     }
 
@@ -271,15 +274,19 @@ export class MapDrawer extends React.Component<Props, State> {
             ...this.state.sources,
             // Filter for providers with a preview_url AND marked to display
             ...this.props.providers.filter(provider => !!provider.preview_url && !!provider.display).map(provider => {
+                let footprintsLayer;
+                if (!!provider.footprint_url) {
+                    footprintsLayer = {
+                        mapUrl: provider.footprint_url,
+                        slug: `${provider.slug}-footprints`,
+                    } as MapLayer;
+                }
                 return {
+                    footprintsLayer,
                     mapLayer: {
                         mapUrl: provider.preview_url,
                         metadata: provider.metadata,
                         slug: provider.slug,
-                    } as MapLayer,
-                    footprintsLayer: {
-                        mapUrl: provider.footprint_url,
-                        slug: `${provider.slug}-footprints`,
                     } as MapLayer,
                     name: provider.name,
                     type: provider.type,
