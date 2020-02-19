@@ -1,11 +1,11 @@
 import React from "react";
 import {createStyles, withStyles, FormControlLabel, Switch} from "@material-ui/core";
 import * as PropTypes from "prop-types";
-import {Props} from "./FootprintDisplay";
 import Card from "@material-ui/core/Card";
 import ListItemText from "@material-ui/core/ListItemText";
 import Typography from "@material-ui/core/Typography";
 import theme from "../../styles/eventkit_theme";
+import {MapLayer} from "./CreateExport";
 
 const jss = () => createStyles({
     footprintBox: {
@@ -26,18 +26,21 @@ const jss = () => createStyles({
     formControlLabel: {
         paddingLeft: '10px',
         fontSize: '12px',
-        paddingRight: '3px'
+        paddingRight: '3px',
     },
     switchBase: {
-    color: theme.eventkit.colors.white,
-      '&$checked': {
-        color: theme.eventkit.colors.primary,
+        color: theme.eventkit.colors.white,
+        '&$checked': {
+            color: theme.eventkit.colors.primary,
+        },
     },
-  },
     checked: {},
 });
 
 export interface Props {
+    addFootprintsLayer: (mapLayer: MapLayer) => void;
+    removeFootprintsLayer: (mapLayer: MapLayer) => void;
+    footprintsLayer: MapLayer;
     classes: { [className: string]: string };
 }
 
@@ -60,8 +63,14 @@ export class FootprintDisplay extends React.Component<Props, State> {
     }
 
     handleCheckClick = () => {
-        this.setState({ checked: !this.state.checked });
-    }
+        if (this.state.checked) {
+            this.setState({ checked: false });
+            this.props.removeFootprintsLayer(this.props.footprintsLayer);
+        } else {
+            this.setState({ checked: true });
+            this.props.addFootprintsLayer(this.props.footprintsLayer);
+        }
+    };
 
     render() {
         const {classes} = this.props;
@@ -70,31 +79,29 @@ export class FootprintDisplay extends React.Component<Props, State> {
             <Card
                 className={classes.footprintBox}
             >
-                <div>
-                    {/* using ListItem for future functionality that will add to this list */}
-                        <ListItemText
-                            className={classes.listItemText}
-                            primary={(
-                                <Typography style={{fontSize: '12px'}}>
-                                    <strong>Layers:</strong>
-                                </Typography>
-                            )}
+                {/* using ListItem for future functionality that will add to this list */}
+                <ListItemText
+                    className={classes.listItemText}
+                    primary={(
+                        <Typography style={{fontSize: '12px'}}>
+                            <strong>Layers:</strong>
+                        </Typography>
+                    )}
+                />
+                <FormControlLabel
+                    className={classes.formControlLabel}
+                    control={(
+                        <Switch
+                            value="switch"
+                            checked={this.state.checked}
+                            onChange={this.handleCheckClick}
+                            classes={{ switchBase: classes.switchBase, checked: classes.checked }}
                         />
-                        <FormControlLabel
-                            className={classes.formControlLabel}
-                            control={(
-                                <Switch
-                                    value="switch"
-                                    checked={this.state.checked}
-                                    onChange={this.handleCheckClick}
-                                    classes={{ switchBase: classes.switchBase, checked: classes.checked }}
-                                />
-                            )}
-                            label={<Typography className={classes.formControlLabel}>Show footprints</Typography>}
-                        />
-                </div>
+                    )}
+                    label={<Typography className={classes.formControlLabel}>Show footprints</Typography>}
+                />
             </Card>
-        )
+        );
     }
 }
 export default (withStyles<any, any>(jss)(FootprintDisplay))

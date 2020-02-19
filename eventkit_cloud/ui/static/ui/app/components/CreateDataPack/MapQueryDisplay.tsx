@@ -2,7 +2,7 @@ import * as React from "react";
 import axios from "axios";
 import {getCookie, getFeatureUrl} from "../../utils/generic";
 import QueryDataBox from "./QueryDataBox";
-import {SelectedBaseMap} from "./CreateExport";
+import {MapLayer} from "./CreateExport";
 
 // The feature response data for a given coordinate specified by lat and long
 interface FeatureResponse {
@@ -23,7 +23,7 @@ export interface TileCoordinate {
 }
 
 export interface Props {
-    selectedBaseMap: SelectedBaseMap;
+    selectedLayer: MapLayer;
     style?: any;
     maxHeight?: number;
     name?: string;
@@ -63,8 +63,10 @@ export class MapQueryDisplay extends React.Component<Props, State> {
             lat: tileCoord.lat,
             long: tileCoord.long,
         } as FeatureResponse;
-        
-        const url = getFeatureUrl(this.props.selectedBaseMap.slug, tileCoord.z, tileCoord.y, tileCoord.x, tileCoord.i, tileCoord.j);
+
+
+        // TODO: Switch Url based on type
+        const url = getFeatureUrl(this.props.selectedLayer, tileCoord.z, tileCoord.y, tileCoord.x, tileCoord.i, tileCoord.j);
         const csrfmiddlewaretoken = getCookie('csrftoken');
         return axios({
             url,
@@ -94,7 +96,7 @@ export class MapQueryDisplay extends React.Component<Props, State> {
     }
 
     private handleMapClick(tileCoord: TileCoordinate) {
-        if (!!this.props.selectedBaseMap.slug) {
+        if (!!this.props.selectedLayer.metadata) {
             this.setState({
                 closeCard: false,
                 responseData: undefined,
