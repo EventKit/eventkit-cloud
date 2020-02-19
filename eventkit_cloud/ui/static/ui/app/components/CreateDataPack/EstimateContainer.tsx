@@ -3,6 +3,7 @@ import BreadcrumbStepper from "./BreadcrumbStepper";
 import {getCookie, isZoomLevelInRange} from "../../utils/generic";
 import {featureToBbox, WGS84} from '../../utils/mapUtils';
 import {updateExportInfo} from '../../actions/datacartActions';
+import { Observable } from 'rxjs';
 import axios from "axios";
 import {connect} from "react-redux";
 import * as PropTypes from "prop-types";
@@ -36,8 +37,9 @@ export class EstimateContainer extends React.Component<Props, State> {
         this.setProviderLoading = this.setProviderLoading.bind(this);
         this.getAvailability = this.getAvailability.bind(this);
         this.checkAvailability = this.checkAvailability.bind(this);
+        this.hasLoadedProviders = this.hasLoadedProviders.bind(this);
         this.state = {
-            loadingProviders: []
+            loadingProviders: [],
         }
     }
 
@@ -142,8 +144,8 @@ export class EstimateContainer extends React.Component<Props, State> {
         })
     }
 
-    hasLoaded(){
-        return Object.keys(this.state.loadingProviders).length > 0;
+    hasLoadedProviders(){
+        return Object.keys(this.state.loadingProviders).length;
     }
 
     setProviderLoading(isLoading: boolean, provider: Eventkit.Provider) {
@@ -154,10 +156,12 @@ export class EstimateContainer extends React.Component<Props, State> {
                     this.setState({loadingProviders: [...loadingProviders, provider.slug]})
                 }
             } else {
-                const removedProvider = loadingProviders.splice(slugIndex, 1);
-                this.setState({loadingProviders: removedProvider})
+                const updatedLoadingProviders = loadingProviders.splice(slugIndex, 1);
+                this.setState({loadingProviders: updatedLoadingProviders})
             }
     }
+
+
 
     render () {
         return (
@@ -166,7 +170,8 @@ export class EstimateContainer extends React.Component<Props, State> {
                 checkProvider={this.checkProvider}
                 checkEstimate={this.checkEstimate}
                 setProviderLoading={this.setProviderLoading}
-                hasLoaded={this.hasLoaded}
+                hasLoadedProviders={this.hasLoadedProviders}
+                loadingProviders={this.state.loadingProviders}
             />
         )
     }
