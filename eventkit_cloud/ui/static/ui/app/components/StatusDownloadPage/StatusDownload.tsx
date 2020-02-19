@@ -508,7 +508,9 @@ function mapDispatchToProps(dispatch) {
             dispatch(clearReRunInfo())
         ),
         cloneExport: (cartDetails: Eventkit.FullRun, providerArray: Eventkit.Provider[],
-                      exportOptions: Eventkit.Map<Eventkit.Store.ProviderExportOptions>) => {
+                      exportOptions: Eventkit.Map<Eventkit.Store.ProviderExportOptions>,
+                      providerInfo: Eventkit.Map<Eventkit.Store.ProviderInfo>
+                      ) => {
             const featureCollection = {
                 type: 'FeatureCollection',
                 features: [cartDetails.job.extent],
@@ -525,6 +527,7 @@ function mapDispatchToProps(dispatch) {
             }));
             dispatch(updateExportInfo({
                 exportOptions,
+                providerInfo,
                 projections,
                 exportName: cartDetails.job.name,
                 datapackDescription: cartDetails.job.description,

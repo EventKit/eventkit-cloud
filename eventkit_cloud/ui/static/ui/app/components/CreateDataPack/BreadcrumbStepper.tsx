@@ -49,6 +49,8 @@ export interface Props {
     stepperNextEnabled: boolean;
     exportInfo: Eventkit.Store.ExportInfo;
     submitJob: (data: JobData) => void;
+    dataPack: Eventkit.FullRun;
+    job: Eventkit.Job;
     getProviders: () => void;
     setNextDisabled: () => void;
     clearAoiInfo: () => void;
@@ -69,6 +71,7 @@ export interface Props {
     theme: Eventkit.Theme & Theme;
     getProjections: () => void;
     projections: Eventkit.Projection[];
+    tasks: Eventkit.Task[];
     breadCrumbStepperProps: any;
     selectedBaseMap: SelectedBaseMap;
     getEstimate: any;
@@ -93,6 +96,7 @@ export interface State {
     timeEstimate: number;
     estimateExplanationOpen: boolean;
     isLoading: boolean;
+    selectedExports: string[];
 }
 
 export class BreadcrumbStepper extends React.Component<Props, State> {
@@ -142,6 +146,7 @@ export class BreadcrumbStepper extends React.Component<Props, State> {
             timeEstimate: -1,
             estimateExplanationOpen: false,
             isLoading: false,
+            selectedExports: [],
         };
         this.leaveRoute = null;
     }
@@ -227,7 +232,8 @@ export class BreadcrumbStepper extends React.Component<Props, State> {
             color: this.props.theme.eventkit.colors.white,
             fontSize: '0.9em',
         };
-        // if (stepIndex !== 0) {
+
+        // if (((stepIndex === 0)) || stepIndex !== 0) {
             return (
                 <div style={{display: 'inline-flex'}}>
                     <Typography style={{
@@ -309,11 +315,11 @@ export class BreadcrumbStepper extends React.Component<Props, State> {
     }
 
     private checkEstimates() {
-        let data = this.props.exportInfo.providerInfo;
+        let providerInfo = this.props.exportInfo.providerInfo;
         // Check that we have polled for provider info for at least one provider
-        if (Object.keys(data).length !== 0) {
+        if (Object.keys(providerInfo).length !== 0) {
             // Check to see if at least one provider has retrieved estimate data
-            return Object.entries(data).some(([slug, data]) => !!data.estimates);
+            return Object.entries(providerInfo).some(([slug, data]) => !!data);
         }
     }
 
@@ -365,15 +371,15 @@ export class BreadcrumbStepper extends React.Component<Props, State> {
         const maxAcceptableTime = 60 * 60 * 24 * this.props.exportInfo.providers.length;
         for (const provider of this.props.exportInfo.providers) {
             if (provider.slug in this.props.exportInfo.providerInfo) {
-                const providerEstimates = this.props.exportInfo.providerInfo[provider.slug];
-                if (providerEstimates) {
+                const providerInfo = this.props.exportInfo.providerInfo[provider.slug];
+                if (providerInfo) {
                     // why is this logic not working???
                     this.props.setProviderLoading(false, provider.slug);
-                    if (providerEstimates.estimates.size) {
-                        sizeEstimate += providerEstimates.estimates.size.value;
+                    if (providerInfo.estimated_size) {
+                        sizeEstimate += providerInfo.estimated_size;
                     }
-                    if (providerEstimates.estimates.time) {
-                        timeEstimate += providerEstimates.estimates.time.value;
+                    if (providerInfo.estimated_duration) {
+                        timeEstimate += providerInfo.estimated_duration;
                     }
                 }
             }

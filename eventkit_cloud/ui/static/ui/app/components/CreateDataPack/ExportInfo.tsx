@@ -516,8 +516,8 @@ export class ExportInfo extends React.Component<Props, State> {
             return this.props.checkProvider(provider);
         })).then(providerResults => {
             const providerInfo = {...this.props.exportInfo.providerInfo} as Eventkit.Map<Eventkit.Store.ProviderInfo>;
-            providerResults.map((info) => {
-                providerInfo[info.slug] = info.data;
+            providerResults.map((provider) => {
+                providerInfo[provider.id] = provider.estimate;
             });
             this.props.updateExportInfo({providerInfo});
             // Trigger an estimate calculation update in the parent

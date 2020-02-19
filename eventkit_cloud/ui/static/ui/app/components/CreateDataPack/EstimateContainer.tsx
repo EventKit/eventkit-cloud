@@ -41,8 +41,10 @@ export class EstimateContainer extends React.Component<Props, State> {
         }
     }
 
+
     getEstimate(provider: Eventkit.Provider, bbox: number[]) {
         const providerExportOptions = this.props.exportInfo.exportOptions[provider.slug] as Eventkit.Store.ProviderExportOptions;
+
         let minZoom = provider.level_from;
         let maxZoom = provider.level_to;
 
@@ -57,7 +59,7 @@ export class EstimateContainer extends React.Component<Props, State> {
         const data = {
             slugs: provider.slug,
             srs: 4326,
-            bbox: bbox.join(','), min_zoom: minZoom, max_zoom: maxZoom
+            bbox: bbox.join(','), min_zoom: minZoom, max_zoom: maxZoom,
         };
 
         const csrfmiddlewaretoken = getCookie('csrftoken');

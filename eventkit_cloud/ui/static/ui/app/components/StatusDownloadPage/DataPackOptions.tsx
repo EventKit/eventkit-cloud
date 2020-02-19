@@ -7,7 +7,9 @@ export interface Props {
     adminPermissions: boolean;
     onRerun: (uid: string) => void;
     onClone: (cartDetails: Eventkit.FullRun, providerArray: Eventkit.Provider[],
-              exportOptions: Eventkit.Map<Eventkit.Store.ProviderExportOptions>) => void;
+              exportOptions: Eventkit.Map<Eventkit.Store.ProviderExportOptions>,
+              providerInfo: Eventkit.Map<Eventkit.Store.ProviderInfo>
+    ) => void;
     onDelete: (uid: string) => void;
     dataPack: Eventkit.FullRun;
     job: Eventkit.Job;
@@ -80,6 +82,7 @@ export class DataPackOptions extends React.Component<Props, State> {
     private handleClone() {
         const providerArray = [];
         const exportOptions = {};
+        const providerInfo = {};
         this.props.dataPack.provider_tasks.forEach((providerTask) => {
             if (providerTask.display === true) {
                 // Map the provider task to its Provider to ensure we have all needed data for the Provider.
@@ -95,13 +98,19 @@ export class DataPackOptions extends React.Component<Props, State> {
                     maxZoom: (dataProviderTask) ? dataProviderTask.max_zoom : null,
                     formats: (dataProviderTask) ? dataProviderTask.formats : null,
                 } as Eventkit.Store.ProviderExportOptions;
+
+                providerInfo[providerTask.slug] = {
+                    estimated_size: (providerTask) ? providerTask.estimated_size: null,
+                    estimated_duration: (providerTask) ? providerTask.estimated_duration: null
+                };
+
                 // Cannot clone a provider without the full set of info.
                 if (fullProvider) {
                     providerArray.push(fullProvider);
                 }
             }
         });
-        this.props.onClone(this.props.dataPack, providerArray, exportOptions);
+        this.props.onClone(this.props.dataPack, providerArray, exportOptions, providerInfo);
         this.setState({ showCloneDialog: false });
     }
 

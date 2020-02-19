@@ -2,6 +2,8 @@ type Omit<T, K extends keyof T> = Pick<T, Exclude<keyof T, K>>;
 
 declare namespace Eventkit {
 
+    import Estimates = Eventkit.Store.Estimates;
+
     interface License {
         slug: string;
         name: string;
@@ -67,6 +69,8 @@ declare namespace Eventkit {
         license: License;
         service_description: string;
         preview_url: string;
+        estimated_size: Estimates;
+        estimated_duration: Estimates;
     }
 
     interface DataProviderTask {
@@ -400,6 +404,8 @@ declare namespace Eventkit {
         interface ProviderInfo extends ExportInfo {
             estimates?: Estimates;
             availability?: Availability;
+            estimated_size?: number;
+            estimated_duration?: number;
         }
 
         interface ExportInfo {
