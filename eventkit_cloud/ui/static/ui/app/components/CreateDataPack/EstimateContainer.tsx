@@ -41,7 +41,6 @@ export class EstimateContainer extends React.Component<Props, State> {
         }
     }
 
-
     getEstimate(provider: Eventkit.Provider, bbox: number[]) {
         const providerExportOptions = this.props.exportInfo.exportOptions[provider.slug] as Eventkit.Store.ProviderExportOptions;
 

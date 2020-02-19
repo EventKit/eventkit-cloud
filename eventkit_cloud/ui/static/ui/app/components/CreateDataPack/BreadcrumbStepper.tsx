@@ -15,7 +15,7 @@ import ExportInfo from './ExportInfo';
 import ExportSummary from './ExportSummary';
 import {flattenFeatureCollection} from '../../utils/mapUtils';
 import {formatMegaBytes, getDuration, isZoomLevelInRange} from '../../utils/generic';
-import {clearAoiInfo, clearExportInfo, clearJobInfo, submitJob, updateExportInfo,} from '../../actions/datacartActions';
+import {clearAoiInfo, clearExportInfo, clearJobInfo, submitJob, updateExportInfo} from '../../actions/datacartActions';
 import {stepperNextDisabled} from '../../actions/uiActions';
 import {getFormats} from '../../actions/formatActions';
 import {getProviders} from '../../actions/providerActions';
@@ -315,7 +315,7 @@ export class BreadcrumbStepper extends React.Component<Props, State> {
     }
 
     private checkEstimates() {
-        let providerInfo = this.props.exportInfo.providerInfo;
+        const providerInfo = this.props.exportInfo.providerInfo;
         // Check that we have polled for provider info for at least one provider
         if (Object.keys(providerInfo).length !== 0) {
             // Check to see if at least one provider has retrieved estimate data

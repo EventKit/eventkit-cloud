@@ -415,7 +415,7 @@ declare namespace Eventkit {
             formats: string[];
             projectName: string;
             providers: Provider[];
-            providerInfo : Map<ProviderInfo>;  // Polled info collected when setting up jobs, e.g. status or estimates
+            providerInfo: Map<ProviderInfo>;  // Polled info collected when setting up jobs, e.g. status or estimates
             exportOptions: Map<ProviderExportOptions>;
             projections: number[];  // Expecting projection srid
         }
