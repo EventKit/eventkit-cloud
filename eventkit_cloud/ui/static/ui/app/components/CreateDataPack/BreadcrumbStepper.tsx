@@ -160,6 +160,7 @@ export class BreadcrumbStepper extends React.Component<Props, State> {
         this.getEstimateLabel(0);
         this.props.getProjections();
         this.props.getFormats();
+        this.updateEstimate();
         // const route = this.props.routes[this.props.routes.length - 1];
         // this.props.router.setRouteLeaveHook(route, this.routeLeaveHook);
     }
@@ -373,11 +374,14 @@ export class BreadcrumbStepper extends React.Component<Props, State> {
                 const providerInfo = this.props.exportInfo.providerInfo[provider.slug];
                 if (providerInfo) {
                     this.props.setProviderLoading(false, provider.slug);
-                    if (providerInfo.estimated_size) {
-                        sizeEstimate += providerInfo.estimated_size;
+                    if (providerInfo.estimates) {
+                        timeEstimate += providerInfo.estimates.time.value;
+                        sizeEstimate += providerInfo.estimates.size.value;
                     }
-                    if (providerInfo.estimated_duration) {
+                    // for cloned estimates as data structure is slightly different when saved to store
+                    if (providerInfo.estimated_size || providerInfo.estimated_duration) {
                         timeEstimate += providerInfo.estimated_duration;
+                        sizeEstimate += providerInfo.estimated_size;
                     }
                 }
             }
