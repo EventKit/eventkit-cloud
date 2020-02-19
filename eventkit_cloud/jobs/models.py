@@ -264,11 +264,13 @@ class DataProvider(UIDMixin, TimeStampedModelMixin, CachedModelMixin):
         return "{0}".format(self.name)
 
     @property
-    def metadata_url(self):
+    def metadata(self):
         config = yaml.load(self.config)
         url = config.get("sources", {}).get("info", {}).get("req", {}).get("url")
+        type = config.get("sources", {}).get("info", {}).get("type")
         if url:
-            return get_mapproxy_metadata_url(self.slug)
+            return {"url": get_mapproxy_metadata_url(self.slug),
+                    "type": type}
 
     @property
     def footprint_url(self):

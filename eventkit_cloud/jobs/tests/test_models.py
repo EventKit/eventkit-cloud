@@ -354,19 +354,22 @@ class TestDataProvider(TestCase):
         mocked_cache.set.assert_has_calls(cache_calls, any_order=True)
 
     @patch("eventkit_cloud.jobs.models.get_mapproxy_metadata_url")
-    def test_metadata_url(self, mock_get_mapproxy_metadata_url):
+    def test_metadata(self, mock_get_mapproxy_metadata_url):
         example_url = "http://test.test"
         expected_url = "http://ek.test/metadata/"
+        expected_metadata = {"url": expected_url,
+                             "type": "arcgis"}
         mock_get_mapproxy_metadata_url.return_value = expected_url
         config = {'sources': {
             "info": {
+                "type": "arcgis",
                 "req": {
                     "url": example_url
                 }
             }
         }}
         self.export_provider.config = yaml.dump(config)
-        self.assertEqual(expected_url, self.export_provider.metadata_url)
+        self.assertEqual(expected_metadata, self.export_provider.metadata)
 
         @patch("eventkit_cloud.jobs.models.get_mapproxy_footprint_url")
         def test_footprint_url(self, mock_get_mapproxy_footprint_url):
