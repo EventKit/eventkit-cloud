@@ -41,7 +41,6 @@ export class EstimateContainer extends React.Component<Props, State> {
         }
     }
 
-
     getEstimate(provider: Eventkit.Provider, bbox: number[]) {
         const providerExportOptions = this.props.exportInfo.exportOptions[provider.slug] as Eventkit.Store.ProviderExportOptions;
 
@@ -135,8 +134,10 @@ export class EstimateContainer extends React.Component<Props, State> {
             this.setProviderLoading(false, provider);
             return {
                 slug: provider.slug,
-                availability: results[0],
-                estimates: results[1]
+                data: {
+                    availability: results[0],
+                    estimates: results[1],
+                } as Eventkit.Store.ProviderInfo,
             }
         })
     }
@@ -183,11 +184,11 @@ function mapDispatchToProps(dispatch) {
     return {
         updateExportInfo: (exportInfo) => {
             dispatch(updateExportInfo(exportInfo));
-        }
+        },
     };
 }
 
 export default connect(
     mapStateToProps,
-    mapDispatchToProps
+    mapDispatchToProps,
 )(EstimateContainer);

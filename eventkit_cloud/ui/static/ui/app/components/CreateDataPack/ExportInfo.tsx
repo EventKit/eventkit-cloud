@@ -523,7 +523,7 @@ export class ExportInfo extends React.Component<Props, State> {
             // Trigger an estimate calculation update in the parent
             // Does not re-request any data, calculates the total from available results.
             this.props.onUpdateEstimate();
-        })
+        });
     }
 
     private handlePopoverOpen(e: React.MouseEvent<any>) {
