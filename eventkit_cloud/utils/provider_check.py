@@ -132,11 +132,7 @@ class CheckResults(Enum):
     )
 
     UNKNOWN_ERROR = (
-        {
-            "status": "ERR",
-            "type": "ERROR",
-            "message": _("An error has occurred, please contact an administrator."),
-        },
+        {"status": "ERR", "type": "ERROR", "message": _("An error has occurred, please contact an administrator.")},
     )
 
     SUCCESS = ({"status": "SUCCESS", "type": "SUCCESS", "message": _("Export should proceed without issues.")},)
