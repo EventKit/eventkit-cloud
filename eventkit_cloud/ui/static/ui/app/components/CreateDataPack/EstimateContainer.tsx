@@ -3,12 +3,9 @@ import BreadcrumbStepper from "./BreadcrumbStepper";
 import {getCookie, isZoomLevelInRange} from "../../utils/generic";
 import {featureToBbox, WGS84} from '../../utils/mapUtils';
 import {updateExportInfo} from '../../actions/datacartActions';
-import { Observable } from 'rxjs';
 import axios from "axios";
 import {connect} from "react-redux";
 import * as PropTypes from "prop-types";
-import {Simulate} from "react-dom/test-utils";
-import load = Simulate.load;
 
 
 export interface Props {
@@ -19,11 +16,7 @@ export interface Props {
     breadcrumbStepperProps: any;
 }
 
-export interface State {
-    loadingProviders: string[];
-}
-
-export class EstimateContainer extends React.Component<Props, State> {
+export class EstimateContainer extends React.Component<Props, {}> {
     private CancelToken = axios.CancelToken;
     private source = this.CancelToken.source();
 
@@ -36,13 +29,8 @@ export class EstimateContainer extends React.Component<Props, State> {
         this.getEstimate = this.getEstimate.bind(this);
         this.checkEstimate = this.checkEstimate.bind(this);
         this.checkProvider = this.checkProvider.bind(this);
-        this.setProviderLoading = this.setProviderLoading.bind(this);
         this.getAvailability = this.getAvailability.bind(this);
         this.checkAvailability = this.checkAvailability.bind(this);
-        this.areProvidersLoaded = this.areProvidersLoaded.bind(this);
-        this.state = {
-            loadingProviders: [],
-        }
     }
 
     getEstimate(provider: Eventkit.Provider, bbox: number[]) {
@@ -129,13 +117,10 @@ export class EstimateContainer extends React.Component<Props, State> {
         if (provider.display === false) {
             return;
         }
-        this.setProviderLoading(true, provider);
-
         return Promise.all([
             this.checkAvailability(provider),
             this.checkEstimate(provider),
         ]).then(results => {
-            this.setProviderLoading(false, provider);
             return {
                 slug: provider.slug,
                 data: {
@@ -146,36 +131,12 @@ export class EstimateContainer extends React.Component<Props, State> {
         })
     }
 
-    areProvidersLoaded(){
-        return Object.keys(this.state.loadingProviders).length;
-    }
-
-    setProviderLoading(isLoading: boolean, provider: Eventkit.Provider) {
-        const { loadingProviders } = this.state;
-        let slugIndex = loadingProviders.indexOf(provider.slug);
-            if (isLoading) {
-                if (slugIndex === -1) {
-                    this.setState({loadingProviders: [...loadingProviders, provider.slug]})
-                }
-            } else {
-                // if (loadingProviders.indexOf(provider.slug) === 0){
-                //     slugIndex += 1
-                // }
-                const updatedLoadingProviders = loadingProviders.splice(slugIndex, 1);
-                this.setState({loadingProviders: updatedLoadingProviders})
-            }
-    }
-
-
-
     render () {
         return (
             <BreadcrumbStepper
                 {...this.props.breadcrumbStepperProps}
                 checkProvider={this.checkProvider}
                 checkEstimate={this.checkEstimate}
-                setProviderLoading={this.setProviderLoading}
-                areProvidersLoaded={this.areProvidersLoaded}
             />
         )
     }

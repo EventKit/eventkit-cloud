@@ -76,8 +76,6 @@ export interface Props {
     selectedBaseMap: SelectedBaseMap;
     getEstimate: any;
     checkProvider: (args: any) => void;
-    setProviderLoading: (args: boolean, Provider) => void;
-    areProvidersLoaded: () => number;
 }
 
 export interface State {
@@ -96,6 +94,7 @@ export interface State {
     estimateExplanationOpen: boolean;
     isLoading: boolean;
     selectedExports: string[];
+    areEstimatesLoading: boolean;
 }
 
 export class BreadcrumbStepper extends React.Component<Props, State> {
@@ -146,6 +145,7 @@ export class BreadcrumbStepper extends React.Component<Props, State> {
             estimateExplanationOpen: false,
             isLoading: false,
             selectedExports: [],
+            areEstimatesLoading: false
         };
         this.leaveRoute = null;
     }
@@ -315,7 +315,7 @@ export class BreadcrumbStepper extends React.Component<Props, State> {
         // Check that we have polled for provider info for at least one provider
         if (Object.keys(providerInfo).length !== 0) {
             // Check to see if at least one provider has retrieved estimate data
-            return Object.entries(providerInfo).some(([slug, data]) => !!data);
+            return Object.entries(providerInfo).some(([slug, data]) => !!data.estimates);
         }
     }
 
@@ -327,10 +327,6 @@ export class BreadcrumbStepper extends React.Component<Props, State> {
         const get = (estimate, nf = 'unknown') => (estimate) ? estimate.toString() : nf;
 
         if (this.areProvidersSelected()) {
-            if (this.props.areProvidersLoaded() > 0) {
-                return (<CircularProgress/>);
-            }
-
             sizeEstimate = formatMegaBytes(this.state.sizeEstimate);
 
             const estimateInSeconds = this.state.timeEstimate;
@@ -352,11 +348,7 @@ export class BreadcrumbStepper extends React.Component<Props, State> {
             secondary = ` ( ${get(durationEstimate, '')}${separator}${get(sizeEstimate, 'size unknown')})`;
 
             const calculatingText = 'Getting calculations...';
-            // if (this.props.areProvidersLoaded() > 0) {
-            //     return (<CircularProgress/>);
-            // }
-            return `${get(dateTimeEstimate)}${get(secondary, '')}`;
-
+            return this.state.areEstimatesLoading ? (<CircularProgress/>) : `${get(dateTimeEstimate)}${get(secondary, '')}`;
         }
         return 'Select providers to get estimate';
     }
@@ -368,30 +360,38 @@ export class BreadcrumbStepper extends React.Component<Props, State> {
         let sizeEstimate = 0;
         let timeEstimate = 0;
 
+
         const maxAcceptableTime = 60 * 60 * 24 * this.props.exportInfo.providers.length;
         for (const provider of this.props.exportInfo.providers) {
-            // this.props.setProviderLoading(false, provider);
-
-            if (provider.slug in this.props.exportInfo.providerInfo) {
+            if (this.props.exportInfo.providerInfo[provider.slug] === undefined) {
+                this.setState({areEstimatesLoading: true});
+                setTimeout(() => {}, 2000);
+            } else {
+                if (provider.slug in this.props.exportInfo.providerInfo) {
                 const providerInfo = this.props.exportInfo.providerInfo[provider.slug];
+
                 if (providerInfo) {
                     if (providerInfo.estimates) {
+                        this.setState({areEstimatesLoading: false});
                         timeEstimate += providerInfo.estimates.time.value;
                         sizeEstimate += providerInfo.estimates.size.value;
-                    }
-                    // for cloned estimates as data structure is slightly different when saved to store
-                    if (providerInfo.estimated_size || providerInfo.estimated_duration) {
-                        timeEstimate += providerInfo.estimated_duration;
-                        sizeEstimate += providerInfo.estimated_size;
+
+                        // for cloned estimates as data structure is slightly different when saved to store
+                        if (providerInfo.estimated_size || providerInfo.estimated_duration) {
+                            this.setState({areEstimatesLoading: false});
+                            timeEstimate += providerInfo.estimated_duration;
+                            sizeEstimate += providerInfo.estimated_size;
+
+                        }
                     }
                 }
+                }
+                if (timeEstimate > maxAcceptableTime) {
+                    timeEstimate = maxAcceptableTime;
+                }
+                this.setState({sizeEstimate, timeEstimate});
             }
         }
-
-        if (timeEstimate > maxAcceptableTime) {
-            timeEstimate = maxAcceptableTime;
-        }
-        this.setState({sizeEstimate, timeEstimate});
     }
 
     private areProvidersSelected() {

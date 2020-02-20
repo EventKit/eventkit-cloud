@@ -414,7 +414,7 @@ describe('BreadcrumbStepper component', () => {
         wrapper.setProps({ aoiInfo: {} });
         expect(wrapper.state().modified).toBe(true);
         wrapper.setState({ modified: false });
-        wrapper.setProps({ exportInfo: {} });
+        wrapper.setProps({ exportInfo: {providerInfo: {availability: false}} });
         expect(wrapper.state().modified).toBe(true);
     });
 
