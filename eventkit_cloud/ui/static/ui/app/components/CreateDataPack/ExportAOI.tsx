@@ -599,6 +599,9 @@ export class ExportAOI extends React.Component<Props, State> {
         this.map.addLayer(this.drawLayer);
         this.map.addLayer(this.markerLayer);
         this.map.addLayer(this.bufferLayer);
+        this.map.setLayerIndex(this.drawLayer, 97);
+        this.map.setLayerIndex(this.markerLayer, 98);
+        this.map.setLayerIndex(this.bufferLayer, 99);
 
         this.updateZoomLevel();
         this.map.getView().on('change:resolution', this.updateZoomLevel);
