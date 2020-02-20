@@ -43,8 +43,6 @@ def expire_runs_task():
     for run in runs:
         expiration = run.expiration
         email = run.user.email
-        if not email:
-            break
         uid = run.job.uid
         url = "{0}/status/{1}".format(site_url.rstrip("/"), uid)
         notified = run.notified
@@ -65,7 +63,8 @@ def expire_runs_task():
                     NotificationLevel.WARNING.value,
                     run.status,
                 )
-                send_warning_email(date=expiration, url=url, addr=email, job_name=run.job.name)
+                if email:
+                    send_warning_email(date=expiration, url=url, addr=email, job_name=run.job.name)
                 run.notified = now
                 run.save()
 
@@ -80,7 +79,8 @@ def expire_runs_task():
                 NotificationLevel.WARNING.value,
                 run.status,
             )
-            send_warning_email(date=expiration, url=url, addr=email, job_name=run.job.name)
+            if email:
+                send_warning_email(date=expiration, url=url, addr=email, job_name=run.job.name)
             run.notified = now
             run.save()
 
