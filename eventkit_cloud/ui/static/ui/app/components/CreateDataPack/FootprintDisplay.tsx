@@ -62,6 +62,10 @@ export class FootprintDisplay extends React.Component<Props, State> {
         };
     }
 
+    componentWillUnmount(): void {
+        this.props.removeFootprintsLayer(this.props.footprintsLayer);
+    }
+
     handleCheckClick = () => {
         if (this.state.checked) {
             this.setState({ checked: false });
