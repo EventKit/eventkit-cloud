@@ -77,7 +77,7 @@ export interface Props {
     getEstimate: any;
     checkProvider: (args: any) => void;
     setProviderLoading: (args: boolean, Provider) => void;
-    hasLoadedProviders: () => number;
+    areProvidersLoaded: () => number;
 }
 
 export interface State {
@@ -327,6 +327,10 @@ export class BreadcrumbStepper extends React.Component<Props, State> {
         const get = (estimate, nf = 'unknown') => (estimate) ? estimate.toString() : nf;
 
         if (this.areProvidersSelected()) {
+            if (this.props.areProvidersLoaded() > 0) {
+                return (<CircularProgress/>);
+            }
+
             sizeEstimate = formatMegaBytes(this.state.sizeEstimate);
 
             const estimateInSeconds = this.state.timeEstimate;
@@ -348,11 +352,10 @@ export class BreadcrumbStepper extends React.Component<Props, State> {
             secondary = ` ( ${get(durationEstimate, '')}${separator}${get(sizeEstimate, 'size unknown')})`;
 
             const calculatingText = 'Getting calculations...';
-            return this.props.hasLoadedProviders() ? (<CircularProgress/>) : `${get(dateTimeEstimate)}${get(secondary, '')}`;
-            // if (this.props.hasLoadedProviders()) {
+            // if (this.props.areProvidersLoaded() > 0) {
             //     return (<CircularProgress/>);
             // }
-            // return `${get(dateTimeEstimate)}${get(secondary, '')}`;
+            return `${get(dateTimeEstimate)}${get(secondary, '')}`;
 
         }
         return 'Select providers to get estimate';
@@ -367,10 +370,11 @@ export class BreadcrumbStepper extends React.Component<Props, State> {
 
         const maxAcceptableTime = 60 * 60 * 24 * this.props.exportInfo.providers.length;
         for (const provider of this.props.exportInfo.providers) {
+            // this.props.setProviderLoading(false, provider);
+
             if (provider.slug in this.props.exportInfo.providerInfo) {
                 const providerInfo = this.props.exportInfo.providerInfo[provider.slug];
                 if (providerInfo) {
-                    this.props.setProviderLoading(false, provider.slug);
                     if (providerInfo.estimates) {
                         timeEstimate += providerInfo.estimates.time.value;
                         sizeEstimate += providerInfo.estimates.size.value;

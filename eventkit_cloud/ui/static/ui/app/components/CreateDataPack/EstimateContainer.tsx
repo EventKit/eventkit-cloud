@@ -7,6 +7,8 @@ import { Observable } from 'rxjs';
 import axios from "axios";
 import {connect} from "react-redux";
 import * as PropTypes from "prop-types";
+import {Simulate} from "react-dom/test-utils";
+import load = Simulate.load;
 
 
 export interface Props {
@@ -37,7 +39,7 @@ export class EstimateContainer extends React.Component<Props, State> {
         this.setProviderLoading = this.setProviderLoading.bind(this);
         this.getAvailability = this.getAvailability.bind(this);
         this.checkAvailability = this.checkAvailability.bind(this);
-        this.hasLoadedProviders = this.hasLoadedProviders.bind(this);
+        this.areProvidersLoaded = this.areProvidersLoaded.bind(this);
         this.state = {
             loadingProviders: [],
         }
@@ -144,18 +146,21 @@ export class EstimateContainer extends React.Component<Props, State> {
         })
     }
 
-    hasLoadedProviders(){
+    areProvidersLoaded(){
         return Object.keys(this.state.loadingProviders).length;
     }
 
     setProviderLoading(isLoading: boolean, provider: Eventkit.Provider) {
         const { loadingProviders } = this.state;
-        const slugIndex = loadingProviders.indexOf(provider.slug);
+        let slugIndex = loadingProviders.indexOf(provider.slug);
             if (isLoading) {
                 if (slugIndex === -1) {
                     this.setState({loadingProviders: [...loadingProviders, provider.slug]})
                 }
             } else {
+                // if (loadingProviders.indexOf(provider.slug) === 0){
+                //     slugIndex += 1
+                // }
                 const updatedLoadingProviders = loadingProviders.splice(slugIndex, 1);
                 this.setState({loadingProviders: updatedLoadingProviders})
             }
@@ -170,8 +175,7 @@ export class EstimateContainer extends React.Component<Props, State> {
                 checkProvider={this.checkProvider}
                 checkEstimate={this.checkEstimate}
                 setProviderLoading={this.setProviderLoading}
-                hasLoadedProviders={this.hasLoadedProviders}
-                loadingProviders={this.state.loadingProviders}
+                areProvidersLoaded={this.areProvidersLoaded}
             />
         )
     }
