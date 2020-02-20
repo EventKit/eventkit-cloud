@@ -86,6 +86,7 @@ describe('ExportInfo component', () => {
             onUpdateEstimate: sinon.spy(),
             setNextDisabled: sinon.spy(),
             setNextEnabled: sinon.spy(),
+            checkProvider: sinon.spy(),
             ...(global as any).eventkit_test_props,
             classes: {},
         }
@@ -294,15 +295,6 @@ describe('ExportInfo component', () => {
         expect(checkStub.calledOnce).toBe(true);
         stateStub.restore();
         checkStub.restore();
-    });
-
-    it('checkProviders should call checkAvailablity and checkEstimate for each provider', async () => {
-        const providers = [{display: true}, {display: false}, {display: true}];
-        const checkAvailStub = sinon.stub(instance, 'checkAvailability').resolves({});
-        const checkEstStub = sinon.stub(instance, 'checkEstimate');
-        await instance.checkProviders(providers);
-        expect(checkAvailStub.calledTwice).toBe(true);
-        expect(checkEstStub.calledTwice).toBe(true);
     });
 
     it('handlePopoverOpen should setState with anchorEl', () => {

@@ -1,7 +1,6 @@
 import {shallow} from "enzyme";
 import * as sinon from 'sinon';
 import * as React from "react";
-import {ExportInfo} from "../../components/CreateDataPack/ExportInfo";
 import {EstimateContainer} from "../../components/CreateDataPack/EstimateContainer";
 import MockAdapter from "axios-mock-adapter";
 import axios from "axios";
@@ -56,7 +55,6 @@ describe('EstimateContainer component', () => {
     let instance;
     const setup = (overrides = {}, serveEstimates = true) => {
         const config = {
-            BASEMAP_URL: 'http://my-osm-tile-service/{z}/{x}/{y}.png',
             SERVE_ESTIMATES: serveEstimates
         };
         props = {...getProps(), ...overrides};
@@ -68,23 +66,17 @@ describe('EstimateContainer component', () => {
 
     beforeEach(setup);
 
-    // it('should render a form', () => {
-    //     expect(wrapper.find('#root')).toHaveLength(1);
-    // });
     it('getAvailability should return updated provider', async () => {
         const mock = new MockAdapter(axios, {delayResponse: 10});
         const provider = {
             slug: '123',
         };
+        const expected = {
+            status: 'some status',
+            slug: provider.slug,
+        };
         mock.onPost(`/api/providers/${provider.slug}/status`)
             .reply(200, {status: 'some status'});
-        const expected = {
-            ...provider,
-            availability: {
-                status: 'some status',
-                slug: provider.slug,
-            },
-        };
         const newProvider = await instance.getAvailability(provider, {});
         expect(newProvider).toEqual(expected);
         mock.restore();
@@ -98,92 +90,31 @@ describe('EstimateContainer component', () => {
         mock.onPost(`/api/providers/${provider.slug}/status`)
             .reply(400, {status: 'some status'});
         const expected = {
-            ...provider,
-            availability: {
-                status: 'WARN',
-                type: 'CHECK_FAILURE',
-                message: 'An error occurred while checking this provider\'s availability.',
-                slug: provider.slug,
-            },
+            status: 'WARN',
+            type: 'CHECK_FAILURE',
+            message: 'An error occurred while checking this provider\'s availability.',
+            slug: provider.slug,
         };
         const newProvider = await instance.getAvailability(provider, {});
         expect(newProvider).toEqual(expected);
         mock.restore();
     });
 
-    it('checkAvailability should setState with new provider', async () => {
-        setup({providers: [{slug: '123'}]});
-        const provider = {
-            slug: '123',
-        };
-
-        const newProvider = {
-            slug: '123',
-            availability: {
-                status: 'GOOD',
-            },
-        };
-
-        sinon.stub(instance, 'getAvailability').callsFake(() => (
-            new Promise((resolve) => {
-                setTimeout(() => resolve(newProvider), 10);
-            })
-        ));
-        const stateSpy = sinon.spy(instance, 'setState');
-        await instance.checkAvailability(provider);
-        expect(stateSpy.calledOnce).toBe(true);
-        expect(wrapper.state().providers).toEqual([newProvider]);
+    it('checkProvider should call checkAvailablity and checkEstimate for a provider', async () => {
+        const provider = {display: true};
+        const checkAvailStub = sinon.stub(instance, 'checkAvailability').resolves({});
+        const checkEstStub = sinon.stub(instance, 'checkEstimate');
+        await instance.checkProvider(provider);
+        expect(checkAvailStub.calledOnce).toBe(true);
+        expect(checkEstStub.calledOnce).toBe(true);
     });
 
-    it('checkEstimate should setState with new provider', async () => {
-        setup({providers: [{slug: '123'}]});
-        const provider = {
-            slug: '123',
-        };
-
-        const newProvider = {
-            slug: '123',
-            estimate: {
-                slug: '123',
-                size: 10,
-                unit: 'MB',
-            }
-        };
-
-        sinon.stub(instance, 'getEstimate').callsFake(() => (
-            new Promise((resolve) => {
-                setTimeout(() => resolve(newProvider), 10);
-            })
-        ));
-        const stateSpy = sinon.spy(instance, 'setState');
-        await instance.checkEstimate(provider);
-        expect(stateSpy.calledOnce).toBe(true);
-        expect(wrapper.state().providers).toEqual([newProvider]);
-    });
-
-    it('checkEstimate should not setState when SERVE_ESTIMATES is false', async () => {
-        setup({}, false);
-        const provider = {
-            slug: '123',
-        };
-
-        const newProvider = {
-            slug: '123',
-            estimate: {
-                slug: '123',
-                size: 10,
-                unit: 'MB',
-            }
-        };
-
-        sinon.stub(instance, 'getEstimate').callsFake(() => (
-            new Promise((resolve) => {
-                setTimeout(() => resolve(newProvider), 10);
-            })
-        ));
-        const stateSpy = sinon.spy(instance, 'setState');
-        await instance.checkEstimate(provider);
-        expect(stateSpy.called).toBe(false);
-        expect(wrapper.state().providers).toEqual([]);
+    it('checkProvider should not call checkAvailablity and checkEstimate when provider display is set to false', async () => {
+        const provider = {display: false};
+        const checkAvailStub = sinon.stub(instance, 'checkAvailability').resolves({});
+        const checkEstStub = sinon.stub(instance, 'checkEstimate');
+        await instance.checkProvider(provider);
+        expect(checkAvailStub.called).toBe(false);
+        expect(checkEstStub.called).toBe(false);
     });
 });
