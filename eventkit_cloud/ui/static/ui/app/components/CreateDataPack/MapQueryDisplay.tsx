@@ -64,8 +64,7 @@ export class MapQueryDisplay extends React.Component<Props, State> {
             long: tileCoord.long,
         } as FeatureResponse;
 
-
-        // TODO: Switch Url based on type
+        // TODO: Switch Url based on type - not yet needed
         const url = getFeatureUrl(this.props.selectedLayer, tileCoord.z, tileCoord.y, tileCoord.x, tileCoord.i, tileCoord.j);
         const csrfmiddlewaretoken = getCookie('csrftoken');
         return axios({
@@ -96,20 +95,18 @@ export class MapQueryDisplay extends React.Component<Props, State> {
     }
 
     private handleMapClick(tileCoord: TileCoordinate) {
-        if (!!this.props.selectedLayer.metadata) {
+        this.setState({
+            closeCard: false,
+            responseData: undefined,
+            queryLoading: true,
+        });
+        this.setVisibility(true);
+        this.getFeatures(tileCoord).then(featureResponseData => {
             this.setState({
-                closeCard: false,
-                responseData: undefined,
-                queryLoading: true,
+                responseData: featureResponseData,
+                queryLoading: false,
             });
-            this.setVisibility(true);
-            this.getFeatures(tileCoord).then(featureResponseData => {
-                this.setState({
-                    responseData: featureResponseData,
-                    queryLoading: false,
-                });
-            });
-        }
+        });
     }
 
     handleClose = (event) => {
