@@ -160,6 +160,7 @@ export class BreadcrumbStepper extends React.Component<Props, State> {
         this.getEstimateLabel(0);
         this.props.getProjections();
         this.props.getFormats();
+        this.updateEstimate();
         // const route = this.props.routes[this.props.routes.length - 1];
         // this.props.router.setRouteLeaveHook(route, this.routeLeaveHook);
     }
@@ -226,12 +227,13 @@ export class BreadcrumbStepper extends React.Component<Props, State> {
         this.setState({limits});
     }
 
-    private styleEstimate(allowNull = false) {
+    private styleEstimate(allowNull = false, stepIndex) {
         const textStyle = {
             color: this.props.theme.eventkit.colors.white,
             fontSize: '0.9em',
         };
-        return (
+        if (stepIndex === 0 && this.areProvidersSelected() || stepIndex !== 0) {
+            return (
             <div style={{display: 'inline-flex'}}>
                 <Typography style={{
                     ...textStyle,
@@ -279,6 +281,7 @@ export class BreadcrumbStepper extends React.Component<Props, State> {
                 </BaseDialog>
             </div>
         )
+        }
     }
 
     private handleEstimateExplanationClosed() {
@@ -316,7 +319,6 @@ export class BreadcrumbStepper extends React.Component<Props, State> {
         let durationEstimate;
         // function that will return nf (not found) when the provided estimate is undefined
         const get = (estimate, nf = 'unknown') => (estimate) ? estimate.toString() : nf;
-
         if (this.areProvidersSelected()) {
             sizeEstimate = formatMegaBytes(this.state.sizeEstimate);
 
@@ -365,13 +367,11 @@ export class BreadcrumbStepper extends React.Component<Props, State> {
                     if (providerInfo.estimates) {
                         timeEstimate += providerInfo.estimates.time.value;
                         sizeEstimate += providerInfo.estimates.size.value;
-
-                        // for cloned estimates as data structure is slightly different when saved to store
-                        if (providerInfo.estimated_size || providerInfo.estimated_duration) {
-                            timeEstimate += providerInfo.estimated_duration;
-                            sizeEstimate += providerInfo.estimated_size;
-
-                        }
+                    }
+                    // for cloned estimates as data structure is slightly different when saved to store
+                    if (providerInfo.estimated_size || providerInfo.estimated_duration) {
+                        timeEstimate += providerInfo.estimated_duration;
+                        sizeEstimate += providerInfo.estimated_size;
                     }
                 }
                 }
@@ -399,11 +399,11 @@ export class BreadcrumbStepper extends React.Component<Props, State> {
         };
 
         return (
-                <div className="qa-BreadcrumbStepper-step3Label" style={estimateTextStyle}>
-                    {renderEstimate &&
-                    this.styleEstimate(true)}
-                </div>
-            );
+            <div className="qa-BreadcrumbStepper-step3Label" style={estimateTextStyle}>
+                {renderEstimate &&
+                this.styleEstimate(true, stepIndex)}
+            </div>
+        );
     }
 
     private getStepLabel(stepIndex: number) {
