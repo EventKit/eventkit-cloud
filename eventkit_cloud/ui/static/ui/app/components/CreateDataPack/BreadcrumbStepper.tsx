@@ -310,15 +310,6 @@ export class BreadcrumbStepper extends React.Component<Props, State> {
         );
     }
 
-    private checkEstimates() {
-        const providerInfo = this.props.exportInfo.providerInfo;
-        // Check that we have polled for provider info for at least one provider
-        if (Object.keys(providerInfo).length !== 0) {
-            // Check to see if at least one provider has retrieved estimate data
-            return Object.entries(providerInfo).some(([slug, data]) => !!data.estimates);
-        }
-    }
-
     private formatEstimate() {
         let dateTimeEstimate;
         let sizeEstimate;
@@ -348,7 +339,8 @@ export class BreadcrumbStepper extends React.Component<Props, State> {
             secondary = ` ( ${get(durationEstimate, '')}${separator}${get(sizeEstimate, 'size unknown')})`;
 
             const calculatingText = 'Getting calculations...';
-            return this.state.areEstimatesLoading ? <div>{calculatingText}<CircularProgress/></div> : `${get(dateTimeEstimate)}${get(secondary, '')}`;
+            return this.state.areEstimatesLoading ?
+                <div>{calculatingText}<CircularProgress/></div> : `${get(dateTimeEstimate)}${get(secondary, '')}`;
         }
         return 'Select providers to get estimate';
     }
@@ -359,26 +351,23 @@ export class BreadcrumbStepper extends React.Component<Props, State> {
         }
         let sizeEstimate = 0;
         let timeEstimate = 0;
-
-
         const maxAcceptableTime = 60 * 60 * 24 * this.props.exportInfo.providers.length;
         for (const provider of this.props.exportInfo.providers) {
-            if (this.props.exportInfo.providerInfo[provider.slug] === undefined) {
+            // tslint:disable-next-line:triple-equals
+            if (this.props.exportInfo.providerInfo[provider.slug] == undefined) {
                 this.setState({areEstimatesLoading: true});
-                setTimeout(() => {}, 2000);
+                return;
             } else {
                 if (provider.slug in this.props.exportInfo.providerInfo) {
                 const providerInfo = this.props.exportInfo.providerInfo[provider.slug];
 
                 if (providerInfo) {
                     if (providerInfo.estimates) {
-                        this.setState({areEstimatesLoading: false});
                         timeEstimate += providerInfo.estimates.time.value;
                         sizeEstimate += providerInfo.estimates.size.value;
 
                         // for cloned estimates as data structure is slightly different when saved to store
                         if (providerInfo.estimated_size || providerInfo.estimated_duration) {
-                            this.setState({areEstimatesLoading: false});
                             timeEstimate += providerInfo.estimated_duration;
                             sizeEstimate += providerInfo.estimated_size;
 
@@ -391,6 +380,7 @@ export class BreadcrumbStepper extends React.Component<Props, State> {
                 }
                 this.setState({sizeEstimate, timeEstimate});
             }
+            this.setState({areEstimatesLoading: false});
         }
     }
 
@@ -408,16 +398,12 @@ export class BreadcrumbStepper extends React.Component<Props, State> {
             textAlign: 'center' as 'center',
         };
 
-        if (this.checkEstimates()) {
-            return (
+        return (
                 <div className="qa-BreadcrumbStepper-step3Label" style={estimateTextStyle}>
                     {renderEstimate &&
                     this.styleEstimate(true)}
                 </div>
-            )
-        } else {
-            return;
-        }
+            );
     }
 
     private getStepLabel(stepIndex: number) {

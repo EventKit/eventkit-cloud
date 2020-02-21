@@ -439,6 +439,7 @@ export class ExportInfo extends React.Component<Props, State> {
         this.props.updateExportInfo({
             providers,
         });
+
     }
 
     private onSelectAll(e: React.ChangeEvent<HTMLInputElement>) {
@@ -850,6 +851,16 @@ export class ExportInfo extends React.Component<Props, State> {
                                             alt={ix % 2 === 0}
                                             renderEstimate={this.context.config.SERVE_ESTIMATES}
                                             checkProvider={() => {
+                                                // Clear Provider Info since we will be checking.
+                                                this.props.updateExportInfo({
+                                                        providerInfo: {
+                                                            ...this.props.exportInfo.providerInfo,
+                                                            [provider.slug]: null,
+                                                        }
+                                                    });
+                                                // Ask parent to update the estimate (i.e. display loading icon).
+                                                this.props.onUpdateEstimate();
+                                                // Check the provider for updated info.
                                                 this.props.checkProvider(provider).then(providerInfo => {
                                                     this.props.updateExportInfo({
                                                         providerInfo: {
@@ -857,7 +868,7 @@ export class ExportInfo extends React.Component<Props, State> {
                                                             [provider.slug]: providerInfo.data,
                                                         }
                                                     });
-                                                    // Trigger an estimate caclulation update in the parent
+                                                    // Trigger an estimate calculation update in the parent
                                                     // Does not re-request any data, calculates the total from available results.
                                                     this.props.onUpdateEstimate();
                                                 });
