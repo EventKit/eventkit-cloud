@@ -16,7 +16,13 @@ export interface Props {
     breadcrumbStepperProps: any;
 }
 
-export class EstimateContainer extends React.Component<Props, {}> {
+export interface State {
+    areEstimatesLoading: boolean;
+    sizeEstimate: number;
+    timeEstimate: number
+}
+
+export class EstimateContainer extends React.Component<Props, State> {
     private CancelToken = axios.CancelToken;
     private source = this.CancelToken.source();
 
@@ -31,6 +37,39 @@ export class EstimateContainer extends React.Component<Props, {}> {
         this.checkProvider = this.checkProvider.bind(this);
         this.getAvailability = this.getAvailability.bind(this);
         this.checkAvailability = this.checkAvailability.bind(this);
+        this.updateEstimate = this.updateEstimate.bind(this);
+        this.state = {
+            areEstimatesLoading: true,
+            sizeEstimate: -1,
+            timeEstimate: -1
+        }
+    }
+
+    componentDidMount(): void {
+        this.setState({areEstimatesLoading: true});
+        // make requests to check provider availability
+        if (this.props.exportInfo.providers) {
+            this.checkProviders(this.props.exportInfo.providers);
+        }
+    }
+
+    componentDidUpdate(prevProps: Readonly<Props>): void {
+        if (this.context.config.SERVE_ESTIMATES) {
+            // only update the estimate if providers has changed
+            const prevProviders = prevProps.exportInfo.providers;
+            const providers = this.props.exportInfo.providers;
+            if (prevProviders && providers) {
+                if (prevProviders.length !== providers.length) {
+                    this.updateEstimate();
+                } else if (!prevProviders.every((p1) => {
+                    return providers.includes(p1);
+                })) {
+                    this.updateEstimate();
+                }
+            } else if (prevProviders || providers) {
+                this.updateEstimate();
+            }
+        }
     }
 
     getEstimate(provider: Eventkit.Provider, bbox: number[]) {
@@ -131,12 +170,68 @@ export class EstimateContainer extends React.Component<Props, {}> {
         })
     }
 
+    private checkProviders(providers: Eventkit.Provider[]) {
+        Promise.all(providers.filter(provider => provider.display).map((provider) => {
+            return this.checkProvider(provider);
+        })).then(providerResults => {
+            const providerInfo = {...this.props.exportInfo.providerInfo} as Eventkit.Map<Eventkit.Store.ProviderInfo>;
+            providerResults.map((provider) => {
+                providerInfo[provider.slug] = provider.data;
+            });
+            this.props.updateExportInfo({providerInfo});
+            // Trigger an estimate calculation update in the parent
+            // Does not re-request any data, calculates the total from available results.
+            this.updateEstimate();
+        });
+    }
+
+    private updateEstimate() {
+        if (!this.context.config.SERVE_ESTIMATES || !this.props.exportInfo.providers) {
+            return;
+        }
+        let sizeEstimate = 0;
+        let timeEstimate = 0;
+        const maxAcceptableTime = 60 * 60 * 24 * this.props.exportInfo.providers.length;
+        for (const provider of this.props.exportInfo.providers) {
+            // tslint:disable-next-line:triple-equals
+            if (this.props.exportInfo.providerInfo[provider.slug] == undefined) {
+                this.setState({areEstimatesLoading: true});
+                return;
+            } else {
+                if (provider.slug in this.props.exportInfo.providerInfo) {
+                const providerInfo = this.props.exportInfo.providerInfo[provider.slug];
+
+                if (providerInfo) {
+                    if (providerInfo.estimates) {
+                        timeEstimate += providerInfo.estimates.time.value;
+                        sizeEstimate += providerInfo.estimates.size.value;
+                    }
+                    // for cloned estimates as data structure is slightly different when saved to store
+                    if (providerInfo.estimated_size || providerInfo.estimated_duration) {
+                        timeEstimate += providerInfo.estimated_duration;
+                        sizeEstimate += providerInfo.estimated_size;
+                    }
+                }
+                }
+                if (timeEstimate > maxAcceptableTime) {
+                    timeEstimate = maxAcceptableTime;
+                }
+                this.setState({sizeEstimate, timeEstimate});
+            }
+            this.setState({areEstimatesLoading: false});
+        }
+    }
+
     render () {
         return (
             <BreadcrumbStepper
                 {...this.props.breadcrumbStepperProps}
                 checkProvider={this.checkProvider}
                 checkEstimate={this.checkEstimate}
+                updateEstimate={this.updateEstimate}
+                sizeEstimate={this.state.sizeEstimate}
+                timeEstimate={this.state.timeEstimate}
+                areEstimatesLoading={this.state.areEstimatesLoading}
             />
         )
     }

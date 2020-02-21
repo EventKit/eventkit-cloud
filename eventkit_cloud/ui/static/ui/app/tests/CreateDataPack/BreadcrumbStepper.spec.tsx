@@ -282,6 +282,21 @@ describe('BreadcrumbStepper component', () => {
         />);
     });
 
+    // it('getStepContent should return the estimate label if estimates exist from cloned datapack', () => {
+    //    let content = wrapper.instance().getStepContent(0);
+    //     const clonedEstimates = {};
+    //     expect(content).toEqual(
+    //         <ExportAOI
+    //             limits={wrapper.state('limits')}
+    //             onWalkthroughReset={props.onWalkthroughReset}
+    //             walkthroughClicked={props.walkthroughClicked}
+    //         />,
+    //         <ExportInfo
+    //             onUpdateEstimate={wrapper.instance().updateEstimate}
+    //         />
+    //     );
+    // });
+
     it('getButtonContent should return the correct content for each stepIndex', () => {
         let content = mount(wrapper.instance().getButtonContent(0));
         expect(content.find(Button)).toHaveLength(1);

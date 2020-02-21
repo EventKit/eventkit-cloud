@@ -99,10 +99,10 @@ export class DataPackOptions extends React.Component<Props, State> {
                     formats: (dataProviderTask) ? dataProviderTask.formats : null,
                 } as Eventkit.Store.ProviderExportOptions;
 
-                providerInfo[providerTask.slug] = {
-                    estimated_size: (providerTask) ? providerTask.estimated_size: null,
-                    estimated_duration: (providerTask) ? providerTask.estimated_duration: null
-                };
+                // providerInfo[providerTask.slug] = {
+                //     estimated_size: (providerTask) ? providerTask.estimated_size: null,
+                //     estimated_duration: (providerTask) ? providerTask.estimated_duration: null
+                // };
 
                 // Cannot clone a provider without the full set of info.
                 if (fullProvider) {

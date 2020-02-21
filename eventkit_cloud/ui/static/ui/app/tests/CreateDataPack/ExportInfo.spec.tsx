@@ -65,8 +65,14 @@ describe('ExportInfo component', () => {
                 exportName: '',
                 datapackDescription: '',
                 projectName: '',
-                providers: [],
-                providerInfo: {},
+                providers: [{slug: 'osm'}, {slug: 'osm'}],
+                providerInfo: {
+                    'osm': {
+                        availability: {
+                            status: 'STAT'
+                        },
+                }
+                },
                 exportOptions: {
                     '123': {
                         minZoom: 0,
@@ -339,15 +345,25 @@ describe('ExportInfo component', () => {
     });
 
     it('hasDisallowedSelection should return true if the provider status is FATAL', () => {
-        const providerInfo = {
-            slug: 'test',
-            status: 'FATAL',
+        const exportInfo = {
+            exportName: 'name',
+            datapackDescription: 'stuff',
+            projectName: 'name',
+            providers: [{slug: 'providerslug'}],
+            projections: [4237],
+            exportOptions: {
+                providerslug: {
+                    formats: ['validformat'],
+                }
+            },
+            providerInfo: {
+                providerslug: {
+                    availability: {status: 'FATAL'},
+                }
+            },
         };
-        // const info = {providers: [provider]};
-        // setup({providers: [provider]});
-
-        const info = {exportInfo: [providerInfo]};
-        setup({exportInfo: [providerInfo]});
+        const info = {exportInfo: {exportInfo}};
+        setup({exportInfo: {exportInfo}});
         expect(instance.hasDisallowedSelection(info)).toBe(true);
     });
 

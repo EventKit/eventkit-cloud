@@ -237,11 +237,6 @@ export class ExportInfo extends React.Component<Props, State> {
             areaStr,
         } as Eventkit.Store.ExportInfo;
 
-        // make requests to check provider availability
-        if (this.state.providers) {
-            this.checkProviders(this.state.providers);
-        }
-
         const steps = joyride.ExportInfo as any[];
         this.joyrideAddSteps(steps);
 

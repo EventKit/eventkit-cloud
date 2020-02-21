@@ -218,6 +218,7 @@ export class DataProvider extends React.Component<Props, State> {
         this.setState(state => ({open: !state.open}));
     }
 
+    // private formatEstimate(providerEstimates: Eventkit.Store.ProviderInfo) {
     private formatEstimate(providerEstimates: Eventkit.Store.Estimates) {
         if (!providerEstimates) {
             return '';
@@ -234,6 +235,14 @@ export class DataProvider extends React.Component<Props, State> {
             const estimateInSeconds = providerEstimates.time.value;
             durationEstimate = getDuration(estimateInSeconds);
         }
+
+        // if (providerEstimates.estimates.size) {
+        //     sizeEstimate = formatMegaBytes(providerEstimates.size.value);
+        // }
+        // if (providerEstimates.estimates.time) {
+        //     const estimateInSeconds = providerEstimates.time.value;
+        //     durationEstimate = getDuration(estimateInSeconds);
+        // }
         return `${get(sizeEstimate)} / ${get(durationEstimate)}`;
     }
 
