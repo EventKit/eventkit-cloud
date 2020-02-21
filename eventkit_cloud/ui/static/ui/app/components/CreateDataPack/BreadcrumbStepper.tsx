@@ -348,7 +348,7 @@ export class BreadcrumbStepper extends React.Component<Props, State> {
             secondary = ` ( ${get(durationEstimate, '')}${separator}${get(sizeEstimate, 'size unknown')})`;
 
             const calculatingText = 'Getting calculations...';
-            return this.state.areEstimatesLoading ? <div>{calculatingText}<CircularProgress/></div> : `${get(dateTimeEstimate)}${get(secondary, '')}`;
+            return this.state.areEstimatesLoading ? <span>{calculatingText}<CircularProgress/></span> : `${get(dateTimeEstimate)}${get(secondary, '')}`;
         }
         return 'Select providers to get estimate';
     }
