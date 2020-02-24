@@ -202,8 +202,10 @@ def run_task_command(client: PcfClient, app_name: str, queue_name: str, task: di
     :param task:A dict containing the comamnd, memory, and disk for the task to run.
     :return: None
     """
-
-    command = task["command"]
+    hostnames = ["worker@$HOSTNAME","celery@$HOSTNAME","cancel@$HOSTNAME","finalize@$HOSTNAME","osm@$HOSTNAME"]
+    ping_command = " && ".join([f"celery inspect -A eventkit_cloud --timeout=20 --destination={hostname} ping" for hostname in hostnames])
+    health_check_command = f"sleep 30; while {ping_command} >/dev/null 2>&1; do sleep 60; done; echo At least one $HOSTNAME worker is dead! Killing Task...; pkill celery"
+    command = f"{task['command']} & {health_check_command}"
     disk = task["disk"]
     memory = task["memory"]
 
