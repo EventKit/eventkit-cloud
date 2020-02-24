@@ -165,27 +165,9 @@ describe('DataPackOptions component', () => {
                 formats: ['gpkg'],
             }
         };
-        const providerInfo = {
-            'test1': {
-                estimated_size: 50.42,
-        // {
-                    // size: {
-                    //     value: 1,
-                    //     units: "MB"
-                    // }
-                // },
-                estimated_duration: 4798.23
-                    // {
-                    // time: {
-                    //     value: 20,
-                    //     units: 'seconds'
-                    // }
-                // }
-            }
-        };
         instance.handleClone();
         expect(props.onClone.calledOnce).toBe(true);
-        expect(props.onClone.calledWith(props.dataPack, [props.providers[0]], exportInfo, providerInfo)).toBe(true);
+        expect(props.onClone.calledWith(props.dataPack, [props.providers[0]], exportInfo)).toBe(true);
         expect(stateStub.calledOnce).toBe(true);
         expect(stateStub.calledWith({ showCloneDialog: false })).toBe(true);
         stateStub.restore();

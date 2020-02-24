@@ -3,6 +3,7 @@ import BreadcrumbStepper from "./BreadcrumbStepper";
 import {getCookie, isZoomLevelInRange} from "../../utils/generic";
 import {featureToBbox, WGS84} from '../../utils/mapUtils';
 import {updateExportInfo} from '../../actions/datacartActions';
+import {getProviders} from '../../actions/providerActions';
 import axios from "axios";
 import {connect} from "react-redux";
 import * as PropTypes from "prop-types";
@@ -14,12 +15,17 @@ export interface Props {
     geojson: GeoJSON.FeatureCollection;
     updateExportInfo: (args: any) => void;
     breadcrumbStepperProps: any;
+    getProviders: () => void;
 }
 
 export interface State {
     areEstimatesLoading: boolean;
     sizeEstimate: number;
-    timeEstimate: number
+    timeEstimate: number;
+    limits: {
+        max: number;
+        sizes: number[];
+    };
 }
 
 export class EstimateContainer extends React.Component<Props, State> {
@@ -38,19 +44,23 @@ export class EstimateContainer extends React.Component<Props, State> {
         this.getAvailability = this.getAvailability.bind(this);
         this.checkAvailability = this.checkAvailability.bind(this);
         this.updateEstimate = this.updateEstimate.bind(this);
+        this.getProviders = this.getProviders.bind(this);
+        this.checkProviders = this.checkProviders.bind(this);
         this.state = {
             areEstimatesLoading: true,
             sizeEstimate: -1,
-            timeEstimate: -1
+            timeEstimate: -1,
+            limits: {
+                max: 0,
+                sizes: [],
+            },
         }
     }
 
     componentDidMount(): void {
         this.setState({areEstimatesLoading: true});
         // make requests to check provider availability
-        if (this.props.exportInfo.providers) {
-            this.checkProviders(this.props.exportInfo.providers);
-        }
+        this.getProviders().then(r => this.checkProviders(this.props.providers));
     }
 
     componentDidUpdate(prevProps: Readonly<Props>): void {
@@ -61,6 +71,7 @@ export class EstimateContainer extends React.Component<Props, State> {
             if (prevProviders && providers) {
                 if (prevProviders.length !== providers.length) {
                     this.updateEstimate();
+                    this.setState({areEstimatesLoading: false});
                 } else if (!prevProviders.every((p1) => {
                     return providers.includes(p1);
                 })) {
@@ -70,6 +81,27 @@ export class EstimateContainer extends React.Component<Props, State> {
                 this.updateEstimate();
             }
         }
+    }
+
+    async getProviders() {
+        await this.props.getProviders();
+        let max = 0;
+        const sizes = [];
+        this.props.providers.forEach((provider) => {
+            if (!provider.display) {
+                return;
+            }
+            const providerMax = parseFloat(provider.max_selection);
+            sizes.push(providerMax);
+            if (providerMax > max) {
+                max = providerMax;
+            }
+        });
+        const limits = {
+            max,
+            sizes: sizes.sort((a, b) => a - b),
+        };
+        this.setState({limits});
     }
 
     getEstimate(provider: Eventkit.Provider, bbox: number[]) {
@@ -232,6 +264,7 @@ export class EstimateContainer extends React.Component<Props, State> {
                 sizeEstimate={this.state.sizeEstimate}
                 timeEstimate={this.state.timeEstimate}
                 areEstimatesLoading={this.state.areEstimatesLoading}
+                getProviders={this.getProviders}
             />
         )
     }
@@ -250,6 +283,9 @@ function mapDispatchToProps(dispatch) {
         updateExportInfo: (exportInfo) => {
             dispatch(updateExportInfo(exportInfo));
         },
+        getProviders: () => (
+            dispatch(getProviders())
+        )
     };
 }
 

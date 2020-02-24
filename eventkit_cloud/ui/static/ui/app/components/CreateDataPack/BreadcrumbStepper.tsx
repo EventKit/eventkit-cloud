@@ -18,7 +18,6 @@ import {formatMegaBytes, getDuration, isZoomLevelInRange} from '../../utils/gene
 import {clearAoiInfo, clearExportInfo, clearJobInfo, submitJob, updateExportInfo} from '../../actions/datacartActions';
 import {stepperNextDisabled} from '../../actions/uiActions';
 import {getFormats} from '../../actions/formatActions';
-import {getProviders} from '../../actions/providerActions';
 import {getNotifications, getNotificationsUnreadCount} from '../../actions/notificationsActions';
 import BaseDialog from '../Dialog/BaseDialog';
 import ConfirmDialog from '../Dialog/ConfirmDialog';
@@ -114,7 +113,6 @@ export class BreadcrumbStepper extends React.Component<Props, State> {
     constructor(props: Props) {
         super(props);
         this.getEstimateLabel = this.getEstimateLabel.bind(this);
-        this.getProviders = this.getProviders.bind(this);
         this.getStepLabel = this.getStepLabel.bind(this);
         this.handleNext = this.handleNext.bind(this);
         this.handleSubmit = this.handleSubmit.bind(this);
@@ -155,7 +153,7 @@ export class BreadcrumbStepper extends React.Component<Props, State> {
         if (this.props.exportInfo.exportName === '') {
             this.props.setNextDisabled();
         }
-        this.getProviders();
+        this.props.getProviders();
         this.getEstimateLabel(0);
         this.props.getProjections();
         this.props.getFormats();
@@ -188,27 +186,6 @@ export class BreadcrumbStepper extends React.Component<Props, State> {
         this.props.clearJobInfo();
     }
 
-    private async getProviders() {
-        await this.props.getProviders();
-        let max = 0;
-        const sizes = [];
-        this.props.providers.forEach((provider) => {
-            if (!provider.display) {
-                return;
-            }
-            const providerMax = parseFloat(provider.max_selection);
-            sizes.push(providerMax);
-            if (providerMax > max) {
-                max = providerMax;
-            }
-        });
-        const limits = {
-            max,
-            sizes: sizes.sort((a, b) => a - b),
-        };
-        this.setState({limits});
-    }
-
     private styleEstimate(allowNull = false, stepIndex) {
         const textStyle = {
             color: this.props.theme.eventkit.colors.white,
@@ -216,7 +193,7 @@ export class BreadcrumbStepper extends React.Component<Props, State> {
         };
         if (stepIndex === 0 && this.areProvidersSelected() || stepIndex !== 0) {
             return (
-            <div style={{display: 'inline-flex'}}>
+            <div style={{display: 'inline-flex', marginTop: '-20px'}}>
                 <Typography style={{
                     ...textStyle,
                     color: 'yellow'
@@ -337,12 +314,6 @@ export class BreadcrumbStepper extends React.Component<Props, State> {
     }
 
     private checkEstimates() {
-        // const providerInfo = this.props.exportInfo.providerInfo;
-        // // Check that we have polled for provider info for at least one provider
-        // if (Object.keys(providerInfo).length !== 0) {
-        //     // Check to see if at least one provider has retrieved estimate data
-        //     return Object.entries(providerInfo).some(([slug, data]) => !!data.estimates);
-        // }
         return this.props.sizeEstimate !== -1 || this.props.timeEstimate !== -1;
     }
 
@@ -371,7 +342,7 @@ export class BreadcrumbStepper extends React.Component<Props, State> {
             minWidth: '200px',
             display: 'inline-flex',
             marginLeft: '24px',
-            fontSize: '16px'
+            fontSize: '16px',
         };
         const textStyle = {
             color: this.props.theme.eventkit.colors.white,
@@ -721,9 +692,6 @@ function mapDispatchToProps(dispatch) {
         submitJob: (data) => {
             dispatch(submitJob(data));
         },
-        getProviders: () => (
-            dispatch(getProviders())
-        ),
         getProjections: () => (
             dispatch(getProjections())
         ),
