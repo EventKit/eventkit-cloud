@@ -14,14 +14,19 @@ export interface Props {
     theme: Eventkit.Theme & Theme;
 }
 
-export interface SelectedBaseMap {
-    baseMapUrl: string;
-    slug?: string;
+export interface MapLayer {
+    mapUrl: string;
+    metadata?: {
+        type: string;
+        url: string;
+    };
+    slug: string;
 }
 
 export interface State {
     walkthroughClicked: boolean;
-    selectedBaseMap: SelectedBaseMap;
+    selectedBaseMap: MapLayer;
+    mapLayers: MapLayer[];
 }
 
 export class CreateExport extends React.Component<Props, State> {
@@ -30,9 +35,12 @@ export class CreateExport extends React.Component<Props, State> {
         this.handleWalkthroughReset = this.handleWalkthroughReset.bind(this);
         this.handleWalkthroughClick = this.handleWalkthroughClick.bind(this);
         this.updateBaseMap = this.updateBaseMap.bind(this);
+        this.addFootprintsLayer = this.addFootprintsLayer.bind(this);
+        this.removeFootprintsLayer = this.removeFootprintsLayer.bind(this);
         this.state = {
             walkthroughClicked: false,
-            selectedBaseMap: {baseMapUrl: ''},
+            selectedBaseMap: {mapUrl: ''} as MapLayer,
+            mapLayers: [] as MapLayer[],
         };
     }
 
@@ -44,8 +52,28 @@ export class CreateExport extends React.Component<Props, State> {
         this.setState({walkthroughClicked: true});
     }
 
-    private updateBaseMap(baseMapUrl: string, slug?: string) {
-        this.setState({selectedBaseMap: {baseMapUrl, slug}});
+    private updateBaseMap(mapLayer: MapLayer) {
+        this.setState({selectedBaseMap: mapLayer});
+    }
+
+    private addFootprintsLayer(mapLayer: MapLayer) {
+        const mapLayers = [...this.state.mapLayers];
+        const index = mapLayers.map(x => x.slug).indexOf(mapLayer.slug);
+        if (index !== -1) {
+            return;
+        }
+        mapLayers.push(mapLayer);
+        this.setState({mapLayers});
+    }
+
+    private removeFootprintsLayer(mapLayer: MapLayer) {
+        const mapLayers = [...this.state.mapLayers];
+        const index = mapLayers.map(x => x.slug).indexOf(mapLayer.slug);
+        if (index === -1) {
+            return;
+        }
+        mapLayers.splice(index, 1);
+        this.setState({mapLayers});
     }
 
     render() {
@@ -91,9 +119,12 @@ export class CreateExport extends React.Component<Props, State> {
                     walkthroughClicked={this.state.walkthroughClicked}
                     onWalkthroughReset={this.handleWalkthroughReset}
                     selectedBaseMap={this.state.selectedBaseMap}
+                    mapLayers={this.state.mapLayers}
                 />
                 <MapDrawer
                     updateBaseMap={this.updateBaseMap}
+                    addFootprintsLayer={this.addFootprintsLayer}
+                    removeFootprintsLayer={this.removeFootprintsLayer}
                 />
                 <div>
                     {this.props.children}

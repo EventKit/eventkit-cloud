@@ -34,6 +34,7 @@ class CheckResults(Enum):
         LAYER_NOT_AVAILABLE - The requested layer wasn't found among those listed by GetCapabilities reply
         NO_INTERSECT - The given AOI doesn't intersect the response's bounding box for the given layer
         NO_URL - No service url was given in the data provider config, so availability couldn't be checked
+        UNKNOWN_ERROR - An exception was thrown that wasn't handled by any of the other Exception handlers.
         SUCCESS - No problems: export should proceed without issues
         (NB: for OWS sources in some cases, GetCapabilities may return 200 while GetMap/Coverage/Feature returns 403.
         In these cases, a success case will be falsely reported instead of ERR_UNAUTHORIZED.)
@@ -128,6 +129,10 @@ class CheckResults(Enum):
             "type": "SELECTION_TOO_LARGE",
             "message": _("The selected AOI is larger than the maximum allowed size for this data provider."),
         },
+    )
+
+    UNKNOWN_ERROR = (
+        {"status": "ERR", "type": "ERROR", "message": _("An error has occurred, please contact an administrator.")},
     )
 
     SUCCESS = ({"status": "SUCCESS", "type": "SUCCESS", "message": _("Export should proceed without issues.")},)
@@ -248,6 +253,11 @@ class ProviderCheck(object):
             self.result = CheckResults.CONNECTION
             return None
 
+        except Exception as ex:
+            logger.error("An unknown error has occured for URL {}: {}".format(self.service_url, str(ex)))
+            self.result = CheckResults.UNKNOWN_ERROR
+            return None
+
         return response
 
     def validate_response(self, response):
@@ -330,6 +340,11 @@ class OverpassProviderCheck(ProviderCheck):
             logger.error("Provider check failed for URL {}: {}".format(self.service_url, str(ex)))
             self.result = CheckResults.CONNECTION
             return
+
+        except Exception as ex:
+            logger.error("An unknown error has occured for URL {}: {}".format(self.service_url, str(ex)))
+            self.result = CheckResults.UNKNOWN_ERROR
+            return None
 
 
 class OWSProviderCheck(ProviderCheck):

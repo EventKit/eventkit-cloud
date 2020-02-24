@@ -5,7 +5,7 @@ import { Breakpoint } from '@material-ui/core/styles/createBreakpoints';
 import {Tab, Tabs, Typography} from "@material-ui/core";;
 import AoiInfobar from "./AoiInfobar";
 import {MapQueryDisplay} from "./MapQueryDisplay";
-import {SelectedBaseMap} from "./CreateExport";
+import {MapLayer} from "./CreateExport";
 
 const jss = (theme: Eventkit.Theme & Theme) => createStyles({
     wrapper: {
@@ -73,7 +73,7 @@ export interface Props {
     aoiInfoBarProps: any;
     setRef: (ref: any) => void;
     classes: { [className: string]: string };
-    selectedBaseMap: SelectedBaseMap;
+    selectedBaseMap: MapLayer;
 }
 
 export interface State {
@@ -153,7 +153,7 @@ export class MapDisplayBar extends React.Component<Props, State> {
                             ref={child => {
                                 this.props.setRef(child)
                             }}
-                            selectedBaseMap={this.props.selectedBaseMap}
+                            selectedLayer={this.props.selectedBaseMap}
                         />
                     </div>
                     }
@@ -201,7 +201,7 @@ export class MapDisplayBar extends React.Component<Props, State> {
                                 ref={child => {
                                     this.props.setRef(child)
                                 }}
-                                selectedBaseMap={this.props.selectedBaseMap}
+                                selectedLayer={this.props.selectedBaseMap}
                                 setVisibility={(visibility) => {
                                     this.setState({ queryBoxVisible: visibility })
                                 }}

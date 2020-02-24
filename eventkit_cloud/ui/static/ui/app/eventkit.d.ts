@@ -133,6 +133,11 @@ declare namespace Eventkit {
         name: string;
         slug: string;
         preview_url: string;
+        metadata: {
+            type: string;
+            url: string;
+        };
+        footprint_url: string;
         service_copyright: string;
         service_description: string;
         layer: string;

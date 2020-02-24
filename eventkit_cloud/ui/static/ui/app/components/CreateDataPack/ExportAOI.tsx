@@ -55,8 +55,8 @@ import {joyride} from '../../joyride.config';
 import {Breakpoint} from '@material-ui/core/styles/createBreakpoints';
 import TileGrid from "ol/tilegrid/tilegrid";
 
-import {MapQueryDisplay, TileCoordinate} from "./MapQueryDisplay";
-import {SelectedBaseMap} from "./CreateExport";
+import {TileCoordinate} from "./MapQueryDisplay";
+import {MapLayer} from "./CreateExport";
 import MapDisplayBar from "./MapDisplayBar";
 
 export const WGS84 = 'EPSG:4326';
@@ -81,7 +81,8 @@ export interface Props {
     clearExportInfo: () => void;
     walkthroughClicked: boolean;
     onWalkthroughReset: () => void;
-    selectedBaseMap: SelectedBaseMap;
+    selectedBaseMap: MapLayer;
+    mapLayers: MapLayer[];
     theme: Eventkit.Theme & Theme;
     width: Breakpoint;
 }
@@ -111,7 +112,7 @@ export class ExportAOI extends React.Component<Props, State> {
     static contextTypes = {
         config: PropTypes.object,
     };
-    static defaultProps = {selectedBaseMap: {baseMapUrl:''}};
+    static defaultProps = {selectedBaseMap: {mapUrl:'', slug: 'DEFAULT'}};
 
     private bufferFunction: (val: any) => void;
     private drawLayer;
@@ -162,7 +163,6 @@ export class ExportAOI extends React.Component<Props, State> {
         this.resetAoi = this.resetAoi.bind(this);
         this.updateZoomLevel = this.updateZoomLevel.bind(this);
         this.shouldEnableNext = this.shouldEnableNext.bind(this);
-        this.getBaseLayer = this.getBaseLayer.bind(this);
         this.setDisplayBofRef = this.setDisplayBofRef.bind(this);
         this.bufferFunction = () => { /* do nothing */
         };
@@ -228,12 +228,12 @@ export class ExportAOI extends React.Component<Props, State> {
         }
 
         this.map.updateSize();
-        const { baseMapUrl } = this.props.selectedBaseMap;
-        const prevBaseMapUrl = prevProps.selectedBaseMap.baseMapUrl;
-        if (baseMapUrl !== prevBaseMapUrl) {
+        const { mapUrl } = this.props.selectedBaseMap;
+        const prevBaseMapUrl = prevProps.selectedBaseMap.mapUrl;
+        if (mapUrl !== prevBaseMapUrl) {
             const newSource = new XYZ({
                 projection: 'EPSG:4326',
-                url: (!!baseMapUrl) ? baseMapUrl : this.context.config.BASEMAP_URL,
+                url: (!!mapUrl) ? mapUrl : this.context.config.BASEMAP_URL,
                 wrapX: true,
                 attributions: this.context.config.BASEMAP_COPYRIGHT,
                 tileGrid: this.tileGrid,
@@ -241,10 +241,27 @@ export class ExportAOI extends React.Component<Props, State> {
 
             this.baseLayer.setSource(newSource);
         }
-    }
 
-    private getBaseLayer() {
+        const prevLayers = prevProps.mapLayers;
+        const mapLayers = this.props.mapLayers;
+        if (prevLayers !== null && prevLayers !== undefined) {
+            if (mapLayers.length !== prevLayers.length || !prevLayers.every((p1) => {
+                return mapLayers.includes(p1);
+            })) {
+                // Valid slugs -> all layers that should remain selected and visible, including base layer
+                let currentLayers = this.map.getLayers().getArray();
+                const validSlugs = [...mapLayers.map(layer => layer.slug), this.baseLayer.get('name')];
+                const layersToBeRemoved = currentLayers.filter(layer => validSlugs.indexOf(layer.get('name')) === -1);
+                layersToBeRemoved.forEach(layer => this.map.removeLayer(layer));
+                
+                mapLayers.forEach(layer => {
+                    if (currentLayers.findIndex(olLayer => olLayer.get('name') === layer.slug) === -1) {
+                        this.map.addLayer(this.createRasterTileLayer(layer.mapUrl, layer.slug));
+                    }
+                });
 
+            }
+        }
     }
 
     private setButtonSelected(iconName: string) {
@@ -527,16 +544,8 @@ export class ExportAOI extends React.Component<Props, State> {
         // Order matters here
         // Above comment assumed to refer to the order of the parameters to XYZ()
         // Comment moved with code, originally offered no further explanation.
-        const { baseMapUrl } = this.props.selectedBaseMap;
-        this.baseLayer = new Tile({
-            source: new XYZ({
-                projection: 'EPSG:4326',
-                url: (!!baseMapUrl) ? baseMapUrl : this.context.config.BASEMAP_URL,
-                wrapX: true,
-                attributions: this.context.config.BASEMAP_COPYRIGHT,
-                tileGrid: this.tileGrid,
-            }),
-        });
+        const { mapUrl } = this.props.selectedBaseMap;
+        this.baseLayer = this.createRasterTileLayer((!!mapUrl) ? mapUrl : this.context.config.BASEMAP_URL, 'baseLayer');
 
         this.map = new Map({
             controls: [
@@ -605,6 +614,23 @@ export class ExportAOI extends React.Component<Props, State> {
 
         this.updateZoomLevel();
         this.map.getView().on('change:resolution', this.updateZoomLevel);
+    }
+
+    private createRasterTileLayer(baseMapUrl: string, name: string) {
+        // Order matters here
+        // Above comment assumed to refer to the order of the parameters to XYZ() --
+        // -- comment moved with code, originally offered no further explanation.
+        const layer = new Tile({
+            source: new XYZ({
+                projection: 'EPSG:4326',
+                url: baseMapUrl,
+                wrapX: true,
+                attributions: this.context.config.BASEMAP_COPYRIGHT,
+                tileGrid: this.tileGrid,
+            }),
+        });
+        layer.set('name', name);
+        return layer;
     }
 
     private updateZoomLevel() {

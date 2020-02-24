@@ -477,7 +477,7 @@ class TestExportTasks(ExportTaskBase):
         }):
             rocketchat_notifications = settings.ROCKETCHAT_NOTIFICATIONS
             channel = rocketchat_notifications["channels"][0]
-            message = f"@here A DataPack has failed during processing. {url}"
+            message = f"@here: A DataPack has failed during processing. {url}"
             export_provider_task = DataProviderTaskRecord.objects.create(run=self.run, name='Shapefile Export')
             ExportTaskRecord.objects.create(export_provider_task=export_provider_task, uid=task_id,
                                             celery_uid=celery_uid, status=TaskStates.FAILED.value,
