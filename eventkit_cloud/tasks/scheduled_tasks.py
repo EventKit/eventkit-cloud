@@ -199,12 +199,17 @@ def run_task_command(client: PcfClient, app_name: str, queue_name: str, task: di
     :param client: A Pcf Client object.
     :param app_name: The name of the pcf application to send the task to.
     :param queue_name: Name of queue to scale.
-    :param task:A dict containing the comamnd, memory, and disk for the task to run.
+    :param task:A dict containing the command, memory, and disk for the task to run.
     :return: None
     """
-    hostnames = ["worker@$HOSTNAME","celery@$HOSTNAME","cancel@$HOSTNAME","finalize@$HOSTNAME","osm@$HOSTNAME"]
-    ping_command = " && ".join([f"celery inspect -A eventkit_cloud --timeout=20 --destination={hostname} ping" for hostname in hostnames])
-    health_check_command = f"sleep 30; while {ping_command} >/dev/null 2>&1; do sleep 60; done; echo At least one $HOSTNAME worker is dead! Killing Task...; pkill celery"
+    hostnames = ["worker@$HOSTNAME", "celery@$HOSTNAME", "cancel@$HOSTNAME", "finalize@$HOSTNAME", "osm@$HOSTNAME"]
+    ping_command = " && ".join(
+        [f"celery inspect -A eventkit_cloud --timeout=20 --destination={hostname} ping" for hostname in hostnames]
+    )
+    health_check_command = (
+        f"sleep 30; while {ping_command} >/dev/null 2>&1; do sleep 60; done; "
+        f"echo At least one $HOSTNAME worker is dead! Killing Task...; pkill celery"
+    )
     command = f"{task['command']} & {health_check_command}"
     disk = task["disk"]
     memory = task["memory"]
