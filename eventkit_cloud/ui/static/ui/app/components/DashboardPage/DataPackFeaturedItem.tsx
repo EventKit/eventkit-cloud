@@ -23,7 +23,7 @@ import ol3mapCss from '../../styles/ol3map.css';
 import { makeFullRunSelector } from '../../selectors/runSelector';
 import { Breakpoint } from '@material-ui/core/styles/createBreakpoints';
 import {MapView} from "../common/MapView";
-import {SelectedBaseMap} from "../CreateDataPack/CreateExport";
+import {MapLayer} from "../CreateDataPack/CreateExport";
 
 const jss = (theme: Eventkit.Theme & Theme) => createStyles({
     card: {
@@ -178,7 +178,7 @@ export class DataPackFeaturedItem extends React.Component<Props, {}> {
 
     render() {
         const { classes } = this.props;
-        const selectedBasemap = { baseMapUrl: this.context.config.BASEMAP_URL } as SelectedBaseMap;
+        const selectedBasemap = { mapUrl: this.context.config.BASEMAP_URL } as MapLayer;
 
         return (
             <Card

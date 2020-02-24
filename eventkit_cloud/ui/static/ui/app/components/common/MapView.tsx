@@ -14,11 +14,11 @@ import ol3mapCss from '../../styles/ol3map.css';
 import {getResolutions, getTileCoordinateFromClick} from "../../utils/mapUtils";
 import TileGrid from "ol/tilegrid/tilegrid";
 import MapQueryDisplay from "../CreateDataPack/MapQueryDisplay";
-import {SelectedBaseMap} from "../CreateDataPack/CreateExport";
+import {MapLayer} from "../CreateDataPack/CreateExport";
 
 export interface Props {
     geojson: object;
-    selectedBaseMap: SelectedBaseMap | string;
+    selectedBaseMap: MapLayer | string;
     zoom?: number;
     copyright?: string;
     setZoom?: (from: number, to: number) => void;
@@ -29,7 +29,7 @@ export interface Props {
 }
 
 export interface State {
-    selectedBaseMap: SelectedBaseMap;
+    selectedBaseMap: MapLayer;
 }
 
 export class MapView extends React.Component<Props, State> {
@@ -45,7 +45,7 @@ export class MapView extends React.Component<Props, State> {
     constructor(props: Props) {
         let selectedBaseMap = props.selectedBaseMap;
         if (typeof selectedBaseMap === 'string' || selectedBaseMap instanceof String) {
-            selectedBaseMap = { baseMapUrl: props.selectedBaseMap } as SelectedBaseMap;
+            selectedBaseMap = { mapUrl: props.selectedBaseMap } as MapLayer;
         }
         super(props);
         this.state = {
@@ -97,7 +97,7 @@ export class MapView extends React.Component<Props, State> {
         const base = new Tile({
             source: new XYZ({
                 projection: 'EPSG:4326',
-                url: this.state.selectedBaseMap.baseMapUrl,
+                url: this.state.selectedBaseMap.mapUrl,
                 wrapX: true,
                 attributions: this.props.copyright,
                 tileGrid: tileGrid,
@@ -179,7 +179,7 @@ export class MapView extends React.Component<Props, State> {
                         ref={child => {
                             this.displayBoxRef = child
                         }}
-                        selectedBaseMap={this.state.selectedBaseMap}
+                        selectedLayer={this.state.selectedBaseMap}
                     />
                 </div>
             </div>
