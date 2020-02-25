@@ -345,25 +345,21 @@ describe('ExportInfo component', () => {
     });
 
     it('hasDisallowedSelection should return true if the provider status is FATAL', () => {
-        const exportInfo = {
-            exportName: 'name',
-            datapackDescription: 'stuff',
-            projectName: 'name',
-            providers: [{slug: 'providerslug'}],
-            projections: [4237],
-            exportOptions: {
-                providerslug: {
-                    formats: ['validformat'],
-                }
-            },
-            providerInfo: {
-                providerslug: {
-                    availability: {status: 'FATAL'},
-                }
-            },
+        const provider = {
+            slug: 'providerslug'
         };
-        const info = {exportInfo: {exportInfo}};
-        setup({exportInfo: {exportInfo}});
+        const providerInfo = {
+            providerslug: {
+                availability: {
+                    status: 'FATAL',
+                    type: 'type',
+                    slug: 'providerslug',
+                    message: 'message'
+                },
+             }
+        };
+        const info = {providerInfo: {providerInfo}};
+        setup({providerInfo: {providerInfo}});
         expect(instance.hasDisallowedSelection(info)).toBe(true);
     });
 
