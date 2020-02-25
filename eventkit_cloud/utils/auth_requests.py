@@ -140,9 +140,8 @@ def handle_basic_auth(func):
             )
             response = func(url, **kwargs)
             return response
-        except Exception as e:
-            logger.error(str(e))
-            raise Exception("Unable to securely connect to this provider.")
+        except Exception:
+            raise
 
     return wrapper
 

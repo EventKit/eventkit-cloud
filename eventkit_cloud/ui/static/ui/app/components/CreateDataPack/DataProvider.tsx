@@ -23,6 +23,7 @@ import {Compatibility} from '../../utils/enums';
 import IndeterminateCheckBoxIcon from '@material-ui/icons/IndeterminateCheckBox';
 import CheckBoxIcon from "@material-ui/icons/CheckBox";
 import {CompatibilityInfo} from "./ExportInfo";
+import {MapLayer} from "./CreateExport";
 
 const jss = (theme: Theme & Eventkit.Theme) => createStyles({
     container: {
@@ -40,7 +41,10 @@ const jss = (theme: Theme & Eventkit.Theme) => createStyles({
     sublistItem: {
         fontWeight: 'normal',
         fontSize: '13px',
-        padding: '0px 20px 14px 49px',
+        padding: '14px 40px',
+        [theme.breakpoints.only('xs')]: {
+            padding: '10px 10px',
+        },
         borderTop: theme.eventkit.colors.secondary,
     },
     checkbox: {
@@ -71,6 +75,12 @@ const jss = (theme: Theme & Eventkit.Theme) => createStyles({
     prewrap: {
         whiteSpace: 'pre-wrap',
     },
+    listItemPadding: {
+        padding: '10px 40px',
+        [theme.breakpoints.only('xs')]: {
+            padding: '10px 15px',
+        },
+    }
 });
 
 interface Props {
@@ -101,6 +111,7 @@ interface Props {
         expand: string;
         license: string;
         prewrap: string;
+        listItemPadding: string;
     };
 }
 
@@ -108,6 +119,7 @@ interface State {
     open: boolean;
     licenseDialogOpen: boolean;
     zoomLevel: number;
+    checked: boolean;
 }
 
 export class DataProvider extends React.Component<Props, State> {
@@ -127,6 +139,7 @@ export class DataProvider extends React.Component<Props, State> {
         this.setZoom = this.setZoom.bind(this);
         this.getFormatCompatibility = this.getFormatCompatibility.bind(this);
         this.getCheckedIcon = this.getCheckedIcon.bind(this);
+        this.handleFootprintsCheck = this.handleFootprintsCheck.bind(this);
 
         this.estimateDebouncer = () => { /* do nothing while not mounted */
         };
@@ -134,6 +147,7 @@ export class DataProvider extends React.Component<Props, State> {
             open: false,
             licenseDialogOpen: false,
             zoomLevel: this.props.provider.level_to,
+            checked: false,
         };
     }
 
@@ -218,7 +232,10 @@ export class DataProvider extends React.Component<Props, State> {
         this.setState(state => ({open: !state.open}));
     }
 
-    // private formatEstimate(providerEstimates: Eventkit.Store.ProviderInfo) {
+    handleFootprintsCheck = () => {
+        this.setState({ checked: !this.state.checked });
+    };
+
     private formatEstimate(providerEstimates: Eventkit.Store.Estimates) {
         if (!providerEstimates) {
             return '';
@@ -274,6 +291,11 @@ export class DataProvider extends React.Component<Props, State> {
             }
         }
 
+        const selectedBasemap = {
+            mapUrl: (this.props.provider.preview_url || this.context.config.BASEMAP_URL),
+            slug: (!!this.props.provider.preview_url) ? provider.slug : undefined,
+        } as MapLayer;
+
         // Show license if one exists.
         const nestedItems = [];
         if (provider.license) {
@@ -316,9 +338,8 @@ export class DataProvider extends React.Component<Props, State> {
                     key={nestedItems.length}
                 >
                     <div
-                        className={`qa-DataProvider-ListItem-zoomSlider ${this.props.provider.slug + '-sliderDiv'}`}
+                        className={`qa-DataProvider-ListItem-zoomSlider ${this.props.provider.slug + '-sliderDiv ' + classes.listItemPadding}`}
                         key={this.props.provider.slug + '-sliderDiv'}
-                        style={{padding: '10px 40px'}}
                     >
                         <ZoomLevelSlider
                             updateZoom={this.setZoom}
@@ -326,16 +347,17 @@ export class DataProvider extends React.Component<Props, State> {
                             selectedMinZoom={currentMinZoom}
                             maxZoom={provider.level_to}
                             minZoom={provider.level_from}
+                            handleCheckClick={this.handleFootprintsCheck}
+                            checked={this.state.checked}
                         />
                     </div>
                     <div
-                        className={`qa-DataProvider-ListItem-zoomMap ${this.props.provider.slug + '-mapDiv'}`}
+                        className={`qa-DataProvider-ListItem-zoomMap ${this.props.provider.slug + '-mapDiv ' + classes.listItemPadding}`}
                         key={this.props.provider.slug + '-mapDiv'}
-                        style={{padding: '10px 40px'}}
                     >
                         <MapView
                             id={this.props.provider.id + "-map"}
-                            url={this.props.provider.preview_url || this.context.config.BASEMAP_URL}
+                            selectedBaseMap={selectedBasemap}
                             copyright={this.props.provider.service_copyright}
                             geojson={this.props.geojson}
                             setZoom={this.setZoom}
@@ -357,7 +379,8 @@ export class DataProvider extends React.Component<Props, State> {
                     <div>
                         <em>Zoom not available for this source.</em>
                     </div>
-                </ListItem>);
+                </ListItem>
+            );
         }
 
         nestedItems.push((

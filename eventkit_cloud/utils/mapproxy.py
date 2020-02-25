@@ -256,7 +256,6 @@ def get_cache_template(sources, grids, geopackage, table_name="tiles"):
     """
     return {
         "sources": sources,
-        "meta_size": [1, 1],
         "cache": {"type": "geopackage", "filename": str(geopackage), "table_name": table_name or "None"},
         "grids": [grid for grid in grids if grid == "default"] or grids,
         "format": "mixed",
@@ -346,13 +345,30 @@ def create_mapproxy_app(slug: str):
                 ]
             },
         },
-        "caches": {slug: {"default": {"type": "file"}, "sources": ["default"], "grids": ["default"]}},
+        "caches": {slug: {"cache": {"type": "file"}, "sources": ["default"], "grids": ["default"]}},
         "layers": [{"name": slug, "title": slug, "sources": [slug]}],
         "globals": {"cache": {"base_dir": getattr(settings, "TILE_CACHE_DIR")}},
     }
     if conf_dict["sources"].get("info"):
         base_config["caches"][slug]["sources"] += ["info"]
+    if conf_dict["sources"].get("footprint"):
+        base_config["caches"][get_footprint_layer_name(slug)] = {
+            "cache": {"type": "file"},
+            "sources": ["footprint"],
+            "grids": ["default"],
+        }
+        base_config["layers"] += [
+            {
+                "name": get_footprint_layer_name(slug),
+                "title": get_footprint_layer_name(slug),
+                "sources": [get_footprint_layer_name(slug)],
+            }
+        ]
     try:
+        import sys
+
+        print(base_config)
+        sys.stdout.flush()
         mapproxy_config = load_default_config()
         load_config(mapproxy_config, config_dict=conf_dict)
         load_config(mapproxy_config, config_dict=base_config)
@@ -402,3 +418,18 @@ def get_conf_dict(slug: str) -> dict:
         raise Exception(f"Unable to load a mapproxy configuration for slug {slug}")
 
     return conf_dict
+
+
+def get_footprint_layer_name(slug):
+    footprint_layer_name = f"{slug}-footprint"
+    return footprint_layer_name
+
+
+def get_mapproxy_metadata_url(slug):
+    metadata_url = f"{settings.SITE_URL.rstrip('/')}/map/{slug}/service"
+    return metadata_url
+
+
+def get_mapproxy_footprint_url(slug):
+    footprint_url = f"{settings.SITE_URL.rstrip('/')}/map/{slug}/wmts/{get_footprint_layer_name(slug)}/default/{{z}}/{{x}}/{{y}}.png"  # NOQA
+    return footprint_url

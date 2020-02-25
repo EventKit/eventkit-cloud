@@ -27,7 +27,8 @@ import {CircularProgress, Typography} from "@material-ui/core";
 import * as PropTypes from "prop-types";
 import Info from '@material-ui/icons/Info';
 import {getProjections} from "../../actions/projectionActions";
-import {SelectedBaseMap} from "./CreateExport";
+import {MapLayer} from "./CreateExport";
+import {SelectedBaseMap} from "../../../../../../staticfiles/ui/app/components/CreateDataPack/CreateExport";
 
 export interface JobData {
     name: string;
@@ -72,7 +73,8 @@ export interface Props {
     projections: Eventkit.Projection[];
     tasks: Eventkit.Task[];
     breadCrumbStepperProps: any;
-    selectedBaseMap: SelectedBaseMap;
+    selectedBaseMap: MapLayer;
+    mapLayers: MapLayer[];
     getEstimate: any;
     checkProvider: (args: any) => void;
     checkProviders: (args: any) => void;
@@ -394,6 +396,7 @@ export class BreadcrumbStepper extends React.Component<Props, State> {
                         walkthroughClicked={this.props.walkthroughClicked}
                         onWalkthroughReset={this.props.onWalkthroughReset}
                         selectedBaseMap={this.props.selectedBaseMap}
+                        mapLayers={this.props.mapLayers}
                     />
                 );
             case 1:
@@ -421,6 +424,7 @@ export class BreadcrumbStepper extends React.Component<Props, State> {
                         limits={this.state.limits}
                         walkthroughClicked={this.props.walkthroughClicked}
                         onWalkthroughReset={this.props.onWalkthroughReset}
+                        mapLayers={this.props.mapLayers}
                     />
                 );
         }

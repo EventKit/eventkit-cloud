@@ -10,6 +10,7 @@ import DataPackGeneralTable from './DataPackGeneralTable';
 import { DataCartInfoTable } from './DataCartInfoTable';
 import { MapView } from "../common/MapView";
 import { getSqKmString } from "../../utils/generic"
+import {MapLayer} from "../CreateDataPack/CreateExport";
 
 export interface Props {
     cartDetails: Eventkit.FullRun;
@@ -78,6 +79,7 @@ export class DataCartDetails extends React.Component<Props, State> {
 
     render() {
         const { colors } = this.props.theme.eventkit;
+        const selectedBasemap = { mapUrl: this.context.config.BASEMAP_URL } as MapLayer;
 
         const styles = {
             container: {
@@ -184,7 +186,7 @@ export class DataCartDetails extends React.Component<Props, State> {
                         <div className="qa-DataPackAoiInfo-div-map" style={{maxHeight: '400px', marginTop: '10px'}}>
                             <MapView
                                 id={"summaryMap"}
-                                url={this.context.config.BASEMAP_URL}
+                                selectedBaseMap={selectedBasemap}
                                 copyright={this.context.config.BASEMAP_COPYRIGHT}
                                 geojson={this.props.cartDetails.job.extent}
                                 minZoom={2}

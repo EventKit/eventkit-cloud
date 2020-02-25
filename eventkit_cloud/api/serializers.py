@@ -691,6 +691,8 @@ class DataProviderSerializer(serializers.ModelSerializer):
     supported_formats = serializers.SerializerMethodField(read_only=True)
     thumbnail_url = serializers.SerializerMethodField(read_only=True)
     license = LicenseSerializer(required=False)
+    metadata = serializers.SerializerMethodField(read_only=True)
+    footprint_url = serializers.SerializerMethodField(read_only=True)
 
     class Meta:
         model = DataProvider
@@ -743,6 +745,14 @@ class DataProviderSerializer(serializers.ModelSerializer):
             ).geturl()
         else:
             return ""
+
+    @staticmethod
+    def get_metadata(obj):
+        return obj.metadata
+
+    @staticmethod
+    def get_footprint_url(obj):
+        return obj.footprint_url
 
 
 class ListJobSerializer(serializers.Serializer):

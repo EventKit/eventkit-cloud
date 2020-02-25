@@ -5,7 +5,10 @@ else
 endif
 
 black:
-	docker-compose run --rm eventkit black --config /var/lib/eventkit/config/pyproject.toml --check eventkit_cloud
+	docker-compose run --rm eventkit black --config /var/lib/eventkit/config/pyproject.toml --check --diff eventkit_cloud
+
+black-format:
+	docker-compose run --rm eventkit black --config /var/lib/eventkit/config/pyproject.toml eventkit_cloud
 
 flake8:
 	docker-compose run --rm eventkit flake8 --config /var/lib/eventkit/config/setup.cfg eventkit_cloud
@@ -16,6 +19,12 @@ test:
 	docker-compose run --rm -e COVERAGE=True eventkit python manage.py test -v 3 eventkit_cloud
 	docker-compose run --rm webpack npm test
 
+test-back:
+	docker-compose run --rm -e COVERAGE=True eventkit python manage.py test -v 3 eventkit_cloud
+
+test-front:
+	docker-compose run --rm webpack npm test
+
 initial:
 ifeq ($(detected_OS),Linux)
 	sudo groupadd -g 880 eventkit || echo "Group eventkit already exists."
@@ -24,10 +33,12 @@ ifeq ($(detected_OS),Linux)
 	sudo chown -R ${USER}:eventkit .
 endif
 
+# Only run this command if you want to completely rebuild your conda dependencies.
 conda-install:
 	cd conda && docker-compose build --no-cache
 	cd conda && docker-compose run --rm conda
 
+# Run this command if you want to rebuild all of your docker images.
 build:
 ifeq ($(detected_OS),Linux)
 	echo $(detected_OS)
@@ -37,6 +48,7 @@ else
 	docker-compose build --no-cache
 endif
 
+# This command will migrate your database, setup caches and load initial data.
 setup:
 ifeq ($(detected_OS),Linux)
 	sudo chmod -R g+rw .
@@ -57,9 +69,11 @@ down:
 restart:
 	docker-compose restart
 
+# Runs the more commonly used logs.
 logs:
 	docker-compose logs -f celery celery-beat eventkit webpack
 
+# Runs all of the logs for all containers.
 logs-verbose:
 	docker-compose logs -f
 
@@ -68,6 +82,8 @@ logs-verbose:
 clean:
 	docker-compose down -v
 
+# This is the command that you'll want to use in order to setup from scratch.
 fresh: initial clean conda-install build setup up logs
 
+# Run this command if you want to rebuild everything except for the conda dependencies.
 refresh: initial clean build setup up logs
