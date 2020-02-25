@@ -638,7 +638,7 @@ export class BreadcrumbStepper extends React.Component<Props, State> {
         }
 
         return (
-            <div className="qa-BreadcrumbStepper-div-content" style={{backgroundColor: colors.background}}>
+            <div className="qa-BreadcrumbStepper-div-content" style={{backgroundColor: colors.background, paddingBottom: '26px'}}>
                 <div className="qa-BreadcrumbStepper-div-stepLabel"
                      style={{width: '100%', height: '50px', display: 'inline-block'}}>
                     {this.getStepLabel(this.state.stepIndex)}

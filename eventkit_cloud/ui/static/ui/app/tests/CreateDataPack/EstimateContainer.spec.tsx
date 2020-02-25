@@ -45,6 +45,7 @@ describe('EstimateContainer component', () => {
             onWalkthroughReset: sinon.spy(),
             updateExportInfo: sinon.spy(),
             onUpdateEstimate: sinon.spy(),
+            getProviders: sinon.spy(),
             ...(global as any).eventkit_test_props,
             classes: {},
         }

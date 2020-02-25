@@ -65,7 +65,7 @@ describe('ExportInfo component', () => {
                 exportName: '',
                 datapackDescription: '',
                 projectName: '',
-                providers: [{slug: 'osm'}, {slug: 'osm'}],
+                providers: [{slug: 'osm'}],
                 providerInfo: {
                     'osm': {
                         availability: {
@@ -345,32 +345,37 @@ describe('ExportInfo component', () => {
     });
 
     it('hasDisallowedSelection should return true if the provider status is FATAL', () => {
-        const provider = {
-            slug: 'providerslug'
-        };
+        const defaultProps = getProps();
         const providerInfo = {
-            providerslug: {
+            osm: {
                 availability: {
                     status: 'FATAL',
-                    type: 'type',
-                    slug: 'providerslug',
-                    message: 'message'
                 },
              }
         };
-        const info = {providerInfo: {providerInfo}};
-        setup({providerInfo: {providerInfo}});
-        expect(instance.hasDisallowedSelection(info)).toBe(true);
+        const exportInfo = {
+            ...defaultProps.exportInfo,
+            providerInfo
+        };
+        setup({exportInfo: exportInfo});
+        expect(instance.hasDisallowedSelection(exportInfo)).toBe(true);
     });
 
     it('hasDisallowedSelection should return false if no status', () => {
-        const provider = {
-            slug: 'test',
-            availability: {status: undefined},
+        const defaultProps = getProps();
+        const providerInfo = {
+            osm: {
+                availability: {
+                    status: undefined,
+                },
+             }
         };
-        const info = {providers: [provider]};
-        setup({providers: [provider]});
-        expect(instance.hasDisallowedSelection(info)).toBe(false);
+        const exportInfo = {
+            ...defaultProps.exportInfo,
+            providerInfo
+        };
+        setup({exportInfo: exportInfo});
+        expect(instance.hasDisallowedSelection(exportInfo)).toBe(false);
     });
 
     it('joyrideAddSteps should set state for steps in tour', () => {
