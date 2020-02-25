@@ -58,12 +58,14 @@ export class EstimateContainer extends React.Component<Props, State> {
     }
 
     componentDidMount(): void {
-        this.setState({areEstimatesLoading: true});
         // make requests to check provider availability
         this.getProviders().then(r => this.checkProviders(this.props.providers));
+        this.setState({areEstimatesLoading: true});
     }
 
     componentDidUpdate(prevProps: Readonly<Props>): void {
+        this.getProviders().then(r => this.checkProviders(this.props.providers));
+
         if (this.context.config.SERVE_ESTIMATES) {
             // only update the estimate if providers has changed
             const prevProviders = prevProps.exportInfo.providers;
@@ -146,8 +148,8 @@ export class EstimateContainer extends React.Component<Props, State> {
         // This assumes that the entire selection is the first feature, if the feature collection becomes the
         // selection then the bbox would need to be calculated for it.
         if (this.context.config.SERVE_ESTIMATES) {
-            if (!this.props.geojson) {
-                return;
+            if (Object.keys(this.props.geojson).length === 0) {
+                return null;
             }
             const bbox = featureToBbox(this.props.geojson.features[0], WGS84);
             const estimates = await this.getEstimate(provider, bbox);
@@ -259,6 +261,7 @@ export class EstimateContainer extends React.Component<Props, State> {
             <BreadcrumbStepper
                 {...this.props.breadcrumbStepperProps}
                 checkProvider={this.checkProvider}
+                checkProviders={this.checkProviders}
                 checkEstimate={this.checkEstimate}
                 updateEstimate={this.updateEstimate}
                 sizeEstimate={this.state.sizeEstimate}

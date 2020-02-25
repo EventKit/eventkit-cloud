@@ -75,6 +75,7 @@ export interface Props {
     selectedBaseMap: SelectedBaseMap;
     getEstimate: any;
     checkProvider: (args: any) => void;
+    checkProviders: (args: any) => void;
     updateEstimate: () => void;
     sizeEstimate: number;
     timeEstimate: number;
@@ -403,6 +404,7 @@ export class BreadcrumbStepper extends React.Component<Props, State> {
                         onWalkthroughReset={this.props.onWalkthroughReset}
                         onUpdateEstimate={this.props.updateEstimate}
                         checkProvider={this.props.checkProvider}
+                        checkProviders={this.props.checkProviders}
                     />
                 );
             case 2:
