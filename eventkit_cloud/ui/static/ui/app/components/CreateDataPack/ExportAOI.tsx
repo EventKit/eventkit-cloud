@@ -16,6 +16,7 @@ import Feature from 'ol/feature';
 import Point from 'ol/geom/point';
 import Polygon from 'ol/geom/polygon';
 import Style from 'ol/style/style';
+import Icon from 'ol/style/icon';
 import Fill from 'ol/style/fill';
 import Stroke from 'ol/style/stroke';
 import Circle from 'ol/style/circle';
@@ -123,6 +124,7 @@ export class ExportAOI extends React.Component<Props, State> {
     private drawFreeInteraction;
     private markerLayer;
     private bufferLayer;
+    private pinLayer;
     private pointer;
     private feature;
     private coordinate;
@@ -504,6 +506,13 @@ export class ExportAOI extends React.Component<Props, State> {
         this.drawLayer = generateDrawLayer();
         this.markerLayer = generateDrawLayer();
         this.bufferLayer = generateDrawLayer();
+        this.pinLayer = generateDrawLayer();
+
+        this.pinLayer.setStyle(new Style({
+            image: new Icon({
+                src: this.props.theme.eventkit.images.map_pin,
+            })
+        }));
 
         this.markerLayer.setStyle(new Style({
             image: new Circle({
@@ -597,7 +606,15 @@ export class ExportAOI extends React.Component<Props, State> {
         // Hook up the click to query feature data
         this.map.on('click', (event) => {
                 if (this.state.mode === MODE_NORMAL && this.displayBoxRef) {
-                    this.displayBoxRef.handleMapClick(getTileCoordinateFromClick(event, this.baseLayer, this.map))
+                    const didQuery = this.displayBoxRef.handleMapClick(
+                        getTileCoordinateFromClick(event, this.baseLayer, this.map)
+                    );
+                    clearDraw(this.pinLayer);
+                    if (didQuery) {
+                        this.pinLayer.getSource().addFeature(new Feature({
+                            geometry: new Point(event.coordinate),
+                        }));
+                    }
                 }
             }
         );
@@ -608,9 +625,11 @@ export class ExportAOI extends React.Component<Props, State> {
         this.map.addLayer(this.drawLayer);
         this.map.addLayer(this.markerLayer);
         this.map.addLayer(this.bufferLayer);
-        this.map.setLayerIndex(this.drawLayer, 97);
-        this.map.setLayerIndex(this.markerLayer, 98);
-        this.map.setLayerIndex(this.bufferLayer, 99);
+        this.map.addLayer(this.pinLayer);
+        this.drawLayer.setZIndex(97);
+        this.markerLayer.setZIndex(98);
+        this.bufferLayer.setZIndex(99);
+        this.pinLayer.setZIndex(100);
 
         this.updateZoomLevel();
         this.map.getView().on('change:resolution', this.updateZoomLevel);

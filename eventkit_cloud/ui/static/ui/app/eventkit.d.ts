@@ -238,6 +238,8 @@ declare namespace Eventkit {
                 logo: string;
                 favicon: string;
                 reddotfavicon: string
+                basemap: string;
+                map_pin: string;
             };
         };
     }

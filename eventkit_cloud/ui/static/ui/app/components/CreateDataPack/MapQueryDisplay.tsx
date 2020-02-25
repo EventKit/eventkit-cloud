@@ -95,18 +95,22 @@ export class MapQueryDisplay extends React.Component<Props, State> {
     }
 
     private handleMapClick(tileCoord: TileCoordinate) {
-        this.setState({
-            closeCard: false,
-            responseData: undefined,
-            queryLoading: true,
-        });
-        this.setVisibility(true);
-        this.getFeatures(tileCoord).then(featureResponseData => {
+        if (!!this.props.selectedLayer && !!this.props.selectedLayer.mapUrl) {
             this.setState({
-                responseData: featureResponseData,
-                queryLoading: false,
+                closeCard: false,
+                responseData: undefined,
+                queryLoading: true,
             });
-        });
+            this.setVisibility(true);
+            this.getFeatures(tileCoord).then(featureResponseData => {
+                this.setState({
+                    responseData: featureResponseData,
+                    queryLoading: false,
+                });
+            });
+            return true;
+        }
+        return false;
     }
 
     handleClose = (event) => {
