@@ -150,7 +150,6 @@ export interface Props {
     projections: Eventkit.Projection[];
     formats: Eventkit.Format[];
     checkProvider: any;
-    checkProviders: (args: any) => void;
 }
 
 export interface State {
@@ -208,7 +207,7 @@ export class ExportInfo extends React.Component<Props, State> {
         this.onSelectAll = this.onSelectAll.bind(this);
         this.onSelectProjection = this.onSelectProjection.bind(this);
         this.onRefresh = this.onRefresh.bind(this);
-        // this.checkProviders = this.checkProviders.bind(this);
+        this.checkProviders = this.checkProviders.bind(this);
         this.handlePopoverOpen = this.handlePopoverOpen.bind(this);
         this.handlePopoverClose = this.handlePopoverClose.bind(this);
         this.handleProjectionCompatibilityOpen = this.handleProjectionCompatibilityOpen.bind(this);
@@ -237,6 +236,11 @@ export class ExportInfo extends React.Component<Props, State> {
         const updatedInfo = {
             areaStr,
         } as Eventkit.Store.ExportInfo;
+
+        // make requests to check provider availability
+        if (this.state.providers) {
+            this.checkProviders(this.state.providers);
+        }
 
         const steps = joyride.ExportInfo as any[];
         this.joyrideAddSteps(steps);
@@ -277,7 +281,7 @@ export class ExportInfo extends React.Component<Props, State> {
 
         if (this.props.providers.length !== prevProps.providers.length) {
             this.setState({providers: this.props.providers});
-            this.props.checkProviders(this.props.providers);
+            this.checkProviders(this.props.providers);
         }
 
         const selectedProjections = [...exportInfo.projections];
@@ -486,7 +490,7 @@ export class ExportInfo extends React.Component<Props, State> {
         }));
         // update state with the new copy of providers
         this.setState({providers});
-        this.props.checkProviders(providers);
+        this.checkProviders(providers);
     }
 
     private clearEstimate(provider: Eventkit.Provider) {
@@ -508,20 +512,20 @@ export class ExportInfo extends React.Component<Props, State> {
         });
     }
 
-    // private checkProviders(providers: Eventkit.Provider[]) {
-    //     Promise.all(providers.filter(provider => provider.display).map((provider) => {
-    //         return this.props.checkProvider(provider);
-    //     })).then(providerResults => {
-    //         const providerInfo = {...this.props.exportInfo.providerInfo} as Eventkit.Map<Eventkit.Store.ProviderInfo>;
-    //         providerResults.map((provider) => {
-    //             providerInfo[provider.slug] = provider.data;
-    //         });
-    //         this.props.updateExportInfo({providerInfo});
-    //         // Trigger an estimate calculation update in the parent
-    //         // Does not re-request any data, calculates the total from available results.
-    //         this.props.onUpdateEstimate();
-    //     });
-    // }
+    private checkProviders(providers: Eventkit.Provider[]) {
+        Promise.all(providers.filter(provider => provider.display).map((provider) => {
+            return this.props.checkProvider(provider);
+        })).then(providerResults => {
+            const providerInfo = {...this.props.exportInfo.providerInfo} as Eventkit.Map<Eventkit.Store.ProviderInfo>;
+            providerResults.map((provider) => {
+                providerInfo[provider.slug] = provider.data;
+            });
+            this.props.updateExportInfo({providerInfo});
+            // Trigger an estimate calculation update in the parent
+            // Does not re-request any data, calculates the total from available results.
+            this.props.onUpdateEstimate();
+        });
+    }
 
     private handlePopoverOpen(e: React.MouseEvent<any>) {
         this.setState({refreshPopover: e.currentTarget});
@@ -552,7 +556,7 @@ export class ExportInfo extends React.Component<Props, State> {
         return exportInfo.providers.some((provider) => {
             // short-circuiting means that this shouldn't be called until provider.availability
             // is populated, but if it's not, return false
-            const providerInfo = this.props.exportInfo.providerInfo[provider.slug] as Eventkit.Store.ProviderInfo;
+            const providerInfo = this.props.exportInfo.providerInfo[provider.slug];
             if (!providerInfo) {
                 return false;
             }
