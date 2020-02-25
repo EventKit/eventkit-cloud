@@ -148,9 +148,9 @@ export class EstimateContainer extends React.Component<Props, State> {
         // This assumes that the entire selection is the first feature, if the feature collection becomes the
         // selection then the bbox would need to be calculated for it.
         if (this.context.config.SERVE_ESTIMATES) {
-            if (Object.keys(this.props.geojson).length === 0) {
-                return null;
-            }
+            // if (Object.keys(this.props.geojson).length === 0) {
+            //     return null;
+            // }
             const bbox = featureToBbox(this.props.geojson.features[0], WGS84);
             const estimates = await this.getEstimate(provider, bbox);
             return {time: estimates.time, size: estimates.size} as Eventkit.Store.Estimates;

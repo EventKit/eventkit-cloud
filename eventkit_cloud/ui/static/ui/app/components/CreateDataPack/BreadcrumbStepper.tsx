@@ -28,7 +28,6 @@ import * as PropTypes from "prop-types";
 import Info from '@material-ui/icons/Info';
 import {getProjections} from "../../actions/projectionActions";
 import {MapLayer} from "./CreateExport";
-import {SelectedBaseMap} from "../../../../../../staticfiles/ui/app/components/CreateDataPack/CreateExport";
 
 export interface JobData {
     name: string;
@@ -407,7 +406,6 @@ export class BreadcrumbStepper extends React.Component<Props, State> {
                         onWalkthroughReset={this.props.onWalkthroughReset}
                         onUpdateEstimate={this.props.updateEstimate}
                         checkProvider={this.props.checkProvider}
-                        checkProviders={this.props.checkProviders}
                     />
                 );
             case 2:

@@ -267,7 +267,6 @@ describe('BreadcrumbStepper component', () => {
                 onUpdateEstimate={wrapper.instance().updateEstimate}
                 handlePrev={wrapper.instance().handlePrev}
                 checkProvider={props.checkProvider}
-                checkProviders={props.checkProviders}
             />
         );
 

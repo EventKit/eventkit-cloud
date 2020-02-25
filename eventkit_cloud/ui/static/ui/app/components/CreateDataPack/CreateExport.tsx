@@ -124,10 +124,9 @@ export class CreateExport extends React.Component<Props, State> {
                         walkthroughClicked: this.state.walkthroughClicked,
                         onWalkthroughReset: this.handleWalkthroughReset,
                         selectedBaseMap: this.state.selectedBaseMap,
-                        mapLayers={this.state.mapLayers},
+                        mapLayers: this.state.mapLayers,
                         geojson: this.props.geojson,
                     }}
-
                 />
                 <MapDrawer
                     updateBaseMap={this.updateBaseMap}
