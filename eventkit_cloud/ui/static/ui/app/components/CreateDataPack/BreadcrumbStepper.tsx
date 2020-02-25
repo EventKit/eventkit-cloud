@@ -154,6 +154,7 @@ export class BreadcrumbStepper extends React.Component<Props, State> {
         if (this.props.exportInfo.exportName === '') {
             this.props.setNextDisabled();
         }
+        console.log('breadcrumbstepper mounted')
         this.props.getProviders();
         this.getEstimateLabel(0);
         this.props.getProjections();

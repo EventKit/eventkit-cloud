@@ -58,14 +58,14 @@ export class EstimateContainer extends React.Component<Props, State> {
     }
 
     componentDidMount(): void {
+        console.log('estimatecontainer mounted')
         // make requests to check provider availability
         this.getProviders().then(r => this.checkProviders(this.props.providers));
         this.setState({areEstimatesLoading: true});
     }
 
     componentDidUpdate(prevProps: Readonly<Props>): void {
-        this.getProviders().then(r => this.checkProviders(this.props.providers));
-
+        console.log('estimatecontainer updated')
         if (this.context.config.SERVE_ESTIMATES) {
             // only update the estimate if providers has changed
             const prevProviders = prevProps.exportInfo.providers;
@@ -261,7 +261,6 @@ export class EstimateContainer extends React.Component<Props, State> {
             <BreadcrumbStepper
                 {...this.props.breadcrumbStepperProps}
                 checkProvider={this.checkProvider}
-                // checkProviders={this.checkProviders}
                 checkEstimate={this.checkEstimate}
                 updateEstimate={this.updateEstimate}
                 sizeEstimate={this.state.sizeEstimate}
