@@ -261,7 +261,7 @@ export class EstimateContainer extends React.Component<Props, State> {
             <BreadcrumbStepper
                 {...this.props.breadcrumbStepperProps}
                 checkProvider={this.checkProvider}
-                checkProviders={this.checkProviders}
+                // checkProviders={this.checkProviders}
                 checkEstimate={this.checkEstimate}
                 updateEstimate={this.updateEstimate}
                 sizeEstimate={this.state.sizeEstimate}

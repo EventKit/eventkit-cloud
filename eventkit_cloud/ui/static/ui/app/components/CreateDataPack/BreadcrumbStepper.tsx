@@ -76,7 +76,6 @@ export interface Props {
     mapLayers: MapLayer[];
     getEstimate: any;
     checkProvider: (args: any) => void;
-    checkProviders: (args: any) => void;
     updateEstimate: () => void;
     sizeEstimate: number;
     timeEstimate: number;
