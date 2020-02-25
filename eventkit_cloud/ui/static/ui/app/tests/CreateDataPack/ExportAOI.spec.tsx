@@ -690,11 +690,11 @@ describe('ExportAOI component', () => {
         const addInteractionSpy = sinon.spy(Map.prototype, 'addInteraction');
         const addLayerSpy = sinon.spy(Map.prototype, 'addLayer');
         instance.initializeOpenLayers();
-        expect(layerSpy.calledThrice).toBe(true);
+        expect(layerSpy.callCount).toBe(4);
         expect(boxSpy.calledOnce).toBe(true);
         expect(freeSpy.calledOnce).toBe(true);
         expect(addInteractionSpy.calledThrice).toBe(true);
-        expect(addLayerSpy.calledThrice).toBe(true);
+        expect(addLayerSpy.callCount).toBe(4);
         layerSpy.restore();
         boxSpy.restore();
         freeSpy.restore();

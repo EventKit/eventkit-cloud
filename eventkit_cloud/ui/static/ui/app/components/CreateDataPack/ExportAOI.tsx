@@ -523,6 +523,7 @@ export class ExportAOI extends React.Component<Props, State> {
             fill: new Fill({color: this.props.theme.eventkit.colors.text_primary}),
             stroke: new Stroke({color: '#3399CC', width: 1.25}),
         }));
+
         this.bufferLayer.setStyle(new Style({
             stroke: new Stroke({
                 color: this.props.theme.eventkit.colors.primary,
