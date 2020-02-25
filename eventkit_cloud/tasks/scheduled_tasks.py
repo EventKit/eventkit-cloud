@@ -202,7 +202,7 @@ def run_task_command(client: PcfClient, app_name: str, queue_name: str, task: di
     :param task:A dict containing the command, memory, and disk for the task to run.
     :return: None
     """
-    command = task['command']
+    command = task["command"]
     disk = task["disk"]
     memory = task["memory"]
 
@@ -311,7 +311,7 @@ def get_celery_health_check_command(node_type: str):
         [f"celery inspect -A eventkit_cloud --timeout=20 --destination={hostname} ping" for hostname in hostnames]
     )
     health_check_command = (
-        f"sleep 30; while {ping_command} >/dev/null 2>&1; do sleep 60; done; "
+        f" & sleep 30; while {ping_command} >/dev/null 2>&1; do sleep 60; done; "
         f"echo At least one $HOSTNAME worker is dead! Killing Task...; pkill celery"
     )
 
@@ -326,7 +326,7 @@ def get_celery_tasks():
     """
     celery_group_name = os.getenv("CELERY_GROUP_NAME", socket.gethostname())
 
-    priority_queue_command = " & exec celery worker -A eventkit_cloud --loglevel=$LOG_LEVEL --concurrency=1 -n priority@%h -Q $CELERY_GROUP_NAME.priority,$HOSTNAME.priority "  # NOQA
+    priority_queue_command = " & exec celery worker -A eventkit_cloud --loglevel=$LOG_LEVEL --concurrency=1 -n priority@%h -Q $CELERY_GROUP_NAME.priority,$HOSTNAME.priority"  # NOQA
 
     celery_tasks = OrderedDict(
         {
