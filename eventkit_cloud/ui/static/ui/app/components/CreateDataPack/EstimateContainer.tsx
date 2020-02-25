@@ -65,7 +65,6 @@ export class EstimateContainer extends React.Component<Props, State> {
     }
 
     componentDidUpdate(prevProps: Readonly<Props>): void {
-        console.log('estimatecontainer updated')
         if (this.context.config.SERVE_ESTIMATES) {
             // only update the estimate if providers has changed
             const prevProviders = prevProps.exportInfo.providers;
@@ -148,9 +147,9 @@ export class EstimateContainer extends React.Component<Props, State> {
         // This assumes that the entire selection is the first feature, if the feature collection becomes the
         // selection then the bbox would need to be calculated for it.
         if (this.context.config.SERVE_ESTIMATES) {
-            // if (Object.keys(this.props.geojson).length === 0) {
-            //     return null;
-            // }
+            if (Object.keys(this.props.geojson).length === 0) {
+                return null;
+            }
             const bbox = featureToBbox(this.props.geojson.features[0], WGS84);
             const estimates = await this.getEstimate(provider, bbox);
             return {time: estimates.time, size: estimates.size} as Eventkit.Store.Estimates;
@@ -227,7 +226,6 @@ export class EstimateContainer extends React.Component<Props, State> {
         let timeEstimate = 0;
         const maxAcceptableTime = 60 * 60 * 24 * this.props.exportInfo.providers.length;
         for (const provider of this.props.exportInfo.providers) {
-            // tslint:disable-next-line:triple-equals
             if (this.props.exportInfo.providerInfo[provider.slug] == undefined) {
                 this.setState({areEstimatesLoading: true});
                 return;
@@ -239,11 +237,6 @@ export class EstimateContainer extends React.Component<Props, State> {
                     if (providerInfo.estimates) {
                         timeEstimate += providerInfo.estimates.time.value;
                         sizeEstimate += providerInfo.estimates.size.value;
-                    }
-                    // for cloned estimates as data structure is slightly different when saved to store
-                    if (providerInfo.estimated_size || providerInfo.estimated_duration) {
-                        timeEstimate += providerInfo.estimated_duration;
-                        sizeEstimate += providerInfo.estimated_size;
                     }
                 }
                 }

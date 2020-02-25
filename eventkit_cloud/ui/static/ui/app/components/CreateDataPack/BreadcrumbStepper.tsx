@@ -2,7 +2,7 @@ import * as React from 'react';
 import {Route} from 'react-router';
 import history from '../../utils/history';
 import {connect} from 'react-redux';
-import {Theme, withStyles, withTheme} from '@material-ui/core/styles';
+import {Theme, withTheme} from '@material-ui/core/styles';
 import isEqual from 'lodash/isEqual';
 import Divider from '@material-ui/core/Divider';
 import Warning from '@material-ui/icons/Warning';
@@ -154,7 +154,6 @@ export class BreadcrumbStepper extends React.Component<Props, State> {
         if (this.props.exportInfo.exportName === '') {
             this.props.setNextDisabled();
         }
-        console.log('breadcrumbstepper mounted')
         this.props.getProviders();
         this.getEstimateLabel(0);
         this.props.getProjections();
@@ -175,7 +174,6 @@ export class BreadcrumbStepper extends React.Component<Props, State> {
             this.hideLoading();
             this.showError(this.props.jobError);
         }
-
         if (!isEqual(this.props.aoiInfo, prevProps.aoiInfo) ||
             !isEqual(this.props.exportInfo, prevProps.exportInfo)) {
             this.setState({modified: true});
