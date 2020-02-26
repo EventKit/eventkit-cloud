@@ -23,6 +23,7 @@ import Button from "@material-ui/core/Button";
 import Clear from '@material-ui/icons/Clear';
 import theme from "../../styles/eventkit_theme";
 import FootprintDisplay from "./FootprintDisplay";
+import {MapLayer} from "./CreateExport";
 
 
 const jss = (theme: Theme & Eventkit.Theme) => createStyles({
@@ -171,17 +172,18 @@ export const VerticalTabs = withStyles(theme => ({
 
 // This should be used to facilitate user added base map sources (sources not derived from providers)
 export interface BaseMapSource {
-    url: string;
+    mapLayer: MapLayer;
     name: string;
     type: string;
     thumbnail_url: string;
-    slug?: string;
 }
 
 export interface Props {
     providers: Eventkit.Provider[];
     sources: BaseMapSource[];
-    updateBaseMap: (mapId: string, slug?: string) => void;
+    updateBaseMap: (mapLayer: MapLayer) => void;
+    addFootprintsLayer: (mapLayer: MapLayer) => void;
+    removeFootprintsLayer: (mapLayer: MapLayer) => void;
     classes: { [className: string]: string };
 }
 
@@ -215,17 +217,11 @@ export class MapDrawer extends React.Component<Props, State> {
 
     private updateBaseMap(newBaseMapId: number, sources) {
         this.setState({selectedBaseMap: newBaseMapId});
-        let baseMapUrl;
-        let slug;
-        if (newBaseMapId && newBaseMapId !== -1) {
-            baseMapUrl = sources[newBaseMapId].url;
-            if (!!sources[newBaseMapId].slug) {
-                slug = sources[newBaseMapId].slug;
-            }
-        } else {
-            baseMapUrl = '';
+        let mapLayer = {} as MapLayer;
+        if ((!!newBaseMapId || newBaseMapId === 0) && newBaseMapId !== -1) {
+            mapLayer = {...sources[newBaseMapId]}.mapLayer;
         }
-        this.props.updateBaseMap(baseMapUrl, slug);
+        this.props.updateBaseMap(mapLayer);
     }
 
     handleChange = (event, newValue) => {
@@ -244,7 +240,7 @@ export class MapDrawer extends React.Component<Props, State> {
                 if (selectedSources.indexOf(selectedSource) <=0) {
                     selectedSources.push(selectedSource)
                 } else {
-                    index = selectedSources.indexOf(selectedSource)
+                    index = selectedSources.indexOf(selectedSource);
                     if (index >= 0) {
                         selectedSources.splice(index, 1);
                     }
@@ -252,13 +248,22 @@ export class MapDrawer extends React.Component<Props, State> {
         } else {
             return null
         }
-        this.setState({expandedSources: selectedSources})
+        this.setState({expandedSources: selectedSources});
         this.updateBaseMap(Number(event.target.value), sources);
     };
 
-    showFootprintData(ix: number) {
+    showFootprintData(ix: number, sources) {
         if (this.state.expandedSources && this.state.selectedBaseMap === ix) {
-            return <FootprintDisplay/>
+            const source = sources[ix];
+            if (!!source.footprintsLayer) {
+                return (
+                    <FootprintDisplay
+                        footprintsLayer={source.footprintsLayer}
+                        addFootprintsLayer={this.props.addFootprintsLayer}
+                        removeFootprintsLayer={this.props.removeFootprintsLayer}
+                    />
+                )
+            }
         }
     }
 
@@ -269,12 +274,23 @@ export class MapDrawer extends React.Component<Props, State> {
             ...this.state.sources,
             // Filter for providers with a preview_url AND marked to display
             ...this.props.providers.filter(provider => !!provider.preview_url && !!provider.display).map(provider => {
+                let footprintsLayer;
+                if (!!provider.footprint_url) {
+                    footprintsLayer = {
+                        mapUrl: provider.footprint_url,
+                        slug: `${provider.slug}-footprints`,
+                    } as MapLayer;
+                }
                 return {
-                    url: provider.preview_url,
+                    footprintsLayer,
+                    mapLayer: {
+                        mapUrl: provider.preview_url,
+                        metadata: provider.metadata,
+                        slug: provider.slug,
+                    } as MapLayer,
                     name: provider.name,
                     type: provider.type,
                     thumbnail_url: provider.thumbnail_url,
-                    slug: provider.slug,
                 } as BaseMapSource;
             })];
         const drawerOpen = !!selectedTab;
@@ -374,7 +390,7 @@ export class MapDrawer extends React.Component<Props, State> {
                                                     <div
                                                         className={classes.footprint_options}
                                                     >
-                                                        {this.showFootprintData(ix)}
+                                                        {this.showFootprintData(ix, sources)}
                                                     </div>
                                                 </div>
                                             ))

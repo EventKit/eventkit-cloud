@@ -4,6 +4,7 @@ import logo from '../../images/eventkit-logo.1.png';
 import basemap from '../../images/icn_basemap.svg';
 import favicon from '../../images/favicon.png';
 import reddotfavicon from '../../images/reddotfavicon.png';
+import map_pin from '../../images/icn_poi_pin.svg';
 
 export const breakpoints = {
     values: {
@@ -45,7 +46,8 @@ export const images = {
     logo,
     basemap,
     favicon,
-    reddotfavicon
+    reddotfavicon,
+    map_pin,
 };
 
 // define a global theme for the application

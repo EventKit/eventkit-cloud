@@ -8,7 +8,7 @@ import Collapse from '@material-ui/core/Collapse';
 import ExpandLess from '@material-ui/icons/ExpandLess';
 import ExpandMore from '@material-ui/icons/ExpandMore';
 import {MapView} from "./MapView";
-import {SelectedBaseMap} from "../CreateDataPack/CreateExport";
+import {MapLayer} from "../CreateDataPack/CreateExport";
 
 export interface Props {
     children: any;
@@ -47,7 +47,7 @@ export class MapCard extends React.Component<Props, State> {
 
     render() {
         const { colors } = this.props.theme.eventkit;
-        const selectedBasemap = { baseMapUrl: this.context.config.BASEMAP_URL } as SelectedBaseMap;
+        const selectedBasemap = { mapUrl: this.context.config.BASEMAP_URL } as MapLayer;
 
         return (
             <Card
