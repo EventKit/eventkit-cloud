@@ -3,7 +3,7 @@ import * as React from 'react';
 import CustomTableRow from '../CustomTableRow';
 import { getSqKmString } from '../../utils/generic';
 import {MapView} from "../common/MapView";
-import {SelectedBaseMap} from "../CreateDataPack/CreateExport";
+import {MapLayer} from "../CreateDataPack/CreateExport";
 
 export interface Props {
     extent: object;
@@ -19,7 +19,7 @@ export class DataPackAoiInfo extends React.Component<Props, {}> {
     }
 
     render() {
-        const selectedBasemap = { baseMapUrl: this.context.config.BASEMAP_URL } as SelectedBaseMap;
+        const selectedBasemap = { mapUrl: this.context.config.BASEMAP_URL } as MapLayer;
 
         return (
             <div>

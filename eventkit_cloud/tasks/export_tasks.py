@@ -1506,7 +1506,7 @@ def export_task_error_handler(self, result=None, run_uid=None, task_id=None, sta
     rocketchat_notifications = settings.ROCKETCHAT_NOTIFICATIONS
     if rocketchat_notifications:
         channels = rocketchat_notifications["channels"]
-        message = f"@here A DataPack has failed during processing. {ctx['url']}"
+        message = f"@here: A DataPack has failed during processing. {ctx['url']}"
 
         client = RocketChat(**rocketchat_notifications)
         for channel in channels:

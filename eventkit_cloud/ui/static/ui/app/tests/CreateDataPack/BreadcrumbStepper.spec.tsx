@@ -130,6 +130,7 @@ describe('BreadcrumbStepper component', () => {
         getNotificationsUnreadCount: sinon.spy(),
         getFormats: sinon.spy(),
         getProjections: sinon.spy(),
+        mapLayers: [],
         ...(global as any).eventkit_test_props,
     });
 
@@ -249,6 +250,7 @@ describe('BreadcrumbStepper component', () => {
             limits={wrapper.state('limits')}
             onWalkthroughReset={props.onWalkthroughReset}
             walkthroughClicked={props.walkthroughClicked}
+            mapLayers={props.mapLayers}
         />);
 
         content = wrapper.instance().getStepContent(1);
@@ -273,6 +275,7 @@ describe('BreadcrumbStepper component', () => {
             limits={wrapper.state('limits')}
             onWalkthroughReset={props.onWalkthroughReset}
             walkthroughClicked={props.walkthroughClicked}
+            mapLayers={props.mapLayers}
         />);
     });
 
