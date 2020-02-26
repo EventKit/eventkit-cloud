@@ -355,7 +355,7 @@ def get_celery_tasks():
                 "limit": 6,
             },
             f"{celery_group_name}.priority": {
-                "command": "celery worker -A eventkit_cloud --loglevel=$LOG_LEVEL -n priority@%h -Q $CELERY_GROUP_NAME.priority "
+                "command": "celery worker -A eventkit_cloud --loglevel=$LOG_LEVEL -n priority@%h -Q $CELERY_GROUP_NAME.priority "  # NOQA
                 + get_celery_health_check_command("priority"),  # NOQA
                 # NOQA
                 "disk": 2048,
