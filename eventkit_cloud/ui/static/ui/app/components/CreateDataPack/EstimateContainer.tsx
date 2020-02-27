@@ -4,6 +4,7 @@ import {getCookie, isZoomLevelInRange} from "../../utils/generic";
 import {featureToBbox, WGS84} from '../../utils/mapUtils';
 import {updateExportInfo} from '../../actions/datacartActions';
 import {getProviders} from '../../actions/providerActions';
+import debounce from 'lodash/debounce';
 import axios from "axios";
 import {connect} from "react-redux";
 import * as PropTypes from "prop-types";
@@ -31,6 +32,7 @@ export interface State {
 export class EstimateContainer extends React.Component<Props, State> {
     private CancelToken = axios.CancelToken;
     private source = this.CancelToken.source();
+    private estimateDebouncer;
 
     static contextTypes = {
         config: PropTypes.object,
@@ -46,6 +48,8 @@ export class EstimateContainer extends React.Component<Props, State> {
         this.updateEstimate = this.updateEstimate.bind(this);
         this.getProviders = this.getProviders.bind(this);
         this.checkProviders = this.checkProviders.bind(this);
+
+        this.estimateDebouncer = ()  => { /* do nothing while not mounted */};
         this.state = {
             areEstimatesLoading: true,
             sizeEstimate: -1,
@@ -58,10 +62,12 @@ export class EstimateContainer extends React.Component<Props, State> {
     }
 
     componentDidMount(): void {
-        console.log('estimatecontainer mounted')
         // make requests to check provider availability
         this.getProviders().then(r => this.checkProviders(this.props.providers));
         this.setState({areEstimatesLoading: true});
+        this.estimateDebouncer = debounce((val) => {
+            this.checkProviders(val);
+        }, 1000);
     }
 
     componentDidUpdate(prevProps: Readonly<Props>): void {
@@ -69,8 +75,11 @@ export class EstimateContainer extends React.Component<Props, State> {
             // only update the estimate if providers has changed
             const prevProviders = prevProps.exportInfo.providers;
             const providers = this.props.exportInfo.providers;
-            if (prevProviders && providers) {
-                if (prevProviders.length !== providers.length) {
+            const prevGeojson = prevProps.geojson;
+            const geojson = this.props.geojson;
+
+            if ((prevProviders && providers)) {
+                if ((prevProviders.length !== providers.length)) {
                     this.updateEstimate();
                     this.setState({areEstimatesLoading: false});
                 } else if (!prevProviders.every((p1) => {
@@ -80,6 +89,12 @@ export class EstimateContainer extends React.Component<Props, State> {
                 }
             } else if (prevProviders || providers) {
                 this.updateEstimate();
+            } if (Object.keys(geojson).length !== 0) {
+                if (prevGeojson && geojson) {
+                    if (Object.keys(prevGeojson) !== Object.keys(geojson)) {
+                        this.estimateDebouncer(this.props.providers);
+                    }
+                }
             }
         }
     }
@@ -152,8 +167,8 @@ export class EstimateContainer extends React.Component<Props, State> {
             }
             const bbox = featureToBbox(this.props.geojson.features[0], WGS84);
             const estimates = await this.getEstimate(provider, bbox);
-            return {time: estimates.time, size: estimates.size} as Eventkit.Store.Estimates;
-        }
+                return {time: estimates.time, size: estimates.size} as Eventkit.Store.Estimates;
+            }
         return undefined;
     }
 
@@ -231,14 +246,14 @@ export class EstimateContainer extends React.Component<Props, State> {
                 return;
             } else {
                 if (provider.slug in this.props.exportInfo.providerInfo) {
-                const providerInfo = this.props.exportInfo.providerInfo[provider.slug];
+                    const providerInfo = this.props.exportInfo.providerInfo[provider.slug];
 
-                if (providerInfo) {
-                    if (providerInfo.estimates) {
-                        timeEstimate += providerInfo.estimates.time.value;
-                        sizeEstimate += providerInfo.estimates.size.value;
+                    if (providerInfo) {
+                        if (providerInfo.estimates.time && providerInfo.estimates.size) {
+                            timeEstimate += providerInfo.estimates.time.value;
+                            sizeEstimate += providerInfo.estimates.size.value;
+                        }
                     }
-                }
                 }
                 if (timeEstimate > maxAcceptableTime) {
                     timeEstimate = maxAcceptableTime;

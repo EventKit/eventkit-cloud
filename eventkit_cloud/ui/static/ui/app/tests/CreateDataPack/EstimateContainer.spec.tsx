@@ -118,4 +118,13 @@ describe('EstimateContainer component', () => {
         expect(checkAvailStub.called).toBe(false);
         expect(checkEstStub.called).toBe(false);
     });
+
+    it('updated estimates should trigger componentDidUpdate', async () => {
+        const updateSpy = sinon.spy(instance, 'componentDidUpdate');
+        expect(updateSpy.called).toBe(false);
+        instance.setState({sizeEstimate: 4, timeEstimate: 10});
+        wrapper.update();
+        expect(updateSpy.called).toBe(true);
+        updateSpy.restore();
+    });
 });
