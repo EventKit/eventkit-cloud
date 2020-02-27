@@ -266,7 +266,7 @@ class DataProvider(UIDMixin, TimeStampedModelMixin, CachedModelMixin):
     @property
     def metadata(self):
         if not self.config:
-            return
+            return None
         config = yaml.load(self.config)
         url = config.get("sources", {}).get("info", {}).get("req", {}).get("url")
         type = config.get("sources", {}).get("info", {}).get("type")
@@ -276,7 +276,7 @@ class DataProvider(UIDMixin, TimeStampedModelMixin, CachedModelMixin):
     @property
     def footprint_url(self):
         if not self.config:
-            return
+            return None
         config = yaml.load(self.config)
 
         url = config.get("sources", {}).get("footprint", {}).get("req", {}).get("url")
