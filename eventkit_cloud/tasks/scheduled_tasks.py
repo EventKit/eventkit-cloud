@@ -199,10 +199,9 @@ def run_task_command(client: PcfClient, app_name: str, queue_name: str, task: di
     :param client: A Pcf Client object.
     :param app_name: The name of the pcf application to send the task to.
     :param queue_name: Name of queue to scale.
-    :param task:A dict containing the comamnd, memory, and disk for the task to run.
+    :param task:A dict containing the command, memory, and disk for the task to run.
     :return: None
     """
-
     command = task["command"]
     disk = task["disk"]
     memory = task["memory"]
@@ -299,6 +298,26 @@ def clean_up_queues_task():
                 logger.info(e)
 
 
+def get_celery_health_check_command(node_type: str):
+    """
+    Constructs a health check command for celery workers.
+    :param node_type: A string with the name of the node type to add to hostnames.
+    """
+    hostnames = ["priority@$HOSTNAME"]
+    if node_type is not "priority":
+        hostnames.append(f"{node_type}@$HOSTNAME")
+
+    ping_command = " && ".join(
+        [f"celery inspect -A eventkit_cloud --timeout=20 --destination={hostname} ping" for hostname in hostnames]
+    )
+    health_check_command = (
+        f" & sleep 30; while {ping_command} >/dev/null 2>&1; do sleep 60; done; "
+        f"echo At least one $HOSTNAME worker is dead! Killing Task...; pkill celery"
+    )
+
+    return health_check_command
+
+
 def get_celery_tasks():
     """
     Sets up a dict with settings for running about running PCF tasks for celery.
@@ -313,27 +332,31 @@ def get_celery_tasks():
         {
             f"{celery_group_name}": {
                 "command": "celery worker -A eventkit_cloud --loglevel=$LOG_LEVEL -n worker@%h -Q $CELERY_GROUP_NAME "
-                + priority_queue_command,
+                + priority_queue_command
+                + get_celery_health_check_command("worker"),
                 # NOQA
                 "disk": 2048,
                 "memory": 2048,
             },
             f"{celery_group_name}.large": {
                 "command": "celery worker -A eventkit_cloud --concurrency=1 --loglevel=$LOG_LEVEL -n large@%h -Q $CELERY_GROUP_NAME.large "  # NOQA
-                + priority_queue_command,
+                + priority_queue_command
+                + get_celery_health_check_command("large"),
                 # NOQA
                 "disk": 2048,
                 "memory": 4096,
             },
             "celery": {
                 "command": "celery worker -A eventkit_cloud --loglevel=$LOG_LEVEL -n celery@%h -Q celery "
-                + priority_queue_command,
+                + priority_queue_command
+                + get_celery_health_check_command("celery"),
                 "disk": 2048,
                 "memory": 2048,
                 "limit": 6,
             },
             f"{celery_group_name}.priority": {
-                "command": "celery worker -A eventkit_cloud --loglevel=$LOG_LEVEL -n priority@%h -Q $CELERY_GROUP_NAME.priority",  # NOQA
+                "command": "celery worker -A eventkit_cloud --loglevel=$LOG_LEVEL -n priority@%h -Q $CELERY_GROUP_NAME.priority "  # NOQA
+                + get_celery_health_check_command("priority"),  # NOQA
                 # NOQA
                 "disk": 2048,
                 "memory": 2048,
