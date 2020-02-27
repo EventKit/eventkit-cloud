@@ -81,7 +81,6 @@ export class EstimateContainer extends React.Component<Props, State> {
             if ((prevProviders && providers)) {
                 if ((prevProviders.length !== providers.length)) {
                     this.updateEstimate();
-                    this.setState({areEstimatesLoading: false});
                 } else if (!prevProviders.every((p1) => {
                     return providers.includes(p1);
                 })) {
@@ -91,7 +90,12 @@ export class EstimateContainer extends React.Component<Props, State> {
                 this.updateEstimate();
             } if (Object.keys(geojson).length !== 0) {
                 if (prevGeojson && geojson) {
-                    if (Object.keys(prevGeojson) !== Object.keys(geojson)) {
+                    if (prevGeojson !== geojson) {
+                        // if geojson changes clear out the provider info and trigger loading estimates.
+                        this.setState((state, props) => ({
+                            areEstimatesLoading: true,
+                            exportInfo: {providerInfo: {}}
+                        }));
                         this.estimateDebouncer(this.props.providers);
                     }
                 }
@@ -241,6 +245,7 @@ export class EstimateContainer extends React.Component<Props, State> {
         let timeEstimate = 0;
         const maxAcceptableTime = 60 * 60 * 24 * this.props.exportInfo.providers.length;
         for (const provider of this.props.exportInfo.providers) {
+            // tslint:disable-next-line:triple-equals
             if (this.props.exportInfo.providerInfo[provider.slug] == undefined) {
                 this.setState({areEstimatesLoading: true});
                 return;
@@ -248,7 +253,7 @@ export class EstimateContainer extends React.Component<Props, State> {
                 if (provider.slug in this.props.exportInfo.providerInfo) {
                     const providerInfo = this.props.exportInfo.providerInfo[provider.slug];
 
-                    if (providerInfo) {
+                    if (providerInfo && providerInfo.estimates) {
                         if (providerInfo.estimates.time && providerInfo.estimates.size) {
                             timeEstimate += providerInfo.estimates.time.value;
                             sizeEstimate += providerInfo.estimates.size.value;

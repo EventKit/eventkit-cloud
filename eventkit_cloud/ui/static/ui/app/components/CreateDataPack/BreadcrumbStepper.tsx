@@ -15,7 +15,7 @@ import ExportInfo from './ExportInfo';
 import ExportSummary from './ExportSummary';
 import {flattenFeatureCollection} from '../../utils/mapUtils';
 import {formatMegaBytes, getDuration, isZoomLevelInRange} from '../../utils/generic';
-import {clearAoiInfo, clearExportInfo, clearJobInfo, submitJob, updateExportInfo} from '../../actions/datacartActions';
+import {clearAoiInfo, clearExportInfo, clearJobInfo, submitJob} from '../../actions/datacartActions';
 import {stepperNextDisabled} from '../../actions/uiActions';
 import {getFormats} from '../../actions/formatActions';
 import {getNotifications, getNotificationsUnreadCount} from '../../actions/notificationsActions';
@@ -66,7 +66,6 @@ export interface Props {
     routes: Route[];
     getNotifications: () => void;
     getNotificationsUnreadCount: () => void;
-    updateExportInfo: (args: any) => void;
     theme: Eventkit.Theme & Theme;
     getProjections: () => void;
     projections: Eventkit.Projection[];
@@ -717,9 +716,6 @@ function mapDispatchToProps(dispatch) {
         },
         getNotificationsUnreadCount: (args) => {
             dispatch(getNotificationsUnreadCount(args));
-        },
-        updateExportInfo: (exportInfo) => {
-            dispatch(updateExportInfo(exportInfo));
         },
     };
 }
