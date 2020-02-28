@@ -48,6 +48,6 @@ has no support for inline styles :(
 /*
 This hides an unused label on the right side of result items.
  */
-.row > div > strong {
+.row > div > .empty {
     display: none !important;
 }
