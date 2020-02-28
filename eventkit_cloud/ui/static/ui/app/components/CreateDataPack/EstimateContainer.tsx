@@ -88,15 +88,14 @@ export class EstimateContainer extends React.Component<Props, State> {
                 }
             } else if (prevProviders || providers) {
                 this.updateEstimate();
-            } if (Object.keys(geojson).length !== 0) {
+            }
+            if (Object.keys(geojson).length !== 0) {
                 if (prevGeojson && geojson) {
                     if (prevGeojson !== geojson) {
                         // if geojson changes clear out the provider info and trigger loading estimates.
-                        this.setState((state, props) => ({
-                            areEstimatesLoading: true,
-                            exportInfo: {providerInfo: {}}
-                        }));
-                        this.estimateDebouncer(this.props.providers);
+                        this.props.exportInfo.providerInfo = {};
+                        this.setState({areEstimatesLoading: true});
+                        this.checkProviders(this.props.providers);
                     }
                 }
             }
