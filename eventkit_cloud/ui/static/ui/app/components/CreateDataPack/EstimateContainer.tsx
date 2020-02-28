@@ -4,7 +4,6 @@ import {getCookie, isZoomLevelInRange} from "../../utils/generic";
 import {featureToBbox, WGS84} from '../../utils/mapUtils';
 import {updateExportInfo} from '../../actions/datacartActions';
 import {getProviders} from '../../actions/providerActions';
-import debounce from 'lodash/debounce';
 import axios from "axios";
 import {connect} from "react-redux";
 import * as PropTypes from "prop-types";
@@ -32,7 +31,6 @@ export interface State {
 export class EstimateContainer extends React.Component<Props, State> {
     private CancelToken = axios.CancelToken;
     private source = this.CancelToken.source();
-    private estimateDebouncer;
 
     static contextTypes = {
         config: PropTypes.object,
@@ -49,7 +47,6 @@ export class EstimateContainer extends React.Component<Props, State> {
         this.getProviders = this.getProviders.bind(this);
         this.checkProviders = this.checkProviders.bind(this);
 
-        this.estimateDebouncer = ()  => { /* do nothing while not mounted */};
         this.state = {
             areEstimatesLoading: true,
             sizeEstimate: -1,
@@ -65,12 +62,9 @@ export class EstimateContainer extends React.Component<Props, State> {
         // make requests to check provider availability
         this.getProviders().then(r => this.checkProviders(this.props.providers));
         this.setState({areEstimatesLoading: true});
-        this.estimateDebouncer = debounce((val) => {
-            this.checkProviders(val);
-        }, 1000);
     }
 
-    componentDidUpdate(prevProps: Readonly<Props>): void {
+    async componentDidUpdate(prevProps: Readonly<Props>): Promise<void> {
         if (this.context.config.SERVE_ESTIMATES) {
             // only update the estimate if providers has changed
             const prevProviders = prevProps.exportInfo.providers;
@@ -93,13 +87,30 @@ export class EstimateContainer extends React.Component<Props, State> {
                 if (prevGeojson && geojson) {
                     if (prevGeojson !== geojson) {
                         // if geojson changes clear out the provider info and trigger loading estimates.
-                        this.props.exportInfo.providerInfo = {};
                         this.setState({areEstimatesLoading: true});
+                        await this.props.updateExportInfo({providerInfo: {}});
                         this.checkProviders(this.props.providers);
                     }
                 }
             }
         }
+    }
+
+    async checkGeojson(prevProps) {
+        const prevGeojson = prevProps.geojson;
+        const geojson = this.props.geojson;
+
+        if (Object.keys(geojson).length !== 0) {
+                if (prevGeojson && geojson) {
+                    if (prevGeojson !== geojson) {
+                        // if geojson changes clear out the provider info and trigger loading estimates.
+                        // providerInfo = {};
+                        this.setState({areEstimatesLoading: true});
+                        this.props.updateExportInfo({providerInfo: {}});
+                        this.checkProviders(this.props.providers);
+                    }
+                }
+            }
     }
 
     async getProviders() {
