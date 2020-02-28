@@ -96,23 +96,6 @@ export class EstimateContainer extends React.Component<Props, State> {
         }
     }
 
-    async checkGeojson(prevProps) {
-        const prevGeojson = prevProps.geojson;
-        const geojson = this.props.geojson;
-
-        if (Object.keys(geojson).length !== 0) {
-                if (prevGeojson && geojson) {
-                    if (prevGeojson !== geojson) {
-                        // if geojson changes clear out the provider info and trigger loading estimates.
-                        // providerInfo = {};
-                        this.setState({areEstimatesLoading: true});
-                        this.props.updateExportInfo({providerInfo: {}});
-                        this.checkProviders(this.props.providers);
-                    }
-                }
-            }
-    }
-
     async getProviders() {
         await this.props.getProviders();
         let max = 0;
