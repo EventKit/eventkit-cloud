@@ -64,7 +64,7 @@ export class EstimateContainer extends React.Component<Props, State> {
         this.setState({areEstimatesLoading: true});
     }
 
-    async componentDidUpdate(prevProps: Readonly<Props>): Promise<void> {
+    componentDidUpdate(prevProps: Readonly<Props>): void {
         if (this.context.config.SERVE_ESTIMATES) {
             // only update the estimate if providers has changed
             const prevProviders = prevProps.exportInfo.providers;
@@ -88,7 +88,7 @@ export class EstimateContainer extends React.Component<Props, State> {
                     if (prevGeojson !== geojson) {
                         // if geojson changes clear out the provider info and trigger loading estimates.
                         this.setState({areEstimatesLoading: true});
-                        await this.props.updateExportInfo({providerInfo: {}});
+                        this.props.updateExportInfo({providerInfo: {}});
                         this.checkProviders(this.props.providers);
                     }
                 }
@@ -193,8 +193,12 @@ export class EstimateContainer extends React.Component<Props, State> {
     }
 
     async checkAvailability(provider: Eventkit.Provider) {
-        const data = {geojson: this.props.geojson};
-        return (await this.getAvailability(provider, data));
+        if (Object.keys(this.props.geojson).length === 0) {
+                return;
+            } else {
+            const data = {geojson: this.props.geojson};
+            return (await this.getAvailability(provider, data));
+        }
     }
 
     async checkProvider(provider: Eventkit.Provider) {
@@ -267,7 +271,6 @@ export class EstimateContainer extends React.Component<Props, State> {
             <BreadcrumbStepper
                 {...this.props.breadcrumbStepperProps}
                 checkProvider={this.checkProvider}
-                checkEstimate={this.checkEstimate}
                 updateEstimate={this.updateEstimate}
                 sizeEstimate={this.state.sizeEstimate}
                 timeEstimate={this.state.timeEstimate}

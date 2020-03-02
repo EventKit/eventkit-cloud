@@ -3,7 +3,7 @@ import * as React from 'react';
 import {createStyles, Theme, withStyles, withTheme} from '@material-ui/core/styles';
 import {connect} from 'react-redux';
 import axios from 'axios';
-import {unsupportedFormats} from '../../utils/generic';
+import {getCookie, unsupportedFormats} from '../../utils/generic';
 import Joyride, {Step} from 'react-joyride';
 import List from '@material-ui/core/List';
 import Paper from '@material-ui/core/Paper';
@@ -207,7 +207,6 @@ export class ExportInfo extends React.Component<Props, State> {
         this.onSelectAll = this.onSelectAll.bind(this);
         this.onSelectProjection = this.onSelectProjection.bind(this);
         this.onRefresh = this.onRefresh.bind(this);
-        this.checkProviders = this.checkProviders.bind(this);
         this.handlePopoverOpen = this.handlePopoverOpen.bind(this);
         this.handlePopoverClose = this.handlePopoverClose.bind(this);
         this.handleProjectionCompatibilityOpen = this.handleProjectionCompatibilityOpen.bind(this);
@@ -236,11 +235,6 @@ export class ExportInfo extends React.Component<Props, State> {
         const updatedInfo = {
             areaStr,
         } as Eventkit.Store.ExportInfo;
-
-        // make requests to check provider availability
-        if (this.state.providers) {
-            this.checkProviders(this.state.providers);
-        }
 
         const steps = joyride.ExportInfo as any[];
         this.joyrideAddSteps(steps);
@@ -281,7 +275,6 @@ export class ExportInfo extends React.Component<Props, State> {
 
         if (this.props.providers.length !== prevProps.providers.length) {
             this.setState({providers: this.props.providers});
-            this.checkProviders(this.props.providers);
         }
 
         const selectedProjections = [...exportInfo.projections];
@@ -490,7 +483,6 @@ export class ExportInfo extends React.Component<Props, State> {
         }));
         // update state with the new copy of providers
         this.setState({providers});
-        this.checkProviders(providers);
     }
 
     private clearEstimate(provider: Eventkit.Provider) {
@@ -509,21 +501,6 @@ export class ExportInfo extends React.Component<Props, State> {
 
         this.props.updateExportInfo({
             providerInfo: updatedProviderInfo
-        });
-    }
-
-    private checkProviders(providers: Eventkit.Provider[]) {
-        Promise.all(providers.filter(provider => provider.display).map((provider) => {
-            return this.props.checkProvider(provider);
-        })).then(providerResults => {
-            const providerInfo = {...this.props.exportInfo.providerInfo} as Eventkit.Map<Eventkit.Store.ProviderInfo>;
-            providerResults.map((provider) => {
-                providerInfo[provider.slug] = provider.data;
-            });
-            this.props.updateExportInfo({providerInfo});
-            // Trigger an estimate calculation update in the parent
-            // Does not re-request any data, calculates the total from available results.
-            this.props.onUpdateEstimate();
         });
     }
 
