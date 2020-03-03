@@ -616,7 +616,7 @@ class TestExportTasks(ExportTaskBase):
         kill_task.run(task_pid=task_pid, celery_uid=celery_uid)
         mock_progressive_kill.assert_called_once_with(task_pid)
 
-    @patch('eventkit_cloud.tasks.models.ExportRun')
+    @patch('eventkit_cloud.tasks.export_tasks.ExportRun')
     def test_wait_for_providers_task(self, mock_export_run):
         mock_run_uid = str(uuid.uuid4())
 
@@ -653,7 +653,7 @@ class TestExportTasks(ExportTaskBase):
     @patch('builtins.open')
     @patch('eventkit_cloud.tasks.export_tasks.generate_qgs_style')
     @patch('os.path.join', side_effect=lambda *args: args[-1])
-    @patch('eventkit_cloud.tasks.models.DataProviderTaskRecord')
+    @patch('eventkit_cloud.tasks.export_tasks.DataProviderTaskRecord')
     def test_create_zip_task(self, mock_DataProviderTaskRecord, join, mock_generate_qgs_style, mock_open,
                              mock_json, mock_get_style_files, mock_get_human_readable_metadata_document,
                              mock_zip_files, mock_get_metadata, mock_get_arcgis_metadata):

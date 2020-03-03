@@ -1144,10 +1144,16 @@ def pick_up_run_task(self, result=None, run_uid=None, user_details=None, *args, 
         run.save()
         logger.error(str(e))
         raise
-    # wait_for_run(run=run, uid=run_uid)
+    wait_for_run(run_uid=run_uid)
 
 
-def wait_for_run(run=None, uid=None):
+def wait_for_run(run_uid: str = None) -> None:
+    """
+
+    :param run_uid: The uid of the run to wait on.
+    :return: None
+    """
+    run = ExportRun.objects.get(uid=run_uid)
     if run.status:
         while (
             TaskStates[run.status] not in TaskStates.get_finished_states()
@@ -1160,7 +1166,6 @@ def wait_for_run(run=None, uid=None):
 # This could be improved by using Redis or Memcached to help manage state.
 @app.task(name="Wait For Providers", base=EventKitBaseTask, acks_late=True)
 def wait_for_providers_task(result=None, apply_args=None, run_uid=None, callback_task=None, *args, **kwargs):
-    from eventkit_cloud.tasks.models import ExportRun
 
     if isinstance(callback_task, dict):
         callback_task = signature(callback_task)
@@ -1185,8 +1190,6 @@ def create_zip_task(result=None, data_provider_task_uid=None, *args, **kwargs):
     :param data_provider_task_uid: A data provider to zip (this or run_uid must be passed).
     :return: The run files, or a single zip file if data_provider_task_uid is passed.
     """
-    from eventkit_cloud.tasks.models import DataProviderTaskRecord
-
     if not result:
         result = {}
 
@@ -1230,8 +1233,6 @@ def finalize_export_provider_task(result=None, data_provider_task_uid=None, stat
     Cleans up staging directory.
     Updates export provider status.
     """
-
-    from eventkit_cloud.tasks.models import DataProviderTaskRecord
 
     # if the status was a success, we can assume all the ExportTasks succeeded. if not, we need to parse ExportTasks to
     # mark tasks not run yet as cancelled.
@@ -1340,8 +1341,6 @@ class FinalizeRunBase(EventKitBaseTask):
         """
         """
         """
-        from eventkit_cloud.tasks.models import ExportRun
-
         result = result or {}
 
         run = ExportRun.objects.get(uid=run_uid)
@@ -1419,8 +1418,6 @@ def finalize_run_task(result=None, run_uid=None, stage_dir=None, apply_args=None
     Updates run with finish time.
     Emails user notification.
     """
-    from eventkit_cloud.tasks.models import ExportRun
-
     result = result or {}
 
     run = ExportRun.objects.get(uid=run_uid)
@@ -1476,8 +1473,6 @@ def export_task_error_handler(self, result=None, run_uid=None, task_id=None, sta
     """
     Handles un-recoverable errors in export tasks.
     """
-    from eventkit_cloud.tasks.models import ExportRun
-
     result = result or {}
 
     run = ExportRun.objects.get(uid=run_uid)
@@ -1516,8 +1511,6 @@ def export_task_error_handler(self, result=None, run_uid=None, task_id=None, sta
 
 
 def cancel_synchronous_task_chain(data_provider_task_uid=None):
-    from eventkit_cloud.tasks.models import DataProviderTaskRecord
-
     data_provider_task_record = DataProviderTaskRecord.objects.get(uid=data_provider_task_uid)
     for export_task in data_provider_task_record.tasks.all():
         if TaskStates[export_task.status] == TaskStates.PENDING.value:
@@ -1540,8 +1533,6 @@ def create_datapack_preview(
     """
     result = result or {}
     try:
-        from eventkit_cloud.tasks.models import ExportRun, DataProviderTaskRecord
-        from eventkit_cloud.jobs.models import DataProviderTask
         from eventkit_cloud.utils.image_snapshot import (
             get_wmts_snapshot_image,
             make_snapshot_downloadable,
