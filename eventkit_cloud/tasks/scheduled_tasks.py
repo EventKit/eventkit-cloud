@@ -16,20 +16,6 @@ from eventkit_cloud.tasks.helpers import get_all_rabbitmq_objects, get_message_c
 logger = get_task_logger(__name__)
 
 
-# Seems redundant to expire_runs, if not needed should be deleted for 1.0.0
-# @app.task(name='Purge Unpublished Exports')
-# def PurgeUnpublishedExportsTask():
-#     """
-#     Purge unpublished export tasks after 48 hours.
-#     """
-#     from eventkit_cloud.jobs.models import Job
-#     time_limit = timezone.now() - timezone.timedelta(hours=48)
-#     expired_jobs = Job.objects.filter(created_at__lt=time_limit, published=False)
-#     count = expired_jobs.count()
-#     logger.debug('Purging {0} unpublished exports.'.format(count))
-#     expired_jobs.delete()
-
-
 @app.task(name='Expire Runs')
 def expire_runs():
     """
@@ -40,30 +26,28 @@ def expire_runs():
     """
     from eventkit_cloud.tasks.models import ExportRun
     site_url = getattr(settings, "SITE_URL")
-    runs = ExportRun.objects.all()
+    runs = ExportRun.objects.filter(deleted=False)
 
     for run in runs:
         expiration = run.expiration
         email = run.user.email
-        if not email:
-            break
         uid = run.job.uid
         url = '{0}/status/{1}'.format(site_url.rstrip('/'), uid)
         notified = run.notified
         now = timezone.now()
         # if expired delete the run:
         if expiration <= now:
-            run.delete()
+            run.soft_delete()
 
         # if two days left and most recent notification was at the 7 day mark email user
-        elif expiration - now <= timezone.timedelta(days=2):
+        elif expiration - now <= timezone.timedelta(days=2) and email:
             if not notified or (notified and notified < expiration - timezone.timedelta(days=2)):
                 send_warning_email(date=expiration, url=url, addr=email, job_name=run.job.name)
                 run.notified = now
                 run.save()
 
         # if one week left and no notification yet email the user
-        elif expiration - now <= timezone.timedelta(days=7) and not notified:
+        elif expiration - now <= timezone.timedelta(days=7) and not notified and email:
             send_warning_email(date=expiration, url=url, addr=email, job_name=run.job.name)
             run.notified = now
             run.save()
@@ -83,63 +67,78 @@ def pcf_scale_celery(max_instances):
     else:
         app_name = json.loads(os.getenv("VCAP_APPLICATION", "{}")).get("application_name")
 
-    client = PcfClient()
-    client.login()
-
-    running_tasks = client.get_running_tasks(app_name)
-    running_tasks_count = running_tasks["pagination"]["total_results"]
-
-    if running_tasks_count >= max_instances:
-        logger.info("Already at max instances, skipping.")
-        return
+    hostnames = ["worker@$HOSTNAME", "celery@$HOSTNAME", "cancel@$HOSTNAME", "finalize@$HOSTNAME", "osm@$HOSTNAME"]
+    ping_command = " && ".join(
+        [f"celery inspect -A eventkit_cloud --timeout=20 --destination={hostname} ping" for hostname in hostnames])
+    health_check_command = f"sleep 30; while {ping_command} >/dev/null 2>&1; do sleep 60; done; echo At least one $HOSTNAME worker is dead! Killing Task...; pkill celery"
 
     default_command = ("python manage.py runinitial && echo 'Starting celery workers' && "
-    "celery worker -A eventkit_cloud --concurrency=$CONCURRENCY --loglevel=$LOG_LEVEL -n runs@%h -Q runs "
-    "& exec celery worker -A eventkit_cloud --concurrency=$CONCURRENCY --loglevel=$LOG_LEVEL -n worker@%h -Q $CELERY_GROUP_NAME "
+    "celery worker -A eventkit_cloud --concurrency=$CONCURRENCY --loglevel=$LOG_LEVEL -n worker@%h -Q $CELERY_GROUP_NAME "
     "& exec celery worker -A eventkit_cloud --loglevel=$LOG_LEVEL -n celery@%h -Q celery "
     "& exec celery worker -A eventkit_cloud --loglevel=$LOG_LEVEL -n cancel@%h -Q $HOSTNAME.cancel "
     "& exec celery worker -A eventkit_cloud --concurrency=2 -n finalize@%h -Q $CELERY_GROUP_NAME.finalize "
     "& exec celery worker -A eventkit_cloud --concurrency=1 --loglevel=$LOG_LEVEL -n osm@%h -Q $CELERY_GROUP_NAME.osm ")
 
     command = os.getenv('CELERY_TASK_COMMAND',  default_command)
-
-    message_count = get_message_count("runs")
-    if message_count > 0:
-        logger.info(F"Sending task to {app_name} with command {command}")
-        client.run_task(command, app_name=app_name)
-        return
+    command = f"{command} & {health_check_command}"
 
     celery_group_name = os.getenv("CELERY_GROUP_NAME", socket.gethostname())
     broker_api_url = getattr(settings, 'BROKER_API_URL')
     queue_class = "queues"
     total_pending_messages = 0
 
-    # If there are queues with work and no workers, spawn a new worker instance
+    # Check to see if there is work that we care about and if so, scale a worker to do it.
     for queue in get_all_rabbitmq_objects(broker_api_url, queue_class):
         queue_name = queue.get('name')
-        pending_messages = queue.get('messages')
-        total_pending_messages = total_pending_messages + pending_messages
+        pending_messages = queue.get('messages', 0)
         if celery_group_name in queue_name or queue_name == "celery":
             logger.info(f"Queue {queue_name} has {pending_messages} pending messages.")
-            if pending_messages > 0 and running_tasks_count < 1:
-                logger.info(F"Sending task to {app_name} with command {command}")
-                client.run_task(command, app_name=app_name)
-                return
+            total_pending_messages = total_pending_messages + pending_messages
 
-    # If there is no work in the group, shut down the groups workers
-    if total_pending_messages == 0 and running_tasks_count > 0:
+    client = PcfClient()
+    client.login()
+
+    running_tasks = client.get_running_tasks(app_name)
+    running_tasks_count = running_tasks["pagination"]["total_results"]
+
+    # If there is work to do, and we aren't at max instances already then scale.
+    if total_pending_messages > 0:
+        if running_tasks_count < max_instances:
+            logger.info(F"Sending task to {app_name} with command {command}")
+            client.run_task(command, app_name=app_name)
+            return
+        else:
+            logger.info(F"Already at max instances, skipping scale with {total_pending_messages} total pending messages left in queue.")
+    # If there is no work in the group, shut down the remaining group workers down.
+    elif running_tasks_count > 0:
         shutdown_celery_workers.apply_async(queue=celery_group_name)
 
 
-@app.task(name="Shutdown Celery Workers")
-def shutdown_celery_workers():
-    hostnames = []
-    workers = ["runs", "worker", "celery", "cancel", "finalize", "osm"]
-    for worker in workers:
-        hostnames.append(F"{worker}@{socket.gethostname()}")
+@app.task(name="Shutdown Celery Workers", bind=True, default_retry_delay=60)
+def shutdown_celery_workers(self):
+    from eventkit_cloud.tasks.models import ExportTaskRecord
+    from eventkit_cloud.tasks.enumerations import TaskStates
 
-    logger.info("Queue is at zero, shutting down.")
-    app.control.broadcast("shutdown", destination=hostnames)
+    hostname = socket.gethostname()
+    hostnames = []
+    workers = ["worker", "celery", "cancel", "finalize", "osm"]
+    for worker in workers:
+        hostnames.append(F"{worker}@{hostname}")
+
+    export_tasks = ExportTaskRecord.objects.filter(
+        worker=hostname, status__in=['PENDING', 'RUNNING', 'SUBMITTED']
+    )
+    if not export_tasks:
+        logger.info(f"No work remaining on for worker {hostname}, shutting down {workers}")
+        app.control.broadcast("shutdown", destination=hostnames)
+        # return value is unused but useful for storing in the celery result.
+        return {"action": "shutdown", "workers": hostnames}
+    logger.info(
+        f"There are {running_tasks_by_queue_count} running tasks for "
+        f"{queue_name} and {messages} on the queue, skipping shutdown."
+    )
+    logger.info(f"Waiting for tasks {export_tasks} to finish before shutting down, {workers}.")
+    self.retry(exc=Exception(f"Tasks still in queue."))
 
 
 @app.task(name="Check Provider Availability")
