@@ -134,7 +134,9 @@ export class EstimateContainer extends React.Component<Props, State> {
         const data = {
             slugs: provider.slug,
             srs: 4326,
-            bbox: bbox.join(','), min_zoom: minZoom, max_zoom: maxZoom,
+            bbox: bbox.join(','),
+            min_zoom: minZoom,
+            max_zoom: maxZoom,
         };
 
         const csrfmiddlewaretoken = getCookie('csrftoken');
@@ -147,7 +149,7 @@ export class EstimateContainer extends React.Component<Props, State> {
         }).then((response) => {
             return response.data[0];
         }).catch(() => {
-            return {
+            return{
                 size: null,
                 slug: provider.slug,
                 time: null,
@@ -164,8 +166,10 @@ export class EstimateContainer extends React.Component<Props, State> {
             }
             const bbox = featureToBbox(this.props.geojson.features[0], WGS84);
             const estimates = await this.getEstimate(provider, bbox);
+            if (estimates) {
                 return {time: estimates.time, size: estimates.size} as Eventkit.Store.Estimates;
             }
+        }
         return undefined;
     }
 

@@ -208,14 +208,13 @@ describe('ExportInfo component', () => {
         expect(stateStub.calledWith({isRunning: true})).toBe(true);
     });
 
-    it('componentDidUpdate should update the providers and call checkProviders', () => {
+    it('componentDidUpdate should update the providers', () => {
         const stateStub = sinon.stub(instance, 'setState');
-        const checkStub = sinon.stub(instance, 'checkProviders');
+        // const checkStub = sinon.stub(instance, 'checkProviders');
         const nextProps = getProps();
         nextProps.providers = [{slug: '124'}];
         wrapper.setProps(nextProps);
         expect(stateStub.calledWith({providers: nextProps.providers})).toBe(true);
-        expect(checkStub.calledWith(nextProps.providers)).toBe(true);
     });
 
     it('onNameChange should call updateExportInfo', () => {
@@ -284,13 +283,12 @@ describe('ExportInfo component', () => {
         })).toBe(true);
     });
 
-    it('onRefresh should setState with empty availability and estimate and call checkProviders', () => {
+    it('onRefresh should setState with empty availability and estimate', () => {
         const p = getProps();
         p.providers = [{name: 'one'}, {name: 'two'}];
         p.exportInfo.providers = [...p.providers];
         setup(p);
         const stateStub = sinon.stub(instance, 'setState');
-        const checkStub = sinon.stub(instance, 'checkProviders');
         instance.onRefresh();
         const expected = [
             {name: 'one', availability: {}, estimate: {}},
@@ -298,9 +296,7 @@ describe('ExportInfo component', () => {
         ];
         expect(stateStub.calledOnce).toBe(true);
         expect(stateStub.calledWith({providers: expected}));
-        expect(checkStub.calledOnce).toBe(true);
         stateStub.restore();
-        checkStub.restore();
     });
 
     it('handlePopoverOpen should setState with anchorEl', () => {

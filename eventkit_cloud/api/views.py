@@ -402,7 +402,7 @@ class JobViewSet(viewsets.ModelViewSet):
                                                 "status": status_code,
                                                 "title": _("Selection area too large"),
                                                 "detail": _("The selected area is too large " "for provider '%s'")
-                                                % provider.name,
+                                                          % provider.name,
                                             }
                                         ]
                                     }
@@ -640,7 +640,7 @@ class JobViewSet(viewsets.ModelViewSet):
                         admins += 1
 
             if admins == 0:
-                return Response([{"detail": "This job has no administrators."}], status.HTTP_400_BAD_REQUEST,)
+                return Response([{"detail": "This job has no administrators."}], status.HTTP_400_BAD_REQUEST, )
 
             # throw out all current permissions and rewrite them
 
@@ -696,7 +696,7 @@ class JobViewSet(viewsets.ModelViewSet):
         """
 
         if "permissions" not in request.data:
-            return Response([{"detail": "missing permissions attribute"}], status.HTTP_400_BAD_REQUEST,)
+            return Response([{"detail": "missing permissions attribute"}], status.HTTP_400_BAD_REQUEST, )
 
         job_list = get_job_ids_via_permissions(request.data["permissions"])
         jobs = Job.objects.filter(id__in=job_list)
@@ -858,11 +858,14 @@ class DataProviderViewSet(viewsets.ReadOnlyModelViewSet):
             return Response(perform_provider_check(provider, geojson), status=status.HTTP_200_OK)
 
         except DataProvider.DoesNotExist as e:
-            return Response([{"detail": _("Provider not found")}], status=status.HTTP_400_BAD_REQUEST,)
+            return Response([{"detail": _("Provider not found")}], status=status.HTTP_400_BAD_REQUEST, )
 
         except Exception as e:
             logger.error(e)
-            return Response([{"detail": _("Internal Server Error")}], status=status.HTTP_500_INTERNAL_SERVER_ERROR,)
+            import traceback
+            traceback.print_exc()
+
+            return Response([{"detail": _("Internal Server Error")}], status=status.HTTP_500_INTERNAL_SERVER_ERROR, )
 
     def list(self, request, slug=None, *args, **kwargs):
         """
@@ -1127,9 +1130,9 @@ class ExportRunViewSet(viewsets.ModelViewSet):
         if search_term is not None:
             queryset = queryset.filter(
                 (
-                    Q(job__name__icontains=search_term)
-                    | Q(job__description__icontains=search_term)
-                    | Q(job__event__icontains=search_term)
+                        Q(job__name__icontains=search_term)
+                        | Q(job__description__icontains=search_term)
+                        | Q(job__event__icontains=search_term)
                 )
             )
         if not request.query_params.get("job_uid"):
@@ -1185,10 +1188,10 @@ class ExportRunViewSet(viewsets.ModelViewSet):
             max_date = now + timedelta(max_days)
             if target_date > max_date.replace(tzinfo=None):
                 message = "expiration date must be before " + max_date.isoformat()
-                return Response({"success": False, "detail": message}, status=status.HTTP_400_BAD_REQUEST,)
+                return Response({"success": False, "detail": message}, status=status.HTTP_400_BAD_REQUEST, )
             if target_date < run.expiration.replace(tzinfo=None):
                 message = "expiration date must be after " + run.expiration.isoformat()
-                return Response({"success": False, "detail": message}, status=status.HTTP_400_BAD_REQUEST,)
+                return Response({"success": False, "detail": message}, status=status.HTTP_400_BAD_REQUEST, )
 
         run.expiration = target_date
         run.save()
@@ -1505,8 +1508,8 @@ class UserJobActivityViewSet(mixins.CreateModelMixin, mixins.ListModelMixin, vie
                     job__last_export_run__isnull=False,
                     job__last_export_run__deleted=False,
                 )
-                .distinct("job")
-                .values_list("id", flat=True)
+                    .distinct("job")
+                    .values_list("id", flat=True)
             )
 
             return activities.filter(id__in=ids).order_by("-created_at")
@@ -1545,7 +1548,7 @@ class UserJobActivityViewSet(mixins.CreateModelMixin, mixins.ListModelMixin, vie
                 last_job_viewed = queryset.first()
                 # Don't save consecutive views of the same job.
                 if str(last_job_viewed.job.uid) == job_uid:
-                    return Response({"ignored": True}, content_type="application/json", status=status.HTTP_200_OK,)
+                    return Response({"ignored": True}, content_type="application/json", status=status.HTTP_200_OK, )
             job = Job.objects.get(uid=job_uid)
             UserJobActivity.objects.create(user=self.request.user, job=job, type=UserJobActivity.VIEWED)
         else:
@@ -1986,7 +1989,7 @@ class EstimatorView(views.APIView):
          Args:
              slugs: Comma separated list of slugs for provider slugs (e.g. 'osm,some_wms1')
              bbox: Bounding box as w,s,e,n (e.g. '-130,-45,-100,10)
-             srs: EPSG code for the bbox srs (default=4326)
+             srqus: EPSG code for the bbox srs (default=4326)
          Returns:
             [{ "slug" : $slug_1, "size": $estimate_1, "unit": "mb"}, ...] or error
         """
@@ -2001,12 +2004,17 @@ class EstimatorView(views.APIView):
         if request.query_params.get("slugs", None):
             estimator = AoiEstimator(bbox=bbox, bbox_srs=srs, min_zoom=min_zoom, max_zoom=max_zoom)
             for slug in request.query_params.get("slugs").split(","):
-                size = estimator.get_estimate_from_slug(AoiEstimator.Types.SIZE, slug)[0]
-                time = estimator.get_estimate_from_slug(AoiEstimator.Types.TIME, slug)[0]
-                payload += [
-                    {"slug": slug, "size": {"value": size, "unit": "MB"}, "time": {"value": time, "unit": "seconds"}}
-                ]
-
+                try:
+                    size = estimator.get_estimate_from_slug(AoiEstimator.Types.SIZE, slug)[0]
+                    time = estimator.get_estimate_from_slug(AoiEstimator.Types.TIME, slug)[0]
+                    payload += [
+                        {"slug": slug, "size": {"value": size, "unit": "MB"},
+                         "time": {"value": time, "unit": "seconds"}}
+                    ]
+                except Exception as e:
+                    logger.error(e)
+        else:
+            return Response([{"detail": _("No providers found")}], status=status.HTTP_400_BAD_REQUEST, )
         return Response(payload, status=status.HTTP_200_OK)
 
 

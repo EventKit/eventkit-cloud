@@ -127,4 +127,12 @@ describe('EstimateContainer component', () => {
         expect(updateSpy.called).toBe(true);
         updateSpy.restore();
     });
+
+    it('componentDidUpdate should update the providers and call checkProviders', () => {
+        const checkStub = sinon.stub(instance, 'checkProviders');
+        const nextProps = getProps();
+        nextProps.providers = [{slug: '124'}];
+        wrapper.setProps(nextProps);
+        expect(checkStub.calledWith(nextProps.providers)).toBe(true);
+    });
 });
