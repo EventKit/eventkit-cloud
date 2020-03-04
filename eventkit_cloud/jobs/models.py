@@ -263,7 +263,6 @@ class DataProvider(UIDMixin, TimeStampedModelMixin, CachedModelMixin):
         cache.delete(f"base-config-{self.slug}")
         super(DataProvider, self).save(*args, **kwargs)
 
-
     def __str__(self):
         return "{0}".format(self.name)
 
