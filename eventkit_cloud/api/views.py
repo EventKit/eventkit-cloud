@@ -2001,12 +2001,21 @@ class EstimatorView(views.APIView):
         if request.query_params.get("slugs", None):
             estimator = AoiEstimator(bbox=bbox, bbox_srs=srs, min_zoom=min_zoom, max_zoom=max_zoom)
             for slug in request.query_params.get("slugs").split(","):
-                size = estimator.get_estimate_from_slug(AoiEstimator.Types.SIZE, slug)[0]
-                time = estimator.get_estimate_from_slug(AoiEstimator.Types.TIME, slug)[0]
-                payload += [
-                    {"slug": slug, "size": {"value": size, "unit": "MB"}, "time": {"value": time, "unit": "seconds"}}
-                ]
-
+                try:
+                    size = estimator.get_estimate_from_slug(AoiEstimator.Types.SIZE, slug)[0]
+                    time = estimator.get_estimate_from_slug(AoiEstimator.Types.TIME, slug)[0]
+                    payload += [
+                        {
+                            "slug": slug,
+                            "size": {"value": size, "unit": "MB"},
+                            "time": {"value": time, "unit": "seconds"},
+                        }
+                    ]
+                except Exception as e:
+                    logger.error(e)
+                    return Response([{"detail": _("Failed to get the estimates")}], status=status.HTTP_500_INTERNAL_SERVER_ERROR )
+        else:
+            return Response([{"detail": _("No providers found")}], status=status.HTTP_400_BAD_REQUEST)
         return Response(payload, status=status.HTTP_200_OK)
 
 
