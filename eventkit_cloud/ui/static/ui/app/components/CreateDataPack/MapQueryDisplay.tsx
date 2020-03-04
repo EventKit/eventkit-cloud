@@ -33,6 +33,7 @@ export interface Props {
 export interface State {
     queryLoading: boolean;
     responseData: FeatureResponse;
+    lastCoordinate?: TileCoordinate;
     closeCard: boolean;
 }
 
@@ -52,6 +53,16 @@ export class MapQueryDisplay extends React.Component<Props, State> {
         };
     }
 
+    componentDidUpdate(prevProps: Readonly<Props>, prevState: Readonly<State>, snapshot?: any): void {
+        const { selectedLayer } = this.props;
+        const { closeCard, lastCoordinate} = this.state;
+        const prevSelectedLayer = prevProps.selectedLayer;
+
+        if (prevSelectedLayer !== selectedLayer && !closeCard && lastCoordinate) {
+            this.handleMapClick(this.state.lastCoordinate);
+        }
+    }
+
     isQueryBoxVisible() {
         return this.state.queryLoading || !!this.state.responseData;
     }
@@ -59,6 +70,7 @@ export class MapQueryDisplay extends React.Component<Props, State> {
     private CancelToken = axios.CancelToken;
     private source = this.CancelToken.source();
     private getFeatures(tileCoord: TileCoordinate) {
+        this.setState({lastCoordinate: tileCoord});
         let responseData = {
             lat: tileCoord.lat,
             long: tileCoord.long,
