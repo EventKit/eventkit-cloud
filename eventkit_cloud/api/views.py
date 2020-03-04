@@ -2013,7 +2013,9 @@ class EstimatorView(views.APIView):
                     ]
                 except Exception as e:
                     logger.error(e)
-                    return Response([{"detail": _("Failed to get the estimates")}], status=status.HTTP_500_INTERNAL_SERVER_ERROR )
+                    return Response(
+                        [{"detail": _("Failed to get the estimates")}], status=status.HTTP_500_INTERNAL_SERVER_ERROR
+                    )
         else:
             return Response([{"detail": _("No providers found")}], status=status.HTTP_400_BAD_REQUEST)
         return Response(payload, status=status.HTTP_200_OK)
