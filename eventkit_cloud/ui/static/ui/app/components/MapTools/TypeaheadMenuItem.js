@@ -7,12 +7,8 @@ import IrregularPolygon from '../icons/IrregularPolygon';
 import '../../styles/typeaheadStyles.css';
 
 export class TypeaheadMenuItem extends Component {
-    createDescription(result) {
-        const description = [];
-        if (result.province) description.push(result.province);
-        if (result.region) description.push(result.region);
-        if (result.country) description.push(result.country);
-        return description.join(', ');
+    createDescription(returnedResult) {
+        return returnedResult.context_name;
     }
 
     render() {

@@ -1,267 +1,327 @@
+import json
 import logging
-from abc import ABCMeta, abstractmethod
 
-import requests
+import requests_mock
 from django.conf import settings
+from django.test import TestCase, override_settings
 
-from eventkit_cloud.utils.geocoding.geocode import AuthenticationError
-from eventkit_cloud.utils.geocoding.geocode_auth import get_auth_headers, authenticate
+from eventkit_cloud.utils.geocoding.geocode import Geocode, GeocodeAdapter, expand_bbox, is_valid_bbox
 
 logger = logging.getLogger(__name__)
 
+@override_settings(GEOCODING_AUTH_URL=None)
+class TestGeoCode(TestCase):
 
-class ReverseGeocodeAdapter(metaclass=ABCMeta):
-    """
-    An abstract class to implement a new reverse geocoding service.  Note that the UI will expect,
-    each feature to have a name, countryName, adminName1, adminName2, and the bbox only
-    """
+    def setUp(self):
+        self.mock_requests = requests_mock.Mocker()
+        self.mock_requests.start()
+        self.addCleanup(self.mock_requests.stop)
 
-    _properties = ['name', 'province', 'region', 'country']
+    def geocode_test(self, api_response):
+        self.mock_requests.get(settings.GEOCODING_API_URL, text=json.dumps(api_response), status_code=200)
+        geocode = Geocode()
+        result = geocode.search("test")
+        self.assertIsNotNone(result.get("features"))
+        self.assertEqual(result.get("type"), "FeatureCollection")
+        self.assertIsInstance(result.get("bbox"), list)
 
-    def __init__(self, url):
-        self.url = url
+        for feature in result.get("features"):
+            self.assertIsInstance(feature.get("bbox"), list)
+            properties = feature.get("properties")
+            self.assertIsInstance(properties, dict)
+            self.assertIsNotNone(feature.get('geometry'))
+            self.assertIsNotNone(feature.get('properties', {}).get('context_name'))
+            for property in GeocodeAdapter._properties:
+                self.assertTrue(property in properties)
 
-    @abstractmethod
-    def property_map(self):
-        """
-        This should be to convert a desired property to an existing property (i.e. AdminName2 -> province).
-        :return: A dict of the original properties, with the aliased properties appended.
-        Example:
-          Input:
-            {"AdminName2": "Fairfax"}
-          Output:
-             {"AdminName2": "Fairfax", "province": "Fairfax"}
-        """
-        pass
 
-    @abstractmethod
-    def add_bbox(self, update_url, data):
-        """
-        This takes an individual search result and tries to update it with a bbox if possible
-        :param update_url: The url to check for a bbox
-        :param data: A search feature
-        :return: The search feature with (if available) the relevant bbox
-        """
-        pass
-
-    @abstractmethod
-    def get_payload(self, query):
-        """
-        This takes some query (e.g. "38, -77"), and returns a dict representing query parameters that a specific api will expect.
-        :param query: A string
-        :return: A dict of API specific query paramters.
-            Input:
-                "Something"
-            Output:
-                {'maxRows': 20, 'username': 'eventkit', 'style': 'full', 'query': "Something"}
-        """
-        pass
-
-    @abstractmethod
-    def create_geojson(self, response):
-        """
-        This method takes a Requests response, and returns a GeoJSON, the returned geojson will be given as a response,
-        to the user, so it should already contain the mapped properties.
-        :param response: A Requests.response object.
-        :return: A FeatureCollection GeoJSON.
-
-            See GeoNames.create_geojson for an example implementation.
-            In general:
-                Convert each location to a GeoJSON Feature, by passing the feature, bbox, and/or properties (as a dict)
-                  to get_feature.
-                Add the Features to a FeatureCollection.
-                Return the FeatureCollection GeoJSON
-        """
-        pass
-
-    def get_response(self, payload):
-        response = requests.get(self.url, params=payload, headers=get_auth_headers())
-        if response.status_code in [401, 403]:
-            authenticate()
-            response = requests.get(self.url, params=payload, headers=get_auth_headers())
-            if not response.ok:
-                error_message = "EventKit was not able to authenticate to the Geocoding service."
-                logger.error(error_message)
-                raise AuthenticationError(error_message)
-        return response
-
-    def get_data(self, query):
-        """
-        Handles querying the endpoint and returning a geojson (as a python dict).
-        The expectation is that the concrete class will implement `get_payload`.
-        :param query: A string.
-        :return: A dict representing a geojson.
-        """
-
-        payload = self.get_payload(query)
-
-        if not self.url:
-            return
-        response = self.get_response(payload)
-        if response.status_code in [401, 403]:
-            authenticate()
-            response = self.get_response(payload)
-        return self.create_geojson(response)
-
-    def get_feature(self, feature=None, bbox=None, properties=None):
-        """
-        Used to prepare a feature.  It can take an original feature or create one from a bbox.  If both a feature AND
-        a bbox are used the bbox will be used to update the geometry.
-
-        The concrete class should implement property_map to ensure the information needed for the UI is returned.
-
-        :param feature: A dict representing a geojson feature.
-        :param bbox: A list representing a bounding box in EPSG:4326, [west, south, east, north].
-        :param properties: A dict of properties and their values.
-        :return: A feature with properties mapped.
-        """
-        if not feature:
-            feature = {
-                "type": "Feature",
-                "geometry": None,
-                "properties": None
+    @override_settings(GEOCODING_API_URL="http://geonames.url/",
+                       GEOCODING_API_TYPE="geonames")
+    def test_geonames_success(self):
+        geonames_response = {
+            "totalResultsCount": 2786,
+            "geonames": [{
+                "countryName": "United States",
+                "name": "Boston",
+                "bbox": {
+                    "west": -71.191155,
+                    "accuracyLevel": 10,
+                    "east": -70.748802,
+                    "north": 42.40082,
+                    "south": 42.22788
+                },
+                "adminName5": "",
+                "adminName2": "Suffolk County",
+                "adminName3": "City of Boston",
+                "adminName1": "Massachusetts",
+                "countryCode": "US"
+            }, {
+                "countryName": "United Kingdom",
+                "name": "Boston",
+                "bbox": {
+                    "west": -0.07844180129338765,
+                    "accuracyLevel": 10,
+                    "east": 0.02037330885294458,
+                    "north": 53.00181078171916,
+                    "south": 52.94756432927841
+                },
+                "adminName4": "",
+                "adminName5": "",
+                "adminName2": "Lincolnshire",
+                "adminName3": "Boston District",
+                "adminName1": "England",
+                "countryCode": "GB"
             }
-        if bbox and is_valid_bbox(bbox):
-            # testing
-            feature['bbox'] = bbox
-            feature['geometry'] = self.bbox2polygon(bbox)
-        return self.map_properties(feature, properties=properties)
-
-    @staticmethod
-    def get_feature_collection(features=None):
-        assert (isinstance(features, list))
-        max_bbox=None
-        for feature in features:
-            bbox = feature.get('bbox')
-            if bbox:
-                max_bbox = expand_bbox(max_bbox, bbox)
-        feature_collection = {
-            "type": "FeatureCollection",
-            "features": features
-        }
-        if is_valid_bbox(max_bbox):
-            feature_collection['bbox'] = max_bbox
-        return feature_collection
-
-    @staticmethod
-    def bbox2polygon(bbox):
-        try:
-            (w, s, e, n) = bbox
-        except KeyError:
-            return
-        coordinates = [
-            [
-                [w, s],
-                [e, s],
-                [e, n],
-                [w, n],
-                [w, s]
             ]
-        ]
-        return {"type": "Polygon",
-                "coordinates": coordinates}
+        }
 
-    def map_properties(self, feature, properties=None):
-        props = properties or feature.get('properties')
-        if props:
-            for key, value in self.property_map().items():
-                props[key] = props.get(value)
-        feature['properties'] = props
-        return feature
+        self.geocode_test(geonames_response)
 
+    @override_settings(GEOCODING_API_URL="http://geonames.url/",
+                       GEOCODING_API_TYPE="geonames",
+                       GEOCODING_UPDATE_URL='http://geonames.url/fake-update')
+    def test_geonames_add_bbox(self):
+        in_result = {
+            "type": "Feature",
+            "geometry": {"type": "Point", "coordinates": [102.18947, 17.77036]},
+            "properties": {"id": "1608462", "gid": "geonames:locality:1608462", "layer": "locality",
+                           "source": "geonames", "source_id": "1608462", "name": "Nam Som", "confidence": 0.957,
+                           "accuracy": "centroid", "country": "Thailand", "country_gid": "whosonfirst:country:85632293",
+                           "country_a": "THA", "region": "Udon Thani", "region_gid": "whosonfirst:region:85678869",
+                           "county": "Nam Som", "county_gid": "whosonfirst:county:1108731585", "locality": "Nam Som",
+                           "locality_gid": "geonames:locality:1608462", "label": "Nam Som, Thailand"
+            }
+        }
+        geocode = Geocode()
+        result = geocode.add_bbox(in_result)
+        self.assertEqual(result, in_result)
 
-class Pelias(ReverseGeocodeAdapter):
+    @override_settings(GEOCODING_API_URL="http://pelias.url/",
+                       GEOCODING_API_TYPE="pelias")
+    def test_pelias_success(self):
+        pelias_response = {"geocoding": {"version": "0.2", "attribution": "127.0.0.1:/v1/attribution",
+                                         "query": {"text": "Boston", "size": 10, "private": False,
+                                                   "lang": {"name": "English", "iso6391": "en", "iso6393": "eng",
+                                                            "defaulted": False}, "querySize": 20},
+                                         "engine": {"name": "Pelias", "author": "Mapzen", "version": "1.0"},
+                                         "timestamp": 1499345535894}, "type": "FeatureCollection", "features": [
+            {"type": "Feature", "geometry": {"type": "Point", "coordinates": [-71.048611, 42.355492]},
+             "properties": {"id": "85950361", "gid": "whosonfirst:locality:85950361", "layer": "locality",
+                            "source": "whosonfirst", "source_id": "85950361", "name": "Boston", "confidence": 0.947,
+                            "accuracy": "centroid", "country": "United States",
+                            "country_gid": "whosonfirst:country:85633793", "country_a": "USA",
+                            "region": "Massachusetts", "region_gid": "whosonfirst:region:85688645", "region_a": "MA",
+                            "county": "Suffolk County", "county_gid": "whosonfirst:county:102084423",
+                            "localadmin": "Boston", "localadmin_gid": "whosonfirst:localadmin:404476573",
+                            "locality": "Boston", "locality_gid": "whosonfirst:locality:85950361",
+                            "label": "Boston, MA, USA"},
+             "bbox": [-71.1912490997, 42.227911131, -70.9227798807, 42.3969775021]},
+            {"type": "Feature", "geometry": {"type": "Point", "coordinates": [-71.078909, 42.31369]},
+             "properties": {"id": "404476573", "gid": "whosonfirst:localadmin:404476573", "layer": "localadmin",
+                            "source": "whosonfirst", "source_id": "404476573", "name": "Boston", "confidence": 0.947,
+                            "accuracy": "centroid", "country": "United States",
+                            "country_gid": "whosonfirst:country:85633793", "country_a": "USA",
+                            "region": "Massachusetts", "region_gid": "whosonfirst:region:85688645", "region_a": "MA",
+                            "county": "Suffolk County", "county_gid": "whosonfirst:county:102084423",
+                            "localadmin": "Boston", "localadmin_gid": "whosonfirst:localadmin:404476573",
+                            "label": "Boston, MA, USA"}, "bbox": [-71.191155, 42.22788, -70.9235839844, 42.397398]}, ],
+                           "bbox": [-85.311933, 7.91601, 126.27843, 52.9924044449]}
 
-    def get_payload(self, query):
-        return query
+        self.geocode_test(pelias_response)
 
-    def create_geojson(self, response):
-        features = []
-        for feature in response.json().get('features'):
-            feature = self.get_feature(feature=feature, bbox=feature.get('bbox'))
-            features += [feature]
-        return self.get_feature_collection(features=features)
+    @override_settings(GEOCODING_API_URL="http://pelias.url/",
+                       GEOCODING_API_TYPE="pelias",
+                       GEOCODING_UPDATE_URL='http://pelias.url/place')
+    def test_pelias_add_bbox(self):
+        in_result = {
+            "type": "Feature",
+            "geometry": {"type": "Point", "coordinates": [102.18947, 17.77036]},
+            "properties": {"id": "1608462", "gid": "geonames:locality:1608462", "layer": "locality",
+                "source": "geonames", "source_id": "1608462", "name": "Nam Som", "confidence": 0.957,
+                "accuracy": "centroid", "country": "Thailand", "country_gid": "whosonfirst:country:85632293",
+                "country_a": "THA", "region": "Udon Thani", "region_gid": "whosonfirst:region:85678869",
+                "county": "Nam Som", "county_gid": "whosonfirst:county:1108731585", "locality": "Nam Som",
+                "locality_gid": "geonames:locality:1608462", "label": "Nam Som, Thailand"
+            }
+        }
 
-    def property_map(self):
-        return {"name": "name", "province": "county", "region": "region", "country": "country"}
+        api_response = {
+            "geocoding": {
+                "version": "0.2",
+                "attribution": "/v1/attribution",
+                "query": {
+                    "ids": [{"source": "whosonfirst", "layer": "county", "id": "1108731585"}],
+			        "private": False,
+			        "lang": {"name": "English", "iso6391": "en", "iso6393": "eng", "defaulted": False}
 
-    def add_bbox(self, update_url, data):
-        # the different gid levels that should be checked for a bbox
-        ids = ['neighbourhood_gid', 'locality_gid', 'county_gid', 'region_gid', 'country_gid']
-        search_id = ''
-        for id in ids:
-            gid = data.get(id, data.get('properties', None).get(id, None))
-            # use the gid if it exists and its not gid of the data in question
-            # (if it is the gid of the data then we should already have a bbox if its available at that level)
-            if gid and gid != data.get('gid'):
-                search_id = gid
-                break
+                },
+		        "engine": { "name": "Pelias", "author": "Mapzen", "version": "1.0" },
+                "timestamp": 1510925466405
+	        },
+	        "type": "FeatureCollection",
+	        "features": [
+                { "type": "Feature", "geometry": {
+				    "type": "Point",
+				    "coordinates": [102.227634, 17.743244]
+			    },
+			    "properties": { "id": "1108731585", "gid": "whosonfirst:county:1108731585", "layer": "county",
+                    "source": "whosonfirst", "source_id": "1108731585", "name": "Nam Som", "accuracy": "centroid",
+                    "country": "Thailand", "country_gid": "whosonfirst:country:85632293", "country_a": "THA",
+                    "region": "Udon Thani", "region_gid": "whosonfirst:region:85678869", "county": "Nam Som",
+                    "county_gid": "whosonfirst:county:1108731585", "label": "Nam Som, Thailand"
+			    },
+			    "bbox": [102.020749821, 17.6291659858, 102.33623593, 17.8795015544]
+		        }
+	        ],
+	        "bbox": [102.020749821, 17.6291659858, 102.33623593, 17.8795015544]
+        }
+        self.mock_requests.get(settings.GEOCODING_UPDATE_URL, text=json.dumps(api_response), status_code=200)
+        expected_bbox = api_response.get('bbox')
+        geocode = Geocode()
+        result = geocode.add_bbox(in_result)
+        self.assertEqual(result.get('type'), 'Feature')
+        self.assertEqual(result.get('bbox'), expected_bbox)
+        self.assertEqual(result.get('properties').get('bbox'), expected_bbox)
 
-        if search_id:
-            response = requests.get(update_url, params={'ids': search_id}).json()
-            logger.info(data)
-            features = response.get('features', [])
-            if len(features):
-                feature = features[0]
-                bbox = feature.get('bbox', None)
-                if bbox:
-                    data['bbox'] = bbox
-                    data['properties']['bbox'] = bbox
-        return data
+    @override_settings(GEOCODING_API_URL="http://pelias.url/",
+                       GEOCODING_API_TYPE="pelias",
+                       GEOCODING_UPDATE_URL="")
+    def test_geocode_no_update_url(self):
+        in_result = {
+            "type": "Feature",
+            "geometry": {"type": "Point", "coordinates": [102.18947, 17.77036]},
+            "properties": {"id": "1608462", "gid": "geonames:locality:1608462", "layer": "locality",
+                           "source": "geonames", "source_id": "1608462", "name": "Nam Som", "confidence": 0.957,
+                           "accuracy": "centroid", "country": "Thailand", "country_gid": "whosonfirst:country:85632293",
+                           "country_a": "THA", "region": "Udon Thani", "region_gid": "whosonfirst:region:85678869",
+                           "county": "Nam Som", "county_gid": "whosonfirst:county:1108731585", "locality": "Nam Som",
+                           "locality_gid": "geonames:locality:1608462", "label": "Nam Som, Thailand"
+                           }
+        }
+        geocode = Geocode()
+        result = geocode.add_bbox(in_result)
+        self.assertEqual(result, in_result)
 
+    @override_settings(GEOCODING_API_URL="",
+                       GEOCODING_API_TYPE="")
+    def test_geocode_error(self):
+        response = {}
 
-class ReverseGeocode(object):
+        with self.assertRaises(Exception):
+            self.geocode_test(response)
 
-    _supported_geocoders = {'pelias': Pelias}
+    def test_expand_bbox(self):
+        original_bbox = [-1,-1,1,1]
+        new_bbox = [0,0,2,2]
+        expected_result = [-1,-1,2,2]
 
-    def __init__(self):
-        url = getattr(settings, 'REVERSE_GEOCODING_API_URL')
-        type = getattr(settings, 'REVERSE_GEOCODING_API_TYPE')
-        self.update_url = getattr(settings, 'GEOCODING_UPDATE_URL')
-        if not (url and type):
-            logger.error("Both a `REVERSE_GEOCODING_API_URL` and a `REVERSE_GEOCODING_API_TYPE` must be defined in the settings.")
-            raise Exception('A geocoder configuration was not provided, contact an administrator.')
-        self.geocoder = self.get_geocoder(type, url)
+        result = expand_bbox(original_bbox, new_bbox)
+        assert(expected_result, result)
 
-    @property
-    def map(self):
-        return self._supported_geocoders
+        original_bbox = None
+        new_bbox = [0, 0, 2, 2]
+        expected_result = new_bbox
 
-    def get_geocoder(self, name, url):
-        return self.map.get(name.lower())(url)
+        result = expand_bbox(original_bbox, new_bbox)
+        assert (expected_result, result)
 
-    def add_bbox(self, data):
-        if not self.update_url:
-            return data
-        return self.geocoder.add_bbox(self.update_url, data)
+    def test_is_valid_bbox(self):
+        # test valid
+        bbox = [0, 0, 1, 1]
+        self.assertTrue(is_valid_bbox(bbox))
 
-    def search(self, query):
-        logger.info(query);
-        return self.geocoder.get_data(query)
+        # test not valid
+        bbox = [1, 1, 0, 2]
+        self.assertFalse(is_valid_bbox(bbox))
 
-# TODO: This is redundant code to what is in geocode.py additionally these functions
-# can probably be handled by existing dependencies.
-def is_valid_bbox(bbox):
-    if not isinstance(bbox, list) or len(bbox) != 4:
-        return False
-    if bbox[0] < bbox[2] and bbox[1] < bbox[3]:
-        return True
-    else:
-        return False
+        # test not valid
+        bbox = [1, 1, 2, 0]
+        self.assertFalse(is_valid_bbox(bbox))
 
+        # test not valid
+        bbox = None
+        self.assertFalse(is_valid_bbox(bbox))
 
-def expand_bbox(original_bbox, new_bbox):
-    """
-    Takes two bboxes and returns a new bbox containing the original two.
-    :param bbox: A list representing [west, south, east, north]
-    :param new_bbox: A list representing [west, south, east, north]
-    :return: A list containing the two original lists.
-    """
-    if not original_bbox:
-        original_bbox = list(new_bbox)
-        return original_bbox
-    original_bbox[0] = min(new_bbox[0], original_bbox[0])
-    original_bbox[1] = min(new_bbox[1], original_bbox[1])
-    original_bbox[2] = max(new_bbox[2], original_bbox[2])
-    original_bbox[3] = max(new_bbox[3], original_bbox[3])
-    return original_bbox
+        # test not valid
+        bbox = {}
+        self.assertFalse(is_valid_bbox(bbox))
+
+        # test not valid
+        bbox = [0,0,1]
+        self.assertFalse(is_valid_bbox(bbox))
+
+    @override_settings(GEOCODING_API_URL="http://pelias.url/",
+                       GEOCODING_API_TYPE="pelias",
+                       GEOCODING_UPDATE_URL='http://pelias.url/place')
+    def test_pelias_point_geometry(self):
+        bbox = [-71.1912490997, 42.227911131, -70.9227798807, 42.3969775021]
+        api_response = {
+            "features": [
+                {
+                    "type": "Feature",
+                    "geometry": {
+                        "type": "Point",
+                        "coordinates": []
+                    },
+                    "properties": {},
+                    "bbox": bbox
+                }
+            ]
+        }
+        self.mock_requests.get(settings.GEOCODING_API_URL, text=json.dumps(api_response), status_code=200)
+        geocode = Geocode()
+        result = geocode.search("test")
+        self.assertEqual(result.get('features')[0].get('geometry').get('coordinates'), [[[-71.1912490997, 42.227911131], [-70.9227798807, 42.227911131], [-70.9227798807, 42.3969775021], [-71.1912490997, 42.3969775021], [-71.1912490997, 42.227911131]]])
+
+    @override_settings(GEOCODING_API_URL="http://pelias.url/",
+                       GEOCODING_API_TYPE="pelias",
+                       GEOCODING_UPDATE_URL='http://pelias.url/place')
+    def test_pelias_polygon_geometry(self):
+        polygonCoordinates = [[[0, 1], [1, 0], [0, 3]]]
+        bbox = [-71.1912490997, 42.227911131, -70.9227798807, 42.3969775021]
+        api_response = {
+            "features": [
+                {
+                    "type": "Feature",
+                    "geometry": {
+                        "type":"Polygon",
+                        "coordinates": polygonCoordinates
+                    },
+                    "properties": {},
+                    "bbox": bbox
+                }
+            ]
+        }
+        self.mock_requests.get(settings.GEOCODING_API_URL, text=json.dumps(api_response), status_code=200)
+        geocode = Geocode()
+        result = geocode.search("test")
+        self.assertEqual(result.get('features')[0].get('geometry').get('coordinates'), polygonCoordinates)
+
+        @override_settings(GEOCODING_API_URL="http://nominatim.url/",
+                           GEOCODING_API_TYPE="nominatim")
+        def test_nominatim_success(self):
+            nominatim_response = [{
+                "place_id": 235668418,
+                "licence": "Data © OpenStreetMap contributors, ODbL 1.0. https://osm.org/copyright",
+                "osm_type": "relation",
+                "osm_id": 2315704,
+                "boundingbox": [
+                    "42.2279112",
+                    "42.3969775",
+                    "-71.1912491",
+                    "-70.8044881"
+                ],
+                "lat": "42.3602534",
+                "lon": "-71.0582912",
+                "display_name": "Boston, Suffolk County, Massachusetts, United States of America",
+                "class": "boundary",
+                "type": "administrative",
+                "importance": 0.8202507899404512,
+                "icon": "https://nominatim.openstreetmap.org/images/mapicons/poi_boundary_administrative.p.20.png",
+                "geojson": {
+                    "type": "Polygon",
+                    "coordinates": [[]]
+                }
+            }]
+
+            self.geocode_test(nominatim_response)
