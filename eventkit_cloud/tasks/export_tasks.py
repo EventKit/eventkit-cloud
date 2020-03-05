@@ -76,6 +76,7 @@ from eventkit_cloud.tasks.models import (
 from eventkit_cloud.jobs.models import (
     Job,
     DataProvider,
+    DataProviderTask
 )
 
 

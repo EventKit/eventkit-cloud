@@ -16,21 +16,31 @@ class ReverseGeocodeAdapter(metaclass=ABCMeta):
     each feature to have a name, countryName, adminName1, adminName2, and the bbox only
     """
 
-    _properties = ["name", "province", "region", "country"]
+    _properties = ["name", "context_name"]
 
     def __init__(self, url):
         self.url = url
 
     @abstractmethod
-    def property_map(self):
+    def add_name(self, feature):
         """
-        This should be to convert a desired property to an existing property (i.e. AdminName2 -> province).
-        :return: A dict of the original properties, with the aliased properties appended.
-        Example:
-          Input:
-            {"AdminName2": "Fairfax"}
-          Output:
-             {"AdminName2": "Fairfax", "province": "Fairfax"}
+        This should be used to add the full name of a feature to be displayed as the nane of the feature.
+        For example the "name" of the feature might be 5th Ave.  But the full name might be,
+        5th Ave, New York, NY, USA.  This value needs to be used as a field "display_name" in the returned,
+        geojson.  The feature would appear as 5th Ave, and underneath it would be the display_name of the feature,
+        underneath it.
+        :return: A string of the name (i.e. a short name).
+        """
+        pass
+
+    @abstractmethod
+    def add_context_name(self, feature):
+        """
+        This should be used to add the full name of a feature to be displayed under the "short name".
+        For example the "name" of the feature might be 5th Ave.  But the context name might be,
+        New York, NY, USA, to describe where the name occurs.  This value needs to be used as a
+        field "context_name" in the returned geojson.
+        :return: A string of the full name.
         """
         pass
 
@@ -122,7 +132,9 @@ class ReverseGeocodeAdapter(metaclass=ABCMeta):
             # testing
             feature["bbox"] = bbox
             feature["geometry"] = self.bbox2polygon(bbox)
-        return self.map_properties(feature, properties=properties)
+        self.add_name(feature)
+        self.add_context_name(feature)
+        return feature
 
     @staticmethod
     def get_feature_collection(features=None):
@@ -149,15 +161,74 @@ class ReverseGeocodeAdapter(metaclass=ABCMeta):
     def map_properties(self, feature, properties=None):
         props = properties or feature.get("properties")
         if props:
-            for key, value in self.property_map().items():
-                props[key] = props.get(value)
-        feature["properties"] = props
+            feature["properties"] = props
         return feature
+
+
+class Nominatim(ReverseGeocodeAdapter):
+    def get_payload(self, query):
+        return {"lat": query["lat"], "lon": query["lon"], "format": "json", "polygon_geojson": 1}
+
+    def create_geojson(self, response):
+        result = response.json()
+        if not response:
+            raise Exception("Geocoder did not return any results in the response")
+        features = []
+        logger.error(response)
+
+        bbox = result.pop("boundingbox", None)
+        feature = self.get_feature(result=result, bbox=self.get_bbox(bbox=bbox), properties=result)
+        features += [feature]
+        return self.get_feature_collection(features=features)
+
+    def get_bbox(self, bbox=None):
+        if not bbox:
+            return
+        try:
+            return list(map(float, [bbox[2], bbox[0], bbox[3], bbox[1]]))
+        except KeyError:
+            return None
+
+    def get_feature(self, result=None, bbox=None, properties=None):
+        """
+        Used to prepare a feature.  It can take an original feature or create one from a bbox.  If both a feature AND
+        a bbox are used the bbox will be used to update the geometry.
+
+        :param feature: A dict representing a geojson feature.
+        :param bbox: A list representing a bounding box in EPSG:4326, [west, south, east, north].
+        :param properties: A dict of properties and their values.
+        :return: A feature with properties mapped.
+        """
+        feature = {"type": "Feature", "geometry": result.pop("geojson", None), "properties": None}
+        for prop, value in result.pop("address", {}).items():
+            properties[prop] = value
+        if bbox and is_valid_bbox(bbox):
+            feature["bbox"] = bbox
+            if not feature.get("geometry"):
+                feature["geometry"] = self.bbox2polygon(bbox)
+        properties["source"] = "osm"
+        # Can't have type because front end confuses it as a geojson type
+        properties["class_type"] = properties.pop("type", None)
+        self.map_properties(feature, properties=result)
+        self.add_name(feature)
+        self.add_context_name(feature)
+        return feature
+
+    def add_name(self, feature):
+        """Nothing to do geonames already has a 'name' field."""
+        return feature
+
+    def add_context_name(self, feature):
+        feature["properties"]["context_name"] = ",".join(feature["properties"]["display_name"].split(",")[1:])
+        return feature
+
+    def add_bbox(self, update_url, data):
+        return data
 
 
 class Pelias(ReverseGeocodeAdapter):
     def get_payload(self, query):
-        return query
+        return {"point.lat": query["lat"], "point.lon": query["lon"]}
 
     def create_geojson(self, response):
         features = []
@@ -166,13 +237,19 @@ class Pelias(ReverseGeocodeAdapter):
             features += [feature]
         return self.get_feature_collection(features=features)
 
-    def property_map(self):
-        return {
-            "name": "name",
-            "province": "county",
-            "region": "region",
-            "country": "country",
-        }
+    def add_name(self, feature):
+        """Nothing to do Pelias already has a 'name' field."""
+        return feature
+
+    def add_context_name(self, feature):
+        mapping = ["county", "region", "country"]
+        name = []
+        for prop in mapping:
+            value = feature["properties"].get(prop)
+            if value:
+                name.append(value)
+        feature["properties"]["context_name"] = ", ".join(name)
+        return feature
 
     def add_bbox(self, update_url, data):
         # the different gid levels that should be checked for a bbox
@@ -194,7 +271,6 @@ class Pelias(ReverseGeocodeAdapter):
 
         if search_id:
             response = requests.get(update_url, params={"ids": search_id}).json()
-            logger.info(data)
             features = response.get("features", [])
             if len(features):
                 feature = features[0]
@@ -207,7 +283,7 @@ class Pelias(ReverseGeocodeAdapter):
 
 class ReverseGeocode(object):
 
-    _supported_geocoders = {"pelias": Pelias}
+    _supported_geocoders = {"pelias": Pelias, "nominatim": Nominatim}
 
     def __init__(self):
         url = getattr(settings, "REVERSE_GEOCODING_API_URL")
