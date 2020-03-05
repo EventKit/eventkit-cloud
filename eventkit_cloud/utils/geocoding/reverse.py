@@ -215,7 +215,7 @@ class Nominatim(ReverseGeocodeAdapter):
         return feature
 
     def add_name(self, feature):
-        """Nothing to do geonames already has a 'name' field."""
+        feature["properties"]["name"] = feature["properties"]["display_name"].split(",")[0]
         return feature
 
     def add_context_name(self, feature):
