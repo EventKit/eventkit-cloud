@@ -24,9 +24,9 @@ def main():
     parser.add_argument('--project', default='project',
                         help='The project name, will be the same for all datapacks (not based on file).')
     parser.add_argument('--sources', nargs='*', default='',
-                        help='The project name, will be the same for all datapacks (not based on file).')
+                        help='The data providers that you would like to use, if left blank it will use all of them.')
     parser.add_argument('--limit', type=int, default=0,
-                        help='The project name, will be the same for all datapacks (not based on file).')
+                        help='The max number of jobs to create.')
     parser.add_argument('--start', type=int, default=0,
                         help='The index (0-based) of the first geojson feature to use to create a datapack')
     parser.add_argument('--verify', default='true',
@@ -49,9 +49,9 @@ def main():
         provider_tasks = []
         for provider in client.get_providers():
             if provider.get('slug') in args.sources:
-                provider_tasks += [{"provider": provider.get('name'), "formats": ["gpkg"]}]
+                provider_tasks += [{"provider": provider.get('slug'), "formats": ["gpkg"]}]
     else:
-        provider_tasks = [{"provider": provider.get('name'), "formats": ["gpkg"]} for provider in client.get_providers()]
+        provider_tasks = [{"provider": provider.get('slug'), "formats": ["gpkg"]} for provider in client.get_providers()]
 
     with open(args.file, 'rb') as geojson_file:
         geojson_data = json.load(geojson_file)
@@ -69,14 +69,14 @@ def main():
 
         description = feature['properties'].get(args.description) or "Created using the seed_data script."
         project = feature['properties'].get(args.project) or "seed"
-        if name in [run['job']['name'] for run in client.get_runs(search_term=name)]:
+        if name in [run['job']['name'] for run in client.search_runs(search_term=name)]:
             print(("Skipping {0} because data already exists in a DataPack with the same name.".format(name)))
             continue
         if not name:
             print(("Skipping: \n {0} \n"
                   "because a valid name wasn't provided or found.".format(feature)))
             continue
-        response = client.run_job(name=name, description=description, project=project,
+        response = client.create_job(name=name, description=description, project=project,
                                   provider_tasks=provider_tasks, selection=feature)
 
         if response:
