@@ -208,12 +208,11 @@ def get_raster_tile_grid_size_estimate(provider, bbox, srs="4326", with_clipping
     total_pixels = ek_stats.get_total_num_pixels(tile_grid, bbox, srs, with_clipping)
 
     mpp, method = ek_stats.query(
-        provider.name,
+        provider.slug,
         field=Stats.Fields.MPP,
         statistic_name=Stats.MEAN,
         bbox=bbox,
         bbox_srs=srs,
-        grouping="provider_name",
         gap_fill_thresh=0.1,
         default_value=0.00000006,
     )
@@ -240,12 +239,11 @@ def get_vector_estimate(provider, bbox, srs="4326"):
 
     # Compute estimate
     size_per_km, method = ek_stats.query(
-        provider.export_provider_type.type_name,
+        provider.slug,
         field=Stats.Fields.SIZE,
         statistic_name=Stats.MEAN,
         bbox=bbox,
         bbox_srs=srs,
-        grouping="provider_type",
         gap_fill_thresh=0.1,
         default_value=0,
     )
@@ -261,12 +259,11 @@ def get_time_estimate(provider, bbox, bbox_srs="4326"):
     :return: (estimate in seconds, object w/ metadata about how it was generated)
     """
     duration_per_unit_area, method = ek_stats.query(
-        provider.name,
+        provider.slug,
         field=Stats.Fields.DURATION,
         statistic_name=Stats.MEAN,
         bbox=bbox,
         bbox_srs=bbox_srs,
-        grouping="provider_name",
         gap_fill_thresh=0.1,
         default_value=0,
     )
