@@ -174,7 +174,6 @@ class Nominatim(ReverseGeocodeAdapter):
         if not response:
             raise Exception("Geocoder did not return any results in the response")
         features = []
-        logger.error(response)
 
         bbox = result.pop("boundingbox", None)
         feature = self.get_feature(result=result, bbox=self.get_bbox(bbox=bbox), properties=result)
@@ -309,7 +308,6 @@ class ReverseGeocode(object):
         return self.geocoder.add_bbox(self.update_url, data)
 
     def search(self, query):
-        logger.info(query)
         return self.geocoder.get_data(query)
 
 
