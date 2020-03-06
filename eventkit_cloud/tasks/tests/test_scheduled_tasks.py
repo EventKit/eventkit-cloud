@@ -35,7 +35,6 @@ class TestExpireRunsTask(TestCase):
         Job.objects.create(name="TestJob", created_at=created_at, published=False,
                                  description='Test description', user=self.user, the_geom=the_geom)
 
-
     @patch('eventkit_cloud.tasks.scheduled_tasks.send_warning_email')
     def test_expire_runs(self, send_email):
         job = Job.objects.all()[0]
@@ -46,7 +45,6 @@ class TestExpireRunsTask(TestCase):
         ExportRun.objects.create(job=job, user=job.user, expiration=now_time - timezone.timedelta(hours=5))
 
         with patch('eventkit_cloud.tasks.scheduled_tasks.timezone.now') as mock_time:
-
             mock_time.return_value = now_time
 
             self.assertEqual('Expire Runs', expire_runs.name)
@@ -57,21 +55,23 @@ class TestExpireRunsTask(TestCase):
                                        addr=job.user.email, job_name=job.name)
             send_email.assert_any_call(date=now_time + timezone.timedelta(days=6), url=expected_url,
                                        addr=job.user.email, job_name=job.name)
-            self.assertEqual(3, ExportRun.objects.all().count())
-            self.assertEqual(0, Notification.objects.all().count())
+            self.assertEqual(3, ExportRun.objects.filter(deleted=False).count())
+            self.assertEqual(1, ExportRun.objects.filter(deleted=True).count())
 
 
 class TestPcfScaleCeleryTask(TestCase):
 
-    @patch('eventkit_cloud.tasks.scheduled_tasks.get_message_count')
+    @patch('eventkit_cloud.tasks.scheduled_tasks.get_all_rabbitmq_objects')
     @patch('eventkit_cloud.utils.pcf.PcfClient')
-    def test_pcf_scale_celery(self, mock_pcf_client, mock_get_message_count):
-        # Figure out how to test the two differnt environment variable options
-        mock_pcf_client().get_running_tasks.return_value = {"pagination": {"total_results": 0}}
-        mock_get_message_count.return_value = 1
-
-        pcf_scale_celery(3)
+    def test_pcf_scale_celery(self, mock_pcf_client, mock_get_all_rabbitmq_objects):
+        example_queues = [{"name": "celery", "messages": 2}]
+        empty_queues = [{"name": "celery", "messages": 0}]
+        mock_get_all_rabbitmq_objects.side_effect = [example_queues, empty_queues]
+        mock_pcf_client().get_running_tasks.return_value = {'pagination': {'total_results': 3}}
+        pcf_scale_celery(4)
         mock_pcf_client().run_task.assert_called_once()
+        mock_pcf_client.reset_mock()
+        mock_get_all_rabbitmq_objects.side_effect = None
 
 
 class TestCheckProviderAvailabilityTask(TestCase):

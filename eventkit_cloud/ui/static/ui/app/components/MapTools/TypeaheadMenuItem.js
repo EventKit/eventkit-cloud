@@ -7,8 +7,8 @@ import IrregularPolygon from '../icons/IrregularPolygon';
 import '../../styles/typeaheadStyles.css';
 
 export class TypeaheadMenuItem extends Component {
-    createDescription(returnedResult) {
-        return returnedResult.context_name;
+    createDescription(result) {
+        return result.context_name;
     }
 
     render() {

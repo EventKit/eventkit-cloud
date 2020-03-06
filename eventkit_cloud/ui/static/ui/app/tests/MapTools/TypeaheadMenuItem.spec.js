@@ -50,9 +50,7 @@ describe('TypeaheadMenuItem component', () => {
     it('createDescription should return the proper description', () => {
         const result = {
             name: 'test name',
-            province: 'province',
-            region: 'region',
-            country: 'country name',
+            context_name: 'province, region, country name',
         };
         const props = getProps();
         const context = getContext();
