@@ -91,9 +91,10 @@ def compute_statistics(provider_slug, tile_grid=get_default_tile_grid(), filenam
     :param filename: Serializes the intermediate data-sample data so it can be shared btw different deployments
     :return: A dict with statistics including area, duration, and package size per sq. kilometer
     """
+    max_estimate_export_task_records = os.getenv("MAX_ESTIMATE_EXPORT_TASK_RECORDS", 10000)
     # Order by time descending to ensure more recent samples are collected first
     export_task_records = (
-        ExportTaskRecord.objects.filter(result__isnull=False).filter(export_provider_task__slug=provider_slug).order_by("-finished_at").select_related("result").all()
+        ExportTaskRecord.objects.filter(result__isnull=False).filter(export_provider_task__slug=provider_slug).order_by("-finished_at").select_related("result").all()[:max_estimate_export_task_records]
     )
 
     # Method to pull normalized data values off of the run, provider_task, or provider_task.task objects
@@ -193,8 +194,8 @@ def compute_statistics(provider_slug, tile_grid=get_default_tile_grid(), filenam
 
     if filename is not None:
         all_stats["timestamp"] = datetime.datetime.now()
-        with open(filename, "w") as os:
-            json.dump(all_stats, os)
+        with open(filename, "w") as file:
+            json.dump(all_stats, file)
 
     totals = {
         "run_count": len(processed_runs),
