@@ -3,4 +3,4 @@ channels:
   - local
 dependencies:
   - python=3.6
-  - eventkit-cloud
+  - eventkit-cloud=1.5
