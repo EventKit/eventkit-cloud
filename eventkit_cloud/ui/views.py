@@ -234,6 +234,7 @@ def search(request):
         try:
             result = geocode.search(q)
         except Exception as e:
+            raise e
             logger.error(e)
             return HttpResponse(content=error_string, status=500)
         return HttpResponse(content=json.dumps(result), status=200, content_type="application/json")

@@ -70,7 +70,7 @@ def pcf_scale_celery(max_instances):
     hostnames = ["worker@$HOSTNAME", "celery@$HOSTNAME", "cancel@$HOSTNAME", "finalize@$HOSTNAME", "osm@$HOSTNAME"]
     ping_command = " && ".join(
         [f"celery inspect -A eventkit_cloud --timeout=20 --destination={hostname} ping" for hostname in hostnames])
-    health_check_command = f"sleep 30; while {ping_command} >/dev/null 2>&1; do sleep 60; done; echo At least one $HOSTNAME worker is dead! Killing Task...; pkill celery"
+    health_check_command = f"sleep 30; while {ping_command} >/dev/null 2>&1; do sleep 600; done; echo At least one $HOSTNAME worker is dead! Killing Task...; pkill celery"
 
     default_command = ("python manage.py runinitial && echo 'Starting celery workers' && "
     "celery worker -A eventkit_cloud --concurrency=$CONCURRENCY --loglevel=$LOG_LEVEL -n worker@%h -Q $CELERY_GROUP_NAME "
@@ -80,7 +80,8 @@ def pcf_scale_celery(max_instances):
     "& exec celery worker -A eventkit_cloud --concurrency=1 --loglevel=$LOG_LEVEL -n osm@%h -Q $CELERY_GROUP_NAME.osm ")
 
     command = os.getenv('CELERY_TASK_COMMAND',  default_command)
-    command = f"{command} & {health_check_command}"
+    # command = f"{command} & {health_check_command}"
+    command = f"{command}"
 
     celery_group_name = os.getenv("CELERY_GROUP_NAME", socket.gethostname())
     broker_api_url = getattr(settings, 'BROKER_API_URL')
