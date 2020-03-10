@@ -365,10 +365,6 @@ def create_mapproxy_app(slug: str):
             }
         ]
     try:
-        import sys
-
-        print(base_config)
-        sys.stdout.flush()
         mapproxy_config = load_default_config()
         load_config(mapproxy_config, config_dict=conf_dict)
         load_config(mapproxy_config, config_dict=base_config)
