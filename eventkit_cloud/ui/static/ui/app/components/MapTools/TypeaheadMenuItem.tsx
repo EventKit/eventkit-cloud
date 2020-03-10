@@ -38,12 +38,8 @@ interface Props {
 }
 
 export function TypeaheadMenuItem(props: Props) {
-    function createDescription(result: any) {
-        const description = [];
-        if (result.province) description.push(result.province);
-        if (result.region) description.push(result.region);
-        if (result.country) description.push(result.country);
-        return description.join(', ');
+    function createDescription(returnedResult: any) {
+        return returnedResult.context_name;
     }
 
     const { result, index, classes } = props;
