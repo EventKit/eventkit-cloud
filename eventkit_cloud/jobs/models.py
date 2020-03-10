@@ -283,6 +283,14 @@ class DataProvider(UIDMixin, TimeStampedModelMixin, CachedModelMixin):
         if url:
             return get_mapproxy_footprint_url(self.slug)
 
+    """
+    Max datasize is the size in megabytes.
+    """
+    @property
+    def max_data_size(self):
+        config = yaml.load(self.config)
+        return config.get('max_data_size', None)
+
 
 class DataProviderStatus(UIDMixin, TimeStampedModelMixin):
     """

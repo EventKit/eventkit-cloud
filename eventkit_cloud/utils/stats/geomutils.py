@@ -4,7 +4,6 @@ from eventkit_cloud.tasks.models import ExportRun
 import json
 import math
 
-
 _dbg_geom_cache_misses = 0
 
 
@@ -119,3 +118,9 @@ def prefetch_geometry_cache(geom_cache):
     """
     for er in ExportRun.objects.select_related("job").only("id", "job__the_geom").all():
         geom_cache[er.id] = _create_cache_geom_entry(er.job)
+
+
+def get_estimate_cache_key(bbox, srs, min_zoom, max_zoom, slug):
+    estimate_tuple = (tuple(bbox), srs, min_zoom, max_zoom, slug)
+    hash_val = hash(estimate_tuple)
+    return str(hash_val)
