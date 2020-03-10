@@ -123,9 +123,9 @@ export class MapContainer {
         return this.addLayer(layer, zIndex) as Tile;
     }
 
-    getInteraction(interactionType: typeof interaction.Interaction) : interaction.Interaction {
+    getInteraction(interactionType: interaction.Interaction) : interaction.Interaction {
         // Returns a specific Interaction from the map by type, may return undefined if not added to the collection.
-        return this.olMap.getInteractions().find(i => i instanceof interactionType);
+        return this.olMap.getInteractions().getArray().find(i => i instanceof interactionType);
     }
 
     addListener(eventTypeKey: string, callback: () => void) {

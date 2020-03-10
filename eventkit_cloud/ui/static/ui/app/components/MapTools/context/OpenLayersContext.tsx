@@ -15,7 +15,8 @@ export const OlMapProvider = openLayersContext.Provider;
 
 
 interface ZoomContext {
-    zoomLevel: number;
+    zoomLevel: number;  // The floored version of the openlayers zoom
+    olZoomLevel: number; // The current real floating value of zoomLevel according to openlayers.
     setZoom: (zoomLevel: number) => void;
 }
 

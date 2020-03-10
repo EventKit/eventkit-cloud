@@ -15,7 +15,6 @@ import {Typography} from "@material-ui/core";
 import ZoomLevelSlider from "./ZoomLevelSlider";
 import {connect} from "react-redux";
 import {updateExportInfo} from '../../actions/datacartActions';
-import {MapView} from "../common/MapView";
 import debounce from 'lodash/debounce';
 import * as PropTypes from "prop-types";
 import FormatSelector from "./FormatSelector";
@@ -24,9 +23,12 @@ import IndeterminateCheckBoxIcon from '@material-ui/icons/IndeterminateCheckBox'
 import CheckBoxIcon from "@material-ui/icons/CheckBox";
 import {CompatibilityInfo} from "./ExportInfo";
 import {MapLayer} from "./CreateExport";
-import InfoDialog from "../common/InfoDialog";
 import MapComponent from "../MapTools/OpenLayers/MapComponent";
 import OlRasterTileLayer from "../MapTools/OpenLayers/OlRasterTileLayer";
+import OlFeatureLayer from "../MapTools/OpenLayers/OlFeatureLayer";
+import ZoomToAoi from "../MapTools/OpenLayers/ZoomToAoi";
+import OlMouseWheelZoom from "../MapTools/OpenLayers/MouseWheelZoom";
+import ZoomUpdater from "./ZoomUpdater";
 
 const jss = (theme: Theme & Eventkit.Theme) => createStyles({
     container: {
@@ -174,6 +176,7 @@ export class DataProvider extends React.Component<Props, State> {
 
     componentDidMount() {
         this.estimateDebouncer = debounce((val) => {
+            this.props.clearEstimate(this.props.provider);
             this.props.checkProvider(val);
         }, 1000);
     }
@@ -235,10 +238,8 @@ export class DataProvider extends React.Component<Props, State> {
             exportOptions: updatedExportOptions,
         });
 
-        if (minZoom !== lastMin || maxZoom !== lastMax) {
-            this.props.clearEstimate(this.props.provider);
-            this.estimateDebouncer(this.props.provider);
-        }
+        this.estimateDebouncer(this.props.provider);
+
     }
 
     private handleLicenseOpen() {
@@ -376,24 +377,19 @@ export class DataProvider extends React.Component<Props, State> {
                         className={`qa-DataProvider-ListItem-zoomMap ${this.props.provider.slug + '-mapDiv ' + classes.listItemPadding}`}
                         key={this.props.provider.slug + '-mapDiv'}
                     >
-                        {/*<MapView*/}
-                        {/*    id={this.props.provider.id + "-map"}*/}
-                        {/*    selectedBaseMap={selectedBasemap}*/}
-                        {/*    copyright={this.props.provider.service_copyright}*/}
-                        {/*    geojson={this.props.geojson}*/}
-                        {/*    setZoom={this.setZoom}*/}
-                        {/*    zoom={currentMaxZoom}*/}
-                        {/*    minZoom={this.props.provider.level_from}*/}
-                        {/*    maxZoom={this.props.provider.level_to}*/}
-                        {/*/>*/}
                         <MapComponent
                             style={{ height: '100%', width: '100%' }}
-                            divId={this.props.provider.id + "-map1"}
+                            divId={this.props.provider.id + "-map"}
                             zoomLevel={currentMaxZoom}
                             minZoom={this.props.provider.level_from}
                             maxZoom={this.props.provider.level_to}
                         >
-                            <OlRasterTileLayer mapLayer={selectedBasemap}/>
+                            <ZoomUpdater setZoom={this.setZoom}/>
+                            <OlRasterTileLayer mapLayer={selectedBasemap} copyright={this.props.provider.service_copyright}/>
+                            <OlFeatureLayer geojson={this.props.geojson}>
+                                <ZoomToAoi zoomLevel={currentMaxZoom}/>
+                            </OlFeatureLayer>
+                            <OlMouseWheelZoom enabled={false}/>
                         </MapComponent>
                     </div>
                 </div>

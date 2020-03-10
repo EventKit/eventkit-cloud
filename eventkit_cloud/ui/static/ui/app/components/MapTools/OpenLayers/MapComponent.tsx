@@ -20,33 +20,47 @@ MapComponent.defaultProps = {
 function MapComponent(props: React.PropsWithChildren<Props>) {
     const [ mapContainer, setMapContainer ] = useState();
 
-    const { zoomLevel, minZoom, maxZoom, style, divId } = props;
-    const [zoomLevelState, setZoom] = useState(zoomLevel || minZoom);
+    const { minZoom, maxZoom, style, divId } = props;
+    const zoomLevelProp = props.zoomLevel;
+    const [zoomLevel, setZoom] = useState(zoomLevelProp || minZoom);
+    const [olZoomLevel, setOlZoom] = useState(zoomLevelProp || minZoom)
 
     useEffectOnMount(() => {
-        const mapContainer = new MapContainer(zoomLevelState, minZoom, maxZoom);
+        const mapContainer = new MapContainer(zoomLevel, minZoom, maxZoom);
         setMapContainer(mapContainer);
 
         const olMap = mapContainer.getMap();
         olMap.setTarget(divId);
-        olMap.getView().on('change:resolution', () => setZoom(Math.floor(olMap.getView().getZoom())));  // Update zoom level on resolution change
+
+        olMap.getView().on('change:resolution', () => setOlZoom(olMap.getView().getZoom()));
 
         return function cleanup() {
             olMap.setTarget(null);
         };
     });
 
+    const mapZoomLevel = Math.floor(olZoomLevel);
     useEffect(() => {
+        // Effect runs when the Open Layers map updates its zoom level.
         if (!!mapContainer) {
-            setZoom(zoomLevelState);
-            mapContainer.getMap().getView().setZoom(zoomLevelState);
+            setZoom(mapZoomLevel);
+            mapContainer.getMap().getView().setZoom(mapZoomLevel);
         }
-    }, [zoomLevelState]);
+    }, [mapZoomLevel]);
+
+    useEffect(() => {
+        // Effect runs when the zoomLevel prop changes, updates the map zoom level
+        if (!!mapContainer) {
+            setZoom(zoomLevelProp);
+            mapContainer.getMap().getView().setZoom(zoomLevelProp);
+        }
+    }, [zoomLevelProp]);
 
     return (
         <OlMapProvider value={{ mapContainer: mapContainer }}>
             <OlZoomProvider value={{
-                zoomLevel: zoomLevelState,
+                zoomLevel: zoomLevel,
+                olZoomLevel,
                 setZoom,
             }}>
                 <div style={style} id={divId}>
