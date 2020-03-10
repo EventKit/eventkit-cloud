@@ -15,6 +15,7 @@ import {getResolutions, getTileCoordinateFromClick} from "../../utils/mapUtils";
 import TileGrid from "ol/tilegrid/tilegrid";
 import MapQueryDisplay from "../CreateDataPack/MapQueryDisplay";
 import {MapLayer} from "../CreateDataPack/CreateExport";
+import {MapContainer} from "../../utils/mapBuilder";
 
 export interface Props {
     geojson: object;
@@ -34,7 +35,7 @@ export interface State {
 
 export class MapView extends React.Component<Props, State> {
 
-    private map: any;
+    private mapContainer: MapContainer;
     private layer: any;
     private mapDiv: string;
     private minZoom: number;
@@ -57,18 +58,36 @@ export class MapView extends React.Component<Props, State> {
     }
 
     componentDidMount() {
-        if (!this.map) {
-            this.initializeOpenLayers();
+        const { zoom, minZoom, maxZoom } = this.props;
+        this.mapContainer = new MapContainer(zoom, minZoom, maxZoom);
+        
+        const map = this.mapContainer.getMap();
+
+        this.mapContainer.addRasterTileLayer(this.state.selectedBaseMap.mapUrl, this.props.copyright);
+        const geojsonLayer = this.mapContainer.addFeatureLayer(this.props.geojson);
+        map.getView().fit(geojsonLayer.getSource().getExtent(), map.getSize());
+
+        if (this.props.zoom) {
+            map.getView().setZoom(this.props.zoom);
         }
+
+        map.on('moveend', () => {
+            if (this.props.setZoom) {
+                this.props.setZoom(null, map.getView().getZoom());
+            }
+        });
+
 
         if (!this.props.moveable) {
             this.ref = this.mapContainerRef;
         }
+
+        map.setTarget(this.mapDiv);
     }
 
     componentDidUpdate(prevProps: Readonly<Props>, prevState: Readonly<{}>, snapshot?: any): void {
         if (this.props.zoom) {
-            this.map.getView().setZoom(this.props.zoom);
+            this.mapContainer.getMap().getView().setZoom(this.props.zoom);
         }
     }
 
@@ -83,8 +102,8 @@ export class MapView extends React.Component<Props, State> {
     }
 
     componentWillUnmount() {
-        this.map.setTarget(null);
-        this.map = null;
+        this.mapContainer.getMap().setTarget(null);
+        this.mapContainer = null;
     }
 
     private initializeOpenLayers() {
@@ -94,74 +113,19 @@ export class MapView extends React.Component<Props, State> {
             extent: [-180, -90, 180, 90],
             resolutions: resolutions
         });
-        const base = new Tile({
-            source: new XYZ({
-                projection: 'EPSG:4326',
-                url: this.state.selectedBaseMap.mapUrl,
-                wrapX: true,
-                attributions: this.props.copyright,
-                tileGrid: tileGrid,
-            }),
-        });
-        this.map = new Map({
-            interactions: interaction.defaults({
-                keyboard: false,
-                altShiftDragRotate: false,
-                pinchRotate: false,
-                mouseWheelZoom: false,
-            }),
-            layers: [base],
-            target: this.mapDiv,
-            view: new View({
-                projection: 'EPSG:4326',
-                center: [0, 0],
-                zoom: this.props.zoom || this.maxZoom,
-                minZoom: this.minZoom,
-                maxZoom: this.maxZoom,
-            }),
-            controls: [
-                new ScaleLine({
-                    className: ol3mapCss.olScaleLine,
-                }),
-                new Attribution({
-                    className: ['ol-attribution', ol3mapCss['ol-attribution']].join(' '),
-                    collapsible: false,
-                    collapsed: false,
-                }),
-                new Zoom({
-                    className: [ol3mapCss.olZoom].join(' '),
-                }),
-            ],
-        });
-
-        const source = new VectorSource();
-        const geojson = new GeoJSON();
-        const features = geojson.readFeatures(this.props.geojson, {
-            featureProjection: 'EPSG:4326',
-            dataProjection: 'EPSG:4326',
-        });
-        source.addFeatures(features);
-        const layer = new VectorLayer({
-            source,
-        });
-
-        this.map.addLayer(layer);
-        this.map.getView().fit(source.getExtent(), this.map.getSize());
-        if (this.props.zoom) {
-            this.map.getView().setZoom(this.props.zoom);
-        }
-
-        this.map.on('moveend', () => {
-            if (this.props.setZoom) {
-                this.props.setZoom(null, this.map.getView().getZoom());
-            }
-        });
-        this.layer = base;
-        // Hook up the click to query feature data
-        this.map.on('click', (event) => {
-                this.displayBoxRef.handleMapClick(getTileCoordinateFromClick(event, this.layer, this.map))
-            }
-        );
+        
+        //
+        // this.map.on('moveend', () => {
+        //     if (this.props.setZoom) {
+        //         this.props.setZoom(null, this.map.getView().getZoom());
+        //     }
+        // });
+        // this.layer = base;
+        // // Hook up the click to query feature data
+        // this.map.on('click', (event) => {
+        //         this.displayBoxRef.handleMapClick(getTileCoordinateFromClick(event, this.layer, this.map))
+        //     }
+        // );
     }
 
     render() {

@@ -25,6 +25,8 @@ import CheckBoxIcon from "@material-ui/icons/CheckBox";
 import {CompatibilityInfo} from "./ExportInfo";
 import {MapLayer} from "./CreateExport";
 import InfoDialog from "../common/InfoDialog";
+import MapComponent from "../MapTools/OpenLayers/MapComponent";
+import OlRasterTileLayer from "../MapTools/OpenLayers/OlRasterTileLayer";
 
 const jss = (theme: Theme & Eventkit.Theme) => createStyles({
     container: {
@@ -374,16 +376,25 @@ export class DataProvider extends React.Component<Props, State> {
                         className={`qa-DataProvider-ListItem-zoomMap ${this.props.provider.slug + '-mapDiv ' + classes.listItemPadding}`}
                         key={this.props.provider.slug + '-mapDiv'}
                     >
-                        <MapView
-                            id={this.props.provider.id + "-map"}
-                            selectedBaseMap={selectedBasemap}
-                            copyright={this.props.provider.service_copyright}
-                            geojson={this.props.geojson}
-                            setZoom={this.setZoom}
-                            zoom={currentMaxZoom}
+                        {/*<MapView*/}
+                        {/*    id={this.props.provider.id + "-map"}*/}
+                        {/*    selectedBaseMap={selectedBasemap}*/}
+                        {/*    copyright={this.props.provider.service_copyright}*/}
+                        {/*    geojson={this.props.geojson}*/}
+                        {/*    setZoom={this.setZoom}*/}
+                        {/*    zoom={currentMaxZoom}*/}
+                        {/*    minZoom={this.props.provider.level_from}*/}
+                        {/*    maxZoom={this.props.provider.level_to}*/}
+                        {/*/>*/}
+                        <MapComponent
+                            style={{ height: '100%', width: '100%' }}
+                            divId={this.props.provider.id + "-map1"}
+                            zoomLevel={currentMaxZoom}
                             minZoom={this.props.provider.level_from}
                             maxZoom={this.props.provider.level_to}
-                        />
+                        >
+                            <OlRasterTileLayer mapLayer={selectedBasemap}/>
+                        </MapComponent>
                     </div>
                 </div>
             );
