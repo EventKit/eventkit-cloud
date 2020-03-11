@@ -31,10 +31,6 @@ class TaskProcess(object):
         else:
             proc = subprocess.Popen(command, **kwargs)
             self.store_pid(pid=proc.pid)
-            while proc.poll() is None:
-                line = proc.stdout.readline()  # This blocks until it receives a newline.
-                print(line)
-
             self.exitcode = proc.wait()
 
         # We need to close the existing connection because the logger could be using a forked process which,

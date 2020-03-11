@@ -28,7 +28,7 @@ from eventkit_cloud.celery import app, TaskPriority
 from eventkit_cloud.core.helpers import sendnotification, NotificationVerb, NotificationLevel
 from eventkit_cloud.feature_selection.feature_selection import FeatureSelection
 from eventkit_cloud.tasks.enumerations import TaskStates
-from eventkit_cloud.tasks.exceptions import CancelException, DeleteException
+from eventkit_cloud.tasks.exceptions import CancelException, DeleteException, FailedException
 from eventkit_cloud.tasks.helpers import normalize_name, get_archive_data_path, get_run_download_url, \
     get_download_filename, get_run_staging_dir, get_provider_staging_dir, get_run_download_dir, Directory, \
     default_format_time, progressive_kill, get_style_files, generate_qgs_style, create_license_file, \
@@ -185,11 +185,7 @@ class ExportTask(UserDetailsBase):
         try:
             task = ExportTaskRecord.objects.get(uid=task_uid)
 
-            try:
-                task_state_result = args[0]
-            except IndexError:
-                task_state_result = None
-            self.update_task_state(result=task_state_result, task_uid=task_uid)
+            self.update_task_state(*args, **kwargs)
 
             if not TaskStates.CANCELED.value in [task.status, task.export_provider_task.status]:
                 retval = super(ExportTask, self).__call__(*args, **kwargs)
@@ -315,7 +311,7 @@ class ExportTask(UserDetailsBase):
             return {'status': TaskStates.FAILED.value}
         return {'status': TaskStates.CANCELED.value}
 
-    def update_task_state(self, result=None, task_status=TaskStates.RUNNING.value, task_uid=None):
+    def update_task_state(self, result=None, task_status=TaskStates.RUNNING.value, task_uid=None, *args, **kwargs):
         """
         Update the task state and celery task uid.
         Can use the celery uid for diagnostics.
@@ -358,6 +354,32 @@ class FormatTask(ExportTask):
     A class to manage tasks which are desired output from the user, and not merely associated files or metadata.
     """
     display = True
+
+
+class AbortOnRestartTask(FormatTask):
+
+    def update_task_state(self, *args, **kwargs):
+        """
+        Extend update_task_state to check if task is in a running state if so fail, because that task was probably
+        running previously.
+
+        This must be used inconjunction with acks_late=True.
+
+        This is meant to be used if there is a type of issue where the subprocess will just kill celery worker.
+
+        Note that using this means a task won't finish properly if a worker is normally restarted.
+        """
+        from eventkit_cloud.tasks.models import ExportTaskRecord
+        try:
+            task_uid = kwargs.get('task_uid')
+            task = ExportTaskRecord.objects.get(uid=task_uid)
+            if task.status == TaskStates.RUNNING.value:
+                raise FailedException(task_name=task.name)
+            else:
+                super(AbortOnRestartTask, self).update_task_state(*args, **kwargs)
+        except DatabaseError as e:
+            logger.error('Updating task {0} state throws: {1}'.format(task_uid, e))
+            raise e
 
 
 @gdalutils.retry
@@ -508,7 +530,7 @@ def add_metadata_task(self, result=None, job_uid=None, provider_slug=None, user_
     return result
 
 
-@app.task(name='ESRI Shapefile (.shp)', bind=True, base=FormatTask)
+@app.task(name='ESRI Shapefile (.shp)', bind=True, base=FormatTask, acks_late=True)
 def shp_export_task(self, result=None, run_uid=None, task_uid=None, stage_dir=None, job_name=None, user_details=None,
                     projection=4326, *args, **kwargs):
     """
@@ -524,14 +546,14 @@ def shp_export_task(self, result=None, run_uid=None, task_uid=None, stage_dir=No
                           params="-lco 'ENCODING=UTF-8' -overwrite -skipfailures")
         result['file_format'] = 'ESRI Shapefile'
         result['result'] = out
-        result['shp'] = out
+        result['shp'] = out,
         return result
     except Exception as e:
         logger.error('Exception while converting {} -> {}: {}'.format(gpkg, shapefile, str(e)))
         raise
 
 
-@app.task(name='Keyhole Markup Language (.kml)', bind=True, base=FormatTask)
+@app.task(name='Keyhole Markup Language (.kml)', bind=True, base=FormatTask, acks_late=True)
 def kml_export_task(self, result=None, run_uid=None, task_uid=None, stage_dir=None, job_name=None, user_details=None,
                     projection=4326, *args, **kwargs):
     """
@@ -554,7 +576,7 @@ def kml_export_task(self, result=None, run_uid=None, task_uid=None, stage_dir=No
         raise Exception(e)
 
 
-@app.task(name='SQLITE Format', bind=True, base=FormatTask)
+@app.task(name='SQLITE Format', bind=True, base=FormatTask, acks_late=True)
 def sqlite_export_task(self, result=None, run_uid=None, task_uid=None, stage_dir=None, job_name=None,
                        user_details=None, projection=4326, *args, **kwargs):
     """
@@ -576,7 +598,7 @@ def sqlite_export_task(self, result=None, run_uid=None, task_uid=None, stage_dir
         raise Exception(e)
 
 
-@app.task(name='Area of Interest (.geojson)', bind=True, base=ExportTask)
+@app.task(name='Area of Interest (.geojson)', bind=True, base=ExportTask, acks_late=True)
 def output_selection_geojson_task(self, result=None, task_uid=None, selection=None, stage_dir=None, provider_slug=None,
                                   projection=4326, *args, **kwargs):
     """
@@ -600,7 +622,7 @@ def output_selection_geojson_task(self, result=None, task_uid=None, selection=No
     return result
 
 
-@app.task(name='Geopackage (.gpkg)', bind=True, base=FormatTask)
+@app.task(name='Geopackage (.gpkg)', bind=True, base=FormatTask, acks_late=True)
 def geopackage_export_task(self, result=None, run_uid=None, task_uid=None, stage_dir=None, job_name=None,
                            user_details=None, projection=4326, *args, **kwargs):
     """
@@ -620,7 +642,7 @@ def geopackage_export_task(self, result=None, run_uid=None, task_uid=None, stage
     return result
 
 
-@app.task(name="Geotiff (.tif)", bind=True, base=FormatTask)
+@app.task(name="Geotiff (.tif)", bind=True, base=AbortOnRestartTask, acks_late=True)
 def geotiff_export_task(
     self, result=None, task_uid=None, stage_dir=None, job_name=None, projection=4326, compress=False, *args, **kwargs,
 ):
@@ -635,8 +657,6 @@ def geotiff_export_task(
     # Clip the dataset.
     # This happens if geotiff is the FIRST step in the pipeline as opposed to GPKG.
     if selection:
-        if compress:
-            params = "-co COMPRESS=JPEG -co PHOTOMETRIC=YCBCR -co TILED=YES -b 1 -b 2 -b 3"
         gtiff_out_dataset = gdalutils.clip_dataset(
             boundary=selection,
             in_dataset=gtiff_in_dataset,
@@ -675,7 +695,7 @@ def geotiff_export_task(
     return result
 
 
-@app.task(name='National Imagery Transmission Format (.nitf)', bind=True, base=FormatTask)
+@app.task(name='National Imagery Transmission Format (.nitf)', bind=True, base=FormatTask, acks_late=True)
 def nitf_export_task(self, result=None, run_uid=None, task_uid=None, stage_dir=None, job_name=None,
                         user_details=None, projection=4326, *args, **kwargs):
     """
@@ -694,7 +714,7 @@ def nitf_export_task(self, result=None, run_uid=None, task_uid=None, stage_dir=N
     return result
 
 
-@app.task(name='Erdas Imagine HFA (.img)', bind=True, base=FormatTask)
+@app.task(name='Erdas Imagine HFA (.img)', bind=True, base=FormatTask, acks_late=True)
 def hfa_export_task(self, result=None, run_uid=None, task_uid=None, stage_dir=None, job_name=None,
                      user_details=None, projection=4326, *args, **kwargs):
     """
@@ -713,7 +733,7 @@ def hfa_export_task(self, result=None, run_uid=None, task_uid=None, stage_dir=No
     return result
 
 
-@app.task(name='Reprojection Task', bind=True, base=FormatTask)
+@app.task(name='Reprojection Task', bind=True, base=FormatTask, acks_late=True)
 def reprojection_task(self, result=None, run_uid=None, task_uid=None, stage_dir=None, job_name=None,
                         user_details=None, projection=None, *args, **kwargs):
     """
@@ -756,7 +776,6 @@ def clip_export_task(self, result=None, run_uid=None, task_uid=None, stage_dir=N
     :return:
     """
     result = result or {}
-    # self.update_task_state(result=result, task_uid=task_uid)
 
     dataset = parse_result(result, 'result')
     selection = parse_result(result, 'selection')
@@ -970,12 +989,14 @@ def pick_up_run_task(self, result=None, run_uid=None, user_details=None, *args, 
         raise
     wait_for_run(run=run, uid=run_uid)
 
+
 def wait_for_run(run=None, uid=None):
     if run.status:
         while(TaskStates[run.status] not in TaskStates.get_finished_states() and
                 TaskStates[run.status] not in TaskStates.get_incomplete_states()):
             time.sleep(10)
             run.refresh_from_db()
+
 
 # This could be improved by using Redis or Memcached to help manage state.
 @app.task(name='Wait For Providers', base=UserDetailsBase, acks_late=True)

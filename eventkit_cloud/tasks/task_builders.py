@@ -199,7 +199,7 @@ class TaskChainBuilder(object):
         )
 
         if "osm" in primary_export_task.name.lower():
-            queue_routing_key_name = "{}.large".format(queue_group)
+            queue_routing_key_name = "{}.osm".format(queue_group)
         else:
             queue_routing_key_name = queue_group
 
