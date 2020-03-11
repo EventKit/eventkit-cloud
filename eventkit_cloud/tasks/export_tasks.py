@@ -840,33 +840,6 @@ def reprojection_task(
     return result
 
 
-@app.task(name="Clip Export", bind=True, base=EventKitBaseTask)
-def clip_export_task(
-    self, result=None, run_uid=None, task_uid=None, stage_dir=None, job_name=None, user_details=None, *args, **kwargs,
-):
-    """
-    Clips a dataset to a vector cutline and returns a dataset of the same format.
-    :param self:
-    :param result:
-    :param run_uid:
-    :param task_uid:
-    :param stage_dir:
-    :param job_name:
-    :param user_details:
-    :return:
-    """
-    result = result or {}
-    # self.update_task_state(result=result, task_uid=task_uid)
-
-    dataset = parse_result(result, "result")
-    selection = parse_result(result, "selection")
-    if selection:
-        dataset = gdalutils.clip_dataset(boundary=selection, in_dataset=dataset, fmt=None)
-
-    result["result"] = dataset
-    return result
-
-
 @app.task(name="WFSExport", bind=True, base=ExportTask, abort_on_error=True)
 def wfs_export_task(
     self,
