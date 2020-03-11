@@ -69,15 +69,20 @@ export class MapQueryDisplay extends React.Component<Props, State> {
 
     private CancelToken = axios.CancelToken;
     private source = this.CancelToken.source();
-    private getFeatures(tileCoord: TileCoordinate) {
-        this.setState({lastCoordinate: tileCoord});
+    async getFeatures(tileCoord: TileCoordinate) {
         let responseData = {
             lat: tileCoord.lat,
             long: tileCoord.long,
         } as FeatureResponse;
+        let url;
+        try {
+            url = getFeatureUrl(this.props.selectedLayer, tileCoord.z, tileCoord.y, tileCoord.x, tileCoord.i, tileCoord.j);
+        }
+        catch(error) {
+            responseData.errorMessage = 'No data found at coordinates.';
+            return responseData;
+        }
 
-        // TODO: Switch Url based on type - not yet needed
-        const url = getFeatureUrl(this.props.selectedLayer, tileCoord.z, tileCoord.y, tileCoord.x, tileCoord.i, tileCoord.j);
         const csrfmiddlewaretoken = getCookie('csrftoken');
         return axios({
             url,
