@@ -9,18 +9,20 @@ interface Props {
     zoomLevel?: number;
     minZoom?: number;
     maxZoom?: number;
+    visible?: boolean;
 }
 
 MapComponent.defaultProps = {
     minZoom: 2,
     maxZoom: 20,
     style: {},
+    visible: true,
 } as Props;
 
 function MapComponent(props: React.PropsWithChildren<Props>) {
     const [ mapContainer, setMapContainer ] = useState();
 
-    const { minZoom, maxZoom, style, divId } = props;
+    const { minZoom, maxZoom, style, divId, visible } = props;
     const zoomLevelProp = props.zoomLevel;
     const [zoomLevel, setZoom] = useState(zoomLevelProp || minZoom);
     const [olZoomLevel, setOlZoom] = useState(zoomLevelProp || minZoom)
@@ -30,14 +32,29 @@ function MapComponent(props: React.PropsWithChildren<Props>) {
         setMapContainer(mapContainer);
 
         const olMap = mapContainer.getMap();
-        olMap.setTarget(divId);
+        if (visible) {
+            olMap.setTarget(divId);
+        }
 
-        olMap.getView().on('change:resolution', () => setOlZoom(olMap.getView().getZoom()));
+        olMap.getView().on('change:resolution', () =>
+            setOlZoom(olMap.getView().getZoom())
+        );
 
         return function cleanup() {
             olMap.setTarget(null);
         };
     });
+
+    useEffect(() => {
+        if (!!mapContainer) {
+            const olMap = mapContainer.getMap();
+            if (visible) {
+                olMap.setTarget(null);
+            } else {
+                olMap.setTarget(divId);
+            }
+        }
+    }, [visible, divId]);
 
     const mapZoomLevel = Math.floor(olZoomLevel);
     useEffect(() => {

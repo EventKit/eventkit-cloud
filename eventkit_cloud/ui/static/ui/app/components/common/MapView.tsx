@@ -1,16 +1,4 @@
 import * as React from 'react';
-import Map from 'ol/map';
-import View from 'ol/view';
-import interaction from 'ol/interaction';
-import VectorSource from 'ol/source/vector';
-import XYZ from 'ol/source/xyz';
-import GeoJSON from 'ol/format/geojson';
-import VectorLayer from 'ol/layer/vector';
-import Tile from 'ol/layer/tile';
-import ScaleLine from 'ol/control/scaleline';
-import Attribution from 'ol/control/attribution';
-import Zoom from 'ol/control/zoom';
-import ol3mapCss from '../../styles/ol3map.css';
 import {getResolutions, getTileCoordinateFromClick} from "../../utils/mapUtils";
 import TileGrid from "ol/tilegrid/tilegrid";
 import MapQueryDisplay from "../CreateDataPack/MapQueryDisplay";

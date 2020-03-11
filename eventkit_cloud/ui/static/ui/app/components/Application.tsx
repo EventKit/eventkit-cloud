@@ -27,6 +27,7 @@ import '../styles/bootstrap/css/bootstrap.css';
 import '../styles/openlayers/ol.css';
 import '../styles/flexboxgrid.css';
 import '../styles/react-joyride-compliled.css';
+import {AppConfigProvider} from "./ApplicationContext";
 // tslint:disable-next-line:no-var-requires
 require('../fonts/index.css');
 
@@ -730,83 +731,85 @@ export class Application extends React.Component<Props, State> {
         ));
 
         return (
-            <div style={{ backgroundColor: colors.black }}>
-                <AppBar
-                    className={`qa-Application-AppBar ${classes.appBar}`}
-                >
-                    <Banner />
-                    <div className={classes.title}>
-                        <img className={classes.img} src={images.logo} alt="EventKit" />
-                    </div>
-                    {this.state.loggedIn ? <div style={{ position: 'absolute', left: '0', top: '25px' }}>
-                        <IconButton
-                            className={`qa-Application-AppBar-MenuButton ${classes.menuButton}`}
-                            color="secondary"
-                            onClick={this.handleToggle}
-                        >
-                            <Menu style={{ width: '36px', height: '36px' }} />
-                        </IconButton>
-                            <div style={{ display: 'inline-block', position: 'relative' }}>
-                                <IconButton
-                                    className={`qa-Application-AppBar-NotificationsButton ${classes.notificationsButton}`}
-                                    style={{
-                                        backgroundColor: (this.props.history.location.pathname.indexOf('/notifications') === 0) ?
-                                            colors.primary : '',
-                                        padding: 0
-                                    }}
-                                    color="secondary"
-                                    onClick={this.handleNotificationsButtonClick}
-                                >
-                                    <Notifications style={{ width: '38px', height: '38px' }} />
-                                </IconButton>
-                        <div
-                            className={`qa-Application-AppBar-badgeNotificationsIndicator ${classes.badgeNotificationsIndicator}`}
-                            style={{
-                                transform: (this.props.notificationsCount > 0) ? 'scale(1)' : 'scale(0)',
-                                transition: 'transform 0.25s cubic-bezier(0.23, 1, 0.32, 1)',
-                            }}
-                        >
-                            { this.handleNotificationCount() }
+            <AppConfigProvider value={{...this.state.childContext.config}}>
+                <div style={{ backgroundColor: colors.black }}>
+                    <AppBar
+                        className={`qa-Application-AppBar ${classes.appBar}`}
+                    >
+                        <Banner />
+                        <div className={classes.title}>
+                            <img className={classes.img} src={images.logo} alt="EventKit" />
                         </div>
-                            <div>
-                                {this.state.showNotificationsDropdown ?
-                                    <NotificationsDropdown
-                                        loading={this.state.notificationsLoading}
-                                        notifications={this.props.notificationsData}
-                                        history={this.props.history}
-                                        onNavigate={this.handleNotificationsDropdownNavigate}
-                                        onClickAway={this.handleClick}
-                                    /> : null }
+                        {this.state.loggedIn ? <div style={{ position: 'absolute', left: '0', top: '25px' }}>
+                            <IconButton
+                                className={`qa-Application-AppBar-MenuButton ${classes.menuButton}`}
+                                color="secondary"
+                                onClick={this.handleToggle}
+                            >
+                                <Menu style={{ width: '36px', height: '36px' }} />
+                            </IconButton>
+                                <div style={{ display: 'inline-block', position: 'relative' }}>
+                                    <IconButton
+                                        className={`qa-Application-AppBar-NotificationsButton ${classes.notificationsButton}`}
+                                        style={{
+                                            backgroundColor: (this.props.history.location.pathname.indexOf('/notifications') === 0) ?
+                                                colors.primary : '',
+                                            padding: 0
+                                        }}
+                                        color="secondary"
+                                        onClick={this.handleNotificationsButtonClick}
+                                    >
+                                        <Notifications style={{ width: '38px', height: '38px' }} />
+                                    </IconButton>
+                            <div
+                                className={`qa-Application-AppBar-badgeNotificationsIndicator ${classes.badgeNotificationsIndicator}`}
+                                style={{
+                                    transform: (this.props.notificationsCount > 0) ? 'scale(1)' : 'scale(0)',
+                                    transition: 'transform 0.25s cubic-bezier(0.23, 1, 0.32, 1)',
+                                }}
+                            >
+                                { this.handleNotificationCount() }
                             </div>
-                        </div>
-                    </div> : null}
-                </AppBar>
-                <Drawer
-                    open={this.props.drawer === 'open' || this.props.drawer === 'opening'}
-                    handleLogout={this.logout}
-                    handleMenuItemClick={this.onMenuItemClick}
-                    contactUrl={this.state.childContext.config.CONTACT_URL}
-                />
-                <div className="qa-Application-content" style={styles.content}>
-                    <div>{childrenWithContext}</div>
-                    { routes }
+                                <div>
+                                    {this.state.showNotificationsDropdown ?
+                                        <NotificationsDropdown
+                                            loading={this.state.notificationsLoading}
+                                            notifications={this.props.notificationsData}
+                                            history={this.props.history}
+                                            onNavigate={this.handleNotificationsDropdownNavigate}
+                                            onClickAway={this.handleClick}
+                                        /> : null }
+                                </div>
+                            </div>
+                        </div> : null}
+                    </AppBar>
+                    <Drawer
+                        open={this.props.drawer === 'open' || this.props.drawer === 'opening'}
+                        handleLogout={this.logout}
+                        handleMenuItemClick={this.onMenuItemClick}
+                        contactUrl={this.state.childContext.config.CONTACT_URL}
+                    />
+                    <div className="qa-Application-content" style={styles.content}>
+                        <div>{childrenWithContext}</div>
+                        { routes }
+                    </div>
+                    <BaseDialog
+                        show={this.state.showAutoLogoutWarningDialog}
+                        title="AUTO LOGOUT"
+                        buttonText="Stay Logged In"
+                        onClose={this.handleStayLoggedIn}
+                    >
+                        <strong>{this.state.autoLogoutWarningText}</strong>
+                    </BaseDialog>
+                    <BaseDialog
+                        show={this.state.showAutoLoggedOutDialog}
+                        title="AUTO LOGOUT"
+                        onClose={this.handleCloseAutoLoggedOutDialog}
+                    >
+                        <strong>You have been automatically logged out due to inactivity.</strong>
+                    </BaseDialog>
                 </div>
-                <BaseDialog
-                    show={this.state.showAutoLogoutWarningDialog}
-                    title="AUTO LOGOUT"
-                    buttonText="Stay Logged In"
-                    onClose={this.handleStayLoggedIn}
-                >
-                    <strong>{this.state.autoLogoutWarningText}</strong>
-                </BaseDialog>
-                <BaseDialog
-                    show={this.state.showAutoLoggedOutDialog}
-                    title="AUTO LOGOUT"
-                    onClose={this.handleCloseAutoLoggedOutDialog}
-                >
-                    <strong>You have been automatically logged out due to inactivity.</strong>
-                </BaseDialog>
-            </div>
+            </AppConfigProvider>
         );
     }
 }

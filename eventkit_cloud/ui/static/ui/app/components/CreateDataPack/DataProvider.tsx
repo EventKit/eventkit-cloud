@@ -29,6 +29,7 @@ import OlFeatureLayer from "../MapTools/OpenLayers/OlFeatureLayer";
 import ZoomToAoi from "../MapTools/OpenLayers/ZoomToAoi";
 import OlMouseWheelZoom from "../MapTools/OpenLayers/MouseWheelZoom";
 import ZoomUpdater from "./ZoomUpdater";
+import ProviderPreviewMap from "../MapTools/ProviderPreviewMap";
 
 const jss = (theme: Theme & Eventkit.Theme) => createStyles({
     container: {
@@ -377,20 +378,28 @@ export class DataProvider extends React.Component<Props, State> {
                         className={`qa-DataProvider-ListItem-zoomMap ${this.props.provider.slug + '-mapDiv ' + classes.listItemPadding}`}
                         key={this.props.provider.slug + '-mapDiv'}
                     >
-                        <MapComponent
-                            style={{ height: '100%', width: '100%' }}
-                            divId={this.props.provider.id + "-map"}
+                        <ProviderPreviewMap
+                            geojson={this.props.geojson}
                             zoomLevel={currentMaxZoom}
-                            minZoom={this.props.provider.level_from}
-                            maxZoom={this.props.provider.level_to}
+                            provider={this.props.provider}
                         >
                             <ZoomUpdater setZoom={this.setZoom}/>
-                            <OlRasterTileLayer mapLayer={selectedBasemap} copyright={this.props.provider.service_copyright}/>
-                            <OlFeatureLayer geojson={this.props.geojson}>
-                                <ZoomToAoi zoomLevel={currentMaxZoom}/>
-                            </OlFeatureLayer>
                             <OlMouseWheelZoom enabled={false}/>
-                        </MapComponent>
+                        </ProviderPreviewMap>
+                        {/*<MapComponent*/}
+                        {/*    style={{ height: '100%', width: '100%' }}*/}
+                        {/*    divId={this.props.provider.id + "-map"}*/}
+                        {/*    zoomLevel={currentMaxZoom}*/}
+                        {/*    minZoom={this.props.provider.level_from}*/}
+                        {/*    maxZoom={this.props.provider.level_to}*/}
+                        {/*>*/}
+                        {/*    <ZoomUpdater setZoom={this.setZoom}/>*/}
+                        {/*    <OlRasterTileLayer mapLayer={selectedBasemap} copyright={this.props.provider.service_copyright}/>*/}
+                        {/*    <OlFeatureLayer geojson={this.props.geojson}>*/}
+                        {/*        <ZoomToAoi zoomLevel={currentMaxZoom}/>*/}
+                        {/*    </OlFeatureLayer>*/}
+                        {/*    <OlMouseWheelZoom enabled={false}/>*/}
+                        {/*</MapComponent>*/}
                     </div>
                 </div>
             );
