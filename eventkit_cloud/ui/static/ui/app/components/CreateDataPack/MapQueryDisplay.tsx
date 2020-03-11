@@ -70,6 +70,7 @@ export class MapQueryDisplay extends React.Component<Props, State> {
     private CancelToken = axios.CancelToken;
     private source = this.CancelToken.source();
     async getFeatures(tileCoord: TileCoordinate) {
+        this.setState({lastCoordinate: tileCoord});
         let responseData = {
             lat: tileCoord.lat,
             long: tileCoord.long,
