@@ -550,7 +550,7 @@ def shp_export_task(self, result=None, run_uid=None, task_uid=None, stage_dir=No
                           params="-lco 'ENCODING=UTF-8' -overwrite -skipfailures")
         result['file_format'] = 'ESRI Shapefile'
         result['result'] = out
-        result['shp'] = out,
+        result['shp'] = out
         return result
     except Exception as e:
         logger.error('Exception while converting {} -> {}: {}'.format(gpkg, shapefile, str(e)))
