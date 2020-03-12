@@ -654,7 +654,7 @@ def geotiff_export_task(
     Class defining geopackage export function.
     """
     result = result or {}
-    gtiff_in_dataset = parse_result(resqult, "source")
+    gtiff_in_dataset = parse_result(result, "source")
     gtiff_out_dataset = os.path.join(stage_dir, "{0}-{1}.tif".format(job_name, projection))
     selection = parse_result(result, "selection")
     # Clip the dataset.
