@@ -9,6 +9,7 @@ import socket
 import time
 import traceback
 from zipfile import ZipFile, ZIP_DEFLATED
+from billiard.einfo import ExceptionInfo
 
 from audit_logging.celery_support import UserDetailsBase
 from celery import signature
@@ -83,7 +84,6 @@ class LockingTask(UserDetailsBase):
         lock_key = lock_key or self.get_lock_key()
         try:
             result = self.cache.add(lock_key, value, self.lock_expiration)
-            # result = self.cache.add(str(self.lock_key), value, self.lock_expiration)
             logger.info('Acquiring {0} key: {1}'.format(lock_key, 'succeed' if result else 'failed'))
         finally:
             return result
@@ -263,7 +263,6 @@ class ExportTask(UserDetailsBase):
         except Exception as e:
             tb = traceback.format_exc()
             logger.error('Exception in the handler for {}:\n{}'.format(self.name, tb))
-            from billiard.einfo import ExceptionInfo
             einfo = ExceptionInfo()
             result = self.task_failure(e, task_uid, args, kwargs, einfo)
             return result
@@ -369,16 +368,21 @@ class AbortOnRestartTask(FormatTask):
 
         Note that using this means a task won't finish properly if a worker is normally restarted.
         """
-        from eventkit_cloud.tasks.models import ExportTaskRecord
+        from eventkit_cloud.tasks.models import ExportTaskRecord, ExportTaskException
+        task_uid = kwargs.get('task_uid')
         try:
-            task_uid = kwargs.get('task_uid')
             task = ExportTaskRecord.objects.get(uid=task_uid)
+            celery_uid = self.request.id
+            if not celery_uid:
+                raise Exception("Failed to save celery_UID")
+            task.celery_uid = celery_uid
+            task.save()
             if task.status == TaskStates.RUNNING.value:
                 raise FailedException(task_name=task.name)
             else:
                 super(AbortOnRestartTask, self).update_task_state(*args, **kwargs)
         except DatabaseError as e:
-            logger.error('Updating task {0} state throws: {1}'.format(task_uid, e))
+            logger.error(f'Updating task {task_uid} state throws: {e}')
             raise e
 
 
@@ -650,8 +654,7 @@ def geotiff_export_task(
     Class defining geopackage export function.
     """
     result = result or {}
-
-    gtiff_in_dataset = parse_result(result, "source")
+    gtiff_in_dataset = parse_result(resqult, "source")
     gtiff_out_dataset = os.path.join(stage_dir, "{0}-{1}.tif".format(job_name, projection))
     selection = parse_result(result, "selection")
     # Clip the dataset.
@@ -1033,7 +1036,7 @@ def create_zip_task(result=None, data_provider_task_uid=None, *args, **kwargs):
     data_provider_task = DataProviderTaskRecord.objects.get(uid=data_provider_task_uid)
     metadata = get_metadata(data_provider_task_uid)
 
-    include_files = metadata['include_files']
+    include_files = metadata.get('include_files')
     if include_files:
         arcgis_dir = os.path.join(get_run_staging_dir(metadata['run_uid']), Directory.ARCGIS.value)
         make_dirs(arcgis_dir)
