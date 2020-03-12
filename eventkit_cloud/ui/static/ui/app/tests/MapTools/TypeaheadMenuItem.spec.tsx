@@ -43,9 +43,7 @@ describe('TypeaheadMenuItem component', () => {
         const props = getProps();
         props.result = { geometry: { type: 'Polygon' } };
         props.result.name = 'test name';
-        props.result.province = 'province';
-        props.result.region = 'region';
-        props.result.country = 'country name';
+        props.result.context_name = 'province, region, country name';
         const wrapper = shallow(<TypeaheadMenuItem {...props} />);
         expect(wrapper.find(IrregularPolygon)).toHaveLength(1);
         expect(wrapper.find('.qa-TypeaheadMenuItem-name').text()).toEqual('test name');
