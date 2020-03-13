@@ -401,9 +401,7 @@ class JobViewSet(viewsets.ModelViewSet):
                         if not self.request.user.is_superuser:
                             logger.info("I'M NOT A SUPERUSER")
                             error_data = {
-                                "errors": [
-
-                                ]
+                                "errors": []
                             }
                             for provider_task in job.provider_tasks.all():
                                 provider = provider_task.provider

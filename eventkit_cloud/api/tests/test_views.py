@@ -234,9 +234,9 @@ class TestJobViewSet(APITestCase):
         self.add_max_data_size(self.provider, excessive_data_size)
 
         # estimates contain size and time
-        size = 110
-        time = 200
-        cache_mock.get.return_value = [size, time]
+        estimate_size = 110
+        estimate_time = 200
+        cache_mock.get.return_value = [estimate_size, estimate_time]
 
         cache_key = '222222222222222'
         get_estimate_cache_key_mock.return_value = cache_key
@@ -281,10 +281,9 @@ class TestJobViewSet(APITestCase):
         excessive_data_size = 100
         self.add_max_data_size(self.provider, excessive_data_size)
 
-        # estimates = [110, 200]  # estimates contain size and time
-        size = 110
-        time = 200
-        cache_mock.get.return_value = [size, time]
+        estimate_size = 110
+        estimate_time = 200
+        cache_mock.get.return_value = [estimate_size, estimate_time]
 
         cache_key = '222222222222222'
         get_estimate_cache_key_mock.return_value = cache_key
@@ -370,10 +369,9 @@ class TestJobViewSet(APITestCase):
         excessive_data_size = 100
         self.add_max_data_size(self.provider, excessive_data_size)
 
-        # estimates = [110, 200]  # estimates contain size and time
-        size = 110
-        time = 200
-        cache_mock.get.return_value = [size, time]
+        estimate_size = 110
+        estimate_time = 200
+        cache_mock.get.return_value = [estimate_size, estimate_time]
 
         cache_key = '222222222222222'
         get_estimate_cache_key_mock.return_value = cache_key
@@ -431,10 +429,9 @@ class TestJobViewSet(APITestCase):
         excessive_data_size = 100
         self.add_max_data_size(self.provider, excessive_data_size)
 
-        # estimates contain size and time
-        size = 110
-        time = 200
-        cache_mock.get.return_value = [size, time]
+        estimate_size = 110
+        estimate_time = 200
+        cache_mock.get.return_value = [estimate_size, estimate_time]
 
         cache_key = '222222222222222'
         get_estimate_cache_key_mock.return_value = cache_key
@@ -602,46 +599,45 @@ class TestJobViewSet(APITestCase):
         self.assertEqual(response['Content-Language'], 'en')
         self.assertEqual('invalid_extents', response.data['errors'][0]['title'])
 
-    # @patch('eventkit_cloud.api.views.get_estimate_cache_key')
-    # @patch('eventkit_cloud.api.views.cache')
-    # def test_extents_too_large_for_max_data_size(self, cache_mock, get_estimate_cache_key_mock):
-    #     estimates = [110, 200]  # estimates contain size and time
-    #     size = 110
-    #     time = 200
-    #     cache_mock.get.return_value = [size, time]
-    #
-    #     cache_key = '1.22222222222222'
-    #     get_estimate_cache_key_mock.return_value = cache_key
-    #     bbox = (5, 16, 5.1, 16.1)
-    #     srs = '4326'
-    #     max_zoom = 17
-    #     min_zoom = 0
-    #     slug = 'osm'
-    #     excessive_data_size = 200
-    #
-    #     self.add_max_data_size(self.provider, excessive_data_size)
-    #
-    #     job_url = reverse('api:jobs-list')
-    #
-    #     formats = [export_format.slug for export_format in ExportFormat.objects.all()]
-    #     request_data = {
-    #         'name': 'TestJob',
-    #         'description': 'Test description',
-    #         'event': 'Test Activation',
-    #         'selection': bbox_to_geojson(bbox),
-    #         'provider_tasks': [
-    #             {'provider': self.provider.slug, 'formats': formats,
-    #              'min_zoom': min_zoom, 'max_zoom': max_zoom}],
-    #     }
-    #
-    #     response = self.client.post(job_url, data=json.dumps(request_data),
-    #                                 content_type='application/json; version=1.0')
-    #     cache_mock.get.assert_called_with(cache_key, (None, None))
-    #     get_estimate_cache_key_mock.called_once_with(bbox, srs, min_zoom, max_zoom, slug)
-    #     self.assertEqual(status.HTTP_400_BAD_REQUEST, response.status_code)
-    #     self.assertEqual(response['Content-Type'], 'application/json')
-    #     self.assertEqual(response['Content-Language'], 'en')
-    #     self.assertEqual('Selection area too large', response.data['errors'][0]['title'])
+    @patch('eventkit_cloud.api.views.get_estimate_cache_key')
+    @patch('eventkit_cloud.api.views.cache')
+    def test_extents_too_large_for_max_data_size(self, cache_mock, get_estimate_cache_key_mock):
+        estimate_size = 210
+        estimate_time = 20
+        cache_mock.get.return_value = [estimate_size, estimate_time]
+
+        cache_key = '1.22222222222222'
+        get_estimate_cache_key_mock.return_value = cache_key
+        bbox = (5, 16, 5.1, 16.1)
+        srs = '4326'
+        max_zoom = 17
+        min_zoom = 0
+        slug = 'osm'
+        excessive_data_size = 200
+
+        self.add_max_data_size(self.provider, excessive_data_size)
+
+        job_url = reverse('api:jobs-list')
+
+        formats = [export_format.slug for export_format in ExportFormat.objects.all()]
+        request_data = {
+            'name': 'TestJob',
+            'description': 'Test description',
+            'event': 'Test Activation',
+            'selection': bbox_to_geojson(bbox),
+            'provider_tasks': [
+                {'provider': self.provider.slug, 'formats': formats,
+                 'min_zoom': min_zoom, 'max_zoom': max_zoom}],
+        }
+
+        response = self.client.post(job_url, data=json.dumps(request_data),
+                                    content_type='application/json; version=1.0')
+        cache_mock.get.assert_called_with(cache_key, (None, None))
+        get_estimate_cache_key_mock.called_once_with(bbox, srs, min_zoom, max_zoom, slug)
+        self.assertEqual(status.HTTP_400_BAD_REQUEST, response.status_code)
+        self.assertEqual(response['Content-Type'], 'application/json')
+        self.assertEqual(response['Content-Language'], 'en')
+        self.assertEqual('Selection area too large', response.data['errors'][0]['title'])
 
     def test_patch(self):
         expected = '/api/jobs/{0}'.format(self.job.uid)
