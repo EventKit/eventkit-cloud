@@ -169,6 +169,11 @@ export class EstimateContainer extends React.Component<Props, State> {
             if (estimates) {
                 return {time: estimates.time, size: estimates.size} as Eventkit.Store.Estimates;
             }
+            return{
+                size: null,
+                slug: provider.slug,
+                time: null,
+            };
         }
         return undefined;
     }

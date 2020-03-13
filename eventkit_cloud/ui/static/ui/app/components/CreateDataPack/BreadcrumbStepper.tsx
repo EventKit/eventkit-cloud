@@ -333,7 +333,7 @@ export class BreadcrumbStepper extends React.Component<Props, State> {
     }
 
     private checkEstimates() {
-        return this.props.sizeEstimate !== -1 || this.props.timeEstimate !== -1;
+        return this.props.sizeEstimate > 0|| this.props.timeEstimate > 0;
     }
 
     private getEstimateLabel(stepIndex: number) {
