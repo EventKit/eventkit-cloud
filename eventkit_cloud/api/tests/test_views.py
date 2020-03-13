@@ -1,13 +1,10 @@
 # -*- coding: utf-8 -*-
-
-
 import json
 import logging
 import os
 import uuid
 import yaml
 from datetime import datetime, timedelta
-
 from django.conf import settings
 from django.contrib.auth.models import Group, User
 from django.contrib.gis.geos import GEOSGeometry, GeometryCollection, Polygon, Point, LineString
@@ -19,7 +16,6 @@ from rest_framework import status
 from rest_framework.authtoken.models import Token
 from rest_framework.reverse import reverse
 from rest_framework.test import APITestCase
-
 from eventkit_cloud.api.pagination import LinkHeaderPagination
 from eventkit_cloud.api.views import get_models, get_provider_task, ExportRunViewSet
 from eventkit_cloud.core.models import GroupPermission, GroupPermissionLevel
@@ -30,6 +26,14 @@ from eventkit_cloud.tasks.models import ExportRun, ExportTaskRecord, DataProvide
 from eventkit_cloud.tasks.task_factory import InvalidLicense
 
 logger = logging.getLogger(__name__)
+
+
+def add_max_data_size(provider, max_data_size):
+    config = provider.config
+    config = yaml.load(config)
+    config['max_data_size'] = max_data_size
+    provider.config = yaml.dump(config)
+    provider.save()
 
 
 class TestJobViewSet(APITestCase):
@@ -68,7 +72,6 @@ class TestJobViewSet(APITestCase):
                                 HTTP_ACCEPT='application/json; version=1.0',
                                 HTTP_ACCEPT_LANGUAGE='en',
                                 HTTP_HOST='testserver')
-        # create a test config
         hdm_presets = DatamodelPreset.objects.get(name='hdm')
         self.job.preset = hdm_presets
         self.job.save()
@@ -95,13 +98,6 @@ class TestJobViewSet(APITestCase):
                 "geom": ["point", "polygon"],
             }
         ]
-
-    def add_max_data_size(self, provider, max_data_size):
-        config = provider.config
-        config = yaml.load(config)
-        config['max_data_size'] = max_data_size
-        provider.config = yaml.dump(config)
-        provider.save()
 
     def test_list(self, ):
         expected = '/api/jobs'
@@ -224,7 +220,7 @@ class TestJobViewSet(APITestCase):
     @patch('eventkit_cloud.api.views.create_run')
     def test_create_zipfile(self, create_run_mock, pickup_mock, cache_mock, get_estimate_cache_key_mock):
         excessive_data_size = 120
-        self.add_max_data_size(self.provider, excessive_data_size)
+        add_max_data_size(self.provider, excessive_data_size)
 
         estimate_size = 110
         estimate_time = 200
@@ -271,7 +267,7 @@ class TestJobViewSet(APITestCase):
     @patch('eventkit_cloud.api.views.create_run')
     def test_create_job_success(self, create_run_mock, pickup_mock, cache_mock, get_estimate_cache_key_mock):
         excessive_data_size = 100
-        self.add_max_data_size(self.provider, excessive_data_size)
+        add_max_data_size(self.provider, excessive_data_size)
 
         estimate_size = 80
         estimate_time = 2
@@ -359,7 +355,7 @@ class TestJobViewSet(APITestCase):
     def test_create_job_with_config_success(self, create_run_mock, pickup_mock, cache_mock,
                                             get_estimate_cache_key_mock):
         excessive_data_size = 100
-        self.add_max_data_size(self.provider, excessive_data_size)
+        add_max_data_size(self.provider, excessive_data_size)
 
         estimate_size = 80
         estimate_time = 2
@@ -419,7 +415,7 @@ class TestJobViewSet(APITestCase):
     @patch('eventkit_cloud.api.views.create_run')
     def test_create_job_with_tags(self, create_run_mock, pickup_mock, cache_mock, get_estimate_cache_key_mock):
         excessive_data_size = 100
-        self.add_max_data_size(self.provider, excessive_data_size)
+        add_max_data_size(self.provider, excessive_data_size)
 
         estimate_size = 80
         estimate_time = 2
@@ -607,7 +603,7 @@ class TestJobViewSet(APITestCase):
         slug = 'osm'
         excessive_data_size = 200
 
-        self.add_max_data_size(self.provider, excessive_data_size)
+        add_max_data_size(self.provider, excessive_data_size)
 
         job_url = reverse('api:jobs-list')
 

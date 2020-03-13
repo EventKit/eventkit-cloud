@@ -5,13 +5,10 @@ import logging
 from collections import OrderedDict
 from datetime import datetime, timedelta
 from django.core.cache import cache
-import yaml
-
 from dateutil import parser
 from django.conf import settings
 from django.contrib.auth.models import User, Group
 from django.contrib.gis.geos import GEOSException, GEOSGeometry
-from django.core.mail.backends import console
 from django.db import transaction
 from django.db.models import Q
 from django.shortcuts import redirect, render
@@ -24,11 +21,8 @@ from rest_framework.decorators import action
 from rest_framework.parsers import JSONParser
 from rest_framework.renderers import JSONRenderer
 from rest_framework.response import Response
-
 from rest_framework.serializers import ValidationError
-
 from audit_logging.models import AuditEvent
-
 from eventkit_cloud.api.filters import (
     ExportRunFilter,
     JobFilter,
@@ -107,10 +101,9 @@ from eventkit_cloud.tasks.task_factory import (
 from eventkit_cloud.utils.gdalutils import get_area
 from eventkit_cloud.utils.provider_check import perform_provider_check
 from eventkit_cloud.utils.stats.aoi_estimators import AoiEstimator
-
-# Get an instance of a logger
 from eventkit_cloud.utils.stats.geomutils import get_estimate_cache_key
 
+# Get an instance of a logger
 logger = logging.getLogger(__name__)
 
 # controls how api responses are rendered
@@ -394,6 +387,7 @@ class JobViewSet(viewsets.ModelViewSet):
                                 ]
                             }
                             return Response(error_data, status=status_code)
+
                         # Check max area (skip for superusers)
                         if not self.request.user.is_superuser:
                             error_data = {
@@ -529,7 +523,6 @@ class JobViewSet(viewsets.ModelViewSet):
             pick_up_run_task.apply_async(
                 queue="runs", routing_key="runs", kwargs={"run_uid": run_uid, "user_details": user_details},
             )
-            logger.info(f'RUNNING DATA: {running.data}')
             return Response(running.data, status=status.HTTP_202_ACCEPTED)
         else:
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
@@ -2038,13 +2031,8 @@ class EstimatorView(views.APIView):
                 payload += [
                     {"slug": slug, "size": {"value": size, "unit": "MB"}, "time": {"value": time, "unit": "seconds"}}
                 ]
-                logger.info(
-                    f'Cache key set: bbox: {bbox}, srs: {srs}, min_zoom: {min_zoom}, max_zoom: {max_zoom}, slug: {slug}')
-
                 cache_key = get_estimate_cache_key(bbox, srs, min_zoom, max_zoom, slug)
                 cache.set(cache_key, (size, time))
-                logger.info(f"cache key set: {cache_key}")
-                logger.info(f"cache set: {cache.get(cache_key)}")
         return Response(payload, status=status.HTTP_200_OK)
 
 
