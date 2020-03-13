@@ -225,9 +225,27 @@ class TestJobViewSet(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertEqual(response.data[0]['detail'], 'ADMIN permission is required to delete this job.')
 
+    @patch('eventkit_cloud.api.views.get_estimate_cache_key')
+    @patch('eventkit_cloud.api.views.cache')
     @patch('eventkit_cloud.api.views.pick_up_run_task')
     @patch('eventkit_cloud.api.views.create_run')
-    def test_create_zipfile(self, create_run_mock, pickup_mock):
+    def test_create_zipfile(self, create_run_mock, pickup_mock, cache_mock, get_estimate_cache_key_mock):
+        excessive_data_size = 100
+        self.add_max_data_size(self.provider, excessive_data_size)
+
+        # estimates contain size and time
+        size = 110
+        time = 200
+        cache_mock.get.return_value = [size, time]
+
+        cache_key = '222222222222222'
+        get_estimate_cache_key_mock.return_value = cache_key
+        bbox = (5, 16, 5.1, 16.1)
+        srs = '4326'
+        max_zoom = 17
+        min_zoom = 0
+        slug = 'osm'
+
         create_run_mock.return_value = "some_run_uid"
         formats = [export_format.slug for export_format in ExportFormat.objects.all()]
         request_data = {
@@ -235,7 +253,7 @@ class TestJobViewSet(APITestCase):
             'description': 'Test description',
             'event': 'Test Activation',
             'selection': bbox_to_geojson([5, 16, 5.1, 16.1]),
-            'provider_tasks': [{'provider': 'osm-generic', 'formats': formats}],
+            'provider_tasks': [{'provider': self.provider.slug, 'formats': formats, 'min_zoom': min_zoom, 'max_zoom': max_zoom}],
             'preset': self.job.preset.id,
             'published': True,
             'tags': self.tags,
@@ -243,6 +261,8 @@ class TestJobViewSet(APITestCase):
         }
         url = reverse('api:jobs-list')
         response = self.client.post(url, request_data, format='json')
+        cache_mock.get.assert_called_with(cache_key, (None, None))
+        get_estimate_cache_key_mock.called_once_with(bbox, srs, min_zoom, max_zoom, slug)
         expected_user_details = {'username': 'demo', 'is_superuser': False, 'is_staff': False}
         pickup_mock.apply_async.assert_called_with(
             kwargs={"run_uid": "some_run_uid", "user_details": expected_user_details}, queue="runs", routing_key="runs")
