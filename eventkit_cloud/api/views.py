@@ -2026,6 +2026,7 @@ class EstimatorView(views.APIView):
         if request.query_params.get("slugs", None):
             estimator = AoiEstimator(bbox=bbox, bbox_srs=srs, min_zoom=min_zoom, max_zoom=max_zoom)
             for slug in request.query_params.get("slugs").split(","):
+
                 size = estimator.get_estimate_from_slug(AoiEstimator.Types.SIZE, slug)[0]
                 time = estimator.get_estimate_from_slug(AoiEstimator.Types.TIME, slug)[0]
                 payload += [
@@ -2033,6 +2034,8 @@ class EstimatorView(views.APIView):
                 ]
                 cache_key = get_estimate_cache_key(bbox, srs, min_zoom, max_zoom, slug)
                 cache.set(cache_key, (size, time))
+        else:
+            return Response([{"detail": _("No estimates found")}], status=status.HTTP_400_BAD_REQUEST)
         return Response(payload, status=status.HTTP_200_OK)
 
 

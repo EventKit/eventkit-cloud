@@ -8,19 +8,17 @@ from django.test import TestCase, override_settings
 from eventkit_cloud.utils.geocoding.reverse import ReverseGeocode, ReverseGeocodeAdapter, expand_bbox, is_valid_bbox
 
 logger = logging.getLogger(__name__)
-mockURL = "http://192.168.20.1"
 
-
+@override_settings(GEOCODING_AUTH_URL=None)
 class TestReverseGeoCode(TestCase):
 
     def setUp(self):
         self.mock_requests = requests_mock.Mocker()
         self.mock_requests.start()
         self.addCleanup(self.mock_requests.stop)
-        settings.REVERSE_GEOCODING_API_URL = mockURL;
 
     def reverse_geocode_test(self, api_response):
-        self.mock_requests.get(mockURL, text=json.dumps(api_response), status_code=200)
+        self.mock_requests.get(settings.REVERSE_GEOCODING_API_URL, text=json.dumps(api_response), status_code=200)
         reverseGeocode = ReverseGeocode()
         result = reverseGeocode.search({"lat": 38.960327927982796, "lon": -77.422182})
         self.assertIsNotNone(result.get("features"))
@@ -35,8 +33,10 @@ class TestReverseGeoCode(TestCase):
             for property in ReverseGeocodeAdapter._properties:
                 self.assertTrue(property in properties)
 
+    @override_settings(REVERSE_GEOCODING_API_URL="http://pelias.url/",
+                       REVERSE_GEOCODING_API_TYPE="pelias",
+                       GEOCODING_UPDATE_URL="http://pelias.url/")
     def test_pelias_success(self):
-        
         pelias_response = {"geocoding": {"version": "0.2", "attribution": "127.0.0.1:/v1/attribution",
                                          "query": {"text": "Boston", "size": 10, "private": False,
                                                    "lang": {"name": "English", "iso6391": "en", "iso6393": "eng",
@@ -67,9 +67,9 @@ class TestReverseGeoCode(TestCase):
 
         self.reverse_geocode_test(pelias_response)
 
-    @override_settings(GEOCODING_API_URL=mockURL,
-                       GEOCODING_API_TYPE="pelias",
-                       GEOCODING_UPDATE_URL=mockURL)
+    @override_settings(REVERSE_GEOCODING_API_URL="http://pelias.url/",
+                       REVERSE_GEOCODING_API_TYPE="pelias",
+                       GEOCODING_UPDATE_URL="http://pelias.url/")
     def test_pelias_add_bbox(self):
         in_result = {
             "type": "Feature",
@@ -116,7 +116,7 @@ class TestReverseGeoCode(TestCase):
             ],
             "bbox": [102.020749821, 17.6291659858, 102.33623593, 17.8795015544]
         }
-        self.mock_requests.get(mockURL, text=json.dumps(api_response), status_code=200)
+        self.mock_requests.get(settings.REVERSE_GEOCODING_API_URL, text=json.dumps(api_response), status_code=200)
         expected_bbox = api_response.get('bbox')
         reverse_geocode = ReverseGeocode()
         result = reverse_geocode.add_bbox(in_result)
@@ -124,8 +124,8 @@ class TestReverseGeoCode(TestCase):
         self.assertEqual(result.get('bbox'), expected_bbox)
         self.assertEqual(result.get('properties').get('bbox'), expected_bbox)
 
-    @override_settings(GEOCODING_API_URL=mockURL,
-                       GEOCODING_API_TYPE="pelias",
+    @override_settings(REVERSE_GEOCODING_API_URL="http://pelias.url/",
+                       REVERSE_GEOCODING_API_TYPE="pelias",
                        GEOCODING_UPDATE_URL="")
     def test_geocode_no_update_url(self):
         in_result = {
@@ -143,7 +143,7 @@ class TestReverseGeoCode(TestCase):
         result = reverse_geocode.add_bbox(in_result)
         self.assertEqual(result, in_result)
 
-    @override_settings(GEOCODING_API_URL="",
+    @override_settings(REVERSE_GEOCODING_API_URL="",
                        GEOCODING_API_TYPE="")
     def test_geocode_error(self):
         response = {}
@@ -168,7 +168,7 @@ class TestReverseGeoCode(TestCase):
 
     def test_is_valid_bbox(self):
         # test valid
-        bbox = [0,0,1,1]
+        bbox = [0, 0, 1, 1]
         self.assertTrue(is_valid_bbox(bbox))
 
         # test not valid
@@ -188,5 +188,34 @@ class TestReverseGeoCode(TestCase):
         self.assertFalse(is_valid_bbox(bbox))
 
         # test not valid
-        bbox = [0,0,1]
+        bbox = [0, 0, 1]
         self.assertFalse(is_valid_bbox(bbox))
+
+    @override_settings(REVERSE_GEOCODING_API_URL="http://nominatim.url/",
+                       REVERSE_GEOCODING_API_TYPE="nominatim")
+    def test_nominatim_success(self):
+        nominatim_response = {
+            "place_id": 235668418,
+            "licence": "Data © OpenStreetMap contributors, ODbL 1.0. https://osm.org/copyright",
+            "osm_type": "relation",
+            "osm_id": 2315704,
+            "boundingbox": [
+                "42.2279112",
+                "42.3969775",
+                "-71.1912491",
+                "-70.8044881"
+            ],
+            "lat": "42.3602534",
+            "lon": "-71.0582912",
+            "display_name": "Boston, Suffolk County, Massachusetts, United States of America",
+            "class": "boundary",
+            "type": "administrative",
+            "importance": 0.8202507899404512,
+            "icon": "https://nominatim.openstreetmap.org/images/mapicons/poi_boundary_administrative.p.20.png",
+            "geojson": {
+                "type": "Polygon",
+                "coordinates": [[]]
+            }
+        }
+
+        self.reverse_geocode_test(nominatim_response)

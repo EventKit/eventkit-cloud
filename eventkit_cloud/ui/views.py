@@ -174,8 +174,8 @@ def search(request):
         try:
             result = reverse.search(
                 {
-                    "point.lat": mgrs_data.get("geometry").get("coordinates")[1],
-                    "point.lon": mgrs_data.get("geometry").get("coordinates")[0],
+                    "lat": mgrs_data.get("geometry").get("coordinates")[1],
+                    "lon": mgrs_data.get("geometry").get("coordinates")[0],
                 }
             )
         except Exception:
@@ -197,8 +197,8 @@ def search(request):
         # make call to reverse geocode
         reverse = ReverseGeocode()
         try:
-            result = reverse.search({"point.lat": coords[0], "point.lon": coords[1]})
-        except Exception:
+            result = reverse.search({"lat": coords[0], "lon": coords[1]})
+        except Exception as e:
             return HttpResponse(content=error_string, status=500)
 
         # create a feature representing the exact lat/lon being searched
@@ -270,7 +270,7 @@ def reverse_geocode(request):
     reverseGeocode = ReverseGeocode()
     if getattr(settings, "REVERSE_GEOCODING_API_URL") is not None:
         if request.GET.get("lat") and request.GET.get("lon"):
-            result = reverseGeocode.search({"point.lat": request.GET.get("lat"), "point.lon": request.GET.get("lon")})
+            result = reverseGeocode.search({"lat": request.GET.get("lat"), "lon": request.GET.get("lon")})
             return HttpResponse(content=json.dumps(result), status=200, content_type="application/json")
         if request.GET.get("result"):
             result = reverseGeocode.add_bbox(json.loads(request.GET.get("result")))
