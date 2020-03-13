@@ -6,15 +6,7 @@ services:
       dockerfile: config/Dockerfile
     image: eventkit/eventkit-base:1.6.0
     volumes:
-      # using the root directory here will break mapproxy tile locks.
-      - ./scripts:/var/lib/eventkit/scripts
-      - ./eventkit_cloud:/var/lib/eventkit/eventkit_cloud
-      - ./manage.py:/var/lib/eventkit/manage.py
-      - /var/lib/eventkit/node_modules/
-      - ./exports_download:/var/lib/eventkit/exports_download
-      - ./exports_stage:/var/lib/eventkit/exports_stage
-      - ./config:/var/lib/eventkit/config
-      - ./coverage:/var/lib/eventkit/coverage
+      - ./:/var/lib/eventkit/
     user: eventkit
     depends_on:
       - postgis
@@ -24,7 +16,7 @@ services:
       - rabbitmq
     expose:
       - "6080"
-    command: gunicorn eventkit_cloud.wsgi:application --bind 0.0.0.0:6080 --worker-class eventlet --workers 1 --threads 2 --name eventkit --user eventkit --no-sendfile --reload
+    command: gunicorn eventkit_cloud.wsgi:application --bind 0.0.0.0:6080 --worker-class eventlet --workers 8 --threads 2 --name eventkit --user eventkit --no-sendfile --reload
     environment:
       - DATABASE_URL=postgres://eventkit:eventkit_exports@postgis:5432/eventkit_exports
       - BROKER_URL=amqp://guest:guest@rabbitmq:5672/
@@ -62,6 +54,43 @@ services:
       - TILE_CACHE_DIR
       - ROCKETCHAT_NOTIFICATIONS
       - LAND_DATA_URL
+    extra_hosts:
+      - "${SITE_NAME}:${SITE_IP}"
+  map:
+    image: eventkit/eventkit-base:1.6.0
+    volumes:
+      # using the root directory here will break mapproxy tile locks.
+      - ./scripts:/var/lib/eventkit/scripts
+      - ./eventkit_cloud:/var/lib/eventkit/eventkit_cloud
+      - ./manage.py:/var/lib/eventkit/manage.py
+      - ./config:/var/lib/eventkit/config
+    user: eventkit
+    depends_on:
+      - postgis
+    links:
+      - postgis
+    expose:
+      - "6080"
+    command: gunicorn eventkit_cloud.wsgi:application --bind 0.0.0.0:6080 --worker-class eventlet --workers 8 --threads 2 --name eventkit --user eventkit --no-sendfile --reload --timeout 60
+    environment:
+      - DATABASE_URL=postgres://eventkit:eventkit_exports@postgis:5432/eventkit_exports
+      - BROKER_URL=amqp://guest:guest@rabbitmq:5672/
+      - BROKER_API_URL=http://guest:guest@rabbitmq:15672/api/
+      - SITE_NAME
+      - SITE_IP
+      - TERM
+      - DEBUG
+      - PRODUCTION
+      - DJANGO_LOG_LEVEL
+      - LOG_LEVEL
+      - EXPORT_DOWNLOAD_ROOT
+      - PYTHONWARNINGS
+      - SSL_VERIFICATION
+      - USE_S3
+      - AWS_BUCKET_NAME
+      - AWS_ACCESS_KEY
+      - AWS_SECRET_KEY
+      - TILE_CACHE_DIR
     extra_hosts:
       - "${SITE_NAME}:${SITE_IP}"
   celery:
@@ -171,6 +200,7 @@ services:
       - ./site:/var/lib/eventkit/site
     links:
       - eventkit
+      - map
       - webpack
       - mkdocs
     ports:

@@ -862,9 +862,6 @@ class DataProviderViewSet(viewsets.ReadOnlyModelViewSet):
 
         except Exception as e:
             logger.error(e)
-            import traceback
-
-            traceback.print_exc()
 
             return Response([{"detail": _("Internal Server Error")}], status=status.HTTP_500_INTERNAL_SERVER_ERROR,)
 
@@ -1990,7 +1987,7 @@ class EstimatorView(views.APIView):
          Args:
              slugs: Comma separated list of slugs for provider slugs (e.g. 'osm,some_wms1')
              bbox: Bounding box as w,s,e,n (e.g. '-130,-45,-100,10)
-             srqus: EPSG code for the bbox srs (default=4326)
+             srs: EPSG code for the bbox srs (default=4326)
          Returns:
             [{ "slug" : $slug_1, "size": $estimate_1, "unit": "mb"}, ...] or error
         """

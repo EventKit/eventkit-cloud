@@ -2,8 +2,6 @@ type Omit<T, K extends keyof T> = Pick<T, Exclude<keyof T, K>>;
 
 declare namespace Eventkit {
 
-    import Estimates = Eventkit.Store.Estimates;
-
     interface License {
         slug: string;
         name: string;
