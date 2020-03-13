@@ -153,6 +153,7 @@ export class DataProvider extends React.Component<Props, State> {
 
     componentDidMount() {
         this.estimateDebouncer = debounce((val) => {
+            this.props.clearEstimate(this.props.provider);
             this.props.checkProvider(val);
         }, 1000);
     }
@@ -187,6 +188,7 @@ export class DataProvider extends React.Component<Props, State> {
         // we will instead fall back to the min/max for the provider (from/to)
         let lastMin = providerOptions.minZoom;
         let lastMax = providerOptions.maxZoom;
+
         if (!isZoomLevelInRange(lastMin, provider)) {
             lastMin = provider.level_from;
         }
@@ -213,11 +215,7 @@ export class DataProvider extends React.Component<Props, State> {
         this.props.updateExportInfo({
             exportOptions: updatedExportOptions,
         });
-
-        if (minZoom !== lastMin || maxZoom !== lastMax) {
-            this.props.clearEstimate(this.props.provider);
-            this.estimateDebouncer(this.props.provider);
-        }
+        this.estimateDebouncer(this.props.provider);
     }
 
     private handleLicenseOpen() {
