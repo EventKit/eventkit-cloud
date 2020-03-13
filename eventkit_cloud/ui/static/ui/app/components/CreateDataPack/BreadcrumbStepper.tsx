@@ -128,6 +128,7 @@ export class BreadcrumbStepper extends React.Component<Props, State> {
         this.handleEstimateExplanationOpen = this.handleEstimateExplanationOpen.bind(this);
         this.handleEstimateExplanationClosed = this.handleEstimateExplanationClosed.bind(this);
         this.checkEstimates = this.checkEstimates.bind(this);
+        this.haveUnknownEstimate = this.haveUnknownEstimate.bind(this);
         this.state = {
             stepIndex: 0,
             showError: false,
@@ -297,7 +298,7 @@ export class BreadcrumbStepper extends React.Component<Props, State> {
             // Secondary estimate shown in parenthesis (<duration in days hours minutes> - <size>)
             let secondary;
             const separator = (sizeEstimate && durationEstimate) ? ' - ' : '';
-            secondary = ` ( ${get(durationEstimate, '')}${separator}${get(sizeEstimate, 'size unknown')})`;
+            secondary = ` ( ${get(durationEstimate, '')}${separator}${get(sizeEstimate, 'size unknown')}) ${this.haveUnknownEstimate() ? '+' : ''}`;
 
             return this.props.areEstimatesLoading ?
                 <span>{calculatingText}<CircularProgress/></span> : `${get(dateTimeEstimate)}${get(secondary, '')}`;
@@ -309,6 +310,26 @@ export class BreadcrumbStepper extends React.Component<Props, State> {
 
     private areProvidersSelected() {
         return Object.keys(this.props.exportInfo.providers).length > 0;
+    }
+
+    private haveUnknownEstimate() {
+        const providerSlugs = this.props.exportInfo.providers.map(provider => provider.slug);
+        const infoEntries = Object.entries(this.props.exportInfo.providerInfo);
+        return infoEntries.filter(([slug, object]) =>
+            providerSlugs.indexOf(slug) !== -1).some(([slug, object]) => {
+            const estimates = object.estimates;
+            if (!!estimates) {
+                if (!estimates.time || !estimates.time.value) {
+                    return true;
+                }
+                if (!estimates.size || !estimates.size.value) {
+                    return true;
+                }
+            } else {
+                return true;
+            }
+            return false;
+        });
     }
 
     private checkEstimates() {
