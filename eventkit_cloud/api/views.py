@@ -351,12 +351,10 @@ class JobViewSet(viewsets.ModelViewSet):
         * Raises: ValidationError: in case of validation errors.
         ** returns: Not 202
         """
-        logger.info("WE HIT CREATE FUNCTION")
         from eventkit_cloud.tasks.task_factory import InvalidLicense, Unauthorized
 
         serializer = self.get_serializer(data=request.data)
         if serializer.is_valid(raise_exception=True):
-            logger.info(f"SERIALIZER IS VALID")
             """Get the required data from the validated request."""
             export_providers = request.data.get("export_providers", [])
             provider_tasks = request.data.get("provider_tasks", [])
@@ -397,9 +395,7 @@ class JobViewSet(viewsets.ModelViewSet):
                             }
                             return Response(error_data, status=status_code)
                         # Check max area (skip for superusers)
-                        logger.info(f"REQUEST USER: {self.request.user}")
                         if not self.request.user.is_superuser:
-                            logger.info("I'M NOT A SUPERUSER")
                             error_data = {
                                 "errors": []
                             }
@@ -407,9 +403,6 @@ class JobViewSet(viewsets.ModelViewSet):
                                 provider = provider_task.provider
                                 bbox = job.extents
                                 srs = '4326'
-                                logger.info(
-                                    f'Cache key get: bbox: {bbox}, srs: {srs}, min_zoom: {provider_task.min_zoom}, '
-                                    f'max_zoom: {provider_task.max_zoom}, slug: {provider.slug}')
                                 cache_key = get_estimate_cache_key(
                                     bbox,
                                     srs,
@@ -418,26 +411,29 @@ class JobViewSet(viewsets.ModelViewSet):
                                     provider.slug
                                 )
                                 # find cache key that contains the estimator hash with correct time, size values
-                                logger.info(f"cache key: {cache_key}")
-                                logger.info(f"cache: {cache.get(cache_key)}")
                                 size, time = cache.get(cache_key, (None, None))
                                 max_selection = provider.max_selection
 
                                 # Don't rely solely on max_data_size as estimates can sometimes be inaccurate
                                 # Allow user to get a job that passes one of the two conditions:
-                                if size and size < provider.max_data_size:
-                                    logger.info(f"Max data size: {provider.max_data_size}")
-                                    continue
+                                if size is not None:
+                                    if size <= provider.max_data_size:
+                                        continue
+                                    else:
+                                        status_code = status.HTTP_400_BAD_REQUEST
+                                        error_data["errors"] += [{
+                                            "status": status_code,
+                                            "title": _("Estimated size too large"),
+                                            "detail": _(f"The estimated size "
+                                                        f"exceeds the maximum data size for the {provider.name}")
+                                        }]
 
                                 if max_selection and 0 < float(max_selection) < get_area(job.the_geom.geojson):
-                                    logger.info(f"max_selection: {max_selection}")
-                                    logger.info(f"geojson: {get_area(job.the_geom.geojson)}")
                                     status_code = status.HTTP_400_BAD_REQUEST
                                     error_data["errors"] += [{
                                         "status": status_code,
                                         "title": _("Selection area too large"),
-                                        "detail": _(f"The selected area is too large or the estimated size "
-                                                    f"exceeds the maximum data size for the {provider.name}")
+                                        "detail": _(f"The selected area is too large for the {provider.name}")
                                     }]
                             if error_data["errors"]:
                                 return Response(error_data, status=status_code)

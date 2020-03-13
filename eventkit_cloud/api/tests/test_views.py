@@ -97,18 +97,11 @@ class TestJobViewSet(APITestCase):
         ]
 
     def add_max_data_size(self, provider, max_data_size):
-        # first get the config from the provider
         config = provider.config
-        # the config is a yaml we need to load that.
         config = yaml.load(config)
-        # add our setting
         config['max_data_size'] = max_data_size
-        logger.info(f'MAX DATA SIZE: {max_data_size}')
-        # update the provider by converting the config dict to a yaml
         provider.config = yaml.dump(config)
-        # save the settings (write them to the database)
         provider.save()
-        logger.info(f'PROVIDER: {yaml.dump(config)}')
 
     def test_list(self, ):
         expected = '/api/jobs'
@@ -230,10 +223,9 @@ class TestJobViewSet(APITestCase):
     @patch('eventkit_cloud.api.views.pick_up_run_task')
     @patch('eventkit_cloud.api.views.create_run')
     def test_create_zipfile(self, create_run_mock, pickup_mock, cache_mock, get_estimate_cache_key_mock):
-        excessive_data_size = 100
+        excessive_data_size = 120
         self.add_max_data_size(self.provider, excessive_data_size)
 
-        # estimates contain size and time
         estimate_size = 110
         estimate_time = 200
         cache_mock.get.return_value = [estimate_size, estimate_time]
@@ -281,8 +273,8 @@ class TestJobViewSet(APITestCase):
         excessive_data_size = 100
         self.add_max_data_size(self.provider, excessive_data_size)
 
-        estimate_size = 110
-        estimate_time = 200
+        estimate_size = 80
+        estimate_time = 2
         cache_mock.get.return_value = [estimate_size, estimate_time]
 
         cache_key = '222222222222222'
@@ -369,8 +361,8 @@ class TestJobViewSet(APITestCase):
         excessive_data_size = 100
         self.add_max_data_size(self.provider, excessive_data_size)
 
-        estimate_size = 110
-        estimate_time = 200
+        estimate_size = 80
+        estimate_time = 2
         cache_mock.get.return_value = [estimate_size, estimate_time]
 
         cache_key = '222222222222222'
@@ -429,8 +421,8 @@ class TestJobViewSet(APITestCase):
         excessive_data_size = 100
         self.add_max_data_size(self.provider, excessive_data_size)
 
-        estimate_size = 110
-        estimate_time = 200
+        estimate_size = 80
+        estimate_time = 2
         cache_mock.get.return_value = [estimate_size, estimate_time]
 
         cache_key = '222222222222222'
@@ -637,7 +629,7 @@ class TestJobViewSet(APITestCase):
         self.assertEqual(status.HTTP_400_BAD_REQUEST, response.status_code)
         self.assertEqual(response['Content-Type'], 'application/json')
         self.assertEqual(response['Content-Language'], 'en')
-        self.assertEqual('Selection area too large', response.data['errors'][0]['title'])
+        self.assertEqual('Estimated size too large', response.data['errors'][0]['title'])
 
     def test_patch(self):
         expected = '/api/jobs/{0}'.format(self.job.uid)
