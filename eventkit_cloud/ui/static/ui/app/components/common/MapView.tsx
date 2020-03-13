@@ -44,77 +44,77 @@ export class MapView extends React.Component<Props, State> {
         this.maxZoom = this.props.maxZoom || 20;
         this.mapDiv = this.props.id || "ProviderMap";
     }
-
-    componentDidMount() {
-        const { zoom, minZoom, maxZoom } = this.props;
-        this.mapContainer = new MapContainer(zoom, minZoom, maxZoom);
-        
-        const map = this.mapContainer.getMap();
-
-        this.mapContainer.addRasterTileLayer(this.state.selectedBaseMap.mapUrl, this.props.copyright);
-        const geojsonLayer = this.mapContainer.addFeatureLayer(this.props.geojson);
-        map.getView().fit(geojsonLayer.getSource().getExtent(), map.getSize());
-
-        if (this.props.zoom) {
-            map.getView().setZoom(this.props.zoom);
-        }
-
-        map.on('moveend', () => {
-            if (this.props.setZoom) {
-                this.props.setZoom(null, map.getView().getZoom());
-            }
-        });
-
-
-        if (!this.props.moveable) {
-            this.ref = this.mapContainerRef;
-        }
-
-        map.setTarget(this.mapDiv);
-    }
-
-    componentDidUpdate(prevProps: Readonly<Props>, prevState: Readonly<{}>, snapshot?: any): void {
-        if (this.props.zoom) {
-            this.mapContainer.getMap().getView().setZoom(this.props.zoom);
-        }
-    }
-
-    mapContainerRef(element: HTMLElement) {
-        if (!element) {
-            return;
-        }
-        // Absorb touch move events.
-        element.addEventListener('touchmove', (e: TouchEvent) => {
-            e.stopPropagation();
-        });
-    }
-
-    componentWillUnmount() {
-        this.mapContainer.getMap().setTarget(null);
-        this.mapContainer = null;
-    }
-
-    private initializeOpenLayers() {
-        const zoomLevels = 20;
-        const resolutions = getResolutions(zoomLevels, null);
-        let tileGrid = new TileGrid({
-            extent: [-180, -90, 180, 90],
-            resolutions: resolutions
-        });
-        
-        //
-        // this.map.on('moveend', () => {
-        //     if (this.props.setZoom) {
-        //         this.props.setZoom(null, this.map.getView().getZoom());
-        //     }
-        // });
-        // this.layer = base;
-        // // Hook up the click to query feature data
-        // this.map.on('click', (event) => {
-        //         this.displayBoxRef.handleMapClick(getTileCoordinateFromClick(event, this.layer, this.map))
-        //     }
-        // );
-    }
+    //
+    // componentDidMount() {
+    //     const { zoom, minZoom, maxZoom } = this.props;
+    //     this.mapContainer = new MapContainer(zoom, minZoom, maxZoom);
+    //
+    //     const map = this.mapContainer.getMap();
+    //
+    //     this.mapContainer.addRasterTileLayer(this.state.selectedBaseMap.mapUrl, this.props.copyright);
+    //     const geojsonLayer = this.mapContainer.addFeatureLayer(this.props.geojson);
+    //     map.getView().fit(geojsonLayer.getSource().getExtent(), map.getSize());
+    //
+    //     if (this.props.zoom) {
+    //         map.getView().setZoom(this.props.zoom);
+    //     }
+    //
+    //     map.on('moveend', () => {
+    //         if (this.props.setZoom) {
+    //             this.props.setZoom(null, map.getView().getZoom());
+    //         }
+    //     });
+    //
+    //
+    //     if (!this.props.moveable) {
+    //         this.ref = this.mapContainerRef;
+    //     }
+    //
+    //     map.setTarget(this.mapDiv);
+    // }
+    //
+    // componentDidUpdate(prevProps: Readonly<Props>, prevState: Readonly<{}>, snapshot?: any): void {
+    //     if (this.props.zoom) {
+    //         this.mapContainer.getMap().getView().setZoom(this.props.zoom);
+    //     }
+    // }
+    //
+    // mapContainerRef(element: HTMLElement) {
+    //     if (!element) {
+    //         return;
+    //     }
+    //     // Absorb touch move events.
+    //     element.addEventListener('touchmove', (e: TouchEvent) => {
+    //         e.stopPropagation();
+    //     });
+    // }
+    //
+    // componentWillUnmount() {
+    //     this.mapContainer.getMap().setTarget(null);
+    //     this.mapContainer = null;
+    // }
+    //
+    // private initializeOpenLayers() {
+    //     const zoomLevels = 20;
+    //     const resolutions = getResolutions(zoomLevels, null);
+    //     let tileGrid = new TileGrid({
+    //         extent: [-180, -90, 180, 90],
+    //         resolutions: resolutions
+    //     });
+    //
+    //     //
+    //     // this.map.on('moveend', () => {
+    //     //     if (this.props.setZoom) {
+    //     //         this.props.setZoom(null, this.map.getView().getZoom());
+    //     //     }
+    //     // });
+    //     // this.layer = base;
+    //     // // Hook up the click to query feature data
+    //     // this.map.on('click', (event) => {
+    //     //         this.displayBoxRef.handleMapClick(getTileCoordinateFromClick(event, this.layer, this.map))
+    //     //     }
+    //     // );
+    // }
 
     render() {
         return (

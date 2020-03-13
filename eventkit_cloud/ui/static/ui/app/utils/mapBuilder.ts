@@ -37,7 +37,7 @@ export class MapContainer {
         if (!epsgCode) {
             this.mapEpsgCode = DEFAULT_EPSG_CODE;
         }
-        const zoomLevels = maxZoom;
+        const zoomLevels = ((maxZoom) ? maxZoom : 20) + 1;
         const resolutions = getResolutions(zoomLevels, null);
         this.tileGrid = new TileGrid({
             extent: [-180, -90, 180, 90],
@@ -49,8 +49,8 @@ export class MapContainer {
                 projection: this.getEpsg(),
                 center: [0, 0],
                 zoom: currentZoom,
-                minZoom: minZoom,
-                maxZoom: zoomLevels,
+                minZoom: minZoom || 0,
+                maxZoom: maxZoom || 20,
             }),
             interactions: interaction.defaults({
                 keyboard: false,
@@ -123,17 +123,22 @@ export class MapContainer {
         return this.addLayer(layer, zIndex) as Tile;
     }
 
+    removeLayer(layer: Layer) : void {
+        // Remove a layer from the map.
+        this.olMap.removeLayer(layer);
+    }
+
     getInteraction(interactionType: interaction.Interaction) : interaction.Interaction {
         // Returns a specific Interaction from the map by type, may return undefined if not added to the collection.
         return this.olMap.getInteractions().getArray().find(i => i instanceof interactionType);
     }
 
-    addListener(eventTypeKey: string, callback: () => void) {
+    addListener(eventTypeKey: string, callback: (...args: any) => void) : void {
         // Wrapper of Map.on that returns a key that can be used with Observable.unByKey to remove an event
         return this.olMap.on(eventTypeKey, callback);
     }
 
-    removeListener(listenerKey) {
+    removeListener(listenerKey) : void {
         Observable.unByKey(listenerKey);
     }
 }

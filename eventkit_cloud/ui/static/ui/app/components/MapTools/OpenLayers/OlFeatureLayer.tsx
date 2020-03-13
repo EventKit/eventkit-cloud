@@ -1,4 +1,4 @@
-import React, {useEffect, useState} from 'react';
+import React, {useEffect, useRef, useState} from 'react';
 import VectorLayer from "ol/layer/vector";
 import {useOlMapContainer} from "../context/OpenLayersContext";
 
@@ -13,23 +13,20 @@ function OlFeatureLayer(props: React.PropsWithChildren<Props>) {
     const mapContainer = olMapContext.mapContainer;
 
     const { geojson, zIndex, epsgCode } = props;
-    const [featureLayer, setLayer ] = useState(null);
+    const layerRef = useRef(null);
 
     useEffect(() => {
-        setLayer(mapContainer.addFeatureLayer(geojson, zIndex, epsgCode));
-        return function cleanup() {
-            if (!!featureLayer) {
-                mapContainer.getMap().removeLayer(featureLayer);
-            }
-        }
+        layerRef.current = mapContainer.addFeatureLayer(geojson, zIndex, epsgCode);
+        return () => mapContainer.removeLayer(layerRef.current);
     }, [geojson, zIndex, epsgCode]);
 
+    // Mechanism by which to pass a reference to the added ol VectorLayer down to any children.
     const childrenWithProps = React.Children.map(props.children, (child : any) =>
-        React.cloneElement(child, { vectorLayer: featureLayer})
+        React.cloneElement(child, { vectorLayer: layerRef.current})
     );
 
     return (
-        <>{!!featureLayer &&
+        <>{!!layerRef.current &&
             childrenWithProps
         }</>
     );

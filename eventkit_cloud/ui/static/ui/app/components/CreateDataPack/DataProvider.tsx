@@ -11,7 +11,7 @@ import ExpandMore from '@material-ui/icons/ExpandMore';
 import ProviderStatusIcon from './ProviderStatusIcon';
 import BaseDialog from '../Dialog/BaseDialog';
 import {formatMegaBytes, getDuration, isZoomLevelInRange, supportsZoomLevels} from '../../utils/generic';
-import {Typography} from "@material-ui/core";
+import {Switch, Typography} from "@material-ui/core";
 import ZoomLevelSlider from "./ZoomLevelSlider";
 import {connect} from "react-redux";
 import {updateExportInfo} from '../../actions/datacartActions';
@@ -23,13 +23,13 @@ import IndeterminateCheckBoxIcon from '@material-ui/icons/IndeterminateCheckBox'
 import CheckBoxIcon from "@material-ui/icons/CheckBox";
 import {CompatibilityInfo} from "./ExportInfo";
 import {MapLayer} from "./CreateExport";
-import MapComponent from "../MapTools/OpenLayers/MapComponent";
-import OlRasterTileLayer from "../MapTools/OpenLayers/OlRasterTileLayer";
-import OlFeatureLayer from "../MapTools/OpenLayers/OlFeatureLayer";
-import ZoomToAoi from "../MapTools/OpenLayers/ZoomToAoi";
 import OlMouseWheelZoom from "../MapTools/OpenLayers/MouseWheelZoom";
 import ZoomUpdater from "./ZoomUpdater";
 import ProviderPreviewMap from "../MapTools/ProviderPreviewMap";
+import PoiQueryDisplay from "../MapTools/PoiQueryDisplay";
+import OlMapClickEvent from "../MapTools/OpenLayers/OlMapClickEvent";
+import SwitchControl from "../common/SwitchControl";
+import Icon from "ol/style/icon";
 
 const jss = (theme: Theme & Eventkit.Theme) => createStyles({
     container: {
@@ -143,7 +143,7 @@ interface State {
     open: boolean;
     licenseDialogOpen: boolean;
     zoomLevel: number;
-    checked: boolean;
+    displayFootprints: boolean;
 }
 
 export class DataProvider extends React.Component<Props, State> {
@@ -171,7 +171,7 @@ export class DataProvider extends React.Component<Props, State> {
             open: false,
             licenseDialogOpen: false,
             zoomLevel: this.props.provider.level_to,
-            checked: false,
+            displayFootprints: false,
         };
     }
 
@@ -256,7 +256,7 @@ export class DataProvider extends React.Component<Props, State> {
     }
 
     handleFootprintsCheck = () => {
-        this.setState({ checked: !this.state.checked });
+        this.setState({ displayFootprints: !this.state.displayFootprints });
     };
 
     private formatEstimate(providerEstimate) {
@@ -316,6 +316,7 @@ export class DataProvider extends React.Component<Props, State> {
 
         const selectedBasemap = {
             mapUrl: (this.props.provider.preview_url || this.context.config.BASEMAP_URL),
+            metadata: provider.metadata,
             slug: (!!this.props.provider.preview_url) ? provider.slug : undefined,
         } as MapLayer;
 
@@ -371,35 +372,43 @@ export class DataProvider extends React.Component<Props, State> {
                             maxZoom={provider.level_to}
                             minZoom={provider.level_from}
                             handleCheckClick={this.handleFootprintsCheck}
-                            checked={this.state.checked}
-                        />
+                            checked={this.state.displayFootprints}
+                        >
+                            { this.props.provider.footprint_url &&
+                                <SwitchControl onSwitch={this.handleFootprintsCheck} isSwitchOn={this.state.displayFootprints}/>
+                            }
+                        </ZoomLevelSlider>
                     </div>
                     <div
                         className={`qa-DataProvider-ListItem-zoomMap ${this.props.provider.slug + '-mapDiv ' + classes.listItemPadding}`}
                         key={this.props.provider.slug + '-mapDiv'}
                     >
                         <ProviderPreviewMap
+                            style={{height: '290px'}}
                             geojson={this.props.geojson}
                             zoomLevel={currentMaxZoom}
                             provider={this.props.provider}
+                            visible={this.state.open}
+                            displayFootprints={this.state.displayFootprints}
                         >
                             <ZoomUpdater setZoom={this.setZoom}/>
                             <OlMouseWheelZoom enabled={false}/>
+                            <PoiQueryDisplay
+                                style={{
+                                    position: 'absolute',
+                                    width: 'max-content',
+                                    minWidth: '200px',
+                                    justifyContent: 'center',
+                                }}
+                                selectedLayer={selectedBasemap}
+                            >
+                                <OlMapClickEvent mapPinStyle={{
+                                    image: new Icon({
+                                        src: this.props.theme.eventkit.images.map_pin,
+                                    })
+                                }}/>
+                            </PoiQueryDisplay>
                         </ProviderPreviewMap>
-                        {/*<MapComponent*/}
-                        {/*    style={{ height: '100%', width: '100%' }}*/}
-                        {/*    divId={this.props.provider.id + "-map"}*/}
-                        {/*    zoomLevel={currentMaxZoom}*/}
-                        {/*    minZoom={this.props.provider.level_from}*/}
-                        {/*    maxZoom={this.props.provider.level_to}*/}
-                        {/*>*/}
-                        {/*    <ZoomUpdater setZoom={this.setZoom}/>*/}
-                        {/*    <OlRasterTileLayer mapLayer={selectedBasemap} copyright={this.props.provider.service_copyright}/>*/}
-                        {/*    <OlFeatureLayer geojson={this.props.geojson}>*/}
-                        {/*        <ZoomToAoi zoomLevel={currentMaxZoom}/>*/}
-                        {/*    </OlFeatureLayer>*/}
-                        {/*    <OlMouseWheelZoom enabled={false}/>*/}
-                        {/*</MapComponent>*/}
                     </div>
                 </div>
             );

@@ -30,7 +30,6 @@ import Tile from 'ol/layer/tile';
 import XYZ from 'ol/source/xyz';
 
 import css from '../../styles/ol3map.css';
-import AoiInfobar from './AoiInfobar';
 import SearchAOIToolbar from '../MapTools/SearchAOIToolbar';
 import DrawAOIToolbar from '../MapTools/DrawAOIToolbar';
 import InvalidDrawWarning from '../MapTools/InvalidDrawWarning';
@@ -46,7 +45,7 @@ import {
     isGeoJSONValid, createGeoJSON, clearDraw,
     MODE_DRAW_BBOX, MODE_NORMAL, MODE_DRAW_FREE, zoomToFeature, unwrapCoordinates,
     isViewOutsideValidExtent, goToValidExtent, isBox, isVertex, bufferGeojson, allHaveArea,
-    getDominantGeometry, getResolutions, wrapX, getTileCoordinateFromClick
+    getDominantGeometry, getResolutions, wrapX, getTileCoordinateFromClick, TileCoordinate
 } from '../../utils/mapUtils';
 
 import {getSqKm} from '../../utils/generic';
@@ -56,7 +55,6 @@ import {joyride} from '../../joyride.config';
 import {Breakpoint} from '@material-ui/core/styles/createBreakpoints';
 import TileGrid from "ol/tilegrid/tilegrid";
 
-import {TileCoordinate} from "./MapQueryDisplay";
 import {MapLayer} from "./CreateExport";
 import MapDisplayBar from "./MapDisplayBar";
 

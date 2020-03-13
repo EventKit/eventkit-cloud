@@ -9,7 +9,6 @@ import RegularShape from 'ol/style/regularshape';
 import Draw from 'ol/interaction/draw';
 import Point from 'ol/geom/point';
 import Polygon from 'ol/geom/polygon';
-import Map from 'ol/map';
 
 import isEqual from 'lodash/isEqual';
 import Reader from 'jsts/org/locationtech/jts/io/GeoJSONReader';
@@ -20,17 +19,6 @@ import isValidOp from 'jsts/org/locationtech/jts/operation/valid/IsValidOp';
 import BufferParameters from 'jsts/org/locationtech/jts/operation/buffer/BufferParameters';
 import ZoomSlider from 'ol/control/zoomslider';
 import { colors } from '../styles/eventkit_theme';
-import interaction, { Interaction } from "ol/interaction";
-import View from "ol/view";
-import ScaleLine from "ol/control/scaleline";
-import ol3mapCss from "../styles/ol3map.css";
-import Attribution from "ol/control/attribution";
-import Zoom from "ol/control/zoom";
-import TileGrid from "ol/tilegrid/tilegrid";
-import Tile from "ol/layer/tile";
-import XYZ from "ol/source/xyz";
-import Pointer from "ol/interaction/pointer";
-
 const icon = require('../../images/ic_room_black_24px.svg');
 
 export const MODE_DRAW_BBOX = 'MODE_DRAW_BBOX';
@@ -40,6 +28,15 @@ export const MODE_DRAW_FREE = 'MODE_DRAW_FREE';
 export const WGS84 = 'EPSG:4326';
 export const WEB_MERCATOR = 'EPSG:3857';
 
+export interface TileCoordinate {
+    z: number;  // Tile Zoom level
+    y: number;  // Tile row
+    x: number;  // Tile col
+    lat: number;
+    long: number;
+    i?: number;  // Click pixel x
+    j?: number;  // Click pixel y
+}
 
 /**
  * Convert a jsts geometry to an openlayers3 geometry

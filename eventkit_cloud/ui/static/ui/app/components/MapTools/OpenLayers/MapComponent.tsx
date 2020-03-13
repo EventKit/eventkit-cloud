@@ -1,9 +1,9 @@
-import React, {useState, useEffect, createContext} from 'react';
+import React, {useState, useEffect} from 'react';
 import {MapContainer} from "../../../utils/mapBuilder";
 import {OlMapProvider, OlZoomProvider} from "../context/OpenLayersContext";
 import {useEffectOnMount} from "../../../utils/hooks";
 
-interface Props {
+export interface MapComponentProps {
     divId: string;
     style?: any;
     zoomLevel?: number;
@@ -17,24 +17,22 @@ MapComponent.defaultProps = {
     maxZoom: 20,
     style: {},
     visible: true,
-} as Props;
+} as MapComponentProps;
 
-function MapComponent(props: React.PropsWithChildren<Props>) {
+function MapComponent(props: React.PropsWithChildren<MapComponentProps>) {
     const [ mapContainer, setMapContainer ] = useState();
 
     const { minZoom, maxZoom, style, divId, visible } = props;
     const zoomLevelProp = props.zoomLevel;
     const [zoomLevel, setZoom] = useState(zoomLevelProp || minZoom);
-    const [olZoomLevel, setOlZoom] = useState(zoomLevelProp || minZoom)
+    const [olZoomLevel, setOlZoom] = useState(zoomLevelProp || minZoom);
 
     useEffectOnMount(() => {
         const mapContainer = new MapContainer(zoomLevel, minZoom, maxZoom);
         setMapContainer(mapContainer);
 
         const olMap = mapContainer.getMap();
-        if (visible) {
-            olMap.setTarget(divId);
-        }
+        olMap.setTarget(divId);
 
         olMap.getView().on('change:resolution', () =>
             setOlZoom(olMap.getView().getZoom())
@@ -48,11 +46,7 @@ function MapComponent(props: React.PropsWithChildren<Props>) {
     useEffect(() => {
         if (!!mapContainer) {
             const olMap = mapContainer.getMap();
-            if (visible) {
-                olMap.setTarget(null);
-            } else {
-                olMap.setTarget(divId);
-            }
+            olMap.updateSize();
         }
     }, [visible, divId]);
 
@@ -70,9 +64,11 @@ function MapComponent(props: React.PropsWithChildren<Props>) {
         if (!!mapContainer) {
             setZoom(zoomLevelProp);
             mapContainer.getMap().getView().setZoom(zoomLevelProp);
+            mapContainer.getMap().updateSize();
         }
     }, [zoomLevelProp]);
 
+    const displayStyle = (style.display) ? style.display : 'block';
     return (
         <OlMapProvider value={{ mapContainer: mapContainer }}>
             <OlZoomProvider value={{
@@ -80,7 +76,7 @@ function MapComponent(props: React.PropsWithChildren<Props>) {
                 olZoomLevel,
                 setZoom,
             }}>
-                <div style={style} id={divId}>
+                <div style={{...style, display: (visible) ? displayStyle : 'none'}} id={divId}>
                     {!!mapContainer && props.children}
                 </div>
             </OlZoomProvider>
