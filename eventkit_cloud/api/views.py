@@ -4,11 +4,14 @@ import logging
 # -*- coding: utf-8 -*-
 from collections import OrderedDict
 from datetime import datetime, timedelta
+from django.core.cache import cache
+import yaml
 
 from dateutil import parser
 from django.conf import settings
 from django.contrib.auth.models import User, Group
 from django.contrib.gis.geos import GEOSException, GEOSGeometry
+from django.core.mail.backends import console
 from django.db import transaction
 from django.db.models import Q
 from django.shortcuts import redirect, render
@@ -106,6 +109,8 @@ from eventkit_cloud.utils.provider_check import perform_provider_check
 from eventkit_cloud.utils.stats.aoi_estimators import AoiEstimator
 
 # Get an instance of a logger
+from eventkit_cloud.utils.stats.geomutils import get_estimate_cache_key
+
 logger = logging.getLogger(__name__)
 
 # controls how api responses are rendered
@@ -346,10 +351,12 @@ class JobViewSet(viewsets.ModelViewSet):
         * Raises: ValidationError: in case of validation errors.
         ** returns: Not 202
         """
+        logger.info("WE HIT CREATE FUNCTION")
         from eventkit_cloud.tasks.task_factory import InvalidLicense, Unauthorized
 
         serializer = self.get_serializer(data=request.data)
         if serializer.is_valid(raise_exception=True):
+            logger.info(f"SERIALIZER IS VALID")
             """Get the required data from the validated request."""
             export_providers = request.data.get("export_providers", [])
             provider_tasks = request.data.get("provider_tasks", [])
@@ -390,23 +397,52 @@ class JobViewSet(viewsets.ModelViewSet):
                             }
                             return Response(error_data, status=status_code)
                         # Check max area (skip for superusers)
+                        logger.info(f"REQUEST USER: {self.request.user}")
                         if not self.request.user.is_superuser:
+                            logger.info("I'M NOT A SUPERUSER")
+                            error_data = {
+                                "errors": [
+
+                                ]
+                            }
                             for provider_task in job.provider_tasks.all():
                                 provider = provider_task.provider
+                                bbox = job.extents
+                                srs = '4326'
+                                logger.info(
+                                    f'Cache key get: bbox: {bbox}, srs: {srs}, min_zoom: {provider_task.min_zoom}, '
+                                    f'max_zoom: {provider_task.max_zoom}, slug: {provider.slug}')
+                                cache_key = get_estimate_cache_key(
+                                    bbox,
+                                    srs,
+                                    provider_task.min_zoom,
+                                    provider_task.max_zoom,
+                                    provider.slug
+                                )
+                                # find cache key that contains the estimator hash with correct time, size values
+                                logger.info(f"cache key: {cache_key}")
+                                logger.info(f"cache: {cache.get(cache_key)}")
+                                size, time = cache.get(cache_key, (None, None))
                                 max_selection = provider.max_selection
+
+                                # Don't rely solely on max_data_size as estimates can sometimes be inaccurate
+                                # Allow user to get a job that passes one of the two conditions:
+                                if size and size < provider.max_data_size:
+                                    logger.info(f"Max data size: {provider.max_data_size}")
+                                    continue
+
                                 if max_selection and 0 < float(max_selection) < get_area(job.the_geom.geojson):
+                                    logger.info(f"max_selection: {max_selection}")
+                                    logger.info(f"geojson: {get_area(job.the_geom.geojson)}")
                                     status_code = status.HTTP_400_BAD_REQUEST
-                                    error_data = {
-                                        "errors": [
-                                            {
-                                                "status": status_code,
-                                                "title": _("Selection area too large"),
-                                                "detail": _("The selected area is too large " "for provider '%s'")
-                                                % provider.name,
-                                            }
-                                        ]
-                                    }
-                                    return Response(error_data, status=status_code)
+                                    error_data["errors"] += [{
+                                        "status": status_code,
+                                        "title": _("Selection area too large"),
+                                        "detail": _(f"The selected area is too large or the estimated size "
+                                                    f"exceeds the maximum data size for the {provider.name}")
+                                    }]
+                            if error_data["errors"]:
+                                return Response(error_data, status=status_code)
 
                         if preset:
                             """Get the tags from the uploaded preset."""
@@ -434,6 +470,7 @@ class JobViewSet(viewsets.ModelViewSet):
                             job.json_tags = hdm_default_tags
                             job.save()
                     except Exception as e:
+                        logger.error(e)
                         status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
                         error_data = {
                             "errors": [
@@ -498,6 +535,7 @@ class JobViewSet(viewsets.ModelViewSet):
             pick_up_run_task.apply_async(
                 queue="runs", routing_key="runs", kwargs={"run_uid": run_uid, "user_details": user_details},
             )
+            logger.info(f'RUNNING DATA: {running.data}')
             return Response(running.data, status=status.HTTP_202_ACCEPTED)
         else:
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
@@ -640,7 +678,7 @@ class JobViewSet(viewsets.ModelViewSet):
                         admins += 1
 
             if admins == 0:
-                return Response([{"detail": "This job has no administrators."}], status.HTTP_400_BAD_REQUEST,)
+                return Response([{"detail": "This job has no administrators."}], status.HTTP_400_BAD_REQUEST, )
 
             # throw out all current permissions and rewrite them
 
@@ -696,7 +734,7 @@ class JobViewSet(viewsets.ModelViewSet):
         """
 
         if "permissions" not in request.data:
-            return Response([{"detail": "missing permissions attribute"}], status.HTTP_400_BAD_REQUEST,)
+            return Response([{"detail": "missing permissions attribute"}], status.HTTP_400_BAD_REQUEST, )
 
         job_list = get_job_ids_via_permissions(request.data["permissions"])
         jobs = Job.objects.filter(id__in=job_list)
@@ -858,11 +896,11 @@ class DataProviderViewSet(viewsets.ReadOnlyModelViewSet):
             return Response(perform_provider_check(provider, geojson), status=status.HTTP_200_OK)
 
         except DataProvider.DoesNotExist as e:
-            return Response([{"detail": _("Provider not found")}], status=status.HTTP_400_BAD_REQUEST,)
+            return Response([{"detail": _("Provider not found")}], status=status.HTTP_400_BAD_REQUEST, )
 
         except Exception as e:
             logger.error(e)
-            return Response([{"detail": _("Internal Server Error")}], status=status.HTTP_500_INTERNAL_SERVER_ERROR,)
+            return Response([{"detail": _("Internal Server Error")}], status=status.HTTP_500_INTERNAL_SERVER_ERROR, )
 
     def list(self, request, slug=None, *args, **kwargs):
         """
@@ -1127,9 +1165,9 @@ class ExportRunViewSet(viewsets.ModelViewSet):
         if search_term is not None:
             queryset = queryset.filter(
                 (
-                    Q(job__name__icontains=search_term)
-                    | Q(job__description__icontains=search_term)
-                    | Q(job__event__icontains=search_term)
+                        Q(job__name__icontains=search_term)
+                        | Q(job__description__icontains=search_term)
+                        | Q(job__event__icontains=search_term)
                 )
             )
         if not request.query_params.get("job_uid"):
@@ -1185,10 +1223,10 @@ class ExportRunViewSet(viewsets.ModelViewSet):
             max_date = now + timedelta(max_days)
             if target_date > max_date.replace(tzinfo=None):
                 message = "expiration date must be before " + max_date.isoformat()
-                return Response({"success": False, "detail": message}, status=status.HTTP_400_BAD_REQUEST,)
+                return Response({"success": False, "detail": message}, status=status.HTTP_400_BAD_REQUEST, )
             if target_date < run.expiration.replace(tzinfo=None):
                 message = "expiration date must be after " + run.expiration.isoformat()
-                return Response({"success": False, "detail": message}, status=status.HTTP_400_BAD_REQUEST,)
+                return Response({"success": False, "detail": message}, status=status.HTTP_400_BAD_REQUEST, )
 
         run.expiration = target_date
         run.save()
@@ -1505,8 +1543,8 @@ class UserJobActivityViewSet(mixins.CreateModelMixin, mixins.ListModelMixin, vie
                     job__last_export_run__isnull=False,
                     job__last_export_run__deleted=False,
                 )
-                .distinct("job")
-                .values_list("id", flat=True)
+                    .distinct("job")
+                    .values_list("id", flat=True)
             )
 
             return activities.filter(id__in=ids).order_by("-created_at")
@@ -1545,7 +1583,7 @@ class UserJobActivityViewSet(mixins.CreateModelMixin, mixins.ListModelMixin, vie
                 last_job_viewed = queryset.first()
                 # Don't save consecutive views of the same job.
                 if str(last_job_viewed.job.uid) == job_uid:
-                    return Response({"ignored": True}, content_type="application/json", status=status.HTTP_200_OK,)
+                    return Response({"ignored": True}, content_type="application/json", status=status.HTTP_200_OK, )
             job = Job.objects.get(uid=job_uid)
             UserJobActivity.objects.create(user=self.request.user, job=job, type=UserJobActivity.VIEWED)
         else:
@@ -2006,7 +2044,13 @@ class EstimatorView(views.APIView):
                 payload += [
                     {"slug": slug, "size": {"value": size, "unit": "MB"}, "time": {"value": time, "unit": "seconds"}}
                 ]
+                logger.info(
+                    f'Cache key set: bbox: {bbox}, srs: {srs}, min_zoom: {min_zoom}, max_zoom: {max_zoom}, slug: {slug}')
 
+                cache_key = get_estimate_cache_key(bbox, srs, min_zoom, max_zoom, slug)
+                cache.set(cache_key, (size, time))
+                logger.info(f"cache key set: {cache_key}")
+                logger.info(f"cache set: {cache.get(cache_key)}")
         return Response(payload, status=status.HTTP_200_OK)
 
 

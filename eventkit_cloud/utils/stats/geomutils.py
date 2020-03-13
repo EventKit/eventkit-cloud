@@ -1,8 +1,10 @@
 from mapproxy import grid as mapproxy_grid
 from eventkit_cloud.tasks.models import ExportRun
-
+import logging
 import json
 import math
+
+logger = logging.getLogger(__name__)
 
 _dbg_geom_cache_misses = 0
 
@@ -121,6 +123,9 @@ def prefetch_geometry_cache(geom_cache):
 
 
 def get_estimate_cache_key(bbox, srs, min_zoom, max_zoom, slug):
-    estimate_tuple = (tuple(bbox), srs, min_zoom, max_zoom, slug)
+    logger.info(f'CREATING CACHE KEY: bbox: {bbox}, srs: {srs}, min_zoom: {min_zoom}, max_zoom: {max_zoom}, slug: {slug}')
+    estimate_tuple = (tuple(bbox), int(srs), int(min_zoom), int(max_zoom), str(slug))
+    logger.info(f'estimate_tuple: {estimate_tuple}')
     hash_val = hash(estimate_tuple)
+    logger.info(f'Hash value: {hash_val}')
     return str(hash_val)
