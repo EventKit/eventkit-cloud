@@ -390,19 +390,13 @@ class JobViewSet(viewsets.ModelViewSet):
 
                         # Check max area (skip for superusers)
                         if not self.request.user.is_superuser:
-                            error_data = {
-                                "errors": []
-                            }
+                            error_data = {"errors": []}
                             for provider_task in job.provider_tasks.all():
                                 provider = provider_task.provider
                                 bbox = job.extents
-                                srs = '4326'
+                                srs = "4326"
                                 cache_key = get_estimate_cache_key(
-                                    bbox,
-                                    srs,
-                                    provider_task.min_zoom,
-                                    provider_task.max_zoom,
-                                    provider.slug
+                                    bbox, srs, provider_task.min_zoom, provider_task.max_zoom, provider.slug
                                 )
                                 # find cache key that contains the estimator hash with correct time, size values
                                 size, time = cache.get(cache_key, (None, None))
@@ -415,20 +409,26 @@ class JobViewSet(viewsets.ModelViewSet):
                                         continue
                                     else:
                                         status_code = status.HTTP_400_BAD_REQUEST
-                                        error_data["errors"] += [{
-                                            "status": status_code,
-                                            "title": _("Estimated size too large"),
-                                            "detail": _(f"The estimated size "
-                                                        f"exceeds the maximum data size for the {provider.name}")
-                                        }]
+                                        error_data["errors"] += [
+                                            {
+                                                "status": status_code,
+                                                "title": _("Estimated size too large"),
+                                                "detail": _(
+                                                    f"The estimated size "
+                                                    f"exceeds the maximum data size for the {provider.name}"
+                                                ),
+                                            }
+                                        ]
 
                                 if max_selection and 0 < float(max_selection) < get_area(job.the_geom.geojson):
                                     status_code = status.HTTP_400_BAD_REQUEST
-                                    error_data["errors"] += [{
-                                        "status": status_code,
-                                        "title": _("Selection area too large"),
-                                        "detail": _(f"The selected area is too large for the {provider.name}")
-                                    }]
+                                    error_data["errors"] += [
+                                        {
+                                            "status": status_code,
+                                            "title": _("Selection area too large"),
+                                            "detail": _(f"The selected area is too large for the {provider.name}"),
+                                        }
+                                    ]
                             if error_data["errors"]:
                                 return Response(error_data, status=status_code)
 
@@ -665,7 +665,7 @@ class JobViewSet(viewsets.ModelViewSet):
                         admins += 1
 
             if admins == 0:
-                return Response([{"detail": "This job has no administrators."}], status.HTTP_400_BAD_REQUEST, )
+                return Response([{"detail": "This job has no administrators."}], status.HTTP_400_BAD_REQUEST,)
 
             # throw out all current permissions and rewrite them
 
@@ -721,7 +721,7 @@ class JobViewSet(viewsets.ModelViewSet):
         """
 
         if "permissions" not in request.data:
-            return Response([{"detail": "missing permissions attribute"}], status.HTTP_400_BAD_REQUEST, )
+            return Response([{"detail": "missing permissions attribute"}], status.HTTP_400_BAD_REQUEST,)
 
         job_list = get_job_ids_via_permissions(request.data["permissions"])
         jobs = Job.objects.filter(id__in=job_list)
@@ -883,11 +883,11 @@ class DataProviderViewSet(viewsets.ReadOnlyModelViewSet):
             return Response(perform_provider_check(provider, geojson), status=status.HTTP_200_OK)
 
         except DataProvider.DoesNotExist as e:
-            return Response([{"detail": _("Provider not found")}], status=status.HTTP_400_BAD_REQUEST, )
+            return Response([{"detail": _("Provider not found")}], status=status.HTTP_400_BAD_REQUEST,)
 
         except Exception as e:
             logger.error(e)
-            return Response([{"detail": _("Internal Server Error")}], status=status.HTTP_500_INTERNAL_SERVER_ERROR, )
+            return Response([{"detail": _("Internal Server Error")}], status=status.HTTP_500_INTERNAL_SERVER_ERROR,)
 
     def list(self, request, slug=None, *args, **kwargs):
         """
@@ -1152,9 +1152,9 @@ class ExportRunViewSet(viewsets.ModelViewSet):
         if search_term is not None:
             queryset = queryset.filter(
                 (
-                        Q(job__name__icontains=search_term)
-                        | Q(job__description__icontains=search_term)
-                        | Q(job__event__icontains=search_term)
+                    Q(job__name__icontains=search_term)
+                    | Q(job__description__icontains=search_term)
+                    | Q(job__event__icontains=search_term)
                 )
             )
         if not request.query_params.get("job_uid"):
@@ -1210,10 +1210,10 @@ class ExportRunViewSet(viewsets.ModelViewSet):
             max_date = now + timedelta(max_days)
             if target_date > max_date.replace(tzinfo=None):
                 message = "expiration date must be before " + max_date.isoformat()
-                return Response({"success": False, "detail": message}, status=status.HTTP_400_BAD_REQUEST, )
+                return Response({"success": False, "detail": message}, status=status.HTTP_400_BAD_REQUEST,)
             if target_date < run.expiration.replace(tzinfo=None):
                 message = "expiration date must be after " + run.expiration.isoformat()
-                return Response({"success": False, "detail": message}, status=status.HTTP_400_BAD_REQUEST, )
+                return Response({"success": False, "detail": message}, status=status.HTTP_400_BAD_REQUEST,)
 
         run.expiration = target_date
         run.save()
@@ -1530,8 +1530,8 @@ class UserJobActivityViewSet(mixins.CreateModelMixin, mixins.ListModelMixin, vie
                     job__last_export_run__isnull=False,
                     job__last_export_run__deleted=False,
                 )
-                    .distinct("job")
-                    .values_list("id", flat=True)
+                .distinct("job")
+                .values_list("id", flat=True)
             )
 
             return activities.filter(id__in=ids).order_by("-created_at")
@@ -1570,7 +1570,7 @@ class UserJobActivityViewSet(mixins.CreateModelMixin, mixins.ListModelMixin, vie
                 last_job_viewed = queryset.first()
                 # Don't save consecutive views of the same job.
                 if str(last_job_viewed.job.uid) == job_uid:
-                    return Response({"ignored": True}, content_type="application/json", status=status.HTTP_200_OK, )
+                    return Response({"ignored": True}, content_type="application/json", status=status.HTTP_200_OK,)
             job = Job.objects.get(uid=job_uid)
             UserJobActivity.objects.create(user=self.request.user, job=job, type=UserJobActivity.VIEWED)
         else:

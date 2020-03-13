@@ -286,10 +286,11 @@ class DataProvider(UIDMixin, TimeStampedModelMixin, CachedModelMixin):
     """
     Max datasize is the size in megabytes.
     """
+
     @property
     def max_data_size(self):
         config = yaml.load(self.config)
-        return config.get('max_data_size', None)
+        return config.get("max_data_size", None)
 
 
 class DataProviderStatus(UIDMixin, TimeStampedModelMixin):

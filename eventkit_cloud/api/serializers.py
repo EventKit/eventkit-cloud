@@ -759,6 +759,7 @@ class DataProviderSerializer(serializers.ModelSerializer):
     def get_max_data_size(obj):
         return obj.max_data_size
 
+
 class ListJobSerializer(serializers.Serializer):
     """
     Return a sub-set of Job model attributes.
