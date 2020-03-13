@@ -255,7 +255,7 @@ export class ExportAOI extends React.Component<Props, State> {
                 const validSlugs = [...mapLayers.map(layer => layer.slug), this.baseLayer.get('name')];
                 const layersToBeRemoved = currentLayers.filter(layer => validSlugs.indexOf(layer.get('name')) === -1);
                 layersToBeRemoved.forEach(layer => this.map.removeLayer(layer));
-                
+
                 mapLayers.forEach(layer => {
                     if (currentLayers.findIndex(olLayer => olLayer.get('name') === layer.slug) === -1) {
                         this.map.addLayer(this.createRasterTileLayer(layer.mapUrl, layer.slug));
