@@ -1,5 +1,5 @@
 import React from 'react';
-import MapComponent from "../../components/MapTools/OpenLayers/MapComponent";
+import OlMapComponent from "../../components/MapTools/OpenLayers/OlMapComponent";
 import {mount} from "enzyme";
 
 
@@ -10,7 +10,7 @@ describe('SearchAOIToolbar button', () => {
     let instance;
     const setup = (overrides = {}) => {
         props = { ...getProps(), ...overrides };
-        wrapper = mount(<MapComponent {...props}><div id="childDiv"/></MapComponent>);
+        wrapper = mount(<OlMapComponent {...props}><div id="childDiv"/></OlMapComponent>);
         instance = wrapper.instance();
     };
 

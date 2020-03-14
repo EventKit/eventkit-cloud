@@ -395,7 +395,6 @@ export class DataProvider extends React.Component<Props, State> {
                             <OlMouseWheelZoom enabled={false}/>
                             <PoiQueryDisplay
                                 style={{
-                                    position: 'absolute',
                                     width: 'max-content',
                                     minWidth: '200px',
                                     justifyContent: 'center',

@@ -30,7 +30,7 @@ export class DataPackAoiInfo extends React.Component<Props, {}> {
                 >
                     {getSqKmString(this.props.extent)}
                 </CustomTableRow>
-                <div className="qa-DataPackAoiInfo-div-map" style={{maxHeight: '400px', marginTop: '10px'}}>
+                <div className="qa-DataPackAoiInfo-div-map" style={{marginTop: '10px'}}>
                     <MapView
                         id={"summaryMap"}
                         selectedBaseMap={selectedBasemap}

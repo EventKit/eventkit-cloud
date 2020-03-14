@@ -102,8 +102,9 @@ function OlPoiOverlay(props: React.PropsWithChildren<Props>) {
     }
 
     return (
-        <div ref={el => divRef.current = el} onMouseUp={convertToClick}>
+        <div ref={el => divRef.current = el} onMouseUp={convertToClick} className={classes.container}>
             {props.children}
+            <div>
             <IconButton
                 className={classes.closeButton}
                 buttonRef={closerRef}
@@ -115,15 +116,20 @@ function OlPoiOverlay(props: React.PropsWithChildren<Props>) {
             >
                 <CloseIcon className={classes.closeIcon}/>
             </IconButton>
+            </div>
         </div>
     );
 }
 
 const jss = (theme: Theme & Eventkit.Theme) => createStyles({
+    container: {
+        display: 'flex',
+        background: theme.eventkit.colors.secondary_dark,
+    },
     closeButton: {
-        position: 'absolute',
-        top: '7px',
-        right: '7px',
+        zIndex: 10,
+        marginTop: '5px',
+        float: 'right',
     },
     closeIcon: {
         fontSize: 'medium',

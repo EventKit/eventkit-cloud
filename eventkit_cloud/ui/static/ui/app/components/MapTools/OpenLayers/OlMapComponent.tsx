@@ -1,4 +1,4 @@
-import React, {useState, useEffect} from 'react';
+import React, {useState, useEffect, useRef} from 'react';
 import {MapContainer} from "../../../utils/mapBuilder";
 import {OlMapProvider, OlZoomProvider} from "../context/OpenLayersContext";
 import {useEffectOnMount} from "../../../utils/hooks";
@@ -12,15 +12,15 @@ export interface MapComponentProps {
     visible?: boolean;
 }
 
-MapComponent.defaultProps = {
+OlMapComponent.defaultProps = {
     minZoom: 2,
     maxZoom: 20,
     style: {},
     visible: true,
 } as MapComponentProps;
 
-function MapComponent(props: React.PropsWithChildren<MapComponentProps>) {
-    const [ mapContainer, setMapContainer ] = useState();
+function OlMapComponent(props: React.PropsWithChildren<MapComponentProps>) {
+    const [mapContainer, setMapContainer] = useState();
 
     const { minZoom, maxZoom, style, divId, visible } = props;
     const zoomLevelProp = props.zoomLevel;
@@ -68,6 +68,15 @@ function MapComponent(props: React.PropsWithChildren<MapComponentProps>) {
         }
     }, [zoomLevelProp]);
 
+    const divRef = useRef(null);
+    useEffect(() => {
+        if (divRef.current) {
+            divRef.current.addEventListener('touchmove', (e: TouchEvent) => {
+                e.stopPropagation();
+            });
+        }
+    }, [divRef.current]);
+
     const displayStyle = (style.display) ? style.display : 'block';
     return (
         <OlMapProvider value={{ mapContainer: mapContainer }}>
@@ -76,7 +85,7 @@ function MapComponent(props: React.PropsWithChildren<MapComponentProps>) {
                 olZoomLevel,
                 setZoom,
             }}>
-                <div style={{...style, display: (visible) ? displayStyle : 'none'}} id={divId}>
+                <div style={{ ...style, display: (visible) ? displayStyle : 'none' }} id={divId} ref={divRef}>
                     {!!mapContainer && props.children}
                 </div>
             </OlZoomProvider>
@@ -84,4 +93,4 @@ function MapComponent(props: React.PropsWithChildren<MapComponentProps>) {
     );
 }
 
-export default MapComponent;
+export default OlMapComponent;

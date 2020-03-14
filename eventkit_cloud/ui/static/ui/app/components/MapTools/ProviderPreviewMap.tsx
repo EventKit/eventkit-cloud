@@ -3,9 +3,9 @@ import OlRasterTileLayer from "./OpenLayers/OlRasterTileLayer";
 import OlFeatureLayer from "./OpenLayers/OlFeatureLayer";
 import ZoomToAoi from "./OpenLayers/ZoomToAoi";
 import {MapLayer} from "../CreateDataPack/CreateExport";
-import MapComponent from "./OpenLayers/MapComponent";
+import OlMapComponent from "./OpenLayers/OlMapComponent";
 import {useAppContext} from "../ApplicationContext";
-import { MapComponentProps } from "./OpenLayers/MapComponent";
+import { MapComponentProps } from "./OpenLayers/OlMapComponent";
 import {useEffectOnMount} from "../../utils/hooks";
 import {useOlMapContainer} from "./context/OpenLayersContext";
 
@@ -35,7 +35,7 @@ function ProviderPreviewMap(props: React.PropsWithChildren<Props>) {
     } as MapLayer : undefined;
 
     return (
-        <MapComponent
+        <OlMapComponent
             {...props}
             divId={provider.id + "-map"}
             minZoom={provider.level_from}
@@ -51,7 +51,7 @@ function ProviderPreviewMap(props: React.PropsWithChildren<Props>) {
             }
             <OlRasterTileLayer mapLayer={selectedBasemap} copyright={provider.service_copyright} zIndex={0}/>
             {props.children}
-        </MapComponent>
+        </OlMapComponent>
     );
 }
 

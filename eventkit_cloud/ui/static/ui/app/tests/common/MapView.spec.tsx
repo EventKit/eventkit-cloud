@@ -1,12 +1,13 @@
 import * as React from 'react';
 import * as sinon from 'sinon';
-import { shallow } from 'enzyme';
+import {mount, shallow} from 'enzyme';
 import Map from 'ol/map';
 import View from 'ol/view';
 import interaction from 'ol/interaction';
 import VectorSource from 'ol/source/vector';
 import GeoJSON from 'ol/format/geojson';
 import { MapView } from '../../components/common/MapView';
+import OlMapComponent from "../../components/MapTools/OpenLayers/OlMapComponent";
 
 const geojson = {
     type: 'FeatureCollection',
@@ -63,7 +64,7 @@ describe('MapCard component', () => {
             ...defaultProps(),
             ...propsOverride,
         };
-        wrapper = shallow(<MapView {...props} />, {
+        wrapper = mount(<MapView {...props} />, {
             context: { config: { BASEMAP_URL: '', BASEMAP_COPYRIGHT: '' } },
         });
         instance = wrapper.instance();
@@ -72,42 +73,6 @@ describe('MapCard component', () => {
     beforeEach(setup);
 
     it('should clear map when unmounted', () => {
-        wrapper.setState({ open: true });
-        const stub = sinon.stub();
-        const mapStub = { setTarget: stub };
-
-        instance.map = mapStub;
-        wrapper.setState({ open: false });
-        wrapper.unmount();
-
-        expect(stub.calledOnce).toBe(true);
-        expect(instance.map).toBe(null);
-    });
-
-    it('initializeOpenLayers should create a map and add layer', () => {
-        const defaultSpy = sinon.spy(interaction, 'defaults');
-        const readSpy = sinon.spy(GeoJSON.prototype, 'readFeatures');
-        const addFeatureSpy = sinon.spy(VectorSource.prototype, 'addFeatures');
-        const addLayerSpy = sinon.spy(Map.prototype, 'addLayer');
-        const getViewSpy = sinon.spy(Map.prototype, 'getView');
-        const getSizeSpy = sinon.spy(Map.prototype, 'getSize');
-        const fitSpy = sinon.spy(View.prototype, 'fit');
-        instance.initializeOpenLayers();
-        expect(defaultSpy.calledOnce).toBe(true);
-        expect(readSpy.calledOnce).toBe(true);
-        expect(addFeatureSpy.calledOnce).toBe(true);
-        expect(addLayerSpy.calledOnce).toBe(true);
-        expect(getViewSpy.calledTwice).toBe(true);
-        expect(fitSpy.calledOnce).toBe(true);
-        expect(getSizeSpy.calledOnce).toBe(true);
-    });
-
-    it('absorbs touch move events on the map', () => {
-        const element = {
-            addEventListener: sinon.spy(),
-        };
-        instance.mapContainerRef(element);
-        expect(element.addEventListener.callCount).toBe(1);
-        expect(element.addEventListener.calledWith('touchmove')).toBe(true);
+        expect(wrapper.find(OlMapComponent)).toHaveLength(1);
     });
 });
