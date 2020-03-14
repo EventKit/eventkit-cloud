@@ -74,5 +74,6 @@ describe('MapCard component', () => {
 
     it('should clear map when unmounted', () => {
         expect(wrapper.find(OlMapComponent)).toHaveLength(1);
+
     });
 });

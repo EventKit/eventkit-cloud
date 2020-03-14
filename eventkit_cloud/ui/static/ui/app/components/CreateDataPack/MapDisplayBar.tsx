@@ -196,7 +196,7 @@ export class MapDisplayBar extends React.Component<Props, State> {
                             }}
                         >
                             <MapQueryDisplay
-                                style={{ height: '200px' }}
+                                style={{ height: '200px', position: 'absolute'}}
                                 maxHeight={185}
                                 ref={child => {
                                     this.props.setRef(child)
