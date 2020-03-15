@@ -554,6 +554,7 @@ def clean_config(config):
         "concurrency",
         "max_repeat",
         "overpass_query",
+        "max_data_size"
     ]
 
     conf = yaml.safe_load(config) or dict()
