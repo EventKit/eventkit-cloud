@@ -581,7 +581,7 @@ class TestJobViewSet(APITestCase):
 
         response = self.client.post(job_url, data=json.dumps(request_data),
                                     content_type='application/json; version=1.0')
-        cache_mock.get.assert_called_with(cache_key)
+        cache_mock.get.assert_called_with(cache_key, (None, None))
         get_estimate_cache_key_mock.called_once_with(bbox, srs, min_zoom, max_zoom, slug)
         self.assertEqual(status.HTTP_400_BAD_REQUEST, response.status_code)
         self.assertEqual(response['Content-Type'], 'application/json')
