@@ -99,7 +99,7 @@ describe('BreadcrumbStepper component', () => {
             providers,
             areaStr: '',
             formats: ['gpkg'],
-            providerEstimates: {},
+            providerInfo: {},
             projections: [4326],
             exportOptions: {
                 1: {
@@ -130,6 +130,12 @@ describe('BreadcrumbStepper component', () => {
         getNotificationsUnreadCount: sinon.spy(),
         getFormats: sinon.spy(),
         getProjections: sinon.spy(),
+        getEstimate: sinon.spy(),
+        checkEstimate: sinon.spy(),
+        checkProvider: sinon.spy(),
+        checkProviders: sinon.spy(),
+        setProviderLoading: sinon.spy(),
+        hasLoaded: sinon.spy(),
         mapLayers: [],
         ...(global as any).eventkit_test_props,
     });
@@ -260,6 +266,7 @@ describe('BreadcrumbStepper component', () => {
                 walkthroughClicked={props.walkthroughClicked}
                 onUpdateEstimate={wrapper.instance().updateEstimate}
                 handlePrev={wrapper.instance().handlePrev}
+                checkProvider={props.checkProvider}
             />
         );
 
@@ -278,6 +285,21 @@ describe('BreadcrumbStepper component', () => {
             mapLayers={props.mapLayers}
         />);
     });
+
+    // it('getStepContent should return the estimate label if estimates exist from cloned datapack', () => {
+    //    let content = wrapper.instance().getStepContent(0);
+    //     const clonedEstimates = {};
+    //     expect(content).toEqual(
+    //         <ExportAOI
+    //             limits={wrapper.state('limits')}
+    //             onWalkthroughReset={props.onWalkthroughReset}
+    //             walkthroughClicked={props.walkthroughClicked}
+    //         />,
+    //         <ExportInfo
+    //             onUpdateEstimate={wrapper.instance().updateEstimate}
+    //         />
+    //     );
+    // });
 
     it('getButtonContent should return the correct content for each stepIndex', () => {
         let content = mount(wrapper.instance().getButtonContent(0));
@@ -411,7 +433,7 @@ describe('BreadcrumbStepper component', () => {
         wrapper.setProps({ aoiInfo: {} });
         expect(wrapper.state().modified).toBe(true);
         wrapper.setState({ modified: false });
-        wrapper.setProps({ exportInfo: {} });
+        wrapper.setProps({ exportInfo: {providerInfo: {availability: false}} });
         expect(wrapper.state().modified).toBe(true);
     });
 

@@ -3,15 +3,19 @@ import {withTheme, Theme} from '@material-ui/core/styles';
 import Help from '@material-ui/icons/Help';
 import ButtonBase from '@material-ui/core/ButtonBase';
 import PageHeader from '../common/PageHeader';
-import BreadcrumbStepper from './BreadcrumbStepper';
 import {Route} from 'react-router';
 import MapDrawer from "./MapDrawer";
+import EstimateContainer from "./EstimateContainer";
 
 export interface Props {
     children: any;
     history: any;
     routes: Route[];
     theme: Eventkit.Theme & Theme;
+    geojson: GeoJSON.FeatureCollection;
+    exportInfo: Eventkit.Store.ExportInfo;
+    providers: Eventkit.Provider[];
+    updateExportInfo: (args: any) => void;
 }
 
 export interface MapLayer {
@@ -113,13 +117,16 @@ export class CreateExport extends React.Component<Props, State> {
                 >
                     {iconElementRight}
                 </PageHeader>
-                <BreadcrumbStepper
-                    history={this.props.history}
-                    routes={this.props.routes}
-                    walkthroughClicked={this.state.walkthroughClicked}
-                    onWalkthroughReset={this.handleWalkthroughReset}
-                    selectedBaseMap={this.state.selectedBaseMap}
-                    mapLayers={this.state.mapLayers}
+                <EstimateContainer
+                    breadcrumbStepperProps={{
+                        history: this.props.history,
+                        routes: this.props.routes,
+                        walkthroughClicked: this.state.walkthroughClicked,
+                        onWalkthroughReset: this.handleWalkthroughReset,
+                        selectedBaseMap: this.state.selectedBaseMap,
+                        mapLayers: this.state.mapLayers,
+                        geojson: this.props.geojson,
+                    }}
                 />
                 <MapDrawer
                     updateBaseMap={this.updateBaseMap}

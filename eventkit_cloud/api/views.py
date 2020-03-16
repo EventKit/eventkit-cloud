@@ -862,6 +862,7 @@ class DataProviderViewSet(viewsets.ReadOnlyModelViewSet):
 
         except Exception as e:
             logger.error(e)
+
             return Response([{"detail": _("Internal Server Error")}], status=status.HTTP_500_INTERNAL_SERVER_ERROR,)
 
     def list(self, request, slug=None, *args, **kwargs):
