@@ -225,9 +225,6 @@ class TestJobViewSet(APITestCase):
     @patch('eventkit_cloud.api.views.pick_up_run_task')
     @patch('eventkit_cloud.api.views.create_run')
     def test_create_zipfile(self, create_run_mock, pickup_mock):
-        excessive_data_size = 120
-        add_max_data_size(self.provider, excessive_data_size)
-
         bbox = (5, 16, 5.1, 16.1)
         max_zoom = 17
         min_zoom = 0
@@ -262,9 +259,6 @@ class TestJobViewSet(APITestCase):
     @patch('eventkit_cloud.api.views.pick_up_run_task')
     @patch('eventkit_cloud.api.views.create_run')
     def test_create_job_success(self, create_run_mock, pickup_mock):
-        excessive_data_size = 100
-        add_max_data_size(self.provider, excessive_data_size)
-
         bbox = (5, 16, 5.1, 16.1)
         max_zoom = 17
         min_zoom = 0
@@ -337,9 +331,6 @@ class TestJobViewSet(APITestCase):
     @patch('eventkit_cloud.api.views.pick_up_run_task')
     @patch('eventkit_cloud.api.views.create_run')
     def test_create_job_with_config_success(self, create_run_mock, pickup_mock):
-        excessive_data_size = 100
-        add_max_data_size(self.provider, excessive_data_size)
-
         bbox = (5, 16, 5.1, 16.1)
         max_zoom = 17
         min_zoom = 0
@@ -385,9 +376,6 @@ class TestJobViewSet(APITestCase):
     @patch('eventkit_cloud.api.views.pick_up_run_task')
     @patch('eventkit_cloud.api.views.create_run')
     def test_create_job_with_tags(self, create_run_mock, pickup_mock):
-        excessive_data_size = 100
-        add_max_data_size(self.provider, excessive_data_size)
-
         bbox = (5, 16, 5.1, 16.1)
         max_zoom = 17
         min_zoom = 0
