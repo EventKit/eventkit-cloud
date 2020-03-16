@@ -337,7 +337,7 @@ def osm_data_collection_pipeline(
     bbox expected format is an iterable of the form [ long0, lat0, long1, lat1 ]
     """
     # Reasonable subtask_percentages we're determined by profiling code sections on a developer workstation
-    # TODO: Biggest impact to improving ETA estimates reqs higher fidelity tracking of run_query and clip_dataset
+    # TODO: Biggest impact to improving ETA estimates reqs higher fidelity tracking of run_query and convert
 
     # --- Overpass Query
     op = overpass.Overpass(
@@ -393,7 +393,7 @@ def osm_data_collection_pipeline(
         port=database["PORT"],
         name=database["NAME"],
     )
-    gdalutils.clip_dataset(
+    gdalutils.convert(
         boundary=bbox, in_dataset=in_dataset, out_dataset=geopackage_filepath, table="land_polygons", fmt="gpkg",
     )
 
@@ -455,8 +455,8 @@ def osm_data_collection_task(
 
         selection = parse_result(result, "selection")
         if selection:
-            logger.debug("Calling clip_dataset with boundary={}, in_dataset={}".format(selection, gpkg_filepath))
-            gpkg_filepath = gdalutils.clip_dataset(boundary=selection, in_dataset=gpkg_filepath, fmt=None)
+            logger.debug("Calling gdalutils.convert with boundary={}, in_dataset={}".format(selection, gpkg_filepath))
+            gpkg_filepath = gdalutils.convert(boundary=selection, in_dataset=gpkg_filepath, fmt=None)
 
         result["result"] = gpkg_filepath
         result["source"] = gpkg_filepath
@@ -664,7 +664,7 @@ def geopackage_export_task(
     gpkg_in_dataset = parse_result(result, "source")
     gpkg_out_dataset = os.path.join(stage_dir, "{0}-{1}.gpkg".format(job_name, projection))
 
-    gpkg = gdalutils.convert(file_format="gpkg", in_file=gpkg_in_dataset, out_file=gpkg_out_dataset, task_uid=task_uid,)
+    gpkg = gdalutils.convert(fmt="gpkg", in_dataset=gpkg_in_dataset, out_dataset=gpkg_out_dataset, task_uid=task_uid,)
 
     result["file_format"] = "gpkg"
     result["result"] = gpkg
@@ -687,7 +687,7 @@ def geotiff_export_task(
     # Clip the dataset.
     # This happens if geotiff is the FIRST step in the pipeline as opposed to GPKG.
     if selection:
-        gtiff_out_dataset = gdalutils.clip_dataset(
+        gtiff_out_dataset = gdalutils.convert(
             boundary=selection,
             in_dataset=gtiff_in_dataset,
             out_dataset=gtiff_out_dataset,
@@ -701,7 +701,7 @@ def geotiff_export_task(
 
     # Convert to the correct projection
     gtiff_out_dataset = gdalutils.convert(
-        file_format="gtiff", in_file=gtiff_in_dataset, out_file=gtiff_out_dataset, task_uid=task_uid,
+        fmt="gtiff", in_dataset=gtiff_in_dataset, out_dataset=gtiff_out_dataset, task_uid=task_uid,
     )
 
     # Reduce the overall size of geotiffs.  Note this compression could result in the loss of data.
@@ -709,9 +709,9 @@ def geotiff_export_task(
     if compress:
         params = "-co COMPRESS=JPEG -co PHOTOMETRIC=YCBCR -co TILED=YES -b 1 -b 2 -b 3"
         gtiff_out_dataset = gdalutils.convert(
-            file_format="gtiff",
-            in_file=gtiff_out_dataset,
-            out_file=gtiff_out_dataset,
+            fmt="gtiff",
+            in_dataset=gtiff_out_dataset,
+            out_dataset=gtiff_out_dataset,
             task_uid=task_uid,
             params=params,
             use_translate=compress,
@@ -748,7 +748,7 @@ def nitf_export_task(
 
     params = "-co ICORDS=G"
     nitf = gdalutils.convert(
-        file_format="nitf", in_file=nitf_in_dataset, out_file=nitf_out_dataset, task_uid=task_uid, params=params,
+        fmt="nitf", in_dataset=nitf_in_dataset, out_dataset=nitf_out_dataset, task_uid=task_uid, params=params,
     )
 
     result["file_format"] = "nitf"
@@ -777,7 +777,7 @@ def hfa_export_task(
 
     hfa_in_dataset = parse_result(result, "source")
     hfa_out_dataset = os.path.join(stage_dir, "{0}-{1}.img".format(job_name, projection))
-    hfa = gdalutils.convert(file_format="hfa", in_file=hfa_in_dataset, out_file=hfa_out_dataset, task_uid=task_uid,)
+    hfa = gdalutils.convert(fmt="hfa", in_dataset=hfa_in_dataset, out_dataset=hfa_out_dataset, task_uid=task_uid,)
 
     result["file_format"] = "hfa"
     result["result"] = hfa
@@ -821,15 +821,15 @@ def reprojection_task(
         in_dataset = f"GTIFF_RAW:{in_dataset}"
 
     reprojection = gdalutils.convert(
-        file_format=file_format, in_file=in_dataset, out_file=out_dataset, task_uid=task_uid, projection=projection,
+        fmt=file_format, in_dataset=in_dataset, out_dataset=out_dataset, task_uid=task_uid, projection=projection,
     )
 
     if file_format == "gtiff" and compress:
         params = "-co COMPRESS=JPEG -co PHOTOMETRIC=YCBCR -co TILED=YES -b 1 -b 2 -b 3"
         reprojection = gdalutils.convert(
-            file_format=file_format,
-            in_file=reprojection,
-            out_file=out_dataset,
+            fmt=file_format,
+            in_dataset=reprojection,
+            out_dataset=out_dataset,
             task_uid=task_uid,
             params=params,
             use_translate=compress,

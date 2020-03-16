@@ -8,7 +8,7 @@ from django.test import TestCase
 from mock import Mock, patch, call, MagicMock, ANY
 from osgeo import gdal, ogr
 
-from eventkit_cloud.utils.gdalutils import clip_dataset, is_envelope, convert, get_distance, \
+from eventkit_cloud.utils.gdalutils import convert, is_envelope, get_distance, \
     get_dimensions, merge_geotiffs, get_meta, get_band_statistics
 
 logger = logging.getLogger(__name__)
@@ -96,156 +96,97 @@ class TestGdalUtils(TestCase):
     @patch('eventkit_cloud.utils.gdalutils.is_envelope')
     @patch('eventkit_cloud.utils.gdalutils.get_meta')
     @patch('eventkit_cloud.utils.gdalutils.os.path.isfile')
-    def test_clip_dataset(self, isfile, get_meta_mock, is_envelope_mock):
+    def test_convert(self, isfile, get_meta_mock, is_envelope_mock):
 
         isfile.return_value = True
 
         with self.assertRaises(Exception):
-            clip_dataset(boundary=None, in_dataset=None)
+            convert(boundary=None, in_dataset=None)
 
         # Raster geopackage
         extra_parameters = ""
+        in_projection = "EPSG:4326"
+        out_projection = "EPSG:3857"
         geojson_file = "/path/to/geojson"
-        dataset = "/path/to/dataset"
+        out_dataset = "/path/to/dataset"
         in_dataset = "/path/to/old_dataset"
         fmt = "gpkg"
         band_type = "-ot byte"
-        expected_cmd = "gdalwarp -overwrite {} -cutline {} -crop_to_cutline {} -of {} {} {} {}".format(
+        expected_cmd = "gdalwarp -overwrite {} -cutline {} -crop_to_cutline {} -of {} {} {} {} -s_srs {} -t_srs {}".format(
             extra_parameters,
             geojson_file,
             "-dstalpha",
             fmt,
             band_type,
             in_dataset,
-            dataset
+            out_dataset,
+            in_projection,
+            out_projection
         )
         get_meta_mock.return_value = {'driver': 'gpkg', 'is_raster': True, 'nodata': None}
         is_envelope_mock.return_value = False
         self.task_process.return_value = Mock(exitcode=0)
-        clip_dataset(boundary=geojson_file, in_dataset=in_dataset, out_dataset=dataset, fmt=fmt, task_uid=self.task_uid)
+        convert(boundary=geojson_file, in_dataset=in_dataset, out_dataset=out_dataset, fmt=fmt, task_uid=self.task_uid, projection=3857)
         self.task_process().start_process.assert_called_with(expected_cmd, executable='/bin/bash', shell=True,
                                                              stderr=-1, stdout=-1)
 
         # Geotiff
+        out_projection = "EPSG:4326"
         fmt = "gtiff"
         band_type = ""
-        expected_cmd = "gdalwarp -overwrite {} -cutline {} -crop_to_cutline {} -of {} {} {} {}".format(
+        expected_cmd = "gdalwarp -overwrite {} -cutline {} -crop_to_cutline {} -of {} {} {} {} -s_srs {} -t_srs {}".format(
             extra_parameters,
             geojson_file,
             "",
             fmt,
             band_type,
             in_dataset,
-            dataset
+            out_dataset,
+            in_projection,
+            out_projection
         )
         get_meta_mock.return_value = {'driver': 'gtiff', 'is_raster': True, 'nodata': None}
         is_envelope_mock.return_value = True  # So, no need for -dstalpha
-        clip_dataset(boundary=geojson_file, in_dataset=in_dataset, out_dataset=dataset, fmt=fmt, task_uid=self.task_uid)
+        convert(boundary=geojson_file, in_dataset=in_dataset, out_dataset=out_dataset, fmt=fmt, task_uid=self.task_uid)
         self.task_process().start_process.assert_called_with(expected_cmd, executable='/bin/bash', shell=True,
                                                              stderr=-1, stdout=-1)
         # Geotiff with non-envelope polygon cutline
-        expected_cmd = "gdalwarp -overwrite {} -cutline {} -crop_to_cutline {} -of {} {} {} {}".format(
+        expected_cmd = "gdalwarp -overwrite {} -cutline {} -crop_to_cutline {} -of {} {} {} {} -s_srs {} -t_srs {}".format(
             extra_parameters,
             geojson_file,
             "-dstalpha",
             fmt,
             band_type,
             in_dataset,
-            dataset
+            out_dataset,
+            in_projection,
+            out_projection
         )
         is_envelope_mock.return_value = False
-        clip_dataset(boundary=geojson_file, in_dataset=in_dataset, out_dataset=dataset, fmt=fmt, task_uid=self.task_uid)
+        convert(boundary=geojson_file, in_dataset=in_dataset, out_dataset=out_dataset, fmt=fmt, task_uid=self.task_uid)
         self.task_process().start_process.assert_called_with(expected_cmd, executable='/bin/bash', shell=True,
                                                              stderr=-1, stdout=-1)
 
         # Vector
         fmt = "gpkg"
-        expected_cmd = "ogr2ogr -skipfailures {} -nlt PROMOTE_TO_MULTI -overwrite -f {} -clipsrc {} {} {}".format(
+        expected_cmd = "ogr2ogr -skipfailures {} -nlt PROMOTE_TO_MULTI -overwrite -f {} -clipsrc {} {} {} -s_srs {} -t_srs {}".format(
             extra_parameters,
             fmt,
             geojson_file,
-            dataset,
-            in_dataset
+            out_dataset,
+            in_dataset,
+            in_projection,
+            out_projection
         )
         get_meta_mock.return_value = {'driver': 'gpkg', 'is_raster': False}
-        clip_dataset(boundary=geojson_file, in_dataset=in_dataset, out_dataset=dataset, fmt=fmt, task_uid=self.task_uid)
+        convert(boundary=geojson_file, in_dataset=in_dataset, out_dataset=out_dataset, fmt=fmt, task_uid=self.task_uid)
         self.task_process().start_process.assert_called_with(expected_cmd, executable='/bin/bash', shell=True,
                                                              stderr=-1, stdout=-1)
-
-    @patch('eventkit_cloud.utils.gdalutils.get_meta')
-    @patch('eventkit_cloud.utils.gdalutils.os.path.isfile')
-    @patch('eventkit_cloud.utils.gdalutils.os.rename')
-    def test_convert(self, rename, isfile, get_meta_mock):
-
-        isfile.return_value = True
-
-        with self.assertRaises(Exception):
-            convert(dataset=None)
-
-        # No-op (same source and destination)
-        in_dataset = "/path/to/dataset"
-        out_dataset = "/path/to/dataset"
-        fmt = "gpkg"
-        get_meta_mock.return_value = {'driver': 'gpkg', 'is_raster': True}
-        self.task_process.return_value = Mock(exitcode=0)
-        convert(file_format=fmt, in_file=in_dataset, out_file=out_dataset, task_uid=self.task_uid)
-        self.task_process().start_process.assert_not_called()
-
-        # Raster geopackage from geotiff
-        extra_parameters = ""
-        in_dataset = "/path/to/old_dataset"
-        out_dataset = "/path/to/dataset"
-        fmt = "gpkg"
-        band_type = "-ot byte"
-        in_projection = "EPSG:4326"
-        expected_cmd = "gdalwarp -overwrite {0} -of {1} {2} {3} {4} -s_srs {5} -t_srs {5}".format(
-            extra_parameters,
-            fmt,
-            band_type,
-            in_dataset,
-            out_dataset,
-            in_projection,
-        )
-        get_meta_mock.return_value = {'driver': 'gtiff', 'is_raster': True, 'nodata': None}
-        self.task_process.return_value = Mock(exitcode=0)
-        convert(file_format=fmt, in_file=in_dataset, out_file=out_dataset, task_uid=self.task_uid)
-        self.task_process().start_process.assert_called_with(expected_cmd, executable='/bin/bash', shell=True,
-                                                             stderr=-1, stdout=-1)
-
-        # Geotiff from raster geopackage
-        fmt = "gtiff"
-        band_type = ""
-        expected_cmd = "gdalwarp -overwrite {0} -of {1} {2} {3} {4} -s_srs {5} -t_srs {5}".format(
-            extra_parameters,
-            fmt,
-            band_type,
-            in_dataset,
-            out_dataset,
-            in_projection
-        )
-        get_meta_mock.return_value = {'driver': 'gpkg', 'is_raster': True}
-        convert(file_format=fmt, in_file=in_dataset, out_file=out_dataset, task_uid=self.task_uid)
-        self.task_process().start_process.assert_called_with(expected_cmd, executable='/bin/bash', shell=True,
-                                                             stderr=-1, stdout=-1)
-
-        # Vector
-        fmt = "gpkg"
-        expected_cmd = "ogr2ogr -overwrite {0} -f '{1}' {2} {3} -s_srs {4} -t_srs {4}".format(
-            extra_parameters,
-            fmt,
-            out_dataset,
-            in_dataset,
-            in_projection
-        )
-        get_meta_mock.return_value = {'driver': 'geojson', 'is_raster': False}
-        convert(file_format=fmt, in_file=in_dataset, out_file=out_dataset, task_uid=self.task_uid)
-        self.task_process().start_process.assert_called_with(expected_cmd, executable='/bin/bash', shell=True,
-                                                             stderr=-1, stdout=-1)
-
 
         # Test that extra_parameters are added when converting to NITF.
         fmt = "nitf"
         extra_parameters = "-co ICORDS=G"
+        in_projection = "EPSG:4326"
         out_projection = "EPSG:3857"
         band_type = ""
         expected_cmd = "gdalwarp -overwrite {0} -of {1} {2} {3} {4} -s_srs {5} -t_srs {6}".format(
@@ -258,13 +199,14 @@ class TestGdalUtils(TestCase):
             out_projection
         )
         get_meta_mock.return_value = {'driver': 'gpkg', 'is_raster': True}
-        convert(file_format=fmt, in_file=in_dataset, params=extra_parameters,
-                out_file=out_dataset, task_uid=self.task_uid, projection=3857)
+        convert(fmt=fmt, in_dataset=in_dataset, params=extra_parameters, out_dataset=out_dataset, task_uid=self.task_uid, projection=3857)
         self.task_process().start_process.assert_called_with(expected_cmd, executable='/bin/bash', shell=True,
                                                              stderr=-1, stdout=-1)
+
         # Test converting to a new projection
         fmt = "gpkg"
         extra_parameters = ""
+        in_projection = "EPSG:4326"
         out_projection = "EPSG:3857"
         band_type = "-ot byte"
         expected_cmd = "gdalwarp -overwrite {0} -of {1} {2} {3} {4} -s_srs {5} -t_srs {6}".format(
@@ -277,8 +219,7 @@ class TestGdalUtils(TestCase):
             out_projection
         )
         get_meta_mock.return_value = {'driver': 'gpkg', 'is_raster': True}
-        convert(file_format=fmt, in_file=in_dataset,
-                out_file=out_dataset, task_uid=self.task_uid, projection=3857)
+        convert(fmt=fmt, in_dataset=in_dataset, out_dataset=out_dataset, task_uid=self.task_uid, projection=3857)
         self.task_process().start_process.assert_called_with(expected_cmd, executable='/bin/bash', shell=True,
                                                              stderr=-1, stdout=-1)
 
