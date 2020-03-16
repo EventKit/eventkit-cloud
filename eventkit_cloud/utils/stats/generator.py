@@ -48,6 +48,7 @@ def get_statistics(provider_slug, force=os.getenv("FORCE_STATISTICS_RECOMPUTE", 
 
     return json.loads(stats)
 
+
 def update_all_statistics_caches():
     """
     A helper function to compute all of the statistics and update all caches at once.
@@ -56,6 +57,7 @@ def update_all_statistics_caches():
     providers = DataProvider.objects.all()
     for provider in providers:
         get_statistics(provider.slug, force=True)
+
 
 def get_default_tile_grid(level=10):
     """
@@ -94,7 +96,11 @@ def compute_statistics(provider_slug, tile_grid=get_default_tile_grid(), filenam
     max_estimate_export_task_records = os.getenv("MAX_ESTIMATE_EXPORT_TASK_RECORDS", 10000)
     # Order by time descending to ensure more recent samples are collected first
     export_task_records = (
-        ExportTaskRecord.objects.filter(result__isnull=False).filter(export_provider_task__slug=provider_slug).order_by("-finished_at").select_related("result").all()[:max_estimate_export_task_records]
+        ExportTaskRecord.objects.filter(result__isnull=False)
+        .filter(export_provider_task__slug=provider_slug)
+        .order_by("-finished_at")
+        .select_related("result")
+        .all()[:max_estimate_export_task_records]
     )
 
     # Method to pull normalized data values off of the run, provider_task, or provider_task.task objects
@@ -444,14 +450,7 @@ def get_provider_grid(provider, min_zoom=None, max_zoom=None):
 
 
 def query(
-    provider_slug,
-    field,
-    statistic_name,
-    bbox,
-    bbox_srs,
-    gap_fill_thresh=0.1,
-    default_value=None,
-    custom_stats=None,
+    provider_slug, field, statistic_name, bbox, bbox_srs, gap_fill_thresh=0.1, default_value=None, custom_stats=None,
 ):
     """
     Finds the highest resolution of the requested statistic:
