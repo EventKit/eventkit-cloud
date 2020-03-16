@@ -81,7 +81,7 @@ describe('exportInfo reducer', () => {
             providers: [],
             areaStr: '',
             formats: ['gpkg'],
-            providerEstimates: {},
+            providerInfo: {},
             exportOptions: {},
             projections: [],
         });
@@ -141,7 +141,7 @@ describe('exportInfo reducer', () => {
             projections: [],
             areaStr: '',
             formats: ['gpkg'],
-            providerEstimates: {},
+            providerInfo: {},
             exportOptions: {},
         });
     });

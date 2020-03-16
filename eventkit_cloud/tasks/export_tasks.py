@@ -73,10 +73,7 @@ from eventkit_cloud.tasks.models import (
     FileProducingTaskResult,
     ExportRun,
 )
-from eventkit_cloud.jobs.models import (
-    Job,
-    DataProvider,
-)
+from eventkit_cloud.jobs.models import Job, DataProvider, DataProviderTask
 
 
 BLACKLISTED_ZIP_EXTS = [".ini", ".om5", ".osm", ".lck", ".pyc"]

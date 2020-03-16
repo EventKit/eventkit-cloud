@@ -353,6 +353,16 @@ class TestDataProvider(TestCase):
 
         mocked_cache.set.assert_has_calls(cache_calls, any_order=True)
 
+    @patch('eventkit_cloud.jobs.models.cache')
+    def test_deleted_mapproxy_cache_on_save(self, mocked_cache):
+        """Test that triggers a save on a provider and clears the associated mapproxy cache"""
+        self.export_provider.save()
+
+        cache_call = [
+            call(f"base-config-{self.export_provider.slug}")
+        ]
+        mocked_cache.delete.assert_has_calls(cache_call)
+
     @patch("eventkit_cloud.jobs.models.get_mapproxy_metadata_url")
     def test_metadata(self, mock_get_mapproxy_metadata_url):
         example_url = "http://test.test"
