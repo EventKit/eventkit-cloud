@@ -49,7 +49,9 @@ class TestJobViewSet(APITestCase):
         self.config = None
         self.tags = None
 
-    def setUp(self, ):
+    @patch('eventkit_cloud.api.views.get_estimate_cache_key')
+    @patch('eventkit_cloud.api.views.cache')
+    def setUp(self, cache_mock, get_estimate_cache_key_mock):
         self.path = os.path.dirname(os.path.realpath(__file__))
         self.group, created = Group.objects.get_or_create(name='TestDefaultExportExtentGroup')
         self.user = User.objects.create_user(username='demo', email='demo@demo.com', password='demo')
@@ -98,6 +100,12 @@ class TestJobViewSet(APITestCase):
                 "geom": ["point", "polygon"],
             }
         ]
+
+        self.estimate_size = 110
+        self.estimate_time = 200
+        cache_mock.get.return_value = [self.estimate_size, self.estimate_time]
+        self.cache_key = '222222222222222'
+        get_estimate_cache_key_mock.return_value = self.cache_key
 
     def test_list(self, ):
         expected = '/api/jobs'
@@ -214,25 +222,15 @@ class TestJobViewSet(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertEqual(response.data[0]['detail'], 'ADMIN permission is required to delete this job.')
 
-    @patch('eventkit_cloud.api.views.get_estimate_cache_key')
-    @patch('eventkit_cloud.api.views.cache')
     @patch('eventkit_cloud.api.views.pick_up_run_task')
     @patch('eventkit_cloud.api.views.create_run')
-    def test_create_zipfile(self, create_run_mock, pickup_mock, cache_mock, get_estimate_cache_key_mock):
+    def test_create_zipfile(self, create_run_mock, pickup_mock):
         excessive_data_size = 120
         add_max_data_size(self.provider, excessive_data_size)
 
-        estimate_size = 110
-        estimate_time = 200
-        cache_mock.get.return_value = [estimate_size, estimate_time]
-
-        cache_key = '222222222222222'
-        get_estimate_cache_key_mock.return_value = cache_key
         bbox = (5, 16, 5.1, 16.1)
-        srs = '4326'
         max_zoom = 17
         min_zoom = 0
-        slug = 'osm'
 
         create_run_mock.return_value = "some_run_uid"
         formats = [export_format.slug for export_format in ExportFormat.objects.all()]
@@ -240,17 +238,17 @@ class TestJobViewSet(APITestCase):
             'name': 'TestJob',
             'description': 'Test description',
             'event': 'Test Activation',
-            'selection': bbox_to_geojson([5, 16, 5.1, 16.1]),
-            'provider_tasks': [{'provider': self.provider.slug, 'formats': formats, 'min_zoom': min_zoom, 'max_zoom': max_zoom}],
+            'selection': bbox_to_geojson(bbox),
+            'provider_tasks': [
+                {'provider': self.provider.slug, 'formats': formats, 'min_zoom': min_zoom, 'max_zoom': max_zoom}],
             'preset': self.job.preset.id,
             'published': True,
             'tags': self.tags,
             'include_zipfile': True
         }
+
         url = reverse('api:jobs-list')
         response = self.client.post(url, request_data, format='json')
-        cache_mock.get.assert_called_with(cache_key, (None, None))
-        get_estimate_cache_key_mock.called_once_with(bbox, srs, min_zoom, max_zoom, slug)
         expected_user_details = {'username': 'demo', 'is_superuser': False, 'is_staff': False}
         pickup_mock.apply_async.assert_called_with(
             kwargs={"run_uid": "some_run_uid", "user_details": expected_user_details}, queue="runs", routing_key="runs")
@@ -261,25 +259,15 @@ class TestJobViewSet(APITestCase):
         job = Job.objects.get(uid=job_uid)
         self.assertEqual(job.include_zipfile, True)
 
-    @patch('eventkit_cloud.api.views.get_estimate_cache_key')
-    @patch('eventkit_cloud.api.views.cache')
     @patch('eventkit_cloud.api.views.pick_up_run_task')
     @patch('eventkit_cloud.api.views.create_run')
-    def test_create_job_success(self, create_run_mock, pickup_mock, cache_mock, get_estimate_cache_key_mock):
+    def test_create_job_success(self, create_run_mock, pickup_mock):
         excessive_data_size = 100
         add_max_data_size(self.provider, excessive_data_size)
 
-        estimate_size = 80
-        estimate_time = 2
-        cache_mock.get.return_value = [estimate_size, estimate_time]
-
-        cache_key = '222222222222222'
-        get_estimate_cache_key_mock.return_value = cache_key
         bbox = (5, 16, 5.1, 16.1)
-        srs = '4326'
         max_zoom = 17
         min_zoom = 0
-        slug = 'osm'
 
         create_run_mock.return_value = 'some_run_uid'
         url = reverse('api:jobs-list')
@@ -321,8 +309,6 @@ class TestJobViewSet(APITestCase):
         response = self.client.post(url, request_data, format='json')
         job_uid = response.data['uid']
         # test that the mock methods get called.
-        cache_mock.get.assert_called_with(cache_key, (None, None))
-        get_estimate_cache_key_mock.called_once_with(bbox, srs, min_zoom, max_zoom, slug)
         create_run_mock.assert_called_once_with(job_uid=job_uid, user=self.user)
         expected_user_details = {'username': 'demo', 'is_superuser': False, 'is_staff': False}
         pickup_mock.apply_async.assert_called_once_with(
@@ -348,26 +334,15 @@ class TestJobViewSet(APITestCase):
         self.assertIsNotNone(job.preset.json_tags)
         self.assertEqual(259, len(job.preset.json_tags))
 
-    @patch('eventkit_cloud.api.views.get_estimate_cache_key')
-    @patch('eventkit_cloud.api.views.cache')
     @patch('eventkit_cloud.api.views.pick_up_run_task')
     @patch('eventkit_cloud.api.views.create_run')
-    def test_create_job_with_config_success(self, create_run_mock, pickup_mock, cache_mock,
-                                            get_estimate_cache_key_mock):
+    def test_create_job_with_config_success(self, create_run_mock, pickup_mock):
         excessive_data_size = 100
         add_max_data_size(self.provider, excessive_data_size)
 
-        estimate_size = 80
-        estimate_time = 2
-        cache_mock.get.return_value = [estimate_size, estimate_time]
-
-        cache_key = '222222222222222'
-        get_estimate_cache_key_mock.return_value = cache_key
         bbox = (5, 16, 5.1, 16.1)
-        srs = '4326'
         max_zoom = 17
         min_zoom = 0
-        slug = 'osm'
 
         create_run_mock.return_value = "some_run_uid"
         url = reverse('api:jobs-list')
@@ -387,8 +362,6 @@ class TestJobViewSet(APITestCase):
 
         job_uid = response.data['uid']
         # test that the mock methods get called.
-        cache_mock.get.assert_called_with(cache_key, (None, None))
-        get_estimate_cache_key_mock.called_once_with(bbox, srs, min_zoom, max_zoom, slug)
         create_run_mock.assert_called_once_with(job_uid=job_uid, user=self.user)
         expected_user_details = {'username': 'demo', 'is_superuser': False, 'is_staff': False}
         pickup_mock.apply_async.assert_called_once_with(
@@ -409,25 +382,15 @@ class TestJobViewSet(APITestCase):
         self.assertFalse(response.data['published'])
         self.assertEqual(259, len(self.job.preset.json_tags))
 
-    @patch('eventkit_cloud.api.views.get_estimate_cache_key')
-    @patch('eventkit_cloud.api.views.cache')
     @patch('eventkit_cloud.api.views.pick_up_run_task')
     @patch('eventkit_cloud.api.views.create_run')
-    def test_create_job_with_tags(self, create_run_mock, pickup_mock, cache_mock, get_estimate_cache_key_mock):
+    def test_create_job_with_tags(self, create_run_mock, pickup_mock):
         excessive_data_size = 100
         add_max_data_size(self.provider, excessive_data_size)
 
-        estimate_size = 80
-        estimate_time = 2
-        cache_mock.get.return_value = [estimate_size, estimate_time]
-
-        cache_key = '222222222222222'
-        get_estimate_cache_key_mock.return_value = cache_key
         bbox = (5, 16, 5.1, 16.1)
-        srs = '4326'
         max_zoom = 17
         min_zoom = 0
-        slug = 'osm'
 
         create_run_mock.return_value = "some_run_uid"
 
@@ -448,8 +411,6 @@ class TestJobViewSet(APITestCase):
         response = self.client.post(url, request_data, format='json')
         job_uid = response.data['uid']
         # test that the mock methods get called.
-        cache_mock.get.assert_called_with(cache_key, (None, None))
-        get_estimate_cache_key_mock.called_once_with(bbox, srs, min_zoom, max_zoom, slug)
         create_run_mock.assert_called_once_with(job_uid=job_uid, user=self.user)
         expected_user_details = {'username': 'demo', 'is_superuser': False, 'is_staff': False}
         pickup_mock.apply_async.assert_called_once_with(
@@ -590,9 +551,9 @@ class TestJobViewSet(APITestCase):
     @patch('eventkit_cloud.api.views.get_estimate_cache_key')
     @patch('eventkit_cloud.api.views.cache')
     def test_extents_too_large_for_max_data_size(self, cache_mock, get_estimate_cache_key_mock):
-        estimate_size = 210
-        estimate_time = 20
-        cache_mock.get.return_value = [estimate_size, estimate_time]
+        self.estimate_size = 210
+        self.estimate_time = 20
+        cache_mock.get.return_value = [self.estimate_size, self.estimate_time]
 
         cache_key = '1.22222222222222'
         get_estimate_cache_key_mock.return_value = cache_key
@@ -620,7 +581,7 @@ class TestJobViewSet(APITestCase):
 
         response = self.client.post(job_url, data=json.dumps(request_data),
                                     content_type='application/json; version=1.0')
-        cache_mock.get.assert_called_with(cache_key, (None, None))
+        cache_mock.get.assert_called_with(cache_key)
         get_estimate_cache_key_mock.called_once_with(bbox, srs, min_zoom, max_zoom, slug)
         self.assertEqual(status.HTTP_400_BAD_REQUEST, response.status_code)
         self.assertEqual(response['Content-Type'], 'application/json')

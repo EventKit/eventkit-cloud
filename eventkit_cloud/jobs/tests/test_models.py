@@ -320,7 +320,7 @@ class TestDataProvider(TestCase):
         """Test that triggering a save on a provider with a preview_url will attach a MapImageSnapshot."""
         mock_save_thumbnail.return_value = '/var/lib/downloads/images/test_thumb.jpg'
         # An instance of MapImageSnapshot
-        mock_make_thumbnail_downloadable.return_value = MapImageSnapshot(1, 'filename')
+        mock_make_thumbnail_downloadable.return_value = 1
         stat = os.stat
 
         # We don't want to interfere with any other os.stat functions
