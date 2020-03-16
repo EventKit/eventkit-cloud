@@ -8,10 +8,9 @@ from eventkit_cloud.celery import app
 from eventkit_cloud.jobs.models import DataProviderTask
 from eventkit_cloud.tasks.enumerations import TaskStates
 from eventkit_cloud.tasks.helpers import get_message_count
-from eventkit_cloud.tasks.models import ExportRun, DataProviderTaskRecord
+from eventkit_cloud.tasks.models import ExportRun, DataProviderTaskRecord, ExportTaskRecord
 from eventkit_cloud.utils.pcf import PcfClient
 from eventkit_cloud.utils.stats.aoi_estimators import AoiEstimator
-
 
 # Get an instance of a logger
 logger = get_task_logger(__name__)
@@ -28,7 +27,6 @@ def pcf_shutdown_celery_workers(self, queue_name, queue_type=None, hostname=None
     :param queue_type: The type of queue, such as osm.
     :param hostname: The UUID based hostname of the workers.
     """
-    from eventkit_cloud.tasks.models import ExportTaskRecord  # NOQA
 
     if os.getenv("CELERY_TASK_APP"):
         app_name = os.getenv("CELERY_TASK_APP")
@@ -48,8 +46,8 @@ def pcf_shutdown_celery_workers(self, queue_name, queue_type=None, hostname=None
     running_tasks_by_queue = client.get_running_tasks(app_name, queue_name)
     running_tasks_by_queue_count = running_tasks_by_queue["pagination"]["total_results"]
     export_tasks = ExportTaskRecord.objects.filter(
-        worker=hostname, status__in=TaskStates.get_not_finished_states()
-    ).select_related("export_provider_task")
+        worker=hostname, status__in=[task_state.value for task_state in TaskStates.get_not_finished_states()]
+    )
     if not export_tasks:
         if running_tasks_by_queue_count > messages or (running_tasks_by_queue == 0 and messages == 0):
             logger.info(f"No work remaining on the {queue_name} queue, shutting down {workers}")
