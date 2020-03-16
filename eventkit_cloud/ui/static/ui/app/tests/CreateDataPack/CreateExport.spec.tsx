@@ -3,7 +3,7 @@ import { shallow } from 'enzyme';
 import * as sinon from 'sinon';
 import Help from '@material-ui/icons/Help';
 import { CreateExport } from '../../components/CreateDataPack/CreateExport';
-import BreadcrumbStepper from '../../components/CreateDataPack/BreadcrumbStepper';
+import EstimateContainer from '../../components/CreateDataPack/EstimateContainer';
 import PageHeader from '../../components/common/PageHeader';
 
 describe('CreateExport component', () => {
@@ -31,7 +31,7 @@ describe('CreateExport component', () => {
 
     it('should render the elements', () => {
         expect(wrapper.find(PageHeader)).toHaveLength(1);
-        expect(wrapper.find(BreadcrumbStepper)).toHaveLength(1);
+        expect(wrapper.find(EstimateContainer)).toHaveLength(1);
         expect(wrapper.find(Help)).toHaveLength(1);
         expect(wrapper.find('#my-child-element')).toHaveLength(1);
     });

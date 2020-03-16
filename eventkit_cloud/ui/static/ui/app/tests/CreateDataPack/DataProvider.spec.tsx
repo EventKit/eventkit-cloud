@@ -42,12 +42,14 @@ describe('DataProvider component', () => {
                 text: 'test license text',
                 name: 'test license',
             },
-            availability: {},
-            estimate: {},
             supported_formats: formats,
         },
         exportInfo: {
             exportOptions: {123: {minZoom: 0, maxZoom: 1, formats: ['gpkg']}}
+        },
+        providerInfo: {
+            availability: {},
+            estimates: {}
         },
         providerOptions: {minZoom: 0, maxZoom: 1, formats: ['gpkg']},
         selectedProjections: [4326],
@@ -131,8 +133,6 @@ describe('DataProvider component', () => {
                     text: 'test license text',
                     name: 'test license',
                 },
-                availability: {},
-                estimate: {},
                 supported_formats: formats,
             };
             setup({provider});

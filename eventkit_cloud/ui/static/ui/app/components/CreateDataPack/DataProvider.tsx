@@ -24,7 +24,6 @@ import IndeterminateCheckBoxIcon from '@material-ui/icons/IndeterminateCheckBox'
 import CheckBoxIcon from "@material-ui/icons/CheckBox";
 import {CompatibilityInfo} from "./ExportInfo";
 import {MapLayer} from "./CreateExport";
-import InfoDialog from "../common/InfoDialog";
 
 const jss = (theme: Theme & Eventkit.Theme) => createStyles({
     container: {
@@ -84,33 +83,15 @@ const jss = (theme: Theme & Eventkit.Theme) => createStyles({
     }
 });
 
-interface EstimateData {
-    value: number;
-    units: string;
-}
-
-export interface ProviderData extends Eventkit.Provider {
-    availability?: {
-        slug: string;
-        status: string;
-        type: string;
-        message: string;
-    };
-    estimate?: {
-        size?: EstimateData;
-        time?: EstimateData;
-        slug: string;
-    };
-}
-
 interface Props {
     geojson: GeoJSON.FeatureCollection;
     exportInfo: Eventkit.Store.ExportInfo;
     providerOptions: any;
     updateExportInfo: (args: any) => void;
-    provider: ProviderData;
+    provider: Eventkit.Provider;
+    providerInfo: Eventkit.Store.ProviderInfo;
     checkProvider: (args: any) => void;
-    clearEstimate: (provider: ProviderData) => void;
+    clearEstimate: (provider: Eventkit.Provider) => void;
     checked: boolean;
     onChange: (event: React.ChangeEvent<HTMLInputElement>) => void;
     alt: boolean;
@@ -253,8 +234,8 @@ export class DataProvider extends React.Component<Props, State> {
         this.setState({ checked: !this.state.checked });
     };
 
-    private formatEstimate(providerEstimate) {
-        if (!providerEstimate) {
+    private formatEstimate(providerEstimates: Eventkit.Store.Estimates) {
+        if (!providerEstimates) {
             return '';
         }
         let sizeEstimate;
@@ -262,11 +243,11 @@ export class DataProvider extends React.Component<Props, State> {
         // func that will return nf (not found) when the provided estimate is undefined
         const get = (estimate, nf = 'unknown') => (estimate) ? estimate.toString() : nf;
 
-        if (providerEstimate.size) {
-            sizeEstimate = formatMegaBytes(providerEstimate.size.value);
+        if (providerEstimates.size) {
+            sizeEstimate = formatMegaBytes(providerEstimates.size.value);
         }
-        if (providerEstimate.time) {
-            const estimateInSeconds = providerEstimate.time.value;
+        if (providerEstimates.time) {
+            const estimateInSeconds = providerEstimates.time.value;
             durationEstimate = getDuration(estimateInSeconds);
         }
         return `${get(sizeEstimate)} / ${get(durationEstimate)}`;
@@ -292,7 +273,7 @@ export class DataProvider extends React.Component<Props, State> {
 
     render() {
         const {colors} = this.props.theme.eventkit;
-        const {classes, provider} = this.props;
+        const {classes, provider, providerInfo} = this.props;
         const {exportOptions} = this.props.exportInfo;
         // Take the current zoom from the current zoomLevels if they exist and the value is valid,
         // otherwise set it to the max allowable level.
@@ -461,7 +442,7 @@ export class DataProvider extends React.Component<Props, State> {
         // Only set this if we want to display the estimate
         let secondary;
         if (this.props.renderEstimate) {
-            const estimate = this.formatEstimate(provider.estimate);
+            const estimate = this.formatEstimate(providerInfo.estimates);
             if (estimate) {
                 secondary =
                     <Typography style={{fontSize: "0.7em"}}>{estimate}</Typography>;
@@ -499,7 +480,7 @@ export class DataProvider extends React.Component<Props, State> {
                         <ProviderStatusIcon
                             id="ProviderStatus"
                             baseStyle={{marginRight: '40px'}}
-                            availability={provider.availability}
+                            availability={providerInfo.availability}
                         />
                         {this.state.open ?
                             <ExpandLess
@@ -535,6 +516,7 @@ DataProvider.defaultProps = {
 function mapStateToProps(state, ownProps) {
     return {
         providerOptions: state.exportInfo.exportOptions[ownProps.provider.slug] || {} as Eventkit.Store.ProviderExportOptions,
+        providerInfo: state.exportInfo.providerInfo[ownProps.provider.slug] || {} as Eventkit.Store.ProviderInfo,
         exportInfo: state.exportInfo,
         geojson: state.aoiInfo.geojson,
         selectedProjections: [...state.exportInfo.projections],
