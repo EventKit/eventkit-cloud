@@ -26,16 +26,16 @@ MAX_SAMPLES_PER_TARGET = 2000
 DEFAULT_CACHE_EXPIRATION = 86400  # expire in a day
 
 
-def get_statistics(grouping="provider_name", force=os.getenv("FORCE_STATISTICS_RECOMPUTE", False)):
+def get_statistics(provider_slug, force=os.getenv("FORCE_STATISTICS_RECOMPUTE", False)):
     """
+    :param provider_slug: A slug value of the data provider you want to get statistics for.
     :param force: True to re-compute the desired statistics
-    :param grouping: see group_providers_by
     :return: The statistics object
     """
-    cache_key = "DATA_STATISTICS_BY_{}".format(grouping)
+    cache_key = f"{provider_slug}_data_statistics"
 
     def compute_stats():
-        return json.dumps(compute_statistics(group_providers_by(grouping)))
+        return json.dumps(compute_statistics(provider_slug))
 
     if force:
         logger.info("Force Statistics Recompute.")
@@ -49,6 +49,16 @@ def get_statistics(grouping="provider_name", force=os.getenv("FORCE_STATISTICS_R
     return json.loads(stats)
 
 
+def update_all_statistics_caches():
+    """
+    A helper function to compute all of the statistics and update all caches at once.
+    :param force: True to re-compute the desired statistics
+    """
+    providers = DataProvider.objects.all()
+    for provider in providers:
+        get_statistics(provider.slug, force=True)
+
+
 def get_default_tile_grid(level=10):
     """
     A geodetic grid for EPSG:4326 containing only the specified tile level
@@ -59,37 +69,6 @@ def get_default_tile_grid(level=10):
     res = tmp.resolution(level)
 
     return mapproxy_grid.tile_grid_for_epsg("EPSG:4326", res=[res])
-
-
-def group_providers_by(grouping="provider_name"):
-    """
-    :param grouping: Group by either 'provider_name' (e.g. OSM, ..) or 'provider_type' (osm, wms, wmts)
-    :return: A function used to determine a group id given a DataProviderExportTask
-    """
-    providers = DataProvider.objects.all().values()
-    if grouping == "provider_name":
-
-        def grp_by_name(t):
-            return t.name
-
-        get_group = grp_by_name
-    elif grouping == "provider_type":
-        providers_name_idx = {}
-        for provider in providers:
-            providers_name_idx[provider.get("name")] = provider
-
-        def grp_by_type(t):
-            p = providers_name_idx.get(t.name)
-            if p:
-                return p.get("slug")
-
-            return "unknown_provider"
-
-        get_group = grp_by_type
-    else:
-        raise ValueError('Invalid value for "grouping" parameter')
-
-    return get_group
 
 
 def has_tiles(export_task_record_name):
@@ -106,7 +85,7 @@ def has_tiles(export_task_record_name):
     ]
 
 
-def compute_statistics(get_group, tile_grid=get_default_tile_grid(), filename=None):
+def compute_statistics(provider_slug, tile_grid=get_default_tile_grid(), filename=None):
     """
     :param export_task_records: ExporTaskRecords is a list of all export tasks
     :param get_group: Function to generate a group id given a DataExportProviderTask
@@ -114,9 +93,14 @@ def compute_statistics(get_group, tile_grid=get_default_tile_grid(), filename=No
     :param filename: Serializes the intermediate data-sample data so it can be shared btw different deployments
     :return: A dict with statistics including area, duration, and package size per sq. kilometer
     """
+    max_estimate_export_task_records = os.getenv("MAX_ESTIMATE_EXPORT_TASK_RECORDS", 10000)
     # Order by time descending to ensure more recent samples are collected first
     export_task_records = (
-        ExportTaskRecord.objects.filter(result__isnull=False).order_by("-finished_at").select_related("result").all()
+        ExportTaskRecord.objects.filter(result__isnull=False)
+        .filter(export_provider_task__slug=provider_slug)
+        .order_by("-finished_at")
+        .select_related("result")
+        .all()[:max_estimate_export_task_records]
     )
 
     # Method to pull normalized data values off of the run, provider_task, or provider_task.task objects
@@ -143,7 +127,7 @@ def compute_statistics(get_group, tile_grid=get_default_tile_grid(), filename=No
     logger.debug("Prefetching geometry data from all Jobs")
     prefetch_geometry_cache(geom_cache)
 
-    logger.info("Beginning collection of statistics for %d ExportTaskRecords", total_count)
+    logger.info(f"Beginning collection of statistics for {total_count} {provider_slug} ExportTaskRecords")
     for etr in export_task_records:
         if processed_count % 500 == 0:
             logger.debug(
@@ -167,13 +151,12 @@ def compute_statistics(get_group, tile_grid=get_default_tile_grid(), filename=No
         gce = lookup_cache_geometry(run, geom_cache)
         area = gce["area"]
 
-        group_name = get_group(dptr)
         global_stats = get_child_entry(all_stats, "GLOBAL", default_stat)
-        group_stats = get_child_entry(all_stats, group_name, default_stat)
-        task_stats = get_child_entry(group_stats, etr.name, default_stat)
+        provider_stats = get_child_entry(all_stats, provider_slug, default_stat)
+        task_stats = get_child_entry(provider_stats, etr.name, default_stat)
 
         if has_tiles(etr.name):
-            affected_tile_stats = get_tile_stats(group_stats, tile_grid, gce["bbox"], True, tid_cache, run.id)
+            affected_tile_stats = get_tile_stats(provider_stats, tile_grid, gce["bbox"], True, tid_cache, run.id)
         else:
             affected_tile_stats = []
 
@@ -182,14 +165,14 @@ def compute_statistics(get_group, tile_grid=get_default_tile_grid(), filename=No
             collect_samples(run, [global_stats], ["duration", "area"], accessors, area)
         if dptr.id not in processed_dptr:
             processed_dptr[dptr.id] = True
-            collect_samples(dptr, [group_stats], ["duration", "area"], accessors, area)
+            collect_samples(dptr, [provider_stats], ["duration", "area"], accessors, area)
 
         collect_samples(
             etr, affected_tile_stats + [task_stats], ["duration", "area", "size"], accessors, area,
         )
 
         sz = accessors["size"](etr, area)
-        group_stats["size"] += [sz]  # Roll-up into provider_task level
+        provider_stats["size"] += [sz]  # Roll-up into provider_task level
         global_stats["size"] += [sz]  # Roll-up into global level
 
         # Collect a sample of the megabytes per pixel
@@ -197,8 +180,8 @@ def compute_statistics(get_group, tile_grid=get_default_tile_grid(), filename=No
             try:
                 provider = DataProvider.objects.get(name=dptr.name)
                 mpp = compute_mpp(provider, gce["bbox"], etr.result.size)
-                if len(group_stats["mpp"]) < MAX_SAMPLES_PER_TARGET:
-                    group_stats["mpp"] += [mpp]
+                if len(provider_stats["mpp"]) < MAX_SAMPLES_PER_TARGET:
+                    provider_stats["mpp"] += [mpp]
                 if len(global_stats["mpp"]) < MAX_SAMPLES_PER_TARGET:
                     global_stats["mpp"] += [mpp]
                 for ts in affected_tile_stats:
@@ -209,17 +192,16 @@ def compute_statistics(get_group, tile_grid=get_default_tile_grid(), filename=No
                 pass
 
     logger.info(
-        "Computing statistics across %d completed ExportTaskRecords (geom_cache_misses=%d)",
-        export_task_count,
-        _dbg_geom_cache_misses,
+        f"Computing statistics across {export_task_count} completed "
+        f"{provider_slug} ExportTaskRecords (geom_cache_misses={_dbg_geom_cache_misses})"
     )
 
     # TODO: Merge in any auxiliary sample data?
 
     if filename is not None:
         all_stats["timestamp"] = datetime.datetime.now()
-        with open(filename, "w") as os:
-            json.dump(all_stats, os)
+        with open(filename, "w") as file:
+            json.dump(all_stats, file)
 
     totals = {
         "run_count": len(processed_runs),
@@ -227,33 +209,33 @@ def compute_statistics(get_group, tile_grid=get_default_tile_grid(), filename=No
         "export_task_count": export_task_count,
     }
 
-    for group_name in all_stats:
-        if group_name in ["timestamp"]:
+    for provider_slug in all_stats:
+        if provider_slug in ["timestamp"]:
             continue
 
-        totals[group_name] = get_summary_stats(all_stats[group_name], ("area", "duration", "size", "mpp"))
+        totals[provider_slug] = get_summary_stats(all_stats[provider_slug], ("area", "duration", "size", "mpp"))
         tile_count = 0
 
-        for task_name in all_stats[group_name]:
+        for task_name in all_stats[provider_slug]:
             if task_name in ["duration", "area", "size", "mpp"]:
                 # These are properties on the roll'ed up statistics
                 continue
             elif task_name.startswith("tile_"):
                 # Two-level map, index by y then x+z
-                y_s = all_stats[group_name][task_name]
+                y_s = all_stats[provider_slug][task_name]
                 total_ys = {}
-                totals[group_name][task_name] = total_ys
+                totals[provider_slug][task_name] = total_ys
                 for xz_s in y_s:
                     total_ys[xz_s] = get_summary_stats(y_s[xz_s], ("area", "duration", "size", "mpp"))
                     total_ys[xz_s]["tile_coord"] = y_s[xz_s]["tile_coord"]
                     tile_count += 1
             else:
-                totals[group_name][task_name] = get_summary_stats(
-                    all_stats[group_name][task_name], ("area", "duration", "size")
+                totals[provider_slug][task_name] = get_summary_stats(
+                    all_stats[provider_slug][task_name], ("area", "duration", "size")
                 )
 
-        totals[group_name]["tile_count"] = tile_count
-        logger.info("Generated statistics for %d tiles for group %s", tile_count, group_name)
+        totals[provider_slug]["tile_count"] = tile_count
+        logger.info("Generated statistics for %d tiles for group %s", tile_count, provider_slug)
 
     return totals
 
@@ -468,15 +450,7 @@ def get_provider_grid(provider, min_zoom=None, max_zoom=None):
 
 
 def query(
-    group_name,
-    field,
-    statistic_name,
-    bbox,
-    bbox_srs,
-    gap_fill_thresh=0.1,
-    default_value=None,
-    custom_stats=None,
-    grouping="provider_name",
+    provider_slug, field, statistic_name, bbox, bbox_srs, gap_fill_thresh=0.1, default_value=None, custom_stats=None,
 ):
     """
     Finds the highest resolution of the requested statistic:
@@ -485,7 +459,7 @@ def query(
         3. Global
         4. Default value
 
-    :param group_name: Must match grouping semantics (e.g. grouping='provider_type' then group_name in wms, osm, ...)
+    :param provider_slug: Must match one of your current data provider's slug values.
     :param field: The field to query (e.g. size, mpp, duration)
     :param statistic_name: The name of the statistic (e.g. mean, ci_90, ..)
     :param bbox: The bounding box defining the region to estimate
@@ -495,13 +469,12 @@ def query(
                             stats
     :param default_value: A default value to return if no statistics exist
     :param custom_stats: Use custom statistics dictionary rather than cached (see get_statistics or compute_statistics)
-    :param grouping: iff custom_stats is None, defines which stat grouping to use (must match group_name semantics)
     :return: (Highest resolution of statistic, object w/ metadata about how it was generated incl. resolution)
     """
     if custom_stats is not None:
         all_stats = custom_stats
     else:
-        all_stats = get_statistics(grouping=grouping)
+        all_stats = get_statistics(provider_slug)
 
     method = {
         "stat": statistic_name,
@@ -521,15 +494,15 @@ def query(
     stat_value = None
 
     if all_stats:
-        group_stats = all_stats.get(group_name)
-        if group_stats:
+        provider_stats = all_stats.get(provider_slug)
+        if provider_stats:
             # TODO tile_grid params should be serialized on all_stats object
             # We have some statistics specific to this group (e.g. osm, wms, etc)
             tile_grid = get_default_tile_grid()
             req_bbox = mapproxy_grid.grid_bbox(bbox, mapproxy_srs.SRS(bbox_srs), tile_grid.srs)
             req_area = get_area_bbox(req_bbox)
 
-            affected_tiles = get_tile_stats(group_stats, tile_grid, req_bbox)
+            affected_tiles = get_tile_stats(provider_stats, tile_grid, req_bbox)
             if affected_tiles and len(affected_tiles) > 0:
                 # We have some stats specific to this group, at tiles within the user-defined region
                 # We want to weight tile-specific statistics based on its % overlap with the bbox
@@ -554,26 +527,26 @@ def query(
                     stat_value /= total_weight
                 elif total_weight < gap_fill_thresh:
                     # If the overlap was very minor than gap fill using the group-wide stats
-                    stat_value += (1.0 - total_weight) * get_value(group_stats)
+                    stat_value += (1.0 - total_weight) * get_value(provider_stats)
                 else:
                     # Otherwise, gap fill using the average from the tiles we did see
                     stat_value += (1.0 - total_weight) * statistics.mean(values)
 
                 if total_weight > 0:
-                    method["group"] = "{}_tiles".format(group_name)
+                    method["group"] = "{}_tiles".format(provider_slug)
                     method["tiles"] = {
                         "count": len(affected_tiles),
                         "total_weight": 100 * total_weight,
-                        "gap_fill": group_name if total_weight < gap_fill_thresh else "tile_mean",
+                        "gap_fill": provider_slug if total_weight < gap_fill_thresh else "tile_mean",
                     }
                 else:
                     # It's possible that none of the tiles had the stat we were looking for in which case gap_fill
                     # is essentially the same as using the group-level statistic
-                    method["group"] = group_name
+                    method["group"] = provider_slug
             else:
                 # No overlapping tiles, use group specific stats
-                method["group"] = group_name
-                stat_value = get_value(group_stats)
+                method["group"] = provider_slug
+                stat_value = get_value(provider_stats)
         elif "GLOBAL" in all_stats:
             # No group-specific data, use statistics computed across all groups (i.e. every completed job)
             method["group"] = "GLOBAL"
