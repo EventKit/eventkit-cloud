@@ -70,6 +70,7 @@ const jss = (theme: Theme & Eventkit.Theme) => createStyles({
         borderBottomLeftRadius: '5px',
         borderBottomRightRadius: '0px',
         height: 'auto',
+        marginTop: '4px',
         backgroundColor: theme.eventkit.colors.secondary,
     },
     tab: {
