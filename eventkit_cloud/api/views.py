@@ -403,24 +403,23 @@ class JobViewSet(viewsets.ModelViewSet):
                                 max_selection = provider.max_selection
 
                                 # Don't rely solely on max_data_size as estimates can sometimes be inaccurate
-                                # Allow user to get a job that passes one of the two conditions:
-                                if size is not None:
+                                # Allow user to get a job that passes max_data_size or max_selection condition:
+                                if (size and provider.max_data_size) is not None:
                                     # max_data_size is an optional configuration
-                                    if provider.max_data_size is not None:
-                                        if size <= provider.max_data_size:
-                                            continue
-                                        else:
-                                            status_code = status.HTTP_400_BAD_REQUEST
-                                            error_data["errors"] += [
-                                                {
-                                                    "status": status_code,
-                                                    "title": _("Estimated size too large"),
-                                                    "detail": _(
-                                                        f"The estimated size "
-                                                        f"exceeds the maximum data size for the {provider.name}"
-                                                    ),
-                                                }
-                                            ]
+                                    if size <= provider.max_data_size:
+                                        continue
+                                    else:
+                                        status_code = status.HTTP_400_BAD_REQUEST
+                                        error_data["errors"] += [
+                                            {
+                                                "status": status_code,
+                                                "title": _("Estimated size too large"),
+                                                "detail": _(
+                                                    f"The estimated size "
+                                                    f"exceeds the maximum data size for the {provider.name}"
+                                                ),
+                                            }
+                                        ]
 
                                 if max_selection and 0 < float(max_selection) < get_area(job.the_geom.geojson):
                                     status_code = status.HTTP_400_BAD_REQUEST
