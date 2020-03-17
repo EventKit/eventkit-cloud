@@ -23,6 +23,7 @@ import {Compatibility} from '../../utils/enums';
 import IndeterminateCheckBoxIcon from '@material-ui/icons/IndeterminateCheckBox';
 import CheckBoxIcon from "@material-ui/icons/CheckBox";
 import {CompatibilityInfo} from "./ExportInfo";
+import {MapLayer} from "./CreateExport";
 
 const jss = (theme: Theme & Eventkit.Theme) => createStyles({
     container: {
@@ -40,7 +41,10 @@ const jss = (theme: Theme & Eventkit.Theme) => createStyles({
     sublistItem: {
         fontWeight: 'normal',
         fontSize: '13px',
-        padding: '0px 20px 14px 49px',
+        padding: '14px 40px',
+        [theme.breakpoints.only('xs')]: {
+            padding: '10px 10px',
+        },
         borderTop: theme.eventkit.colors.secondary,
     },
     checkbox: {
@@ -71,35 +75,23 @@ const jss = (theme: Theme & Eventkit.Theme) => createStyles({
     prewrap: {
         whiteSpace: 'pre-wrap',
     },
+    listItemPadding: {
+        padding: '10px 40px',
+        [theme.breakpoints.only('xs')]: {
+            padding: '10px 15px',
+        },
+    }
 });
-
-interface EstimateData {
-    value: number;
-    units: string;
-}
-
-export interface ProviderData extends Eventkit.Provider {
-    availability?: {
-        slug: string;
-        status: string;
-        type: string;
-        message: string;
-    };
-    estimate?: {
-        size?: EstimateData;
-        time?: EstimateData;
-        slug: string;
-    };
-}
 
 interface Props {
     geojson: GeoJSON.FeatureCollection;
     exportInfo: Eventkit.Store.ExportInfo;
     providerOptions: any;
     updateExportInfo: (args: any) => void;
-    provider: ProviderData;
+    provider: Eventkit.Provider;
+    providerInfo: Eventkit.Store.ProviderInfo;
     checkProvider: (args: any) => void;
-    clearEstimate: (provider: ProviderData) => void;
+    clearEstimate: (provider: Eventkit.Provider) => void;
     checked: boolean;
     onChange: (event: React.ChangeEvent<HTMLInputElement>) => void;
     alt: boolean;
@@ -119,6 +111,7 @@ interface Props {
         expand: string;
         license: string;
         prewrap: string;
+        listItemPadding: string;
     };
 }
 
@@ -126,6 +119,7 @@ interface State {
     open: boolean;
     licenseDialogOpen: boolean;
     zoomLevel: number;
+    checked: boolean;
 }
 
 export class DataProvider extends React.Component<Props, State> {
@@ -145,6 +139,7 @@ export class DataProvider extends React.Component<Props, State> {
         this.setZoom = this.setZoom.bind(this);
         this.getFormatCompatibility = this.getFormatCompatibility.bind(this);
         this.getCheckedIcon = this.getCheckedIcon.bind(this);
+        this.handleFootprintsCheck = this.handleFootprintsCheck.bind(this);
 
         this.estimateDebouncer = () => { /* do nothing while not mounted */
         };
@@ -152,11 +147,13 @@ export class DataProvider extends React.Component<Props, State> {
             open: false,
             licenseDialogOpen: false,
             zoomLevel: this.props.provider.level_to,
+            checked: false,
         };
     }
 
     componentDidMount() {
         this.estimateDebouncer = debounce((val) => {
+            this.props.clearEstimate(this.props.provider);
             this.props.checkProvider(val);
         }, 1000);
     }
@@ -191,6 +188,7 @@ export class DataProvider extends React.Component<Props, State> {
         // we will instead fall back to the min/max for the provider (from/to)
         let lastMin = providerOptions.minZoom;
         let lastMax = providerOptions.maxZoom;
+
         if (!isZoomLevelInRange(lastMin, provider)) {
             lastMin = provider.level_from;
         }
@@ -217,11 +215,7 @@ export class DataProvider extends React.Component<Props, State> {
         this.props.updateExportInfo({
             exportOptions: updatedExportOptions,
         });
-
-        if (minZoom !== lastMin || maxZoom !== lastMax) {
-            this.props.clearEstimate(this.props.provider);
-            this.estimateDebouncer(this.props.provider);
-        }
+        this.estimateDebouncer(this.props.provider);
     }
 
     private handleLicenseOpen() {
@@ -236,8 +230,12 @@ export class DataProvider extends React.Component<Props, State> {
         this.setState(state => ({open: !state.open}));
     }
 
-    private formatEstimate(providerEstimate) {
-        if (!providerEstimate) {
+    handleFootprintsCheck = () => {
+        this.setState({ checked: !this.state.checked });
+    };
+
+    private formatEstimate(providerEstimates: Eventkit.Store.Estimates) {
+        if (!providerEstimates) {
             return '';
         }
         let sizeEstimate;
@@ -245,11 +243,11 @@ export class DataProvider extends React.Component<Props, State> {
         // func that will return nf (not found) when the provided estimate is undefined
         const get = (estimate, nf = 'unknown') => (estimate) ? estimate.toString() : nf;
 
-        if (providerEstimate.size) {
-            sizeEstimate = formatMegaBytes(providerEstimate.size.value);
+        if (providerEstimates.size) {
+            sizeEstimate = formatMegaBytes(providerEstimates.size.value);
         }
-        if (providerEstimate.time) {
-            const estimateInSeconds = providerEstimate.time.value;
+        if (providerEstimates.time) {
+            const estimateInSeconds = providerEstimates.time.value;
             durationEstimate = getDuration(estimateInSeconds);
         }
         return `${get(sizeEstimate)} / ${get(durationEstimate)}`;
@@ -275,7 +273,7 @@ export class DataProvider extends React.Component<Props, State> {
 
     render() {
         const {colors} = this.props.theme.eventkit;
-        const {classes, provider} = this.props;
+        const {classes, provider, providerInfo} = this.props;
         const {exportOptions} = this.props.exportInfo;
         // Take the current zoom from the current zoomLevels if they exist and the value is valid,
         // otherwise set it to the max allowable level.
@@ -290,6 +288,11 @@ export class DataProvider extends React.Component<Props, State> {
                 currentMinZoom = minZoom;
             }
         }
+
+        const selectedBasemap = {
+            mapUrl: (this.props.provider.preview_url || this.context.config.BASEMAP_URL),
+            slug: (!!this.props.provider.preview_url) ? provider.slug : undefined,
+        } as MapLayer;
 
         // Show license if one exists.
         const nestedItems = [];
@@ -333,9 +336,8 @@ export class DataProvider extends React.Component<Props, State> {
                     key={nestedItems.length}
                 >
                     <div
-                        className={`qa-DataProvider-ListItem-zoomSlider ${this.props.provider.slug + '-sliderDiv'}`}
+                        className={`qa-DataProvider-ListItem-zoomSlider ${this.props.provider.slug + '-sliderDiv ' + classes.listItemPadding}`}
                         key={this.props.provider.slug + '-sliderDiv'}
-                        style={{padding: '10px 40px'}}
                     >
                         <ZoomLevelSlider
                             updateZoom={this.setZoom}
@@ -343,16 +345,17 @@ export class DataProvider extends React.Component<Props, State> {
                             selectedMinZoom={currentMinZoom}
                             maxZoom={provider.level_to}
                             minZoom={provider.level_from}
+                            handleCheckClick={this.handleFootprintsCheck}
+                            checked={this.state.checked}
                         />
                     </div>
                     <div
-                        className={`qa-DataProvider-ListItem-zoomMap ${this.props.provider.slug + '-mapDiv'}`}
+                        className={`qa-DataProvider-ListItem-zoomMap ${this.props.provider.slug + '-mapDiv ' + classes.listItemPadding}`}
                         key={this.props.provider.slug + '-mapDiv'}
-                        style={{padding: '10px 40px'}}
                     >
                         <MapView
                             id={this.props.provider.id + "-map"}
-                            url={this.props.provider.preview_url || this.context.config.BASEMAP_URL}
+                            selectedBaseMap={selectedBasemap}
                             copyright={this.props.provider.service_copyright}
                             geojson={this.props.geojson}
                             setZoom={this.setZoom}
@@ -374,7 +377,8 @@ export class DataProvider extends React.Component<Props, State> {
                     <div>
                         <em>Zoom not available for this source.</em>
                     </div>
-                </ListItem>);
+                </ListItem>
+            );
         }
 
         nestedItems.push((
@@ -438,7 +442,7 @@ export class DataProvider extends React.Component<Props, State> {
         // Only set this if we want to display the estimate
         let secondary;
         if (this.props.renderEstimate) {
-            const estimate = this.formatEstimate(provider.estimate);
+            const estimate = this.formatEstimate(providerInfo.estimates);
             if (estimate) {
                 secondary =
                     <Typography style={{fontSize: "0.7em"}}>{estimate}</Typography>;
@@ -476,7 +480,7 @@ export class DataProvider extends React.Component<Props, State> {
                         <ProviderStatusIcon
                             id="ProviderStatus"
                             baseStyle={{marginRight: '40px'}}
-                            availability={provider.availability}
+                            availability={providerInfo.availability}
                         />
                         {this.state.open ?
                             <ExpandLess
@@ -512,6 +516,7 @@ DataProvider.defaultProps = {
 function mapStateToProps(state, ownProps) {
     return {
         providerOptions: state.exportInfo.exportOptions[ownProps.provider.slug] || {} as Eventkit.Store.ProviderExportOptions,
+        providerInfo: state.exportInfo.providerInfo[ownProps.provider.slug] || {} as Eventkit.Store.ProviderInfo,
         exportInfo: state.exportInfo,
         geojson: state.aoiInfo.geojson,
         selectedProjections: [...state.exportInfo.projections],

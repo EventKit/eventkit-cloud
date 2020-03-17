@@ -1,6 +1,6 @@
 import * as React from 'react';
 import Checkbox from '@material-ui/core/Checkbox';
-import {mount} from 'enzyme';
+import {shallow} from 'enzyme';
 import {FormatSelector} from "../../components/CreateDataPack/FormatSelector";
 import {Compatibility} from '../../utils/enums';
 
@@ -67,7 +67,7 @@ describe('DataProvider component', () => {
             ...defaultProps(),
             ...propsOverride,
         };
-        wrapper = mount(<FormatSelector {...props} />);
+        wrapper = shallow(<FormatSelector {...props} />);
         instance = wrapper.instance();
     };
 

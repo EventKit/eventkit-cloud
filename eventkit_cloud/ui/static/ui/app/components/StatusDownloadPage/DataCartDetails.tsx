@@ -10,6 +10,7 @@ import DataPackGeneralTable from './DataPackGeneralTable';
 import { DataCartInfoTable } from './DataCartInfoTable';
 import { MapView } from "../common/MapView";
 import { getSqKmString } from "../../utils/generic"
+import {MapLayer} from "../CreateDataPack/CreateExport";
 
 export interface Props {
     cartDetails: Eventkit.FullRun;
@@ -78,6 +79,7 @@ export class DataCartDetails extends React.Component<Props, State> {
 
     render() {
         const { colors } = this.props.theme.eventkit;
+        const selectedBasemap = { mapUrl: this.context.config.BASEMAP_URL } as MapLayer;
 
         const styles = {
             container: {
@@ -113,9 +115,10 @@ export class DataCartDetails extends React.Component<Props, State> {
                     <CustomTableRow
                         className="qa-DataCartDetails-name"
                         title="Name"
-                        data={this.props.cartDetails.job.name}
                         dataStyle={{ wordBreak: 'break-all' }}
-                    />
+                    >
+                        {this.props.cartDetails.job.name}
+                    </CustomTableRow>
                 </div>
                 <div style={styles.container} className="qa-DataCartDetails-div-StatusContainer" id="Status">
                     <div className="qa-DataCartDetails-div-status" style={styles.subHeading}>
@@ -176,13 +179,14 @@ export class DataCartDetails extends React.Component<Props, State> {
                         <CustomTableRow
                             className="qa-DataPackAoiInfo-area"
                             title="Area"
-                            data={getSqKmString(this.props.cartDetails.job.extent)}
                             dataStyle={{wordBreak: 'break-all'}}
-                        />
+                        >
+                            {getSqKmString(this.props.cartDetails.job.extent)}
+                        </CustomTableRow>
                         <div className="qa-DataPackAoiInfo-div-map" style={{maxHeight: '400px', marginTop: '10px'}}>
                             <MapView
                                 id={"summaryMap"}
-                                url={this.context.config.BASEMAP_URL}
+                                selectedBaseMap={selectedBasemap}
                                 copyright={this.context.config.BASEMAP_COPYRIGHT}
                                 geojson={this.props.cartDetails.job.extent}
                                 minZoom={2}

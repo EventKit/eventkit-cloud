@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="32.5" height="38.623" viewBox="0 0 32.5 38.623">
+  <defs>
+    <filter id="ic_place_24px" x="0" y="0" width="32.5" height="38.623" filterUnits="userSpaceOnUse">
+      <feOffset dx="1" dy="2" input="SourceAlpha"/>
+      <feGaussianBlur stdDeviation="3" result="blur"/>
+      <feFlood flood-opacity="0.631"/>
+      <feComposite operator="in" in2="blur"/>
+      <feComposite in="SourceGraphic"/>
+    </filter>
+  </defs>
+  <g id="icn_POI" transform="translate(8.25 7.25)">
+    <g transform="matrix(1, 0, 0, 1, -8.25, -7.25)" filter="url(#ic_place_24px)">
+      <path id="ic_place_24px-2" data-name="ic_place_24px" d="M12,2A7,7,0,0,0,5,9c0,5.25,7,13,7,13s7-7.75,7-13A7,7,0,0,0,12,2Zm0,9.5A2.5,2.5,0,1,1,14.5,9,2.5,2.5,0,0,1,12,11.5Z" transform="translate(3.25 5.25)" fill="red" stroke="#000" stroke-width="0.5"/>
+    </g>
+  </g>
+</svg>

@@ -2,7 +2,7 @@ import * as React from 'react';
 import {Route} from 'react-router';
 import history from '../../utils/history';
 import {connect} from 'react-redux';
-import {withTheme, Theme} from '@material-ui/core/styles';
+import {Theme, withTheme} from '@material-ui/core/styles';
 import isEqual from 'lodash/isEqual';
 import Divider from '@material-ui/core/Divider';
 import Warning from '@material-ui/icons/Warning';
@@ -14,23 +14,20 @@ import ExportAOI from './ExportAOI';
 import ExportInfo from './ExportInfo';
 import ExportSummary from './ExportSummary';
 import {flattenFeatureCollection} from '../../utils/mapUtils';
-import {getDuration, formatMegaBytes, isZoomLevelInRange} from '../../utils/generic';
-import {
-    submitJob, clearAoiInfo, clearExportInfo, clearJobInfo,
-} from '../../actions/datacartActions';
+import {formatMegaBytes, getDuration, isZoomLevelInRange} from '../../utils/generic';
+import {clearAoiInfo, clearExportInfo, clearJobInfo, submitJob} from '../../actions/datacartActions';
 import {stepperNextDisabled} from '../../actions/uiActions';
 import {getFormats} from '../../actions/formatActions';
-import {getProviders} from '../../actions/providerActions';
 import {getNotifications, getNotificationsUnreadCount} from '../../actions/notificationsActions';
-import {updateExportInfo} from '../../actions/datacartActions';
 import BaseDialog from '../Dialog/BaseDialog';
 import ConfirmDialog from '../Dialog/ConfirmDialog';
 import PageLoading from '../common/PageLoading';
 import {Location} from 'history';
-import {Typography} from "@material-ui/core";
+import {CircularProgress, Typography} from "@material-ui/core";
 import * as PropTypes from "prop-types";
 import Info from '@material-ui/icons/Info';
 import {getProjections} from "../../actions/projectionActions";
+import {MapLayer} from "./CreateExport";
 
 export interface JobData {
     name: string;
@@ -47,9 +44,12 @@ export interface JobData {
 export interface Props {
     aoiInfo: Eventkit.Store.AoiInfo;
     providers: Eventkit.Provider[];
+    geojson: GeoJSON.FeatureCollection;
     stepperNextEnabled: boolean;
     exportInfo: Eventkit.Store.ExportInfo;
     submitJob: (data: JobData) => void;
+    dataPack: Eventkit.FullRun;
+    job: Eventkit.Job;
     getProviders: () => void;
     setNextDisabled: () => void;
     clearAoiInfo: () => void;
@@ -58,7 +58,7 @@ export interface Props {
     jobFetched: boolean;
     jobError: object;
     jobuid: string;
-    formats: object[];
+    formats: Eventkit.Format[];
     getFormats: () => void;
     walkthroughClicked: boolean;
     onWalkthroughReset: () => void;
@@ -66,11 +66,19 @@ export interface Props {
     routes: Route[];
     getNotifications: () => void;
     getNotificationsUnreadCount: () => void;
-    updateExportInfo: (args: any) => void;
     theme: Eventkit.Theme & Theme;
     getProjections: () => void;
     projections: Eventkit.Projection[];
-    baseMapUrl: string;
+    tasks: Eventkit.Task[];
+    breadCrumbStepperProps: any;
+    selectedBaseMap: MapLayer;
+    mapLayers: MapLayer[];
+    getEstimate: any;
+    checkProvider: (args: any) => void;
+    updateEstimate: () => void;
+    sizeEstimate: number;
+    timeEstimate: number;
+    areEstimatesLoading: boolean;
 }
 
 export interface State {
@@ -84,9 +92,10 @@ export interface State {
         max: number;
         sizes: number[];
     };
-    sizeEstimate: number;
-    timeEstimate: number;
     estimateExplanationOpen: boolean;
+    isLoading: boolean;
+    selectedExports: string[];
+    areEstimatesLoading: boolean;
 }
 
 export class BreadcrumbStepper extends React.Component<Props, State> {
@@ -103,7 +112,7 @@ export class BreadcrumbStepper extends React.Component<Props, State> {
 
     constructor(props: Props) {
         super(props);
-        this.getProviders = this.getProviders.bind(this);
+        this.getEstimateLabel = this.getEstimateLabel.bind(this);
         this.getStepLabel = this.getStepLabel.bind(this);
         this.handleNext = this.handleNext.bind(this);
         this.handleSubmit = this.handleSubmit.bind(this);
@@ -116,9 +125,10 @@ export class BreadcrumbStepper extends React.Component<Props, State> {
         this.routeLeaveHook = this.routeLeaveHook.bind(this);
         this.handleLeaveWarningDialogCancel = this.handleLeaveWarningDialogCancel.bind(this);
         this.handleLeaveWarningDialogConfirm = this.handleLeaveWarningDialogConfirm.bind(this);
-        this.updateEstimate = this.updateEstimate.bind(this);
         this.handleEstimateExplanationOpen = this.handleEstimateExplanationOpen.bind(this);
         this.handleEstimateExplanationClosed = this.handleEstimateExplanationClosed.bind(this);
+        this.checkEstimates = this.checkEstimates.bind(this);
+        this.haveUnknownEstimate = this.haveUnknownEstimate.bind(this);
         this.state = {
             stepIndex: 0,
             showError: false,
@@ -130,9 +140,10 @@ export class BreadcrumbStepper extends React.Component<Props, State> {
                 max: 0,
                 sizes: [],
             },
-            sizeEstimate: -1,
-            timeEstimate: -1,
-            estimateExplanationOpen: false
+            estimateExplanationOpen: false,
+            isLoading: false,
+            selectedExports: [],
+            areEstimatesLoading: false
         };
         this.leaveRoute = null;
     }
@@ -143,10 +154,10 @@ export class BreadcrumbStepper extends React.Component<Props, State> {
         if (this.props.exportInfo.exportName === '') {
             this.props.setNextDisabled();
         }
-        this.getProviders();
+        this.props.getProviders();
+        this.getEstimateLabel(0);
         this.props.getProjections();
         this.props.getFormats();
-
         // const route = this.props.routes[this.props.routes.length - 1];
         // this.props.router.setRouteLeaveHook(route, this.routeLeaveHook);
     }
@@ -162,27 +173,9 @@ export class BreadcrumbStepper extends React.Component<Props, State> {
             this.hideLoading();
             this.showError(this.props.jobError);
         }
-
         if (!isEqual(this.props.aoiInfo, prevProps.aoiInfo) ||
             !isEqual(this.props.exportInfo, prevProps.exportInfo)) {
             this.setState({modified: true});
-        }
-
-        if (this.context.config.SERVE_ESTIMATES) {
-            // only update the estimate if providers has changed
-            const prevProviders = prevProps.exportInfo.providers;
-            const providers = this.props.exportInfo.providers;
-            if (prevProviders && providers) {
-                if (prevProviders.length !== providers.length) {
-                    this.updateEstimate();
-                } else if (!prevProviders.every((p1) => {
-                    return providers.includes(p1);
-                })) {
-                    this.updateEstimate();
-                }
-            } else if (prevProviders || providers) {
-                this.updateEstimate();
-            }
         }
     }
 
@@ -192,25 +185,61 @@ export class BreadcrumbStepper extends React.Component<Props, State> {
         this.props.clearJobInfo();
     }
 
-    private async getProviders() {
-        await this.props.getProviders();
-        let max = 0;
-        const sizes = [];
-        this.props.providers.forEach((provider) => {
-            if (!provider.display) {
-                return;
-            }
-            const providerMax = parseFloat(provider.max_selection);
-            sizes.push(providerMax);
-            if (providerMax > max) {
-                max = providerMax;
-            }
-        });
-        const limits = {
-            max,
-            sizes: sizes.sort((a, b) => a - b),
+    private styleEstimate(allowNull = false, stepIndex) {
+        const textStyle = {
+            color: this.props.theme.eventkit.colors.white,
+            fontSize: '0.9em',
         };
-        this.setState({limits});
+        if (stepIndex === 0 && this.areProvidersSelected() || stepIndex !== 0) {
+            return (
+            <div style={{display: 'inline-flex', marginTop: '-20px'}}>
+                <Typography style={{
+                    ...textStyle,
+                    color: 'yellow'
+                }}>
+                    <strong style={{
+                        fontSize: '17px',
+                        color: 'yellow',
+                        textAlign: 'center'
+                    }}>ETA</strong>: {this.formatEstimate()}
+                </Typography>
+                <Info
+                    className={`qa-Estimate-Info-Icon`}
+                    onClick={this.handleEstimateExplanationOpen}
+                    color="primary"
+                    style={{
+                        cursor: 'pointer', verticalAlign: 'middle',
+                        marginLeft: '10px', height: '18px', width: '18px',
+                    }}
+                />
+                <BaseDialog
+                    show={this.state.estimateExplanationOpen}
+                    title="Projection Information"
+                    onClose={this.handleEstimateExplanationClosed}
+                >
+                    <div
+                        style={{paddingBottom: '10px', wordWrap: 'break-word'}}
+                        className="qa-ExportInfo-dialog-projection"
+                    >
+                        <p>
+                            EventKit calculates estimates intelligently by examining previous DataPack jobs. These
+                            numbers
+                            represent the sum total estimate for all selected DataSources.
+                        </p>
+                        <p>Estimates for a Data Source are calculated by looking at the size of and time to complete
+                            previous DataPacks
+                            created using the specified Data Source(s). These estimates can vary based on
+                            availability
+                            of
+                            data for past jobs and the specified AOI. Larger AOIs will tend to take a longer time to
+                            complete
+                            and result in larger DataPacks.
+                        </p>
+                    </div>
+                </BaseDialog>
+            </div>
+        )
+        }
     }
 
     private handleEstimateExplanationClosed() {
@@ -242,62 +271,18 @@ export class BreadcrumbStepper extends React.Component<Props, State> {
         );
     }
 
-    private getEstimate(textStyle) {
-        return (
-            <div style={{display: 'flex',}}>
-                <Typography style={{...textStyle, width: 'auto', fontSize: '.8em'}}>
-                    <strong style={{fontSize: '.9em'}}>ETA</strong>: {this.formatEstimate()}
-                </Typography>
-                <Info
-                    className={`qa-Estimate-Info-Icon`}
-                    onClick={this.handleEstimateExplanationOpen}
-                    color="primary"
-                    style={{
-                        cursor: 'pointer', verticalAlign: 'middle',
-                        marginLeft: '10px', height: '18px', width: '18px',
-                    }}
-                />
-                <BaseDialog
-                    show={this.state.estimateExplanationOpen}
-                    title="Projection Information"
-                    onClose={this.handleEstimateExplanationClosed}
-                >
-                    <div
-                        style={{paddingBottom: '10px', wordWrap: 'break-word'}}
-                        className="qa-ExportInfo-dialog-projection"
-                    >
-                        <p>
-                            EventKit calculates estimates intelligently by examining previous DataPack jobs. These
-                            numbers
-                            represent the sum total estimate for all selected DataSources.
-                        </p>
-                        <p>Estimates for a Data Source are calculated by looking at the size of and time to complete
-                            previous DataPacks
-                            created using the specified Data Source(s). These estimates can vary based on availability
-                            of
-                            data for past jobs and the specified AOI. Larger AOIs will tend to take a longer time to
-                            complete
-                            and result in larger DataPacks.
-                        </p>
-
-                    </div>
-                </BaseDialog>
-            </div>
-        );
-    }
-
     private formatEstimate() {
         let dateTimeEstimate;
         let sizeEstimate;
         let durationEstimate;
         // function that will return nf (not found) when the provided estimate is undefined
         const get = (estimate, nf = 'unknown') => (estimate) ? estimate.toString() : nf;
+        const calculatingText = 'Getting calculations...';
 
-        if (this.state.sizeEstimate !== -1) {
-            sizeEstimate = formatMegaBytes(this.state.sizeEstimate);
-        }
-        if (this.state.timeEstimate !== -1) {
-            const estimateInSeconds = this.state.timeEstimate;
+        if (this.areProvidersSelected() && this.checkEstimates()) {
+            sizeEstimate = formatMegaBytes(this.props.sizeEstimate);
+
+            const estimateInSeconds = this.props.timeEstimate;
             durationEstimate = getDuration(estimateInSeconds);
 
             // get the current time, add the estimate (in seconds) to it to get the date time of completion
@@ -309,47 +294,64 @@ export class BreadcrumbStepper extends React.Component<Props, State> {
             const timeOfDay = dateEstimate.toLocaleTimeString('default', {hour: '2-digit', minute: '2-digit'});
             // Date of completion in the format 1-JAN-2019 12:32 PM
             dateTimeEstimate = `${dateEstimate.getDate()}-${monthShort}-${dateEstimate.getFullYear()} ${timeOfDay}`;
-        }
-        // Secondary estimate shown in parenthesis (<duration in days hours minutes> - <size>)
-        let secondary;
-        let noEstimateMessage = 'Select providers to get estimate';
-        if (sizeEstimate || durationEstimate) {
+
+            // Secondary estimate shown in parenthesis (<duration in days hours minutes> - <size>)
+            let secondary;
             const separator = (sizeEstimate && durationEstimate) ? ' - ' : '';
-            secondary = ` ( ${get(durationEstimate, '')}${separator}${get(sizeEstimate, 'size unknown')})`;
-            noEstimateMessage = 'Unknown Date'; // used when the size estimate is displayed but time is not.
+            secondary = ` ( ${get(durationEstimate, '')}${separator}${get(sizeEstimate, 'size unknown')}) ${this.haveUnknownEstimate() ? '+' : ''}`;
+
+            return this.props.areEstimatesLoading ?
+                <span>{calculatingText}<CircularProgress/></span> : `${get(dateTimeEstimate)}${get(secondary, '')}`;
+        } else if (this.areProvidersSelected()) {
+            return this.props.areEstimatesLoading ? <span>{calculatingText}<CircularProgress/></span> : 'No estimates found';
         }
-        return `${get(dateTimeEstimate, noEstimateMessage)}${get(secondary, '')}`;
+        return 'Select providers to get estimate';
     }
 
-    private updateEstimate() {
-        if (!this.context.config.SERVE_ESTIMATES || !this.props.exportInfo.providers) {
-            return;
-        }
-        let sizeEstimate = 0;
-        let timeEstimate = 0;
-        const maxAcceptableTime = 60 * 60 * 24 * this.props.exportInfo.providers.length;
-        for (const provider of this.props.exportInfo.providers) {
-            if (provider.id in this.props.exportInfo.providerEstimates) {
-                const estimate = this.props.exportInfo.providerEstimates[provider.id];
-                if (estimate) {
-                    if (estimate.size) {
-                        sizeEstimate += estimate.size.value;
-                    }
-                    if (estimate.time) {
-                        timeEstimate += estimate.time.value;
-                    }
+    private areProvidersSelected() {
+        return Object.keys(this.props.exportInfo.providers).length > 0;
+    }
+
+    private haveUnknownEstimate() {
+        const providerSlugs = this.props.exportInfo.providers.map(provider => provider.slug);
+        const infoEntries = Object.entries(this.props.exportInfo.providerInfo);
+        return infoEntries.filter(([slug, object]) =>
+            providerSlugs.indexOf(slug) !== -1).some(([slug, object]) => {
+            const estimates = object.estimates;
+            if (!!estimates) {
+                if (!estimates.time || !estimates.time.value) {
+                    return true;
                 }
+                if (!estimates.size || !estimates.size.value) {
+                    return true;
+                }
+            } else {
+                return true;
             }
-        }
-        if (timeEstimate === 0) {
-            timeEstimate = -1;
-        } else if (timeEstimate > maxAcceptableTime) {
-            timeEstimate = maxAcceptableTime;
-        }
-        if (sizeEstimate === 0) {
-            sizeEstimate = -1;
-        }
-        this.setState({sizeEstimate, timeEstimate});
+            return false;
+        });
+    }
+
+    private checkEstimates() {
+        return this.props.sizeEstimate > 0|| this.props.timeEstimate > 0;
+    }
+
+    private getEstimateLabel(stepIndex: number) {
+        // capture estimate flag
+        const renderEstimate = this.context.config.SERVE_ESTIMATES;
+
+        const estimateTextStyle = {
+            color: 'yellow',
+            fontSize: '17px',
+            textAlign: 'center' as 'center',
+        };
+
+        return (
+            <div className="qa-BreadcrumbStepper-step3Label" style={estimateTextStyle}>
+                {renderEstimate &&
+                this.styleEstimate(true, stepIndex)}
+            </div>
+        );
     }
 
     private getStepLabel(stepIndex: number) {
@@ -357,17 +359,14 @@ export class BreadcrumbStepper extends React.Component<Props, State> {
             color: this.props.theme.eventkit.colors.white,
             height: '50px',
             minWidth: '200px',
-            display: 'inline-block',
+            display: 'inline-flex',
             marginLeft: '24px',
-            fontSize: '16px'
+            fontSize: '16px',
         };
-
-        // capture estimate flag
-        const renderEstimate = this.context.config.SERVE_ESTIMATES;
-
         const textStyle = {
             color: this.props.theme.eventkit.colors.white,
-            fontSize: '0.9em'
+            fontSize: '0.9em',
+            width: '380px'
         };
 
         switch (stepIndex) {
@@ -385,20 +384,14 @@ export class BreadcrumbStepper extends React.Component<Props, State> {
                         <Typography style={{...textStyle, display: 'inline'}}>
                             STEP 2 OF 3: Select Data & Formats
                         </Typography>
-                        {renderEstimate &&
-                        this.getEstimate(textStyle)
-                        }
                     </div>
                 );
             case 2:
                 return (
                     <div className="qa-BreadcrumbStepper-step3Label" style={labelStyle}>
-                        <Typography style={{...textStyle, display: 'inline'}}>
+                        <Typography style={{...textStyle}}>
                             STEP 3 OF 3: Review & Submit
                         </Typography>
-                        {renderEstimate &&
-                        this.getEstimate(textStyle)
-                        }
                     </div>
                 );
             default:
@@ -418,7 +411,8 @@ export class BreadcrumbStepper extends React.Component<Props, State> {
                         limits={this.state.limits}
                         walkthroughClicked={this.props.walkthroughClicked}
                         onWalkthroughReset={this.props.onWalkthroughReset}
-                        baseMapUrl={this.props.baseMapUrl}
+                        selectedBaseMap={this.props.selectedBaseMap}
+                        mapLayers={this.props.mapLayers}
                     />
                 );
             case 1:
@@ -427,7 +421,8 @@ export class BreadcrumbStepper extends React.Component<Props, State> {
                         handlePrev={this.handlePrev}
                         walkthroughClicked={this.props.walkthroughClicked}
                         onWalkthroughReset={this.props.onWalkthroughReset}
-                        onUpdateEstimate={this.updateEstimate}
+                        onUpdateEstimate={this.props.updateEstimate}
+                        checkProvider={this.props.checkProvider}
                     />
                 );
             case 2:
@@ -435,6 +430,7 @@ export class BreadcrumbStepper extends React.Component<Props, State> {
                     <ExportSummary
                         walkthroughClicked={this.props.walkthroughClicked}
                         onWalkthroughReset={this.props.onWalkthroughReset}
+                        formats={this.props.formats}
                     />
                 );
             default:
@@ -443,6 +439,7 @@ export class BreadcrumbStepper extends React.Component<Props, State> {
                         limits={this.state.limits}
                         walkthroughClicked={this.props.walkthroughClicked}
                         onWalkthroughReset={this.props.onWalkthroughReset}
+                        mapLayers={this.props.mapLayers}
                     />
                 );
         }
@@ -499,7 +496,7 @@ export class BreadcrumbStepper extends React.Component<Props, State> {
             transition: 'none',
             fill: this.props.theme.eventkit.colors.success,
             backgroundColor: this.props.stepperNextEnabled ?
-                this.props.theme.eventkit.colors.success : this.props.theme.eventkit.colors.secondary,
+                this.props.theme.eventkit.colors.success : this.props.theme.eventkit.colors.secondary
         };
 
         switch (stepIndex) {
@@ -585,7 +582,7 @@ export class BreadcrumbStepper extends React.Component<Props, State> {
 
             providerTasks.push({
                 formats,
-                provider: provider.name, max_zoom: maxZoom, min_zoom: minZoom,
+                provider: provider.slug, max_zoom: maxZoom, min_zoom: minZoom,
             });
         });
 
@@ -658,15 +655,18 @@ export class BreadcrumbStepper extends React.Component<Props, State> {
         }
 
         return (
-            <div className="qa-BreadcrumbStepper-div-content" style={{backgroundColor: colors.background}}>
-                <div className="qa-BreadcrumbStepper-div-stepLabel" style={{width: '100%', height: '50px'}}>
+            <div className="qa-BreadcrumbStepper-div-content" style={{backgroundColor: colors.background, paddingBottom: '26px'}}>
+                <div className="qa-BreadcrumbStepper-div-stepLabel"
+                     style={{width: '100%', height: '50px', display: 'inline-block'}}>
                     {this.getStepLabel(this.state.stepIndex)}
                     <div className="qa-BreadcrumbStepper-div-buttons" style={{float: 'right', padding: '5px'}}>
                         {this.getPreviousButtonContent(this.state.stepIndex)}
                         {this.getButtonContent(this.state.stepIndex)}
                     </div>
                 </div>
-                {this.getStepContent(this.state.stepIndex)}
+                <div className="qa-BreadcrumbStepper-div-estimateLabel"
+                     style={{textAlign: 'center'}}>{this.getEstimateLabel(this.state.stepIndex)}</div>
+                <div className="qa-BreadcrumbStepper-div-stepContent">{this.getStepContent(this.state.stepIndex)}</div>
                 <BaseDialog
                     show={this.state.showError}
                     title="ERROR"
@@ -713,9 +713,6 @@ function mapDispatchToProps(dispatch) {
         submitJob: (data) => {
             dispatch(submitJob(data));
         },
-        getProviders: () => (
-            dispatch(getProviders())
-        ),
         getProjections: () => (
             dispatch(getProjections())
         ),
@@ -739,9 +736,6 @@ function mapDispatchToProps(dispatch) {
         },
         getNotificationsUnreadCount: (args) => {
             dispatch(getNotificationsUnreadCount(args));
-        },
-        updateExportInfo: (exportInfo) => {
-            dispatch(updateExportInfo(exportInfo));
         },
     };
 }

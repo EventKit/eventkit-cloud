@@ -23,7 +23,7 @@ const providers = [
         created_at: '2017-03-24T17:44:22.940611Z',
         updated_at: '2017-03-24T17:44:22.940629Z',
         uid: 'be401b02-63d3-4080-943a-0093c1b5a914',
-        name: 'OpenStreetMap Data (Themes)',
+        name: 'OpenStreetMap Data (Generic)',
         slug: 'osm-generic',
         preview_url: '',
         service_copyright: '',
@@ -99,7 +99,7 @@ describe('BreadcrumbStepper component', () => {
             providers,
             areaStr: '',
             formats: ['gpkg'],
-            providerEstimates: {},
+            providerInfo: {},
             projections: [4326],
             exportOptions: {
                 1: {
@@ -130,6 +130,13 @@ describe('BreadcrumbStepper component', () => {
         getNotificationsUnreadCount: sinon.spy(),
         getFormats: sinon.spy(),
         getProjections: sinon.spy(),
+        getEstimate: sinon.spy(),
+        checkEstimate: sinon.spy(),
+        checkProvider: sinon.spy(),
+        checkProviders: sinon.spy(),
+        setProviderLoading: sinon.spy(),
+        hasLoaded: sinon.spy(),
+        mapLayers: [],
         ...(global as any).eventkit_test_props,
     });
 
@@ -249,6 +256,7 @@ describe('BreadcrumbStepper component', () => {
             limits={wrapper.state('limits')}
             onWalkthroughReset={props.onWalkthroughReset}
             walkthroughClicked={props.walkthroughClicked}
+            mapLayers={props.mapLayers}
         />);
 
         content = wrapper.instance().getStepContent(1);
@@ -258,6 +266,7 @@ describe('BreadcrumbStepper component', () => {
                 walkthroughClicked={props.walkthroughClicked}
                 onUpdateEstimate={wrapper.instance().updateEstimate}
                 handlePrev={wrapper.instance().handlePrev}
+                checkProvider={props.checkProvider}
             />
         );
 
@@ -265,6 +274,7 @@ describe('BreadcrumbStepper component', () => {
         expect(content).toEqual(<ExportSummary
             onWalkthroughReset={props.onWalkthroughReset}
             walkthroughClicked={props.walkthroughClicked}
+            formats={props.formats}
         />);
 
         content = wrapper.instance().getStepContent(3);
@@ -272,8 +282,24 @@ describe('BreadcrumbStepper component', () => {
             limits={wrapper.state('limits')}
             onWalkthroughReset={props.onWalkthroughReset}
             walkthroughClicked={props.walkthroughClicked}
+            mapLayers={props.mapLayers}
         />);
     });
+
+    // it('getStepContent should return the estimate label if estimates exist from cloned datapack', () => {
+    //    let content = wrapper.instance().getStepContent(0);
+    //     const clonedEstimates = {};
+    //     expect(content).toEqual(
+    //         <ExportAOI
+    //             limits={wrapper.state('limits')}
+    //             onWalkthroughReset={props.onWalkthroughReset}
+    //             walkthroughClicked={props.walkthroughClicked}
+    //         />,
+    //         <ExportInfo
+    //             onUpdateEstimate={wrapper.instance().updateEstimate}
+    //         />
+    //     );
+    // });
 
     it('getButtonContent should return the correct content for each stepIndex', () => {
         let content = mount(wrapper.instance().getButtonContent(0));
@@ -328,7 +354,7 @@ describe('BreadcrumbStepper component', () => {
             event: 'test event',
             include_zipfile: false,
             provider_tasks: [{
-                provider: 'OpenStreetMap Data (Themes)',
+                provider: 'osm-generic',
                 formats: ['gpkg'],
                 min_zoom: 0, max_zoom: 10
             }],
@@ -407,7 +433,7 @@ describe('BreadcrumbStepper component', () => {
         wrapper.setProps({ aoiInfo: {} });
         expect(wrapper.state().modified).toBe(true);
         wrapper.setState({ modified: false });
-        wrapper.setProps({ exportInfo: {} });
+        wrapper.setProps({ exportInfo: {providerInfo: {availability: false}} });
         expect(wrapper.state().modified).toBe(true);
     });
 

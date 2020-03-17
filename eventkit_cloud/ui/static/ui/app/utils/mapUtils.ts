@@ -369,6 +369,19 @@ export function featureToPoint(feature) {
     return new Point(center);
 }
 
+export function wrapX(tileGrid, tileCoord) {
+    const z = tileCoord[0];
+    const center = tileGrid.getTileCoordCenter(tileCoord);
+    const projectionExtent = tileGrid.getExtent();
+    if (!extent.containsCoordinate(projectionExtent, center)) {
+        const worldWidth = extent.getWidth(projectionExtent);
+        const worldsAway = Math.ceil((projectionExtent[0] - center[0]) / worldWidth);
+        center[0] += worldWidth * worldsAway;
+        return tileGrid.getTileCoordForCoordAndZ(center, z);
+    }
+    return tileCoord;
+}
+
 // if any coordinates are wrapped adjust them to be within the projection extent
 export function unwrapCoordinates(coords, projection) {
     // based on:
@@ -585,4 +598,37 @@ export function getResolutions(levels, startingResolution) {
         resolutions[i] = startResolution / (2 ** i);
     }
     return resolutions;
+}
+
+
+export function getTileCoordinateFromClick(event, layer, map) {
+    const grid = layer.getSource().getTileGrid();
+    const zoom = Math.floor(map.getView().getZoom());
+
+    // Coord is returned as z, x, y
+    // Y is returned as a negative because of openlayers origin, needs to be flipped and offset
+    const tileCoord = wrapX(grid, grid.getTileCoordForCoordAndZ(event.coordinate, zoom));
+    const tileExtent = grid.getTileCoordExtent(tileCoord);
+    tileCoord[2] = tileCoord[2] * -1 - 1;
+
+    const upperLeftPixel = map.getPixelFromCoordinate(extent.getTopLeft(tileExtent));
+    const upperRightPixel = map.getPixelFromCoordinate(extent.getTopRight(tileExtent));
+
+    // Calculate the actual number of pixels each tile is taking up.
+    const pixelWidth = upperRightPixel[0] - upperLeftPixel[0];
+    const tileSize = grid.getTileSize(zoom);
+    const ratio = tileSize / pixelWidth;
+
+    const tilePixel = [Math.floor((event.pixel[0] - upperLeftPixel[0]) * ratio),
+        Math.floor((event.pixel[1] - upperLeftPixel[1]) * ratio)];
+
+    return {
+        lat: event.coordinate[1],
+        long: event.coordinate[0],
+        z: tileCoord[0],
+        y: tileCoord[2],
+        x: tileCoord[1],
+        i: tilePixel[0],
+        j: tilePixel[1],
+    };
 }

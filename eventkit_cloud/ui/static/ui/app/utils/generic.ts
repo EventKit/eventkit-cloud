@@ -219,3 +219,11 @@ export function getDefaultFormat(provider: Partial<Eventkit.Provider>) {
     }
     return defaultFormatsList;
 }
+
+export function getFeatureUrl(mapLayer, z, y, x, i, j) {
+    // MapProxy identifies the zoom level by the TileMatrix name which are named like so, 00, 01, 02...18, 19.
+    const tileMatrixId = z.toString().padStart(1, '2');
+    return `${mapLayer.metadata.url}?FORMAT=application%2Fjson&InfoFormat=application%2Fjson&LAYER=${mapLayer.slug}&`
+        + 'REQUEST=GetFeatureInfo&SERVICE=WMTS&STYLE=default&'
+        + `TILECOL=${x}&TILEMATRIX=${tileMatrixId}&TILEMATRIXSET=default&TILEROW=${y}&VERSION=1.0.0&i=${i}&j=${j}`;
+}

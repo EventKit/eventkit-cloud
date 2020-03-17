@@ -70,7 +70,7 @@ describe('DataPackGeneralTable component', () => {
 
     it('Source Info icon should call handleProviderOpen on click', () => {
         const openStub = sinon.stub(instance, 'handleProviderOpen');
-        shallow(wrapper.find(CustomTableRow).at(2).props().data)
+        wrapper.find(CustomTableRow).at(2).children()
             .find('.qa-DataPackGeneralTable-Info-source').simulate('click');
         expect(openStub.calledOnce).toBe(true);
         openStub.restore();

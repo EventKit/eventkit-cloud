@@ -8,6 +8,7 @@ import Collapse from '@material-ui/core/Collapse';
 import ExpandLess from '@material-ui/icons/ExpandLess';
 import ExpandMore from '@material-ui/icons/ExpandMore';
 import {MapView} from "./MapView";
+import {MapLayer} from "../CreateDataPack/CreateExport";
 
 export interface Props {
     children: any;
@@ -46,6 +47,8 @@ export class MapCard extends React.Component<Props, State> {
 
     render() {
         const { colors } = this.props.theme.eventkit;
+        const selectedBasemap = { mapUrl: this.context.config.BASEMAP_URL } as MapLayer;
+
         return (
             <Card
                 id="Map"
@@ -77,7 +80,7 @@ export class MapCard extends React.Component<Props, State> {
                         { this.props.provider ?
                             <MapView
                                 id={this.props.provider.id + "-map"}
-                                url={this.context.config.BASEMAP_URL}
+                                selectedBaseMap={selectedBasemap}
                                 copyright={this.context.config.BASEMAP_COPYRIGHT}
                                 geojson={this.props.geojson}
                                 setZoom={this.props.setZoom}
@@ -87,7 +90,7 @@ export class MapCard extends React.Component<Props, State> {
                             />
                             :
                             <MapView
-                                url={this.context.config.BASEMAP_URL}
+                                selectedBaseMap={selectedBasemap}
                                 copyright={this.context.config.BASEMAP_COPYRIGHT}
                                 geojson={this.props.geojson}
                                 setZoom={this.props.setZoom}

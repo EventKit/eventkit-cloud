@@ -7,7 +7,6 @@ import Joyride from 'react-joyride';
 
 import Map from 'ol/map';
 import View from 'ol/view';
-import proj from 'ol/proj';
 import extent from 'ol/extent';
 import GeoJSONFormat from 'ol/format/geojson';
 import Feature from 'ol/feature';
@@ -17,7 +16,6 @@ import VectorSource from 'ol/source/vector';
 import Draw from 'ol/interaction/draw';
 
 import { ExportAOI, WGS84, WEB_MERCATOR } from '../../components/CreateDataPack/ExportAOI';
-import AoiInfobar from '../../components/CreateDataPack/AoiInfobar';
 import SearchAOIToolbar from '../../components/MapTools/SearchAOIToolbar';
 import DrawAOIToolbar from '../../components/MapTools/DrawAOIToolbar';
 import InvalidDrawWarning from '../../components/MapTools/InvalidDrawWarning';
@@ -25,6 +23,7 @@ import DropZone from '../../components/MapTools/DropZone';
 import * as utils from '../../utils/mapUtils';
 import * as generic from '../../utils/generic';
 import ZoomLevelLabel from '../../components/MapTools/ZoomLevelLabel';
+import MapDisplayBar from "../../components/CreateDataPack/MapDisplayBar";
 
 describe('ExportAOI component', () => {
     const geojson = {
@@ -83,7 +82,6 @@ describe('ExportAOI component', () => {
             max: 100000,
             sizes: [5, 10, 100000],
         },
-        baseMapUrl: '',
         ...(global as any).eventkit_test_props,
     });
 
@@ -110,7 +108,7 @@ describe('ExportAOI component', () => {
 
     it('should render the basic elements', () => {
         expect(wrapper.find('#map')).toHaveLength(1);
-        expect(wrapper.find(AoiInfobar)).toHaveLength(1);
+        expect(wrapper.find(MapDisplayBar)).toHaveLength(1);
         expect(wrapper.find(SearchAOIToolbar)).toHaveLength(1);
         expect(wrapper.find(DrawAOIToolbar)).toHaveLength(1);
         expect(wrapper.find(ZoomLevelLabel)).toHaveLength(1);
@@ -692,11 +690,11 @@ describe('ExportAOI component', () => {
         const addInteractionSpy = sinon.spy(Map.prototype, 'addInteraction');
         const addLayerSpy = sinon.spy(Map.prototype, 'addLayer');
         instance.initializeOpenLayers();
-        expect(layerSpy.calledThrice).toBe(true);
+        expect(layerSpy.callCount).toBe(4);
         expect(boxSpy.calledOnce).toBe(true);
         expect(freeSpy.calledOnce).toBe(true);
         expect(addInteractionSpy.calledThrice).toBe(true);
-        expect(addLayerSpy.calledThrice).toBe(true);
+        expect(addLayerSpy.callCount).toBe(4);
         layerSpy.restore();
         boxSpy.restore();
         freeSpy.restore();

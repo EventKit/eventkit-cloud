@@ -6,10 +6,10 @@ import os
 import json
 import socket
 
-from eventkit_cloud.settings.celery import *  # NOQA
+from eventkit_cloud.settings.celery import *  # noqa
 from eventkit_cloud.settings.celery import INSTALLED_APPS
 from eventkit_cloud.settings.celery import MIDDLEWARE
-from distutils.util import strtobool
+from eventkit_cloud.settings.celery import is_true
 
 BASE_DIR = os.path.abspath(os.path.dirname(__file__))
 
@@ -39,6 +39,7 @@ EXPORT_TASKS = {
     "thematic": "eventkit_cloud.tasks.export_tasks.ThematicLayersExportTask",
     "gpkg": "eventkit_cloud.tasks.export_tasks.geopackage_export_task",
 }
+
 
 # where exports are staged for processing
 EXPORT_STAGING_ROOT = None
@@ -72,13 +73,13 @@ EXPORT_MEDIA_ROOT = os.getenv("EXPORT_MEDIA_ROOT", "/downloads/")
 # OVERPASS_API_URL = 'http://cloud.eventkit.test/overpass-api/interpreter'
 OVERPASS_API_URL = os.getenv("OVERPASS_API_URL", "http://overpass-api.de/api/interpreter")
 GEOCODING_API_URL = os.getenv("GEOCODING_API_URL", "http://api.geonames.org/searchJSON")
-REVERSE_GEOCODING_API_URL = os.getenv("REVERSE_GEOCODING_API_URL", None)
-REVERSE_GEOCODING_API_TYPE = os.getenv("REVERSE_GEOCODING_API_TYPE", "PELIAS")
 GEOCODING_API_TYPE = os.getenv("GEOCODING_API_TYPE", "GEONAMES")
+REVERSE_GEOCODING_API_URL = os.getenv("REVERSE_GEOCODING_API_URL", None)
+REVERSE_GEOCODING_API_TYPE = os.getenv("REVERSE_GEOCODING_API_TYPE", GEOCODING_API_TYPE)
 GEOCODING_UPDATE_URL = os.getenv("GEOCODING_UPDATE_URL", None)
 GEOCODING_AUTH_URL = os.getenv("GEOCODING_AUTH_URL", None)
 GEOCODING_AUTH_CERT = os.getenv("GEOCODING_AUTH_CERT", None)
-CONVERT_API_URL = os.getenv("CONVERT_API_URL", "http://172.17.0.1:4000/v1/convert")
+CONVERT_API_URL = os.getenv("CONVERT_API_URL", None)
 
 # zoom extents of reverse geocode point result (in degrees)
 REVERSE_GEOCODE_ZOOM = 0.1
@@ -122,11 +123,10 @@ if EMAIL_HOST_PASSWORD:
 else:
     EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
 
-EMAIL_USE_TLS = bool(strtobool(os.getenv("EMAIL_USE_TLS", "false").lower()))
+EMAIL_USE_TLS = is_true(os.getenv("EMAIL_USE_TLS", "true"))
 
 """
 Overpass Element limit
-
 Sets the max ram allowed for overpass query
 
 http://wiki.openstreetmap.org/wiki/Overpass_API/Overpass_QL#Element_limit_.28maxsize.29
@@ -285,7 +285,7 @@ BASE_DIR = os.path.dirname(os.path.dirname(__file__))
 STATIC_URL = "/static/"
 STATIC_ROOT = os.path.join(BASE_DIR, "staticfiles")
 STATICFILES_STORAGE = "django.contrib.staticfiles.storage.StaticFilesStorage"
-SERVE_ESTIMATES = bool(strtobool(os.getenv("SERVE_ESTIMATES", "true").lower()))
+SERVE_ESTIMATES = is_true(os.getenv("SERVE_ESTIMATES", "true"))
 UI_CONFIG = {
     "VERSION": os.getenv("VERSION", ""),
     "CONTACT_URL": os.getenv("CONTACT_URL", "mailto:eventkit.team@gmail.com"),
@@ -302,10 +302,9 @@ UI_CONFIG = {
     "SERVE_ESTIMATES": SERVE_ESTIMATES,
 }
 
-if os.getenv("USE_S3"):
-    USE_S3 = True
-else:
-    USE_S3 = False
+
+USE_S3 = is_true(os.getenv("USE_S3"))
+
 
 AWS_BUCKET_NAME = AWS_ACCESS_KEY = AWS_SECRET_KEY = None
 if os.getenv("VCAP_SERVICES"):
@@ -320,6 +319,7 @@ if os.getenv("VCAP_SERVICES"):
 AWS_BUCKET_NAME = AWS_BUCKET_NAME or os.getenv("AWS_BUCKET_NAME")
 AWS_ACCESS_KEY = AWS_ACCESS_KEY or os.getenv("AWS_ACCESS_KEY")
 AWS_SECRET_KEY = AWS_SECRET_KEY or os.getenv("AWS_SECRET_KEY")
+
 
 MAPPROXY_CONCURRENCY = os.getenv("MAPPROXY_CONCURRENCY", 1)
 
@@ -342,10 +342,7 @@ if os.path.isfile(ssl_verification_settings):
     if not os.getenv("REQUESTS_CA_BUNDLE"):
         os.environ["REQUESTS_CA_BUNDLE"] = SSL_VERIFICATION
 else:
-    try:
-        SSL_VERIFICATION = bool(strtobool(ssl_verification_settings.lower()))
-    except ValueError:
-        SSL_VERIFICATION = True
+    SSL_VERIFICATION = is_true(ssl_verification_settings)
 
 LAND_DATA_URL = os.getenv("LAND_DATA_URL", "https://osmdata.openstreetmap.de/download/land-polygons-split-3857.zip",)
 
@@ -357,3 +354,5 @@ if AUTO_LOGOUT_SECONDS:
     MIDDLEWARE += ["eventkit_cloud.auth.auth.auto_logout"]
 
 DJANGO_NOTIFICATIONS_CONFIG = {"SOFT_DELETE": True}
+
+ROCKETCHAT_NOTIFICATIONS = json.loads(os.getenv("ROCKETCHAT_NOTIFICATIONS", "{}"))

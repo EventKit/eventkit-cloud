@@ -23,7 +23,7 @@ export const initialState = {
         providers: [],
         areaStr: '',
         formats: ['gpkg'],
-        providerEstimates: {},
+        providerInfo: {},
         exportOptions: {},
         projections: [],
     },
@@ -92,7 +92,7 @@ export function exportInfoReducer(state = initialState.exportInfo, action) {
                 providers: [],
                 areaStr: '',
                 formats: ['gpkg'],
-                providerEstimates: {},
+                providerInfo: {},
                 exportOptions: {},
                 projections: [],
             };

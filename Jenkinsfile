@@ -16,7 +16,7 @@ import yaml
 
 data = {}
 with open('environment-dev.yml', 'r') as yaml_file:
-    data = yaml.load(yaml_file)
+    data = yaml.safe_load(yaml_file)
 data['channels'] = ['local', '$CONDA_REPO']
 
 with open('environment-dev.yml', 'w') as outfile:
@@ -43,7 +43,7 @@ END
             sh "ls -al conda/*"
             sh "chmod g+w -R ./*"
             // sh "cd conda && docker-compose up --build && cd .."
-            sh "docker-compose build"
+            sh "docker-compose build --no-cache"
             // Exit 0 provided for when setup has already ran on a previous build.
             // This could hide errors at this step but they will show up again during the tests.
             // No use bringing up containers if integration tests aren't configured.
@@ -144,7 +144,7 @@ def removeVolumes() {
 import yaml
 data = {}
 with open('docker-compose.yml', 'r') as yaml_file:
-    data = yaml.load(yaml_file)
+    data = yaml.safe_load(yaml_file)
 for service in data.get('services'):
     data['services'][service].pop('volumes', "")
 with open('docker-compose.yml', 'w') as outfile:

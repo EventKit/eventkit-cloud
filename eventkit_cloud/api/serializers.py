@@ -76,7 +76,7 @@ class ProviderTaskSerializer(serializers.ModelSerializer):
 
         """Creates an export DataProviderTask."""
         formats = validated_data.pop("formats")
-        provider_model = DataProvider.objects.get(name=validated_data.get("provider"))
+        provider_model = DataProvider.objects.get(slug=validated_data.get("provider"))
         provider_task = DataProviderTask.objects.create(provider=provider_model)
         provider_task.formats.add(*formats)
         provider_task.min_zoom = validated_data.pop("min_zoom", None)
@@ -691,6 +691,9 @@ class DataProviderSerializer(serializers.ModelSerializer):
     supported_formats = serializers.SerializerMethodField(read_only=True)
     thumbnail_url = serializers.SerializerMethodField(read_only=True)
     license = LicenseSerializer(required=False)
+    metadata = serializers.SerializerMethodField(read_only=True)
+    footprint_url = serializers.SerializerMethodField(read_only=True)
+    max_data_size = serializers.SerializerMethodField(read_only=True)
 
     class Meta:
         model = DataProvider
@@ -743,6 +746,18 @@ class DataProviderSerializer(serializers.ModelSerializer):
             ).geturl()
         else:
             return ""
+
+    @staticmethod
+    def get_metadata(obj):
+        return obj.metadata
+
+    @staticmethod
+    def get_footprint_url(obj):
+        return obj.footprint_url
+
+    @staticmethod
+    def get_max_data_size(obj):
+        return obj.max_data_size
 
 
 class ListJobSerializer(serializers.Serializer):

@@ -16,6 +16,7 @@ import Feature from 'ol/feature';
 import Point from 'ol/geom/point';
 import Polygon from 'ol/geom/polygon';
 import Style from 'ol/style/style';
+import Icon from 'ol/style/icon';
 import Fill from 'ol/style/fill';
 import Stroke from 'ol/style/stroke';
 import Circle from 'ol/style/circle';
@@ -45,7 +46,7 @@ import {
     isGeoJSONValid, createGeoJSON, clearDraw,
     MODE_DRAW_BBOX, MODE_NORMAL, MODE_DRAW_FREE, zoomToFeature, unwrapCoordinates,
     isViewOutsideValidExtent, goToValidExtent, isBox, isVertex, bufferGeojson, allHaveArea,
-    getDominantGeometry, getResolutions
+    getDominantGeometry, getResolutions, wrapX, getTileCoordinateFromClick
 } from '../../utils/mapUtils';
 
 import {getSqKm} from '../../utils/generic';
@@ -54,6 +55,10 @@ import globe from '../../../images/globe-americas.svg';
 import {joyride} from '../../joyride.config';
 import {Breakpoint} from '@material-ui/core/styles/createBreakpoints';
 import TileGrid from "ol/tilegrid/tilegrid";
+
+import {TileCoordinate} from "./MapQueryDisplay";
+import {MapLayer} from "./CreateExport";
+import MapDisplayBar from "./MapDisplayBar";
 
 export const WGS84 = 'EPSG:4326';
 export const WEB_MERCATOR = 'EPSG:3857';
@@ -77,9 +82,10 @@ export interface Props {
     clearExportInfo: () => void;
     walkthroughClicked: boolean;
     onWalkthroughReset: () => void;
+    selectedBaseMap: MapLayer;
+    mapLayers: MapLayer[];
     theme: Eventkit.Theme & Theme;
     width: Breakpoint;
-    baseMapUrl: string;
 }
 
 export interface State {
@@ -107,7 +113,7 @@ export class ExportAOI extends React.Component<Props, State> {
     static contextTypes = {
         config: PropTypes.object,
     };
-    static defaultProps = {baseMapUrl: ''};
+    static defaultProps = {selectedBaseMap: {mapUrl:'', slug: 'DEFAULT'}};
 
     private bufferFunction: (val: any) => void;
     private drawLayer;
@@ -118,12 +124,15 @@ export class ExportAOI extends React.Component<Props, State> {
     private drawFreeInteraction;
     private markerLayer;
     private bufferLayer;
+    private pinLayer;
     private pointer;
     private feature;
     private coordinate;
     private bufferFeatures;
     private bounceBack: boolean;
     private joyride: Joyride;
+    private displayBoxRef;
+    private infoBarRef;
 
     constructor(props: Props) {
         super(props);
@@ -156,7 +165,7 @@ export class ExportAOI extends React.Component<Props, State> {
         this.resetAoi = this.resetAoi.bind(this);
         this.updateZoomLevel = this.updateZoomLevel.bind(this);
         this.shouldEnableNext = this.shouldEnableNext.bind(this);
-        this.getBaseLayer = this.getBaseLayer.bind(this);
+        this.setDisplayBofRef = this.setDisplayBofRef.bind(this);
         this.bufferFunction = () => { /* do nothing */
         };
         this.state = {
@@ -221,11 +230,12 @@ export class ExportAOI extends React.Component<Props, State> {
         }
 
         this.map.updateSize();
-
-        if (this.props.baseMapUrl !== prevProps.baseMapUrl) {
+        const { mapUrl } = this.props.selectedBaseMap;
+        const prevBaseMapUrl = prevProps.selectedBaseMap.mapUrl;
+        if (mapUrl !== prevBaseMapUrl) {
             const newSource = new XYZ({
                 projection: 'EPSG:4326',
-                url: (!!this.props.baseMapUrl) ? this.props.baseMapUrl : this.context.config.BASEMAP_URL,
+                url: (!!mapUrl) ? mapUrl : this.context.config.BASEMAP_URL,
                 wrapX: true,
                 attributions: this.context.config.BASEMAP_COPYRIGHT,
                 tileGrid: this.tileGrid,
@@ -233,10 +243,27 @@ export class ExportAOI extends React.Component<Props, State> {
 
             this.baseLayer.setSource(newSource);
         }
-    }
 
-    private getBaseLayer() {
+        const prevLayers = prevProps.mapLayers;
+        const mapLayers = this.props.mapLayers;
+        if (prevLayers !== null && prevLayers !== undefined) {
+            if (mapLayers.length !== prevLayers.length || !prevLayers.every((p1) => {
+                return mapLayers.includes(p1);
+            })) {
+                // Valid slugs -> all layers that should remain selected and visible, including base layer
+                let currentLayers = this.map.getLayers().getArray();
+                const validSlugs = [...mapLayers.map(layer => layer.slug), this.baseLayer.get('name')];
+                const layersToBeRemoved = currentLayers.filter(layer => validSlugs.indexOf(layer.get('name')) === -1);
+                layersToBeRemoved.forEach(layer => this.map.removeLayer(layer));
 
+                mapLayers.forEach(layer => {
+                    if (currentLayers.findIndex(olLayer => olLayer.get('name') === layer.slug) === -1) {
+                        this.map.addLayer(this.createRasterTileLayer(layer.mapUrl, layer.slug));
+                    }
+                });
+
+            }
+        }
     }
 
     private setButtonSelected(iconName: string) {
@@ -317,6 +344,7 @@ export class ExportAOI extends React.Component<Props, State> {
     private handleResetMap() {
         const worldExtent = [-180, -90, 180, 90];
         this.map.getView().fit(worldExtent, this.map.getSize());
+        this.updateZoomLevel();
     }
 
     private checkForSearchUpdate(result: GeoJSON.Feature) {
@@ -478,6 +506,13 @@ export class ExportAOI extends React.Component<Props, State> {
         this.drawLayer = generateDrawLayer();
         this.markerLayer = generateDrawLayer();
         this.bufferLayer = generateDrawLayer();
+        this.pinLayer = generateDrawLayer();
+
+        this.pinLayer.setStyle(new Style({
+            image: new Icon({
+                src: this.props.theme.eventkit.images.map_pin,
+            })
+        }));
 
         this.markerLayer.setStyle(new Style({
             image: new Circle({
@@ -488,6 +523,7 @@ export class ExportAOI extends React.Component<Props, State> {
             fill: new Fill({color: this.props.theme.eventkit.colors.text_primary}),
             stroke: new Stroke({color: '#3399CC', width: 1.25}),
         }));
+
         this.bufferLayer.setStyle(new Style({
             stroke: new Stroke({
                 color: this.props.theme.eventkit.colors.primary,
@@ -518,15 +554,8 @@ export class ExportAOI extends React.Component<Props, State> {
         // Order matters here
         // Above comment assumed to refer to the order of the parameters to XYZ()
         // Comment moved with code, originally offered no further explanation.
-        this.baseLayer = new Tile({
-            source: new XYZ({
-                projection: 'EPSG:4326',
-                url: (!!this.props.baseMapUrl) ? this.props.baseMapUrl : this.context.config.BASEMAP_URL,
-                wrapX: true,
-                attributions: this.context.config.BASEMAP_COPYRIGHT,
-                tileGrid: this.tileGrid,
-            }),
-        });
+        const { mapUrl } = this.props.selectedBaseMap;
+        this.baseLayer = this.createRasterTileLayer((!!mapUrl) ? mapUrl : this.context.config.BASEMAP_URL, 'baseLayer');
 
         this.map = new Map({
             controls: [
@@ -574,15 +603,54 @@ export class ExportAOI extends React.Component<Props, State> {
             handleUpEvent: this.upEvent,
         });
 
+
+        // Hook up the click to query feature data
+        this.map.on('click', (event) => {
+                if (this.state.mode === MODE_NORMAL && this.displayBoxRef) {
+                    const didQuery = this.displayBoxRef.handleMapClick(
+                        getTileCoordinateFromClick(event, this.baseLayer, this.map)
+                    );
+                    clearDraw(this.pinLayer);
+                    if (didQuery) {
+                        this.pinLayer.getSource().addFeature(new Feature({
+                            geometry: new Point(event.coordinate),
+                        }));
+                    }
+                }
+            }
+        );
+
         this.map.addInteraction(this.pointer);
         this.map.addInteraction(this.drawBoxInteraction);
         this.map.addInteraction(this.drawFreeInteraction);
         this.map.addLayer(this.drawLayer);
         this.map.addLayer(this.markerLayer);
         this.map.addLayer(this.bufferLayer);
+        this.map.addLayer(this.pinLayer);
+        this.drawLayer.setZIndex(97);
+        this.markerLayer.setZIndex(98);
+        this.bufferLayer.setZIndex(99);
+        this.pinLayer.setZIndex(100);
 
         this.updateZoomLevel();
         this.map.getView().on('change:resolution', this.updateZoomLevel);
+    }
+
+    private createRasterTileLayer(baseMapUrl: string, name: string) {
+        // Order matters here
+        // Above comment assumed to refer to the order of the parameters to XYZ() --
+        // -- comment moved with code, originally offered no further explanation.
+        const layer = new Tile({
+            source: new XYZ({
+                projection: 'EPSG:4326',
+                url: baseMapUrl,
+                wrapX: true,
+                attributions: this.context.config.BASEMAP_COPYRIGHT,
+                tileGrid: this.tileGrid,
+            }),
+        });
+        layer.set('name', name);
+        return layer;
     }
 
     private updateZoomLevel() {
@@ -977,6 +1045,44 @@ export class ExportAOI extends React.Component<Props, State> {
         zoomToFeature(feature, this.map);
     }
 
+    private handleMapClickQuery(event) {
+        const grid = this.baseLayer.getSource().getTileGrid();
+        const zoom = Math.floor(this.map.getView().getZoom());
+
+        // Coord is returned as z, x, y
+        // Y is returned as a negative because of openlayers origin, needs to be flipped and offset
+        const tileCoord = wrapX(grid, grid.getTileCoordForCoordAndZ(event.coordinate, zoom));
+        const tileExtent = grid.getTileCoordExtent(tileCoord);
+        tileCoord[2] = tileCoord[2] * -1 - 1;
+
+        const upperLeftPixel = this.map.getPixelFromCoordinate(extent.getTopLeft(tileExtent));
+        const upperRightPixel = this.map.getPixelFromCoordinate(extent.getTopRight(tileExtent));
+
+        // Calculate the actual number of pixels each tile is taking up.
+        const pixelWidth = upperRightPixel[0] - upperLeftPixel[0];
+        const tileSize = grid.getTileSize(zoom);
+        const ratio = tileSize / pixelWidth;
+
+        const tilePixel = [Math.floor((event.pixel[0] - upperLeftPixel[0]) * ratio),
+            Math.floor((event.pixel[1] - upperLeftPixel[1]) * ratio)];
+
+        // i, j are the pixels x and y within the selected tile at coordinate z (zoom), y (row), x (col)
+        this.displayBoxRef.handleMapClick(
+            {
+                lat: event.coordinate[1],
+                long: event.coordinate[0],
+                z: tileCoord[0],
+                y: tileCoord[2],
+                x: tileCoord[1],
+            } as TileCoordinate,
+            tilePixel[0],
+            tilePixel[1]);
+    }
+
+    private setDisplayBofRef(ref: any) {
+        this.displayBoxRef = ref;
+    }
+
     render() {
         const {theme} = this.props;
         const {steps, isRunning} = this.state;
@@ -1021,13 +1127,17 @@ export class ExportAOI extends React.Component<Props, State> {
                     run={isRunning}
                 />
                 <div id="map" className={css.map} style={mapStyle}>
-                    <AoiInfobar
-                        aoiInfo={this.props.aoiInfo}
-                        showRevert={!!this.props.aoiInfo.buffer}
-                        onRevertClick={this.openResetDialog}
-                        clickZoomToSelection={this.handleZoomToSelection}
-                        handleBufferClick={this.openBufferDialog}
-                        limits={this.props.limits}
+                    <MapDisplayBar
+                        aoiInfoBarProps={{
+                            aoiInfo: this.props.aoiInfo,
+                            showRevert: !!this.props.aoiInfo.buffer,
+                            onRevertClick: this.openResetDialog,
+                            clickZoomToSelection: this.handleZoomToSelection,
+                            handleBufferClick: this.openBufferDialog,
+                            limits: this.props.limits
+                        }}
+                        setRef={this.setDisplayBofRef}
+                        selectedBaseMap={this.props.selectedBaseMap}
                     />
                     <SearchAOIToolbar
                         handleSearch={this.checkForSearchUpdate}

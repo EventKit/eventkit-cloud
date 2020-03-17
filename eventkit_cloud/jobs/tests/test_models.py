@@ -1,14 +1,16 @@
 # -*- coding: utf-8 -*-
 import logging
 import os
+from unittest.mock import Mock
 
 from django.contrib.auth.models import Group, User
 from django.contrib.gis.db.models.functions import Area
 from django.contrib.gis.db.models.functions import Intersection
 from django.contrib.gis.gdal import DataSource
 from django.contrib.gis.geos import GEOSGeometry, Polygon, MultiPolygon
-from django.test import TestCase, override_settings
-from mock import patch
+from django.test import TestCase
+from mock import call, patch
+import yaml
 
 from eventkit_cloud.jobs.models import (
     ExportFormat, ExportProfile, Job, Region,
@@ -52,7 +54,7 @@ class TestJob(TestCase):
         self.job.provider_tasks.add(provider_task)
         self.job.save()
 
-    def test_job_creation(self,):
+    def test_job_creation(self, ):
         saved_job = Job.objects.all()[0]
         self.assertEqual(self.job, saved_job)
         self.assertEqual(self.uid, saved_job.uid)
@@ -67,7 +69,7 @@ class TestJob(TestCase):
         self.assertEqual(4, len(saved_job.json_tags))
         self.assertEqual(False, saved_job.include_zipfile)  # default
 
-    def test_job_creation_with_config(self,):
+    def test_job_creation_with_config(self, ):
         saved_job = Job.objects.all()[0]
         self.assertEqual(self.job, saved_job)
         self.assertEqual(self.uid, saved_job.uid)
@@ -81,7 +83,7 @@ class TestJob(TestCase):
         saved_job.preset = hdm_preset
         self.assertEqual(hdm_preset.json_tags, saved_job.preset.json_tags)
 
-    def test_spatial_fields(self,):
+    def test_spatial_fields(self, ):
         bbox = Polygon.from_bbox((-7.96, 22.6, -8.14, 27.12))  # in africa
         the_geom = MultiPolygon(GEOSGeometry(bbox, srid=4326), srid=4326)
         the_geog = MultiPolygon(GEOSGeometry(bbox), srid=4326)
@@ -95,18 +97,18 @@ class TestJob(TestCase):
         self.assertEqual(the_geog, geog)
         self.assertEqual(the_geom_webmercator, geom_web)
 
-    def test_fields(self,):
+    def test_fields(self, ):
         job = Job.objects.all()[0]
         self.assertEqual('TestJob', job.name)
         self.assertEqual('Test description', job.description)
         self.assertEqual('Nepal activation', job.event)
         self.assertEqual(self.user, job.user)
 
-    def test_str(self,):
+    def test_str(self, ):
         job = Job.objects.all()[0]
         self.assertEqual(str(job), 'TestJob')
 
-    def test_job_region(self,):
+    def test_job_region(self, ):
         bbox = Polygon.from_bbox((-7.96, 22.6, -8.14, 27.12))  # africa
         region = Region.objects.filter(the_geom__contains=bbox)[0]
         self.assertIsNotNone(region)
@@ -116,19 +118,19 @@ class TestJob(TestCase):
         saved_job = Job.objects.all()[0]
         self.assertEqual(saved_job.region, region)
 
-    def test_overpass_extents(self,):
+    def test_overpass_extents(self, ):
         job = Job.objects.all()[0]
         extents = job.overpass_extents
         self.assertIsNotNone(extents)
         self.assertEqual(4, len(extents.split(',')))
 
-    def test_extents(self,):
+    def test_extents(self, ):
         job = Job.objects.all()[0]
         extents = job.extents
         self.assertIsNotNone(extents)
         self.assertEqual(4, len(extents))
 
-    def test_categorised_tags(self,):
+    def test_categorised_tags(self, ):
         tags = DatamodelPreset.objects.get(name='hdm').json_tags
         self.assertEqual(259, len(tags))
 
@@ -142,7 +144,7 @@ class TestJob(TestCase):
         self.assertEqual(16, len(categories['lines']))
         self.assertEqual(26, len(categories['polygons']))
 
-    def test_tags(self,):
+    def test_tags(self, ):
         tags = DatamodelPreset.objects.get(name='hdm').json_tags
         self.assertIsNotNone(tags)
         self.assertEqual(259, len(tags))
@@ -153,13 +155,13 @@ class TestJob(TestCase):
 
 
 class TestExportFormat(TestCase):
-    def test_str(self,):
+    def test_str(self, ):
         kml = ExportFormat.objects.get(slug='kml')
         self.assertEqual(str(kml), 'KML Format')
 
 
 class TestRegion(TestCase):
-    def test_load_region(self,):
+    def test_load_region(self, ):
         ds = DataSource(os.path.dirname(os.path.realpath(__file__)) + '/../migrations/africa.geojson')
         layer = ds[0]
         geom = layer.get_geoms(geos=True)[0]
@@ -171,20 +173,20 @@ class TestRegion(TestCase):
         saved_region = Region.objects.get(uid=region.uid)
         self.assertEqual(region, saved_region)
 
-    def test_africa_region(self,):
+    def test_africa_region(self, ):
         africa = Region.objects.get(name='Africa')
         self.assertIsNotNone(africa)
         self.assertEqual('Africa', africa.name)
         self.assertIsNotNone(africa.the_geom)
 
-    def test_bbox_intersects_region(self,):
+    def test_bbox_intersects_region(self, ):
         bbox = Polygon.from_bbox((-3.9, 16.6, 7.0, 27.6))
         self.assertIsNotNone(bbox)
         africa = Region.objects.get(name='Africa')
         self.assertIsNotNone(africa)
         self.assertTrue(africa.the_geom.intersects(bbox))
 
-    def test_get_region_for_bbox(self,):
+    def test_get_region_for_bbox(self, ):
         bbox = Polygon.from_bbox((-3.9, 16.6, 7.0, 27.6))
         regions = Region.objects.all()
         found = []
@@ -197,7 +199,7 @@ class TestRegion(TestCase):
 
 
 class TestJobRegionIntersection(TestCase):
-    def setUp(self,):
+    def setUp(self, ):
         self.formats = ExportFormat.objects.all()  # pre-loaded by 'insert_export_formats' migration
         self.group, created = Group.objects.get_or_create(name='TestDefaultExportExtentGroup')
         with patch('eventkit_cloud.jobs.signals.Group') as mock_group:
@@ -206,13 +208,13 @@ class TestJobRegionIntersection(TestCase):
         bbox = Polygon.from_bbox((36.90, 13.54, 48.52, 20.24))  # overlaps africa / central asia
         the_geom = GEOSGeometry(bbox, srid=4326)
         self.job = Job.objects.create(name='TestJob', description='Test description', user=self.user,
-                                      the_geom=the_geom )
+                                      the_geom=the_geom)
         self.uid = self.job.uid
         # add the formats to the job
         self.job.formats = self.formats
         self.job.save()
 
-    def test_job_region_intersection(self,):
+    def test_job_region_intersection(self, ):
         job = Job.objects.all()[0]
         # use the_geog
         regions = Region.objects.filter(the_geog__intersects=job.the_geog).annotate(
@@ -226,7 +228,7 @@ class TestJobRegionIntersection(TestCase):
         self.assertEqual('Africa', africa.name)
         self.assertTrue(asia.intersection > africa.intersection)
 
-    def test_job_outside_region(self,):
+    def test_job_outside_region(self, ):
         job = Job.objects.all()[0]
         bbox = Polygon.from_bbox((2.74, 47.66, 21.61, 60.24))  # outside any region
         the_geom = MultiPolygon(GEOSGeometry(bbox, srid=4326))
@@ -239,7 +241,7 @@ class TestJobRegionIntersection(TestCase):
 class TestTag(TestCase):
     fixtures = ('datamodel_presets.json',)
 
-    def setUp(self,):
+    def setUp(self, ):
         self.formats = ExportFormat.objects.all()  # pre-loaded by 'insert_export_formats' migration
         self.group, created = Group.objects.get_or_create(name='TestDefaultExportExtentGroup')
         with patch('eventkit_cloud.jobs.signals.Group') as mock_group:
@@ -256,7 +258,7 @@ class TestTag(TestCase):
         self.job.save()
         self.path = os.path.dirname(os.path.realpath(__file__))
 
-    def test_create_tags(self,):
+    def test_create_tags(self, ):
         tags = [
             {
                 'key': 'aeroway',
@@ -272,7 +274,7 @@ class TestTag(TestCase):
         self.assertEqual(1, len(self.job.json_tags))
         self.assertEqual(['node', 'area'], geom_types)
 
-    def test_save_tags_from_preset(self,):
+    def test_save_tags_from_preset(self, ):
         tags = DatamodelPreset.objects.get(name='hdm').json_tags
         self.assertIsNotNone(tags)
         self.assertEqual(259, len(tags))
@@ -281,7 +283,7 @@ class TestTag(TestCase):
 
         self.assertEqual(259, len(self.job.json_tags))
 
-    def test_get_categorised_tags(self,):
+    def test_get_categorised_tags(self, ):
         tags = DatamodelPreset.objects.get(name='hdm').json_tags
         self.assertIsNotNone(tags)
         self.assertEqual(259, len(tags))
@@ -291,10 +293,10 @@ class TestTag(TestCase):
 
 
 class TestExportProfile(TestCase):
-    def setUp(self,):
+    def setUp(self, ):
         self.group, created = Group.objects.get_or_create(name='TestDefaultExportExtentGroup')
 
-    def test_export_profile(self,):
+    def test_export_profile(self, ):
         profile = ExportProfile.objects.create(name='DefaultExportProfile', max_extent=2500000,
                                                group=self.group)
         self.assertEqual(self.group.export_profile, profile)
@@ -317,7 +319,7 @@ class TestDataProvider(TestCase):
     def test_snapshot_signal(self, mock_save_thumbnail, mock_make_thumbnail_downloadable, makedirs):
         """Test that triggering a save on a provider with a preview_url will attach a MapImageSnapshot."""
         mock_save_thumbnail.return_value = '/var/lib/downloads/images/test_thumb.jpg'
-        # An "random id number for the MapImageSnapshot key
+        # An instance of MapImageSnapshot
         mock_make_thumbnail_downloadable.return_value = 1
         stat = os.stat
 
@@ -338,3 +340,58 @@ class TestDataProvider(TestCase):
             self.export_provider.save()
             makedirs.assert_called()
             mock_make_thumbnail_downloadable.assert_called()
+
+    @patch('eventkit_cloud.core.models.cache')
+    def test_cached_model_on_save(self, mocked_cache):
+        """Test that triggers a save on a provider and updates the database cache with a generic key name"""
+        self.export_provider.save()
+
+        cache_calls = [
+            call(f"DataProvider-slug-{self.export_provider.slug}", self.export_provider),
+            call(f"DataProvider-uid-{self.export_provider.uid}", self.export_provider),
+        ]
+
+        mocked_cache.set.assert_has_calls(cache_calls, any_order=True)
+
+    @patch('eventkit_cloud.jobs.models.cache')
+    def test_deleted_mapproxy_cache_on_save(self, mocked_cache):
+        """Test that triggers a save on a provider and clears the associated mapproxy cache"""
+        self.export_provider.save()
+
+        cache_call = [
+            call(f"base-config-{self.export_provider.slug}")
+        ]
+        mocked_cache.delete.assert_has_calls(cache_call)
+
+    @patch("eventkit_cloud.jobs.models.get_mapproxy_metadata_url")
+    def test_metadata(self, mock_get_mapproxy_metadata_url):
+        example_url = "http://test.test"
+        expected_url = "http://ek.test/metadata/"
+        expected_metadata = {"url": expected_url,
+                             "type": "arcgis"}
+        mock_get_mapproxy_metadata_url.return_value = expected_url
+        config = {'sources': {
+            "info": {
+                "type": "arcgis",
+                "req": {
+                    "url": example_url
+                }
+            }
+        }}
+        self.export_provider.config = yaml.dump(config)
+        self.assertEqual(expected_metadata, self.export_provider.metadata)
+
+        @patch("eventkit_cloud.jobs.models.get_mapproxy_footprint_url")
+        def test_footprint_url(self, mock_get_mapproxy_footprint_url):
+            example_url = "http://test.test"
+            expected_url = "http://ek.test/footprint/"
+            mock_get_mapproxy_footprint_url.return_value = expected_url
+            config = {'sources': {
+                "footprint": {
+                    "req": {
+                        "url": example_url
+                    }
+                }
+            }}
+            self.export_provider.config = yaml.dump(config)
+            self.assertEqual(expected_url, self.export_provider.footprint_url)

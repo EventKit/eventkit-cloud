@@ -30,6 +30,7 @@ class TestGeoCode(TestCase):
             properties = feature.get("properties")
             self.assertIsInstance(properties, dict)
             self.assertIsNotNone(feature.get('geometry'))
+            self.assertIsNotNone(feature.get('properties', {}).get('context_name'))
             for property in GeocodeAdapter._properties:
                 self.assertTrue(property in properties)
 
@@ -94,8 +95,6 @@ class TestGeoCode(TestCase):
         geocode = Geocode()
         result = geocode.add_bbox(in_result)
         self.assertEqual(result, in_result)
-
-
 
     @override_settings(GEOCODING_API_URL="http://pelias.url/",
                        GEOCODING_API_TYPE="pelias")
@@ -228,7 +227,7 @@ class TestGeoCode(TestCase):
 
     def test_is_valid_bbox(self):
         # test valid
-        bbox = [0,0,1,1]
+        bbox = [0, 0, 1, 1]
         self.assertTrue(is_valid_bbox(bbox))
 
         # test not valid
@@ -261,9 +260,10 @@ class TestGeoCode(TestCase):
                 {
                     "type": "Feature",
                     "geometry": {
-                        "type":"Point",
+                        "type": "Point",
                         "coordinates": []
                     },
+                    "properties": {},
                     "bbox": bbox
                 }
             ]
@@ -272,21 +272,22 @@ class TestGeoCode(TestCase):
         geocode = Geocode()
         result = geocode.search("test")
         self.assertEqual(result.get('features')[0].get('geometry').get('coordinates'), [[[-71.1912490997, 42.227911131], [-70.9227798807, 42.227911131], [-70.9227798807, 42.3969775021], [-71.1912490997, 42.3969775021], [-71.1912490997, 42.227911131]]])
-    
+
     @override_settings(GEOCODING_API_URL="http://pelias.url/",
                        GEOCODING_API_TYPE="pelias",
                        GEOCODING_UPDATE_URL='http://pelias.url/place')
     def test_pelias_polygon_geometry(self):
-        polygonCoordinates = [[[0,1],[1,0],[0,3]]]
+        polygonCoordinates = [[[0, 1], [1, 0], [0, 3]]]
         bbox = [-71.1912490997, 42.227911131, -70.9227798807, 42.3969775021]
         api_response = {
-            "features": [ 
+            "features": [
                 {
                     "type": "Feature",
                     "geometry": {
                         "type":"Polygon",
                         "coordinates": polygonCoordinates
                     },
+                    "properties": {},
                     "bbox": bbox
                 }
             ]
@@ -295,3 +296,32 @@ class TestGeoCode(TestCase):
         geocode = Geocode()
         result = geocode.search("test")
         self.assertEqual(result.get('features')[0].get('geometry').get('coordinates'), polygonCoordinates)
+
+        @override_settings(GEOCODING_API_URL="http://nominatim.url/",
+                           GEOCODING_API_TYPE="nominatim")
+        def test_nominatim_success(self):
+            nominatim_response = [{
+                "place_id": 235668418,
+                "licence": "Data © OpenStreetMap contributors, ODbL 1.0. https://osm.org/copyright",
+                "osm_type": "relation",
+                "osm_id": 2315704,
+                "boundingbox": [
+                    "42.2279112",
+                    "42.3969775",
+                    "-71.1912491",
+                    "-70.8044881"
+                ],
+                "lat": "42.3602534",
+                "lon": "-71.0582912",
+                "display_name": "Boston, Suffolk County, Massachusetts, United States of America",
+                "class": "boundary",
+                "type": "administrative",
+                "importance": 0.8202507899404512,
+                "icon": "https://nominatim.openstreetmap.org/images/mapicons/poi_boundary_administrative.p.20.png",
+                "geojson": {
+                    "type": "Polygon",
+                    "coordinates": [[]]
+                }
+            }]
+
+            self.geocode_test(nominatim_response)

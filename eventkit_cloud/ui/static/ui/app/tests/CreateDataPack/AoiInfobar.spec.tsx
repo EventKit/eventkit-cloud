@@ -77,7 +77,7 @@ describe('AoiInfobar component', () => {
             title: 'fake title',
         };
         setup({ aoiInfo });
-        expect(wrapper.find('.qa-AoiInfobar')).toHaveLength(1);
+        expect(wrapper.find('.qa-AoiInfoBar-container')).toHaveLength(1);
         expect(wrapper.find('.qa-AoiInfobar-title').text()).toEqual('AREA OF INTEREST (AOI)');
         expect(wrapper.find('.qa-AoiInfobar-button-zoom')).toHaveLength(1);
         expect(wrapper.find('.qa-AoiInfobar-button-zoom').first().text()).toContain(' ZOOM TO');

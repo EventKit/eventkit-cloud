@@ -1,12 +1,10 @@
 # -*- coding: utf-8 -*-
-
-
 import json
 import logging
 import os
 import uuid
+import yaml
 from datetime import datetime, timedelta
-
 from django.conf import settings
 from django.contrib.auth.models import Group, User
 from django.contrib.gis.geos import GEOSGeometry, GeometryCollection, Polygon, Point, LineString
@@ -18,7 +16,6 @@ from rest_framework import status
 from rest_framework.authtoken.models import Token
 from rest_framework.reverse import reverse
 from rest_framework.test import APITestCase
-
 from eventkit_cloud.api.pagination import LinkHeaderPagination
 from eventkit_cloud.api.views import get_models, get_provider_task, ExportRunViewSet
 from eventkit_cloud.core.models import GroupPermission, GroupPermissionLevel
@@ -28,8 +25,16 @@ from eventkit_cloud.tasks.enumerations import TaskStates
 from eventkit_cloud.tasks.models import ExportRun, ExportTaskRecord, DataProviderTaskRecord, FileProducingTaskResult
 from eventkit_cloud.tasks.task_factory import InvalidLicense
 
-
 logger = logging.getLogger(__name__)
+
+
+def add_max_data_size(provider, max_data_size):
+    config = provider.config
+    config = yaml.load(config)
+    config['max_data_size'] = max_data_size
+    provider.config = yaml.dump(config)
+    provider.save()
+
 
 class TestJobViewSet(APITestCase):
     fixtures = ('osm_provider.json', 'datamodel_presets.json',)
@@ -44,20 +49,22 @@ class TestJobViewSet(APITestCase):
         self.config = None
         self.tags = None
 
-    def setUp(self,):
+    @patch('eventkit_cloud.api.views.get_estimate_cache_key')
+    @patch('eventkit_cloud.api.views.cache')
+    def setUp(self, cache_mock, get_estimate_cache_key_mock):
         self.path = os.path.dirname(os.path.realpath(__file__))
         self.group, created = Group.objects.get_or_create(name='TestDefaultExportExtentGroup')
-        self.user = User.objects.create_user(username='demo', email='demo@demo.com', password='demo' )
+        self.user = User.objects.create_user(username='demo', email='demo@demo.com', password='demo')
         extents = (-3.9, 16.1, 7.0, 27.6)
         bbox = Polygon.from_bbox(extents)
-        original_selection = GeometryCollection(Point(1,1), LineString((5.625, 48.458),(0.878, 44.339)))
+        original_selection = GeometryCollection(Point(1, 1), LineString((5.625, 48.458), (0.878, 44.339)))
         the_geom = GEOSGeometry(bbox, srid=4326)
         self.job = Job.objects.create(name='TestJob', event='Test Activation', description='Test description',
                                       user=self.user, the_geom=the_geom, original_selection=original_selection)
 
         formats = ExportFormat.objects.all()
-        provider = DataProvider.objects.first()
-        provider_task = DataProviderTask.objects.create(provider=provider)
+        self.provider = DataProvider.objects.first()
+        provider_task = DataProviderTask.objects.create(provider=self.provider)
         provider_task.formats.add(*formats)
 
         self.job.provider_tasks.add(*[provider_task])
@@ -67,7 +74,6 @@ class TestJobViewSet(APITestCase):
                                 HTTP_ACCEPT='application/json; version=1.0',
                                 HTTP_ACCEPT_LANGUAGE='en',
                                 HTTP_HOST='testserver')
-        # create a test config
         hdm_presets = DatamodelPreset.objects.get(name='hdm')
         self.job.preset = hdm_presets
         self.job.save()
@@ -95,12 +101,18 @@ class TestJobViewSet(APITestCase):
             }
         ]
 
-    def test_list(self,):
+        self.estimate_size = 110
+        self.estimate_time = 200
+        cache_mock.get.return_value = [self.estimate_size, self.estimate_time]
+        self.cache_key = '222222222222222'
+        get_estimate_cache_key_mock.return_value = self.cache_key
+
+    def test_list(self, ):
         expected = '/api/jobs'
         url = reverse('api:jobs-list')
         self.assertEqual(expected, url)
 
-    def test_make_job_with_export_providers(self,):
+    def test_make_job_with_export_providers(self, ):
         """tests job creation with export providers"""
         export_providers = DataProvider.objects.all()
         export_providers_start_len = len(export_providers)
@@ -139,7 +151,7 @@ class TestJobViewSet(APITestCase):
         export_providers = DataProvider.objects.all()
         self.assertEqual(len(export_providers), export_providers_start_len + 1)
 
-    def test_get_job_detail(self,):
+    def test_get_job_detail(self, ):
         expected = '/api/jobs/{0}'.format(self.job.uid)
         url = reverse('api:jobs-detail', args=[self.job.uid])
         self.assertEqual(expected, url)
@@ -147,7 +159,7 @@ class TestJobViewSet(APITestCase):
                 "name": "TestJob",
                 "url": 'http://testserver{0}'.format(url),
                 "description": "Test Description",
-                "exports": [{'provider': 'OpenStreetMap Data (Generic)',
+                "exports": [{'provider': 'osm-generic',
                              'formats': [
                                  {"uid": "8611792d-3d99-4c8f-a213-787bc7f3066",
                                   "url": "http://testserver/api/formats/gpkg",
@@ -167,8 +179,8 @@ class TestJobViewSet(APITestCase):
         self.assertEqual(response.data['url'], data['url'])
         self.assertEqual(response.data['exports'][0]['formats'][0]['url'], data['exports'][0]['formats'][0]['url'])
 
-    def test_get_job_detail_no_permissions(self,):
-        user = User.objects.create_user( username='demo2', email='demo2@demo.com', password='demo' )
+    def test_get_job_detail_no_permissions(self, ):
+        user = User.objects.create_user(username='demo2', email='demo2@demo.com', password='demo')
         token = Token.objects.create(user=user)
         # reset the client credentials to the new user
         self.client.credentials(HTTP_AUTHORIZATION='Token ' + token.key,
@@ -187,7 +199,7 @@ class TestJobViewSet(APITestCase):
         # test significant content
         self.assertIsNotNone(response.data["errors"][0]["detail"])
 
-    def test_delete_job(self,):
+    def test_delete_job(self, ):
         url = reverse('api:jobs-detail', args=[self.job.uid])
         response = self.client.delete(url)
         # test the response headers
@@ -195,8 +207,8 @@ class TestJobViewSet(APITestCase):
         self.assertEqual(response['Content-Length'], '0')
         self.assertEqual(response['Content-Language'], 'en')
 
-    def test_delete_job_no_permission(self,):
-        user = User.objects.create_user( username='demo2', email='demo2@demo.com', password='demo' )
+    def test_delete_job_no_permission(self, ):
+        user = User.objects.create_user(username='demo2', email='demo2@demo.com', password='demo')
         token = Token.objects.create(user=user)
         # reset the client credentials to the new user
         self.client.credentials(HTTP_AUTHORIZATION='Token ' + token.key,
@@ -213,23 +225,30 @@ class TestJobViewSet(APITestCase):
     @patch('eventkit_cloud.api.views.pick_up_run_task')
     @patch('eventkit_cloud.api.views.create_run')
     def test_create_zipfile(self, create_run_mock, pickup_mock):
+        bbox = (5, 16, 5.1, 16.1)
+        max_zoom = 17
+        min_zoom = 0
+
         create_run_mock.return_value = "some_run_uid"
         formats = [export_format.slug for export_format in ExportFormat.objects.all()]
         request_data = {
             'name': 'TestJob',
             'description': 'Test description',
             'event': 'Test Activation',
-            'selection':  bbox_to_geojson([5, 16, 5.1, 16.1]),
-            'provider_tasks': [{'provider': 'OpenStreetMap Data (Generic)', 'formats': formats}],
+            'selection': bbox_to_geojson(bbox),
+            'provider_tasks': [
+                {'provider': self.provider.slug, 'formats': formats, 'min_zoom': min_zoom, 'max_zoom': max_zoom}],
             'preset': self.job.preset.id,
             'published': True,
             'tags': self.tags,
             'include_zipfile': True
         }
+
         url = reverse('api:jobs-list')
         response = self.client.post(url, request_data, format='json')
         expected_user_details = {'username': 'demo', 'is_superuser': False, 'is_staff': False}
-        pickup_mock.apply_async.assert_called_with(kwargs={"run_uid":"some_run_uid", "user_details":expected_user_details}, queue="runs", routing_key="runs")
+        pickup_mock.apply_async.assert_called_with(
+            kwargs={"run_uid": "some_run_uid", "user_details": expected_user_details}, queue="runs", routing_key="runs")
         msg = 'status_code {} != {}: {}'.format(200, response.status_code, response.content)
         self.assertEqual(202, response.status_code, msg)
         job_uid = response.data['uid']
@@ -240,7 +259,11 @@ class TestJobViewSet(APITestCase):
     @patch('eventkit_cloud.api.views.pick_up_run_task')
     @patch('eventkit_cloud.api.views.create_run')
     def test_create_job_success(self, create_run_mock, pickup_mock):
-        create_run_mock.return_value = "some_run_uid"
+        bbox = (5, 16, 5.1, 16.1)
+        max_zoom = 17
+        min_zoom = 0
+
+        create_run_mock.return_value = 'some_run_uid'
         url = reverse('api:jobs-list')
         logger.debug(url)
         formats = [export_format.slug for export_format in ExportFormat.objects.all()]
@@ -248,8 +271,9 @@ class TestJobViewSet(APITestCase):
             'name': 'TestJob',
             'description': 'Test description',
             'event': 'Test Activation',
-            'selection':  bbox_to_geojson([5, 16, 5.1, 16.1]),
-            'provider_tasks': [{'provider': 'OpenStreetMap Data (Generic)', 'formats': formats}],
+            'selection': bbox_to_geojson(bbox),
+            'provider_tasks': [
+                {'provider': self.provider.slug, 'formats': formats, 'min_zoom': min_zoom, 'max_zoom': max_zoom}],
             'preset': self.job.preset.id,
             'published': True,
             'tags': self.tags,
@@ -281,14 +305,14 @@ class TestJobViewSet(APITestCase):
         # test that the mock methods get called.
         create_run_mock.assert_called_once_with(job_uid=job_uid, user=self.user)
         expected_user_details = {'username': 'demo', 'is_superuser': False, 'is_staff': False}
-        pickup_mock.apply_async.assert_called_once_with(kwargs={"run_uid":"some_run_uid", "user_details":expected_user_details}, queue="runs", routing_key="runs")
+        pickup_mock.apply_async.assert_called_once_with(
+            kwargs={"run_uid": "some_run_uid", "user_details": expected_user_details}, queue="runs", routing_key="runs")
         # test the response headers
         self.assertEqual(response.status_code, status.HTTP_202_ACCEPTED)
         self.assertEqual(response['Content-Type'], 'application/json')
         self.assertEqual(response['Content-Language'], 'en')
 
         # test significant response content
-
 
         self.assertEqual(response.data['exports'][0]['formats'][0]['slug'],
                          request_data['provider_tasks'][0]['formats'][0])
@@ -307,6 +331,10 @@ class TestJobViewSet(APITestCase):
     @patch('eventkit_cloud.api.views.pick_up_run_task')
     @patch('eventkit_cloud.api.views.create_run')
     def test_create_job_with_config_success(self, create_run_mock, pickup_mock):
+        bbox = (5, 16, 5.1, 16.1)
+        max_zoom = 17
+        min_zoom = 0
+
         create_run_mock.return_value = "some_run_uid"
         url = reverse('api:jobs-list')
         formats = [export_format.slug for export_format in ExportFormat.objects.all()]
@@ -314,8 +342,9 @@ class TestJobViewSet(APITestCase):
             'name': 'TestJob',
             'description': 'Test description',
             'event': 'Test Activation',
-            'selection':  bbox_to_geojson([5, 16, 5.1, 16.1]),
-            'provider_tasks': [{'provider': 'OpenStreetMap Data (Generic)', 'formats': formats}],
+            'selection': bbox_to_geojson(bbox),
+            'provider_tasks': [
+                {'provider': self.provider.slug, 'formats': formats, 'min_zoom': min_zoom, 'max_zoom': max_zoom}],
             'preset': self.job.preset.id,
             'transform': '',
             'translation': ''
@@ -326,7 +355,8 @@ class TestJobViewSet(APITestCase):
         # test that the mock methods get called.
         create_run_mock.assert_called_once_with(job_uid=job_uid, user=self.user)
         expected_user_details = {'username': 'demo', 'is_superuser': False, 'is_staff': False}
-        pickup_mock.apply_async.assert_called_once_with(kwargs={"run_uid":"some_run_uid", "user_details":expected_user_details}, queue="runs", routing_key="runs")
+        pickup_mock.apply_async.assert_called_once_with(
+            kwargs={"run_uid": "some_run_uid", "user_details": expected_user_details}, queue="runs", routing_key="runs")
 
         # test the response headers
         self.assertEqual(response.status_code, status.HTTP_202_ACCEPTED)
@@ -346,6 +376,10 @@ class TestJobViewSet(APITestCase):
     @patch('eventkit_cloud.api.views.pick_up_run_task')
     @patch('eventkit_cloud.api.views.create_run')
     def test_create_job_with_tags(self, create_run_mock, pickup_mock):
+        bbox = (5, 16, 5.1, 16.1)
+        max_zoom = 17
+        min_zoom = 0
+
         create_run_mock.return_value = "some_run_uid"
 
         url = reverse('api:jobs-list')
@@ -354,8 +388,9 @@ class TestJobViewSet(APITestCase):
             'name': 'TestJob',
             'description': 'Test description',
             'event': 'Test Activation',
-            'selection': bbox_to_geojson([5, 16, 5.1, 16.1]),
-            'provider_tasks': [{'provider': 'OpenStreetMap Data (Generic)', 'formats': formats}],
+            'selection': bbox_to_geojson(bbox),
+            'provider_tasks': [
+                {'provider': 'osm-generic', 'formats': formats, 'min_zoom': min_zoom, 'max_zoom': max_zoom}],
             'preset': self.job.preset.id,
             'transform': '',
             'translate': '',
@@ -366,7 +401,8 @@ class TestJobViewSet(APITestCase):
         # test that the mock methods get called.
         create_run_mock.assert_called_once_with(job_uid=job_uid, user=self.user)
         expected_user_details = {'username': 'demo', 'is_superuser': False, 'is_staff': False}
-        pickup_mock.apply_async.assert_called_once_with(kwargs={"run_uid":"some_run_uid", "user_details":expected_user_details}, queue="runs", routing_key="runs")
+        pickup_mock.apply_async.assert_called_once_with(
+            kwargs={"run_uid": "some_run_uid", "user_details": expected_user_details}, queue="runs", routing_key="runs")
 
         # test the response headers
         self.assertEqual(response.status_code, status.HTTP_202_ACCEPTED)
@@ -381,16 +417,16 @@ class TestJobViewSet(APITestCase):
         self.assertEqual(response.data['name'], request_data['name'])
         self.assertEqual(response.data['description'], request_data['description'])
 
-    def test_invalid_selection(self,):
+    def test_invalid_selection(self, ):
         url = reverse('api:jobs-list')
         formats = [export_format.slug for export_format in ExportFormat.objects.all()]
         request_data = {
             'name': 'TestJob',
             'description': 'Test description',
             'event': 'Test Activation',
-            'selection':  {},
+            'selection': {},
             'preset': self.job.preset.id,
-            'provider_tasks': [{'provider': 'OpenStreetMap Data (Generic)', 'formats': formats}]
+            'provider_tasks': [{'provider': 'osm-generic', 'formats': formats}]
         }
         response = self.client.post(url, request_data, format='json')
         self.assertEqual(status.HTTP_400_BAD_REQUEST, response.status_code)
@@ -398,7 +434,7 @@ class TestJobViewSet(APITestCase):
         self.assertEqual(response['Content-Language'], 'en')
         self.assertEqual('no geometry', response.data['errors'][0]['title'])
 
-    def test_empty_string_param(self,):
+    def test_empty_string_param(self, ):
         url = reverse('api:jobs-list')
         formats = [export_format.slug for export_format in ExportFormat.objects.all()]
         request_data = {
@@ -414,7 +450,7 @@ class TestJobViewSet(APITestCase):
         self.assertEqual(response['Content-Language'], 'en')
         self.assertIsNotNone(response.data['errors'][0]['title'])
 
-    def test_string_too_long_param(self,):
+    def test_string_too_long_param(self, ):
         url = reverse('api:jobs-list')
         formats = [export_format.slug for export_format in ExportFormat.objects.all()]
         name = 'x' * 300
@@ -423,37 +459,38 @@ class TestJobViewSet(APITestCase):
             'description': 'Test description',
             'event': 'Test event',
             'selection': bbox_to_geojson([5, 16, 5.1, 16.1]),
-            'provider_tasks': [{'provider': 'OpenStreetMap Data (Generic)', 'formats': formats}]
+            'provider_tasks': [{'provider': 'osm-generic', 'formats': formats}]
         }
         response = self.client.post(url, data=json.dumps(request_data), content_type='application/json; version=1.0')
         self.assertEqual(status.HTTP_400_BAD_REQUEST, response.status_code)
         self.assertEqual(response['Content-Type'], 'application/json')
         self.assertEqual(response['Content-Language'], 'en')
         self.assertEqual('ValidationError', response.data['errors'][0]['title'])
-        self.assertEqual('name: Ensure this field has no more than 100 characters.', response.data['errors'][0]['detail'])
+        self.assertEqual('name: Ensure this field has no more than 100 characters.',
+                         response.data['errors'][0]['detail'])
 
-    def test_missing_format_param(self,):
+    def test_missing_format_param(self, ):
         url = reverse('api:jobs-list')
         request_data = {
             'name': 'TestJob',
             'description': 'Test description',
             'event': 'Test Activation',
             'selection': bbox_to_geojson([5, 16, 5.1, 16.1]),
-            'provider_tasks': [{'provider': 'OpenStreetMap Data (Generic)'}]  # 'formats': formats}]# missing
+            'provider_tasks': [{'provider': 'osm-generic'}]  # 'formats': formats}]# missing
         }
         response = self.client.post(url, data=json.dumps(request_data), content_type='application/json; version=1.0')
         self.assertEqual(response['Content-Type'], 'application/json')
         self.assertEqual(response['Content-Language'], 'en')
         self.assertIsNotNone(response.data['errors'][0]['title'])
 
-    def test_invalid_format_param(self,):
+    def test_invalid_format_param(self, ):
         url = reverse('api:jobs-list')
         request_data = {
             'name': 'TestJob',
             'description': 'Test description',
             'event': 'Test Activation',
-            'selection':  bbox_to_geojson([5, 16, 5.1, 16.1]),
-            'provider_tasks': [{'provider': 'OpenStreetMap Data (Generic)', 'formats': ''}]  # invalid
+            'selection': bbox_to_geojson([5, 16, 5.1, 16.1]),
+            'provider_tasks': [{'provider': 'osm-generic', 'formats': ''}]  # invalid
         }
         response = self.client.post(url, request_data, format='json')
         self.assertEqual(status.HTTP_400_BAD_REQUEST, response.status_code)
@@ -461,15 +498,15 @@ class TestJobViewSet(APITestCase):
         self.assertEqual(response['Content-Language'], 'en')
         self.assertIsNotNone(response.data.get('errors')[0]['title'])
 
-    def test_no_matching_format_slug(self,):
+    def test_no_matching_format_slug(self, ):
         url = reverse('api:jobs-list')
         request_data = {
             'name': 'TestJob',
             'description': 'Test description',
             'event': 'Test Activation',
-            'selection':  bbox_to_geojson([5, 16, 5.1, 16.1]),
+            'selection': bbox_to_geojson([5, 16, 5.1, 16.1]),
             'provider_tasks': [
-                {'provider': 'OpenStreetMap Data (Generic)', 'formats': ['broken-format-one', 'broken-format-two']}]
+                {'provider': 'osm-generic', 'formats': ['broken-format-one', 'broken-format-two']}]
         }
         response = self.client.post(url, request_data, format='json')
 
@@ -478,7 +515,7 @@ class TestJobViewSet(APITestCase):
         self.assertEqual(response['Content-Language'], 'en')
         self.assertIsNotNone(response.data["errors"][0]["detail"])
 
-    def test_extents_too_large(self,):
+    def test_extents_too_large(self, ):
         url = reverse('api:jobs-list')
         formats = [export_format.slug for export_format in ExportFormat.objects.all()]
         # job outside any region
@@ -486,18 +523,58 @@ class TestJobViewSet(APITestCase):
             'name': 'TestJob',
             'description': 'Test description',
             'event': 'Test Activation',
-            'selection':  bbox_to_geojson([-180, -90, 180, 90]),
-            'provider_tasks': [{'provider': 'OpenStreetMap Data (Generic)', 'formats': formats}]
+            'selection': bbox_to_geojson([-180, -90, 180, 90]),
+            'provider_tasks': [{'provider': 'osm-generic', 'formats': formats}]
         }
 
         with self.settings(JOB_MAX_EXTENT=100000):
-            response = self.client.post(url, data=json.dumps(request_data), content_type='application/json; version=1.0')
+            response = self.client.post(url, data=json.dumps(request_data),
+                                        content_type='application/json; version=1.0')
 
         self.assertEqual(status.HTTP_400_BAD_REQUEST, response.status_code)
         self.assertEqual(response['Content-Type'], 'application/json')
         self.assertEqual(response['Content-Language'], 'en')
         self.assertEqual('invalid_extents', response.data['errors'][0]['title'])
 
+    @patch('eventkit_cloud.api.views.get_estimate_cache_key')
+    @patch('eventkit_cloud.api.views.cache')
+    def test_extents_too_large_for_max_data_size(self, cache_mock, get_estimate_cache_key_mock):
+        self.estimate_size = 210
+        self.estimate_time = 20
+        cache_mock.get.return_value = [self.estimate_size, self.estimate_time]
+
+        cache_key = '1.22222222222222'
+        get_estimate_cache_key_mock.return_value = cache_key
+        bbox = (5, 16, 5.1, 16.1)
+        srs = '4326'
+        max_zoom = 17
+        min_zoom = 0
+        slug = 'osm'
+        excessive_data_size = 200
+
+        add_max_data_size(self.provider, excessive_data_size)
+
+        job_url = reverse('api:jobs-list')
+
+        formats = [export_format.slug for export_format in ExportFormat.objects.all()]
+        request_data = {
+            'name': 'TestJob',
+            'description': 'Test description',
+            'event': 'Test Activation',
+            'selection': bbox_to_geojson(bbox),
+            'provider_tasks': [
+                {'provider': self.provider.slug, 'formats': formats,
+                 'min_zoom': min_zoom, 'max_zoom': max_zoom}],
+        }
+
+        response = self.client.post(job_url, data=json.dumps(request_data),
+                                    content_type='application/json; version=1.0')
+        cache_mock.get.assert_called_with(cache_key, (None, None))
+        get_estimate_cache_key_mock.called_once_with(bbox, srs, min_zoom, max_zoom, slug)
+        self.assertEqual(status.HTTP_400_BAD_REQUEST, response.status_code)
+        self.assertEqual(response['Content-Type'], 'application/json')
+        self.assertEqual(response['Content-Language'], 'en')
+        self.assertEqual('Estimated size too large', response.data['errors'][0]['title'])
 
     def test_patch(self):
         expected = '/api/jobs/{0}'.format(self.job.uid)
@@ -516,13 +593,14 @@ class TestJobViewSet(APITestCase):
         self.assertIsNotNone(response.data['featured'])
         self.assertTrue(response.data['success'])
 
-        request_data = {"featured": True, "published" : False, "visibility" : VisibilityState.SHARED.value }
+        request_data = {"featured": True, "published": False, "visibility": VisibilityState.SHARED.value}
         response = self.client.patch(url, data=json.dumps(request_data), content_type='application/json; version=1.0')
         self.assertEqual(status.HTTP_200_OK, response.status_code)
         self.assertIsNotNone(response.data['featured'])
         self.assertIsNotNone(response.data['published'])
         self.assertIsNotNone(response.data['visibility'])
         self.assertTrue(response.data['success'])
+
 
 class TestBBoxSearch(APITestCase):
     """
@@ -535,13 +613,14 @@ class TestBBoxSearch(APITestCase):
         super(TestBBoxSearch, self).__init__(*args, **kwargs)
         self.user = None
         self.client = None
+
     @patch('eventkit_cloud.api.views.pick_up_run_task')
     @patch('eventkit_cloud.api.views.create_run')
     def setUp(self, create_run_mock, pickup_mock):
         create_run_mock.return_value = "some_run_uid"
 
         url = reverse('api:jobs-list')
-        # create dummy user
+
         self.group, created = Group.objects.get_or_create(name='TestDefaultExportExtentGroup')
         self.user = User.objects.create_user(username='demo', email='demo@demo.com', password='demo',
                                              is_superuser=True)
@@ -565,16 +644,18 @@ class TestBBoxSearch(APITestCase):
                 'description': 'Test description',
                 'event': 'Test Activation',
                 'selection': bbox_to_geojson(extent),
-                'provider_tasks': [{'provider': 'OpenStreetMap Data (Generic)', 'formats': formats}]
+                'provider_tasks': [{'provider': 'osm-generic', 'formats': formats}]
             }
             response = self.client.post(url, request_data, format='json')
             expected_user_details = {'username': 'demo', 'is_superuser': True, 'is_staff': False}
-            pickup_mock.apply_async.assert_called_with(kwargs={"run_uid":"some_run_uid", "user_details":expected_user_details}, queue="runs", routing_key="runs")
+            pickup_mock.apply_async.assert_called_with(
+                kwargs={"run_uid": "some_run_uid", "user_details": expected_user_details}, queue="runs",
+                routing_key="runs")
             self.assertEqual(status.HTTP_202_ACCEPTED, response.status_code, response.content)
         self.assertEqual(8, len(Job.objects.all()))
         LinkHeaderPagination.page_size = 2
 
-    def test_bbox_search_success(self,):
+    def test_bbox_search_success(self, ):
         url = reverse('api:jobs-list')
         extent = (-79.5, -16.16, 7.40, 52.44)
         param = 'bbox={0},{1},{2},{3}'.format(extent[0], extent[1], extent[2], extent[3])
@@ -582,7 +663,7 @@ class TestBBoxSearch(APITestCase):
         self.assertEqual(status.HTTP_206_PARTIAL_CONTENT, response.status_code)
         self.assertEqual(2, len(response.data))  # 8 jobs in total but response is paginated
 
-    def test_list_jobs_no_bbox(self,):
+    def test_list_jobs_no_bbox(self, ):
         url = reverse('api:jobs-list')
         response = self.client.get(url)
         self.assertEqual(status.HTTP_206_PARTIAL_CONTENT, response.status_code)
@@ -591,7 +672,7 @@ class TestBBoxSearch(APITestCase):
         self.assertEqual(response['Link'], '<http://testserver/api/jobs?page=2>; rel="next"')
         self.assertEqual(2, len(response.data))  # 8 jobs in total but response is paginated
 
-    def test_bbox_search_missing_params(self,):
+    def test_bbox_search_missing_params(self, ):
         url = reverse('api:jobs-list')
         param = 'bbox='  # missing params
         response = self.client.get('{0}?{1}'.format(url, param))
@@ -600,7 +681,7 @@ class TestBBoxSearch(APITestCase):
         self.assertEqual(response['Content-Language'], 'en')
         self.assertEqual('missing_bbox_parameter', response.data['errors']['id'])
 
-    def test_bbox_missing_coord(self,):
+    def test_bbox_missing_coord(self, ):
         url = reverse('api:jobs-list')
         extent = (-79.5, -16.16, 7.40)  # one missing
         param = 'bbox={0},{1},{2}'.format(extent[0], extent[1], extent[2])
@@ -630,9 +711,9 @@ class TestExportRunViewSet(APITestCase):
         self.export_run = None
         self.run_uid = None
 
-    def setUp(self,):
+    def setUp(self, ):
         self.group, created = Group.objects.get_or_create(name='TestDefaultExportExtentGroup')
-        self.user = User.objects.create_user( username='demo', email='demo@demo.com', password='demo' )
+        self.user = User.objects.create_user(username='demo', email='demo@demo.com', password='demo')
 
         token = Token.objects.create(user=self.user)
         self.client.credentials(HTTP_AUTHORIZATION='Token ' + token.key,
@@ -650,7 +731,7 @@ class TestExportRunViewSet(APITestCase):
         provider_task.formats.add(*formats)
 
         self.job.provider_tasks.add(provider_task)
-        self.job.visibility=VisibilityState.PUBLIC.value
+        self.job.visibility = VisibilityState.PUBLIC.value
         self.job.save()
         self.job_uid = str(self.job.uid)
         self.export_run = ExportRun.objects.create(job=self.job, user=self.user)
@@ -659,22 +740,22 @@ class TestExportRunViewSet(APITestCase):
     def test_patch(self):
         url = reverse('api:runs-detail', args=[self.export_run.uid])
 
-        today  = datetime.today()
+        today = datetime.today()
         max_days = int(getattr(settings, 'MAX_DATAPACK_EXPIRATION_DAYS', 30))
-        ok_expiration = today + timedelta(max_days-1)
+        ok_expiration = today + timedelta(max_days - 1)
         request_data = {"expiration": ok_expiration.isoformat()}
         response = self.client.patch(url, data=json.dumps(request_data), content_type='application/json; version=1.0')
         self.assertEqual(status.HTTP_200_OK, response.status_code)
         self.assertIsNotNone(response.data['expiration'])
         self.assertTrue(response.data['success'])
 
-        not_ok_expiration = ok_expiration  - timedelta(1)
+        not_ok_expiration = ok_expiration - timedelta(1)
         request_data = {"expiration": not_ok_expiration.isoformat()}
         response = self.client.patch(url, data=json.dumps(request_data), content_type='application/json; version=1.0')
         self.assertEqual(status.HTTP_400_BAD_REQUEST, response.status_code)
         self.assertFalse(response.data['success'])
 
-        not_ok_expiration = today + timedelta(max_days+1)
+        not_ok_expiration = today + timedelta(max_days + 1)
         request_data = {"expiration": not_ok_expiration.isoformat()}
         response = self.client.patch(url, data=json.dumps(request_data), content_type='application/json; version=1.0')
         self.assertEqual(status.HTTP_400_BAD_REQUEST, response.status_code)
@@ -685,9 +766,9 @@ class TestExportRunViewSet(APITestCase):
         self.assertEqual(status.HTTP_400_BAD_REQUEST, response.status_code)
 
         run = ExportRun.objects.get(uid=self.export_run.uid)
-        self.assertEqual(ok_expiration,run.expiration.replace(tzinfo=None))
+        self.assertEqual(ok_expiration, run.expiration.replace(tzinfo=None))
 
-    def test_delete_run(self,):
+    def test_delete_run(self, ):
         url = reverse('api:runs-detail', args=[self.export_run.uid])
         response = self.client.delete(url)
         # test the response headers
@@ -696,7 +777,6 @@ class TestExportRunViewSet(APITestCase):
         self.assertEqual(response['Content-Language'], 'en')
 
     def test_zipfile_url_s3(self):
-
         example_url = "/downloads/{0}/file.zip".format(self.run_uid)
         data_provider_task_record = DataProviderTaskRecord.objects.create(run=self.export_run, name="run", slug="run")
         file_result = FileProducingTaskResult.objects.create(download_url=example_url, size=10)
@@ -724,7 +804,7 @@ class TestExportRunViewSet(APITestCase):
                 result[0]['zipfile_url']
             )
 
-    def test_retrieve_run(self,):
+    def test_retrieve_run(self, ):
         expected = '/api/runs/{0}'.format(self.run_uid)
 
         url = reverse('api:runs-detail', args=[self.run_uid])
@@ -759,7 +839,7 @@ class TestExportRunViewSet(APITestCase):
         mock_invalid_licenses.return_value = []
         self.assertTrue(ExportRunViewSet.validate_licenses(queryset))
 
-    def test_list_runs(self,):
+    def test_list_runs(self, ):
         expected = '/api/runs'
         url = reverse('api:runs-list')
         self.assertEqual(expected, url)
@@ -784,8 +864,7 @@ class TestExportRunViewSet(APITestCase):
         self.assertTrue("InvalidLicense" in result[0].get('detail'))
         self.assertEqual(response.status_code, 400)
 
-
-    def test_filter_runs(self,):
+    def test_filter_runs(self, ):
         expected = '/api/runs/filter'
         url = reverse('api:runs-filter')
         self.assertEqual(expected, url)
@@ -828,10 +907,10 @@ class TestExportRunViewSet(APITestCase):
         response = self.client.post(query, {"geojson": "{}".format(geojson)})
         self.assertIsNotNone(response)
         result = response.data
-        #make sure no runs are returned since it should not intersect
+        # make sure no runs are returned since it should not intersect
         self.assertEqual(0, len(result))
 
-        name='TestJob'
+        name = 'TestJob'
         query = '{0}?search_term={1}'.format(url, name)
         response = self.client.get(query)
         self.assertIsNotNone(response)
@@ -840,13 +919,14 @@ class TestExportRunViewSet(APITestCase):
         self.assertEqual(1, len(result))
         self.assertEqual(name, result[0].get('job').get('name'))
 
-        name='NotFound'
+        name = 'NotFound'
         query = '{0}?search_term={1}'.format(url, name)
         response = self.client.get(query)
         self.assertIsNotNone(response)
         result = response.data
         # make sure no runs are returned as they should have been filtered out
         self.assertEqual(0, len(result))
+
 
 class TestExportTaskViewSet(APITestCase):
     """
@@ -867,14 +947,14 @@ class TestExportTaskViewSet(APITestCase):
         self.task = None
         self.task_uid = None
 
-    def setUp(self,):
+    def setUp(self, ):
         self.path = os.path.dirname(os.path.realpath(__file__))
         self.group, created = Group.objects.get_or_create(name='TestDefaultExportExtentGroup')
-        self.user = User.objects.create_user( username='demo', email='demo@demo.com', password='demo' )
+        self.user = User.objects.create_user(username='demo', email='demo@demo.com', password='demo')
         bbox = Polygon.from_bbox((-7.96, 22.6, -8.14, 27.12))
         the_geom = GEOSGeometry(bbox, srid=4326)
         self.job = Job.objects.create(name='TestJob', description='Test description', user=self.user,
-                                      the_geom=the_geom, visibility=VisibilityState.PUBLIC.value )
+                                      the_geom=the_geom, visibility=VisibilityState.PUBLIC.value)
 
         formats = ExportFormat.objects.all()
         provider = DataProvider.objects.first()
@@ -895,11 +975,12 @@ class TestExportTaskViewSet(APITestCase):
         self.export_provider_task = DataProviderTaskRecord.objects.create(run=self.export_run,
                                                                           name='Shapefile Export',
                                                                           status=TaskStates.PENDING.value)
-        self.task = ExportTaskRecord.objects.create(export_provider_task=self.export_provider_task, name='Shapefile Export',
+        self.task = ExportTaskRecord.objects.create(export_provider_task=self.export_provider_task,
+                                                    name='Shapefile Export',
                                                     celery_uid=self.celery_uid, status='SUCCESS')
         self.task_uid = str(self.task.uid)
 
-    def test_retrieve(self,):
+    def test_retrieve(self, ):
         expected = '/api/tasks/{0}'.format(self.task_uid)
         url = reverse('api:tasks-detail', args=[self.task_uid])
         self.assertEqual(expected, url)
@@ -911,7 +992,7 @@ class TestExportTaskViewSet(APITestCase):
         # make sure we get the correct uid back out
         self.assertEqual(self.task_uid, data[0].get('uid'))
 
-    def test_list(self,):
+    def test_list(self, ):
         expected = '/api/tasks'.format(self.task_uid)
         url = reverse('api:tasks-list')
         self.assertEqual(expected, url)
@@ -925,7 +1006,7 @@ class TestExportTaskViewSet(APITestCase):
         # make sure we get the correct uid back out
         self.assertEqual(self.task_uid, data[0].get('uid'))
 
-    def test_patch_cancel_task(self,):
+    def test_patch_cancel_task(self, ):
         expected = '/api/provider_tasks/{0}'.format(self.export_provider_task.uid)
         url = reverse('api:provider_tasks-list') + '/%s' % (self.export_provider_task.uid,)
         self.assertEqual(expected, url)
@@ -940,8 +1021,8 @@ class TestExportTaskViewSet(APITestCase):
         self.assertEqual(pt.status, TaskStates.CANCELED.value)
         self.assertEqual(et.status, TaskStates.SUCCESS.value)
 
-    def test_patch_cancel_task_no_permissions(self,):
-        user = User.objects.create_user( username='demo2', email='demo2@demo.com', password='demo' )
+    def test_patch_cancel_task_no_permissions(self, ):
+        user = User.objects.create_user(username='demo2', email='demo2@demo.com', password='demo')
         token = Token.objects.create(user=user)
         # reset the client credentials to the new user
         self.client.credentials(HTTP_AUTHORIZATION='Token ' + token.key,
@@ -964,6 +1045,7 @@ class TestExportTaskViewSet(APITestCase):
         url = reverse('api:provider_tasks-list')
         response = self.client.get(url)
         self.assertEqual(response.status_code, 200)
+
 
 class TestStaticFunctions(APITestCase):
     def test_get_models(self):
@@ -1000,9 +1082,9 @@ class TestStaticFunctions(APITestCase):
 
 class TestLicenseViewSet(APITestCase):
 
-    def setUp(self,):
+    def setUp(self, ):
         group, created = Group.objects.get_or_create(name='TestDefaultExportExtentGroup')
-        self.user = User.objects.create_user( username='demo', email='demo@demo.com', password='demo' )
+        self.user = User.objects.create_user(username='demo', email='demo@demo.com', password='demo')
         self.licenses = [License.objects.create(slug='test1', name='name1', text='text1')]
         self.licenses += [License.objects.create(slug='test0', name='name0', text='text0')]
         token = Token.objects.create(user=self.user)
@@ -1056,10 +1138,10 @@ class TestLicenseViewSet(APITestCase):
 
 class TestUserDataViewSet(APITestCase):
 
-    def setUp(self,):
+    def setUp(self, ):
         self.path = os.path.dirname(os.path.realpath(__file__))
         self.group, created = Group.objects.get_or_create(name='TestDefaultExportExtentGroup')
-        self.user = User.objects.create_user( username='demo', email='demo@demo.com', password='demo')
+        self.user = User.objects.create_user(username='demo', email='demo@demo.com', password='demo')
         self.licenses = [License.objects.create(slug='test1', name='Test1', text='text')]
         self.licenses += [License.objects.create(slug='test2', name='Test2', text='text')]
         token = Token.objects.create(user=self.user)
@@ -1100,7 +1182,8 @@ class TestUserDataViewSet(APITestCase):
         # update single license.
         request_data = data
         request_data['accepted_licenses'][self.licenses[0].slug] = True
-        patch_response = self.client.patch(url, data=json.dumps(request_data), content_type='application/json; version=1.0')
+        patch_response = self.client.patch(url, data=json.dumps(request_data),
+                                           content_type='application/json; version=1.0')
         response = self.client.get(url)
         data = response.json()
         # check that the response body matches a new request
@@ -1110,13 +1193,15 @@ class TestUserDataViewSet(APITestCase):
         self.assertEqual(data.get('accepted_licenses').get(self.licenses[1].slug), False)
         request_data = data
         request_data['accepted_licenses'][self.licenses[1].slug] = True
-        patch_response = self.client.patch(url, data=json.dumps(request_data), content_type='application/json; version=1.0')
+        patch_response = self.client.patch(url, data=json.dumps(request_data),
+                                           content_type='application/json; version=1.0')
         data = patch_response.json()
         self.assertEqual(data.get('accepted_licenses').get(self.licenses[0].slug), True)
         self.assertEqual(data.get('accepted_licenses').get(self.licenses[1].slug), True)
         request_data = data
         request_data['accepted_licenses'][self.licenses[0].slug] = False
-        patch_response = self.client.patch(url, data=json.dumps(request_data), content_type='application/json; version=1.0')
+        patch_response = self.client.patch(url, data=json.dumps(request_data),
+                                           content_type='application/json; version=1.0')
         data = patch_response.json()
         self.assertEqual(data.get('accepted_licenses').get(self.licenses[0].slug), False)
         self.assertEqual(data.get('accepted_licenses').get(self.licenses[1].slug), True)
@@ -1124,7 +1209,7 @@ class TestUserDataViewSet(APITestCase):
 
 class TestGroupDataViewSet(APITestCase):
 
-    def setUp(self,):
+    def setUp(self, ):
         self.path = os.path.dirname(os.path.realpath(__file__))
         self.user1 = User.objects.create_user(
             username='user_1', email='groupuser@demo.com', password='demo'
@@ -1132,7 +1217,6 @@ class TestGroupDataViewSet(APITestCase):
         self.user2 = User.objects.create_user(
             username='user_2', email='groupuser@demo.com', password='demo'
         )
-
 
         self.token = Token.objects.create(user=self.user1)
         self.client.credentials(HTTP_AUTHORIZATION='Token ' + self.token.key,
@@ -1143,13 +1227,13 @@ class TestGroupDataViewSet(APITestCase):
         self.testName = "Omaha 319"
         group, created = Group.objects.get_or_create(name=self.testName)
         self.groupid = group.id
-        gp = GroupPermission.objects.create(group=group,user=self.user1, permission =GroupPermissionLevel.ADMIN.value)
+        gp = GroupPermission.objects.create(group=group, user=self.user1, permission=GroupPermissionLevel.ADMIN.value)
 
     def test_insert_group(self):
         expected = '/api/groups'
         url = reverse('api:groups-list')
         self.assertEqual(expected, url)
-        payload = {'name' : "Any group"}
+        payload = {'name': "Any group"}
         response = self.client.post(url, data=json.dumps(payload), content_type='application/json; version=1.0')
         self.assertEqual(status.HTTP_200_OK, response.status_code)
 
@@ -1165,35 +1249,34 @@ class TestGroupDataViewSet(APITestCase):
         self.assertIsNotNone(response)
         self.assertEqual(status.HTTP_200_OK, response.status_code)
         data = response.json()
-        self.assertEqual(len(data),2)
-
+        self.assertEqual(len(data), 2)
 
     def test_get_group(self):
         url = reverse('api:groups-detail', args=[self.groupid])
         response = self.client.get(url, content_type='application/json; version=1.0')
-        data= response.json()
+        data = response.json()
         self.groupid = data["id"]
         self.assertEqual(data["name"], self.testName)
-        self.assertEqual(len(data["members"]),0)
+        self.assertEqual(len(data["members"]), 0)
         self.assertEqual(len(data["administrators"]), 1)
 
     def test_set_membership(self):
         url = reverse('api:groups-detail', args=[self.groupid])
         response = self.client.get(url, content_type='application/json; version=1.0')
-        self.assertEqual(response.status_code,status.HTTP_200_OK)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
         groupdata = response.json()
 
         # add a user to group members and to group administrators
 
-        groupdata['members'].append( 'user_1')
-        groupdata['administrators'].append( 'user_1')
-        groupdata['members'].append( 'user_2')
-        groupdata['administrators'].append( 'user_2')
+        groupdata['members'].append('user_1')
+        groupdata['administrators'].append('user_1')
+        groupdata['members'].append('user_2')
+        groupdata['administrators'].append('user_2')
         response = self.client.patch(url, data=json.dumps(groupdata), content_type='application/json; version=1.0')
-        self.assertEqual(response.status_code,status.HTTP_200_OK)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
         response = self.client.get(url, content_type='application/json; version=1.0')
         groupdata = response.json()
-        self.assertEqual(len(groupdata["members"]),2)
+        self.assertEqual(len(groupdata["members"]), 2)
         self.assertEqual(len(groupdata["administrators"]), 2)
 
         # remove user_2 from members
@@ -1201,17 +1284,17 @@ class TestGroupDataViewSet(APITestCase):
         groupdata['members'] = ['user_1']
         groupdata['administrators'] = ['user_1']
         response = self.client.patch(url, data=json.dumps(groupdata), content_type='application/json; version=1.0')
-        self.assertEqual(response.status_code,status.HTTP_200_OK)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
         response = self.client.get(url, content_type='application/json; version=1.0')
         groupdata = response.json()
-        self.assertEqual(len(groupdata["members"]),1)
-        self.assertEqual(groupdata["members"][0],"user_1")
+        self.assertEqual(len(groupdata["members"]), 1)
+        self.assertEqual(groupdata["members"][0], "user_1")
 
         # check for a 403 if we remove all administrators
 
         groupdata['administrators'] = []
         response = self.client.patch(url, data=json.dumps(groupdata), content_type='application/json; version=1.0')
-        self.assertEqual(response.status_code,status.HTTP_403_FORBIDDEN)
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
     def test_leave_group(self):
         # ensure the group is created

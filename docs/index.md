@@ -5,11 +5,10 @@ Eventkit-Cloud
 ==============
 
 Eventkit-cloud is based on the [HOT OSM Export Tool](https://github.com/hotosm/osm-export-tool).  It allows the user to select data from different sources to export into a variety of formats.
-  
 ## Getting Started
-Eventkit-cloud requires [Docker](https://docs.docker.com/engine/installation/). 
+Eventkit-cloud requires [Docker](https://docs.docker.com/engine/installation/).
 
-### Installation 
+### Installation
 _Note: the RabbitMQ configuration provided here is the Official Docker version and is Copyright (c) 2014-2015 Docker, Inc._
 
 There are several options that may be set, however prior to using the EventKit docker setup, two variables must be set
@@ -17,11 +16,18 @@ in the environment running docker, `SITE_NAME` and `SITE_IP`.
 
 Typically `SITE_NAME` is set to 'cloud.eventkit.test' and `SITE_IP` is '127.0.0.1'.  If needing to run the integration tests,
 then `SITE_IP` must be set to a different IP available on the system, typically the local ip `192.168.X.X` or `10.0.X.X`.
-This is usually done by using `export SITE_NAME=cloud.eventkit.test` on OSX/Linux or `setx SITE_NAME cloud.eventkit.test` on Windows. 
-Usually docker-compose will need to be run as sudo.  In which case you want to make sure that the environment variables are made available as sudo won't always use the shell environment.
+This is usually done by using `export SITE_NAME=cloud.eventkit.test` on OSX/Linux or `setx SITE_NAME cloud.eventkit.test` on Windows.
+
+## Quick Start
+
+A Makefile is included to make it easier to get started with a fresh installation.  In order to get started right away, simply run `make fresh` in the root project directory.  This will setup group permissions (for Linux hosts only), build your dependencies, setup the initial data, and bring your docker containers online.  There are additional Make commands inside the Makefile, and they're documented there as well.
+
+## Manual Setup
+
+If you'd like to setup the project manually, you can use the documentation below to do so.  It's recommended that you use the Make commands instead, especially if you're running on a Linux host environment.
 
 #### Building the dependencies
-Before you can build the eventkit container you first need to build a local conda repo that will be used in the creation of the EventKit containers. 
+Before you can build the eventkit container you first need to build a local conda repo that will be used in the creation of the EventKit containers.
 
 This will probably take about an hour or two depending on your system settings and internet speed.
 
@@ -32,9 +38,9 @@ docker-compose run --rm conda  # now grab a warm beverage perhaps a nice technic
 cd ..
 </pre>
 
-In the future it may be nice to host prebuilt artifacts but the ability to build these locally allows us to upgrade dependencies without needing to rely on third-party hosting. 
+In the future it may be nice to host prebuilt artifacts but the ability to build these locally allows us to upgrade dependencies without needing to rely on third-party hosting.
 
-After conda successfully builds you can now build and start the EventKit application. 
+After conda successfully builds you can now build and start the EventKit application.
 
 _Note: if running the docker setup with an IP set other than 127.0.0.1, then the application will be made available to other computer that can access the host machine at the `SITE_IP` address._
 
@@ -65,16 +71,22 @@ EventKit can be configured to support many different environments, visit the [se
 EventKit can be configured to support many different data sources within the application, visit the [sources readme](./sources.md) in the documentation for options.
 
 ### Tests
-To run tests:
-<pre>docker-compose run --rm -e COVERAGE=True eventkit python manage.py test eventkit_cloud</pre>
+To run all the unit tests:
+<pre>make test</pre>
 or
-<pre>docker-compose run --rm eventkit pytest</pre>
+<pre>
+docker-compose run --rm -e COVERAGE=True eventkit python manage.py test -v 3 eventkit_cloud
+docker-compose run --rm webpack npm test
+</pre>
 
 
 #### Building the bundle
 By default, the Eventkit webpack is configured for development, if you need to create bundle and vendor files for production run
 <pre>docker-compose run --rm webpack npm run build</pre>
 
+#### Deploying
+The built EventKit containers can be pushed to a platform like Kubernetes or some other container service.
+Additionally it can be deployed on [Pivotal Cloud Foundry](https://github.com/EventKit/eventkit-cloud/blob/master/docs/pcf.md).
 
 ## For Developers
 #### Using ESLint
@@ -93,3 +105,18 @@ For WebStorm try the following:
 https://www.jetbrains.com/help/webstorm/eslint.html
 
 Finally, if you would like to adjust any of the linting rules edit the .eslintrc.json file in the EventKit root directory.
+
+### Using Flake8
+
+We use flake8 as a linter in our build pipeline.  Prior to submitting pull request, please make sure you've run flake8 on your code using:
+
+<pre>make flake8</pre>
+
+### Using Black
+
+Black is an auto formatting tool for Python that will allow you to handle most of the flake8 / pep8 formatting without having to do it manually.  There are two Make commands for Black, the first one will check and see if any formatting needs to be done.  Always run that before running the auto formatting tool, and make sure the changes it reports make sense to you.
+
+<pre>
+make black
+make black-format
+</pre>

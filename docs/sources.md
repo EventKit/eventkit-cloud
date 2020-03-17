@@ -55,9 +55,17 @@ MapProxy configuration can be fairly complicated.  The `Configuration` section i
 
 In general you need a Layers, Sources, and Grids section. 
 
-Whatever you have as the Service Layer needs to be listed as a Source in the Sources section.
-You need to also list that Layer in the layers section. The source for that layer MUST be `cache`. 
-This is because EventKit will configure the cache for you.
+Each section that will be used for collecting the data needs to be labeled default.  Additionally it is required
+that the final output layer is 4326.  If the input layer is something else it needs to be configured to be reprojected.
+
+Whatever is the Service Layer needs to be listed as a Source in the Sources section.
+You need to also list that Layer in the layers section. The source for that layer MUST be `default`. 
+EventKit will configure the cache for you, or you can override the cache with your own cache section.
+The cache type *MUST* be geopackage and the filename *must* be 'geopackage'.  EventKit relies on having geopackages in 4326, 
+to convert to other formats and projections.    
+
+Additionally if the service supports featureinfo queries or has a footprint layer this can be configured as additional 
+sources in the mapproxy configuration the keys must be `info` and `footprint`. 
 
 For best results use this (WMTS/TMS) template, updating the sources and grids section to fit your data source. 
 EventKit will use MapProxy to help validate your entry to help find errors.
@@ -71,18 +79,35 @@ concurrency: 12
 max_repeat: 5
 
 layers:
- - name: imagery
+ - name: default
    title: imagery
-   sources: [cache]
+   sources: [default]
 
 sources:
-  imagery:
+  default:
     type: tile
-    grid: geodetic
+    grid: default
     url: "https://tileserver.com/tiles/default/%(z)s/%(x)s/%(y)s.png"
+  info:
+    type: wms
+    grid: default
+    req:
+      layers: 'infoLayer'
+      url: "https://test.test/wmsserver"
+    wms_opts:
+      map: false
+      featureinfo: true
+    on_error:
+      500:
+        response: transparent  
+  footprint:
+    type: wms
+    req:
+      url: "http://test.test/wmsserver"
+      layers: 'footprintLayer'
 
 grids:
-  geodetic:
+  default:
     srs: EPSG:4326
     tile_size: [256, 256]
     origin: nw
@@ -97,7 +122,7 @@ grids:
 WMS source example:
 <pre>
 sources:
-  imagery:
+  default:
     type: wms
     grid: geodetic
     req:
@@ -108,7 +133,7 @@ sources:
 ARCGIS Source example:
 <pre>
 sources:
-  imagery:
+  default:
     type: arcgis
     grid: geodetic
     req:
