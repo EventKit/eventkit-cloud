@@ -693,6 +693,7 @@ class DataProviderSerializer(serializers.ModelSerializer):
     license = LicenseSerializer(required=False)
     metadata = serializers.SerializerMethodField(read_only=True)
     footprint_url = serializers.SerializerMethodField(read_only=True)
+    max_data_size = serializers.SerializerMethodField(read_only=True)
 
     class Meta:
         model = DataProvider
@@ -753,6 +754,10 @@ class DataProviderSerializer(serializers.ModelSerializer):
     @staticmethod
     def get_footprint_url(obj):
         return obj.footprint_url
+
+    @staticmethod
+    def get_max_data_size(obj):
+        return obj.max_data_size
 
 
 class ListJobSerializer(serializers.Serializer):
