@@ -1,8 +1,6 @@
 import * as React from 'react';
 import * as sinon from 'sinon';
-import axios from 'axios';
 import {shallow} from 'enzyme';
-import MockAdapter from 'axios-mock-adapter';
 import List from '@material-ui/core/List';
 import Paper from '@material-ui/core/Paper';
 import Checkbox from '@material-ui/core/Checkbox';
@@ -67,7 +65,14 @@ describe('ExportInfo component', () => {
                 exportName: '',
                 datapackDescription: '',
                 projectName: '',
-                providers: [],
+                providers: [{slug: 'osm'}],
+                providerInfo: {
+                    'osm': {
+                        availability: {
+                            status: 'STAT'
+                        },
+                }
+                },
                 exportOptions: {
                     '123': {
                         minZoom: 0,
@@ -87,6 +92,7 @@ describe('ExportInfo component', () => {
             onUpdateEstimate: sinon.spy(),
             setNextDisabled: sinon.spy(),
             setNextEnabled: sinon.spy(),
+            checkProvider: sinon.spy(),
             ...(global as any).eventkit_test_props,
             classes: {},
         }
@@ -202,14 +208,13 @@ describe('ExportInfo component', () => {
         expect(stateStub.calledWith({isRunning: true})).toBe(true);
     });
 
-    it('componentDidUpdate should update the providers and call checkProviders', () => {
+    it('componentDidUpdate should update the providers', () => {
         const stateStub = sinon.stub(instance, 'setState');
-        const checkStub = sinon.stub(instance, 'checkProviders');
+        // const checkStub = sinon.stub(instance, 'checkProviders');
         const nextProps = getProps();
         nextProps.providers = [{slug: '124'}];
         wrapper.setProps(nextProps);
         expect(stateStub.calledWith({providers: nextProps.providers})).toBe(true);
-        expect(checkStub.calledWith(nextProps.providers)).toBe(true);
     });
 
     it('onNameChange should call updateExportInfo', () => {
@@ -278,13 +283,12 @@ describe('ExportInfo component', () => {
         })).toBe(true);
     });
 
-    it('onRefresh should setState with empty availability and estimate and call checkProviders', () => {
+    it('onRefresh should setState with empty availability and estimate', () => {
         const p = getProps();
         p.providers = [{name: 'one'}, {name: 'two'}];
         p.exportInfo.providers = [...p.providers];
         setup(p);
         const stateStub = sinon.stub(instance, 'setState');
-        const checkStub = sinon.stub(instance, 'checkProviders');
         instance.onRefresh();
         const expected = [
             {name: 'one', availability: {}, estimate: {}},
@@ -292,134 +296,7 @@ describe('ExportInfo component', () => {
         ];
         expect(stateStub.calledOnce).toBe(true);
         expect(stateStub.calledWith({providers: expected}));
-        expect(checkStub.calledOnce).toBe(true);
         stateStub.restore();
-        checkStub.restore();
-    });
-
-    it('getAvailability should return updated provider', async () => {
-        const mock = new MockAdapter(axios, {delayResponse: 10});
-        const provider = {
-            slug: '123',
-        };
-        mock.onPost(`/api/providers/${provider.slug}/status`)
-            .reply(200, {status: 'some status'});
-        const expected = {
-            ...provider,
-            availability: {
-                status: 'some status',
-                slug: provider.slug,
-            },
-        };
-        const newProvider = await instance.getAvailability(provider, {});
-        expect(newProvider).toEqual(expected);
-        mock.restore();
-    });
-
-    it('getAvailability should return failed provider', async () => {
-        const mock = new MockAdapter(axios, {delayResponse: 10});
-        const provider = {
-            slug: '123',
-        };
-        mock.onPost(`/api/providers/${provider.slug}/status`)
-            .reply(400, {status: 'some status'});
-        const expected = {
-            ...provider,
-            availability: {
-                status: 'WARN',
-                type: 'CHECK_FAILURE',
-                message: 'An error occurred while checking this provider\'s availability.',
-                slug: provider.slug,
-            },
-        };
-        const newProvider = await instance.getAvailability(provider, {});
-        expect(newProvider).toEqual(expected);
-        mock.restore();
-    });
-
-    it('checkAvailability should setState with new provider', async () => {
-        setup({providers: [{slug: '123'}]});
-        const provider = {
-            slug: '123',
-        };
-
-        const newProvider = {
-            slug: '123',
-            availability: {
-                status: 'GOOD',
-            },
-        };
-
-        sinon.stub(instance, 'getAvailability').callsFake(() => (
-            new Promise((resolve) => {
-                setTimeout(() => resolve(newProvider), 10);
-            })
-        ));
-        const stateSpy = sinon.spy(instance, 'setState');
-        await instance.checkAvailability(provider);
-        expect(stateSpy.calledOnce).toBe(true);
-        expect(wrapper.state().providers).toEqual([newProvider]);
-    });
-
-    it('checkEstimate should setState with new provider', async () => {
-        setup({providers: [{slug: '123'}]});
-        const provider = {
-            slug: '123',
-        };
-
-        const newProvider = {
-            slug: '123',
-            estimate: {
-                slug: '123',
-                size: 10,
-                unit: 'MB',
-            }
-        };
-
-        sinon.stub(instance, 'getEstimate').callsFake(() => (
-            new Promise((resolve) => {
-                setTimeout(() => resolve(newProvider), 10);
-            })
-        ));
-        const stateSpy = sinon.spy(instance, 'setState');
-        await instance.checkEstimate(provider);
-        expect(stateSpy.calledOnce).toBe(true);
-        expect(wrapper.state().providers).toEqual([newProvider]);
-    });
-
-    it('checkEstimate should not setState when SERVE_ESTIMATES is false', async () => {
-        setup({}, false);
-        const provider = {
-            slug: '123',
-        };
-
-        const newProvider = {
-            slug: '123',
-            estimate: {
-                slug: '123',
-                size: 10,
-                unit: 'MB',
-            }
-        };
-
-        sinon.stub(instance, 'getEstimate').callsFake(() => (
-            new Promise((resolve) => {
-                setTimeout(() => resolve(newProvider), 10);
-            })
-        ));
-        const stateSpy = sinon.spy(instance, 'setState');
-        await instance.checkEstimate(provider);
-        expect(stateSpy.called).toBe(false);
-        expect(wrapper.state().providers).toEqual([]);
-    });
-
-    it('checkProviders should call checkAvailablity and checkEstimate for each provider', async () => {
-        const providers = [{display: true}, {display: false}, {display: true}];
-        const checkAvailStub = sinon.stub(instance, 'checkAvailability').resolves({});
-        const checkEstStub = sinon.stub(instance, 'checkEstimate');
-        await instance.checkProviders(providers);
-        expect(checkAvailStub.calledTwice).toBe(true);
-        expect(checkEstStub.calledTwice).toBe(true);
     });
 
     it('handlePopoverOpen should setState with anchorEl', () => {
@@ -464,23 +341,37 @@ describe('ExportInfo component', () => {
     });
 
     it('hasDisallowedSelection should return true if the provider status is FATAL', () => {
-        const provider = {
-            slug: 'test',
-            availability: {status: 'FATAL'},
+        const defaultProps = getProps();
+        const providerInfo = {
+            osm: {
+                availability: {
+                    status: 'FATAL',
+                },
+             }
         };
-        const info = {providers: [provider]};
-        setup({providers: [provider]});
-        expect(instance.hasDisallowedSelection(info)).toBe(true);
+        const exportInfo = {
+            ...defaultProps.exportInfo,
+            providerInfo
+        };
+        setup({exportInfo: exportInfo});
+        expect(instance.hasDisallowedSelection(exportInfo)).toBe(true);
     });
 
     it('hasDisallowedSelection should return false if no status', () => {
-        const provider = {
-            slug: 'test',
-            availability: {status: undefined},
+        const defaultProps = getProps();
+        const providerInfo = {
+            osm: {
+                availability: {
+                    status: undefined,
+                },
+             }
         };
-        const info = {providers: [provider]};
-        setup({providers: [provider]});
-        expect(instance.hasDisallowedSelection(info)).toBe(false);
+        const exportInfo = {
+            ...defaultProps.exportInfo,
+            providerInfo
+        };
+        setup({exportInfo: exportInfo});
+        expect(instance.hasDisallowedSelection(exportInfo)).toBe(false);
     });
 
     it('joyrideAddSteps should set state for steps in tour', () => {

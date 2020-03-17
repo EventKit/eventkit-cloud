@@ -16,6 +16,7 @@ from django.contrib.gis.geos import (
 from django.contrib.postgres.fields.jsonb import JSONField
 from django.core.serializers import serialize
 from django.contrib.gis.db import models
+from django.core.cache import cache
 from django.db.models.fields import CharField
 from django.utils import timezone
 from enum import Enum
@@ -258,6 +259,8 @@ class DataProvider(UIDMixin, TimeStampedModelMixin, CachedModelMixin):
             self.slug = self.name.replace(" ", "_").lower()
             if len(self.slug) > 40:
                 self.slug = self.slug[0:39]
+
+        cache.delete(f"base-config-{self.slug}")
         super(DataProvider, self).save(*args, **kwargs)
 
     def __str__(self):
@@ -282,6 +285,15 @@ class DataProvider(UIDMixin, TimeStampedModelMixin, CachedModelMixin):
         url = config.get("sources", {}).get("footprint", {}).get("req", {}).get("url")
         if url:
             return get_mapproxy_footprint_url(self.slug)
+
+    """
+    Max datasize is the size in megabytes.
+    """
+
+    @property
+    def max_data_size(self):
+        config = yaml.load(self.config)
+        return config.get("max_data_size", None)
 
 
 class DataProviderStatus(UIDMixin, TimeStampedModelMixin):

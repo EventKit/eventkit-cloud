@@ -14,7 +14,7 @@ import yaml
 
 from eventkit_cloud.jobs.models import (
     ExportFormat, ExportProfile, Job, Region,
-    DataProvider, DataProviderTask, DatamodelPreset)
+    DataProvider, DataProviderTask, DatamodelPreset, MapImageSnapshot)
 
 logger = logging.getLogger(__name__)
 
@@ -319,7 +319,7 @@ class TestDataProvider(TestCase):
     def test_snapshot_signal(self, mock_save_thumbnail, mock_make_thumbnail_downloadable, makedirs):
         """Test that triggering a save on a provider with a preview_url will attach a MapImageSnapshot."""
         mock_save_thumbnail.return_value = '/var/lib/downloads/images/test_thumb.jpg'
-        # An "random id number for the MapImageSnapshot key
+        # An instance of MapImageSnapshot
         mock_make_thumbnail_downloadable.return_value = 1
         stat = os.stat
 
@@ -352,6 +352,16 @@ class TestDataProvider(TestCase):
         ]
 
         mocked_cache.set.assert_has_calls(cache_calls, any_order=True)
+
+    @patch('eventkit_cloud.jobs.models.cache')
+    def test_deleted_mapproxy_cache_on_save(self, mocked_cache):
+        """Test that triggers a save on a provider and clears the associated mapproxy cache"""
+        self.export_provider.save()
+
+        cache_call = [
+            call(f"base-config-{self.export_provider.slug}")
+        ]
+        mocked_cache.delete.assert_has_calls(cache_call)
 
     @patch("eventkit_cloud.jobs.models.get_mapproxy_metadata_url")
     def test_metadata(self, mock_get_mapproxy_metadata_url):

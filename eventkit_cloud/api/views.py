@@ -4,7 +4,7 @@ import logging
 # -*- coding: utf-8 -*-
 from collections import OrderedDict
 from datetime import datetime, timedelta
-
+from django.core.cache import cache
 from dateutil import parser
 from django.conf import settings
 from django.contrib.auth.models import User, Group
@@ -21,11 +21,8 @@ from rest_framework.decorators import action
 from rest_framework.parsers import JSONParser
 from rest_framework.renderers import JSONRenderer
 from rest_framework.response import Response
-
 from rest_framework.serializers import ValidationError
-
 from audit_logging.models import AuditEvent
-
 from eventkit_cloud.api.filters import (
     ExportRunFilter,
     JobFilter,
@@ -104,6 +101,7 @@ from eventkit_cloud.tasks.task_factory import (
 from eventkit_cloud.utils.gdalutils import get_area
 from eventkit_cloud.utils.provider_check import perform_provider_check
 from eventkit_cloud.utils.stats.aoi_estimators import AoiEstimator
+from eventkit_cloud.utils.stats.geomutils import get_estimate_cache_key
 
 # Get an instance of a logger
 logger = logging.getLogger(__name__)
@@ -389,24 +387,51 @@ class JobViewSet(viewsets.ModelViewSet):
                                 ]
                             }
                             return Response(error_data, status=status_code)
+
                         # Check max area (skip for superusers)
                         if not self.request.user.is_superuser:
+                            error_data = {"errors": []}
                             for provider_task in job.provider_tasks.all():
                                 provider = provider_task.provider
+                                bbox = job.extents
+                                srs = "4326"
+                                cache_key = get_estimate_cache_key(
+                                    bbox, srs, provider_task.min_zoom, provider_task.max_zoom, provider.slug
+                                )
+                                # find cache key that contains the estimator hash with correct time, size values
+                                size, time = cache.get(cache_key, (None, None))
                                 max_selection = provider.max_selection
-                                if max_selection and 0 < float(max_selection) < get_area(job.the_geom.geojson):
-                                    status_code = status.HTTP_400_BAD_REQUEST
-                                    error_data = {
-                                        "errors": [
+
+                                # Don't rely solely on max_data_size as estimates can sometimes be inaccurate
+                                # Allow user to get a job that passes max_data_size or max_selection condition:
+                                if (size and provider.max_data_size) is not None:
+                                    # max_data_size is an optional configuration
+                                    if size <= provider.max_data_size:
+                                        continue
+                                    else:
+                                        status_code = status.HTTP_400_BAD_REQUEST
+                                        error_data["errors"] += [
                                             {
                                                 "status": status_code,
-                                                "title": _("Selection area too large"),
-                                                "detail": _("The selected area is too large " "for provider '%s'")
-                                                % provider.name,
+                                                "title": _("Estimated size too large"),
+                                                "detail": _(
+                                                    f"The estimated size "
+                                                    f"exceeds the maximum data size for the {provider.name}"
+                                                ),
                                             }
                                         ]
-                                    }
-                                    return Response(error_data, status=status_code)
+
+                                if max_selection and 0 < float(max_selection) < get_area(job.the_geom.geojson):
+                                    status_code = status.HTTP_400_BAD_REQUEST
+                                    error_data["errors"] += [
+                                        {
+                                            "status": status_code,
+                                            "title": _("Selection area too large"),
+                                            "detail": _(f"The selected area is too large for the {provider.name}"),
+                                        }
+                                    ]
+                            if error_data["errors"]:
+                                return Response(error_data, status=status_code)
 
                         if preset:
                             """Get the tags from the uploaded preset."""
@@ -434,6 +459,7 @@ class JobViewSet(viewsets.ModelViewSet):
                             job.json_tags = hdm_default_tags
                             job.save()
                     except Exception as e:
+                        logger.error(e)
                         status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
                         error_data = {
                             "errors": [
@@ -862,6 +888,7 @@ class DataProviderViewSet(viewsets.ReadOnlyModelViewSet):
 
         except Exception as e:
             logger.error(e)
+
             return Response([{"detail": _("Internal Server Error")}], status=status.HTTP_500_INTERNAL_SERVER_ERROR,)
 
     def list(self, request, slug=None, *args, **kwargs):
@@ -2001,23 +2028,16 @@ class EstimatorView(views.APIView):
         if request.query_params.get("slugs", None):
             estimator = AoiEstimator(bbox=bbox, bbox_srs=srs, min_zoom=min_zoom, max_zoom=max_zoom)
             for slug in request.query_params.get("slugs").split(","):
-                try:
-                    size = estimator.get_estimate_from_slug(AoiEstimator.Types.SIZE, slug)[0]
-                    time = estimator.get_estimate_from_slug(AoiEstimator.Types.TIME, slug)[0]
-                    payload += [
-                        {
-                            "slug": slug,
-                            "size": {"value": size, "unit": "MB"},
-                            "time": {"value": time, "unit": "seconds"},
-                        }
-                    ]
-                except Exception as e:
-                    logger.error(e)
-                    return Response(
-                        [{"detail": _("Failed to get the estimates")}], status=status.HTTP_500_INTERNAL_SERVER_ERROR
-                    )
+
+                size = estimator.get_estimate_from_slug(AoiEstimator.Types.SIZE, slug)[0]
+                time = estimator.get_estimate_from_slug(AoiEstimator.Types.TIME, slug)[0]
+                payload += [
+                    {"slug": slug, "size": {"value": size, "unit": "MB"}, "time": {"value": time, "unit": "seconds"}}
+                ]
+                cache_key = get_estimate_cache_key(bbox, srs, min_zoom, max_zoom, slug)
+                cache.set(cache_key, (size, time))
         else:
-            return Response([{"detail": _("No providers found")}], status=status.HTTP_400_BAD_REQUEST)
+            return Response([{"detail": _("No estimates found")}], status=status.HTTP_400_BAD_REQUEST)
         return Response(payload, status=status.HTTP_200_OK)
 
 
