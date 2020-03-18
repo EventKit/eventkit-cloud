@@ -168,7 +168,7 @@ services:
       - "${SITE_NAME}:${SITE_IP}"
     command: /home/eventkit/miniconda3/envs/eventkit-cloud/lib/python3.6/site-packages/scripts/run-celery-beat.sh
   postgis:
-    image: mdillon/postgis:9.5
+    image: kartoza/postgis:11.5-2.5
     environment:
       - POSTGRES_USER=eventkit
       - POSTGRES_PASSWORD=eventkit_exports
