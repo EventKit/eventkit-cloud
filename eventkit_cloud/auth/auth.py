@@ -24,7 +24,7 @@ def auto_logout(get_response):
         if not request.user.is_authenticated:
             return get_response(request)
 
-        if getattr(settings, 'AUTO_LOGOUT_SECONDS'):
+        if getattr(settings, "AUTO_LOGOUT_SECONDS"):
             last_active_at_iso = request.session.get(settings.SESSION_USER_LAST_ACTIVE_AT)
             if last_active_at_iso:
                 # Check if our inactive time has exceeded the auto logout time limit.
@@ -44,8 +44,8 @@ def auto_logout(get_response):
                 set_session_user_last_active_at(request)
             # We want to allow administrative users who are actively browsing the admin page to stay logged in.
             # request.path is /this/path or simply something like /
-            root_context_path = request.path.lstrip('/').split('/')[0]
-            if root_context_path == 'admin':
+            root_context_path = request.path.lstrip("/").split("/")[0]
+            if root_context_path == "admin":
                 set_session_user_last_active_at(request)
         return get_response(request)
 
