@@ -10,8 +10,10 @@ from django.contrib.auth import logout as auth_logout
 from django.contrib.auth import authenticate
 from django.contrib.auth.models import User
 from django.shortcuts import redirect
+from urllib.parse import urlparse
 
 from eventkit_cloud.auth.models import OAuth
+from eventkit_cloud.ui.helpers import set_session_user_last_active_at
 
 logger = logging.getLogger(__name__)
 
@@ -22,22 +24,29 @@ def auto_logout(get_response):
         if not request.user.is_authenticated:
             return get_response(request)
 
-        last_active_at_iso = request.session.get(settings.SESSION_USER_LAST_ACTIVE_AT)
-        if last_active_at_iso:
-            # Check if our inactive time has exceeded the auto logout time limit.
-            last_active_at = dateutil.parser.parse(last_active_at_iso)
-            time_passed = datetime.utcnow().replace(tzinfo=pytz.utc) - last_active_at
-            if time_passed >= timedelta(0, settings.AUTO_LOGOUT_SECONDS, 0):
-                # Force logout and redirect to login page.
-                auth_logout(request)
-                response = redirect("login")
-                if settings.SESSION_USER_LAST_ACTIVE_AT in request.session:
-                    del request.session[settings.SESSION_USER_LAST_ACTIVE_AT]
-                response.delete_cookie(
-                    settings.AUTO_LOGOUT_COOKIE_NAME, domain=settings.SESSION_COOKIE_DOMAIN,
-                )
-                return response
-
+        if getattr(settings, 'AUTO_LOGOUT_SECONDS'):
+            last_active_at_iso = request.session.get(settings.SESSION_USER_LAST_ACTIVE_AT)
+            if last_active_at_iso:
+                # Check if our inactive time has exceeded the auto logout time limit.
+                last_active_at = dateutil.parser.parse(last_active_at_iso)
+                time_passed = datetime.utcnow().replace(tzinfo=pytz.utc) - last_active_at
+                if time_passed >= timedelta(0, settings.AUTO_LOGOUT_SECONDS, 0):
+                    # Force logout and redirect to login page.
+                    auth_logout(request)
+                    response = redirect("login")
+                    if settings.SESSION_USER_LAST_ACTIVE_AT in request.session:
+                        del request.session[settings.SESSION_USER_LAST_ACTIVE_AT]
+                    response.delete_cookie(
+                        settings.AUTO_LOGOUT_COOKIE_NAME, domain=settings.SESSION_COOKIE_DOMAIN,
+                    )
+                    return response
+            else:
+                set_session_user_last_active_at(request)
+            # We want to allow administrative users who are actively browsing the admin page to stay logged in.
+            # request.path is /this/path or simply something like /
+            root_context_path = request.path.lstrip('/').split('/')[0]
+            if root_context_path == 'admin':
+                set_session_user_last_active_at(request)
         return get_response(request)
 
     return middleware
