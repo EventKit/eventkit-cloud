@@ -323,12 +323,7 @@ describe('Application component', () => {
         expect(addStub.callCount).toEqual(wrapper.instance().userActiveInputTypes.length);
         expect(props.userActive.calledOnce).toBe(true);
         addStub.restore();
-        const setStub = sinon.stub(window, 'setTimeout').callsFake((callback, time) => { callback(); });
         props.userActive.reset();
-        wrapper.instance().handleUserActiveInput();
-        expect(setStub.calledOnce).toBe(true);
-        expect(props.userActive.calledOnce).toBe(true);
-        setStub.restore();
     });
 
     it('stopSendingUserActivePings should return with no side effects', () => {

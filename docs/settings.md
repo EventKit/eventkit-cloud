@@ -155,6 +155,9 @@ Django allows built in users to be created via the admin console (such as superu
 (Default: False)
 
 ##### Auto Logout
+These settings will limit the amount of time a user is logged into EventKit.  Users browsing the UI will automatically, 
+stay logged in.  If making API calls, an integrator will need to periodically make a request to `/user_active`, to 
+ensure that they remain logged in.  Additionally any calls to the admin page will all the user to remain logged in. 
 <pre>AUTO_LOGOUT_SECONDS=600</pre>
 (Default: 0)
 <pre>AUTO_LOGOUT_WARNING_AT_SECONDS_LEFT=300</pre>
