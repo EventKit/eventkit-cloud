@@ -171,8 +171,8 @@ services:
     image: kartoza/postgis:11.5-2.5
     environment:
       - POSTGRES_USER=eventkit
-      - POSTGRES_PASSWORD=eventkit_exports
-      - POSTGRES_DB=eventkit_exports
+      - POSTGRES_PASS=eventkit_exports
+      - POSTGRES_DBNAME=eventkit_exports
     expose:
       - "5432"
     # This is stored up a directory because there will be permissions issues if ran with Vagrant shared directory.
