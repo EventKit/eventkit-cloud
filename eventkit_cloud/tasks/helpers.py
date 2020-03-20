@@ -548,13 +548,7 @@ def clean_config(config):
     :param config: A yaml structured string.
     :return:
     """
-    service_keys = [
-        "cert_var",
-        "cert_cred",
-        "concurrency",
-        "max_repeat",
-        "overpass_query",
-    ]
+    service_keys = ["cert_var", "cert_cred", "concurrency", "max_repeat", "overpass_query", "max_data_size"]
 
     conf = yaml.safe_load(config) or dict()
 

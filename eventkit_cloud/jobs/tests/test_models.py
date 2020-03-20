@@ -14,7 +14,7 @@ import yaml
 
 from eventkit_cloud.jobs.models import (
     ExportFormat, ExportProfile, Job, Region,
-    DataProvider, DataProviderTask, DatamodelPreset)
+    DataProvider, DataProviderTask, DatamodelPreset, MapImageSnapshot)
 
 logger = logging.getLogger(__name__)
 
@@ -319,7 +319,7 @@ class TestDataProvider(TestCase):
     def test_snapshot_signal(self, mock_save_thumbnail, mock_make_thumbnail_downloadable, makedirs):
         """Test that triggering a save on a provider with a preview_url will attach a MapImageSnapshot."""
         mock_save_thumbnail.return_value = '/var/lib/downloads/images/test_thumb.jpg'
-        # An "random id number for the MapImageSnapshot key
+        # An instance of MapImageSnapshot
         mock_make_thumbnail_downloadable.return_value = 1
         stat = os.stat
 
