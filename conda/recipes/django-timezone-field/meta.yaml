@@ -15,12 +15,12 @@ build:
 
 requirements:
   host:
-    - django >=1.8
+    - django >=1.8,<3.0
     - pip
     - python
     - pytz
   run:
-    - django >=1.8
+    - django >=1.8,<3.0
     - python
     - pytz
 
@@ -32,10 +32,10 @@ about:
   home: http://github.com/mfogel/django-timezone-field/
   license: BSD
   license_family: BSD
-  license_file: 
+  license_file:
   summary: A Django app providing database and form fields for pytz timezone objects.
-  doc_url: 
-  dev_url: 
+  doc_url:
+  dev_url:
 
 extra:
   recipe-maintainers:
