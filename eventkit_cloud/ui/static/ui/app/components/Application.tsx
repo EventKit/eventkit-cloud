@@ -21,6 +21,7 @@ import Loadable from 'react-loadable';
 import { connectedReduxRedirect } from 'redux-auth-wrapper/history4/redirect';
 import { Redirect, Route, RouteComponentProps } from 'react-router';
 import { routerActions } from 'connected-react-router';
+import debounce from 'lodash/debounce';
 import PageLoading from './common/PageLoading';
 import theme from "../styles/eventkit_theme";
 import '../styles/bootstrap/css/bootstrap.css';
@@ -297,7 +298,9 @@ export class Application extends React.Component<Props, State> {
     private checkAutoLogoutIntervalId: number | null;
     private autoLogoutWarningIntervalId: number | null;
     private isSendingUserActivePings: boolean;
-    private handleUserActiveInput: () => void;
+    private handleUserActiveInput = debounce(() => {
+            this.props.userActive();
+        }, 30 * 1000);
 
     static defaultProps = {
         children: null,
@@ -389,12 +392,14 @@ export class Application extends React.Component<Props, State> {
 
         if (prevState.childContext !== this.state.childContext) {
             this.notificationsPageSize = Number(this.state.childContext.config.NOTIFICATIONS_PAGE_SIZE);
-            if (this.state.loggedIn || this.props.userData) {
-                this.startCheckingForAutoLogout();
-                this.startSendingUserActivePings();
-                this.startListeningForNotifications();
-            }
         }
+
+        if (!prevState.loggedIn && this.state.loggedIn) {
+            this.startCheckingForAutoLogout();
+            this.startSendingUserActivePings();
+            this.startListeningForNotifications();
+        }
+
         if (this.state.loggedIn && this.props.width !== prevProps.width) {
             if (this.props.width === 'xl') {
                 this.props.openDrawer();
@@ -450,6 +455,7 @@ export class Application extends React.Component<Props, State> {
 
     componentWillUnmount() {
         this.stopListeningForNotifications();
+        this.handleUserActiveInput.cancel();
     }
 
     onMenuItemClick() {
@@ -585,19 +591,6 @@ export class Application extends React.Component<Props, State> {
         }
 
         this.isSendingUserActivePings = true;
-
-        let sendPing = true;
-        this.handleUserActiveInput = () => {
-            if (sendPing) {
-                // Allow the next ping to be sent after one minute.
-                sendPing = false;
-                window.setTimeout(() => {
-                    sendPing = true;
-                }, 60 * 1000);
-                // Notify server.
-                this.props.userActive();
-            }
-        };
 
         // Check all forms of input to track user activity.
         this.userActiveInputTypes.forEach((eventType: string) => {
