@@ -2,9 +2,12 @@ import logging
 from abc import ABCMeta, abstractmethod
 
 import requests
+from django.core.cache import cache
 import os
 from django.conf import settings
 from eventkit_cloud.utils import auth_requests
+from eventkit_cloud.utils.geocoding.geocode_auth import get_auth_headers, CACHE_TOKEN_KEY, CACHE_TOKEN_TIMEOUT, \
+    get_session_cookies
 
 logger = logging.getLogger(__name__)
 
@@ -86,7 +89,22 @@ class GeocodeAdapter(metaclass=ABCMeta):
 
     def get_response(self, payload):
         if os.getenv("GEOCODING_AUTH_CERT"):
-            response = auth_requests.get(self.url, params=payload, cert_var="GEOCODING_AUTH_CERT")
+            response = auth_requests.get(
+                self.url,
+                params=payload,
+                cookies=get_session_cookies(),
+                headers=get_auth_headers(),
+                cert_var="GEOCODING_AUTH_CERT"
+            )
+            if response.headers != get_auth_headers():
+                cache.set(CACHE_TOKEN_KEY, response.headers, CACHE_TOKEN_TIMEOUT)
+            if response.cookies != get_session_cookies():
+                logger.info(f'COOKIES: {response.cookies}')
+                logger.info(f'GET_SESSION_COOKIES: {get_session_cookies()}')
+                s = requests.session()
+                # what is the name of my cookie when resetting?
+                new_cookie = s.cookies.set('JSESSIONID', response.cookies)
+                logger.info(f'CHANGED COOKIES: {new_cookie}')
         else:
             response = requests.get(self.url, params=payload)
 
