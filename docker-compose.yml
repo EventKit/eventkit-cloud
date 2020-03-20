@@ -177,7 +177,7 @@ services:
       - "5432"
     # This is stored up a directory because there will be permissions issues if ran with Vagrant shared directory.
     volumes:
-      - "postgis_database:/var/lib/postgresql/data"
+      - "postgis_database:/var/lib/postgresql"
   rabbitmq:
     image: rabbitmq:3.6.6-management
     expose:
