@@ -183,7 +183,7 @@ export class DataCartDetails extends React.Component<Props, State> {
                         >
                             {getSqKmString(this.props.cartDetails.job.extent)}
                         </CustomTableRow>
-                        <div className="qa-DataPackAoiInfo-div-map" style={{maxHeight: '400px', marginTop: '10px'}}>
+                        <div className="qa-DataPackAoiInfo-div-map" style={{ marginTop: '10px'}}>
                             <MapView
                                 id={"summaryMap"}
                                 selectedBaseMap={selectedBasemap}
