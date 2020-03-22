@@ -21,12 +21,23 @@ def get_auth_headers():
     return headers
 
 
+def update_auth_headers(response):
+    if response.headers != get_auth_headers():
+        cache.set(CACHE_TOKEN_KEY, response.headers, CACHE_TOKEN_TIMEOUT)
+
+
 def get_session_cookies():
     s = requests.session()
     if getattr(settings, "GEOCODING_AUTH_URL") is not None:
         resp = s.get(settings.GEOCODING_AUTH_URL)
         cookies = resp.cookies
         return cookies
+
+
+def update_session_cookies(session):
+    cached_cookies = cache.get("cookies")
+    if cached_cookies != session.cookies:
+        cache.set("cookies")
 
 
 def authenticate():
@@ -48,9 +59,11 @@ def authenticate():
                 cert=temp_file.name,
                 headers={"Authorization": "Bearer " + str(token)}
             ).json()
+
             logger.info(f'AUTH_RESP: {auth_response}')
             token = auth_response.get("token")
             cache.set(CACHE_TOKEN_KEY, token, CACHE_TOKEN_TIMEOUT)
+            logger.info(f'TOKEN IN AUTH RESP: {token}')
             return token
     except requests.exceptions.RequestException as e:
         logger.error(traceback.print_exc())

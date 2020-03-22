@@ -3,11 +3,12 @@ from abc import ABCMeta, abstractmethod
 
 import requests
 from django.core.cache import cache
+import json
 import os
 from django.conf import settings
 from eventkit_cloud.utils import auth_requests
 from eventkit_cloud.utils.geocoding.geocode_auth import get_auth_headers, CACHE_TOKEN_KEY, CACHE_TOKEN_TIMEOUT, \
-    get_session_cookies
+    get_session_cookies, update_auth_headers, update_session_cookies
 
 logger = logging.getLogger(__name__)
 
@@ -87,28 +88,53 @@ class GeocodeAdapter(metaclass=ABCMeta):
         """
         pass
 
+    # check validity of data from response
+    def check_data(self, resp_data):
+        try:
+            if "features" in resp_data:
+                logger.info(f'DATA FROM RESPONSE: {resp_data}')
+                return True
+        except Exception:
+            print("Invalid response")
+        return False
+
     def get_response(self, payload):
         if os.getenv("GEOCODING_AUTH_CERT"):
-            response = auth_requests.get(
+            auth_session = auth_requests.AuthSession()
+            response = auth_session.session.get(
                 self.url,
                 params=payload,
                 cookies=get_session_cookies(),
-                headers=get_auth_headers(),
-                cert_var="GEOCODING_AUTH_CERT"
+                # headers=get_auth_headers(),
             )
-            if response.headers != get_auth_headers():
-                cache.set(CACHE_TOKEN_KEY, response.headers, CACHE_TOKEN_TIMEOUT)
-            if response.cookies != get_session_cookies():
-                logger.info(f'COOKIES: {response.cookies}')
-                logger.info(f'GET_SESSION_COOKIES: {get_session_cookies()}')
-                s = requests.session()
-                # what is the name of my cookie when resetting?
-                new_cookie = s.cookies.set('JSESSIONID', response.cookies)
-                logger.info(f'CHANGED COOKIES: {new_cookie}')
+            logger.info(f'1ST RESPONSE {response}')
+            if response.ok:
+                validated = self.check_data(response.json())
+                logger.info(f'VALID {validated}')
+                if validated:
+                    return response
+                else:
+                    response = auth_requests.get(
+                        self.url,
+                        params=payload,
+                        cert_var="GEOCODING_AUTH_CERT"
+                    )
+                    logger.info(f'2ND RESPONSE {response.json()}')
+                    if response.ok:
+                        valid = self.check_data(response)
+                        logger.info(f'VALID {valid}')
+                        if valid:
+                            # if valid, update cache headers and cookies
+                            # update_auth_headers(response)
+                            update_session_cookies(auth_session)
+                            return response
+            else:
+                raise Exception("The Geocoding service received an error. Please try again or contact an Eventkit "
+                                "administrator.")
         else:
             response = requests.get(self.url, params=payload)
 
-        if response.status_code in [401, 403]:
+        if response.status_code in [200]:
             error_message = "EventKit was not able to authenticate to the Geocoding service."
             logger.error(error_message)
             raise AuthenticationError(error_message)

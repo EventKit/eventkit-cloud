@@ -146,6 +146,17 @@ def handle_basic_auth(func):
     return wrapper
 
 
+class AuthSession(object):
+
+    def __init__(self):
+        self.session = requests.session()
+
+        @cert_var_to_cert
+        @handle_basic_auth
+        def get(url, **kwargs):
+            return self.session.get(url, **kwargs)
+
+
 @cert_var_to_cert
 @handle_basic_auth
 def get(url, **kwargs):
