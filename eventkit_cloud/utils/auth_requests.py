@@ -150,6 +150,7 @@ class AuthSession(object):
 
     def __init__(self):
         self.session = requests.session()
+        self.cookies = self.session.cookies
 
         @cert_var_to_cert
         @handle_basic_auth

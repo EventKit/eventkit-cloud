@@ -91,8 +91,8 @@ class GeocodeAdapter(metaclass=ABCMeta):
     # check validity of data from response
     def check_data(self, resp_data):
         try:
-            if "features" in resp_data:
-                logger.info(f'DATA FROM RESPONSE: {resp_data}')
+            if "features" in resp_data.json():
+                logger.info(f'DATA FROM RESPONSE: {resp_data.json()}')
                 return True
         except Exception:
             print("Invalid response")
@@ -105,13 +105,11 @@ class GeocodeAdapter(metaclass=ABCMeta):
                 self.url,
                 params=payload,
                 cookies=get_session_cookies(),
-                # headers=get_auth_headers(),
+                headers=get_auth_headers(),
             )
-            logger.info(f'1ST RESPONSE {response}')
+            logger.info(f'1ST RESPONSE COOKIES {response.cookies}')
             if response.ok:
-                validated = self.check_data(response.json())
-                logger.info(f'VALID {validated}')
-                if validated:
+                if self.check_data(response):
                     return response
                 else:
                     response = auth_requests.get(
@@ -121,12 +119,10 @@ class GeocodeAdapter(metaclass=ABCMeta):
                     )
                     logger.info(f'2ND RESPONSE {response.json()}')
                     if response.ok:
-                        valid = self.check_data(response)
-                        logger.info(f'VALID {valid}')
-                        if valid:
+                        if self.check_data(response):
                             # if valid, update cache headers and cookies
-                            # update_auth_headers(response)
                             update_session_cookies(auth_session)
+                            update_auth_headers(response)
                             return response
             else:
                 raise Exception("The Geocoding service received an error. Please try again or contact an Eventkit "

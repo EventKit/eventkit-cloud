@@ -37,7 +37,7 @@ def get_session_cookies():
 def update_session_cookies(session):
     cached_cookies = cache.get("cookies")
     if cached_cookies != session.cookies:
-        cache.set("cookies")
+        cache.set("cookies", session.cookies)
 
 
 def authenticate():
