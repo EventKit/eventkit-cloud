@@ -170,16 +170,16 @@ services:
       - "${SITE_NAME}:${SITE_IP}"
     command: /home/eventkit/miniconda3/envs/eventkit-cloud/lib/python3.6/site-packages/scripts/run-celery-beat.sh
   postgis:
-    image: mdillon/postgis:9.5
+    image: kartoza/postgis:11.5-2.5
     environment:
       - POSTGRES_USER=eventkit
-      - POSTGRES_PASSWORD=eventkit_exports
-      - POSTGRES_DB=eventkit_exports
+      - POSTGRES_PASS=eventkit_exports
+      - POSTGRES_DBNAME=eventkit_exports
     expose:
       - "5432"
     # This is stored up a directory because there will be permissions issues if ran with Vagrant shared directory.
     volumes:
-      - "postgis_database:/var/lib/postgresql/data"
+      - "postgis_database:/var/lib/postgresql"
   rabbitmq:
     image: rabbitmq:3.6.6-management
     expose:

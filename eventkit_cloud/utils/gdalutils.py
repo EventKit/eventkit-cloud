@@ -259,34 +259,37 @@ def is_envelope(geojson_path):
         return False
 
 
-# TODO: deduplicate clip_dataset and convert.
-
-
 @retry
-def clip_dataset(
-    boundary=None, in_dataset=None, out_dataset=None, fmt=None, table=None, task_uid=None, params: str = "",
+def convert(
+    boundary=None,
+    in_dataset=None,
+    out_dataset=None,
+    fmt=None,
+    table=None,
+    task_uid=None,
+    projection: int = None,
+    params: str = "",
+    use_translate=False,
 ):
     """
-    Uses gdalwarp or ogr2ogr to clip a supported dataset file to a mask.
+    Uses gdalwarp or ogr2ogr to clip a supported dataset file to a mask if boundary is passed in.
+    If boundary is not passed in, uses gdalwarp or ogr2ogr to convert a raster or vector dataset into another format.
     :param boundary: A geojson file or bbox (xmin, ymin, xmax, ymax) to serve as a cutline
     :param in_dataset: A raster or vector file to be clipped
     :param out_dataset: The dataset to put the clipped output in (if not specified will use in_dataset)
     :param fmt: Short name of output driver to use (defaults to input format)
     :param table: Table name in database for in_dataset
     :param task_uid: A task uid to update
+    :param projection: A projection as an int referencing an EPSG code (e.g. 4326 = EPSG:4326)
     :param params: Additional options to pass to the convert method (e.g. "-co SOMETHING")
+    :param use_translate: If true will convert file using gdal_translate instead of gdalwarp.
     :return: Filename of clipped dataset
     """
-
     if not in_dataset:
         raise Exception("No provided 'in' dataset")
 
     # Strip optional file prefixes
     file_prefix, in_dataset_file = strip_prefixes(in_dataset)
-
-    if not boundary:
-        raise Exception("Could not open boundary mask file: {0}".format(boundary))
-
     if not out_dataset:
         out_dataset = in_dataset_file
 
@@ -297,194 +300,79 @@ def clip_dataset(
         in_dataset = f"{file_prefix}{in_dataset_file}"
     meta = get_meta(in_dataset_file)
 
+    if projection is None:
+        projection = 4326
+
     if not fmt:
         fmt = meta["driver"] or "gpkg"
 
-    band_type = ""
-
-    # Overwrite is added to the commands in the event that the dataset is retried.  In general we want these to
-    # act idempotently.
-    if table:
-        cmd_template = Template(
-            "ogr2ogr -skipfailures $extra_parameters -nlt PROMOTE_TO_MULTI -overwrite -f $fmt -clipsrc $boundary $out_ds $in_ds $table"  # NOQA
-        )
-    elif meta["is_raster"]:
-        cmd_template = Template(
-            "gdalwarp -overwrite $extra_parameters -cutline $boundary -crop_to_cutline $dstalpha -of $fmt $type $in_ds $out_ds"  # NOQA
-        )
-        # Geopackage raster only supports byte band type, so check for that
-        if fmt.lower() == "gpkg":
-            band_type = "-ot byte"
+    # Geopackage raster only supports byte band type, so check for that
+    if fmt.lower() == "gpkg":
+        band_type = "-ot byte"
     else:
-        cmd_template = Template(
-            "ogr2ogr -skipfailures $extra_parameters -nlt PROMOTE_TO_MULTI -overwrite -f $fmt -clipsrc $boundary $out_ds $in_ds"  # NOQA
-        )
+        band_type = ""
+    if meta.get("nodata") is None and not is_envelope(in_dataset_file):
+        dstalpha = "-dstalpha"
+    else:
+        dstalpha = ""
 
-    temp_boundfile = None
-    if isinstance(boundary, list):
-        boundary = " ".join(str(i) for i in boundary)  # ogr2ogr can handle bbox as params
-        if not table:  # gdalwarp needs a file
-            temp_boundfile = NamedTemporaryFile()
-            bounds_template = Template(
-                '{"type":"MultiPolygon","coordinates":[[[[$xmin,$ymin],'
-                "[$xmax,$ymin],[$xmax,$y"
-                "max],[$xmin,$ymax],[$xmin,$ymin]]]]}"
-            )
-            geojson = bounds_template.safe_substitute(
-                {"xmin": boundary[0], "ymin": boundary[1], "xmax": boundary[2], "ymax": boundary[3]}
-            )
-            temp_boundfile.write(geojson.encode())
-            temp_boundfile.flush()
-            boundary = temp_boundfile.name
-
-    try:
-        if meta.get("nodata") is None and not is_envelope(in_dataset_file):
-            dstalpha = "-dstalpha"
-        else:
-            dstalpha = ""
+    # Clip the dataset if a boundary is passed in.
+    if boundary:
+        temp_boundfile = None
+        if isinstance(boundary, list):
+            boundary = " ".join(str(i) for i in boundary)  # ogr2ogr can handle bbox as params
+            if not table:  # gdalwarp needs a file
+                temp_boundfile = NamedTemporaryFile()
+                xmin, ymin, xmax, ymax = boundary
+                geojson = (
+                    f"{{'type':'MultiPolygon','coordinates':[[[[{xmin},{ymin}],"
+                    f"[{xmax},{ymin}],[{xmax},{ymax}],[{xmin},{ymax}],[{xmin},{ymin}]]]]}}"
+                )
+                temp_boundfile.write(geojson.encode())
+                temp_boundfile.flush()
+                boundary = temp_boundfile.name
+        # Overwrite is added to the commands in the event that the dataset is retried.  In general we want these to
+        # act idempotently.
 
         if table:
-            cmd = cmd_template.safe_substitute(
-                {
-                    "boundary": boundary,
-                    "fmt": fmt,
-                    "type": band_type,
-                    "in_ds": in_dataset,
-                    "out_ds": out_dataset,
-                    "table": table,
-                    "extra_parameters": params,
-                }
-            )
+            cmd = f"ogr2ogr -skipfailures {params} -nlt PROMOTE_TO_MULTI -overwrite -f {fmt} -clipsrc {boundary} {out_dataset} {in_dataset} {table} -s_srs EPSG:4326 -t_srs EPSG:{projection}"  # NOQA
+        elif meta["is_raster"]:
+            if use_translate:
+                cmd = f"gdal_translate {params} -of {fmt} {band_type} {in_dataset} {out_dataset}"
+            else:
+                cmd = f"gdalwarp -overwrite {params} -cutline {boundary} -crop_to_cutline {dstalpha} -of {fmt} {band_type} {in_dataset} {out_dataset} -s_srs EPSG:4326 -t_srs EPSG:{projection}"  # NOQA
         else:
-            cmd = cmd_template.safe_substitute(
-                {
-                    "boundary": boundary,
-                    "fmt": fmt,
-                    "dstalpha": dstalpha,
-                    "type": band_type,
-                    "in_ds": in_dataset,
-                    "out_ds": out_dataset,
-                    "extra_parameters": params,
-                }
-            )
+            cmd = f"ogr2ogr -skipfailures {params} -nlt PROMOTE_TO_MULTI -overwrite -f {fmt} -clipsrc {boundary} {out_dataset} {in_dataset} -s_srs EPSG:4326 -t_srs EPSG:{projection}"  # NOQA
+    else:  # No boundary given, so just convert the dataset to the requested format.
+        if meta["is_raster"]:
+            if use_translate:
+                cmd = f"gdal_translate {params} -of {fmt} {band_type} {in_dataset} {out_dataset}"
+            else:
+                cmd = f"gdalwarp -overwrite {params} -of {fmt} {band_type} {in_dataset} {out_dataset} -s_srs EPSG:4326 -t_srs EPSG:{projection}"  # NOQA
+        else:
+            cmd = f"ogr2ogr -overwrite {params} -f '{fmt}' {out_dataset} {in_dataset} -s_srs EPSG:4326 -t_srs EPSG:{projection}"  # NOQA
 
-        logger.debug("GDAL clip cmd: %s", cmd)
-
+    try:
+        logger.debug(f"GDAL clip cmd: {cmd}")
         task_process = TaskProcess(task_uid=task_uid)
         task_process.start_process(
             cmd, shell=True, executable="/bin/bash", stdout=subprocess.PIPE, stderr=subprocess.PIPE,
         )
-
     finally:
-        if temp_boundfile:
-            temp_boundfile.close()
+        if boundary:
+            if temp_boundfile:
+                temp_boundfile.close()
+
+    if requires_zip(fmt):
+        logger.debug(f"Requires zip: {out_dataset}")
+        out_dataset = create_zip_file(out_dataset, get_zip_name(out_dataset))
 
     if task_process.exitcode != 0:
-        logger.error("{0}".format(task_process.stdout))
-        logger.error("{0}".format(task_process.stderr))
-        raise Exception("Cutline process failed with return code {0}".format(task_process.exitcode))
+        logger.error(f"{task_process.stdout}")
+        logger.error(f"{task_process.stderr}")
+        raise Exception(f"Cutline process failed with return code {task_process.exitcode} and command {cmd}")
 
     return out_dataset
-
-
-@retry
-def convert(
-    file_format,
-    in_file=None,
-    out_file=None,
-    task_uid=None,
-    projection: int = None,
-    params: str = "",
-    use_translate=False,
-):
-    """
-    Uses gdalwarp or ogr2ogr to convert a raster or vector dataset into another format.
-    If the dataset is already in the output format, returns the unaltered original.
-    :param in_file: Raster or vector file to be converted
-    :param out_file: Raster or vector file to be output
-    :param file_format: Short format (e.g. gpkg, gtiff) to convert into
-    :param task_uid: A task uid to update
-    :param projection: A projection as an int referencing an EPSG code (e.g. 4326 = EPSG:4326)
-    :param params: Additional options to pass to the convert method (e.g. "-co SOMETHING")
-    :param use_translate: If true will convert file using gdal_translate instead of gdalwarp.
-    :return: Converted dataset, same filename as input
-    """
-
-    if not in_file:
-        raise Exception("No provided input file")
-
-    # Strip optional file prefixes
-    file_prefix, in_dataset_file = strip_prefixes(in_file)
-
-    meta = get_meta(in_dataset_file)
-    is_raster = meta["is_raster"]
-
-    if (in_dataset_file == out_file) and not (params or projection):
-        return in_dataset_file
-
-    if out_file is None:
-        out_file = in_dataset_file
-        if not out_file:
-            out_file = in_dataset_file
-
-    if out_file == in_dataset_file:
-        # Don't try to convert without convert params or new projection.
-        if not (params or projection):
-            return in_dataset_file
-        else:
-            # Don't operate on the original file.
-            in_dataset_file = rename_duplicate(in_dataset_file)
-
-    in_file = f"{file_prefix}{in_dataset_file}"
-
-    if projection is None:
-        projection = 4326
-
-    band_type = ""
-    # Geopackage raster only supports byte band type, so check for that
-    if file_format.lower() == "gpkg":
-        band_type = "-ot byte"
-
-    if is_raster:
-        if use_translate:
-            cmd_template = Template("gdal_translate $extra_parameters -of $fmt $type $in_ds $out_ds")
-        else:
-            cmd_template = Template(
-                "gdalwarp -overwrite $extra_parameters -of $fmt $type $in_ds $out_ds -s_srs EPSG:4326 "
-                "-t_srs EPSG:$projection"
-            )
-    else:
-        cmd_template = Template(
-            "ogr2ogr -overwrite $extra_parameters -f '$fmt' $out_ds $in_ds -s_srs EPSG:4326 -t_srs EPSG:$projection"
-        )
-
-    cmd = cmd_template.safe_substitute(
-        {
-            "fmt": file_format,
-            "type": band_type,
-            "in_ds": in_file,
-            "out_ds": out_file,
-            "projection": projection,
-            "extra_parameters": params,
-        }
-    )
-
-    logger.debug("GDAL convert cmd: %s", cmd)
-
-    task_process = TaskProcess(task_uid=task_uid)
-    task_process.start_process(
-        cmd, shell=True, executable="/bin/bash", stdout=subprocess.PIPE, stderr=subprocess.PIPE,
-    )
-
-    if task_process.exitcode != 0:
-        logger.error("{0}".format(task_process.stdout))
-        logger.error("{0}".format(task_process.stderr))
-        raise Exception("Conversion process failed with return code {0}".format(task_process.exitcode))
-    if requires_zip(file_format):
-        logger.debug("Requires zip: {0}".format(out_file))
-        out_file = create_zip_file(out_file, get_zip_name(out_file))
-
-    return out_file
 
 
 def get_dimensions(bbox, scale):

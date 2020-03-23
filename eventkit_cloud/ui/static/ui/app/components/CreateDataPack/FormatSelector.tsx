@@ -179,8 +179,8 @@ export class FormatSelector extends React.Component<Props, {}> {
                                         <strong style={{fontSize: '1.5em', paddingBottom: '15px'}}>
                                             Format(s):
                                         </strong>
-                                        {formats.map((format) => (
-                                                <div style={{ padding: '3px' }}>
+                                        {formats.map((format, ix) => (
+                                                <div style={{ padding: '3px' }} key={ix}>
                                                     <div className={classes.infoItem}>
                                                         <strong>
                                                             {format.name}:

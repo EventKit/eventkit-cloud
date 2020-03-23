@@ -43,6 +43,5 @@ describe('ZoomLevelSlider component', () => {
     it('should render input controls and footprints switch control', () => {
         expect(wrapper.find(TextField)).toHaveLength(2);
         expect(wrapper.find(Slider)).toHaveLength(1);
-        expect(wrapper.find(Switch)).toHaveLength(1);
     });
 });

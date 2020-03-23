@@ -1,8 +1,7 @@
 import axios from 'axios';
 import numeral from 'numeral';
 import GeoJSON from 'ol/format/geojson';
-import BufferOp from "jsts/org/locationtech/jts/operation/buffer/BufferOp";
-import {transformJSTSGeometry} from "./mapUtils";
+import {useEffect, useRef} from 'react';
 
 export function getHeaderPageInfo(response) {
     let nextPage = false;
