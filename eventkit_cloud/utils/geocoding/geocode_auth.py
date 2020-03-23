@@ -10,6 +10,7 @@ logger = logging.getLogger(__name__)
 
 CACHE_TOKEN_TIMEOUT = 60 * 5  # 5 Minutes
 CACHE_TOKEN_KEY = "pelias_token"
+CACHE_COOKIE_KEY = "cookies"
 
 
 def get_auth_headers():
@@ -27,17 +28,15 @@ def update_auth_headers(response):
 
 
 def get_session_cookies():
-    s = requests.session()
     if getattr(settings, "GEOCODING_AUTH_URL") is not None:
-        resp = s.get(settings.GEOCODING_AUTH_URL)
-        cookies = resp.cookies
+        cookies = cache.get(CACHE_COOKIE_KEY)
         return cookies
 
 
 def update_session_cookies(session):
-    cached_cookies = cache.get("cookies")
+    cached_cookies = cache.get(CACHE_COOKIE_KEY)
     if cached_cookies != session.cookies:
-        cache.set("cookies", session.cookies)
+        cache.set(CACHE_COOKIE_KEY, session.cookies)
 
 
 def authenticate():
@@ -51,20 +50,17 @@ def authenticate():
             # clean line endings, the service wants the public cert without line returns.
             public_cert.replace("\n", "\\n").replace("\\n", "")
             verify = getattr(settings, "SSL_VERIFICATION", True)
-            token = cache.get(CACHE_TOKEN_KEY)
 
             auth_response = requests.get(
                 getattr(settings, "GEOCODING_AUTH_URL"),
                 verify=verify,
                 cert=temp_file.name,
-                headers={"Authorization": "Bearer " + str(token)}
             ).json()
 
-            logger.info(f'AUTH_RESP: {auth_response}')
             token = auth_response.get("token")
             cache.set(CACHE_TOKEN_KEY, token, CACHE_TOKEN_TIMEOUT)
-            logger.info(f'TOKEN IN AUTH RESP: {token}')
             return token
+
     except requests.exceptions.RequestException as e:
         logger.error(traceback.print_exc())
         cache.delete(CACHE_TOKEN_KEY)

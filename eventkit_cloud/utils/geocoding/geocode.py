@@ -2,15 +2,23 @@ import logging
 from abc import ABCMeta, abstractmethod
 
 import requests
-from django.core.cache import cache
-import json
 import os
 from django.conf import settings
 from eventkit_cloud.utils import auth_requests
-from eventkit_cloud.utils.geocoding.geocode_auth import get_auth_headers, CACHE_TOKEN_KEY, CACHE_TOKEN_TIMEOUT, \
-    get_session_cookies, update_auth_headers, update_session_cookies
+from eventkit_cloud.utils.geocoding.geocode_auth import get_auth_headers, get_session_cookies, update_auth_headers, \
+    update_session_cookies
 
 logger = logging.getLogger(__name__)
+
+
+# checks validity of data from response
+def check_data(resp_data):
+    try:
+        if "features" in resp_data.json():
+            return True
+    except Exception:
+        print("Invalid response")
+    return False
 
 
 class GeocodeAdapter(metaclass=ABCMeta):
@@ -88,16 +96,6 @@ class GeocodeAdapter(metaclass=ABCMeta):
         """
         pass
 
-    # check validity of data from response
-    def check_data(self, resp_data):
-        try:
-            if "features" in resp_data.json():
-                logger.info(f'DATA FROM RESPONSE: {resp_data.json()}')
-                return True
-        except Exception:
-            print("Invalid response")
-        return False
-
     def get_response(self, payload):
         if os.getenv("GEOCODING_AUTH_CERT"):
             auth_session = auth_requests.AuthSession()
@@ -107,9 +105,8 @@ class GeocodeAdapter(metaclass=ABCMeta):
                 cookies=get_session_cookies(),
                 headers=get_auth_headers(),
             )
-            logger.info(f'1ST RESPONSE COOKIES {response.cookies}')
             if response.ok:
-                if self.check_data(response):
+                if check_data(response):
                     return response
                 else:
                     response = auth_requests.get(
@@ -117,9 +114,8 @@ class GeocodeAdapter(metaclass=ABCMeta):
                         params=payload,
                         cert_var="GEOCODING_AUTH_CERT"
                     )
-                    logger.info(f'2ND RESPONSE {response.json()}')
                     if response.ok:
-                        if self.check_data(response):
+                        if check_data(response):
                             # if valid, update cache headers and cookies
                             update_session_cookies(auth_session)
                             update_auth_headers(response)
@@ -364,7 +360,6 @@ class Pelias(GeocodeAdapter):
 
 
 class Geocode(object):
-
     _supported_geocoders = {"geonames": GeoNames, "pelias": Pelias, "nominatim": Nominatim}
 
     def __init__(self):
