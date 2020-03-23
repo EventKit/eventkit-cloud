@@ -3,6 +3,7 @@ import axios from "axios";
 import {getCookie, getFeatureUrl} from "../../utils/generic";
 import QueryDataBox from "./QueryDataBox";
 import {MapLayer} from "./CreateExport";
+import {TileCoordinate} from "../../utils/mapUtils";
 
 // The feature response data for a given coordinate specified by lat and long
 interface FeatureResponse {
@@ -10,16 +11,6 @@ interface FeatureResponse {
     long: number;
     featureData: any;
     errorMessage?: string;
-}
-
-export interface TileCoordinate {
-    z: number;  // Tile Zoom level
-    y: number;  // Tile row
-    x: number;  // Tile col
-    lat: number;
-    long: number;
-    i?: number;  // Click pixel x
-    j?: number;  // Click pixel y
 }
 
 export interface Props {

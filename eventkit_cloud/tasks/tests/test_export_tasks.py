@@ -186,8 +186,8 @@ class TestExportTasks(ExportTaskBase):
         result = geopackage_export_task.run(run_uid=self.run.uid, result=previous_task_result,
                                             task_uid=str(saved_export_task.uid),
                                             stage_dir=stage_dir, job_name=job_name, projection=projection)
-        mock_convert.assert_called_once_with(file_format='gpkg', in_file=expected_output_path,
-                                             out_file=expected_output_path, task_uid=str(saved_export_task.uid))
+        mock_convert.assert_called_once_with(fmt='gpkg', in_dataset=expected_output_path,
+                                             out_dataset=expected_output_path, task_uid=str(saved_export_task.uid))
 
         self.assertEqual(expected_output_path, result['result'])
         self.assertEqual(expected_output_path, result['source'])
@@ -202,27 +202,27 @@ class TestExportTasks(ExportTaskBase):
         expected_outfile = 'stage/job-4326.tif'
         geotiff_export_task(result=example_result, task_uid=task_uid, stage_dir='stage', job_name='job')
         mock_gdalutils.convert.return_value = expected_outfile
-        mock_gdalutils.convert.assert_called_once_with(file_format='gtiff', in_file=example_geotiff,
-                                                       out_file=expected_outfile, task_uid='1234')
+        mock_gdalutils.convert.assert_called_once_with(fmt='gtiff', in_dataset=example_geotiff,
+                                                       out_dataset=expected_outfile, task_uid='1234')
         mock_gdalutils.reset_mock()
         geotiff_export_task(result=example_result, task_uid=task_uid, stage_dir='stage', job_name='job', compress=True)
         params = "-co COMPRESS=JPEG -co PHOTOMETRIC=YCBCR -co TILED=YES -b 1 -b 2 -b 3"
-        mock_gdalutils.convert.assert_has_calls([call(file_format='gtiff', in_file=example_geotiff,
-                                                      out_file=expected_outfile, task_uid='1234'),
-                                                 call(file_format='gtiff', in_file=expected_outfile,
-                                                      out_file=expected_outfile,
+        mock_gdalutils.convert.assert_has_calls([call(fmt='gtiff', in_dataset=example_geotiff,
+                                                      out_dataset=expected_outfile, task_uid='1234'),
+                                                 call(fmt='gtiff', in_dataset=expected_outfile,
+                                                      out_dataset=expected_outfile,
                                                       params=params, task_uid='1234', use_translate=True)
                                                  ])
         mock_gdalutils.reset_mock()
         example_result = {"source": example_geotiff,
                           "selection": "selection"}
-        mock_gdalutils.clip_dataset.return_value = expected_outfile
+        mock_gdalutils.convert.return_value = expected_outfile
         geotiff_export_task(result=example_result, task_uid=task_uid, stage_dir='stage', job_name='job',
                             compress=True)
-        mock_gdalutils.convert.assert_has_calls([call(file_format='gtiff', in_file=expected_outfile,
-                                                      out_file=expected_outfile, task_uid='1234'),
-                                                 call(file_format='gtiff', in_file=expected_outfile,
-                                                      out_file=expected_outfile,
+        mock_gdalutils.convert.assert_has_calls([call(fmt='gtiff', in_dataset=expected_outfile,
+                                                      out_dataset=expected_outfile, task_uid='1234'),
+                                                 call(fmt='gtiff', in_dataset=expected_outfile,
+                                                      out_dataset=expected_outfile,
                                                       params=params, task_uid='1234', use_translate=True)
                                                  ])
 
