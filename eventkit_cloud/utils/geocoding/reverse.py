@@ -97,8 +97,9 @@ class ReverseGeocodeAdapter(metaclass=ABCMeta):
             logger.error(error_message)
             raise AuthenticationError(error_message)
         if not response.ok:
-            raise Exception("The Geocoding service received an error. Please try again or contact an Eventkit "
-                            "administrator.")
+            raise Exception(
+                "The Geocoding service received an error. Please try again or contact an Eventkit " "administrator."
+            )
         return response
 
     def get_data(self, query):

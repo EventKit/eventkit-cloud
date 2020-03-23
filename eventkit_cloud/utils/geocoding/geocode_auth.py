@@ -52,9 +52,7 @@ def authenticate():
             verify = getattr(settings, "SSL_VERIFICATION", True)
 
             auth_response = requests.get(
-                getattr(settings, "GEOCODING_AUTH_URL"),
-                verify=verify,
-                cert=temp_file.name,
+                getattr(settings, "GEOCODING_AUTH_URL"), verify=verify, cert=temp_file.name,
             ).json()
 
             token = auth_response.get("token")

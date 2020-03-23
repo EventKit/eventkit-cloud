@@ -5,8 +5,12 @@ import requests
 import os
 from django.conf import settings
 from eventkit_cloud.utils import auth_requests
-from eventkit_cloud.utils.geocoding.geocode_auth import get_auth_headers, get_session_cookies, update_auth_headers, \
-    update_session_cookies
+from eventkit_cloud.utils.geocoding.geocode_auth import (
+    get_auth_headers,
+    get_session_cookies,
+    update_auth_headers,
+    update_session_cookies,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -100,20 +104,13 @@ class GeocodeAdapter(metaclass=ABCMeta):
         if os.getenv("GEOCODING_AUTH_CERT"):
             auth_session = auth_requests.AuthSession()
             response = auth_session.session.get(
-                self.url,
-                params=payload,
-                cookies=get_session_cookies(),
-                headers=get_auth_headers(),
+                self.url, params=payload, cookies=get_session_cookies(), headers=get_auth_headers(),
             )
             if response.ok:
                 if check_data(response):
                     return response
                 else:
-                    response = auth_requests.get(
-                        self.url,
-                        params=payload,
-                        cert_var="GEOCODING_AUTH_CERT"
-                    )
+                    response = auth_requests.get(self.url, params=payload, cert_var="GEOCODING_AUTH_CERT")
                     if response.ok:
                         if check_data(response):
                             # if valid, update cache headers and cookies
@@ -121,8 +118,9 @@ class GeocodeAdapter(metaclass=ABCMeta):
                             update_auth_headers(response)
                             return response
             else:
-                raise Exception("The Geocoding service received an error. Please try again or contact an Eventkit "
-                                "administrator.")
+                raise Exception(
+                    "The Geocoding service received an error. Please try again or contact an Eventkit " "administrator."
+                )
         else:
             response = requests.get(self.url, params=payload)
 
@@ -131,8 +129,9 @@ class GeocodeAdapter(metaclass=ABCMeta):
             logger.error(error_message)
             raise AuthenticationError(error_message)
         if not response.ok:
-            raise Exception("The Geocoding service received an error. Please try again or contact an Eventkit "
-                            "administrator.")
+            raise Exception(
+                "The Geocoding service received an error. Please try again or contact an Eventkit " "administrator."
+            )
         return response
 
     def get_data(self, query):
