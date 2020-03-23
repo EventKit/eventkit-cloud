@@ -124,7 +124,7 @@ class GeocodeAdapter(metaclass=ABCMeta):
         else:
             response = requests.get(self.url, params=payload)
 
-        if response.status_code in [200]:
+        if response.status_code in [401, 403]:
             error_message = "EventKit was not able to authenticate to the Geocoding service."
             logger.error(error_message)
             raise AuthenticationError(error_message)
