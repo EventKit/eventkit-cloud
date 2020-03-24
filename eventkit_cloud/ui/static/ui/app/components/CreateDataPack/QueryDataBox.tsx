@@ -171,15 +171,17 @@ export class QueryDataBox extends React.Component<Props, {}> {
             <div className={classes.card} style={this.props.style}>
                 <Typography className={classes.title}>Point of Interest:</Typography>
                 <Divider/>
-                <IconButton
-                    className={classes.closeButton}
-                    type='button'
-                    onClick={(e) => {
-                        handleClose(e);
-                    }}
-                >
-                    <CloseIcon className={classes.closeIcon}/>
-                </IconButton>
+                { !!this.props.handleClose &&
+                    <IconButton
+                        className={classes.closeButton}
+                        type='button'
+                        onClick={(e) => {
+                            handleClose(e);
+                        }}
+                    >
+                        <CloseIcon className={classes.closeIcon}/>
+                    </IconButton>
+                }
                 <CustomScrollbar
                     autoHeight
                     style={{height: '100%'}}

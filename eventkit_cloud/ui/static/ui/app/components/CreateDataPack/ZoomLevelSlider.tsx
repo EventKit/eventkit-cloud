@@ -4,7 +4,6 @@ import {
 } from '@material-ui/core/styles';
 import Slider from '@material-ui/lab/Slider';
 import TextField from '@material-ui/core/TextField';
-import {Switch} from "@material-ui/core";
 
 
 const jss = (theme: Theme & Eventkit.Theme) => createStyles({
@@ -34,18 +33,6 @@ const jss = (theme: Theme & Eventkit.Theme) => createStyles({
         paddingTop: '10px',
         paddingBottom: '5px',
     },
-    switch: {
-        float: 'right',
-        marginTop: '-12px',
-        marginRight: '-14px'
-    },
-    switchBase: {
-    color: theme.eventkit.colors.white,
-      '&$checked': {
-        color: theme.eventkit.colors.primary,
-    },
-  },
-    checked: {},
 });
 
 interface Props {
@@ -81,18 +68,18 @@ export class ZoomLevelSlider extends React.Component<Props, State> {
     }
 
     componentDidUpdate(prevProps: Readonly<Props>): void {
-        const {selectedMinZoom, selectedMaxZoom} = this.props;
+        const { selectedMinZoom, selectedMaxZoom } = this.props;
         const prevMinZoom = prevProps.selectedMinZoom;
         const prevMaxZoom = prevProps.selectedMaxZoom;
         if (selectedMinZoom !== prevMinZoom) {
             // Deprecated rule
             // eslint-disable-next-line react/no-did-update-set-state
-            this.setState({minZoom: selectedMinZoom});
+            this.setState({ minZoom: selectedMinZoom });
         }
         if (selectedMaxZoom !== prevMaxZoom) {
             // Deprecated rule
             // eslint-disable-next-line react/no-did-update-set-state
-            this.setState({maxZoom: selectedMaxZoom});
+            this.setState({ maxZoom: selectedMaxZoom });
         }
     }
 
@@ -125,8 +112,8 @@ export class ZoomLevelSlider extends React.Component<Props, State> {
     };
 
     render() {
-        const {classes} = this.props;
-        const {minZoom, maxZoom} = this.state;
+        const { classes } = this.props;
+        const { minZoom, maxZoom } = this.state;
 
         return (
             <div className={classes.container}>
@@ -140,11 +127,11 @@ export class ZoomLevelSlider extends React.Component<Props, State> {
                             disabled
                             onChange={e => this.updateMin(e, e.target.value)}
                             // MUI uses the case of the i to distinguish between Input component and input html element
-                            InputProps={{style: {bottom: '5px'}}}
+                            InputProps={{ style: { bottom: '5px' } }}
                             // eslint-disable-next-line react/jsx-no-duplicate-props
-                            inputProps={{style: {textAlign: 'center', fontWeight: 'bold', fontSize: '16px'}}}
+                            inputProps={{ style: { textAlign: 'center', fontWeight: 'bold', fontSize: '16px' } }}
                         />
-                        <span style={{fontSize: '16px'}}> to </span>
+                        <span style={{ fontSize: '16px' }}> to </span>
                         <TextField
                             className={classes.textField}
                             type="number"
@@ -152,44 +139,34 @@ export class ZoomLevelSlider extends React.Component<Props, State> {
                             value={maxZoom}
                             onChange={e => this.updateMax(e, e.target.value)}
                             // MUI uses the case of the i to distinguish between Input component and input html element
-                            InputProps={{style: {bottom: '5px'}}}
+                            InputProps={{ style: { bottom: '5px' } }}
                             // eslint-disable-next-line react/jsx-no-duplicate-props
-                            inputProps={{style: {textAlign: 'center', fontWeight: 'bold', fontSize: '16px'}}}
+                            inputProps={{ style: { textAlign: 'center', fontWeight: 'bold', fontSize: '16px' } }}
                         />
-                        <span style={{fontSize: '16px'}}>Selected Zoom</span>
+                        <span style={{ fontSize: '16px' }}>Selected Zoom</span>
                     </span>
-                <span className={classes.switch}>
-                    <span style={{fontSize: '16px'}}>
-                        Footprints
-                    </span>
-                    <Switch
-                        value="switch"
-                        checked={this.props.checked}
-                        onChange={this.props.handleCheckClick}
-                        classes={{ switchBase: classes.switchBase, checked: classes.checked }}
-                    />
-                </span>
-                <br/>
+                    {this.props.children}
+                    <br/>
                 </>
                 <strong className={classes.zoomHeader}>Zoom</strong>
-                <div style={{display: 'block'}}>
-                    <div style={{display: 'flex', position: 'relative', margin: '0 30px'}}>
+                <div style={{ display: 'block' }}>
+                    <div style={{ display: 'flex', position: 'relative', margin: '0 30px' }}>
                         <Slider
                             className={classes.slider}
                             value={maxZoom}
                             aria-labelledby="label"
-                            onChange={(e, v) => this.setState({maxZoom: Number(v)})}
+                            onChange={(e, v) => this.setState({ maxZoom: Number(v) })}
                             onDragEnd={() => this.updateMax(null, maxZoom)}
                             min={this.props.minZoom}
                             max={this.props.maxZoom}
                             step={1}
                         />
                     </div>
-                    <div id="labels" style={{display: 'flex', justifyContent: 'space-between'}}>
-                        <span style={{textAlign: 'left'}}>
+                    <div id="labels" style={{ display: 'flex', justifyContent: 'space-between' }}>
+                        <span style={{ textAlign: 'left' }}>
                             {this.props.minZoom}
                         </span>
-                        <span style={{textAlign: 'right'}}>
+                        <span style={{ textAlign: 'right' }}>
                             {this.props.maxZoom}
                         </span>
                     </div>
