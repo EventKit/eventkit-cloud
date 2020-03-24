@@ -95,7 +95,7 @@ class Overpass(object):
         Return:
             the path to the overpass extract
         """
-        from eventkit_cloud.tasks.export_tasks import update_progress
+        from eventkit_cloud.tasks.task_process import update_progress
         from audit_logging.file_logging import logging_open
 
         # This is just to make it easier to trace when user_details haven't been sent

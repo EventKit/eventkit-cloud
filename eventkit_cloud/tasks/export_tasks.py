@@ -58,6 +58,7 @@ from eventkit_cloud.tasks.helpers import (
     get_provider_staging_preview,
     PREVIEW_TAIL,
 )
+from eventkit_cloud.tasks.task_process import update_progress
 from eventkit_cloud.utils.auth_requests import get_cred
 from eventkit_cloud.utils import overpass, pbf, s3, mapproxy, wcs, geopackage, gdalutils
 from eventkit_cloud.utils.ogr import OGR
@@ -386,15 +387,16 @@ def osm_data_collection_pipeline(
     update_progress(export_task_record_uid, 85.5, eta=eta, msg="Clipping data in Geopackage")
 
     database = settings.DATABASES["feature_data"]
-    in_dataset = 'PG:"dbname={name} host={host} user={user} password={password} port={port}"'.format(
+    in_dataset = 'PG:dbname={name} host={host} user={user} password={password} port={port}'.format(
         host=database["HOST"],
         user=database["USER"],
         password=database["PASSWORD"].replace("$", "\$"),
         port=database["PORT"],
-        name=database["NAME"],
+        name=database["NAME"]
     )
     gdalutils.convert(
-        boundary=bbox, in_dataset=in_dataset, out_dataset=geopackage_filepath, table="land_polygons", fmt="gpkg",
+        boundary=bbox, input_file=in_dataset, output_file=geopackage_filepath, layers=["land_polygons"], fmt="gpkg",
+        is_raster=False
     )
 
     ret_geopackage_filepath = g.results[0].parts[0]
@@ -456,7 +458,7 @@ def osm_data_collection_task(
         selection = parse_result(result, "selection")
         if selection:
             logger.debug("Calling gdalutils.convert with boundary={}, in_dataset={}".format(selection, gpkg_filepath))
-            gpkg_filepath = gdalutils.convert(boundary=selection, in_dataset=gpkg_filepath, fmt=None)
+            gpkg_filepath = gdalutils.convert(boundary=selection, input_file=gpkg_filepath)
 
         result["result"] = gpkg_filepath
         result["source"] = gpkg_filepath
@@ -664,7 +666,7 @@ def geopackage_export_task(
     gpkg_in_dataset = parse_result(result, "source")
     gpkg_out_dataset = os.path.join(stage_dir, "{0}-{1}.gpkg".format(job_name, projection))
 
-    gpkg = gdalutils.convert(fmt="gpkg", in_dataset=gpkg_in_dataset, out_dataset=gpkg_out_dataset, task_uid=task_uid,)
+    gpkg = gdalutils.convert(fmt="gpkg", input_file=gpkg_in_dataset, output_file=gpkg_out_dataset, task_uid=task_uid)
 
     result["file_format"] = "gpkg"
     result["result"] = gpkg
@@ -684,38 +686,18 @@ def geotiff_export_task(
     gtiff_in_dataset = parse_result(result, "source")
     gtiff_out_dataset = os.path.join(stage_dir, "{0}-{1}.tif".format(job_name, projection))
     selection = parse_result(result, "selection")
-    # Clip the dataset.
-    # This happens if geotiff is the FIRST step in the pipeline as opposed to GPKG.
-    if selection:
-        gtiff_out_dataset = gdalutils.convert(
-            boundary=selection,
-            in_dataset=gtiff_in_dataset,
-            out_dataset=gtiff_out_dataset,
-            fmt="gtiff",
-            task_uid=task_uid,
-        )
-        gtiff_in_dataset = gtiff_out_dataset
 
-    if "tif" in os.path.splitext(gtiff_in_dataset[0]):
+    if 'tif' in os.path.splitext(gtiff_in_dataset)[1]:
         gtiff_in_dataset = f"GTIFF_RAW:{gtiff_in_dataset}"
 
-    # Convert to the correct projection
     gtiff_out_dataset = gdalutils.convert(
-        fmt="gtiff", in_dataset=gtiff_in_dataset, out_dataset=gtiff_out_dataset, task_uid=task_uid,
+        fmt="gtiff",
+        input_file=gtiff_in_dataset,
+        output_file=gtiff_out_dataset,
+        task_uid=task_uid,
+        compress=compress,
+        boundary=selection,
     )
-
-    # Reduce the overall size of geotiffs.  Note this compression could result in the loss of data.
-    # If refactoring ensure that a pipeline like WCS does not apply geotiff conversion using this.
-    if compress:
-        params = "-co COMPRESS=JPEG -co PHOTOMETRIC=YCBCR -co TILED=YES -b 1 -b 2 -b 3"
-        gtiff_out_dataset = gdalutils.convert(
-            fmt="gtiff",
-            in_dataset=gtiff_out_dataset,
-            out_dataset=gtiff_out_dataset,
-            task_uid=task_uid,
-            params=params,
-            use_translate=compress,
-        )
 
     result["file_extension"] = "tif"
     result["file_format"] = "gtiff"
@@ -748,7 +730,7 @@ def nitf_export_task(
 
     params = "-co ICORDS=G"
     nitf = gdalutils.convert(
-        fmt="nitf", in_dataset=nitf_in_dataset, out_dataset=nitf_out_dataset, task_uid=task_uid, params=params,
+        fmt="nitf", input_file=nitf_in_dataset, output_file=nitf_out_dataset, task_uid=task_uid, creation_options=params,
     )
 
     result["file_format"] = "nitf"
@@ -777,7 +759,7 @@ def hfa_export_task(
 
     hfa_in_dataset = parse_result(result, "source")
     hfa_out_dataset = os.path.join(stage_dir, "{0}-{1}.img".format(job_name, projection))
-    hfa = gdalutils.convert(fmt="hfa", in_dataset=hfa_in_dataset, out_dataset=hfa_out_dataset, task_uid=task_uid,)
+    hfa = gdalutils.convert(fmt="hfa", input_file=hfa_in_dataset, output_file=hfa_out_dataset, task_uid=task_uid, )
 
     result["file_format"] = "hfa"
     result["result"] = hfa
@@ -821,18 +803,18 @@ def reprojection_task(
         in_dataset = f"GTIFF_RAW:{in_dataset}"
 
     reprojection = gdalutils.convert(
-        fmt=file_format, in_dataset=in_dataset, out_dataset=out_dataset, task_uid=task_uid, projection=projection,
+        fmt=file_format, input_file=in_dataset, output_file=out_dataset, task_uid=task_uid, projection=projection,
     )
 
     if file_format == "gtiff" and compress:
         params = "-co COMPRESS=JPEG -co PHOTOMETRIC=YCBCR -co TILED=YES -b 1 -b 2 -b 3"
         reprojection = gdalutils.convert(
             fmt=file_format,
-            in_dataset=reprojection,
-            out_dataset=out_dataset,
+            input_file=reprojection,
+            output_file=out_dataset,
             task_uid=task_uid,
-            params=params,
-            use_translate=compress,
+            creation_options=params,
+            compress=compress,
         )
 
     result["result"] = reprojection
@@ -918,6 +900,7 @@ def wcs_export_task(
     service_type=None,
     user_details=None,
     projection=4326,
+    selection=None,
     *args,
     **kwargs,
 ):
@@ -1645,52 +1628,6 @@ def kill_task(result=None, task_pid=None, celery_uid=None, *args, **kwargs):
         except OSError:
             logger.info("{0} PID does not exist.".format(task_pid))
     return result
-
-
-def update_progress(
-    task_uid, progress=None, subtask_percentage=100.0, subtask_start=0, estimated_finish=None, eta=None, msg=None,
-):
-    """
-    Updates the progress of the ExportTaskRecord from the given task_uid.
-    :param task_uid: A uid to reference the ExportTaskRecord.
-    :param progress: The percent of completion for the task or subtask [0-100]
-    :param subtask_percentage: is the percentage of the task referenced by task_uid the caller takes up. [0-100]
-    :param subtask_start: is the beginning of where this subtask's percentage block beings [0-100]
-                          (e.g. when subtask_percentage=0.0 the absolute_progress=subtask_start)
-    :param estimated_finish: The datetime of when the entire task is expected to finish, overrides eta estimator
-    :param eta: The ETA estimator for this task will be used to automatically determine estimated_finish
-    :param msg: Message describing the current activity of the task
-    """
-    if task_uid is None:
-        return
-
-    if not progress and not estimated_finish:
-        return
-
-    if progress is not None:
-        subtask_progress = min(progress, 100.0)
-        absolute_progress = min(subtask_start + subtask_progress * (subtask_percentage / 100.0), 100.0)
-
-    # We need to close the existing connection because the logger could be using a forked process which
-    # will be invalid and throw an error.
-    connection.close()
-
-    if absolute_progress:
-        set_cache_value(
-            uid=task_uid, attribute="progress", model_name="ExportTaskRecord", value=absolute_progress,
-        )
-        if eta is not None:
-            eta.update(absolute_progress / 100.0, dbg_msg=msg)  # convert to [0-1.0]
-
-    if estimated_finish:
-        set_cache_value(
-            uid=task_uid, attribute="estimated_finish", model_name="ExportTaskRecord", value=estimated_finish,
-        )
-    elif eta is not None:
-        # Use the updated ETA estimator to determine an estimated_finish
-        set_cache_value(
-            uid=task_uid, attribute="estimated_finish", model_name="ExportTaskRecord", value=eta.eta_datetime(),
-        )
 
 
 def parse_result(task_result, key=""):
