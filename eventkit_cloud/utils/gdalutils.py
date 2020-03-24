@@ -71,11 +71,11 @@ def progress_callback(pct, msg, user_data):
     )
 
 
-def open_ds(ds_path, is_raster):
+def open_ds(file_path, is_raster):
     """
     Given a path to a raster or vector dataset, returns an opened GDAL or OGR dataset.
     The caller has the responsibility of closing/deleting the dataset when finished.
-    :param ds_path: Path to dataset
+    :param file_path: Path to dataset
     :return: Handle to open dataset
     """
 
@@ -83,17 +83,19 @@ def open_ds(ds_path, is_raster):
     use_exceptions = gdal.GetUseExceptions()
     gdal.UseExceptions()
 
-    logger.info("Opening the dataset: {}".format(ds_path))
+    logger.info("Opening the dataset: {}".format(file_path))
+    gdal_dataset = None
+    ogr_dataset = None
     try:
-        gdal_dataset = gdal.Open(ds_path)
+        gdal_dataset = gdal.Open(file_path)
         if gdal_dataset and is_raster:
             return gdal_dataset
         # Attempt to open as ogr dataset (vector)
         # ogr.UseExceptions doesn't seem to work reliably, so just check for Open returning None
-        ogr_dataset = ogr.Open(ds_path)
+        ogr_dataset = ogr.Open(file_path)
 
         if not ogr_dataset:
-            logger.debug("Unknown file format: {0}".format(ds_path))
+            logger.debug("Unknown file format: {0}".format(file_path))
             return None
 
         return ogr_dataset or gdal_dataset
@@ -103,21 +105,22 @@ def open_ds(ds_path, is_raster):
         ):
             raise ex
     finally:
-        gdal_dataset = None
-        ogr_dataset = None
+        cleanup_ds(gdal_dataset)
+        cleanup_ds(ogr_dataset)
         if not use_exceptions:
             gdal.DontUseExceptions()
 
 
-def cleanup_ds(resources):
+def cleanup_ds(dataset):
     """
     Given an input gdal.Dataset or ogr.DataSource, destroy it.
     NB: referring to this object's members after destruction will crash the Python interpreter.
-    :param ds: Dataset / DataSource to destroy
+    :param resources: Dataset / DataSource to destroy
     """
-    logger.info("Closing the resources: {}.".format(resources))
-    # https://trac.osgeo.org/gdal/wiki/PythonGotchas#CertainobjectscontainaDestroymethodbutyoushouldneveruseit
-    del resources
+    if dataset:
+        logger.info("Closing the resources: {}.".format(dataset))
+        # https://trac.osgeo.org/gdal/wiki/PythonGotchas#CertainobjectscontainaDestroymethodbutyoushouldneveruseit
+        del dataset
 
 
 @retry
@@ -384,8 +387,8 @@ def get_task_command(function, *args, **kwargs):
 def get_dataset_names(input_file, output_file):
     """
     This is a helper that will get us the name of the output_dataset.
-    :param input_dataset: The name of the dataset to convert.
-    :param output_dataset: (Optional) The path to convert the file.
+    :param input_file: The name of the dataset to convert.
+    :param output_file: (Optional) The path to convert the file.
     :return: An output dataset name.
     """
     if not input_file:
@@ -636,7 +639,7 @@ def get_band_statistics(file_path, band=1):
         return None
     finally:
         # Need to close the dataset.
-        image_file = None  # NOQA
+        cleanup_ds(image_file)  # NOQA
 
 
 def rename_duplicate(original_file: str) -> str:

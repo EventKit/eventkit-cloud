@@ -304,8 +304,6 @@ class Geopackage(object):
         Create the GeoPackage from the osm data.
         """
 
-        # avoiding a circular import
-
         if self.is_complete:
             LOG.debug("Skipping Geopackage, file exists")
             return

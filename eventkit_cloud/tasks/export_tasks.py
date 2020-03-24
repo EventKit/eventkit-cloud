@@ -794,6 +794,7 @@ def reprojection_task(
     result = result or {}
 
     file_format = parse_result(result, "file_format")
+    selection = parse_result(result, "selection")
 
     if parse_result(result, "file_extension"):
         file_extension = parse_result(result, "file_extension")
@@ -810,19 +811,14 @@ def reprojection_task(
         in_dataset = f"GTIFF_RAW:{in_dataset}"
 
     reprojection = gdalutils.convert(
-        fmt=file_format, input_file=in_dataset, output_file=out_dataset, task_uid=task_uid, projection=projection,
+        fmt=file_format,
+        input_file=in_dataset,
+        output_file=out_dataset,
+        task_uid=task_uid,
+        compress=compress,
+        projection=projection,
+        boundary=selection
     )
-
-    if file_format == "gtiff" and compress:
-        params = "-co COMPRESS=JPEG -co PHOTOMETRIC=YCBCR -co TILED=YES -b 1 -b 2 -b 3"
-        reprojection = gdalutils.convert(
-            fmt=file_format,
-            input_file=reprojection,
-            output_file=out_dataset,
-            task_uid=task_uid,
-            creation_options=params,
-            compress=compress,
-        )
 
     result["result"] = reprojection
 
