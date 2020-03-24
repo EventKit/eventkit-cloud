@@ -17,6 +17,7 @@ class TaskProcess(object):
 
     def __init__(self, task_uid=None):
         from eventkit_cloud.tasks.models import ExportTaskRecord
+
         self.task_uid = task_uid
         self.exitcode = None
         self.stdout = None
@@ -24,7 +25,6 @@ class TaskProcess(object):
         self.export_task = ExportTaskRecord.objects.filter(uid=self.task_uid).first()
 
     def start_process(self, command=None, billiard=False, *args, **kwargs):
-        from eventkit_cloud.tasks.models import ExportTaskRecord
         from eventkit_cloud.tasks.enumerations import TaskStates
 
         if isinstance(command, collections.Callable):

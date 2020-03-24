@@ -21,7 +21,7 @@ from django.contrib.auth.models import User
 
 from django.core.exceptions import ObjectDoesNotExist
 from django.core.mail import EmailMultiAlternatives
-from django.db import connection, DatabaseError, transaction
+from django.db import DatabaseError, transaction
 from django.db.models import Q
 from django.template.loader import get_template, render_to_string
 from django.utils import timezone
@@ -36,7 +36,6 @@ from eventkit_cloud.core.helpers import (
 from eventkit_cloud.feature_selection.feature_selection import FeatureSelection
 from eventkit_cloud.tasks.enumerations import TaskStates
 from eventkit_cloud.tasks.exceptions import CancelException, DeleteException
-from eventkit_cloud.tasks import set_cache_value
 from eventkit_cloud.tasks.helpers import (
     normalize_name,
     get_archive_data_path,
@@ -387,16 +386,20 @@ def osm_data_collection_pipeline(
     update_progress(export_task_record_uid, 85.5, eta=eta, msg="Clipping data in Geopackage")
 
     database = settings.DATABASES["feature_data"]
-    in_dataset = 'PG:dbname={name} host={host} user={user} password={password} port={port}'.format(
+    in_dataset = "PG:dbname={name} host={host} user={user} password={password} port={port}".format(
         host=database["HOST"],
         user=database["USER"],
         password=database["PASSWORD"].replace("$", "\$"),
         port=database["PORT"],
-        name=database["NAME"]
+        name=database["NAME"],
     )
     gdalutils.convert(
-        boundary=bbox, input_file=in_dataset, output_file=geopackage_filepath, layers=["land_polygons"], fmt="gpkg",
-        is_raster=False
+        boundary=bbox,
+        input_file=in_dataset,
+        output_file=geopackage_filepath,
+        layers=["land_polygons"],
+        fmt="gpkg",
+        is_raster=False,
     )
 
     ret_geopackage_filepath = g.results[0].parts[0]
@@ -687,7 +690,7 @@ def geotiff_export_task(
     gtiff_out_dataset = os.path.join(stage_dir, "{0}-{1}.tif".format(job_name, projection))
     selection = parse_result(result, "selection")
 
-    if 'tif' in os.path.splitext(gtiff_in_dataset)[1]:
+    if "tif" in os.path.splitext(gtiff_in_dataset)[1]:
         gtiff_in_dataset = f"GTIFF_RAW:{gtiff_in_dataset}"
 
     gtiff_out_dataset = gdalutils.convert(
@@ -730,7 +733,11 @@ def nitf_export_task(
 
     params = "-co ICORDS=G"
     nitf = gdalutils.convert(
-        fmt="nitf", input_file=nitf_in_dataset, output_file=nitf_out_dataset, task_uid=task_uid, creation_options=params,
+        fmt="nitf",
+        input_file=nitf_in_dataset,
+        output_file=nitf_out_dataset,
+        task_uid=task_uid,
+        creation_options=params,
     )
 
     result["file_format"] = "nitf"
@@ -759,7 +766,7 @@ def hfa_export_task(
 
     hfa_in_dataset = parse_result(result, "source")
     hfa_out_dataset = os.path.join(stage_dir, "{0}-{1}.img".format(job_name, projection))
-    hfa = gdalutils.convert(fmt="hfa", input_file=hfa_in_dataset, output_file=hfa_out_dataset, task_uid=task_uid, )
+    hfa = gdalutils.convert(fmt="hfa", input_file=hfa_in_dataset, output_file=hfa_out_dataset, task_uid=task_uid,)
 
     result["file_format"] = "hfa"
     result["result"] = hfa

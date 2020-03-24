@@ -27,6 +27,7 @@ MAX_DB_CONNECTION_DELAY = 5
 # improved method would perhaps be to see if there are connection options to create a more reliable connection.
 # We have used this solution for now as I could not find options supporting this in the gdal documentation.
 
+
 def retry(f):
     @wraps(f)
     def wrapper(*args, **kwds):
@@ -62,8 +63,12 @@ def retry(f):
 
 
 def progress_callback(pct, msg, user_data):
-    update_progress(user_data.get('task_uid'), progress=round(pct*100),
-                    subtask_percentage=user_data.get('subtask_percentage'), msg=msg)
+    update_progress(
+        user_data.get("task_uid"),
+        progress=round(pct * 100),
+        subtask_percentage=user_data.get("subtask_percentage"),
+        msg=msg,
+    )
 
 
 def open_ds(ds_path, is_raster):
@@ -270,7 +275,7 @@ def convert(
     projection: int = None,
     creation_options: list = None,
     compress=False,
-    is_raster=True
+    is_raster=True,
 ):
     """
     Uses gdal to convert and clip a supported dataset file to a mask if boundary is passed in.
@@ -320,19 +325,40 @@ def convert(
         elif isinstance(boundary, dict):
             geojson = boundary
         if geojson:
-            temp_boundfile = NamedTemporaryFile(suffix='.json')
+            temp_boundfile = NamedTemporaryFile(suffix=".json")
             temp_boundfile.write(json.dumps(geojson).encode())
             temp_boundfile.flush()
             boundary = temp_boundfile.name
 
     if meta["is_raster"]:
-        cmd = get_task_command(convert_raster, input_file, output_file, fmt=fmt, creation_options=creation_options,
-                                     band_type=band_type, dst_alpha=dstalpha, boundary=boundary, compress=compress,
-                                     src_srs=src_src, dst_srs=dst_src, task_uid=task_uid)
+        cmd = get_task_command(
+            convert_raster,
+            input_file,
+            output_file,
+            fmt=fmt,
+            creation_options=creation_options,
+            band_type=band_type,
+            dst_alpha=dstalpha,
+            boundary=boundary,
+            compress=compress,
+            src_srs=src_src,
+            dst_srs=dst_src,
+            task_uid=task_uid,
+        )
     else:
-        cmd = get_task_command(convert_vector, input_file, output_file, fmt=fmt, creation_options=creation_options,
-                                     src_srs=src_src, dst_srs=dst_src, layers=layers, task_uid=task_uid,
-                                     boundary=boundary, bbox=bbox)
+        cmd = get_task_command(
+            convert_vector,
+            input_file,
+            output_file,
+            fmt=fmt,
+            creation_options=creation_options,
+            src_srs=src_src,
+            dst_srs=dst_src,
+            layers=layers,
+            task_uid=task_uid,
+            boundary=boundary,
+            bbox=bbox,
+        )
     try:
         task_process = TaskProcess(task_uid=task_uid)
         task_process.start_process(cmd)
@@ -382,8 +408,19 @@ def clean_options(options):
     return {option: value for option, value in options.items() if value is not None}
 
 
-def convert_raster(input_files, output_file, fmt=None, creation_options=None, band_type=None, dst_alpha=None, boundary=None,
-                   compress=False, src_srs=None, dst_srs=None, task_uid=None):
+def convert_raster(
+    input_files,
+    output_file,
+    fmt=None,
+    creation_options=None,
+    band_type=None,
+    dst_alpha=None,
+    boundary=None,
+    compress=False,
+    src_srs=None,
+    dst_srs=None,
+    task_uid=None,
+):
     """
     :param input_files: A file or list of files to convert.
     :param output_file: The file to convert.
@@ -404,16 +441,20 @@ def convert_raster(input_files, output_file, fmt=None, creation_options=None, ba
     gdal.UseExceptions()
     subtask_percentage = 50 if compress else 100
     options = clean_options(
-        {'callback': progress_callback,
-         'callback_data': {'task_uid': task_uid, 'subtask_percentage': subtask_percentage},
-         'creationOptions': creation_options, 'format': fmt})
-    warp_params = clean_options({'outputType': band_type,
-                   'dstAlpha': dst_alpha, 'srcSRS': src_srs, 'dstSRS': dst_srs})
+        {
+            "callback": progress_callback,
+            "callback_data": {"task_uid": task_uid, "subtask_percentage": subtask_percentage},
+            "creationOptions": creation_options,
+            "format": fmt,
+        }
+    )
+    warp_params = clean_options({"outputType": band_type, "dstAlpha": dst_alpha, "srcSRS": src_srs, "dstSRS": dst_srs})
     if boundary:
-        warp_params.update({'cutlineDSName': boundary, 'cropToCutline': True})
+        warp_params.update({"cutlineDSName": boundary, "cropToCutline": True})
     logger.info(
         f"calling gdal.Warp('{output_file}', [{', '.join(input_files)}], "
-        f"{stringify_params(options)}, {stringify_params(warp_params)},)")
+        f"{stringify_params(options)}, {stringify_params(warp_params)},)"
+    )
     gdal.Warp(output_file, input_files, **options, **warp_params)
     if compress:
         input_file, output_file = get_dataset_names(output_file, output_file)
@@ -425,18 +466,30 @@ def convert_raster(input_files, output_file, fmt=None, creation_options=None, ba
         # isn't as small of a file.
         # options['creationOptions'] = ["COMPRESS=LZW", "TILED=YES"]
         # translate_params = {}
-        options['creationOptions'] = ["COMPRESS=JPEG", "PHOTOMETRIC=YCBCR", "TILED=YES"]
-        translate_params = {'bandList': [1, 2, 3]}
+        options["creationOptions"] = ["COMPRESS=JPEG", "PHOTOMETRIC=YCBCR", "TILED=YES"]
+        translate_params = {"bandList": [1, 2, 3]}
 
         logger.info(
             f"calling gdal.Translate('{output_file}', '{input_file}', "
-            f"{stringify_params(options)}, {stringify_params(translate_params)},)")
+            f"{stringify_params(options)}, {stringify_params(translate_params)},)"
+        )
         gdal.Translate(output_file, input_file, **options, **translate_params)
     return output_file
 
 
-def convert_vector(input_file, output_file, fmt=None, creation_options=None, access_mode='overwrite',
-                   src_srs=None, dst_srs=None, task_uid=None, layers=None, boundary=None, bbox=None):
+def convert_vector(
+    input_file,
+    output_file,
+    fmt=None,
+    creation_options=None,
+    access_mode="overwrite",
+    src_srs=None,
+    dst_srs=None,
+    task_uid=None,
+    layers=None,
+    boundary=None,
+    bbox=None,
+):
     """
     :param input_files: A file or list of files to convert.
     :param output_file: The file to convert.
@@ -455,12 +508,22 @@ def convert_vector(input_file, output_file, fmt=None, creation_options=None, acc
     """
     gdal.UseExceptions()
     options = clean_options(
-        {'callback': progress_callback, 'callback_data': {'task_uid': task_uid},
-         'creationOptions': creation_options, 'format': fmt,
-         'geometryType': 'PROMOTE_TO_MULTI', 'layers': layers,
-         'srcSRS': src_srs, 'dstSRS': dst_srs, 'accessMode': access_mode,
-         'reproject': src_srs != dst_srs, 'skipFailures': True, 'spatFilter': bbox,
-         'options': [f"-clipSrc", boundary] if boundary and not bbox else None})
+        {
+            "callback": progress_callback,
+            "callback_data": {"task_uid": task_uid},
+            "creationOptions": creation_options,
+            "format": fmt,
+            "geometryType": "PROMOTE_TO_MULTI",
+            "layers": layers,
+            "srcSRS": src_srs,
+            "dstSRS": dst_srs,
+            "accessMode": access_mode,
+            "reproject": src_srs != dst_srs,
+            "skipFailures": True,
+            "spatFilter": bbox,
+            "options": [f"-clipSrc", boundary] if boundary and not bbox else None,
+        }
+    )
     logger.info(f"calling gdal.VectorTranslate('{output_file}', '{input_file}', {stringify_params(options)})")
     gdal.VectorTranslate(output_file, input_file, **options)
     return output_file
