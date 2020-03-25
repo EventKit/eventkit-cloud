@@ -71,7 +71,7 @@ def progress_callback(pct, msg, user_data):
     )
 
 
-def open_ds(file_path, is_raster):
+def open_dataset(file_path, is_raster):
     """
     Given a path to a raster or vector dataset, returns an opened GDAL or OGR dataset.
     The caller has the responsibility of closing/deleting the dataset when finished.
@@ -105,13 +105,13 @@ def open_ds(file_path, is_raster):
         ):
             raise ex
     finally:
-        cleanup_ds(gdal_dataset)
-        cleanup_ds(ogr_dataset)
+        cleanup_dataset(gdal_dataset)
+        cleanup_dataset(ogr_dataset)
         if not use_exceptions:
             gdal.DontUseExceptions()
 
 
-def cleanup_ds(dataset):
+def cleanup_dataset(dataset):
     """
     Given an input gdal.Dataset or ogr.DataSource, destroy it.
     NB: referring to this object's members after destruction will crash the Python interpreter.
@@ -160,7 +160,7 @@ def get_gdal_metadata(ds_path, is_raster, multiprocess_queue):
     ret = {"driver": None, "is_raster": None, "nodata": None}
 
     try:
-        ds = open_ds(ds_path, is_raster)
+        ds = open_dataset(ds_path, is_raster)
         if isinstance(ds, ogr.DataSource):
             ret["driver"] = ds.GetDriver().GetName()
             ret["is_raster"] = False
@@ -181,7 +181,7 @@ def get_gdal_metadata(ds_path, is_raster, multiprocess_queue):
         multiprocess_queue.put(ret)
 
     finally:
-        cleanup_ds(ds)
+        cleanup_dataset(ds)
 
 
 def get_area(geojson):
@@ -639,7 +639,7 @@ def get_band_statistics(file_path, band=1):
         return None
     finally:
         # Need to close the dataset.
-        cleanup_ds(image_file)  # NOQA
+        cleanup_dataset(image_file)  # NOQA
 
 
 def rename_duplicate(original_file: str) -> str:
