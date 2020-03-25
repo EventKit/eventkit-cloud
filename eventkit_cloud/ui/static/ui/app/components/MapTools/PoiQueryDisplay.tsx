@@ -95,11 +95,12 @@ function PoiQueryDisplay(props: React.PropsWithChildren<Props>) {
 
     }
 
+    const url = props.selectedLayer.metadata ? props.selectedLayer.metadata.url : '';
     useEffect(() => {
         if (!closeCard && !!lastCoordinate) {
             handleMapClick(lastCoordinate);
         }
-    }, [props.selectedLayer.slug, props.selectedLayer.metadata.url]);
+    }, [props.selectedLayer.slug, url]);
 
     // Mechanism by which to pass a reference to the added ol VectorLayer down to any children.
     const childrenWithProps = React.Children.map(props.children, (child : any) =>
