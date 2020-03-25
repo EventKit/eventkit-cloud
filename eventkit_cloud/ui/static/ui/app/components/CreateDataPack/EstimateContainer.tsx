@@ -1,7 +1,7 @@
 import React, {useEffect, useState} from 'react';
 import BreadcrumbStepper from "./BreadcrumbStepper";
 import {getCookie, isZoomLevelInRange} from "../../utils/generic";
-import {featureToBbox, WGS84} from '../../utils/mapUtils';
+import {allHaveArea, featureToBbox, WGS84} from '../../utils/mapUtils';
 import {updateExportInfo} from '../../actions/datacartActions';
 import {getProviders} from '../../actions/providerActions';
 import axios from "axios";
@@ -10,6 +10,7 @@ import * as PropTypes from "prop-types";
 import {useEffectOnMount} from "../../utils/hooks";
 import {useAppContext} from "../ApplicationContext";
 import get = Reflect.get;
+import {JobValidationProvider} from "./context/JobValidation";
 
 export interface ProviderLimits {
     slug: string;
@@ -26,16 +27,6 @@ export interface Props {
     getProviders: () => void;
 }
 
-export interface State {
-    areEstimatesLoading: boolean;
-    sizeEstimate: number;
-    timeEstimate: number;
-    limits: {
-        max: number;
-        sizes: number[];
-    };
-}
-
 const CancelToken = axios.CancelToken;
 const source = CancelToken.source();
 
@@ -44,11 +35,12 @@ function EstimateContainer(props: Props) {
     const [totalTime, setTime] = useState(-1);
     const [totalSize, setSize] = useState(-1);
     const [areEstimatesLoading, setEstimatesLoading] = useState(true);
-    const [providerLimits, setLimits] = useState({});
+    const [providerLimits, setLimits] = useState([]);
+    const [aoiHasArea, setHasArea] = useState(false);
 
     useEffectOnMount(() => {
-        const waitForProviders = async () => await checkProviders(props.providers);
-        waitForProviders().then(r => checkProviders(props.providers));
+        const waitForProviders = async () => await getProviders();
+        waitForProviders().then(() => checkProviders(props.providers));
     });
 
     useEffect(() => {
@@ -63,24 +55,25 @@ function EstimateContainer(props: Props) {
             setEstimatesLoading(true);
             checkProviders(props.providers);
         }
+        setHasArea(allHaveArea(props.geojson));
     }, [props.geojson]);
 
 
     async function getProviders() {
         await props.getProviders();
-        let max = 0;
         const limits = [];
         props.providers.forEach((provider) => {
             if (!provider.display) {
                 return;
             }
-            const getValue = (value) => (value) ? parseFloat(value) : undefined; // Avoids NaN's
+            const getValue = (value) => (value) ? parseFloat(value) : -1; // Avoids NaN's
             limits.push({
                 slug: provider.slug,
                 maxDataSize: getValue(provider.max_data_size),
                 maxArea: getValue(provider.max_selection),
             } as ProviderLimits)
         });
+        limits.sort((a, b) => a.maxArea - b.maxArea);
         setLimits(limits);
     }
 
@@ -127,7 +120,7 @@ function EstimateContainer(props: Props) {
     async function checkEstimate(provider: Eventkit.Provider) {
         // This assumes that the entire selection is the first feature, if the feature collection becomes the
         // selection then the bbox would need to be calculated for it.
-        if (context.config.SERVE_ESTIMATES) {
+        if (SERVE_ESTIMATES) {
             if (Object.keys(props.geojson).length === 0) {
                 return null;
             }
@@ -211,7 +204,7 @@ function EstimateContainer(props: Props) {
     }
 
     function updateEstimate() {
-        if (!context.config.SERVE_ESTIMATES || !props.exportInfo.providers) {
+        if (!SERVE_ESTIMATES || !props.exportInfo.providers) {
             return;
         }
         let sizeEstimate = 0;
@@ -220,7 +213,7 @@ function EstimateContainer(props: Props) {
         for (const provider of props.exportInfo.providers) {
             // tslint:disable-next-line:triple-equals
             if (props.exportInfo.providerInfo[provider.slug] == undefined) {
-                setState({ areEstimatesLoading: true });
+                setEstimatesLoading(true);
                 return;
             } else {
                 if (provider.slug in props.exportInfo.providerInfo) {
@@ -236,26 +229,29 @@ function EstimateContainer(props: Props) {
                 if (timeEstimate > maxAcceptableTime) {
                     timeEstimate = maxAcceptableTime;
                 }
-                setState({ sizeEstimate, timeEstimate });
+                setTime(timeEstimate);
+                setSize(sizeEstimate);
             }
-            setState({ areEstimatesLoading: false });
+            setEstimatesLoading(false);
         }
     }
 
-    render()
-    {
-        return (
-            <BreadcrumbStepper
-                {...props.breadcrumbStepperProps}
-                checkProvider={checkProvider}
-                updateEstimate={updateEstimate}
-                sizeEstimate={state.sizeEstimate}
-                timeEstimate={state.timeEstimate}
-                areEstimatesLoading={state.areEstimatesLoading}
-                getProviders={getProviders}
-            />
-        )
-    }
+    return (
+        <JobValidationProvider value={{
+            providerLimits,
+            aoiHasArea,
+        }}>
+        <BreadcrumbStepper
+            {...props.breadcrumbStepperProps}
+            checkProvider={checkProvider}
+            updateEstimate={updateEstimate}
+            sizeEstimate={totalSize}
+            timeEstimate={totalTime}
+            areEstimatesLoading={areEstimatesLoading}
+            getProviders={getProviders}
+        />
+        </JobValidationProvider>
+    )
 }
 
 function mapStateToProps(state) {
