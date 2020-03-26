@@ -56,6 +56,7 @@ def authenticate():
         return None
     except requests.exceptions.RequestException as e:
         logger.error("FAILED TO AUTHENTICATE.")
-        logger.error(traceback.print_exc())
+        if auth_response:
+            logger.error(auth_response.content)
         cache.delete(CACHE_TOKEN_KEY)
         return None

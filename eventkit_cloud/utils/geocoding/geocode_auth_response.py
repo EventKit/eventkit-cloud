@@ -11,38 +11,37 @@ logger = logging.getLogger(__name__)
 class GeocodeAuthResponse(object):
 
     def get_response(self, payload):
+        error_message = "The Geocoding service received an error. Please try again or contact an Eventkit administrator."
         if os.getenv("GEOCODING_AUTH_CERT"):
-            cookies = get_session_cookies()
-            headers = get_auth_headers()
-            response = auth_requests.get(self.url, params=payload, cookies=cookies, headers=headers)
-            if check_data(response):
+            response = get_cached_response(self.url, payload)
+            if not response:
+                response = get_auth_response(self.url, payload)
+            if response:
                 return response
             else:
-                auth_session = auth_requests.AuthSession()
-                response = auth_session.get(self.url, params=payload, cert_var="GEOCODING_AUTH_CERT")
-                if response.ok:
-                    if check_data(response):
-                        # if valid, update cache headers and cookies
-                        if cookies != auth_session.session.cookies:
-                            update_session_cookies(auth_session.session.cookies)
-                        authorization_header = response.headers.get("Authorization")
-                        if headers.get("Authorization") != authorization_header:
-                            update_auth_headers(authorization_header)
-                        return response
-                    raise Exception(
-                        "The Geocoding service received an error. Please try again or contact an Eventkit administrator."
-                    )
-                else:
-                    raise AuthenticationError(
-                        "The Geocoding service received an error or was unable to authenticate. Please try again or contact an Eventkit administrator."
-                    )
+                raise Exception(error_message)
         else:
             response = auth_requests.get(self.url, params=payload)
             if not response.ok:
-                raise Exception(
-                    "The Geocoding service received an error. Please try again or contact an Eventkit " "administrator."
-                )
+                raise Exception(error_message)
             return response
+
+
+def get_cached_response(url, payload):
+    cookies = get_session_cookies()
+    headers = get_auth_headers()
+    response = auth_requests.get(url, params=payload, cookies=cookies, headers=headers)
+    if response.ok and check_data(response):
+        return response
+
+
+def get_auth_response(url, payload):
+    auth_session = auth_requests.AuthSession()
+    response = auth_session.get(url, params=payload, cert_var="GEOCODING_AUTH_CERT")
+    if response.ok and check_data(response):
+        update_session_cookies(auth_session.session.cookies)
+        update_auth_headers(response.headers)
+        return response
 
 
 def check_data(response):
@@ -56,8 +55,3 @@ def check_data(response):
         logger.warning("Invalid response.")
         logger.debug(response.content)
     return False
-
-
-class AuthenticationError(Exception):
-    def __init__(self, message):
-        self.message = message

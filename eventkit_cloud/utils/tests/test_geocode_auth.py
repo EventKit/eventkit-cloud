@@ -59,7 +59,6 @@ class TestGeoCodeAuth(TestCase):
             mock_cache.reset_mock()
 
         with self.settings(GEOCODING_AUTH_URL="http://test.test"):
-            example_token = "test_token"
             example_response = {}
             mock_auth_requests.get().json.return_value = example_response
             self.assertIsNone(authenticate())
