@@ -201,12 +201,7 @@ function AoiInfobar(props: Props) {
     const displayAlert = () => setShowAlert(true);
 
     const { dataSizeInfo, providerLimits, aoiHasArea } = useJobValidationContext();
-    let areEstimatesAvailable;
-    let exceedingSize;
-    if (dataSizeInfo) {
-        areEstimatesAvailable = dataSizeInfo.areEstimatesAvailable;
-        exceedingSize = dataSizeInfo.exceedingSize;
-    }
+    const { areEstimatesAvailable = false, exceedingSize = [] } = dataSizeInfo || {};
 
     let needsWarning = false;
     let aoiAlert = null;
@@ -221,46 +216,49 @@ function AoiInfobar(props: Props) {
     const highestMaxSelectionArea = (providerLimits[0]) ? providerLimits[0].maxArea : 0;
     const aoiArea = getSqKm(props.aoiInfo.geojson);
 
-    if (areEstimatesAvailable && false) {
+    if (aoiHasArea) {
+        if (areEstimatesAvailable && false) {
 
-    } else {
-        const exceedsAreaCount = providerLimits.map(limits => limits.maxArea < aoiArea).length;
-        if (exceedsAreaCount === providerLimits.length) {
-            needsWarning = true;
-            aoiAlert = (
-                <AlertCallout
-                    className={`qa-AoiInfobar-alert-oversized ${classes.alertCalloutTop}`}
-                    onClose={closeAlert}
-                    orientation="top"
-                    title="Your AOI is too large!"
-                    body={(
-                        <p>
-                            The max size allowed for the AOI is {numeral(highestMaxSelectionArea).format('0,0')} sq km
-                            and yours is {totalArea}.
-                            Please reduce the size of your polygon and/or buffer.
-                        </p>
-                    )}
-                />
-            );
-        } else if (exceedsAreaCount > 0) {
-            aoiAlert = (
-                <AlertCallout
-                    className={`qa-AoiInfobar-alert-overSome ${classes.alertCalloutTop}`}
-                    onClose={closeAlert}
-                    orientation="top"
-                    title="Your AOI is too large for some of the data sources."
-                    body={(
-                        <p>
-                            The current AOI size of {totalArea}, exceeds the limit set for at least one data source.
-                            If you plan to include all available data sources for this area in your DataPack you,
-                            need to reduce the size of your polygon and/or buffer
-                            to {numeral(highestMaxSelectionArea).format('0,0')} sq km.
-                            Specifics for each Data Provider are on the next page.
-                        </p>
-                    )}
-                    style={{ color: colors.black }}
-                />
-            );
+        } else {
+            const exceedsAreaCount = providerLimits.map(limits => limits.maxArea < aoiArea).length;
+            if (exceedsAreaCount === providerLimits.length) {
+                needsWarning = true;
+                aoiAlert = (
+                    <AlertCallout
+                        className={`qa-AoiInfobar-alert-oversized ${classes.alertCalloutTop}`}
+                        onClose={closeAlert}
+                        orientation="top"
+                        title="Your AOI is too large!"
+                        body={(
+                            <p>
+                                The max size allowed for the AOI is {numeral(highestMaxSelectionArea).format('0,0')} sq
+                                km
+                                and yours is {totalArea}.
+                                Please reduce the size of your polygon and/or buffer.
+                            </p>
+                        )}
+                    />
+                );
+            } else if (exceedsAreaCount > 0) {
+                aoiAlert = (
+                    <AlertCallout
+                        className={`qa-AoiInfobar-alert-overSome ${classes.alertCalloutTop}`}
+                        onClose={closeAlert}
+                        orientation="top"
+                        title="Your AOI is too large for some of the data sources."
+                        body={(
+                            <p>
+                                The current AOI size of {totalArea}, exceeds the limit set for at least one data source.
+                                If you plan to include all available data sources for this area in your DataPack you,
+                                need to reduce the size of your polygon and/or buffer
+                                to {numeral(highestMaxSelectionArea).format('0,0')} sq km.
+                                Specifics for each Data Provider are on the next page.
+                            </p>
+                        )}
+                        style={{ color: colors.black }}
+                    />
+                );
+            }
         }
     }
 
