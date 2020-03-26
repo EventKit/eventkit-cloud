@@ -1,73 +1,41 @@
-import json
 import logging
 
-import requests_mock
+import requests
 from django.conf import settings
-from django.test import TestCase
 
-from eventkit_cloud.utils.geocoding.coordinate_converter import CoordinateConverter
 
 logger = logging.getLogger(__name__)
-mockURL = "http://192.168.20.1"
 
-class TestConvert(TestCase):
 
-    def setUp(self):
-        self.mock_requests = requests_mock.Mocker()
-        self.mock_requests.start()
-        self.addCleanup(self.mock_requests.stop)
-        
-        settings.CONVERT_API_URL = mockURL
+class CoordinateConverter(object):
 
-    def convert_test_success(self, api_response):
-        
-        self.mock_requests.get(mockURL, text=json.dumps(api_response), status_code=200)
-        convert = CoordinateConverter()
-        result = convert.get("18S TJ 97100 03003")
-        self.assertIsNotNone(result.get("geometry"))
-        self.assertEqual(result.get("type"), "Feature")
-        properties = result.get("properties")
-        geometry = result.get("geometry")
-        self.assertIsInstance(properties, dict)
-        self.assertIsInstance(geometry, dict)
-        self.assertEqual(geometry.get("type"), "Point")
-        self.assertIsInstance(geometry.get("coordinates"), list)
+    def __init__(self):
+        self.converter = self.get_converter()
 
-    def test_convert_success(self):
-        convert_response_success = {
-            "type": "Feature",
-            "geometry": {
-                "type": "Point",
-                "coordinates": [
-                -112.61869345019069,
-                50.00105275281522
-                ]
-            },
-            "properties": {
-                "name": "12UUA8440",
-                "from": "mgrs",
-                "to": "decdeg"
-            }        
-        }
+    @property
+    def map(self):
+        return self
 
-        self.convert_test_success(convert_response_success)
+    def get_converter(self):
+        return self
 
-    def convert_test_fail(self, api_response):
-        self.mock_requests.get(mockURL, text=json.dumps(api_response), status_code=200)
-        convert = CoordinateConverter()
-        result = convert.get("12UUA844")
-        self.assertIsNone(result.get("geometry"))
-        properties = result.get("properties")
-        self.assertIsInstance(properties, dict)
+    def add_bbox(self, data):
+        logger.info("add_bbox")
+        if not self.update_url:
+            return data
+        return self.converter.add_bbox(self.update_url, data)
 
-    def test_convert_fail(self):
-        convert_response_fail = {
-            "properties": {
-                "name": "12UUA844",
-                "from": "mgrs",
-                "to": "decdeg"
-            }        
-        }
+    def search(self, query):
+        return self.converter.get_data(query)
 
-        self.convert_test_fail(convert_response_fail)
+    def get(self, query):
+        return self.get_data(query)
 
+    def get_data(self, query):
+        url = getattr(settings, 'CONVERT_API_URL')
+        args = {"from": "mgrs", "to": "decdeg", "q": str(query)}
+        try:
+            return self.get_response(url, args).json()
+        except requests.exceptions.RequestException as e:
+            logger.error(e)
+            return

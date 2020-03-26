@@ -128,17 +128,18 @@ def handle_basic_auth(func):
     """
 
     @wraps(func)
-    def wrapper(url, **kwargs):
+    def wrapper(*args, **kwargs):
         try:
             if not kwargs.get("cert_var"):
                 cred_var = kwargs.pop("cred_var", None) or kwargs.pop("slug", None)
+            url = kwargs.get("url")
             cred = get_cred(cred_var=cred_var, url=url, params=kwargs.get("params", None))
             if cred:
                 kwargs["auth"] = tuple(cred)
             logger.debug(
                 "requests.%s('%s', %s)", func.__name__, url, ", ".join(["%s=%s" % (k, v) for k, v in kwargs.items()]),
             )
-            response = func(url, **kwargs)
+            response = func(*args, **kwargs)
             return response
         except Exception:
             raise
@@ -147,19 +148,20 @@ def handle_basic_auth(func):
 
 
 class AuthSession(object):
+
     def __init__(self):
         self.session = requests.session()
         self.cookies = self.session.cookies
 
-        @cert_var_to_cert
-        @handle_basic_auth
-        def get(url, **kwargs):
-            return self.session.get(url, **kwargs)
+    @cert_var_to_cert
+    @handle_basic_auth
+    def get(self, *args, **kwargs):
+        return self.session.get(*args, **kwargs)
 
 
 @cert_var_to_cert
 @handle_basic_auth
-def get(url, **kwargs):
+def get(url=None, **kwargs):
     """
     As requests.get, but replaces the "slug" kwarg with "cert", pointing to a temporary file holding cert and key info,
     if found.
@@ -172,7 +174,7 @@ def get(url, **kwargs):
 
 @cert_var_to_cert
 @handle_basic_auth
-def post(url, **kwargs):
+def post(url=None, **kwargs):
     """
     As requests.post, but replaces the "slug" kwarg with "cert", pointing to a temporary file holding cert and key info,
     if found.

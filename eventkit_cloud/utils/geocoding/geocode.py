@@ -1,31 +1,15 @@
 import logging
 from abc import ABCMeta, abstractmethod
 
-import requests
-import os
 from django.conf import settings
 from eventkit_cloud.utils import auth_requests
-from eventkit_cloud.utils.geocoding.geocode_auth import (
-    get_auth_headers,
-    get_session_cookies,
-    update_auth_headers,
-    update_session_cookies,
-)
+from eventkit_cloud.utils.geocoding.geocode_auth_response import GeocodeAuthResponse
+
 
 logger = logging.getLogger(__name__)
 
 
-# checks validity of data from response
-def check_data(resp_data):
-    try:
-        if "features" in resp_data.json():
-            return True
-    except Exception:
-        print("Invalid response")
-    return False
-
-
-class GeocodeAdapter(metaclass=ABCMeta):
+class GeocodeAdapter(GeocodeAuthResponse, metaclass=ABCMeta):
     """
     An abstract class to implement a new geocoding service.  Note that the UI will expect,
     each feature to have a name, countryName, adminName1, adminName2, and the bbox only
@@ -99,40 +83,6 @@ class GeocodeAdapter(metaclass=ABCMeta):
                 Return the FeatureCollection GeoJSON
         """
         pass
-
-    def get_response(self, payload):
-        if os.getenv("GEOCODING_AUTH_CERT"):
-            auth_session = auth_requests.AuthSession()
-            response = auth_session.session.get(
-                self.url, params=payload, cookies=get_session_cookies(), headers=get_auth_headers(),
-            )
-            if response.ok:
-                if check_data(response):
-                    return response
-                else:
-                    response = auth_requests.get(self.url, params=payload, cert_var="GEOCODING_AUTH_CERT")
-                    if response.ok:
-                        if check_data(response):
-                            # if valid, update cache headers and cookies
-                            update_session_cookies(auth_session)
-                            update_auth_headers(response)
-                            return response
-            else:
-                raise Exception(
-                    "The Geocoding service received an error. Please try again or contact an Eventkit " "administrator."
-                )
-        else:
-            response = requests.get(self.url, params=payload)
-
-        if not response.ok:
-            error_message = "EventKit was not able to authenticate to the Geocoding service."
-            logger.error(error_message)
-            raise AuthenticationError(error_message)
-        if not response.ok:
-            raise Exception(
-                "The Geocoding service received an error. Please try again or contact an Eventkit " "administrator."
-            )
-        return response
 
     def get_data(self, query):
         """
@@ -347,7 +297,9 @@ class Pelias(GeocodeAdapter):
                 break
 
         if search_id:
-            response = requests.get(update_url, params={"ids": search_id}).json()
+            response = auth_requests.get(update_url,
+                                         params={"ids": search_id},
+                                         cert_var="GEOCODING_AUTH_CERT").json()
             features = response.get("features", [])
             if len(features):
                 feature = features[0]
@@ -410,8 +362,3 @@ def expand_bbox(original_bbox, new_bbox):
     original_bbox[2] = max(new_bbox[2], original_bbox[2])
     original_bbox[3] = max(new_bbox[3], original_bbox[3])
     return original_bbox
-
-
-class AuthenticationError(Exception):
-    def __init__(self, message):
-        self.message = message
