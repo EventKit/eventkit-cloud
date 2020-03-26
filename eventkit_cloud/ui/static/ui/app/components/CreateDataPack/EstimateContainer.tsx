@@ -6,10 +6,8 @@ import {updateExportInfo} from '../../actions/datacartActions';
 import {getProviders} from '../../actions/providerActions';
 import axios from "axios";
 import {connect} from "react-redux";
-import * as PropTypes from "prop-types";
-import {useEffectOnMount} from "../../utils/hooks";
+import {DepsHashers, useEffectOnMount} from "../../utils/hooks";
 import {useAppContext} from "../ApplicationContext";
-import get = Reflect.get;
 import {JobValidationProvider} from "./context/JobValidation";
 
 export interface ProviderLimits {
@@ -19,6 +17,7 @@ export interface ProviderLimits {
 }
 
 export interface Props {
+    aoiInfo: any;
     exportInfo: Eventkit.Store.ExportInfo;
     providers: Eventkit.Provider[];
     geojson: GeoJSON.FeatureCollection;
@@ -32,32 +31,13 @@ const source = CancelToken.source();
 
 function EstimateContainer(props: Props) {
     const { SERVE_ESTIMATES } = useAppContext();
+    const { aoiInfo } = props;
+
     const [totalTime, setTime] = useState(-1);
     const [totalSize, setSize] = useState(-1);
     const [areEstimatesLoading, setEstimatesLoading] = useState(true);
     const [providerLimits, setLimits] = useState([]);
     const [aoiHasArea, setHasArea] = useState(false);
-
-    useEffectOnMount(() => {
-        const waitForProviders = async () => await getProviders();
-        waitForProviders().then(() => checkProviders(props.providers));
-    });
-
-    useEffect(() => {
-        if (SERVE_ESTIMATES) {
-            updateEstimate();
-        }
-    }, [props.exportInfo.providers]);
-
-    useEffect(() => {
-        if (SERVE_ESTIMATES) {
-            props.updateExportInfo({ providerInfo: {} });
-            setEstimatesLoading(true);
-            checkProviders(props.providers);
-        }
-        setHasArea(allHaveArea(props.geojson));
-    }, [props.geojson]);
-
 
     async function getProviders() {
         await props.getProviders();
@@ -236,27 +216,73 @@ function EstimateContainer(props: Props) {
         }
     }
 
+    useEffectOnMount(() => {
+        const waitForProviders = async () => await getProviders();
+        waitForProviders().then(() => checkProviders(props.providers));
+    });
+
+    useEffect(() => {
+        if (SERVE_ESTIMATES) {
+            updateEstimate();
+        }
+    }, [props.exportInfo.providers]);
+
+    useEffect(() => {
+        if (SERVE_ESTIMATES && props.geojson && props.providers) {
+            props.updateExportInfo({ providerInfo: {} });
+            setEstimatesLoading(true);
+            checkProviders(aoiInfo.providers);
+        }
+        setHasArea(allHaveArea(props.geojson));
+    }, [aoiInfo.geojson, props.providers]);
+
+    const [dataSizeInfo, setDataSizeInfo] = useState(undefined);
+    const [slugs, infoObjects] = Object.entries(props.exportInfo.providerInfo);
+    let estimates = [];
+    if (!!infoObjects) {
+        estimates = infoObjects.map((infoObject: Eventkit.Store.ProviderInfo) => infoObject.estimates);
+    }
+    useEffect(() => {
+        if (SERVE_ESTIMATES && slugs && estimates) {
+            const estimateInfo = {
+                providerEstimates: {}
+            };
+
+            slugs.map((slug: string, ix) => estimateInfo.providerEstimates[slug] = infoObjects[ix]);
+            estimateInfo['areEstimatesAvailable'] = props.exportInfo.providers.every((provider) => {
+                const estimate = estimateInfo[provider.slug];
+                return (estimate) ? estimate.size && estimate.size.value : false;
+            });
+
+            estimateInfo['exceedingSize'] = providerLimits.filter(limits =>
+                estimateInfo.providerEstimates[limits.slug].size.value > limits.maxDataSize).map(limits => limits.slug);
+            setDataSizeInfo(estimateInfo);
+        }
+    }, [(SERVE_ESTIMATES) ? estimates.map(providerEstimates => DepsHashers.providerEstimate(providerEstimates)) : undefined]);
+
+
     return (
         <JobValidationProvider value={{
             providerLimits,
             aoiHasArea,
+            dataSizeInfo
         }}>
-        <BreadcrumbStepper
-            {...props.breadcrumbStepperProps}
-            checkProvider={checkProvider}
-            updateEstimate={updateEstimate}
-            sizeEstimate={totalSize}
-            timeEstimate={totalTime}
-            areEstimatesLoading={areEstimatesLoading}
-            getProviders={getProviders}
-        />
+            <BreadcrumbStepper
+                {...props.breadcrumbStepperProps}
+                checkProvider={checkProvider}
+                updateEstimate={updateEstimate}
+                sizeEstimate={totalSize}
+                timeEstimate={totalTime}
+                areEstimatesLoading={areEstimatesLoading}
+                getProviders={getProviders}
+            />
         </JobValidationProvider>
     )
 }
 
 function mapStateToProps(state) {
     return {
-        geojson: state.aoiInfo.geojson,
+        aoiInfo: state.aoiInfo,
         exportInfo: state.exportInfo,
         providers: state.providers,
     };

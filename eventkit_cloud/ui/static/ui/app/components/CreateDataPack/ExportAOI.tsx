@@ -1132,7 +1132,6 @@ export class ExportAOI extends React.Component<Props, State> {
                     <BufferDialog
                         show={this.state.showBuffer}
                         aoi={aoi}
-                        limits={this.props.limits}
                         value={this.props.aoiInfo.buffer}
                         valid={this.state.validBuffer}
                         handleBufferClick={this.handleBufferClick}

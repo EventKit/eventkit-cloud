@@ -4,10 +4,14 @@ import React, {
 } from 'react'
 import {ProviderLimits} from "../EstimateContainer";
 
-// TODO: refactor app to remove all legacy context references -- switch to this
 export interface JobValidationContext {
     providerLimits: ProviderLimits[];
     aoiHasArea: boolean;
+    dataSizeInfo: {
+        areEstimatesAvailable: boolean;
+        providerEstimates: Eventkit.Map<Eventkit.Store.Estimates>;
+        exceedingSize: string[];
+    }
 }
 
 const appContext = createContext<JobValidationContext>({} as JobValidationContext);

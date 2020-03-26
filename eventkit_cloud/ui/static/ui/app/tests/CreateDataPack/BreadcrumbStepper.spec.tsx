@@ -253,7 +253,6 @@ describe('BreadcrumbStepper component', () => {
     it('getStepContent should return the correct content for each stepIndex', () => {
         let content = wrapper.instance().getStepContent(0);
         expect(content).toEqual(<ExportAOI
-            limits={wrapper.state('limits')}
             onWalkthroughReset={props.onWalkthroughReset}
             walkthroughClicked={props.walkthroughClicked}
             mapLayers={props.mapLayers}
@@ -279,27 +278,11 @@ describe('BreadcrumbStepper component', () => {
 
         content = wrapper.instance().getStepContent(3);
         expect(content).toEqual(<ExportAOI
-            limits={wrapper.state('limits')}
             onWalkthroughReset={props.onWalkthroughReset}
             walkthroughClicked={props.walkthroughClicked}
             mapLayers={props.mapLayers}
         />);
     });
-
-    // it('getStepContent should return the estimate label if estimates exist from cloned datapack', () => {
-    //    let content = wrapper.instance().getStepContent(0);
-    //     const clonedEstimates = {};
-    //     expect(content).toEqual(
-    //         <ExportAOI
-    //             limits={wrapper.state('limits')}
-    //             onWalkthroughReset={props.onWalkthroughReset}
-    //             walkthroughClicked={props.walkthroughClicked}
-    //         />,
-    //         <ExportInfo
-    //             onUpdateEstimate={wrapper.instance().updateEstimate}
-    //         />
-    //     );
-    // });
 
     it('getButtonContent should return the correct content for each stepIndex', () => {
         let content = mount(wrapper.instance().getButtonContent(0));

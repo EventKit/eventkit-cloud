@@ -1,7 +1,7 @@
 import {shallow} from "enzyme";
 import * as sinon from 'sinon';
 import * as React from "react";
-import {EstimateContainer} from "../../components/CreateDataPack/EstimateContainer";
+import EstimateContainer from "../../components/CreateDataPack/EstimateContainer";
 import MockAdapter from "axios-mock-adapter";
 import axios from "axios";
 

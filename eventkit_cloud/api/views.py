@@ -897,7 +897,11 @@ class DataProviderViewSet(viewsets.ReadOnlyModelViewSet):
         * slug: optional lookup field
         * return: A list of data providers.
         """
-        return super(DataProviderViewSet, self).list(self, request, slug, *args, **kwargs)
+        try:
+            return super(DataProviderViewSet, self).list(self, request, slug, *args, **kwargs)
+        except:
+            import traceback
+            traceback.print_exc()
 
     def retrieve(self, request, slug=None, *args, **kwargs):
         """

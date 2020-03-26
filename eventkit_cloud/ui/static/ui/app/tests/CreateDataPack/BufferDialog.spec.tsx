@@ -5,7 +5,7 @@ import TextField from '@material-ui/core/TextField';
 import Slider from '@material-ui/lab/Slider';
 import Clear from '@material-ui/icons/Clear';
 import AlertCallout from '../../components/CreateDataPack/AlertCallout';
-import { BufferDialog } from '../../components/CreateDataPack/BufferDialog';
+import BufferDialog from '../../components/CreateDataPack/BufferDialog';
 
 describe('AlertCallout component', () => {
     const getProps = () => ({

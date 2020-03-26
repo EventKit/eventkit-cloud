@@ -19,3 +19,26 @@ function usePrevious(stateValue) {
     });
     return ref.current;
 }
+
+
+export class DepsHashers {
+
+    private static readonly emptyEstimate = DepsHashers.stringHash('-1:-1');
+
+    static stringHash(value: string) {
+        let h;
+        for (let i = 0; i < value.length; i += 1) {
+            // eslint-disable-next-line no-bitwise
+            h = Math.imul(31, h) + value.charCodeAt(i) | 0;
+        }
+        return h;
+    }
+
+    static providerEstimate(estimates: Eventkit.Store.Estimates) {
+        const {size, time} = estimates;
+        if (!size && !time) {
+            return DepsHashers.emptyEstimate;
+        }
+        return DepsHashers.stringHash(`${size.value}:${time.value}`);
+    }
+}

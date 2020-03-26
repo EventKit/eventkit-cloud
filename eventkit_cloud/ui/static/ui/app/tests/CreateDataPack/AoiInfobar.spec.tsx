@@ -9,7 +9,7 @@ import Line from '@material-ui/icons/Timeline';
 import Extent from '@material-ui/icons/SettingsOverscan';
 import IrregularPolygon from '../../components/icons/IrregularPolygon';
 import AlertCallout from '../../components/CreateDataPack/AlertCallout';
-import { AoiInfobar } from '../../components/CreateDataPack/AoiInfobar';
+import AoiInfobar from '../../components/CreateDataPack/AoiInfobar';
 
 describe('AoiInfobar component', () => {
     const getProps = () => ({
