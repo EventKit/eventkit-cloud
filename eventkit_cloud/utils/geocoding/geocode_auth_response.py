@@ -1,7 +1,11 @@
 import logging
 import os
-from eventkit_cloud.utils.geocoding.geocode_auth import get_session_cookies, get_auth_headers, update_auth_headers, \
-    update_session_cookies
+from eventkit_cloud.utils.geocoding.geocode_auth import (
+    get_session_cookies,
+    get_auth_headers,
+    update_auth_headers,
+    update_session_cookies,
+)
 from eventkit_cloud.utils import auth_requests
 
 
@@ -9,9 +13,10 @@ logger = logging.getLogger(__name__)
 
 
 class GeocodeAuthResponse(object):
-
     def get_response(self, payload):
-        error_message = "The Geocoding service received an error. Please try again or contact an Eventkit administrator."
+        error_message = (
+            "The Geocoding service received an error. Please try again or contact an Eventkit administrator."
+        )
         if os.getenv("GEOCODING_AUTH_CERT"):
             response = get_cached_response(self.url, payload)
             if not response:

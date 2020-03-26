@@ -297,9 +297,7 @@ class Pelias(GeocodeAdapter):
                 break
 
         if search_id:
-            response = auth_requests.get(update_url,
-                                         params={"ids": search_id},
-                                         cert_var="GEOCODING_AUTH_CERT").json()
+            response = auth_requests.get(update_url, params={"ids": search_id}, cert_var="GEOCODING_AUTH_CERT").json()
             features = response.get("features", [])
             if len(features):
                 feature = features[0]

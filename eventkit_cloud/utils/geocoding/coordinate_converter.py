@@ -9,7 +9,6 @@ logger = logging.getLogger(__name__)
 
 
 class CoordinateConverter(GeocodeAuthResponse):
-
     def __init__(self, url=None):
         self.url = url or getattr(settings, "CONVERT_API_URL")
 
