@@ -817,7 +817,7 @@ def reprojection_task(
         task_uid=task_uid,
         compress=compress,
         projection=projection,
-        boundary=selection
+        boundary=selection,
     )
 
     result["result"] = reprojection
