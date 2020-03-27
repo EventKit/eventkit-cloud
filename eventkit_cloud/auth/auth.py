@@ -10,7 +10,6 @@ from django.contrib.auth import logout as auth_logout
 from django.contrib.auth import authenticate
 from django.contrib.auth.models import User
 from django.shortcuts import redirect
-from urllib.parse import urlparse
 
 from eventkit_cloud.auth.models import OAuth
 from eventkit_cloud.ui.helpers import set_session_user_last_active_at
