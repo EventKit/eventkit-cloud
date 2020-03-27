@@ -22,35 +22,35 @@ class TestGdalUtils(TestCase):
         self.task_uid = uuid4()
 
     @patch('eventkit_cloud.utils.gdalutils.os.path.isfile')
-    @patch('eventkit_cloud.utils.gdalutils.open_ds')
-    def test_get_meta(self, open_ds_mock, isfile):
+    @patch('eventkit_cloud.utils.gdalutils.open_dataset')
+    def test_get_meta(self, open_dataset_mock, isfile):
 
         dataset_path = "/path/to/dataset"
         isfile.return_value = True
         self.task_process.return_value = Mock(exitcode=0)
 
-        ds_mock = Mock(spec=gdal.Dataset)
-        ds_mock.RasterCount = 0
-        open_ds_mock.return_value = ds_mock
-        ds_mock.GetDriver.return_value.ShortName = 'gtiff'
+        mock_open_dataset = Mock(spec=gdal.Dataset)
+        mock_open_dataset.RasterCount = 0
+        open_dataset_mock.return_value = mock_open_dataset
+        mock_open_dataset.GetDriver.return_value.ShortName = 'gtiff'
         expected_meta = {'driver': 'gtiff', 'is_raster': True, 'nodata': None}
         returned_meta = get_meta(dataset_path)
         self.assertEqual(expected_meta, returned_meta)
 
-        ds_mock.RasterCount = 2
-        ds_mock.GetRasterBand.return_value.GetNoDataValue.return_value = -32768.0
+        mock_open_dataset.RasterCount = 2
+        mock_open_dataset.GetRasterBand.return_value.GetNoDataValue.return_value = -32768.0
         expected_meta = {'driver': 'gtiff', 'is_raster': True, 'nodata': -32768.0}
         returned_meta = get_meta(dataset_path)
         self.assertEqual(expected_meta, returned_meta)
 
-        ds_mock = Mock(spec=ogr.DataSource)
-        open_ds_mock.return_value = ds_mock
-        ds_mock.GetDriver.return_value.GetName.return_value = 'gpkg'
+        mock_open_dataset = Mock(spec=ogr.DataSource)
+        open_dataset_mock.return_value = mock_open_dataset
+        mock_open_dataset.GetDriver.return_value.GetName.return_value = 'gpkg'
         expected_meta = {'driver': 'gpkg', 'is_raster': False, 'nodata': None}
         returned_meta = get_meta(dataset_path)
         self.assertEqual(expected_meta, returned_meta)
 
-        open_ds_mock.return_value = None
+        open_dataset_mock.return_value = None
         expected_meta = {'driver': None, 'is_raster': None, 'nodata': None}
         returned_meta = get_meta(dataset_path)
         self.assertEqual(expected_meta, returned_meta)
