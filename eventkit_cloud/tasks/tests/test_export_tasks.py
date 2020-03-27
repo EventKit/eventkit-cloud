@@ -20,12 +20,12 @@ from eventkit_cloud.celery import TaskPriority, app
 from eventkit_cloud.jobs.models import DatamodelPreset, Job
 from eventkit_cloud.tasks.export_tasks import (ExportTask, export_task_error_handler, finalize_run_task,
                                                kml_export_task, mapproxy_export_task, geopackage_export_task,
-                                               shp_export_task, arcgis_feature_service_export_task, update_progress,
-                                               pick_up_run_task, cancel_export_provider_task, kill_task,
+                                               shp_export_task, arcgis_feature_service_export_task, pick_up_run_task, cancel_export_provider_task, kill_task,
                                                bounds_export_task, parse_result, finalize_export_provider_task,
                                                FormatTask, wait_for_providers_task, create_zip_task,
                                                default_format_time, geotiff_export_task
                                                )
+from eventkit_cloud.tasks.task_process import update_progress
 from eventkit_cloud.tasks.task_base import LockingTask
 from eventkit_cloud.tasks.enumerations import TaskStates
 from eventkit_cloud.tasks.export_tasks import zip_files
@@ -186,8 +186,9 @@ class TestExportTasks(ExportTaskBase):
         result = geopackage_export_task.run(run_uid=self.run.uid, result=previous_task_result,
                                             task_uid=str(saved_export_task.uid),
                                             stage_dir=stage_dir, job_name=job_name, projection=projection)
-        mock_convert.assert_called_once_with(fmt='gpkg', in_dataset=expected_output_path,
-                                             out_dataset=expected_output_path, task_uid=str(saved_export_task.uid))
+        mock_convert.assert_called_once_with(fmt='gpkg', input_file=expected_output_path,
+                                             output_file=expected_output_path,
+                                             task_uid=str(saved_export_task.uid))
 
         self.assertEqual(expected_output_path, result['result'])
         self.assertEqual(expected_output_path, result['source'])
@@ -202,29 +203,23 @@ class TestExportTasks(ExportTaskBase):
         expected_outfile = 'stage/job-4326.tif'
         geotiff_export_task(result=example_result, task_uid=task_uid, stage_dir='stage', job_name='job')
         mock_gdalutils.convert.return_value = expected_outfile
-        mock_gdalutils.convert.assert_called_once_with(fmt='gtiff', in_dataset=example_geotiff,
-                                                       out_dataset=expected_outfile, task_uid='1234')
+        mock_gdalutils.convert.assert_called_once_with(boundary=None, compress=False, fmt='gtiff',
+                                                       input_file=f'GTIFF_RAW:{example_geotiff}',
+                                                       output_file=expected_outfile, task_uid=task_uid)
         mock_gdalutils.reset_mock()
         geotiff_export_task(result=example_result, task_uid=task_uid, stage_dir='stage', job_name='job', compress=True)
-        params = "-co COMPRESS=JPEG -co PHOTOMETRIC=YCBCR -co TILED=YES -b 1 -b 2 -b 3"
-        mock_gdalutils.convert.assert_has_calls([call(fmt='gtiff', in_dataset=example_geotiff,
-                                                      out_dataset=expected_outfile, task_uid='1234'),
-                                                 call(fmt='gtiff', in_dataset=expected_outfile,
-                                                      out_dataset=expected_outfile,
-                                                      params=params, task_uid='1234', use_translate=True)
-                                                 ])
+        mock_gdalutils.convert.assert_called_once_with(boundary=None, compress=True, fmt='gtiff',
+                                                       input_file=f'GTIFF_RAW:{example_geotiff}',
+                                                       output_file=expected_outfile, task_uid=task_uid)
         mock_gdalutils.reset_mock()
         example_result = {"source": example_geotiff,
                           "selection": "selection"}
         mock_gdalutils.convert.return_value = expected_outfile
         geotiff_export_task(result=example_result, task_uid=task_uid, stage_dir='stage', job_name='job',
                             compress=True)
-        mock_gdalutils.convert.assert_has_calls([call(fmt='gtiff', in_dataset=expected_outfile,
-                                                      out_dataset=expected_outfile, task_uid='1234'),
-                                                 call(fmt='gtiff', in_dataset=expected_outfile,
-                                                      out_dataset=expected_outfile,
-                                                      params=params, task_uid='1234', use_translate=True)
-                                                 ])
+        mock_gdalutils.convert.assert_called_once_with(boundary="selection", compress=True, fmt='gtiff',
+                                                       input_file=f'GTIFF_RAW:{example_geotiff}',
+                                                       output_file=expected_outfile, task_uid=task_uid)
 
     @patch('celery.app.task.Task.request')
     @patch('eventkit_cloud.tasks.export_tasks.OGR')
@@ -489,27 +484,6 @@ class TestExportTasks(ExportTaskBase):
             email().send.assert_called_once()
             rocket_chat.assert_called_once_with(**rocketchat_notifications)
             rocket_chat().post_message.assert_called_once_with(channel, message)
-
-    @patch('eventkit_cloud.tasks.export_tasks.set_cache_value')
-    @patch('django.db.connection.close')
-    @patch('eventkit_cloud.tasks.models.ExportTaskRecord')
-    def test_update_progress(self, export_task, mock_close, mock_set_cache_value):
-        export_provider_task = DataProviderTaskRecord.objects.create(
-            run=self.run,
-            name='test_provider_task'
-        )
-        saved_export_task_uid = ExportTaskRecord.objects.create(
-            export_provider_task=export_provider_task,
-            status=TaskStates.PENDING.value,
-            name="test_task"
-        ).uid
-        estimated = timezone.now()
-        update_progress(saved_export_task_uid, progress=50, estimated_finish=estimated)
-        mock_close.assert_called_once()
-        mock_set_cache_value.assert_has_calls(
-            [call(uid=saved_export_task_uid, attribute='progress', model_name='ExportTaskRecord', value=50),
-             call(uid=saved_export_task_uid, attribute='estimated_finish',
-                  model_name='ExportTaskRecord', value=estimated)])
 
     @patch('eventkit_cloud.tasks.export_tasks.kill_task')
     def test_cancel_task(self, mock_kill_task):
