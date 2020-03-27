@@ -315,18 +315,20 @@ export class BreadcrumbStepper extends React.Component<Props, State> {
     private haveUnknownEstimate() {
         const providerSlugs = this.props.exportInfo.providers.map(provider => provider.slug);
         const infoEntries = Object.entries(this.props.exportInfo.providerInfo);
-        return infoEntries.filter(([slug, object]) =>
-            providerSlugs.indexOf(slug) !== -1).some(([slug, object]) => {
-            const estimates = object.estimates;
-            if (!!estimates) {
-                if (!estimates.time || !estimates.time.value) {
+        return infoEntries.filter(([slug, providerInfo]) =>
+            providerSlugs.indexOf(slug) !== -1).some(([slug, providerInfo]) => {
+            if (providerInfo) {
+                const estimates = providerInfo.estimates;
+                if (!!estimates) {
+                    if (!estimates.time || !estimates.time.value) {
+                        return true;
+                    }
+                    if (!estimates.size || !estimates.size.value) {
+                        return true;
+                    }
+                } else {
                     return true;
                 }
-                if (!estimates.size || !estimates.size.value) {
-                    return true;
-                }
-            } else {
-                return true;
             }
             return false;
         });
