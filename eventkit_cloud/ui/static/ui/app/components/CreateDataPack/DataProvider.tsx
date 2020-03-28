@@ -31,9 +31,10 @@ import OlMapClickEvent from "../MapTools/OpenLayers/OlMapClickEvent";
 import SwitchControl from "../common/SwitchControl";
 import Icon from "ol/style/icon";
 import {number, string} from "prop-types";
-import {useState} from "react";
-import {useEffectOnMount} from "../../utils/hooks";
+import {useEffect, useRef, useState} from "react";
+import {DepsHashers, useEffectOnMount} from "../../utils/hooks";
 import {useAppContext} from "../ApplicationContext";
+import {useJobValidationContext} from "./context/JobValidation";
 
 const jss = (theme: Theme & Eventkit.Theme) => createStyles({
     container: {
@@ -127,16 +128,36 @@ interface Props {
 
 function DataProvider(props: Props) {
     const { BASEMAP_URL } = useAppContext();
+    const { colors } = props.theme.eventkit;
+    const { classes, provider, providerInfo } = props;
+    const { exportOptions } = props.exportInfo;
+
     const [isOpen, setOpen] = useState(false);
     const [isLicenseOpen, setLicenseOpen] = useState(false);
     const [displayFootprints, setDisplayFootprints] = useState(false);
 
+    const { dataSizeInfo, areEstimatesLoading, aoiArea, providerLimits } = useJobValidationContext();
+    const { haveAvailableEstimates = [] } = dataSizeInfo;
+    const [ overSize, setOverSize ] = useState(false);
+    const [ overArea, setOverArea ] = useState(false);
+    const debouncerRef = useRef(null);
+    const estimateDebouncer = (...args) => debouncerRef.current(...args);
+
     useEffectOnMount(() => {
-        const a = debounce((val) => {
-            props.clearEstimate(props.provider);
+        debouncerRef.current = debounce((val) => {
+            props.clearEstimate(val);
             props.checkProvider(val);
         }, 1000);
     });
+
+    const providerHasEstimates = haveAvailableEstimates.indexOf(provider.slug) !== -1;
+    useEffect(() => {
+        const limits = providerLimits.find(limits => limits.slug === props.provider.slug);
+        const { size={value:-1} } = providerInfo.estimates || {};
+        const { maxArea=-1, maxDataSize=-1 } = limits || {};
+        setOverArea(aoiArea > maxArea);
+        setOverSize(size.value > maxDataSize);
+    }, [areEstimatesLoading, aoiArea]);
 
     function getFormatCompatibility(formatSlug: string) {
         const formatInfo = props.compatibilityInfo.formats[formatSlug.toLowerCase()];
@@ -189,7 +210,7 @@ function DataProvider(props: Props) {
         props.updateExportInfo({
             exportOptions: updatedExportOptions,
         });
-        //estimateDebouncer(props.provider);
+        estimateDebouncer(props.provider);
     }
 
     function handleLicenseOpen() {
@@ -245,9 +266,6 @@ function DataProvider(props: Props) {
         return (<IndeterminateCheckBoxIcon/>);
     }
 
-    const { colors } = props.theme.eventkit;
-    const { classes, provider, providerInfo } = props;
-    const { exportOptions } = props.exportInfo;
     // Take the current zoom from the current zoomLevels if they exist and the value is valid,
     // otherwise set it to the max allowable level.
     let currentMaxZoom = provider.level_to;
@@ -474,6 +492,10 @@ function DataProvider(props: Props) {
                         id="ProviderStatus"
                         baseStyle={{ marginRight: '40px' }}
                         availability={providerInfo.availability}
+                        overArea={overArea}
+                        overSize={overSize}
+                        providerHasEstimates={providerHasEstimates}
+                        areEstimatesLoading={areEstimatesLoading}
                     />
                     {isOpen ?
                         <ExpandLess

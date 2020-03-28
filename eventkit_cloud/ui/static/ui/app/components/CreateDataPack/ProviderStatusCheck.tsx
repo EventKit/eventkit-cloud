@@ -15,6 +15,10 @@ interface Props extends React.HTMLAttributes<HTMLElement> {
         message: string;
         slug: string;
     };
+    overSize: boolean;
+    overArea: boolean;
+    providerHasEstimates: boolean;
+    areEstimatesLoading: boolean;
     baseStyle?: any;
     iconStyle?: any;
 }
@@ -24,6 +28,7 @@ enum STATUS {
     FATAL='FATAL',
     ERR='ERR',
     WARN='WARN',
+    PENDING='PENDING',
     ESTIMATES_PENDING=1,
     OVER_DATA_SIZE,
     OVER_AREA_SIZE,
@@ -32,9 +37,8 @@ enum STATUS {
 ProviderStatusCheck.defaultProps = { availability: { status: '', type: '', message: '' } } as Props;
 
 function ProviderStatusCheck(props: Props) {
+    const { areEstimatesLoading, providerHasEstimates } = props;
     const [ anchorElement, setAnchor ] = useState(null);
-    const { dataSizeInfo, areEstimatesLoading, aoiArea } = useJobValidationContext();
-    const { haveAvailableEstimates = [], exceedingSize = [], providerEstimates = {} } = dataSizeInfo;
 
     function handlePopoverOpen(e: React.MouseEvent<HTMLElement>) {
         setAnchor(e.currentTarget );
@@ -62,56 +66,72 @@ function ProviderStatusCheck(props: Props) {
     let StatusIcon;
     let title;
     let messagePrefix;
+    let message;
+    const makeMessage = (prefix: string, message=avail.message) => prefix + message;
     let otherProps = {};
-    let status;
+    let status = avail.status as STATUS;
     const slug = props.availability.slug;
-    // if (areEstimatesLoading) {
-    //     status = STATUS.ESTIMATES_PENDING;
-    // } else if(haveAvailableEstimates.length) {
-    //     if (haveAvailableEstimates.indexOf(slug) > 0) {
-    //
-    //     } else {
-    //
-    //     }
-    // }
-    status = avail.status;
-    switch (status) {
-        case 'SUCCESS':
-            style.icon.color = 'rgba(0, 192, 0, 0.87)';
-            StatusIcon = ActionDone;
-            title = 'SUCCESS';
-            messagePrefix = 'No problems: ';
-            break;
-        case 'FATAL':
-            style.icon.color = 'rgba(128, 0, 0, 0.87)';
-            StatusIcon = AlertError;
-            title = 'CANNOT SELECT';
-            messagePrefix = '';
-            break;
-        case 'ERR':
-            style.icon.color = 'rgba(192, 0, 0, 0.87)';
-            StatusIcon = AlertError;
-            title = 'ALMOST CERTAIN FAILURE';
-            messagePrefix = 'Availability unlikely: ';
-            break;
-        case 'WARN':
-            style.icon.color = 'rgba(255, 162, 0, 0.87)';
-            StatusIcon = AlertWarning;
-            title = 'POSSIBLE FAILURE';
-            messagePrefix = 'Availability compromised: ';
-            break;
-        case 'EST_PENDING':
-            break;
-        case 'PENDING':
-        default:
-            StatusIcon = CircularProgress;
-            title = 'CHECKING AVAILABILITY';
-            messagePrefix = '';
-            otherProps = { thickness: 2, size: 20, color: 'primary' };
-            break;
-    }
 
-    const message = messagePrefix + avail.message;
+    if (status === STATUS.FATAL) {
+        style.icon.color = 'rgba(128, 0, 0, 0.87)';
+        StatusIcon = AlertError;
+        title = 'CANNOT SELECT';
+        messagePrefix = '';
+    } else {
+        if (areEstimatesLoading) {
+            status = STATUS.ESTIMATES_PENDING;
+        } else {
+            if (providerHasEstimates) {
+                if (props.overSize) {
+                    status = STATUS.OVER_DATA_SIZE;
+                }
+            } else {
+                if (props.overArea) {
+                    status = STATUS.OVER_AREA_SIZE;
+                }
+            }
+        }
+        switch (status) {
+            case 'SUCCESS':
+                style.icon.color = 'rgba(0, 192, 0, 0.87)';
+                StatusIcon = ActionDone;
+                title = 'SUCCESS';
+                message = makeMessage('No problems: ');
+                break;
+            case STATUS.ERR:
+                style.icon.color = 'rgba(192, 0, 0, 0.87)';
+                StatusIcon = AlertError;
+                title = 'ALMOST CERTAIN FAILURE';
+                message = makeMessage('Availability unlikely: ');
+                break;
+            case STATUS.WARN:
+                style.icon.color = 'rgba(255, 162, 0, 0.87)';
+                StatusIcon = AlertWarning;
+                title = 'POSSIBLE FAILURE';
+                message = makeMessage('Availability compromised: ');
+                break;
+            case STATUS.OVER_AREA_SIZE:
+                style.icon.color = 'rgba(192, 0, 0, 0.87)';
+                StatusIcon = AlertError;
+                title = 'AOI TOO LARGE';
+                message = makeMessage('Selected AoI too large for this provider.', '');
+                break;
+            case STATUS.OVER_DATA_SIZE:
+                style.icon.color = 'rgba(192, 0, 0, 0.87)';
+                StatusIcon = AlertError;
+                title = 'MAX DATA SIZE EXCEEDED';
+                message = makeMessage('Estimated size exceeds max allowed data size. Adjust zoom levels to reduce.');
+                break;
+            case STATUS.ESTIMATES_PENDING:
+            case STATUS.PENDING:
+            default:
+                StatusIcon = CircularProgress;
+                title = 'CHECKING AVAILABILITY';
+                messagePrefix = '';
+                otherProps = { thickness: 2, size: 20, color: 'primary' };
+                break;
+        }
+    }
 
     return (
         <div style={style.base} className="qa-ProviderStatusIcon" >

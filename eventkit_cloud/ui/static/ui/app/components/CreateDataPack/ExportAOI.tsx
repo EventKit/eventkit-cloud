@@ -79,6 +79,7 @@ export interface Props {
     clearExportInfo: () => void;
     walkthroughClicked: boolean;
     onWalkthroughReset: () => void;
+    nextEnabled: boolean;
     selectedBaseMap: MapLayer;
     mapLayers: MapLayer[];
     theme: Eventkit.Theme & Theme;
@@ -107,7 +108,7 @@ export interface State {
 }
 
 function StepValidator(props: Props) {
-    const { setNextEnabled, setNextDisabled } = props;
+    const { setNextEnabled, setNextDisabled, nextEnabled } = props;
     const { aoiHasArea, areEstimatesLoading } = useJobValidationContext();
 
     useEffectOnMount(() => {
@@ -115,13 +116,13 @@ function StepValidator(props: Props) {
     });
 
     useEffect(() => {
-        const setEnabled = areEstimatesLoading && aoiHasArea;
-        if (setEnabled) {
+        const setEnabled = !areEstimatesLoading && aoiHasArea;
+        if (setEnabled && !nextEnabled) {
             setNextEnabled();
-        } else {
+        } else if(!setEnabled && nextEnabled) {
             setNextDisabled();
         }
-    }, [aoiHasArea, areEstimatesLoading]);
+    });
 
     return null;
 }
@@ -344,7 +345,6 @@ export class ExportAOI extends React.Component<Props, State> {
         }
         clearDraw(this.drawLayer);
         this.props.clearAoiInfo();
-        this.props.setNextDisabled();
     }
 
     private handleResetMap() {
@@ -663,7 +663,6 @@ export class ExportAOI extends React.Component<Props, State> {
                 });
                 this.showInvalidDrawWarning(false);
             } else {
-                this.props.setNextDisabled();
                 this.showInvalidDrawWarning(true);
             }
         }
@@ -1168,6 +1167,7 @@ function mapStateToProps(state) {
         importGeom: state.importGeom,
         drawer: state.drawer,
         geocode: state.geocode,
+        nextEnabled: state.stepperNextEnabled,
     };
 }
 

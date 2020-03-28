@@ -163,6 +163,7 @@ function EstimateContainer(props: Props) {
             // Trigger an estimate calculation update in the parent
             // Does not re-request any data, calculates the total from available results.
             updateEstimate();
+            setEstimatesLoading(false);
         });
     }
 
