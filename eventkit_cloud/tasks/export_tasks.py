@@ -406,7 +406,7 @@ def osm_data_collection_pipeline(
     return geopackage_filepath
 
 
-@app.task(name="OSM (.gpkg)", bind=True, base=FormatTask, abort_on_error=True)
+@app.task(name="OSM (.gpkg)", bind=True, base=FormatTask, abort_on_error=True, acks_late=True)
 def osm_data_collection_task(
     self,
     result=None,
@@ -508,7 +508,7 @@ def add_metadata_task(self, result=None, job_uid=None, provider_slug=None, user_
     return result
 
 
-@app.task(name="ESRI Shapefile (.shp)", bind=True, base=FormatTask)
+@app.task(name="ESRI Shapefile (.shp)", bind=True, base=FormatTask, acks_late=True)
 def shp_export_task(
     self,
     result=None,
@@ -545,7 +545,7 @@ def shp_export_task(
         raise
 
 
-@app.task(name="Keyhole Markup Language (.kml)", bind=True, base=FormatTask)
+@app.task(name="Keyhole Markup Language (.kml)", bind=True, base=FormatTask, acks_late=True)
 def kml_export_task(
     self,
     result=None,
@@ -578,7 +578,7 @@ def kml_export_task(
         raise Exception(e)
 
 
-@app.task(name="SQLITE Format", bind=True, base=FormatTask)
+@app.task(name="SQLITE Format", bind=True, base=FormatTask, acks_late=True)
 def sqlite_export_task(
     self,
     result=None,
@@ -610,7 +610,7 @@ def sqlite_export_task(
         raise Exception(e)
 
 
-@app.task(name="Area of Interest (.geojson)", bind=True, base=ExportTask)
+@app.task(name="Area of Interest (.geojson)", bind=True, base=ExportTask, acks_late=True)
 def output_selection_geojson_task(
     self,
     result=None,
@@ -643,7 +643,7 @@ def output_selection_geojson_task(
     return result
 
 
-@app.task(name="Geopackage (.gpkg)", bind=True, base=FormatTask)
+@app.task(name="Geopackage (.gpkg)", bind=True, base=FormatTask, acks_late=True)
 def geopackage_export_task(
     self,
     result=None,
@@ -672,7 +672,7 @@ def geopackage_export_task(
     return result
 
 
-@app.task(name="Geotiff (.tif)", bind=True, base=FormatTask)
+@app.task(name="Geotiff (.tif)", bind=True, base=FormatTask, acks_late=True)
 def geotiff_export_task(
     self, result=None, task_uid=None, stage_dir=None, job_name=None, projection=4326, compress=False, *args, **kwargs,
 ):
@@ -725,7 +725,7 @@ def geotiff_export_task(
     return result
 
 
-@app.task(name="National Imagery Transmission Format (.nitf)", bind=True, base=FormatTask)
+@app.task(name="National Imagery Transmission Format (.nitf)", bind=True, base=FormatTask, acks_late=True)
 def nitf_export_task(
     self,
     result=None,
@@ -757,7 +757,7 @@ def nitf_export_task(
     return result
 
 
-@app.task(name="Erdas Imagine HFA (.img)", bind=True, base=FormatTask)
+@app.task(name="Erdas Imagine HFA (.img)", bind=True, base=FormatTask, acks_late=True)
 def hfa_export_task(
     self,
     result=None,
@@ -785,7 +785,7 @@ def hfa_export_task(
     return result
 
 
-@app.task(name="Reprojection Task", bind=True, base=FormatTask)
+@app.task(name="Reprojection Task", bind=True, base=FormatTask, acks_late=True)
 def reprojection_task(
     self,
     result=None,
