@@ -38,10 +38,11 @@ def update_session_cookies(cookies):
 
 
 def authenticate():
-    logger.info("Receiving new authentication token for geocoder")
+    auth_response = None
     try:
         url = getattr(settings, "GEOCODING_AUTH_URL")
         if url:
+            logger.info("Receiving new authentication token for geocoder.")
             auth_response = auth_requests.get(
                 getattr(settings, "GEOCODING_AUTH_URL"),
                 verify=getattr(settings, "SSL_VERIFICATION", True),
