@@ -25,7 +25,7 @@ export class DepsHashers {
 
     private static readonly emptyEstimate = DepsHashers.stringHash('-1:-1');
 
-    static stringHash(value: string) {
+    static stringHash(value: string) : number {
         let h;
         for (let i = 0; i < value.length; i += 1) {
             // eslint-disable-next-line no-bitwise
@@ -34,8 +34,21 @@ export class DepsHashers {
         return h;
     }
 
-    static providerEstimate(estimates: Eventkit.Store.Estimates) {
-        const {size, time} = estimates;
+    static arrayHash(arrayIn: any[], hasher?: (val: any) => number | string) : number {
+        if (!hasher) {
+            hasher = DepsHashers.stringHash;
+        }
+        let hash = '';
+        arrayIn.forEach((val) => hash += hasher(val));
+        return DepsHashers.stringHash(hash);
+    }
+
+    static providerIdentityHash(provider: Eventkit.Provider) : number {
+        return DepsHashers.stringHash(provider.slug + provider.name);
+    }
+
+    static providerEstimate(estimates: Eventkit.Store.Estimates) : number {
+        const {size = undefined, time = undefined} = estimates || {};
         if (!size && !time) {
             return DepsHashers.emptyEstimate;
         }

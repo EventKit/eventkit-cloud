@@ -1,7 +1,7 @@
 import * as React from 'react';
 import * as sinon from 'sinon';
 import {shallow} from 'enzyme';
-import {DataProvider} from '../../components/CreateDataPack/DataProvider';
+import DataProvider from '../../components/CreateDataPack/DataProvider';
 
 const formats = [
     {

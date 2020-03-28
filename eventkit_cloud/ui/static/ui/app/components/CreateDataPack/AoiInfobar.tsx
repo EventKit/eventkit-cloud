@@ -200,12 +200,14 @@ function AoiInfobar(props: Props) {
     const closeAlert = () => setShowAlert(false);
     const displayAlert = () => setShowAlert(true);
 
-    const { dataSizeInfo, providerLimits, aoiHasArea } = useJobValidationContext();
-    const { areEstimatesAvailable = false, exceedingSize = [] } = dataSizeInfo || {};
+    const { dataSizeInfo, providerLimits, aoiHasArea, aoiArea } = useJobValidationContext();
+    const { haveAvailableEstimates = [], exceedingSize = [] } = dataSizeInfo || {};
 
     let needsWarning = false;
     let aoiAlert = null;
 
+    // No hooks may be declared beyond this point.
+    // Hooks must be before any possible return statements.
     if (Object.keys(props.aoiInfo.geojson).length === 0) {
         return null;
     }
@@ -214,13 +216,52 @@ function AoiInfobar(props: Props) {
     const originalArea = getSqKmString(props.aoiInfo.originalGeojson);
     const totalArea = getSqKmString(props.aoiInfo.geojson);
     const highestMaxSelectionArea = (providerLimits[0]) ? providerLimits[0].maxArea : 0;
-    const aoiArea = getSqKm(props.aoiInfo.geojson);
 
     if (aoiHasArea) {
-        if (areEstimatesAvailable && false) {
-
+        if (haveAvailableEstimates.length > 0) {
+            if (exceedingSize.length > 0 && haveAvailableEstimates.every(slug => exceedingSize.indexOf(slug) !== -1)) {
+                needsWarning = true;
+                aoiAlert = (
+                    <AlertCallout
+                        className={`qa-AoiInfobar-alert-oversized ${classes.alertCalloutTop}`}
+                        onClose={closeAlert}
+                        orientation="top"
+                        title="Data sizes exceeded!"
+                        body={(
+                            <p>
+                                All providers exceed their specified maximum allowable data size with the specified
+                                AOI
+                                and zoom levels. This job cannot be submitted. Please reduce the size of your polygon
+                                and/or buffer. Zoom levels may
+                                be
+                                adjusted on the next step to reduce data size.
+                            </p>
+                        )}
+                        style={{ color: colors.black }}
+                    />
+                );
+            } else if (exceedingSize.length > 0) {
+                aoiAlert = (
+                    <AlertCallout
+                        className={`qa-AoiInfobar-alert-oversized ${classes.alertCalloutTop}`}
+                        onClose={closeAlert}
+                        orientation="top"
+                        title="Data sizes exceeded."
+                        body={(
+                            <p>
+                                One or more providers would exceed their maximum allowable data size with the specified
+                                AOI
+                                and zoom levels. Please reduce the size of your polygon and/or buffer. Zoom levels may
+                                be
+                                adjusted on the next step to reduce data size.
+                            </p>
+                        )}
+                        style={{ color: colors.black }}
+                    />
+                );
+            }
         } else {
-            const exceedsAreaCount = providerLimits.map(limits => limits.maxArea < aoiArea).length;
+            const exceedsAreaCount = providerLimits.filter(limits => limits.maxArea <= aoiArea).length;
             if (exceedsAreaCount === providerLimits.length) {
                 needsWarning = true;
                 aoiAlert = (
@@ -350,14 +391,16 @@ function AoiInfobar(props: Props) {
                             <strong style={{ color: needsWarning ? colors.warning : 'initial' }}>
                                 TOTAL AOI
                             </strong>
-                            <div style={{ position: 'relative', display: 'inline-block', marginLeft: '10px' }}>
-                                <AlertWarning
-                                    className={`qa-AoiInfobar-alert-icon ${classes.alert}`}
-                                    style={{ fill: colors.over }}
-                                    onClick={displayAlert}
-                                />
-                                {showAlert && aoiAlert}
-                            </div>
+                            {aoiAlert && (
+                                <div style={{ position: 'relative', display: 'inline-block', marginLeft: '10px' }}>
+                                    <AlertWarning
+                                        className={`qa-AoiInfobar-alert-icon ${classes.alert}`}
+                                        style={{ ...((!needsWarning) ? { fill: colors.over } : {}) }}
+                                        onClick={displayAlert}
+                                    />
+                                    {showAlert && aoiAlert}
+                                </div>
+                            )}
                         </div>
                     </div>
                 </div>

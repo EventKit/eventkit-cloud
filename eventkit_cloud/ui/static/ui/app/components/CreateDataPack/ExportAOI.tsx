@@ -108,19 +108,20 @@ export interface State {
 
 function StepValidator(props: Props) {
     const { setNextEnabled, setNextDisabled } = props;
-    const { aoiHasArea } = useJobValidationContext();
+    const { aoiHasArea, areEstimatesLoading } = useJobValidationContext();
 
     useEffectOnMount(() => {
         setNextDisabled();
     });
 
     useEffect(() => {
-        if (aoiHasArea) {
+        const setEnabled = areEstimatesLoading && aoiHasArea;
+        if (setEnabled) {
             setNextEnabled();
         } else {
             setNextDisabled();
         }
-    }, [aoiHasArea]);
+    }, [aoiHasArea, areEstimatesLoading]);
 
     return null;
 }

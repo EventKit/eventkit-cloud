@@ -7,11 +7,13 @@ import {ProviderLimits} from "../EstimateContainer";
 export interface JobValidationContext {
     providerLimits: ProviderLimits[];
     aoiHasArea: boolean;
+    aoiArea: number;
     dataSizeInfo: {
-        areEstimatesAvailable: boolean;
+        haveAvailableEstimates: string[];
         providerEstimates: Eventkit.Map<Eventkit.Store.Estimates>;
         exceedingSize: string[];
-    }
+    },
+    areEstimatesLoading: boolean,
 }
 
 const appContext = createContext<JobValidationContext>({} as JobValidationContext);

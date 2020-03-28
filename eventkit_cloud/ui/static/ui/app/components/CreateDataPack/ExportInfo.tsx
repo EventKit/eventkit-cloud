@@ -832,7 +832,10 @@ export class ExportInfo extends React.Component<Props, State> {
                                                 this.props.updateExportInfo({
                                                         providerInfo: {
                                                             ...this.props.exportInfo.providerInfo,
-                                                            [provider.slug]: null,
+                                                            [provider.slug]: {
+                                                                estimates: undefined,
+                                                                availability: undefined,
+                                                            },
                                                         }
                                                     });
                                                 // Ask parent to update the estimate (i.e. display loading icon).

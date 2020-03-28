@@ -142,11 +142,8 @@ function BufferDialog(props: Props) {
         </Button>,
     ];
 
-    if (!props.show) {
-        return null;
-    }
-
-    const { providerLimits } = useJobValidationContext();
+    const { providerLimits, dataSizeInfo } = useJobValidationContext();
+    const { haveAvailableEstimates = [] } = dataSizeInfo || {};
 
     const highestMaxSelectionArea = (providerLimits[0]) ? providerLimits[0].maxArea : 0;
     const totalArea = getSqKmString(props.aoi);
@@ -156,7 +153,23 @@ function BufferDialog(props: Props) {
     if (highestMaxSelectionArea && highestMaxSelectionArea < aoiArea) {
         over = true;
     }
-
+    let message = (
+        <p>
+            The max size allowed for the AOI is {numeral(highestMaxSelectionArea).format('0,0')} sq
+            km and yours
+            is {totalArea}.
+            Please reduce the size of your buffer and/or polygon
+        </p>
+    );
+    if (over && haveAvailableEstimates.length > 0) {
+        message = (
+            <p>
+                The size of your AOI is {totalArea}. This exceeds the provider specified limit of
+                {numeral(highestMaxSelectionArea).format('0,0')} sq km. Depending on your zoom levels and data formats,
+                you might exceed the maximum allowable size for one or more providers.
+            </p>
+        );
+    }
     let warning = null;
     if (over) {
         warning = (
@@ -173,19 +186,16 @@ function BufferDialog(props: Props) {
                         onClose={closeAlert}
                         orientation="top"
                         title="Your AOI is too large!"
-                        body={(
-                            <p>
-                                The max size allowed for the AOI is {numeral(highestMaxSelectionArea).format('0,0')} sq
-                                km and yours
-                                is {totalArea}.
-                                Please reduce the size of your buffer and/or polygon
-                            </p>
-                        )}
+                        body={message}
                         className={classes.callOut}
                     />
                 )}
             </div>
         );
+    }
+
+    if (!props.show) {
+        return null;
     }
 
     return (

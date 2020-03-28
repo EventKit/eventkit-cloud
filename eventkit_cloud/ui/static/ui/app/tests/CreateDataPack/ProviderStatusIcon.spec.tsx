@@ -5,7 +5,7 @@ import AlertWarning from '@material-ui/icons/Warning';
 import AlertError from '@material-ui/icons/Error';
 import ActionDone from '@material-ui/icons/Done';
 import CircularProgress from '@material-ui/core/CircularProgress';
-import { ProviderStatusIcon } from '../../components/CreateDataPack/ProviderStatusIcon';
+import { ProviderStatusCheck } from '../../components/CreateDataPack/ProviderStatusCheck';
 
 describe('ProviderStatusIcon component', () => {
     let wrapper;
@@ -25,7 +25,7 @@ describe('ProviderStatusIcon component', () => {
             ...defaultProps(),
             ...propsOverride,
         };
-        wrapper = shallow(<ProviderStatusIcon {...props} />);
+        wrapper = shallow(<ProviderStatusCheck {...props} />);
         instance = wrapper.instance();
     };
 
