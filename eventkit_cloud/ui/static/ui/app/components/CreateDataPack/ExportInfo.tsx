@@ -25,6 +25,7 @@ import AlertWarning from '@material-ui/icons/Warning';
 import {useJobValidationContext} from "./context/JobValidation";
 import {useEffectOnMount} from "../../utils/hooks";
 import {useEffect} from "react";
+import {array} from "prop-types";
 
 const jss = (theme: Eventkit.Theme & Theme) => createStyles({
     underlineStyle: {
@@ -168,7 +169,7 @@ export interface State {
     stepIndex: number;
 }
 
-function hasRequiredFields(exportInfo: Eventkit.Store.ExportInfo) {
+export function hasRequiredFields(exportInfo: Eventkit.Store.ExportInfo) {
     // if the required fields are populated return true, else return false
     const {exportOptions} = exportInfo;
     const formatsAreSelected = exportInfo.providers.map((provider) => {
@@ -184,7 +185,7 @@ function hasRequiredFields(exportInfo: Eventkit.Store.ExportInfo) {
         && formatsAreSelected.every(selected => selected === true);
 }
 
-function hasDisallowedSelection(exportInfo: Eventkit.Store.ExportInfo) {
+export function hasDisallowedSelection(exportInfo: Eventkit.Store.ExportInfo) {
     // if any unacceptable providers are selected return true, else return false
     return exportInfo.providers.some((provider) => {
         // short-circuiting means that this shouldn't be called until provider.availability
@@ -203,7 +204,7 @@ function hasDisallowedSelection(exportInfo: Eventkit.Store.ExportInfo) {
 
 function StepValidator(props: Props) {
     const { setNextEnabled, setNextDisabled, walkthroughClicked, exportInfo, nextEnabled} = props;
-    const { aoiHasArea, areEstimatesLoading, dataSizeInfo } = useJobValidationContext();
+    const { aoiHasArea, areEstimatesLoading, dataSizeInfo, aoiArea } = useJobValidationContext();
     const { exceedingSize=[], noMaxDataSize=[] } = dataSizeInfo;
 
     useEffectOnMount(() => {
@@ -217,7 +218,9 @@ function StepValidator(props: Props) {
             // This returns true if the provider doesn't have a max data size, so it is validated via AOI size
             // Or if failing that, it is NOT present in the exceedingSize array.
             // Meaning, the provider's estimate is below its max data size and that max data size is a real value (not null).
-            return arrayHasValue(noMaxDataSize, provider.slug) || !arrayHasValue(exceedingSize, provider.slug)
+            const goodSize = !arrayHasValue(exceedingSize, provider.slug);
+            const noSizeAndGoodAoi = arrayHasValue(noMaxDataSize, provider.slug) && parseFloat(provider.max_selection) > aoiArea;
+            return goodSize || noSizeAndGoodAoi;
         });
         const setEnabled = !walkthroughClicked && !areEstimatesLoading && aoiHasArea && validState && sizesValid;
         if (setEnabled && !nextEnabled) {
@@ -321,6 +324,12 @@ export class ExportInfo extends React.Component<Props, State> {
 
         if (this.props.providers.length !== prevProps.providers.length) {
             this.setState({providers: this.props.providers});
+        } else {
+            const providerSlugs = this.props.providers.map(provider => provider.slug);
+            const prevProviderSlugs = prevProps.providers.map(provider => provider.slug);
+            if (providerSlugs.some(slug => !arrayHasValue(prevProviderSlugs, slug))) {
+                this.setState({providers: this.props.providers});
+            }
         }
 
         const selectedProjections = [...exportInfo.projections];

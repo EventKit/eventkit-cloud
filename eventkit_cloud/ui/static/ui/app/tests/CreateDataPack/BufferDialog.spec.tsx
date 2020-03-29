@@ -26,11 +26,9 @@ describe('AlertCallout component', () => {
 
     let props;
     let wrapper;
-    let instance;
     const setup = (overrides = {}) => {
         props = { ...getProps(), ...overrides };
         wrapper = shallow(<BufferDialog {...props} />);
-        instance = wrapper.instance();
     };
 
     beforeEach(setup);
@@ -59,31 +57,8 @@ describe('AlertCallout component', () => {
         expect(wrapper.find('.qa-BufferDialog-warning')).toHaveLength(1);
     });
 
-    it('should render the alert popup', () => {
-        wrapper.setProps({ limits: { ...props.limits, max: -200 }});
-        expect(wrapper.find(AlertCallout)).toHaveLength(0);
-        wrapper.setState({ showAlert: true });
-        expect(wrapper.find(AlertCallout)).toHaveLength(1);
-    });
-
     it('Clear icon should call closeBufferDialog on click', () => {
         wrapper.find(Clear).simulate('click');
         expect(props.closeBufferDialog.calledOnce).toBe(true);
-    });
-
-    it('showAlert should set showAlert true', () => {
-        const stateStub = sinon.stub(instance, 'setState');
-        instance.showAlert();
-        expect(stateStub.calledOnce).toBe(true);
-        expect(stateStub.calledWith({ showAlert: true })).toBe(true);
-        stateStub.restore();
-    });
-
-    it('closeAlert should set showAlert false', () => {
-        const stateStub = sinon.stub(instance, 'setState');
-        instance.closeAlert();
-        expect(stateStub.calledOnce).toBe(true);
-        expect(stateStub.calledWith({ showAlert: false })).toBe(true);
-        stateStub.restore();
     });
 });

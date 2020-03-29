@@ -19,9 +19,9 @@ interface Props extends React.HTMLAttributes<HTMLElement> {
     overArea: boolean;
     providerHasEstimates: boolean;
     areEstimatesLoading: boolean;
+    supportsZoomLevels: boolean;
     baseStyle?: any;
     iconStyle?: any;
-    supportsZoomLevels: boolean;
 }
 
 enum STATUS {
@@ -83,7 +83,7 @@ function ProviderStatusCheck(props: Props) {
             if (providerHasEstimates) {
                 if (props.overSize) {
                     status = STATUS.OVER_DATA_SIZE;
-                } else {
+                } else if (status === STATUS.WARN && avail.type === 'SELECTION_TOO_LARGE') {
                     status = STATUS.SUCCESS;
                     message = makeMessage('No problems: Export should proceed without issues.', false);
                 }
@@ -94,7 +94,7 @@ function ProviderStatusCheck(props: Props) {
             }
         }
         switch (status) {
-            case 'SUCCESS':
+            case STATUS.SUCCESS:
                 style.icon.color = 'rgba(0, 192, 0, 0.87)';
                 StatusIcon = ActionDone;
                 title = 'SUCCESS';

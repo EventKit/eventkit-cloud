@@ -21,7 +21,7 @@ import FormatSelector from "./FormatSelector";
 import {Compatibility} from '../../utils/enums';
 import IndeterminateCheckBoxIcon from '@material-ui/icons/IndeterminateCheckBox';
 import CheckBoxIcon from "@material-ui/icons/CheckBox";
-import {CompatibilityInfo} from "./ExportInfo";
+import {CompatibilityInfo, ExportInfo} from "./ExportInfo";
 import {MapLayer} from "./CreateExport";
 import OlMouseWheelZoom from "../MapTools/OpenLayers/MouseWheelZoom";
 import ZoomUpdater from "./ZoomUpdater";
@@ -550,9 +550,7 @@ function mapDispatchToProps(dispatch) {
     };
 }
 
-export default withStyles<any, any>(jss, { withTheme: true })(connect(
+export default withTheme()(withStyles(jss)(connect(
     mapStateToProps,
     mapDispatchToProps,
-    null,
-    { forwardRef: true }
-)(DataProvider));
+)(DataProvider)));
