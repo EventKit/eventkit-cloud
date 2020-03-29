@@ -35,7 +35,7 @@ from eventkit_cloud.core.helpers import (
 
 from eventkit_cloud.feature_selection.feature_selection import FeatureSelection
 from eventkit_cloud.tasks.enumerations import TaskStates
-from eventkit_cloud.tasks.exceptions import CancelException, DeleteException
+from eventkit_cloud.tasks.exceptions import CancelException, DeleteException, FailedException
 from eventkit_cloud.tasks import set_cache_value
 from eventkit_cloud.tasks.helpers import (
     normalize_name,
@@ -135,6 +135,13 @@ class ExportTask(EventKitBaseTask):
 
         try:
             task = ExportTaskRecord.objects.get(uid=task_uid)
+
+            task.task_attempts += 1
+            max_task_attempts = int(os.getenv("MAX_TASK_ATTEMPTS", 5))
+
+            if task.task_attempts > max_task_attempts:
+                raise FailedException(task_name=self.name)
+
             task.worker = socket.gethostname()
             task.save()
 
@@ -261,7 +268,7 @@ class ExportTask(EventKitBaseTask):
             logger.debug("Task name: {0} failed, {1}".format(self.name, einfo))
             if self.abort_on_error:
                 export_provider_task = DataProviderTaskRecord.objects.get(tasks__uid=task_id)
-                cancel_synchronous_task_chain(data_provider_task_uid=export_provider_task.uid)
+                fail_synchronous_task_chain(data_provider_task_uid=export_provider_task.uid)
                 run = export_provider_task.run
                 stage_dir = kwargs["stage_dir"]
                 export_task_error_handler(run_uid=str(run.uid), task_id=task_id, stage_dir=stage_dir)
@@ -1480,11 +1487,11 @@ def export_task_error_handler(self, result=None, run_uid=None, task_id=None, sta
     return result
 
 
-def cancel_synchronous_task_chain(data_provider_task_uid=None):
+def fail_synchronous_task_chain(data_provider_task_uid=None):
     data_provider_task_record = DataProviderTaskRecord.objects.get(uid=data_provider_task_uid)
     for export_task in data_provider_task_record.tasks.all():
-        if TaskStates[export_task.status] == TaskStates.PENDING.value:
-            export_task.status = TaskStates.CANCELED.value
+        if TaskStates[export_task.status] == TaskStates.PENDING:
+            export_task.status = TaskStates.FAILED.value
             export_task.save()
             kill_task.apply_async(
                 kwargs={"task_pid": export_task.pid, "celery_uid": export_task.celery_uid},

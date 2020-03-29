@@ -28,3 +28,17 @@ class DeleteException(Exception):
         if not self.message:
             self.message = "{0} was deleted by {1}.".format(task_name, user_name)
         super(DeleteException, self).__init__(self.message, *args, **kwargs)
+
+
+class FailedException(Exception):
+    """Used to indicate when a task has failed too many times."""
+
+    def __init__(self, message=None, task_name=None, *args, **kwargs):
+        """
+        :param message: A non-default message
+        :param task_uid: Task_uid to look up user and task name.
+        """
+        self.message = message  # without this you may get DeprecationWarning
+        if not self.message:
+            self.message = f"{task_name} has failed too many times and will not be retried."
+        super(FailedException, self).__init__(self.message, *args, **kwargs)

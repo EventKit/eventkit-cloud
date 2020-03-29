@@ -245,6 +245,14 @@ class ExportTaskRecord(UIDMixin, TimeStampedModelMixin, TimeTrackingModelMixin):
     def estimated_finish(self, value, expiration=DEFAULT_CACHE_EXPIRATION):
         return set_cache_value(obj=self, attribute="estimated_finish", value=value, expiration=expiration)
 
+    @property
+    def task_attempts(self):
+        return get_cache_value(obj=self, attribute="task_attempts", default=0)
+
+    @task_attempts.setter
+    def task_attempts(self, value, expiration=DEFAULT_CACHE_EXPIRATION):
+        return set_cache_value(obj=self, attribute="task_attempts", value=value, expiration=expiration)
+
 
 class ExportTaskException(TimeStampedModelMixin):
     """
