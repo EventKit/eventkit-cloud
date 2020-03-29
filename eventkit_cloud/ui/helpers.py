@@ -3,18 +3,15 @@ import math
 import os
 import re
 import shutil
-import subprocess
 import zipfile
 from datetime import datetime
-from string import Template
 from uuid import uuid4
 
 import pytz
 from celery.utils.log import get_task_logger
 from django.conf import settings
 
-
-from eventkit_cloud.utils.gdalutils import get_meta
+from eventkit_cloud.utils.gdalutils import get_meta, convert_vector
 
 logger = get_task_logger(__name__)
 
@@ -56,21 +53,13 @@ def file_to_geojson(in_memory_file):
                 if not has_shp:
                     raise Exception("Zip file does not contain a shp")
 
-        meta = get_meta(in_path)
+        meta = get_meta(in_path, is_raster=False)
 
+        logger.error(meta)
         if not meta["driver"] or meta["is_raster"]:
             raise Exception("Could not find the proper driver to handle this file")
 
-        cmd_template = Template("ogr2ogr -f $fmt $out_ds $in_ds")
-
-        cmd = cmd_template.safe_substitute({"fmt": "geojson", "out_ds": out_path, "in_ds": in_path})
-
-        try:
-            proc = subprocess.Popen(cmd, shell=True, executable="/bin/bash")
-            proc.wait()
-        except Exception as e:
-            logger.debug(e)
-            raise Exception("Failed to convert file")
+        out_path = convert_vector(in_path, out_path, fmt="geojson")
 
         if os.path.exists(out_path):
             geojson = read_json_file(out_path)
