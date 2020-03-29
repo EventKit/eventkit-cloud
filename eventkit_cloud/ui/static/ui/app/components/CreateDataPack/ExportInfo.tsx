@@ -3,7 +3,7 @@ import * as React from 'react';
 import {createStyles, Theme, withStyles, withTheme} from '@material-ui/core/styles';
 import {connect} from 'react-redux';
 import axios from 'axios';
-import {getCookie, unsupportedFormats} from '../../utils/generic';
+import {arrayHasValue, getCookie, unsupportedFormats} from '../../utils/generic';
 import Joyride, {Step} from 'react-joyride';
 import List from '@material-ui/core/List';
 import Paper from '@material-ui/core/Paper';
@@ -189,7 +189,7 @@ function hasDisallowedSelection(exportInfo: Eventkit.Store.ExportInfo) {
     return exportInfo.providers.some((provider) => {
         // short-circuiting means that this shouldn't be called until provider.availability
         // is populated, but if it's not, return false
-        const providerInfo = this.props.exportInfo.providerInfo[provider.slug];
+        const providerInfo = exportInfo.providerInfo[provider.slug];
         if (!providerInfo) {
             return false;
         }
@@ -203,7 +203,8 @@ function hasDisallowedSelection(exportInfo: Eventkit.Store.ExportInfo) {
 
 function StepValidator(props: Props) {
     const { setNextEnabled, setNextDisabled, walkthroughClicked, exportInfo, nextEnabled} = props;
-    const { aoiHasArea, areEstimatesLoading } = useJobValidationContext();
+    const { aoiHasArea, areEstimatesLoading, dataSizeInfo } = useJobValidationContext();
+    const { exceedingSize=[], noMaxDataSize=[] } = dataSizeInfo;
 
     useEffectOnMount(() => {
         setNextDisabled();
@@ -211,7 +212,14 @@ function StepValidator(props: Props) {
 
     useEffect(() => {
         const validState = hasRequiredFields(exportInfo) && !hasDisallowedSelection(exportInfo);
-        const setEnabled = !walkthroughClicked && areEstimatesLoading && aoiHasArea && validState;
+        const sizesValid = exportInfo.providers.every(provider => {
+            // No provider should ever be in exceedingSize AND noMaxDataSize
+            // This returns true if the provider doesn't have a max data size, so it is validated via AOI size
+            // Or if failing that, it is NOT present in the exceedingSize array.
+            // Meaning, the provider's estimate is below its max data size and that max data size is a real value (not null).
+            return arrayHasValue(noMaxDataSize, provider.slug) || !arrayHasValue(exceedingSize, provider.slug)
+        });
+        const setEnabled = !walkthroughClicked && !areEstimatesLoading && aoiHasArea && validState && sizesValid;
         if (setEnabled && !nextEnabled) {
             setNextEnabled();
         } else if(!setEnabled && nextEnabled) {
@@ -515,12 +523,7 @@ export class ExportInfo extends React.Component<Props, State> {
 
     private onRefresh() {
         // make a copy of providers and set availability to empty json
-        const providers = this.state.providers.map(provider => ({
-            ...provider,
-            availability: {slug: undefined, type: undefined, status: undefined, message: undefined},
-        }));
-        // update state with the new copy of providers
-        this.setState({providers});
+        this.props.providers.forEach(provider => this.props.checkProvider(provider));
     }
 
     private clearEstimate(provider: Eventkit.Provider) {

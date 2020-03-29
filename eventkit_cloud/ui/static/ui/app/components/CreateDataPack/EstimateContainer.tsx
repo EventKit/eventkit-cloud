@@ -211,7 +211,7 @@ function EstimateContainer(props: Props) {
                 if (!provider.display) {
                     return;
                 }
-                const getValue = (value) => (value) ? parseFloat(value) : -1; // Avoids NaN's
+                const getValue = (value) => (value) ? parseFloat(value) : undefined; // Avoids NaN's
                 limits.push({
                     slug: provider.slug,
                     maxDataSize: getValue(provider.max_data_size),
@@ -250,6 +250,7 @@ function EstimateContainer(props: Props) {
         haveAvailableEstimates: undefined,
         providerEstimates: undefined,
         exceedingSize: undefined,
+        noMaxDataSize: undefined,
     });
     const providerEstimates = {};
     const hashes = [];
@@ -261,16 +262,21 @@ function EstimateContainer(props: Props) {
     });
     useEffect(() => {
         if (SERVE_ESTIMATES && Object.keys(providerEstimates).length) {
-            const providerSlugs = props.providers.map(provider => provider.slug);
+            const providerSlugs = props.providers.filter(provider => provider.display).map(provider => provider.slug);
             const haveAvailableEstimates = providerSlugs.filter((slug) => {
                 // Filter out providers that DO NOT have a size estimate
                 const estimate = providerEstimates[slug];
                 return estimate && estimate.size && estimate.size.value;
             });
+            // Providers without a max data size will fall back to AoI.
+            const noMaxDataSize = [...providerLimits.filter(limits => !limits.maxDataSize).map(limits => limits.slug)];
             // Exceeding size contains the slugs of providers that are greater than their max data size and
             // any slugs for providers that did not have estimates available to determine size with.
             const exceedingSize = [
                 ...providerLimits.filter(limits => {
+                    if (!limits.maxDataSize) {
+                        return false;
+                    }
                     return haveAvailableEstimates.indexOf(limits.slug) !== -1 && providerEstimates[limits.slug].size.value > limits.maxDataSize;
                 }).map(limits => limits.slug),
                 ...providerSlugs.filter(slug => haveAvailableEstimates.indexOf(slug) === -1)];
@@ -279,6 +285,7 @@ function EstimateContainer(props: Props) {
                 providerEstimates,
                 haveAvailableEstimates,
                 exceedingSize,
+                noMaxDataSize,
             });
         }
     }, [(SERVE_ESTIMATES) ? DepsHashers.arrayHash(hashes) : undefined]);

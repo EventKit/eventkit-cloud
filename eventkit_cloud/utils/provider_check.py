@@ -125,7 +125,7 @@ class CheckResults(Enum):
 
     TOO_LARGE = (
         {
-            "status": "FATAL",
+            "status": "WARN",
             "type": "SELECTION_TOO_LARGE",
             "message": _("The selected AOI is larger than the maximum allowed size for this data provider."),
         },

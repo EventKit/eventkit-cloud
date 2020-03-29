@@ -21,6 +21,7 @@ interface Props extends React.HTMLAttributes<HTMLElement> {
     areEstimatesLoading: boolean;
     baseStyle?: any;
     iconStyle?: any;
+    supportsZoomLevels: boolean;
 }
 
 enum STATUS {
@@ -65,18 +66,16 @@ function ProviderStatusCheck(props: Props) {
 
     let StatusIcon;
     let title;
-    let messagePrefix;
     let message;
-    const makeMessage = (prefix: string, message=avail.message) => prefix + message;
+    const makeMessage = (prefix: string, useMessage=true) => prefix + ((useMessage) ? avail.message : '');
     let otherProps = {};
     let status = avail.status as STATUS;
-    const slug = props.availability.slug;
 
-    if (status === STATUS.FATAL) {
+    if (status === STATUS.FATAL && avail.type !== 'SELECTION_TOO_LARGE') {
         style.icon.color = 'rgba(128, 0, 0, 0.87)';
         StatusIcon = AlertError;
+        message = makeMessage('');
         title = 'CANNOT SELECT';
-        messagePrefix = '';
     } else {
         if (areEstimatesLoading) {
             status = STATUS.ESTIMATES_PENDING;
@@ -84,6 +83,9 @@ function ProviderStatusCheck(props: Props) {
             if (providerHasEstimates) {
                 if (props.overSize) {
                     status = STATUS.OVER_DATA_SIZE;
+                } else {
+                    status = STATUS.SUCCESS;
+                    message = makeMessage('No problems: Export should proceed without issues.', false);
                 }
             } else {
                 if (props.overArea) {
@@ -96,7 +98,9 @@ function ProviderStatusCheck(props: Props) {
                 style.icon.color = 'rgba(0, 192, 0, 0.87)';
                 StatusIcon = ActionDone;
                 title = 'SUCCESS';
-                message = makeMessage('No problems: ');
+                if (!message) {
+                    message = makeMessage('No problems: ');
+                }
                 break;
             case STATUS.ERR:
                 style.icon.color = 'rgba(192, 0, 0, 0.87)';
@@ -114,20 +118,24 @@ function ProviderStatusCheck(props: Props) {
                 style.icon.color = 'rgba(192, 0, 0, 0.87)';
                 StatusIcon = AlertError;
                 title = 'AOI TOO LARGE';
-                message = makeMessage('Selected AoI too large for this provider.', '');
+                message = makeMessage('Selected AoI too large for this provider.', false);
                 break;
             case STATUS.OVER_DATA_SIZE:
                 style.icon.color = 'rgba(192, 0, 0, 0.87)';
                 StatusIcon = AlertError;
                 title = 'MAX DATA SIZE EXCEEDED';
-                message = makeMessage('Estimated size exceeds max allowed data size. Adjust zoom levels to reduce.');
+                if (props.supportsZoomLevels) {
+                    message = makeMessage('Estimated size too large. Please adjust zoom levels or your AOI to reduce.', false);
+                } else {
+                    message = makeMessage('Estimated size too large. Please adjust your AOI to reduce.', false);
+                }
                 break;
             case STATUS.ESTIMATES_PENDING:
             case STATUS.PENDING:
             default:
                 StatusIcon = CircularProgress;
                 title = 'CHECKING AVAILABILITY';
-                messagePrefix = '';
+                message = makeMessage('');
                 otherProps = { thickness: 2, size: 20, color: 'primary' };
                 break;
         }

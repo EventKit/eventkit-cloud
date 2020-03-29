@@ -12,6 +12,7 @@ export interface JobValidationContext {
         haveAvailableEstimates: string[];
         providerEstimates: Eventkit.Map<Eventkit.Store.Estimates>;
         exceedingSize: string[];
+        noMaxDataSize: string[];
     },
     areEstimatesLoading: boolean,
 }

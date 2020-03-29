@@ -10,7 +10,7 @@ import ExpandLess from '@material-ui/icons/ExpandLess';
 import ExpandMore from '@material-ui/icons/ExpandMore';
 import ProviderStatusCheck from './ProviderStatusCheck';
 import BaseDialog from '../Dialog/BaseDialog';
-import {formatMegaBytes, getDuration, isZoomLevelInRange, supportsZoomLevels} from '../../utils/generic';
+import {arrayHasValue, formatMegaBytes, getDuration, isZoomLevelInRange, supportsZoomLevels} from '../../utils/generic';
 import {Switch, Typography} from "@material-ui/core";
 import ZoomLevelSlider from "./ZoomLevelSlider";
 import {connect} from "react-redux";
@@ -137,7 +137,7 @@ function DataProvider(props: Props) {
     const [displayFootprints, setDisplayFootprints] = useState(false);
 
     const { dataSizeInfo, areEstimatesLoading, aoiArea, providerLimits } = useJobValidationContext();
-    const { haveAvailableEstimates = [] } = dataSizeInfo;
+    const { haveAvailableEstimates = [], noMaxDataSize = [] } = dataSizeInfo;
     const [ overSize, setOverSize ] = useState(false);
     const [ overArea, setOverArea ] = useState(false);
     const debouncerRef = useRef(null);
@@ -150,7 +150,11 @@ function DataProvider(props: Props) {
         }, 1000);
     });
 
-    const providerHasEstimates = haveAvailableEstimates.indexOf(provider.slug) !== -1;
+    const [providerHasEstimates, setHasEstimates ] = useState(() => arrayHasValue(haveAvailableEstimates, provider.slug) && !arrayHasValue(noMaxDataSize, provider.slug));
+    useEffect(() => {
+        setHasEstimates(arrayHasValue(haveAvailableEstimates, provider.slug) && !arrayHasValue(noMaxDataSize, provider.slug));
+    }, [DepsHashers.arrayHash(haveAvailableEstimates), DepsHashers.arrayHash(noMaxDataSize)]);
+
     useEffect(() => {
         const limits = providerLimits.find(limits => limits.slug === props.provider.slug);
         const { size={value:-1} } = providerInfo.estimates || {};
@@ -496,6 +500,7 @@ function DataProvider(props: Props) {
                         overSize={overSize}
                         providerHasEstimates={providerHasEstimates}
                         areEstimatesLoading={areEstimatesLoading}
+                        supportsZoomLevels={supportsZoomLevels(props.provider)}
                     />
                     {isOpen ?
                         <ExpandLess

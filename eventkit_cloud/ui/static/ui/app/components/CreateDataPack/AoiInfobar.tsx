@@ -19,7 +19,7 @@ import MoreVertIcon from '@material-ui/icons/MoreVert';
 import {useState} from 'react';
 import AlertCallout from './AlertCallout';
 import IrregularPolygon from '../icons/IrregularPolygon';
-import {getSqKm, getSqKmString} from '../../utils/generic';
+import {arrayHasValue, getSqKm, getSqKmString} from '../../utils/generic';
 import {useJobValidationContext} from './context/JobValidation';
 
 const jss = (theme: Eventkit.Theme & Theme) => createStyles({
@@ -201,7 +201,7 @@ function AoiInfobar(props: Props) {
     const displayAlert = () => setShowAlert(true);
 
     const { dataSizeInfo, providerLimits, aoiHasArea, aoiArea } = useJobValidationContext();
-    const { haveAvailableEstimates = [], exceedingSize = [] } = dataSizeInfo || {};
+    const { haveAvailableEstimates = [], exceedingSize = [], noMaxDataSize = [] } = dataSizeInfo || {};
 
     let needsWarning = false;
     let aoiAlert = null;
@@ -218,7 +218,10 @@ function AoiInfobar(props: Props) {
     const highestMaxSelectionArea = (providerLimits[0]) ? providerLimits[0].maxArea : 0;
 
     if (aoiHasArea) {
-        if (haveAvailableEstimates.length > 0) {
+        // If estimates have been fetched successfully and every proivder with estimates has a max data size.
+        if (haveAvailableEstimates.length > 0 && haveAvailableEstimates.every(slug => !arrayHasValue(noMaxDataSize, slug))) {
+            // If any providers exceed their max data size, and those all providers with estimates exceed their max
+            // I.e. if every provider we can check is over their specified max data size.
             if (exceedingSize.length > 0 && haveAvailableEstimates.every(slug => exceedingSize.indexOf(slug) !== -1)) {
                 needsWarning = true;
                 aoiAlert = (
@@ -241,6 +244,7 @@ function AoiInfobar(props: Props) {
                     />
                 );
             } else if (exceedingSize.length > 0) {
+                // Only some providers exceed their max data size
                 aoiAlert = (
                     <AlertCallout
                         className={`qa-AoiInfobar-alert-oversized ${classes.alertCalloutTop}`}
@@ -261,6 +265,7 @@ function AoiInfobar(props: Props) {
                 );
             }
         } else {
+            // Can't check max data sizes, fall back to max AoI.
             const exceedsAreaCount = providerLimits.filter(limits => limits.maxArea <= aoiArea).length;
             if (exceedsAreaCount === providerLimits.length) {
                 needsWarning = true;
