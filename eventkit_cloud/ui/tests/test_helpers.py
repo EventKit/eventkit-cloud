@@ -15,19 +15,19 @@ logger = logging.getLogger(__name__)
 
 class TestHelpers(TestCase):
 
-
+    @patch('eventkit_cloud.ui.helpers.convert_vector')
     @patch('eventkit_cloud.ui.helpers.os.path.splitext')
     @patch('eventkit_cloud.ui.helpers.shutil.rmtree')
     @patch('eventkit_cloud.ui.helpers.read_json_file')
     @patch('eventkit_cloud.ui.helpers.os.path.exists')
-    @patch('eventkit_cloud.ui.helpers.subprocess')
     @patch('eventkit_cloud.ui.helpers.get_meta')
     @patch('eventkit_cloud.ui.helpers.os.listdir')
     @patch('eventkit_cloud.ui.helpers.unzip_file')
     @patch('eventkit_cloud.ui.helpers.write_uploaded_file')
     @patch('eventkit_cloud.ui.helpers.os.mkdir')
     @patch('eventkit_cloud.ui.helpers.uuid4')
-    def test_file_to_geojson(self, uid, makedir, write, unzip, listdirs, meta, subproc, exists, reader, rm, split):
+    def test_file_to_geojson(self, uid, makedir, write, unzip, listdirs, meta, exists, reader, rm, split,
+                             convert_vector):
         geojson = {'type': 'FeatureCollection', 'other_stuff': {}}
         file = Mock()
         file.name = 'test_file.geojson'
@@ -38,9 +38,7 @@ class TestHelpers(TestCase):
         unzip.return_value = False
         listdirs.return_value = []
         meta.return_value = {'driver': 'GeoJSON', 'is_raster': False}
-        proc = Mock()
-        proc.wait = Mock()
-        subproc.Popen.return_value = proc
+        convert_vector.return_value = file.name
         exists.return_value = True
         reader.return_value = geojson
         with self.settings(
@@ -55,11 +53,11 @@ class TestHelpers(TestCase):
             self.assertEqual(ret, geojson)
             makedir.assert_called_once_with(dir)
             write.assert_called_once_with(file, expected_in_path)
-            meta.assert_called_once_with(expected_in_path)
-            expected_cmd = "ogr2ogr -f geojson {0} {1}".format(expected_out_path, expected_in_path)
-            subproc.Popen.assert_called_once_with(expected_cmd, shell=True, executable='/bin/bash')
+            meta.assert_called_once_with(expected_in_path, is_raster=False)
+            convert_vector.assert_called_once_with(expected_in_path, expected_out_path, fmt="geojson")
             rm.assert_called_once_with(dir)
-
+            convert_vector.reset_mock()
+            meta.reset_mock()
 
             # It should run through the entire process for a zip shp and return a geojson
             file.name = 'something.zip'
@@ -70,13 +68,12 @@ class TestHelpers(TestCase):
             expected_out_path = os.path.join(dir, 'out_{0}.geojson'.format(expected_file_name))
             listdirs.return_value = ['something.shp']
             updated_in_path = os.path.join(dir, 'something.shp')
-            updated_cmd = 'ogr2ogr -f geojson {0} {1}'.format(expected_out_path, updated_in_path)
             ret = file_to_geojson(file)
             self.assertEqual(ret, geojson)
             unzip.assert_called_once_with(expected_in_path, dir)
             listdirs.assert_called_with(dir)
-            meta.assert_called_with(updated_in_path)
-            subproc.Popen.called_with(updated_cmd, shell=True, executable='/bin/bash')
+            meta.convert_vector(updated_in_path, is_raster=False)
+            convert_vector.assert_called_once_with(updated_in_path, expected_out_path, fmt="geojson")
 
             # It should raise an exception if there is no file extension
             file.name = 'something'
@@ -100,15 +97,16 @@ class TestHelpers(TestCase):
             meta.return_value = {'driver': 'GTiff', 'is_raster': True}
             self.assertRaises(Exception, file_to_geojson, file)
 
-            # It should raise an exception if the subprocess throws one
-            meta.return_value = {'driver': 'GeoJSON', 'is_raster': False}
-            subproc.Popen.side_effect = Exception('doh!')
-            self.assertRaises(Exception, file_to_geojson, file)
+            # It should raise an exception if the convert throws one
+            with self.assertRaises(Exception):
+                meta.return_value = {'driver': 'GeoJSON', 'is_raster': False}
+                convert_vector.side_effect = Exception('doh!')
+                file_to_geojson(file)
 
             # It should raise and exception if output file does not exist
-            subproc.Popen.side_effect = None
-            exists.return_value = False
-            self.assertRaises(Exception, file_to_geojson, file)
+            with self.assertRaises(Exception):
+                exists.return_value = False
+                file_to_geojson(file)
 
     @patch('eventkit_cloud.ui.helpers.json')
     def test_read_json_file(self, fake_json):
