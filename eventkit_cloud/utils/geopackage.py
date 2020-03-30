@@ -4,7 +4,7 @@ import os
 import subprocess
 from string import Template
 
-from eventkit_cloud.tasks.task_process import TaskProcess  # NOQA
+from eventkit_cloud.tasks.task_process import TaskProcess, update_progress  # NOQA
 from osgeo import gdal, osr
 import sqlite3
 
@@ -303,9 +303,6 @@ class Geopackage(object):
         """
         Create the GeoPackage from the osm data.
         """
-
-        # avoiding a circular import
-        from eventkit_cloud.tasks.export_tasks import update_progress
 
         if self.is_complete:
             LOG.debug("Skipping Geopackage, file exists")

@@ -4,28 +4,28 @@ import logging
 import math
 import billiard
 import os
-import subprocess
 import time
-from string import Template
 from tempfile import NamedTemporaryFile
 from functools import wraps
 
 from osgeo import gdal, ogr, osr
 
-from eventkit_cloud.tasks.task_process import TaskProcess
+from eventkit_cloud.tasks.task_process import TaskProcess, update_progress
 from eventkit_cloud.utils.generic import requires_zip, create_zip_file, get_zip_name
+from eventkit_cloud.utils.geocoding.geocode import GeocodeAdapter, is_valid_bbox
 from django.conf import settings
+
 
 logger = logging.getLogger(__name__)
 
 MAX_DB_CONNECTION_RETRIES = 5
 MAX_DB_CONNECTION_DELAY = 5
 
+
 # The retry here is an attempt to mitigate any possible dropped connections. We chose to do a limited number of
 # retries as retrying forever would cause the job to never finish in the event that the database is down. An
 # improved method would perhaps be to see if there are connection options to create a more reliable connection.
-# We have used this solution for now as I could not find options supporting this in the ogr2ogr or gdalwarp
-# documentation.
+# We have used this solution for now as I could not find options supporting this in the gdal documentation.
 
 
 def retry(f):
@@ -62,60 +62,69 @@ def retry(f):
     return wrapper
 
 
-def open_ds(ds_path):
+def progress_callback(pct, msg, user_data):
+    update_progress(
+        user_data.get("task_uid"),
+        progress=round(pct * 100),
+        subtask_percentage=user_data.get("subtask_percentage"),
+        msg=msg,
+    )
+
+
+def open_dataset(file_path, is_raster):
     """
     Given a path to a raster or vector dataset, returns an opened GDAL or OGR dataset.
     The caller has the responsibility of closing/deleting the dataset when finished.
-    :param ds_path: Path to dataset
+    :param file_path: Path to dataset
     :return: Handle to open dataset
     """
 
-    # TODO: Can be a DB Connection
-    # if not os.path.isfile(ds_path):
-    #    raise Exception("Could not find file {}".format(ds_path))
-
     # Attempt to open as gdal dataset (raster)
-    use_exceptions = gdal.GetUseExceptions()
-    gdal.UseExceptions()
+    gdal.DontUseExceptions()
 
-    logger.info("Opening the dataset: {}".format(ds_path))
+    logger.info("Opening the dataset: {}".format(file_path))
+    gdal_dataset = None
+    ogr_dataset = None
     try:
-        gdal_dataset = gdal.Open(ds_path)
-        if gdal_dataset:
+        gdal_dataset = gdal.Open(file_path)
+        if gdal_dataset and is_raster:
+            logger.info(f"The dataset: {file_path} opened with gdal.")
             return gdal_dataset
+
+        # Attempt to open as ogr dataset (vector)
+        # ogr.UseExceptions doesn't seem to work reliably, so just check for Open returning None
+        ogr_dataset = ogr.Open(file_path)
+
+        if not ogr_dataset:
+            logger.debug("Unknown file format: {0}".format(file_path))
+        else:
+            logger.info(f"The dataset: {file_path} opened with ogr.")
+        return ogr_dataset or gdal_dataset
     except RuntimeError as ex:
         if ("not recognized as a supported file format" not in str(ex)) or (
             "Error browsing database for PostGIS Raster tables" in str(ex)
         ):
             raise ex
     finally:
-        if not use_exceptions:
-            gdal.DontUseExceptions()
-
-    # Attempt to open as ogr dataset (vector)
-    # ogr.UseExceptions doesn't seem to work reliably, so just check for Open returning None
-    ogr_dataset = ogr.Open(ds_path)
-
-    if not ogr_dataset:
-        logger.debug("Unknown file format: {0}".format(ds_path))
-        return None
-
-    return ogr_dataset
+        cleanup_dataset(gdal_dataset)
+        cleanup_dataset(ogr_dataset)
+        gdal.UseExceptions()
 
 
-def cleanup_ds(resources):
+def cleanup_dataset(dataset):
     """
     Given an input gdal.Dataset or ogr.DataSource, destroy it.
     NB: referring to this object's members after destruction will crash the Python interpreter.
-    :param ds: Dataset / DataSource to destroy
+    :param resources: Dataset / DataSource to destroy
     """
-    logger.info("Closing the resources: {}.".format(resources))
-    # https://trac.osgeo.org/gdal/wiki/PythonGotchas#CertainobjectscontainaDestroymethodbutyoushouldneveruseit
-    del resources
+    if dataset:
+        logger.info("Closing the resources: {}.".format(dataset))
+        # https://trac.osgeo.org/gdal/wiki/PythonGotchas#CertainobjectscontainaDestroymethodbutyoushouldneveruseit
+        del dataset
 
 
 @retry
-def get_meta(ds_path):
+def get_meta(ds_path, is_raster=True):
     """
     This function is a wrapper for the get_gdal metadata because if there is a database diconnection there is no obvious
     way to clean up and free those resources therefore it is put on a separate process and if it fails it can just be
@@ -123,6 +132,8 @@ def get_meta(ds_path):
 
     This is using GDAL 2.2.4 this should be checked again to see if it can be simplified in a later version.
     :param ds_path: String: Path to dataset
+    :param is_raster Boolean: Do not try to do OGR lookup if a raster dataset can be opened, otherwise it will try both,
+         and return the vector if that is an option.
     :return: Metadata dict
         driver: Short name of GDAL driver for dataset
         is_raster: True if dataset is a raster type
@@ -130,13 +141,13 @@ def get_meta(ds_path):
     """
 
     multiprocess_queue = billiard.Queue()
-    proc = billiard.Process(target=get_gdal_metadata, daemon=True, args=(ds_path, multiprocess_queue,))
+    proc = billiard.Process(target=get_gdal_metadata, daemon=True, args=(ds_path, is_raster, multiprocess_queue,))
     proc.start()
     proc.join()
     return multiprocess_queue.get()
 
 
-def get_gdal_metadata(ds_path, multiprocess_queue):
+def get_gdal_metadata(ds_path, is_raster, multiprocess_queue):
     """
     Don't call this directly use get_meta.
 
@@ -147,22 +158,22 @@ def get_gdal_metadata(ds_path, multiprocess_queue):
     :return: None.
     """
 
-    ds = None
+    dataset = None
     ret = {"driver": None, "is_raster": None, "nodata": None}
 
     try:
-        ds = open_ds(ds_path)
-        if isinstance(ds, gdal.Dataset):
-            ret["driver"] = ds.GetDriver().ShortName
+        dataset = open_dataset(ds_path, is_raster)
+        if isinstance(dataset, ogr.DataSource):
+            ret["driver"] = dataset.GetDriver().GetName()
+            ret["is_raster"] = False
+
+        elif isinstance(dataset, gdal.Dataset):
+            ret["driver"] = dataset.GetDriver().ShortName
             ret["is_raster"] = True
-            if ds.RasterCount:
-                bands = list(set([ds.GetRasterBand(i + 1).GetNoDataValue() for i in range(ds.RasterCount)]))
+            if dataset.RasterCount:
+                bands = list(set([dataset.GetRasterBand(i + 1).GetNoDataValue() for i in range(dataset.RasterCount)]))
                 if len(bands) == 1:
                     ret["nodata"] = bands[0]
-
-        elif isinstance(ds, ogr.DataSource):
-            ret["driver"] = ds.GetDriver().GetName()
-            ret["is_raster"] = False
 
         if ret["driver"]:
             logger.debug("Identified dataset {0} as {1}".format(ds_path, ret["driver"]))
@@ -172,7 +183,7 @@ def get_gdal_metadata(ds_path, multiprocess_queue):
         multiprocess_queue.put(ret)
 
     finally:
-        cleanup_ds(ds)
+        cleanup_dataset(dataset)
 
 
 def get_area(geojson):
@@ -224,7 +235,6 @@ def is_envelope(geojson_path):
     :return: True if the given geojson is an envelope/bounding box, with one polygon and one ring.
     """
     try:
-        geojson = ""
         if not os.path.isfile(geojson_path) and isinstance(geojson_path, str):
             geojson = json.loads(geojson_path)
         else:
@@ -262,117 +272,270 @@ def is_envelope(geojson_path):
 @retry
 def convert(
     boundary=None,
-    in_dataset=None,
-    out_dataset=None,
+    input_file=None,
+    output_file=None,
     fmt=None,
-    table=None,
+    layers=None,
     task_uid=None,
     projection: int = None,
-    params: str = "",
-    use_translate=False,
+    creation_options: list = None,
+    compress=False,
+    is_raster=True,
 ):
     """
-    Uses gdalwarp or ogr2ogr to clip a supported dataset file to a mask if boundary is passed in.
-    If boundary is not passed in, uses gdalwarp or ogr2ogr to convert a raster or vector dataset into another format.
+    Uses gdal to convert and clip a supported dataset file to a mask if boundary is passed in.
     :param boundary: A geojson file or bbox (xmin, ymin, xmax, ymax) to serve as a cutline
-    :param in_dataset: A raster or vector file to be clipped
-    :param out_dataset: The dataset to put the clipped output in (if not specified will use in_dataset)
+    :param input_file: A raster or vector file to be clipped
+    :param output_file: The dataset to put the clipped output in (if not specified will use in_dataset)
     :param fmt: Short name of output driver to use (defaults to input format)
-    :param table: Table name in database for in_dataset
+    :param layers: Table name in database for in_dataset
     :param task_uid: A task uid to update
     :param projection: A projection as an int referencing an EPSG code (e.g. 4326 = EPSG:4326)
-    :param params: Additional options to pass to the convert method (e.g. "-co SOMETHING")
-    :param use_translate: If true will convert file using gdal_translate instead of gdalwarp.
+    :param creation_options: Additional options to pass to the convert method (e.g. "-co SOMETHING")
+    :param compress: If true will convert file using gdal_translate instead of gdalwarp.
     :return: Filename of clipped dataset
     """
-    if not in_dataset:
-        raise Exception("No provided 'in' dataset")
 
-    # Strip optional file prefixes
-    file_prefix, in_dataset_file = strip_prefixes(in_dataset)
-    if not out_dataset:
-        out_dataset = in_dataset_file
-
-    # don't operate on the original file.  If the renamed file already exists,
-    # then don't try to rename, since that file may not exist if this is a retry.
-    if out_dataset == in_dataset_file:
-        in_dataset_file = rename_duplicate(in_dataset_file)
-        in_dataset = f"{file_prefix}{in_dataset_file}"
-    meta = get_meta(in_dataset_file)
+    input_file, output_file = get_dataset_names(input_file, output_file)
+    meta = get_meta(input_file, is_raster)
 
     if projection is None:
         projection = 4326
+    src_src = "EPSG:4326"
+    dst_src = f"EPSG:{projection}"
 
     if not fmt:
         fmt = meta["driver"] or "gpkg"
 
     # Geopackage raster only supports byte band type, so check for that
+    band_type = None
+    dstalpha = None
     if fmt.lower() == "gpkg":
-        band_type = "-ot byte"
-    else:
-        band_type = ""
-    if meta.get("nodata") is None and not is_envelope(in_dataset_file):
-        dstalpha = "-dstalpha"
-    else:
-        dstalpha = ""
+        band_type = gdal.GDT_Byte
+    if meta.get("nodata") is None and not is_envelope(input_file):
+        dstalpha = True
 
     # Clip the dataset if a boundary is passed in.
+    temp_boundfile = None
+    geojson = None
+    bbox = None
     if boundary:
-        temp_boundfile = None
-        if isinstance(boundary, list):
-            boundary = " ".join(str(i) for i in boundary)  # ogr2ogr can handle bbox as params
-            if not table:  # gdalwarp needs a file
-                temp_boundfile = NamedTemporaryFile()
-                xmin, ymin, xmax, ymax = boundary
-                geojson = (
-                    f"{{'type':'MultiPolygon','coordinates':[[[[{xmin},{ymin}],"
-                    f"[{xmax},{ymin}],[{xmax},{ymax}],[{xmin},{ymax}],[{xmin},{ymin}]]]]}}"
-                )
-                temp_boundfile.write(geojson.encode())
-                temp_boundfile.flush()
-                boundary = temp_boundfile.name
-        # Overwrite is added to the commands in the event that the dataset is retried.  In general we want these to
-        # act idempotently.
+        # Strings are expected to be a file.
+        if isinstance(boundary, str):
+            if not os.path.isfile(boundary):
+                raise Exception(f"Called convert using a boundary of {boundary} but no such path exists.")
+        elif is_valid_bbox(boundary):
+            geojson = GeocodeAdapter.bbox2polygon(boundary)
+            bbox = boundary
+        elif isinstance(boundary, dict):
+            geojson = boundary
+        if geojson:
+            temp_boundfile = NamedTemporaryFile(suffix=".json")
+            temp_boundfile.write(json.dumps(geojson).encode())
+            temp_boundfile.flush()
+            boundary = temp_boundfile.name
 
-        if table:
-            cmd = f"ogr2ogr -skipfailures {params} -nlt PROMOTE_TO_MULTI -overwrite -f {fmt} -clipsrc {boundary} {out_dataset} {in_dataset} {table} -s_srs EPSG:4326 -t_srs EPSG:{projection}"  # NOQA
-        elif meta["is_raster"]:
-            if use_translate:
-                cmd = f"gdal_translate {params} -of {fmt} {band_type} {in_dataset} {out_dataset}"
-            else:
-                cmd = f"gdalwarp -overwrite {params} -cutline {boundary} -crop_to_cutline {dstalpha} -of {fmt} {band_type} {in_dataset} {out_dataset} -s_srs EPSG:4326 -t_srs EPSG:{projection}"  # NOQA
-        else:
-            cmd = f"ogr2ogr -skipfailures {params} -nlt PROMOTE_TO_MULTI -overwrite -f {fmt} -clipsrc {boundary} {out_dataset} {in_dataset} -s_srs EPSG:4326 -t_srs EPSG:{projection}"  # NOQA
-    else:  # No boundary given, so just convert the dataset to the requested format.
-        if meta["is_raster"]:
-            if use_translate:
-                cmd = f"gdal_translate {params} -of {fmt} {band_type} {in_dataset} {out_dataset}"
-            else:
-                cmd = f"gdalwarp -overwrite {params} -of {fmt} {band_type} {in_dataset} {out_dataset} -s_srs EPSG:4326 -t_srs EPSG:{projection}"  # NOQA
-        else:
-            cmd = f"ogr2ogr -overwrite {params} -f '{fmt}' {out_dataset} {in_dataset} -s_srs EPSG:4326 -t_srs EPSG:{projection}"  # NOQA
-
-    try:
-        logger.debug(f"GDAL clip cmd: {cmd}")
-        task_process = TaskProcess(task_uid=task_uid)
-        task_process.start_process(
-            cmd, shell=True, executable="/bin/bash", stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+    if meta["is_raster"]:
+        cmd = get_task_command(
+            convert_raster,
+            input_file,
+            output_file,
+            fmt=fmt,
+            creation_options=creation_options,
+            band_type=band_type,
+            dst_alpha=dstalpha,
+            boundary=boundary,
+            compress=compress,
+            src_srs=src_src,
+            dst_srs=dst_src,
+            task_uid=task_uid,
         )
+    else:
+        cmd = get_task_command(
+            convert_vector,
+            input_file,
+            output_file,
+            fmt=fmt,
+            creation_options=creation_options,
+            src_srs=src_src,
+            dst_srs=dst_src,
+            layers=layers,
+            task_uid=task_uid,
+            boundary=boundary,
+            bbox=bbox,
+        )
+    try:
+        task_process = TaskProcess(task_uid=task_uid)
+        task_process.start_process(cmd)
+    except Exception as e:
+        logger.error(e)
+        raise Exception("File conversion failed.  Please try again or contact support.")
+
     finally:
-        if boundary:
-            if temp_boundfile:
-                temp_boundfile.close()
+        if temp_boundfile:
+            temp_boundfile.close()
 
     if requires_zip(fmt):
-        logger.debug(f"Requires zip: {out_dataset}")
-        out_dataset = create_zip_file(out_dataset, get_zip_name(out_dataset))
+        logger.debug(f"Requires zip: {output_file}")
+        output_file = create_zip_file(output_file, get_zip_name(output_file))
 
-    if task_process.exitcode != 0:
-        logger.error(f"{task_process.stdout}")
-        logger.error(f"{task_process.stderr}")
-        raise Exception(f"Cutline process failed with return code {task_process.exitcode} and command {cmd}")
+    return output_file
 
-    return out_dataset
+
+def get_task_command(function, *args, **kwargs):
+    return lambda: function(*args, **kwargs)
+
+
+def get_dataset_names(input_file, output_file):
+    """
+    This is a helper that will get us the name of the output_dataset.
+    :param input_file: The name of the dataset to convert.
+    :param output_file: (Optional) The path to convert the file.
+    :return: An output dataset name.
+    """
+    if not input_file:
+        raise Exception("No provided 'in' dataset")
+
+    # Strip optional file prefixes
+    file_prefix, in_dataset_file = strip_prefixes(input_file)
+    if not output_file:
+        output_file = in_dataset_file
+
+    # don't operate on the original file.  If the renamed file already exists,
+    # then don't try to rename, since that file may not exist if this is a retry.
+    if output_file == in_dataset_file:
+        in_dataset_file = rename_duplicate(in_dataset_file)
+        input_file = f"{file_prefix}{in_dataset_file}"
+    return input_file, output_file
+
+
+def clean_options(options):
+    return {option: value for option, value in options.items() if value is not None}
+
+
+def convert_raster(
+    input_files,
+    output_file,
+    fmt=None,
+    creation_options=None,
+    band_type=None,
+    dst_alpha=None,
+    boundary=None,
+    compress=False,
+    src_srs=None,
+    dst_srs=None,
+    task_uid=None,
+):
+    """
+    :param input_files: A file or list of files to convert.
+    :param output_file: The file to convert.
+    :param fmt: The file format to convert.
+    :param creation_options: Special GDAL options for conversion.
+        Seardh for "gdal driver <format> creation options" creation options for driver specific implementation.
+    :param band_type: The GDAL data type (e.g. gdal.GDT_BYTE).
+    :param dst_alpha: If including an alpha band in the destination file.
+    :param boundary: The boundary to be used for clipping, this must be a file.
+    :param compress: Boolean if should compress the images.
+    :param src_srs: The srs of the source (e.g. "EPSG:4326")
+    :param dst_srs: The srs of the destination (e.g. "EPSG:3857")
+    :param task_uid: The eventkit task uid used for tracking the work.
+    :return: The output file.
+    """
+    if isinstance(input_files, str):
+        input_files = [input_files]
+    gdal.UseExceptions()
+    subtask_percentage = 50 if compress else 100
+    options = clean_options(
+        {
+            "callback": progress_callback,
+            "callback_data": {"task_uid": task_uid, "subtask_percentage": subtask_percentage},
+            "creationOptions": creation_options,
+            "format": fmt,
+        }
+    )
+    warp_params = clean_options({"outputType": band_type, "dstAlpha": dst_alpha, "srcSRS": src_srs, "dstSRS": dst_srs})
+    if boundary:
+        warp_params.update({"cutlineDSName": boundary, "cropToCutline": True})
+    logger.info(
+        f"calling gdal.Warp('{output_file}', [{', '.join(input_files)}], "
+        f"{stringify_params(options)}, {stringify_params(warp_params)},)"
+    )
+    gdal.Warp(output_file, input_files, **options, **warp_params)
+    if compress:
+        input_file, output_file = get_dataset_names(output_file, output_file)
+
+        # This compression is used with geotiff, we remove the alpha channel and do JPEG compression.  This
+        # lossy compression should not be used with datasets where the source value is important (i.e. elevation data).
+        # This results in a very small filesize but also adds a black background.
+        # Optionally lossless compression like LZW can be used, which will preserve the transparent background, but
+        # isn't as small of a file.
+        # options['creationOptions'] = ["COMPRESS=LZW", "TILED=YES"]
+        # translate_params = {}
+        options["creationOptions"] = ["COMPRESS=JPEG", "PHOTOMETRIC=YCBCR", "TILED=YES"]
+        translate_params = {"bandList": [1, 2, 3]}
+
+        logger.info(
+            f"calling gdal.Translate('{output_file}', '{input_file}', "
+            f"{stringify_params(options)}, {stringify_params(translate_params)},)"
+        )
+        gdal.Translate(output_file, input_file, **options, **translate_params)
+    return output_file
+
+
+def convert_vector(
+    input_file,
+    output_file,
+    fmt=None,
+    creation_options=None,
+    access_mode="overwrite",
+    src_srs=None,
+    dst_srs=None,
+    task_uid=None,
+    layers=None,
+    boundary=None,
+    bbox=None,
+):
+    """
+    :param input_files: A file or list of files to convert.
+    :param output_file: The file to convert.
+    :param fmt: The file format to convert.
+    :param creation_options: Special GDAL options for conversion.
+        Seardh for "gdal driver <format> creation options" creation options for driver specific implementation.
+    :param access_mode: The access mode for the file (e.g. "append" or "overwrite")
+    :param bbox: A bounding box as a list (w,s,e,n) to be used for limiting the AOI that is used during conversion.
+    :param boundary: The boundary to be used for clipping.
+        This must be a file (i.e. a path as a string) and cannot be used with bbox.
+    :param src_srs: The srs of the source (e.g. "EPSG:4326")
+    :param dst_srs: The srs of the destination (e.g. "EPSG:3857")
+    :param task_uid: The eventkit task uid used for tracking the work.
+    :param layers: A list of layers to include for translation.
+    :return: The output file.
+    """
+    gdal.UseExceptions()
+    options = clean_options(
+        {
+            "callback": progress_callback,
+            "callback_data": {"task_uid": task_uid},
+            "creationOptions": creation_options,
+            "format": fmt,
+            "geometryType": "PROMOTE_TO_MULTI",
+            "layers": layers,
+            "srcSRS": src_srs,
+            "dstSRS": dst_srs,
+            "accessMode": access_mode,
+            "reproject": src_srs != dst_srs,
+            "skipFailures": True,
+            "spatFilter": bbox,
+            "options": [f"-clipSrc", boundary] if boundary and not bbox else None,
+        }
+    )
+    logger.info(f"calling gdal.VectorTranslate('{output_file}', '{input_file}', {stringify_params(options)})")
+    gdal.VectorTranslate(output_file, input_file, **options)
+    return output_file
+
+
+def stringify_params(params):
+    return ", ".join([f"{k}='{v}'" for k, v in params.items()])
 
 
 def get_dimensions(bbox, scale):
@@ -445,22 +608,17 @@ def merge_geotiffs(in_files, out_file, task_uid=None):
 
     :param in_files: A list of geotiffs.
     :param out_file:  A location for the result of the merge.
-    :param task_uid: A task uid to manage the subprocess.
+    :param task_uid: A task uid to track the conversion.
     :return: The out_file path.
     """
-    cmd_template = Template("gdalwarp $in_ds $out_ds")
-    cmd = cmd_template.safe_substitute({"in_ds": " ".join(in_files), "out_ds": out_file})
+    cmd = get_task_command(convert_raster, in_files, out_file, task_uid=task_uid)
 
-    logger.debug("GDAL merge cmd: {0}".format(cmd))
-
-    task_process = TaskProcess(task_uid=task_uid)
-    task_process.start_process(
-        cmd, shell=True, executable="/bin/bash", stdout=subprocess.PIPE, stderr=subprocess.PIPE,
-    )
-
-    if task_process.exitcode != 0:
-        logger.error("{0}".format(task_process.stderr))
-        raise Exception("GeoTIFF merge process failed with return code {0}".format(task_process.exitcode))
+    try:
+        task_process = TaskProcess(task_uid=task_uid)
+        task_process.start_process(cmd)
+    except Exception as e:
+        logger.error(e)
+        raise Exception("GeoTIFF merge process failed.")
 
     return out_file
 
@@ -481,6 +639,9 @@ def get_band_statistics(file_path, band=1):
         logger.error(e)
         logger.error("Could not get statistics for {0}:{1}".format(file_path, band))
         return None
+    finally:
+        # Need to close the dataset.
+        cleanup_dataset(image_file)  # NOQA
 
 
 def rename_duplicate(original_file: str) -> str:
