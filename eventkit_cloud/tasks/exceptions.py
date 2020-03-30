@@ -10,7 +10,7 @@ class CancelException(Exception):
         self.message = message  # without this you may get DeprecationWarning
         self.filename = filename
         if not self.message:
-            self.message = "{0} was canceled by {1}.".format(task_name, user_name)
+            self.message = f"{task_name} was canceled by {user_name}."
         super(CancelException, self).__init__(self.message, *args, **kwargs)
 
 
@@ -26,7 +26,7 @@ class DeleteException(Exception):
         self.message = message  # without this you may get DeprecationWarning
         self.filename = filename
         if not self.message:
-            self.message = "{0} was deleted by {1}.".format(task_name, user_name)
+            self.message = f"{task_name} was deleted by {user_name}."
         super(DeleteException, self).__init__(self.message, *args, **kwargs)
 
 
