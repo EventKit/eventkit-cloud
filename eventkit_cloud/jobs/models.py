@@ -528,6 +528,35 @@ class UserJobActivity(models.Model):
         return "%s %s %s %s" % (self.user, self.job, self.type, self.created_at)
 
 
+class MaxDataSizeRule(models.Model):
+    """
+    Mixin for models that have a downloadable product.
+    """
+
+    max_data_size = models.DecimalField(
+        verbose_name="Max data size",
+        default=100,
+        max_digits=12,
+        decimal_places=3,
+        help_text="This is the maximum data size in MB that can be exported "
+                  "from this provider in a single DataPack.",
+    )
+    provider = models.ForeignKey(DataProvider, on_delete=models.CASCADE)
+
+    class Meta:
+        abstract = True
+
+
+class UserMaxDataSize(MaxDataSizeRule):
+
+   user = models.ForeignKey(User, on_delete=models.CASCADE)
+
+
+class GroupMaxDataSize(MaxDataSizeRule):
+
+   group = models.ForeignKey(Group, on_delete=models.CASCADE)
+
+
 def convert_polygon(geom=None):
     if geom and isinstance(geom, Polygon):
         return MultiPolygon(geom, srid=geom.srid)

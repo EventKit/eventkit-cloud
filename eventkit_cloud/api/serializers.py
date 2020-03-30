@@ -38,6 +38,8 @@ from eventkit_cloud.jobs.models import (
     License,
     UserLicense,
     UserJobActivity,
+    UserMaxDataSize,
+    GroupMaxDataSize,
 )
 from eventkit_cloud.tasks.models import (
     ExportRun,
@@ -73,7 +75,6 @@ class ProviderTaskSerializer(serializers.ModelSerializer):
 
     @staticmethod
     def create(validated_data, **kwargs):
-
         """Creates an export DataProviderTask."""
         formats = validated_data.pop("formats")
         provider_model = DataProvider.objects.get(slug=validated_data.get("provider"))
@@ -499,14 +500,14 @@ class GroupUserSerializer(serializers.ModelSerializer):
         if request.query_params.get("limit"):
             limit = int(request.query_params.get("limit"))
         gp_admins = GroupPermission.objects.filter(group=instance).filter(permission=GroupPermissionLevel.ADMIN.value)[
-            :limit
-        ]
+                    :limit
+                    ]
         admins = [gp.user for gp in gp_admins]
         members = []
         gp_members = (
             GroupPermission.objects.filter(group=instance)
-            .filter(permission=GroupPermissionLevel.MEMBER.value)
-            .exclude(user__in=admins)[: limit - gp_admins.count()]
+                .filter(permission=GroupPermissionLevel.MEMBER.value)
+                .exclude(user__in=admins)[: limit - gp_admins.count()]
         )
         for gp in gp_members:
             if gp.user not in admins:
@@ -755,9 +756,27 @@ class DataProviderSerializer(serializers.ModelSerializer):
     def get_footprint_url(obj):
         return obj.footprint_url
 
-    @staticmethod
-    def get_max_data_size(obj):
-        return obj.max_data_size
+    def get_max_data_size(self, obj):
+        user = None
+        request = self.context.get("request")
+        if request and hasattr(request, "user"):
+            user = request.user
+            user_rules = UserMaxDataSize.objects.filter(provider=obj, user=user)
+
+            group_rules = []
+            user_groups = user.groups.all()
+            if len(user_groups) > 0:
+                group_rules = GroupMaxDataSize.objects.filter(provider=obj, group__in=user_groups)
+
+            size_rules = [*list(user_rules), *list(group_rules)]
+            if len(size_rules) > 0:
+                return max([_limit.max_data_size for _limit in size_rules])
+            else:
+                return obj.max_data_size
+        if not user:
+            return obj.max_data_size
+        else:
+            return obj.max_data_size
 
 
 class ListJobSerializer(serializers.Serializer):
@@ -849,8 +868,8 @@ class JobSerializer(serializers.Serializer):
 
     uid = serializers.UUIDField(read_only=True)
     url = serializers.HyperlinkedIdentityField(view_name="api:jobs-detail", lookup_field="uid")
-    name = serializers.CharField(max_length=100,)
-    description = serializers.CharField(max_length=255,)
+    name = serializers.CharField(max_length=100, )
+    description = serializers.CharField(max_length=255, )
     event = serializers.CharField(max_length=100, allow_blank=True, required=False)
     created_at = serializers.DateTimeField(read_only=True)
     updated_at = serializers.DateTimeField(read_only=True)
@@ -1004,7 +1023,6 @@ class GenericNotificationRelatedSerializer(serializers.BaseSerializer):
 
 
 class NotificationSerializer(serializers.ModelSerializer):
-
     actor = serializers.SerializerMethodField()
     target = serializers.SerializerMethodField()
     action_object = serializers.SerializerMethodField()
