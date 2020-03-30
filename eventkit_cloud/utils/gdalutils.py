@@ -80,8 +80,7 @@ def open_dataset(file_path, is_raster):
     """
 
     # Attempt to open as gdal dataset (raster)
-    use_exceptions = gdal.GetUseExceptions()
-    gdal.UseExceptions()
+    gdal.DontUseExceptions()
 
     logger.info("Opening the dataset: {}".format(file_path))
     gdal_dataset = None
@@ -89,15 +88,17 @@ def open_dataset(file_path, is_raster):
     try:
         gdal_dataset = gdal.Open(file_path)
         if gdal_dataset and is_raster:
+            logger.info(f"The dataset: {file_path} opened with gdal.")
             return gdal_dataset
+
         # Attempt to open as ogr dataset (vector)
         # ogr.UseExceptions doesn't seem to work reliably, so just check for Open returning None
         ogr_dataset = ogr.Open(file_path)
 
         if not ogr_dataset:
             logger.debug("Unknown file format: {0}".format(file_path))
-            return None
-
+        else:
+            logger.info(f"The dataset: {file_path} opened with ogr.")
         return ogr_dataset or gdal_dataset
     except RuntimeError as ex:
         if ("not recognized as a supported file format" not in str(ex)) or (
@@ -107,8 +108,7 @@ def open_dataset(file_path, is_raster):
     finally:
         cleanup_dataset(gdal_dataset)
         cleanup_dataset(ogr_dataset)
-        if not use_exceptions:
-            gdal.DontUseExceptions()
+        gdal.UseExceptions()
 
 
 def cleanup_dataset(dataset):
@@ -132,6 +132,8 @@ def get_meta(ds_path, is_raster=True):
 
     This is using GDAL 2.2.4 this should be checked again to see if it can be simplified in a later version.
     :param ds_path: String: Path to dataset
+    :param is_raster Boolean: Do not try to do OGR lookup if a raster dataset can be opened, otherwise it will try both,
+         and return the vector if that is an option.
     :return: Metadata dict
         driver: Short name of GDAL driver for dataset
         is_raster: True if dataset is a raster type
@@ -156,20 +158,20 @@ def get_gdal_metadata(ds_path, is_raster, multiprocess_queue):
     :return: None.
     """
 
-    ds = None
+    dataset = None
     ret = {"driver": None, "is_raster": None, "nodata": None}
 
     try:
-        ds = open_dataset(ds_path, is_raster)
-        if isinstance(ds, ogr.DataSource):
-            ret["driver"] = ds.GetDriver().GetName()
+        dataset = open_dataset(ds_path, is_raster)
+        if isinstance(dataset, ogr.DataSource):
+            ret["driver"] = dataset.GetDriver().GetName()
             ret["is_raster"] = False
 
-        elif isinstance(ds, gdal.Dataset):
-            ret["driver"] = ds.GetDriver().ShortName
+        elif isinstance(dataset, gdal.Dataset):
+            ret["driver"] = dataset.GetDriver().ShortName
             ret["is_raster"] = True
-            if ds.RasterCount:
-                bands = list(set([ds.GetRasterBand(i + 1).GetNoDataValue() for i in range(ds.RasterCount)]))
+            if dataset.RasterCount:
+                bands = list(set([dataset.GetRasterBand(i + 1).GetNoDataValue() for i in range(dataset.RasterCount)]))
                 if len(bands) == 1:
                     ret["nodata"] = bands[0]
 
@@ -181,7 +183,7 @@ def get_gdal_metadata(ds_path, is_raster, multiprocess_queue):
         multiprocess_queue.put(ret)
 
     finally:
-        cleanup_dataset(ds)
+        cleanup_dataset(dataset)
 
 
 def get_area(geojson):
