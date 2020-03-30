@@ -393,6 +393,7 @@ class JobViewSet(viewsets.ModelViewSet):
                             error_data = {"errors": []}
                             for provider_task in job.provider_tasks.all():
                                 provider = provider_task.provider
+                                provider_serializer = DataProviderSerializer(context={"request": request})
                                 bbox = job.extents
                                 srs = "4326"
                                 cache_key = get_estimate_cache_key(
@@ -401,12 +402,13 @@ class JobViewSet(viewsets.ModelViewSet):
                                 # find cache key that contains the estimator hash with correct time, size values
                                 size, time = cache.get(cache_key, (None, None))
                                 max_selection = provider.max_selection
+                                max_data_size = provider_serializer.get_max_data_size(provider)
 
                                 # Don't rely solely on max_data_size as estimates can sometimes be inaccurate
                                 # Allow user to get a job that passes max_data_size or max_selection condition:
-                                if (size and provider.max_data_size) is not None:
+                                if (size and max_data_size) is not None:
                                     # max_data_size is an optional configuration
-                                    if size <= provider.max_data_size:
+                                    if size <= max_data_size:
                                         continue
                                     else:
                                         status_code = status.HTTP_400_BAD_REQUEST
