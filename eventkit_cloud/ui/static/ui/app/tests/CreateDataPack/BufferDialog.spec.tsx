@@ -1,11 +1,13 @@
 import * as React from 'react';
 import * as sinon from 'sinon';
-import { shallow } from 'enzyme';
+import {mount, shallow} from 'enzyme';
 import TextField from '@material-ui/core/TextField';
 import Slider from '@material-ui/lab/Slider';
 import Clear from '@material-ui/icons/Clear';
 import AlertCallout from '../../components/CreateDataPack/AlertCallout';
-import BufferDialog from '../../components/CreateDataPack/BufferDialog';
+import { BufferDialog } from '../../components/CreateDataPack/BufferDialog';
+import {JobValidationProvider} from "../../components/CreateDataPack/context/JobValidation";
+import {ProviderLimits} from "../../components/CreateDataPack/EstimateContainer";
 
 describe('AlertCallout component', () => {
     const getProps = () => ({
@@ -16,19 +18,24 @@ describe('AlertCallout component', () => {
         handleBufferChange: sinon.spy(),
         closeBufferDialog: sinon.spy(),
         aoi: {},
-        limits: {
-            max: 10,
-            sizes: [5, 10],
-        },
         ...(global as any).eventkit_test_props,
         classes: {},
     });
 
     let props;
     let wrapper;
-    const setup = (overrides = {}) => {
+    const setup = (overrides = {}, area=100) => {
         props = { ...getProps(), ...overrides };
-        wrapper = shallow(<BufferDialog {...props} />);
+        wrapper = mount(
+            <JobValidationProvider value={{
+                providerLimits: [{maxDataSize: 100, maxArea: 100, slug: 'osm'} as ProviderLimits],
+                aoiHasArea: true,
+                aoiArea: area,
+                dataSizeInfo: {} as any,
+                areEstimatesLoading: false,
+            }}>
+                <BufferDialog {...props} />
+            </JobValidationProvider>);
     };
 
     beforeEach(setup);
@@ -47,13 +54,13 @@ describe('AlertCallout component', () => {
     });
 
     it('should not render anything if show is false', () => {
-        wrapper.setProps({ show: false });
+        setup({show: false});
         expect(wrapper.find('.qa-BufferDialog-main').hostNodes()).toHaveLength(0);
         expect(wrapper.find('.qa-BufferDialog-background').hostNodes()).toHaveLength(0);
     });
 
     it('should render a warning if the area exceeds the aoi limit', () => {
-        wrapper.setProps({ limits: { ...props.limits, max: -200 }});
+        setup({}, 1000);
         expect(wrapper.find('.qa-BufferDialog-warning')).toHaveLength(1);
     });
 

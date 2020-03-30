@@ -187,7 +187,6 @@ describe('BreadcrumbStepper component', () => {
     it('componentDidMount should set nextDisabled and get providers and formats', () => {
         setup({ exportInfo: { ...props.exportInfo, exportName: '' }});
         expect(props.setNextDisabled.calledOnce).toBe(true);
-        expect(props.getProviders.calledOnce).toBe(true);
         expect(props.getFormats.calledOnce).toBe(true);
     });
 
@@ -277,11 +276,7 @@ describe('BreadcrumbStepper component', () => {
         />);
 
         content = wrapper.instance().getStepContent(3);
-        expect(content).toEqual(<ExportAOI
-            onWalkthroughReset={props.onWalkthroughReset}
-            walkthroughClicked={props.walkthroughClicked}
-            mapLayers={props.mapLayers}
-        />);
+        expect(content).toEqual(null);
     });
 
     it('getButtonContent should return the correct content for each stepIndex', () => {

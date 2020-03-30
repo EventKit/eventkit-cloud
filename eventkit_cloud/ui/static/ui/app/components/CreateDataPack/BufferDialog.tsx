@@ -110,7 +110,7 @@ export interface State {
     showAlert: boolean;
 }
 
-function BufferDialog(props: Props) {
+export function BufferDialog(props: Props) {
     const [showAlert, setShowAlert] = useState(false);
     const closeAlert = () => setShowAlert(false);
     const displayAlert = () => setShowAlert(true);
@@ -142,12 +142,11 @@ function BufferDialog(props: Props) {
         </Button>,
     ];
 
-    const { providerLimits, dataSizeInfo } = useJobValidationContext();
+    const { providerLimits, dataSizeInfo, aoiArea } = useJobValidationContext();
     const { haveAvailableEstimates = [] } = dataSizeInfo || {};
 
     const highestMaxSelectionArea = (providerLimits[0]) ? providerLimits[0].maxArea : 0;
     const totalArea = getSqKmString(props.aoi);
-    const aoiArea = getSqKm(props.aoi);
 
     let over = false;
     if (highestMaxSelectionArea && highestMaxSelectionArea < aoiArea) {

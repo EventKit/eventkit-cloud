@@ -153,37 +153,34 @@ export interface Props {
     ref?: any;
 }
 
-export interface State {
-    showAlert: boolean;
-    menuAnchor: null | HTMLElement;
+AoiInfobar.defaultProps = { displayTitle: true } as Props;
+
+export function getIcon(geomType: string, source: string) {
+    const type = geomType.toUpperCase();
+    const iconStyle = {
+        width: '30px',
+        height: '30px',
+    };
+    if (source === 'Box') {
+        return <ImageCropSquare style={iconStyle} className="qa-AoiInfobar-icon-box" color="primary"/>;
+    }
+    if (source === 'Map View') {
+        return <Extent style={iconStyle} className="qa-AoiInfobar-icon-mapview" color="primary"/>;
+    }
+    if (type.includes('POINT')) {
+        return <ActionRoom style={iconStyle} className="qa-AoiInfobar-icon-point" color="primary"/>;
+    }
+    if (type.includes('LINE')) {
+        return <Line style={iconStyle} className="qa-AoiInfobar-icon-line" color="primary"/>;
+    }
+    if (type.includes('POLYGON') || type.includes('COLLECTION')) {
+        return <IrregularPolygon style={iconStyle} className="qa-AoiInfobar-icon-polygon" color="primary"/>;
+    }
+    return <AlertWarning style={iconStyle} className="qa-AoiInfobar-icon-no-selection" color="primary"/>;
 }
 
-function AoiInfobar(props: Props) {
+export function AoiInfobar(props: Props) {
     const [menuAnchor, setMenuAnchor] = useState(null);
-
-    function getIcon(geomType: string, source: string) {
-        const type = geomType.toUpperCase();
-        const iconStyle = {
-            width: '30px',
-            height: '30px',
-        };
-        if (source === 'Box') {
-            return <ImageCropSquare style={iconStyle} className="qa-AoiInfobar-icon-box" color="primary"/>;
-        }
-        if (source === 'Map View') {
-            return <Extent style={iconStyle} className="qa-AoiInfobar-icon-mapview" color="primary"/>;
-        }
-        if (type.includes('POINT')) {
-            return <ActionRoom style={iconStyle} className="qa-AoiInfobar-icon-point" color="primary"/>;
-        }
-        if (type.includes('LINE')) {
-            return <Line style={iconStyle} className="qa-AoiInfobar-icon-line" color="primary"/>;
-        }
-        if (type.includes('POLYGON') || type.includes('COLLECTION')) {
-            return <IrregularPolygon style={iconStyle} className="qa-AoiInfobar-icon-polygon" color="primary"/>;
-        }
-        return <AlertWarning style={iconStyle} className="qa-AoiInfobar-icon-no-selection" color="primary"/>;
-    }
 
     function handleMenuClose() {
         setMenuAnchor(null);
@@ -307,7 +304,6 @@ function AoiInfobar(props: Props) {
             }
         }
     }
-
 
     return (
         <>

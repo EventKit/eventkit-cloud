@@ -1,7 +1,7 @@
 import * as React from 'react';
 import * as sinon from 'sinon';
 import {shallow} from 'enzyme';
-import DataProvider from '../../components/CreateDataPack/DataProvider';
+import { DataProvider } from '../../components/CreateDataPack/DataProvider';
 
 const formats = [
     {
@@ -83,10 +83,6 @@ describe('DataProvider component', () => {
     beforeEach(setup);
 
     describe('it handles providers correctly', () => {
-
-        it('renders the list item', () => {
-            expect(wrapper.find('.qa-DataProvider-ListItem')).toHaveLength(1);
-        });
 
         it('it renders ZoomLevelSlider when type is valid', () => {
             expect(wrapper.find('div.slug-sliderDiv')).toHaveLength(1);

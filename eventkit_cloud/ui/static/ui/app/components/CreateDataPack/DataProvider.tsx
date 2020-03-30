@@ -126,7 +126,7 @@ interface Props {
     };
 }
 
-function DataProvider(props: Props) {
+export function DataProvider(props: Props) {
     const { BASEMAP_URL } = useAppContext();
     const { colors } = props.theme.eventkit;
     const { classes, provider, providerInfo } = props;
@@ -137,7 +137,7 @@ function DataProvider(props: Props) {
     const [displayFootprints, setDisplayFootprints] = useState(false);
 
     const { dataSizeInfo, areEstimatesLoading, aoiArea, providerLimits } = useJobValidationContext();
-    const { haveAvailableEstimates = [], noMaxDataSize = [] } = dataSizeInfo;
+    const { haveAvailableEstimates = [], noMaxDataSize = [] } = dataSizeInfo || {};
     const [ overSize, setOverSize ] = useState(false);
     const [ overArea, setOverArea ] = useState(false);
     const debouncerRef = useRef(null);
