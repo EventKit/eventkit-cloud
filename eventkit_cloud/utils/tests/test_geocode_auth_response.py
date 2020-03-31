@@ -75,9 +75,8 @@ class TestGeoCodeAuthResponse(TestCase):
 
     @patch("eventkit_cloud.utils.geocoding.geocode_auth_response.check_data")
     @patch("eventkit_cloud.utils.geocoding.geocode_auth_response.auth_requests")
-    @patch("eventkit_cloud.utils.geocoding.geocode_auth_response.update_auth_headers")
     @patch("eventkit_cloud.utils.geocoding.geocode_auth_response.update_session_cookies")
-    def test_get_auth_response(self, mock_update_session_cookies, mock_update_auth_headers, mock_auth_requests,
+    def test_get_auth_response(self, mock_update_session_cookies, mock_auth_requests,
                                  mock_check_data):
         example_url = "test_headers"
         example_payload = {"test": "payload"}
@@ -88,7 +87,6 @@ class TestGeoCodeAuthResponse(TestCase):
         mock_auth_requests.AuthSession().session.cookies = example_cookies
         self.assertEquals(expected_response, get_auth_response(example_url, example_payload))
         mock_update_session_cookies.assert_called_once_with(example_cookies)
-        mock_update_auth_headers.assert_called_once_with(example_headers)
         mock_auth_requests.AuthSession().get.assert_called_once_with(example_url, params=example_payload, cert_var="GEOCODING_AUTH_CERT")
 
         expected_response = Mock(ok=False)
