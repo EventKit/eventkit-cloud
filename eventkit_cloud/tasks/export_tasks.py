@@ -137,9 +137,7 @@ class ExportTask(EventKitBaseTask):
             task = ExportTaskRecord.objects.get(uid=task_uid)
 
             task.task_attempts += 1
-            max_task_attempts = int(os.getenv("MAX_TASK_ATTEMPTS", 5))
-
-            if task.task_attempts > max_task_attempts:
+            if task.task_attempts > settings.MAX_TASK_ATTEMPTS:
                 raise FailedException(task_name=self.name)
 
             task.worker = socket.gethostname()
@@ -1198,7 +1196,7 @@ def finalize_export_provider_task(result=None, data_provider_task_uid=None, stat
     """
 
     # if the status was a success, we can assume all the ExportTasks succeeded. if not, we need to parse ExportTasks to
-    # mark tasks not run yet as cancelled.
+    # mark tasks not run yet as canceled.
     result_status = parse_result(result, "status")
 
     with transaction.atomic():

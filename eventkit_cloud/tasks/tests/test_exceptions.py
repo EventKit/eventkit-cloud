@@ -12,7 +12,7 @@ class TestExceptions(TestCase):
     def test_cancel_exception(self):
         task_name = "Test Task"
         user_name = "Test User"
-        message = "The task was cancelled"
+        message = "The task was canceled"
 
         output = CancelException(task_name=task_name, user_name=user_name)
         self.assertEqual(str(output), f"{task_name} was canceled by {user_name}.")
