@@ -9,7 +9,7 @@ logger = logging.getLogger(__file__)
 
 default_app_config = "eventkit_cloud.tasks.apps.EventKitTasks"
 
-DEFAULT_CACHE_EXPIRTATION = 86400  # expire in a day
+DEFAULT_CACHE_EXPIRATION = 86400  # expire in a day
 
 
 def get_cache_key(obj=None, attribute=None, uid=None, model_name=None):
@@ -44,7 +44,7 @@ def get_cache_key(obj=None, attribute=None, uid=None, model_name=None):
 
 
 def set_cache_value(
-    obj=None, uid=None, attribute=None, value=None, model_name=None, expiration=DEFAULT_CACHE_EXPIRTATION,
+    obj=None, uid=None, attribute=None, value=None, model_name=None, expiration=DEFAULT_CACHE_EXPIRATION,
 ):
     return cache.set(
         get_cache_key(obj=obj, attribute=attribute, uid=str(uid), model_name=model_name), value, timeout=expiration,

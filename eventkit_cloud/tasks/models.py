@@ -21,7 +21,7 @@ from eventkit_cloud.core.models import (
 from eventkit_cloud.jobs.models import Job, LowerCaseCharField, DataProvider
 from eventkit_cloud.tasks.enumerations import TaskStates
 from eventkit_cloud.tasks import (
-    DEFAULT_CACHE_EXPIRTATION,
+    DEFAULT_CACHE_EXPIRATION,
     get_cache_value,
     set_cache_value,
 )
@@ -232,7 +232,7 @@ class ExportTaskRecord(UIDMixin, TimeStampedModelMixin, TimeTrackingModelMixin):
         return get_cache_value(obj=self, attribute="progress", default=0)
 
     @progress.setter
-    def progress(self, value, expiration=DEFAULT_CACHE_EXPIRTATION):
+    def progress(self, value, expiration=DEFAULT_CACHE_EXPIRATION):
         return set_cache_value(obj=self, attribute="progress", value=value, expiration=expiration)
 
     @property
@@ -242,7 +242,7 @@ class ExportTaskRecord(UIDMixin, TimeStampedModelMixin, TimeTrackingModelMixin):
         return get_cache_value(obj=self, attribute="estimated_finish", default=0)
 
     @estimated_finish.setter
-    def estimated_finish(self, value, expiration=DEFAULT_CACHE_EXPIRTATION):
+    def estimated_finish(self, value, expiration=DEFAULT_CACHE_EXPIRATION):
         return set_cache_value(obj=self, attribute="estimated_finish", value=value, expiration=expiration)
 
 
