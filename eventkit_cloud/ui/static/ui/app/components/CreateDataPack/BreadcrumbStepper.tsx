@@ -88,10 +88,6 @@ export interface State {
     loading: boolean;
     showLeaveWarningDialog: boolean;
     modified: boolean;
-    limits: {
-        max: number;
-        sizes: number[];
-    };
     estimateExplanationOpen: boolean;
     isLoading: boolean;
     selectedExports: string[];
@@ -136,10 +132,6 @@ export class BreadcrumbStepper extends React.Component<Props, State> {
             loading: false,
             showLeaveWarningDialog: false,
             modified: false,
-            limits: {
-                max: 0,
-                sizes: [],
-            },
             estimateExplanationOpen: false,
             isLoading: false,
             selectedExports: [],
@@ -154,7 +146,6 @@ export class BreadcrumbStepper extends React.Component<Props, State> {
         if (this.props.exportInfo.exportName === '') {
             this.props.setNextDisabled();
         }
-        this.props.getProviders();
         this.getEstimateLabel(0);
         this.props.getProjections();
         this.props.getFormats();
@@ -410,7 +401,6 @@ export class BreadcrumbStepper extends React.Component<Props, State> {
             case 0:
                 return (
                     <ExportAOI
-                        limits={this.state.limits}
                         walkthroughClicked={this.props.walkthroughClicked}
                         onWalkthroughReset={this.props.onWalkthroughReset}
                         selectedBaseMap={this.props.selectedBaseMap}
@@ -436,14 +426,7 @@ export class BreadcrumbStepper extends React.Component<Props, State> {
                     />
                 );
             default:
-                return (
-                    <ExportAOI
-                        limits={this.state.limits}
-                        walkthroughClicked={this.props.walkthroughClicked}
-                        onWalkthroughReset={this.props.onWalkthroughReset}
-                        mapLayers={this.props.mapLayers}
-                    />
-                );
+                return null;
         }
     }
 

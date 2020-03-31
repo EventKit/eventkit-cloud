@@ -16,6 +16,8 @@ export interface ApplicationContext {
     DATAPACK_PAGE_SIZE?: string;
     NOTIFICATIONS_PAGE_SIZE?: string;
     VERSION?: string;
+    CONTACT_URL?: string;
+    SERVE_ESTIMATES?: boolean
 }
 
 const appContext = createContext<ApplicationContext>({} as ApplicationContext);
