@@ -295,6 +295,22 @@ class DataProvider(UIDMixin, TimeStampedModelMixin, CachedModelMixin):
         config = yaml.load(self.config)
         return config.get("max_data_size", None)
 
+    def get_max_data_size(self, user=None):
+        if user is None:
+            return self.max_data_size
+
+        user_rules = UserMaxDataSize.objects.filter(provider=self, user=user)
+        group_rules = []
+        user_groups = user.groups.all()
+        if len(user_groups) > 0:
+            group_rules = GroupMaxDataSize.objects.filter(provider=self, group__in=user_groups)
+
+        size_rules = [*list(user_rules), *list(group_rules)]
+        if len(size_rules) > 0:
+            return max([_limit.max_data_size for _limit in size_rules])
+        else:
+            return self.max_data_size
+
 
 class DataProviderStatus(UIDMixin, TimeStampedModelMixin):
     """

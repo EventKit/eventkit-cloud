@@ -761,22 +761,7 @@ class DataProviderSerializer(serializers.ModelSerializer):
         request = self.context.get("request")
         if request and hasattr(request, "user"):
             user = request.user
-            user_rules = UserMaxDataSize.objects.filter(provider=obj, user=user)
-
-            group_rules = []
-            user_groups = user.groups.all()
-            if len(user_groups) > 0:
-                group_rules = GroupMaxDataSize.objects.filter(provider=obj, group__in=user_groups)
-
-            size_rules = [*list(user_rules), *list(group_rules)]
-            if len(size_rules) > 0:
-                return max([_limit.max_data_size for _limit in size_rules])
-            else:
-                return obj.max_data_size
-        if not user:
-            return obj.max_data_size
-        else:
-            return obj.max_data_size
+        return obj.get_max_data_size(user)
 
 
 class ListJobSerializer(serializers.Serializer):
