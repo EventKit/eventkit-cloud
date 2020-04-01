@@ -109,6 +109,7 @@ logger = logging.getLogger(__name__)
 # controls how api responses are rendered
 renderer_classes = (JSONRenderer, HOTExportApiRenderer)
 
+ESTIMATE_CACHE_TIMEOUT = 600
 
 class JobViewSet(viewsets.ModelViewSet):
     """
@@ -389,7 +390,7 @@ class JobViewSet(viewsets.ModelViewSet):
                             return Response(error_data, status=status_code)
 
                         # Check max area (skip for superusers)
-                        if not self.request.user.is_superuser and False:
+                        if not self.request.user.is_superuser:
                             error_data = {"errors": []}
                             for provider_task in job.provider_tasks.all():
                                 provider = provider_task.provider
@@ -2037,7 +2038,7 @@ class EstimatorView(views.APIView):
                         {"slug": slug, "size": {"value": size, "unit": "MB"}, "time": {"value": time, "unit": "seconds"}}
                     ]
                     cache_key = get_estimate_cache_key(bbox, srs, min_zoom, max_zoom, slug)
-                    cache.set(cache_key, (size, time))
+                    cache.set(cache_key, (size, time), ESTIMATE_CACHE_TIMEOUT)
             else:
                 return Response([{"detail": _("No estimates found")}], status=status.HTTP_400_BAD_REQUEST)
             return Response(payload, status=status.HTTP_200_OK)
