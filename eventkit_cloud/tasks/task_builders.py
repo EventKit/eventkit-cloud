@@ -74,6 +74,10 @@ class TaskChainBuilder(object):
         formats = [provider_task_format.slug for provider_task_format in provider_task.formats.all()]
         export_tasks = {}
 
+        # If WCS we will want geotiff...
+        if "wcs" in primary_export_task.name.lower():
+            formats += ["gtiff"]
+
         # build a list of celery tasks based on the export formats...
         for file_format in formats:
             try:
