@@ -119,7 +119,7 @@ class TestGdalUtils(TestCase):
         is_envelope_mock.return_value = False
         convert(boundary=geojson_file, input_file=in_dataset, output_file=out_dataset, fmt=fmt, task_uid=self.task_uid, projection=3857)
         get_task_command_mock.assert_called_once_with(convert_raster, in_dataset, out_dataset, fmt=fmt, creation_options=None,
-                                     band_type=band_type, dst_alpha=dstalpha, boundary=geojson_file, compress=False,
+                                     band_type=band_type, dst_alpha=dstalpha, boundary=geojson_file,
                                      src_srs=in_projection, dst_srs=out_projection, task_uid=self.task_uid)
         get_task_command_mock.reset_mock()
         self.task_process().start_process.assert_called_once_with(lambda_mock)
@@ -134,7 +134,7 @@ class TestGdalUtils(TestCase):
         convert(boundary=geojson_file, input_file=in_dataset, output_file=out_dataset, fmt=fmt, task_uid=self.task_uid)
         get_task_command_mock.assert_called_once_with(convert_raster, in_dataset, out_dataset, fmt=fmt,
                                                       creation_options=None, band_type=band_type, dst_alpha=dstalpha,
-                                                      boundary=geojson_file, compress=False, src_srs=in_projection,
+                                                      boundary=geojson_file, src_srs=in_projection,
                                                       dst_srs=in_projection, task_uid=self.task_uid)
         get_task_command_mock.reset_mock()
         self.task_process().start_process.assert_called_once_with(lambda_mock)
@@ -146,7 +146,7 @@ class TestGdalUtils(TestCase):
         convert(boundary=geojson_file, input_file=in_dataset, output_file=out_dataset, fmt=fmt, task_uid=self.task_uid)
         get_task_command_mock.assert_called_once_with(convert_raster, in_dataset, out_dataset, fmt=fmt,
                                                       creation_options=None, band_type=band_type, dst_alpha=dstalpha,
-                                                      boundary=geojson_file, compress=False, src_srs=in_projection,
+                                                      boundary=geojson_file, src_srs=in_projection,
                                                       dst_srs=in_projection, task_uid=self.task_uid)
         get_task_command_mock.reset_mock()
         self.task_process().start_process.assert_called_once_with(lambda_mock)
@@ -176,7 +176,7 @@ class TestGdalUtils(TestCase):
         get_task_command_mock.assert_called_once_with(convert_raster, in_dataset, out_dataset, fmt=fmt,
                                                       creation_options=extra_parameters,
                                                       band_type=band_type, dst_alpha=dstalpha, boundary=None,
-                                                      compress=False,  src_srs=in_projection, dst_srs=out_projection,
+                                                      src_srs=in_projection, dst_srs=out_projection,
                                                       task_uid=self.task_uid)
         get_task_command_mock.reset_mock()
         self.task_process().start_process.assert_called_once_with(lambda_mock)
@@ -193,7 +193,6 @@ class TestGdalUtils(TestCase):
         get_task_command_mock.assert_called_once_with(convert_raster, in_dataset, out_dataset, fmt=fmt,
                                                       creation_options=None,
                                                       band_type=band_type, dst_alpha=dstalpha, boundary=None,
-                                                      compress=False,
                                                       src_srs=in_projection, dst_srs=out_projection,
                                                       task_uid=self.task_uid)
         get_task_command_mock.reset_mock()
@@ -261,24 +260,21 @@ class TestGdalUtils(TestCase):
         task_uid = '123'
         input_file = '/test/test.gpkg'
         output_file = '/test/test.tif'
-        compress = True
         boundary = '/test/test.json'
         fmt = 'gtiff'
         srs = "EPSG:4326"
 
         mock_get_dataset_names.return_value = (input_file, output_file)
-        convert_raster(input_file, output_file, fmt=fmt, boundary=boundary,
-                       compress=compress, src_srs=srs, dst_srs=srs, task_uid=task_uid)
+        convert_raster(input_file, output_file, fmt=fmt, boundary=boundary, src_srs=srs, dst_srs=srs, task_uid=task_uid)
         mock_gdal.Warp.assert_called_once_with(output_file, [input_file],
                                                callback=progress_callback,
                                                callback_data={'task_uid': task_uid, 'subtask_percentage': 50},
                                                cropToCutline=True, cutlineDSName=boundary,
                                                dstSRS=srs, format=fmt, srcSRS=srs)
-        mock_gdal.Translate.assert_called_once_with(output_file, input_file, bandList=[1, 2, 3],
+        mock_gdal.Translate.assert_called_once_with(output_file, input_file,
                                                     callback=progress_callback, format=fmt,
                                                     callback_data={'task_uid': task_uid, 'subtask_percentage': 50},
-                                                    creationOptions=['COMPRESS=JPEG',
-                                                                      'PHOTOMETRIC=YCBCR',
+                                                    creationOptions=['COMPRESS=LZW',
                                                                       'TILED=YES'])
 
     @patch('eventkit_cloud.utils.gdalutils.gdal')
