@@ -8,8 +8,13 @@ import Typography from '@material-ui/core/Typography';
 import BaseDialog from '../Dialog/BaseDialog';
 import {useState} from "react";
 import {useJobValidationContext} from "./context/JobValidation";
-import {Button, IconButton} from "@material-ui/core";
-import CloseIcon from '@material-ui/icons/Clear';
+import {Button, createStyles, IconButton, Theme, withStyles} from "@material-ui/core";
+import CloseIcon from '@material-ui/icons/Close';
+
+// const jss = (theme: Eventkit.Theme & Theme) => createStyles({
+//     submissionPopover: {},
+//     submissionPopoverText: {},
+// });
 
 interface Props extends React.HTMLAttributes<HTMLElement> {
     availability: {
@@ -25,6 +30,7 @@ interface Props extends React.HTMLAttributes<HTMLElement> {
     supportsZoomLevels: boolean;
     baseStyle?: any;
     iconStyle?: any;
+    classes: { [className: string]: string };
 }
 
 enum STATUS {
@@ -42,23 +48,32 @@ ProviderStatusCheck.defaultProps = { availability: { status: '', type: '', messa
 
 function ProviderStatusCheck(props: Props) {
     const { areEstimatesLoading, providerHasEstimates } = props;
-    const [ anchorElement, setAnchor ] = useState(null);
-    const [ open, setOpen ] = useState(true);
+    const [ anchorElement, setAnchor ] = React.useState(null);
+    const [ open, setOpen ] = useState(false);
     const [ isSubmissionOpen, setSubmissionOpen ] = useState(false);
+    const divRef = React.useRef();
+    const { classes } = props;
 
     function handlePopoverOpen(e: React.MouseEvent<HTMLElement>) {
-        setAnchor(e.currentTarget );
+        setAnchor(e.currentTarget);
     }
 
     function handlePopoverClose() {
+        // e.preventDefault();
+        // e.stopPropagation();
         setAnchor(null);
+        setOpen(false);
         console.log('HITTING FINAL CLOSE EVENT')
     }
 
+    function handleClick(e: React.MouseEvent<HTMLElement>) {
+        setAnchor(e.currentTarget);
+        // setOpen(true)
+      }
+
     function handleClose() {
         // e.preventDefault();
-        alert("Alerted Browser Close");
-
+        // e.stopPropagation();
         setAnchor(null);
         console.log('HITTING FIRST CLICK EVENT')
         // setOpen(false);
@@ -165,15 +180,15 @@ function ProviderStatusCheck(props: Props) {
     }
 
     let submissionPopover;
-    if (!!handleSubmissionOpen) {
+    if (!!isSubmissionOpen) {
         submissionPopover = (
-            <div className="qa-ProviderStatusIcon-submission-popover">
+            <div className={classes.submissionPopover}>
                 <BaseDialog
                     show={isSubmissionOpen}
                     // title={provider.license.name}
                     onClose={handleSubmissionClose}
                 >
-                    <div className="qa-ProviderStatusIcon-submission-popover-text">Your AOI increase request has been submitted.</div>
+                    <div className={classes.submissionPopoverText}>Your AOI increase request has been submitted.</div>
                     <Button>OK</Button>
                 </BaseDialog>
             </div>
@@ -181,6 +196,8 @@ function ProviderStatusCheck(props: Props) {
     }
 
     let popOverBlock;
+    const openEl = Boolean(anchorElement);
+    const id = open ? 'simple-popover' : undefined;
     if ((status !== STATUS.OVER_AREA_SIZE) && (avail.type !== 'AOI TOO LARGE')) {
         popOverBlock = (
             <div style={style.base} className="qa-ProviderStatusIcon">
@@ -223,17 +240,19 @@ function ProviderStatusCheck(props: Props) {
                 <StatusIcon
                     style={style.icon}
                     title={props.availability.message}
-                    onClick={handlePopoverOpen}
+                    onClick={handleClick}
+                    // onClick={handlePopoverOpen}
                     {...otherProps}
                 />
                 <Popover
+                    id={id}
                     style={{pointerEvents: 'none'}}
                     PaperProps={{
                         style: {padding: '16px'},
                     }}
-                    open={!!anchorElement}
+                    open={openEl}
                     anchorEl={anchorElement}
-                    onClose={handlePopoverClose}
+                    onClose={handleClose}
                     anchorOrigin={{
                         vertical: 'top',
                         horizontal: 'center',
@@ -249,18 +268,23 @@ function ProviderStatusCheck(props: Props) {
                             <IconButton
                                 className='qa-ProviderStatusIcon-icon-btn'
                                 type='button'
-                                onClick={handlePopoverClose}
-                                // onClick={() => handlePopoverClose()}
+                                onChange={handleClose}
+
+                                // issue is anchor element is the status icon, not the icon btn
+                                // onClick={()=> console.log("HITTING ICON BTN")}
                             >
-                                <CloseIcon className='qa-ProviderStatusIcon-close-icon'/>
+                                <CloseIcon
+                                    className='qa-ProviderStatusIcon-close-icon'
+                                />
                             </IconButton>
                         </Typography>
                         <div>{message}</div>
+                        <br/>
                         <span
+                            className="qa-ProviderStatusIcon-submission-popover-title"
                             role="button"
                             onClick={handleSubmissionOpen}
                             onKeyPress={handleSubmissionOpen}
-                            className="qa-ProviderStatusIcon-submission-popover-title"
                         >
                             <strong>Request Larger AOI Limit</strong>
                         </span>
@@ -277,5 +301,5 @@ function ProviderStatusCheck(props: Props) {
         </div>
     );
 }
-
+// export default withStyles<any, any>(jss)(ProviderStatusCheck);
 export default ProviderStatusCheck;
