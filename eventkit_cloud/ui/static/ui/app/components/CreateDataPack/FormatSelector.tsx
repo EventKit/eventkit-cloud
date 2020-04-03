@@ -8,7 +8,7 @@ import IndeterminateCheckBoxIcon from '@material-ui/icons/IndeterminateCheckBox'
 import {Compatibility} from '../../utils/enums';
 import {CompatibilityInfo} from "./ExportInfo";
 import {getDefaultFormat} from "../../utils/generic";
-import InfoDialog from "../common/InfoDialog";
+import InfoDialog from "../Dialog/InfoDialog";
 
 const jss = (theme: Theme & Eventkit.Theme) => createStyles({
     container: {

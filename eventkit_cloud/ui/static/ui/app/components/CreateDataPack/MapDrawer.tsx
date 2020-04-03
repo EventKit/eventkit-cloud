@@ -24,6 +24,8 @@ import Clear from '@material-ui/icons/Clear';
 import theme from "../../styles/eventkit_theme";
 import FootprintDisplay from "./FootprintDisplay";
 import {MapLayer} from "./CreateExport";
+import RequestDataSource from "./RequestDataSource";
+import {useEffect, useState} from "react";
 
 
 const jss = (theme: Theme & Eventkit.Theme) => createStyles({
@@ -188,93 +190,73 @@ export interface Props {
     classes: { [className: string]: string };
 }
 
-export interface State {
-    selectedTab: any;
-    selectedBaseMap: number;
-    sources: BaseMapSource[];
-    expandedSources: BaseMapSource[];
-}
+MapDrawer.defaultProps = { sources: [] } as Props;
 
-export class MapDrawer extends React.Component<Props, State> {
-    static contextTypes = {
-        config: PropTypes.object,
-    };
-    static defaultProps = {sources: []};
+export function MapDrawer(props: Props) {
 
-    constructor(props: Props) {
-        super(props);
-        this.updateBaseMap = this.updateBaseMap.bind(this);
-        this.handleExpandClick = this.handleExpandClick.bind(this);
+    const { providers, classes } = props;
+    const [expandedSources, setExpandedSources] = useState([]);
+    const [selectedTab, setSelectedTab] = useState(false);
+    const [selectedBaseMap, setBaseMap] = useState(-1);
+    const [ requestDataSourceOpen, setRequestDataSourceOpen ] = useState(true);
 
-        this.state = {
-            expandedSources: [],
-            selectedTab: false,
-            selectedBaseMap: -1,
-            sources: [
-                ...props.sources,
-            ]
-        };
-    }
 
-    private updateBaseMap(newBaseMapId: number, sources) {
-        this.setState({selectedBaseMap: newBaseMapId});
+    function updateBaseMap(newBaseMapId: number, sources) {
+        setBaseMap(newBaseMapId);
         let mapLayer = {} as MapLayer;
         if ((!!newBaseMapId || newBaseMapId === 0) && newBaseMapId !== -1) {
-            mapLayer = {...sources[newBaseMapId]}.mapLayer;
+            mapLayer = { ...sources[newBaseMapId] }.mapLayer;
         }
-        this.props.updateBaseMap(mapLayer);
+        props.updateBaseMap(mapLayer);
     }
 
-    handleChange = (event, newValue) => {
-        if (this.state.selectedTab === newValue) {
-            this.setState({selectedTab: false});
+    function handleChange(event, newValue) {
+        if (selectedTab === newValue) {
+            setSelectedTab(false );
         } else {
-            this.setState({selectedTab: newValue});
+            setSelectedTab(newValue);
         }
-    };
+    }
 
-    handleExpandClick(event, sources) {
-        const selectedSources = [...this.props.sources] || [];
+    function handleExpandClick(event, sources) {
+        const selectedSources = [...props.sources] || [];
         let index;
         if (event && event.target.checked) {
             let selectedSource = event;
-                if (selectedSources.indexOf(selectedSource) <=0) {
-                    selectedSources.push(selectedSource)
-                } else {
-                    index = selectedSources.indexOf(selectedSource);
-                    if (index >= 0) {
-                        selectedSources.splice(index, 1);
-                    }
+            if (selectedSources.indexOf(selectedSource) <= 0) {
+                selectedSources.push(selectedSource)
+            } else {
+                index = selectedSources.indexOf(selectedSource);
+                if (index >= 0) {
+                    selectedSources.splice(index, 1);
                 }
+            }
         } else {
             return null
         }
-        this.setState({expandedSources: selectedSources});
-        this.updateBaseMap(Number(event.target.value), sources);
-    };
+        setExpandedSources(selectedSources);
+        updateBaseMap(Number(event.target.value), sources);
+    }
 
-    showFootprintData(ix: number, sources) {
-        if (this.state.expandedSources && this.state.selectedBaseMap === ix) {
+    function showFootprintData(ix: number, sources) {
+        if (expandedSources && selectedBaseMap === ix) {
             const source = sources[ix];
             if (!!source.footprintsLayer) {
                 return (
                     <FootprintDisplay
                         footprintsLayer={source.footprintsLayer}
-                        addFootprintsLayer={this.props.addFootprintsLayer}
-                        removeFootprintsLayer={this.props.removeFootprintsLayer}
+                        addFootprintsLayer={props.addFootprintsLayer}
+                        removeFootprintsLayer={props.removeFootprintsLayer}
                     />
                 )
             }
         }
     }
 
-    render() {
-        const {classes} = this.props;
-        const {selectedTab, selectedBaseMap} = this.state;
-        const sources = [
-            ...this.state.sources,
-            // Filter for providers with a preview_url AND marked to display
-            ...this.props.providers.filter(provider => !!provider.preview_url && !!provider.display).map(provider => {
+    const [ sources, setSources ] = useState([]);
+    useEffect(() => {
+        setSources([
+            ...providers.filter(provider => !!provider.preview_url && !!provider.display).map(provider => {
                 let footprintsLayer;
                 if (!!provider.footprint_url) {
                     footprintsLayer = {
@@ -293,134 +275,136 @@ export class MapDrawer extends React.Component<Props, State> {
                     type: provider.type,
                     thumbnail_url: provider.thumbnail_url,
                 } as BaseMapSource;
-            })];
-        const drawerOpen = !!selectedTab;
+            })
+        ])
+    }, [providers]);
 
-        return (
+    const drawerOpen = !!selectedTab;
+
+    return (
+        <div
+            className={classes.container}
+        >
             <div
-                className={classes.container}
+                className={classes.flexContainer}
+                style={{ zIndex: 5, marginRight: (drawerOpen) ? '250px' : '0px' }}
             >
-                <div
-                    className={classes.flexContainer}
-                    style={{zIndex: 5, marginRight: (drawerOpen) ? '250px' : '0px'}}
+                <Drawer
+                    className="qa-MapDrawer-Drawer"
+                    variant="persistent"
+                    anchor="right"
+                    open={drawerOpen}
+                    style={{ flexShrink: 0 }}
+                    PaperProps={{
+                        className: classes.drawerPaper,
+                        // style: {visibility: selectedTab === 'basemap' ? 'visible' as 'visible' : 'hidden' as 'hidden'},
+                    }}
                 >
-                    <Drawer
-                        className="qa-MapDrawer-Drawer"
-                        variant="persistent"
-                        anchor="right"
-                        open={drawerOpen}
-                        style={{flexShrink: 0}}
-                        PaperProps={{
-                            className: classes.drawerPaper,
-                            // style: {visibility: selectedTab === 'basemap' ? 'visible' as 'visible' : 'hidden' as 'hidden'},
-                        }}
+                    <VerticalTabs
+                        className={classes.tabs}
+                        value={(selectedTab) ? selectedTab : false}
+                        onChange={handleChange}
                     >
-                        <VerticalTabs
-                            className={classes.tabs}
-                            value={(selectedTab) ? selectedTab : false}
-                            onChange={this.handleChange}
-                        >
-                            <Tab
-                                value="basemap"
-                                classes={{
-                                    root: classes.tab,
-                                    selected: classes.selected,
-                                }}
-                                label={(
-                                    <Card className={classes.tabHeader}>
-                                        <Icon classes={{root: classes.iconRoot}}>
-                                            <img
-                                                className={classes.imageIcon}
-                                                src={theme.eventkit.images.basemap}
-                                                alt="Basemap"
-                                                title="Basemap"
-                                            />
-                                        </Icon>
-                                    </Card>)}
-                            />
-                        </VerticalTabs>
-                        <div style={{display: 'flex'}}>
-                            <strong className={classes.heading}>Select a basemap</strong>
-                            <Clear className={classes.clear} color="primary" onClick={(event) => {
-                                this.setState({selectedTab: false})
-                            }}/>
-                        </div>
-                        <Divider style={{margin: '0 5px 0 5px'}}/>
-                        <div className={classes.scrollBar}>
-                            <CustomScrollbar>
-                                <List style={{padding: '10px'}}>
-                                        {sources.map((source, ix) =>
-                                            (
-                                                <div key={ix}>
-                                                    <ListItem className={`${classes.listItem} ${classes.noPadding}`}>
-                                                    <span style={{marginRight: '2px'}}>
+                        <Tab
+                            value="basemap"
+                            classes={{
+                                root: classes.tab,
+                                selected: classes.selected,
+                            }}
+                            label={(
+                                <Card className={classes.tabHeader}>
+                                    <Icon classes={{ root: classes.iconRoot }}>
+                                        <img
+                                            className={classes.imageIcon}
+                                            src={theme.eventkit.images.basemap}
+                                            alt="Basemap"
+                                            title="Basemap"
+                                        />
+                                    </Icon>
+                                </Card>)}
+                        />
+                    </VerticalTabs>
+                    <div style={{ display: 'flex' }}>
+                        <strong className={classes.heading}>Select a basemap</strong>
+                        <Clear className={classes.clear} color="primary" onClick={(event) => setSelectedTab(false)}/>
+                    </div>
+                    <Divider style={{ margin: '0 5px 0 5px' }}/>
+                    <div className={classes.scrollBar}>
+                        <CustomScrollbar>
+                            <List style={{ padding: '10px' }}>
+                                {sources.map((source, ix) =>
+                                    (
+                                        <div key={ix}>
+                                            <ListItem className={`${classes.listItem} ${classes.noPadding}`}>
+                                                    <span style={{ marginRight: '2px' }}>
                                                         <Radio
-                                                            checked={this.state.selectedBaseMap === ix}
+                                                            checked={selectedBaseMap === ix}
                                                             value={ix}
-                                                            classes={{root: classes.checkbox, checked: classes.checked,
+                                                            classes={{
+                                                                root: classes.checkbox, checked: classes.checked,
                                                             }}
-                                                            onClick={(e)=> this.handleExpandClick(e, sources)}
+                                                            onClick={(e) => handleExpandClick(e, sources)}
                                                             name="source"
                                                         />
                                                     </span>
-                                                        <div>
-                                                            <div style={{display: 'flex'}}>
-                                                                {source.thumbnail_url &&
-                                                                <CardMedia
-                                                                    className={classes.thumbnail}
-                                                                    image={source.thumbnail_url}
-                                                                />
-                                                                }
-                                                                <ListItemText
-                                                                    className={classes.noPadding}
-                                                                    disableTypography
-                                                                    primary={
-                                                                        <Typography
-                                                                            className={classes.buttonLabel}
-                                                                        >
-                                                                            {source.name}
-                                                                        </Typography>
-                                                                    }
-                                                                />
-                                                            </div>
-                                                            <div className={classes.buttonLabelSecondary}>
-                                                                {source.type.toUpperCase()}
-                                                            </div>
-                                                        </div>
-                                                    </ListItem>
-                                                    <div
-                                                        className={classes.footprint_options}
-                                                    >
-                                                        {this.showFootprintData(ix, sources)}
+                                                <div>
+                                                    <div style={{ display: 'flex' }}>
+                                                        {source.thumbnail_url &&
+                                                        <CardMedia
+                                                            className={classes.thumbnail}
+                                                            image={source.thumbnail_url}
+                                                        />
+                                                        }
+                                                        <ListItemText
+                                                            className={classes.noPadding}
+                                                            disableTypography
+                                                            primary={
+                                                                <Typography
+                                                                    className={classes.buttonLabel}
+                                                                >
+                                                                    {source.name}
+                                                                </Typography>
+                                                            }
+                                                        />
+                                                    </div>
+                                                    <div className={classes.buttonLabelSecondary}>
+                                                        {source.type.toUpperCase()}
                                                     </div>
                                                 </div>
-                                            ))
-                                        }
-                                </List>
-                            </CustomScrollbar>
-                        </div>
-                        <Divider style={{margin: '0 5px 0 5px'}}/>
-                        <div
-                            className={classes.stickyRow}
+                                            </ListItem>
+                                            <div
+                                                className={classes.footprint_options}
+                                            >
+                                                {showFootprintData(ix, sources)}
+                                            </div>
+                                        </div>
+                                    ))
+                                }
+                            </List>
+                        </CustomScrollbar>
+                    </div>
+                    <Divider style={{ margin: '0 5px 0 5px' }}/>
+                    <div
+                        className={classes.stickyRow}
+                    >
+                        <RequestDataSource open={requestDataSourceOpen} onClose={() => setRequestDataSourceOpen(false)}/>
+                        <Button
+                            className={classes.button}
+                            color="primary"
+                            variant="contained"
+                            disabled={selectedBaseMap === -1 || (!selectedBaseMap && selectedBaseMap !== 0)}
+                            onClick={() => {
+                                // Send empty string to clear base map url.
+                                updateBaseMap(-1, sources);
+                            }}
                         >
-                            <Button
-                                className={classes.button}
-                                color="primary"
-                                variant="contained"
-                                disabled={selectedBaseMap === -1 || (!selectedBaseMap && selectedBaseMap !== 0)}
-                                onClick={() => {
-                                    // Send empty string to clear base map url.
-                                    this.updateBaseMap(-1, sources);
-                                }}
-                            >
-                                Reset
-                            </Button>
-                        </div>
-                    </Drawer>
-                </div>
+                            Reset
+                        </Button>
+                    </div>
+                </Drawer>
             </div>
-        );
-    }
+        </div>
+    );
 }
 
 function mapStateToProps(state) {

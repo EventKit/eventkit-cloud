@@ -9,7 +9,7 @@ import CustomScrollbar from '../CustomScrollbar';
 import CustomTableRow from '../CustomTableRow';
 import { joyride } from '../../joyride.config';
 import {isZoomLevelInRange, supportsZoomLevels} from "../../utils/generic";
-import InfoDialog from "../common/InfoDialog";
+import InfoDialog from "../Dialog/InfoDialog";
 import {Link} from "@material-ui/core";
 
 const jss = (theme: Eventkit.Theme & Theme) => createStyles({

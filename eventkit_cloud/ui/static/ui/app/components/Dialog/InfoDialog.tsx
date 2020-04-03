@@ -1,6 +1,6 @@
 import * as React from 'react';
 import Info from '@material-ui/icons/Info';
-import BaseDialog from "../Dialog/BaseDialog";
+import BaseDialog from "./BaseDialog";
 
 interface Props {
     title?: string;
