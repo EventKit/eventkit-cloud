@@ -7,14 +7,33 @@ import Popover from '@material-ui/core/Popover';
 import Typography from '@material-ui/core/Typography';
 import BaseDialog from '../Dialog/BaseDialog';
 import {useState} from "react";
-import {useJobValidationContext} from "./context/JobValidation";
-import {Button, createStyles, IconButton, Theme, withStyles} from "@material-ui/core";
+import {createStyles, IconButton, withStyles} from "@material-ui/core";
 import CloseIcon from '@material-ui/icons/Close';
+import axios from "axios";
+import {featureToBbox, WGS84} from "../../utils/mapUtils";
 
-// const jss = (theme: Eventkit.Theme & Theme) => createStyles({
-//     submissionPopover: {},
-//     submissionPopoverText: {},
-// });
+const jss = (theme: any) => createStyles({
+    submissionPopover: {
+        textAlign: 'center',
+        marginTop: '-5px',
+    },
+    submissionPopoverText: {
+        display: 'inline-block',
+        color: theme.eventkit.colors.black,
+    },
+    iconBtn: {
+        float: 'right',
+        color: theme.eventkit.colors.primary,
+        marginTop: '-7px',
+    },
+    closeIcon: {
+        backgroundColor: theme.eventkit.colors.white,
+    },
+    popoverTitle: {
+        color: theme.eventkit.colors.primary,
+        fontWeight: 'bolder',
+    }
+});
 
 interface Props extends React.HTMLAttributes<HTMLElement> {
     availability: {
@@ -22,7 +41,9 @@ interface Props extends React.HTMLAttributes<HTMLElement> {
         type: string;
         message: string;
         slug: string;
-    };
+    }
+    provider: Eventkit.Provider;
+    geojson: GeoJSON.FeatureCollection;
     overSize: boolean;
     overArea: boolean;
     providerHasEstimates: boolean;
@@ -47,11 +68,11 @@ enum STATUS {
 ProviderStatusCheck.defaultProps = { availability: { status: '', type: '', message: '' } } as Props;
 
 function ProviderStatusCheck(props: Props) {
+    console.log('HITTING PROVIDER STATUS CHECK COMP')
     const { areEstimatesLoading, providerHasEstimates } = props;
     const [ anchorElement, setAnchor ] = React.useState(null);
     const [ open, setOpen ] = useState(false);
     const [ isSubmissionOpen, setSubmissionOpen ] = useState(false);
-    const divRef = React.useRef();
     const { classes } = props;
 
     function handlePopoverOpen(e: React.MouseEvent<HTMLElement>) {
@@ -59,27 +80,15 @@ function ProviderStatusCheck(props: Props) {
     }
 
     function handlePopoverClose() {
-        // e.preventDefault();
-        // e.stopPropagation();
         setAnchor(null);
-        setOpen(false);
-        console.log('HITTING FINAL CLOSE EVENT')
     }
-
-    function handleClick(e: React.MouseEvent<HTMLElement>) {
-        setAnchor(e.currentTarget);
-        // setOpen(true)
-      }
 
     function handleClose() {
-        // e.preventDefault();
-        // e.stopPropagation();
         setAnchor(null);
-        console.log('HITTING FIRST CLICK EVENT')
-        // setOpen(false);
     }
 
-    function handleSubmissionOpen() {
+    function handleSubmissionOpen(e: any) {
+        // call to backend api here: send all three pieces of info in request
         setSubmissionOpen(true);
     }
 
@@ -179,27 +188,11 @@ function ProviderStatusCheck(props: Props) {
         }
     }
 
-    let submissionPopover;
-    if (!!isSubmissionOpen) {
-        submissionPopover = (
-            <div className={classes.submissionPopover}>
-                <BaseDialog
-                    show={isSubmissionOpen}
-                    // title={provider.license.name}
-                    onClose={handleSubmissionClose}
-                >
-                    <div className={classes.submissionPopoverText}>Your AOI increase request has been submitted.</div>
-                    <Button>OK</Button>
-                </BaseDialog>
-            </div>
-        );
-    }
-
-    let popOverBlock;
+    let popoverBlock;
     const openEl = Boolean(anchorElement);
     const id = open ? 'simple-popover' : undefined;
     if ((status !== STATUS.OVER_AREA_SIZE) && (avail.type !== 'AOI TOO LARGE')) {
-        popOverBlock = (
+        popoverBlock = (
             <div style={style.base} className="qa-ProviderStatusIcon">
                 <StatusIcon
                     style={style.icon}
@@ -235,18 +228,16 @@ function ProviderStatusCheck(props: Props) {
             </div>
         )
     } else {
-        popOverBlock = (
+        popoverBlock = (
             <div style={style.base} className="qa-ProviderStatusIcon">
                 <StatusIcon
                     style={style.icon}
                     title={props.availability.message}
-                    onClick={handleClick}
-                    // onClick={handlePopoverOpen}
+                    onClick={handlePopoverOpen}
                     {...otherProps}
                 />
                 <Popover
                     id={id}
-                    style={{pointerEvents: 'none'}}
                     PaperProps={{
                         style: {padding: '16px'},
                     }}
@@ -262,33 +253,38 @@ function ProviderStatusCheck(props: Props) {
                         horizontal: 'center',
                     }}
                 >
-                    <div style={{maxWidth: 400}}>
+                    <div style={{maxWidth: 400, width: 350}}>
                         <Typography variant="h6" gutterBottom style={{fontWeight: 600}}>
                             {title}
                             <IconButton
-                                className='qa-ProviderStatusIcon-icon-btn'
+                                className={classes.iconBtn}
                                 type='button'
-                                onChange={handleClose}
-
-                                // issue is anchor element is the status icon, not the icon btn
-                                // onClick={()=> console.log("HITTING ICON BTN")}
+                                onClick={handlePopoverClose}
                             >
-                                <CloseIcon
-                                    className='qa-ProviderStatusIcon-close-icon'
-                                />
+                                <CloseIcon className={classes.closeIcon}/>
                             </IconButton>
                         </Typography>
                         <div>{message}</div>
                         <br/>
                         <span
-                            className="qa-ProviderStatusIcon-submission-popover-title"
+                            className={classes.popoverTitle}
                             role="button"
                             onClick={handleSubmissionOpen}
                             onKeyPress={handleSubmissionOpen}
                         >
-                            <strong>Request Larger AOI Limit</strong>
+                            Request Larger AOI Limit
                         </span>
-                        {submissionPopover}
+                        <span>
+                            <BaseDialog
+                                className={classes.submissionPopover}
+                                show={isSubmissionOpen}
+                                onClose={handleSubmissionClose}
+                            >
+                                <div className={classes.submissionPopoverText}>
+                                    <strong>Your AOI increase request has been submitted.</strong>
+                                </div>
+                            </BaseDialog>
+                        </span>
                     </div>
                 </Popover>
             </div>
@@ -297,9 +293,8 @@ function ProviderStatusCheck(props: Props) {
 
     return (
         <div style={style.base} className="qa-ProviderStatusIcon" >
-            {popOverBlock}
+            {popoverBlock}
         </div>
     );
 }
-// export default withStyles<any, any>(jss)(ProviderStatusCheck);
-export default ProviderStatusCheck;
+export default withStyles<any, any>(jss)(ProviderStatusCheck);
