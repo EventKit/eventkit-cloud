@@ -83,7 +83,7 @@ function EstimateContainer(props: Props) {
         // selection then the bbox would need to be calculated for it.
         if (SERVE_ESTIMATES) {
             if (Object.keys(aoiInfo.geojson).length === 0) {
-                return null;
+                return undefined;
             }
             const bbox = featureToBbox(aoiInfo.geojson.features[0], WGS84);
             const estimates = await getEstimate(provider, bbox);
@@ -91,9 +91,9 @@ function EstimateContainer(props: Props) {
                 return { time: estimates.time, size: estimates.size } as Eventkit.Store.Estimates;
             }
             return {
-                size: null,
+                size: undefined,
                 slug: provider.slug,
-                time: null,
+                time: undefined,
             };
         }
         return undefined;
