@@ -71,9 +71,9 @@ function EstimateContainer(props: Props) {
             return response.data[0];
         }).catch(() => {
             return {
-                size: null,
+                size: undefined,
                 slug: provider.slug,
-                time: null,
+                time: undefined,
             };
         });
     }
