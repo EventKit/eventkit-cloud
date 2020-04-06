@@ -300,14 +300,8 @@ class DataProvider(UIDMixin, TimeStampedModelMixin, CachedModelMixin):
             return self.max_data_size
 
         user_rules = UserMaxDataSize.objects.filter(provider=self, user=user)
-        group_rules = []
-        user_groups = user.groups.all()
-        if len(user_groups) > 0:
-            group_rules = GroupMaxDataSize.objects.filter(provider=self, group__in=user_groups)
-
-        size_rules = [*list(user_rules), *list(group_rules)]
-        if len(size_rules) > 0:
-            return max([_limit.max_data_size for _limit in size_rules])
+        if len(user_rules) > 0:
+            return max([_limit.max_data_size for _limit in user_rules])
         else:
             return self.max_data_size
 
@@ -571,16 +565,6 @@ class UserMaxDataSize(MaxDataSizeRule):
 
     def __str__(self):
         return f'{self.user.username} max for {self.provider.slug}'
-
-
-class GroupMaxDataSize(MaxDataSizeRule):
-    group = models.ForeignKey(Group, on_delete=models.CASCADE)
-
-    class Meta:
-        unique_together = ('provider', 'group')
-
-    def __str__(self):
-        return f'{self.group.name} max for {self.provider.slug}'
 
 
 def convert_polygon(geom=None):

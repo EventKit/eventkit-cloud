@@ -39,7 +39,6 @@ from eventkit_cloud.jobs.models import (
     UserLicense,
     UserJobActivity,
     UserMaxDataSize,
-    GroupMaxDataSize,
 )
 from eventkit_cloud.tasks.models import (
     ExportRun,
