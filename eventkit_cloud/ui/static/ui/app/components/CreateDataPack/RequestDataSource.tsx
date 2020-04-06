@@ -2,12 +2,14 @@ import BaseDialog from "../Dialog/BaseDialog";
 import * as React from 'react';
 import Button from "@material-ui/core/Button";
 import CustomTableRow from "../CustomTableRow";
-import moment from "moment";
+import axios from "axios";
 import CustomTextField from "../CustomTextField";
 import {createStyles, Theme, withStyles} from "@material-ui/core";
-import {useState} from "react";
+import {useEffect, useState} from "react";
 import {Dispatch} from "react";
 import {SetStateAction} from "react";
+import {getCookie} from "../../utils/generic";
+import {useAsyncRequest, useDebouncedSetter, useEffectOnMount} from "../../utils/hooks";
 
 interface Props {
     open: boolean;
@@ -28,14 +30,25 @@ function NoFlexRow(props: React.PropsWithChildren<any>) {
     );
 }
 
+const CancelToken = axios.CancelToken;
+const source = CancelToken.source();
+
+const csrfmiddlewaretoken = getCookie('csrftoken');
 export function RequestDataSource(props: Props) {
     const { open, onClose, classes } = props;
 
+    const [{ status, response }, makeRequest] = useAsyncRequest({
+        url: `/api/providers`,
+        method: 'get',
+        headers: { 'X-CSRFToken': csrfmiddlewaretoken },
+        cancelToken: source.token,
+    });
     const [name, setName] = useState(undefined);
     const [url, setUrl] = useState(undefined);
     const [description, setDescription] = useState(undefined);
+    const nameDebouncer = useDebouncedSetter(setName);
 
-    function onChange(e: React.ChangeEvent<HTMLInputElement>, setter: Dispatch<SetStateAction<any>>) {
+    function onChange(e: any, setter: Dispatch<SetStateAction<any>>) {
         setter(e.target.value);
     }
 
@@ -52,60 +65,71 @@ export function RequestDataSource(props: Props) {
                     key="close"
                     variant="contained"
                     color="primary"
-                    onClick={props.onClose}
+                    onClick={makeRequest}
                 >
                     Submit
                 </Button>
             )]}
         >
-            <div
-                id="mainHeading"
-                className={`qa-RequestDataSource-heading ${classes.heading}`}
-            >
-                Please provide as much detail as possible.
-            </div>
-            <NoFlexRow
-                title="Source name"
-            >
-                <CustomTextField
-                    className={`qa-RequestDataSource-input-name ${classes.textField}`}
-                    id="Name"
-                    name="sourceName"
-                    onChange={(e) => onChange(e, setName)}
-                    placeholder="Source Name"
-                    InputProps={{ className: classes.input }}
-                    fullWidth
-                    maxLength={100}
-                />
-            </NoFlexRow>
-            <NoFlexRow
-                title="Source Link (URL)"
-            >
-                <CustomTextField
-                    className={`qa-RequestDataSource-input-url ${classes.textField}`}
-                    id="url"
-                    name="sourceUrl"
-                    onChange={(e) => onChange(e, setUrl)}
-                    placeholder="Source Name"
-                    InputProps={{ className: classes.input }}
-                    fullWidth
-                    maxLength={256}
-                />
-            </NoFlexRow>
-            <NoFlexRow
-                title="Description"
-            >
-                <CustomTextField
-                    className={`qa-RequestDataSource-input-description ${classes.textField}`}
-                    id="description"
-                    name="sourceDescription"
-                    onChange={(e) => onChange(e, setDescription)}
-                    placeholder="Source Name"
-                    InputProps={{ className: classes.input }}
-                    fullWidth
-                    maxLength={1000}
-                />
-            </NoFlexRow>
+            {!status && (
+                <>
+                    <div
+                        id="mainHeading"
+                        className={`qa-RequestDataSource-heading ${classes.heading}`}
+                    >
+                        Info description placeholder.
+                    </div>
+                    <NoFlexRow
+                        title="Source name"
+                    >
+                        <CustomTextField
+                            className={`qa-RequestDataSource-input-name ${classes.textField}`}
+                            id="Name"
+                            name="sourceName"
+                            onChange={(e) => onChange(e, nameDebouncer)}
+                            placeholder="Source Name"
+                            InputProps={{ className: classes.input }}
+                            fullWidth
+                            maxLength={100}
+                        />
+                    </NoFlexRow>
+                    <NoFlexRow
+                        title="Source Link"
+                    >
+                        <CustomTextField
+                            className={`qa-RequestDataSource-input-url ${classes.textField}`}
+                            id="url"
+                            name="sourceUrl"
+                            onChange={(e) => onChange(e, setUrl)}
+                            placeholder="Source Link"
+                            InputProps={{ className: classes.input }}
+                            fullWidth
+                            maxLength={256}
+                        />
+                    </NoFlexRow>
+                    <NoFlexRow
+                        title="Description"
+                    >
+                        <CustomTextField
+                            className={`qa-RequestDataSource-input-description ${classes.textField}`}
+                            id="description"
+                            name="sourceDescription"
+                            onChange={(e) => onChange(e, setDescription)}
+                            placeholder="Description"
+                            InputProps={{ className: classes.input }}
+                            fullWidth
+                            multiline
+                            rows="4"
+                            maxLength={1000}
+                        />
+                    </NoFlexRow>
+                </>
+            )}
+            {status && !!response(
+                <div>
+                {response.data.toString()}
+                </div>
+            )}
         </BaseDialog>
     );
 }
