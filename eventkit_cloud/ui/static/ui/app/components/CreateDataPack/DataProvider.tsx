@@ -501,6 +501,9 @@ export function DataProvider(props: Props) {
                         providerHasEstimates={providerHasEstimates}
                         areEstimatesLoading={areEstimatesLoading}
                         supportsZoomLevels={supportsZoomLevels(props.provider)}
+                        geojson={props.geojson}
+                        providerInfo={props.providerInfo}
+                        areaStr={props.exportInfo.areaStr}
                     />
                     {isOpen ?
                         <ExpandLess

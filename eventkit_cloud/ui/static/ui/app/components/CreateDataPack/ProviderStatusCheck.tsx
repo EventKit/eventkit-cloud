@@ -7,31 +7,32 @@ import Popover from '@material-ui/core/Popover';
 import Typography from '@material-ui/core/Typography';
 import BaseDialog from '../Dialog/BaseDialog';
 import {useState} from "react";
-import {createStyles, IconButton, withStyles} from "@material-ui/core";
+import {createStyles, IconButton, Theme, withStyles} from "@material-ui/core";
 import CloseIcon from '@material-ui/icons/Close';
 import axios from "axios";
 import {featureToBbox, WGS84} from "../../utils/mapUtils";
+import {getCookie} from "../../utils/generic";
 
-const jss = (theme: any) => createStyles({
+const jss = (theme: Eventkit.Theme & Theme) => createStyles({
     submissionPopover: {
-        textAlign: 'center',
+        textAlign: 'center' as 'center',
         marginTop: '-5px',
     },
     submissionPopoverText: {
         display: 'inline-block',
-        color: theme.eventkit.colors.black,
+        // color: theme.eventkit.colors.black,
     },
     iconBtn: {
-        float: 'right',
-        color: theme.eventkit.colors.primary,
+        float: 'right' as 'right',
+        // color: theme.eventkit.colors.primary,
         marginTop: '-7px',
     },
     closeIcon: {
-        backgroundColor: theme.eventkit.colors.white,
+        // backgroundColor: theme.eventkit.colors.white,
     },
     popoverTitle: {
-        color: theme.eventkit.colors.primary,
-        fontWeight: 'bolder',
+        // color: theme.eventkit.colors.primary,
+        fontWeight: 300,
     }
 });
 
@@ -42,16 +43,21 @@ interface Props extends React.HTMLAttributes<HTMLElement> {
         message: string;
         slug: string;
     }
+    // read more into how aoiArea is used
     provider: Eventkit.Provider;
     geojson: GeoJSON.FeatureCollection;
     overSize: boolean;
     overArea: boolean;
+    areaStr: string;
+    providerInfo: Eventkit.Store.ProviderInfo;
+    estimateDataSize: Eventkit.Store.EstimateData;
     providerHasEstimates: boolean;
     areEstimatesLoading: boolean;
     supportsZoomLevels: boolean;
     baseStyle?: any;
     iconStyle?: any;
     classes: { [className: string]: string };
+    theme: Eventkit.Theme & Theme;
 }
 
 enum STATUS {
@@ -67,13 +73,48 @@ enum STATUS {
 
 ProviderStatusCheck.defaultProps = { availability: { status: '', type: '', message: '' } } as Props;
 
+const CancelToken = axios.CancelToken;
+const source = CancelToken.source();
+
 function ProviderStatusCheck(props: Props) {
-    console.log('HITTING PROVIDER STATUS CHECK COMP')
     const { areEstimatesLoading, providerHasEstimates } = props;
     const [ anchorElement, setAnchor ] = React.useState(null);
     const [ open, setOpen ] = useState(false);
     const [ isSubmissionOpen, setSubmissionOpen ] = useState(false);
     const { classes } = props;
+
+    async function getLargerSize(
+        provider: Eventkit.Provider,
+        bbox: number[],
+        aoiArea: string,
+        estimatedSize: Eventkit.Store.EstimateData
+    ) {
+        const data = {
+            provider: provider,
+            bbox: bbox.join(','),
+            aoiArea: aoiArea,
+            estimatedDataSize: estimatedSize.value,
+        };
+
+        const csrfmiddlewaretoken = getCookie('csrftoken');
+        return axios({
+            url: `/api/?`,
+            method: 'post',
+            params: data,
+            headers: { 'X-CSRFToken': csrfmiddlewaretoken },
+            cancelToken: source.token,
+        }).then((response) => {
+            console.log(response);
+            return response.data[0];
+        }).catch((error) => {
+            console.log(error);
+            return {
+                provider: provider,
+                aoiSize: null,
+                estimatedDataSize: null,
+            };
+        });
+    }
 
     function handlePopoverOpen(e: React.MouseEvent<HTMLElement>) {
         setAnchor(e.currentTarget);
@@ -87,8 +128,16 @@ function ProviderStatusCheck(props: Props) {
         setAnchor(null);
     }
 
-    function handleSubmissionOpen(e: any) {
-        // call to backend api here: send all three pieces of info in request
+    async function handleSubmissionOpen(e: any) {
+        if (Object.keys(props.geojson).length === 0) {
+                return null;
+            }
+        const bbox = featureToBbox(props.geojson.features[0], WGS84);
+        console.log('BBOX', bbox);
+        const aoiArea = props.areaStr;
+        const estimatedSize = props.providerInfo.estimates.size;
+
+        // await getLargerSize(props.provider, bbox, aoiArea, estimatedSize);
         setSubmissionOpen(true);
     }
 
@@ -258,16 +307,18 @@ function ProviderStatusCheck(props: Props) {
                             {title}
                             <IconButton
                                 className={classes.iconBtn}
+                                style={{color: '#4598bf'}}
                                 type='button'
                                 onClick={handlePopoverClose}
                             >
-                                <CloseIcon className={classes.closeIcon}/>
+                                <CloseIcon className={classes.closeIcon} style={{backgroundColor: '#fff'}}/>
                             </IconButton>
                         </Typography>
                         <div>{message}</div>
                         <br/>
                         <span
                             className={classes.popoverTitle}
+                            style={{color: '#4598bf'}}
                             role="button"
                             onClick={handleSubmissionOpen}
                             onKeyPress={handleSubmissionOpen}
@@ -280,7 +331,7 @@ function ProviderStatusCheck(props: Props) {
                                 show={isSubmissionOpen}
                                 onClose={handleSubmissionClose}
                             >
-                                <div className={classes.submissionPopoverText}>
+                                <div className={classes.submissionPopoverText} style={{color: '#000'}}>
                                     <strong>Your AOI increase request has been submitted.</strong>
                                 </div>
                             </BaseDialog>
