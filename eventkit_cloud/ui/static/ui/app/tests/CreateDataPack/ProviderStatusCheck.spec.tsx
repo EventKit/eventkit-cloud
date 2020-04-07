@@ -1,35 +1,58 @@
 import * as React from 'react';
 import * as sinon from 'sinon';
-import {shallow} from 'enzyme';
+import {mount} from 'enzyme';
 import AlertWarning from '@material-ui/icons/Warning';
 import AlertError from '@material-ui/icons/Error';
 import ActionDone from '@material-ui/icons/Done';
 import CircularProgress from '@material-ui/core/CircularProgress';
 import ProviderStatusCheck from '../../components/CreateDataPack/ProviderStatusCheck';
+import {Button, Dialog, IconButton, Popover} from "@material-ui/core";
+import {act} from "react-dom/test-utils";
 
-describe('ProviderStatusIcon component', () => {
-    let wrapper;
-
+describe('ProviderStatusCheck component', () => {
     const defaultProps = () => ({
         availability: {
             status: '',
             type: '',
             message: '',
         },
+        userData: {
+            accepted_licenses: {},
+            user: {
+                username: '',
+                last_name: '',
+                first_name: '',
+                email: '',
+                commonname: '',
+                date_joined: '',
+                last_login: '',
+                identification: ''
+            }},
+        provider: '',
+        geojson: '',
+        areaStr: '',
         overSize: false,
         overArea: false,
+        providerInfo: {},
+        estimateDataSize: {},
         providerHasEstimates: true,
         areEstimatesLoading: false,
         supportsZoomLevels: true,
+        theme: {},
+        classes: {},
         ...(global as any).eventkit_test_props,
     });
 
+    let props;
+    let wrapper;
+    let instance;
     const setup = (propsOverride = {}) => {
-        const props = {
+        props = {
             ...defaultProps(),
             ...propsOverride,
         };
-        wrapper = shallow(<ProviderStatusCheck {...props} />);
+        wrapper = mount(<ProviderStatusCheck {...props} />);
+        instance = wrapper.instance();
     };
 
     beforeEach(setup);
@@ -85,29 +108,94 @@ describe('ProviderStatusIcon component', () => {
             setup({availability: {status: 'PENDING'}});
             expect(wrapper.find(CircularProgress)).toHaveLength(1);
         });
-    });
 
-    // Testing state on functional components with hooks is currently not well supported.
-    // describe('it sets the correct state value', () => {
-    //     let stateSpy;
-    //
-    //     beforeEach(() => {
-    //         stateSpy = sinon.spy(instance, 'setState');
-    //     });
-    //
-    //     afterEach(() => {
-    //         stateSpy.restore();
-    //     });
-    //
-    //     it('handlePopoverOpen sets target in state', () => {
-    //         const e = { currentTarget: sinon.spy() };
-    //         instance.handlePopoverOpen(e);
-    //         expect(stateSpy.calledWith({ anchorEl: e.currentTarget })).toBe(true);
-    //     });
-    //
-    //     it('handlePopoverClose should set null in state', () => {
-    //         instance.handlePopoverClose();
-    //         expect(stateSpy.calledWith({ anchorEl: null })).toBe(true);
-    //     });
-    // });
+/*  TODO: Complete test placeholders below:
+    Testing state on functional components with hooks is currently not well supported.
+
+    it('handlePopoverClose should set null in state', () => {
+        instance.handlePopoverClose();
+        expect(stateSpy.calledWith({ anchorEl: null })).toBe(true);
+    });
+    it('handlePopoverOpen sets target in state', () => {
+            const e = { currentTarget: sinon.spy() };
+            const wrapper = mount(<ProviderStatusCheck/>);
+            const instance = wrapper.instance();
+            instance.handlePopoverOpen(e);
+            expect(wrapper.state('anchorElement')).toBe(null);
+            // expect(stateSpy.calledWith({ anchorEl: e.currentTarget })).toBe(true);
+        });
+        it('renders a popover when clicking on the warning icon', () => {
+            const handlePopoverOpen = sinon.spy();
+            const wrapper = mount((
+                <ProviderStatusCheck handlePopoverOpen={handlePopoverOpen}/>
+            ));
+            wrapper.find('button').simulate('click');
+            expect(handlePopoverOpen).to.have.property('callCount', 1)
+        });
+        it('renders the submission popover after requesting a larger AOI size', () => {})
+    }); */
+    });
+});
+describe('it sets correct values on props', () => {
+    it('renders correct prop value for areaStr', () => {
+        const wrapper = mount(<ProviderStatusCheck areaStr="34.77"/>);
+        expect(wrapper.props().areaStr).toBe('34.77');
+
+        wrapper.setProps({areaStr: '34.77'});
+        expect(wrapper.props().areaStr).toBe('34.77');
+        wrapper.unmount();
+    });
+    it('should open the popovers when clicking on the error status icon, then clicking on "Request Larger AOI Limit', () => {
+        const initialProps = {
+            overArea: true,
+            availability: {status: 'FATAL', type: 'AOI TOO LARGE', message: '', slug: 'osm'}
+        };
+        const wrapper = mount(<ProviderStatusCheck {...initialProps} />);
+        const handleSubmissionOpenMock = jest.fn();
+        expect(wrapper.find(Popover).props().open).toBe(false);
+        expect(wrapper.find(AlertError).length).toBe(1);
+
+        act(() => {
+            wrapper
+                .find(AlertError)
+                .first()
+                .simulate('click');
+        });
+        wrapper.update();
+        expect(wrapper.find(Popover).props().open).toBe(true);
+        expect(handleSubmissionOpenMock).not.toBeCalled();
+
+
+        act(() => {
+            wrapper
+                .find('.ProviderStatusCheck-popoverTitle')
+                .first()
+                .simulate('click');
+        });
+        wrapper.update();
+        // TODO: test handleSubmissionOpen when requesting larger AOI limit
+        // expect(handleSubmissionOpenMock).toHaveBeenCalledTimes(1);
+        wrapper.unmount();
+    });
+    /* it('should close the popover when clicking the cancel icon', () => {
+        const initialProps = {
+            overArea: true,
+            availability: {status: 'FATAL', type: 'AOI TOO LARGE', message: '', slug: 'osm'}
+        };
+        const wrapper = mount(<ProviderStatusCheck {...initialProps} />);
+        console.log(wrapper.debug())
+        expect(wrapper.find(Popover).props().open).toBe(true);
+        expect(wrapper.find(IconButton).length).toBe(1);
+
+        act(() => {
+            wrapper
+                .find(IconButton)
+                .first()
+                .simulate('click');
+        });
+        wrapper.update();
+        console.log(wrapper.debug())
+        expect(wrapper.find(Popover).props().open).toBe(false);
+        wrapper.unmount();
+    }); */
 });

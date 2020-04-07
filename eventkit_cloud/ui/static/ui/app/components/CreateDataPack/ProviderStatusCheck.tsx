@@ -7,7 +7,7 @@ import Popover from '@material-ui/core/Popover';
 import Typography from '@material-ui/core/Typography';
 import BaseDialog from '../Dialog/BaseDialog';
 import {useState} from "react";
-import {createStyles, IconButton, Theme, withStyles} from "@material-ui/core";
+import {createStyles, Dialog, IconButton, Theme, withStyles, withTheme} from "@material-ui/core";
 import CloseIcon from '@material-ui/icons/Close';
 import axios from "axios";
 import {featureToBbox, WGS84} from "../../utils/mapUtils";
@@ -20,18 +20,18 @@ const jss = (theme: Eventkit.Theme & Theme) => createStyles({
     },
     submissionPopoverText: {
         display: 'inline-block',
-        // color: theme.eventkit.colors.black,
+        color: theme.eventkit.colors.black,
     },
     iconBtn: {
         float: 'right' as 'right',
-        // color: theme.eventkit.colors.primary,
+        color: theme.eventkit.colors.primary,
         marginTop: '-7px',
     },
     closeIcon: {
-        // backgroundColor: theme.eventkit.colors.white,
+        backgroundColor: theme.eventkit.colors.white,
     },
     popoverTitle: {
-        // color: theme.eventkit.colors.primary,
+        color: theme.eventkit.colors.primary,
         fontWeight: 300,
     }
 });
@@ -43,7 +43,6 @@ interface Props extends React.HTMLAttributes<HTMLElement> {
         message: string;
         slug: string;
     }
-    // read more into how aoiArea is used
     provider: Eventkit.Provider;
     geojson: GeoJSON.FeatureCollection;
     overSize: boolean;
@@ -68,7 +67,7 @@ enum STATUS {
     PENDING='PENDING',
     ESTIMATES_PENDING=1,
     OVER_DATA_SIZE,
-    OVER_AREA_SIZE,
+    OVER_AREA_SIZE
 }
 
 ProviderStatusCheck.defaultProps = { availability: { status: '', type: '', message: '' } } as Props;
@@ -78,8 +77,7 @@ const source = CancelToken.source();
 
 function ProviderStatusCheck(props: Props) {
     const { areEstimatesLoading, providerHasEstimates } = props;
-    const [ anchorElement, setAnchor ] = React.useState(null);
-    const [ open, setOpen ] = useState(false);
+    const [ anchorElement, setAnchor ] = useState(null);
     const [ isSubmissionOpen, setSubmissionOpen ] = useState(false);
     const { classes } = props;
 
@@ -90,9 +88,9 @@ function ProviderStatusCheck(props: Props) {
         estimatedSize: Eventkit.Store.EstimateData
     ) {
         const data = {
-            provider: provider,
+            provider: provider.id,
             bbox: bbox.join(','),
-            aoiArea: aoiArea,
+            aoiArea: parseInt(aoiArea, 10),
             estimatedDataSize: estimatedSize.value,
         };
 
@@ -110,8 +108,8 @@ function ProviderStatusCheck(props: Props) {
             console.log(error);
             return {
                 provider: provider,
-                aoiSize: null,
-                estimatedDataSize: null,
+                aoiSize: undefined,
+                estimatedDataSize: undefined,
             };
         });
     }
@@ -135,7 +133,9 @@ function ProviderStatusCheck(props: Props) {
         const bbox = featureToBbox(props.geojson.features[0], WGS84);
         console.log('BBOX', bbox);
         const aoiArea = props.areaStr;
+        console.log('AOI AREA', aoiArea);
         const estimatedSize = props.providerInfo.estimates.size;
+        console.log('ESTIMATED SIZE', estimatedSize);
 
         // await getLargerSize(props.provider, bbox, aoiArea, estimatedSize);
         setSubmissionOpen(true);
@@ -280,6 +280,7 @@ function ProviderStatusCheck(props: Props) {
         popoverBlock = (
             <div style={style.base} className="qa-ProviderStatusIcon">
                 <StatusIcon
+                    className="qa-ProviderStatusErrorIcon"
                     style={style.icon}
                     title={props.availability.message}
                     onClick={handlePopoverOpen}
@@ -317,7 +318,8 @@ function ProviderStatusCheck(props: Props) {
                         <div>{message}</div>
                         <br/>
                         <span
-                            className={classes.popoverTitle}
+                            className="ProviderStatusCheck-popoverTitle"
+                            // className={classes.popoverTitle}
                             style={{color: '#4598bf'}}
                             role="button"
                             onClick={handleSubmissionOpen}
@@ -329,6 +331,7 @@ function ProviderStatusCheck(props: Props) {
                             <BaseDialog
                                 className={classes.submissionPopover}
                                 show={isSubmissionOpen}
+                                // open={isSubmissionOpen}
                                 onClose={handleSubmissionClose}
                             >
                                 <div className={classes.submissionPopoverText} style={{color: '#000'}}>
