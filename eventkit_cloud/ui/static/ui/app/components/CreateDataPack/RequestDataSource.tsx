@@ -9,7 +9,7 @@ import {useState} from "react";
 import {Dispatch} from "react";
 import {SetStateAction} from "react";
 import {getCookie} from "../../utils/generic";
-import {useAsyncRequest, useDebouncedSetter, useEffectOnMount} from "../../utils/hooks";
+import {useAsyncRequest, useDebouncedSetter, useDebouncedState, useEffectOnMount} from "../../utils/hooks";
 
 interface Props {
     open: boolean;
@@ -22,30 +22,36 @@ function NoFlexRow(props: React.PropsWithChildren<any>) {
         <CustomTableRow
             {...props}
             dataStyle={{ display: 'block', padding: '0px' }}
-            titleStyle={{ padding: '0px' }}
+            titleStyle={{ margin: '0px' }}
         />
     );
 }
 
 const CancelToken = axios.CancelToken;
 const source = CancelToken.source();
-
 const csrfmiddlewaretoken = getCookie('csrftoken');
 
 export function RequestDataSource(props: Props) {
     const { open, onClose, classes } = props;
 
-    const [{ status, response }, makeRequest] = useAsyncRequest({
+    const [name, debounceName] = useDebouncedState(undefined);
+    const [url, debounceUrl] = useDebouncedState(undefined);
+    const [layerNames, debounceLayerNames] = useDebouncedState(undefined);
+    const [description, debounceDescription] = useDebouncedState(undefined);
+
+    const [{ status, response }, requestCall] = useAsyncRequest();
+    const makeRequest = () => requestCall({
         url: `/api/providers`,
         method: 'get',
+        data: {
+            url,
+            name,
+            service_description: description,
+            layer_names: layerNames,
+        },
         headers: { 'X-CSRFToken': csrfmiddlewaretoken },
         cancelToken: source.token,
     });
-    const [name, setName] = useState(undefined);
-    const [url, setUrl] = useState(undefined);
-    const [description, setDescription] = useState(undefined);
-    const [layerNames, setLayerNames] = useState(undefined);
-    const nameDebouncer = useDebouncedSetter(setName);
 
     function onChange(e: any, setter: Dispatch<SetStateAction<any>>) {
         setter(e.target.value);
@@ -85,7 +91,7 @@ export function RequestDataSource(props: Props) {
                             className={`qa-RequestDataSource-input-name ${classes.textField}`}
                             id="Name"
                             name="sourceName"
-                            onChange={(e) => onChange(e, nameDebouncer)}
+                            onChange={(e) => onChange(e, debounceName)}
                             placeholder="Source Name"
                             InputProps={{ className: classes.input }}
                             fullWidth
@@ -99,7 +105,7 @@ export function RequestDataSource(props: Props) {
                             className={`qa-RequestDataSource-input-url ${classes.textField}`}
                             id="url"
                             name="sourceUrl"
-                            onChange={(e) => onChange(e, setUrl)}
+                            onChange={(e) => onChange(e, debounceUrl)}
                             placeholder="Source Link"
                             InputProps={{ className: classes.input }}
                             fullWidth
@@ -113,7 +119,7 @@ export function RequestDataSource(props: Props) {
                             className={`qa-RequestDataSource-input-layers ${classes.textField}`}
                             id="url"
                             name="layerNames"
-                            onChange={(e) => onChange(e, setLayerNames)}
+                            onChange={(e) => onChange(e, debounceLayerNames)}
                             placeholder="Layer1, Layer2, Layer3..."
                             InputProps={{ className: classes.input }}
                             fullWidth
@@ -127,7 +133,7 @@ export function RequestDataSource(props: Props) {
                             className={`qa-RequestDataSource-input-description ${classes.textField}`}
                             id="description"
                             name="sourceDescription"
-                            onChange={(e) => onChange(e, setDescription)}
+                            onChange={(e) => onChange(e, debounceDescription)}
                             placeholder="Description"
                             InputProps={{ className: classes.input }}
                             fullWidth

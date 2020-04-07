@@ -66,9 +66,9 @@ export function useAsyncRequest_Control(): [any, Dispatcher] {
     return [state, dispatches]
 }
 
-export function useAsyncRequest(params) {
+export function useAsyncRequest() {
     const [state, dispatches] = useAsyncRequest_Control();
-    const makeRequest = useCallback(async () => {
+    const makeRequest = useCallback(async (params: any) => {
         dispatches.fetching();
         try {
             const response = await axios({ ...params });
@@ -76,7 +76,7 @@ export function useAsyncRequest(params) {
         } catch (e) {
             dispatches.error(e);
         }
-    }, [params]);
+    }, []);
     return [state, makeRequest];
 }
 
