@@ -11,7 +11,7 @@ import NavigationArrowDropUp from '@material-ui/icons/ArrowDropUp';
 import { DataPackList } from '../../components/DataPackPage/DataPackList';
 import DataPackListItem from '../../components/DataPackPage/DataPackListItem';
 import DataPackTableItem from '../../components/DataPackPage/DataPackTableItem';
-import CustomScrollbar from '../../components/CustomScrollbar';
+import CustomScrollbar from '../../components/common/CustomScrollbar';
 
 describe('DataPackList component', () => {
     const getProps = () => ({

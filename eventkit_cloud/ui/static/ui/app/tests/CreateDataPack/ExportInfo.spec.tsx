@@ -8,8 +8,8 @@ import Joyride from 'react-joyride';
 import MapCard from '../../components/common/MapCard';
 import DataProvider from '../../components/CreateDataPack/DataProvider';
 import {ExportInfo} from '../../components/CreateDataPack/ExportInfo';
-import CustomScrollbar from '../../components/CustomScrollbar';
-import TextField from '../../components/CustomTextField';
+import CustomScrollbar from '../../components/common/CustomScrollbar';
+import TextField from '../../components/common/CustomTextField';
 import * as utils from '../../utils/generic';
 
 const formats = [

@@ -2,7 +2,7 @@ import * as React from 'react';
 import * as sinon from 'sinon';
 import { createShallow } from '@material-ui/core/test-utils';
 import BaseDialog from '../../components/Dialog/BaseDialog';
-import CustomTextField from '../../components/CustomTextField';
+import CustomTextField from '../../components/common/CustomTextField';
 import { RenameGroupDialog } from '../../components/UserGroupsPage/Dialogs/RenameGroupDialog';
 
 describe('LeaveGroupDialog component', () => {

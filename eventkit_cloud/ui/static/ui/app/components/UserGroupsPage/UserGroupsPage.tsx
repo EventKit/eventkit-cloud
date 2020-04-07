@@ -13,7 +13,7 @@ import Warning from '@material-ui/icons/Warning';
 import AddCircle from '@material-ui/icons/AddCircle';
 import PageHeader from '../common/PageHeader';
 import PageLoading from '../common/PageLoading';
-import CustomScrollbar from '../CustomScrollbar';
+import CustomScrollbar from '../common/CustomScrollbar';
 import UserRow from './UserRow';
 import OwnUserRow from './OwnUserRow';
 import UserHeader from './UserHeader';

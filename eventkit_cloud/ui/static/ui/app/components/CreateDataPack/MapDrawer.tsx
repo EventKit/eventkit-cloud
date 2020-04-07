@@ -1,6 +1,6 @@
 import * as React from 'react';
 import Drawer from '@material-ui/core/Drawer';
-import CustomScrollbar from "../CustomScrollbar";
+import CustomScrollbar from "../common/CustomScrollbar";
 import List from '@material-ui/core/List';
 import ListItem from '@material-ui/core/ListItem';
 import {

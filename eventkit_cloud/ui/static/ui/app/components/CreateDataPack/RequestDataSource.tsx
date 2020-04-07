@@ -1,9 +1,9 @@
 import BaseDialog from "../Dialog/BaseDialog";
 import * as React from 'react';
 import Button from "@material-ui/core/Button";
-import CustomTableRow from "../CustomTableRow";
+import CustomTableRow from "../common/CustomTableRow";
 import axios from "axios";
-import CustomTextField from "../CustomTextField";
+import CustomTextField from "../common/CustomTextField";
 import {createStyles, Theme, withStyles} from "@material-ui/core";
 import {useState} from "react";
 import {Dispatch} from "react";
@@ -41,8 +41,8 @@ export function RequestDataSource(props: Props) {
 
     const [{ status, response }, requestCall] = useAsyncRequest();
     const makeRequest = () => requestCall({
-        url: `/api/providers`,
-        method: 'get',
+        url: `/api/data_provider_requests`,
+        method: 'post',
         data: {
             url,
             name,
@@ -52,6 +52,86 @@ export function RequestDataSource(props: Props) {
         headers: { 'X-CSRFToken': csrfmiddlewaretoken },
         cancelToken: source.token,
     });
+
+    function renderMainBody() {
+        return (
+            <>
+                <div
+                    id="mainHeading"
+                    className={`qa-RequestDataSource-heading ${classes.heading}`}
+                >
+                    {status !== 'success' ? (<>Please enter TODO</>) : (<>Request successfully submitted.</>)}
+                </div>
+                <NoFlexRow
+                    title="Source name"
+                >
+                    {status !== 'success' ? (
+                            <CustomTextField
+                                className={`qa-RequestDataSource-input-name ${classes.textField}`}
+                                id="Name"
+                                name="sourceName"
+                                onChange={(e) => onChange(e, debounceName)}
+                                placeholder="Source Name"
+                                InputProps={{ className: classes.input }}
+                                fullWidth
+                                maxLength={100}
+                            />) :
+                        { name }
+                    }
+                </NoFlexRow>
+                <NoFlexRow
+                    title="Source Link"
+                >
+                    {status !== 'success' ? (<CustomTextField
+                            className={`qa-RequestDataSource-input-url ${classes.textField}`}
+                            id="url"
+                            name="sourceUrl"
+                            onChange={(e) => onChange(e, debounceUrl)}
+                            placeholder="Source Link"
+                            InputProps={{ className: classes.input }}
+                            fullWidth
+                            maxLength={256}
+                        />) :
+                        { url }
+                    }
+                </NoFlexRow>
+                <NoFlexRow
+                    title="Layer Names"
+                >
+                    {status !== 'success' ? (<CustomTextField
+                            className={`qa-RequestDataSource-input-layers ${classes.textField}`}
+                            id="url"
+                            name="layerNames"
+                            onChange={(e) => onChange(e, debounceLayerNames)}
+                            placeholder="Layer1, Layer2, Layer3..."
+                            InputProps={{ className: classes.input }}
+                            fullWidth
+                            maxLength={256}
+                        />) :
+                        { layerNames }
+                    }
+                </NoFlexRow>
+                <NoFlexRow
+                    title="Description"
+                >
+                    {status !== 'success' ? (<CustomTextField
+                            className={`qa-RequestDataSource-input-description ${classes.textField}`}
+                            id="description"
+                            name="sourceDescription"
+                            onChange={(e) => onChange(e, debounceDescription)}
+                            placeholder="Description"
+                            InputProps={{ className: classes.input }}
+                            fullWidth
+                            multiline
+                            rows="4"
+                            maxLength={1000}
+                        />) :
+                        { description }
+                    }
+                </NoFlexRow>
+            </>
+        )
+    }
 
     function onChange(e: any, setter: Dispatch<SetStateAction<any>>) {
         setter(e.target.value);
@@ -76,78 +156,12 @@ export function RequestDataSource(props: Props) {
                 </Button>
             )]}
         >
-            {!status && (
-                <>
-                    <div
-                        id="mainHeading"
-                        className={`qa-RequestDataSource-heading ${classes.heading}`}
-                    >
-                        Info description placeholder.
-                    </div>
-                    <NoFlexRow
-                        title="Source name"
-                    >
-                        <CustomTextField
-                            className={`qa-RequestDataSource-input-name ${classes.textField}`}
-                            id="Name"
-                            name="sourceName"
-                            onChange={(e) => onChange(e, debounceName)}
-                            placeholder="Source Name"
-                            InputProps={{ className: classes.input }}
-                            fullWidth
-                            maxLength={100}
-                        />
-                    </NoFlexRow>
-                    <NoFlexRow
-                        title="Source Link"
-                    >
-                        <CustomTextField
-                            className={`qa-RequestDataSource-input-url ${classes.textField}`}
-                            id="url"
-                            name="sourceUrl"
-                            onChange={(e) => onChange(e, debounceUrl)}
-                            placeholder="Source Link"
-                            InputProps={{ className: classes.input }}
-                            fullWidth
-                            maxLength={256}
-                        />
-                    </NoFlexRow>
-                    <NoFlexRow
-                        title="Layer Names"
-                    >
-                        <CustomTextField
-                            className={`qa-RequestDataSource-input-layers ${classes.textField}`}
-                            id="url"
-                            name="layerNames"
-                            onChange={(e) => onChange(e, debounceLayerNames)}
-                            placeholder="Layer1, Layer2, Layer3..."
-                            InputProps={{ className: classes.input }}
-                            fullWidth
-                            maxLength={256}
-                        />
-                    </NoFlexRow>
-                    <NoFlexRow
-                        title="Description"
-                    >
-                        <CustomTextField
-                            className={`qa-RequestDataSource-input-description ${classes.textField}`}
-                            id="description"
-                            name="sourceDescription"
-                            onChange={(e) => onChange(e, debounceDescription)}
-                            placeholder="Description"
-                            InputProps={{ className: classes.input }}
-                            fullWidth
-                            multiline
-                            rows="4"
-                            maxLength={1000}
-                        />
-                    </NoFlexRow>
-                </>
+            {(true) && (renderMainBody())}
+            {status === 'pending' && (
+                <div>Submitting request...</div>
             )}
-            {status && !!response(
-                <div>
-                    {response.data.toString()}
-                </div>
+            {status === 'error' && (
+                <div>Error message</div>
             )}
         </BaseDialog>
     );

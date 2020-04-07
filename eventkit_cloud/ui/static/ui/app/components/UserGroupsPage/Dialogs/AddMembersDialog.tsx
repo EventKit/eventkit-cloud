@@ -14,8 +14,8 @@ import Clear from '@material-ui/icons/Clear';
 import ArrowDown from '@material-ui/icons/ArrowDropDown';
 import ArrowUp from '@material-ui/icons/ArrowDropUp';
 import Indeterminate from '../../icons/IndeterminateIcon';
-import CustomTextField from '../../CustomTextField';
-import CustomScrollbar from '../../CustomScrollbar';
+import CustomTextField from '../../common/CustomTextField';
+import CustomScrollbar from '../../common/CustomScrollbar';
 
 const jss = (theme: Eventkit.Theme & Theme) => createStyles({
     label: {

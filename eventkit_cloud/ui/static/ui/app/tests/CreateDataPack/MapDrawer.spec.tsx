@@ -3,7 +3,7 @@ import * as sinon from 'sinon';
 import { shallow } from 'enzyme';
 import Drawer from '@material-ui/core/Drawer';
 import {MapDrawer, VerticalTabs} from "../../components/CreateDataPack/MapDrawer";
-import CustomScrollbar from "../../components/CustomScrollbar";
+import CustomScrollbar from "../../components/common/CustomScrollbar";
 import Tab from "@material-ui/core/Tab";
 import ListItem from '@material-ui/core/ListItem';
 import Radio from "@material-ui/core/Radio";

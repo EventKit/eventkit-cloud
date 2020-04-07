@@ -1,6 +1,6 @@
 import * as React from 'react';
 import moment from 'moment';
-import CustomTableRow from '../CustomTableRow';
+import CustomTableRow from '../common/CustomTableRow';
 
 export interface Props {
     dataPack: {
