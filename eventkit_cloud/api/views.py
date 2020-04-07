@@ -56,6 +56,8 @@ from eventkit_cloud.api.serializers import (
     NotificationSerializer,
     GroupUserSerializer,
     AuditEventSerializer,
+    DataProviderRequestSerializer,
+    AoiIncreaseRequestSerializer
 )
 from eventkit_cloud.api.validators import validate_bbox_params, validate_search_bbox
 from eventkit_cloud.core.helpers import (
@@ -98,6 +100,7 @@ from eventkit_cloud.tasks.task_factory import (
     InvalidLicense,
     Error,
 )
+from eventkit_cloud.user_requests.models import AoiIncreaseRequest, DataProviderRequest
 from eventkit_cloud.utils.gdalutils import get_area
 from eventkit_cloud.utils.provider_check import perform_provider_check
 from eventkit_cloud.utils.stats.aoi_estimators import AoiEstimator
@@ -2000,6 +2003,16 @@ class NotificationViewSet(viewsets.ModelViewSet):
                 qs.mark_all_as_unread()
 
         return Response({"success": True}, status=status.HTTP_200_OK)
+
+
+class AoiIncreaseRequestViewSet(viewsets.ModelViewSet):
+        queryset = AoiIncreaseRequest.objects.all()
+        serializer_class = AoiIncreaseRequestSerializer
+
+
+class DataProviderRequestViewSet(viewsets.ModelViewSet):
+        queryset = DataProviderRequest.objects.all()
+        serializer_class = DataProviderRequestSerializer
 
 
 class EstimatorView(views.APIView):
