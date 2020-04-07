@@ -1,4 +1,4 @@
-import {Dispatch, ReducerAction, ReducerState, useCallback, useEffect, useReducer, useRef} from "react";
+import {Dispatch, ReducerAction, ReducerState, useCallback, useEffect, useReducer, useRef, useState} from "react";
 import axios from "axios";
 
 // Convenience function that acts like componentDidMount.
@@ -112,4 +112,9 @@ export function useDebouncedSetter(setter: (value: any) => void, timeout = 1000)
             valueCapture.current = null;
         }
     }, [setter, timeout]);
+}
+
+export function useDebouncedState(initialValue: any, timeout = 1000) {
+    const [ valueState, setValueState ] = useState(initialValue);
+    return [ valueState, useDebouncedSetter(setValueState, timeout) ];
 }

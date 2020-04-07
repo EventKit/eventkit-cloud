@@ -5,7 +5,7 @@ import CustomTableRow from "../CustomTableRow";
 import axios from "axios";
 import CustomTextField from "../CustomTextField";
 import {createStyles, Theme, withStyles} from "@material-ui/core";
-import {useEffect, useState} from "react";
+import {useState} from "react";
 import {Dispatch} from "react";
 import {SetStateAction} from "react";
 import {getCookie} from "../../utils/generic";
@@ -18,15 +18,12 @@ interface Props {
 }
 
 function NoFlexRow(props: React.PropsWithChildren<any>) {
-    const passThroughProps = { ...props };
-    passThroughProps.children = undefined;
     return (
         <CustomTableRow
-            {...passThroughProps}
-            dataStyle={{ display: 'block' }}
-        >
-            {props.children}
-        </CustomTableRow>
+            {...props}
+            dataStyle={{ display: 'block', padding: '0px' }}
+            titleStyle={{ padding: '0px' }}
+        />
     );
 }
 
@@ -34,6 +31,7 @@ const CancelToken = axios.CancelToken;
 const source = CancelToken.source();
 
 const csrfmiddlewaretoken = getCookie('csrftoken');
+
 export function RequestDataSource(props: Props) {
     const { open, onClose, classes } = props;
 
@@ -46,6 +44,7 @@ export function RequestDataSource(props: Props) {
     const [name, setName] = useState(undefined);
     const [url, setUrl] = useState(undefined);
     const [description, setDescription] = useState(undefined);
+    const [layerNames, setLayerNames] = useState(undefined);
     const nameDebouncer = useDebouncedSetter(setName);
 
     function onChange(e: any, setter: Dispatch<SetStateAction<any>>) {
@@ -108,6 +107,20 @@ export function RequestDataSource(props: Props) {
                         />
                     </NoFlexRow>
                     <NoFlexRow
+                        title="Layer Names"
+                    >
+                        <CustomTextField
+                            className={`qa-RequestDataSource-input-layers ${classes.textField}`}
+                            id="url"
+                            name="layerNames"
+                            onChange={(e) => onChange(e, setLayerNames)}
+                            placeholder="Layer1, Layer2, Layer3..."
+                            InputProps={{ className: classes.input }}
+                            fullWidth
+                            maxLength={256}
+                        />
+                    </NoFlexRow>
+                    <NoFlexRow
                         title="Description"
                     >
                         <CustomTextField
@@ -127,7 +140,7 @@ export function RequestDataSource(props: Props) {
             )}
             {status && !!response(
                 <div>
-                {response.data.toString()}
+                    {response.data.toString()}
                 </div>
             )}
         </BaseDialog>
