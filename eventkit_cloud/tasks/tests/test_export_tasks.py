@@ -203,21 +203,20 @@ class TestExportTasks(ExportTaskBase):
         expected_outfile = 'stage/job-4326.tif'
         geotiff_export_task(result=example_result, task_uid=task_uid, stage_dir='stage', job_name='job')
         mock_gdalutils.convert.return_value = expected_outfile
-        mock_gdalutils.convert.assert_called_once_with(boundary=None, compress=False, fmt='gtiff',
+        mock_gdalutils.convert.assert_called_once_with(boundary=None, fmt='gtiff',
                                                        input_file=f'GTIFF_RAW:{example_geotiff}',
                                                        output_file=expected_outfile, task_uid=task_uid)
         mock_gdalutils.reset_mock()
-        geotiff_export_task(result=example_result, task_uid=task_uid, stage_dir='stage', job_name='job', compress=True)
-        mock_gdalutils.convert.assert_called_once_with(boundary=None, compress=True, fmt='gtiff',
+        geotiff_export_task(result=example_result, task_uid=task_uid, stage_dir='stage', job_name='job')
+        mock_gdalutils.convert.assert_called_once_with(boundary=None, fmt='gtiff',
                                                        input_file=f'GTIFF_RAW:{example_geotiff}',
                                                        output_file=expected_outfile, task_uid=task_uid)
         mock_gdalutils.reset_mock()
         example_result = {"source": example_geotiff,
                           "selection": "selection"}
         mock_gdalutils.convert.return_value = expected_outfile
-        geotiff_export_task(result=example_result, task_uid=task_uid, stage_dir='stage', job_name='job',
-                            compress=True)
-        mock_gdalutils.convert.assert_called_once_with(boundary="selection", compress=True, fmt='gtiff',
+        geotiff_export_task(result=example_result, task_uid=task_uid, stage_dir='stage', job_name='job')
+        mock_gdalutils.convert.assert_called_once_with(boundary="selection", fmt='gtiff',
                                                        input_file=f'GTIFF_RAW:{example_geotiff}',
                                                        output_file=expected_outfile, task_uid=task_uid)
 
