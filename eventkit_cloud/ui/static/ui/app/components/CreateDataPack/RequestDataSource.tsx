@@ -156,7 +156,7 @@ export function RequestDataSource(props: Props) {
                 </Button>
             )]}
         >
-            {(true) && (renderMainBody())}
+            {(!status || status === 'success') && (renderMainBody())}
             {status === 'pending' && (
                 <div>Submitting request...</div>
             )}
