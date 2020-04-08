@@ -57,7 +57,7 @@ from eventkit_cloud.api.serializers import (
     GroupUserSerializer,
     AuditEventSerializer,
     DataProviderRequestSerializer,
-    AoiIncreaseRequestSerializer
+    AoiIncreaseRequestSerializer,
 )
 from eventkit_cloud.api.validators import validate_bbox_params, validate_search_bbox
 from eventkit_cloud.core.helpers import (
@@ -2006,13 +2006,13 @@ class NotificationViewSet(viewsets.ModelViewSet):
 
 
 class AoiIncreaseRequestViewSet(viewsets.ModelViewSet):
-        queryset = AoiIncreaseRequest.objects.all()
-        serializer_class = AoiIncreaseRequestSerializer
+    queryset = AoiIncreaseRequest.objects.all()
+    serializer_class = AoiIncreaseRequestSerializer
 
 
 class DataProviderRequestViewSet(viewsets.ModelViewSet):
-        queryset = DataProviderRequest.objects.all()
-        serializer_class = DataProviderRequestSerializer
+    queryset = DataProviderRequest.objects.all()
+    serializer_class = DataProviderRequestSerializer
 
 
 class EstimatorView(views.APIView):
