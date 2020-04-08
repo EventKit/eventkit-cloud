@@ -36,6 +36,8 @@ router = DefaultRouter(trailing_slash=False)
 router.register(r"jobs", JobViewSet, basename="jobs")
 router.register(r"formats", ExportFormatViewSet, basename="formats")
 router.register(r"providers", DataProviderViewSet, basename="providers")
+router.register(r"providers/requests", DataProviderRequestViewSet, basename="data_provider_requests")
+router.register(r"providers/requests/aoi", AoiIncreaseRequestViewSet, basename="aoi_increase_requests")
 router.register(r"licenses", LicenseViewSet, basename="licenses")
 router.register(r"runs", ExportRunViewSet, basename="runs")
 router.register(r"provider_tasks", DataProviderTaskViewSet, basename="provider_tasks")
@@ -47,8 +49,6 @@ router.register(r"groups", GroupViewSet, basename="groups")
 router.register(r"notifications", NotificationViewSet, basename="notifications")
 router.register(r"projections", ProjectionViewSet, basename="projections")
 router.register(r"audit_events", AuditEventViewSet, basename="audit_events")
-router.register(r"aoi_increase_requests", AoiIncreaseRequestViewSet, basename="aoi_increase_requests")
-router.register(r"data_provider_requests", DataProviderRequestViewSet, basename="data_provider_requests")
 
 urlpatterns = [
     re_path(r"^api/docs/$", api_docs_view, name="swagger-ui"),
