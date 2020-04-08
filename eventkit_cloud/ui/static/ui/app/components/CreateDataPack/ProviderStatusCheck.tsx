@@ -7,10 +7,9 @@ import Popover from '@material-ui/core/Popover';
 import Typography from '@material-ui/core/Typography';
 import BaseDialog from '../Dialog/BaseDialog';
 import {useState} from "react";
-import {createStyles, Dialog, IconButton, Theme, withStyles, withTheme} from "@material-ui/core";
+import {createStyles, IconButton, Theme, withStyles} from "@material-ui/core";
 import CloseIcon from '@material-ui/icons/Close';
 import axios from "axios";
-import {featureToBbox, WGS84} from "../../utils/mapUtils";
 import {getCookie} from "../../utils/generic";
 
 const jss = (theme: Eventkit.Theme & Theme) => createStyles({
@@ -75,7 +74,7 @@ ProviderStatusCheck.defaultProps = { availability: { status: '', type: '', messa
 const CancelToken = axios.CancelToken;
 const source = CancelToken.source();
 
-function ProviderStatusCheck(props: Props) {
+export function ProviderStatusCheck(props: Props) {
     const { areEstimatesLoading, providerHasEstimates } = props;
     const [ anchorElement, setAnchor ] = useState(null);
     const [ isSubmissionOpen, setSubmissionOpen ] = useState(false);
@@ -83,31 +82,29 @@ function ProviderStatusCheck(props: Props) {
 
     async function getLargerSize(
         provider: Eventkit.Provider,
-        bbox: number[],
+        selection: GeoJSON.FeatureCollection,
         aoiArea: string,
         estimatedSize: Eventkit.Store.EstimateData
     ) {
         const data = {
             provider: provider.id,
-            bbox: bbox.join(','),
-            aoiArea: parseInt(aoiArea, 10),
-            estimatedDataSize: estimatedSize.value,
+            selection: selection,
+            requested_aoi_size: parseInt(aoiArea),
+            estimated_data_size: estimatedSize.value,
         };
 
         const csrfmiddlewaretoken = getCookie('csrftoken');
         return axios({
-            url: `/api/?`,
+            url: `/api/aoi_increase_requests`,
             method: 'post',
-            params: data,
+            data: data,
             headers: { 'X-CSRFToken': csrfmiddlewaretoken },
             cancelToken: source.token,
         }).then((response) => {
-            console.log(response);
             return response.data[0];
-        }).catch((error) => {
-            console.log(error);
+        }).catch(() => {
             return {
-                provider: provider,
+                provider: provider.id,
                 aoiSize: undefined,
                 estimatedDataSize: undefined,
             };
@@ -122,22 +119,16 @@ function ProviderStatusCheck(props: Props) {
         setAnchor(null);
     }
 
-    function handleClose() {
-        setAnchor(null);
-    }
-
-    async function handleSubmissionOpen(e: any) {
+    async function handleSubmissionOpen() {
         if (Object.keys(props.geojson).length === 0) {
                 return null;
             }
-        const bbox = featureToBbox(props.geojson.features[0], WGS84);
-        console.log('BBOX', bbox);
-        const aoiArea = props.areaStr;
-        console.log('AOI AREA', aoiArea);
+        const selection = props.geojson;
+        let aoiArea = props.areaStr;
+        aoiArea = aoiArea.replace(/\,/g,'');
         const estimatedSize = props.providerInfo.estimates.size;
-        console.log('ESTIMATED SIZE', estimatedSize);
 
-        // await getLargerSize(props.provider, bbox, aoiArea, estimatedSize);
+        await getLargerSize(props.provider, selection, aoiArea, estimatedSize);
         setSubmissionOpen(true);
     }
 
@@ -293,7 +284,7 @@ function ProviderStatusCheck(props: Props) {
                     }}
                     open={openEl}
                     anchorEl={anchorElement}
-                    onClose={handleClose}
+                    onClose={handlePopoverClose}
                     anchorOrigin={{
                         vertical: 'top',
                         horizontal: 'center',
@@ -308,19 +299,16 @@ function ProviderStatusCheck(props: Props) {
                             {title}
                             <IconButton
                                 className={classes.iconBtn}
-                                style={{color: '#4598bf'}}
                                 type='button'
                                 onClick={handlePopoverClose}
                             >
-                                <CloseIcon className={classes.closeIcon} style={{backgroundColor: '#fff'}}/>
+                                <CloseIcon className={classes.closeIcon}/>
                             </IconButton>
                         </Typography>
                         <div>{message}</div>
                         <br/>
                         <span
-                            className="ProviderStatusCheck-popoverTitle"
-                            // className={classes.popoverTitle}
-                            style={{color: '#4598bf'}}
+                            className={classes.popoverTitle}
                             role="button"
                             onClick={handleSubmissionOpen}
                             onKeyPress={handleSubmissionOpen}
@@ -331,10 +319,9 @@ function ProviderStatusCheck(props: Props) {
                             <BaseDialog
                                 className={classes.submissionPopover}
                                 show={isSubmissionOpen}
-                                // open={isSubmissionOpen}
                                 onClose={handleSubmissionClose}
                             >
-                                <div className={classes.submissionPopoverText} style={{color: '#000'}}>
+                                <div className={classes.submissionPopoverText}>
                                     <strong>Your AOI increase request has been submitted.</strong>
                                 </div>
                             </BaseDialog>
@@ -351,4 +338,4 @@ function ProviderStatusCheck(props: Props) {
         </div>
     );
 }
-export default withStyles<any, any>(jss)(ProviderStatusCheck);
+export default withStyles(jss)(ProviderStatusCheck);

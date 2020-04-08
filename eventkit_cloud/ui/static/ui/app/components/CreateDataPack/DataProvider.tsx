@@ -498,6 +498,7 @@ export function DataProvider(props: Props) {
                         availability={providerInfo.availability}
                         overArea={overArea}
                         overSize={overSize}
+                        provider={provider}
                         providerHasEstimates={providerHasEstimates}
                         areEstimatesLoading={areEstimatesLoading}
                         supportsZoomLevels={supportsZoomLevels(provider)}
