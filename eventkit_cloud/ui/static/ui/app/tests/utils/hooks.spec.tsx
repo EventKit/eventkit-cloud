@@ -69,8 +69,8 @@ function ApiHookTester() {
 
 
 it('should render correctly based on status', async () => {
-    // const mock = new MockAdapter(axios, { delayResponse: 1 });
-    // mock.onGet(apiUrl).reply(500);
+    const mock = new MockAdapter(axios, { delayResponse: 1 });
+    mock.onGet(apiUrl).reply(500);
 
     const wrapper = mount(<ApiHookTester />);
     expect(wrapper.find('div').html()).toContain('Request not fired.');
