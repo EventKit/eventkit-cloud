@@ -21,8 +21,7 @@ function NoFlexRow(props: React.PropsWithChildren<any>) {
     return (
         <CustomTableRow
             {...props}
-            dataStyle={{ display: 'block', padding: '0px' }}
-            titleStyle={{ margin: '0px' }}
+            dataStyle={{...props.dataStyle, display: 'block' }}
         />
     );
 }
@@ -66,71 +65,88 @@ export function RequestDataSource(props: Props) {
                     title="Source name"
                 >
                     {status !== 'success' ? (
-                            <CustomTextField
-                                className={`qa-RequestDataSource-input-name ${classes.textField}`}
-                                id="Name"
-                                name="sourceName"
-                                onChange={(e) => onChange(e, debounceName)}
-                                placeholder="Source Name"
-                                InputProps={{ className: classes.input }}
-                                fullWidth
-                                maxLength={100}
-                            />) :
-                        { name }
+                        <CustomTextField
+                            className={`qa-RequestDataSource-input-name ${classes.textField}`}
+                            id="Name"
+                            name="sourceName"
+                            onChange={(e) => onChange(e, debounceName)}
+                            placeholder="Source Name"
+                            InputProps={{ className: classes.input }}
+                            fullWidth
+                            maxLength={100}
+                        />) : name
                     }
                 </NoFlexRow>
                 <NoFlexRow
                     title="Source Link"
                 >
                     {status !== 'success' ? (<CustomTextField
-                            className={`qa-RequestDataSource-input-url ${classes.textField}`}
-                            id="url"
-                            name="sourceUrl"
-                            onChange={(e) => onChange(e, debounceUrl)}
-                            placeholder="Source Link"
-                            InputProps={{ className: classes.input }}
-                            fullWidth
-                            maxLength={256}
-                        />) :
-                        { url }
+                        className={`qa-RequestDataSource-input-url ${classes.textField}`}
+                        id="url"
+                        name="sourceUrl"
+                        onChange={(e) => onChange(e, debounceUrl)}
+                        placeholder="Source Link"
+                        InputProps={{ className: classes.input }}
+                        fullWidth
+                        maxLength={256}
+                    />) : url
                     }
                 </NoFlexRow>
                 <NoFlexRow
                     title="Layer Names"
                 >
                     {status !== 'success' ? (<CustomTextField
-                            className={`qa-RequestDataSource-input-layers ${classes.textField}`}
-                            id="url"
-                            name="layerNames"
-                            onChange={(e) => onChange(e, debounceLayerNames)}
-                            placeholder="Layer1, Layer2, Layer3..."
-                            InputProps={{ className: classes.input }}
-                            fullWidth
-                            maxLength={256}
-                        />) :
-                        { layerNames }
+                        className={`qa-RequestDataSource-input-layers ${classes.textField}`}
+                        id="url"
+                        name="layerNames"
+                        onChange={(e) => onChange(e, debounceLayerNames)}
+                        placeholder="Layer1, Layer2, Layer3..."
+                        InputProps={{ className: classes.input }}
+                        fullWidth
+                        maxLength={256}
+                    />) : layerNames
                     }
                 </NoFlexRow>
                 <NoFlexRow
                     title="Description"
                 >
                     {status !== 'success' ? (<CustomTextField
-                            className={`qa-RequestDataSource-input-description ${classes.textField}`}
-                            id="description"
-                            name="sourceDescription"
-                            onChange={(e) => onChange(e, debounceDescription)}
-                            placeholder="Description"
-                            InputProps={{ className: classes.input }}
-                            fullWidth
-                            multiline
-                            rows="4"
-                            maxLength={1000}
-                        />) :
-                        { description }
+                        className={`qa-RequestDataSource-input-description ${classes.textField}`}
+                        id="description"
+                        name="sourceDescription"
+                        onChange={(e) => onChange(e, debounceDescription)}
+                        placeholder="Description"
+                        InputProps={{ className: classes.input }}
+                        fullWidth
+                        multiline
+                        rows="4"
+                        maxLength={1000}
+                    />) : description
                     }
                 </NoFlexRow>
             </>
         )
+    }
+
+    function renderErrorMessage() {
+        const { data = {errors: []} } = !!response ? response.response : {};
+        return (
+            <>
+                <div
+                    className={`qa-RequestDataSource-error-message ${classes.heading}`}
+                >
+                    Request failure.
+                </div>
+                {data.errors.map((error, ix) => (
+                    <NoFlexRow
+                        key={ix}
+                        title={error.title}
+                    >
+                        {error.detail}
+                    </NoFlexRow>
+                ))}
+            </>
+        );
     }
 
     function onChange(e: any, setter: Dispatch<SetStateAction<any>>) {
@@ -156,13 +172,11 @@ export function RequestDataSource(props: Props) {
                 </Button>
             )]}
         >
-            {(!status || status === 'success') && (renderMainBody())}
+            {(!status || status === 'success') && renderMainBody()}
             {status === 'pending' && (
                 <div>Submitting request...</div>
             )}
-            {status === 'error' && (
-                <div>Error message</div>
-            )}
+            {status === 'error' && renderErrorMessage()}
         </BaseDialog>
     );
 }

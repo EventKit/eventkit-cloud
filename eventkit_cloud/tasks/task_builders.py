@@ -75,12 +75,8 @@ class TaskChainBuilder(object):
         export_tasks = {}
 
         # If WCS we will want geotiff...
-
         if "wcs" in primary_export_task.name.lower():
             formats += ["gtiff"]
-            compress = False
-        else:
-            compress = True
 
         # build a list of celery tasks based on the export formats...
         for file_format in formats:
@@ -151,7 +147,6 @@ class TaskChainBuilder(object):
                         run_uid=run.uid,
                         stage_dir=stage_dir,
                         job_name=job_name,
-                        compress=compress,
                         task_uid=task.get("task_uid"),
                         user_details=user_details,
                         locking_task_key=data_provider_task_record.uid,
@@ -187,7 +182,6 @@ class TaskChainBuilder(object):
                             run_uid=run.uid,
                             stage_dir=stage_dir,
                             job_name=job_name,
-                            compress=compress,
                             task_uid=projection_task.uid,
                             user_details=user_details,
                             locking_task_key=data_provider_task_record.uid,
@@ -234,7 +228,6 @@ class TaskChainBuilder(object):
             layer=provider_task.provider.layer,
             level_from=min_zoom,
             level_to=max_zoom,
-            compress=compress,
             service_type=service_type,
             service_url=provider_task.provider.url,
             config=provider_task.provider.config,

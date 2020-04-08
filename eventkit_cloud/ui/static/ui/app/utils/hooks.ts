@@ -1,4 +1,4 @@
-import {Dispatch, ReducerAction, ReducerState, useCallback, useEffect, useReducer, useRef, useState} from "react";
+import {useCallback, useEffect, useReducer, useRef, useState} from "react";
 import axios from "axios";
 
 // Convenience function that acts like componentDidMount.
@@ -28,12 +28,9 @@ enum ACTIONS {
     CLEAR,
 }
 
-const initialState = {
-    status: null,
-    response: {},
-};
-
-function submitReducer(state = initialState, { type = undefined, response = undefined } = {}) {
+interface RequestState {status: any, response: any}
+const initialState = { status: null, response: {} } as RequestState;
+function submitReducer(state = initialState, { type = undefined, response = undefined } = {}) : RequestState {
     switch (type) {
         case ACTIONS.FETCHING:
             return { ...initialState, status: 'fetching' };
@@ -52,10 +49,11 @@ interface Dispatcher {
     fetching: () => void;
     success: (response) => void;
     error: (response) => void;
+    clear: () => void;
 }
 
 // Async request hook with more fine grained ability to control the request.
-export function useAsyncRequest_Control(): [any, Dispatcher] {
+export function useAsyncRequest_Control(): [RequestState, Dispatcher] {
     const [state, dispatch] = useReducer(submitReducer, initialState);
     const dispatches = {
         fetching: () => dispatch({ type: ACTIONS.FETCHING }),
@@ -66,12 +64,12 @@ export function useAsyncRequest_Control(): [any, Dispatcher] {
     return [state, dispatches]
 }
 
-export function useAsyncRequest() {
+export function useAsyncRequest(): [RequestState, ((params: any) => Promise<void>)] {
     const [state, dispatches] = useAsyncRequest_Control();
     const makeRequest = useCallback(async (params: any) => {
         dispatches.fetching();
         try {
-            const response = await axios({ ...params });
+            const response = await axios({ ...params }).then();
             dispatches.success(response);
         } catch (e) {
             dispatches.error(e);
@@ -118,3 +116,4 @@ export function useDebouncedState(initialValue: any, timeout = 1000) {
     const [ valueState, setValueState ] = useState(initialValue);
     return [ valueState, useDebouncedSetter(setValueState, timeout) ];
 }
+
