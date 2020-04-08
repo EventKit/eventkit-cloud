@@ -299,10 +299,10 @@ class DataProvider(UIDMixin, TimeStampedModelMixin, CachedModelMixin):
         if user is None:
             return self.max_data_size
 
-        user_rules = UserMaxDataSize.objects.filter(provider=self, user=user)
-        if len(user_rules) > 0:
-            return max([_limit.max_data_size for _limit in user_rules])
-        else:
+        try:
+            user_rule = UserMaxDataSize.objects.get(provider=self, user=user)
+            return user_rule.max_data_size
+        except UserMaxDataSize.DoesNotExist:
             return self.max_data_size
 
 
