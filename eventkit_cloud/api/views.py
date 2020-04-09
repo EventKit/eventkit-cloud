@@ -2006,13 +2006,43 @@ class NotificationViewSet(viewsets.ModelViewSet):
 
 
 class AoiIncreaseRequestViewSet(viewsets.ModelViewSet):
-        queryset = AoiIncreaseRequest.objects.all()
-        serializer_class = AoiIncreaseRequestSerializer
+    permission_classes = (permissions.IsAuthenticated, IsOwnerOrReadOnly)
+    serializer_class = AoiIncreaseRequestSerializer
+    lookup_field = "uid"
+
+    def get_queryset(self):
+        """
+        This view should return a list of all
+        of the AOI Increase Requests for the
+        currently authenticated user.
+        """
+        user = self.request.user
+
+        # Admins and staff should be able to view all requests.
+        if user.is_staff == True or user.is_superuser == True:
+            return AoiIncreaseRequest.objects.all()
+
+        return AoiIncreaseRequest.objects.filter(user=user)
 
 
 class DataProviderRequestViewSet(viewsets.ModelViewSet):
-        queryset = DataProviderRequest.objects.all()
-        serializer_class = DataProviderRequestSerializer
+    permission_classes = (permissions.IsAuthenticated, IsOwnerOrReadOnly)
+    serializer_class = DataProviderRequestSerializer
+    lookup_field = "uid"
+
+    def get_queryset(self):
+        """
+        This view should return a list of all
+        of the AOI Increase Requests for the
+        currently authenticated user.
+        """
+        user = self.request.user
+
+        # Admins and staff should be able to view all requests.
+        if user.is_staff == True or user.is_superuser == True:
+            return DataProviderRequest.objects.all()
+
+        return DataProviderRequest.objects.filter(user=user)
 
 
 class EstimatorView(views.APIView):
