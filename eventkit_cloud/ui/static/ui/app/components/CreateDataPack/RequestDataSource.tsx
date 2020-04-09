@@ -21,7 +21,8 @@ function NoFlexRow(props: React.PropsWithChildren<any>) {
     return (
         <CustomTableRow
             {...props}
-            dataStyle={{...props.dataStyle, display: 'block' }}
+            // titleStyle={{padding: '0px'}}
+            dataStyle={{ ...props.dataStyle, display: 'block', padding: '0px' }}
         />
     );
 }
@@ -108,6 +109,7 @@ export function RequestDataSource(props: Props) {
                     }
                 </NoFlexRow>
                 <NoFlexRow
+                    className={classes.textField}
                     title="Description"
                 >
                     {status !== 'success' ? (<CustomTextField
@@ -121,7 +123,7 @@ export function RequestDataSource(props: Props) {
                         multiline
                         rows="4"
                         maxLength={1000}
-                    />) : description
+                    />) : (<p>{description}</p>)
                     }
                 </NoFlexRow>
             </>
@@ -129,7 +131,7 @@ export function RequestDataSource(props: Props) {
     }
 
     function renderErrorMessage() {
-        const { data = {errors: []} } = !!response ? response.response : {};
+        const { data = { errors: [] } } = !!response ? response.response : {};
         return (
             <>
                 <div
@@ -172,18 +174,21 @@ export function RequestDataSource(props: Props) {
                 </Button>
             )]}
         >
-            {(!status || status === 'success') && renderMainBody()}
-            {status === 'pending' && (
-                <div>Submitting request...</div>
-            )}
-            {status === 'error' && renderErrorMessage()}
+            <div className={classes.outerContainer}>
+                {(!status || status === 'success') && renderMainBody()}
+                {status === 'pending' && (
+                    <div>Submitting request...</div>
+                )}
+                {status === 'error' && renderErrorMessage()}
+            </div>
         </BaseDialog>
     );
 }
 
 const jss = (theme: Eventkit.Theme & Theme) => createStyles({
-    textField: {
+    outerContainer: {
         backgroundColor: theme.eventkit.colors.secondary,
+        padding: '5px',
     },
     input: {
         fontSize: '16px',
