@@ -1076,7 +1076,6 @@ class NotificationRunSerializer(serializers.ModelSerializer):
 class AoiIncreaseRequestSerializer(serializers.ModelSerializer):
 
     extent = serializers.SerializerMethodField(read_only=True)
-    original_selection = serializers.SerializerMethodField(read_only=True)
     user = serializers.HiddenField(default=serializers.CurrentUserDefault())
 
     class Meta:
@@ -1099,8 +1098,6 @@ class AoiIncreaseRequestSerializer(serializers.ModelSerializer):
         user = data["user"]
         selection = validators.validate_selection(self.context["request"].data, user=user)
         data["the_geom"] = selection
-        original_selection = validators.validate_original_selection(self.context["request"].data)
-        data["original_selection"] = original_selection
 
         return data
 

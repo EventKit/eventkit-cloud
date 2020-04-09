@@ -37,7 +37,6 @@ class AoiIncreaseRequest(UserRequest):
 
     provider = models.ForeignKey(DataProvider, on_delete=models.CASCADE, related_name="requested_provider")
     the_geom = models.MultiPolygonField(verbose_name="Extent for export", srid=4326, default="")
-    original_selection = models.GeometryCollectionField(verbose_name="The original map selection", srid=4326, default=GeometryCollection(), null=True, blank=True)
     requested_aoi_size = models.IntegerField(verbose_name="Requested AOI Size", null=True, blank=True)
     estimated_data_size = models.IntegerField(verbose_name="Estimated Data Size", null=True, blank=True)
 
