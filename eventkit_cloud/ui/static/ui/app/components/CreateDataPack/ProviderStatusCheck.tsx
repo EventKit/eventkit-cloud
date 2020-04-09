@@ -11,6 +11,7 @@ import {createStyles, IconButton, Theme, withStyles} from "@material-ui/core";
 import CloseIcon from '@material-ui/icons/Close';
 import axios from "axios";
 import {getCookie} from "../../utils/generic";
+import {useAsyncRequest} from "../../utils/hooks";
 
 const jss = (theme: Eventkit.Theme & Theme) => createStyles({
     submissionPopover: {
@@ -78,38 +79,24 @@ export function ProviderStatusCheck(props: Props) {
     const { areEstimatesLoading, providerHasEstimates } = props;
     const [ anchorElement, setAnchor ] = useState(null);
     const [ isSubmissionOpen, setSubmissionOpen ] = useState(false);
+    const [{ status: requestStatus, response: response }, requestCall] = useAsyncRequest();
     const { classes } = props;
 
-    async function getLargerSize(
-        provider: Eventkit.Provider,
-        selection: GeoJSON.FeatureCollection,
-        aoiArea: string,
-        estimatedSize: Eventkit.Store.EstimateData
-    ) {
-        const data = {
-            provider: provider.id,
-            selection: selection,
-            requested_aoi_size: parseInt(aoiArea),
-            estimated_data_size: estimatedSize.value,
-        };
-
-        const csrfmiddlewaretoken = getCookie('csrftoken');
-        return axios({
+    const csrfmiddlewaretoken = getCookie('csrftoken');
+    const makeRequest = (provider: Eventkit.Provider, selection: GeoJSON.FeatureCollection, aoiArea: string,
+                         estimatedSize: Eventkit.Store.EstimateData) =>
+        requestCall({
             url: `/api/aoi_increase_requests`,
             method: 'post',
-            data: data,
+            data: {
+                provider: provider.id,
+                selection: selection,
+                requested_aoi_size: parseInt(aoiArea),
+                estimated_data_size: Math.trunc(estimatedSize.value),
+            },
             headers: { 'X-CSRFToken': csrfmiddlewaretoken },
             cancelToken: source.token,
-        }).then((response) => {
-            return response.data[0];
-        }).catch(() => {
-            return {
-                provider: provider.id,
-                aoiSize: undefined,
-                estimatedDataSize: undefined,
-            };
-        });
-    }
+    });
 
     function handlePopoverOpen(e: React.MouseEvent<HTMLElement>) {
         setAnchor(e.currentTarget);
@@ -128,7 +115,7 @@ export function ProviderStatusCheck(props: Props) {
         aoiArea = aoiArea.replace(/\,/g,'');
         const estimatedSize = props.providerInfo.estimates.size;
 
-        await getLargerSize(props.provider, selection, aoiArea, estimatedSize);
+        await makeRequest(props.provider, selection, aoiArea, estimatedSize);
         setSubmissionOpen(true);
     }
 
@@ -322,7 +309,24 @@ export function ProviderStatusCheck(props: Props) {
                                 onClose={handleSubmissionClose}
                             >
                                 <div className={classes.submissionPopoverText}>
-                                    <strong>Your AOI increase request has been submitted.</strong>
+                                    {requestStatus !== 'error' && (
+                                        <>
+                                            {requestStatus === 'pending' && (
+                                                <div>Pending Request</div>
+                                            )}
+                                            {requestStatus === 'success' && (
+                                                <div>
+                                                    <strong>Your AOI increase request has been submitted.</strong>
+                                                </div>
+                                            )}
+                                        </>
+                                    )}
+                                    {requestStatus === 'error' && (
+                                        <div>
+                                            Request Failure due to {response.response.data.errors[0].title}.
+                                        </div>
+
+                                    )}
                                 </div>
                             </BaseDialog>
                         </span>
