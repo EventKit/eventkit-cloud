@@ -23,8 +23,8 @@ from eventkit_cloud.api.views import (
     EstimatorView,
     AuditEventViewSet,
     api_docs_view,
-    AoiIncreaseRequestViewSet,
-    DataProviderRequestViewSet
+    DataProviderRequestViewSet,
+    SizeIncreaseRequestViewSet,
 )
 
 import notifications.urls
@@ -35,8 +35,8 @@ app_name = "api"
 router = DefaultRouter(trailing_slash=False)
 router.register(r"jobs", JobViewSet, basename="jobs")
 router.register(r"formats", ExportFormatViewSet, basename="formats")
-router.register(r"providers/requests/aoi", AoiIncreaseRequestViewSet, basename="aoi_increase_requests")
-router.register(r"providers/requests", DataProviderRequestViewSet, basename="data_provider_requests")
+router.register(r"providers/requests/size", SizeIncreaseRequestViewSet, basename="size_requests")
+router.register(r"providers/requests", DataProviderRequestViewSet, basename="provider_requests")
 router.register(r"providers", DataProviderViewSet, basename="providers")
 router.register(r"licenses", LicenseViewSet, basename="licenses")
 router.register(r"runs", ExportRunViewSet, basename="runs")
