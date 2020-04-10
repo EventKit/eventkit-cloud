@@ -102,6 +102,8 @@ function ProviderStatusCheck(props: Props) {
                     message = makeMessage('No problems: ');
                 }
                 break;
+            case STATUS.FATAL:
+                break;
             case STATUS.ERR:
                 style.icon.color = 'rgba(192, 0, 0, 0.87)';
                 StatusIcon = AlertError;
@@ -135,7 +137,7 @@ function ProviderStatusCheck(props: Props) {
             default:
                 StatusIcon = CircularProgress;
                 title = 'CHECKING AVAILABILITY';
-                message = makeMessage('');
+                message = makeMessage('', false);
                 otherProps = { thickness: 2, size: 20, color: 'primary' };
                 break;
         }

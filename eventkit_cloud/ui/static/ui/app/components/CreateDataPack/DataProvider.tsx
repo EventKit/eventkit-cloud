@@ -136,7 +136,7 @@ export function DataProvider(props: Props) {
     const [isLicenseOpen, setLicenseOpen] = useState(false);
     const [displayFootprints, setDisplayFootprints] = useState(false);
 
-    const { dataSizeInfo, areEstimatesLoading, aoiArea, providerLimits } = useJobValidationContext();
+    const { dataSizeInfo, aoiArea, areEstimatesLoading: anyLoading, providerLimits } = useJobValidationContext();
     const { haveAvailableEstimates = [], noMaxDataSize = [] } = dataSizeInfo || {};
     const [ overSize, setOverSize ] = useState(false);
     const [ overArea, setOverArea ] = useState(false);
@@ -155,6 +155,7 @@ export function DataProvider(props: Props) {
         setHasEstimates(arrayHasValue(haveAvailableEstimates, provider.slug) && !arrayHasValue(noMaxDataSize, provider.slug));
     }, [DepsHashers.arrayHash(haveAvailableEstimates), DepsHashers.arrayHash(noMaxDataSize)]);
 
+    const areEstimatesLoading = !providerInfo.estimates;
     useEffect(() => {
         const limits = providerLimits.find(limits => limits.slug === props.provider.slug);
         const { size={value:-1} } = providerInfo.estimates || {};

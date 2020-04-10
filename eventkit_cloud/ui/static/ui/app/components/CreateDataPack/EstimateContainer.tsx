@@ -6,7 +6,7 @@ import {updateExportInfo} from '../../actions/datacartActions';
 import {getProviders} from '../../actions/providerActions';
 import axios from "axios";
 import {connect} from "react-redux";
-import {DepsHashers, useEffectOnMount} from "../../utils/hooks";
+import {DepsHashers, useEffectOnMount, useProviderIdentity, useProvidersLoading} from "../../utils/hooks";
 import {useAppContext} from "../ApplicationContext";
 import {JobValidationProvider} from "./context/JobValidation";
 
@@ -34,9 +34,9 @@ function EstimateContainer(props: Props) {
 
     const [totalTime, setTime] = useState(-1);
     const [totalSize, setSize] = useState(-1);
-    const [areEstimatesLoading, setEstimatesLoading] = useState(true);
     const [providerLimits, setLimits] = useState([]);
     const [aoiHasArea, setHasArea] = useState(false);
+    const [areEstimatesLoading, setProviderLoading] = useProvidersLoading(props.providers.filter(provider => provider.display));
 
     async function getEstimate(provider: Eventkit.Provider, bbox: number[]) {
         const providerExportOptions = props.exportInfo.exportOptions[provider.slug] as Eventkit.Store.ProviderExportOptions;
@@ -61,6 +61,7 @@ function EstimateContainer(props: Props) {
         };
 
         const csrfmiddlewaretoken = getCookie('csrftoken');
+        setProviderLoading(provider,true);
         return axios({
             url: `/api/estimate`,
             method: 'get',
@@ -68,8 +69,10 @@ function EstimateContainer(props: Props) {
             headers: { 'X-CSRFToken': csrfmiddlewaretoken },
             cancelToken: source.token,
         }).then((response) => {
+            setProviderLoading(provider,false);
             return response.data[0];
         }).catch(() => {
+            setProviderLoading(provider,false);
             return {
                 size: null,
                 slug: provider.slug,
@@ -163,7 +166,6 @@ function EstimateContainer(props: Props) {
             // Trigger an estimate calculation update in the parent
             // Does not re-request any data, calculates the total from available results.
             updateEstimate();
-            setEstimatesLoading(false);
         });
     }
 
@@ -177,7 +179,6 @@ function EstimateContainer(props: Props) {
         for (const provider of props.exportInfo.providers) {
             // tslint:disable-next-line:triple-equals
             if (props.exportInfo.providerInfo[provider.slug] == undefined) {
-                setEstimatesLoading(true);
                 return;
             } else {
                 if (provider.slug in props.exportInfo.providerInfo) {
@@ -196,7 +197,6 @@ function EstimateContainer(props: Props) {
                 setTime(timeEstimate);
                 setSize(sizeEstimate);
             }
-            setEstimatesLoading(false);
         }
     }
 
@@ -224,17 +224,16 @@ function EstimateContainer(props: Props) {
         }
     }, [props.providers]);
 
-    useEffect(() => {
+    useProviderIdentity(() => {
         if (SERVE_ESTIMATES) {
             updateEstimate();
         }
-    }, [DepsHashers.arrayHash(props.exportInfo.providers.map(provider => DepsHashers.providerIdentityHash(provider)))]);
+    }, props.exportInfo.providers);
 
     const [ aoiArea, setArea ] = useState(0);
     useEffect(() => {
         if (SERVE_ESTIMATES && Object.keys(aoiInfo.geojson).length && props.providers.length) {
             props.updateExportInfo({ providerInfo: {} });
-            setEstimatesLoading(true);
             checkProviders(props.providers);
         }
         const hasArea = allHaveArea(aoiInfo.geojson);
