@@ -57,7 +57,7 @@ from eventkit_cloud.api.serializers import (
     GroupUserSerializer,
     AuditEventSerializer,
     DataProviderRequestSerializer,
-    AoiIncreaseRequestSerializer
+    AoiIncreaseRequestSerializer,
 )
 from eventkit_cloud.api.validators import validate_bbox_params, validate_search_bbox
 from eventkit_cloud.core.helpers import (
@@ -2019,7 +2019,7 @@ class AoiIncreaseRequestViewSet(viewsets.ModelViewSet):
         user = self.request.user
 
         # Admins and staff should be able to view all requests.
-        if user.is_staff == True or user.is_superuser == True:
+        if user.is_staff or user.is_superuser:
             return AoiIncreaseRequest.objects.all()
 
         return AoiIncreaseRequest.objects.filter(user=user)
@@ -2039,7 +2039,7 @@ class DataProviderRequestViewSet(viewsets.ModelViewSet):
         user = self.request.user
 
         # Admins and staff should be able to view all requests.
-        if user.is_staff == True or user.is_superuser == True:
+        if user.is_staff or user.is_superuser:
             return DataProviderRequest.objects.all()
 
         return DataProviderRequest.objects.filter(user=user)

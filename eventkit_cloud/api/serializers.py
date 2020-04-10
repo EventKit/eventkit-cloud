@@ -1120,13 +1120,16 @@ def get_extent_geojson(obj):
     uid = str(obj.uid)
     if hasattr(obj, "name"):
         name = obj.name
+    else:
+        name = ""
     geom = obj.the_geom
     geometry = json.loads(GEOSGeometry(geom).geojson)
     feature = OrderedDict()
     feature["type"] = "Feature"
-    feature["properties"] = {"uid": uid}
+    feature["properties"] = {"uid": uid, "name": name}
     feature["geometry"] = geometry
     return feature
+
 
 def get_selection_dict(obj):
     """Return the selection as a feature collection dictionary."""

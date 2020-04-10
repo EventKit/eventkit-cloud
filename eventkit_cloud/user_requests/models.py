@@ -1,6 +1,6 @@
 from django.contrib.auth.models import User
 from django.contrib.gis.db import models
-from django.contrib.gis.geos import GeometryCollection, Polygon, MultiPolygon
+from django.contrib.gis.geos import Polygon, MultiPolygon
 
 from eventkit_cloud.core.models import (
     TimeStampedModelMixin,
@@ -30,7 +30,6 @@ class DataProviderRequest(UserRequest):
 
 
 class AoiIncreaseRequest(UserRequest):
-
     def __init__(self, *args, **kwargs):
         kwargs["the_geom"] = convert_polygon(kwargs.get("the_geom")) or ""
         super(AoiIncreaseRequest, self).__init__(*args, **kwargs)
@@ -39,6 +38,7 @@ class AoiIncreaseRequest(UserRequest):
     the_geom = models.MultiPolygonField(verbose_name="Extent for export", srid=4326, default="")
     requested_aoi_size = models.IntegerField(verbose_name="Requested AOI Size", null=True, blank=True)
     estimated_data_size = models.IntegerField(verbose_name="Estimated Data Size", null=True, blank=True)
+
 
 def convert_polygon(geom=None):
     if geom and isinstance(geom, Polygon):

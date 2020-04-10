@@ -1,10 +1,6 @@
 from django.contrib import admin
 
-from eventkit_cloud.user_requests.models import (
-    UserRequest,
-    DataProviderRequest,
-    AoiIncreaseRequest,
-)
+from eventkit_cloud.user_requests.models import DataProviderRequest, AoiIncreaseRequest
 
 
 class DataProviderRequestAdmin(admin.ModelAdmin):

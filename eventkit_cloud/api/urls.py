@@ -24,7 +24,7 @@ from eventkit_cloud.api.views import (
     AuditEventViewSet,
     api_docs_view,
     AoiIncreaseRequestViewSet,
-    DataProviderRequestViewSet
+    DataProviderRequestViewSet,
 )
 
 import notifications.urls
