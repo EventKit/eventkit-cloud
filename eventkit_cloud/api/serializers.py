@@ -46,7 +46,7 @@ from eventkit_cloud.tasks.models import (
     FileProducingTaskResult,
     DataProviderTaskRecord,
 )
-from eventkit_cloud.user_requests.models import DataProviderRequest, AoiIncreaseRequest
+from eventkit_cloud.user_requests.models import DataProviderRequest, SizeIncreaseRequest
 from eventkit_cloud.utils.s3 import get_presigned_url
 
 try:
@@ -300,32 +300,11 @@ class SimpleJobSerializer(serializers.Serializer):
 
     @staticmethod
     def get_extent(obj):
-        """Return the Job's extent as a GeoJSON Feature."""
-        uid = str(obj.uid)
-        name = obj.name
-        geom = obj.the_geom
-        geometry = json.loads(GEOSGeometry(geom).geojson)
-        feature = OrderedDict()
-        feature["type"] = "Feature"
-        feature["properties"] = {"uid": uid, "name": name}
-        feature["geometry"] = geometry
-        return feature
+        return get_extent_geojson(obj)
 
     @staticmethod
     def get_original_selection(obj):
-        geom_collection = obj.original_selection
-        if not geom_collection:
-            return None
-        feature_collection = OrderedDict()
-        feature_collection["type"] = "FeatureCollection"
-        feature_collection["features"] = []
-        for geom in geom_collection:
-            geojson_geom = json.loads(geom.geojson)
-            feature = OrderedDict()
-            feature["type"] = "Feature"
-            feature["geometry"] = geojson_geom
-            feature_collection["features"].append(feature)
-        return feature_collection
+        return get_selection_dict(obj)
 
     @staticmethod
     def get_permissions(obj):
@@ -796,32 +775,11 @@ class ListJobSerializer(serializers.Serializer):
 
     @staticmethod
     def get_extent(obj):
-        """Return the export extent as a GeoJSON Feature."""
-        uid = str(obj.uid)
-        name = obj.name
-        geom = obj.the_geom
-        geometry = json.loads(GEOSGeometry(geom).geojson)
-        feature = OrderedDict()
-        feature["type"] = "Feature"
-        feature["properties"] = {"uid": uid, "name": name}
-        feature["geometry"] = geometry
-        return feature
+        return get_extent_geojson(obj)
 
     @staticmethod
     def get_original_selection(obj):
-        geom_collection = obj.original_selection
-        if not geom_collection:
-            return None
-        feature_collection = OrderedDict()
-        feature_collection["type"] = "FeatureCollection"
-        feature_collection["features"] = []
-        for geom in geom_collection:
-            geojson_geom = json.loads(geom.geojson)
-            feature = OrderedDict()
-            feature["type"] = "Feature"
-            feature["geometry"] = geojson_geom
-            feature_collection["features"].append(feature)
-        return feature_collection
+        return get_selection_dict(obj)
 
     @staticmethod
     def get_owner(obj):
@@ -901,32 +859,11 @@ class JobSerializer(serializers.Serializer):
 
     @staticmethod
     def get_extent(obj):
-        """Return the export extent as a GeoJSON Feature."""
-        uid = str(obj.uid)
-        name = obj.name
-        geom = obj.the_geom
-        geometry = json.loads(GEOSGeometry(geom).geojson)
-        feature = OrderedDict()
-        feature["type"] = "Feature"
-        feature["properties"] = {"uid": uid, "name": name}
-        feature["geometry"] = geometry
-        return feature
+        return get_extent_geojson(obj)
 
     @staticmethod
     def get_original_selection(obj):
-        geom_collection = obj.original_selection
-        if not geom_collection:
-            return None
-        feature_collection = OrderedDict()
-        feature_collection["type"] = "FeatureCollection"
-        feature_collection["features"] = []
-        for geom in geom_collection:
-            geojson_geom = json.loads(geom.geojson)
-            feature = OrderedDict()
-            feature["type"] = "Feature"
-            feature["geometry"] = geojson_geom
-            feature_collection["features"].append(feature)
-        return feature_collection
+        return get_selection_dict(obj)
 
     def get_exports(self, obj):
         """Return the export formats selected for this export."""
@@ -1136,14 +1073,22 @@ class NotificationRunSerializer(serializers.ModelSerializer):
             return obj.expiration
 
 
-class AoiIncreaseRequestSerializer(serializers.ModelSerializer):
+class DataProviderRequestSerializer(serializers.ModelSerializer):
 
-    extent = serializers.SerializerMethodField(read_only=True)
-    original_selection = serializers.SerializerMethodField(read_only=True)
     user = serializers.HiddenField(default=serializers.CurrentUserDefault())
 
     class Meta:
-        model = AoiIncreaseRequest
+        model = DataProviderRequest
+        fields = "__all__"
+
+
+class SizeIncreaseRequestSerializer(serializers.ModelSerializer):
+
+    extent = serializers.SerializerMethodField(read_only=True)
+    user = serializers.HiddenField(default=serializers.CurrentUserDefault())
+
+    class Meta:
+        model = SizeIncreaseRequest
         fields = "__all__"
 
     @staticmethod
@@ -1151,7 +1096,7 @@ class AoiIncreaseRequestSerializer(serializers.ModelSerializer):
         """Creates an export Job.
         :param **kwargs:
         """
-        return AoiIncreaseRequest.objects.create(**validated_data)
+        return SizeIncreaseRequest.objects.create(**validated_data)
 
     def validate(self, data, **kwargs):
         """
@@ -1162,45 +1107,42 @@ class AoiIncreaseRequestSerializer(serializers.ModelSerializer):
         user = data["user"]
         selection = validators.validate_selection(self.context["request"].data, user=user)
         data["the_geom"] = selection
-        original_selection = validators.validate_original_selection(self.context["request"].data)
-        data["original_selection"] = original_selection
 
         return data
 
     @staticmethod
     def get_extent(obj):
-        """Return the export extent as a GeoJSON Feature."""
-        uid = str(obj.uid)
-        # name = obj.name
-        geom = obj.the_geom
-        geometry = json.loads(GEOSGeometry(geom).geojson)
+        return get_extent_geojson(obj)
+
+
+def get_extent_geojson(obj):
+    """Return the export extent as a GeoJSON Feature."""
+    uid = str(obj.uid)
+    if hasattr(obj, "name"):
+        name = obj.name
+    else:
+        name = ""
+    geom = obj.the_geom
+    geometry = json.loads(GEOSGeometry(geom).geojson)
+    feature = OrderedDict()
+    feature["type"] = "Feature"
+    feature["properties"] = {"uid": uid, "name": name}
+    feature["geometry"] = geometry
+    return feature
+
+
+def get_selection_dict(obj):
+    """Return the selection as a feature collection dictionary."""
+    geom_collection = obj.original_selection
+    if not geom_collection:
+        return None
+    feature_collection = OrderedDict()
+    feature_collection["type"] = "FeatureCollection"
+    feature_collection["features"] = []
+    for geom in geom_collection:
+        geojson_geom = json.loads(geom.geojson)
         feature = OrderedDict()
         feature["type"] = "Feature"
-        feature["properties"] = {"uid": uid}
-        feature["geometry"] = geometry
-        return feature
-
-    @staticmethod
-    def get_original_selection(obj):
-        geom_collection = obj.original_selection
-        if not geom_collection:
-            return None
-        feature_collection = OrderedDict()
-        feature_collection["type"] = "FeatureCollection"
-        feature_collection["features"] = []
-        for geom in geom_collection:
-            geojson_geom = json.loads(geom.geojson)
-            feature = OrderedDict()
-            feature["type"] = "Feature"
-            feature["geometry"] = geojson_geom
-            feature_collection["features"].append(feature)
-        return feature_collection
-
-
-class DataProviderRequestSerializer(serializers.ModelSerializer):
-
-    user = serializers.HiddenField(default=serializers.CurrentUserDefault())
-
-    class Meta:
-        model = DataProviderRequest
-        fields = "__all__"
+        feature["geometry"] = geojson_geom
+        feature_collection["features"].append(feature)
+    return feature_collection
