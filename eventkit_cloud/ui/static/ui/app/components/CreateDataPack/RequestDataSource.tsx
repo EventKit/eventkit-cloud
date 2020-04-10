@@ -62,9 +62,9 @@ export function RequestDataSource(props: Props) {
                 >
                     {status !== 'success' ? (<>Please enter TODO</>) : (<>Request successfully submitted.</>)}
                 </div>
-                <NoFlexRow
-                    title="Source name"
-                >
+                <div>
+                    <div className={classes.title}>Source name</div>
+                    <div className={classes.entryBlock}>
                     {status !== 'success' ? (
                         <CustomTextField
                             className={`qa-RequestDataSource-input-name ${classes.textField}`}
@@ -77,7 +77,8 @@ export function RequestDataSource(props: Props) {
                             maxLength={100}
                         />) : name
                     }
-                </NoFlexRow>
+                    </div>
+                </div>
                 <NoFlexRow
                     title="Source Link"
                 >
@@ -203,6 +204,25 @@ const jss = (theme: Eventkit.Theme & Theme) => createStyles({
         flexWrap: 'wrap',
         lineHeight: '25px',
     },
+    title: {
+        display: 'flex',
+        flex: '0 0 auto',
+        width: '140px',
+        backgroundColor: theme.eventkit.colors.secondary,
+        padding: '10px',
+        marginRight: '5px',
+    },
+    entryBlock: {
+        display: 'flex',
+        flex: '1 1 auto',
+        flexWrap: 'wrap',
+        alignItems: 'center',
+        backgroundColor: theme.eventkit.colors.secondary,
+        color: theme.eventkit.colors.text_primary,
+        padding: '10px',
+        wordBreak: 'break-word',
+        width: '100%',
+    }
 });
 
 

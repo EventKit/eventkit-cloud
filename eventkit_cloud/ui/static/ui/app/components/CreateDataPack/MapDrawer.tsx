@@ -387,6 +387,7 @@ export function MapDrawer(props: Props) {
                     <div
                         className={classes.stickyRow}
                     >
+                        Data Source Missing?
                         <RequestDataSource open={requestDataSourceOpen} onClose={() => setRequestDataSourceOpen(false)}/>
                         <Button
                             className={classes.button}
