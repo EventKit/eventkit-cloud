@@ -50,24 +50,6 @@ function ApiHookTester() {
     return (<div>{status}</div>);
 }
 
-//
-// it('should render correctly based on status', async () => {
-//     const mock = new MockAdapter(axios, { delayResponse: 1 });
-//     mock.onGet(apiUrl).reply(500);
-//     act(() => {
-//         render(<ApiHookTester />, container);
-//     });
-//     expect(container.querySelector('div').textContent).toContain('Request not fired.');
-//     const button = container.querySelector('button');
-//     expect(button.textContent).toBe('Request not fired.');
-//
-//     act(() => {
-//         button.dispatchEvent(new MouseEvent('click', { bubbles: true }));
-//     });
-//     expect(container.querySelector('div').textContent).toContain('fetching');
-// });
-
-
 it('should render correctly based on status', async () => {
     const mock = new MockAdapter(axios, { delayResponse: 1 });
     mock.onGet(apiUrl).reply(500);
