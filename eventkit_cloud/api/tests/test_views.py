@@ -24,6 +24,7 @@ from eventkit_cloud.jobs.models import ExportFormat, Job, DataProvider, \
 from eventkit_cloud.tasks.enumerations import TaskStates
 from eventkit_cloud.tasks.models import ExportRun, ExportTaskRecord, DataProviderTaskRecord, FileProducingTaskResult
 from eventkit_cloud.tasks.task_factory import InvalidLicense
+from eventkit_cloud.user_requests.models import AoiIncreaseRequest, DataProviderRequest
 
 logger = logging.getLogger(__name__)
 
@@ -1461,6 +1462,180 @@ class TestUserJobActivityViewSet(APITestCase):
         job.save()
         return job
 
+
+class TestAoiIncreaseRequestViewSet(APITestCase):
+    fixtures = ('osm_provider.json',)
+
+    def setUp(self):
+        bbox = Polygon.from_bbox((-7.96, 22.6, -8.14, 27.12))
+        the_geom = GEOSGeometry(bbox, srid=4326)
+        provider = DataProvider.objects.get(slug="osm-generic")
+        self.user = User.objects.create_user(username='demo', email='demo@demo.com', password='demo')
+        self.provider = DataProvider.objects.first()
+        self.aoi_request = AoiIncreaseRequest(
+            provider=provider,
+            the_geom=the_geom,
+            requested_aoi_size=5000,
+            estimated_data_size=1000,
+            user=self.user
+        )
+
+        token = Token.objects.create(user=self.user)
+        self.client.credentials(HTTP_AUTHORIZATION='Token ' + token.key,
+                        HTTP_ACCEPT='application/json; version=1.0',
+                        HTTP_ACCEPT_LANGUAGE='en',
+                        HTTP_HOST='testserver')
+        self.aoi_request.save()
+
+    def test_list(self):
+        expected = '/api/providers/requests/aoi'
+        url = reverse('api:aoi_requests-list')
+        self.assertEqual(expected, url)
+
+    def test_create_aoi_request_success(self):
+
+        request_data = {
+            'provider': self.provider.id,
+            'selection': bbox_to_geojson([5, 16, 5.1, 16.1]),
+            'requested_aoi_size': 5000,
+	        'estimated_data_size': 1000,
+        }
+
+        url = reverse('api:aoi_requests-list')
+        response = self.client.post(url, data=json.dumps(request_data), content_type='application/json; version=1.0')
+        response = response.json()
+
+        aoi_request = AoiIncreaseRequest.objects.last()
+        self.assertEqual(aoi_request.provider.id, request_data['provider'])
+        self.assertEqual(aoi_request.requested_aoi_size, request_data['requested_aoi_size'])
+        self.assertEqual(aoi_request.estimated_data_size, request_data['estimated_data_size'])
+        self.assertEqual(aoi_request.status, "pending")
+        self.assertEqual(aoi_request.user, self.user)
+
+    def test_get_aoi_request_detail(self):
+        expected = f'/api/providers/requests/aoi/{self.aoi_request.uid}'
+        url = reverse('api:aoi_requests-detail', args=[self.aoi_request.uid])
+        self.assertEqual(expected, url)
+
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response['Content-Type'], 'application/json')
+        self.assertEqual(response['Content-Language'], 'en')
+
+        self.assertEqual(response.data['uid'], str(self.aoi_request.uid))
+
+    def test_get_aoi_request_detail_no_permissions(self):
+        user = User.objects.create_user(username='demo2', email='demo2@demo.com', password='demo')
+        token = Token.objects.create(user=user)
+        self.client.credentials(HTTP_AUTHORIZATION='Token ' + token.key,
+                        HTTP_ACCEPT='application/json; version=1.0',
+                        HTTP_ACCEPT_LANGUAGE='en',
+                        HTTP_HOST='testserver')
+
+        expected = f'/api/providers/requests/aoi/{self.aoi_request.uid}'
+        url = reverse('api:aoi_requests-detail', args=[self.aoi_request.uid])
+        self.assertEqual(expected, url)
+        response = self.client.get(url)
+
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+        self.assertEqual(response['Content-Type'], 'application/json')
+        self.assertEqual(response['Content-Language'], 'en')
+
+        self.assertIsNotNone(response.data["errors"][0]["detail"])
+
+    def test_delete_job(self, ):
+        url = reverse('api:aoi_requests-detail', args=[self.aoi_request.uid])
+        response = self.client.delete(url)
+
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+        self.assertEqual(response['Content-Length'], '0')
+        self.assertEqual(response['Content-Language'], 'en')
+
+
+class TestDataProviderRequestViewSet(APITestCase):
+
+    def setUp(self):
+        self.user = User.objects.create_user(username='demo', email='demo@demo.com', password='demo')
+        self.provider_request = DataProviderRequest(
+            name="Test Data Provider Request",
+            url="http://www.test.com",
+            service_description="Test Service Description",
+            layer_names="[Test1, Test2, Test3]",
+            comment="Test Comment",
+            user=self.user
+        )
+
+        token = Token.objects.create(user=self.user)
+        self.client.credentials(HTTP_AUTHORIZATION='Token ' + token.key,
+                        HTTP_ACCEPT='application/json; version=1.0',
+                        HTTP_ACCEPT_LANGUAGE='en',
+                        HTTP_HOST='testserver')
+        self.provider_request.save()
+
+    def test_list(self):
+        expected = '/api/providers/requests'
+        url = reverse('api:provider_requests-list')
+        self.assertEqual(expected, url)
+
+    def test_create_provider_request_success(self):
+
+        request_data = {
+            'name': 'Test Name',
+            'url': 'http://www.test.com',
+            'service_description': 'Test Description',
+            'layer_names': '[Test1, Test2, Test3]'
+        }
+
+        url = reverse('api:provider_requests-list')
+        response = self.client.post(url, data=json.dumps(request_data), content_type='application/json; version=1.0')
+        response = response.json()
+
+        provider_request = DataProviderRequest.objects.last()
+        self.assertEqual(provider_request.name, request_data['name'])
+        self.assertEqual(provider_request.url, request_data['url'])
+        self.assertEqual(provider_request.service_description, request_data['service_description'])
+        self.assertEqual(provider_request.layer_names, request_data['layer_names'])
+        self.assertEqual(provider_request.status, "pending")
+        self.assertEqual(provider_request.user, self.user)
+
+    def test_get_provider_request_detail(self):
+        expected = f'/api/providers/requests/{self.provider_request.uid}'
+        url = reverse('api:provider_requests-detail', args=[self.provider_request.uid])
+        self.assertEqual(expected, url)
+
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response['Content-Type'], 'application/json')
+        self.assertEqual(response['Content-Language'], 'en')
+
+        self.assertEqual(response.data['uid'], str(self.provider_request.uid))
+
+    def test_get_provider_request_detail_no_permissions(self):
+        user = User.objects.create_user(username='demo2', email='demo2@demo.com', password='demo')
+        token = Token.objects.create(user=user)
+        self.client.credentials(HTTP_AUTHORIZATION='Token ' + token.key,
+                        HTTP_ACCEPT='application/json; version=1.0',
+                        HTTP_ACCEPT_LANGUAGE='en',
+                        HTTP_HOST='testserver')
+
+        expected = f'/api/providers/requests/{self.provider_request.uid}'
+        url = reverse('api:provider_requests-detail', args=[self.provider_request.uid])
+        self.assertEqual(expected, url)
+        response = self.client.get(url)
+
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+        self.assertEqual(response['Content-Type'], 'application/json')
+        self.assertEqual(response['Content-Language'], 'en')
+
+        self.assertIsNotNone(response.data["errors"][0]["detail"])
+
+    def test_delete_job(self, ):
+        url = reverse('api:provider_requests-detail', args=[self.provider_request.uid])
+        response = self.client.delete(url)
+
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+        self.assertEqual(response['Content-Length'], '0')
+        self.assertEqual(response['Content-Language'], 'en')
 
 def date_handler(obj):
     if hasattr(obj, 'isoformat'):
