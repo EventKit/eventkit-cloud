@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from eventkit_cloud.user_requests.models import DataProviderRequest, AoiIncreaseRequest
+from eventkit_cloud.user_requests.models import DataProviderRequest, SizeIncreaseRequest
 
 
 class DataProviderRequestAdmin(admin.ModelAdmin):
@@ -31,14 +31,14 @@ class DataProviderRequestAdmin(admin.ModelAdmin):
     ]
 
 
-class AoiIncreaseRequestAdmin(admin.ModelAdmin):
+class SizeIncreaseRequestAdmin(admin.ModelAdmin):
     list_display = [
         "uid",
         "status",
         "user",
         "provider",
         "requested_aoi_size",
-        "estimated_data_size",
+        "requested_data_size",
         "created_at",
         "updated_at",
     ]
@@ -61,4 +61,4 @@ class AoiIncreaseRequestAdmin(admin.ModelAdmin):
 
 
 admin.site.register(DataProviderRequest, DataProviderRequestAdmin)
-admin.site.register(AoiIncreaseRequest, AoiIncreaseRequestAdmin)
+admin.site.register(SizeIncreaseRequest, SizeIncreaseRequestAdmin)

@@ -29,15 +29,15 @@ class DataProviderRequest(UserRequest):
     layer_names = models.TextField(verbose_name="Layer Names", null=True, default="", blank=True)
 
 
-class AoiIncreaseRequest(UserRequest):
+class SizeIncreaseRequest(UserRequest):
     def __init__(self, *args, **kwargs):
         kwargs["the_geom"] = convert_polygon(kwargs.get("the_geom")) or ""
-        super(AoiIncreaseRequest, self).__init__(*args, **kwargs)
+        super(SizeIncreaseRequest, self).__init__(*args, **kwargs)
 
     provider = models.ForeignKey(DataProvider, on_delete=models.CASCADE, related_name="requested_provider")
     the_geom = models.MultiPolygonField(verbose_name="Extent for export", srid=4326, default="")
     requested_aoi_size = models.IntegerField(verbose_name="Requested AOI Size", null=True, blank=True)
-    estimated_data_size = models.IntegerField(verbose_name="Estimated Data Size", null=True, blank=True)
+    requested_data_size = models.IntegerField(verbose_name="Requested Data Size", null=True, blank=True)
 
 
 def convert_polygon(geom=None):

@@ -57,7 +57,7 @@ from eventkit_cloud.api.serializers import (
     GroupUserSerializer,
     AuditEventSerializer,
     DataProviderRequestSerializer,
-    AoiIncreaseRequestSerializer,
+    SizeIncreaseRequestSerializer,
 )
 from eventkit_cloud.api.validators import validate_bbox_params, validate_search_bbox
 from eventkit_cloud.core.helpers import (
@@ -100,7 +100,7 @@ from eventkit_cloud.tasks.task_factory import (
     InvalidLicense,
     Error,
 )
-from eventkit_cloud.user_requests.models import AoiIncreaseRequest, DataProviderRequest
+from eventkit_cloud.user_requests.models import DataProviderRequest, SizeIncreaseRequest
 from eventkit_cloud.utils.gdalutils import get_area
 from eventkit_cloud.utils.provider_check import perform_provider_check
 from eventkit_cloud.utils.stats.aoi_estimators import AoiEstimator
@@ -2005,26 +2005,6 @@ class NotificationViewSet(viewsets.ModelViewSet):
         return Response({"success": True}, status=status.HTTP_200_OK)
 
 
-class AoiIncreaseRequestViewSet(viewsets.ModelViewSet):
-    permission_classes = (permissions.IsAuthenticated, IsOwnerOrReadOnly)
-    serializer_class = AoiIncreaseRequestSerializer
-    lookup_field = "uid"
-
-    def get_queryset(self):
-        """
-        This view should return a list of all
-        of the AOI Increase Requests for the
-        currently authenticated user.
-        """
-        user = self.request.user
-
-        # Admins and staff should be able to view all requests.
-        if user.is_staff or user.is_superuser:
-            return AoiIncreaseRequest.objects.all()
-
-        return AoiIncreaseRequest.objects.filter(user=user)
-
-
 class DataProviderRequestViewSet(viewsets.ModelViewSet):
     permission_classes = (permissions.IsAuthenticated, IsOwnerOrReadOnly)
     serializer_class = DataProviderRequestSerializer
@@ -2033,7 +2013,7 @@ class DataProviderRequestViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         """
         This view should return a list of all
-        of the AOI Increase Requests for the
+        of Data Provider Requests for the
         currently authenticated user.
         """
         user = self.request.user
@@ -2043,6 +2023,26 @@ class DataProviderRequestViewSet(viewsets.ModelViewSet):
             return DataProviderRequest.objects.all()
 
         return DataProviderRequest.objects.filter(user=user)
+
+
+class SizeIncreaseRequestViewSet(viewsets.ModelViewSet):
+    permission_classes = (permissions.IsAuthenticated, IsOwnerOrReadOnly)
+    serializer_class = SizeIncreaseRequestSerializer
+    lookup_field = "uid"
+
+    def get_queryset(self):
+        """
+        This view should return a list of all
+        of the Data Size Increase Requests for the
+        currently authenticated user.
+        """
+        user = self.request.user
+
+        # Admins and staff should be able to view all requests.
+        if user.is_staff or user.is_superuser:
+            return SizeIncreaseRequest.objects.all()
+
+        return SizeIncreaseRequest.objects.filter(user=user)
 
 
 class EstimatorView(views.APIView):

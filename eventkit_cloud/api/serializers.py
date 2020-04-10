@@ -46,7 +46,7 @@ from eventkit_cloud.tasks.models import (
     FileProducingTaskResult,
     DataProviderTaskRecord,
 )
-from eventkit_cloud.user_requests.models import DataProviderRequest, AoiIncreaseRequest
+from eventkit_cloud.user_requests.models import DataProviderRequest, SizeIncreaseRequest
 from eventkit_cloud.utils.s3 import get_presigned_url
 
 try:
@@ -1073,13 +1073,22 @@ class NotificationRunSerializer(serializers.ModelSerializer):
             return obj.expiration
 
 
-class AoiIncreaseRequestSerializer(serializers.ModelSerializer):
+class DataProviderRequestSerializer(serializers.ModelSerializer):
+
+    user = serializers.HiddenField(default=serializers.CurrentUserDefault())
+
+    class Meta:
+        model = DataProviderRequest
+        fields = "__all__"
+
+
+class SizeIncreaseRequestSerializer(serializers.ModelSerializer):
 
     extent = serializers.SerializerMethodField(read_only=True)
     user = serializers.HiddenField(default=serializers.CurrentUserDefault())
 
     class Meta:
-        model = AoiIncreaseRequest
+        model = SizeIncreaseRequest
         fields = "__all__"
 
     @staticmethod
@@ -1087,7 +1096,7 @@ class AoiIncreaseRequestSerializer(serializers.ModelSerializer):
         """Creates an export Job.
         :param **kwargs:
         """
-        return AoiIncreaseRequest.objects.create(**validated_data)
+        return SizeIncreaseRequest.objects.create(**validated_data)
 
     def validate(self, data, **kwargs):
         """
@@ -1104,15 +1113,6 @@ class AoiIncreaseRequestSerializer(serializers.ModelSerializer):
     @staticmethod
     def get_extent(obj):
         return get_extent_geojson(obj)
-
-
-class DataProviderRequestSerializer(serializers.ModelSerializer):
-
-    user = serializers.HiddenField(default=serializers.CurrentUserDefault())
-
-    class Meta:
-        model = DataProviderRequest
-        fields = "__all__"
 
 
 def get_extent_geojson(obj):

@@ -3,43 +3,8 @@ from django.contrib.auth.models import User
 from django.contrib.gis.geos import GEOSGeometry, Polygon, MultiPolygon
 
 from eventkit_cloud.jobs.models import DataProvider
-from eventkit_cloud.user_requests.models import AoiIncreaseRequest, DataProviderRequest
+from eventkit_cloud.user_requests.models import DataProviderRequest, SizeIncreaseRequest
 
-
-class TestAoiIncreaseRequest(TestCase):
-    fixtures = ('osm_provider.json',)
-
-    def setUp(self):
-        bbox = Polygon.from_bbox((-7.96, 22.6, -8.14, 27.12))
-        the_geom = GEOSGeometry(bbox, srid=4326)
-        provider = DataProvider.objects.get(slug="osm-generic")
-        self.user = User.objects.create(username="demo", email="demo@demo.com", password="demo")
-        self.aoi_request = AoiIncreaseRequest(
-            provider=provider,
-            the_geom=the_geom,
-            requested_aoi_size=5000,
-            estimated_data_size=1000,
-            user=self.user
-        )
-        self.aoi_request.save()
-        self.uid = self.aoi_request.uid
-
-    def test_aoi_increase_request_creation(self):
-        aoi_request = AoiIncreaseRequest.objects.all()[0]
-        self.assertEqual(aoi_request, self.aoi_request)
-        self.assertEqual(aoi_request.uid, self.uid)
-        self.assertIsNotNone(aoi_request.created_at)
-        self.assertIsNotNone(aoi_request.updated_at)
-
-    def test_fields(self):
-        aoi_request = AoiIncreaseRequest.objects.all()[0]
-        bbox = Polygon.from_bbox((-7.96, 22.6, -8.14, 27.12))
-        the_geom = MultiPolygon(GEOSGeometry(bbox, srid=4326), srid=4326)
-        self.assertEqual(aoi_request.the_geom, the_geom)
-        self.assertEqual(aoi_request.requested_aoi_size, 5000)
-        self.assertEqual(aoi_request.estimated_data_size, 1000)
-        self.assertEqual(aoi_request.status, "pending")
-        self.assertEqual(aoi_request.user, self.user)
 
 class TestDataProviderRequest(TestCase):
 
@@ -72,3 +37,39 @@ class TestDataProviderRequest(TestCase):
         self.assertEqual(provider_request.comment, "Test Comment")
         self.assertEqual(provider_request.status,"pending")
         self.assertEqual(provider_request.user, self.user)
+
+
+class TestSizeIncreaseRequest(TestCase):
+    fixtures = ('osm_provider.json',)
+
+    def setUp(self):
+        bbox = Polygon.from_bbox((-7.96, 22.6, -8.14, 27.12))
+        the_geom = GEOSGeometry(bbox, srid=4326)
+        provider = DataProvider.objects.get(slug="osm-generic")
+        self.user = User.objects.create(username="demo", email="demo@demo.com", password="demo")
+        self.size_request = SizeIncreaseRequest(
+            provider=provider,
+            the_geom=the_geom,
+            requested_aoi_size=5000,
+            requested_data_size=1000,
+            user=self.user
+        )
+        self.size_request.save()
+        self.uid = self.size_request.uid
+
+    def test_size_increase_request_creation(self):
+        size_request = SizeIncreaseRequest.objects.all()[0]
+        self.assertEqual(size_request, self.size_request)
+        self.assertEqual(size_request.uid, self.uid)
+        self.assertIsNotNone(size_request.created_at)
+        self.assertIsNotNone(size_request.updated_at)
+
+    def test_fields(self):
+        size_request = SizeIncreaseRequest.objects.all()[0]
+        bbox = Polygon.from_bbox((-7.96, 22.6, -8.14, 27.12))
+        the_geom = MultiPolygon(GEOSGeometry(bbox, srid=4326), srid=4326)
+        self.assertEqual(size_request.the_geom, the_geom)
+        self.assertEqual(size_request.requested_aoi_size, 5000)
+        self.assertEqual(size_request.requested_data_size, 1000)
+        self.assertEqual(size_request.status, "pending")
+        self.assertEqual(size_request.user, self.user)
