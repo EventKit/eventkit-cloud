@@ -33,7 +33,16 @@ const jss = (theme: Eventkit.Theme & Theme) => createStyles({
     popoverTitle: {
         color: theme.eventkit.colors.primary,
         fontWeight: 300,
-    }
+    },
+    // actionsStyle: {
+    //     margin: 'auto',
+    //     flexDirection: 'initial',
+    //     justifyContent: 'initial',
+    //     paddingBottom: '20px'
+    // },
+    // // titleStyle: {display: 'None'},
+    // // bodyStyle: {padding: '35px 0px'},
+    // // buttonText: "OK"
 });
 
 interface Props extends React.HTMLAttributes<HTMLElement> {
@@ -83,20 +92,20 @@ export function ProviderStatusCheck(props: Props) {
     const { classes } = props;
 
     const csrfmiddlewaretoken = getCookie('csrftoken');
-    const makeRequest = (provider: Eventkit.Provider, selection: GeoJSON.FeatureCollection, aoiArea: string,
+    const makeRequest = async (provider: Eventkit.Provider, selection: GeoJSON.FeatureCollection, aoiArea: string,
                          estimatedSize: Eventkit.Store.EstimateData) =>
         requestCall({
-            url: `/api/aoi_increase_requests`,
+            url: `/api/size_requests`,
             method: 'post',
             data: {
                 provider: provider.id,
-                selection: selection,
+                the_geom: selection,
                 requested_aoi_size: parseInt(aoiArea),
-                estimated_data_size: Math.trunc(estimatedSize.value),
+                requested_data_size: estimatedSize ? Math.trunc(estimatedSize.value) : undefined,
             },
             headers: { 'X-CSRFToken': csrfmiddlewaretoken },
             cancelToken: source.token,
-    });
+        });
 
     function handlePopoverOpen(e: React.MouseEvent<HTMLElement>) {
         setAnchor(e.currentTarget);
@@ -304,7 +313,16 @@ export function ProviderStatusCheck(props: Props) {
                         </span>
                         <span>
                             <BaseDialog
-                                className={classes.submissionPopover}
+                                actionsStyle={{
+                                    margin: 'auto',
+                                    flexDirection: 'initial',
+                                    justifyContent: 'initial',
+                                    paddingBottom: '20px',
+                                }}
+                                titleStyle={{display: 'None'}}
+                                bodyStyle={{padding: '35px 0px'}}
+                                buttonText="OK"
+                                // className={classes.submissionPopover}
                                 show={isSubmissionOpen}
                                 onClose={handleSubmissionClose}
                             >
