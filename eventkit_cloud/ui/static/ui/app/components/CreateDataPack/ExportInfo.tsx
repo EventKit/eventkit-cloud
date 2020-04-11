@@ -970,7 +970,7 @@ function mapDispatchToProps(dispatch) {
     };
 }
 
-// Wrapper around the CustomTextField component that debounces the setter.
+// Wrapper around the CustomTextField component that debounces the redux store call.
 // This was done to avoid refactoring the entire component to hooks all at once.
 // At a later point this could be removed and done in place.
 function DebouncedTextField(props: any) {

@@ -35,7 +35,6 @@ const csrfmiddlewaretoken = getCookie('csrftoken');
 export function RequestDataSource(props: Props) {
     const { open, onClose, classes } = props;
 
-    const [name1, setName] = useState(undefined);
     const [name, debounceName] = useDebouncedState(undefined);
     const [url, debounceUrl] = useDebouncedState('');
     const [layerNames, debounceLayerNames] = useDebouncedState('');
@@ -55,17 +54,6 @@ export function RequestDataSource(props: Props) {
         cancelToken: source.token,
     });
 
-    function FlexRow(props) {
-        return (
-            <div className={classes.entryRow}>
-                <strong className={classes.left}>{props.title}</strong>
-                <div className={classes.right}>
-                    {props.children}
-                </div>
-            </div>
-        )
-    }
-
     function renderMainBody() {
         const infoMessage = "Please provide as much detail as possible. If you have a link to the website that" +
             "hosts the map and any detail about the layers you need, please include that information in this request.";
@@ -77,63 +65,77 @@ export function RequestDataSource(props: Props) {
                 >
                     {status !== 'success' ? infoMessage : "Request successfully submitted"}
                 </div>
-                <FlexRow title="Source Name:">
-                    <CustomTextField
-                        className={classes.textField}
-                        id="name"
-                        name="sourceName"
-                        onChange={e => onChange(e, setName)}
-                        placeholder="enter source here"
-                        InputProps={{ className: classes.input }}
-                        fullWidth
-                        maxLength={100}
-                        variant="outlined"
-                        disabled={status === 'success'}
-                    />
-                </FlexRow>
-                <FlexRow title="Source URL:">
-                    <CustomTextField
-                        className={classes.textField}
-                        id="url"
-                        name="sourceUrl"
-                        onChange={(e) => onChange(e, debounceUrl)}
-                        placeholder="enter url here"
-                        InputProps={{ className: classes.input }}
-                        fullWidth
-                        maxLength={100}
-                        variant="outlined"
-                        disabled={status === 'success'}
-                    />
-                </FlexRow>
-                <FlexRow title="Layer Names:">
-                    <CustomTextField
-                        className={classes.textField}
-                        id="layerNames"
-                        name="layerNames"
-                        onChange={(e) => onChange(e, debounceLayerNames)}
-                        placeholder="layer1, layer2, layer3..."
-                        InputProps={{ className: classes.input }}
-                        fullWidth
-                        variant="outlined"
-                        disabled={status === 'success'}
-                    />
-                </FlexRow>
-                <FlexRow title="Description:">
-                    <CustomTextField
-                        className={classes.textField}
-                        id="description"
-                        name="description"
-                        onChange={(e) => onChange(e, () => {})}
-                        placeholder="enter description here"
-                        InputProps={{ className: classes.input }}
-                        fullWidth
-                        variant="outlined"
-                        disabled={status === 'success'}
-                        rows={4}
-                        rowsMax={4}
-                        multiline
-                    />
-                </FlexRow>
+                <div className={classes.entryRow}>
+                    <strong className={classes.left}>Source Name:</strong>
+                    <div className={classes.right}>
+                        <CustomTextField
+                            className={classes.textField}
+                            id="name"
+                            name="sourceName"
+                            onChange={e => onChange(e, debounceName)}
+                            placeholder="enter source here"
+                            InputProps={{ className: classes.input }}
+                            fullWidth
+                            maxLength={256}
+                            variant="outlined"
+                            disabled={status === 'success'}
+                        />
+                    </div>
+                </div>
+                <div className={classes.entryRow}>
+                    <strong className={classes.left}>Source Name:</strong>
+                    <div className={classes.right}>
+                        <CustomTextField
+                            className={classes.textField}
+                            id="url"
+                            name="sourceUrl"
+                            onChange={(e) => onChange(e, debounceUrl)}
+                            placeholder="enter url here"
+                            InputProps={{ className: classes.input }}
+                            fullWidth
+                            maxLength={256}
+                            variant="outlined"
+                            disabled={status === 'success'}
+                        />
+                    </div>
+                </div>
+                <div className={classes.entryRow}>
+                    <strong className={classes.left}>Source Name:</strong>
+                    <div className={classes.right}>
+                        <CustomTextField
+                            className={classes.textField}
+                            id="layerNames"
+                            name="layerNames"
+                            onChange={(e) => onChange(e, debounceLayerNames)}
+                            placeholder="layer1, layer2, layer3..."
+                            InputProps={{ className: classes.input }}
+                            fullWidth
+                            maxLength={256}
+                            variant="outlined"
+                            disabled={status === 'success'}
+                        />
+                    </div>
+                </div>
+                <div className={classes.entryRow}>
+                    <strong className={classes.left}>Source Name:</strong>
+                    <div className={classes.right}>
+                        <CustomTextField
+                            className={classes.textField}
+                            id="description"
+                            name="description"
+                            onChange={(e) => onChange(e, debounceDescription)}
+                            placeholder="enter description here"
+                            InputProps={{ className: classes.input }}
+                            fullWidth
+                            variant="outlined"
+                            disabled={status === 'success'}
+                            maxLength={1000}
+                            rows={4}
+                            rowsMax={4}
+                            multiline
+                        />
+                    </div>
+                </div>
             </>
         )
     }
