@@ -1,15 +1,15 @@
 import logging
 from abc import ABCMeta, abstractmethod
 
-import requests
 from django.conf import settings
+from eventkit_cloud.utils import auth_requests
+from eventkit_cloud.utils.geocoding.geocode_auth_response import GeocodeAuthResponse
 
-from eventkit_cloud.utils.geocoding.geocode_auth import get_auth_headers, authenticate
 
 logger = logging.getLogger(__name__)
 
 
-class GeocodeAdapter(metaclass=ABCMeta):
+class GeocodeAdapter(GeocodeAuthResponse, metaclass=ABCMeta):
     """
     An abstract class to implement a new geocoding service.  Note that the UI will expect,
     each feature to have a name, countryName, adminName1, adminName2, and the bbox only
@@ -84,17 +84,6 @@ class GeocodeAdapter(metaclass=ABCMeta):
         """
         pass
 
-    def get_response(self, payload):
-        response = requests.get(self.url, params=payload, headers=get_auth_headers())
-        if response.status_code in [401, 403]:
-            authenticate()
-            response = requests.get(self.url, params=payload, headers=get_auth_headers())
-            if not response.ok:
-                error_message = "EventKit was not able to authenticate to the Geocoding service."
-                logger.error(error_message)
-                raise AuthenticationError(error_message)
-        return response
-
     def get_data(self, query):
         """
         Handles querying the endpoint and returning a geojson (as a python dict).
@@ -105,6 +94,7 @@ class GeocodeAdapter(metaclass=ABCMeta):
         payload = self.get_payload(query)
         if not self.url:
             return
+
         response_data = self.get_response(payload).json()
         return self.create_geojson(response_data)
 
@@ -307,7 +297,7 @@ class Pelias(GeocodeAdapter):
                 break
 
         if search_id:
-            response = requests.get(update_url, params={"ids": search_id}).json()
+            response = auth_requests.get(update_url, params={"ids": search_id}, cert_var="GEOCODING_AUTH_CERT").json()
             features = response.get("features", [])
             if len(features):
                 feature = features[0]
@@ -319,7 +309,6 @@ class Pelias(GeocodeAdapter):
 
 
 class Geocode(object):
-
     _supported_geocoders = {"geonames": GeoNames, "pelias": Pelias, "nominatim": Nominatim}
 
     def __init__(self):
@@ -371,8 +360,3 @@ def expand_bbox(original_bbox, new_bbox):
     original_bbox[2] = max(new_bbox[2], original_bbox[2])
     original_bbox[3] = max(new_bbox[3], original_bbox[3])
     return original_bbox
-
-
-class AuthenticationError(Exception):
-    def __init__(self, message):
-        self.message = message

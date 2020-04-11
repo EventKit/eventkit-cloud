@@ -306,18 +306,20 @@ export class BreadcrumbStepper extends React.Component<Props, State> {
     private haveUnknownEstimate() {
         const providerSlugs = this.props.exportInfo.providers.map(provider => provider.slug);
         const infoEntries = Object.entries(this.props.exportInfo.providerInfo);
-        return infoEntries.filter(([slug, object]) =>
-            providerSlugs.indexOf(slug) !== -1).some(([slug, object]) => {
-            const estimates = object.estimates;
-            if (!!estimates) {
-                if (!estimates.time || !estimates.time.value) {
+        return infoEntries.filter(([slug, providerInfo]) =>
+            providerSlugs.indexOf(slug) !== -1).some(([slug, providerInfo]) => {
+            if (providerInfo) {
+                const estimates = providerInfo.estimates;
+                if (!!estimates) {
+                    if (!estimates.time || !estimates.time.value) {
+                        return true;
+                    }
+                    if (!estimates.size || !estimates.size.value) {
+                        return true;
+                    }
+                } else {
                     return true;
                 }
-                if (!estimates.size || !estimates.size.value) {
-                    return true;
-                }
-            } else {
-                return true;
             }
             return false;
         });
@@ -350,6 +352,7 @@ export class BreadcrumbStepper extends React.Component<Props, State> {
             color: this.props.theme.eventkit.colors.white,
             height: '50px',
             minWidth: '200px',
+            width: '60%',
             display: 'inline-flex',
             marginLeft: '24px',
             fontSize: '16px',
@@ -364,7 +367,7 @@ export class BreadcrumbStepper extends React.Component<Props, State> {
             case 0:
                 return (
                     <div className="qa-BreadcrumbStepper-step1Label" style={labelStyle}>
-                        <Typography style={{...textStyle, lineHeight: '50px'}}>
+                        <Typography style={{...textStyle}}>
                             STEP 1 OF 3: Define Area of Interest
                         </Typography>
                     </div>
@@ -502,6 +505,7 @@ export class BreadcrumbStepper extends React.Component<Props, State> {
             case 2:
                 return (
                     <Button
+                        mini
                         id="Next"
                         variant="fab"
                         color="primary"

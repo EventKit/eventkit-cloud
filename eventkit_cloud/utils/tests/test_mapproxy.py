@@ -170,7 +170,7 @@ class TestHelpers(TransactionTestCase):
 
 class TestLogger(TransactionTestCase):
 
-    @patch('eventkit_cloud.tasks.export_tasks.update_progress')
+    @patch('eventkit_cloud.tasks.task_process.update_progress')
     def test_log_step(self, mock_update_progress):
         test_task_uid = "1234"
         test_progress = 0.42

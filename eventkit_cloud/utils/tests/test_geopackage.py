@@ -211,7 +211,7 @@ class TestGeopackage(TransactionTestCase):
                                 "{0}.geojson".format(os.path.splitext(os.path.basename(gpkg))[0])), 'w')
         ogr_mock = mock_ogr.return_value
         ogr_mock.convert.called_once_with(file_format='GPKG', in_file=geojson, out_file=gpkg,
-                             params="-nln {0}".format(layer_name))
+                                          creation_options="-nln {0}".format(layer_name))
 
 
     @patch('eventkit_cloud.utils.geopackage.sqlite3')

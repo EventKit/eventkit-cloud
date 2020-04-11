@@ -4,13 +4,13 @@ from abc import ABCMeta, abstractmethod
 import requests
 from django.conf import settings
 
-from eventkit_cloud.utils.geocoding.geocode import AuthenticationError
-from eventkit_cloud.utils.geocoding.geocode_auth import get_auth_headers, authenticate
+from eventkit_cloud.utils.geocoding.geocode_auth_response import GeocodeAuthResponse
+
 
 logger = logging.getLogger(__name__)
 
 
-class ReverseGeocodeAdapter(metaclass=ABCMeta):
+class ReverseGeocodeAdapter(GeocodeAuthResponse, metaclass=ABCMeta):
     """
     An abstract class to implement a new reverse geocoding service.  Note that the UI will expect,
     each feature to have a name, countryName, adminName1, adminName2, and the bbox only
@@ -85,17 +85,6 @@ class ReverseGeocodeAdapter(metaclass=ABCMeta):
         """
         pass
 
-    def get_response(self, payload):
-        response = requests.get(self.url, params=payload, headers=get_auth_headers())
-        if response.status_code in [401, 403]:
-            authenticate()
-            response = requests.get(self.url, params=payload, headers=get_auth_headers())
-            if not response.ok:
-                error_message = "EventKit was not able to authenticate to the Geocoding service."
-                logger.error(error_message)
-                raise AuthenticationError(error_message)
-        return response
-
     def get_data(self, query):
         """
         Handles querying the endpoint and returning a geojson (as a python dict).
@@ -105,13 +94,10 @@ class ReverseGeocodeAdapter(metaclass=ABCMeta):
         """
 
         payload = self.get_payload(query)
-
         if not self.url:
             return
+
         response = self.get_response(payload)
-        if response.status_code in [401, 403]:
-            authenticate()
-            response = self.get_response(payload)
         return self.create_geojson(response)
 
     def get_feature(self, feature=None, bbox=None, properties=None):
