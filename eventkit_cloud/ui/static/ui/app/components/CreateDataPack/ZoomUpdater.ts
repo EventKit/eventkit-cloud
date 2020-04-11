@@ -1,4 +1,4 @@
-import React, {useEffect} from 'react';
+import React, {useEffect, useRef} from 'react';
 import { useOlZoom} from "../MapTools/context/OpenLayersContext";
 
 interface Props {
@@ -7,9 +7,12 @@ interface Props {
 
 function ZoomUpdater(props: Props) {
     const zoomContext = useOlZoom();
-
+    const initialRender = useRef(true);
     useEffect(() => {
-        props.setZoom(null, zoomContext.zoomLevel);
+        if (!initialRender) {
+            props.setZoom(null, zoomContext.zoomLevel);
+        }
+        initialRender.current = false;
     }, [zoomContext.zoomLevel, props.setZoom]);
 
     return null;

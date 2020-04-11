@@ -505,7 +505,7 @@ export function isVertex(pixel, feature, tolarance, map) {
  * @return true if all geometries have area, otherwise false
  */
 export function allHaveArea(featureCollection) {
-    if (!featureCollection.features) {
+    if (!featureCollection || !featureCollection.features) {
         return false;
     }
 

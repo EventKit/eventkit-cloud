@@ -3,7 +3,7 @@ import * as React from 'react';
 import {createStyles, Theme, withStyles, withTheme} from '@material-ui/core/styles';
 import {connect} from 'react-redux';
 import axios from 'axios';
-import {getCookie, unsupportedFormats} from '../../utils/generic';
+import {arrayHasValue, getCookie, unsupportedFormats} from '../../utils/generic';
 import Joyride, {Step} from 'react-joyride';
 import List from '@material-ui/core/List';
 import Paper from '@material-ui/core/Paper';
@@ -22,6 +22,10 @@ import {joyride} from '../../joyride.config';
 import {getSqKmString} from '../../utils/generic';
 import BaseDialog from "../Dialog/BaseDialog";
 import AlertWarning from '@material-ui/icons/Warning';
+import {useJobValidationContext} from "./context/JobValidation";
+import {useEffectOnMount} from "../../utils/hooks";
+import {useEffect} from "react";
+import {array} from "prop-types";
 
 const jss = (theme: Eventkit.Theme & Theme) => createStyles({
     underlineStyle: {
@@ -165,6 +169,71 @@ export interface State {
     stepIndex: number;
 }
 
+export function hasRequiredFields(exportInfo: Eventkit.Store.ExportInfo) {
+    // if the required fields are populated return true, else return false
+    const {exportOptions} = exportInfo;
+    const formatsAreSelected = exportInfo.providers.map((provider) => {
+        return !!exportOptions[provider.slug]
+            && exportOptions[provider.slug].formats
+            && exportOptions[provider.slug].formats.length > 0;
+    });
+    return exportInfo.exportName
+        && exportInfo.datapackDescription
+        && exportInfo.projectName
+        && exportInfo.providers.length > 0
+        && exportInfo.projections.length > 0
+        && formatsAreSelected.every(selected => selected === true);
+}
+
+export function hasDisallowedSelection(exportInfo: Eventkit.Store.ExportInfo) {
+    // if any unacceptable providers are selected return true, else return false
+    return exportInfo.providers.some((provider) => {
+        // short-circuiting means that this shouldn't be called until provider.availability
+        // is populated, but if it's not, return false
+        const providerInfo = exportInfo.providerInfo[provider.slug];
+        if (!providerInfo) {
+            return false;
+        }
+        const {availability} = providerInfo;
+        if (availability && availability.status) {
+            return availability.status.toUpperCase() === 'FATAL';
+        }
+        return false;
+    });
+}
+
+function StepValidator(props: Props) {
+    const { setNextEnabled, setNextDisabled, walkthroughClicked, exportInfo, nextEnabled} = props;
+    const { aoiHasArea, areEstimatesLoading, dataSizeInfo, aoiArea } = useJobValidationContext();
+    const { exceedingSize=[], noMaxDataSize=[] } = dataSizeInfo;
+
+    useEffectOnMount(() => {
+        setNextDisabled();
+    });
+
+    useEffect(() => {
+        const validState = hasRequiredFields(exportInfo) && !hasDisallowedSelection(exportInfo);
+        const sizesValid = exportInfo.providers.every(provider => {
+            // No provider should ever be in exceedingSize AND noMaxDataSize
+            // This returns true if the provider doesn't have a max data size, so it is validated via AOI size
+            // Or if failing that, it is NOT present in the exceedingSize array.
+            // Meaning, the provider's estimate is below its max data size and that max data size is a real value (not null).
+            const goodSize = !arrayHasValue(exceedingSize, provider.slug);
+            const noSizeAndGoodAoi = arrayHasValue(noMaxDataSize, provider.slug) && parseFloat(provider.max_selection) > aoiArea;
+            return goodSize || noSizeAndGoodAoi;
+        });
+        const setEnabled = !walkthroughClicked && !areEstimatesLoading && aoiHasArea && validState && sizesValid;
+        if (setEnabled && !nextEnabled) {
+            setNextEnabled();
+        } else if(!setEnabled && nextEnabled) {
+            setNextDisabled();
+        }
+    });
+
+    return null;
+}
+
+
 export class ExportInfo extends React.Component<Props, State> {
     static contextTypes = {
         config: PropTypes.object,
@@ -200,8 +269,6 @@ export class ExportInfo extends React.Component<Props, State> {
         this.onNameChange = this.onNameChange.bind(this);
         this.onDescriptionChange = this.onDescriptionChange.bind(this);
         this.onProjectChange = this.onProjectChange.bind(this);
-        this.hasRequiredFields = this.hasRequiredFields.bind(this);
-        this.hasDisallowedSelection = this.hasDisallowedSelection.bind(this);
         this.callback = this.callback.bind(this);
         this.onChangeCheck = this.onChangeCheck.bind(this);
         this.onSelectAll = this.onSelectAll.bind(this);
@@ -223,12 +290,6 @@ export class ExportInfo extends React.Component<Props, State> {
     }
 
     componentDidMount() {
-        // if the state does not have required data disable next
-        if (!this.hasRequiredFields(this.props.exportInfo) ||
-            this.hasDisallowedSelection(this.props.exportInfo)) {
-            this.props.setNextDisabled();
-        }
-
         // calculate the area of the AOI
         const areaStr = getSqKmString(this.props.geojson);
 
@@ -256,18 +317,6 @@ export class ExportInfo extends React.Component<Props, State> {
         const {exportInfo} = this.props;
         let nextState = {};
 
-        if (!this.props.walkthroughClicked) {
-            // if required fields are fulfilled enable next
-            if (this.hasRequiredFields(exportInfo) &&
-                !this.hasDisallowedSelection(exportInfo)) {
-                if (!this.props.nextEnabled) {
-                    this.props.setNextEnabled();
-                }
-            } else if (this.props.nextEnabled) {
-                // if not and next is enabled it should be disabled
-                this.props.setNextDisabled();
-            }
-        }
         if (this.props.walkthroughClicked && !prevProps.walkthroughClicked && !this.state.isRunning) {
             this.joyride.current.reset(true);
             this.setState({isRunning: true});
@@ -275,6 +324,12 @@ export class ExportInfo extends React.Component<Props, State> {
 
         if (this.props.providers.length !== prevProps.providers.length) {
             this.setState({providers: this.props.providers});
+        } else {
+            const providerSlugs = this.props.providers.map(provider => provider.slug);
+            const prevProviderSlugs = prevProps.providers.map(provider => provider.slug);
+            if (providerSlugs.some(slug => !arrayHasValue(prevProviderSlugs, slug))) {
+                this.setState({providers: this.props.providers});
+            }
         }
 
         const selectedProjections = [...exportInfo.projections];
@@ -295,7 +350,7 @@ export class ExportInfo extends React.Component<Props, State> {
     }
 
     static elementsEqual(array1, array2) {
-        // To compare too arrays for equality, we check length for an early exit,
+        // To compare two arrays for equality, we check length for an early exit,
         // otherwise we sort them then compare element by element.
         if (array1.length !== array2.length) {
             return false;
@@ -477,12 +532,7 @@ export class ExportInfo extends React.Component<Props, State> {
 
     private onRefresh() {
         // make a copy of providers and set availability to empty json
-        const providers = this.state.providers.map(provider => ({
-            ...provider,
-            availability: {slug: undefined, type: undefined, status: undefined, message: undefined},
-        }));
-        // update state with the new copy of providers
-        this.setState({providers});
+        this.props.providers.forEach(provider => this.props.checkProvider(provider));
     }
 
     private clearEstimate(provider: Eventkit.Provider) {
@@ -510,39 +560,6 @@ export class ExportInfo extends React.Component<Props, State> {
 
     private handlePopoverClose() {
         this.setState({refreshPopover: null});
-    }
-
-    private hasRequiredFields(exportInfo: Eventkit.Store.ExportInfo) {
-        // if the required fields are populated return true, else return false
-        const {exportOptions} = exportInfo;
-        const formatsAreSelected = exportInfo.providers.map((provider) => {
-            return !!exportOptions[provider.slug]
-                && exportOptions[provider.slug].formats
-                && exportOptions[provider.slug].formats.length > 0;
-        });
-        return exportInfo.exportName
-            && exportInfo.datapackDescription
-            && exportInfo.projectName
-            && exportInfo.providers.length > 0
-            && exportInfo.projections.length > 0
-            && formatsAreSelected.every(selected => selected === true);
-    }
-
-    private hasDisallowedSelection(exportInfo: Eventkit.Store.ExportInfo) {
-        // if any unacceptable providers are selected return true, else return false
-        return exportInfo.providers.some((provider) => {
-            // short-circuiting means that this shouldn't be called until provider.availability
-            // is populated, but if it's not, return false
-            const providerInfo = this.props.exportInfo.providerInfo[provider.slug];
-            if (!providerInfo) {
-                return false;
-            }
-            const {availability} = providerInfo;
-            if (availability && availability.status) {
-                return availability.status.toUpperCase() === 'FATAL';
-            }
-            return false;
-        });
     }
 
     private joyrideAddSteps(steps: Step[]) {
@@ -661,6 +678,7 @@ export class ExportInfo extends React.Component<Props, State> {
 
         return (
             <div id="root" className={`qa-ExportInfo-root ${classes.root}`}>
+                <StepValidator {...this.props}/>
                 <Joyride
                     callback={this.callback}
                     ref={this.joyride}
@@ -832,7 +850,10 @@ export class ExportInfo extends React.Component<Props, State> {
                                                 this.props.updateExportInfo({
                                                         providerInfo: {
                                                             ...this.props.exportInfo.providerInfo,
-                                                            [provider.slug]: null,
+                                                            [provider.slug]: {
+                                                                estimates: undefined,
+                                                                availability: undefined,
+                                                            },
                                                         }
                                                     });
                                                 // Ask parent to update the estimate (i.e. display loading icon).

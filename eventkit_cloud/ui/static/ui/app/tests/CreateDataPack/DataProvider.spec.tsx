@@ -1,7 +1,7 @@
 import * as React from 'react';
 import * as sinon from 'sinon';
 import {shallow} from 'enzyme';
-import {DataProvider} from '../../components/CreateDataPack/DataProvider';
+import { DataProvider } from '../../components/CreateDataPack/DataProvider';
 
 const formats = [
     {
@@ -28,7 +28,6 @@ const formats = [
 
 describe('DataProvider component', () => {
     let wrapper;
-    let instance;
 
     const defaultProps = () => ({
         provider: {
@@ -78,42 +77,10 @@ describe('DataProvider component', () => {
             ...defaultProps(),
             ...propsOverride,
         };
-        wrapper = shallow(<DataProvider {...props} />, {
-            context: { config: { BASEMAP_URL: '', BASEMAP_COPYRIGHT: '' } },
-        });
-        instance = wrapper.instance();
+        wrapper = shallow(<DataProvider {...props} />);
     };
 
     beforeEach(setup);
-
-    describe('it sets state correctly', () => {
-        let stateSpy;
-
-        beforeEach(() => {
-            stateSpy = sinon.spy(instance, 'setState');
-        });
-
-        afterEach(() => {
-            stateSpy.restore();
-        });
-
-        it('handleLicenseOpen sets true in state', () => {
-            instance.handleLicenseOpen();
-            expect(stateSpy.calledWith({licenseDialogOpen: true})).toBe(true);
-        });
-
-        it('handleLicenseClose should set false in state', () => {
-            instance.handleLicenseClose();
-            expect(stateSpy.calledWith({licenseDialogOpen: false})).toBe(true);
-        });
-
-        it('handleExpand should negate the open state', () => {
-            const expected = !instance.state.open;
-            instance.handleExpand();
-            expect(stateSpy.calledOnce).toBe(true);
-            expect(instance.state.open).toBe(expected);
-        });
-    });
 
     describe('it handles providers correctly', () => {
 
