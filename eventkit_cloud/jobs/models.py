@@ -293,7 +293,7 @@ class DataProvider(UIDMixin, TimeStampedModelMixin, CachedModelMixin):
     @property
     def max_data_size(self):
         config = yaml.load(self.config)
-        return config.get("max_data_size", None)
+        return None if config is None else config.get("max_data_size", None)
 
     def get_max_data_size(self, user=None):
         if user is None:
