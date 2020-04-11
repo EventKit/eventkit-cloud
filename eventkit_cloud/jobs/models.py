@@ -171,10 +171,10 @@ class DataProvider(UIDMixin, TimeStampedModelMixin, CachedModelMixin):
         default="",
         blank=True,
         help_text="The SERVICE_URL is used as the endpoint for WFS, OSM, and WCS services. It is "
-                  "also used to check availability for all OGC services. If you are adding a TMS "
-                  "service, please provide a link to a single tile, but with the coordinate numbers "
-                  "replaced by {z}, {y}, and {x}. Example: https://tiles.your-geospatial-site.com/"
-                  "tiles/default/{z}/{y}/{x}.png",
+        "also used to check availability for all OGC services. If you are adding a TMS "
+        "service, please provide a link to a single tile, but with the coordinate numbers "
+        "replaced by {z}, {y}, and {x}. Example: https://tiles.your-geospatial-site.com/"
+        "tiles/default/{z}/{y}/{x}.png",
     )
     preview_url = models.CharField(
         verbose_name="Preview URL",
@@ -209,7 +209,7 @@ class DataProvider(UIDMixin, TimeStampedModelMixin, CachedModelMixin):
         max_digits=12,
         decimal_places=3,
         help_text="This is the maximum area in square kilometers that can be exported "
-                  "from this provider in a single DataPack.",
+        "from this provider in a single DataPack.",
     )
     level_from = models.IntegerField(
         verbose_name="Seed from level",
@@ -432,7 +432,7 @@ class Job(UIDMixin, TimeStampedModelMixin):
         return "{0}".format(self.name)
 
     @property
-    def overpass_extents(self, ):
+    def overpass_extents(self,):
         """
         Return the export extents in order required by Overpass API.
         """
@@ -442,11 +442,11 @@ class Job(UIDMixin, TimeStampedModelMixin):
         return overpass_extents
 
     @property
-    def extents(self, ):
+    def extents(self,):
         return GEOSGeometry(self.the_geom).extent  # (w,s,e,n)
 
     @property
-    def filters(self, ):
+    def filters(self,):
         """
         Return key=value pairs for each tag in this export.
 
@@ -460,7 +460,7 @@ class Job(UIDMixin, TimeStampedModelMixin):
         return filters
 
     @property
-    def categorised_tags(self, ):
+    def categorised_tags(self,):
         """
         Return tags mapped according to their geometry types.
         """
@@ -481,7 +481,7 @@ class Job(UIDMixin, TimeStampedModelMixin):
         }
 
     @property
-    def bounds_geojson(self, ):
+    def bounds_geojson(self,):
         return serialize("geojson", [self], geometry_field="the_geom", fields=("name", "the_geom"))
 
 
@@ -549,7 +549,7 @@ class MaxDataSizeRule(models.Model):
         max_digits=12,
         decimal_places=3,
         help_text="This is the maximum data size in MB that can be exported "
-                  "from this provider in a single DataPack.",
+        "from this provider in a single DataPack.",
     )
     provider = models.ForeignKey(DataProvider, on_delete=models.CASCADE)
 
@@ -561,10 +561,10 @@ class UserMaxDataSize(MaxDataSizeRule):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
 
     class Meta:
-        unique_together = ('provider', 'user')
+        unique_together = ("provider", "user")
 
     def __str__(self):
-        return f'{self.user.username} max for {self.provider.slug}'
+        return f"{self.user.username} max for {self.provider.slug}"
 
 
 def convert_polygon(geom=None):

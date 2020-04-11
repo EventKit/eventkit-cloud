@@ -38,7 +38,6 @@ from eventkit_cloud.jobs.models import (
     License,
     UserLicense,
     UserJobActivity,
-    UserMaxDataSize,
 )
 from eventkit_cloud.tasks.models import (
     ExportRun,
@@ -499,14 +498,14 @@ class GroupUserSerializer(serializers.ModelSerializer):
         if request.query_params.get("limit"):
             limit = int(request.query_params.get("limit"))
         gp_admins = GroupPermission.objects.filter(group=instance).filter(permission=GroupPermissionLevel.ADMIN.value)[
-                    :limit
-                    ]
+            :limit
+        ]
         admins = [gp.user for gp in gp_admins]
         members = []
         gp_members = (
             GroupPermission.objects.filter(group=instance)
-                .filter(permission=GroupPermissionLevel.MEMBER.value)
-                .exclude(user__in=admins)[: limit - gp_admins.count()]
+            .filter(permission=GroupPermissionLevel.MEMBER.value)
+            .exclude(user__in=admins)[: limit - gp_admins.count()]
         )
         for gp in gp_members:
             if gp.user not in admins:
@@ -852,8 +851,8 @@ class JobSerializer(serializers.Serializer):
 
     uid = serializers.UUIDField(read_only=True)
     url = serializers.HyperlinkedIdentityField(view_name="api:jobs-detail", lookup_field="uid")
-    name = serializers.CharField(max_length=100, )
-    description = serializers.CharField(max_length=255, )
+    name = serializers.CharField(max_length=100,)
+    description = serializers.CharField(max_length=255,)
     event = serializers.CharField(max_length=100, allow_blank=True, required=False)
     created_at = serializers.DateTimeField(read_only=True)
     updated_at = serializers.DateTimeField(read_only=True)
