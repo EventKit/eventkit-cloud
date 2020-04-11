@@ -679,7 +679,7 @@ def geopackage_export_task(
 
 @app.task(name="Geotiff (.tif)", bind=True, base=FormatTask)
 def geotiff_export_task(
-    self, result=None, task_uid=None, stage_dir=None, job_name=None, projection=4326, compress=False, *args, **kwargs,
+    self, result=None, task_uid=None, stage_dir=None, job_name=None, projection=4326, *args, **kwargs,
 ):
     """
     Class defining geopackage export function.
@@ -694,12 +694,7 @@ def geotiff_export_task(
         gtiff_in_dataset = f"GTIFF_RAW:{gtiff_in_dataset}"
 
     gtiff_out_dataset = gdalutils.convert(
-        fmt="gtiff",
-        input_file=gtiff_in_dataset,
-        output_file=gtiff_out_dataset,
-        task_uid=task_uid,
-        compress=compress,
-        boundary=selection,
+        fmt="gtiff", input_file=gtiff_in_dataset, output_file=gtiff_out_dataset, task_uid=task_uid, boundary=selection,
     )
 
     result["file_extension"] = "tif"
@@ -784,7 +779,6 @@ def reprojection_task(
     job_name=None,
     user_details=None,
     projection=None,
-    compress=False,
     *args,
     **kwargs,
 ):
@@ -815,7 +809,6 @@ def reprojection_task(
         input_file=in_dataset,
         output_file=out_dataset,
         task_uid=task_uid,
-        compress=compress,
         projection=projection,
         boundary=selection,
     )
