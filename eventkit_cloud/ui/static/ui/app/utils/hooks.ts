@@ -117,3 +117,58 @@ export function useDebouncedState(initialValue: any, timeout = 1000) {
     return [ valueState, useDebouncedSetter(setValueState, timeout) ];
 }
 
+export class DepsHashers {
+
+    private static readonly emptyEstimate = DepsHashers.stringHash('-1:-1');
+
+    static stringHash(value: string) : number {
+        let h;
+        for (let i = 0; i < value.length; i += 1) {
+            // eslint-disable-next-line no-bitwise
+            h = Math.imul(31, h) + value.charCodeAt(i) | 0;
+        }
+        return h;
+    }
+
+    static arrayHash(arrayIn: any[], hasher?: (val: any) => number | string) : number {
+        if (!hasher) {
+            hasher = DepsHashers.stringHash;
+        }
+        let hash = '';
+        arrayIn.forEach((val) => hash += hasher(val));
+        return DepsHashers.stringHash(hash);
+    }
+
+    static providerIdentityHash(provider: Eventkit.Provider) : number {
+        return DepsHashers.stringHash(provider.slug + provider.name);
+    }
+
+    static providerEstimate(estimates: Eventkit.Store.Estimates) : number {
+        const {size = undefined, time = undefined} = estimates || {};
+        if (!size && !time) {
+            return DepsHashers.emptyEstimate;
+        }
+        return DepsHashers.stringHash(`${size.value}:${time.value}`);
+    }
+}
+
+export function useProviderIdentity(effect: () => void, providers: Eventkit.Provider[]) {
+    useEffect(effect, [DepsHashers.arrayHash(providers.map(provider => DepsHashers.providerIdentityHash(provider)))]);
+}
+
+export function useProvidersLoading(providers: Eventkit.Provider[]): [boolean, ((provider: Eventkit.Provider, isLoading: boolean) => void)] {
+    const slugMap = useRef({});
+    const [ areProvidersLoading, setAreProvidersLoading ] = useState(true);
+    const [ flag, setFlag ] = useState(false);
+    useProviderIdentity(() => {
+        providers.map(provider => slugMap.current[provider.slug] = slugMap.current[provider.slug] || true);
+    }, providers);
+    useEffect(() => {
+        setAreProvidersLoading(Object.values(slugMap.current).some(value => value));
+    }, [flag]);
+    function setProviderLoading(provider: Eventkit.Provider, isLoading: boolean)  {
+        slugMap.current[provider.slug] = isLoading;
+        setFlag(flag => !flag);
+    }
+    return [areProvidersLoading, setProviderLoading];
+}

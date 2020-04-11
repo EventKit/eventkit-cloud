@@ -1,6 +1,6 @@
 import * as React from 'react';
 import * as sinon from 'sinon';
-import { shallow } from 'enzyme';
+import {mount, shallow} from 'enzyme';
 import AlertWarning from '@material-ui/icons/Warning';
 import ImageCropSquare from '@material-ui/icons/CropSquare';
 import ActionRoom from '@material-ui/icons/Room';
@@ -9,7 +9,9 @@ import Line from '@material-ui/icons/Timeline';
 import Extent from '@material-ui/icons/SettingsOverscan';
 import IrregularPolygon from '../../components/icons/IrregularPolygon';
 import AlertCallout from '../../components/CreateDataPack/AlertCallout';
-import { AoiInfobar } from '../../components/CreateDataPack/AoiInfobar';
+import {AoiInfobar, getIcon} from '../../components/CreateDataPack/AoiInfobar';
+import {JobValidationProvider} from "../../components/CreateDataPack/context/JobValidation";
+import {ProviderLimits} from "../../components/CreateDataPack/EstimateContainer";
 
 describe('AoiInfobar component', () => {
     const getProps = () => ({
@@ -26,10 +28,6 @@ describe('AoiInfobar component', () => {
         onRevertClick: sinon.spy(),
         clickZoomToSelection: sinon.spy(),
         handleBufferClick: sinon.spy(),
-        limits: {
-            max: 10,
-            sizes: [5, 10],
-        },
         ...(global as any).eventkit_test_props,
         classes: {},
     });
@@ -37,9 +35,18 @@ describe('AoiInfobar component', () => {
     let props;
     let wrapper;
     let instance;
-    const setup = (overrides = {}) => {
+    const setup = (overrides = {}, area = 100) => {
         props = { ...getProps(), ...overrides };
-        wrapper = shallow(<AoiInfobar {...props} />);
+        wrapper = mount(
+            <JobValidationProvider value={{
+                providerLimits: [{ maxDataSize: 100, maxArea: 100, slug: 'osm' } as ProviderLimits],
+                aoiHasArea: true,
+                aoiArea: area,
+                dataSizeInfo: {} as any,
+                areEstimatesLoading: false,
+            }}>
+                <AoiInfobar {...props} />
+            </JobValidationProvider>);
         instance = wrapper.instance();
     };
 
@@ -84,7 +91,7 @@ describe('AoiInfobar component', () => {
         expect(wrapper.find(ActionZoomIn)).toHaveLength(1);
         expect(wrapper.find('.qa-AoiInfobar-infoTitle').text()).toEqual('fake title');
         expect(wrapper.find('.qa-AoiInfobar-infoDescription').text()).toEqual('fake description');
-        expect(wrapper.find('.qa-AoiInfobar-icon-polygon')).toHaveLength(1);
+        expect(wrapper.find('.qa-AoiInfobar-icon-polygon')).toHaveLength(5);
     });
 
     it('clicking on zoom button should call clickZoomToSelection', () => {
@@ -113,93 +120,38 @@ describe('AoiInfobar component', () => {
         expect(props.onRevertClick.calledOnce).toBe(true);
     });
 
-    it('clicking on buffer button should call handleBufferClick', () => {
-        const aoiInfo = {
-            ...props.aoiInfo,
-            geojson,
-            description: 'fake description',
-            geomType: 'Polygon',
-            title: 'fake title',
-        };
-        setup({ aoiInfo });
-        wrapper.find('.qa-AoiInfobar-buffer-button').shallow().simulate('click');
-        expect(props.handleBufferClick.calledOnce).toBe(true);
-    });
-
-    it('should show an alert icon which calls showAlert on click', () => {
-        const showSpy = sinon.spy(AoiInfobar.prototype, 'showAlert');
-        const aoiInfo = {
-            ...props.aoiInfo,
-            geojson,
-            description: 'fake description',
-            geomType: 'Polygon',
-            title: 'fake title',
-        };
-        setup({ aoiInfo, limits: { ...props.limits, max: 0.0000000001 } });
-        expect(wrapper.find('.qa-AoiInfobar-alert-icon')).toHaveLength(1);
-        wrapper.find('.qa-AoiInfobar-alert-icon').simulate('click');
-        expect(showSpy.calledOnce).toBe(true);
-        showSpy.restore();
-    });
-
     it('getIcon should return ImageCropSquare', () => {
-        const icon = instance.getIcon('Polygon', 'Box');
+        const icon = getIcon('Polygon', 'Box');
         expect(icon.type).toBe(ImageCropSquare);
     });
 
     it('getIcon should return Extent', () => {
-        const icon = instance.getIcon('Polygon', 'Map View');
+        const icon = getIcon('Polygon', 'Map View');
         expect(icon.type).toBe(Extent);
     });
 
     it('getIcon should return ActionRoom', () => {
-        const icon = instance.getIcon('Point', '');
+        const icon = getIcon('Point', '');
         expect(icon.type).toBe(ActionRoom);
     });
 
     it('getIcon should return Line', () => {
-        const icon = instance.getIcon('Line', '');
+        const icon = getIcon('Line', '');
         expect(icon.type).toBe(Line);
     });
 
     it('getIcon should return IrregularPolygon', () => {
-        const icon = instance.getIcon('Polygon', '');
+        const icon = getIcon('Polygon', '');
         expect(icon.type).toBe(IrregularPolygon);
     });
 
     it('getIcon should return IrregularPolygon', () => {
-        const icon = instance.getIcon('Collection', '');
+        const icon = getIcon('Collection', '');
         expect(icon.type).toBe(IrregularPolygon);
     });
 
     it('getIcon should return AlertWarning', () => {
-        const icon = instance.getIcon('', '');
+        const icon = getIcon('', '');
         expect(icon.type).toEqual(AlertWarning);
-    });
-
-    it('showAlert should set show to true', () => {
-        const stateSpy = sinon.spy(instance, 'setState');
-        instance.showAlert();
-        expect(stateSpy.calledOnce).toBe(true);
-        expect(stateSpy.calledWith({ showAlert: true })).toBe(true);
-    });
-
-    it('closeAlert should set show to false', () => {
-        const stateSpy = sinon.spy(instance, 'setState');
-        instance.closeAlert();
-        expect(stateSpy.calledOnce).toBe(true);
-        expect(stateSpy.calledWith({ showAlert: false })).toBe(true);
-    });
-
-    it('AlertCallout should show when alert state is true', () => {
-        const aoiInfo = {
-            ...props.aoiInfo,
-            geojson,
-            description: 'fake description',
-            geomType: 'Polygon',
-            title: 'fake title',
-        };
-        setup({ aoiInfo, limits: { ...props.limits, max: 500 } });
-        expect(wrapper.find(AlertCallout)).toHaveLength(1);
     });
 });
