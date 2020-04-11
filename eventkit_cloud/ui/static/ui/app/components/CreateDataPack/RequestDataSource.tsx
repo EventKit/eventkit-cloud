@@ -4,7 +4,7 @@ import Button from "@material-ui/core/Button";
 import CustomTableRow from "../common/CustomTableRow";
 import axios from "axios";
 import CustomTextField from "../common/CustomTextField";
-import {createStyles, Theme, withStyles} from "@material-ui/core";
+import {createStyles, Theme, withStyles, withTheme} from "@material-ui/core";
 import {useState} from "react";
 import {Dispatch} from "react";
 import {SetStateAction} from "react";
@@ -14,6 +14,7 @@ import {useAsyncRequest, useDebouncedSetter, useDebouncedState, useEffectOnMount
 interface Props {
     open: boolean;
     onClose: () => void;
+    theme: Eventkit.Theme & Theme;
     classes: { [className: string]: string };
 }
 
@@ -35,98 +36,103 @@ export function RequestDataSource(props: Props) {
     const { open, onClose, classes } = props;
 
     const [name, debounceName] = useDebouncedState(undefined);
-    const [url, debounceUrl] = useDebouncedState(undefined);
-    const [layerNames, debounceLayerNames] = useDebouncedState(undefined);
-    const [description, debounceDescription] = useDebouncedState(undefined);
+    const [url, debounceUrl] = useDebouncedState('');
+    const [layerNames, debounceLayerNames] = useDebouncedState('');
+    const [description, debounceDescription] = useDebouncedState('');
 
     const [{ status, response }, requestCall] = useAsyncRequest();
     const makeRequest = () => requestCall({
-        url: `/api/data_provider_requests`,
+        url: `/api/providers/requests`,
         method: 'post',
         data: {
             url,
             name,
             service_description: description,
-            layer_names: layerNames,
+            layer_names: `[${layerNames}]`,
         },
         headers: { 'X-CSRFToken': csrfmiddlewaretoken },
         cancelToken: source.token,
     });
 
+    function FlexRow(props) {
+        return (
+            <div className={classes.entryRow}>
+                <strong className={classes.left}>{props.title}</strong>
+                <div className={classes.right}>
+                    {props.children}
+                </div>
+            </div>
+        )
+    }
+
     function renderMainBody() {
+        const infoMessage = "Please provide as much detail as possible. If you have a link to the website that" +
+            "hosts the map and any detail about the layers you need, please include that information in this request.";
         return (
             <>
                 <div
                     id="mainHeading"
                     className={`qa-RequestDataSource-heading ${classes.heading}`}
                 >
-                    {status !== 'success' ? (<>Please enter TODO</>) : (<>Request successfully submitted.</>)}
+                    {status !== 'success' ? infoMessage : "Request successfully submitted"}
                 </div>
-                <div>
-                    <div className={classes.title}>Source name</div>
-                    <div className={classes.entryBlock}>
-                    {status !== 'success' ? (
-                        <CustomTextField
-                            className={`qa-RequestDataSource-input-name ${classes.textField}`}
-                            id="Name"
-                            name="sourceName"
-                            onChange={(e) => onChange(e, debounceName)}
-                            placeholder="Source Name"
-                            InputProps={{ className: classes.input }}
-                            fullWidth
-                            maxLength={100}
-                        />) : name
-                    }
-                    </div>
-                </div>
-                <NoFlexRow
-                    title="Source Link"
-                >
-                    {status !== 'success' ? (<CustomTextField
-                        className={`qa-RequestDataSource-input-url ${classes.textField}`}
+                <FlexRow title="Source Name:">
+                    <CustomTextField
+                        className={classes.textField}
+                        id="name"
+                        name="sourceName"
+                        onChange={e => debounceName(e.target.value)}
+                        placeholder="enter source here"
+                        InputProps={{ className: classes.input }}
+                        fullWidth
+                        maxLength={100}
+                        variant="outlined"
+                        disabled={status === 'success'}
+                    />
+                </FlexRow>
+                <FlexRow title="Source URL:">
+                    <CustomTextField
+                        className={classes.textField}
                         id="url"
                         name="sourceUrl"
                         onChange={(e) => onChange(e, debounceUrl)}
-                        placeholder="Source Link"
+                        placeholder="enter url here"
                         InputProps={{ className: classes.input }}
                         fullWidth
-                        maxLength={256}
-                    />) : url
-                    }
-                </NoFlexRow>
-                <NoFlexRow
-                    title="Layer Names"
-                >
-                    {status !== 'success' ? (<CustomTextField
-                        className={`qa-RequestDataSource-input-layers ${classes.textField}`}
-                        id="url"
+                        maxLength={100}
+                        variant="outlined"
+                        disabled={status === 'success'}
+                    />
+                </FlexRow>
+                <FlexRow title="Layer Names:">
+                    <CustomTextField
+                        className={classes.textField}
+                        id="layerNames"
                         name="layerNames"
                         onChange={(e) => onChange(e, debounceLayerNames)}
-                        placeholder="Layer1, Layer2, Layer3..."
+                        placeholder="layer1, layer2, layer3..."
                         InputProps={{ className: classes.input }}
                         fullWidth
-                        maxLength={256}
-                    />) : layerNames
-                    }
-                </NoFlexRow>
-                <NoFlexRow
-                    className={classes.textField}
-                    title="Description"
-                >
-                    {status !== 'success' ? (<CustomTextField
-                        className={`qa-RequestDataSource-input-description ${classes.textField}`}
+                        variant="outlined"
+                        disabled={status === 'success'}
+                    />
+                </FlexRow>
+                <FlexRow title="Description:">
+                    <CustomTextField
+                        className={classes.textField}
                         id="description"
-                        name="sourceDescription"
-                        onChange={(e) => onChange(e, debounceDescription)}
-                        placeholder="Description"
+                        name="description"
+                        onChange={(e) => onChange(e, () => {})}
+                        placeholder="enter description here"
                         InputProps={{ className: classes.input }}
                         fullWidth
+                        variant="outlined"
+                        disabled={status === 'success'}
+                        rows={4}
+                        rowsMax={4}
                         multiline
-                        rows="4"
-                        maxLength={1000}
-                    />) : (<p>{description}</p>)
-                    }
-                </NoFlexRow>
+                    />
+                </FlexRow>
             </>
         )
     }
@@ -164,6 +170,7 @@ export function RequestDataSource(props: Props) {
             show
             title="Request Data Source"
             onClose={onClose}
+            innerMaxHeight={600}
             actions={[(
                 <Button
                     key="close"
@@ -188,8 +195,10 @@ export function RequestDataSource(props: Props) {
 
 const jss = (theme: Eventkit.Theme & Theme) => createStyles({
     outerContainer: {
-        backgroundColor: theme.eventkit.colors.secondary,
-        padding: '5px',
+        padding: '15px',
+        borderStyle: 'solid',
+        borderWidth: '1px',
+        borderRadius: '4px',
     },
     input: {
         fontSize: '16px',
@@ -197,33 +206,27 @@ const jss = (theme: Eventkit.Theme & Theme) => createStyles({
         paddingRight: '50px',
     },
     heading: {
-        fontSize: '18px',
-        fontWeight: 'bold',
+        paddingBottom: '15px',
+        display: 'flex',
+        flexWrap: 'wrap',
+        lineHeight: '17px',
+    },
+    entryRow: {
         paddingBottom: '10px',
         display: 'flex',
-        flexWrap: 'wrap',
-        lineHeight: '25px',
     },
-    title: {
-        display: 'flex',
-        flex: '0 0 auto',
-        width: '140px',
-        backgroundColor: theme.eventkit.colors.secondary,
-        padding: '10px',
-        marginRight: '5px',
+    left: {
+        width: '150px',
+        paddingTop: '10px',
+        flexGrow: 1,
     },
-    entryBlock: {
-        display: 'flex',
-        flex: '1 1 auto',
-        flexWrap: 'wrap',
-        alignItems: 'center',
-        backgroundColor: theme.eventkit.colors.secondary,
-        color: theme.eventkit.colors.text_primary,
-        padding: '10px',
-        wordBreak: 'break-word',
-        width: '100%',
-    }
+    right: {
+        flexGrow: 5,
+    },
+    textField: {
+        backgroundColor: theme.eventkit.colors.white,
+    },
 });
 
 
-export default withStyles(jss)(RequestDataSource);
+export default withTheme()(withStyles(jss)(RequestDataSource));
