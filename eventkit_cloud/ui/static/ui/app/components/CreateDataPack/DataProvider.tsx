@@ -8,9 +8,9 @@ import CircularProgress from '@material-ui/core/CircularProgress';
 import Checkbox from '@material-ui/core/Checkbox';
 import ExpandLess from '@material-ui/icons/ExpandLess';
 import ExpandMore from '@material-ui/icons/ExpandMore';
-import ProviderStatusIcon from './ProviderStatusIcon';
+import ProviderStatusCheck from './ProviderStatusCheck';
 import BaseDialog from '../Dialog/BaseDialog';
-import {formatMegaBytes, getDuration, isZoomLevelInRange, supportsZoomLevels} from '../../utils/generic';
+import {arrayHasValue, formatMegaBytes, getDuration, isZoomLevelInRange, supportsZoomLevels} from '../../utils/generic';
 import {Switch, Typography} from "@material-ui/core";
 import ZoomLevelSlider from "./ZoomLevelSlider";
 import {connect} from "react-redux";
@@ -21,7 +21,7 @@ import FormatSelector from "./FormatSelector";
 import {Compatibility} from '../../utils/enums';
 import IndeterminateCheckBoxIcon from '@material-ui/icons/IndeterminateCheckBox';
 import CheckBoxIcon from "@material-ui/icons/CheckBox";
-import {CompatibilityInfo} from "./ExportInfo";
+import {CompatibilityInfo, ExportInfo} from "./ExportInfo";
 import {MapLayer} from "./CreateExport";
 import OlMouseWheelZoom from "../MapTools/OpenLayers/MouseWheelZoom";
 import ZoomUpdater from "./ZoomUpdater";
@@ -30,6 +30,11 @@ import PoiQueryDisplay from "../MapTools/PoiQueryDisplay";
 import OlMapClickEvent from "../MapTools/OpenLayers/OlMapClickEvent";
 import SwitchControl from "../common/SwitchControl";
 import Icon from "ol/style/icon";
+import {number, string} from "prop-types";
+import {useEffect, useRef, useState} from "react";
+import {DepsHashers, useEffectOnMount} from "../../utils/hooks";
+import {useAppContext} from "../ApplicationContext";
+import {useJobValidationContext} from "./context/JobValidation";
 
 const jss = (theme: Theme & Eventkit.Theme) => createStyles({
     container: {
@@ -121,62 +126,51 @@ interface Props {
     };
 }
 
-interface State {
-    open: boolean;
-    licenseDialogOpen: boolean;
-    zoomLevel: number;
-    displayFootprints: boolean;
-}
+export function DataProvider(props: Props) {
+    const { BASEMAP_URL } = useAppContext();
+    const { colors } = props.theme.eventkit;
+    const { classes, provider, providerInfo } = props;
+    const { exportOptions } = props.exportInfo;
 
-export class DataProvider extends React.Component<Props, State> {
+    const [isOpen, setOpen] = useState(false);
+    const [isLicenseOpen, setLicenseOpen] = useState(false);
+    const [displayFootprints, setDisplayFootprints] = useState(false);
 
-    static defaultProps;
-    private estimateDebouncer;
+    const { dataSizeInfo, aoiArea, areEstimatesLoading: anyLoading, providerLimits } = useJobValidationContext();
+    const { haveAvailableEstimates = [], noMaxDataSize = [] } = dataSizeInfo || {};
+    const [ overSize, setOverSize ] = useState(false);
+    const [ overArea, setOverArea ] = useState(false);
+    const debouncerRef = useRef(null);
+    const estimateDebouncer = (...args) => debouncerRef.current(...args);
 
-    static contextTypes = {
-        config: PropTypes.object,
-    };
-
-    constructor(props: Props) {
-        super(props);
-        this.handleLicenseOpen = this.handleLicenseOpen.bind(this);
-        this.handleLicenseClose = this.handleLicenseClose.bind(this);
-        this.handleExpand = this.handleExpand.bind(this);
-        this.setZoom = this.setZoom.bind(this);
-        this.getFormatCompatibility = this.getFormatCompatibility.bind(this);
-        this.getCheckedIcon = this.getCheckedIcon.bind(this);
-        this.handleFootprintsCheck = this.handleFootprintsCheck.bind(this);
-
-        this.estimateDebouncer = () => { /* do nothing while not mounted */
-        };
-        this.state = {
-            open: false,
-            licenseDialogOpen: false,
-            zoomLevel: this.props.provider.level_to,
-            displayFootprints: false,
-        };
-    }
-
-    componentDidMount() {
-        this.estimateDebouncer = debounce((val) => {
-            this.props.clearEstimate(this.props.provider);
-            this.props.checkProvider(val);
+    useEffectOnMount(() => {
+        debouncerRef.current = debounce((val) => {
+            props.clearEstimate(val);
+            props.checkProvider(val);
         }, 1000);
-    }
+    });
 
-    componentDidUpdate(prevProps: Readonly<Props>, prevState: Readonly<State>, snapshot?: any): void {
-        if(this.props.open){
-            this.state.open;
-        }
-    }
+    const [providerHasEstimates, setHasEstimates ] = useState(() => arrayHasValue(haveAvailableEstimates, provider.slug) && !arrayHasValue(noMaxDataSize, provider.slug));
+    useEffect(() => {
+        setHasEstimates(arrayHasValue(haveAvailableEstimates, provider.slug) && !arrayHasValue(noMaxDataSize, provider.slug));
+    }, [DepsHashers.arrayHash(haveAvailableEstimates), DepsHashers.arrayHash(noMaxDataSize)]);
 
-    getFormatCompatibility(formatSlug: string) {
-        const formatInfo = this.props.compatibilityInfo.formats[formatSlug.toLowerCase()];
+    const areEstimatesLoading = !providerInfo.estimates;
+    useEffect(() => {
+        const limits = providerLimits.find(limits => limits.slug === props.provider.slug);
+        const { size={value:-1} } = providerInfo.estimates || {};
+        const { maxArea=-1, maxDataSize=-1 } = limits || {};
+        setOverArea(aoiArea > maxArea);
+        setOverSize(size.value > maxDataSize);
+    }, [areEstimatesLoading, aoiArea]);
+
+    function getFormatCompatibility(formatSlug: string) {
+        const formatInfo = props.compatibilityInfo.formats[formatSlug.toLowerCase()];
         if (!formatInfo) {
             return Compatibility.Full;
         }
-        const incompatibleProjections = this.props.compatibilityInfo.formats[formatSlug.toLowerCase()].projections.length;
-        if (incompatibleProjections >= this.props.selectedProjections.length) {
+        const incompatibleProjections = props.compatibilityInfo.formats[formatSlug.toLowerCase()].projections.length;
+        if (incompatibleProjections >= props.selectedProjections.length) {
             return Compatibility.None;
         } else if (incompatibleProjections > 0) {
             return Compatibility.Partial;
@@ -184,10 +178,10 @@ export class DataProvider extends React.Component<Props, State> {
         return Compatibility.Full;
     }
 
-    private setZoom(minZoom: number, maxZoom: number) {
+    function setZoom(minZoom: number, maxZoom: number) {
         // update the state with the new array of options
-        const {provider} = this.props;
-        const providerOptions = {...this.props.providerOptions};
+        const { provider } = props;
+        const providerOptions = { ...props.providerOptions };
 
         // Check if a value was already set, we will fall back to this if the new values are invalid
         // If no values have been set, or the values are somehow invalid,
@@ -211,36 +205,36 @@ export class DataProvider extends React.Component<Props, State> {
         }
 
         const updatedExportOptions = {
-            ...this.props.exportInfo.exportOptions,
+            ...props.exportInfo.exportOptions,
             [provider.slug]: {
                 ...providerOptions,
                 minZoom,
                 maxZoom,
             }
         };
-        this.props.updateExportInfo({
+        props.updateExportInfo({
             exportOptions: updatedExportOptions,
         });
-        this.estimateDebouncer(this.props.provider);
+        estimateDebouncer(props.provider);
     }
 
-    private handleLicenseOpen() {
-        this.setState({licenseDialogOpen: true});
+    function handleLicenseOpen() {
+        setLicenseOpen(true);
     }
 
-    private handleLicenseClose() {
-        this.setState({licenseDialogOpen: false});
+    function handleLicenseClose() {
+        setLicenseOpen(true);
     }
 
-    handleExpand() {
-        this.setState(state => ({open: !state.open}));
+    function handleExpand() {
+        setOpen((val) => !val);
     }
 
-    handleFootprintsCheck = () => {
-        this.setState({ displayFootprints: !this.state.displayFootprints });
-    };
+    function handleFootprintsCheck() {
+        setDisplayFootprints((val) => !val);
+    }
 
-    private formatEstimate(providerEstimates: Eventkit.Store.Estimates) {
+    function formatEstimate(providerEstimates: Eventkit.Store.Estimates) {
         if (!providerEstimates) {
             return '';
         }
@@ -259,17 +253,17 @@ export class DataProvider extends React.Component<Props, State> {
         return `${get(sizeEstimate)} / ${get(durationEstimate)}`;
     }
 
-    private getCheckedIcon() {
+    function getCheckedIcon() {
         // If every format is fully compatible with every projection, this value will be true.
         // This means we can display a normal checkbox, otherwise we indicate there is an issue
         // by using an indeterminate icon for the checkbox.
-        const selectedFormats = this.props.providerOptions.formats;
+        const selectedFormats = props.providerOptions.formats;
         if (!selectedFormats) {
             // When no formats are selected, the provider isn't ready to be packed up
             return (<IndeterminateCheckBoxIcon/>);
         }
         const fullCompatibility = selectedFormats.map(
-            (formatSlug) => this.getFormatCompatibility(formatSlug) === Compatibility.Full).every(value => !!value);
+            (formatSlug) => getFormatCompatibility(formatSlug) === Compatibility.Full).every(value => !!value);
 
         if (fullCompatibility) {
             return (<CheckBoxIcon/>);
@@ -277,262 +271,262 @@ export class DataProvider extends React.Component<Props, State> {
         return (<IndeterminateCheckBoxIcon/>);
     }
 
-    render() {
-        const {colors} = this.props.theme.eventkit;
-        const {classes, provider, providerInfo} = this.props;
-        const {exportOptions} = this.props.exportInfo;
-        // Take the current zoom from the current zoomLevels if they exist and the value is valid,
-        // otherwise set it to the max allowable level.
-        let currentMaxZoom = provider.level_to;
-        let currentMinZoom = provider.level_from;
-        if (exportOptions[provider.slug]) {
-            const {maxZoom, minZoom} = exportOptions[provider.slug];
-            if (maxZoom || maxZoom === 0) {
-                currentMaxZoom = maxZoom;
-            }
-            if (minZoom || minZoom === 0) {
-                currentMinZoom = minZoom;
-            }
+    // Take the current zoom from the current zoomLevels if they exist and the value is valid,
+    // otherwise set it to the max allowable level.
+    let currentMaxZoom = provider.level_to;
+    let currentMinZoom = provider.level_from;
+    if (exportOptions[provider.slug]) {
+        const { maxZoom, minZoom } = exportOptions[provider.slug];
+        if (maxZoom || maxZoom === 0) {
+            currentMaxZoom = maxZoom;
         }
-
-        const selectedBasemap = {
-            mapUrl: (this.props.provider.preview_url || this.context.config.BASEMAP_URL),
-            metadata: provider.metadata,
-            slug: (!!this.props.provider.preview_url) ? provider.slug : undefined,
-        } as MapLayer;
-
-        // Show license if one exists.
-        const nestedItems = [];
-        if (provider.license) {
-            nestedItems.push((
-                <ListItem
-                    key={nestedItems.length}
-                    dense
-                    disableGutters
-                    className={`qa-DataProvider-ListItem-license ${classes.sublistItem}`}
-                >
-                    <div className={classes.prewrap}>
-                        <i>
-                            Use of this data is governed by&nbsp;
-                            <span
-                                role="button"
-                                tabIndex={0}
-                                onClick={this.handleLicenseOpen}
-                                onKeyPress={this.handleLicenseOpen}
-                                className={classes.license}
-                            >
-                                {provider.license.name}
-                            </span>
-                        </i>
-                        <BaseDialog
-                            show={this.state.licenseDialogOpen}
-                            title={provider.license.name}
-                            onClose={this.handleLicenseClose}
-                        >
-                            <div className={classes.prewrap}>{provider.license.text}</div>
-                        </BaseDialog>
-                    </div>
-                </ListItem>
-            ));
+        if (minZoom || minZoom === 0) {
+            currentMinZoom = minZoom;
         }
-        if (supportsZoomLevels(this.props.provider)) {
-            nestedItems.push(
-                <div
-                    className={`qa-DataProvider-ListItem-zoomSelection`}
-                    id={'ZoomSelection'}
-                    key={nestedItems.length}
-                >
-                    <div
-                        className={`qa-DataProvider-ListItem-zoomSlider ${this.props.provider.slug + '-sliderDiv ' + classes.listItemPadding}`}
-                        key={this.props.provider.slug + '-sliderDiv'}
-                    >
-                        <ZoomLevelSlider
-                            updateZoom={this.setZoom}
-                            selectedMaxZoom={currentMaxZoom}
-                            selectedMinZoom={currentMinZoom}
-                            maxZoom={provider.level_to}
-                            minZoom={provider.level_from}
-                            handleCheckClick={this.handleFootprintsCheck}
-                            checked={this.state.displayFootprints}
-                        >
-                            { this.props.provider.footprint_url &&
-                                <SwitchControl onSwitch={this.handleFootprintsCheck} isSwitchOn={this.state.displayFootprints}/>
-                            }
-                        </ZoomLevelSlider>
-                    </div>
-                    <div
-                        className={`qa-DataProvider-ListItem-zoomMap ${this.props.provider.slug + '-mapDiv ' + classes.listItemPadding}`}
-                        key={this.props.provider.slug + '-mapDiv'}
-                    >
-                        <ProviderPreviewMap
-                            style={{height: '290px'}}
-                            geojson={this.props.geojson}
-                            zoomLevel={currentMaxZoom}
-                            provider={this.props.provider}
-                            visible={this.state.open}
-                            displayFootprints={this.state.displayFootprints}
-                        >
-                            <ZoomUpdater setZoom={this.setZoom}/>
-                            <OlMouseWheelZoom enabled={false}/>
-                            <PoiQueryDisplay
-                                style={{
-                                    width: 'max-content',
-                                    minWidth: '200px',
-                                    justifyContent: 'center',
-                                }}
-                                selectedLayer={selectedBasemap}
-                            >
-                                <OlMapClickEvent mapPinStyle={{
-                                    image: new Icon({
-                                        src: this.props.theme.eventkit.images.map_pin,
-                                    })
-                                }}/>
-                            </PoiQueryDisplay>
-                        </ProviderPreviewMap>
-                    </div>
-                </div>
-            );
-        } else {
-            nestedItems.push(
-                <ListItem
-                    className={`qa-DataProvider-ListItem-zoomSlider ${classes.sublistItem}`}
-                    key={nestedItems.length}
-                    dense
-                    disableGutters
-                >
-                    <div>
-                        <em>Zoom not available for this source.</em>
-                    </div>
-                </ListItem>
-            );
-        }
+    }
 
+    const selectedBasemap = {
+        mapUrl: (props.provider.preview_url || BASEMAP_URL),
+        metadata: provider.metadata,
+        slug: (!!props.provider.preview_url) ? provider.slug : undefined,
+    } as MapLayer;
+
+    // Show license if one exists.
+    const nestedItems = [];
+    if (provider.license) {
         nestedItems.push((
             <ListItem
-                className={`qa-DataProvider-ListItem-provServDesc ${classes.sublistItem}`}
                 key={nestedItems.length}
                 dense
                 disableGutters
-            >
-                <div
-                    className={classes.prewrap}
-                >
-                    {provider.service_description || 'No provider description available.'}
-                </div>
-            </ListItem>
-        ));
-
-        nestedItems.push((
-            <ListItem
-                className={`qa-DataProvider-ListItem-provMaxAoi ${classes.sublistItem}`}
-                key={nestedItems.length}
-                dense
-                disableGutters
+                className={`qa-DataProvider-ListItem-license ${classes.sublistItem}`}
             >
                 <div className={classes.prewrap}>
-                    <strong>Maximum selection area: </strong>
-                    {((provider.max_selection == null ||
-                            provider.max_selection === '' ||
-                            parseFloat(provider.max_selection) <= 0) ?
-                            'unlimited' : `${provider.max_selection} km²`
-                    )}
+                    <i>
+                        Use of this data is governed by&nbsp;
+                        <span
+                            role="button"
+                            tabIndex={0}
+                            onClick={handleLicenseOpen}
+                            onKeyPress={handleLicenseOpen}
+                            className={classes.license}
+                        >
+                            {provider.license.name}
+                        </span>
+                    </i>
+                    <BaseDialog
+                        show={isLicenseOpen}
+                        title={provider.license.name}
+                        onClose={handleLicenseClose}
+                    >
+                        <div className={classes.prewrap}>{provider.license.text}</div>
+                    </BaseDialog>
                 </div>
             </ListItem>
         ));
-
-        nestedItems.push((
-            <ListItem
-                className={`qa-DataProvider-ListItem-provFormats ${classes.sublistItem}`}
+    }
+    if (supportsZoomLevels(props.provider)) {
+        nestedItems.push(
+            <div
+                className={`qa-DataProvider-ListItem-zoomSelection`}
+                id={'ZoomSelection'}
                 key={nestedItems.length}
-                dense
-                disableGutters
             >
-                <div className={classes.prewrap}>
-                    <span>
-                        <strong>Select Format(s)</strong>
-                        <div><em>Cartography only available with GeoPackage.</em></div>
-                    </span>
-
-                    <div style={{marginTop: '10px'}}>
-                        <FormatSelector
-                            formats={provider.supported_formats}
-                            getFormatCompatibility={this.getFormatCompatibility}
-                            provider={provider}
-                            compatibilityInfo={this.props.compatibilityInfo}
-                        />
-                    </div>
-                </div>
-            </ListItem>
-        ));
-
-        // Only set this if we want to display the estimate
-        let secondary;
-        if (this.props.renderEstimate) {
-            const estimate = this.formatEstimate(providerInfo.estimates);
-            if (estimate) {
-                secondary =
-                    <Typography style={{fontSize: "0.7em"}}>{estimate}</Typography>;
-            } else {
-                secondary = <CircularProgress style={{display: 'grid'}} size={11}/>;
-            }
-        }
-
-        const backgroundColor = (this.props.alt) ? colors.secondary : colors.white;
-
-        return (
-            <React.Fragment>
-                <ListItem
-                    className={`qa-DataProvider-ListItem ${classes.listItem}`}
-                    key={provider.uid}
-                    style={{backgroundColor}}
-                    dense
-                    disableGutters
+                <div
+                    className={`qa-DataProvider-ListItem-zoomSlider ${props.provider.slug + '-sliderDiv ' + classes.listItemPadding}`}
+                    key={props.provider.slug + '-sliderDiv'}
                 >
-                    <div className={classes.container}>
-                        <Checkbox
-                            className="qa-DataProvider-CheckBox-provider"
-                            classes={{root: classes.checkbox, checked: classes.checked}}
-                            name={provider.name}
-                            checked={this.props.checked}
-                            checkedIcon={this.getCheckedIcon()}
-                            onChange={this.props.onChange}
-                        />
-                        <ListItemText
-                            disableTypography
-                            classes={{root: classes.listItemText}}
-                            primary={<Typography style={{fontSize: "1.0em"}}>{provider.name}</Typography>}
-                            secondary={secondary}
-                        />
-                        <ProviderStatusIcon
-                            id="ProviderStatus"
-                            baseStyle={{marginRight: '40px'}}
-                            availability={providerInfo.availability}
-                        />
-                        {this.state.open ?
-                            <ExpandLess
-                                id="ExpandButton"
-                                className={`qa-DataProvider-ListItem-Expand ${classes.expand}`}
-                                onClick={this.handleExpand}
-                                color="primary"
-                            />
-                            :
-                            <ExpandMore
-                                id="ExpandButton"
-                                className={`qa-DataProvider-ListItem-Expand ${classes.expand}`}
-                                onClick={this.handleExpand}
-                                color="primary"
-                            />
+                    <ZoomLevelSlider
+                        updateZoom={setZoom}
+                        selectedMaxZoom={currentMaxZoom}
+                        selectedMinZoom={currentMinZoom}
+                        maxZoom={provider.level_to}
+                        minZoom={provider.level_from}
+                        handleCheckClick={handleFootprintsCheck}
+                        checked={displayFootprints}
+                    >
+                        {props.provider.footprint_url &&
+                        <SwitchControl onSwitch={handleFootprintsCheck} isSwitchOn={displayFootprints}/>
                         }
-                    </div>
-                </ListItem>
-                <Collapse in={this.state.open} key={`${provider.uid}-expanded`}>
-                    <List style={{backgroundColor}}>
-                        {nestedItems}
-                    </List>
-                </Collapse>
-            </React.Fragment>
+                    </ZoomLevelSlider>
+                </div>
+                <div
+                    className={`qa-DataProvider-ListItem-zoomMap ${props.provider.slug + '-mapDiv ' + classes.listItemPadding}`}
+                    key={props.provider.slug + '-mapDiv'}
+                >
+                    <ProviderPreviewMap
+                        style={{ height: '290px' }}
+                        geojson={props.geojson}
+                        zoomLevel={currentMaxZoom}
+                        provider={props.provider}
+                        visible={isOpen}
+                        displayFootprints={displayFootprints}
+                    >
+                        <ZoomUpdater setZoom={setZoom}/>
+                        <OlMouseWheelZoom enabled={false}/>
+                        <PoiQueryDisplay
+                            style={{
+                                width: 'max-content',
+                                minWidth: '200px',
+                                justifyContent: 'center',
+                            }}
+                            selectedLayer={selectedBasemap}
+                        >
+                            <OlMapClickEvent mapPinStyle={{
+                                image: new Icon({
+                                    src: props.theme.eventkit.images.map_pin,
+                                })
+                            }}/>
+                        </PoiQueryDisplay>
+                    </ProviderPreviewMap>
+                </div>
+            </div>
+        );
+    } else {
+        nestedItems.push(
+            <ListItem
+                className={`qa-DataProvider-ListItem-zoomSlider ${classes.sublistItem}`}
+                key={nestedItems.length}
+                dense
+                disableGutters
+            >
+                <div>
+                    <em>Zoom not available for this source.</em>
+                </div>
+            </ListItem>
         );
     }
+
+    nestedItems.push((
+        <ListItem
+            className={`qa-DataProvider-ListItem-provServDesc ${classes.sublistItem}`}
+            key={nestedItems.length}
+            dense
+            disableGutters
+        >
+            <div
+                className={classes.prewrap}
+            >
+                {provider.service_description || 'No provider description available.'}
+            </div>
+        </ListItem>
+    ));
+
+    nestedItems.push((
+        <ListItem
+            className={`qa-DataProvider-ListItem-provMaxAoi ${classes.sublistItem}`}
+            key={nestedItems.length}
+            dense
+            disableGutters
+        >
+            <div className={classes.prewrap}>
+                <strong>Maximum selection area: </strong>
+                {((provider.max_selection == null ||
+                        provider.max_selection === '' ||
+                        parseFloat(provider.max_selection) <= 0) ?
+                        'unlimited' : `${provider.max_selection} km²`
+                )}
+            </div>
+        </ListItem>
+    ));
+
+    nestedItems.push((
+        <ListItem
+            className={`qa-DataProvider-ListItem-provFormats ${classes.sublistItem}`}
+            key={nestedItems.length}
+            dense
+            disableGutters
+        >
+            <div className={classes.prewrap}>
+                <span>
+                    <strong>Select Format(s)</strong>
+                    <div><em>Cartography only available with GeoPackage.</em></div>
+                </span>
+
+                <div style={{ marginTop: '10px' }}>
+                    <FormatSelector
+                        formats={provider.supported_formats}
+                        getFormatCompatibility={getFormatCompatibility}
+                        provider={provider}
+                        compatibilityInfo={props.compatibilityInfo}
+                    />
+                </div>
+            </div>
+        </ListItem>
+    ));
+
+    // Only set this if we want to display the estimate
+    let secondary;
+    if (props.renderEstimate) {
+        const estimate = formatEstimate(providerInfo.estimates);
+        if (estimate) {
+            secondary =
+                <Typography style={{ fontSize: "0.7em" }}>{estimate}</Typography>;
+        } else {
+            secondary = <CircularProgress style={{ display: 'grid' }} size={11}/>;
+        }
+    }
+
+    const backgroundColor = (props.alt) ? colors.secondary : colors.white;
+
+    return (
+        <React.Fragment>
+            <ListItem
+                className={`qa-DataProvider-ListItem ${classes.listItem}`}
+                key={provider.uid}
+                style={{ backgroundColor }}
+                dense
+                disableGutters
+            >
+                <div className={classes.container}>
+                    <Checkbox
+                        className="qa-DataProvider-CheckBox-provider"
+                        classes={{ root: classes.checkbox, checked: classes.checked }}
+                        name={provider.name}
+                        checked={props.checked}
+                        checkedIcon={getCheckedIcon()}
+                        onChange={props.onChange}
+                    />
+                    <ListItemText
+                        disableTypography
+                        classes={{ root: classes.listItemText }}
+                        primary={<Typography style={{ fontSize: "1.0em" }}>{provider.name}</Typography>}
+                        secondary={secondary}
+                    />
+                    <ProviderStatusCheck
+                        id="ProviderStatus"
+                        baseStyle={{ marginRight: '40px' }}
+                        availability={providerInfo.availability}
+                        overArea={overArea}
+                        overSize={overSize}
+                        providerHasEstimates={providerHasEstimates}
+                        areEstimatesLoading={areEstimatesLoading}
+                        supportsZoomLevels={supportsZoomLevels(props.provider)}
+                    />
+                    {isOpen ?
+                        <ExpandLess
+                            id="ExpandButton"
+                            className={`qa-DataProvider-ListItem-Expand ${classes.expand}`}
+                            onClick={handleExpand}
+                            color="primary"
+                        />
+                        :
+                        <ExpandMore
+                            id="ExpandButton"
+                            className={`qa-DataProvider-ListItem-Expand ${classes.expand}`}
+                            onClick={handleExpand}
+                            color="primary"
+                        />
+                    }
+                </div>
+            </ListItem>
+            <Collapse in={isOpen} key={`${provider.uid}-expanded`}>
+                <List style={{ backgroundColor }}>
+                    {nestedItems}
+                </List>
+            </Collapse>
+        </React.Fragment>
+    );
 }
 
 DataProvider.defaultProps = {
@@ -557,9 +551,7 @@ function mapDispatchToProps(dispatch) {
     };
 }
 
-export default withStyles<any, any>(jss, { withTheme: true })(connect(
+export default withTheme()(withStyles(jss)(connect(
     mapStateToProps,
     mapDispatchToProps,
-    null,
-    {forwardRef: true}
-)(DataProvider));
+)(DataProvider)));
