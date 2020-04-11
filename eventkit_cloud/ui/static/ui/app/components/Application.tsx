@@ -724,7 +724,7 @@ export class Application extends React.Component<Props, State> {
         ));
 
         return (
-            <AppConfigProvider value={{...this.state.childContext.config}}>
+            <AppConfigProvider value={this.state.childContext.config}>
                 <div style={{ backgroundColor: colors.black }}>
                     <AppBar
                         className={`qa-Application-AppBar ${classes.appBar}`}

@@ -1,7 +1,7 @@
 import * as React from 'react';
-import { Theme, withStyles, createStyles } from '@material-ui/core/styles';
+import {Theme, withStyles, createStyles} from '@material-ui/core/styles';
 import withWidth, {isWidthUp} from '@material-ui/core/withWidth';
-import { Breakpoint } from '@material-ui/core/styles/createBreakpoints';
+import {Breakpoint} from '@material-ui/core/styles/createBreakpoints';
 import numeral from 'numeral';
 import Button from '@material-ui/core/Button';
 import Divider from '@material-ui/core/Divider';
@@ -16,10 +16,11 @@ import ActionRestore from '@material-ui/icons/Restore';
 import Line from '@material-ui/icons/Timeline';
 import Extent from '@material-ui/icons/SettingsOverscan';
 import MoreVertIcon from '@material-ui/icons/MoreVert';
+import {useState} from 'react';
 import AlertCallout from './AlertCallout';
 import IrregularPolygon from '../icons/IrregularPolygon';
-import { getSqKm, getSqKmString } from '../../utils/generic';
-import { allHaveArea } from '../../utils/mapUtils';
+import {arrayHasValue, getSqKm, getSqKmString} from '../../utils/generic';
+import {useJobValidationContext} from './context/JobValidation';
 
 const jss = (theme: Eventkit.Theme & Theme) => createStyles({
     body: {
@@ -132,10 +133,6 @@ const jss = (theme: Eventkit.Theme & Theme) => createStyles({
 });
 
 export interface Props {
-    limits: {
-        max: number;
-        sizes: number[];
-    };
     aoiInfo: {
         geojson: GeoJSON.FeatureCollection;
         originalGeojson: GeoJSON.FeatureCollection;
@@ -156,303 +153,319 @@ export interface Props {
     ref?: any;
 }
 
-export interface State {
-    showAlert: boolean;
-    menuAnchor: null | HTMLElement;
+AoiInfobar.defaultProps = { displayTitle: true } as Props;
+
+export function getIcon(geomType: string, source: string) {
+    const type = geomType.toUpperCase();
+    const iconStyle = {
+        width: '30px',
+        height: '30px',
+    };
+    if (source === 'Box') {
+        return <ImageCropSquare style={iconStyle} className="qa-AoiInfobar-icon-box" color="primary"/>;
+    }
+    if (source === 'Map View') {
+        return <Extent style={iconStyle} className="qa-AoiInfobar-icon-mapview" color="primary"/>;
+    }
+    if (type.includes('POINT')) {
+        return <ActionRoom style={iconStyle} className="qa-AoiInfobar-icon-point" color="primary"/>;
+    }
+    if (type.includes('LINE')) {
+        return <Line style={iconStyle} className="qa-AoiInfobar-icon-line" color="primary"/>;
+    }
+    if (type.includes('POLYGON') || type.includes('COLLECTION')) {
+        return <IrregularPolygon style={iconStyle} className="qa-AoiInfobar-icon-polygon" color="primary"/>;
+    }
+    return <AlertWarning style={iconStyle} className="qa-AoiInfobar-icon-no-selection" color="primary"/>;
 }
 
-export class AoiInfobar extends React.Component<Props, State> {
+export function AoiInfobar(props: Props) {
+    const [menuAnchor, setMenuAnchor] = useState(null);
 
-    static defaultProps = { displayTitle: true };
-
-    constructor(props: Props) {
-        super(props);
-        this.showAlert = this.showAlert.bind(this);
-        this.closeAlert = this.closeAlert.bind(this);
-        this.handleMenuClose = this.handleMenuClose.bind(this);
-        this.handleMenuOpen = this.handleMenuOpen.bind(this);
-        this.state = {
-            showAlert: true,
-            menuAnchor: null,
-        };
+    function handleMenuClose() {
+        setMenuAnchor(null);
     }
 
-    private getIcon(geomType: string, source: string) {
-        const type = geomType.toUpperCase();
-        const iconStyle = {
-            width: '30px',
-            height: '30px',
-        };
-        if (source === 'Box') {
-            return <ImageCropSquare style={iconStyle} className="qa-AoiInfobar-icon-box" color="primary" />;
-        } else if (source === 'Map View') {
-            return <Extent style={iconStyle} className="qa-AoiInfobar-icon-mapview" color="primary" />;
-        } else if (type.includes('POINT')) {
-            return <ActionRoom style={iconStyle} className="qa-AoiInfobar-icon-point" color="primary" />;
-        } else if (type.includes('LINE')) {
-            return <Line style={iconStyle} className="qa-AoiInfobar-icon-line" color="primary" />;
-        } else if (type.includes('POLYGON') || type.includes('COLLECTION')) {
-            return <IrregularPolygon style={iconStyle} className="qa-AoiInfobar-icon-polygon" color="primary" />;
-        }
-        return <AlertWarning style={iconStyle} className="qa-AoiInfobar-icon-no-selection" color="primary" />;
+    function handleMenuOpen(e: React.MouseEvent<HTMLElement>) {
+        setMenuAnchor(e.currentTarget);
     }
 
-    private handleMenuClose() {
-        this.setState({ menuAnchor: null });
+    const { classes } = props;
+    const { colors } = props.theme.eventkit;
+
+    const [showAlert, setShowAlert] = useState(false);
+    const closeAlert = () => setShowAlert(false);
+    const displayAlert = () => setShowAlert(true);
+
+    const { dataSizeInfo, providerLimits, aoiHasArea, aoiArea } = useJobValidationContext();
+    const { haveAvailableEstimates = [], exceedingSize = [], noMaxDataSize = [] } = dataSizeInfo || {};
+
+    let needsWarning = false;
+    let aoiAlert = null;
+
+    // No hooks may be declared beyond this point.
+    // Hooks must be before any possible return statements.
+    if (Object.keys(props.aoiInfo.geojson).length === 0) {
+        return null;
     }
 
-    private handleMenuOpen(e: React.MouseEvent<HTMLElement>) {
-        this.setState({ menuAnchor: e.currentTarget });
-    }
+    const geometryIcon = getIcon(props.aoiInfo.geomType, props.aoiInfo.description);
+    const originalArea = getSqKmString(props.aoiInfo.originalGeojson);
+    const totalArea = getSqKmString(props.aoiInfo.geojson);
+    const highestMaxSelectionArea = (providerLimits[0]) ? providerLimits[0].maxArea : 0;
 
-    private showAlert() {
-        this.setState({ showAlert: true });
-    }
-
-    private closeAlert() {
-        this.setState({ showAlert: false });
-    }
-
-    render() {
-        const { colors } = this.props.theme.eventkit;
-        const { classes } = this.props;
-
-        if (Object.keys(this.props.aoiInfo.geojson).length === 0) {
-            return null;
-        }
-
-        const geometryIcon = this.getIcon(this.props.aoiInfo.geomType, this.props.aoiInfo.description);
-
-        const noArea = !allHaveArea(this.props.aoiInfo.geojson);
-        const originalArea = getSqKmString(this.props.aoiInfo.originalGeojson);
-        const totalArea = getSqKmString(this.props.aoiInfo.geojson);
-        const { max } = this.props.limits;
-        const area = getSqKm(this.props.aoiInfo.geojson);
-        const overAll = max && max < area;
-        const overSome = max && this.props.limits.sizes.some(size => size < area);
-
-        const bufferAlert = (
-            <AlertCallout
-                className={`qa-AoiInfobar-alert-buffer ${classes.alertCalloutTop}`}
-                onClose={this.closeAlert}
-                orientation="top"
-                title="There must be a buffer."
-                body={<p>Please add a buffer before moving forward.</p>}
-            />
-        );
-
-        const overAreaAlert = (
-            <AlertCallout
-                className={`qa-AoiInfobar-alert-oversized ${classes.alertCalloutTop}`}
-                onClose={this.closeAlert}
-                orientation="top"
-                title="Your AOI is too large!"
-                body={
-                    <p>
-                        The max size allowed for the AOI is {numeral(max).format('0,0')} sq km and yours is {totalArea}.
-                        Please reduce the size of your polygon and/or buffer.
-                    </p>
-                }
-            />
-        );
-
-        const overSomeAlert = (
-            <AlertCallout
-                className={`qa-AoiInfobar-alert-overSome ${classes.alertCalloutTop}`}
-                onClose={this.closeAlert}
-                orientation="top"
-                title="Your AOI is too large for some of the data sources."
-                body={
-                    <p>
-                        The current AOI size of  {totalArea}, exceeds the limit set for at least one data source.
-                         If you plan to include all available data sources for this area in your DataPack you,
-                          need to reduce the size of your polygon and/or buffer
-                           to {numeral(this.props.limits.sizes[0]).format('0,0')} sq km.
-                            Specifics for each Data Provider are on the next page.
-                    </p>
-                }
-                style={{ color: colors.black }}
-            />
-        );
-
-        let bufferWarning = null;
-        let sizeWarning = null;
-        if (noArea) {
-            bufferWarning = (
-                <div style={{ position: 'relative', display: 'inline-block', marginLeft: '10px' }}>
-                    <AlertWarning
-                        className={`qa-AoiInfobar-alert-icon ${classes.alert}`}
-                        onClick={this.showAlert}
+    if (aoiHasArea) {
+        // If estimates have been fetched successfully and every proivder with estimates has a max data size.
+        if (haveAvailableEstimates.length > 0 && haveAvailableEstimates.every(slug => !arrayHasValue(noMaxDataSize, slug))) {
+            // If any providers exceed their max data size, and those all providers with estimates exceed their max
+            // I.e. if every provider we can check is over their specified max data size.
+            if (exceedingSize.length > 0 && haveAvailableEstimates.every(slug => exceedingSize.indexOf(slug) !== -1)) {
+                needsWarning = true;
+                aoiAlert = (
+                    <AlertCallout
+                        className={`qa-AoiInfobar-alert-oversized ${classes.alertCalloutTop}`}
+                        onClose={closeAlert}
+                        orientation="top"
+                        title="Data sizes exceeded!"
+                        body={(
+                            <p>
+                                All providers exceed their specified maximum allowable data size with the specified
+                                AOI
+                                and zoom levels. This job cannot be submitted. Please reduce the size of your polygon
+                                and/or buffer. Zoom levels may
+                                be
+                                adjusted on the next step to reduce data size.
+                            </p>
+                        )}
+                        style={{ color: colors.black }}
                     />
-                    {this.state.showAlert ?
-                        bufferAlert
-                        :
-                        null
-                    }
-                </div>
-            );
-        } else if (overAll) {
-            sizeWarning = (
-                <div style={{ position: 'relative', display: 'inline-block', marginLeft: '10px' }}>
-                    <AlertWarning
-                        className={`qa-AoiInfobar-alert-icon ${classes.alert}`}
-                        onClick={this.showAlert}
+                );
+            } else if (exceedingSize.length > 0) {
+                // Only some providers exceed their max data size
+                aoiAlert = (
+                    <AlertCallout
+                        className={`qa-AoiInfobar-alert-oversized ${classes.alertCalloutTop}`}
+                        onClose={closeAlert}
+                        orientation="top"
+                        title="Data sizes exceeded."
+                        body={(
+                            <p>
+                                One or more providers would exceed their maximum allowable data size with the specified
+                                AOI
+                                and zoom levels. Please reduce the size of your polygon and/or buffer. Zoom levels may
+                                be
+                                adjusted on the next step to reduce data size.
+                            </p>
+                        )}
+                        style={{ color: colors.black }}
                     />
-                    {this.state.showAlert ?
-                        overAreaAlert
-                        :
-                        null
-                    }
-                </div>
-            );
-        } else if (overSome) {
-            sizeWarning = (
-                <div style={{ position: 'relative', display: 'inline-block', marginLeft: '10px' }}>
-                    <AlertWarning
-                        className={`qa-AoiInfobar-alert-icon ${classes.alert}`}
-                        style={{ fill: colors.over }}
-                        onClick={this.showAlert}
+                );
+            }
+        } else {
+            // Can't check max data sizes, fall back to max AoI.
+            const exceedsAreaCount = providerLimits.filter(limits => limits.maxArea <= aoiArea).length;
+            if (exceedsAreaCount === providerLimits.length) {
+                needsWarning = true;
+                aoiAlert = (
+                    <AlertCallout
+                        className={`qa-AoiInfobar-alert-oversized ${classes.alertCalloutTop}`}
+                        onClose={closeAlert}
+                        orientation="top"
+                        title="Your AOI is too large!"
+                        body={(
+                            <p>
+                                The max size allowed for the AOI is {numeral(highestMaxSelectionArea).format('0,0')} sq
+                                km
+                                and yours is {totalArea}.
+                                Please reduce the size of your polygon and/or buffer.
+                            </p>
+                        )}
                     />
-                    {this.state.showAlert ?
-                        overSomeAlert
-                        :
-                        null
-                    }
-                </div>
-            );
+                );
+            } else if (exceedsAreaCount > 0) {
+                aoiAlert = (
+                    <AlertCallout
+                        className={`qa-AoiInfobar-alert-overSome ${classes.alertCalloutTop}`}
+                        onClose={closeAlert}
+                        orientation="top"
+                        title="Your AOI is too large for some of the data sources."
+                        body={(
+                            <p>
+                                The current AOI size of {totalArea}, exceeds the limit set for at least one data source.
+                                If you plan to include all available data sources for this area in your DataPack you,
+                                need to reduce the size of your polygon and/or buffer
+                                to {numeral(highestMaxSelectionArea).format('0,0')} sq km.
+                                Specifics for each Data Provider are on the next page.
+                            </p>
+                        )}
+                        style={{ color: colors.black }}
+                    />
+                );
+            }
         }
-        return (
-            <>
-                <div className={`qa-AoiInfoBar-container ${classes.body}`}>
-                    <div className={classes.titleBar}>
-                        {this.props.displayTitle &&
-                            <div className={`qa-AoiInfobar-title ${classes.title}`}>
-                                <strong>AREA OF INTEREST (AOI)</strong>
-                            </div>
-                        }
-                        <div className={`qa-AoiInfobar-maxSize ${classes.maxSize}`}>
+    }
+
+    return (
+        <>
+            <div className={`qa-AoiInfoBar-container ${classes.body}`}>
+                <div className={classes.titleBar}>
+                    {props.displayTitle && (
+                        <div className={`qa-AoiInfobar-title ${classes.title}`}>
+                            <strong>AREA OF INTEREST (AOI)</strong>
+                        </div>
+                    )}
+                    <div className={`qa-AoiInfobar-maxSize ${classes.maxSize}`}>
+                        <div style={{ paddingRight: '5px' }}>
+                            {highestMaxSelectionArea ? `${numeral(highestMaxSelectionArea).format('0,0')} sq km max;` : null}
+                        </div>
+                    </div>
+                </div>
+                <div className={`qa-AoiInfobar-content ${classes.content}`}>
+                    <div className={`qa-AoiInfobar-areaColumn ${classes.areaColumn}`}>
+                        <div style={{ flex: '1 1 auto' }}><strong>{originalArea}</strong></div>
+                        <div style={{ lineHeight: '30px', marginTop: '5px' }}>
+                            <strong>
+                                {numeral(getSqKm(props.aoiInfo.geojson)
+                                    - getSqKm(props.aoiInfo.originalGeojson)).format('0,0')} sq km
+                            </strong>
+                        </div>
+                        <Divider style={{ marginTop: '10px', marginBottom: '10px' }}/>
+                        <div>
+                            <strong style={{ color: needsWarning ? colors.warning : 'initial' }}>
+                                {totalArea}
+                            </strong>
+                        </div>
+                    </div>
+                    <div className={`qa-AoiInfobar-geomColumn ${classes.geomColumn}`}>
+                        <div className="qa-AoiInfobar-info" style={{ display: 'flex' }}>
                             <div style={{ paddingRight: '5px' }}>
-                                {max ? `${numeral(max).format('0,0')} sq km max;` : null}
+                                {geometryIcon}
                             </div>
-                        </div>
-                    </div>
-                    <div className={`qa-AoiInfobar-content ${classes.content}`}>
-                        <div className={`qa-AoiInfobar-areaColumn ${classes.areaColumn}`}>
-                            <div style={{ flex: '1 1 auto' }}><strong>{originalArea}</strong></div>
-                            <div style={{ lineHeight: '30px', marginTop: '5px' }}>
-                                <strong>
-                                    {numeral(getSqKm(this.props.aoiInfo.geojson)
-                                        - getSqKm(this.props.aoiInfo.originalGeojson)).format('0,0')} sq km
-                                </strong>
-                            </div>
-                            <Divider style={{ marginTop: '10px', marginBottom: '10px' }} />
-                            <div>
-                                <strong style={{ color: overAll ? colors.warning : 'initial' }}>
-                                    {totalArea}
-                                </strong>
-                            </div>
-                        </div>
-                        <div className={`qa-AoiInfobar-geomColumn ${classes.geomColumn}`}>
-                            <div className="qa-AoiInfobar-info" style={{ display: 'flex' }}>
-                                <div style={{ paddingRight: '5px' }}>
-                                    {geometryIcon}
-                                </div>
-                                <div style={{ display: 'flex', flexDirection: 'column' }}>
-                                    <div style={{ flex: '1 1 auto', wordBreak: 'break-word' }} className="qa-AoiInfobar-infoTitle">
-                                        <strong>{this.props.aoiInfo.title || ''}</strong>
-                                    </div>
-                                    <div
-                                        style={{ flex: '1 1 auto', wordBreak: 'break-word' }}
-                                        className="qa-AoiInfobar-infoDescription"
-                                    >
-                                        <span className="qa-AoiInfobar-description" style={{ color: colors.grey }}>
-                                            {this.props.aoiInfo.description}
-                                        </span>
-                                    </div>
-                                </div>
-                            </div>
-                            <div className="qa-AoiInfobar-buffer" style={{ marginTop: '5px' }}>
-                                <Button
-                                    className={`qa-AoiInfobar-buffer-button ${classes.bufferButton}`}
-                                    onClick={this.props.handleBufferClick}
-                                    variant="contained"
-                                    color="primary"
-                                    disabled={!!this.props.aoiInfo.buffer}
-
+                            <div style={{ display: 'flex', flexDirection: 'column' }}>
+                                <div
+                                    style={{ flex: '1 1 auto', wordBreak: 'break-word' }}
+                                    className="qa-AoiInfobar-infoTitle"
                                 >
-                                    {`Buffer (${numeral(this.props.aoiInfo.buffer).format('0,0')}m)`}
-                                </Button>
-                                {bufferWarning}
+                                    <strong>{props.aoiInfo.title || ''}</strong>
+                                </div>
+                                <div
+                                    style={{ flex: '1 1 auto', wordBreak: 'break-word' }}
+                                    className="qa-AoiInfobar-infoDescription"
+                                >
+                                    <span className="qa-AoiInfobar-description" style={{ color: colors.grey }}>
+                                        {props.aoiInfo.description}
+                                    </span>
+                                </div>
                             </div>
-                            <Divider style={{ marginTop: '10px', marginBottom: '10px' }} />
-                            <div style={{ position: 'relative' }}>
-                                <strong style={{ color: overAll ? colors.warning : 'initial' }}>
-                                     TOTAL AOI
-                                </strong>
-                                {sizeWarning}
-                            </div>
+                        </div>
+                        <div className="qa-AoiInfobar-buffer" style={{ marginTop: '5px' }}>
+                            <Button
+                                className={`qa-AoiInfobar-buffer-button ${classes.bufferButton}`}
+                                onClick={props.handleBufferClick}
+                                variant="contained"
+                                color="primary"
+                                disabled={!!props.aoiInfo.buffer}
+
+                            >
+                                {`Buffer (${numeral(props.aoiInfo.buffer).format('0,0')}m)`}
+                            </Button>
+                            {!aoiHasArea && (
+                                <div style={{ position: 'relative', display: 'inline-block', marginLeft: '10px' }}>
+                                    <AlertWarning
+                                        className={`qa-AoiInfobar-alert-icon ${classes.alert}`}
+                                        onClick={displayAlert}
+                                    />
+                                    {showAlert && (
+                                        <AlertCallout
+                                            className={`qa-AoiInfobar-alert-buffer ${classes.alertCalloutTop}`}
+                                            onClose={closeAlert}
+                                            orientation="top"
+                                            title="There must be a buffer."
+                                            body={<p>Please add a buffer before moving forward.</p>}
+                                        />
+                                    )}
+                                </div>
+                            )}
+                        </div>
+                        <Divider style={{ marginTop: '10px', marginBottom: '10px' }}/>
+                        <div style={{ position: 'relative' }}>
+                            <strong style={{ color: needsWarning ? colors.warning : 'initial' }}>
+                                TOTAL AOI
+                            </strong>
+                            {aoiAlert && (
+                                <div style={{ position: 'relative', display: 'inline-block', marginLeft: '10px' }}>
+                                    <AlertWarning
+                                        className={`qa-AoiInfobar-alert-icon ${classes.alert}`}
+                                        style={{ ...((!needsWarning) ? { fill: colors.over } : {}) }}
+                                        onClick={displayAlert}
+                                    />
+                                    {showAlert && aoiAlert}
+                                </div>
+                            )}
                         </div>
                     </div>
                 </div>
-                <div className={`qa-AoiInfobar-sidebar ${classes.sidebar}`}>
+            </div>
+            <div className={`qa-AoiInfobar-sidebar ${classes.sidebar}`}>
+                <div style={{ width: '100%', padding: '5px 0px' }}>
+                    <button
+                        className={`qa-AoiInfobar-button-zoom ${classes.button}`}
+                        onClick={props.clickZoomToSelection}
+                    >
+                        <ActionZoomIn
+                            className={`qa-AoiInfobar-ActionZoomIn ${classes.searchIcon}`}
+                        /> ZOOM TO
+                    </button>
+                </div>
+                {props.showRevert && (
                     <div style={{ width: '100%', padding: '5px 0px' }}>
                         <button
-                            className={`qa-AoiInfobar-button-zoom ${classes.button}`}
-                            onClick={this.props.clickZoomToSelection}
+                            className={`qa-AoiInfobar-button-revert ${classes.button}`}
+                            onClick={props.onRevertClick}
                         >
-                            <ActionZoomIn
-                                className={`qa-AoiInfobar-ActionZoomIn ${classes.searchIcon}`}
-                            /> ZOOM TO
+                            <ActionRestore
+                                className={`qa-AoiInfobar-ActionRestore ${classes.searchIcon}`}
+                            /> REVERT
                         </button>
                     </div>
-                    {this.props.showRevert ?
-                        <div style={{ width: '100%', padding: '5px 0px' }}>
-                            <button
-                                className={`qa-AoiInfobar-button-revert ${classes.button}`}
-                                onClick={this.props.onRevertClick}
-                            >
-                                <ActionRestore
-                                    className={`qa-AoiInfobar-ActionRestore ${classes.searchIcon}`}
-                                /> REVERT
-                            </button>
-                        </div>
-                        :
-                        null
-                    }
-                </div>
-                <div className={`qa-AoiInfobar-sidebar-mobile ${classes.mobileSidebar}`}>
-                    <IconButton
-                        color="primary"
-                        onClick={this.handleMenuOpen}
+                )}
+            </div>
+            <div className={`qa-AoiInfobar-sidebar-mobile ${classes.mobileSidebar}`}>
+                <IconButton
+                    color="primary"
+                    onClick={handleMenuOpen}
+                >
+                    <MoreVertIcon/>
+                </IconButton>
+                <Menu
+                    id="infobar-menu"
+                    anchorEl={menuAnchor}
+                    open={Boolean(menuAnchor)}
+                    onClose={handleMenuClose}
+                >
+                    <MenuItem
+                        onClick={props.clickZoomToSelection}
+                        className={classes.menuItem}
                     >
-                        <MoreVertIcon />
-                    </IconButton>
-                    <Menu
-                        id="infobar-menu"
-                        anchorEl={this.state.menuAnchor}
-                        open={Boolean(this.state.menuAnchor)}
-                        onClose={this.handleMenuClose}
+                        ZOOM TO
+                    </MenuItem>
+                    <MenuItem
+                        onClick={props.onRevertClick}
+                        className={classes.menuItem}
+                        style={{
+                            ...(!props.showRevert ? {
+                                pointerEvents: 'none',
+                                cursor: 'default',
+                                color: colors.grey,
+                            } : {}),
+                        }}
                     >
-                        <MenuItem
-                            onClick={this.props.clickZoomToSelection}
-                            className={classes.menuItem}
-                        >
-                            ZOOM TO
-                        </MenuItem>
-                        <MenuItem
-                            onClick={this.props.onRevertClick}
-                            className={classes.menuItem}
-                            style={{
-                                ...(!this.props.showRevert ? { pointerEvents: 'none', cursor: 'default', color: colors.grey } : {}),
-                            }}
-                        >
-                            REVERT
-                        </MenuItem>
-                    </Menu>
-                </div>
-            </>
-        );
-    }
+                        REVERT
+                    </MenuItem>
+                </Menu>
+            </div>
+        </>
+    );
 }
 
 export default withWidth()(withStyles(jss, { withTheme: true })(AoiInfobar));

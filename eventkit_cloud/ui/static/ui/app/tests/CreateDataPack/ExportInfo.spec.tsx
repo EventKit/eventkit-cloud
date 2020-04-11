@@ -7,7 +7,7 @@ import Checkbox from '@material-ui/core/Checkbox';
 import Joyride from 'react-joyride';
 import MapCard from '../../components/common/MapCard';
 import DataProvider from '../../components/CreateDataPack/DataProvider';
-import {ExportInfo} from '../../components/CreateDataPack/ExportInfo';
+import {ExportInfo, hasDisallowedSelection, hasRequiredFields} from '../../components/CreateDataPack/ExportInfo';
 import CustomScrollbar from '../../components/CustomScrollbar';
 import TextField from '../../components/CustomTextField';
 import * as utils from '../../utils/generic';
@@ -38,6 +38,26 @@ const projections = [
         name: 'EPSG:1',
         description: null,
     }
+];
+const providers = [
+    {
+        display: true,
+        id: 1,
+        model_url: 'http://cloud.eventkit.test/api/providers/1',
+        type: 'osm-generic',
+        created_at: '2017-03-24T17:44:22.940611Z',
+        updated_at: '2017-03-24T17:44:22.940629Z',
+        uid: 'be401b02-63d3-4080-943a-0093c1b5a914',
+        name: 'OpenStreetMap Data (Generic)',
+        slug: 'osm-generic',
+        preview_url: '',
+        service_copyright: '',
+        service_description: '',
+        layer: null,
+        level_from: 0,
+        level_to: 10,
+        export_provider_type: 1,
+    },
 ];
 
 describe('ExportInfo component', () => {
@@ -81,7 +101,7 @@ describe('ExportInfo component', () => {
                 },
                 projections: [],
             },
-            providers: [],
+            providers,
             projections,
             formats,
             nextEnabled: true,
@@ -126,7 +146,7 @@ describe('ExportInfo component', () => {
         expect(wrapper.find('#layersHeader').text()).toEqual('Select Data Sources');
         expect(wrapper.find('#layersSubheader').text()).toEqual('(You must choose at least one)');
         expect(wrapper.find(List)).toHaveLength(1);
-        expect(wrapper.find(DataProvider)).toHaveLength(0);
+        expect(wrapper.find(DataProvider)).toHaveLength(1);
         expect(wrapper.find('.qa-ExportInfo-projectionHeader')).toHaveLength(1);
         expect(wrapper.find('.qa-ExportInfo-projectionHeader').text()).toEqual('Select Projection');
         expect(wrapper.find('.qa-ExportInfo-projections').find(Checkbox)).toHaveLength(2);
@@ -137,20 +157,15 @@ describe('ExportInfo component', () => {
     it('componentDidMount should setNextDisabled, setArea, and add joyride steps', () => {
         const expectedString = '12,393 sq km';
         const areaSpy = sinon.spy(utils, 'getSqKmString');
-        const hasFieldsSpy = sinon.spy(ExportInfo.prototype, 'hasRequiredFields');
         const joyrideSpy = sinon.spy(ExportInfo.prototype, 'joyrideAddSteps');
         setup();
-        expect(hasFieldsSpy.called).toBe(true);
-        expect(hasFieldsSpy.calledWith(props.exportInfo)).toBe(true);
         expect(joyrideSpy.calledOnce).toBe(true);
-        expect(props.setNextDisabled.called).toBe(true);
         expect(props.updateExportInfo.calledWith({
             areaStr: expectedString,
             projections: [4326], // We force 4326 to be selected by default (except when something is already selected e.g. cloning)
         })).toBe(true);
         expect(props.updateExportInfo.called).toBe(true);
         areaSpy.restore();
-        hasFieldsSpy.restore();
         joyrideSpy.restore();
     });
 
@@ -171,32 +186,6 @@ describe('ExportInfo component', () => {
         areaSpy.restore();
     });
 
-    it('componentDidUpdate should setNextEnabled', () => {
-        const nextProps = getProps();
-        nextProps.setNextEnabled = sinon.spy();
-        nextProps.exportInfo.exportName = 'name';
-        nextProps.exportInfo.datapackDescription = 'description';
-        nextProps.exportInfo.projectName = 'project';
-        nextProps.exportInfo.projections = [4326];
-        nextProps.exportInfo.providers = [{slug: 'providerslug'}];
-        nextProps.exportInfo.exportOptions = {
-            providerslug: {
-                formats: ['validformat']
-            }
-        };
-        nextProps.nextEnabled = false;
-        wrapper.setProps(nextProps);
-        expect(nextProps.setNextEnabled.callCount).toBe(3);
-    });
-
-    it('componentDidUpdate should setNextDisabled', () => {
-        const nextProps = getProps();
-        nextProps.setNextDisabled = sinon.spy();
-        nextProps.nextEnabled = true;
-        wrapper.setProps(nextProps);
-        expect(nextProps.setNextDisabled.calledOnce).toBe(true);
-    });
-
     it('componentDidUpdate should reset joyride and set running state', () => {
         const joyride = {current: {reset: sinon.spy()}};
         instance.joyride = joyride;
@@ -210,7 +199,6 @@ describe('ExportInfo component', () => {
 
     it('componentDidUpdate should update the providers', () => {
         const stateStub = sinon.stub(instance, 'setState');
-        // const checkStub = sinon.stub(instance, 'checkProviders');
         const nextProps = getProps();
         nextProps.providers = [{slug: '124'}];
         wrapper.setProps(nextProps);
@@ -284,19 +272,8 @@ describe('ExportInfo component', () => {
     });
 
     it('onRefresh should setState with empty availability and estimate', () => {
-        const p = getProps();
-        p.providers = [{name: 'one'}, {name: 'two'}];
-        p.exportInfo.providers = [...p.providers];
-        setup(p);
-        const stateStub = sinon.stub(instance, 'setState');
         instance.onRefresh();
-        const expected = [
-            {name: 'one', availability: {}, estimate: {}},
-            {name: 'two', availability: {}, estimate: {}},
-        ];
-        expect(stateStub.calledOnce).toBe(true);
-        expect(stateStub.calledWith({providers: expected}));
-        stateStub.restore();
+        expect(props.checkProvider.called).toBe(true);
     });
 
     it('handlePopoverOpen should setState with anchorEl', () => {
@@ -323,7 +300,7 @@ describe('ExportInfo component', () => {
             projectName: 'name',
             providers: [],
             exportOptions: {}
-        };
+        } as any;
         const valid = {
             exportName: 'name',
             datapackDescription: 'stuff',
@@ -335,9 +312,9 @@ describe('ExportInfo component', () => {
                     formats: ['validformat'],
                 }
             },
-        };
-        expect(instance.hasRequiredFields(invalid)).toBe(false);
-        expect(instance.hasRequiredFields(valid)).toBe(true);
+        } as any;
+        expect(hasRequiredFields(invalid)).toBe(false);
+        expect(hasRequiredFields(valid)).toBe(true);
     });
 
     it('hasDisallowedSelection should return true if the provider status is FATAL', () => {
@@ -354,7 +331,7 @@ describe('ExportInfo component', () => {
             providerInfo
         };
         setup({exportInfo: exportInfo});
-        expect(instance.hasDisallowedSelection(exportInfo)).toBe(true);
+        expect(hasDisallowedSelection(exportInfo)).toBe(true);
     });
 
     it('hasDisallowedSelection should return false if no status', () => {
@@ -371,7 +348,7 @@ describe('ExportInfo component', () => {
             providerInfo
         };
         setup({exportInfo: exportInfo});
-        expect(instance.hasDisallowedSelection(exportInfo)).toBe(false);
+        expect(hasDisallowedSelection(exportInfo)).toBe(false);
     });
 
     it('joyrideAddSteps should set state for steps in tour', () => {

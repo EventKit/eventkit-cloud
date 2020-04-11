@@ -1,13 +1,17 @@
 import * as React from 'react';
-import { withTheme, Theme, withStyles, createStyles } from '@material-ui/core/styles';
+import {
+    withTheme, Theme, withStyles, createStyles,
+} from '@material-ui/core/styles';
 import numeral from 'numeral';
 import Button from '@material-ui/core/Button';
 import TextField from '@material-ui/core/TextField';
 import AlertWarning from '@material-ui/icons/Warning';
 import Clear from '@material-ui/icons/Clear';
 import Slider from '@material-ui/lab/Slider';
+import { useState } from 'react';
 import AlertCallout from './AlertCallout';
 import { getSqKm, getSqKmString } from '../../utils/generic';
+import { useJobValidationContext } from './context/JobValidation';
 
 const jss = (theme: Eventkit.Theme & Theme) => createStyles({
     background: {
@@ -91,10 +95,6 @@ const jss = (theme: Eventkit.Theme & Theme) => createStyles({
 });
 
 export interface Props {
-    limits: {
-        max: number;
-        sizes: number[];
-    };
     show: boolean;
     value: number;
     valid: boolean;
@@ -110,173 +110,170 @@ export interface State {
     showAlert: boolean;
 }
 
-export class BufferDialog extends React.Component<Props, State> {
-    constructor(props: Props) {
-        super(props);
-        this.showAlert = this.showAlert.bind(this);
-        this.closeAlert = this.closeAlert.bind(this);
-        this.state = {
-            showAlert: false,
-        };
+export function BufferDialog(props: Props) {
+    const [showAlert, setShowAlert] = useState(false);
+    const closeAlert = () => setShowAlert(false);
+    const displayAlert = () => setShowAlert(true);
+
+    const { classes } = props;
+    const { colors } = props.theme.eventkit;
+
+    const bufferActions = [
+        <Button
+            key="BufferDialog-close"
+            className="qa-BufferDialog-Button-close"
+            style={{ float: 'left', fontWeight: 'bold' }}
+            onClick={props.closeBufferDialog}
+            variant="text"
+            color="primary"
+        >
+            close
+        </Button>,
+        <Button
+            key="BufferDialog-buffer"
+            className="qa-BufferDialog-Button-buffer"
+            style={{ fontWeight: 'bold' }}
+            variant="contained"
+            color="primary"
+            onClick={props.handleBufferClick}
+            disabled={!props.valid}
+        >
+            Update AOI
+        </Button>,
+    ];
+
+    const { providerLimits, dataSizeInfo, aoiArea } = useJobValidationContext();
+    const { haveAvailableEstimates = [] } = dataSizeInfo || {};
+
+    const highestMaxSelectionArea = (providerLimits[0]) ? providerLimits[0].maxArea : 0;
+    const totalArea = getSqKmString(props.aoi);
+
+    let over = false;
+    if (highestMaxSelectionArea && highestMaxSelectionArea < aoiArea) {
+        over = true;
     }
-
-    private showAlert() {
-        this.setState({ showAlert: true });
+    let message = (
+        <p>
+            The max size allowed for the AOI is {numeral(highestMaxSelectionArea).format('0,0')} sq
+            km and yours
+            is {totalArea}.
+            Please reduce the size of your buffer and/or polygon
+        </p>
+    );
+    if (over && haveAvailableEstimates.length > 0) {
+        message = (
+            <p>
+                The size of your AOI is {totalArea}. This exceeds the provider specified limit of
+                {numeral(highestMaxSelectionArea).format('0,0')} sq km. Depending on your zoom levels and data formats,
+                you might exceed the maximum allowable size for one or more providers.
+            </p>
+        );
     }
-
-    private closeAlert() {
-        this.setState({ showAlert: false });
-    }
-
-    render() {
-        const { classes } = this.props;
-        const { colors } = this.props.theme.eventkit;
-
-        const bufferActions = [
-            <Button
-                key="BufferDialog-close"
-                className="qa-BufferDialog-Button-close"
-                style={{ float: 'left', fontWeight: 'bold' }}
-                onClick={this.props.closeBufferDialog}
-                variant="text"
-                color="primary"
+    let warning = null;
+    if (over) {
+        warning = (
+            <div
+                className="qa-BufferDialog-warning"
+                style={{ position: 'relative', display: 'inline-block', marginRight: '5px' }}
             >
-                close
-            </Button>,
-            <Button
-                key="BufferDialog-buffer"
-                className="qa-BufferDialog-Button-buffer"
-                style={{ fontWeight: 'bold' }}
-                variant="contained"
-                color="primary"
-                onClick={this.props.handleBufferClick}
-                disabled={!this.props.valid}
-            >
-                Update AOI
-            </Button>,
-        ];
-
-        if (!this.props.show) {
-            return null;
-        }
-
-        let over = false;
-        const maxAoi = this.props.limits.max;
-        const totalArea = getSqKmString(this.props.aoi);
-        const size = getSqKm(this.props.aoi);
-        if (maxAoi && maxAoi < size) {
-            over = true;
-        }
-
-        let warning = null;
-        if (over) {
-            warning = (
-                <div
-                    className="qa-BufferDialog-warning"
-                    style={{ position: 'relative', display: 'inline-block', marginRight: '5px' }}
-                >
-                    <AlertWarning
-                        onClick={this.showAlert}
-                        className={classes.warning}
+                <AlertWarning
+                    onClick={displayAlert}
+                    className={classes.warning}
+                />
+                {showAlert && (
+                    <AlertCallout
+                        onClose={closeAlert}
+                        orientation="top"
+                        title="Your AOI is too large!"
+                        body={message}
+                        className={classes.callOut}
                     />
-                    {this.state.showAlert ?
-                        <AlertCallout
-                            onClose={this.closeAlert}
-                            orientation="top"
-                            title="Your AOI is too large!"
-                            body={
-                                <p>
-                                    The max size allowed for the AOI is {numeral(maxAoi).format('0,0')} sq km and yours is {totalArea}.
-                                    Please reduce the size of your buffer and/or polygon
-                                </p>
-                            }
-                            className={classes.callOut}
-                        />
-                        :
-                        null
-                    }
-                </div>
-            );
-        }
-
-        return (
-            <div>
-                <div className={`qa-BufferDialog-background ${classes.background}`} />
-                <div className={`qa-BufferDialog-main ${classes.dialog}`}>
-                    <div className={`qa-BufferDialog-header ${classes.header}`}>
-                        <strong>
-                            <div style={{ display: 'inline-block' }}>
-                                <span>
-                                    BUFFER AOI
-                                </span>
-                            </div>
-                        </strong>
-                        <Clear className={classes.clear} onClick={this.props.closeBufferDialog} />
-                    </div>
-                    <div className={`qa-BufferDialog-body ${classes.body}`}>
-                        <div style={{ paddingBottom: '10px', display: 'flex' }}>
-                            <TextField
-                                className={classes.textField}
-                                type="number"
-                                name="buffer-value"
-                                value={this.props.value}
-                                onChange={e => this.props.handleBufferChange(e.target.value)}
-                                style={{ color: this.props.valid ? colors.grey : colors.warning }}
-                                InputProps={{ style: { fontSize: '14px', lineHeight: '24px' } }}
-                                // MUI uses the case of the i to distinguish between Input component and input html element
-                                // eslint-disable-next-line react/jsx-no-duplicate-props
-                                inputProps={{ style: { textAlign: 'center' } }}
-                            />
-                            <span style={{ fontSize: '16px', color: colors.grey }}>m</span>
-                            <div style={{ flex: '1 1 auto', textAlign: 'right', color: over ? colors.warning : 'initial' }}>
-                                {warning}
-                                {getSqKmString(this.props.aoi)} total AOI
-                            </div>
-                        </div>
-                        <div style={{ textAlign: 'center' }}>
-                            <table style={{ width: '100%', position: 'relative' }}>
-                                <thead>
-                                    <tr>
-                                        <td>
-                                            <span style={{ float: 'left' }}>0m</span>
-                                        </td>
-                                        <td>
-                                            <span style={{ float: 'right' }}>10,000m</span>
-                                        </td>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    <tr>
-                                        <td className={classes.tableData} style={{ borderLeft: '1px solid #ccc' }} >
-                                            <Slider
-                                                className={classes.slider}
-                                                step={10}
-                                                max={10000}
-                                                min={0}
-                                                value={this.props.value}
-                                                onChange={(e, value) => this.props.handleBufferChange(value)}
-                                            />
-                                        </td>
-                                        <td className={classes.tableData} style={{ borderRight: '1px solid #ccc' }} />
-                                    </tr>
-                                    <tr>
-                                        <td className={classes.tableData} style={{ borderLeft: '1px solid #ccc' }} />
-                                        <td className={classes.tableData} style={{ borderRight: '1px solid #ccc' }} />
-                                    </tr>
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-                    <div className={`qa-BufferDialog-footnote ${classes.footnote}`}>
-                        Once updated, you must <strong>&apos;Revert&apos; to set again.</strong>
-                    </div>
-                    <div className={`qa-BufferDialog-footer ${classes.footer}`}>
-                        {bufferActions}
-                    </div>
-                </div>
+                )}
             </div>
         );
     }
+
+    if (!props.show) {
+        return null;
+    }
+
+    return (
+        <div>
+            <div className={`qa-BufferDialog-background ${classes.background}`} />
+            <div className={`qa-BufferDialog-main ${classes.dialog}`}>
+                <div className={`qa-BufferDialog-header ${classes.header}`}>
+                    <strong>
+                        <div style={{ display: 'inline-block' }}>
+                            <span>
+                                BUFFER AOI
+                            </span>
+                        </div>
+                    </strong>
+                    <Clear className={classes.clear} onClick={props.closeBufferDialog} />
+                </div>
+                <div className={`qa-BufferDialog-body ${classes.body}`}>
+                    <div style={{ paddingBottom: '10px', display: 'flex' }}>
+                        <TextField
+                            className={classes.textField}
+                            type="number"
+                            name="buffer-value"
+                            value={props.value}
+                            onChange={e => props.handleBufferChange(e.target.value)}
+                            style={{ color: props.valid ? colors.grey : colors.warning }}
+                            InputProps={{ style: { fontSize: '14px', lineHeight: '24px' } }}
+                            // MUI uses the case of the i to distinguish between Input component and input html element
+                            // eslint-disable-next-line react/jsx-no-duplicate-props
+                            inputProps={{ style: { textAlign: 'center' } }}
+                        />
+                        <span style={{ fontSize: '16px', color: colors.grey }}>m</span>
+                        <div style={{ flex: '1 1 auto', textAlign: 'right', color: over ? colors.warning : 'initial' }}>
+                            {warning}
+                            {getSqKmString(props.aoi)} total AOI
+                        </div>
+                    </div>
+                    <div style={{ textAlign: 'center' }}>
+                        <table style={{ width: '100%', position: 'relative' }}>
+                            <thead>
+                                <tr>
+                                    <td>
+                                        <span style={{ float: 'left' }}>0m</span>
+                                    </td>
+                                    <td>
+                                        <span style={{ float: 'right' }}>10,000m</span>
+                                    </td>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td className={classes.tableData} style={{ borderLeft: '1px solid #ccc' }}>
+                                        <Slider
+                                            className={classes.slider}
+                                            step={10}
+                                            max={10000}
+                                            min={0}
+                                            value={props.value}
+                                            onChange={(e, value) => props.handleBufferChange(value)}
+                                        />
+                                    </td>
+                                    <td className={classes.tableData} style={{ borderRight: '1px solid #ccc' }} />
+                                </tr>
+                                <tr>
+                                    <td className={classes.tableData} style={{ borderLeft: '1px solid #ccc' }} />
+                                    <td className={classes.tableData} style={{ borderRight: '1px solid #ccc' }} />
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <div className={`qa-BufferDialog-footnote ${classes.footnote}`}>
+                    Once updated, you must <strong>&apos;Revert&apos; to set again.</strong>
+                </div>
+                <div className={`qa-BufferDialog-footer ${classes.footer}`}>
+                    {bufferActions}
+                </div>
+            </div>
+        </div>
+    );
 }
 
 export default withTheme()(withStyles(jss)(BufferDialog));

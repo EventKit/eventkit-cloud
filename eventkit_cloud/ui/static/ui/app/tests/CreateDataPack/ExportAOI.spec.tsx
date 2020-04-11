@@ -171,7 +171,6 @@ describe('ExportAOI component', () => {
         expect(addSpy.calledOnce).toBe(true);
         expect(fitSpy.calledOnce).toBe(true);
         expect(joyrideSpy.calledOnce).toBe(true);
-        expect(props.setNextEnabled.calledOnce).toBe(true);
         expect(setSpy.calledOnce).toBe(true);
         expect(setSpy.calledWith('fake type')).toBe(true);
         initSpy.restore();
@@ -193,7 +192,6 @@ describe('ExportAOI component', () => {
         expect(readSpy.called).toBe(false);
         expect(addSpy.called).toBe(false);
         expect(fitSpy.called).toBe(false);
-        expect(props.setNextEnabled.called).toBe(false);
         expect(setSpy.called).toBe(false);
         initSpy.restore();
         readSpy.restore();
@@ -312,7 +310,6 @@ describe('ExportAOI component', () => {
         expect(instance.updateMode.called).toBe(false);
         expect(clearSpy.calledOnce).toBe(true);
         expect(props.clearAoiInfo.calledOnce).toBe(true);
-        expect(props.setNextDisabled.calledOnce).toBe(true);
         clearSpy.restore();
     });
 
@@ -326,7 +323,6 @@ describe('ExportAOI component', () => {
         expect(instance.updateMode.calledOnce).toBe(true);
         expect(clearSpy.calledOnce).toBe(true);
         expect(props.clearAoiInfo.calledOnce).toBe(true);
-        expect(props.setNextDisabled.calledOnce).toBe(true);
         clearSpy.restore();
     });
 
@@ -385,35 +381,18 @@ describe('ExportAOI component', () => {
         const zoomSpy = sinon.spy(utils, 'zoomToFeature');
         const showSpy = sinon.spy(instance, 'showInvalidDrawWarning');
         const readSpy = sinon.spy(GeoJSONFormat.prototype, 'readFeature');
-        const transformSpy = sinon.spy(Polygon.prototype, 'transform');
         const addSpy = sinon.spy(VectorSource.prototype, 'addFeature');
         expect(instance.handleSearch(geojson.features[0])).toBe(true);
         expect(clearSpy.calledOnce).toBe(true);
         expect(showSpy.calledOnce).toBe(true);
         expect(readSpy.calledOnce).toBe(true);
-        expect(transformSpy.called).toBe(true);
         expect(addSpy.calledOnce).toBe(true);
         
-        
         expect(zoomSpy.calledOnce).toBe(true);
-        expect(props.setNextEnabled.calledOnce).toBe(true);
         clearSpy.restore();
         zoomSpy.restore();
         readSpy.restore();
-        transformSpy.restore();
         addSpy.restore();
-    });
-
-    it('handleSearch should not setNextEnabled', () => {
-        const point = {
-            type: 'Feature',
-            geometry: {
-                type: 'Point',
-                coordinates: [1, 1],
-            },
-        };
-        instance.handleSearch(point);
-        expect(props.setNextEnabled.called).toBe(false);
     });
 
     it('handleGeoJSONUpload should clearDraw, addFeature, createGeoJSON, zoomTo, updateAoiInfo, and set next enabled', () => {
@@ -421,7 +400,6 @@ describe('ExportAOI component', () => {
         const areaSpy = sinon.stub(utils, 'allHaveArea').returns(true);
         const readSpy = sinon.spy(GeoJSONFormat.prototype, 'readFeatures');
         const fitSpy = sinon.spy(View.prototype, 'fit');
-        const enableStub = sinon.stub(instance, 'shouldEnableNext').returns(true);
         const addSpy = sinon.spy(VectorSource.prototype, 'addFeatures');
         const featureCollection = {
             type: 'FeatureCollection',
@@ -441,13 +419,11 @@ describe('ExportAOI component', () => {
         expect(readSpy.calledOnce).toBe(true);
         expect(fitSpy.calledOnce).toBe(true);
         expect(props.updateAoiInfo.calledOnce).toBe(true);
-        expect(props.setNextEnabled.calledOnce).toBe(true);
         clearSpy.restore();
         areaSpy.restore();
         readSpy.restore();
         fitSpy.restore();
         addSpy.restore();
-        enableStub.restore();
     });
 
     it('setMapView should clear the drawing, calculate map extent add feature, and update aoiInfo and next enabled', () => {
@@ -458,7 +434,6 @@ describe('ExportAOI component', () => {
         const fromExtentSpy = sinon.spy(Polygon, 'fromExtent');
         const getCoordSpy = sinon.spy(Polygon.prototype, 'getCoordinates');
         const addSpy = sinon.spy(VectorSource.prototype, 'addFeature');
-        const enableStub = sinon.stub(instance, 'shouldEnableNext').returns(true);
         instance.setMapView();
         expect(clearSpy.calledOnce).toBe(true);
         expect(calcSpy.calledOnce).toBe(true);
@@ -468,7 +443,6 @@ describe('ExportAOI component', () => {
         expect(createSpy.calledOnce).toBe(true);
         expect(addSpy.calledOnce).toBe(true);
         expect(props.updateAoiInfo.calledOnce).toBe(true);
-        expect(props.setNextEnabled.calledOnce).toBe(true);
         clearSpy.restore();
         unwrapSpy.restore();
         createSpy.restore();
@@ -476,7 +450,6 @@ describe('ExportAOI component', () => {
         fromExtentSpy.restore();
         getCoordSpy.restore();
         addSpy.restore();
-        enableStub.restore();
     });
 
     it('updateMode should set interactions false then activate BBOX interaction', () => {
@@ -582,7 +555,6 @@ describe('ExportAOI component', () => {
         expect(createSpy.calledOnce).toBe(true);
         expect(isValidSpy.calledOnce).toBe(true);
         expect(props.updateAoiInfo.calledOnce).toBe(true);
-        expect(props.setNextEnabled.calledOnce).toBe(true);
         expect(updateSpy.calledOnce).toBe(true);
         getGeomSpy.restore();
         getCoordSpy.restore();
@@ -612,7 +584,6 @@ describe('ExportAOI component', () => {
         expect(isValidSpy.calledOnce).toBe(true);
         expect(showWarningSpy.calledOnce).toBe(true);
         expect(props.updateAoiInfo.called).toBe(false);
-        expect(props.setNextEnabled.called).toBe(false);
         expect(updateSpy.calledOnce).toBe(true);
         isValidSpy.restore();
     });
@@ -646,7 +617,6 @@ describe('ExportAOI component', () => {
         expect(setCoordSpy.calledOnce).toBe(true);
         expect(createSpy.calledOnce).toBe(true);
         expect(props.updateAoiInfo.calledOnce).toBe(true);
-        expect(props.setNextEnabled.calledOnce).toBe(true);
         expect(updateSpy.calledOnce).toBe(true);
         getGeomSpy.restore();
         getCoordSpy.restore();
@@ -671,7 +641,6 @@ describe('ExportAOI component', () => {
         };
         instance.handleDrawEnd(event);
         expect(props.updateAoiInfo.called).toBe(false);
-        expect(props.setNextEnabled.called).toBe(false);
         expect(updateSpy.called).toBe(false);
     });
 
@@ -743,7 +712,6 @@ describe('ExportAOI component', () => {
         })).toBe(true);
         expect(warningSpy.calledOnce).toBe(true);
         expect(warningSpy.calledWith(false)).toBe(true);
-        expect(props.setNextEnabled.calledOnce).toBe(true);
 
         unwrapStub.restore();
         setSpy.restore();
@@ -775,7 +743,6 @@ describe('ExportAOI component', () => {
         expect(props.updateAoiInfo.called).toBe(false);
         expect(warningSpy.calledOnce).toBe(true);
         expect(warningSpy.calledWith(true)).toBe(true);
-        expect(props.setNextDisabled.calledOnce).toBe(true);
 
         unwrapStub.restore();
         validStub.restore();
@@ -1143,24 +1110,20 @@ describe('ExportAOI component', () => {
         aoiInfo.geojson = geojson;
         aoiInfo.geomType = 'Polygon';
         setup({ aoiInfo });
-        props.setNextEnabled.resetHistory();
         const fakeFeature = new Feature();
 
         const addStub = sinon.stub(VectorSource.prototype, 'addFeatures');
         const readStub = sinon.stub(GeoJSONFormat.prototype, 'readFeatures')
             .returns([fakeFeature]);
-        const enableStub = sinon.stub(instance, 'shouldEnableNext').returns(true);
         instance.bufferFeatures = geojson;
         expect(instance.bufferMapFeature(111)).toBe(true);
         expect(addStub.calledOnce).toBe(true);
         expect(readStub.calledOnce).toBe(true);
         expect(readStub.calledWith(geojson)).toBe(true);
         expect(props.updateAoiInfo.calledOnce).toBe(true);
-        expect(props.setNextEnabled.calledOnce).toBe(true);
 
         addStub.restore();
         readStub.restore();
-        enableStub.restore();
     });
 
     it('openResetDialog should set showReset to true', () => {
@@ -1189,7 +1152,6 @@ describe('ExportAOI component', () => {
         const addSpy = sinon.spy(VectorSource.prototype, 'addFeatures');
         const stateSpy = sinon.spy(ExportAOI.prototype, 'setState');
         setup({ aoiInfo: { ...props.aoiInfo, originalGeojson: geojson }});
-        const enableStub = sinon.stub(instance, 'shouldEnableNext').returns(true);
         instance.resetAoi();
         expect(readSpy.calledOnce).toBe(true);
         expect(readSpy.calledWith(geojson, {
@@ -1205,37 +1167,10 @@ describe('ExportAOI component', () => {
             buffer: 0,
         })).toBe(true);
         expect(stateSpy.calledWith({ showReset: false })).toBe(true);
-        expect(props.setNextDisabled.called).toBe(false);
         readSpy.restore();
         clearSpy.restore();
         addSpy.restore();
         stateSpy.restore();
-        enableStub.restore();
-    });
-
-    it('shouldEnabledNext should rturn false if not all feature have area', () => {
-        const areaStub = sinon.stub(utils, 'allHaveArea').returns(false);
-        const enable = instance.shouldEnableNext({});
-        expect(enable).toBe(false);
-        areaStub.restore();
-    });
-
-    it('shouldEnableNext should return false if the area exceeds the limit', () => {
-        const areaStub = sinon.stub(utils, 'allHaveArea').returns(true);
-        const getStub = sinon.stub(generic, 'getSqKm').returns(9999999);
-        const enable = instance.shouldEnableNext({});
-        expect(enable).toBe(false);
-        areaStub.restore();
-        getStub.restore();
-    });
-
-    it('shouldEnableNext should return true', () => {
-        const areaStub = sinon.stub(utils, 'allHaveArea').returns(true);
-        const getStub = sinon.stub(generic, 'getSqKm').returns(10);
-        const enable = instance.shouldEnableNext({});
-        expect(enable).toBe(true);
-        areaStub.restore();
-        getStub.restore();
     });
 
     it('joyrideAddSteps should set state for steps in tour', () => {
