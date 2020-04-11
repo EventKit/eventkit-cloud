@@ -35,6 +35,7 @@ const csrfmiddlewaretoken = getCookie('csrftoken');
 export function RequestDataSource(props: Props) {
     const { open, onClose, classes } = props;
 
+    const [name1, setName] = useState(undefined);
     const [name, debounceName] = useDebouncedState(undefined);
     const [url, debounceUrl] = useDebouncedState('');
     const [layerNames, debounceLayerNames] = useDebouncedState('');
@@ -81,7 +82,7 @@ export function RequestDataSource(props: Props) {
                         className={classes.textField}
                         id="name"
                         name="sourceName"
-                        onChange={e => debounceName(e.target.value)}
+                        onChange={e => onChange(e, setName)}
                         placeholder="enter source here"
                         InputProps={{ className: classes.input }}
                         fullWidth

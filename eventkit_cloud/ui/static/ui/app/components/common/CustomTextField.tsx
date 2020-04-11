@@ -16,8 +16,6 @@ interface Props extends OutlinedTextFieldProps {
 }
 
 CustomTextField.defaultProps = {
-    className: '',
-    defaultValue: '',
     showRemaining: true,
     maxLength: 100,
     charsRemainingStyle: {},
@@ -36,27 +34,31 @@ export function CustomTextField(props: Props) {
         InputProps,
         maxLength,
         classes,
+        onChange,
+        onFocus,
+        onBlur,
         ...passThroughProps
     } = props;
 
     const [charsRemaining, setCharsRemaining] = useState(props.maxLength - getTextLength());
     const [focused, setFocused] = useState(undefined);
 
-    function onChange(e) {
+    // onChange, onFocus, onBlur must be pulled out of the passThroughProps on these local functions will be ignored below
+    function onChangeLocal(e) {
         if (props.onChange) {
             props.onChange(e);
         }
         setCharsRemaining(props.maxLength - e.target.value.length);
     }
 
-    function onFocus(e) {
+    function onFocusLocal(e) {
         if (props.onFocus) {
             props.onFocus(e);
         }
         setFocused(true);
     }
 
-    function onBlur(e) {
+    function onBlurLocal(e) {
         if (props.onBlur) {
             props.onBlur(e);
         }
@@ -99,9 +101,9 @@ export function CustomTextField(props: Props) {
             <TextField
                 className="qa-CustomTextField-TextField"
                 id="custom-text-field"
-                onChange={onChange}
-                onFocus={onFocus}
-                onBlur={onBlur}
+                onChange={onChangeLocal}
+                onFocus={onFocusLocal}
+                onBlur={onBlurLocal}
                 inputProps={{ maxLength, ...inputProps }}
                 // eslint-disable-next-line react/jsx-no-duplicate-props
                 InputProps={{ ...InputProps, style: inputStyle }}
