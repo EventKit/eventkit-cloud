@@ -14,14 +14,6 @@ import {getCookie} from "../../utils/generic";
 import {useAsyncRequest} from "../../utils/hooks";
 
 const jss = (theme: Eventkit.Theme & Theme) => createStyles({
-    submissionPopover: {
-        textAlign: 'center' as 'center',
-        marginTop: '-5px',
-    },
-    submissionPopoverText: {
-        display: 'inline-block',
-        color: theme.eventkit.colors.black,
-    },
     iconBtn: {
         float: 'right' as 'right',
         color: theme.eventkit.colors.primary,
@@ -33,16 +25,7 @@ const jss = (theme: Eventkit.Theme & Theme) => createStyles({
     popoverTitle: {
         color: theme.eventkit.colors.primary,
         fontWeight: 300,
-    },
-    // actionsStyle: {
-    //     margin: 'auto',
-    //     flexDirection: 'initial',
-    //     justifyContent: 'initial',
-    //     paddingBottom: '20px'
-    // },
-    // // titleStyle: {display: 'None'},
-    // // bodyStyle: {padding: '35px 0px'},
-    // // buttonText: "OK"
+    }
 });
 
 interface Props extends React.HTMLAttributes<HTMLElement> {
@@ -88,18 +71,18 @@ export function ProviderStatusCheck(props: Props) {
     const { areEstimatesLoading, providerHasEstimates } = props;
     const [ anchorElement, setAnchor ] = useState(null);
     const [ isSubmissionOpen, setSubmissionOpen ] = useState(false);
-    const [{ status: requestStatus, response: response }, requestCall] = useAsyncRequest();
+    const [{ status: requestStatus, response }, requestCall] = useAsyncRequest();
     const { classes } = props;
 
     const csrfmiddlewaretoken = getCookie('csrftoken');
     const makeRequest = async (provider: Eventkit.Provider, selection: GeoJSON.FeatureCollection, aoiArea: string,
                          estimatedSize: Eventkit.Store.EstimateData) =>
         requestCall({
-            url: `/api/size_requests`,
+            url: `/api/providers/requests/size`,
             method: 'post',
             data: {
                 provider: provider.id,
-                the_geom: selection,
+                selection: selection,
                 requested_aoi_size: parseInt(aoiArea),
                 requested_data_size: estimatedSize ? Math.trunc(estimatedSize.value) : undefined,
             },
@@ -320,13 +303,12 @@ export function ProviderStatusCheck(props: Props) {
                                     paddingBottom: '20px',
                                 }}
                                 titleStyle={{display: 'None'}}
-                                bodyStyle={{padding: '35px 0px'}}
+                                bodyStyle={{padding: '35px 0px', textAlign: 'center', color: '#000'}}
                                 buttonText="OK"
-                                // className={classes.submissionPopover}
                                 show={isSubmissionOpen}
                                 onClose={handleSubmissionClose}
                             >
-                                <div className={classes.submissionPopoverText}>
+                                <div>
                                     {requestStatus !== 'error' && (
                                         <>
                                             {requestStatus === 'pending' && (
@@ -341,9 +323,8 @@ export function ProviderStatusCheck(props: Props) {
                                     )}
                                     {requestStatus === 'error' && (
                                         <div>
-                                            Request Failure due to {response.response.data.errors[0].title}.
+                                            Request Failure due to {response.data.errors[0].title}.
                                         </div>
-
                                     )}
                                 </div>
                             </BaseDialog>
