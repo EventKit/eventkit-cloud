@@ -39,9 +39,8 @@ interface Props extends React.HTMLAttributes<HTMLElement> {
     geojson: GeoJSON.FeatureCollection;
     overSize: boolean;
     overArea: boolean;
-    areaStr: string;
+    aoiArea: number;
     providerInfo: Eventkit.Store.ProviderInfo;
-    estimateDataSize: Eventkit.Store.EstimateData;
     providerHasEstimates: boolean;
     areEstimatesLoading: boolean;
     supportsZoomLevels: boolean;
@@ -68,27 +67,30 @@ const CancelToken = axios.CancelToken;
 const source = CancelToken.source();
 
 export function ProviderStatusCheck(props: Props) {
-    const { areEstimatesLoading, providerHasEstimates } = props;
+    const {
+        areEstimatesLoading, providerHasEstimates,
+        aoiArea, providerInfo, provider, geojson } = props;
     const [ anchorElement, setAnchor ] = useState(null);
     const [ isSubmissionOpen, setSubmissionOpen ] = useState(false);
     const [{ status: requestStatus, response }, requestCall] = useAsyncRequest();
     const { classes } = props;
 
     const csrfmiddlewaretoken = getCookie('csrftoken');
-    const makeRequest = async (provider: Eventkit.Provider, selection: GeoJSON.FeatureCollection, aoiArea: string,
-                         estimatedSize: Eventkit.Store.EstimateData) =>
+    const makeRequest = async () => {
+        const estimatedSize = providerInfo.estimates.size;
         requestCall({
             url: `/api/providers/requests/size`,
             method: 'post',
             data: {
                 provider: provider.id,
-                selection: selection,
-                requested_aoi_size: parseInt(aoiArea),
+                selection: geojson,
+                requested_aoi_size: Math.round(aoiArea),
                 requested_data_size: estimatedSize ? Math.trunc(estimatedSize.value) : undefined,
             },
             headers: { 'X-CSRFToken': csrfmiddlewaretoken },
             cancelToken: source.token,
         });
+    };
 
     function handlePopoverOpen(e: React.MouseEvent<HTMLElement>) {
         setAnchor(e.currentTarget);
@@ -102,12 +104,7 @@ export function ProviderStatusCheck(props: Props) {
         if (Object.keys(props.geojson).length === 0) {
                 return null;
             }
-        const selection = props.geojson;
-        let aoiArea = props.areaStr;
-        aoiArea = aoiArea.replace(/\,/g,'');
-        const estimatedSize = props.providerInfo.estimates.size;
-
-        await makeRequest(props.provider, selection, aoiArea, estimatedSize);
+        await makeRequest();
         setSubmissionOpen(true);
     }
 
@@ -341,4 +338,5 @@ export function ProviderStatusCheck(props: Props) {
         </div>
     );
 }
+
 export default withStyles(jss)(ProviderStatusCheck);

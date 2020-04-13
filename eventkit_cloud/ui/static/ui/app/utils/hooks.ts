@@ -1,4 +1,4 @@
-import {useCallback, useEffect, useReducer, useRef} from "react";
+import {useCallback, useEffect, useReducer, useRef, useState} from "react";
 import axios from "axios";
 
 // Convenience function that acts like componentDidMount.
@@ -111,4 +111,25 @@ export class DepsHashers {
         }
         return DepsHashers.stringHash(`${size.value}:${time.value}`);
     }
+}
+
+export function useProviderIdentity(effect: () => void, providers: Eventkit.Provider[]) {
+    useEffect(effect, [DepsHashers.arrayHash(providers.map(provider => DepsHashers.providerIdentityHash(provider)))]);
+}
+
+export function useProvidersLoading(providers: Eventkit.Provider[]): [boolean, ((provider: Eventkit.Provider, isLoading: boolean) => void)] {
+    const slugMap = useRef({});
+    const [ areProvidersLoading, setAreProvidersLoading ] = useState(true);
+    const [ flag, setFlag ] = useState(false);
+    useProviderIdentity(() => {
+        providers.map(provider => slugMap.current[provider.slug] = slugMap.current[provider.slug] || true);
+    }, providers);
+    useEffect(() => {
+        setAreProvidersLoading(Object.values(slugMap.current).some(value => value));
+    }, [flag]);
+    function setProviderLoading(provider: Eventkit.Provider, isLoading: boolean)  {
+        slugMap.current[provider.slug] = isLoading;
+        setFlag(flag => !flag);
+    }
+    return [areProvidersLoading, setProviderLoading];
 }
