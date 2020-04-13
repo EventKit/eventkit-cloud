@@ -673,6 +673,7 @@ class DataProviderSerializer(serializers.ModelSerializer):
     metadata = serializers.SerializerMethodField(read_only=True)
     footprint_url = serializers.SerializerMethodField(read_only=True)
     max_data_size = serializers.SerializerMethodField(read_only=True)
+    max_selection = serializers.SerializerMethodField(read_only=True)
 
     class Meta:
         model = DataProvider
@@ -682,7 +683,7 @@ class DataProviderSerializer(serializers.ModelSerializer):
             "config": {"write_only": True},
         }
         read_only_fields = ("uid",)
-        exclude = ("thumbnail",)
+        exclude = ("thumbnail", )
 
     @staticmethod
     def create(validated_data, **kwargs):
@@ -740,6 +741,13 @@ class DataProviderSerializer(serializers.ModelSerializer):
         if request and hasattr(request, "user"):
             user = request.user
         return obj.get_max_data_size(user)
+
+    def get_max_selection(self, obj):
+        user = None
+        request = self.context.get("request")
+        if request and hasattr(request, "user"):
+            user = request.user
+        return obj.get_max_selection_size(user)
 
 
 class ListJobSerializer(serializers.Serializer):

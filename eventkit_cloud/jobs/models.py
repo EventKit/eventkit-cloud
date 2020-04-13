@@ -296,6 +296,7 @@ class DataProvider(UIDMixin, TimeStampedModelMixin, CachedModelMixin):
         return None if config is None else config.get("max_data_size", None)
 
     def get_max_data_size(self, user=None):
+        from eventkit_cloud.user_requests.models import UserMaxDataSize
         if user is None:
             return self.max_data_size
 
@@ -304,6 +305,17 @@ class DataProvider(UIDMixin, TimeStampedModelMixin, CachedModelMixin):
             return user_rule.max_data_size
         except UserMaxDataSize.DoesNotExist:
             return self.max_data_size
+
+    def get_max_selection_size(self, user=None):
+        from eventkit_cloud.user_requests.models import UserAoiSize
+        if user is None:
+            return self.max_selection
+
+        try:
+            user_rule = UserAoiSize.objects.get(provider=self, user=user)
+            return user_rule.max_selection_size
+        except UserAoiSize.DoesNotExist:
+            return self.max_selection
 
 
 class DataProviderStatus(UIDMixin, TimeStampedModelMixin):
@@ -536,35 +548,6 @@ class UserJobActivity(models.Model):
 
     def __str__(self):
         return "%s %s %s %s" % (self.user, self.job, self.type, self.created_at)
-
-
-class MaxDataSizeRule(models.Model):
-    """
-    Mixin for models that have a downloadable product.
-    """
-
-    max_data_size = models.DecimalField(
-        verbose_name="Max data size",
-        default=100,
-        max_digits=12,
-        decimal_places=3,
-        help_text="This is the maximum data size in MB that can be exported "
-        "from this provider in a single DataPack.",
-    )
-    provider = models.ForeignKey(DataProvider, on_delete=models.CASCADE)
-
-    class Meta:
-        abstract = True
-
-
-class UserMaxDataSize(MaxDataSizeRule):
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
-
-    class Meta:
-        unique_together = ("provider", "user")
-
-    def __str__(self):
-        return f"{self.user.username} max for {self.provider.slug}"
 
 
 def convert_polygon(geom=None):

@@ -21,7 +21,6 @@ from eventkit_cloud.jobs.models import (
     License,
     DataProviderStatus,
     DataProviderTask,
-    UserMaxDataSize,
 )
 from eventkit_cloud.tasks.helpers import clean_config
 
@@ -33,7 +32,6 @@ admin.site.register(DataProviderType)
 admin.site.register(DatamodelPreset)
 admin.site.register(License)
 admin.site.register(DataProviderTask)
-admin.site.register(UserMaxDataSize)
 
 
 class JobAdmin(OSMGeoAdmin):

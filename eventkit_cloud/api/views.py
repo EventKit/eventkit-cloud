@@ -405,7 +405,7 @@ class JobViewSet(viewsets.ModelViewSet):
                                 )
                                 # find cache key that contains the estimator hash with correct time, size values
                                 size, time = cache.get(cache_key, (None, None))
-                                max_selection = provider.max_selection
+                                max_selection = provider.get_max_selection_size(self.request.user)
                                 max_data_size = provider.get_max_data_size(self.request.user)
 
                                 # Don't rely solely on max_data_size as estimates can sometimes be inaccurate
