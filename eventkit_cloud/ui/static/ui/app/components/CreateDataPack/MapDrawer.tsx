@@ -8,7 +8,7 @@ import {
     Theme,
     withStyles,
     Icon,
-    Divider
+    Divider, ButtonBase
 } from "@material-ui/core";
 import {connect} from "react-redux";
 import CardMedia from '@material-ui/core/CardMedia';
@@ -93,7 +93,7 @@ const jss = (theme: Theme & Eventkit.Theme) => createStyles({
         }
     },
     scrollBar: {
-        height: 'calc(100% - 100px)',
+        height: 'calc(100% - 125px)',
         width: '250px',
     },
     heading: {
@@ -388,6 +388,9 @@ export function MapDrawer(props: Props) {
                         className={classes.stickyRow}
                     >
                         Data Source Missing?
+                        <ButtonBase onClick={() => setRequestDataSourceOpen(true)}>
+                            Add a new one
+                        </ButtonBase>
                         <RequestDataSource open={requestDataSourceOpen} onClose={() => setRequestDataSourceOpen(false)}/>
                         <Button
                             className={classes.button}
