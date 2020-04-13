@@ -505,6 +505,7 @@ export function DataProvider(props: Props) {
                         provider={provider}
                         aoiArea={aoiArea}
                         providerInfo={providerInfo}
+                        geojson={props.geojson}
                     />
                     {isOpen ?
                         <ExpandLess

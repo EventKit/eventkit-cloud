@@ -101,15 +101,26 @@ export function ProviderStatusCheck(props: Props) {
     }
 
     async function handleSubmissionOpen() {
-        if (Object.keys(props.geojson).length === 0) {
-                return null;
-            }
+       if (Object.keys(props.geojson).length === 0) {
+            return null;
+        }
         await makeRequest();
         setSubmissionOpen(true);
     }
 
     function handleSubmissionClose() {
         setSubmissionOpen(false);
+    }
+
+    function handleErrorMessage(response) {
+        const { data = {errors: []} } = !!response ? response.response : {};
+        return (
+            data.errors.map((error, ix) => (
+                <span key={ix} title={error.title}>
+                    {error.title}
+                </span>
+            ))
+        )
     }
 
     const style = {
@@ -320,7 +331,7 @@ export function ProviderStatusCheck(props: Props) {
                                     )}
                                     {requestStatus === 'error' && (
                                         <div>
-                                            Request Failure due to {response.data.errors[0].title}.
+                                            Request Failure due to {handleErrorMessage(response)}.
                                         </div>
                                     )}
                                 </div>
