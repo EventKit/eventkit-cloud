@@ -1,4 +1,5 @@
-import {useEffect, useRef, useState} from "react";
+import {useCallback, useEffect, useReducer, useRef, useState} from "react";
+import axios from "axios";
 
 // Convenience function that acts like componentDidMount.
 // useEffect replaces componentDidMount AND componentDidUpdate
@@ -20,6 +21,62 @@ function usePrevious(stateValue) {
     return ref.current;
 }
 
+enum ACTIONS {
+    FETCHING,
+    SUCCESS,
+    ERROR,
+    CLEAR,
+}
+
+interface RequestState {status: any, response: any}
+const initialState = { status: null, response: {} } as RequestState;
+function submitReducer(state = initialState, { type = undefined, response = undefined } = {}) : RequestState {
+    switch (type) {
+        case ACTIONS.FETCHING:
+            return { ...initialState, status: 'fetching' };
+        case ACTIONS.SUCCESS:
+            return { ...state, status: 'success', response };
+        case ACTIONS.ERROR:
+            return { ...state, status: 'error', response };
+        case ACTIONS.CLEAR:
+            return { ...initialState };
+        default:
+            return state;
+    }
+}
+
+interface Dispatcher {
+    fetching: () => void;
+    success: (response) => void;
+    error: (response) => void;
+    clear: () => void;
+}
+
+// Async request hook with more fine grained ability to control the request.
+export function useAsyncRequest_Control(): [RequestState, Dispatcher] {
+    const [state, dispatch] = useReducer(submitReducer, initialState);
+    const dispatches = {
+        fetching: () => dispatch({ type: ACTIONS.FETCHING }),
+        success: (response) => dispatch({ type: ACTIONS.SUCCESS, response }),
+        error: (response) => dispatch({ type: ACTIONS.ERROR, response }),
+        clear: () => dispatch({ type: ACTIONS.CLEAR }),
+    };
+    return [state, dispatches]
+}
+
+export function useAsyncRequest(): [RequestState, ((params: any) => Promise<void>)] {
+    const [state, dispatches] = useAsyncRequest_Control();
+    const makeRequest = useCallback(async (params: any) => {
+        dispatches.fetching();
+        try {
+            const response = await axios({ ...params });
+            dispatches.success(response);
+        } catch (e) {
+            dispatches.error(e);
+        }
+    }, []);
+    return [state, makeRequest];
+}
 
 export class DepsHashers {
 
