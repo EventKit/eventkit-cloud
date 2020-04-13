@@ -141,6 +141,7 @@ declare namespace Eventkit {
         service_copyright: string;
         service_description: string;
         layer: string;
+        max_data_size: string;
         max_selection: string;
         level_from: number;
         level_to: number;
