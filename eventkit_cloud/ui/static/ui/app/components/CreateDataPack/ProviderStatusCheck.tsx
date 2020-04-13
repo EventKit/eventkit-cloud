@@ -207,42 +207,42 @@ export function ProviderStatusCheck(props: Props) {
     let popoverBlock;
     const openEl = Boolean(anchorElement);
     const id = open ? 'simple-popover' : undefined;
-    if ((status !== STATUS.OVER_AREA_SIZE) && (avail.type !== 'AOI TOO LARGE')) {
-        popoverBlock = (
-            <div style={style.base} className="qa-ProviderStatusIcon">
-                <StatusIcon
-                    style={style.icon}
-                    title={props.availability.message}
-                    onMouseEnter={handlePopoverOpen}
-                    onMouseLeave={handlePopoverClose}
-                    {...otherProps}
-                />
-                <Popover
-                    style={{pointerEvents: 'none'}}
-                    PaperProps={{
-                        style: {padding: '16px'},
-                    }}
-                    open={!!anchorElement}
-                    anchorEl={anchorElement}
-                    onClose={handlePopoverClose}
-                    anchorOrigin={{
-                        vertical: 'top',
-                        horizontal: 'center',
-                    }}
-                    transformOrigin={{
-                        vertical: 'bottom',
-                        horizontal: 'center',
-                    }}
-                >
-                    <div style={{maxWidth: 400}}>
-                        <Typography variant="h6" gutterBottom style={{fontWeight: 600}}>
-                            {title}
-                        </Typography>
-                        <div>{message}</div>
-                    </div>
-                </Popover>
-            </div>
-        )
+        if (status !== STATUS.OVER_DATA_SIZE && status !== STATUS.OVER_AREA_SIZE) {
+            popoverBlock = (
+                <div style={style.base} className="qa-ProviderStatusIcon">
+                    <StatusIcon
+                        style={style.icon}
+                        title={props.availability.message}
+                        onMouseEnter={handlePopoverOpen}
+                        onMouseLeave={handlePopoverClose}
+                        {...otherProps}
+                    />
+                    <Popover
+                        style={{pointerEvents: 'none'}}
+                        PaperProps={{
+                            style: {padding: '16px'},
+                        }}
+                        open={!!anchorElement}
+                        anchorEl={anchorElement}
+                        onClose={handlePopoverClose}
+                        anchorOrigin={{
+                            vertical: 'top',
+                            horizontal: 'center',
+                        }}
+                        transformOrigin={{
+                            vertical: 'bottom',
+                            horizontal: 'center',
+                        }}
+                    >
+                        <div style={{maxWidth: 400}}>
+                            <Typography variant="h6" gutterBottom style={{fontWeight: 600}}>
+                                {title}
+                            </Typography>
+                            <div>{message}</div>
+                        </div>
+                    </Popover>
+                </div>
+            )
     } else {
         popoverBlock = (
             <div style={style.base} className="qa-ProviderStatusIcon">
@@ -313,7 +313,7 @@ export function ProviderStatusCheck(props: Props) {
                                             )}
                                             {requestStatus === 'success' && (
                                                 <div>
-                                                    <strong>Your AOI increase request has been submitted.</strong>
+                                                    <strong>Your increased data request has been submitted.</strong>
                                                 </div>
                                             )}
                                         </>
