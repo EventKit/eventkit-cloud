@@ -9,6 +9,7 @@ from eventkit_cloud.utils.geocoding.reverse import ReverseGeocode, ReverseGeocod
 
 logger = logging.getLogger(__name__)
 
+
 @override_settings(GEOCODING_AUTH_URL=None)
 class TestReverseGeoCode(TestCase):
 
@@ -75,12 +76,12 @@ class TestReverseGeoCode(TestCase):
             "type": "Feature",
             "geometry": {"type": "Point", "coordinates": [102.18947, 17.77036]},
             "properties": {"id": "1608462", "gid": "geonames:locality:1608462", "layer": "locality",
-                "source": "geonames", "source_id": "1608462", "name": "Nam Som", "confidence": 0.957,
-                "accuracy": "centroid", "country": "Thailand", "country_gid": "whosonfirst:country:85632293",
-                "country_a": "THA", "region": "Udon Thani", "region_gid": "whosonfirst:region:85678869",
-                "county": "Nam Som", "county_gid": "whosonfirst:county:1108731585", "locality": "Nam Som",
-                "locality_gid": "geonames:locality:1608462", "label": "Nam Som, Thailand"
-            }
+                           "source": "geonames", "source_id": "1608462", "name": "Nam Som", "confidence": 0.957,
+                           "accuracy": "centroid", "country": "Thailand", "country_gid": "whosonfirst:country:85632293",
+                           "country_a": "THA", "region": "Udon Thani", "region_gid": "whosonfirst:region:85678869",
+                           "county": "Nam Som", "county_gid": "whosonfirst:county:1108731585", "locality": "Nam Som",
+                           "locality_gid": "geonames:locality:1608462", "label": "Nam Som, Thailand"
+                           }
         }
 
         api_response = {
@@ -152,12 +153,12 @@ class TestReverseGeoCode(TestCase):
             self.reverse_geocode_test(response)
 
     def test_expand_bbox(self):
-        original_bbox = [-1,-1,1,1]
-        new_bbox = [0,0,2,2]
-        expected_result = [-1,-1,2,2]
+        original_bbox = [-1, -1, 1, 1]
+        new_bbox = [0, 0, 2, 2]
+        expected_result = [-1, -1, 2, 2]
 
         result = expand_bbox(original_bbox, new_bbox)
-        assert(expected_result, result)
+        assert (expected_result, result)
 
         original_bbox = None
         new_bbox = [0, 0, 2, 2]

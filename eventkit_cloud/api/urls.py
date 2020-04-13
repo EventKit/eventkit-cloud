@@ -23,6 +23,8 @@ from eventkit_cloud.api.views import (
     EstimatorView,
     AuditEventViewSet,
     api_docs_view,
+    DataProviderRequestViewSet,
+    SizeIncreaseRequestViewSet,
 )
 
 import notifications.urls
@@ -33,6 +35,8 @@ app_name = "api"
 router = DefaultRouter(trailing_slash=False)
 router.register(r"jobs", JobViewSet, basename="jobs")
 router.register(r"formats", ExportFormatViewSet, basename="formats")
+router.register(r"providers/requests/size", SizeIncreaseRequestViewSet, basename="size_requests")
+router.register(r"providers/requests", DataProviderRequestViewSet, basename="provider_requests")
 router.register(r"providers", DataProviderViewSet, basename="providers")
 router.register(r"licenses", LicenseViewSet, basename="licenses")
 router.register(r"runs", ExportRunViewSet, basename="runs")
@@ -45,7 +49,6 @@ router.register(r"groups", GroupViewSet, basename="groups")
 router.register(r"notifications", NotificationViewSet, basename="notifications")
 router.register(r"projections", ProjectionViewSet, basename="projections")
 router.register(r"audit_events", AuditEventViewSet, basename="audit_events")
-
 
 urlpatterns = [
     re_path(r"^api/docs/$", api_docs_view, name="swagger-ui"),

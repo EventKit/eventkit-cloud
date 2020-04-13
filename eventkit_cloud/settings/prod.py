@@ -23,6 +23,7 @@ INSTALLED_APPS += (
     "eventkit_cloud.tasks",
     "eventkit_cloud.api",
     "eventkit_cloud.ui",
+    "eventkit_cloud.user_requests",
     "eventkit_cloud.utils",
     "eventkit_cloud",
     "notifications",

@@ -279,7 +279,6 @@ def convert(
     task_uid=None,
     projection: int = None,
     creation_options: list = None,
-    compress=False,
     is_raster=True,
 ):
     """
@@ -292,7 +291,6 @@ def convert(
     :param task_uid: A task uid to update
     :param projection: A projection as an int referencing an EPSG code (e.g. 4326 = EPSG:4326)
     :param creation_options: Additional options to pass to the convert method (e.g. "-co SOMETHING")
-    :param compress: If true will convert file using gdal_translate instead of gdalwarp.
     :return: Filename of clipped dataset
     """
 
@@ -345,7 +343,6 @@ def convert(
             band_type=band_type,
             dst_alpha=dstalpha,
             boundary=boundary,
-            compress=compress,
             src_srs=src_src,
             dst_srs=dst_src,
             task_uid=task_uid,
@@ -421,7 +418,6 @@ def convert_raster(
     band_type=None,
     dst_alpha=None,
     boundary=None,
-    compress=False,
     src_srs=None,
     dst_srs=None,
     task_uid=None,
@@ -435,7 +431,6 @@ def convert_raster(
     :param band_type: The GDAL data type (e.g. gdal.GDT_BYTE).
     :param dst_alpha: If including an alpha band in the destination file.
     :param boundary: The boundary to be used for clipping, this must be a file.
-    :param compress: Boolean if should compress the images.
     :param src_srs: The srs of the source (e.g. "EPSG:4326")
     :param dst_srs: The srs of the destination (e.g. "EPSG:3857")
     :param task_uid: The eventkit task uid used for tracking the work.
@@ -444,7 +439,7 @@ def convert_raster(
     if isinstance(input_files, str):
         input_files = [input_files]
     gdal.UseExceptions()
-    subtask_percentage = 50 if compress else 100
+    subtask_percentage = 50 if fmt.lower() == "gtiff" else 100
     options = clean_options(
         {
             "callback": progress_callback,
@@ -461,18 +456,11 @@ def convert_raster(
         f"{stringify_params(options)}, {stringify_params(warp_params)},)"
     )
     gdal.Warp(output_file, input_files, **options, **warp_params)
-    if compress:
+    if fmt.lower() == "gtiff":
         input_file, output_file = get_dataset_names(output_file, output_file)
 
-        # This compression is used with geotiff, we remove the alpha channel and do JPEG compression.  This
-        # lossy compression should not be used with datasets where the source value is important (i.e. elevation data).
-        # This results in a very small filesize but also adds a black background.
-        # Optionally lossless compression like LZW can be used, which will preserve the transparent background, but
-        # isn't as small of a file.
-        # options['creationOptions'] = ["COMPRESS=LZW", "TILED=YES"]
-        # translate_params = {}
-        options["creationOptions"] = ["COMPRESS=JPEG", "PHOTOMETRIC=YCBCR", "TILED=YES"]
-        translate_params = {"bandList": [1, 2, 3]}
+        options["creationOptions"] = ["COMPRESS=LZW", "TILED=YES"]
+        translate_params = {}
 
         logger.info(
             f"calling gdal.Translate('{output_file}', '{input_file}', "

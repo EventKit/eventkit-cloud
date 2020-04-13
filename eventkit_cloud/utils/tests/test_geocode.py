@@ -40,6 +40,7 @@ class TestGeoCode(TestCase):
     def test_geonames_success(self):
         geonames_response = {
             "totalResultsCount": 2786,
+            "features": [],
             "geonames": [{
                 "countryName": "United States",
                 "name": "Boston",
