@@ -297,6 +297,7 @@ class DataProvider(UIDMixin, TimeStampedModelMixin, CachedModelMixin):
 
     def get_max_data_size(self, user=None):
         from eventkit_cloud.user_requests.models import UserMaxDataSize
+
         if user is None:
             return self.max_data_size
 
@@ -308,6 +309,7 @@ class DataProvider(UIDMixin, TimeStampedModelMixin, CachedModelMixin):
 
     def get_max_selection_size(self, user=None):
         from eventkit_cloud.user_requests.models import UserAoiSize
+
         if user is None:
             return self.max_selection
 

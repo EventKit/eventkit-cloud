@@ -683,7 +683,7 @@ class DataProviderSerializer(serializers.ModelSerializer):
             "config": {"write_only": True},
         }
         read_only_fields = ("uid",)
-        exclude = ("thumbnail", )
+        exclude = ("thumbnail",)
 
     @staticmethod
     def create(validated_data, **kwargs):
