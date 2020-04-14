@@ -442,16 +442,6 @@ export class BreadcrumbStepper extends React.Component<Props, State> {
             },
         };
 
-        // const styles = {
-        //     arrowBack: {
-        //         fill: stepIndex !== 0 ? this.props.theme.eventkit.colors.primary : "",
-        //         opacity: stepIndex !== 0 ? 1 : "",
-        //         cursor: stepIndex !== 0 ? 'pointer' : "",
-        //         verticalAlign: stepIndex !== 0 ? 'middle' : "",
-        //         marginRight: stepIndex !== 0 ? '10px' : "",
-        //     },
-        // };
-
         switch (stepIndex) {
             case 0:
             case 1:
