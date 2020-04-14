@@ -69,7 +69,7 @@ export function useAsyncRequest(): [RequestState, ((params: any) => Promise<void
     const makeRequest = useCallback(async (params: any) => {
         dispatches.fetching();
         try {
-            const response = await axios({ ...params }).then();
+            const response = await axios({ ...params });
             dispatches.success(response);
         } catch (e) {
             dispatches.error(e);
