@@ -3,8 +3,7 @@ from django.contrib import admin
 from eventkit_cloud.user_requests.models import (
     DataProviderRequest,
     SizeIncreaseRequest,
-    UserMaxDataSize,
-    UserAoiSize,
+    UserSizeRule,
 )
 
 
@@ -67,5 +66,4 @@ class SizeIncreaseRequestAdmin(admin.ModelAdmin):
 
 admin.site.register(DataProviderRequest, DataProviderRequestAdmin)
 admin.site.register(SizeIncreaseRequest, SizeIncreaseRequestAdmin)
-admin.site.register(UserMaxDataSize)
-admin.site.register(UserAoiSize)
+admin.site.register(UserSizeRule)

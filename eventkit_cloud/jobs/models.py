@@ -296,27 +296,27 @@ class DataProvider(UIDMixin, TimeStampedModelMixin, CachedModelMixin):
         return None if config is None else config.get("max_data_size", None)
 
     def get_max_data_size(self, user=None):
-        from eventkit_cloud.user_requests.models import UserMaxDataSize
+        from eventkit_cloud.user_requests.models import UserSizeRule
 
         if user is None:
             return self.max_data_size
 
         try:
-            user_rule = UserMaxDataSize.objects.get(provider=self, user=user)
+            user_rule = UserSizeRule.objects.get(provider=self, user=user)
             return user_rule.max_data_size
-        except UserMaxDataSize.DoesNotExist:
+        except UserSizeRule.DoesNotExist:
             return self.max_data_size
 
     def get_max_selection_size(self, user=None):
-        from eventkit_cloud.user_requests.models import UserAoiSize
+        from eventkit_cloud.user_requests.models import UserSizeRule
 
         if user is None:
             return self.max_selection
 
         try:
-            user_rule = UserAoiSize.objects.get(provider=self, user=user)
+            user_rule = UserSizeRule.objects.get(provider=self, user=user)
             return user_rule.max_selection_size
-        except UserAoiSize.DoesNotExist:
+        except UserSizeRule.DoesNotExist:
             return self.max_selection
 
 
