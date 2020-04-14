@@ -22,7 +22,6 @@ function NoFlexRow(props: React.PropsWithChildren<any>) {
     return (
         <CustomTableRow
             {...props}
-            // titleStyle={{padding: '0px'}}
             dataStyle={{ ...props.dataStyle, display: 'block', padding: '0px' }}
         />
     );
@@ -55,7 +54,7 @@ export function RequestDataSource(props: Props) {
     });
 
     function renderMainBody() {
-        const infoMessage = "Please provide as much detail as possible. If you have a link to the website that" +
+        const infoMessage = "Please provide as much detail as possible. If you have a link to the website that " +
             "hosts the map and any detail about the layers you need, please include that information in this request.";
         return (
             <>
@@ -69,11 +68,12 @@ export function RequestDataSource(props: Props) {
                     <strong className={classes.left}>Source Name:</strong>
                     <div className={classes.right}>
                         <CustomTextField
+                            autoComplete="off"
                             className={classes.textField}
                             id="name"
                             name="sourceName"
                             onChange={e => onChange(e, debounceName)}
-                            placeholder="enter source here"
+                            placeholder="source name"
                             InputProps={{ className: classes.input }}
                             fullWidth
                             maxLength={256}
@@ -83,14 +83,15 @@ export function RequestDataSource(props: Props) {
                     </div>
                 </div>
                 <div className={classes.entryRow}>
-                    <strong className={classes.left}>Source Name:</strong>
+                    <strong className={classes.left}>Source URL:</strong>
                     <div className={classes.right}>
                         <CustomTextField
+                            autoComplete="off"
                             className={classes.textField}
                             id="url"
                             name="sourceUrl"
                             onChange={(e) => onChange(e, debounceUrl)}
-                            placeholder="enter url here"
+                            placeholder="source url"
                             InputProps={{ className: classes.input }}
                             fullWidth
                             maxLength={256}
@@ -100,9 +101,10 @@ export function RequestDataSource(props: Props) {
                     </div>
                 </div>
                 <div className={classes.entryRow}>
-                    <strong className={classes.left}>Source Name:</strong>
+                    <strong className={classes.left}>Layer Names:</strong>
                     <div className={classes.right}>
                         <CustomTextField
+                            autoComplete="off"
                             className={classes.textField}
                             id="layerNames"
                             name="layerNames"
@@ -117,15 +119,17 @@ export function RequestDataSource(props: Props) {
                     </div>
                 </div>
                 <div className={classes.entryRow}>
-                    <strong className={classes.left}>Source Name:</strong>
+                    <strong className={classes.left}>Description:</strong>
                     <div className={classes.right}>
                         <CustomTextField
-                            className={classes.textField}
+                            autoComplete="off"
+                            className={`${classes.textField}`}
                             id="description"
                             name="description"
                             onChange={(e) => onChange(e, debounceDescription)}
                             placeholder="enter description here"
-                            InputProps={{ className: classes.input }}
+                            inputProps={{className: classes.innerInput}}
+                            InputProps={{ className: classes.input}}
                             fullWidth
                             variant="outlined"
                             disabled={status === 'success'}
@@ -171,8 +175,9 @@ export function RequestDataSource(props: Props) {
     return (
         <BaseDialog
             show
-            title="Request Data Source"
+            title="Request New Data Source"
             onClose={onClose}
+            titleStyle={{padding: '12px 24px'}}
             innerMaxHeight={600}
             actions={[(
                 <Button
@@ -205,8 +210,10 @@ const jss = (theme: Eventkit.Theme & Theme) => createStyles({
     },
     input: {
         fontSize: '16px',
-        paddingLeft: '5px',
-        paddingRight: '50px',
+        padding: '0px'
+    },
+    innerInput: {
+        padding: '18.5px 14px'
     },
     heading: {
         paddingBottom: '15px',

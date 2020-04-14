@@ -8,7 +8,7 @@ import {
     Theme,
     withStyles,
     Icon,
-    Divider, ButtonBase
+    Divider, Link
 } from "@material-ui/core";
 import {connect} from "react-redux";
 import CardMedia from '@material-ui/core/CardMedia';
@@ -143,7 +143,10 @@ const jss = (theme: Theme & Eventkit.Theme) => createStyles({
         position: 'absolute',
         height: '50px',
         width: '100%',
-        display: 'grid',
+        display: 'flex',
+    },
+    stickyRowItems: {
+        flexGrow: 1,
     },
     button: {
         color: theme.eventkit.colors.white,
@@ -160,7 +163,7 @@ const jss = (theme: Theme & Eventkit.Theme) => createStyles({
     imageIcon: {
         width: '55px',
         height: '55px',
-    }
+    },
 });
 
 export const VerticalTabs = withStyles(theme => ({
@@ -198,7 +201,7 @@ export function MapDrawer(props: Props) {
     const [expandedSources, setExpandedSources] = useState([]);
     const [selectedTab, setSelectedTab] = useState(false);
     const [selectedBaseMap, setBaseMap] = useState(-1);
-    const [ requestDataSourceOpen, setRequestDataSourceOpen ] = useState(true);
+    const [requestDataSourceOpen, setRequestDataSourceOpen] = useState(true);
 
 
     function updateBaseMap(newBaseMapId: number, sources) {
@@ -212,7 +215,7 @@ export function MapDrawer(props: Props) {
 
     function handleChange(event, newValue) {
         if (selectedTab === newValue) {
-            setSelectedTab(false );
+            setSelectedTab(false);
         } else {
             setSelectedTab(newValue);
         }
@@ -253,7 +256,7 @@ export function MapDrawer(props: Props) {
         }
     }
 
-    const [ sources, setSources ] = useState([]);
+    const [sources, setSources] = useState([]);
     useEffect(() => {
         setSources([
             ...providers.filter(provider => !!provider.preview_url && !!provider.display).map(provider => {
@@ -384,16 +387,19 @@ export function MapDrawer(props: Props) {
                         </CustomScrollbar>
                     </div>
                     <Divider style={{ margin: '0 5px 0 5px' }}/>
-                    <div
-                        className={classes.stickyRow}
-                    >
-                        Data Source Missing?
-                        <ButtonBase onClick={() => setRequestDataSourceOpen(true)}>
-                            Add a new one
-                        </ButtonBase>
-                        <RequestDataSource open={requestDataSourceOpen} onClose={() => setRequestDataSourceOpen(false)}/>
+                    <div className={classes.stickyRow}>
+                        <div className={classes.stickyRowItems} style={{paddingLeft: '8px', paddingTop: '8px'}}>
+                        <RequestDataSource open={requestDataSourceOpen}
+                                           onClose={() => setRequestDataSourceOpen(false)}/>
+                        <div>
+                            Data Source Missing?
+                        </div>
+                        <Link onClick={() => setRequestDataSourceOpen(true)}>
+                            Request Data Source
+                        </Link>
+                        </div>
                         <Button
-                            className={classes.button}
+                            className={`${classes.button} ${classes.stickRowyItems}`}
                             color="primary"
                             variant="contained"
                             disabled={selectedBaseMap === -1 || (!selectedBaseMap && selectedBaseMap !== 0)}
