@@ -4,12 +4,18 @@ import Button from "@material-ui/core/Button";
 import CustomTableRow from "../common/CustomTableRow";
 import axios from "axios";
 import CustomTextField from "../common/CustomTextField";
-import {createStyles, Theme, withStyles, withTheme} from "@material-ui/core";
-import {useState} from "react";
+import {CircularProgress, createStyles, Theme, withStyles, withTheme} from "@material-ui/core";
+import {useEffect, useState} from "react";
 import {Dispatch} from "react";
 import {SetStateAction} from "react";
 import {getCookie} from "../../utils/generic";
-import {useAsyncRequest, useDebouncedSetter, useDebouncedState, useEffectOnMount} from "../../utils/hooks";
+import {
+    useAccessibleRef,
+    useAsyncRequest,
+    useDebouncedSetter,
+    useDebouncedState,
+    useEffectOnMount
+} from "../../utils/hooks";
 
 interface Props {
     open: boolean;
@@ -34,28 +40,66 @@ const csrfmiddlewaretoken = getCookie('csrftoken');
 export function RequestDataSource(props: Props) {
     const { open, onClose, classes } = props;
 
-    const [name, debounceName] = useDebouncedState(undefined);
-    const [url, debounceUrl] = useDebouncedState('');
-    const [layerNames, debounceLayerNames] = useDebouncedState('');
-    const [description, debounceDescription] = useDebouncedState('');
+    useEffect(() => {
+        debounceName('');
+        debounceUrl('');
+        debounceLayerNames('');
+        debounceDescription('');
+    }, [open]);
+
+    const [name, debounceName] = useDebouncedState(null);
+    const [url, debounceUrl] = useDebouncedState(null);
+    const [layerNames, debounceLayerNames] = useDebouncedState(null);
+    const [description, debounceDescription] = useDebouncedState(null);
+    const [shouldValidate, setShouldValidate] = useAccessibleRef(false);
 
     const [{ status, response }, requestCall] = useAsyncRequest();
-    const makeRequest = () => requestCall({
-        url: `/api/providers/requests`,
-        method: 'post',
-        data: {
-            url,
-            name,
-            service_description: description,
-            layer_names: `[${layerNames}]`,
-        },
-        headers: { 'X-CSRFToken': csrfmiddlewaretoken },
-        cancelToken: source.token,
-    });
+    const makeRequest = () => {
+        setShouldValidate(true);
+        if (!isSubmitValid()) {
+            return;
+        }
+        requestCall({
+            url: `/api/providers/requests`,
+            method: 'post',
+            data: {
+                url,
+                name,
+                service_description: description,
+                layer_names: layerNames,
+            },
+            headers: { 'X-CSRFToken': csrfmiddlewaretoken },
+            cancelToken: source.token,
+        });
+    };
+
+    function validate(value, required) {
+        // We don't want to validate until a user has tried to submit.
+        if (!shouldValidate()) {
+            return true;
+        }
+        return (!!value && value.length > 0) || !required;
+    }
 
     function renderMainBody() {
         const infoMessage = "Please provide as much detail as possible. If you have a link to the website that " +
             "hosts the map and any detail about the layers you need, please include that information in this request.";
+        const getDisplayProps = (displayValue, required) => {
+            const submitted = status === 'success';
+            return {
+                value: (submitted) ? displayValue : undefined,
+                disable: submitted ,
+                error: !validate(displayValue, required),
+            }
+        };
+        const sharedProps = {
+            autoComplete: "off",
+            className: classes.textField,
+            InputProps: { className: classes.input },
+            fullWidth: true,
+            maxLength: 100,
+            variant: "outlined" as "outlined",
+        };
         return (
             <>
                 <div
@@ -68,17 +112,13 @@ export function RequestDataSource(props: Props) {
                     <strong className={classes.left}>Source Name:</strong>
                     <div className={classes.right}>
                         <CustomTextField
-                            autoComplete="off"
-                            className={classes.textField}
+
                             id="name"
                             name="sourceName"
-                            onChange={e => onChange(e, debounceName)}
                             placeholder="source name"
-                            InputProps={{ className: classes.input }}
-                            fullWidth
-                            maxLength={256}
-                            variant="outlined"
-                            disabled={status === 'success'}
+                            onChange={e => onChange(e, debounceName)}
+                            {...sharedProps}
+                            {...getDisplayProps(name, true)}
                         />
                     </div>
                 </div>
@@ -86,17 +126,12 @@ export function RequestDataSource(props: Props) {
                     <strong className={classes.left}>Source URL:</strong>
                     <div className={classes.right}>
                         <CustomTextField
-                            autoComplete="off"
-                            className={classes.textField}
                             id="url"
                             name="sourceUrl"
-                            onChange={(e) => onChange(e, debounceUrl)}
                             placeholder="source url"
-                            InputProps={{ className: classes.input }}
-                            fullWidth
-                            maxLength={256}
-                            variant="outlined"
-                            disabled={status === 'success'}
+                            onChange={(e) => onChange(e, debounceUrl)}
+                            {...sharedProps}
+                            {...getDisplayProps(url, true)}
                         />
                     </div>
                 </div>
@@ -104,17 +139,12 @@ export function RequestDataSource(props: Props) {
                     <strong className={classes.left}>Layer Names:</strong>
                     <div className={classes.right}>
                         <CustomTextField
-                            autoComplete="off"
-                            className={classes.textField}
                             id="layerNames"
                             name="layerNames"
-                            onChange={(e) => onChange(e, debounceLayerNames)}
                             placeholder="layer1, layer2, layer3..."
-                            InputProps={{ className: classes.input }}
-                            fullWidth
-                            maxLength={256}
-                            variant="outlined"
-                            disabled={status === 'success'}
+                            onChange={(e) => onChange(e, debounceLayerNames)}
+                            {...sharedProps}
+                            {...getDisplayProps(layerNames, true)}
                         />
                     </div>
                 </div>
@@ -122,21 +152,17 @@ export function RequestDataSource(props: Props) {
                     <strong className={classes.left}>Description:</strong>
                     <div className={classes.right}>
                         <CustomTextField
-                            autoComplete="off"
-                            className={`${classes.textField}`}
                             id="description"
                             name="description"
-                            onChange={(e) => onChange(e, debounceDescription)}
                             placeholder="enter description here"
-                            inputProps={{className: classes.innerInput}}
-                            InputProps={{ className: classes.input}}
-                            fullWidth
-                            variant="outlined"
-                            disabled={status === 'success'}
-                            maxLength={1000}
+                            inputProps={{ className: classes.innerInput }}
                             rows={4}
                             rowsMax={4}
                             multiline
+                            onChange={(e) => onChange(e, debounceDescription)}
+                            {...sharedProps}
+                            {...getDisplayProps(description, false)}
+                            maxLength={1000}
                         />
                     </div>
                 </div>
@@ -169,6 +195,32 @@ export function RequestDataSource(props: Props) {
         setter(e.target.value);
     }
 
+    function isSubmitValid() {
+        return [
+            validate(name, true),
+            validate(url, true),
+            validate(layerNames, true),
+        ].every(value => value)
+    }
+
+    function getAction() {
+        if (!status) {
+            return [(
+                <Button
+                    key="close"
+                    variant="contained"
+                    color="primary"
+                    disabled={!isSubmitValid}
+                    onClick={makeRequest}
+                >
+                    Submit
+                </Button>
+            )];
+        } else {
+            return undefined;
+        }
+    }
+
     if (!open) {
         return null;
     }
@@ -177,23 +229,14 @@ export function RequestDataSource(props: Props) {
             show
             title="Request New Data Source"
             onClose={onClose}
-            titleStyle={{padding: '12px 24px'}}
+            titleStyle={{ padding: '12px 24px' }}
             innerMaxHeight={600}
-            actions={[(
-                <Button
-                    key="close"
-                    variant="contained"
-                    color="primary"
-                    onClick={makeRequest}
-                >
-                    Submit
-                </Button>
-            )]}
+            actions={getAction()}
         >
             <div className={classes.outerContainer}>
                 {(!status || status === 'success') && renderMainBody()}
                 {status === 'pending' && (
-                    <div>Submitting request...</div>
+                    <CircularProgress size={50}/>
                 )}
                 {status === 'error' && renderErrorMessage()}
             </div>

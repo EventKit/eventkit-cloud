@@ -28,9 +28,14 @@ enum ACTIONS {
     CLEAR,
 }
 
-interface RequestState {status: any, response: any}
+interface RequestState {
+    status: any,
+    response: any
+}
+
 const initialState = { status: null, response: {} } as RequestState;
-function submitReducer(state = initialState, { type = undefined, response = undefined } = {}) : RequestState {
+
+function submitReducer(state = initialState, { type = undefined, response = undefined } = {}): RequestState {
     switch (type) {
         case ACTIONS.FETCHING:
             return { ...initialState, status: 'fetching' };
@@ -113,15 +118,15 @@ export function useDebouncedSetter(setter: (value: any) => void, timeout = 1000)
 }
 
 export function useDebouncedState(initialValue: any, timeout = 1000) {
-    const [ valueState, setValueState ] = useState(initialValue);
-    return [ valueState, useDebouncedSetter(setValueState, timeout) ];
+    const [valueState, setValueState] = useState(initialValue);
+    return [valueState, useDebouncedSetter(setValueState, timeout)];
 }
 
 export class DepsHashers {
 
     private static readonly emptyEstimate = DepsHashers.stringHash('-1:-1');
 
-    static stringHash(value: string) : number {
+    static stringHash(value: string): number {
         let h;
         for (let i = 0; i < value.length; i += 1) {
             // eslint-disable-next-line no-bitwise
@@ -130,7 +135,7 @@ export class DepsHashers {
         return h;
     }
 
-    static arrayHash(arrayIn: any[], hasher?: (val: any) => number | string) : number {
+    static arrayHash(arrayIn: any[], hasher?: (val: any) => number | string): number {
         if (!hasher) {
             hasher = DepsHashers.stringHash;
         }
@@ -139,12 +144,12 @@ export class DepsHashers {
         return DepsHashers.stringHash(hash);
     }
 
-    static providerIdentityHash(provider: Eventkit.Provider) : number {
+    static providerIdentityHash(provider: Eventkit.Provider): number {
         return DepsHashers.stringHash(provider.slug + provider.name);
     }
 
-    static providerEstimate(estimates: Eventkit.Store.Estimates) : number {
-        const {size = undefined, time = undefined} = estimates || {};
+    static providerEstimate(estimates: Eventkit.Store.Estimates): number {
+        const { size = undefined, time = undefined } = estimates || {};
         if (!size && !time) {
             return DepsHashers.emptyEstimate;
         }
@@ -158,17 +163,35 @@ export function useProviderIdentity(effect: () => void, providers: Eventkit.Prov
 
 export function useProvidersLoading(providers: Eventkit.Provider[]): [boolean, ((provider: Eventkit.Provider, isLoading: boolean) => void)] {
     const slugMap = useRef({});
-    const [ areProvidersLoading, setAreProvidersLoading ] = useState(true);
-    const [ flag, setFlag ] = useState(false);
+    const [areProvidersLoading, setAreProvidersLoading] = useState(true);
+    const [flag, setFlag] = useState(false);
     useProviderIdentity(() => {
         providers.map(provider => slugMap.current[provider.slug] = slugMap.current[provider.slug] || true);
     }, providers);
     useEffect(() => {
         setAreProvidersLoading(Object.values(slugMap.current).some(value => value));
     }, [flag]);
-    function setProviderLoading(provider: Eventkit.Provider, isLoading: boolean)  {
+
+    function setProviderLoading(provider: Eventkit.Provider, isLoading: boolean) {
         slugMap.current[provider.slug] = isLoading;
         setFlag(flag => !flag);
     }
+
     return [areProvidersLoading, setProviderLoading];
+}
+
+// This is a wrapper around useRef that returns a getter and setter to avoid
+// having to use ref.current and all associated mistakes.
+// Adds the overhead of a function to save on confusion when mutable state is needed.
+// TODO: Modify to accept a callback akin to useState
+export function useAccessibleRef<T>(initialValue): [() => T, (value: T) => void] {
+    const stateRef = useRef(initialValue);
+    const setState = useState(0)[1];
+    return [
+        () => stateRef.current,
+        (value: T) => {
+            stateRef.current = value;
+            setState(v => (v % 2 === 0) ? v + 1 : v - 1);  // This forces an update when the ref changes.
+        }
+    ]
 }
