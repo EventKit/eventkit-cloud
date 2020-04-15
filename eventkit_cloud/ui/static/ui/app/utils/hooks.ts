@@ -69,7 +69,7 @@ export function useAsyncRequest_Control(): [RequestState, Dispatcher] {
     return [state, dispatches]
 }
 
-export function useAsyncRequest(): [RequestState, ((params: any) => Promise<void>)] {
+export function useAsyncRequest(): [RequestState, (params: any) => Promise<void>, () => void] {
     const [state, dispatches] = useAsyncRequest_Control();
     const makeRequest = useCallback(async (params: any) => {
         dispatches.fetching();
@@ -80,7 +80,7 @@ export function useAsyncRequest(): [RequestState, ((params: any) => Promise<void
             dispatches.error(e);
         }
     }, []);
-    return [state, makeRequest];
+    return [state, makeRequest, dispatches.clear];
 }
 
 // Returns a callback function that wraps the passed setter in a debouncer mechanism

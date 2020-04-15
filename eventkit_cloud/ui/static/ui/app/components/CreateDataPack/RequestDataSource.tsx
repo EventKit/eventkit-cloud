@@ -40,25 +40,41 @@ const csrfmiddlewaretoken = getCookie('csrftoken');
 export function RequestDataSource(props: Props) {
     const { open, onClose, classes } = props;
 
-    useEffect(() => {
-        debounceName('');
-        debounceUrl('');
-        debounceLayerNames('');
-        debounceDescription('');
-    }, [open]);
-
     const [name, debounceName] = useDebouncedState(null);
     const [url, debounceUrl] = useDebouncedState(null);
     const [layerNames, debounceLayerNames] = useDebouncedState(null);
     const [description, debounceDescription] = useDebouncedState(null);
     const [shouldValidate, setShouldValidate] = useAccessibleRef(false);
+    const fieldMap = {
+        name: {
+            value: name,
+            setter: debounceName,
+            required: true,
+        },
+        url: {
+            value: url,
+            setter: debounceUrl,
+            required: true,
+        },
+        layerNames: {
+            value: layerNames,
+            setter: debounceLayerNames,
+            required: false,
+        },
+        description: {
+            value: description,
+            setter: debounceDescription,
+            required: false,
+        },
+    };
 
-    const [{ status, response }, requestCall] = useAsyncRequest();
+    const [{ status, response }, requestCall, clearRequest] = useAsyncRequest();
     const makeRequest = () => {
         setShouldValidate(true);
         if (!isSubmitValid()) {
             return;
         }
+        // Returned promise is ignored, we don't need it.
         requestCall({
             url: `/api/providers/requests`,
             method: 'post',
@@ -73,6 +89,16 @@ export function RequestDataSource(props: Props) {
         });
     };
 
+    // Clear text boxes when closed.
+    useEffect(() => {
+        debounceName('');
+        debounceUrl('');
+        debounceLayerNames('');
+        debounceDescription('');
+        setShouldValidate(false);
+        clearRequest();
+    }, [open]);
+
     function validate(value, required) {
         // We don't want to validate until a user has tried to submit.
         if (!shouldValidate()) {
@@ -82,14 +108,16 @@ export function RequestDataSource(props: Props) {
     }
 
     function renderMainBody() {
-        const infoMessage = "Please provide as much detail as possible. If you have a link to the website that " +
-            "hosts the map and any detail about the layers you need, please include that information in this request.";
-        const getDisplayProps = (displayValue, required) => {
+        const infoMessage = "Please provide a link to the service and the specific layers that you need." +
+            "  Additionally please provide a description of the service, if the link does not provide one.  ";
+        const getDisplayProps = (field) => {
             const submitted = status === 'success';
+            const displayValue = field.value;
             return {
-                value: (submitted) ? displayValue : undefined,
-                disable: submitted ,
-                error: !validate(displayValue, required),
+                value: (submitted) ? displayValue || ' ' : undefined,
+                disabled: submitted,
+                error: !validate(displayValue, field.required),
+                onChange: (e) => field.setter(e.target.value),
             }
         };
         const sharedProps = {
@@ -106,19 +134,26 @@ export function RequestDataSource(props: Props) {
                     id="mainHeading"
                     className={`qa-RequestDataSource-heading ${classes.heading}`}
                 >
-                    {status !== 'success' ? infoMessage : "Request successfully submitted"}
+                    {status !== 'success' ? infoMessage : (
+                        <>
+                            <p>
+                                Request successfully submitted.
+                            </p>
+                            <p>
+                                We will notify you with a status/resolution.
+                            </p>
+                        </>
+                    )}
                 </div>
                 <div className={classes.entryRow}>
                     <strong className={classes.left}>Source Name:</strong>
                     <div className={classes.right}>
                         <CustomTextField
-
                             id="name"
                             name="sourceName"
                             placeholder="source name"
-                            onChange={e => onChange(e, debounceName)}
                             {...sharedProps}
-                            {...getDisplayProps(name, true)}
+                            {...getDisplayProps(fieldMap.name)}
                         />
                     </div>
                 </div>
@@ -129,9 +164,8 @@ export function RequestDataSource(props: Props) {
                             id="url"
                             name="sourceUrl"
                             placeholder="source url"
-                            onChange={(e) => onChange(e, debounceUrl)}
                             {...sharedProps}
-                            {...getDisplayProps(url, true)}
+                            {...getDisplayProps(fieldMap.url)}
                         />
                     </div>
                 </div>
@@ -142,9 +176,8 @@ export function RequestDataSource(props: Props) {
                             id="layerNames"
                             name="layerNames"
                             placeholder="layer1, layer2, layer3..."
-                            onChange={(e) => onChange(e, debounceLayerNames)}
                             {...sharedProps}
-                            {...getDisplayProps(layerNames, true)}
+                            {...getDisplayProps(fieldMap.layerNames)}
                         />
                     </div>
                 </div>
@@ -155,14 +188,15 @@ export function RequestDataSource(props: Props) {
                             id="description"
                             name="description"
                             placeholder="enter description here"
+                            // Current version of MUI seems to size the textfield differently when it's multilined
+                            // This style overrides some child styles to bring it in line with the other components.
                             inputProps={{ className: classes.innerInput }}
                             rows={4}
                             rowsMax={4}
                             multiline
-                            onChange={(e) => onChange(e, debounceDescription)}
                             {...sharedProps}
-                            {...getDisplayProps(description, false)}
-                            maxLength={1000}
+                            {...getDisplayProps(fieldMap.description)}
+                            maxLength={1000}  // Overwrites maxLength in sharedProps
                         />
                     </div>
                 </div>
@@ -191,16 +225,12 @@ export function RequestDataSource(props: Props) {
         );
     }
 
-    function onChange(e: any, setter: Dispatch<SetStateAction<any>>) {
-        setter(e.target.value);
-    }
-
     function isSubmitValid() {
-        return [
-            validate(name, true),
-            validate(url, true),
-            validate(layerNames, true),
-        ].every(value => value)
+        // Get keys of all fields that are required (required === true)
+        const required = Object.keys(fieldMap).filter(key => fieldMap[key].required);
+        // Run each required field, via the required keys, through the validate function with required set to true
+        // Then check if EVERY result in the array is true, return true if so, else false.
+        return required.map(key => validate(fieldMap[key].value, true)).every(value => value)
     }
 
     function getAction() {
