@@ -55,6 +55,7 @@ describe('DataPackOptions component', () => {
             uid: '123',
             slug: 'test1',
             name: 'test1',
+            display: true,
             max_selection: '10000',
             type: 'wmts',
             service_description: 'test description',
@@ -62,6 +63,12 @@ describe('DataPackOptions component', () => {
                 text: 'test license text',
                 name: 'test license',
             },
+            supported_formats: [{
+                uid: '135',
+                name: 'tested_name',
+                slug: 'gpkg',
+                description: 'tested_description'
+            }]
         }],
         ...(global as any).eventkit_test_props,
     });
@@ -165,6 +172,7 @@ describe('DataPackOptions component', () => {
                 formats: ['gpkg'],
             }
         };
+
         instance.handleClone();
         expect(props.onClone.calledOnce).toBe(true);
         expect(props.onClone.calledWith(props.dataPack, [props.providers[0]], exportInfo)).toBe(true);
