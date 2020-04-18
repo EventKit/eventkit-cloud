@@ -395,7 +395,7 @@ export function MapDrawer(props: Props) {
                             Data Source Missing?
                         </div>
                         <Link onClick={() => setRequestDataSourceOpen(true)}>
-                            Request Data Source
+                            Request New Data Source
                         </Link>
                         </div>
                         <Button
@@ -403,8 +403,8 @@ export function MapDrawer(props: Props) {
                             color="primary"
                             variant="contained"
                             disabled={selectedBaseMap === -1 || (!selectedBaseMap && selectedBaseMap !== 0)}
+                            // -1 clear the map
                             onClick={() => {
-                                // Send empty string to clear base map url.
                                 updateBaseMap(-1, sources);
                             }}
                         >

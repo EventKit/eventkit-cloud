@@ -41,6 +41,10 @@ export function RequestDataSource(props: Props) {
     const [layerNames, debounceLayerNames] = useDebouncedState(null);
     const [description, debounceDescription] = useDebouncedState(null);
     const [shouldValidate, setShouldValidate] = useAccessibleRef(false);
+
+    // Helper object, maps the field options to their value, setter, and a property
+    // indicating whether it should be required. Removes the need to manually keep track of what is required
+    // in various locations and allows for a reduction of boilerplate props being added manually.
     const fieldMap = {
         name: {
             value: name,
@@ -140,61 +144,64 @@ export function RequestDataSource(props: Props) {
                         </>
                     )}
                 </div>
-                <div className={classes.entryRow}>
-                    <strong className={classes.left}>Source Name:</strong>
-                    <div className={classes.right}>
-                        <CustomTextField
-                            id="name"
-                            name="sourceName"
-                            placeholder="source name"
-                            {...sharedProps}
-                            {...getDisplayProps(fieldMap.name)}
-                        />
+                {/*The conditional can be removed here if we want to show a user what data they submitted.*/}
+                {status !== 'success' && (<>
+                    <div className={classes.entryRow}>
+                        <strong className={classes.left}>Source Name:</strong>
+                        <div className={classes.right}>
+                            <CustomTextField
+                                id="name"
+                                name="sourceName"
+                                placeholder="source name"
+                                {...sharedProps}
+                                {...getDisplayProps(fieldMap.name)}
+                            />
+                        </div>
                     </div>
-                </div>
-                <div className={classes.entryRow}>
-                    <strong className={classes.left}>Source URL:</strong>
-                    <div className={classes.right}>
-                        <CustomTextField
-                            id="url"
-                            name="sourceUrl"
-                            placeholder="source url"
-                            {...sharedProps}
-                            {...getDisplayProps(fieldMap.url)}
-                        />
+                    <div className={classes.entryRow}>
+                        <strong className={classes.left}>Source Link:</strong>
+                        <div className={classes.right}>
+                            <CustomTextField
+                                id="url"
+                                name="sourceUrl"
+                                placeholder="source link"
+                                {...sharedProps}
+                                {...getDisplayProps(fieldMap.url)}
+                            />
+                        </div>
                     </div>
-                </div>
-                <div className={classes.entryRow}>
-                    <strong className={classes.left}>Layer Names:</strong>
-                    <div className={classes.right}>
-                        <CustomTextField
-                            id="layerNames"
-                            name="layerNames"
-                            placeholder="layer1, layer2, layer3..."
-                            {...sharedProps}
-                            {...getDisplayProps(fieldMap.layerNames)}
-                        />
+                    <div className={classes.entryRow}>
+                        <strong className={classes.left}>Layer(s) Needed:</strong>
+                        <div className={classes.right}>
+                            <CustomTextField
+                                id="layerNames"
+                                name="layerNames"
+                                placeholder="layer1, layer2, layer3..."
+                                {...sharedProps}
+                                {...getDisplayProps(fieldMap.layerNames)}
+                            />
+                        </div>
                     </div>
-                </div>
-                <div className={classes.entryRow}>
-                    <strong className={classes.left}>Description:</strong>
-                    <div className={classes.right}>
-                        <CustomTextField
-                            id="description"
-                            name="description"
-                            placeholder="enter description here"
-                            // Current version of MUI seems to size the textfield differently when it's multilined
-                            // This style overrides some child styles to bring it in line with the other components.
-                            inputProps={{ className: classes.innerInput }}
-                            rows={4}
-                            rowsMax={4}
-                            multiline
-                            {...sharedProps}
-                            {...getDisplayProps(fieldMap.description)}
-                            maxLength={1000}  // Overwrites maxLength in sharedProps
-                        />
+                    <div className={classes.entryRow}>
+                        <strong className={classes.left}>Description:</strong>
+                        <div className={classes.right}>
+                            <CustomTextField
+                                id="description"
+                                name="description"
+                                placeholder="enter description here"
+                                // Current version of MUI seems to size the textfield differently when it's multilined
+                                // This style overrides some child styles to bring it in line with the other components.
+                                inputProps={{ className: classes.innerInput }}
+                                rows={4}
+                                rowsMax={4}
+                                multiline
+                                {...sharedProps}
+                                {...getDisplayProps(fieldMap.description)}
+                                maxLength={1000}  // Overwrites maxLength in sharedProps
+                            />
+                        </div>
                     </div>
-                </div>
+                </>)}
             </>
         )
     }
