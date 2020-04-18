@@ -3,9 +3,14 @@ import * as sinon from 'sinon';
 import { createShallow } from '@material-ui/core/test-utils';
 import List from '@material-ui/core/List';
 import Progress from '@material-ui/core/CircularProgress';
-import BaseDialog from '../../components/Dialog/BaseDialog';
 import DropDownListItem from '../../components/common/DropDownListItem';
 import { ProviderDialog } from '../../components/Dialog/ProviderDialog';
+
+import BaseDialog from "../../components/Dialog/BaseDialog";
+jest.mock("../../components/Dialog/BaseDialog", () => {
+    const React = require('react');
+    return (props) => (<div id="basedialog">{props.children}</div>);
+});
 
 describe('ProviderDialog component', () => {
     let shallow: any;

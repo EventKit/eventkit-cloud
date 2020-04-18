@@ -3,7 +3,7 @@ import * as React from 'react';
 import {createStyles, Theme, withStyles, withTheme} from '@material-ui/core/styles';
 import {connect} from 'react-redux';
 import axios from 'axios';
-import {arrayHasValue, getCookie, unsupportedFormats} from '../../utils/generic';
+import {arrayHasValue, unsupportedFormats} from '../../utils/generic';
 import Joyride, {Step} from 'react-joyride';
 import List from '@material-ui/core/List';
 import Paper from '@material-ui/core/Paper';
@@ -22,10 +22,8 @@ import {joyride} from '../../joyride.config';
 import {getSqKmString} from '../../utils/generic';
 import BaseDialog from "../Dialog/BaseDialog";
 import AlertWarning from '@material-ui/icons/Warning';
-import {useDebouncedSetter, useDebouncedState, useEffectOnMount} from "../../utils/hooks";
+import {useDebouncedState, useEffectOnMount} from "../../utils/hooks";
 import {useEffect} from "react";
-import {Dispatch} from "react";
-import {SetStateAction} from "react";
 import {useJobValidationContext} from "./context/JobValidation";
 
 const jss = (theme: Eventkit.Theme & Theme) => createStyles({
@@ -206,7 +204,7 @@ export function hasDisallowedSelection(exportInfo: Eventkit.Store.ExportInfo) {
 function StepValidator(props: Props) {
     const { setNextEnabled, setNextDisabled, walkthroughClicked, exportInfo, nextEnabled} = props;
     const { aoiHasArea, areEstimatesLoading, dataSizeInfo, aoiArea } = useJobValidationContext();
-    const { exceedingSize=[], noMaxDataSize=[] } = dataSizeInfo;
+    const { exceedingSize=[], noMaxDataSize=[] } = dataSizeInfo || {};
 
     useEffectOnMount(() => {
         setNextDisabled();
@@ -1001,6 +999,7 @@ function DebouncedTextField(props: any) {
         <CustomTextField
             onChange={e => debounceValue(e.target.value)}
             {...passThroughProps}
+            className={`debounced-textField ${props.className ? props.className : ''}`}
         />
     )
 }

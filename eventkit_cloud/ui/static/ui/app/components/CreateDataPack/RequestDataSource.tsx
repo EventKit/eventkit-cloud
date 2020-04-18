@@ -33,10 +33,6 @@ function NoFlexRow(props: React.PropsWithChildren<any>) {
     );
 }
 
-const CancelToken = axios.CancelToken;
-const source = CancelToken.source();
-const csrfmiddlewaretoken = getCookie('csrftoken');
-
 export function RequestDataSource(props: Props) {
     const { open, onClose, classes } = props;
 
@@ -84,8 +80,7 @@ export function RequestDataSource(props: Props) {
                 service_description: description,
                 layer_names: layerNames,
             },
-            headers: { 'X-CSRFToken': csrfmiddlewaretoken },
-            cancelToken: source.token,
+            headers: { 'X-CSRFToken': getCookie('csrftoken') },
         });
     };
 

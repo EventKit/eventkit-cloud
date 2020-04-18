@@ -1,17 +1,21 @@
 import * as React from 'react';
 import * as sinon from 'sinon';
-import { createShallow } from '@material-ui/core/test-utils';
-import BaseDialog from '../../components/Dialog/BaseDialog';
+import {RenameGroupDialog} from '../../components/UserGroupsPage/Dialogs/RenameGroupDialog';
+import {mount} from "enzyme";
+
+import BaseDialog from "../../components/Dialog/BaseDialog";
+jest.mock("../../components/Dialog/BaseDialog", () => {
+    const React = require('react');
+    return (props) => (<div id="basedialog">{props.children}</div>);
+});
+
 import CustomTextField from '../../components/common/CustomTextField';
-import { RenameGroupDialog } from '../../components/UserGroupsPage/Dialogs/RenameGroupDialog';
+jest.mock("../../components/common/CustomTextField", () => {
+    const React = require('react');
+    return (props) => (<div className="textfield">{props.children}</div>);
+});
 
 describe('LeaveGroupDialog component', () => {
-    let shallow;
-
-    beforeAll(() => {
-        shallow = createShallow();
-    });
-
     const props = {
         show: true,
         onInputChange: sinon.spy(),
@@ -23,25 +27,28 @@ describe('LeaveGroupDialog component', () => {
     };
 
     it('should render a BaseDialog with text field', () => {
-        const wrapper = shallow(<RenameGroupDialog {...props} />);
+        const wrapper = mount(<RenameGroupDialog {...props} />);
+        expect(wrapper.first().html()).toContain('basedialog');
         expect(wrapper.find(BaseDialog)).toHaveLength(1);
-        expect(wrapper.find(BaseDialog).dive().find(CustomTextField)).toHaveLength(1);
+        expect(wrapper.find(BaseDialog).find(CustomTextField)).toHaveLength(1);
     });
 
     it('should show name unavailable warning', () => {
         props.valid = false;
-        const wrapper = shallow(<RenameGroupDialog {...props} />);
+
+        const wrapper = mount(<RenameGroupDialog {...props} />);
+
         expect(wrapper.find(BaseDialog)).toHaveLength(1);
-        const child = shallow(wrapper.find(BaseDialog).props().children[0]);
+        const child = mount(wrapper.find(BaseDialog).props().children[0]);
         expect(child.text()).toEqual('Name unavailable');
     });
 
     it('should set the save button disabled if no value or its invalid', () => {
         props.valid = true;
         props.value = '';
-        const wrapper = shallow(<RenameGroupDialog {...props} />);
-        expect(wrapper.find(BaseDialog).props().actions[0].props.disabled).toBe(true);
+        const wrapper = mount(<RenameGroupDialog {...props} />);
+        expect((wrapper.find(BaseDialog).props().actions[0] as any).props.disabled).toBe(true);
         wrapper.setProps({ valid: false, value: 'something' });
-        expect(wrapper.find(BaseDialog).props().actions[0].props.disabled).toBe(true);
+        expect((wrapper.find(BaseDialog).props().actions[0] as any).props.disabled).toBe(true);
     });
 });

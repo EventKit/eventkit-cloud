@@ -25,25 +25,26 @@ enum ACTIONS {
     FETCHING,
     SUCCESS,
     ERROR,
-    CLEAR,
+    CANCEL,
 }
 
 interface RequestState {
     status: any,
     response: any
+    onCancel: () => void;
 }
 
-const initialState = { status: null, response: {} } as RequestState;
+const initialState = { status: null, response: {}, onCancel: () => {} } as RequestState;
 
-function submitReducer(state = initialState, { type = undefined, response = undefined } = {}): RequestState {
+function submitReducer(state = initialState, { type = undefined, response = undefined, onCancel=undefined } = {}): RequestState {
     switch (type) {
         case ACTIONS.FETCHING:
-            return { ...initialState, status: 'fetching' };
+            return { ...initialState, status: 'fetching', onCancel: onCancel ? onCancel : initialState.onCancel };
         case ACTIONS.SUCCESS:
             return { ...state, status: 'success', response };
         case ACTIONS.ERROR:
             return { ...state, status: 'error', response };
-        case ACTIONS.CLEAR:
+        case ACTIONS.CANCEL:
             return { ...initialState };
         default:
             return state;
@@ -51,20 +52,25 @@ function submitReducer(state = initialState, { type = undefined, response = unde
 }
 
 interface Dispatcher {
-    fetching: () => void;
+    fetching: (onCancel: () => void) => void;
     success: (response) => void;
     error: (response) => void;
-    clear: () => void;
+    cancel: () => void;
 }
 
 // Async request hook with more fine grained ability to control the request.
 export function useAsyncRequest_Control(): [RequestState, Dispatcher] {
     const [state, dispatch] = useReducer(submitReducer, initialState);
     const dispatches = {
-        fetching: () => dispatch({ type: ACTIONS.FETCHING }),
+        fetching: (onCancel: () => void) => dispatch({ onCancel, type: ACTIONS.FETCHING }),
         success: (response) => dispatch({ type: ACTIONS.SUCCESS, response }),
         error: (response) => dispatch({ type: ACTIONS.ERROR, response }),
-        clear: () => dispatch({ type: ACTIONS.CLEAR }),
+        cancel: () => {
+            if (state.onCancel) {
+                state.onCancel();
+            }
+            dispatch({ type: ACTIONS.CANCEL })
+        },
     };
     return [state, dispatches]
 }
@@ -72,15 +78,20 @@ export function useAsyncRequest_Control(): [RequestState, Dispatcher] {
 export function useAsyncRequest(): [RequestState, (params: any) => Promise<void>, () => void] {
     const [state, dispatches] = useAsyncRequest_Control();
     const makeRequest = useCallback(async (params: any) => {
-        dispatches.fetching();
+        const CancelToken = axios.CancelToken;
+        const source = CancelToken.source();
+        dispatches.fetching(() => source.cancel(''));
         try {
-            const response = await axios({ ...params });
+            const response = await axios({
+                ...params,
+                cancelToken: source.token,
+            });
             dispatches.success(response);
         } catch (e) {
             dispatches.error(e);
         }
     }, []);
-    return [state, makeRequest, dispatches.clear];
+    return [state, makeRequest, dispatches.cancel];
 }
 
 // Returns a callback function that wraps the passed setter in a debouncer mechanism
@@ -176,7 +187,6 @@ export function useProvidersLoading(providers: Eventkit.Provider[]): [boolean, (
         slugMap.current[provider.slug] = isLoading;
         setFlag(flag => !flag);
     }
-
     return [areProvidersLoading, setProviderLoading];
 }
 

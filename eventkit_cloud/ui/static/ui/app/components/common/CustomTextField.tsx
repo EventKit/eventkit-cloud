@@ -41,7 +41,7 @@ export function CustomTextField(props: Props) {
     } = props;
 
     const [charsRemaining, setCharsRemaining] = useState(props.maxLength - getTextLength());
-    const [focused, setFocused] = useState(undefined);
+    const [focused, setFocused] = useState(false);
 
     // onChange, onFocus, onBlur must be pulled out of the passThroughProps on these local functions will be ignored below
     function onChangeLocal(e) {
@@ -113,8 +113,8 @@ export function CustomTextField(props: Props) {
             {(maxLength && showRemaining && focused)
                 ? (
                     <div
-                        className={`qa-CustomTextField ${classes.charsRemainingText} ${(charsRemaining <= 10) ? classes.limitWarning : ''}`}
-                        style={{ ...props.charsRemainingStyle }}
+                        className={`qa-remaining ${classes.charsRemainingText} ${(charsRemaining <= 10) ? classes.limitWarning : ''}`}
+                        style={{ ...customStyle }}
                     >
                         {charsRemaining}
                     </div>
