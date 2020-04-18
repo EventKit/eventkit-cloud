@@ -40,6 +40,44 @@ class SizeIncreaseRequest(UserRequest):
     requested_data_size = models.IntegerField(verbose_name="Requested Data Size", null=True, blank=True)
 
 
+class SizeRule(models.Model):
+    """
+    Based model that represents a collection of custom values
+    """
+
+    max_data_size = models.DecimalField(
+        verbose_name="Max data size",
+        default=100,
+        max_digits=12,
+        decimal_places=3,
+        help_text="This is the maximum data size in MB that can be exported "
+        "from this provider in a single DataPack.",
+    )
+    max_selection_size = models.DecimalField(
+        verbose_name="Max AOI selection size",
+        default=100,
+        max_digits=12,
+        decimal_places=3,
+        help_text="This is the maximum area in square kilometers that can be exported "
+        "from this provider in a single DataPack. This rule is generally superseded by data size.",
+    )
+    provider = models.ForeignKey(DataProvider, on_delete=models.CASCADE)
+
+    class Meta:
+        abstract = True
+
+
+class UserSizeRule(SizeRule):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+
+    class Meta:
+        indexes = [models.Index(fields=["user", "provider"])]
+        unique_together = ("provider", "user")
+
+    def __str__(self):
+        return f"{self.provider.slug} rules for {self.user.username}"
+
+
 def convert_polygon(geom=None):
     if geom and isinstance(geom, Polygon):
         return MultiPolygon(geom, srid=geom.srid)
