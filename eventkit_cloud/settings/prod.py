@@ -112,14 +112,15 @@ SITE_ID = 1
 Admin email address
 which receives task error notifications.
 """
-TASK_ERROR_EMAIL = os.getenv("TASK_ERROR_EMAIL", "eventkit.team@gmail.com")
-DEFAULT_FROM_EMAIL = os.getenv("DEFAULT_FROM_EMAIL", "Eventkit Team <eventkit.team@gmail.com>")
-EMAIL_HOST = os.getenv("EMAIL_HOST", "smtp.gmail.com")
-EMAIL_PORT = int(os.getenv("EMAIL_PORT", 587))
-EMAIL_HOST_USER = os.getenv("EMAIL_HOST_USER", "eventkit.team@gmail.com")
+TASK_ERROR_EMAIL = os.getenv("TASK_ERROR_EMAIL", None)
+DEFAULT_FROM_EMAIL = os.getenv("DEFAULT_FROM_EMAIL", None)
+EMAIL_HOST = os.getenv("EMAIL_HOST", None)
+EMAIL_PORT = int(os.getenv("EMAIL_PORT", None))
+EMAIL_HOST_USER = os.getenv("EMAIL_HOST_USER", None)
 EMAIL_HOST_PASSWORD = os.getenv("EMAIL_HOST_PASSWORD", None)
+USE_EMAIL = is_true(os.getenv("USE_EMAIL", False))
 
-if EMAIL_HOST_PASSWORD:
+if USE_EMAIL:
     EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
 else:
     EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"

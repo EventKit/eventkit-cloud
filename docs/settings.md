@@ -47,7 +47,9 @@ EXPORT_DOWNLOAD_ROOT='/path/to/download/dir/'</pre>
 #### Task error email
 To configure the email address that will send out any error messages add:
 <pre>EMAIL_HOST_USER='email@email.com'
-EMAIL_HOST_PASSWORD='email-password'</pre>
+EMAIL_HOST_PASSWORD='email-password'
+</pre>
+
 
 #### Overpass API
 To use your own instance of an Overpass API add:
@@ -137,13 +139,16 @@ EventKit can send users email notifying them about certain changes.
 
 | Variable Name | Description | Default |
 |---------------|-------------|---------|
-| TASK_ERROR_EMAIL | The "from" account. |  eventkit.team@gmail.com |
-| DEFAULT_FROM_EMAIL | The name to use "from". | Eventkit Team <eventkit.team@gmail.com> |
-| EMAIL_HOST | The SMTP email server. | smtp.gmail.com |
-| EMAIL_PORT | The SMTP email server port. | 587 |
-| EMAIL_HOST_USER | The account id to login to the SMTP server. | eventkit.team@gmail.com |
+| USE_EMAIL | A boolean on whether to enable email and use these settings | False |
+| TASK_ERROR_EMAIL | The "from" account. |  None |
+| DEFAULT_FROM_EMAIL | The name to use "from". | None |
+| EMAIL_HOST | The SMTP email server. | None |
+| EMAIL_PORT | The SMTP email server port. | None |
+| EMAIL_HOST_USER | The account id to login to the SMTP server. | None |
 | EMAIL_HOST_PASSWORD | The password to login to the SMTP server. | None |
 | EMAIL_USE_TLS | Use TLS for communication with the SMTP server. | True |
+
+
 
 ### User Authentication
 
