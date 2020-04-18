@@ -512,6 +512,28 @@ class UserSerializer(serializers.ModelSerializer):
     first_name = serializers.CharField()
     last_name = serializers.CharField()
     email = serializers.CharField()
+
+    class Meta:
+        model = User
+        fields = (
+            "username",
+            "first_name",
+            "last_name",
+            "email",
+        )
+        read_only_fields = (
+            "username",
+            "first_name",
+            "last_name",
+            "email",
+        )
+
+
+class UserSerializerFull(serializers.ModelSerializer):
+    username = serializers.CharField()
+    first_name = serializers.CharField()
+    last_name = serializers.CharField()
+    email = serializers.CharField()
     last_login = serializers.DateTimeField(read_only=True)
     date_joined = serializers.DateTimeField(read_only=True)
     identification = serializers.SerializerMethodField()
@@ -579,8 +601,10 @@ class UserDataSerializer(serializers.Serializer):
                 licenses[license.slug] = False
         return licenses
 
-    @staticmethod
-    def get_user(instance):
+    def get_user(self, instance):
+        request = self.context["request"]
+        if request.user.is_superuser or request.user == instance:
+            return UserSerializerFull(instance).data
         return UserSerializer(instance).data
 
     @staticmethod
