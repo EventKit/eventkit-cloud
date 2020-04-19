@@ -115,7 +115,7 @@ which receives task error notifications.
 TASK_ERROR_EMAIL = os.getenv("TASK_ERROR_EMAIL", None)
 DEFAULT_FROM_EMAIL = os.getenv("DEFAULT_FROM_EMAIL", None)
 EMAIL_HOST = os.getenv("EMAIL_HOST", None)
-EMAIL_PORT = int(os.getenv("EMAIL_PORT", None))
+EMAIL_PORT = int(os.getenv("EMAIL_PORT", 587))
 EMAIL_HOST_USER = os.getenv("EMAIL_HOST_USER", None)
 EMAIL_HOST_PASSWORD = os.getenv("EMAIL_HOST_PASSWORD", None)
 USE_EMAIL = is_true(os.getenv("USE_EMAIL", False))

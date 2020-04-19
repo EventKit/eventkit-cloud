@@ -143,7 +143,7 @@ EventKit can send users email notifying them about certain changes.
 | TASK_ERROR_EMAIL | The "from" account. |  None |
 | DEFAULT_FROM_EMAIL | The name to use "from". | None |
 | EMAIL_HOST | The SMTP email server. | None |
-| EMAIL_PORT | The SMTP email server port. | None |
+| EMAIL_PORT | The SMTP email server port. | 587 |
 | EMAIL_HOST_USER | The account id to login to the SMTP server. | None |
 | EMAIL_HOST_PASSWORD | The password to login to the SMTP server. | None |
 | EMAIL_USE_TLS | Use TLS for communication with the SMTP server. | True |
