@@ -15,71 +15,9 @@ jest.mock("../../components/CreateDataPack/RequestDataSource", () => {
 });
 
 
-describe('FilterDrawer component', () => {
-    const providers = [
-        {
-            id: 2,
-            type: 'osm',
-            license: null,
-            created_at: '2017-08-15T19:25:10.844911Z',
-            updated_at: '2017-08-15T19:25:10.844919Z',
-            uid: 'bc9a834a-727a-7777-8679-2500880a8526',
-            name: 'OpenStreetMap Data (Themes)',
-            slug: 'osm',
-            service_description: 'OpenStreetMap vector data.',
-            display: true,
-            export_provider_type: 2,
-            supported_formats: ['fmt1'],
-            preview_url: 'url/path/1'
-        },
-        {
-            id: 3,
-            type: 'osm',
-            license: null,
-            created_at: '2017-08-15T19:25:10.844911Z',
-            updated_at: '2017-08-15T19:25:10.844919Z',
-            uid: 'bc9a834a-727a-6666-8679-2500880a8526',
-            name: 'OpenStreetMap Data (Themes)',
-            slug: 'osm4',
-            service_description: 'OpenStreetMap vector data.',
-            display: false,
-            export_provider_type: 2,
-            supported_formats: ['fmt1'],
-            preview_url: 'url/path/2'
-        },
-        {
-            id: 1337,
-            type: 'osm',
-            license: null,
-            created_at: '2017-08-15T19:25:10.844911Z',
-            updated_at: '2017-08-15T19:25:10.844919Z',
-            uid: 'bc9a834a-727a-5555-8679-2500880a8526',
-            name: 'OpenStreetMap Data (Themes)',
-            slug: 'osm5',
-            service_description: 'OpenStreetMap vector data.',
-            display: true,
-            export_provider_type: 2,
-            supported_formats: ['fmt1'],
-        },
-    ];
-
-    const sources = [
-            {
-                url: '/url/path/1',
-                name: 'source a',
-                type: 'type a',
-                thumbnail_url: '/thumbnail/url/path/1'
-            },
-            {
-                url: '/url/path/2',
-                name: 'source b',
-                type: 'type b',
-                thumbnail_url: '/thumbnail/url/path/2'
-            }
-        ];
+describe('RequestDataSource component', () => {
 
     const getProps = () => ({
-        providers,
         updateBaseMap: (mapUrl: string) => {
         },
         classes: {},

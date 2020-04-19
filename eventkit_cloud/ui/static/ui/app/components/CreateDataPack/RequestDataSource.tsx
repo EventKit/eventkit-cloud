@@ -40,6 +40,8 @@ export function RequestDataSource(props: Props) {
     const [url, debounceUrl] = useDebouncedState(null);
     const [layerNames, debounceLayerNames] = useDebouncedState(null);
     const [description, debounceDescription] = useDebouncedState(null);
+    // Special state variable that uses a ref and a functional getter so that the value can be updated
+    // and set in the same frame. Changes to this DO trigger re-renders, unlike normal ref change.
     const [shouldValidate, setShouldValidate] = useAccessibleRef(false);
 
     // Helper object, maps the field options to their value, setter, and a property
@@ -70,8 +72,10 @@ export function RequestDataSource(props: Props) {
 
     const [{ status, response }, requestCall, clearRequest] = useAsyncRequest();
     const makeRequest = () => {
+        // User clicks the submit button, inform the UI to start displaying validation.
         setShouldValidate(true);
         if (!isSubmitValid()) {
+            // Exit early if the submission isn't valid.
             return;
         }
         // Returned promise is ignored, we don't need it.
@@ -108,7 +112,7 @@ export function RequestDataSource(props: Props) {
 
     function renderMainBody() {
         const infoMessage = "Please provide a link to the service and the specific layers that you need." +
-            "  Additionally please provide a description of the service, if the link does not provide one.  ";
+            "  Additionally please provide a description of the service, if the link does not provide one.";
         const getDisplayProps = (field) => {
             const submitted = status === 'success';
             const displayValue = field.value;
@@ -189,7 +193,7 @@ export function RequestDataSource(props: Props) {
                                 id="description"
                                 name="description"
                                 placeholder="enter description here"
-                                // Current version of MUI seems to size the textfield differently when it's multilined
+                                // Current version of MUI seems to size the text field differently when it's multilined
                                 // This style overrides some child styles to bring it in line with the other components.
                                 inputProps={{ className: classes.innerInput }}
                                 rows={4}
@@ -231,12 +235,13 @@ export function RequestDataSource(props: Props) {
         // Get keys of all fields that are required (required === true)
         const required = Object.keys(fieldMap).filter(key => fieldMap[key].required);
         // Run each required field, via the required keys, through the validate function with required set to true
-        // Then check if EVERY result in the array is true, return true if so, else false.
+        // Then check if EVERY result in the array is true, return the result (true/false)
         return required.map(key => validate(fieldMap[key].value, true)).every(value => value)
     }
 
     function getAction() {
         if (!status) {
+            // Status is undefined, meaning we haven't submitted anything yet, so we need the submit button to display
             return [(
                 <Button
                     key="close"
@@ -249,6 +254,7 @@ export function RequestDataSource(props: Props) {
                 </Button>
             )];
         } else {
+            // When we pass undefined to the basedialog, it will use the default 'Close' button that we want
             return undefined;
         }
     }

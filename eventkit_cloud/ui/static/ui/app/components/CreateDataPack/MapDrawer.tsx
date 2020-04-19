@@ -196,12 +196,12 @@ export interface Props {
 MapDrawer.defaultProps = { sources: [] } as Props;
 
 export function MapDrawer(props: Props) {
-
     const { providers, classes } = props;
+
     const [expandedSources, setExpandedSources] = useState([]);
     const [selectedTab, setSelectedTab] = useState(false);
     const [selectedBaseMap, setBaseMap] = useState(-1);
-    const [requestDataSourceOpen, setRequestDataSourceOpen] = useState(true);
+    const [requestDataSourceOpen, setRequestDataSourceOpen] = useState(false);
 
 
     function updateBaseMap(newBaseMapId: number, sources) {
@@ -394,7 +394,7 @@ export function MapDrawer(props: Props) {
                         <div>
                             Data Source Missing?
                         </div>
-                        <Link onClick={() => setRequestDataSourceOpen(true)}>
+                        <Link onClick={() => setRequestDataSourceOpen(true)} style={{fontSize: '12px'}}>
                             Request New Data Source
                         </Link>
                         </div>
