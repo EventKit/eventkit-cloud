@@ -181,7 +181,7 @@ export class SearchAOIToolbar extends React.Component<Props, State> {
                 } else {
                     content = (
                         <div className={classes.empty}>
-                            No results
+                            No results were found.
                         </div>
                     );
                 }
