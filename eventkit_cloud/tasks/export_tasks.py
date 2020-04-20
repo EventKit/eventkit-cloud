@@ -1323,7 +1323,7 @@ class FinalizeRunBase(EventKitBaseTask):
 
         # send notification email to user
         site_url = settings.SITE_URL.rstrip("/")
-        url = "{0}/exports/{1}".format(site_url, run.job.uid)
+        url = "{0}/status/{1}".format(site_url, run.job.uid)
         addr = run.user.email
         if run.status == TaskStates.CANCELED.value:
             subject = "Your Eventkit Data Pack was CANCELED."
@@ -1331,7 +1331,7 @@ class FinalizeRunBase(EventKitBaseTask):
             subject = "Your Eventkit Data Pack is ready."
         to = [addr]
         from_email = getattr(settings, "DEFAULT_FROM_EMAIL", "Eventkit Team <eventkit.team@gmail.com>")
-        ctx = {"url": url, "status": run.status}
+        ctx = {"url": url, "status": run.status, "job_name": run.job.name}
 
         text = get_template("email/email.txt").render(ctx)
         html = get_template("email/email.html").render(ctx)
@@ -1394,15 +1394,15 @@ def finalize_run_task(result=None, run_uid=None, stage_dir=None, apply_args=None
 
     # send notification email to user
     site_url = settings.SITE_URL.rstrip("/")
-    url = "{0}/exports/{1}".format(site_url, run.job.uid)
+    url = "{0}/status/{1}".format(site_url, run.job.uid)
     addr = run.user.email
     if run.status == TaskStates.CANCELED.value:
         subject = "Your Eventkit Data Pack was CANCELED."
     else:
         subject = "Your Eventkit Data Pack is ready."
     to = [addr]
-    from_email = getattr(settings, "DEFAULT_FROM_EMAIL", "Eventkit Team <eventkit.team@gmail.com>")
-    ctx = {"url": url, "status": run.status}
+    from_email = getattr(settings, "DEFAULT_FROM_EMAIL")
+    ctx = {"url": url, "status": run.status, "job_name": run.job.name}
 
     text = get_template("email/email.txt").render(ctx)
     html = get_template("email/email.html").render(ctx)
