@@ -608,8 +608,8 @@ describe('DataPackPage component', () => {
         expect(instance.getView('map')).toEqual((
             <MapView
                 {...commonProps}
-                geocode={props.geocode}
-                getGeocode={props.getGeocode}
+                // geocode={props.geocode}
+                // getGeocode={props.getGeocode}
                 importGeom={props.importGeom}
                 processGeoJSONFile={props.processGeoJSONFile}
                 resetGeoJSONFile={props.resetGeoJSONFile}

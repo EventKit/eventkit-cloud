@@ -3,7 +3,10 @@ import React  from 'react';
 import {createStyles, Theme, withTheme, withStyles} from '@material-ui/core/styles';
 import { MenuItem } from 'react-bootstrap-typeahead';
 import ActionRoom from '@material-ui/icons/Room';
-import IrregularPolygon from '../icons/IrregularPolygon';;
+import IrregularPolygon from '../icons/IrregularPolygon';
+import index from "react-joyride";
+
+;
 
 const jss = (theme: Theme & Eventkit.Theme) => createStyles({
     icon: {

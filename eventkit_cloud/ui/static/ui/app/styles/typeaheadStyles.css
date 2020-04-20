@@ -1,5 +1,5 @@
 /*
-We still need this css file because the typeahead component
+We still need this css file because the typeahead/menu components from react-bootstrap
 has no support for inline styles :(
  */
 
@@ -21,6 +21,7 @@ has no support for inline styles :(
 
 .typeahead > div > div > div {
     display: none !important;
+    visibility: hidden;
 }
 
 .typeahead > div > div > input:focus {
@@ -43,4 +44,8 @@ has no support for inline styles :(
 
 .menuItem > a {
     padding: 7px 10px !important;
+}
+
+.dropdown-menu > li > a {
+    padding: 0;
 }

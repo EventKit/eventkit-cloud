@@ -7,6 +7,8 @@ import CircularProgress from '@material-ui/core/CircularProgress';
 import {Typeahead, Menu} from 'react-bootstrap-typeahead';
 import TypeaheadMenuItem from './TypeaheadMenuItem';
 import SearchAOIButton from './SearchAOIButton';
+import {getGeocode} from '../../actions/geocodeActions';
+import {connect} from "react-redux";
 
 const jss = (theme: Theme & Eventkit.Theme) => createStyles({
     container: {
@@ -52,13 +54,15 @@ const jss = (theme: Theme & Eventkit.Theme) => createStyles({
         alignItems: 'center',
         zIndex: 1,
     },
+    typeaheadPosition: {
+      position: 'fixed'
+    },
     spinnerContainer: {
         zIndex: 3,  // Make sure spinner can float above the text box.
-        right: '0px',
-        width: '50px',
+        right: '12px',
+        bottom: '13px',
+        width: '25px',
         position: 'absolute',
-        marginTop: '10px',
-        marginRight: '10px',
     },
     spinner: {
         float: 'right',
@@ -67,7 +71,13 @@ const jss = (theme: Theme & Eventkit.Theme) => createStyles({
 
 interface Props {
     toolbarIcons: any;
-    geocode: any;
+    geocode: {
+        cancelSource: boolean;
+        data: any;
+        error: any;
+        fetched: boolean;
+        fetching: boolean;
+    };
     getGeocode: (any) => void;
     handleSearch: (any) => any;
     handleCancel: () => void;
@@ -75,15 +85,7 @@ interface Props {
     setSearchAOIButtonSelected: () => void;
     containerStyle: any;
     theme: any;
-    classes: {
-        container: string;
-        buttonContainer: string;
-        error: string;
-        empty: string;
-        loading: string;
-        spinnerContainer: string;
-        spinner: string;
-    };
+    classes: { [className: string]: string };
 }
 
 interface State {
@@ -109,13 +111,14 @@ export class SearchAOIToolbar extends React.Component<Props, State> {
     }
 
     componentWillMount() {
-        this.debouncer = debounce(e => this.handleChange(e), 500);
+        this.debouncer = debounce(e => this.handleChange(e), 300);
     }
 
     componentDidUpdate(prevProps) {
         if (this.props.geocode.fetched === true && !prevProps.geocode.fetched) {
             this.setState({suggestions: this.props.geocode.data});
         } else if (!this.props.geocode.fetched && this.state.suggestions.length > 0) {
+            console.log("HITTING 2ND CONDITION FOR UPDATED COMP")
             this.setState({suggestions: []});
         }
         if (this.props.toolbarIcons.search !== prevProps.toolbarIcons.search) {
@@ -209,19 +212,21 @@ export class SearchAOIToolbar extends React.Component<Props, State> {
                             true
                         )}
                         paginate={false}
-                        emptyLabel=""
+                        emptyLabel=" "
                         minLength={2}
                         renderMenu={renderer}
-                        className="qa-SearchAOIToolbar-typeahead"
+                        className={classes.typeaheadPosition}
                     >
                         {this.props.geocode.fetching ?
-                            <div className={classes.spinnerContainer}>
+                            <span
+                                className={classes.spinnerContainer}
+                            >
                                 <CircularProgress
                                     size={25}
                                     color="primary"
                                     className={classes.spinner}
                                 />
-                            </div>
+                            </span>
                             : null
                         }
                     </Typeahead>
@@ -238,4 +243,21 @@ export class SearchAOIToolbar extends React.Component<Props, State> {
     }
 }
 
-export default withTheme()(withStyles<any, any>(jss)(SearchAOIToolbar));
+function mapStateToProps(state) {
+    return {
+        geocode: state.geocode
+    }
+}
+
+function mapDispatchToProps(dispatch) {
+    return {
+        getGeocode: (query) => {
+            dispatch(getGeocode(query));
+        },
+    }
+}
+
+export default withTheme()(withStyles<any, any>(jss)(connect(
+    mapStateToProps,
+    mapDispatchToProps,
+)(SearchAOIToolbar)));
