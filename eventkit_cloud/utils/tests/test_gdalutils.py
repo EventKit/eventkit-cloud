@@ -274,8 +274,7 @@ class TestGdalUtils(TestCase):
         mock_gdal.Translate.assert_called_once_with(output_file, input_file,
                                                     callback=progress_callback, format=fmt,
                                                     callback_data={'task_uid': task_uid, 'subtask_percentage': 50},
-                                                    creationOptions=['COMPRESS=LZW',
-                                                                      'TILED=YES'])
+                                                    creationOptions=['COMPRESS=LZW', 'TILED=YES', 'BIGTIFF=YES'])
 
     @patch('eventkit_cloud.utils.gdalutils.gdal')
     def test_convert_vector(self, mock_gdal):

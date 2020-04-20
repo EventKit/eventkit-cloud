@@ -112,6 +112,8 @@ logger = logging.getLogger(__name__)
 # controls how api responses are rendered
 renderer_classes = (JSONRenderer, HOTExportApiRenderer)
 
+ESTIMATE_CACHE_TIMEOUT = 600
+
 
 class JobViewSet(viewsets.ModelViewSet):
     """
@@ -403,13 +405,14 @@ class JobViewSet(viewsets.ModelViewSet):
                                 )
                                 # find cache key that contains the estimator hash with correct time, size values
                                 size, time = cache.get(cache_key, (None, None))
-                                max_selection = provider.max_selection
+                                max_selection = provider.get_max_selection_size(self.request.user)
+                                max_data_size = provider.get_max_data_size(self.request.user)
 
                                 # Don't rely solely on max_data_size as estimates can sometimes be inaccurate
                                 # Allow user to get a job that passes max_data_size or max_selection condition:
-                                if (size and provider.max_data_size) is not None:
+                                if (size and max_data_size) is not None:
                                     # max_data_size is an optional configuration
-                                    if size <= provider.max_data_size:
+                                    if size <= max_data_size:
                                         continue
                                     else:
                                         status_code = status.HTTP_400_BAD_REQUEST
@@ -2078,7 +2081,7 @@ class EstimatorView(views.APIView):
                     {"slug": slug, "size": {"value": size, "unit": "MB"}, "time": {"value": time, "unit": "seconds"}}
                 ]
                 cache_key = get_estimate_cache_key(bbox, srs, min_zoom, max_zoom, slug)
-                cache.set(cache_key, (size, time))
+                cache.set(cache_key, (size, time), ESTIMATE_CACHE_TIMEOUT)
         else:
             return Response([{"detail": _("No estimates found")}], status=status.HTTP_400_BAD_REQUEST)
         return Response(payload, status=status.HTTP_200_OK)
