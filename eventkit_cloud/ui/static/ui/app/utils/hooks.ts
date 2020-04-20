@@ -193,15 +193,17 @@ export function useProvidersLoading(providers: Eventkit.Provider[]): [boolean, (
 // This is a wrapper around useRef that returns a getter and setter to avoid
 // having to use ref.current and all associated mistakes.
 // Adds the overhead of a function to save on confusion when mutable state is needed.
-// TODO: Modify to accept a callback akin to useState
+// TODO: Modify setter to accept a callback akin to useState
 export function useAccessibleRef<T>(initialValue): [() => T, (value: T) => void] {
     const stateRef = useRef(initialValue);
-    const setState = useState(0)[1];
+    // This is used to force an update when the ref changes.
+    // Flips an int back and forth from 0 to 1. Value unused.
+    const forceUpdate = () => useState(0)[1](v => v ^ 1);
     return [
         () => stateRef.current,
         (value: T) => {
             stateRef.current = value;
-            setState(v => (v % 2 === 0) ? v + 1 : v - 1);  // This forces an update when the ref changes.
+            forceUpdate();
         }
     ]
 }
