@@ -198,7 +198,8 @@ export function useAccessibleRef<T>(initialValue): [() => T, (value: T) => void]
     const stateRef = useRef(initialValue);
     // This is used to force an update when the ref changes.
     // Flips an int back and forth from 0 to 1. Value unused.
-    const forceUpdate = () => useState(0)[1](v => v ^ 1);
+    const updater = useState(0);
+    const forceUpdate = () => updater[1](v => v ^ 1);
     return [
         () => stateRef.current,
         (value: T) => {

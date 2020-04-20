@@ -135,7 +135,7 @@ export function RequestDataSource(props: Props) {
             <>
                 <div
                     id="mainHeading"
-                    className={`qa-RequestDataSource-heading ${classes.heading}`}
+                    className={`qa-RequestDataSource-heading ${classes.heading} ${status ? classes.submittedHeading : ''}`}
                 >
                     {status !== 'success' ? infoMessage : (
                         <>
@@ -239,10 +239,11 @@ export function RequestDataSource(props: Props) {
         return required.map(key => validate(fieldMap[key].value, true)).every(value => value)
     }
 
-    function getAction() {
+    function getActionProps() {
+        const actionProps = {};
         if (!status) {
             // Status is undefined, meaning we haven't submitted anything yet, so we need the submit button to display
-            return [(
+            actionProps['actions'] = [(
                 <Button
                     key="close"
                     variant="contained"
@@ -255,8 +256,15 @@ export function RequestDataSource(props: Props) {
             )];
         } else {
             // When we pass undefined to the basedialog, it will use the default 'Close' button that we want
-            return undefined;
+            actionProps['actionsStyle'] = {
+                paddingTop: '15px',
+                margin: 'auto',
+                flexDirection: 'initial',
+                justifyContent: 'initial',
+                paddingBottom: '20px',
+            }
         }
+        return actionProps;
     }
 
     if (!open) {
@@ -269,7 +277,7 @@ export function RequestDataSource(props: Props) {
             onClose={onClose}
             titleStyle={{ padding: '12px 24px' }}
             innerMaxHeight={600}
-            actions={getAction()}
+            {...getActionProps()}
         >
             <div className={classes.outerContainer}>
                 {(!status || status === 'success') && renderMainBody()}
@@ -300,7 +308,11 @@ const jss = (theme: Eventkit.Theme & Theme) => createStyles({
         paddingBottom: '15px',
         display: 'flex',
         flexWrap: 'wrap',
-        lineHeight: '17px',
+    },
+    submittedHeading: {
+        paddingBottom: '0px',
+        display: 'flex',
+        justifyContent: 'center'
     },
     entryRow: {
         paddingBottom: '10px',
