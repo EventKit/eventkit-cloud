@@ -387,78 +387,80 @@ def get_metadata(data_provider_task_uid):
         "has_elevation": False,
     }
     for provider_task in provider_tasks:
-        if TaskStates[provider_task.status] in TaskStates.get_incomplete_states():
-            continue
+    for provider_task in provider_tasks:
         data_provider = DataProvider.objects.get(slug=provider_task.slug)
         provider_type = data_provider.export_provider_type.type_name
-        if TaskStates[provider_task.status] not in TaskStates.get_incomplete_states():
-            provider_staging_dir = get_provider_staging_dir(run.uid, provider_task.slug)
-            conf = yaml.safe_load(data_provider.config) or dict()
-            cert_var = conf.get("cert_var", data_provider.slug)
-            metadata["data_sources"][provider_task.slug] = {
-                "uid": str(provider_task.uid),
-                "slug": provider_task.slug,
-                "name": provider_task.name,
-                "files": [],
-                "type": get_data_type_from_provider(provider_task.slug),
-                "description": str(data_provider.service_description).replace("\r\n", "\n").replace("\n", "\r\n\t"),
-                "last_update": get_last_update(data_provider.url, provider_type, cert_var=cert_var),
-                "metadata": get_metadata_url(data_provider.url, provider_type),
-                "copyright": data_provider.service_copyright,
-            }
-            if metadata["data_sources"][provider_task.slug].get("type") == "raster":
-                metadata["has_raster"] = True
-            if metadata["data_sources"][provider_task.slug].get("type") == "elevation":
-                metadata["has_elevation"] = True
 
-            if provider_task.preview is not None:
-                include_files += [get_provider_staging_preview(run.uid, provider_task.slug)]
+        provider_staging_dir = get_provider_staging_dir(run.uid, provider_task.slug)
+        conf = yaml.safe_load(data_provider.config) or dict()
+        cert_var = conf.get("cert_var", data_provider.slug)
+        metadata["data_sources"][provider_task.slug] = {
+            "uid": str(provider_task.uid),
+            "slug": provider_task.slug,
+            "name": provider_task.name,
+            "files": [],
+            "type": get_data_type_from_provider(provider_task.slug),
+            "description": str(data_provider.service_description).replace("\r\n", "\n").replace("\n", "\r\n\t"),
+            "last_update": get_last_update(data_provider.url, provider_type, cert_var=cert_var),
+            "metadata": get_metadata_url(data_provider.url, provider_type),
+            "copyright": data_provider.service_copyright,
+        }
+        if metadata["data_sources"][provider_task.slug].get("type") == "raster":
+            metadata["has_raster"] = True
+        if metadata["data_sources"][provider_task.slug].get("type") == "elevation":
+            metadata["has_elevation"] = True
 
-            for export_task in provider_task.tasks.all():
-                try:
-                    filename = export_task.result.filename
-                except Exception:
-                    continue
-                full_file_path = os.path.join(provider_staging_dir, filename)
-                current_files = metadata["data_sources"][provider_task.slug]["files"]
+        if provider_task.preview is not None:
+            include_files += [get_provider_staging_preview(run.uid, provider_task.slug)]
 
-                if full_file_path not in map(itemgetter("full_file_path"), current_files):
-                    file_ext = os.path.splitext(filename)[1]
-                    # Only include files relavant to the user that we can actually add to the carto.
-                    if export_task.display and ("project file" not in export_task.name.lower()):
-                        download_filename = get_download_filename(
-                            os.path.splitext(os.path.basename(filename))[0],
-                            timezone.now(),
-                            file_ext,
-                            additional_descriptors=provider_task.slug,
-                        )
-                        filepath = get_archive_data_path(provider_task.slug, download_filename)
+        for export_task in provider_task.tasks.all():
+            if TaskStates[export_task.status] in TaskStates.get_incomplete_states():
+                logger.info(f"IN FAILED STATES, MOVING ON: {export_task.name}, {export_task.status}")
+                continue
+            try:
+                filename = export_task.result.filename
+            except Exception:
+                continue
+            full_file_path = os.path.join(provider_staging_dir, filename)
+            current_files = metadata["data_sources"][provider_task.slug]["files"]
 
-                        file_data = {
-                            "file_path": filepath,
-                            "full_file_path": full_file_path,
-                            "file_ext": file_ext,
-                        }
-                        if metadata["data_sources"][provider_task.slug].get("type") == "elevation":
-                            # Get statistics to update ranges in template.
-                            band_stats = get_band_statistics(full_file_path)
-                            logger.info("Band Stats {0}: {1}".format(full_file_path, band_stats))
-                            file_data["band_stats"] = band_stats
-                            # Calculate the value for each elevation step (of 16)
-                            try:
-                                steps = linspace(band_stats[0], band_stats[1], num=16)
-                                file_data["ramp_shader_steps"] = list(map(int, steps))
-                            except TypeError:
-                                file_data["ramp_shader_steps"] = None
+            if full_file_path not in map(itemgetter("full_file_path"), current_files):
+                file_ext = os.path.splitext(filename)[1]
+                # Only include files relavant to the user that we can actually add to the carto.
+                if export_task.display and ("project file" not in export_task.name.lower()):
+                    download_filename = get_download_filename(
+                        os.path.splitext(os.path.basename(filename))[0],
+                        timezone.now(),
+                        file_ext,
+                        additional_descriptors=provider_task.slug,
+                    )
+                    filepath = get_archive_data_path(provider_task.slug, download_filename)
 
-                        metadata["data_sources"][provider_task.slug]["files"] += [file_data]
+                    file_data = {
+                        "file_path": filepath,
+                        "full_file_path": full_file_path,
+                        "file_ext": file_ext,
+                    }
+                    if metadata["data_sources"][provider_task.slug].get("type") == "elevation":
+                        # Get statistics to update ranges in template.
+                        band_stats = get_band_statistics(full_file_path)
+                        logger.info("Band Stats {0}: {1}".format(full_file_path, band_stats))
+                        file_data["band_stats"] = band_stats
+                        # Calculate the value for each elevation step (of 16)
+                        try:
+                            steps = linspace(band_stats[0], band_stats[1], num=16)
+                            file_data["ramp_shader_steps"] = list(map(int, steps))
+                        except TypeError:
+                            file_data["ramp_shader_steps"] = None
 
-                if not os.path.isfile(full_file_path):
-                    logger.error("Could not find file {0} for export {1}.".format(full_file_path, export_task.name))
-                    continue
-                # Exclude zip files created by zip_export_provider
-                if not (full_file_path.endswith(".zip") and export_task.name == create_zip_task.name):
-                    include_files += [full_file_path]
+                    metadata["data_sources"][provider_task.slug]["files"] += [file_data]
+
+            if not os.path.isfile(full_file_path):
+                logger.error("Could not find file {0} for export {1}.".format(full_file_path, export_task.name))
+                continue
+            # Exclude zip files created by zip_export_provider
+            if not (full_file_path.endswith(".zip") and export_task.name == create_zip_task.name):
+                include_files += [full_file_path]
 
         # add the license for this provider if there are other files already
         license_file = create_license_file(provider_task)

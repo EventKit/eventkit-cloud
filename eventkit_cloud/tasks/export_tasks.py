@@ -1145,7 +1145,7 @@ def create_zip_task(result=None, data_provider_task_uid=None, *args, **kwargs):
     data_provider_task = DataProviderTaskRecord.objects.get(uid=data_provider_task_uid)
     metadata = get_metadata(data_provider_task_uid)
 
-    include_files = metadata["include_files"]
+    include_files = metadata.get("include_files", None)
     if include_files:
         arcgis_dir = os.path.join(get_run_staging_dir(metadata["run_uid"]), Directory.ARCGIS.value)
         make_dirs(arcgis_dir)
