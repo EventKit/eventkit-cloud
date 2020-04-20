@@ -135,11 +135,6 @@ class ExportTask(EventKitBaseTask):
 
         try:
             task = ExportTaskRecord.objects.get(uid=task_uid)
-
-            task.task_attempts += 1
-            if task.task_attempts > settings.MAX_TASK_ATTEMPTS:
-                raise FailedException(task_name=self.name)
-
             task.worker = socket.gethostname()
             task.save()
 
