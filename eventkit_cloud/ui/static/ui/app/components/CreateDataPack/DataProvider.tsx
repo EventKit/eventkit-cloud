@@ -136,7 +136,7 @@ export function DataProvider(props: Props) {
     const [isLicenseOpen, setLicenseOpen] = useState(false);
     const [displayFootprints, setDisplayFootprints] = useState(false);
 
-    const { dataSizeInfo, aoiArea, areEstimatesLoading: anyLoading, providerLimits } = useJobValidationContext();
+    const { dataSizeInfo, aoiArea, providerLimits } = useJobValidationContext();
     const { haveAvailableEstimates = [], noMaxDataSize = [] } = dataSizeInfo || {};
     const [ overSize, setOverSize ] = useState(false);
     const [ overArea, setOverArea ] = useState(false);
@@ -502,6 +502,10 @@ export function DataProvider(props: Props) {
                         providerHasEstimates={providerHasEstimates}
                         areEstimatesLoading={areEstimatesLoading}
                         supportsZoomLevels={supportsZoomLevels(props.provider)}
+                        provider={provider}
+                        aoiArea={aoiArea}
+                        providerInfo={providerInfo}
+                        geojson={props.geojson}
                     />
                     {isOpen ?
                         <ExpandLess
