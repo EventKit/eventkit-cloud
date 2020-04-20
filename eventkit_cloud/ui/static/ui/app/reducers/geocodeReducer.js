@@ -1,8 +1,8 @@
 import { types } from '../actions/geocodeActions';
 
 export const initialState = {
-    fetching: null,
-    fetched: null,
+    fetching: false,
+    fetched: false,
     data: [],
     error: null,
     cancelSource: null,

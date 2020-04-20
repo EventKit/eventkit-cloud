@@ -86,14 +86,6 @@ export interface Props {
     loadLessDisabled: boolean;
     loadMoreDisabled: boolean;
     providers: Eventkit.Provider[];
-    geocode: {
-        cancelSource: boolean;
-        data: any;
-        error: any;
-        fetched: boolean;
-        fetching: boolean;
-    };
-    getGeocode: () => void;
     importGeom: {
         processed: boolean;
         featureCollection: GeoJSON.FeatureCollection;
@@ -1048,9 +1040,7 @@ export class MapView extends React.Component<Props, State> {
                         <SearchAOIToolbar
                             handleSearch={this.checkForSearchUpdate}
                             handleCancel={this.handleCancel}
-                            geocode={this.props.geocode}
                             toolbarIcons={this.state.toolbarIcons}
-                            getGeocode={this.props.getGeocode}
                             setAllButtonsDefault={this.setAllButtonsDefault}
                             setSearchAOIButtonSelected={() => {
                                 this.setButtonSelected('search');
