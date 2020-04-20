@@ -387,7 +387,6 @@ def get_metadata(data_provider_task_uid):
         "has_elevation": False,
     }
     for provider_task in provider_tasks:
-    for provider_task in provider_tasks:
         data_provider = DataProvider.objects.get(slug=provider_task.slug)
         provider_type = data_provider.export_provider_type.type_name
 
@@ -415,8 +414,8 @@ def get_metadata(data_provider_task_uid):
 
         for export_task in provider_task.tasks.all():
             if TaskStates[export_task.status] in TaskStates.get_incomplete_states():
-                logger.info(f"IN FAILED STATES, MOVING ON: {export_task.name}, {export_task.status}")
                 continue
+
             try:
                 filename = export_task.result.filename
             except Exception:
