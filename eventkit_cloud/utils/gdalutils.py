@@ -459,7 +459,7 @@ def convert_raster(
     if fmt.lower() == "gtiff":
         input_file, output_file = get_dataset_names(output_file, output_file)
 
-        options["creationOptions"] = ["COMPRESS=LZW", "TILED=YES"]
+        options["creationOptions"] = ["COMPRESS=LZW", "TILED=YES", "BIGTIFF=YES"]
         translate_params = {}
 
         logger.info(
