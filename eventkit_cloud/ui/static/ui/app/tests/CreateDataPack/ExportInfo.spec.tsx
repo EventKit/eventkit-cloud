@@ -31,6 +31,11 @@ jest.mock("../../components/CreateDataPack/DataProvider", () => {
     return (props) => (<div className="provider">{props.children}</div>);
 });
 
+jest.mock("../../components/CreateDataPack/RequestDataSource", () => {
+    const React = require('react');
+    return (props) => (<div id="dataSource-dialog">{props.open.toString()}</div>);
+});
+
 
 const formats = [
     {

@@ -1001,40 +1001,6 @@ export class ExportAOI extends React.Component<Props, State> {
         zoomToFeature(feature, this.map);
     }
 
-    private handleMapClickQuery(event) {
-        const grid = this.baseLayer.getSource().getTileGrid();
-        const zoom = Math.floor(this.map.getView().getZoom());
-
-        // Coord is returned as z, x, y
-        // Y is returned as a negative because of openlayers origin, needs to be flipped and offset
-        const tileCoord = wrapX(grid, grid.getTileCoordForCoordAndZ(event.coordinate, zoom));
-        const tileExtent = grid.getTileCoordExtent(tileCoord);
-        tileCoord[2] = tileCoord[2] * -1 - 1;
-
-        const upperLeftPixel = this.map.getPixelFromCoordinate(extent.getTopLeft(tileExtent));
-        const upperRightPixel = this.map.getPixelFromCoordinate(extent.getTopRight(tileExtent));
-
-        // Calculate the actual number of pixels each tile is taking up.
-        const pixelWidth = upperRightPixel[0] - upperLeftPixel[0];
-        const tileSize = grid.getTileSize(zoom);
-        const ratio = tileSize / pixelWidth;
-
-        const tilePixel = [Math.floor((event.pixel[0] - upperLeftPixel[0]) * ratio),
-            Math.floor((event.pixel[1] - upperLeftPixel[1]) * ratio)];
-
-        // i, j are the pixels x and y within the selected tile at coordinate z (zoom), y (row), x (col)
-        this.displayBoxRef.handleMapClick(
-            {
-                lat: event.coordinate[1],
-                long: event.coordinate[0],
-                z: tileCoord[0],
-                y: tileCoord[2],
-                x: tileCoord[1],
-            } as TileCoordinate,
-            tilePixel[0],
-            tilePixel[1]);
-    }
-
     private setDisplayBofRef(ref: any) {
         this.displayBoxRef = ref;
     }
