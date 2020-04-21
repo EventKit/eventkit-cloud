@@ -45,8 +45,10 @@ interface Props {
     actions?: React.ReactNode[];
     buttonText?: string;
     dialogStyle?: any;
+    dialogProps?: any;
     titleStyle?: any;
     bodyStyle?: any;
+    bodyProps?: any;
     actionsStyle?: any;
     buttonStyle?: any;
     overlayStyle?: any;
@@ -63,8 +65,10 @@ BaseDialog.defaultProps = {
     buttonText: undefined,
     children: undefined,
     dialogStyle: {},
+    dialogProps: {},
     titleStyle: {},
     bodyStyle: {},
+    bodyProps: {},
     actionsStyle: {},
     buttonStyle: {},
     overlayStyle: {},
@@ -107,6 +111,7 @@ export function BaseDialog(props: React.PropsWithChildren<Props>) {
             onClose={props.onClose}
             maxWidth="md"
             PaperProps={{
+                ...props.dialogProps,
                 style: {
                     width: '70%',
                     minWidth: '300px',
@@ -118,7 +123,10 @@ export function BaseDialog(props: React.PropsWithChildren<Props>) {
             style={props.overlayStyle}
         >
             <DialogTitle className={classes.title} style={props.titleStyle} disableTypography>{title}</DialogTitle>
-            <DialogContent className={classes.body} style={props.bodyStyle}>
+            <DialogContent
+                style={props.bodyStyle}
+                {...props.bodyProps}
+                className={`${classes.body} ${props.bodyProps.className || ''}`} >
                 <CustomScrollbar
                     autoHeight
                     autoHeightMax={props.innerMaxHeight}

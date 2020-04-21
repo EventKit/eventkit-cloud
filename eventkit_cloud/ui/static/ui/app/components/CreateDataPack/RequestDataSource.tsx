@@ -16,12 +16,16 @@ import {
     useDebouncedState,
     useEffectOnMount
 } from "../../utils/hooks";
+import {isWidthUp} from "@material-ui/core/withWidth";
+import withWidth from "@material-ui/core/withWidth/withWidth";
+import {Breakpoint} from "@material-ui/core/styles/createBreakpoints";
 
 interface Props {
     open: boolean;
     onClose: () => void;
     theme: Eventkit.Theme & Theme;
     classes: { [className: string]: string };
+    width: Breakpoint;
 }
 
 function NoFlexRow(props: React.PropsWithChildren<any>) {
@@ -34,7 +38,7 @@ function NoFlexRow(props: React.PropsWithChildren<any>) {
 }
 
 export function RequestDataSource(props: Props) {
-    const { open, onClose, classes } = props;
+    const { open, onClose, width, classes } = props;
 
     const [name, debounceName] = useDebouncedState(null);
     const [url, debounceUrl] = useDebouncedState(null);
@@ -43,6 +47,8 @@ export function RequestDataSource(props: Props) {
     // Special state variable that uses a ref and a functional getter so that the value can be updated
     // and set in the same frame. Changes to this DO trigger re-renders, unlike normal ref change.
     const [shouldValidate, setShouldValidate] = useAccessibleRef(false);
+
+    const isSmallScreen = () => !isWidthUp('sm', width);
 
     // Helper object, maps the field options to their value, setter, and a property
     // indicating whether it should be required. Removes the need to manually keep track of what is required
@@ -239,11 +245,21 @@ export function RequestDataSource(props: Props) {
         return required.map(key => validate(fieldMap[key].value, true)).every(value => value)
     }
 
-    function getActionProps() {
-        const actionProps = {};
+    function getDialogProps() {
+        const dialogProps = {};
+        if (!isSmallScreen()) {
+            dialogProps['innerMaxHeight'] = 600;
+        } else {
+            dialogProps['bodyProps'] = { className: classes.dialog };
+            dialogProps['dialogStyle'] = {
+                width: '95%',
+                maxHeight: '90%',
+                margin: '10px',
+            }
+        }
         if (!status) {
             // Status is undefined, meaning we haven't submitted anything yet, so we need the submit button to display
-            actionProps['actions'] = [(
+            dialogProps['actions'] = [(
                 <Button
                     key="close"
                     variant="contained"
@@ -256,7 +272,7 @@ export function RequestDataSource(props: Props) {
             )];
         } else {
             // When we pass undefined to the basedialog, it will use the default 'Close' button that we want
-            actionProps['actionsStyle'] = {
+            dialogProps['actionsStyle'] = {
                 paddingTop: '15px',
                 margin: 'auto',
                 flexDirection: 'initial',
@@ -264,22 +280,22 @@ export function RequestDataSource(props: Props) {
                 paddingBottom: '20px',
             }
         }
-        return actionProps;
+        return dialogProps;
     }
 
     if (!open) {
         return null;
     }
+
     return (
         <BaseDialog
             show
             title="Request New Data Source"
             onClose={onClose}
             titleStyle={{ padding: '12px 24px' }}
-            innerMaxHeight={600}
-            {...getActionProps()}
+            {...getDialogProps()}
         >
-            <div className={classes.outerContainer}>
+            <div className={`${!isSmallScreen() ? classes.outerContainer : classes.outerContainerSm}`}>
                 {(!status || status === 'success') && renderMainBody()}
                 {status === 'pending' && (
                     <CircularProgress size={50}/>
@@ -292,9 +308,19 @@ export function RequestDataSource(props: Props) {
 
 const jss = (theme: Eventkit.Theme & Theme) => createStyles({
     outerContainer: {
-        padding: '15px',
         borderStyle: 'solid',
         borderWidth: '1px',
+        borderRadius: '4px',
+        padding: '12px',
+        margin: '5px',
+    },
+    outerContainerSm: {
+        paddingRight: '15px',
+    },
+    dialog: {
+        borderStyle: 'solid',
+        borderWidth: '1px',
+        padding: '0 12px',
         borderRadius: '4px',
     },
     input: {
@@ -317,6 +343,7 @@ const jss = (theme: Eventkit.Theme & Theme) => createStyles({
     entryRow: {
         paddingBottom: '10px',
         display: 'flex',
+        flexWrap: 'wrap',
     },
     left: {
         width: '150px',
@@ -332,4 +359,4 @@ const jss = (theme: Eventkit.Theme & Theme) => createStyles({
 });
 
 
-export default withTheme()(withStyles(jss)(RequestDataSource));
+export default withWidth()(withTheme()(withStyles(jss)(RequestDataSource)));
