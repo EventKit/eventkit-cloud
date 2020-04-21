@@ -74,7 +74,6 @@ class ProviderTaskSerializer(serializers.ModelSerializer):
 
     @staticmethod
     def create(validated_data, **kwargs):
-
         """Creates an export DataProviderTask."""
         formats = validated_data.pop("formats")
         provider_model = DataProvider.objects.get(slug=validated_data.get("provider"))
@@ -512,6 +511,28 @@ class UserSerializer(serializers.ModelSerializer):
     first_name = serializers.CharField()
     last_name = serializers.CharField()
     email = serializers.CharField()
+
+    class Meta:
+        model = User
+        fields = (
+            "username",
+            "first_name",
+            "last_name",
+            "email",
+        )
+        read_only_fields = (
+            "username",
+            "first_name",
+            "last_name",
+            "email",
+        )
+
+
+class UserSerializerFull(serializers.ModelSerializer):
+    username = serializers.CharField()
+    first_name = serializers.CharField()
+    last_name = serializers.CharField()
+    email = serializers.CharField()
     last_login = serializers.DateTimeField(read_only=True)
     date_joined = serializers.DateTimeField(read_only=True)
     identification = serializers.SerializerMethodField()
@@ -579,8 +600,10 @@ class UserDataSerializer(serializers.Serializer):
                 licenses[license.slug] = False
         return licenses
 
-    @staticmethod
-    def get_user(instance):
+    def get_user(self, instance):
+        request = self.context["request"]
+        if request.user.is_superuser or request.user == instance:
+            return UserSerializerFull(instance).data
         return UserSerializer(instance).data
 
     @staticmethod
@@ -674,6 +697,7 @@ class DataProviderSerializer(serializers.ModelSerializer):
     metadata = serializers.SerializerMethodField(read_only=True)
     footprint_url = serializers.SerializerMethodField(read_only=True)
     max_data_size = serializers.SerializerMethodField(read_only=True)
+    max_selection = serializers.SerializerMethodField(read_only=True)
 
     class Meta:
         model = DataProvider
@@ -735,9 +759,19 @@ class DataProviderSerializer(serializers.ModelSerializer):
     def get_footprint_url(obj):
         return obj.footprint_url
 
-    @staticmethod
-    def get_max_data_size(obj):
-        return obj.max_data_size
+    def get_max_data_size(self, obj):
+        user = None
+        request = self.context.get("request")
+        if request and hasattr(request, "user"):
+            user = request.user
+        return obj.get_max_data_size(user)
+
+    def get_max_selection(self, obj):
+        user = None
+        request = self.context.get("request")
+        if request and hasattr(request, "user"):
+            user = request.user
+        return obj.get_max_selection_size(user)
 
 
 class ListJobSerializer(serializers.Serializer):
@@ -942,7 +976,6 @@ class GenericNotificationRelatedSerializer(serializers.BaseSerializer):
 
 
 class NotificationSerializer(serializers.ModelSerializer):
-
     actor = serializers.SerializerMethodField()
     target = serializers.SerializerMethodField()
     action_object = serializers.SerializerMethodField()
