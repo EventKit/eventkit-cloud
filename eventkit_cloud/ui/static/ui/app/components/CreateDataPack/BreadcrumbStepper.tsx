@@ -201,6 +201,7 @@ export class BreadcrumbStepper extends React.Component<Props, State> {
                         style={{
                             cursor: 'pointer', verticalAlign: 'middle',
                             marginLeft: '10px', height: '18px', width: '18px',
+                            pointerEvents: 'auto'
                         }}
                     />
                     <BaseDialog
@@ -658,9 +659,11 @@ export class BreadcrumbStepper extends React.Component<Props, State> {
                 >
                     <div style={{ position: 'relative', display: 'flex' }}>
                         {this.getStepLabel(this.state.stepIndex)}
-                        <div style={{ marginLeft: 'auto' }}>
-                            <div className="qa-BreadcrumbStepper-div-buttons"
-                                 style={{ float: 'right', padding: '5px', zIndex: 5 }}>
+                        <div style={{ marginLeft: 'auto', zIndex: 5, pointerEvents: 'none' }}>
+                            <div
+                                className="qa-BreadcrumbStepper-div-buttons"
+                                style={{ float: 'right', padding: '5px', pointerEvents: 'auto' }}
+                            >
                                 {this.getPreviousButtonContent(this.state.stepIndex)}
                                 {this.getButtonContent(this.state.stepIndex)}
                             </div>
@@ -675,6 +678,7 @@ export class BreadcrumbStepper extends React.Component<Props, State> {
                                  right: '0',
                                  bottom: '0',
                                  marginBottom: '5px',
+                                 pointerEvents: 'none'
                              }}
                         >
                             {this.getEstimateLabel(this.state.stepIndex)}
