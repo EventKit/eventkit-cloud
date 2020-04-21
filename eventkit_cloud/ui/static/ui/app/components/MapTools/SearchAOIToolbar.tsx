@@ -107,7 +107,7 @@ export class SearchAOIToolbar extends React.Component<Props, State> {
         this.typeAheadInput = React.createRef();
     }
 
-    componentWillMount() {
+    componentDidMount() {
         this.debouncer = debounce(e => this.handleChange(e), 500);
     }
 
@@ -175,6 +175,7 @@ export class SearchAOIToolbar extends React.Component<Props, State> {
                         />
                     ));
                 } else {
+                // if ((results.length === 0) && (this.state.suggestions.length === 0)) {
                     content = (
                         <div className={classes.empty}>
                             No results were found.
