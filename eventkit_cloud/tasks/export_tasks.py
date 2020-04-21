@@ -35,7 +35,7 @@ from eventkit_cloud.core.helpers import (
 
 from eventkit_cloud.feature_selection.feature_selection import FeatureSelection
 from eventkit_cloud.tasks.enumerations import TaskStates
-from eventkit_cloud.tasks.exceptions import CancelException, DeleteException, FailedException
+from eventkit_cloud.tasks.exceptions import CancelException, DeleteException
 from eventkit_cloud.tasks.helpers import (
     normalize_name,
     get_archive_data_path,
@@ -55,6 +55,7 @@ from eventkit_cloud.tasks.helpers import (
     clean_config,
     get_metadata,
     get_provider_staging_preview,
+    check_cached_task_failures,
     PREVIEW_TAIL,
 )
 from eventkit_cloud.tasks.task_process import update_progress
@@ -135,6 +136,9 @@ class ExportTask(EventKitBaseTask):
 
         try:
             task = ExportTaskRecord.objects.get(uid=task_uid)
+
+            check_cached_task_failures(task.name, task_uid)
+
             task.worker = socket.gethostname()
             task.save()
 
@@ -1473,7 +1477,7 @@ def fail_synchronous_task_chain(data_provider_task_uid=None):
             )
 
 
-@app.task(name="Create preview", base=EventKitBaseTask, acks_late=True)
+@app.task(name="Create preview", base=EventKitBaseTask, acks_late=True, reject_on_worker_lost=True)
 def create_datapack_preview(
     result=None, run_uid=None, task_uid=None, stage_dir=None, task_record_uid=None, *args, **kwargs,
 ):
@@ -1487,6 +1491,8 @@ def create_datapack_preview(
             make_snapshot_downloadable,
             fit_to_area,
         )
+
+        check_cached_task_failures(create_datapack_preview.name, task_uid)
 
         provider_task = DataProviderTask.objects.select_related("provider").get(uid=task_uid)
         provider = provider_task.provider

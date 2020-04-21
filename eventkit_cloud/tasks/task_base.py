@@ -1,12 +1,9 @@
 import os
-import traceback
 
 from audit_logging.celery_support import UserDetailsBase
 from celery.utils.log import get_task_logger
-from django.core.cache import cache, caches
+from django.core.cache import caches
 from django.conf import settings
-
-from eventkit_cloud.tasks.exceptions import FailedException
 
 logger = get_task_logger(__name__)
 
@@ -14,22 +11,6 @@ logger = get_task_logger(__name__)
 class EventKitBaseTask(UserDetailsBase):
 
     name = "EventKitBaseTask"
-
-    def __call__(self, *args, **kwargs):
-        if kwargs.get("task_uid") is not None:
-            task_uid = kwargs.get("task_uid")
-        else:
-            task_uid = self.request.id
-
-        if task_uid:
-            cache_key = f"{task_uid}-task-attempts"
-            task_attempts = cache.get_or_set(cache_key, 0)
-            task_attempts += 1
-            cache.set(cache_key, task_attempts)
-            if task_attempts > settings.MAX_TASK_ATTEMPTS:
-                raise FailedException(task_name=self.name)
-
-        return super(EventKitBaseTask, self).__call__(*args, **kwargs)
 
     def after_return(self, status, retval, task_id, args, kwargs, einfo):
         # This will only run in the PCF environment to shut down unused workers.

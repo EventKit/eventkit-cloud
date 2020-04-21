@@ -14,6 +14,7 @@ import yaml
 
 
 from django.conf import settings
+from django.core.cache import cache
 from django.template.loader import render_to_string
 from django.utils import timezone
 from django.db.models import Q
@@ -23,6 +24,7 @@ from eventkit_cloud.utils.gdalutils import get_band_statistics
 from eventkit_cloud.utils.generic import cd, get_file_paths  # NOQA
 
 from eventkit_cloud.jobs.models import DataProvider
+from eventkit_cloud.tasks.exceptions import FailedException
 from eventkit_cloud.tasks.models import DataProviderTaskRecord
 
 logger = logging.getLogger()
@@ -557,3 +559,17 @@ def clean_config(config):
         conf.pop(service_key, None)
 
     return yaml.dump(conf)
+
+
+def check_cached_task_failures(task_name, task_uid):
+    """
+    Used to check how many times this task has already attempted to run.
+    If the task continues to fail, this will fire an exception to be
+    handled by the task.
+    """
+    cache_key = f"{task_uid}-task-attempts"
+    task_attempts = cache.get_or_set(cache_key, 0)
+    task_attempts += 1
+    cache.set(cache_key, task_attempts)
+    if task_attempts > settings.MAX_TASK_ATTEMPTS:
+        raise FailedException(task_name=task_name)
