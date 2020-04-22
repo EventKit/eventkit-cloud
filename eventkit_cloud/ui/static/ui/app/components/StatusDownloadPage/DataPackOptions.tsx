@@ -2,6 +2,7 @@ import * as React from 'react';
 import Button from '@material-ui/core/Button';
 import BaseDialog from '../Dialog/BaseDialog';
 import DeleteDataPackDialog from '../Dialog/DeleteDataPackDialog';
+import {arrayHasValue} from "../../utils/generic";
 
 export interface Props {
     adminPermissions: boolean;
@@ -87,22 +88,32 @@ export class DataPackOptions extends React.Component<Props, State> {
             if (providerTask.display === true) {
                 // Map the provider task to its Provider to ensure we have all needed data for the Provider.
                 const fullProvider = this.props.providers.find((provider) => providerTask.slug === provider.slug);
+                // Cannot clone a provider without the full set of info.
+                if (!fullProvider || !fullProvider.display) {
+                    return;
+                }
                 const dataProviderTask = this.props.job.provider_tasks.find((jobProviderTask) =>
                     // Currently `provider` is the provider name
                     // The backend should be updated in the future to make it point to a uuid or the slug
                     // this change will need to happen here as well
                     providerTask.name === jobProviderTask.provider
                 );
-                exportOptions[providerTask.slug] = {
-                    minZoom: (dataProviderTask) ? dataProviderTask.min_zoom : null,
-                    maxZoom: (dataProviderTask) ? dataProviderTask.max_zoom : null,
-                    formats: (dataProviderTask) ? dataProviderTask.formats : null,
-                } as Eventkit.Store.ProviderExportOptions;
+                let supported_formats = null;
+                if (!!dataProviderTask) {
+                    supported_formats = dataProviderTask.formats.filter(slug =>
+                        arrayHasValue(fullProvider.supported_formats.map((format: Eventkit.Format) => format.slug), slug)
+                    );
+                }
+                if (!!fullProvider) {
+                    exportOptions[providerTask.slug] = {
+                        minZoom: (fullProvider) ? fullProvider.level_from : null,
+                        maxZoom: (fullProvider) ? fullProvider.level_to : null,
+                        formats: supported_formats
+                    } as Eventkit.Store.ProviderExportOptions;
+                }
 
                 // Cannot clone a provider without the full set of info.
-                if (fullProvider) {
-                    providerArray.push(fullProvider);
-                }
+                providerArray.push(fullProvider);
             }
         });
         this.props.onClone(this.props.dataPack, providerArray, exportOptions, providerInfo);
