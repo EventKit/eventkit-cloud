@@ -7,6 +7,7 @@ describe('geocodeActions', () => {
                 actions.types.FETCHING_GEOCODE,
                 actions.types.RECEIVED_GEOCODE,
                 actions.types.FETCH_GEOCODE_ERROR,
+                actions.types.FETCH_GEOCODE_EMPTY,
             ]);
         });
 
@@ -63,7 +64,7 @@ describe('geocodeActions', () => {
 
         it('onError should return generic error string', () => {
             expect(actions.getGeocode().onError({ response: {} })).toEqual({
-                error: 'An unknown error has occured',
+                error: 'An unknown error has occurred',
             });
         });
 
