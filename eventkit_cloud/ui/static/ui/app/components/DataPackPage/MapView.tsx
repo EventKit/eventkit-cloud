@@ -1157,5 +1157,4 @@ function mapDispatchToProps(dispatch) {
     };
 }
 
-// connect signature -> (mapStateToProps?, mapDispatchToProps?, mergeProps?, options?)
 export default withWidth()(withTheme()(connect(makeMapStateToProps, mapDispatchToProps, null, {forwardRef: true})(MapView)));

@@ -95,6 +95,7 @@ export class SearchAOIToolbar extends React.Component<Props, State> {
         containerStyle: {},
     };
     private debouncer;
+    private minimumValue = 2;
 
     constructor(props) {
         super(props);
@@ -102,7 +103,7 @@ export class SearchAOIToolbar extends React.Component<Props, State> {
         this.handleChange = this.handleChange.bind(this);
         this.handleEnter = this.handleEnter.bind(this);
         this.state = {
-            suggestions: [],
+            suggestions: []
         };
         this.typeAheadInput = React.createRef();
     }
@@ -126,11 +127,15 @@ export class SearchAOIToolbar extends React.Component<Props, State> {
 
     handleInputChange(e) {
         this.setState({
-            suggestions: [],
+            suggestions: []
         });
         this.props.geocode.fetched = false;
-        this.props.geocode.fetching = true;
 
+        if (this.minimumValue >= e.length) {
+            this.props.geocode.fetching = false;
+        } else {
+            this.props.geocode.fetching = true;
+        }
         this.debouncer(e);
     }
 
@@ -138,7 +143,7 @@ export class SearchAOIToolbar extends React.Component<Props, State> {
         const query = e.slice(0, 1000);
 
         // If 2 or more characters are entered then make request for suggested names.
-        if (query.length >= 2) {
+        if (query.length >= this.minimumValue) {
             this.props.getGeocode(query);
         }
     }
@@ -222,7 +227,7 @@ export class SearchAOIToolbar extends React.Component<Props, State> {
                                     color="primary"
                                     className={classes.spinner}
                                 />
-                            </span>
+                            </span> 
                             : null
                         }
                     </Typeahead>
@@ -241,7 +246,7 @@ export class SearchAOIToolbar extends React.Component<Props, State> {
 
 function mapStateToProps(state) {
     return {
-        geocode: state.geocode
+        geocode: state.geocode,
     }
 }
 
@@ -250,6 +255,12 @@ function mapDispatchToProps(dispatch) {
         getGeocode: (query) => {
             dispatch(getGeocode(query));
         },
+        fetching: () => {
+            dispatch({type: 'FETCHING'})
+        },
+        fetched: () => {
+            dispatch({type: 'FETCHED'})
+        }
     }
 }
 
