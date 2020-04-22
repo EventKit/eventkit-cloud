@@ -128,6 +128,8 @@ export class SearchAOIToolbar extends React.Component<Props, State> {
         this.setState({
             suggestions: [],
         });
+        this.props.geocode.fetched = false;
+        this.props.geocode.fetching = true;
 
         this.debouncer(e);
     }
