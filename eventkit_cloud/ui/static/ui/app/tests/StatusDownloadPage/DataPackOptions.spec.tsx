@@ -63,6 +63,8 @@ describe('DataPackOptions component', () => {
                 text: 'test license text',
                 name: 'test license',
             },
+            level_from: 0,
+            level_to: 10,
             supported_formats: [{
                 uid: '135',
                 name: 'tested_name',
@@ -168,7 +170,7 @@ describe('DataPackOptions component', () => {
         const exportInfo = {
             'test1': {
                 minZoom: 0,
-                maxZoom: 3,
+                maxZoom: 10,
                 formats: ['gpkg'],
             }
         };

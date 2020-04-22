@@ -104,11 +104,13 @@ export class DataPackOptions extends React.Component<Props, State> {
                         arrayHasValue(fullProvider.supported_formats.map((format: Eventkit.Format) => format.slug), slug)
                     );
                 }
-                exportOptions[providerTask.slug] = {
-                    minZoom: (dataProviderTask) ? dataProviderTask.min_zoom : null,
-                    maxZoom: (dataProviderTask) ? dataProviderTask.max_zoom : null,
-                    formats: supported_formats,
-                } as Eventkit.Store.ProviderExportOptions;
+                if (!!fullProvider) {
+                    exportOptions[providerTask.slug] = {
+                        minZoom: (fullProvider) ? fullProvider.level_from : null,
+                        maxZoom: (fullProvider) ? fullProvider.level_to : null,
+                        formats: supported_formats
+                    } as Eventkit.Store.ProviderExportOptions;
+                }
 
                 // Cannot clone a provider without the full set of info.
                 providerArray.push(fullProvider);
