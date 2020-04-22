@@ -1,5 +1,5 @@
 import React from 'react';
-import {getGeocode, FETCH_GEOCODE_ERROR, FETCHING_GEOCODE, RECEIVED_GEOCODE} from '../../actions/geocodeActions';
+import {getGeocode, types} from '../../actions/geocodeActions';
 import {connect} from "react-redux";
 import {createStyles, Theme, withStyles, withTheme} from '@material-ui/core/styles';
 import 'react-bootstrap-typeahead/css/Typeahead.css';
@@ -242,13 +242,19 @@ export class SearchAOIToolbar extends React.Component<Props, State> {
     }
 }
 
+function mapStateToProps(state) {
+    return {
+        geocode: state.geocode
+    };
+}
+
 function mapDispatchToProps(dispatch) {
     return {
-        getGeocode: (query) => dispatch(getGeocode(query)),
-        fetching: () => dispatch({type: FETCHING_GEOCODE}),
-        fetched: () => dispatch({type: RECEIVED_GEOCODE}),
-        error: () => dispatch({type: FETCH_GEOCODE_ERROR}),
+        getGeocode: (query) => {dispatch(getGeocode(query))},
+        fetching: () => {dispatch({type: types.FETCHING_GEOCODE})},
+        fetched: () => {dispatch({type: types.RECEIVED_GEOCODE})},
+        error: () => {dispatch({type: types.FETCH_GEOCODE_ERROR})},
     }
 }
 
-export default withTheme()(withStyles<any, any>(jss)(connect(null, mapDispatchToProps)(SearchAOIToolbar)));
+export default withTheme()(withStyles<any, any>(jss)(connect(mapStateToProps, mapDispatchToProps)(SearchAOIToolbar)));
