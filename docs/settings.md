@@ -160,9 +160,9 @@ Django allows built in users to be created via the admin console (such as superu
 (Default: False)
 
 ##### Auto Logout
-These settings will limit the amount of time a user is logged into EventKit.  Users browsing the UI will automatically, 
-stay logged in.  If making API calls, an integrator will need to periodically make a request to `/user_active`, to 
-ensure that they remain logged in.  Additionally any calls to the admin page will all the user to remain logged in. 
+These settings will limit the amount of time a user is logged into EventKit.  Users browsing the UI will automatically,
+stay logged in.  If making API calls, an integrator will need to periodically make a request to `/user_active`, to
+ensure that they remain logged in.  Additionally any calls to the admin page will all the user to remain logged in.
 <pre>AUTO_LOGOUT_SECONDS=600</pre>
 (Default: 0)
 <pre>AUTO_LOGOUT_WARNING_AT_SECONDS_LEFT=300</pre>
@@ -297,12 +297,17 @@ Increases the number of concurrent requests when using an OSM source per run. Th
 The max number of processes/threads the `runs` celery worker will use. This will effect how many total OSM tasks can be running at one time per celery instance.
 <pre>RUNS_CONCURRENCY=1</pre>
 
+### Celery Task Settings
+
+The maximum amount of times you want Celery to retry an export related task prior to failing it and moving on.
+<pre>MAX_TASK_ATTEMPTS=5</pre>
+
 ### RocketChat Settings
 
 Pass in this environment variable with your RocketChat settings to enable notifications about failed DataPacks to specific channel(s) or user(s).
 <pre>ROCKETCHAT_NOTIFICATIONS={"auth_token": "personal_access_token", "user_id": "personal_user_id", "channels": ["#channel", "@username"], "url": "https://rocketchat.example.com/"}</pre>
 
-#### PCF Settings
+### PCF Settings
 
 EventKit can be configured to autoscale celery when deployed on Pivotal Cloud Foundry.  The settings for that
 and some background is available in the [PCF Section](https://github.com/EventKit/eventkit-cloud/blob/master/docs/pcf.md).

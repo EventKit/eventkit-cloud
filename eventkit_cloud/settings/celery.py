@@ -88,3 +88,5 @@ if os.getenv("VCAP_SERVICES"):
             break
 if not BROKER_API_URL:
     BROKER_API_URL = os.environ.get("BROKER_API_URL", "http://guest:guest@localhost:15672/api/")
+
+MAX_TASK_ATTEMPTS = int(os.getenv("MAX_TASK_ATTEMPTS", 3))
