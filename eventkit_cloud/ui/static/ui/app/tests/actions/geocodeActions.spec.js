@@ -63,7 +63,7 @@ describe('geocodeActions', () => {
 
         it('onError should return generic error string', () => {
             expect(actions.getGeocode().onError({ response: {} })).toEqual({
-                error: 'An unknown error has occured',
+                error: 'An unknown error has occurred',
             });
         });
 

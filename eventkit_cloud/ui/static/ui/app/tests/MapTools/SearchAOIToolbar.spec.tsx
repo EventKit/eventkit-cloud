@@ -22,6 +22,7 @@ describe('SearchAOIToolbar button', () => {
             geocode: [],
             error: null,
         },
+        setGeocodeEmpty: () => {},
         getGeocode: () => {},
         handleSearch: () => {},
         handleCancel: () => {},
