@@ -181,14 +181,15 @@ class TestEmailNotifications(TestCase):
 
         ctx = {'url': url, 'date': str(now), 'job_name': job_name}
 
-        text = get_template('email/expiration_warning.txt').render(ctx)
-        html = get_template('email/expiration_warning.html').render(ctx)
-        self.assertIsNotNone(html)
-        self.assertIsNotNone(text)
-        send_warning_email(date=now, url=url, addr=addr, job_name=job_name)
-        alternatives.assert_called_once_with("Your EventKit DataPack is set to expire.",
-                                                 text, to=[addr], from_email='Eventkit Team <eventkit.team@gmail.com>')
-        alternatives().send.assert_called_once()
+        with self.settings(DEFAULT_FROM_EMAIL="example@eventkit.test"):
+            text = get_template('email/expiration_warning.txt').render(ctx)
+            html = get_template('email/expiration_warning.html').render(ctx)
+            self.assertIsNotNone(html)
+            self.assertIsNotNone(text)
+            send_warning_email(date=now, url=url, addr=addr, job_name=job_name)
+            alternatives.assert_called_once_with("Your EventKit DataPack is set to expire.",
+                                                     text, to=[addr], from_email='example@eventkit.test')
+            alternatives().send.assert_called_once()
 
 
 class TestCleanUpRabbit(TestCase):
