@@ -7,7 +7,6 @@ describe('geocodeActions', () => {
                 actions.types.FETCHING_GEOCODE,
                 actions.types.RECEIVED_GEOCODE,
                 actions.types.FETCH_GEOCODE_ERROR,
-                actions.types.FETCH_GEOCODE_EMPTY,
             ]);
         });
 

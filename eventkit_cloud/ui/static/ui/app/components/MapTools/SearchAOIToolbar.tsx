@@ -74,7 +74,10 @@ interface Props {
         error: any;
         fetched: boolean;
         fetching: boolean;
+        empty: boolean;
     };
+    setFetchingGeocode: () => void;
+    setGeocodeEmpty: () => void;
     getGeocode: (any) => void;
     handleSearch: (any) => any;
     handleCancel: () => void;
@@ -130,9 +133,9 @@ export class SearchAOIToolbar extends React.Component<Props, State> {
             suggestions: []
         });
         if (this.minimumValue >= e.length) {
-            this.props.geocode.fetching = false;
+            this.props.setGeocodeEmpty();
         } else {
-            this.props.geocode.fetching = true;
+            this.props.setFetchingGeocode();
         }
         this.debouncer(e);
     }
@@ -250,10 +253,13 @@ function mapStateToProps(state) {
 
 function mapDispatchToProps(dispatch) {
     return {
-        getGeocode: (query) => {dispatch(getGeocode(query))},
-        fetching: () => {dispatch({type: types.FETCHING_GEOCODE})},
-        fetched: () => {dispatch({type: types.RECEIVED_GEOCODE})},
-        error: () => {dispatch({type: types.FETCH_GEOCODE_ERROR})},
+        getGeocode: (query) => {
+            dispatch(getGeocode(query))
+        },
+        setFetchingGeocode: () => {
+            dispatch({type: types.FETCHING_GEOCODE})
+        },
+        setGeocodeEmpty: () => {dispatch({type: types.FETCH_GEOCODE_EMPTY})},
     }
 }
 

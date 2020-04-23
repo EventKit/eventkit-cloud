@@ -35,7 +35,7 @@ export function geocodeReducer(state = initialState, action) {
                 cancelSource: null,
             };
         case types.FETCH_GEOCODE_EMPTY:
-            return { initialState };
+            return initialState;
         default:
             return state;
     }

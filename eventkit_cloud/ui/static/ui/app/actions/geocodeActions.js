@@ -12,7 +12,6 @@ export function getGeocode(query) {
             types.FETCHING_GEOCODE,
             types.RECEIVED_GEOCODE,
             types.FETCH_GEOCODE_ERROR,
-            types.FETCH_GEOCODE_EMPTY,
         ],
         getCancelSource: state => state.geocode.cancelSource,
         cancellable: true,
