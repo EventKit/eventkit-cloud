@@ -12,7 +12,8 @@ describe('BaseDialog component', () => {
         show: true,
         onClose: () => {},
         title: '',
-        ...global.eventkit_test_props,
+        classes: {},
+        ...(global as any).eventkit_test_props,
     });
 
     const getWrapper = props => mount(<BaseDialog {...props} />);

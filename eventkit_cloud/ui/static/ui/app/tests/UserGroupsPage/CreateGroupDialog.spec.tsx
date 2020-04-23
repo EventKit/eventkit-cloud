@@ -1,9 +1,19 @@
 import * as React from 'react';
 import * as sinon from 'sinon';
 import { createShallow } from '@material-ui/core/test-utils';
-import BaseDialog from '../../components/Dialog/BaseDialog';
-import CustomTextField from '../../components/CustomTextField';
 import { CreateGroupDialog } from '../../components/UserGroupsPage/Dialogs/CreateGroupDialog';
+
+import BaseDialog from "../../components/Dialog/BaseDialog";
+jest.mock("../../components/Dialog/BaseDialog", () => {
+    const React = require('react');
+    return (props) => (<div id="basedialog">{props.children}</div>);
+});
+
+import CustomTextField from '../../components/common/CustomTextField';
+jest.mock("../../components/common/CustomTextField", () => {
+    const React = require('react');
+    return (props) => (<div className="textfield">{props.children}</div>);
+});
 
 describe('CreateGroupDialog component', () => {
     let shallow;

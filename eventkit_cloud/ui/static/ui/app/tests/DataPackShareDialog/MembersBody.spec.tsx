@@ -1,7 +1,7 @@
 import * as React from 'react';
 import * as sinon from 'sinon';
 import { shallow } from 'enzyme';
-import CustomTextField from '../../components/CustomTextField';
+import CustomTextField from '../../components/common/CustomTextField';
 import MembersHeaderRow from '../../components/DataPackShareDialog/MembersHeaderRow';
 import MemberRow from '../../components/DataPackShareDialog/MemberRow';
 import MembersBodyTooltip from '../../components/DataPackShareDialog/ShareBodyTooltip';

@@ -7,7 +7,7 @@ import PageHeader from '../../components/common/PageHeader';
 import UserInfo from '../../components/AccountPage/UserInfo';
 import LicenseInfo from '../../components/AccountPage/LicenseInfo';
 import SaveButton from '../../components/AccountPage/SaveButton';
-import CustomScrollbar from '../../components/CustomScrollbar';
+import CustomScrollbar from '../../components/common/CustomScrollbar';
 import { Account, Props } from '../../components/AccountPage/Account';
 
 describe('Account Component', () => {

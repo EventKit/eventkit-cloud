@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { withTheme, Theme } from '@material-ui/core/styles';
 import Info from '@material-ui/icons/Info';
-import CustomTableRow from '../CustomTableRow';
+import CustomTableRow from '../common/CustomTableRow';
 import BaseDialog from '../Dialog/BaseDialog';
 
 export interface Props {

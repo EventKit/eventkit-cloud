@@ -3,6 +3,7 @@ export const types = {
     FETCHING_GEOCODE: 'FETCHING_GEOCODE',
     RECEIVED_GEOCODE: 'RECEIVED_GEOCODE',
     FETCH_GEOCODE_ERROR: 'FETCH_GEOCODE_ERROR',
+    FETCH_GEOCODE_EMPTY: 'FETCH_GEOCODE_EMPTY',
 };
 
 export function getGeocode(query) {
@@ -35,7 +36,7 @@ export function getGeocode(query) {
         onError: (e) => {
             let error = e.response.data;
             if (!error) {
-                error = 'An unknown error has occured';
+                error = 'An unknown error has occurred';
             }
             return { error };
         },

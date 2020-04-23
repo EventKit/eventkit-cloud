@@ -8,7 +8,7 @@ import ButtonBase from '@material-ui/core/ButtonBase';
 import InfoIcon from '@material-ui/icons/InfoOutlined';
 import AddCircleIcon from '@material-ui/icons/AddCircle';
 import IconMenu from '../common/IconMenu';
-import CustomScrollbar from '../CustomScrollbar';
+import CustomScrollbar from '../common/CustomScrollbar';
 
 const jss = (theme: Eventkit.Theme & Theme) => createStyles({
     drawer: {

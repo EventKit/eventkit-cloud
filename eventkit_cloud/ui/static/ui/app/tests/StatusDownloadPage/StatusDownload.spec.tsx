@@ -6,7 +6,7 @@ import Paper from '@material-ui/core/Paper';
 import PageLoading from '../../components/common/PageLoading';
 import { StatusDownload } from '../../components/StatusDownloadPage/StatusDownload';
 import DataCartDetails from '../../components/StatusDownloadPage/DataCartDetails';
-import CustomScrollbar from '../../components/CustomScrollbar';
+import CustomScrollbar from '../../components/common/CustomScrollbar';
 import history from '../../utils/history';
 
 describe('StatusDownload component', () => {

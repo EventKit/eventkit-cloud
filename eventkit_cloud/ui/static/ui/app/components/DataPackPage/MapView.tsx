@@ -38,7 +38,7 @@ import css from '../../styles/ol3map.css';
 import DataPackListItem from './DataPackListItem';
 import LoadButtons from '../common/LoadButtons';
 import MapPopup from './MapPopup';
-import CustomScrollbar from '../CustomScrollbar';
+import CustomScrollbar from '../common/CustomScrollbar';
 import SearchAOIToolbar from '../MapTools/SearchAOIToolbar';
 import DrawAOIToolbar from '../MapTools/DrawAOIToolbar';
 import InvalidDrawWarning from '../MapTools/InvalidDrawWarning';
@@ -86,14 +86,6 @@ export interface Props {
     loadLessDisabled: boolean;
     loadMoreDisabled: boolean;
     providers: Eventkit.Provider[];
-    geocode: {
-        cancelSource: boolean;
-        data: any;
-        error: any;
-        fetched: boolean;
-        fetching: boolean;
-    };
-    getGeocode: () => void;
     importGeom: {
         processed: boolean;
         featureCollection: GeoJSON.FeatureCollection;
@@ -1048,9 +1040,7 @@ export class MapView extends React.Component<Props, State> {
                         <SearchAOIToolbar
                             handleSearch={this.checkForSearchUpdate}
                             handleCancel={this.handleCancel}
-                            geocode={this.props.geocode}
                             toolbarIcons={this.state.toolbarIcons}
-                            getGeocode={this.props.getGeocode}
                             setAllButtonsDefault={this.setAllButtonsDefault}
                             setSearchAOIButtonSelected={() => {
                                 this.setButtonSelected('search');
@@ -1167,5 +1157,4 @@ function mapDispatchToProps(dispatch) {
     };
 }
 
-// connect signature -> (mapStateToProps?, mapDispatchToProps?, mergeProps?, options?)
 export default withWidth()(withTheme()(connect(makeMapStateToProps, mapDispatchToProps, null, {forwardRef: true})(MapView)));
