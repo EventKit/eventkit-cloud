@@ -8,3 +8,4 @@ django-notifications-hq
 django-timezone-field
 mapproxy
 eventkit-cloud
+memcached
