@@ -55,6 +55,7 @@ from eventkit_cloud.tasks.helpers import (
     clean_config,
     get_metadata,
     get_provider_staging_preview,
+    check_cached_task_failures,
     PREVIEW_TAIL,
 )
 from eventkit_cloud.tasks.task_process import update_progress
@@ -135,6 +136,9 @@ class ExportTask(EventKitBaseTask):
 
         try:
             task = ExportTaskRecord.objects.get(uid=task_uid)
+
+            check_cached_task_failures(task.name, task_uid)
+
             task.worker = socket.gethostname()
             task.save()
 
@@ -261,7 +265,7 @@ class ExportTask(EventKitBaseTask):
             logger.debug("Task name: {0} failed, {1}".format(self.name, einfo))
             if self.abort_on_error:
                 export_provider_task = DataProviderTaskRecord.objects.get(tasks__uid=task_id)
-                cancel_synchronous_task_chain(data_provider_task_uid=export_provider_task.uid)
+                fail_synchronous_task_chain(data_provider_task_uid=export_provider_task.uid)
                 run = export_provider_task.run
                 stage_dir = kwargs["stage_dir"]
                 export_task_error_handler(run_uid=str(run.uid), task_id=task_id, stage_dir=stage_dir)
@@ -411,7 +415,7 @@ def osm_data_collection_pipeline(
     return geopackage_filepath
 
 
-@app.task(name="OSM (.gpkg)", bind=True, base=FormatTask, abort_on_error=True)
+@app.task(name="OSM (.gpkg)", bind=True, base=FormatTask, abort_on_error=True, acks_late=True)
 def osm_data_collection_task(
     self,
     result=None,
@@ -513,7 +517,7 @@ def add_metadata_task(self, result=None, job_uid=None, provider_slug=None, user_
     return result
 
 
-@app.task(name="ESRI Shapefile (.shp)", bind=True, base=FormatTask)
+@app.task(name="ESRI Shapefile (.shp)", bind=True, base=FormatTask, acks_late=True)
 def shp_export_task(
     self,
     result=None,
@@ -550,7 +554,7 @@ def shp_export_task(
         raise
 
 
-@app.task(name="Keyhole Markup Language (.kml)", bind=True, base=FormatTask)
+@app.task(name="Keyhole Markup Language (.kml)", bind=True, base=FormatTask, acks_late=True)
 def kml_export_task(
     self,
     result=None,
@@ -583,7 +587,7 @@ def kml_export_task(
         raise Exception(e)
 
 
-@app.task(name="SQLITE Format", bind=True, base=FormatTask)
+@app.task(name="SQLITE Format", bind=True, base=FormatTask, acks_late=True)
 def sqlite_export_task(
     self,
     result=None,
@@ -615,7 +619,7 @@ def sqlite_export_task(
         raise Exception(e)
 
 
-@app.task(name="Area of Interest (.geojson)", bind=True, base=ExportTask)
+@app.task(name="Area of Interest (.geojson)", bind=True, base=ExportTask, acks_late=True)
 def output_selection_geojson_task(
     self,
     result=None,
@@ -648,7 +652,7 @@ def output_selection_geojson_task(
     return result
 
 
-@app.task(name="Geopackage (.gpkg)", bind=True, base=FormatTask)
+@app.task(name="Geopackage (.gpkg)", bind=True, base=FormatTask, acks_late=True)
 def geopackage_export_task(
     self,
     result=None,
@@ -677,7 +681,7 @@ def geopackage_export_task(
     return result
 
 
-@app.task(name="Geotiff (.tif)", bind=True, base=FormatTask)
+@app.task(name="Geotiff (.tif)", bind=True, base=FormatTask, acks_late=True)
 def geotiff_export_task(
     self, result=None, task_uid=None, stage_dir=None, job_name=None, projection=4326, *args, **kwargs,
 ):
@@ -705,7 +709,7 @@ def geotiff_export_task(
     return result
 
 
-@app.task(name="National Imagery Transmission Format (.nitf)", bind=True, base=FormatTask)
+@app.task(name="National Imagery Transmission Format (.nitf)", bind=True, base=FormatTask, acks_late=True)
 def nitf_export_task(
     self,
     result=None,
@@ -741,7 +745,7 @@ def nitf_export_task(
     return result
 
 
-@app.task(name="Erdas Imagine HFA (.img)", bind=True, base=FormatTask)
+@app.task(name="Erdas Imagine HFA (.img)", bind=True, base=FormatTask, acks_late=True)
 def hfa_export_task(
     self,
     result=None,
@@ -769,7 +773,7 @@ def hfa_export_task(
     return result
 
 
-@app.task(name="Reprojection Task", bind=True, base=FormatTask)
+@app.task(name="Reprojection Task", bind=True, base=FormatTask, acks_late=True)
 def reprojection_task(
     self,
     result=None,
@@ -1145,7 +1149,7 @@ def create_zip_task(result=None, data_provider_task_uid=None, *args, **kwargs):
     data_provider_task = DataProviderTaskRecord.objects.get(uid=data_provider_task_uid)
     metadata = get_metadata(data_provider_task_uid)
 
-    include_files = metadata["include_files"]
+    include_files = metadata.get("include_files", None)
     if include_files:
         arcgis_dir = os.path.join(get_run_staging_dir(metadata["run_uid"]), Directory.ARCGIS.value)
         make_dirs(arcgis_dir)
@@ -1184,7 +1188,7 @@ def finalize_export_provider_task(result=None, data_provider_task_uid=None, stat
     """
 
     # if the status was a success, we can assume all the ExportTasks succeeded. if not, we need to parse ExportTasks to
-    # mark tasks not run yet as cancelled.
+    # mark tasks not run yet as canceled.
     result_status = parse_result(result, "status")
 
     with transaction.atomic():
@@ -1323,7 +1327,7 @@ class FinalizeRunBase(EventKitBaseTask):
 
         # send notification email to user
         site_url = settings.SITE_URL.rstrip("/")
-        url = "{0}/exports/{1}".format(site_url, run.job.uid)
+        url = "{0}/status/{1}".format(site_url, run.job.uid)
         addr = run.user.email
         if run.status == TaskStates.CANCELED.value:
             subject = "Your Eventkit Data Pack was CANCELED."
@@ -1331,7 +1335,7 @@ class FinalizeRunBase(EventKitBaseTask):
             subject = "Your Eventkit Data Pack is ready."
         to = [addr]
         from_email = getattr(settings, "DEFAULT_FROM_EMAIL", "Eventkit Team <eventkit.team@gmail.com>")
-        ctx = {"url": url, "status": run.status}
+        ctx = {"url": url, "status": run.status, "job_name": run.job.name}
 
         text = get_template("email/email.txt").render(ctx)
         html = get_template("email/email.html").render(ctx)
@@ -1394,15 +1398,15 @@ def finalize_run_task(result=None, run_uid=None, stage_dir=None, apply_args=None
 
     # send notification email to user
     site_url = settings.SITE_URL.rstrip("/")
-    url = "{0}/exports/{1}".format(site_url, run.job.uid)
+    url = "{0}/status/{1}".format(site_url, run.job.uid)
     addr = run.user.email
     if run.status == TaskStates.CANCELED.value:
         subject = "Your Eventkit Data Pack was CANCELED."
     else:
         subject = "Your Eventkit Data Pack is ready."
     to = [addr]
-    from_email = getattr(settings, "DEFAULT_FROM_EMAIL", "Eventkit Team <eventkit.team@gmail.com>")
-    ctx = {"url": url, "status": run.status}
+    from_email = getattr(settings, "DEFAULT_FROM_EMAIL")
+    ctx = {"url": url, "status": run.status, "job_name": run.job.name}
 
     text = get_template("email/email.txt").render(ctx)
     html = get_template("email/email.html").render(ctx)
@@ -1459,11 +1463,11 @@ def export_task_error_handler(self, result=None, run_uid=None, task_id=None, sta
     return result
 
 
-def cancel_synchronous_task_chain(data_provider_task_uid=None):
+def fail_synchronous_task_chain(data_provider_task_uid=None):
     data_provider_task_record = DataProviderTaskRecord.objects.get(uid=data_provider_task_uid)
     for export_task in data_provider_task_record.tasks.all():
-        if TaskStates[export_task.status] == TaskStates.PENDING.value:
-            export_task.status = TaskStates.CANCELED.value
+        if TaskStates[export_task.status] == TaskStates.PENDING:
+            export_task.status = TaskStates.FAILED.value
             export_task.save()
             kill_task.apply_async(
                 kwargs={"task_pid": export_task.pid, "celery_uid": export_task.celery_uid},
@@ -1473,7 +1477,7 @@ def cancel_synchronous_task_chain(data_provider_task_uid=None):
             )
 
 
-@app.task(name="Create preview", base=EventKitBaseTask, acks_late=True)
+@app.task(name="Create preview", base=EventKitBaseTask, acks_late=True, reject_on_worker_lost=True)
 def create_datapack_preview(
     result=None, run_uid=None, task_uid=None, stage_dir=None, task_record_uid=None, *args, **kwargs,
 ):
@@ -1487,6 +1491,8 @@ def create_datapack_preview(
             make_snapshot_downloadable,
             fit_to_area,
         )
+
+        check_cached_task_failures(create_datapack_preview.name, task_uid)
 
         provider_task = DataProviderTask.objects.select_related("provider").get(uid=task_uid)
         provider = provider_task.provider

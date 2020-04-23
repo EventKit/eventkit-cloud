@@ -97,6 +97,7 @@ core/settings/secret.py
 exports_download
 exports_stage
 cache_data
+tile_cache
 *~
 
 coverage
@@ -116,5 +117,3 @@ venv/
 
 #mkdocs staticfiles
 site
-
-
