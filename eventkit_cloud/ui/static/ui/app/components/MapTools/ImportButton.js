@@ -28,14 +28,14 @@ export class ImportButton extends Component {
         const styles = {
             buttonName: {
                 fontSize: '8px',
-                width: '50px',
+                width: '55px',
                 height: '12px',
                 color: colors.primary,
                 bottom: '0',
             },
             drawButtonGeneral: {
                 height: '50px',
-                width: '50px',
+                width: '55px',
                 borderTop: '1px solid #e6e6e6',
                 borderRight: 'none',
                 borderLeft: 'none',
@@ -44,6 +44,7 @@ export class ImportButton extends Component {
                 padding: 0,
                 backgroundColor: colors.white,
                 outline: 'none',
+                borderRadius: '5px',
             },
         };
 
