@@ -2,7 +2,7 @@ import * as React from 'react';
 import { withTheme, Theme } from '@material-ui/core/styles';
 import Button from '@material-ui/core/Button';
 import BaseDialog from '../../Dialog/BaseDialog';
-import CustomTextField from '../../CustomTextField';
+import CustomTextField from '../../common/CustomTextField';
 
 export interface Props {
     className: string;

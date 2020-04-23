@@ -3,7 +3,7 @@ import * as React from 'react';
 import {createStyles, Theme, withStyles, withTheme} from '@material-ui/core/styles';
 import {connect} from 'react-redux';
 import axios from 'axios';
-import {arrayHasValue, getCookie, unsupportedFormats} from '../../utils/generic';
+import {arrayHasValue, unsupportedFormats} from '../../utils/generic';
 import Joyride, {Step} from 'react-joyride';
 import List from '@material-ui/core/List';
 import Paper from '@material-ui/core/Paper';
@@ -11,21 +11,20 @@ import Popover from '@material-ui/core/Popover';
 import Checkbox from '@material-ui/core/Checkbox';
 import Typography from '@material-ui/core/Typography';
 import NavigationRefresh from '@material-ui/icons/Refresh';
-import CustomScrollbar from '../CustomScrollbar';
+import CustomScrollbar from '../common/CustomScrollbar';
 import DataProvider from './DataProvider';
 import MapCard from '../common/MapCard';
 import {updateExportInfo} from '../../actions/datacartActions';
 import {stepperNextDisabled, stepperNextEnabled} from '../../actions/uiActions';
-import CustomTextField from '../CustomTextField';
-import CustomTableRow from '../CustomTableRow';
+import CustomTextField from '../common/CustomTextField';
+import CustomTableRow from '../common/CustomTableRow';
 import {joyride} from '../../joyride.config';
 import {getSqKmString} from '../../utils/generic';
 import BaseDialog from "../Dialog/BaseDialog";
 import AlertWarning from '@material-ui/icons/Warning';
-import {useJobValidationContext} from "./context/JobValidation";
-import {useEffectOnMount} from "../../utils/hooks";
+import {useDebouncedState, useEffectOnMount} from "../../utils/hooks";
 import {useEffect} from "react";
-import {array} from "prop-types";
+import {useJobValidationContext} from "./context/JobValidation";
 
 const jss = (theme: Eventkit.Theme & Theme) => createStyles({
     underlineStyle: {
@@ -205,7 +204,7 @@ export function hasDisallowedSelection(exportInfo: Eventkit.Store.ExportInfo) {
 function StepValidator(props: Props) {
     const { setNextEnabled, setNextDisabled, walkthroughClicked, exportInfo, nextEnabled} = props;
     const { aoiHasArea, areEstimatesLoading, dataSizeInfo, aoiArea } = useJobValidationContext();
-    const { exceedingSize=[], noMaxDataSize=[] } = dataSizeInfo;
+    const { exceedingSize=[], noMaxDataSize=[] } = dataSizeInfo || {};
 
     useEffectOnMount(() => {
         setNextDisabled();
@@ -433,30 +432,30 @@ export class ExportInfo extends React.Component<Props, State> {
         this.dataProvider.current.handleExpand();
     }
 
-    private onNameChange(e: React.ChangeEvent<HTMLInputElement>) {
+    private onNameChange(value) {
         // It feels a little weird to write every single change to redux
         // but the TextField (v0.18.7) does not size vertically to the defaultValue prop, only the value prop.
         // If we use value we cannot debounce the input because the user should see it as they type.
         this.props.updateExportInfo({
-            exportName: e.target.value,
+            exportName: value,
         });
     }
 
-    private onDescriptionChange(e: React.ChangeEvent<HTMLInputElement>) {
+    private onDescriptionChange(value) {
         // It feels a little weird to write every single change to redux
         // but the TextField (v0.18.7) does not size vertically to the defaultValue prop, only the value prop.
         // If we use value we cannot debounce the input because the user should see it as they type.
         this.props.updateExportInfo({
-            datapackDescription: e.target.value,
+            datapackDescription: value,
         });
     }
 
-    private onProjectChange(e: React.ChangeEvent<HTMLInputElement>) {
+    private onProjectChange(value) {
         // It feels a little weird to write every single change to redux
         // but the TextField (v0.18.7) does not size vertically to the defaultValue prop, only the value prop.
         // If we use value we cannot debounce the input because the user should see it as they type.
         this.props.updateExportInfo({
-            projectName: e.target.value,
+            projectName: value,
         });
     }
 
@@ -711,22 +710,22 @@ export class ExportInfo extends React.Component<Props, State> {
                                     Enter General Information
                                 </div>
                                 <div style={{marginBottom: '30px'}}>
-                                    <CustomTextField
+                                    <DebouncedTextField
                                         className={`qa-ExportInfo-input-name ${classes.textField}`}
                                         id="Name"
                                         name="exportName"
-                                        onChange={this.onNameChange}
+                                        setValue={this.onNameChange}
                                         defaultValue={this.props.exportInfo.exportName}
                                         placeholder="Datapack Name"
                                         InputProps={{className: classes.input}}
                                         fullWidth
                                         maxLength={100}
                                     />
-                                    <CustomTextField
+                                    <DebouncedTextField
                                         className={`qa-ExportInfo-input-description ${classes.textField}`}
                                         id="Description"
                                         name="datapackDescription"
-                                        onChange={this.onDescriptionChange}
+                                        setValue={this.onDescriptionChange}
                                         defaultValue={this.props.exportInfo.datapackDescription}
                                         placeholder="Description"
                                         multiline
@@ -736,11 +735,11 @@ export class ExportInfo extends React.Component<Props, State> {
                                         // eslint-disable-next-line react/jsx-no-duplicate-props
                                         InputProps={{className: classes.input, style: {lineHeight: '21px'}}}
                                     />
-                                    <CustomTextField
+                                    <DebouncedTextField
                                         className={`qa-ExportInfo-input-project ${classes.textField}`}
                                         id="Project"
                                         name="projectName"
-                                        onChange={this.onProjectChange}
+                                        setValue={this.onProjectChange}
                                         defaultValue={this.props.exportInfo.projectName}
                                         placeholder="Project Name"
                                         InputProps={{className: classes.input}}
@@ -985,6 +984,24 @@ function mapDispatchToProps(dispatch) {
             dispatch(stepperNextEnabled());
         },
     };
+}
+
+// Wrapper around the CustomTextField component that debounces the redux store call.
+// This was done to avoid refactoring the entire component to hooks all at once.
+// At a later point this could be removed and done in place.
+function DebouncedTextField(props: any) {
+    const { setValue, ...passThroughProps } = props;
+    const [value, debounceValue] = useDebouncedState('', 500);
+    useEffect(() => {
+        props.setValue(value);
+    }, [value]);
+    return (
+        <CustomTextField
+            onChange={e => debounceValue(e.target.value)}
+            {...passThroughProps}
+            className={`debounced-textField ${props.className ? props.className : ''}`}
+        />
+    )
 }
 
 export default withTheme()(withStyles(jss)(connect(

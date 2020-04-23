@@ -7,7 +7,7 @@ import Checked from '@material-ui/icons/CheckBox';
 import Unchecked from '@material-ui/icons/CheckBoxOutlineBlank';
 import Dialog from '@material-ui/core/Dialog';
 import Indeterminate from '../../components/icons/IndeterminateIcon';
-import CustomScrollbar from '../../components/CustomScrollbar';
+import CustomScrollbar from '../../components/common/CustomScrollbar';
 import { AddMembersDialog } from '../../components/UserGroupsPage/Dialogs/AddMembersDialog';
 
 describe('AddMembersDialog component', () => {

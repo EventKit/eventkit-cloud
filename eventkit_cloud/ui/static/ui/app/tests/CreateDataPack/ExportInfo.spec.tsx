@@ -1,16 +1,36 @@
 import * as React from 'react';
 import * as sinon from 'sinon';
-import {shallow} from 'enzyme';
+import {mount} from 'enzyme';
 import List from '@material-ui/core/List';
 import Paper from '@material-ui/core/Paper';
 import Checkbox from '@material-ui/core/Checkbox';
 import Joyride from 'react-joyride';
 import MapCard from '../../components/common/MapCard';
-import DataProvider from '../../components/CreateDataPack/DataProvider';
 import {ExportInfo, hasDisallowedSelection, hasRequiredFields} from '../../components/CreateDataPack/ExportInfo';
-import CustomScrollbar from '../../components/CustomScrollbar';
-import TextField from '../../components/CustomTextField';
+import CustomScrollbar from '../../components/common/CustomScrollbar';
 import * as utils from '../../utils/generic';
+
+jest.mock("../../components/common/CustomTableRow", () => {
+    const React = require('react');
+    return (props) => (<div className="row">{props.children}</div>);
+});
+
+jest.mock("../../components/common/MapCard", () => {
+    const React = require('react');
+    return (props) => (<div className="mapcard">{props.children}</div>);
+});
+
+jest.mock("../../components/common/CustomTextField", () => {
+    const React = require('react');
+    return (props) => (<div className="textField">{props.children}</div>);
+});
+
+import DataProvider from '../../components/CreateDataPack/DataProvider';
+jest.mock("../../components/CreateDataPack/DataProvider", () => {
+    const React = require('react');
+    return (props) => (<div className="provider">{props.children}</div>);
+});
+
 
 const formats = [
     {
@@ -127,7 +147,7 @@ describe('ExportInfo component', () => {
             SERVE_ESTIMATES: serveEstimates
         };
         props = {...getProps(), ...overrides};
-        wrapper = shallow(<ExportInfo {...props} />, {
+        wrapper = mount(<ExportInfo {...props} />, {
             context: {config},
         });
         instance = wrapper.instance();
@@ -141,7 +161,8 @@ describe('ExportInfo component', () => {
         expect(wrapper.find('#form')).toHaveLength(1);
         expect(wrapper.find(Paper)).toHaveLength(1);
         expect(wrapper.find('#mainHeading')).toHaveLength(1);
-        expect(wrapper.find(TextField)).toHaveLength(3);
+        // expect(wrapper.find('#root').html()).toBe('');
+        expect(wrapper.find('.textField')).toHaveLength(3);
         expect(wrapper.find('#layersHeader')).toHaveLength(1);
         expect(wrapper.find('#layersHeader').text()).toEqual('Select Data Sources');
         expect(wrapper.find('#layersSubheader').text()).toEqual('(You must choose at least one)');
@@ -187,13 +208,11 @@ describe('ExportInfo component', () => {
     });
 
     it('componentDidUpdate should reset joyride and set running state', () => {
-        const joyride = {current: {reset: sinon.spy()}};
-        instance.joyride = joyride;
+        wrapper.update();
         const stateStub = sinon.stub(instance, 'setState');
         const nextProps = getProps();
         nextProps.walkthroughClicked = true;
         wrapper.setProps(nextProps);
-        expect(joyride.current.reset.calledOnce).toBe(true);
         expect(stateStub.calledWith({isRunning: true})).toBe(true);
     });
 
@@ -206,9 +225,8 @@ describe('ExportInfo component', () => {
     });
 
     it('onNameChange should call updateExportInfo', () => {
-        const event = {target: {value: 'test'}};
         props.updateExportInfo.resetHistory();
-        instance.onNameChange(event);
+        instance.onNameChange('test');
         expect(props.updateExportInfo.calledOnce).toBe(true);
         expect(props.updateExportInfo.calledWith({
             exportName: 'test',
@@ -216,9 +234,8 @@ describe('ExportInfo component', () => {
     });
 
     it('onDescriptionChange should call persist and nameHandler', () => {
-        const event = {target: {value: 'test'}};
         props.updateExportInfo.resetHistory();
-        instance.onDescriptionChange(event);
+        instance.onDescriptionChange('test');
         expect(props.updateExportInfo.calledOnce).toBe(true);
         expect(props.updateExportInfo.calledWith({
             datapackDescription: 'test',
@@ -226,9 +243,8 @@ describe('ExportInfo component', () => {
     });
 
     it('onProjectChange should call persist and nameHandler', () => {
-        const event = {target: {value: 'test'}};
         props.updateExportInfo.resetHistory();
-        instance.onProjectChange(event);
+        instance.onProjectChange('test');
         expect(props.updateExportInfo.calledOnce).toBe(true);
         expect(props.updateExportInfo.calledWith({
             projectName: 'test',
