@@ -21,6 +21,9 @@ const jss = (theme: Theme & Eventkit.Theme) => createStyles({
         top: '1em',
         left: '10px',
         backgroundColor: theme.eventkit.colors.secondary,
+        borderRadius: '5px',
+        display: 'inline-grid',
+        boxShadow: '0px 3px 15px rgba(0, 0, 0, 0.2)',
     },
     buttonContainer: {
         position: 'absolute',
@@ -199,7 +202,7 @@ export class SearchAOIToolbar extends React.Component<Props, State> {
         };
 
         return (
-            <div className={classes.container} style={{display: 'inline-grid'}}>
+            <div className={classes.container}>
                 <div className="typeahead">
                     <Typeahead
                         id="aoiSearchBar"

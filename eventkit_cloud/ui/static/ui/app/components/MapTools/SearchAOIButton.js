@@ -26,12 +26,12 @@ export class SearchAOIButton extends Component {
                 color: colors.primary,
                 bottom: '0px',
                 fontSize: '8px',
-                width: '50px',
+                width: '55px',
                 height: '12px',
             },
             buttonGeneral: {
                 height: '50px',
-                width: '50px',
+                width: '55px',
                 borderRight: '1px solid #e6e6e6',
                 borderLeft: 'none',
                 borderBottom: 'none',
@@ -40,6 +40,8 @@ export class SearchAOIButton extends Component {
                 padding: '0px',
                 backgroundColor: colors.white,
                 outline: 'none',
+                borderRadius: '5px 0px 0px 5px',
+                boxShadow: '0px 3px gba(0, 0, 0, 0.2)',
             },
 
         };

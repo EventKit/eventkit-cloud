@@ -54,7 +54,8 @@
 
 .ol-control {
     background-color: rgba(255, 255, 255, .4);
-    border-radius: 4px
+    border-radius: 4px;
+    box-shadow: 0px 3px 15px rgba(0, 0, 0, 0.2);
 }
 
 .ol-control:hover {
@@ -108,7 +109,8 @@
     line-height: .4em;
     background-color: rgba(0, 60, 136, .5);
     border: none;
-    border-radius: 2px
+    border-radius: 2px;
+    box-shadow: 0px 3px 15px rgba(0, 0, 0, 0.2);
 }
 
 .ol-control button::-moz-focus-inner {
@@ -289,7 +291,8 @@
 }
 
 .ol-overviewmap:not(.ol-collapsed) {
-    background: rgba(255, 255, 255, .8)
+    background: rgba(255, 255, 255, .8);
+    box-shadow: 0px 3px 15px rgba(0, 0, 0, 0.2);
 }
 
 .ol-overviewmap-box {
