@@ -157,7 +157,7 @@ class Nominatim(GeocodeAdapter):
         return {"q": query, "format": "json", "polygon_geojson": 1, "addressdetails": 1}
 
     def create_geojson(self, response):
-        if not response:
+        if response is None:
             raise Exception("Geocoder did not return any results in the response")
         features = []
         for result in response:

@@ -1,8 +1,8 @@
 import { types } from '../actions/geocodeActions';
 
 export const initialState = {
-    fetching: null,
-    fetched: null,
+    fetching: false,
+    fetched: false,
     data: [],
     error: null,
     cancelSource: null,
@@ -34,6 +34,8 @@ export function geocodeReducer(state = initialState, action) {
                 error: action.error,
                 cancelSource: null,
             };
+        case types.FETCH_GEOCODE_EMPTY:
+            return initialState;
         default:
             return state;
     }

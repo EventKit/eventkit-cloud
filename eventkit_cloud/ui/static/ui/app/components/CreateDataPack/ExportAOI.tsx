@@ -38,7 +38,6 @@ import BufferDialog from './BufferDialog';
 import RevertDialog from './RevertDialog';
 import {updateAoiInfo, clearAoiInfo, clearExportInfo} from '../../actions/datacartActions';
 import {stepperNextDisabled, stepperNextEnabled} from '../../actions/uiActions';
-import {getGeocode} from '../../actions/geocodeActions';
 import {processGeoJSONFile, resetGeoJSONFile} from '../../actions/fileActions';
 import {
     generateDrawLayer, generateDrawBoxInteraction, generateDrawFreeInteraction,
@@ -68,12 +67,10 @@ export interface Props {
     aoiInfo: Eventkit.Store.AoiInfo;
     importGeom: Eventkit.Store.ImportGeom;
     drawer: string;
-    geocode: object;
     updateAoiInfo: (args: any) => void;
     clearAoiInfo: () => void;
     setNextDisabled: () => void;
     setNextEnabled: () => void;
-    getGeocode: () => void;
     processGeoJSONFile: () => void;
     resetGeoJSONFile: () => void;
     clearExportInfo: () => void;
@@ -1064,9 +1061,7 @@ export class ExportAOI extends React.Component<Props, State> {
                     <SearchAOIToolbar
                         handleSearch={this.checkForSearchUpdate}
                         handleCancel={this.handleCancel}
-                        geocode={this.props.geocode}
                         toolbarIcons={this.state.toolbarIcons}
-                        getGeocode={this.props.getGeocode}
                         setAllButtonsDefault={this.setAllButtonsDefault}
                         setSearchAOIButtonSelected={() => {
                             this.setButtonSelected('search');
@@ -1132,7 +1127,6 @@ function mapStateToProps(state) {
         aoiInfo: state.aoiInfo,
         importGeom: state.importGeom,
         drawer: state.drawer,
-        geocode: state.geocode,
         nextEnabled: state.stepperNextEnabled,
     };
 }
@@ -1150,9 +1144,6 @@ function mapDispatchToProps(dispatch) {
         },
         setNextEnabled: () => {
             dispatch(stepperNextEnabled());
-        },
-        getGeocode: (query) => {
-            dispatch(getGeocode(query));
         },
         processGeoJSONFile: (file) => {
             dispatch(processGeoJSONFile(file));

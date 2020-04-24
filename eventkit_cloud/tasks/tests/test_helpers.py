@@ -119,6 +119,7 @@ class TestHelpers(TestCase):
         for fname in [sample_file]:
             mps = MagicMock()
             mps.result.filename = fname
+            mps.status = TaskStates.COMPLETED.value
             mocked_provider_subtasks.append(mps)
 
         mocked_provider_task = MagicMock()
