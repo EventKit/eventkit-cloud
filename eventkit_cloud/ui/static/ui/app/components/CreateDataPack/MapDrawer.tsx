@@ -395,7 +395,7 @@ export function MapDrawer(props: Props) {
                         <div>
                             Data Source Missing?
                         </div>
-                        <Link onClick={() => setRequestDataSourceOpen(true)} style={{fontSize: '12px'}}>
+                        <Link onClick={() => setRequestDataSourceOpen(true)} style={{fontSize: '12px', cursor: 'pointer'}}>
                             Request New Data Source
                         </Link>
                         </div>
