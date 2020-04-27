@@ -72,8 +72,9 @@ const jss = (theme: Theme & Eventkit.Theme) => createStyles({
         borderBottomLeftRadius: '5px',
         borderBottomRightRadius: '0px',
         height: 'auto',
-        marginTop: '4px',
+        marginTop: '17px',
         backgroundColor: theme.eventkit.colors.secondary,
+        boxShadow: '0px 3px 15px rgba(0, 0, 0, 0.2) ',
     },
     tab: {
         opacity: 1,
@@ -394,7 +395,7 @@ export function MapDrawer(props: Props) {
                         <div>
                             Data Source Missing?
                         </div>
-                        <Link onClick={() => setRequestDataSourceOpen(true)} style={{fontSize: '12px'}}>
+                        <Link onClick={() => setRequestDataSourceOpen(true)} style={{fontSize: '12px', cursor: 'pointer'}}>
                             Request New Data Source
                         </Link>
                         </div>
