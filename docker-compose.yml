@@ -21,6 +21,7 @@ services:
       - DATABASE_URL=postgres://eventkit:eventkit_exports@postgis:5432/eventkit_exports
       - BROKER_URL=amqp://guest:guest@rabbitmq:5672/
       - BROKER_API_URL=http://guest:guest@rabbitmq:15672/api/
+      - MEMCACHED=memcached:11211
       - SERVE_ESTIMATES
       - SITE_NAME
       - SITE_IP
@@ -135,6 +136,12 @@ services:
     extra_hosts:
       - "${SITE_NAME}:${SITE_IP}"
     command: /home/eventkit/miniconda3/envs/eventkit-cloud/lib/python3.6/site-packages/scripts/run-celery.sh
+  memcached:
+    image: eventkit/eventkit-base:1.6.0
+    ports:
+      - "11211:11211"
+    entrypoint: >
+      /bin/bash -c "source activate eventkit-cloud && memcached -m 2048"
   celery-beat:
     image: eventkit/eventkit-base:1.6.0
     volumes:
