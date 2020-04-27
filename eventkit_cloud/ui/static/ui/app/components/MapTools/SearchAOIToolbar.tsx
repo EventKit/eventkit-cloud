@@ -151,7 +151,6 @@ export class SearchAOIToolbar extends React.Component<Props, State> {
 
     handleEnter(e) {
         const results = e.slice(0, 1000);
-        this.setState({suggestions: []});
         if (results.length > 0) {
             if (this.props.handleSearch(results[0])) {
                 this.props.setSearchAOIButtonSelected();
@@ -174,14 +173,14 @@ export class SearchAOIToolbar extends React.Component<Props, State> {
                     </div>
                 );
             } else if (this.props.geocode.fetched) {
-                if (results.length) {
+                if (this.props.toolbarIcons.search === 'SELECTED' || results.length) {
                     content = results.map((result, index) => (
                         <TypeaheadMenuItem
                             result={result}
                             index={index}
-                            key={JSON.stringify(result.properties)}
+                            key={JSON.stringify(results.properties)}
                         />
-                    ));
+                    ))
                 } else {
                     content = (
                         <div className={classes.empty}>
