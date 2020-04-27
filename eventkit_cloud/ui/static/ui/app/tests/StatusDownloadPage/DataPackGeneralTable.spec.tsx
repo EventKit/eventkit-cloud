@@ -1,7 +1,7 @@
 import * as React from 'react';
 import * as sinon from 'sinon';
 import { createShallow } from '@material-ui/core/test-utils';
-import CustomTableRow from '../../components/CustomTableRow';
+import CustomTableRow from '../../components/common/CustomTableRow';
 import { DataPackGeneralTable } from '../../components/StatusDownloadPage/DataPackGeneralTable';
 
 describe('DataPackGeneralTable component', () => {

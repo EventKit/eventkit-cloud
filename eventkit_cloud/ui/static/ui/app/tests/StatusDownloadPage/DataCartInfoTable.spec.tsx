@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { createShallow } from '@material-ui/core/test-utils';
-import CustomTableRow from '../../components/CustomTableRow';
+import CustomTableRow from '../../components/common/CustomTableRow';
 import { DataCartInfoTable } from '../../components/StatusDownloadPage/DataCartInfoTable';
 
 describe('DataCartInfoTable component', () => {

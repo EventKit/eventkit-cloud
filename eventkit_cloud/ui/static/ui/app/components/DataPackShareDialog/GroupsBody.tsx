@@ -5,7 +5,7 @@ import CircularProgress from '@material-ui/core/CircularProgress';
 import ButtonBase from '@material-ui/core/ButtonBase';
 import Button from '@material-ui/core/Button';
 import InfoIcon from '@material-ui/icons/InfoOutlined';
-import CustomTextField from '../CustomTextField';
+import CustomTextField from '../common/CustomTextField';
 import GroupRow from './GroupRow';
 import GroupsHeaderRow, { GroupOrder, SharedOrder } from './GroupsHeaderRow';
 import GroupBodyTooltip from './ShareBodyTooltip';

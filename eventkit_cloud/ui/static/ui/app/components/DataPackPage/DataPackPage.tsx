@@ -22,7 +22,6 @@ import DataPackLinkButton from './DataPackLinkButton';
 import FilterDrawer from './FilterDrawer';
 import { getRuns, deleteRun } from '../../actions/datapackActions';
 import { getProviders } from '../../actions/providerActions';
-import { getGeocode } from '../../actions/geocodeActions';
 import { processGeoJSONFile, resetGeoJSONFile } from '../../actions/fileActions';
 import { updateDataCartPermissions } from '../../actions/datacartActions';
 import { setPageOrder, setPageView } from '../../actions/uiActions';
@@ -59,14 +58,6 @@ interface Props {
     importGeom: {
         processing: boolean;
     };
-    geocode: {
-        cancelSource: boolean;
-        data: any;
-        error: any;
-        fetched: boolean;
-        fetching: boolean;
-    };
-    getGeocode: () => void;
     processGeoJSONFile: (file: File) => void;
     resetGeoJSONFile: () => void;
     setOrder: (order: string) => void;
@@ -319,8 +310,6 @@ export class DataPackPage extends React.Component<Props, State> {
                 return (
                     <MapView
                         {...commonProps}
-                        geocode={this.props.geocode}
-                        getGeocode={this.props.getGeocode}
                         importGeom={this.props.importGeom}
                         processGeoJSONFile={this.props.processGeoJSONFile}
                         resetGeoJSONFile={this.props.resetGeoJSONFile}
@@ -763,7 +752,6 @@ function mapStateToProps(state) {
         formats: state.formats,
         projections: state.projections,
         importGeom: state.importGeom,
-        geocode: state.geocode,
         updatePermissions: state.updatePermission,
     };
 }
@@ -784,9 +772,6 @@ function mapDispatchToProps(dispatch) {
         },
         getProjections: () => {
             dispatch(getProjections());
-        },
-        getGeocode: (query: object) => {
-            dispatch(getGeocode(query));
         },
         processGeoJSONFile: (file: File) => {
             dispatch(processGeoJSONFile(file));

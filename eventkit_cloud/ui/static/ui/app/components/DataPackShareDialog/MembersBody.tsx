@@ -5,7 +5,7 @@ import ButtonBase from '@material-ui/core/ButtonBase';
 import Button from '@material-ui/core/Button';
 import CircularProgress from '@material-ui/core/CircularProgress';
 import InfoIcon from '@material-ui/icons/InfoOutlined';
-import CustomTextField from '../CustomTextField';
+import CustomTextField from '../common/CustomTextField';
 import BaseDialog from '../Dialog/BaseDialog';
 import MembersHeaderRow, { SharedOrder, MemberOrder } from './MembersHeaderRow';
 import MemberRow from './MemberRow';
