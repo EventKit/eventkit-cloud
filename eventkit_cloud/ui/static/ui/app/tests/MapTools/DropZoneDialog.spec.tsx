@@ -2,8 +2,13 @@ import React from 'react';
 import sinon from 'sinon';
 import { createShallow } from '@material-ui/core/test-utils';
 import Dropzone from 'react-dropzone';
-import BaseDialog from '../../components/Dialog/BaseDialog';
 import { DropZoneDialog } from '../../components/MapTools/DropZoneDialog';
+
+import BaseDialog from "../../components/Dialog/BaseDialog";
+jest.mock("../../components/Dialog/BaseDialog", () => {
+    const React = require('react');
+    return (props) => (<div id="basedialog">{props.children}</div>);
+});
 
 describe('DropZoneDialog component', () => {
     let shallow;
@@ -17,7 +22,7 @@ describe('DropZoneDialog component', () => {
         setAllButtonsDefault: () => {},
         setImportModalState: () => {},
         processGeoJSONFile: () => {},
-        ...global.eventkit_test_props,
+        ...(global as any).eventkit_test_props,
     });
 
     const getWrapper = props => shallow(<DropZoneDialog {...props} />);
@@ -44,7 +49,7 @@ describe('DropZoneDialog component', () => {
     });
 
     it('should reject oversized file', () => {
-        global.window.URL.createObjectURL = sinon.mock();
+        (global as any).window.URL.createObjectURL = sinon.mock();
         const props = getProps();
         props.showImportModal = true;
         props.setImportModalState = sinon.spy();

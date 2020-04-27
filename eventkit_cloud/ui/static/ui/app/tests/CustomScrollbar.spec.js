@@ -2,7 +2,7 @@ import React from 'react';
 import { mount } from 'enzyme';
 import sinon from 'sinon';
 import { Scrollbars } from 'react-custom-scrollbars';
-import CustomScrollbar from '../components/CustomScrollbar';
+import CustomScrollbar from '../components/common/CustomScrollbar';
 
 describe('Custom Scrollbar component', () => {
     it('should render a react-custom-scrollbar component with custom vertical thumb', () => {

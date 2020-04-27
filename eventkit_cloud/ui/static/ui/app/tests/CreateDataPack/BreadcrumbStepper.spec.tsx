@@ -158,7 +158,8 @@ describe('BreadcrumbStepper component', () => {
     it('should render step 1 with disabled next arrow by default', () => {
         expect(wrapper.find(NavigationArrowBack)).toHaveLength(1);
         expect(wrapper.find(ExportAOI)).toHaveLength(1);
-        expect(wrapper.childAt(0).childAt(0).childAt(0).childAt(0).text()).toEqual('STEP 1 OF 3: Define Area of Interest');
+        expect(wrapper.childAt(0).childAt(0).childAt(0).childAt(0)
+        .childAt(0).text()).toEqual('STEP 1 OF 3: Define Area of Interest');
         expect(wrapper.find(Button)).toHaveLength(1);
         expect(wrapper.find(Button).props().disabled).toEqual(true);
         expect(wrapper.find(NavigationArrowForward)).toHaveLength(1);

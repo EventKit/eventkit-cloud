@@ -4,7 +4,7 @@ import { connect } from 'react-redux';
 import { withTheme, StyledComponentProps } from '@material-ui/core/styles';
 import List from '@material-ui/core/List';
 import Progress from '@material-ui/core/CircularProgress';
-import BaseDialog from '../Dialog/BaseDialog';
+import BaseDialog from './BaseDialog';
 import DropDownListItem from '../common/DropDownListItem';
 import { getProviderTask } from '../../actions/providerActions';
 import { getJobDetails } from "../../utils/generic"

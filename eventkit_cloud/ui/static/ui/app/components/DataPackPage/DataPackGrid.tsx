@@ -2,7 +2,7 @@ import * as React from 'react';
 import withWidth, { isWidthUp } from '@material-ui/core/withWidth';
 import GridList from '@material-ui/core/GridList';
 import DataPackGridItem from './DataPackGridItem';
-import CustomScrollbar from '../CustomScrollbar';
+import CustomScrollbar from '../common/CustomScrollbar';
 import LoadButtons from '../common/LoadButtons';
 import withRef from '../../utils/withRef';
 import { Breakpoint } from '@material-ui/core/styles/createBreakpoints';

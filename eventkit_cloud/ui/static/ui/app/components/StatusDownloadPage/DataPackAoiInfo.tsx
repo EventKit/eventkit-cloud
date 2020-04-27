@@ -1,6 +1,6 @@
 import * as PropTypes from 'prop-types';
 import * as React from 'react';
-import CustomTableRow from '../CustomTableRow';
+import CustomTableRow from '../common/CustomTableRow';
 import { getSqKmString } from '../../utils/generic';
 import {MapView} from "../common/MapView";
 import {MapLayer} from "../CreateDataPack/CreateExport";

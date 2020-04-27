@@ -38,7 +38,6 @@ import BufferDialog from './BufferDialog';
 import RevertDialog from './RevertDialog';
 import {updateAoiInfo, clearAoiInfo, clearExportInfo} from '../../actions/datacartActions';
 import {stepperNextDisabled, stepperNextEnabled} from '../../actions/uiActions';
-import {getGeocode} from '../../actions/geocodeActions';
 import {processGeoJSONFile, resetGeoJSONFile} from '../../actions/fileActions';
 import {
     generateDrawLayer, generateDrawBoxInteraction, generateDrawFreeInteraction,
@@ -68,12 +67,10 @@ export interface Props {
     aoiInfo: Eventkit.Store.AoiInfo;
     importGeom: Eventkit.Store.ImportGeom;
     drawer: string;
-    geocode: object;
     updateAoiInfo: (args: any) => void;
     clearAoiInfo: () => void;
     setNextDisabled: () => void;
     setNextEnabled: () => void;
-    getGeocode: () => void;
     processGeoJSONFile: () => void;
     resetGeoJSONFile: () => void;
     clearExportInfo: () => void;
@@ -1001,40 +998,6 @@ export class ExportAOI extends React.Component<Props, State> {
         zoomToFeature(feature, this.map);
     }
 
-    private handleMapClickQuery(event) {
-        const grid = this.baseLayer.getSource().getTileGrid();
-        const zoom = Math.floor(this.map.getView().getZoom());
-
-        // Coord is returned as z, x, y
-        // Y is returned as a negative because of openlayers origin, needs to be flipped and offset
-        const tileCoord = wrapX(grid, grid.getTileCoordForCoordAndZ(event.coordinate, zoom));
-        const tileExtent = grid.getTileCoordExtent(tileCoord);
-        tileCoord[2] = tileCoord[2] * -1 - 1;
-
-        const upperLeftPixel = this.map.getPixelFromCoordinate(extent.getTopLeft(tileExtent));
-        const upperRightPixel = this.map.getPixelFromCoordinate(extent.getTopRight(tileExtent));
-
-        // Calculate the actual number of pixels each tile is taking up.
-        const pixelWidth = upperRightPixel[0] - upperLeftPixel[0];
-        const tileSize = grid.getTileSize(zoom);
-        const ratio = tileSize / pixelWidth;
-
-        const tilePixel = [Math.floor((event.pixel[0] - upperLeftPixel[0]) * ratio),
-            Math.floor((event.pixel[1] - upperLeftPixel[1]) * ratio)];
-
-        // i, j are the pixels x and y within the selected tile at coordinate z (zoom), y (row), x (col)
-        this.displayBoxRef.handleMapClick(
-            {
-                lat: event.coordinate[1],
-                long: event.coordinate[0],
-                z: tileCoord[0],
-                y: tileCoord[2],
-                x: tileCoord[1],
-            } as TileCoordinate,
-            tilePixel[0],
-            tilePixel[1]);
-    }
-
     private setDisplayBofRef(ref: any) {
         this.displayBoxRef = ref;
     }
@@ -1098,9 +1061,7 @@ export class ExportAOI extends React.Component<Props, State> {
                     <SearchAOIToolbar
                         handleSearch={this.checkForSearchUpdate}
                         handleCancel={this.handleCancel}
-                        geocode={this.props.geocode}
                         toolbarIcons={this.state.toolbarIcons}
-                        getGeocode={this.props.getGeocode}
                         setAllButtonsDefault={this.setAllButtonsDefault}
                         setSearchAOIButtonSelected={() => {
                             this.setButtonSelected('search');
@@ -1166,7 +1127,6 @@ function mapStateToProps(state) {
         aoiInfo: state.aoiInfo,
         importGeom: state.importGeom,
         drawer: state.drawer,
-        geocode: state.geocode,
         nextEnabled: state.stepperNextEnabled,
     };
 }
@@ -1184,9 +1144,6 @@ function mapDispatchToProps(dispatch) {
         },
         setNextEnabled: () => {
             dispatch(stepperNextEnabled());
-        },
-        getGeocode: (query) => {
-            dispatch(getGeocode(query));
         },
         processGeoJSONFile: (file) => {
             dispatch(processGeoJSONFile(file));

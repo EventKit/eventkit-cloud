@@ -9,7 +9,7 @@ import {Card, CardContent, Typography} from '@material-ui/core';
 import CloseIcon from '@material-ui/icons/Close';
 import IconButton from "@material-ui/core/IconButton";
 import CircularProgress from "@material-ui/core/CircularProgress";
-import CustomScrollbar from "../CustomScrollbar";
+import CustomScrollbar from "../common/CustomScrollbar";
 import Alignment = PropTypes.Alignment;
 
 const jss = (theme: Theme & Eventkit.Theme) => createStyles({

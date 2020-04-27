@@ -157,7 +157,7 @@ class Nominatim(ReverseGeocodeAdapter):
 
     def create_geojson(self, response):
         result = response.json()
-        if not response:
+        if response is None:
             raise Exception("Geocoder did not return any results in the response")
         features = []
 

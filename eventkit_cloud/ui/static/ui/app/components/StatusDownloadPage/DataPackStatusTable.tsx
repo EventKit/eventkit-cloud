@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { withTheme } from '@material-ui/core/styles';
-import CustomTableRow from '../CustomTableRow';
+import CustomTableRow from '../common/CustomTableRow';
 import PermissionsData from './PermissionsData';
 import ExpirationData from './ExpirationData';
 
