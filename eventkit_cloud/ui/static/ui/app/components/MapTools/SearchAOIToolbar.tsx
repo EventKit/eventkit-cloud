@@ -181,7 +181,7 @@ export class SearchAOIToolbar extends React.Component<Props, State> {
                         <TypeaheadMenuItem
                             result={result}
                             index={index}
-                            key={JSON.stringify(results.properties)}
+                            key={JSON.stringify(result.properties)}
                         />
                     ))
                 } else {
