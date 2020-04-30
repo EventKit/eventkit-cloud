@@ -61,7 +61,7 @@ export function ZoomLevelSlider(props: Props) {
     }, [props.selectedMaxZoom]);
 
 
-    function updateMax(event, value) {
+    const updateMax = (event, value) => {
         const zoomValue = Number(value);
         if (zoomValue >= props.minZoom && zoomValue <= props.maxZoom) {
             if (zoomValue < props.selectedMinZoom) {
@@ -73,9 +73,9 @@ export function ZoomLevelSlider(props: Props) {
             // Send null for min and max zoom to force the prop to reupdate with the last valid value
             props.updateZoom(null, null);
         }
-    }
+    };
 
-    function updateMin(event, value) {
+    const updateMin = (event, value) => {
         const zoomValue = Number(value);
         if (zoomValue >= props.minZoom && zoomValue <= props.maxZoom) {
             if (zoomValue > props.selectedMaxZoom) {
@@ -87,7 +87,7 @@ export function ZoomLevelSlider(props: Props) {
             // Send null for min and max zoom to force the prop to reupdate with the last valid value
             props.updateZoom(null, null);
         }
-    }
+    };
 
     const { classes } = props;
 
