@@ -4,7 +4,7 @@ import logging
 from mock import patch, Mock, MagicMock
 from django.test import TestCase
 from eventkit_cloud.utils.image_snapshot import get_tile, get_wmts_snapshot_image, save_thumbnail, \
-    make_thumbnail_downloadable
+    make_thumbnail_downloadable, get_width, get_height, get_resolution_for_extent
 
 from eventkit_cloud.utils.geocoding.geocode import Geocode, GeocodeAdapter, expand_bbox, is_valid_bbox
 
@@ -86,3 +86,22 @@ class TestImageSnapshot(TestCase):
             mock_shutil.copy.assert_called_once()
             mock_snapshot.save.assert_called_once()
             self.assertEquals(returned_snapshot, mock_snapshot)
+
+    @patch("eventkit_cloud.utils.image_snapshot.get_height")
+    @patch("eventkit_cloud.utils.image_snapshot.get_width")
+    def test_get_resolution_for_extent(self, mock_get_width, mock_get_height):
+        extent = (-180, -90, 180, 90)
+        mock_get_width.return_value = 360
+        mock_get_height.return_value = 180
+        resolution = get_resolution_for_extent(extent)
+        self.assertEqual(resolution, 0.3515625)
+
+    def test_get_width(self):
+        extent = (-180, -90, 180, 90)
+        width = get_width(extent)
+        self.assertEqual(width, 360)
+
+    def test_get_height(self):
+        extent = (-180, -90, 180, 90)
+        height = get_height(extent)
+        self.assertEqual(height, 180)
