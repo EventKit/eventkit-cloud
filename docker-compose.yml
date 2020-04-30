@@ -11,9 +11,11 @@ services:
     depends_on:
       - postgis
       - rabbitmq
+      - memcached
     links:
       - postgis
       - rabbitmq
+      - memcached
     expose:
       - "6080"
     command: gunicorn eventkit_cloud.wsgi:application --bind 0.0.0.0:6080 --worker-class eventlet --workers 8 --threads 2 --name eventkit --user eventkit --no-sendfile --reload
@@ -71,8 +73,10 @@ services:
     user: eventkit
     depends_on:
       - postgis
+      - memcached
     links:
       - postgis
+      - memcached
     expose:
       - "6080"
     command: gunicorn eventkit_cloud.wsgi:application --bind 0.0.0.0:6080 --worker-class eventlet --workers 8 --threads 2 --name eventkit --user eventkit --no-sendfile --reload --timeout 60
@@ -107,9 +111,11 @@ services:
       - postgis
       - rabbitmq
       - eventkit
+      - memcached
     links:
       - postgis
       - rabbitmq
+      - memcached
     environment:
       - DATABASE_URL=postgres://eventkit:eventkit_exports@postgis:5432/eventkit_exports
       - BROKER_URL=amqp://guest:guest@rabbitmq:5672/

@@ -618,6 +618,7 @@ def get_band_statistics(file_path, band=1):
     :param band: A specific raster band (defaults to 1).
     :return: A list [min, max, mean, std_dev]
     """
+    image_file = None
     try:
         gdal.UseExceptions()
         image_file = gdal.Open(file_path)
