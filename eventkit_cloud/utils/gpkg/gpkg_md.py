@@ -54,9 +54,7 @@ class NMISLayerInformation(object):
         """
         Constructor
         :param title: the title attribute information in the MD_Identification element
-        :type title: str
         :param abstract: the abstract information in the MD_Identification element
-        :type abstract: str
         """
         self.title = title
         self.abstract = abstract
@@ -70,10 +68,7 @@ class NMISServiceInformation(object):
         """
         Constructor
         :param contact: The Contact name in the CI_ResponsibleParty element
-        :type contact: str
-
         :param access_constraints: The Access Constraints in the  MD_SecurityConstraints element
-        :type access_constraints: str
         """
         self.contact = contact
         self.access_constraints = access_constraints
@@ -87,10 +82,7 @@ class NMISMetadataInformation(object):
         """
         Constructor
         :param layers: the layers in the nmis data
-        :type layers: list of NMISLayerInformation
-
         :param service: the service information in the nmis data
-        :type service: NMISServiceInformation
         """
         self.layers = layers
         self.service = service
@@ -106,6 +98,13 @@ class NameSpaces(Enum):
     GCO = ("gco", "http://www.isotc211.org/2005/gco")
     ISM = ("ism", "urn:us:gov:ic:ism")
     NTK = ("ntk", "urn:us:gov:ic:ntk")
+
+
+nas = NameSpaces.NAS.value[0]
+gmd = NameSpaces.GMD.value[0]
+gco = NameSpaces.GCO.value[0]
+ism = NameSpaces.ISM.value[0]
+ntk = NameSpaces.NTK.value[0]
 
 
 class Tags(object):
@@ -207,12 +206,11 @@ class Generator:
 
         This will grab all the entries in the gpkg_metadata Table
         :return: a list of Metadata in the GeoPackage
-        :rtype: list of Metadata
         """
         with GpkgUtil.get_database_connection(self.geopackage_path) as db:
             cursor = db.cursor()
             GpkgUtil.create_metadata_table(cursor=cursor)
-            # GeoPackageMetadataReferenceTableAdapter.create_metadata_reference_table(cursor=cursor)
+            GpkgUtil.create_metadata_reference_table(cursor=cursor)
             db.commit()
             return GpkgUtil.get_all_metadata(cursor=cursor)
 
@@ -270,18 +268,17 @@ class Generator:
         Removes extra whitespace between xml elements and within the text.
 
         :param elem: the root element to remove the whitespace between and its children.
-        :type elem: Element
         """
         for elem in elem.iter():
-            if (elem.text):
+            if elem.text:
                 elem.text = elem.text.strip()
-            if (elem.tail):
+            if elem.tail:
                 elem.tail = elem.tail.strip()
 
     def add_layer_identity(self,
                            layer_table_name,
                            abstract_msg,
-                           BBOX,
+                           bbox,
                            srs_id,
                            srs_organization,
                            organization_name="UNDEFINED"):
@@ -289,24 +286,13 @@ class Generator:
         Adds necessary XML on a per layer basis.
 
         :param organization_name: The name of the organization providing the data
-        :type organization_name: str
-
         :param srs_organization: Case-insensitive name of the defining organization e.g. EPSG or epsg
-        :type srs_organization: str
-
         :param srs_id: Unique identifier for each Spatial Reference System within a GeoPackage e.g. 4326
-        :type srs_id: str
-
         :param layer_table_name: The table name where this layer's data is stored in the GPKG
-        :type layer_table_name: str
-
         :param abstract_msg: string data added to give information about the layer
-        :type abstract_msg: str
-
-        :param BBOX: bbox representing the extent of the layer's data.
-        :type BBOX: BoundingBox
+        :param bbox: bbox representing the extent of the layer's data.
         """
-        self.__add_table_data(layer_table_name=layer_table_name, abstract_msg=abstract_msg, BBOX=BBOX,
+        self.__add_table_data(layer_table_name=layer_table_name, abstract_msg=abstract_msg, bbox=bbox,
                               organization_name=organization_name)
 
         self.__add_reference_system(srs_id=srs_id,
@@ -318,9 +304,7 @@ class Generator:
         Will not add if the Spatial reference system is already in the XML (no duplicates)
 
         :param srs_id: Unique identifier for each Spatial Reference System within a GeoPackage e.g. 4326
-        :type srs_id: str
         :param srs_organization: Case-insensitive name of the defining organization e.g. EPSG or epsg
-        :type srs_organization: str
         """
         # attempt to find reference system specifications
         reference_sys = Generator.find_all_spatial_reference_system_ri_identifier_tags(root=self.tree)
@@ -336,75 +320,61 @@ class Generator:
         if sys_present:
             return
         # add the spatial reference system to the xml
-        base = DET.parse(source=REFERENCE_SYS_TREE)
+        base = etree.parse(source=REFERENCE_SYS_TREE)
         # insert it as the 6th element in the tree (the standard just has it in this order)
         self.tree.insert(6, base.getroot())
 
-        RS_IDENTIFIER = base.find("{gmd}:MD_ReferenceSystem/{gmd}:referenceSystemIdentifier/"
-                                  "{gmd}:RS_Identifier".format(gmd=NameSpaces.GMD.value[0]),
+        RS_IDENTIFIER = base.find(f"{gmd}:MD_ReferenceSystem/{gmd}:referenceSystemIdentifier/"
+                                  f"{gmd}:RS_Identifier",
                                   Generator.generate_namespace_map())
         self.__build_tag(namespace=NameSpaces.GCO.value[1],
                          tag=Tags.CHAR_STRING,
-                         parent=RS_IDENTIFIER.find("{gmd}:code".format(gmd=NameSpaces.GMD.value[0]),
-                                                   Generator.generate_namespace_map()),
+                         parent=RS_IDENTIFIER.find(f"{gmd}:code", Generator.generate_namespace_map()),
                          text=srs_id)
         self.__build_tag(namespace=NameSpaces.GCO.value[1],
                          tag=Tags.CHAR_STRING,
-                         parent=RS_IDENTIFIER.find("{gmd}:codeSpace".format(gmd=NameSpaces.GMD.value[0]),
-                                                   Generator.generate_namespace_map()),
+                         parent=RS_IDENTIFIER.find(f"{gmd}:codeSpace", Generator.generate_namespace_map()),
                          text=srs_organization)
 
     def __add_table_data(self,
                          layer_table_name,
                          abstract_msg,
-                         BBOX,
+                         bbox,
                          organization_name):
         """
         Adds or updates the existing table data with the given information.
 
         :param organization_name: the name of the organization providing the data
-        :type organization_name: str
-
         :param layer_table_name: the name of the raster tile layer which should match the table_name in the GeoPackage
-        :type layer_table_name: str
-
         :param abstract_msg: string data added to give information about the layer
-        :type abstract_msg: str
-
-        :param BBOX: The bounds of the tile data
-        :type BBOX: BoundingBox
+        :param bbox: The bounds of the tile data
         """
         # update existing table otherwise create a
         existing_table = self.find_table_identity(self.tree, layer_table_name)
         if existing_table:
             self.__update_table_data(table_identity=existing_table, layer_table_name=layer_table_name,
-                                     abstract_msg=abstract_msg, BBOX=BBOX, organization_name=organization_name)
+                                     abstract_msg=abstract_msg, bbox=bbox, organization_name=organization_name)
         else:
-            self.__add_new_table_data(layer_table_name=layer_table_name, abstract_msg=abstract_msg, BBOX=BBOX,
+            self.__add_new_table_data(layer_table_name=layer_table_name, abstract_msg=abstract_msg, bbox=bbox,
                                       organization_name=organization_name)
 
     def __add_new_table_data(self,
                              layer_table_name,
                              abstract_msg,
-                             BBOX,
+                             bbox,
                              organization_name):
         """
         Adds a new xml element about the table data to the metadata information
 
         :param organization_name:
         :param layer_table_name: the name of the raster tile layer which should match the table_name in the GeoPackage
-        :type layer_table_name: str
-
         :param abstract_msg: string data added to give information about the layer
-        :type abstract_msg: str
-
-        :param BBOX: The bounds of the tile data
-        :type BBOX: BoundingBox
+        :param bbox: The bounds of the tile data
         """
         # get the MD_DataIdentification element- where all the table information is stored
         # the table information needed are the following: CI_CITATION, ABSTRACT, ORG_NAME, and the BOUNDING BOX data
-        base = DET.parse(source=LAYER_IDENTITY_TREE).getroot()
-        md_identification_element = base.find("{nas}:MD_DataIdentification".format(nas=NameSpaces.NAS.value[0]),
+        base = etree.parse(source=LAYER_IDENTITY_TREE).getroot()
+        md_identification_element = base.find(f"{nas}:MD_DataIdentification",
                                               Generator.generate_namespace_map())
 
         # insert element as the 2nd to last item in the tree because spec
@@ -416,7 +386,7 @@ class Generator:
         # add the title which should be the name of the table
         Generator.__build_tag(namespace=namespace,
                               tag=Tags.CHAR_STRING,
-                              parent=CI_CITATION.find("{gmd}:title".format(gmd=NameSpaces.GMD.value[0]),
+                              parent=CI_CITATION.find(f"{gmd}:title",
                                                       Generator.generate_namespace_map()),
                               text=layer_table_name)
 
@@ -424,7 +394,7 @@ class Generator:
         Generator.__build_tag(namespace=namespace,
                               tag=Tags.DATETIME,
                               parent=CI_CITATION.find(
-                                  "{gmd}:date/{gmd}:CI_Date/gmd:date".format(gmd=NameSpaces.GMD.value[0]),
+                                  f"{gmd}:date/{gmd}:CI_Date/gmd:date",
                                   Generator.generate_namespace_map()),
                               text=datetime.datetime.now().isoformat())
 
@@ -443,61 +413,45 @@ class Generator:
                               text=organization_name)
 
         # add the bounding box information
-        Generator.__add_bounding_box_data(base=md_identification_element, BBOX=BBOX)
+        Generator.__add_bounding_box_data(base=md_identification_element, bbox=bbox)
 
     @staticmethod
     def __update_table_data(table_identity,
                             layer_table_name,
                             abstract_msg,
-                            BBOX,
+                            bbox,
                             organization_name):
         """
         updates an existing table metadata information in the xml
 
         :param organization_name: the name of the organization providing the data
-        :type organization_name: str
-
         :param table_identity: The existing MD_Identification element that is the parent of the table information
         element that needs to be updated.
-        :type table_identity: Element
-
         :param layer_table_name: the name of the raster tile layer which should match the table_name in the GeoPackage
-        :type layer_table_name: str
-
         :param abstract_msg: string data added to give information about the layer
-        :type abstract_msg: str
-
-        :param BBOX: The bounds of the tile data
-        :type BBOX: BoundingBox
+        :param bbox: The bounds of the tile data
         """
         existing_ci_citation = Generator.find_ci_citation(table_identity)
         # update title
-        title = existing_ci_citation.find(".//{gmd}:title/{gco}:{char_str}".format(gmd=NameSpaces.GMD.value[0],
-                                                                                   gco=NameSpaces.GCO.value[0],
-                                                                                   char_str=Tags.CHAR_STRING),
+        title = existing_ci_citation.find(f".//{gmd}:title/{gco}:{Tags.CHAR_STRING}",
                                           Generator.generate_namespace_map())
         title.text = layer_table_name
 
         # update date
         date = existing_ci_citation.find(
-            ".//{gmd}:date/{gmd}:CI_Date/{gmd}:date/{gco}:{date_time}".format(gmd=NameSpaces.GMD.value[0],
-                                                                              gco=NameSpaces.GCO.value[0],
-                                                                              date_time=Tags.DATETIME),
+            f".//{gmd}:date/{gmd}:CI_Date/{gmd}:date/{gco}:{Tags.DATETIME}",
             Generator.generate_namespace_map())
         date.text = datetime.datetime.now().isoformat()
 
         existing_abstract_element = Generator.find_abstract_element(data_identification_element=table_identity)
         # update abstract message
-        message = existing_abstract_element.find(".//{gco}:{char_string}".format(gco=NameSpaces.GCO.value[0],
-                                                                                 char_string=Tags.CHAR_STRING),
+        message = existing_abstract_element.find(f".//{gco}:{Tags.CHAR_STRING}",
                                                  Generator.generate_namespace_map())
         message.text = abstract_msg
 
         existing_organization_element = Generator.find_organization_element(data_identification_element=table_identity)
         # update organization name
-        organization_name_element = existing_organization_element.find(".//{gco}:{char_string}"
-                                                                       .format(gco=NameSpaces.GCO.value[0],
-                                                                               char_string=Tags.CHAR_STRING),
+        organization_name_element = existing_organization_element.find(f".//{gco}:{Tags.CHAR_STRING}",
                                                                        Generator.generate_namespace_map())
         organization_name_element.text = organization_name
 
@@ -506,47 +460,33 @@ class Generator:
 
         # north
         north = existing_bounding_box_element.find(
-            ".//{tag}:{name}/{tag2}:{decimal}".format(tag=NameSpaces.GMD.value[0],
-                                                      name=Tags.Extent.N_BOUND_LAT,
-                                                      tag2=NameSpaces.GCO.value[0],
-                                                      decimal=Tags.Extent.DECIMAL),
+            f".//{gmd}:{Tags.Extent.N_BOUND_LAT}/{gco}:{Tags.Extent.DECIMAL}",
             Generator.generate_namespace_map())
-        north.text = str(BBOX.max_y)
+        north.text = str(bbox.max_y)
         # south
         south = existing_bounding_box_element.find(
-            ".//{tag}:{name}/{tag2}:{decimal}".format(tag=NameSpaces.GMD.value[0],
-                                                      name=Tags.Extent.S_BOUND_LAT,
-                                                      tag2=NameSpaces.GCO.value[0],
-                                                      decimal=Tags.Extent.DECIMAL),
+            f".//{gmd}:{Tags.Extent.S_BOUND_LAT}/{gco}:{Tags.Extent.DECIMAL}",
             Generator.generate_namespace_map())
-        south.text = str(BBOX.min_y)
+        south.text = str(bbox.min_y)
         # east
         east = existing_bounding_box_element.find(
-            ".//{tag}:{name}/{tag2}:{decimal}".format(tag=NameSpaces.GMD.value[0],
-                                                      name=Tags.Extent.E_BOUND_LON,
-                                                      tag2=NameSpaces.GCO.value[0],
-                                                      decimal=Tags.Extent.DECIMAL),
+            f".//{gmd}:{Tags.Extent.E_BOUND_LON}/{gco}:{Tags.Extent.DECIMAL}",
             Generator.generate_namespace_map())
-        east.text = str(BBOX.max_x)
+        east.text = str(bbox.max_x)
         # west
         west = existing_bounding_box_element.find(
-            ".//{tag}:{name}/{tag2}:{decimal}".format(tag=NameSpaces.GMD.value[0],
-                                                      name=Tags.Extent.W_BOUND_LON,
-                                                      tag2=NameSpaces.GCO.value[0],
-                                                      decimal=Tags.Extent.DECIMAL),
+            f".//{gmd}:{Tags.Extent.W_BOUND_LON}/{gco}:{Tags.Extent.DECIMAL}",
             Generator.generate_namespace_map())
-        west.text = str(BBOX.min_x)
+        west.text = str(bbox.min_x)
 
     @staticmethod
-    def __add_bounding_box_data(base, BBOX):
+    def __add_bounding_box_data(base, bbox):
         """
         Adds the extent information to a particular MD_DataIdentification element (which is information about a
         specific layer or raster tiles table)
 
         :param base: MD_DataIdentification Element that the Extent information needs to be appended to
-        :type base: Element
-        :param BBOX: The tile bounds
-        :type BBOX: BoundingBox
+        :param bbox: The tile bounds
         """
         namespace = NameSpaces.GMD.value[1]
         EX_GEO_BOUNDING_BOX = Generator.find_bounding_box_tag(data_identification_element=base)
@@ -561,82 +501,61 @@ class Generator:
                                             parent=EX_GEO_BOUNDING_BOX)
 
         namespace = NameSpaces.GCO.value[1]
-        Generator.__build_tag(namespace=namespace, tag=Tags.Extent.DECIMAL, parent=W_BOUND_LON, text=str(BBOX.min_x))
-        Generator.__build_tag(namespace=namespace, tag=Tags.Extent.DECIMAL, parent=E_BOUND_LON, text=str(BBOX.max_x))
-        Generator.__build_tag(namespace=namespace, tag=Tags.Extent.DECIMAL, parent=N_BOUND_LAT, text=str(BBOX.max_y))
-        Generator.__build_tag(namespace=namespace, tag=Tags.Extent.DECIMAL, parent=S_BOUND_LAT, text=str(BBOX.min_y))
+        Generator.__build_tag(namespace=namespace, tag=Tags.Extent.DECIMAL, parent=W_BOUND_LON, text=str(bbox.min_x))
+        Generator.__build_tag(namespace=namespace, tag=Tags.Extent.DECIMAL, parent=E_BOUND_LON, text=str(bbox.max_x))
+        Generator.__build_tag(namespace=namespace, tag=Tags.Extent.DECIMAL, parent=N_BOUND_LAT, text=str(bbox.max_y))
+        Generator.__build_tag(namespace=namespace, tag=Tags.Extent.DECIMAL, parent=S_BOUND_LAT, text=str(bbox.min_y))
 
     def get_nmis_metadata_information(self):
         """
         Creates a NMISMetadataInformation object out of the NMIS data created
-
-        :rtype NMISMetadataInformation
         """
         nsmap = Generator.generate_namespace_map()
         service_information = None
         try:
             access_constraints = \
-                self.tree.find("{gmd}:metadataConstraints/"
-                               "{nas}:MD_SecurityConstraints/"
-                               "{gmd}:classification/"
-                               "{gmd}:MD_ClassificationCode"
-                               .format(gmd=NameSpaces.GMD.value[0],
-                                       nas=NameSpaces.NAS.value[0]),
-                               nsmap).attrib['codeListValue']
-            contact_element = self.tree.find("{gmd}:contact/{gmd}:CI_ResponsibleParty"
-                                             .format(gmd=NameSpaces.GMD.value[0]), nsmap)
-            contact_name = contact_element.find("{gmd}:organisationName/"
-                                                "{gco}:{char_string}"
-                                                .format(gmd=NameSpaces.GMD.value[0],
-                                                        gco=NameSpaces.GCO.value[0],
-                                                        char_string=Tags.CHAR_STRING),
-                                                nsmap).text
+                self.tree.find(f"{gmd}:metadataConstraints/"
+                               f"{nas}:MD_SecurityConstraints/"
+                               f"{gmd}:classification/"
+                               f"{gmd}:MD_ClassificationCode", nsmap).attrib['codeListValue']
+            contact_element = self.tree.find(f"{gmd}:contact/{gmd}:CI_ResponsibleParty", nsmap)
+            contact_name = contact_element.find(f"{gmd}:organisationName/"
+                                                f"{gco}:{Tags.CHAR_STRING}", nsmap).text
             service_information = NMISServiceInformation(contact=contact_name,
                                                          access_constraints=access_constraints)
         except Exception:
             pass
 
-        layers = self.tree.findall("{gmd}:identificationInfo".format(gmd=NameSpaces.GMD.value[0]), nsmap)
+        layers = self.tree.findall(f"{gmd}:identificationInfo", nsmap)
         nmis_layer_list = []
         try:
             for _layer in layers:
-                md_identification_element = _layer.find("{nas}:MD_DataIdentification"
-                                                        .format(nas=NameSpaces.NAS.value[0]),
-                                                        nsmap)
+                md_identification_element = _layer.find(f"{nas}:MD_DataIdentification", nsmap)
                 ci_citation = Generator.find_ci_citation(md_identification_element)
-                layer_title = ci_citation.find("{gmd}:title/{gco}:{char_str}"
-                                               .format(gmd=NameSpaces.GMD.value[0],
-                                                       gco=NameSpaces.GCO.value[0],
-                                                       char_str=Tags.CHAR_STRING),
-                                               nsmap).text
+                layer_title = ci_citation.find(f"{gmd}:title/{gco}:{Tags.CHAR_STRING}", nsmap).text
 
                 abstract_element = Generator.find_abstract_element(md_identification_element)
 
-                layer_abstract = abstract_element.find(".//{gco}:{char_string}"
-                                                       .format(gco=NameSpaces.GCO.value[0],
-                                                               char_string=Tags.CHAR_STRING),
-                                                       nsmap).text
+                layer_abstract = abstract_element.find(f".//{gco}:{Tags.CHAR_STRING}", nsmap).text
                 nmis_layer_list.append(NMISLayerInformation(title=layer_title,
                                                             abstract=layer_abstract))
         except Exception:
             pass
 
-        return NMISMetadataInformation(layers=nmis_layer_list,
-                                       service=service_information)
+        return NMISMetadataInformation(layers=nmis_layer_list, service=service_information)
 
     @staticmethod
     def find_all_spatial_reference_system_ri_identifier_tags(root):
         """
         returns a list of Elements with the tag RS_Identifier
+        
         :param root: root xml element of the tree
-        :type root: Element
         :return: a list of Elements with the tag RS_Identifier
-        :rtype: list of Element
         """
-        return root.findall(".//{gmd}:referenceSystemInfo"
-                            "/{gmd}:MD_ReferenceSystem"
-                            "/{gmd}:referenceSystemIdentifier"
-                            "/{gmd}:RS_Identifier".format(gmd=NameSpaces.GMD.value[0]),
+        return root.findall(f".//{gmd}:referenceSystemInfo"
+                            f"/{gmd}:MD_ReferenceSystem"
+                            f"/{gmd}:referenceSystemIdentifier"
+                            f"/{gmd}:RS_Identifier",
                             Generator.generate_namespace_map())
 
     @staticmethod
@@ -647,20 +566,16 @@ class Generator:
             <gco:characterString>text</gco:characterString>
         </gmd:code>
         returns the characterString Element
+        
          :param ri_identifier_element: the RI_Identifier element containing the code subElement
-        :type ri_identifier_element: Element
         :return:
         in
         <gmd:code>
             <gco:characterString>text</gco:characterString>
         </gmd:code>
         returns the characterString Element
-        :rtype: Element, None
         """
-        return ri_identifier_element.find("{gmd}:code/{gco}:{char_string}".format(gmd=NameSpaces.GMD.value[0],
-                                                                                  gco=NameSpaces.GCO.value[0],
-                                                                                  char_string=Tags.CHAR_STRING),
-                                          Generator.generate_namespace_map())
+        return ri_identifier_element.find(f"{gmd}:code/{gco}:{Tags.CHAR_STRING}", Generator.generate_namespace_map())
 
     @staticmethod
     def find_code_space_from_ri_identifier_tag(ri_identifier_element):
@@ -672,61 +587,46 @@ class Generator:
 
         this returns the characterString Element
         :param ri_identifier_element: the RI_Identifier element containing the codeSpace subElement
-        :type ri_identifier_element: Element
         :return: in
         <gmd:codeSpace>
             <gco:characterString>text</gco:characterString>
         </gmd:codeSpace>
 
         this returns the characterString Element
-        :rtype: Element, None
         """
-        return ri_identifier_element.find("{gmd}:codeSpace/{gco}:{char_string}".format(gmd=NameSpaces.GMD.value[0],
-                                                                                       gco=NameSpaces.GCO.value[0],
-                                                                                       char_string=Tags.CHAR_STRING),
+        return ri_identifier_element.find(f"{gmd}:codeSpace/{gco}:{Tags.CHAR_STRING}",
                                           Generator.generate_namespace_map())
 
     @staticmethod
     def find_bounding_box_tag(data_identification_element):
         """
-        Returns the Geographic Bounding Box element or None if it was not found in the base
+        Returns the Geographic Bounding Box element
+        
         :param data_identification_element:  MD_DataIdentification Element that the EX_GeographBoundingBox will be part of
         (or a sub element of)
-        :type data_identification_element: Element
         :return: Returns the Geographic Bounding Box element or None if it was not found in the base
-        :rtype: Element, None
         """
-        return data_identification_element.find("{gmd}:extent/"
-                                                "{gmd}:EX_Extent/"
-                                                "{gmd}:geographicElement/"
-                                                "{gmd}:EX_GeographicBoundingBox".format(gmd=NameSpaces.GMD.value[0]),
+        return data_identification_element.find(f"{gmd}:extent/"
+                                                f"{gmd}:EX_Extent/"
+                                                f"{gmd}:geographicElement/"
+                                                f"{gmd}:EX_GeographicBoundingBox",
                                                 Generator.generate_namespace_map())
 
     @staticmethod
     def find_table_identity(base, table_name):
         """
-        Returns the MD_DataIdentification Element that matches the table_name given.  Returns None if a match
-        was not found
+        Returns the MD_DataIdentification Element that matches the table_name given.
+        
         :param base: The root of the xml
-        :type base: Element
         :param table_name:
-        :type table_name: str
         :return: MD_DataIdentification Element that the matches the table_name given, or None if nothing is found
-        :rtype: Element, None
         """
-        table_identities = base.findall(".//{nas}:MD_DataIdentification".format(nas=NameSpaces.NAS.value[0]),
-                                        Generator.generate_namespace_map())
+        ns_map = Generator.generate_namespace_map()
+        table_identities = base.findall(f".//{NameSpaces.NAS.value[0]}:MD_DataIdentification", ns_map)
         for table_identity in table_identities:
-            ci_citations = table_identity.findall(
-                ".//{gmd}:citation/{gmd}:CI_Citation".format(gmd=NameSpaces.GMD.value[0]),
-                Generator.generate_namespace_map())
+            ci_citations = table_identity.findall(f".//{gmd}:citation/{gmd}:CI_Citation", ns_map)
             for ci_citation in ci_citations:
-                existing_table_name = ci_citation.find(
-                    "{gmd}:title/{gco}:{char_str}".format(gmd=NameSpaces.GMD.value[0],
-                                                          gco=NameSpaces.GCO.value[0],
-                                                          char_str=Tags.CHAR_STRING),
-                    Generator.generate_namespace_map()) \
-                    .text
+                existing_table_name = ci_citation.find(f"{gmd}:title/{gco}:{Tags.CHAR_STRING}", ns_map).text
                 if table_name == existing_table_name:
                     return table_identity
 
@@ -737,9 +637,7 @@ class Generator:
         """
         Gets the Ci_Citation sub element given the MD_DataIdentification Element
         :param data_identification_element: MD_DataIdentification Element
-        :type data_identification_element: Element
         :return:  Gets the Ci_Citation sub element given the MD_DataIdentification Element
-        :rtype: Element, None
         """
         return data_identification_element.find("{gmd}:citation/{gmd}:CI_Citation".format(gmd=NameSpaces.GMD.value[0]),
                                                 Generator.generate_namespace_map())
@@ -749,9 +647,7 @@ class Generator:
         """
         Gets the abstract sub element given the MD_DataIdentification Element
         :param data_identification_element: MD_DataIdentification Element
-        :type data_identification_element: Element
         :return:   Gets the abstract sub element given the MD_DataIdentification Element
-        :rtype: Element, None
         """
         return data_identification_element.find("{gmd}:abstract".format(gmd=NameSpaces.GMD.value[0]),
                                                 Generator.generate_namespace_map())
@@ -761,19 +657,14 @@ class Generator:
         """
         Gets the organizationName sub element given the MD_DataIdentification Element
         :param data_identification_element: MD_DataIdentification Element
-        :type data_identification_element: Element
         :return:  Gets the organizationName sub element given the MD_DataIdentification Element
-        :rtype: Element, None
         """
         return data_identification_element.find("{gmd}:pointOfContact/{gmd}:CI_ResponsibleParty/{gmd}:organisationName"
                                                 .format(gmd=NameSpaces.GMD.value[0]),
                                                 Generator.generate_namespace_map())
 
     @staticmethod
-    def __build_tag(namespace,
-                    tag,
-                    parent=None,
-                    text=None):
+    def __build_tag(namespace, tag, parent=None, text=None):
         """
         Returns the Element that was created with the properties given appended to the parent element given (or just
         the new element if no parent element was given)
@@ -785,19 +676,15 @@ class Generator:
         :return: the Element that was created with the properties given appended to the parent element given (or just
         the new element if no parent element was given)
         """
-        q_name = QName(namespace, tag)
-        if parent is None:
-            e = Element(q_name)
-            if text:
-                e.text = text
-            return e
-        else:
-            e = SubElement(parent,
-                           q_name,
-                           {})
-            if text:
-                e.text = text
-            return e
+        args = dict(tag=QName(namespace, tag))
+        element_type = Element
+        if parent is not None:
+            element_type = SubElement
+            args['parent'] = parent
+        element = element_type(**args)
+        if text:
+            element.text = text
+        return element
 
     @staticmethod
     def generate_namespace_map():
@@ -805,6 +692,6 @@ class Generator:
 
 
 dir_name = os.path.dirname(__file__)
-REFERENCE_SYS_TREE = join(dir_name, 'resources', 'spatial_reference_system_tree.xml')
-LAYER_IDENTITY_TREE = join(dir_name, 'resources', 'layer_identity_tree.xml')
-MD_TREE = join(dir_name, 'resources', 'base_nsg_metadata.xml')
+REFERENCE_SYS_TREE = join(dir_name, 'metadata', 'srs_tree.xml')
+LAYER_IDENTITY_TREE = join(dir_name, 'metadata', 'layer_identity_tree.xml')
+MD_TREE = join(dir_name, 'metadata', 'base_nsg_tree.xml')

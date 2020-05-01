@@ -1,9 +1,11 @@
 from sqlite3 import Cursor, connect, Row
 
-from eventkit_cloud.utils.gpkg.tables import TableNames, MetadataEntry
+from eventkit_cloud.utils.gpkg.metadata import Metadata
+from eventkit_cloud.utils.gpkg.tables import TableNames, MetadataEntry, row_to_dict, MetadataReferenceEntry
 
 
 class _TableQuery(object):
+
     def __init__(self, cursor, table_name):
         self._cursor = cursor
         self._table_name = table_name
@@ -20,10 +22,18 @@ class _TableQuery(object):
 
     @staticmethod
     def _build_where(where_conditions):
+        """
+        Builds a tuple containing the string that constitutes the query's WHERE clause and a tuple containing
+        the values to be substituted into the clause string.
+
+        :param where_conditions: dictionary mapping column names to the values to be searched against.
+        :return:
+        """
         if where_conditions is None:
-            return ""
+            return "", tuple()
         clauses = [f"""[{_key}] {'IS NULL' if _val is None else '= ?'}""" for _key, _val in where_conditions.items()]
-        return f"""WHERE {' AND '.join(clauses)}"""
+        values = tuple([_value for _value in where_conditions.values() if _value is not None])
+        return f"""WHERE {' AND '.join(clauses)}""", values
 
     def where(self, **column_conditions):
         self._where_columns = column_conditions if len(column_conditions) else None
@@ -55,11 +65,12 @@ class From(_TableQuery):
         else:
             select_columns = ', '.join(select_columns)
 
+        where_clause, where_values = self._build_where(self._where_columns)
         self._cursor.execute(f"""
             SELECT {select_columns} 
             FROM {self._table_name} 
-            {self._build_where(self._where_columns)}
-            """, tuple([_value for _value in self._where_columns.values() if _value is not None]))
+            {where_clause}
+            """, where_values)
         return self
 
 
@@ -91,12 +102,12 @@ class Update(_TableQuery):
         if any(column_name is None or len(column_name) == 0 for column_name in all_columns):
             raise ValueError("The column names cannot be None or empty")
 
+        where_clause, where_values = self._build_where(self._where_columns)
         self._cursor.execute(f"""
             UPDATE {self._table_name} 
             SET {self._build_set(self._set_columns)} 
-            {self._build_where(self._where_columns)}
-            """, tuple([_value for _value in self._set_columns.values() if _value is not None]
-                       + [_value for _value in self._where_columns.values() if _value is not None]))
+            {where_clause}
+            """, tuple([_value for _value in self._set_columns.values() if _value is not None]) + where_values)
         return self
 
 
@@ -119,13 +130,13 @@ class Insert(Update):
         return self
 
 
-class Table(Update):
+class Table(_TableQuery):
 
     def insert(self):
         return Insert(self.cursor, self._table_name)
 
     def update(self):
-        return Insert(self.cursor, self._table_name)
+        return Update(self.cursor, self._table_name)
 
     def select(self, *select_columns):
         return From(self.cursor, self._table_name).select(*select_columns)
@@ -150,9 +161,7 @@ class Table(Update):
         return bool(cursor.fetchone())
 
     @staticmethod
-    def validate_table_schema(cursor,
-                              table_name,
-                              expected_columns):
+    def validate_table(cursor, table_name, expected_columns):
         """
         Validate the table to ensure the table with a name table_name exists with the expected columns given. Raises an
         error if columns aren't what is expected or table doesn't exist.
@@ -169,6 +178,7 @@ class Table(Update):
                                     table_name=table_name,
                                     column_names=expected_columns):
             raise ValueError(f"Invalid Schema. The table does not have the expected columns: {expected_columns}.")
+
     @staticmethod
     def columns_exists(cursor,
                        table_name,
@@ -198,122 +208,42 @@ class Table(Update):
         :param set_columns: dictionary mapping a set of column names to their new/inserted values.
         :param where_columns: dictionary mapping a set of column names to their current values, search against these.
         """
-        self.select().where(**where_columns)
+        self.select().where(**where_columns).execute()
         existing_row = self.cursor.fetchall()
 
         if existing_row is None or len(existing_row) > 1 or len(existing_row) == 0:
+            print(existing_row)
+            print(where_columns)
             self.insert().set(**set_columns).execute()
         else:
             self.update().set(**set_columns).where(**where_columns).execute()
         return self
 
 
-class GpkgUtil(object):
+def get_database_connection(file_path,
+                            timeout=0.0):
+    """
+    Gets a Connection to an Sqlite Database
 
-    @staticmethod
-    def get_database_connection(file_path,
-                                timeout=0.0):
-        """
-        Gets a Connection to an Sqlite Database
+    :param timeout: how long in seconds the driver will attempt to execute a statement before aborting.
+    :param file_path: path to the sqlite database
 
-        :param timeout: how long in seconds the driver will attempt to execute a statement before aborting.
-        :param file_path: path to the sqlite database
+    :return: a connection to the database
+    """
+    db_connection = connect(database=file_path,
+                            timeout=timeout)
+    db_connection.row_factory = Row
+    return db_connection
 
-        :return: a connection to the database
-        """
-        db_connection = connect(database=file_path,
-                                timeout=timeout)
-        db_connection.row_factory = Row
-        return db_connection
 
-    @staticmethod
-    def insert_or_update_metadata_row(cursor,
-                                      metadata):
-        """
-        Inserts or updates the metadata entry into gpkg_metadata table.
 
-        :param cursor: the cursor to the GeoPackage database's connection
-        :type cursor: Cursor
+def main():
+    import os
+    with get_database_connection(os.path.join(os.getcwd(), 't-4326-osm-20200430.gpkg')) as conn:
+        cursor = conn.cursor()
+        Metadata.create_metadata_table(cursor)
 
-        :param metadata:  The Metadata entry to insert into the gpkg_metadata table
-        :type metadata: MetadataEntry
-        """
 
-        if not Table.exists(cursor=cursor, table_name=TableNames.GPKG_METADATA):
-            GpkgUtil.create_metadata_table(cursor=cursor)
 
-        columns = metadata.to_dict()
-        Table(
-            cursor=cursor, table_name=TableNames.GPKG_METADATA
-        ).insert_or_update_row(set_columns=columns, where_columns=columns)
-
-    @staticmethod
-    def get_all_metadata(cursor):
-        """
-        Returns all the rows in the gpkg_metadata table
-
-        :param cursor: the cursor to the GeoPackage database's connection
-        :return all the rows in the gpkg_metadata table
-        """
-        # GeoPackageMetadataTableAdapter.validate_metadata_table(cursor=cursor)
-
-        # select all the rows
-        Table(cursor, TableNames.GPKG_METADATA).select().execute()
-        rows = cursor.fetchall()
-
-        # get the results
-        return [MetadataEntry.from_row(_row) for _row in rows]
-
-    @staticmethod
-    def create_metadata_table(cursor):
-        """
-        Creates the gpkg_metadata table and registers the table as an extension to the GeoPackage
-        see http://www.geopackage.org/spec121/#metadata_table_table_definition
-
-        :param cursor: the cursor to the GeoPackage database's connection
-        """
-        # create the metadata table
-        cursor.execute("""
-                          CREATE TABLE IF NOT EXISTS {table_name}
-                          (id              INTEGER CONSTRAINT m_pk PRIMARY KEY ASC NOT NULL UNIQUE,             -- Primary key for the meta data entry
-                           md_scope        TEXT                                    NOT NULL DEFAULT 'dataset',  -- Case sensitive name of the data scope
-                           md_standard_uri TEXT                                    NOT NULL,                    -- URI reference to the metadata authority
-                           mime_type       TEXT                                    NOT NULL DEFAULT 'text/xml', -- MIME encoding of metadata
-                           metadata        TEXT                                    NOT NULL DEFAULT ''          -- metadata document
-                          );
-                        """.format(table_name=TableNames.GPKG_METADATA))
-        #
-        # # register extension in the extensions table
-        # if not GpkgUtil.has_extension(cursor=cursor,
-        #                               extension=GeoPackageMetadataTableAdapter()):
-        #     GeoPackageExtensionsTableAdapter.insert_or_update_extensions_row(cursor=cursor,
-        #                                                                      extension=GeoPackageMetadataTableAdapter())
-
-    @staticmethod
-    def has_extension(cursor, extension):
-        """
-        Returns True if the GeoPackage has the extension, False otherwise
-
-        :param cursor: the cursor to the GeoPackage database's connection
-        :type cursor: Cursor
-
-        :param extension: an Extension entry in the gpkg_extensions table to check if it exists or not
-        :type extension: ExtensionEntry
-
-        :return  Returns True if the GeoPackage has the extension, False otherwise
-        :rtype: bool
-        """
-        if not Table.exists(cursor=cursor,
-                            table_name=TableNames.GPKG_EXTENSIONS):
-            return False
-
-        # select all the rows
-        Table(cursor=cursor,
-              table_name=TableNames.GPKG_EXTENSIONS).select(
-            'table_name', 'column_name', 'extension_name', 'definition', 'scope'
-        ).where(table_name=extension.table_name,
-                column_name=extension.column_name,
-                extension_name=extension.extension_name).execute()
-        rows = cursor.fetchall()
-
-        return rows is not None and len(rows) > 0
+if __name__ == '__main__':
+    main()
