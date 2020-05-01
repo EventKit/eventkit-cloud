@@ -1504,7 +1504,7 @@ def create_datapack_preview(
 
         filepath = get_provider_staging_preview(export_run.uid, provider.slug)
         make_dirs(stage_dir)
-        preview = get_wmts_snapshot_image(provider.preview_url, provider_task.max_zoom, bbox=job.extents)
+        preview = get_wmts_snapshot_image(provider.preview_url, bbox=job.extents)
         fit_to_area(preview)
         preview.save(filepath)
 
