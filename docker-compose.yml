@@ -144,8 +144,8 @@ services:
     command: /home/eventkit/miniconda3/envs/eventkit-cloud/lib/python3.6/site-packages/scripts/run-celery.sh
   memcached:
     image: eventkit/eventkit-base:1.6.0
-    ports:
-      - "11211:11211"
+    expose:
+      - "11211"
     entrypoint: >
       /bin/bash -c "source activate eventkit-cloud && memcached -m 2048"
   celery-beat:
