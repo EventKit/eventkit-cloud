@@ -31,7 +31,7 @@ logger = logging.getLogger(__name__)
 WGS84_FULL_WORLD = [-180, -90, 180, 90]
 
 
-def get_wmts_snapshot_image(base_url, zoom_level=None, bbox=None):
+def get_wmts_snapshot_image(base_url: str, zoom_level: int = None, bbox: list = None):
     """
     Returns an image comprised of all tiles touched by bbox at a given zoom_level for the provided provider URL.
 
@@ -190,7 +190,7 @@ def make_snapshot_downloadable(staging_filepath, relative_path=None, download_fi
     return thumbnail_snapshot
 
 
-def get_resolution_for_extent(extent, size=None):
+def get_resolution_for_extent(extent: list, size: tuple = None):
     """
     :param extent: A bounding box as a list [w,s,e,n].
     :param optional size: The pixel size of the image to get the resolution for as a tuple.
@@ -205,7 +205,7 @@ def get_resolution_for_extent(extent, size=None):
     return max([x_resolution, y_resolution])
 
 
-def get_width(extent):
+def get_width(extent: list):
     """
     :param extent: A bounding box as a list [w,s,e,n].
     :return: The width of the given extent.
@@ -213,7 +213,7 @@ def get_width(extent):
     return extent[2] - extent[0]
 
 
-def get_height(extent):
+def get_height(extent: list):
     """
     :param extent: A bounding box as a list [w,s,e,n].
     :return: The height of the given extent.
