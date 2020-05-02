@@ -273,7 +273,7 @@ export class ExportInfo extends React.Component<Props, State> {
                 projections: {},
             } as CompatibilityInfo,
             providerDrawerIsOpen: false,
-            stepIndex: 0
+            stepIndex: 0,
         };
 
         this.onNameChange = this.onNameChange.bind(this);
@@ -1021,7 +1021,7 @@ function AddDataSource() {
 // At a later point this could be removed and done in place.
 function DebouncedTextField(props: any) {
     const { setValue, ...passThroughProps } = props;
-    const [value, debounceValue] = useDebouncedState('', 500);
+    const [value, debounceValue] = useDebouncedState(props.defaultValue, 500);
     useEffect(() => {
         props.setValue(value);
     }, [value]);

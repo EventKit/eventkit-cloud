@@ -170,7 +170,7 @@ describe('DataPackOptions component', () => {
         const exportInfo = {
             'test1': {
                 minZoom: 0,
-                maxZoom: 10,
+                maxZoom: 3,
                 formats: ['gpkg'],
             }
         };
