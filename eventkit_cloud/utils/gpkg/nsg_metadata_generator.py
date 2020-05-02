@@ -34,16 +34,12 @@ from os.path import join
 from xml.dom import minidom
 from xml.etree.ElementTree import QName, Element, SubElement, register_namespace, tostring
 
-from lxml import etree
+from xml.etree import ElementTree
 from enum import Enum
 
-# from rgi.geopackage.extensions.metadata.geopackage_metadata_table_adapter import GeoPackageMetadataTableAdapter
-# from rgi.geopackage.extensions.metadata.metadata_reference.geopackage_metadata_reference_table_adapter import \
-#     GeoPackageMetadataReferenceTableAdapter
-# from rgi.geopackage.nsg.nsg_metadata_entry import NsgMetadataEntry, NsgMetadataReferenceEntry
-# from rgi.geopackage.utility.sql_utility import get_database_connection
-
-from eventkit_cloud.utils.gpkg.sqlite_utils import GpkgUtil
+from eventkit_cloud.utils.gpkg.gpkg_util import Geopackage
+from eventkit_cloud.utils.gpkg.metadata import Metadata
+from eventkit_cloud.utils.gpkg.sqlite_utils import get_database_connection
 
 
 class NMISLayerInformation(object):
@@ -171,21 +167,24 @@ class Generator:
 
         # TODO: Check that the existing Metadata has appropriate Namespaces and is NSG compliant
         # currently always gets the first item in the metadata list
-        existing_metadata = next(iter(self.__load_metadata()), None)
+        existing_metadata = self.__load_metadata()
+        self.existing_metadata = dict()
+        for _entry in self.existing_metadata:
+            self.existing_metadata[_entry['id']] = _entry
 
         # register the namespaces we will be using as we manipulate the data
         [register_namespace(namespace.value[0], namespace.value[1]) for namespace in NameSpaces]
         # check to see if there is existing data or not
-        if existing_metadata:
+        if len(self.existing_metadata):
             try:
-                self.tree = etree.fromstring(existing_metadata.metadata.encode('ascii', 'ignore'))
+                self.tree = ElementTree.fromstring(self.existing_metadata[1]['metadata'].encode('ascii', 'ignore'))
             except Exception:  # metadata is invalid or not what we want
-                self.tree = etree.parse(source=MD_TREE).getroot()  # Load base MD XML
+                self.tree = ElementTree.parse(source=MD_TREE).getroot()  # Load base MD XML
                 # set the creation date
                 self.tree.set(QName(NameSpaces.ISM.value[1], "createDate"),
                               datetime.date.today().isoformat())
         else:
-            self.tree = etree.parse(source=MD_TREE).getroot()  # Load base MD XML
+            self.tree = ElementTree.parse(source=MD_TREE).getroot()  # Load base MD XML
             # set the creation date
             self.tree.set(QName(NameSpaces.ISM.value[1], "createDate"),
                           datetime.date.today().isoformat())
@@ -207,12 +206,11 @@ class Generator:
         This will grab all the entries in the gpkg_metadata Table
         :return: a list of Metadata in the GeoPackage
         """
-        with GpkgUtil.get_database_connection(self.geopackage_path) as db:
+        with get_database_connection(self.geopackage_path) as db:
             cursor = db.cursor()
-            GpkgUtil.create_metadata_table(cursor=cursor)
-            GpkgUtil.create_metadata_reference_table(cursor=cursor)
+            Metadata.ensure_metadata_tables(cursor)
             db.commit()
-            return GpkgUtil.get_all_metadata(cursor=cursor)
+            return Metadata.get_all_metadata(cursor=cursor)
 
     def write_metadata(self):
         """
@@ -221,14 +219,11 @@ class Generator:
         add layer identity information before calling this method, since this writes to the
         GeoPackage
         """
-        with GpkgUtil.get_database_connection(self.geopackage_path) as db:
+        with get_database_connection(self.geopackage_path) as db:
             # Add entry to specify that this GeoPackage supports the Metadata extension
             try:
                 cursor = db.cursor()
-
-                GpkgUtil.create_metadata_table(cursor=cursor)
-                GpkgUtil.create_metadata_reference_table(cursor=cursor)
-
+                Metadata.ensure_metadata_tables(cursor)
                 db.commit()
             except sqlite3.OperationalError:
                 if self.log:
@@ -250,15 +245,11 @@ class Generator:
                 pretty_xml = reparsed.toprettyxml()
 
                 # insert xml in gpkg
-                GpkgUtil.insert_or_update_metadata_row(cursor=cursor,
-                                                       metadata=NsgMetadataEntry(
-                                                           metadata=pretty_xml))
-
-                GeoPackageMetadataReferenceTableAdapter.insert_or_update_metadata_reference_row(cursor=cursor,
-                                                                                                metadata_reference=NsgMetadataReferenceEntry())
-
+                nsg_metadata_entry = Metadata.nsg_entry_template(id=1)  # NSG metadata must have id of 1
+                nsg_metadata_entry['metadata'] = pretty_xml
+                Metadata.insert_or_update_metadata_row(cursor=cursor, metadata=nsg_metadata_entry)
                 db.commit()
-            except sqlite3.IntegrityError:
+            except sqlite3.IntegrityError as e:
                 if self.log:
                     self.log.error("Failed to add NSG profile metadata to the metadata tables")
 
@@ -320,7 +311,7 @@ class Generator:
         if sys_present:
             return
         # add the spatial reference system to the xml
-        base = etree.parse(source=REFERENCE_SYS_TREE)
+        base = ElementTree.parse(source=REFERENCE_SYS_TREE)
         # insert it as the 6th element in the tree (the standard just has it in this order)
         self.tree.insert(6, base.getroot())
 
@@ -373,12 +364,12 @@ class Generator:
         """
         # get the MD_DataIdentification element- where all the table information is stored
         # the table information needed are the following: CI_CITATION, ABSTRACT, ORG_NAME, and the BOUNDING BOX data
-        base = etree.parse(source=LAYER_IDENTITY_TREE).getroot()
+        base = ElementTree.parse(source=LAYER_IDENTITY_TREE).getroot()
         md_identification_element = base.find(f"{nas}:MD_DataIdentification",
                                               Generator.generate_namespace_map())
 
         # insert element as the 2nd to last item in the tree because spec
-        sub_elements_count = len(self.tree.getchildren())
+        sub_elements_count = len(list(self.tree))
         self.tree.insert(sub_elements_count - 2, base)
 
         namespace = NameSpaces.GCO.value[1]
@@ -639,7 +630,7 @@ class Generator:
         :param data_identification_element: MD_DataIdentification Element
         :return:  Gets the Ci_Citation sub element given the MD_DataIdentification Element
         """
-        return data_identification_element.find("{gmd}:citation/{gmd}:CI_Citation".format(gmd=NameSpaces.GMD.value[0]),
+        return data_identification_element.find(f"{gmd}:citation/{gmd}:CI_Citation",
                                                 Generator.generate_namespace_map())
 
     @staticmethod
@@ -649,7 +640,7 @@ class Generator:
         :param data_identification_element: MD_DataIdentification Element
         :return:   Gets the abstract sub element given the MD_DataIdentification Element
         """
-        return data_identification_element.find("{gmd}:abstract".format(gmd=NameSpaces.GMD.value[0]),
+        return data_identification_element.find(f"{gmd}:abstract",
                                                 Generator.generate_namespace_map())
 
     @staticmethod
@@ -659,8 +650,8 @@ class Generator:
         :param data_identification_element: MD_DataIdentification Element
         :return:  Gets the organizationName sub element given the MD_DataIdentification Element
         """
-        return data_identification_element.find("{gmd}:pointOfContact/{gmd}:CI_ResponsibleParty/{gmd}:organisationName"
-                                                .format(gmd=NameSpaces.GMD.value[0]),
+        return data_identification_element.find(f"{gmd}:pointOfContact/{gmd}:"
+                                                f"CI_ResponsibleParty/{gmd}:organisationName",
                                                 Generator.generate_namespace_map())
 
     @staticmethod
@@ -671,19 +662,19 @@ class Generator:
 
         :param namespace: the namespace the new tag belongs to i.e. gmd, nas
         :param tag: the name of the tag  i.e. abstract, CI_Citation
-        :param parent: the parent Element that this new tag should be appended to
-        :param text: the text that should be in the new tag i.e. <namespace:tag>my cool text</namespace:tag>
+        :param parent: parent element
+        :param text: inner text of the element
         :return: the Element that was created with the properties given appended to the parent element given (or just
         the new element if no parent element was given)
         """
-        args = dict(tag=QName(namespace, tag))
+        args = [QName(namespace, tag)]
         element_type = Element
         if parent is not None:
             element_type = SubElement
-            args['parent'] = parent
-        element = element_type(**args)
+            args.insert(0, parent)
+        element = element_type(*args)
         if text:
-            element.text = text
+            element.text = str(text)
         return element
 
     @staticmethod
@@ -692,6 +683,34 @@ class Generator:
 
 
 dir_name = os.path.dirname(__file__)
-REFERENCE_SYS_TREE = join(dir_name, 'metadata', 'srs_tree.xml')
-LAYER_IDENTITY_TREE = join(dir_name, 'metadata', 'layer_identity_tree.xml')
-MD_TREE = join(dir_name, 'metadata', 'base_nsg_tree.xml')
+REFERENCE_SYS_TREE = join(dir_name, 'resources', 'srs_tree.xml')
+LAYER_IDENTITY_TREE = join(dir_name, 'resources', 'layer_identity_tree.xml')
+MD_TREE = join(dir_name, 'resources', 'base_nsg_tree.xml')
+
+
+def main():
+    import os
+    class Log:
+        def error(self, message):
+            import traceback
+            traceback.print_exc()
+            print(message)
+    path = os.path.join(os.getcwd(), 't-4326-osm-20200430.gpkg')
+    with get_database_connection(path) as conn:
+        cursor = conn.cursor()
+        layers = Geopackage.get_layers(cursor)
+
+    gen = Generator(path, log=Log())
+    for _layer in layers:
+        gen.add_layer_identity(layer_table_name=_layer['table_name'],
+                               abstract_msg='Added message',
+                               bbox=BoundingBox(min_x=_layer['min_x'], min_y=_layer['min_y'],
+                                                max_x=_layer['max_x'], max_y=_layer['max_y']),
+                               srs_id=_layer['srs_id'],
+                               srs_organization='EPSG',
+                               organization_name='EventKit')
+    gen.write_metadata()
+
+
+if __name__ == '__main__':
+    main()

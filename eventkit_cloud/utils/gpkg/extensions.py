@@ -1,5 +1,5 @@
 from eventkit_cloud.utils.gpkg.sqlite_utils import Table
-from eventkit_cloud.utils.gpkg.tables import TableNames
+from eventkit_cloud.utils.gpkg.tables import TableNames, ExtensionEntry
 
 
 class Extension(object):
@@ -44,9 +44,9 @@ class Extension(object):
         Table(cursor=cursor,
               table_name=TableNames.GPKG_EXTENSIONS).select(
             'table_name', 'column_name', 'extension_name', 'definition', 'scope'
-        ).where(table_name=extension.table_name,
-                column_name=extension.column_name,
-                extension_name=extension.extension_name).execute()
+        ).where(table_name=extension['table_name'],
+                column_name=extension['column_name'],
+                extension_name=extension['extension_name']).execute()
         rows = cursor.fetchall()
 
         return rows is not None and len(rows) > 0
@@ -62,15 +62,15 @@ class Extension(object):
         if not Table.exists(cursor, TableNames.GPKG_EXTENSIONS):
             Extension.create_extensions_table(cursor)
 
-        # Extension.validate_extensions_table(cursor=cursor)
+        Table.validate_table(cursor, ExtensionEntry.NAME, ExtensionEntry.COLUMNS)
 
-        if extension['table_name'] is not None and not Table.exists(cursor=cursor, table_name=extension.table_name):
+        if extension['table_name'] is not None and not Table.exists(cursor=cursor, table_name=extension['table_name']):
             raise ValueError("Extension's table_name is not None and it does not exist in the GeoPackage.  The "
                              "table_name must exist before adding it to the extensions table")
 
-        if extension.column_name is not None and not Table.columns_exists(cursor=cursor,
-                                                                          table_name=extension['table_name'],
-                                                                          column_names=[extension['column_name']]):
+        if extension['column_name'] is not None and not Table.columns_exists(cursor=cursor,
+                                                                             table_name=extension['table_name'],
+                                                                             column_names=[extension['column_name']]):
             raise ValueError(f"Extension's column_name is not None and table {extension['table_name']} "
                              f"does not have a column named {extension['column_name']}.")
         # sqlite does not check uniqueness if any values are null, therefore we have to check ourselves
@@ -80,3 +80,10 @@ class Extension(object):
                              definition=extension['definition'],
                              scope=extension['scope'])
         Table(cursor, TableNames.GPKG_EXTENSIONS).insert_or_update_row(set_columns, where_columns)
+
+    @staticmethod
+    def ensure_extension(cursor, extension):
+        if not Extension.has_extension(cursor=cursor,
+                                       extension=extension):
+            Extension.add_extension(cursor=cursor,
+                                    extension=extension)

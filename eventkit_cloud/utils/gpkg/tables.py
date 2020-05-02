@@ -6,6 +6,7 @@ class TableNames(object):
     GPKG_METADATA = "gpkg_metadata"
     GPKG_EXTENSIONS = "gpkg_extensions"
     GPKG_METADATA_REFERENCE = "gpkg_metadata_reference"
+    GPKG_CONTENTS = 'gpkg_contents'
 
 
 class TableRow(object):
@@ -13,7 +14,9 @@ class TableRow(object):
     COLUMNS = []
 
     def __init__(self, **kwargs):
-        self.columns = {_column: kwargs.get(_column, None) for _column in self.COLUMNS}
+        self.columns = {_key: None for _key in self.COLUMNS}
+        for _key, _value in kwargs.items():
+            self.columns[_key] = _value
 
     @classmethod
     def from_row(cls, sqlite_row):
@@ -25,6 +28,11 @@ class TableRow(object):
     def __getitem__(self, item):
         return self.columns[item]
 
+    def __setitem__(self, key, item):
+        if key not in self.columns.keys():
+            raise KeyError(f"'{key}' is not a valid column for table '{self.NAME}'.")
+        self.columns[key] = item
+
     def validate(self):
         return True
 
@@ -33,7 +41,7 @@ class ExtensionEntry(TableRow):
     WRITE_ONLY_SCOPE = 'write-only'
     READ_WRITE_SCOPE = 'read-write'
 
-    NAME = 'extensions'
+    NAME = TableNames.GPKG_EXTENSIONS
     COLUMNS = ['table_name',
                'column_name',
                'extension_name',
@@ -82,7 +90,7 @@ class MetadataEntry(TableRow):
 
 class MetadataReferenceEntry(TableRow):
     NAME = TableNames.GPKG_METADATA_REFERENCE
-    columns = ['reference_scope',
+    COLUMNS = ['reference_scope',
                'table_name',
                'column_name',
                'row_id_value',
@@ -90,3 +98,16 @@ class MetadataReferenceEntry(TableRow):
                'md_file_id',
                'md_parent_id']
 
+
+class LayerEntry(TableRow):
+    NAME = TableNames.GPKG_CONTENTS
+    COLUMNS = ['table_name',
+               'data_type',
+               'identifier',
+               'description',
+               'last_change',
+               'min_x',
+               'min_y',
+               'max_x',
+               'max_y',
+               'srs_id', ]

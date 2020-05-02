@@ -61,6 +61,7 @@ from eventkit_cloud.tasks.helpers import (
 from eventkit_cloud.tasks.task_process import update_progress
 from eventkit_cloud.utils.auth_requests import get_cred
 from eventkit_cloud.utils import overpass, pbf, s3, mapproxy, wcs, geopackage, gdalutils
+from eventkit_cloud.utils.gpkg.nsg_metadata_generator import Generator
 from eventkit_cloud.utils.ogr import OGR
 from eventkit_cloud.utils.rocket_chat import RocketChat
 from eventkit_cloud.utils.stats.eta_estimator import ETA
@@ -492,25 +493,27 @@ def add_metadata_task(self, result=None, job_uid=None, provider_slug=None, user_
     input_gpkg = parse_result(result, "source")
     date_time = timezone.now()
     bbox = job.extents
-    metadata_values = {
-        "fileIdentifier": "{0}-{1}-{2}".format(job.name, provider.slug, default_format_time(date_time)),
-        "abstract": job.description,
-        "title": job.name,
-        "westBoundLongitude": bbox[0],
-        "southBoundLatitude": bbox[1],
-        "eastBoundLongitude": bbox[2],
-        "northBoundLatitude": bbox[3],
-        "URL": provider.preview_url,
-        "applicationProfile": None,
-        "code": None,
-        "name": provider.name,
-        "description": provider.service_description,
-        "dateStamp": date_time.isoformat(),
-    }
-
-    metadata = render_to_string("data/geopackage_metadata.xml", context=metadata_values)
-
-    geopackage.add_file_metadata(input_gpkg, metadata)
+    # metadata_values = {
+    #     "fileIdentifier": "{0}-{1}-{2}".format(job.name, provider.slug, default_format_time(date_time)),
+    #     "abstract": job.description,
+    #     "title": job.name,
+    #     "westBoundLongitude": bbox[0],
+    #     "southBoundLatitude": bbox[1],
+    #     "eastBoundLongitude": bbox[2],
+    #     "northBoundLatitude": bbox[3],
+    #     "URL": provider.preview_url,
+    #     "applicationProfile": None,
+    #     "code": None,
+    #     "name": provider.name,
+    #     "description": provider.service_description,
+    #     "dateStamp": date_time.isoformat(),
+    # }
+    #
+    # metadata = render_to_string("data/geopackage_metadata.xml", context=metadata_values)
+    #
+    # geopackage.add_file_metadata(input_gpkg, metadata)
+    generator = Generator(input_gpkg, logger)
+    generator.
 
     result["result"] = input_gpkg
     result["source"] = input_gpkg

@@ -1,25 +1,48 @@
-from eventkit_cloud.utils.gpkg.extensions import Extension
-from eventkit_cloud.utils.gpkg.sqlite_utils import Table
+from eventkit_cloud.utils.gpkg.sqlite_utils import Table, SQL
 from eventkit_cloud.utils.gpkg.tables import TableNames, MetadataEntry, ExtensionEntry, MetadataReferenceEntry
 
 
 class Metadata(object):
-    EXTENSION = ExtensionEntry(
-        table_name=TableNames.GPKG_METADATA,
-        column_name=None,
-        scope=ExtensionEntry.READ_WRITE_SCOPE,
-        definition='http://www.geopackage.org/spec121/#extension_metadata',
-        extension_name='gpkg_metadata'
-    )
-    REFERENCE = MetadataReferenceEntry(
-        reference_scope='geopackage',
-        table_name=None,
-        column_name=None,
-        row_identifier=None,
-        file_identifier=1,
-        parent_identifier=None
 
-    )
+    @staticmethod
+    def extension_template():
+        return ExtensionEntry(
+            table_name=TableNames.GPKG_METADATA,
+            column_name=None,
+            scope=ExtensionEntry.READ_WRITE_SCOPE,
+            definition='http://www.geopackage.org/spec121/#extension_metadata',
+            extension_name='gpkg_metadata'
+        )
+
+    @staticmethod
+    def reference_template():
+        return MetadataReferenceEntry(
+            reference_scope='geopackage',
+            table_name=None,
+            column_name=None,
+            row_id_value=None,
+            md_file_id=1,
+            md_parent_id=None,
+            timestamp=SQL("""strftime('%Y-%m-%dT%H:%M:%fZ','now')"""),
+        )
+
+    @staticmethod
+    def reference_extension_template():
+        return ExtensionEntry(
+            table_name=TableNames.GPKG_METADATA_REFERENCE,
+            column_name=None,
+            scope=ExtensionEntry.READ_WRITE_SCOPE,
+            definition='http://www.geopackage.org/spec121/#extension_metadata',
+            extension_name='gpkg_metadata'
+        )
+
+    @staticmethod
+    def nsg_entry_template(**kwargs):
+        return MetadataEntry(md_scope='series',
+                             md_standard_uri='http://metadata.ces.mil/dse/ns/GSIP/nmis/2.2.0/doc',
+                             mime_type='text/xml',
+                             **kwargs
+                             )
 
     @staticmethod
     def insert_or_update_metadata_row(cursor,
@@ -42,6 +65,13 @@ class Metadata(object):
             cursor=cursor, table_name=TableNames.GPKG_METADATA
         ).insert_or_update_row(set_columns=columns, where_columns=columns)
 
+        set_columns = Metadata.reference_template().to_dict()
+        where_columns = Metadata.reference_template().to_dict()
+        del where_columns['timestamp']
+        Table(
+            cursor=cursor, table_name=TableNames.GPKG_METADATA_REFERENCE
+        ).insert_or_update_row(set_columns=set_columns, where_columns=where_columns)
+
     @staticmethod
     def get_all_metadata(cursor):
         """
@@ -50,10 +80,10 @@ class Metadata(object):
         :param cursor: the cursor to the GeoPackage database's connection
         :return all the rows in the gpkg_metadata table
         """
-        Table.validate_table(cursor, TableNames.GPKG_METADATA, MetadataEntry.COLUMNS)
+        Table.validate_table(cursor, MetadataEntry.NAME, MetadataEntry.COLUMNS)
 
         # select all the rows
-        Table(cursor, TableNames.GPKG_METADATA).select().execute()
+        Table(cursor, table_name=TableNames.GPKG_METADATA).select().execute()
         rows = cursor.fetchall()
 
         # get the results
@@ -67,22 +97,20 @@ class Metadata(object):
 
         :param cursor: the cursor to the GeoPackage database's connection
         """
+        from eventkit_cloud.utils.gpkg.extensions import Extension
         # create the metadata table
         cursor.execute("""
                           CREATE TABLE IF NOT EXISTS {table_name}
-                          (id              INTEGER CONSTRAINT m_pk PRIMARY KEY ASC NOT NULL UNIQUE,             -- Primary key for the meta data entry
-                           md_scope        TEXT                                    NOT NULL DEFAULT 'dataset',  -- Case sensitive name of the data scope
-                           md_standard_uri TEXT                                    NOT NULL,                    -- URI reference to the metadata authority
-                           mime_type       TEXT                                    NOT NULL DEFAULT 'text/xml', -- MIME encoding of metadata
-                           metadata        TEXT                                    NOT NULL DEFAULT ''          -- metadata document
+                          (id              INTEGER CONSTRAINT m_pk PRIMARY KEY ASC NOT NULL UNIQUE,             
+                           md_scope        TEXT                                    NOT NULL DEFAULT 'dataset',  
+                           md_standard_uri TEXT                                    NOT NULL,                    
+                           mime_type       TEXT                                    NOT NULL DEFAULT 'text/xml', 
+                           metadata        TEXT                                    NOT NULL DEFAULT ''          
                           );
                         """.format(table_name=TableNames.GPKG_METADATA))
 
-        # # register extension in the extensions table
-        if not Extension.has_extension(cursor=cursor,
-                                       extension=Metadata.EXTENSION):
-            Extension.add_extension(cursor=cursor,
-                                    extension=Metadata.EXTENSION)
+        # register extension in the extensions table
+        Extension.ensure_extension(cursor, Metadata.extension_template())
 
     @staticmethod
     def create_metadata_reference_table(cursor):
@@ -92,6 +120,7 @@ class Metadata(object):
 
         :param cursor: the cursor to the GeoPackage database's connection
         """
+        from eventkit_cloud.utils.gpkg.extensions import Extension
         # create the metadata table
         cursor.execute(f"""
                          CREATE TABLE IF NOT EXISTS {TableNames.GPKG_METADATA_REFERENCE}
@@ -107,7 +136,10 @@ class Metadata(object):
                        """)
 
         # register extension in the extensions table
-        if not Extension.has_extension(cursor=cursor,
-                                       extension=Metadata.REFERENCE):
-            Extension.add_extension(cursor=cursor,
-                                    extension=Metadata.REFERENCE)
+        Extension.ensure_extension(cursor, Metadata.reference_extension_template())
+
+    @staticmethod
+    def ensure_metadata_tables(cursor):
+        """Within the specified cursor connection, try to add all needed MD tables if not present."""
+        Metadata.create_metadata_table(cursor=cursor)
+        Metadata.create_metadata_reference_table(cursor=cursor)

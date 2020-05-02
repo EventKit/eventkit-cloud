@@ -1,7 +1,11 @@
 from sqlite3 import Cursor, connect, Row
 
-from eventkit_cloud.utils.gpkg.metadata import Metadata
-from eventkit_cloud.utils.gpkg.tables import TableNames, MetadataEntry, row_to_dict, MetadataReferenceEntry
+
+
+
+class SQL(object):
+    def __init__(self, query_string):
+        self.query_string = query_string
 
 
 class _TableQuery(object):
@@ -81,8 +85,19 @@ class Update(_TableQuery):
         self._set_columns = None
 
     @staticmethod
+    def get_values(set_columns):
+        return [_value for _value in set_columns.values() if not isinstance(_value, SQL)]
+
+    @staticmethod
+    def get_value_insert(value):
+        if isinstance(value, SQL):
+            return value.query_string
+        return '?'
+
+    @staticmethod
     def _build_set(set_columns):
-        return ' = ?, '.join([f"""[{_column}]""" for _column in set_columns.keys()]) + ' = ? '
+        return ', '.join([f"""[{_name}] = {Update.get_value_insert(_value)}"""
+                          for _name, _value in set_columns.items()])
 
     def validate(self):
         super(Update, self).validate()
@@ -107,7 +122,8 @@ class Update(_TableQuery):
             UPDATE {self._table_name} 
             SET {self._build_set(self._set_columns)} 
             {where_clause}
-            """, tuple([_value for _value in self._set_columns.values() if _value is not None]) + where_values)
+            """, tuple(Update.get_values(self._set_columns)) + where_values)
+
         return self
 
 
@@ -121,12 +137,14 @@ class Insert(Update):
             raise ValueError("The column names cannot be None or empty")
 
         column_names = ', '.join([f"[{_column}]" for _column in self._set_columns.keys()])
-
-        self._cursor.execute(f"""
+        try:
+            self._cursor.execute(f"""
             INSERT INTO {self._table_name} 
             ({column_names}) 
-            VALUES ({', '.join(['?' for _column in self._set_columns])})
-            """, tuple([_value for _value in self._set_columns.values() if _value is not None]))
+            VALUES ({', '.join([Insert.get_value_insert(_column) for _column in self._set_columns.values()])})
+            """, tuple(Insert.get_values(self._set_columns)))
+        except:
+            pass
         return self
 
 
@@ -212,8 +230,6 @@ class Table(_TableQuery):
         existing_row = self.cursor.fetchall()
 
         if existing_row is None or len(existing_row) > 1 or len(existing_row) == 0:
-            print(existing_row)
-            print(where_columns)
             self.insert().set(**set_columns).execute()
         else:
             self.update().set(**set_columns).where(**where_columns).execute()
@@ -236,14 +252,16 @@ def get_database_connection(file_path,
     return db_connection
 
 
-
 def main():
     import os
+    from eventkit_cloud.utils.gpkg.metadata import Metadata
+    from eventkit_cloud.utils.gpkg.gpkg_util import Geopackage
     with get_database_connection(os.path.join(os.getcwd(), 't-4326-osm-20200430.gpkg')) as conn:
         cursor = conn.cursor()
         Metadata.create_metadata_table(cursor)
-
-
+        Metadata.create_metadata_reference_table(cursor)
+        layers = Geopackage.get_layers(cursor)
+    x = 1
 
 if __name__ == '__main__':
     main()
