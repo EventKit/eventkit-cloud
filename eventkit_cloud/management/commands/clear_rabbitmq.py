@@ -1,4 +1,5 @@
 from django.core.management import BaseCommand
+from django.conf import settings
 from eventkit_cloud.tasks.helpers import delete_rabbit_objects
 
 
@@ -13,4 +14,5 @@ class Command(BaseCommand):
         rabbit_classes = ["queues"]
         if options["all"]:
             rabbit_classes = ["queues", "exchanges"]
-        delete_rabbit_objects(rabbit_classes=rabbit_classes, force=options["force"])
+        api_url = getattr(settings, "BROKER_API_URL")
+        delete_rabbit_objects(api_url, rabbit_classes=rabbit_classes, force=options["force"])
