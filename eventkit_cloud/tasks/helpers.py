@@ -26,6 +26,7 @@ from eventkit_cloud.utils.generic import cd, get_file_paths  # NOQA
 from eventkit_cloud.jobs.models import DataProvider
 from eventkit_cloud.tasks.exceptions import FailedException
 from eventkit_cloud.tasks.models import DataProviderTaskRecord
+import urllib.parse
 
 logger = logging.getLogger()
 
@@ -510,21 +511,59 @@ def get_data_type_from_provider(provider_slug: str) -> str:
     return type_mapped
 
 
-def get_all_rabbitmq_objects(api_url: str, rabbit_class: str) -> dict:
+def get_all_rabbitmq_objects(api_url: str, rabbit_class: str) -> list:
     """
     :param api_url: The http api url including authentication values.
     :param rabbit_class: The type of rabbitmq class (i.e. queues or exchanges) as a string.
     :return: An array of dicts with the desired objects.
     """
 
-    queues_url = f"{api_url.rstrip('/')}/{rabbit_class}"
-    response = requests.get(queues_url)
-    if response.ok:
-        return response.json()
-    else:
-        logger.error(response.content.decode())
-        logger.error(f"Could not get the {rabbit_class}")
-        return {}
+    url = f"{api_url.rstrip('/')}/{rabbit_class}"
+    params = {"page": 1, "page_size": 100, "pagination": True}
+    response = None
+    try:
+        logger.info(f"Getting all {rabbit_class}")
+        response = requests.get(url, params=params).json()
+        rabbit_objects = response["items"]
+        pages = response.get("page_count", 0)
+        for page in range(2, pages + 1):
+            logger.info(f"Getting page: {page} of {pages} for {rabbit_class}")
+            params["page"] = page
+            response = requests.get(url, params=params)
+            if response.ok:
+                rabbit_objects += response.json()["items"]
+            else:
+                raise Exception(f"Failed to fetch {rabbit_class}")
+        return rabbit_objects
+    except Exception as e:
+        if response:
+            logger.error(response.content.decode())
+        logger.error(e)
+        raise e
+
+
+def delete_rabbit_objects(api_url: str, rabbit_classes: list = ["queues"], force: bool = False) -> None:
+
+    for rabbit_class in rabbit_classes:
+        for rabbit_object in get_all_rabbitmq_objects(api_url, rabbit_class):
+            object_name = urllib.parse.quote(rabbit_object.get("name"))
+            vhost = rabbit_object.get("vhost")
+            # Exchanges don't have consumers or messages, so deleting exchanges is always done.
+            consumers = rabbit_object.get("consumers")
+            messages = rabbit_object.get("messages")
+            if not (messages or consumers) or force:
+                object_url = f"{api_url}/{rabbit_class}/{vhost}/{object_name}"
+                res = requests.delete(object_url)
+                if res.ok:
+                    logger.info(f"Removed {rabbit_class}: {object_name}")
+                else:
+                    logger.info(f"Could not remove {rabbit_class}: {res.content}")
+            else:
+                logger.info(f"Cannot remove {rabbit_class}: {rabbit_object}")
+                if consumers:
+                    logger.info(f"There are {consumers} consumers")
+                if messages:
+                    logger.info(f"There are {messages} messages")
 
 
 def get_message_count(queue_name: str) -> int:
