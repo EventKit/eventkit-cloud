@@ -84,6 +84,7 @@ export class DataPackOptions extends React.Component<Props, State> {
         const providerArray = [];
         const exportOptions = {};
         const providerInfo = {};
+        let supportedFormats = null;
         this.props.dataPack.provider_tasks.forEach((providerTask) => {
             if (providerTask.display === true) {
                 // Map the provider task to its Provider to ensure we have all needed data for the Provider.
@@ -98,20 +99,16 @@ export class DataPackOptions extends React.Component<Props, State> {
                     // this change will need to happen here as well
                     providerTask.name === jobProviderTask.provider
                 );
-                let supported_formats = null;
                 if (!!dataProviderTask) {
-                    supported_formats = dataProviderTask.formats.filter(slug =>
+                    supportedFormats = dataProviderTask.formats.filter(slug =>
                         arrayHasValue(fullProvider.supported_formats.map((format: Eventkit.Format) => format.slug), slug)
                     );
-                }
-                if (!!fullProvider) {
                     exportOptions[providerTask.slug] = {
-                        minZoom: (fullProvider) ? fullProvider.level_from : null,
-                        maxZoom: (fullProvider) ? fullProvider.level_to : null,
-                        formats: supported_formats
-                    } as Eventkit.Store.ProviderExportOptions;
+                        minZoom: (dataProviderTask.min_zoom) ? dataProviderTask.min_zoom : fullProvider.level_from,
+                        maxZoom: (dataProviderTask.max_zoom <= fullProvider.level_to) ? dataProviderTask.max_zoom : fullProvider.level_to,
+                        formats: supportedFormats
+                    }
                 }
-
                 // Cannot clone a provider without the full set of info.
                 providerArray.push(fullProvider);
             }
