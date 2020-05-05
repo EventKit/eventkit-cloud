@@ -20,8 +20,7 @@ class _TableQuery(object):
         return self._cursor
 
     def validate(self):
-        if not Table.exists(cursor=self._cursor,
-                            table_name=self._table_name):
+        if not Table.exists(cursor=self._cursor, table_name=self._table_name) and self._table_name != 'sqlite_master':
             raise ValueError("Table must exist to select entries from it")
 
     @staticmethod
@@ -123,7 +122,6 @@ class Update(_TableQuery):
             SET {self._build_set(self._set_columns)} 
             {where_clause}
             """, tuple(Update.get_values(self._set_columns)) + where_values)
-
         return self
 
 
@@ -137,14 +135,11 @@ class Insert(Update):
             raise ValueError("The column names cannot be None or empty")
 
         column_names = ', '.join([f"[{_column}]" for _column in self._set_columns.keys()])
-        try:
-            self._cursor.execute(f"""
+        self._cursor.execute(f"""
             INSERT INTO {self._table_name} 
             ({column_names}) 
             VALUES ({', '.join([Insert.get_value_insert(_column) for _column in self._set_columns.values()])})
             """, tuple(Insert.get_values(self._set_columns)))
-        except:
-            pass
         return self
 
 

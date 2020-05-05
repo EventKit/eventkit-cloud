@@ -99,16 +99,15 @@ class Metadata(object):
         """
         from eventkit_cloud.utils.gpkg.extensions import Extension
         # create the metadata table
-        cursor.execute("""
-                          CREATE TABLE IF NOT EXISTS {table_name}
+        cursor.execute(f"""
+                          CREATE TABLE IF NOT EXISTS {TableNames.GPKG_METADATA}
                           (id              INTEGER CONSTRAINT m_pk PRIMARY KEY ASC NOT NULL UNIQUE,             
                            md_scope        TEXT                                    NOT NULL DEFAULT 'dataset',  
                            md_standard_uri TEXT                                    NOT NULL,                    
                            mime_type       TEXT                                    NOT NULL DEFAULT 'text/xml', 
                            metadata        TEXT                                    NOT NULL DEFAULT ''          
                           );
-                        """.format(table_name=TableNames.GPKG_METADATA))
-
+                        """)
         # register extension in the extensions table
         Extension.ensure_extension(cursor, Metadata.extension_template())
 

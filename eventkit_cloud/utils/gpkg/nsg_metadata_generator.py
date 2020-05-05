@@ -224,6 +224,7 @@ class Generator:
             try:
                 cursor = db.cursor()
                 Metadata.ensure_metadata_tables(cursor)
+                cursor.execute("PRAGMA foreign_keys = OFF")
                 db.commit()
             except sqlite3.OperationalError:
                 if self.log:

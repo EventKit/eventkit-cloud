@@ -8,7 +8,7 @@ from django.db import DatabaseError
 
 from eventkit_cloud.jobs.models import DataProviderTask, ExportFormat
 from eventkit_cloud.tasks.enumerations import TaskStates
-from eventkit_cloud.tasks.export_tasks import reprojection_task, create_datapack_preview
+from eventkit_cloud.tasks.export_tasks import reprojection_task, create_datapack_preview, add_metadata_task
 from eventkit_cloud.tasks.helpers import normalize_name, get_metadata
 from eventkit_cloud.tasks.models import ExportTaskRecord, DataProviderTaskRecord
 from eventkit_cloud.tasks.util_tasks import get_estimates_task
@@ -142,14 +142,14 @@ class TaskChainBuilder(object):
 
             for current_format, task in export_tasks.items():
                 subtasks.append(
-                    task.get("obj")
-                    .s(
+                    task.get("obj").s(
                         run_uid=run.uid,
                         stage_dir=stage_dir,
                         job_name=job_name,
                         task_uid=task.get("task_uid"),
                         user_details=user_details,
                         locking_task_key=data_provider_task_record.uid,
+                        callback=add_metadata_task.si()
                     )
                     .set(queue=queue_group, routing_key=queue_group)
                 )
