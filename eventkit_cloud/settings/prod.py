@@ -328,11 +328,11 @@ MAPPROXY_CONCURRENCY = os.getenv("MAPPROXY_CONCURRENCY", 1)
 LOGGING = {
     "version": 1,
     "disable_existing_loggers": False,
-    "handlers": {"console": {"class": "logging.StreamHandler"}},
+    "handlers": {"console": {"class": "logging.StreamHandler", "formatter": "simple"}},
+    "formatters": {"simple": {"format": "[{asctime}] {module} - {levelname} - {message}", "style": "{"}},
+    "root": {"handlers": ["console"], "propagate": True, "level": os.getenv("LOG_LEVEL", "INFO")},
     "loggers": {
         "django": {"handlers": ["console"], "propagate": True, "level": os.getenv("DJANGO_LOG_LEVEL", "WARN")},
-        "eventkit_cloud": {"handlers": ["console"], "propagate": True, "level": os.getenv("LOG_LEVEL", "INFO")},
-        "audit_logging": {"handlers": ["console"], "propagate": True, "level": os.getenv("LOG_LEVEL", "INFO")},
     },
 }
 

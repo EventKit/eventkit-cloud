@@ -72,7 +72,6 @@ class LockingTask(UserDetailsBase):
         """
         retry = False
         logger.debug("enter __call__ for {0}".format(self.request.id))
-
         lock_key = kwargs.get("locking_task_key")
         worker = kwargs.get("worker")
 
@@ -84,8 +83,9 @@ class LockingTask(UserDetailsBase):
         if self.acquire_lock(lock_key=lock_key, value=self.request.id):
             logger.debug("Task {0} started.".format(self.request.id))
             logger.debug("exit __call__ for {0}".format(self.request.id))
-            super(LockingTask, self).__call__(*args, **kwargs)
+            result = super(LockingTask, self).__call__(*args, **kwargs)
             self.release_lock()
+            return result
         else:
             if retry:
                 logger.warn("Task {0} waiting for lock {1} to be free.".format(self.request.id, lock_key))

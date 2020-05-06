@@ -517,7 +517,6 @@ def get_all_rabbitmq_objects(api_url: str, rabbit_class: str) -> list:
     :param rabbit_class: The type of rabbitmq class (i.e. queues or exchanges) as a string.
     :return: An array of dicts with the desired objects.
     """
-
     url = f"{api_url.rstrip('/')}/{rabbit_class}"
     params = {"page": 1, "page_size": 100, "pagination": True}
     response = None
