@@ -526,23 +526,24 @@ def get_data_type_from_provider(provider_slug: str) -> str:
     return type_mapped
 
 
-def get_all_rabbitmq_objects(api_url, rabbit_class):
+def get_all_rabbitmq_objects(api_url: str, rabbit_class: str) -> dict:
     """
     :param api_url: The http api url including authentication values.
     :param rabbit_class: The type of rabbitmq class (i.e. queues or exchanges) as a string.
     :return: An array of dicts with the desired objects.
     """
 
-    queues_url = "{}/{}".format(api_url.rstrip("/"), rabbit_class)
+    queues_url = f"{api_url.rstrip('/')}/{rabbit_class}"
     response = requests.get(queues_url)
     if response.ok:
         return response.json()
     else:
         logger.error(response.content.decode())
-        logger.error("Could not get the {}".format(type))
+        logger.error(f"Could not get the {rabbit_class}")
+        return {}
 
 
-def get_message_count(queue_name):
+def get_message_count(queue_name: str) -> int:
     """
     :param queue_name: The queue that you want to check messages for.
     :return: An integer count of pending messages.
