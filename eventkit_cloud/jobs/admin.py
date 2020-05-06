@@ -121,6 +121,7 @@ class DataProviderForm(forms.ModelForm):
         fields = [
             "name",
             "slug",
+            "label",
             "url",
             "preview_url",
             "service_copyright",
@@ -181,6 +182,7 @@ class DataProviderAdmin(admin.ModelAdmin):
     list_display = [
         "name",
         "slug",
+        "label",
         "export_provider_type",
         "user",
         "license",
