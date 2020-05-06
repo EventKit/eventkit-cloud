@@ -210,7 +210,7 @@ def run_task_command(client: PcfClient, app_name: str, queue_name: str, task: di
     client.run_task(name=queue_name, command=command, disk_in_mb=disk, memory_in_mb=memory, app_name=app_name)
 
 
-def list_to_dict(list_to_convert, key_name):
+def list_to_dict(list_to_convert: dict, key_name: str):
     """
     USed to convert a list of dictionaries to a dictionary using some common properties (i.e. name)
     Careful as data will be lost for duplicate entries, this assumes the list is a "set".
@@ -219,8 +219,9 @@ def list_to_dict(list_to_convert, key_name):
     :return: A dictionary.
     """
     converted_dict = dict()
-    for item in list_to_convert:
-        converted_dict[item[key_name]] = item
+    if list_to_convert:
+        for item in list_to_convert:
+            converted_dict[item[key_name]] = item
     return converted_dict
 
 
