@@ -543,10 +543,11 @@ def get_all_rabbitmq_objects(api_url: str, rabbit_class: str) -> list:
 
 def delete_rabbit_objects(api_url: str, rabbit_classes: list = ["queues"], force: bool = False) -> None:
 
+    api_url = api_url.rstrip('/')
     for rabbit_class in rabbit_classes:
         for rabbit_object in get_all_rabbitmq_objects(api_url, rabbit_class):
-            object_name = urllib.parse.quote(rabbit_object.get("name"))
-            vhost = rabbit_object.get("vhost")
+            object_name = urllib.parse.quote(rabbit_object.get("name"), safe='')
+            vhost = urllib.parse.quote(rabbit_object.get("vhost"), safe='')
             # Exchanges don't have consumers or messages, so deleting exchanges is always done.
             consumers = rabbit_object.get("consumers")
             messages = rabbit_object.get("messages")
@@ -556,7 +557,7 @@ def delete_rabbit_objects(api_url: str, rabbit_classes: list = ["queues"], force
                 if res.ok:
                     logger.info(f"Removed {rabbit_class}: {object_name}")
                 else:
-                    logger.info(f"Could not remove {rabbit_class}: {res.content}")
+                    logger.info(f"Could not remove {rabbit_class} {object_name}: {res.content}")
             else:
                 logger.info(f"Cannot remove {rabbit_class}: {rabbit_object}")
                 if consumers:
