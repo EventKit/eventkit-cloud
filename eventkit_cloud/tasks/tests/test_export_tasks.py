@@ -45,7 +45,7 @@ class TestLockingTask(TestCase):
         task_id = '0123'
         retries = False
         task_name = 'lock_test_task'
-        expected_lock_key = 'TaskLock_{0}_{1}_{2}'.format(task_name, task_id, retries)
+        expected_lock_key = f"TaskLock_{task_name}_{task_id}_{retries}"
         expected_result = "result"
 
         # Create a test task...

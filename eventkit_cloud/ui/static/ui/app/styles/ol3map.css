@@ -2,8 +2,7 @@ div.map {
     position: absolute;
     margin-top: 0px;
     margin-left: 0px;
-    bottom: 0px;
-    height: calc(100% - 210px);
+    height: calc(100vh - 180px);
 }
 
 .draw {

@@ -9,11 +9,11 @@ function ZoomUpdater(props: Props) {
     const zoomContext = useOlZoom();
     const initialRender = useRef(true);
     useEffect(() => {
-        if (!initialRender) {
+        if (!initialRender.current) {
             props.setZoom(null, zoomContext.zoomLevel);
         }
         initialRender.current = false;
-    }, [zoomContext.zoomLevel, props.setZoom]);
+    }, [zoomContext.zoomLevel]);
 
     return null;
 }

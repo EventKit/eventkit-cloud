@@ -51,7 +51,7 @@ class LockingTask(UserDetailsBase):
         """
         return "TaskLock_%s_%s_%s" % (self.__class__.__name__, self.request.id, self.request.retries,)
 
-    def acquire_lock(self, lock_key=None, value="True"):
+    def acquire_lock(self, lock_key, value="True"):
         """
         Set lock.
         :param lock_key: Location to store lock.
@@ -59,11 +59,10 @@ class LockingTask(UserDetailsBase):
         :return:
         """
         result = False
-        lock_key = lock_key or self.get_lock_key()
+        self.lock_key = lock_key
         try:
-            result = self.cache.add(lock_key, value, self.lock_expiration)
-            # result = self.cache.add(str(self.lock_key), value, self.lock_expiration)
-            logger.info("Acquiring {0} key: {1}".format(lock_key, "succeed" if result else "failed"))
+            result = self.cache.add(self.lock_key, value, self.lock_expiration)
+            logger.debug("Acquiring {0} key: {1}".format(self.lock_key, "succeed" if result else "failed"))
         finally:
             return result
 
@@ -73,21 +72,19 @@ class LockingTask(UserDetailsBase):
         """
         retry = False
         logger.debug("enter __call__ for {0}".format(self.request.id))
-
         lock_key = kwargs.get("locking_task_key")
         worker = kwargs.get("worker")
 
         if lock_key:
-            self.lock_expiration = 5
-            self.lock_key = lock_key
             retry = True
         else:
-            self.lock_key = self.get_lock_key()
+            lock_key = self.get_lock_key()
 
         if self.acquire_lock(lock_key=lock_key, value=self.request.id):
             logger.debug("Task {0} started.".format(self.request.id))
             logger.debug("exit __call__ for {0}".format(self.request.id))
             return super(LockingTask, self).__call__(*args, **kwargs)
+            self.release_lock()
         else:
             if retry:
                 logger.warn("Task {0} waiting for lock {1} to be free.".format(self.request.id, lock_key))
@@ -98,7 +95,10 @@ class LockingTask(UserDetailsBase):
             else:
                 logger.info("Task {0} skipped due to lock".format(self.request.id))
 
-    def after_return(self, *args, **kwargs):
-        logger.debug("Task {0} releasing lock".format(self.request.id))
+    def release_lock(self):
+        """
+        Normally we would release the lock in an after_return method but there appears to be some issue with
+        subclassing, https://github.com/celery/celery/issues/5666.
+        """
+        logger.debug(f"Task {self.request.id} releasing lock: {self.lock_key}")
         self.cache.delete(self.lock_key)
-        super(LockingTask, self).after_return(*args, **kwargs)

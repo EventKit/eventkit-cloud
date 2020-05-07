@@ -90,7 +90,7 @@ describe('SearchAOIToolbar button', () => {
         expect(props.getGeocode.calledWith('rio')).toEqual(true);
     });
 
-    it('handleEnter should only clear the suggestions', () => {
+    it('handleEnter should not clear the suggestions', () => {
         const suggestions = ['one', 'two'];
         const props = getProps();
         const wrapper = shallow(<SearchAOIToolbar {...props} />);
@@ -100,6 +100,6 @@ describe('SearchAOIToolbar button', () => {
         wrapper.setProps(nextProps);
         expect(wrapper.state().suggestions).toEqual(suggestions);
         wrapper.instance().handleEnter('');
-        expect(wrapper.state().suggestions.length).toEqual(0);
+        expect(wrapper.state().suggestions.length).toEqual(2);
     });
 });

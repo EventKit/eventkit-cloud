@@ -55,6 +55,8 @@ import globe from '../../../images/globe-americas.svg';
 import {makeAllRunsSelector} from '../../selectors/runSelector';
 import {updateAoiInfo, clearAoiInfo, clearExportInfo} from '../../actions/datacartActions';
 import {Breakpoint} from '@material-ui/core/styles/createBreakpoints';
+import withRef from '../../utils/withRef';
+
 
 export const RED_STYLE = new Style({
     stroke: new Stroke({
@@ -75,6 +77,7 @@ export const BLUE_STYLE = new Style({
 });
 
 export interface Props {
+    customRef?: any;
     runIds: string[];
     runs: Eventkit.Run[];
     user: Eventkit.Store.User;
@@ -1157,4 +1160,4 @@ function mapDispatchToProps(dispatch) {
     };
 }
 
-export default withWidth()(withTheme()(connect(makeMapStateToProps, mapDispatchToProps, null, {forwardRef: true})(MapView)));
+export default withWidth()(withTheme()(connect(makeMapStateToProps, mapDispatchToProps, null, {forwardRef: true})(withRef()(MapView))));

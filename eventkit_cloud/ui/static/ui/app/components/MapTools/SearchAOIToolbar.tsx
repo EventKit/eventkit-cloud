@@ -21,6 +21,9 @@ const jss = (theme: Theme & Eventkit.Theme) => createStyles({
         top: '1em',
         left: '10px',
         backgroundColor: theme.eventkit.colors.secondary,
+        borderRadius: '5px',
+        display: 'inline-grid',
+        boxShadow: '0px 3px 15px rgba(0, 0, 0, 0.2)',
     },
     buttonContainer: {
         position: 'absolute',
@@ -151,7 +154,6 @@ export class SearchAOIToolbar extends React.Component<Props, State> {
 
     handleEnter(e) {
         const results = e.slice(0, 1000);
-        this.setState({suggestions: []});
         if (results.length > 0) {
             if (this.props.handleSearch(results[0])) {
                 this.props.setSearchAOIButtonSelected();
@@ -174,14 +176,14 @@ export class SearchAOIToolbar extends React.Component<Props, State> {
                     </div>
                 );
             } else if (this.props.geocode.fetched) {
-                if (results.length) {
+                if (this.props.toolbarIcons.search === 'SELECTED' || results.length) {
                     content = results.map((result, index) => (
                         <TypeaheadMenuItem
                             result={result}
                             index={index}
                             key={JSON.stringify(result.properties)}
                         />
-                    ));
+                    ))
                 } else {
                     content = (
                         <div className={classes.empty}>
@@ -199,7 +201,7 @@ export class SearchAOIToolbar extends React.Component<Props, State> {
         };
 
         return (
-            <div className={classes.container} style={{display: 'inline-grid'}}>
+            <div className={classes.container}>
                 <div className="typeahead">
                     <Typeahead
                         id="aoiSearchBar"
