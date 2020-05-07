@@ -36,7 +36,7 @@
                             codeListValue="unclassified"/>
                 </gmd:classification>
                 <gmd:classificationSystem></gmd:classificationSystem>
-                <nas:capcoMarking ism:classification="U" ism:ownerProducer="USA"/>
+                <nas:capcoMarking ism:classification="UNSPECIFIED" ism:ownerProducer="USA"/>
             </nas:MD_SecurityConstraints>
         </gmd:resourceConstraints>
         <gmd:language>

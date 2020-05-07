@@ -19,7 +19,7 @@
     <gmd:contact>
         <gmd:CI_ResponsibleParty>
             <gmd:organisationName>
-                <gco:CharacterString>UNDEFINED</gco:CharacterString>
+                <gco:CharacterString>EventKit</gco:CharacterString>
             </gmd:organisationName>
             <gmd:role>
                 <gmd:CI_RoleCode codeList="http://api.nsgreg.nga.mil/codelist/RoleCode" codeListValue="publisher"/>
@@ -70,7 +70,7 @@
             <gmd:classificationSystem>
                 <nas:ClassificationSystem>US CAPCO</nas:ClassificationSystem>
             </gmd:classificationSystem>
-            <nas:capcoMarking ism:classification="U" ism:ownerProducer="USA"/>
+            <nas:capcoMarking ism:classification="UNSPECIFIED" ism:ownerProducer="USA"/>
         </nas:MD_SecurityConstraints>
     </gmd:metadataConstraints>
 </nas:MD_Metadata>
