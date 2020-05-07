@@ -472,8 +472,6 @@ def osm_data_collection_task(
         result["result"] = gpkg_filepath
         result["source"] = gpkg_filepath
 
-        # result = add_metadata_task(result=result, job_uid=run.job.uid, provider_slug=provider_slug)
-
         logger.debug("exit run for {0}".format(self.name))
     finally:
         if debug_os:
@@ -1049,9 +1047,6 @@ def mapproxy_export_task(
         result["file_format"] = "gpkg"
         result["result"] = gpkg
         result["source"] = gpkg
-        # add_metadata_task(
-        #     result=result, job_uid=run.job.uid, provider_slug=task.export_provider_task.slug,
-        # )
 
         return result
     except Exception as e:
