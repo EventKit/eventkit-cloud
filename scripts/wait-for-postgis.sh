@@ -4,7 +4,6 @@ set -e
 
 cmd="$@"
 
-echo "Activating the Conda environment..."
 source activate eventkit-cloud
 
 python - << END

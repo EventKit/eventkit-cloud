@@ -39,8 +39,7 @@ export class DataPackLinkButton extends React.Component<Props, {}> {
                 href="/create"
             >
                 <Button
-                    className={`datapack-button-create`}
-                    // activeClassName={classes.activeLink}
+                    className={"qa-DataPackLinkButton-Button datapack-button-create"}
                     style={styles.button}
                     variant="contained"
                     color="primary"
