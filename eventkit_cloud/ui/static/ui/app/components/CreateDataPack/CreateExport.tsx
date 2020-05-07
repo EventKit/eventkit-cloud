@@ -25,6 +25,7 @@ export interface MapLayer {
         url: string;
     };
     slug: string;
+    copyright?: string;
 }
 
 export interface State {
