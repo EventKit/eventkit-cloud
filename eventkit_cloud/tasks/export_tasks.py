@@ -58,10 +58,10 @@ from eventkit_cloud.tasks.helpers import (
     check_cached_task_failures,
     PREVIEW_TAIL,
 )
+from eventkit_cloud.tasks.metadata import metadata_tasks
 from eventkit_cloud.tasks.task_process import update_progress
 from eventkit_cloud.utils.auth_requests import get_cred
 from eventkit_cloud.utils import overpass, pbf, s3, mapproxy, wcs, geopackage, gdalutils
-from eventkit_cloud.utils.gpkg.nsg_metadata_generator import Generator
 from eventkit_cloud.utils.ogr import OGR
 from eventkit_cloud.utils.rocket_chat import RocketChat
 from eventkit_cloud.utils.stats.eta_estimator import ETA
@@ -170,17 +170,7 @@ class ExportTask(EventKitBaseTask):
             if not (retval and retval.get("result")):
                 raise Exception("This task was skipped due to previous failures/cancellations.")
 
-            for _ in kwargs:
-                print(f'{_} -> {kwargs[_]}')
-            for _ in retval:
-                print(f'{_} -> {retval[_]}')
-            logger.info('getting callback')
-            callback = kwargs.get('callback', None)
-            if callback:
-                logger.info('calling into callback')
-                callback(retval)
-            else:
-                logger.info('no callback found')
+            add_metadata(task.export_provider_task.run.job, task.export_provider_task.slug, retval)
             # update the task
             finished = timezone.now()
             if TaskStates.CANCELED.value in [
@@ -492,68 +482,24 @@ def osm_data_collection_task(
     return result
 
 
-@app.task(name="Add Metadata", bind=True, base=EventKitBaseTask, abort_on_error=False)
-def add_metadata_task(retval):
+def add_metadata(job, provider_slug, retval):
     """
-    Task to create metadata to a geopackage.
+    Accepts a job, provider slug, and return value from a task and applies metadata to the relevant file.
+
+    :param job:
+    :param provider_slug:
+    :param retval:
+    :return:
     """
-    # job = Job.objects.get(uid=job_uid)
-    #
-    # provider = DataProvider.objects.get(slug=provider_slug)
-    # result = result or {}
-    # input_gpkg = parse_result(result, "source")
-    # date_time = timezone.now()
-    # bbox = job.extents
-    # metadata_values = {
-    #     "fileIdentifier": "{0}-{1}-{2}".format(job.name, provider.slug, default_format_time(date_time)),
-    #     "abstract": job.description,
-    #     "title": job.name,
-    #     "westBoundLongitude": bbox[0],
-    #     "southBoundLatitude": bbox[1],
-    #     "eastBoundLongitude": bbox[2],
-    #     "northBoundLatitude": bbox[3],
-    #     "URL": provider.preview_url,
-    #     "applicationProfile": None,
-    #     "code": None,
-    #     "name": provider.name,
-    #     "description": provider.service_description,
-    #     "dateStamp": date_time.isoformat(),
-    # }
-    #
-    # metadata = render_to_string("data/geopackage_metadata.xml", context=metadata_values)
-    #
-    result_file = retval['result']
-    for _ in retval:
-        print(f'{_} -> {retval[_]}')
-    file_format = os.path.splitext(result_file)[1]
-    if 'gpkg' in file_format:
-        logger.info(result_file)
-        logger.info('META WORK')
-        logger.info(result_file)
-        from eventkit_cloud.utils.gpkg.sqlite_utils import get_database_connection
-        from eventkit_cloud.utils.gpkg.metadata import Metadata
-        from eventkit_cloud.utils.gpkg.tables import TableRow
-        from eventkit_cloud.utils.gpkg.sqlite_utils import Table
-        with get_database_connection(retval['result']) as conn:
-            cursor = conn.cursor()
-            Metadata.ensure_metadata_tables(cursor)
-            table = Table(cursor, 'gpkg_contents')
-            table.select().execute()
-            rows = cursor.fetchall()
-            for _row in rows:
-                table_row = TableRow.from_row(_row).to_dict()
-                print(f"row [{table_row['table_name']}]")
-            conn.commit()
-        generator = Generator(result_file, logger)
-        generator.write_metadata()
-        with get_database_connection(retval['result']) as conn:
-            cursor = conn.cursor()
-            Metadata.ensure_metadata_tables(cursor)
-            Table(cursor, 'sqlite_master').select('name').where(type='table').execute()
-            rows = cursor.fetchall()
-            for _row in rows:
-                table_row = TableRow.from_row(_row).to_dict()
-                print(f"row -> [{table_row['name']}]")
+    result_file = retval.get('result', None)
+    if result_file is None:
+        return
+    task = metadata_tasks.get(os.path.splitext(result_file)[1], None)
+    if provider_slug == "run":
+        return
+    if task is not None:
+        provider = DataProvider.objects.get(slug=provider_slug)
+        task(filepath=result_file, job=job, provider=provider)
 
 
 @app.task(name="ESRI Shapefile (.shp)", bind=True, base=FormatTask, acks_late=True)

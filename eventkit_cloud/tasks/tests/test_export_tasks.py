@@ -248,10 +248,9 @@ class TestExportTasks(ExportTaskBase):
         self.assertIsNotNone(run_task)
         self.assertEqual(TaskStates.RUNNING.value, run_task.status)
 
-    @patch('eventkit_cloud.tasks.export_tasks.add_metadata_task')
     @patch('celery.app.task.Task.request')
     @patch('eventkit_cloud.utils.mapproxy.MapproxyGeopackage')
-    def test_run_external_raster_service_export_task(self, mock_service, mock_request, mock_add_metadata_task):
+    def test_run_external_raster_service_export_task(self, mock_service, mock_request):
         celery_uid = str(uuid.uuid4())
         expected_provider_slug = "slug"
         type(mock_request).id = PropertyMock(return_value=celery_uid)
@@ -273,8 +272,6 @@ class TestExportTasks(ExportTaskBase):
                                           stage_dir=stage_dir,
                                           job_name=job_name)
         service_to_gpkg.convert.assert_called_once()
-        mock_add_metadata_task.assert_called_once_with(result=result, job_uid=self.run.job.uid,
-                                                       provider_slug=expected_provider_slug)
         self.assertEqual(expected_output_path, result['result'])
         # test the tasks update_task_state method
         run_task = ExportTaskRecord.objects.get(celery_uid=celery_uid)

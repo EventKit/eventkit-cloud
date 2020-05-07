@@ -1,6 +1,4 @@
-from sqlite3 import Cursor, connect, Row
-
-
+from sqlite3 import connect, Row
 
 
 class SQL(object):
@@ -9,7 +7,6 @@ class SQL(object):
 
 
 class _TableQuery(object):
-
     def __init__(self, cursor, table_name):
         self._cursor = cursor
         self._table_name = table_name
@@ -20,7 +17,7 @@ class _TableQuery(object):
         return self._cursor
 
     def validate(self):
-        if not Table.exists(cursor=self._cursor, table_name=self._table_name) and self._table_name != 'sqlite_master':
+        if not Table.exists(cursor=self._cursor, table_name=self._table_name) and self._table_name != "sqlite_master":
             raise ValueError("Table must exist to select entries from it")
 
     @staticmethod
@@ -44,7 +41,6 @@ class _TableQuery(object):
 
 
 class From(_TableQuery):
-
     def __init__(self, cursor, table_name):
         super(From, self).__init__(cursor, table_name)
         self._select_columns = None
@@ -64,21 +60,23 @@ class From(_TableQuery):
             raise ValueError("The column names cannot be None or empty")
 
         if len(select_columns) == 0:
-            select_columns = '*'
+            select_columns = "*"
         else:
-            select_columns = ', '.join(select_columns)
+            select_columns = ", ".join(select_columns)
 
         where_clause, where_values = self._build_where(self._where_columns)
-        self._cursor.execute(f"""
+        self._cursor.execute(
+            f"""
             SELECT {select_columns} 
             FROM {self._table_name} 
             {where_clause}
-            """, where_values)
+            """,
+            where_values,
+        )
         return self
 
 
 class Update(_TableQuery):
-
     def __init__(self, cursor, table_name):
         super(Update, self).__init__(cursor, table_name)
         self._set_columns = None
@@ -91,12 +89,13 @@ class Update(_TableQuery):
     def get_value_insert(value):
         if isinstance(value, SQL):
             return value.query_string
-        return '?'
+        return "?"
 
     @staticmethod
     def _build_set(set_columns):
-        return ', '.join([f"""[{_name}] = {Update.get_value_insert(_value)}"""
-                          for _name, _value in set_columns.items()])
+        return ", ".join(
+            [f"""[{_name}] = {Update.get_value_insert(_value)}""" for _name, _value in set_columns.items()]
+        )
 
     def validate(self):
         super(Update, self).validate()
@@ -117,16 +116,18 @@ class Update(_TableQuery):
             raise ValueError("The column names cannot be None or empty")
 
         where_clause, where_values = self._build_where(self._where_columns)
-        self._cursor.execute(f"""
+        self._cursor.execute(
+            f"""
             UPDATE {self._table_name} 
             SET {self._build_set(self._set_columns)} 
             {where_clause}
-            """, tuple(Update.get_values(self._set_columns)) + where_values)
+            """,
+            tuple(Update.get_values(self._set_columns)) + where_values,
+        )
         return self
 
 
 class Insert(Update):
-
     def execute(self):
         self.validate()
 
@@ -134,17 +135,19 @@ class Insert(Update):
         if any(column_name is None or len(column_name) == 0 for column_name in set_columns):
             raise ValueError("The column names cannot be None or empty")
 
-        column_names = ', '.join([f"[{_column}]" for _column in self._set_columns.keys()])
-        self._cursor.execute(f"""
+        column_names = ", ".join([f"[{_column}]" for _column in self._set_columns.keys()])
+        self._cursor.execute(
+            f"""
             INSERT INTO {self._table_name} 
             ({column_names}) 
             VALUES ({', '.join([Insert.get_value_insert(_column) for _column in self._set_columns.values()])})
-            """, tuple(Insert.get_values(self._set_columns)))
+            """,
+            tuple(Insert.get_values(self._set_columns)),
+        )
         return self
 
 
 class Table(_TableQuery):
-
     def insert(self):
         return Insert(self.cursor, self._table_name)
 
@@ -166,11 +169,14 @@ class Table(_TableQuery):
         :param table_name: the name of the table searching for
         :return: true if the table exists, false otherwise
         """
-        cursor.execute("""
+        cursor.execute(
+            """
                            SELECT name 
                            FROM sqlite_master 
                            WHERE type='table' AND name=?;
-                       """, (table_name,))
+                       """,
+            (table_name,),
+        )
         return bool(cursor.fetchone())
 
     @staticmethod
@@ -184,18 +190,13 @@ class Table(_TableQuery):
         :param table_name: the name of the expected table
         :param expected_columns: a list of strings with the names of the columns
         """
-        if not Table.exists(cursor=cursor,
-                            table_name=table_name):
+        if not Table.exists(cursor=cursor, table_name=table_name):
             raise ValueError(f"Table {table_name} does not exist. Cannot retrieve entries from a non-existent table")
-        if not Table.columns_exists(cursor=cursor,
-                                    table_name=table_name,
-                                    column_names=expected_columns):
+        if not Table.columns_exists(cursor=cursor, table_name=table_name, column_names=expected_columns):
             raise ValueError(f"Invalid Schema. The table does not have the expected columns: {expected_columns}.")
 
     @staticmethod
-    def columns_exists(cursor,
-                       table_name,
-                       column_names):
+    def columns_exists(cursor, table_name, column_names):
         """
         Validates the existence for several columns in a table.
 
@@ -204,12 +205,15 @@ class Table(_TableQuery):
         :param column_names: the list of column names to verify exist in the table
         :return: True if the column exists, false otherwise
         """
-        cursor.execute("""
+        cursor.execute(
+            """
                         PRAGMA table_info("{table_name}")
-                        """.format(table_name=table_name))
-        found_columns = [_row['name'] for _row in cursor]
-        return all(
-            any(_existing_column == _column for _existing_column in found_columns) for _column in column_names)
+                        """.format(
+                table_name=table_name
+            )
+        )
+        found_columns = [_row["name"] for _row in cursor]
+        return all(any(_existing_column == _column for _existing_column in found_columns) for _column in column_names)
 
     def insert_or_update_row(self, set_columns, where_columns):
         """
@@ -231,8 +235,7 @@ class Table(_TableQuery):
         return self
 
 
-def get_database_connection(file_path,
-                            timeout=0.0):
+def get_database_connection(file_path, timeout=0.0):
     """
     Gets a Connection to an Sqlite Database
 
@@ -241,8 +244,7 @@ def get_database_connection(file_path,
 
     :return: a connection to the database
     """
-    db_connection = connect(database=file_path,
-                            timeout=timeout)
+    db_connection = connect(database=file_path, timeout=timeout)
     db_connection.row_factory = Row
     return db_connection
 
@@ -251,12 +253,14 @@ def main():
     import os
     from eventkit_cloud.utils.gpkg.metadata import Metadata
     from eventkit_cloud.utils.gpkg.gpkg_util import Geopackage
-    with get_database_connection(os.path.join(os.getcwd(), 't-4326-osm-20200430.gpkg')) as conn:
+
+    with get_database_connection(os.path.join(os.getcwd(), "t-4326-osm-20200430.gpkg")) as conn:
         cursor = conn.cursor()
         Metadata.create_metadata_table(cursor)
         Metadata.create_metadata_reference_table(cursor)
         layers = Geopackage.get_layers(cursor)
     x = 1
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     main()
