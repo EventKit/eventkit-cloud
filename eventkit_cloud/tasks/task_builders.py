@@ -142,7 +142,8 @@ class TaskChainBuilder(object):
 
             for current_format, task in export_tasks.items():
                 subtasks.append(
-                    task.get("obj").s(
+                    task.get("obj")
+                    .s(
                         run_uid=run.uid,
                         stage_dir=stage_dir,
                         job_name=job_name,

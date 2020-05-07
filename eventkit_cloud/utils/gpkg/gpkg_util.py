@@ -3,7 +3,6 @@ from eventkit_cloud.utils.gpkg.tables import LayerEntry
 
 
 class Geopackage(object):
-
     @staticmethod
     def get_layers(cursor) -> [LayerEntry]:
         """
@@ -19,4 +18,3 @@ class Geopackage(object):
 
         # get the results
         return [LayerEntry.from_row(_row) for _row in rows]
-

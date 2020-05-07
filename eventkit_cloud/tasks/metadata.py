@@ -10,7 +10,7 @@ logger = get_task_logger(__name__)
 
 def build_abstract(*args):
     """Combines multiple messages into a single abstract over multiple lines."""
-    return '\n'.join([_arg for _arg in args if _arg])
+    return "\n".join([_arg for _arg in args if _arg])
 
 
 def add_geopackage_metadata(filepath, job, provider):
@@ -28,15 +28,20 @@ def add_geopackage_metadata(filepath, job, provider):
     generator = Generator(filepath, logger)
     for _layer in layers:
         # Add a layer identity to the meta data. If already present, the identity will be updated.
-        generator.add_layer_identity(table_name=_layer['table_name'],
-                                     abstract_msg=build_abstract(job_description,
-                                                                 provider_description,
-                                                                 _layer['description']),
-                                     bbox=dict(min_x=_layer['min_x'] or bbox[0], min_y=_layer['min_y'] or bbox[1],
-                                               max_x=_layer['max_x'] or bbox[2], max_y=_layer['max_y'] or bbox[3]),
-                                     srs_id=_layer['srs_id'], srs_organization='EPSG',
-                                     organization_name='EventKit')
+        generator.add_layer_identity(
+            table_name=_layer["table_name"],
+            abstract_msg=build_abstract(job_description, provider_description, _layer["description"]),
+            bbox=dict(
+                min_x=_layer["min_x"] or bbox[0],
+                min_y=_layer["min_y"] or bbox[1],
+                max_x=_layer["max_x"] or bbox[2],
+                max_y=_layer["max_y"] or bbox[3],
+            ),
+            srs_id=_layer["srs_id"],
+            srs_organization="EPSG",
+            organization_name="EventKit",
+        )
     generator.write_metadata()
 
 
-metadata_tasks = {'.gpkg': add_geopackage_metadata}
+metadata_tasks = {".gpkg": add_geopackage_metadata}
