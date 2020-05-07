@@ -23,7 +23,7 @@ from django.core.exceptions import ObjectDoesNotExist
 from django.core.mail import EmailMultiAlternatives
 from django.db import DatabaseError, transaction
 from django.db.models import Q
-from django.template.loader import get_template, render_to_string
+from django.template.loader import get_template
 from django.utils import timezone
 
 from eventkit_cloud.celery import app, TaskPriority
@@ -45,7 +45,6 @@ from eventkit_cloud.tasks.helpers import (
     get_provider_staging_dir,
     get_run_download_dir,
     Directory,
-    default_format_time,
     progressive_kill,
     get_style_files,
     generate_qgs_style,
@@ -75,7 +74,7 @@ from eventkit_cloud.tasks.models import (
     FileProducingTaskResult,
     ExportRun,
 )
-from eventkit_cloud.jobs.models import Job, DataProvider, DataProviderTask
+from eventkit_cloud.jobs.models import DataProvider, DataProviderTask
 
 BLACKLISTED_ZIP_EXTS = [".ini", ".om5", ".osm", ".lck", ".pyc"]
 
@@ -447,7 +446,6 @@ def osm_data_collection_task(
         eta = ETA(task_uid=task_uid, debug_os=debug_os)
 
         result = result or {}
-        run = ExportRun.objects.get(uid=run_uid)
 
         if user_details is None:
             user_details = {"username": "username not set in osm_data_collection_task"}
@@ -1022,10 +1020,6 @@ def mapproxy_export_task(
     Class defining geopackage export for external raster service.
     """
     result = result or {}
-    run = ExportRun.objects.get(uid=run_uid)
-    task = ExportTaskRecord.objects.get(uid=task_uid)
-    # ETA estimator will be initialized by the eventkit_cloud.utils.mapproxy.CustomLogger
-
     selection = parse_result(result, "selection")
 
     gpkgfile = os.path.join(stage_dir, "{0}-{1}.gpkg".format(job_name, projection))

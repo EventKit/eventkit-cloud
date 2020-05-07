@@ -67,8 +67,8 @@ class From(_TableQuery):
         where_clause, where_values = self._build_where(self._where_columns)
         self._cursor.execute(
             f"""
-            SELECT {select_columns} 
-            FROM {self._table_name} 
+            SELECT {select_columns}
+            FROM {self._table_name}
             {where_clause}
             """,
             where_values,
@@ -118,8 +118,8 @@ class Update(_TableQuery):
         where_clause, where_values = self._build_where(self._where_columns)
         self._cursor.execute(
             f"""
-            UPDATE {self._table_name} 
-            SET {self._build_set(self._set_columns)} 
+            UPDATE {self._table_name}
+            SET {self._build_set(self._set_columns)}
             {where_clause}
             """,
             tuple(Update.get_values(self._set_columns)) + where_values,
@@ -138,8 +138,8 @@ class Insert(Update):
         column_names = ", ".join([f"[{_column}]" for _column in self._set_columns.keys()])
         self._cursor.execute(
             f"""
-            INSERT INTO {self._table_name} 
-            ({column_names}) 
+            INSERT INTO {self._table_name}
+            ({column_names})
             VALUES ({', '.join([Insert.get_value_insert(_column) for _column in self._set_columns.values()])})
             """,
             tuple(Insert.get_values(self._set_columns)),
@@ -171,8 +171,8 @@ class Table(_TableQuery):
         """
         cursor.execute(
             """
-                           SELECT name 
-                           FROM sqlite_master 
+                           SELECT name
+                           FROM sqlite_master
                            WHERE type='table' AND name=?;
                        """,
             (table_name,),

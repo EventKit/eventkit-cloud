@@ -486,7 +486,6 @@ class Generator:
     def find_all_spatial_reference_system_ri_identifier_tags(root):
         """
         returns a list of Elements with the tag RS_Identifier
-        
         :param root: root xml element of the tree
         :return: a list of Elements with the tag RS_Identifier
         """
@@ -506,7 +505,6 @@ class Generator:
             <gco:characterString>text</gco:characterString>
         </gmd:code>
         returns the characterString Element
-        
          :param ri_identifier_element: the RI_Identifier element containing the code subElement
         :return:
         in
@@ -523,15 +521,13 @@ class Generator:
         in
         <gmd:codeSpace>
             <gco:characterString>text</gco:characterString>
-        </gmd:codeSpace>
-
+        </gmd:codeSpace
         this returns the characterString Element
         :param ri_identifier_element: the RI_Identifier element containing the codeSpace subElement
         :return: in
         <gmd:codeSpace>
             <gco:characterString>text</gco:characterString>
         </gmd:codeSpace>
-
         this returns the characterString Element
         """
         return ri_identifier_element.find(
@@ -542,9 +538,8 @@ class Generator:
     def find_bounding_box_tag(data_identification_element):
         """
         Returns the Geographic Bounding Box element
-        
-        :param data_identification_element:  MD_DataIdentification Element that the EX_GeographBoundingBox will be part of
-        (or a sub element of)
+        :param data_identification_element:  MD_DataIdentification Element that the EX_GeographBoundingBox will
+        be part of (or a sub element of)
         :return: Returns the Geographic Bounding Box element or None if it was not found in the base
         """
         return data_identification_element.find(
@@ -556,7 +551,6 @@ class Generator:
     def find_table_identity(base, table_name):
         """
         Returns the MD_DataIdentification Element that matches the table_name given.
-        
         :param base: The root of the xml
         :param table_name:
         :return: MD_DataIdentification Element that the matches the table_name given, or None if nothing is found
