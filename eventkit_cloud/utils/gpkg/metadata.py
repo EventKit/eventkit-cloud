@@ -50,10 +50,7 @@ class Metadata(object):
         Inserts or updates the metadata entry into gpkg_metadata table.
 
         :param cursor: the cursor to the GeoPackage database's connection
-        :type cursor: Cursor
-
         :param metadata:  The Metadata entry to insert into the gpkg_metadata table
-        :type metadata: MetadataEntry
         """
 
         if not Table.exists(cursor=cursor, table_name=TableNames.GPKG_METADATA):

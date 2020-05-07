@@ -186,7 +186,6 @@ class Table(_TableQuery):
         error if columns aren't what is expected or table doesn't exist.
 
         :param cursor: the cursor to the GeoPackage database's connection
-        :type cursor: Cursor
         :param table_name: the name of the expected table
         :param expected_columns: a list of strings with the names of the columns
         """
@@ -247,20 +246,3 @@ def get_database_connection(file_path, timeout=0.0):
     db_connection = connect(database=file_path, timeout=timeout)
     db_connection.row_factory = Row
     return db_connection
-
-
-def main():
-    import os
-    from eventkit_cloud.utils.gpkg.metadata import Metadata
-    from eventkit_cloud.utils.gpkg.gpkg_util import Geopackage
-
-    with get_database_connection(os.path.join(os.getcwd(), "t-4326-osm-20200430.gpkg")) as conn:
-        cursor = conn.cursor()
-        Metadata.create_metadata_table(cursor)
-        Metadata.create_metadata_reference_table(cursor)
-        layers = Geopackage.get_layers(cursor)
-    x = 1
-
-
-if __name__ == "__main__":
-    main()

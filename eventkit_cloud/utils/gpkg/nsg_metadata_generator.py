@@ -1,32 +1,3 @@
-#!/usr/bin/python2.7
-"""
-Copyright (C) 2014 Reinventing Geospatial, Inc.
-
-This program is free software: you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
-the Free Software Foundation, either version 3 of the License, or
-(at your option) any later version.
-
-This program is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU General Public License for more details.
-
-You should have received a copy of the GNU General Public License
-along with this program.  If not, see <http://www.gnu.org/licenses/>,
-or write to the Free Software Foundation, Inc., 59 Temple Place -
-Suite 330, Boston, MA 02111-1307, USA.
-
-Author: Jenifer Cochran, Reinventing Geospatial Inc (RGi)
-Date: 2018-11-11
-   Requires: sqlite3, argparse
-   Optional: Python Imaging Library (PIL or Pillow)
-Credits:
-  MapProxy imaging functions: http://mapproxy.org
-  gdal2mb on github: https://github.com/developmentseed/gdal2mb
-
-Version:
-"""
 import datetime
 import os
 import sqlite3
@@ -37,7 +8,6 @@ from xml.etree.ElementTree import QName, Element, SubElement, register_namespace
 from xml.etree import ElementTree
 from enum import Enum
 
-from eventkit_cloud.utils.gpkg.gpkg_util import Geopackage
 from eventkit_cloud.utils.gpkg.metadata import Metadata
 from eventkit_cloud.utils.gpkg.sqlite_utils import get_database_connection
 
@@ -130,18 +100,11 @@ class BoundingBox(object):
         self.max_y = max_y
 
 
-# TODO the overall design of the generator should be re-done.  I think that it should take a GeoPackage Path and simply
-# construct the metadata by reading directly from the GeoPackage (finding all the tiles tables) instead of the user
-# having to add the layer identity each time.
-
-
 class Generator:
     """
-    NSG Metadata generator:
+    NSG Metadata generator. Add layer identities then call write_metadata.
 
-    make as many calls to add_layer_identity which creates the metadata for that
-    tiles layer that is stored in the GeoPackage.  When finished adding tiles layers,
-    call write_metadata() so the metadata is written to the GeoPackage.
+    Give the same layer entries, writing metadata is semi idempotent except for datetimes which will be updated.
     """
 
     def __init__(self, geopackage_path, log=None):
@@ -154,8 +117,6 @@ class Generator:
         self.geopackage_path = geopackage_path
         self.log = log
 
-        # TODO: Check that the existing Metadata has appropriate Namespaces and is NSG compliant
-        # currently always gets the first item in the metadata list
         existing_metadata = self.__load_metadata()
         self.existing_metadata = dict()
         for _entry in existing_metadata:
@@ -602,12 +563,12 @@ class Generator:
         """
         ns_map = Generator.generate_namespace_map()
         table_identities = base.findall(f".//{NameSpaces.NAS.value[0]}:MD_DataIdentification", ns_map)
-        for table_identity in table_identities:
-            ci_citations = table_identity.findall(f".//{gmd}:citation/{gmd}:CI_Citation", ns_map)
-            for ci_citation in ci_citations:
-                existing_table_name = ci_citation.find(f"{gmd}:title/{gco}:{Tags.CHAR_STRING}", ns_map).text
+        for _table_identity in table_identities:
+            ci_citations = _table_identity.findall(f".//{gmd}:citation/{gmd}:CI_Citation", ns_map)
+            for _ci_citation in ci_citations:
+                existing_table_name = _ci_citation.find(f"{gmd}:title/{gco}:{Tags.CHAR_STRING}", ns_map).text
                 if table_name == existing_table_name:
-                    return table_identity
+                    return _table_identity
 
         return None
 
@@ -673,37 +634,3 @@ dir_name = os.path.dirname(__file__)
 REFERENCE_SYS_TREE = join(dir_name, "resources", "srs_tree.xml")
 LAYER_IDENTITY_TREE = join(dir_name, "resources", "layer_identity_tree.xml")
 MD_TREE = join(dir_name, "resources", "base_nsg_tree.xml")
-
-
-def main():
-    import os
-
-    class Log:
-        def error(self, message):
-            import traceback
-
-            traceback.print_exc()
-            print(message)
-
-    path = os.path.join(os.getcwd(), "t-4326-osm-20200430.gpkg")
-    with get_database_connection(path) as conn:
-        cursor = conn.cursor()
-        layers = Geopackage.get_layers(cursor)
-
-    gen = Generator(path, log=Log())
-    for _layer in layers:
-        gen.add_layer_identity(
-            table_name=_layer["table_name"],
-            abstract_msg="Added message",
-            bbox=BoundingBox(
-                min_x=_layer["min_x"], min_y=_layer["min_y"], max_x=_layer["max_x"], max_y=_layer["max_y"]
-            ),
-            srs_id=_layer["srs_id"],
-            srs_organization="EPSG",
-            organization_name="EventKit",
-        )
-    gen.write_metadata()
-
-
-if __name__ == "__main__":
-    main()

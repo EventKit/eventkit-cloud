@@ -9,7 +9,6 @@ class Extension(object):
          Creates the GeoPackage Extensions table
 
         :param cursor: the cursor to the GeoPackage database's connection
-        :type cursor: Cursor
         """
         cursor.execute(
             f"""
@@ -29,13 +28,8 @@ class Extension(object):
         Returns True if the GeoPackage has the extension, False otherwise
 
         :param cursor: the cursor to the GeoPackage database's connection
-        :type cursor: Cursor
-
         :param extension: an Extension entry in the gpkg_extensions table to check if it exists or not
-        :type extension: ExtensionEntry
-
         :return  Returns True if the GeoPackage has the extension, False otherwise
-        :rtype: bool
         """
         if not Table.exists(cursor=cursor, table_name=TableNames.GPKG_EXTENSIONS):
             return False
