@@ -11,9 +11,11 @@ services:
     depends_on:
       - postgis
       - rabbitmq
+      - memcached
     links:
       - postgis
       - rabbitmq
+      - memcached
     expose:
       - "6080"
     command: gunicorn eventkit_cloud.wsgi:application --bind 0.0.0.0:6080 --worker-class eventlet --workers 8 --threads 2 --name eventkit --user eventkit --no-sendfile --reload
@@ -21,6 +23,7 @@ services:
       - DATABASE_URL=postgres://eventkit:eventkit_exports@postgis:5432/eventkit_exports
       - BROKER_URL=amqp://guest:guest@rabbitmq:5672/
       - BROKER_API_URL=http://guest:guest@rabbitmq:15672/api/
+      - MEMCACHED=memcached:11211
       - SERVE_ESTIMATES
       - SITE_NAME
       - SITE_IP
@@ -70,8 +73,10 @@ services:
     user: eventkit
     depends_on:
       - postgis
+      - memcached
     links:
       - postgis
+      - memcached
     expose:
       - "6080"
     command: gunicorn eventkit_cloud.wsgi:application --bind 0.0.0.0:6080 --worker-class eventlet --workers 8 --threads 2 --name eventkit --user eventkit --no-sendfile --reload --timeout 60
@@ -79,6 +84,7 @@ services:
       - DATABASE_URL=postgres://eventkit:eventkit_exports@postgis:5432/eventkit_exports
       - BROKER_URL=amqp://guest:guest@rabbitmq:5672/
       - BROKER_API_URL=http://guest:guest@rabbitmq:15672/api/
+      - MEMCACHED=memcached:11211
       - SITE_NAME
       - SITE_IP
       - TERM
@@ -106,13 +112,16 @@ services:
       - postgis
       - rabbitmq
       - eventkit
+      - memcached
     links:
       - postgis
       - rabbitmq
+      - memcached
     environment:
       - DATABASE_URL=postgres://eventkit:eventkit_exports@postgis:5432/eventkit_exports
       - BROKER_URL=amqp://guest:guest@rabbitmq:5672/
       - BROKER_API_URL=http://guest:guest@rabbitmq:15672/api/
+      - MEMCACHED=memcached:11211
       - CELERY_GROUP_NAME=GROUP_A
       - SITE_NAME
       - SITE_IP
@@ -135,6 +144,12 @@ services:
     extra_hosts:
       - "${SITE_NAME}:${SITE_IP}"
     command: /home/eventkit/miniconda3/envs/eventkit-cloud/lib/python3.6/site-packages/scripts/run-celery.sh
+  memcached:
+    image: eventkit/eventkit-base:1.6.0
+    expose:
+      - "11211"
+    entrypoint: >
+      /bin/bash -c "source activate eventkit-cloud && memcached -m 2048"
   celery-beat:
     image: eventkit/eventkit-base:1.6.0
     volumes:
@@ -247,8 +262,8 @@ services:
       context: .
       dockerfile: config/Dockerfile_webpack
     volumes:
-      - ./eventkit_cloud:/var/lib/eventkit/eventkit_cloud:rw
-      - ./coverage/coveralls:/var/lib/eventkit/coverage/coveralls:rw
+      - ./eventkit_cloud:/var/lib/eventkit/eventkit_cloud
+      - ./coverage/coveralls:/var/lib/eventkit/coverage/coveralls
       - ./package.json:/var/lib/eventkit/package.json
       - ./config/ui/.eslintrc.json:/var/lib/eventkit/.eslintrc.json
       - ./config/ui/.eslintignore:/var/lib/eventkit/.eslintignore

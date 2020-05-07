@@ -31,7 +31,7 @@ logger = logging.getLogger(__name__)
 WGS84_FULL_WORLD = [-180, -90, 180, 90]
 
 
-def get_wmts_snapshot_image(base_url, zoom_level, bbox=None):
+def get_wmts_snapshot_image(base_url: str, zoom_level: int = None, bbox: list = None):
     """
     Returns an image comprised of all tiles touched by bbox at a given zoom_level for the provided provider URL.
 
@@ -40,7 +40,7 @@ def get_wmts_snapshot_image(base_url, zoom_level, bbox=None):
     small regions or high level (low zoom) snapshots of a map. Full world, zoom level 0 is used to generate Thumbnails.
 
     :param base_url: URL that tiles are to be requested from, must be formatted with {x], {y}, and {z}
-    :param zoom_level: level to look for tiles at.
+    :param zoom_level: level to look for tiles at, will be determined automatically based on extent if one isn't passed.
     :param bbox: region of the world to get tiles for
     :return: A Pillow Image object built for the collected tiles.
     """
@@ -48,6 +48,10 @@ def get_wmts_snapshot_image(base_url, zoom_level, bbox=None):
         bbox = copy.copy(WGS84_FULL_WORLD)
     # Creates and returns a TileGrid object, let's us specify min_res instead of supplying the resolution list.
     mapproxy_grid = tile_grid(srs=4326, min_res=0.703125, bbox_srs=4326, bbox=copy.copy(WGS84_FULL_WORLD), origin="ul",)
+
+    if zoom_level is None:
+        resolution = get_resolution_for_extent(bbox)
+        zoom_level = mapproxy_grid.closest_level(resolution)
 
     tiles = mapproxy_grid.get_affected_level_tiles(bbox, zoom_level)
     dim_col, dim_row = tiles[1]
@@ -184,3 +188,34 @@ def make_snapshot_downloadable(staging_filepath, relative_path=None, download_fi
     thumbnail_snapshot.save()
 
     return thumbnail_snapshot
+
+
+def get_resolution_for_extent(extent: list, size: tuple = None):
+    """
+    :param extent: A bounding box as a list [w,s,e,n].
+    :param optional size: The pixel size of the image to get the resolution for as a tuple.
+    :return: The resolution at which the extent will render at the given size.
+    """
+    if size is None:
+        size = (1024, 512)
+
+    size_x, size_y = size
+    x_resolution = get_width(extent) / size_x
+    y_resolution = get_height(extent) / size_y
+    return max([x_resolution, y_resolution])
+
+
+def get_width(extent: list):
+    """
+    :param extent: A bounding box as a list [w,s,e,n].
+    :return: The width of the given extent.
+    """
+    return extent[2] - extent[0]
+
+
+def get_height(extent: list):
+    """
+    :param extent: A bounding box as a list [w,s,e,n].
+    :return: The height of the given extent.
+    """
+    return extent[3] - extent[1]

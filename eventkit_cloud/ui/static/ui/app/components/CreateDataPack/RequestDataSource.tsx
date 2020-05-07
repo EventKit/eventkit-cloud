@@ -2,19 +2,14 @@ import BaseDialog from "../Dialog/BaseDialog";
 import * as React from 'react';
 import Button from "@material-ui/core/Button";
 import CustomTableRow from "../common/CustomTableRow";
-import axios from "axios";
 import CustomTextField from "../common/CustomTextField";
 import {CircularProgress, createStyles, Theme, withStyles, withTheme} from "@material-ui/core";
-import {useEffect, useState} from "react";
-import {Dispatch} from "react";
-import {SetStateAction} from "react";
+import {useEffect} from "react";
 import {getCookie} from "../../utils/generic";
 import {
     useAccessibleRef,
     useAsyncRequest,
-    useDebouncedSetter,
     useDebouncedState,
-    useEffectOnMount
 } from "../../utils/hooks";
 import {isWidthUp} from "@material-ui/core/withWidth";
 import withWidth from "@material-ui/core/withWidth/withWidth";
