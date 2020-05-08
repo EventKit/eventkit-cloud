@@ -18,7 +18,7 @@ from eventkit_cloud.core.helpers import (
     NotificationVerb,
     NotificationLevel,
 )
-from eventkit_cloud.tasks.helpers import get_all_rabbitmq_objects
+from eventkit_cloud.tasks.helpers import get_all_rabbitmq_objects, delete_rabbit_objects
 from eventkit_cloud.tasks.task_base import LockingTask, EventKitBaseTask
 from eventkit_cloud.tasks.util_tasks import pcf_shutdown_celery_workers
 from eventkit_cloud.utils.pcf import PcfClient
@@ -271,32 +271,9 @@ def send_warning_email(date=None, url=None, addr=None, job_name=None):
 
 @app.task(name="Clean Up Queues", base=EventKitBaseTask)
 def clean_up_queues_task():
-    broker_api_url = getattr(settings, "BROKER_API_URL")
-    queue_class = "queues"
-    exchange_class = "exchanges"
-
-    if not broker_api_url:
-        logger.error("Cannot clean up queues without a BROKER_API_URL.")
-        return
-    with app.connection() as conn:
-        channel = conn.channel()
-        if not channel:
-            logger.error("Could not establish a rabbitmq channel")
-            return
-        for queue in get_all_rabbitmq_objects(broker_api_url, queue_class):
-            queue_name = queue.get("name")
-            try:
-                channel.queue_delete(queue_name, if_unused=True, if_empty=True)
-                logger.info("Removed queue: {}".format(queue_name))
-            except Exception as e:
-                logger.info(e)
-        for exchange in get_all_rabbitmq_objects(broker_api_url, exchange_class):
-            exchange_name = exchange.get("name")
-            try:
-                channel.exchange_delete(exchange_name, if_unused=True)
-                logger.info("Removed exchange: {}".format(exchange_name))
-            except Exception as e:
-                logger.info(e)
+    """Deletes all of the queues that don't have any consumers or messages"""
+    api_url = getattr(settings, "BROKER_API_URL")
+    delete_rabbit_objects(api_url)
 
 
 def get_celery_health_check_command(node_type: str):
