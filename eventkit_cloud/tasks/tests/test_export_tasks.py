@@ -20,12 +20,12 @@ from eventkit_cloud.celery import TaskPriority, app
 from eventkit_cloud.jobs.models import DatamodelPreset, Job
 from eventkit_cloud.tasks.export_tasks import (ExportTask, export_task_error_handler, finalize_run_task,
                                                kml_export_task, mapproxy_export_task, geopackage_export_task,
-                                               shp_export_task, arcgis_feature_service_export_task, pick_up_run_task, cancel_export_provider_task, kill_task,
+                                               shp_export_task, arcgis_feature_service_export_task, pick_up_run_task,
+                                               cancel_export_provider_task, kill_task, geotiff_export_task,
                                                bounds_export_task, parse_result, finalize_export_provider_task,
                                                FormatTask, wait_for_providers_task, create_zip_task,
-                                               default_format_time, geotiff_export_task
                                                )
-from eventkit_cloud.tasks.task_process import update_progress
+from eventkit_cloud.tasks.helpers import default_format_time
 from eventkit_cloud.tasks.task_base import LockingTask
 from eventkit_cloud.tasks.enumerations import TaskStates
 from eventkit_cloud.tasks.export_tasks import zip_files
