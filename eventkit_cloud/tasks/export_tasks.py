@@ -203,7 +203,9 @@ class ExportTask(EventKitBaseTask):
                     name, finished, ext, additional_descriptors=[event, "eventkit"]
                 )
             else:
-                download_filename = get_download_filename(name, finished, ext, additional_descriptors=provider_slug)
+                download_filename = get_download_filename(
+                    name, finished, ext, additional_descriptors=[provider_slug], data_provider_slug=provider_slug
+                )
 
             # construct the download url
             skip_copy = task.name == "OverpassQuery"
@@ -1235,7 +1237,11 @@ def zip_files(include_files, file_path=None, static_files=None, *args, **kwargs)
                 filename = os.path.join(Directory.ARCGIS.value, "{0}{1}".format(name, ext))
             elif filepath.endswith(PREVIEW_TAIL):
                 download_filename = get_download_filename(
-                    "preview", timezone.now(), ext, additional_descriptors=provider_slug,
+                    "preview",
+                    timezone.now(),
+                    ext,
+                    additional_descriptors=[provider_slug],
+                    data_provider_slug=provider_slug,
                 )
                 filename = get_archive_data_path(provider_slug, download_filename)
             else:
@@ -1243,7 +1249,7 @@ def zip_files(include_files, file_path=None, static_files=None, *args, **kwargs)
                 # prepend with `data`
 
                 download_filename = get_download_filename(
-                    name, timezone.now(), ext, additional_descriptors=provider_slug
+                    name, timezone.now(), ext, additional_descriptors=[provider_slug], data_provider_slug=provider_slug
                 )
                 filename = get_archive_data_path(provider_slug, download_filename)
             zipfile.write(filepath, arcname=filename)

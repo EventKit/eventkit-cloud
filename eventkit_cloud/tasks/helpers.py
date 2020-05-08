@@ -17,8 +17,10 @@ from django.conf import settings
 from django.core.cache import cache
 from django.template.loader import render_to_string
 from django.utils import timezone
+from django.utils.text import slugify
 from django.db.models import Q
 
+from eventkit_cloud.core.helpers import get_cached_model
 from eventkit_cloud.utils import auth_requests
 from eventkit_cloud.utils.gdalutils import get_band_statistics
 from eventkit_cloud.utils.generic import cd, get_file_paths  # NOQA
@@ -93,20 +95,33 @@ def get_provider_staging_preview(run_uid, provider_slug):
     return os.path.join(run_staging_dir, provider_slug, PREVIEW_TAIL)
 
 
-def get_download_filename(name, time, ext, additional_descriptors=None):
+def get_download_filename(
+    name: str, time, ext: str, additional_descriptors: list = None, data_provider_slug: str = None
+):
     """
     This provides specific formatting for the names of the downloadable files.
     :param name: A name for the file, typically the job name.
-    :param additional_descriptors: Additional descriptors, typically the provider slug or project name
-    or any list of items.
     :param time:  A python datetime object.
     :param ext: The file extension (e.g. .gpkg)
+    :param additional_descriptors: Additional descriptors, typically the provider slug or project name
+        or any list of items.
+    :param data_provider_slug: Slug of the data provider for this filename, used to get the label
+        of that data provider to add on to the filename
     :return: The formatted file name (e.g. Boston-example-20180711.gpkg)
     """
+
+    if data_provider_slug:
+        try:
+            provider = provider = get_cached_model(model=DataProvider, prop="slug", value=data_provider_slug)
+            provider_label = slugify(provider.label) or ""
+            additional_descriptors.append(provider_label)
+        except DataProvider.DoesNotExist:
+            provider_label = ""
+
     # Allow numbers or strings.
     if not isinstance(additional_descriptors, (list, tuple)):
         additional_descriptors = [str(additional_descriptors)]
-    return "{0}-{1}-{2}{3}".format(name, "-".join(additional_descriptors), default_format_time(time), ext)
+    return "{0}-{1}-{2}{3}".format(name, "-".join(filter(None, additional_descriptors)), default_format_time(time), ext)
 
 
 def get_archive_data_path(provider_slug=None, file_name=None):
@@ -434,7 +449,8 @@ def get_metadata(data_provider_task_uid):
                         os.path.splitext(os.path.basename(filename))[0],
                         timezone.now(),
                         file_ext,
-                        additional_descriptors=provider_task.slug,
+                        additional_descriptors=[provider_task.slug],
+                        data_provider_slug=provider_task.slug,
                     )
                     filepath = get_archive_data_path(provider_task.slug, download_filename)
 
