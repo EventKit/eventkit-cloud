@@ -13,7 +13,7 @@ import os
 import signal
 from eventkit_cloud.tasks.helpers import get_style_files, get_file_paths, get_last_update, get_metadata_url, \
     get_osm_last_update, cd, get_arcgis_metadata, get_metadata, get_message_count, \
-    get_all_rabbitmq_objects
+    get_all_rabbitmq_objects, delete_rabbit_objects, get_download_filename
 from eventkit_cloud.tasks.enumerations import TaskStates
 
 from eventkit_cloud.tasks.helpers import progressive_kill
@@ -96,6 +96,34 @@ class TestHelpers(TestCase):
         returned_value = get_metadata_url(test_url, 'arcgis-raster')
         self.assertEqual(test_url, returned_value)
 
+    @patch('eventkit_cloud.tasks.helpers.get_cached_model')
+    def test_get_download_filename(self, mock_get_cached_model):
+        name = "test_datapack"
+        date = timezone.now()
+        ext = ".gpkg"
+        descriptors = ["osm"]
+        data_provider_slug = "osm"
+        label = "testlabel"
+
+        expected_date = date.strftime("%Y%m%d")
+        expected_descriptors_string = "-".join(filter(None, descriptors))
+
+        mocked_data_provider = MagicMock()
+        mocked_data_provider.label = "testlabel"
+        mock_get_cached_model.return_value = mocked_data_provider
+
+        expected_value = f"{name}-{expected_descriptors_string}-{label}-{expected_date}{ext}"
+        returned_value = get_download_filename(
+            name=name,
+            time=date,
+            ext=ext,
+            additional_descriptors=descriptors,
+            data_provider_slug=data_provider_slug
+        )
+
+        self.assertEqual(expected_value, returned_value)
+
+    @patch('eventkit_cloud.tasks.helpers.get_download_filename')
     @patch('os.path.isfile')
     @patch('eventkit_cloud.tasks.helpers.create_license_file')
     @patch('eventkit_cloud.tasks.helpers.get_metadata_url')
@@ -103,7 +131,7 @@ class TestHelpers(TestCase):
     @patch('eventkit_cloud.tasks.helpers.DataProvider')
     @patch('eventkit_cloud.tasks.helpers.DataProviderTaskRecord')
     def test_get_metadata(self, mock_DataProviderTaskRecord, mock_DataProvider, mock_get_last_update,
-                          mock_get_metadata_url, mock_create_license_file, mock_isfile):
+                          mock_get_metadata_url, mock_create_license_file, mock_isfile, mock_get_download_filename):
         run_uid = '1234'
         stage_dir = os.path.join(settings.EXPORT_STAGING_ROOT, str(run_uid))
 
@@ -154,6 +182,13 @@ class TestHelpers(TestCase):
 
         expected_date = timezone.now().strftime("%Y%m%d")
         split_file = os.path.splitext(sample_file)
+
+        expected_download_filename = "{}-{}-{}{}".format(split_file[0],
+                                                        expected_provider_slug,
+                                                        expected_date,
+                                                        split_file[1]
+                                                        )
+        mock_get_download_filename.return_value = expected_download_filename
 
         expected_metadata = {
             "aoi": expected_aoi,
@@ -230,12 +265,58 @@ class TestHelpers(TestCase):
         example_api = "http://example/api/"
         queues = "queues"
         expected_queues = [{"name": "queue1"}, {"name": "queue2"}]
-        requests_mocker.get(example_api + queues, text=json.dumps(expected_queues))
+        res1 = {"page_count": 2, "page": 1, "items": [{"name": "queue1"}]}
+        res2 = {"page_count": 2, "page": 2, "items": [{"name": "queue2"}]}
+
+        requests_mocker.get(example_api + queues + "?page=1&page_size=100&pagination=true", text=json.dumps(res1))
+        requests_mocker.get(example_api + queues + "?page=2&page_size=100&pagination=true", text=json.dumps(res2))
         result = get_all_rabbitmq_objects(example_api, queues)
         self.assertEqual(result, expected_queues)
 
         with self.assertRaises(Exception):
+            requests_mocker.get(example_api + queues + "?page=1&page_size=100&pagination=true", text="ERROR")
             get_all_rabbitmq_objects(example_api, "WRONG")
+
+    @patch('eventkit_cloud.tasks.helpers.get_all_rabbitmq_objects')
+    def test_delete_rabbit_objects(self, mock_get_all_rabbitmq_objects):
+        example_api = "https://example/api"
+        example_vhost = "abcd_vhost"
+        example_queues = [{"name": "queue1", "consumers": 0, "messages": 0, "vhost": example_vhost},
+                          {"name": "queue2", "consumers": 1, "messages": 1, "vhost": example_vhost}]
+        example_exchanges = [{"name": "exchange1", "vhost": example_vhost},
+                             {"name": "exchange2", "vhost": example_vhost}]
+
+        return_values = {'queues': example_queues, 'exchanges': example_exchanges}
+
+        mock_get_all_rabbitmq_objects.side_effect = lambda api, rabbit_class: return_values[rabbit_class]
+
+        # Deletes only the empty queue
+        with requests_mock.Mocker() as requests_mocker:
+            requests_mocker.delete(f"{example_api}/queues/{example_vhost}/{example_queues[0]['name']}")
+            delete_rabbit_objects(example_api)
+            mock_get_all_rabbitmq_objects.assert_called_once_with(example_api, 'queues')
+            self.assertEquals(requests_mocker.call_count, 1)
+            mock_get_all_rabbitmq_objects.reset_mock()
+
+        # Deletes only the empty queue and exchanges
+        with requests_mock.Mocker() as requests_mocker:
+            requests_mocker.delete(f"{example_api}/queues/{example_vhost}/{example_queues[0]['name']}")
+            requests_mocker.delete(f"{example_api}/exchanges/{example_vhost}/{example_exchanges[0]['name']}")
+            requests_mocker.delete(f"{example_api}/exchanges/{example_vhost}/{example_exchanges[1]['name']}")
+            delete_rabbit_objects(example_api, rabbit_classes=['queues', 'exchanges'])
+            mock_get_all_rabbitmq_objects.assert_has_calls([call(example_api, 'queues'), call(example_api, 'exchanges')])
+            self.assertEquals(requests_mocker.call_count, 3)
+            mock_get_all_rabbitmq_objects.reset_mock()
+
+        # Deletes all queues
+        with requests_mock.Mocker() as requests_mocker:
+            requests_mocker.delete(f"{example_api}/queues/{example_vhost}/{example_queues[0]['name']}")
+            requests_mocker.delete(f"{example_api}/queues/{example_vhost}/{example_queues[1]['name']}")
+            delete_rabbit_objects(example_api, force=True)
+            mock_get_all_rabbitmq_objects.assert_called_once_with(example_api, 'queues')
+            self.assertEquals(requests_mocker.call_count, 2)
+            mock_get_all_rabbitmq_objects.reset_mock()
+
 
     @patch('eventkit_cloud.tasks.helpers.get_all_rabbitmq_objects')
     def test_get_message_count(self, mock_get_all_rabbitmq_objects):

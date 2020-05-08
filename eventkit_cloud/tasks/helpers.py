@@ -17,8 +17,10 @@ from django.conf import settings
 from django.core.cache import cache
 from django.template.loader import render_to_string
 from django.utils import timezone
+from django.utils.text import slugify
 from django.db.models import Q
 
+from eventkit_cloud.core.helpers import get_cached_model
 from eventkit_cloud.utils import auth_requests
 from eventkit_cloud.utils.gdalutils import get_band_statistics
 from eventkit_cloud.utils.generic import cd, get_file_paths  # NOQA
@@ -26,6 +28,7 @@ from eventkit_cloud.utils.generic import cd, get_file_paths  # NOQA
 from eventkit_cloud.jobs.models import DataProvider
 from eventkit_cloud.tasks.exceptions import FailedException
 from eventkit_cloud.tasks.models import DataProviderTaskRecord
+import urllib.parse
 
 logger = logging.getLogger()
 
@@ -92,20 +95,33 @@ def get_provider_staging_preview(run_uid, provider_slug):
     return os.path.join(run_staging_dir, provider_slug, PREVIEW_TAIL)
 
 
-def get_download_filename(name, time, ext, additional_descriptors=None):
+def get_download_filename(
+    name: str, time, ext: str, additional_descriptors: list = None, data_provider_slug: str = None
+):
     """
     This provides specific formatting for the names of the downloadable files.
     :param name: A name for the file, typically the job name.
-    :param additional_descriptors: Additional descriptors, typically the provider slug or project name
-    or any list of items.
     :param time:  A python datetime object.
     :param ext: The file extension (e.g. .gpkg)
+    :param additional_descriptors: Additional descriptors, typically the provider slug or project name
+        or any list of items.
+    :param data_provider_slug: Slug of the data provider for this filename, used to get the label
+        of that data provider to add on to the filename
     :return: The formatted file name (e.g. Boston-example-20180711.gpkg)
     """
+
+    if data_provider_slug:
+        try:
+            provider = provider = get_cached_model(model=DataProvider, prop="slug", value=data_provider_slug)
+            provider_label = slugify(provider.label) or ""
+            additional_descriptors.append(provider_label)
+        except DataProvider.DoesNotExist:
+            provider_label = ""
+
     # Allow numbers or strings.
     if not isinstance(additional_descriptors, (list, tuple)):
         additional_descriptors = [str(additional_descriptors)]
-    return "{0}-{1}-{2}{3}".format(name, "-".join(additional_descriptors), default_format_time(time), ext)
+    return "{0}-{1}-{2}{3}".format(name, "-".join(filter(None, additional_descriptors)), default_format_time(time), ext)
 
 
 def get_archive_data_path(provider_slug=None, file_name=None):
@@ -433,7 +449,8 @@ def get_metadata(data_provider_task_uid):
                         os.path.splitext(os.path.basename(filename))[0],
                         timezone.now(),
                         file_ext,
-                        additional_descriptors=provider_task.slug,
+                        additional_descriptors=[provider_task.slug],
+                        data_provider_slug=provider_task.slug,
                     )
                     filepath = get_archive_data_path(provider_task.slug, download_filename)
 
@@ -510,21 +527,59 @@ def get_data_type_from_provider(provider_slug: str) -> str:
     return type_mapped
 
 
-def get_all_rabbitmq_objects(api_url: str, rabbit_class: str) -> dict:
+def get_all_rabbitmq_objects(api_url: str, rabbit_class: str) -> list:
     """
     :param api_url: The http api url including authentication values.
     :param rabbit_class: The type of rabbitmq class (i.e. queues or exchanges) as a string.
     :return: An array of dicts with the desired objects.
     """
+    url = f"{api_url.rstrip('/')}/{rabbit_class}"
+    params = {"page": 1, "page_size": 100, "pagination": True}
+    response = None
+    try:
+        logger.info(f"Getting all {rabbit_class}")
+        response = requests.get(url, params=params).json()
+        rabbit_objects = response["items"]
+        pages = response.get("page_count", 0)
+        for page in range(2, pages + 1):
+            logger.info(f"Getting page: {page} of {pages} for {rabbit_class}")
+            params["page"] = page
+            response = requests.get(url, params=params)
+            if response.ok:
+                rabbit_objects += response.json()["items"]
+            else:
+                raise Exception(f"Failed to fetch {rabbit_class}")
+        return rabbit_objects
+    except Exception as e:
+        if response:
+            logger.error(response.content.decode())
+        logger.error(e)
+        raise e
 
-    queues_url = f"{api_url.rstrip('/')}/{rabbit_class}"
-    response = requests.get(queues_url)
-    if response.ok:
-        return response.json()
-    else:
-        logger.error(response.content.decode())
-        logger.error(f"Could not get the {rabbit_class}")
-        return {}
+
+def delete_rabbit_objects(api_url: str, rabbit_classes: list = ["queues"], force: bool = False) -> None:
+
+    api_url = api_url.rstrip("/")
+    for rabbit_class in rabbit_classes:
+        for rabbit_object in get_all_rabbitmq_objects(api_url, rabbit_class):
+            object_name = urllib.parse.quote(rabbit_object.get("name"), safe="")
+            vhost = urllib.parse.quote(rabbit_object.get("vhost"), safe="")
+            # Exchanges don't have consumers or messages, so deleting exchanges is always done.
+            consumers = rabbit_object.get("consumers")
+            messages = rabbit_object.get("messages")
+            if not (messages or consumers) or force:
+                object_url = f"{api_url}/{rabbit_class}/{vhost}/{object_name}"
+                res = requests.delete(object_url)
+                if res.ok:
+                    logger.info(f"Removed {rabbit_class}: {object_name}")
+                else:
+                    logger.info(f"Could not remove {rabbit_class} {object_name}: {res.content}")
+            else:
+                logger.info(f"Cannot remove {rabbit_class}: {rabbit_object}")
+                if consumers:
+                    logger.info(f"There are {consumers} consumers")
+                if messages:
+                    logger.info(f"There are {messages} messages")
 
 
 def get_message_count(queue_name: str) -> int:
