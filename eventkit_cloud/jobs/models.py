@@ -164,6 +164,7 @@ class DataProvider(UIDMixin, TimeStampedModelMixin, CachedModelMixin):
     name = models.CharField(verbose_name="Service Name", unique=True, max_length=100)
 
     slug = LowerCaseCharField(max_length=40, unique=True, default="")
+    label = models.CharField(verbose_name="Label", max_length=100, null=True, blank=True)
     url = models.CharField(
         verbose_name="Service URL",
         max_length=1000,
