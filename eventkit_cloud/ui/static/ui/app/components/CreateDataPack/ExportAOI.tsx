@@ -247,7 +247,7 @@ export class ExportAOI extends React.Component<Props, State> {
                 projection: 'EPSG:4326',
                 url: (!!mapUrl) ? mapUrl : this.context.config.BASEMAP_URL,
                 wrapX: true,
-                attributions: this.context.config.BASEMAP_COPYRIGHT,
+                attributions: this.props.selectedBaseMap.copyright,
                 tileGrid: this.tileGrid,
             });
 
@@ -619,12 +619,13 @@ export class ExportAOI extends React.Component<Props, State> {
         // Order matters here
         // Above comment assumed to refer to the order of the parameters to XYZ() --
         // -- comment moved with code, originally offered no further explanation.
+        const { copyright } = this.props.selectedBaseMap;
         const layer = new Tile({
             source: new XYZ({
                 projection: 'EPSG:4326',
                 url: baseMapUrl,
                 wrapX: true,
-                attributions: this.context.config.BASEMAP_COPYRIGHT,
+                attributions: copyright ? copyright : this.context.config.BASEMAP_COPYRIGHT,
                 tileGrid: this.tileGrid,
             }),
         });
