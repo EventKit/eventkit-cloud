@@ -194,23 +194,9 @@ class TestEmailNotifications(TestCase):
 
 class TestCleanUpRabbit(TestCase):
 
-    @patch('eventkit_cloud.tasks.scheduled_tasks.app')
-    @patch('eventkit_cloud.tasks.scheduled_tasks.get_all_rabbitmq_objects')
-    def test_clean_up_queues_task(self, mock_get_all_rabbitmq_objects, mock_celery_app):
-
-        expected_queues = [{"name": "queue1"}, {"name": "queue2"}]
-        expected_exchanges = [{"name": "exchange1"}, {"name": "exchange2"}]
-        mock_get_all_rabbitmq_objects.side_effect = [expected_queues, expected_exchanges]
-        clean_up_queues_task()
-        mock_celery_app.connection.__enter__().channel().queue_delete('queue1', if_empty=True, if_unused=True),
-        mock_celery_app.connection.__enter__().channel().queue_delete('queue2', if_empty=True, if_unused=True),
-        mock_celery_app.connection.__enter__().channel().exchange_delete('exchange1', if_empty=True, if_unused=True),
-        mock_celery_app.connection.__enter__().channel().exchange_delete('exchange2', if_empty=True, if_unused=True),
-
-        with self.assertRaises(Exception):
-            mock_celery_app.connection.__enter__().channel().queue_delete().return_value = Exception()
+    @patch('eventkit_cloud.tasks.scheduled_tasks.delete_rabbit_objects')
+    def test_clean_up_queues_task(self, mock_delete_rabbit_objects):
+        example_api_url = "https://test/api"
+        with self.settings(BROKER_API_URL=example_api_url):
             clean_up_queues_task()
-
-        with self.assertRaises(Exception):
-            mock_celery_app.connection.__enter__().channel().exchange_delete().return_value = Exception()
-            clean_up_queues_task()
+            mock_delete_rabbit_objects.assert_called_once_with(example_api_url)

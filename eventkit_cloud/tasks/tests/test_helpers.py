@@ -13,7 +13,7 @@ import os
 import signal
 from eventkit_cloud.tasks.helpers import get_style_files, get_file_paths, get_last_update, get_metadata_url, \
     get_osm_last_update, cd, get_arcgis_metadata, get_metadata, get_message_count, \
-    get_all_rabbitmq_objects
+    get_all_rabbitmq_objects, delete_rabbit_objects
 from eventkit_cloud.tasks.enumerations import TaskStates
 
 from eventkit_cloud.tasks.helpers import progressive_kill
@@ -230,12 +230,58 @@ class TestHelpers(TestCase):
         example_api = "http://example/api/"
         queues = "queues"
         expected_queues = [{"name": "queue1"}, {"name": "queue2"}]
-        requests_mocker.get(example_api + queues, text=json.dumps(expected_queues))
+        res1 = {"page_count": 2, "page": 1, "items": [{"name": "queue1"}]}
+        res2 = {"page_count": 2, "page": 2, "items": [{"name": "queue2"}]}
+
+        requests_mocker.get(example_api + queues + "?page=1&page_size=100&pagination=true", text=json.dumps(res1))
+        requests_mocker.get(example_api + queues + "?page=2&page_size=100&pagination=true", text=json.dumps(res2))
         result = get_all_rabbitmq_objects(example_api, queues)
         self.assertEqual(result, expected_queues)
 
         with self.assertRaises(Exception):
+            requests_mocker.get(example_api + queues + "?page=1&page_size=100&pagination=true", text="ERROR")
             get_all_rabbitmq_objects(example_api, "WRONG")
+
+    @patch('eventkit_cloud.tasks.helpers.get_all_rabbitmq_objects')
+    def test_delete_rabbit_objects(self, mock_get_all_rabbitmq_objects):
+        example_api = "https://example/api"
+        example_vhost = "abcd_vhost"
+        example_queues = [{"name": "queue1", "consumers": 0, "messages": 0, "vhost": example_vhost},
+                          {"name": "queue2", "consumers": 1, "messages": 1, "vhost": example_vhost}]
+        example_exchanges = [{"name": "exchange1", "vhost": example_vhost},
+                             {"name": "exchange2", "vhost": example_vhost}]
+
+        return_values = {'queues': example_queues, 'exchanges': example_exchanges}
+
+        mock_get_all_rabbitmq_objects.side_effect = lambda api, rabbit_class: return_values[rabbit_class]
+
+        # Deletes only the empty queue
+        with requests_mock.Mocker() as requests_mocker:
+            requests_mocker.delete(f"{example_api}/queues/{example_vhost}/{example_queues[0]['name']}")
+            delete_rabbit_objects(example_api)
+            mock_get_all_rabbitmq_objects.assert_called_once_with(example_api, 'queues')
+            self.assertEquals(requests_mocker.call_count, 1)
+            mock_get_all_rabbitmq_objects.reset_mock()
+
+        # Deletes only the empty queue and exchanges
+        with requests_mock.Mocker() as requests_mocker:
+            requests_mocker.delete(f"{example_api}/queues/{example_vhost}/{example_queues[0]['name']}")
+            requests_mocker.delete(f"{example_api}/exchanges/{example_vhost}/{example_exchanges[0]['name']}")
+            requests_mocker.delete(f"{example_api}/exchanges/{example_vhost}/{example_exchanges[1]['name']}")
+            delete_rabbit_objects(example_api, rabbit_classes=['queues', 'exchanges'])
+            mock_get_all_rabbitmq_objects.assert_has_calls([call(example_api, 'queues'), call(example_api, 'exchanges')])
+            self.assertEquals(requests_mocker.call_count, 3)
+            mock_get_all_rabbitmq_objects.reset_mock()
+
+        # Deletes all queues
+        with requests_mock.Mocker() as requests_mocker:
+            requests_mocker.delete(f"{example_api}/queues/{example_vhost}/{example_queues[0]['name']}")
+            requests_mocker.delete(f"{example_api}/queues/{example_vhost}/{example_queues[1]['name']}")
+            delete_rabbit_objects(example_api, force=True)
+            mock_get_all_rabbitmq_objects.assert_called_once_with(example_api, 'queues')
+            self.assertEquals(requests_mocker.call_count, 2)
+            mock_get_all_rabbitmq_objects.reset_mock()
+
 
     @patch('eventkit_cloud.tasks.helpers.get_all_rabbitmq_objects')
     def test_get_message_count(self, mock_get_all_rabbitmq_objects):
