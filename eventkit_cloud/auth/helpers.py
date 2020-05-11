@@ -25,22 +25,24 @@ def validate_object(filter: Union[List[any], bool], object_dict: dict) -> bool:
         right = object_dict.get(right)
 
     if isinstance(left, str):
-        if left.lower() == 'none':
+        if left.lower() == "none":
             left = None
 
     # https://docs.python.org/3/reference/expressions.html#comparisons
-    operations = {"in": lambda: left in right,
-                  "not in": lambda: left not in right,
-                  "<": lambda: left < right,
-                  "<=": lambda: left <= right,
-                  ">": lambda: left > right,
-                  ">=": lambda: left >= right,
-                  "==": lambda: left == right,
-                  "!=": lambda: left != right,
-                  "is": lambda: left is right,
-                  "is not": lambda: left is not right,
-                  "or": lambda: left or right,
-                  "and": lambda: left and right}
+    operations = {
+        "in": lambda: left in right,
+        "not in": lambda: left not in right,
+        "<": lambda: left < right,
+        "<=": lambda: left <= right,
+        ">": lambda: left > right,
+        ">=": lambda: left >= right,
+        "==": lambda: left == right,
+        "!=": lambda: left != right,
+        "is": lambda: left is right,
+        "is not": lambda: left is not right,
+        "or": lambda: left or right,
+        "and": lambda: left and right,
+    }
 
     try:
         operation = operations[operator]
