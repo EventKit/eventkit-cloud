@@ -23,7 +23,7 @@ from django.core.exceptions import ObjectDoesNotExist
 from django.core.mail import EmailMultiAlternatives
 from django.db import DatabaseError, transaction
 from django.db.models import Q
-from django.template.loader import get_template, render_to_string
+from django.template.loader import get_template
 from django.utils import timezone
 
 from eventkit_cloud.celery import app, TaskPriority
@@ -45,7 +45,6 @@ from eventkit_cloud.tasks.helpers import (
     get_provider_staging_dir,
     get_run_download_dir,
     Directory,
-    default_format_time,
     progressive_kill,
     get_style_files,
     generate_qgs_style,
@@ -58,6 +57,7 @@ from eventkit_cloud.tasks.helpers import (
     check_cached_task_failures,
     PREVIEW_TAIL,
 )
+from eventkit_cloud.tasks.metadata import metadata_tasks
 from eventkit_cloud.tasks.task_process import update_progress
 from eventkit_cloud.utils.auth_requests import get_cred
 from eventkit_cloud.utils import overpass, pbf, s3, mapproxy, wcs, geopackage, gdalutils
@@ -74,8 +74,7 @@ from eventkit_cloud.tasks.models import (
     FileProducingTaskResult,
     ExportRun,
 )
-from eventkit_cloud.jobs.models import Job, DataProvider, DataProviderTask
-
+from eventkit_cloud.jobs.models import DataProvider, DataProviderTask
 
 BLACKLISTED_ZIP_EXTS = [".ini", ".om5", ".osm", ".lck", ".pyc"]
 
@@ -169,6 +168,15 @@ class ExportTask(EventKitBaseTask):
             # Something needs to be populated to notify the user and to skip the following steps.
             if not (retval and retval.get("result")):
                 raise Exception("This task was skipped due to previous failures/cancellations.")
+
+            try:
+                add_metadata(task.export_provider_task.run.job, task.export_provider_task.slug, retval)
+            except Exception:
+                import traceback
+
+                logger.error(traceback.format_exc())
+                logger.error("Failed to add metadata.")
+
             # update the task
             finished = timezone.now()
             if TaskStates.CANCELED.value in [
@@ -447,7 +455,6 @@ def osm_data_collection_task(
         eta = ETA(task_uid=task_uid, debug_os=debug_os)
 
         result = result or {}
-        run = ExportRun.objects.get(uid=run_uid)
 
         if user_details is None:
             user_details = {"username": "username not set in osm_data_collection_task"}
@@ -472,8 +479,6 @@ def osm_data_collection_task(
         result["result"] = gpkg_filepath
         result["source"] = gpkg_filepath
 
-        result = add_metadata_task(result=result, job_uid=run.job.uid, provider_slug=provider_slug)
-
         logger.debug("exit run for {0}".format(self.name))
     finally:
         if debug_os:
@@ -482,41 +487,24 @@ def osm_data_collection_task(
     return result
 
 
-@app.task(name="Add Metadata", bind=True, base=EventKitBaseTask, abort_on_error=False)
-def add_metadata_task(self, result=None, job_uid=None, provider_slug=None, user_details=None, *args, **kwargs):
+def add_metadata(job, provider_slug, retval):
     """
-    Task to create metadata to a geopackage.
+    Accepts a job, provider slug, and return value from a task and applies metadata to the relevant file.
+
+    :param job:
+    :param provider_slug:
+    :param retval:
+    :return:
     """
-    job = Job.objects.get(uid=job_uid)
-
-    provider = DataProvider.objects.get(slug=provider_slug)
-    result = result or {}
-    input_gpkg = parse_result(result, "source")
-    date_time = timezone.now()
-    bbox = job.extents
-    metadata_values = {
-        "fileIdentifier": "{0}-{1}-{2}".format(job.name, provider.slug, default_format_time(date_time)),
-        "abstract": job.description,
-        "title": job.name,
-        "westBoundLongitude": bbox[0],
-        "southBoundLatitude": bbox[1],
-        "eastBoundLongitude": bbox[2],
-        "northBoundLatitude": bbox[3],
-        "URL": provider.preview_url,
-        "applicationProfile": None,
-        "code": None,
-        "name": provider.name,
-        "description": provider.service_description,
-        "dateStamp": date_time.isoformat(),
-    }
-
-    metadata = render_to_string("data/geopackage_metadata.xml", context=metadata_values)
-
-    geopackage.add_file_metadata(input_gpkg, metadata)
-
-    result["result"] = input_gpkg
-    result["source"] = input_gpkg
-    return result
+    result_file = retval.get("result", None)
+    if result_file is None:
+        return
+    task = metadata_tasks.get(os.path.splitext(result_file)[1], None)
+    if provider_slug == "run":
+        return
+    if task is not None:
+        provider = DataProvider.objects.get(slug=provider_slug)
+        task(filepath=result_file, job=job, provider=provider)
 
 
 @app.task(name="ESRI Shapefile (.shp)", bind=True, base=FormatTask, acks_late=True)
@@ -792,7 +780,6 @@ def reprojection_task(
     Class defining a task that will reproject all file formats to the chosen projections.
     """
     result = result or {}
-
     file_format = parse_result(result, "file_format")
     selection = parse_result(result, "selection")
 
@@ -1042,10 +1029,6 @@ def mapproxy_export_task(
     Class defining geopackage export for external raster service.
     """
     result = result or {}
-    run = ExportRun.objects.get(uid=run_uid)
-    task = ExportTaskRecord.objects.get(uid=task_uid)
-    # ETA estimator will be initialized by the eventkit_cloud.utils.mapproxy.CustomLogger
-
     selection = parse_result(result, "selection")
 
     gpkgfile = os.path.join(stage_dir, "{0}-{1}.gpkg".format(job_name, projection))
@@ -1067,9 +1050,6 @@ def mapproxy_export_task(
         result["file_format"] = "gpkg"
         result["result"] = gpkg
         result["source"] = gpkg
-        add_metadata_task(
-            result=result, job_uid=run.job.uid, provider_slug=task.export_provider_task.slug,
-        )
 
         return result
     except Exception as e:
@@ -1121,7 +1101,6 @@ def wait_for_run(run_uid: str = None) -> None:
 # This could be improved by using Redis or Memcached to help manage state.
 @app.task(name="Wait For Providers", base=EventKitBaseTask, acks_late=True)
 def wait_for_providers_task(result=None, apply_args=None, run_uid=None, callback_task=None, *args, **kwargs):
-
     if isinstance(callback_task, dict):
         callback_task = signature(callback_task)
 
