@@ -196,6 +196,7 @@ export interface Props {
 
 MapDrawer.defaultProps = { sources: [] } as Props;
 
+
 export function MapDrawer(props: Props) {
     const { providers, classes } = props;
 
@@ -260,7 +261,8 @@ export function MapDrawer(props: Props) {
     const [sources, setSources] = useState([]);
     useEffect(() => {
         setSources([
-            ...providers.filter(provider => !!provider.preview_url && !!provider.display).map(provider => {
+            ...providers.filter(provider =>
+                !!provider.preview_url && !!provider.display).map(provider => {
                 let footprintsLayer;
                 if (!!provider.footprint_url) {
                     footprintsLayer = {
@@ -274,6 +276,7 @@ export function MapDrawer(props: Props) {
                         mapUrl: provider.preview_url,
                         metadata: provider.metadata,
                         slug: provider.slug,
+                        copyright: provider.service_copyright,
                     } as MapLayer,
                     name: provider.name,
                     type: provider.type,

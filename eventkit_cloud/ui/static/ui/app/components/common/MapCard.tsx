@@ -81,7 +81,7 @@ export class MapCard extends React.Component<Props, State> {
                             <MapView
                                 id={this.props.provider.id + "-map"}
                                 selectedBaseMap={selectedBasemap}
-                                copyright={this.context.config.BASEMAP_COPYRIGHT}
+                                copyright={this.props.provider.service_copyright ? this.props.provider.service_copyright : this.context.config.BASEMAP_COPYRIGHT}
                                 geojson={this.props.geojson}
                                 setZoom={this.props.setZoom}
                                 zoom={this.props.zoom}

@@ -34,7 +34,6 @@ export class DataPackAoiInfo extends React.Component<Props, {}> {
                     <MapView
                         id={"summaryMap"}
                         selectedBaseMap={selectedBasemap}
-                        copyright={this.context.config.BASEMAP_COPYRIGHT}
                         geojson={this.props.extent}
                         minZoom={2}
                         maxZoom={20}
