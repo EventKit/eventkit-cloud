@@ -173,8 +173,9 @@ class ExportTask(EventKitBaseTask):
                 add_metadata(task.export_provider_task.run.job, task.export_provider_task.slug, retval)
             except Exception:
                 import traceback
+
                 logger.error(traceback.format_exc())
-                logger.error('Failed to add metadata.')
+                logger.error("Failed to add metadata.")
 
             # update the task
             finished = timezone.now()
