@@ -16,7 +16,7 @@ describe('SearchAOIToolbar button', () => {
 
     const getProps = () => ({
         divId: 'div12',
-        style: {display: 'block', height: '55px'},
+        style: {visibility: 'hidden', height: '55px'},
         zoomLevel: 2,
         minZoom: 0,
         maxZoom: 20,
@@ -34,9 +34,9 @@ describe('SearchAOIToolbar button', () => {
         expect(wrapper.find(`#${props.divId}`).get(0).props.style).toEqual({...props.style});
     });
 
-    it('should set display style to none when not visible', () => {
+    it('should set visibility style to hidden when not visible', () => {
         setup({visible: false});
-        expect(wrapper.find(`#${props.divId}`).get(0).props.style).toEqual({...props.style, display: 'none'});
+        expect(wrapper.find(`#${props.divId}`).get(0).props.style).toEqual({...props.style, visibility: 'hidden'});
     });
 
 
