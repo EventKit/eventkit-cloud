@@ -156,6 +156,9 @@ class DataProviderTaskRecord(UIDMixin, TimeStampedModelMixin, TimeTrackingModelM
 
     name = models.CharField(max_length=100, blank=True)
     slug = LowerCaseCharField(max_length=40, default="")
+    provider = models.ForeignKey(
+        DataProvider, on_delete=models.CASCADE, related_name="task_record_provider", null=True, blank=True
+    )
     run = models.ForeignKey(ExportRun, related_name="provider_tasks", on_delete=models.CASCADE)
     status = models.CharField(blank=True, max_length=20, db_index=True)
     display = models.BooleanField(default=False)

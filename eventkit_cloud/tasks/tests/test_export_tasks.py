@@ -17,7 +17,7 @@ from django.utils import timezone
 from mock import Mock, PropertyMock, patch, MagicMock, call, ANY
 
 from eventkit_cloud.celery import TaskPriority, app
-from eventkit_cloud.jobs.models import DatamodelPreset, Job
+from eventkit_cloud.jobs.models import DatamodelPreset, DataProvider, Job
 from eventkit_cloud.tasks.export_tasks import (ExportTask, export_task_error_handler, finalize_run_task,
                                                kml_export_task, mapproxy_export_task, geopackage_export_task,
                                                shp_export_task, arcgis_feature_service_export_task, pick_up_run_task, cancel_export_provider_task, kill_task,
@@ -83,7 +83,7 @@ class TestLockingTask(TestCase):
 
 
 class ExportTaskBase(TransactionTestCase):
-    fixtures = ('datamodel_presets.json',)
+    fixtures = ('osm_provider.json', 'datamodel_presets.json')
 
     def setUp(self, ):
         self.path = os.path.dirname(os.path.realpath(__file__))
@@ -110,7 +110,8 @@ class ExportTaskBase(TransactionTestCase):
         self.job.feature_pub = True
         self.job.save()
         self.run = ExportRun.objects.create(job=self.job, user=self.user)
-
+        self.provider = DataProvider.objects.first()
+        print(f"{self.provider} EXISTS")
 
 class TestExportTasks(ExportTaskBase):
     @patch('celery.app.task.Task.request')
@@ -123,7 +124,8 @@ class TestExportTasks(ExportTaskBase):
         ogr_mock.convert.return_value = '/path/to/' + job_name + '.shp'
         stage_dir = settings.EXPORT_STAGING_ROOT + str(self.run.uid)
         export_provider_task = DataProviderTaskRecord.objects.create(run=self.run, name='Shapefile Export',
-                                                                     status=TaskStates.PENDING.value)
+                                                                     status=TaskStates.PENDING.value,
+                                                                     provider=self.provider)
         saved_export_task = ExportTaskRecord.objects.create(export_provider_task=export_provider_task,
                                                             status=TaskStates.PENDING.value,
                                                             name=shp_export_task.name)
@@ -148,7 +150,8 @@ class TestExportTasks(ExportTaskBase):
         ogr_mock.convert.return_value = expected_output_path
         stage_dir = settings.EXPORT_STAGING_ROOT + str(self.run.uid) + '/'
         export_provider_task = DataProviderTaskRecord.objects.create(run=self.run, name='GPKGToKml',
-                                                                     status=TaskStates.PENDING.value)
+                                                                     status=TaskStates.PENDING.value,
+                                                                     provider=self.provider)
         saved_export_task = ExportTaskRecord.objects.create(export_provider_task=export_provider_task,
                                                             status=TaskStates.PENDING.value,
                                                             name=kml_export_task.name)
@@ -177,7 +180,7 @@ class TestExportTasks(ExportTaskBase):
         stage_dir = settings.EXPORT_STAGING_ROOT + str(self.run.uid) + '/'
         export_provider_task = DataProviderTaskRecord.objects.create(run=self.run,
                                                                      status=TaskStates.PENDING.value,
-                                                                     slug=expected_provider_slug)
+                                                                     provider=self.provider)
         saved_export_task = ExportTaskRecord.objects.create(export_provider_task=export_provider_task,
                                                             status=TaskStates.PENDING.value,
                                                             name=geopackage_export_task.name)
@@ -233,7 +236,8 @@ class TestExportTasks(ExportTaskBase):
         ogr_mock.convert.return_value = expected_output_path
         stage_dir = settings.EXPORT_STAGING_ROOT + str(self.run.uid) + '/'
         export_provider_task = DataProviderTaskRecord.objects.create(run=self.run,
-                                                                     status=TaskStates.PENDING.value)
+                                                                     status=TaskStates.PENDING.value,
+                                                                     provider=self.provider)
         saved_export_task = ExportTaskRecord.objects.create(export_provider_task=export_provider_task,
                                                             status=TaskStates.PENDING.value,
                                                             name=arcgis_feature_service_export_task.name)
@@ -253,7 +257,6 @@ class TestExportTasks(ExportTaskBase):
     @patch('eventkit_cloud.utils.mapproxy.MapproxyGeopackage')
     def test_run_external_raster_service_export_task(self, mock_service, mock_request, mock_add_metadata_task):
         celery_uid = str(uuid.uuid4())
-        expected_provider_slug = "slug"
         type(mock_request).id = PropertyMock(return_value=celery_uid)
         service_to_gpkg = mock_service.return_value
         job_name = self.job.name.lower()
@@ -263,7 +266,7 @@ class TestExportTasks(ExportTaskBase):
         stage_dir = settings.EXPORT_STAGING_ROOT + str(self.run.uid) + '/'
         export_provider_task = DataProviderTaskRecord.objects.create(run=self.run,
                                                                      status=TaskStates.PENDING.value,
-                                                                     slug=expected_provider_slug)
+                                                                     provider=self.provider)
         saved_export_task = ExportTaskRecord.objects.create(export_provider_task=export_provider_task,
                                                             status=TaskStates.PENDING.value,
                                                             name=mapproxy_export_task.name)
@@ -273,8 +276,7 @@ class TestExportTasks(ExportTaskBase):
                                           stage_dir=stage_dir,
                                           job_name=job_name)
         service_to_gpkg.convert.assert_called_once()
-        mock_add_metadata_task.assert_called_once_with(result=result, job_uid=self.run.job.uid,
-                                                       provider_slug=expected_provider_slug)
+        mock_add_metadata_task.assert_called_once_with(result=result, job_uid=self.run.job.uid)
         self.assertEqual(expected_output_path, result['result'])
         # test the tasks update_task_state method
         run_task = ExportTaskRecord.objects.get(celery_uid=celery_uid)
@@ -288,7 +290,9 @@ class TestExportTasks(ExportTaskBase):
     def test_task_on_failure(self, ):
         celery_uid = str(uuid.uuid4())
         # assume task is running
-        export_provider_task = DataProviderTaskRecord.objects.create(run=self.run, name='Shapefile Export')
+        export_provider_task = DataProviderTaskRecord.objects.create(run=self.run,
+                                                                     name='Shapefile Export',
+                                                                     provider=self.provider)
         test_export_task_record = ExportTaskRecord.objects.create(export_provider_task=export_provider_task,
                                                                   celery_uid=celery_uid,
                                                                   status=TaskStates.RUNNING.value,
@@ -381,7 +385,7 @@ class TestExportTasks(ExportTaskBase):
                                                                               '{}_bounds.gpkg'.format(provider_slug))
         expected_output_path = os.path.join(settings.EXPORT_STAGING_ROOT.rstrip('\/'), str(self.run.uid),
                                             '{}_bounds.gpkg'.format(provider_slug))
-        export_provider_task = DataProviderTaskRecord.objects.create(run=self.run)
+        export_provider_task = DataProviderTaskRecord.objects.create(run=self.run, provider=self.provider)
         saved_export_task = ExportTaskRecord.objects.create(export_provider_task=export_provider_task,
                                                             status=TaskStates.PENDING.value,
                                                             name=bounds_export_task.name)
@@ -415,7 +419,9 @@ class TestExportTasks(ExportTaskBase):
         run_uid = self.run.uid
         stage_dir = os.path.join(settings.EXPORT_STAGING_ROOT, str(self.run.uid))
         isdir.return_value = True
-        export_provider_task = DataProviderTaskRecord.objects.create(run=self.run, name='Shapefile Export')
+        export_provider_task = DataProviderTaskRecord.objects.create(run=self.run,
+                                                                     name='Shapefile Export',
+                                                                     provider=self.provider)
         ExportTaskRecord.objects.create(export_provider_task=export_provider_task, celery_uid=celery_uid,
                                         status='SUCCESS', name='Default Shapefile Export')
         finalize_run_task.after_return('status', {'stage_dir': stage_dir}, run_uid, (), {}, 'Exception Info')
@@ -423,7 +429,9 @@ class TestExportTasks(ExportTaskBase):
         rmtree.assert_called_with(stage_dir)
 
         celery_uid = str(uuid.uuid4())
-        export_provider_task = DataProviderTaskRecord.objects.create(run=self.run, name='Shapefile Export')
+        export_provider_task = DataProviderTaskRecord.objects.create(run=self.run,
+                                                                     name='Shapefile Export',
+                                                                     provider=self.provider)
         ExportTaskRecord.objects.create(export_provider_task=export_provider_task, celery_uid=celery_uid,
                                         status='SUCCESS', name='Default Shapefile Export')
         rmtree.side_effect = IOError()
@@ -438,8 +446,10 @@ class TestExportTasks(ExportTaskBase):
         celery_uid = str(uuid.uuid4())
         run_uid = self.run.uid
         stage_dir = settings.EXPORT_STAGING_ROOT + str(self.run.uid)
-        export_provider_task = DataProviderTaskRecord.objects.create(status=TaskStates.SUCCESS.value, run=self.run,
-                                                                     name='Shapefile Export')
+        export_provider_task = DataProviderTaskRecord.objects.create(status=TaskStates.SUCCESS.value,
+                                                                     run=self.run,
+                                                                     name='Shapefile Export',
+                                                                     provider=self.provider)
         ExportTaskRecord.objects.create(export_provider_task=export_provider_task, celery_uid=celery_uid,
                                         status=TaskStates.SUCCESS.value, name='Default Shapefile Export')
         self.assertEqual('Finalize Run Task', finalize_run_task.name)
@@ -472,7 +482,9 @@ class TestExportTasks(ExportTaskBase):
             rocketchat_notifications = settings.ROCKETCHAT_NOTIFICATIONS
             channel = rocketchat_notifications["channels"][0]
             message = f"@here: A DataPack has failed during processing. {url}"
-            export_provider_task = DataProviderTaskRecord.objects.create(run=self.run, name='Shapefile Export')
+            export_provider_task = DataProviderTaskRecord.objects.create(run=self.run,
+                                                                         name='Shapefile Export',
+                                                                         provider=self.provider)
             ExportTaskRecord.objects.create(export_provider_task=export_provider_task, uid=task_id,
                                             celery_uid=celery_uid, status=TaskStates.FAILED.value,
                                             name='Default Shapefile Export')
@@ -495,6 +507,7 @@ class TestExportTasks(ExportTaskBase):
         export_provider_task = DataProviderTaskRecord.objects.create(
             run=self.run,
             name='test_provider_task',
+            provider=self.provider,
             status=TaskStates.PENDING.value
         )
         export_task = ExportTaskRecord.objects.create(
@@ -544,7 +557,7 @@ class TestExportTasks(ExportTaskBase):
             run=self.run,
             name='test_provider_task',
             status=TaskStates.COMPLETED.value,
-            slug='test_provider_task_slug'
+            provider=self.provider
         )
         result = FileProducingTaskResult.objects.create(filename=filename, size=10)
         task = ExportTaskRecord.objects.create(
