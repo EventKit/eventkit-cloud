@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<nas:MD_Metadata xmlns:nas="http://metadata.ces.mil/dse/ns/GSIP/5.0/nas"
+                 xmlns:gmd="http://www.isotc211.org/2005/gmd"
+                 xmlns:gco="http://www.isotc211.org/2005/gco"
+                 xmlns:ism="urn:us:gov:ic:ism"
+                 xmlns:ntk="urn:us:gov:ic:ntk"
+                 ism:DESVersion="9"
+                 ism:resourceElement="true"
+                 ism:classification="U"
+                 ism:ownerProducer="USA"
+                 ntk:DESVersion="7">
+    <gmd:hierarchyLevel>
+        <gmd:MD_ScopeCode codeList="http://api.nsgreg.nga.mil/codelist/ScopeCode" codeListValue="series"/>
+    </gmd:hierarchyLevel>
+    <gmd:hierarchyLevelName>
+        <nas:ScopeAmplificationCode codeList="http://api.nsgreg.nga.mil/codelist/ScopeAmplificationCode"
+                                    codeListValue="collection"/>
+    </gmd:hierarchyLevelName>
+    <gmd:contact>
+        <gmd:CI_ResponsibleParty>
+            <gmd:organisationName>
+                <gco:CharacterString>EventKit</gco:CharacterString>
+            </gmd:organisationName>
+            <gmd:role>
+                <gmd:CI_RoleCode codeList="http://api.nsgreg.nga.mil/codelist/RoleCode" codeListValue="publisher"/>
+            </gmd:role>
+        </gmd:CI_ResponsibleParty>
+    </gmd:contact>
+    <gmd:metadataStandardName>
+        <nas:MetadataStandardNameCode codeList="http://api.nsgreg.nga.mil/codelist/MetadataStandardNameCode"
+                                      codeListValue="nsgMetadataFoundation"/>
+    </gmd:metadataStandardName>
+    <gmd:metadataStandardVersion>
+        <nas:MetadataStandardVersion>2.2.0</nas:MetadataStandardVersion>
+    </gmd:metadataStandardVersion>
+    <gmd:dataQualityInfo>
+        <gmd:DQ_DataQuality>
+            <gmd:scope>
+                <gmd:DQ_Scope>
+                    <gmd:level>
+                        <gmd:MD_ScopeCode codeList="http://api.nsgreg.nga.mil/codelist/ScopeCode"
+                                          codeListValue="series"/>
+                    </gmd:level>
+                    <gmd:levelDescription>
+                        <gmd:MD_ScopeDescription>
+                            <gmd:other>
+                                <nas:ScopeAmplificationCode
+                                        codeList="http://api.nsgreg.nga.mil/codelist/ScopeAmplificationCode"
+                                        codeListValue="dataset"/>
+                            </gmd:other>
+                        </gmd:MD_ScopeDescription>
+                    </gmd:levelDescription>
+                </gmd:DQ_Scope>
+            </gmd:scope>
+            <gmd:lineage>
+                <gmd:LI_Lineage>
+                    <gmd:statement>
+                        <gco:CharacterString>Unknown Lineage</gco:CharacterString>
+                    </gmd:statement>
+                </gmd:LI_Lineage>
+            </gmd:lineage>
+        </gmd:DQ_DataQuality>
+    </gmd:dataQualityInfo>
+    <gmd:metadataConstraints>
+        <nas:MD_SecurityConstraints>
+            <gmd:classification>
+                <gmd:MD_ClassificationCode codeList="http://api.nsgreg.nga.mil/codelist/ClassificationCode"
+                                           codeListValue="unclassified"/>
+            </gmd:classification>
+            <gmd:classificationSystem>
+                <nas:ClassificationSystem>US CAPCO</nas:ClassificationSystem>
+            </gmd:classificationSystem>
+            <nas:capcoMarking ism:classification="UNSPECIFIED" ism:ownerProducer="USA"/>
+        </nas:MD_SecurityConstraints>
+    </gmd:metadataConstraints>
+</nas:MD_Metadata>
