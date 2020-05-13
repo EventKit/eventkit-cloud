@@ -82,7 +82,7 @@ class TestLockingTask(TestCase):
         mock_cache.add.assert_called_with(expected_lock_key, task_id, lock_task.lock_expiration)
 
 
-class ExportTaskBase(TransactionTestCase):
+class ExportTaskBase(TestCase):
     fixtures = ('osm_provider.json', 'datamodel_presets.json')
 
     def setUp(self, ):
@@ -276,7 +276,7 @@ class TestExportTasks(ExportTaskBase):
                                           stage_dir=stage_dir,
                                           job_name=job_name)
         service_to_gpkg.convert.assert_called_once()
-        mock_add_metadata_task.assert_called_once_with(result=result, job_uid=self.run.job.uid)
+        mock_add_metadata_task.assert_called_once_with(result=result, job_uid=self.run.job.uid, provider_slug=self.provider.slug)
         self.assertEqual(expected_output_path, result['result'])
         # test the tasks update_task_state method
         run_task = ExportTaskRecord.objects.get(celery_uid=celery_uid)
