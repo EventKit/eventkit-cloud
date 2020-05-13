@@ -112,11 +112,12 @@ def get_download_filename(
 
     if data_provider_slug:
         try:
-            provider = provider = get_cached_model(model=DataProvider, prop="slug", value=data_provider_slug)
-            provider_label = slugify(provider.label) or ""
-            additional_descriptors.append(provider_label)
+            provider = get_cached_model(model=DataProvider, prop="slug", value=data_provider_slug)
+            if provider.label:
+                provider_label = slugify(provider.label)
+                additional_descriptors.append(provider_label)
         except DataProvider.DoesNotExist:
-            provider_label = ""
+            logger.info(f"{data_provider_slug} does not map to any known DataProvider.")
 
     # Allow numbers or strings.
     if not isinstance(additional_descriptors, (list, tuple)):
