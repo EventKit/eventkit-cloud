@@ -111,6 +111,9 @@ def fetch_user_from_token(access_token):
     user_data = get_user_data_from_schema(orig_data)
 
     auth_a_data = get_auth_A(user_data)
+    if auth_a_data is None:
+        logger.error('Could not retrieve AuthA response')
+    logger.info('AuthA retrieved.')
     logger.info(f'AuthA user data: {auth_a_data}')
 
     return get_user(user_data, orig_data)
