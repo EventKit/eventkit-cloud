@@ -175,6 +175,10 @@ if os.getenv("OAUTH_AUTHORIZATION_URL"):
     OAUTH_PROFILE_SCHEMA = os.getenv("OAUTH_PROFILE_SCHEMA")
     OAUTH_PROFILE_URL = os.getenv("OAUTH_PROFILE_URL")
 
+
+AUTHA_URL = os.getenv("AUTHA_URL", None)
+AUTHA_CERT = os.getenv("AUTHA_CERT", None)
+
 if os.getenv("LDAP_SERVER_URI"):
     import ldap
     from django_auth_ldap.config import LDAPSearch

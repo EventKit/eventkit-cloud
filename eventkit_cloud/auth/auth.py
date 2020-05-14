@@ -5,6 +5,7 @@ from datetime import datetime, timedelta
 import dateutil.parser
 import pytz
 import requests
+from requests.utils import urlparse
 from django.conf import settings
 from django.contrib.auth import logout as auth_logout
 from django.contrib.auth import authenticate
@@ -51,13 +52,43 @@ def auto_logout(get_response):
     return middleware
 
 
+def get_auth_A(user_data):
+    """
+    Given OAuth user data, try to get AuthA results based on the user identification.
+
+    :param user_data: dict containing user data. Identification is may be DN or UID, we try one then the other.
+    :return: AuthA response data, otherwise None in case of error or lack of proper identification.
+    """
+    identification = user_data.get('identification')
+
+    if not identification or not hasattr(settings, 'AUTHA_URL') or not hasattr(settings, 'AUTHA_CERT'):
+        return None
+    try:
+        response = requests.get(settings.AUTHA_URL, params={"uid": identification}, cert=settings.AUTHA_CERT)
+        return response.json()
+    except requests.exceptions.RequestException:
+        import traceback
+        logger.error('Could not get AuthA with uid.')
+        logger.error(traceback.format_exc())
+
+    try:
+        response = requests.get(settings.AUTHA_URL, params={
+            "certsubjectstring": requests.utils.quote(identification)
+        }, cert=settings.AUTHA_CERT)
+        return response.json()
+    except requests.exceptions.RequestException:
+        import traceback
+        logger.error('Could not get AuthA with DN.')
+        logger.error(traceback.format_exc())
+        return None
+
+
 def fetch_user_from_token(access_token):
     """
 
     :param access_token: Uses OAuth token to retrieve user data from the resource server.
     :return: User object.
     """
-
     logger.debug('Sending request: access_token="{0}"'.format(access_token))
     try:
         response = requests.get(
@@ -79,6 +110,9 @@ def fetch_user_from_token(access_token):
     orig_data = response.json()
     user_data = get_user_data_from_schema(orig_data)
 
+    auth_a_data = get_auth_A(user_data)
+    logger.info(f'AuthA user data: {auth_a_data}')
+
     return get_user(user_data, orig_data)
 
 
@@ -89,6 +123,7 @@ def get_user(user_data, orig_data=None):
     :param orig_data: The original dictionary returned from the OAuth response, not modified to fit our User model.
     :return:
     """
+    logger.info('get user hit')
     oauth = OAuth.objects.filter(identification=user_data.get("identification")).first()
     if not oauth:
         if orig_data is None:
@@ -133,13 +168,18 @@ def get_user(user_data, orig_data=None):
         return oauth.user
 
 
-def get_user_data_from_schema(data):
-    """
-    Uses schema provided in settings to get user_data.
-    :param data: user profile data from oauth_service
-    :return: a dict of user_data.
-    """
-    user_data = dict()
+def get_identification_types():
+    """Gets all available identification methods in the specified profile schema."""
+    mapping = get_mapping()
+    identification = mapping.get('identification')
+    if identification is None:
+        return None
+    if type(identification) is not list:
+        return [identification]
+
+
+def get_mapping():
+    """Loads and returns mapping from OAUTH Profile Schema."""
     try:
         mapping = json.loads(settings.OAUTH_PROFILE_SCHEMA)
     except AttributeError:
@@ -159,6 +199,17 @@ def get_user_data_from_schema(data):
             "AN OAUTH_PROFILE_SCHEMA was added to the environment but it an empty json object.  Please add a "
             "valid mapping."
         )
+    return mapping
+
+
+def get_user_data_from_schema(data):
+    """
+    Uses schema provided in settings to get user_data.
+    :param data: user profile data from oauth_service
+    :return: a dict of user_data.
+    """
+    user_data = dict()
+    mapping = get_mapping()
     for key, value_list in mapping.items():
         if type(value_list) is not list:
             value_list = [value_list]
