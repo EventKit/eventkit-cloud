@@ -12,7 +12,8 @@ def set_provider_from_slug(apps, schema_editor):
             task_record.provider = DataProvider.objects.get(slug=task_record.slug)
             task_record.save()
         except DataProvider.DoesNotExist:
-            print(f"{task_record.slug} does not map to any known DataProvider.")
+            if task_record.slug != "run":
+                print(f"{task_record.slug} does not map to any known DataProvider.")
 
 def reverse_set_provider_from_slug(apps, schema_editor):
     task_records = DataProviderTaskRecord.objects.all()
