@@ -300,6 +300,12 @@ def create_task(
         user_details = {"username": "unknown-create_task"}
 
     export_provider_task = DataProviderTaskRecord.objects.get(uid=data_provider_task_uid)
+
+    if export_provider_task.provider:
+        export_provider_task_slug = export_provider_task.provider.slug
+    else:
+        export_provider_task_slug = export_provider_task.slug
+
     export_task = create_export_task_record(
         task_name=task.name,
         export_provider_task=export_provider_task,
@@ -312,7 +318,7 @@ def create_task(
         task_uid=export_task.uid,
         selection=selection,
         stage_dir=stage_dir,
-        provider_slug=export_provider_task.slug,
+        provider_slug=export_provider_task_slug,
         data_provider_task_uid=data_provider_task_uid,
         job_name=job_name,
         user_details=user_details,

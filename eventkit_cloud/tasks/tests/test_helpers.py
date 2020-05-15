@@ -153,7 +153,7 @@ class TestHelpers(TestCase):
         mocked_provider_task = MagicMock()
         mocked_provider_task.name = expected_provider_task_name = "example_name"
         mocked_provider_task.status = TaskStates.COMPLETED.value
-        mocked_provider_task.slug = expected_provider_slug = 'example_slug'
+        mocked_provider_task.provider.slug = expected_provider_slug = 'example_slug'
         mocked_provider_task.tasks.all.return_value = mocked_provider_subtasks
         mocked_provider_task.uid = expected_provider_task_uid = '5678'
         mock_DataProviderTaskRecord.objects.get.return_value = mocked_provider_task

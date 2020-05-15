@@ -6,7 +6,7 @@ import os
 from celery import chain  # required for tests
 from django.db import DatabaseError
 
-from eventkit_cloud.jobs.models import DataProviderTask, ExportFormat
+from eventkit_cloud.jobs.models import DataProvider, DataProviderTask, ExportFormat
 from eventkit_cloud.tasks.enumerations import TaskStates
 from eventkit_cloud.tasks.export_tasks import reprojection_task, create_datapack_preview
 from eventkit_cloud.tasks.helpers import normalize_name, get_metadata
@@ -67,6 +67,7 @@ class TaskChainBuilder(object):
         logger.debug("Running Job with id: {0}".format(provider_task_uid))
         # pull the provider_task from the database
         provider_task = DataProviderTask.objects.get(uid=provider_task_uid)
+        provider = DataProvider.objects.get(slug=provider_task.provider.slug)
         job = run.job
 
         job_name = normalize_name(job.name)
@@ -90,11 +91,7 @@ class TaskChainBuilder(object):
 
         # run the tasks
         data_provider_task_record = DataProviderTaskRecord.objects.create(
-            run=run,
-            name=provider_task.provider.name,
-            slug=provider_task.provider.slug,
-            status=TaskStates.PENDING.value,
-            display=True,
+            run=run, name=provider_task.provider.name, provider=provider, status=TaskStates.PENDING.value, display=True,
         )
 
         """
