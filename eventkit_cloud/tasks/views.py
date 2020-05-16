@@ -6,7 +6,7 @@ from django.conf import settings
 from django.http import HttpResponse
 from django.shortcuts import redirect
 
-from eventkit_cloud.jobs.models import User
+from eventkit_cloud.core.models import JobPermission, JobPermissionLevel
 from eventkit_cloud.tasks.models import FileProducingTaskResult, UserDownload
 from eventkit_cloud.utils.s3 import get_presigned_url
 
@@ -18,18 +18,25 @@ def download(request):
     Logs and redirects a dataset download request
     :return: A redirect to the direct download URL provided in the URL query string
     """
+
+    current_user = request.user
+
+    if current_user is None:
+        return HttpResponse(status=401)
+
     download_uid = request.GET.get("uid")
     try:
         downloadable = FileProducingTaskResult.objects.get(uid=download_uid)
+        jobs = JobPermission.userjobs(current_user, JobPermissionLevel.READ.value)
+        jobs = jobs.filter(runs__provider_tasks__tasks__result=downloadable)
+        if not jobs:
+            return HttpResponse(
+                status=401, content=f"User {current_user.username} does not have permission to download this file."
+            )
     except FileProducingTaskResult.DoesNotExist:
         return HttpResponse(status=400, content="Download not found for requested id value.")
 
-    current_user = request.user
-    if current_user is None:
-        return HttpResponse(status=401)
-    user = User.objects.get(username=current_user)
-
-    user_download = UserDownload.objects.create(user=user, downloadable=downloadable)
+    user_download = UserDownload.objects.create(user=current_user, downloadable=downloadable)
     user_download.save()
 
     if getattr(settings, "USE_S3", False):

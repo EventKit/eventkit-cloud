@@ -1,6 +1,9 @@
+import logging
 from typing import Optional
 import requests
 import json
+
+logger = logging.getLogger(__name__)
 
 
 class RocketChat(object):
@@ -40,12 +43,12 @@ class RocketChat(object):
         # Make a request to ensure that the credentials are ok.
         response = requests.get(self.profile_url, headers=self.headers, verify=False)
         if not response.ok:
-            print(response.content)
+            logger.error(response.content)
             raise Exception(f"Unable to get profile.")
 
     def post_message(self, channel: str, message: str):
         data = {"channel": channel, "text": message}
         response = requests.post(self.message_url, headers=self.headers, data=json.dumps(data), verify=False)
         if not response.ok:
-            print(response.content)
+            logger.error(response.content)
             raise Exception(f"Failed to send {channel} the message: {message}")

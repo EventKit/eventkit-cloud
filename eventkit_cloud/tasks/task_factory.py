@@ -227,7 +227,7 @@ def create_run(job_uid, user=None):
             max_runs = settings.EXPORT_MAX_RUNS
 
             # get the number of existing runs for this job
-            job = Job.objects.get(uid=job_uid)
+            job = Job.objects.select_related("user").get(uid=job_uid)
             if not job.provider_tasks.all():
                 raise Error(
                     "This job does not have any data sources or formats associated with it, "
@@ -243,8 +243,8 @@ def create_run(job_uid, user=None):
             if not user:
                 user = job.user
 
-            perms, job_ids = JobPermission.userjobs(user, JobPermissionLevel.ADMIN.value)
-            if job.id not in job_ids:
+            jobs = JobPermission.userjobs(user, JobPermissionLevel.ADMIN.value)
+            if not jobs.filter(id=job.id):
                 raise Unauthorized(
                     "The user: {0} is not authorized to create a run based on the job: {1}.".format(
                         job.user.username, job.name
