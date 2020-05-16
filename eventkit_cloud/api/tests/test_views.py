@@ -975,6 +975,7 @@ class TestExportTaskViewSet(APITestCase):
         self.celery_uid = str(uuid.uuid4())
         self.export_provider_task = DataProviderTaskRecord.objects.create(run=self.export_run,
                                                                           name='Shapefile Export',
+                                                                          provider=provider,
                                                                           status=TaskStates.PENDING.value)
         self.task = ExportTaskRecord.objects.create(export_provider_task=self.export_provider_task,
                                                     name='Shapefile Export',

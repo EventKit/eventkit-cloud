@@ -29,8 +29,8 @@ class DataProviderTaskRecordAdmin(admin.ModelAdmin):
         "created_at",
         "updated_at",
     )
-    search_fields = ("uid", "name", "status")
-    list_display = ["uid", "name", "run", "status", "updated_at"]
+    search_fields = ("uid", "name", "provider", "status")
+    list_display = ["uid", "name", "provider", "run", "status", "updated_at"]
 
     def has_add_permission(self, request, obj=None):
         return False

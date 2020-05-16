@@ -200,9 +200,13 @@ class ExportTaskListSerializer(serializers.BaseSerializer):
 
 
 class DataProviderTaskRecordSerializer(serializers.ModelSerializer):
+    provider = serializers.SerializerMethodField()
     tasks = serializers.SerializerMethodField()
     url = serializers.HyperlinkedIdentityField(view_name="api:provider_tasks-detail", lookup_field="uid")
     preview_url = serializers.SerializerMethodField()
+
+    def get_provider(self, obj):
+        return DataProviderSerializer(obj.provider, context=self.context).data
 
     def get_tasks(self, obj):
         request = self.context["request"]
@@ -237,6 +241,7 @@ class DataProviderTaskRecordSerializer(serializers.ModelSerializer):
             "uid",
             "url",
             "name",
+            "provider",
             "started_at",
             "finished_at",
             "duration",
