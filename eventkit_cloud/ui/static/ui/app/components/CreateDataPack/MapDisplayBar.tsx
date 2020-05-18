@@ -146,7 +146,7 @@ export class MapDisplayBar extends React.Component<Props, State> {
                         <AoiInfobar
                             {...this.props.aoiInfoBarProps}
                         />
-                        < MapQueryDisplay
+                        <MapQueryDisplay
                             style={{ height: '200px'}}
                             maxHeight={185}
                             // Passes a ref up to ExportAOI to hook in the click event to our query function.

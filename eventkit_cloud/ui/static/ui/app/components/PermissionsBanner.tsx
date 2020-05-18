@@ -38,6 +38,10 @@ const jss = (theme: Eventkit.Theme & Theme) => createStyles({
 
 export interface Props {
     handleClosedPermissionsBanner: () => void;
+<<<<<<< Updated upstream
+=======
+    isOpen: boolean;
+>>>>>>> Stashed changes
     classes: { [className: string]: string };
 }
 
