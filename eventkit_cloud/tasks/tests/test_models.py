@@ -7,12 +7,13 @@ import uuid
 
 from django.contrib.auth.models import Group, User
 from django.contrib.gis.geos import GEOSGeometry, Polygon
+from django.core.files import File
 from django.test import TestCase
-from mock import patch
+from mock import MagicMock, patch
 
 from eventkit_cloud.jobs.models import ExportFormat, Job, DataProviderTask, DataProvider
 from eventkit_cloud.tasks.enumerations import TaskStates
-from eventkit_cloud.tasks.models import ExportRun, ExportTaskRecord, FileProducingTaskResult, DataProviderTaskRecord
+from eventkit_cloud.tasks.models import ExportRun, ExportRunFile, ExportTaskRecord, FileProducingTaskResult, DataProviderTaskRecord
 
 logger = logging.getLogger(__name__)
 
@@ -102,6 +103,37 @@ class TestExportRun(TestCase):
         run.refresh_from_db()
         self.assertTrue(run.deleted)
         mock_run_delete_exports.assert_called_once()
+
+
+class TestExportRunFile(TestCase):
+    """
+    Test cases for ExportRunFile model
+    """
+
+    fixtures = ('osm_provider.json',)
+
+    def test_create_export_run_file(self):
+        file_mock = MagicMock(spec=File)
+        file_mock.name = "test.pdf"
+        directory = "test"
+        provider = DataProvider.objects.first()
+        file_model = ExportRunFile.objects.create(file=file_mock, directory=directory, provider=provider)
+        self.assertEqual(file_mock.name, file_model.file.name)
+        self.assertEqual(directory, file_model.directory)
+        self.assertEqual(provider, file_model.provider)
+        file_model.file.delete()
+
+    def test_delete_export_run_file(self):
+        file_mock = MagicMock(spec=File)
+        file_mock.name = "test.pdf"
+        directory = "test"
+        provider = DataProvider.objects.first()
+        file_model = ExportRunFile.objects.create(file=file_mock, directory=directory, provider=provider)
+        files = ExportRunFile.objects.all()
+        self.assertEqual(1, files.count())
+        file_model.file.delete()
+        file_model.delete()
+        self.assertEqual(0, files.count())
 
 
 class TestExportTask(TestCase):

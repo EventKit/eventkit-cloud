@@ -147,6 +147,25 @@ class ExportRun(UIDMixin, TimeStampedModelMixin, TimeTrackingModelMixin, Notific
         self.soft_delete_notifications(*args, **kwargs)
 
 
+class ExportRunFile(UIDMixin, TimeStampedModelMixin):
+    """
+    The ExportRunFile stores additional files to be added to each ExportRun zip archive.
+    """
+
+    file = models.FileField(verbose_name="File")
+    directory = models.CharField(
+        max_length=100, null=True, blank=True, help_text="An optional directory name to store the file in."
+    )
+    provider = models.ForeignKey(
+        DataProvider,
+        on_delete=models.CASCADE,
+        related_name="file_provider",
+        null=True,
+        blank=True,
+        help_text="An optional data provider to associate the file with.",
+    )
+
+
 class DataProviderTaskRecord(UIDMixin, TimeStampedModelMixin, TimeTrackingModelMixin):
     """
     The DataProviderTaskRecord stores the task information for a specific provider.

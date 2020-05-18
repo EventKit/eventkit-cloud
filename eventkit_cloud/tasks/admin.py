@@ -3,6 +3,7 @@ from django.contrib import admin
 from eventkit_cloud.tasks.models import (
     DataProviderTaskRecord,
     ExportRun,
+    ExportRunFile,
     UserDownload,
     ExportTaskRecord,
 )
@@ -90,6 +91,10 @@ class ExportRunAdmin(admin.ModelAdmin):
         return False
 
 
+class ExportRunFileAdmin(admin.ModelAdmin):
+    list_display = ["uid", "file", "provider", "directory"]
+
+
 class UserDownloadAdmin(admin.ModelAdmin):
     """
     User download records
@@ -114,5 +119,6 @@ class UserDownloadAdmin(admin.ModelAdmin):
 
 admin.site.register(DataProviderTaskRecord, DataProviderTaskRecordAdmin)
 admin.site.register(ExportRun, ExportRunAdmin)
+admin.site.register(ExportRunFile, ExportRunFileAdmin)
 admin.site.register(UserDownload, UserDownloadAdmin)
 admin.site.register(ExportTaskRecord, ExportTaskRecordAdmin)
