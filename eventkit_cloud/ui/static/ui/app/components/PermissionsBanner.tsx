@@ -14,6 +14,7 @@ const jss = (theme: Eventkit.Theme & Theme) => createStyles({
         zIndex: 6,
         padding: '11px',
         backgroundColor: '#FAFFB5',
+        borderRadius: 0,
         flexGrow: 1,
         position: 'relative',
         display: 'flex'
@@ -57,7 +58,7 @@ function PermissionsBanner(props: Props) {
     return (
         <>
             <CssBaseline />
-            <Paper elevation={0} className={classes.paper} square={false}>
+            <Paper elevation={0} className={classes.paper}>
                 <Grid container spacing={32} justify="space-between">
                     {!isOpen
                         ? (
