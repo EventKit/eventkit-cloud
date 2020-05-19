@@ -119,7 +119,7 @@ class ExportRun(UIDMixin, TimeStampedModelMixin, TimeTrackingModelMixin, Notific
     status = models.CharField(blank=True, max_length=20, db_index=True, default="")
     expiration = models.DateTimeField(default=timezone.now, editable=True)
     notified = models.DateTimeField(default=None, blank=True, null=True)
-    deleted = models.BooleanField(default=False)
+    deleted = models.BooleanField(default=False, db_index=True)
     delete_user = models.ForeignKey(User, null=True, blank=True, editable=False, on_delete=models.CASCADE)
 
     class Meta:

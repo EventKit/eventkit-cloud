@@ -156,7 +156,7 @@ class TestJobPermissions(APITestCase):
 
         response = self.client.patch(url, data=json.dumps(request_data), content_type='application/json; version=1.0')
         self.assertEqual(status.HTTP_400_BAD_REQUEST, response.status_code)
-        self.assertEqual(response.data[0]['detail'], 'ADMIN permission is required to update this job.')
+        self.assertEqual(response.data[0]['detail'], 'ADMIN permission is required to update this Datapack.')
 
         # however, should be able to read this job.
 
@@ -190,7 +190,7 @@ class TestJobPermissions(APITestCase):
 
         response = self.client.patch(url, data=json.dumps(request_data), content_type='application/json; version=1.0')
         self.assertEqual(status.HTTP_400_BAD_REQUEST, response.status_code)
-        self.assertEqual(response.data[0]['detail'], 'ADMIN permission is required to update this job.')
+        self.assertEqual(response.data[0]['detail'], 'ADMIN permission is required to update this Datapack.')
 
         #  should not be able to read this job
 
@@ -222,7 +222,7 @@ class TestJobPermissions(APITestCase):
 
         response = self.client.patch(url, data=json.dumps(request_data), content_type='application/json; version=1.0')
         self.assertEqual(status.HTTP_400_BAD_REQUEST, response.status_code)
-        self.assertEqual(response.data[0]['detail'], 'ADMIN permission is required to update this job.')
+        self.assertEqual(response.data[0]['detail'], 'ADMIN permission is required to update this Datapack.')
 
         #  should be able to read this job
 
@@ -273,7 +273,7 @@ class TestJobPermissions(APITestCase):
 
         response = self.client.patch(url, data=json.dumps(request_data), content_type='application/json; version=1.0')
         self.assertEqual(status.HTTP_400_BAD_REQUEST, response.status_code)
-        self.assertEqual(response.data[0]['detail'], 'ADMIN permission is required to update this job.')
+        self.assertEqual(response.data[0]['detail'], 'ADMIN permission is required to update this Datapack.')
 
         #  should still be able to read this job.
 

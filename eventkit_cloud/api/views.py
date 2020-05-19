@@ -8,6 +8,7 @@ from django.core.cache import cache
 from dateutil import parser
 from django.conf import settings
 from django.contrib.auth.models import User, Group
+from django.contrib.contenttypes.models import ContentType
 from django.contrib.gis.geos import GEOSException, GEOSGeometry
 from django.db import transaction
 from django.db.models import Q
@@ -167,9 +168,9 @@ class JobViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         """Return all objects user can view."""
 
-        perms, job_ids = JobPermission.userjobs(self.request.user, JobPermissionLevel.READ.value)
+        jobs = JobPermission.userjobs(self.request.user, JobPermissionLevel.READ.value)
 
-        return Job.objects.filter(Q(visibility=VisibilityState.PUBLIC.value) | Q(pk__in=job_ids))
+        return Job.objects.filter(Q(visibility=VisibilityState.PUBLIC.value) | Q(pk__in=jobs))
 
     def list(self, request, *args, **kwargs):
         """
@@ -609,13 +610,11 @@ class JobViewSet(viewsets.ModelViewSet):
         job = Job.objects.get(uid=uid)
 
         # Does the user have admin permission to make changes to this job?
-
-        perms, job_ids = JobPermission.userjobs(request.user, JobPermissionLevel.ADMIN.value)
-        if job.id not in job_ids:
+        jobs = JobPermission.userjobs(request.user, JobPermissionLevel.ADMIN.value)
+        if not jobs.filter(id=job.id):
             return Response(
-                [{"detail": "ADMIN permission is required to update this job."}], status.HTTP_400_BAD_REQUEST,
+                [{"detail": "ADMIN permission is required to update this Datapack."}], status.HTTP_400_BAD_REQUEST,
             )
-
         response = {}
         payload = request.data
 
@@ -624,11 +623,12 @@ class JobViewSet(viewsets.ModelViewSet):
                 msg = "unknown visibility value - %s" % value
                 return Response([{"detail": msg}], status.HTTP_400_BAD_REQUEST)
 
-            if hasattr(job, attribute):
+            if attribute == "permissions":
+                pass
+            elif hasattr(job, attribute):
                 setattr(job, attribute, value)
                 response[attribute] = value
-            elif attribute == "permissions":
-                pass
+
             else:
                 msg = "unidentified job attribute - %s" % attribute
                 return Response([{"detail": msg}], status.HTTP_400_BAD_REQUEST)
@@ -675,21 +675,19 @@ class JobViewSet(viewsets.ModelViewSet):
                 return Response([{"detail": "This job has no administrators."}], status.HTTP_400_BAD_REQUEST,)
 
             # throw out all current permissions and rewrite them
-
-            for jp in JobPermission.objects.filter(job=job):
-                jp.delete()
-
-            for key in users:
-                perm = users[key]
-                user = User.objects.filter(username=key).all()[0]
-                jp = JobPermission.objects.create(job=job, content_object=user, permission=perm)
-                jp.save()
-
-            for key in groups:
-                perm = groups[key]
-                group = Group.objects.filter(name=key).all()[0]
-                jp = JobPermission.objects.create(job=job, content_object=group, permission=perm)
-                jp.save()
+            with transaction.atomic():
+                job.permissions.all().delete()
+                user_objects = User.objects.filter(username__in=users)
+                group_objects = Group.objects.filter(name__in=groups)
+                user_job_permissions = [
+                    JobPermission(job=job, content_object=user, permission=users.get(user.username))
+                    for user in user_objects
+                ]  # NOQA
+                group_job_permissions = [
+                    JobPermission(job=job, content_object=group, permission=groups.get(group.name))
+                    for group in group_objects
+                ]  # NOQA
+                JobPermission.objects.bulk_create(user_job_permissions + group_job_permissions)
 
             response["permissions"] = payload["permissions"]
 
@@ -730,8 +728,7 @@ class JobViewSet(viewsets.ModelViewSet):
         if "permissions" not in request.data:
             return Response([{"detail": "missing permissions attribute"}], status.HTTP_400_BAD_REQUEST,)
 
-        job_list = get_job_ids_via_permissions(request.data["permissions"])
-        jobs = Job.objects.filter(id__in=job_list)
+        jobs = get_jobs_via_permissions(request.data["permissions"])
         serializer = ListJobSerializer(jobs, many=True, context={"request": request})
         return Response(serializer.data)
 
@@ -746,10 +743,9 @@ class JobViewSet(viewsets.ModelViewSet):
         # Does the user have admin permission to make changes to this job?
 
         logger.info("DELETE REQUEST")
-        perms, job_ids = JobPermission.userjobs(request.user, JobPermissionLevel.ADMIN.value)
-        logger.info("JOB IDS %s %s" % (job.id, job_ids))
+        jobs = JobPermission.userjobs(request.user, JobPermissionLevel.ADMIN.value)
 
-        if job.id not in job_ids:
+        if not jobs.filter(id=job.id):
             return Response(
                 [{"detail": "ADMIN permission is required to delete this job."}], status.HTTP_400_BAD_REQUEST,
             )
@@ -1029,12 +1025,15 @@ class ExportRunViewSet(viewsets.ModelViewSet):
     ordering = ("-started_at",)
 
     def get_queryset(self):
-        _, job_ids = JobPermission.userjobs(self.request.user, "READ")
+        jobs = JobPermission.userjobs(self.request.user, "READ")
+
         if self.request.query_params.get("slim"):
-            return ExportRun.objects.filter((Q(job_id__in=job_ids) | Q(job__visibility=VisibilityState.PUBLIC.value)))
+            return ExportRun.objects.filter(
+                Q(job__in=jobs) | Q(job__visibility=VisibilityState.PUBLIC.value)
+            ).select_related("job")
         else:
             return prefetch_export_runs(
-                (ExportRun.objects.filter((Q(job_id__in=job_ids) | Q(job__visibility=VisibilityState.PUBLIC.value))))
+                (ExportRun.objects.filter(Q(job__in=jobs) | Q(job__visibility=VisibilityState.PUBLIC.value)))
             )
 
     def retrieve(self, request, uid=None, *args, **kwargs):
@@ -1075,8 +1074,8 @@ class ExportRunViewSet(viewsets.ModelViewSet):
         instance = self.get_object()
         job = instance.job
 
-        perms, job_ids = JobPermission.userjobs(request.user, JobPermissionLevel.ADMIN.value)
-        if job.id not in job_ids:
+        jobs = JobPermission.userjobs(request.user, JobPermissionLevel.ADMIN.value)
+        if not jobs.filter(id=job.id):
             return Response(
                 [{"detail": "ADMIN permission is required to delete this DataPack."}], status.HTTP_400_BAD_REQUEST,
             )
@@ -1095,6 +1094,7 @@ class ExportRunViewSet(viewsets.ModelViewSet):
         :return: the serialized runs
         """
         queryset = self.filter_queryset(self.get_queryset())
+
         try:
             self.validate_licenses(queryset, user=request.user)
         except InvalidLicense as il:
@@ -1121,12 +1121,11 @@ class ExportRunViewSet(viewsets.ModelViewSet):
         :param kwargs:
         :return: the serialized runs
         """
-
         queryset = self.filter_queryset(self.get_queryset())
 
         if "permissions" in request.data:
-            job_ids = get_job_ids_via_permissions(request.data["permissions"])
-            queryset = ExportRun.objects.filter(Q(job_id__in=job_ids))
+            jobs = get_jobs_via_permissions(request.data["permissions"])
+            queryset = ExportRun.objects.filter(Q(job__in=jobs))
 
         search_geojson = self.request.data.get("geojson", None)
         if search_geojson is not None:
@@ -2154,37 +2153,23 @@ def geojson_to_geos(geojson_geom, srid=None):
     return geom
 
 
-def get_job_ids_via_permissions(permissions):
-    groupnames = []
-    if "groups" in permissions:
-        groupnames = permissions["groups"]
-    usernames = []
-    if "members" in permissions:
-        usernames = permissions["members"]
+def get_jobs_via_permissions(permissions):
 
-    groups = Group.objects.filter(name__in=groupnames)
-    master_job_list = []
-    initialized = False
-    for group in groups:
-        perms, job_ids = JobPermission.groupjobs(group, JobPermissionLevel.READ.value)
-        temp_list = master_job_list
-        if not initialized:
-            master_job_list = job_ids
-        else:
-            master_job_list = list(set(temp_list).intersection(job_ids))
-        initialized = True
+    groups = Group.objects.filter(name__in=permissions.get("groups", []))
+    group_query = [
+        Q(permissions__content_type=ContentType.objects.get_for_model(Group)),
+        Q(permissions__object_id__in=groups),
+        Q(permissions__permission=JobPermissionLevel.READ.value),
+    ]
 
-    users = User.objects.filter(username__in=usernames)
-    for user in users:
-        perms, job_ids = JobPermission.userjobs(user, JobPermissionLevel.READ.value, include_groups=False)
-        temp_list = master_job_list
-        if not initialized:
-            master_job_list = job_ids
-        else:
-            master_job_list = list(set(temp_list).intersection(job_ids))
-        initialized = True
+    users = User.objects.filter(username__in=permissions.get("members", []))
+    user_query = [
+        Q(permissions__content_type=ContentType.objects.get_for_model(User)),
+        Q(permissions__object_id__in=users),
+        Q(permissions__permission=JobPermissionLevel.READ.value),
+    ]
 
-    return master_job_list
+    return Job.objects.filter(Q(*user_query) | Q(*group_query))
 
 
 def api_docs_view(request):
