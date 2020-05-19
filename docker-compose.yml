@@ -37,9 +37,9 @@ services:
       - SSL_VERIFICATION
       - MAX_EXPORTRUN_EXPIRATION_DAYS
       - USE_S3
-      - AWS_BUCKET_NAME
-      - AWS_ACCESS_KEY
-      - AWS_SECRET_KEY
+      - AWS_STORAGE_BUCKET_NAME
+      - AWS_ACCESS_KEY_ID
+      - AWS_SECRET_ACCESS_KEY
       - CONTAINER_CODE_PATH
       - DEV_MACHINE_CODE_PATH
       - DJANGO_MODEL_LOGIN=True
@@ -96,9 +96,9 @@ services:
       - PYTHONWARNINGS
       - SSL_VERIFICATION
       - USE_S3
-      - AWS_BUCKET_NAME
-      - AWS_ACCESS_KEY
-      - AWS_SECRET_KEY
+      - AWS_STORAGE_BUCKET_NAME
+      - AWS_ACCESS_KEY_ID
+      - AWS_SECRET_ACCESS_KEY
       - TILE_CACHE_DIR
     extra_hosts:
       - "${SITE_NAME}:${SITE_IP}"
