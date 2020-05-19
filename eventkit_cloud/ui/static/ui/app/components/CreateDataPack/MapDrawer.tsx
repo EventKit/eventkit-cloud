@@ -16,7 +16,6 @@ import Card from '@material-ui/core/Card';
 
 import Radio from "@material-ui/core/Radio";
 import {Tab, Tabs} from "@material-ui/core";
-import * as PropTypes from "prop-types";
 import Typography from "@material-ui/core/Typography";
 import ListItemText from "@material-ui/core/ListItemText";
 import Button from "@material-ui/core/Button";
@@ -26,7 +25,6 @@ import FootprintDisplay from "./FootprintDisplay";
 import {MapLayer} from "./CreateExport";
 import RequestDataSource from "./RequestDataSource";
 import {useEffect, useState} from "react";
-
 
 const jss = (theme: Theme & Eventkit.Theme) => createStyles({
     container: {
@@ -72,7 +70,7 @@ const jss = (theme: Theme & Eventkit.Theme) => createStyles({
         borderBottomLeftRadius: '5px',
         borderBottomRightRadius: '0px',
         height: 'auto',
-        marginTop: '17px',
+        marginTop: '14px',
         backgroundColor: theme.eventkit.colors.secondary,
         boxShadow: '0px 3px 15px rgba(0, 0, 0, 0.2) ',
     },
@@ -196,7 +194,6 @@ export interface Props {
 
 MapDrawer.defaultProps = { sources: [] } as Props;
 
-
 export function MapDrawer(props: Props) {
     const { providers, classes } = props;
 
@@ -204,7 +201,6 @@ export function MapDrawer(props: Props) {
     const [selectedTab, setSelectedTab] = useState(false);
     const [selectedBaseMap, setBaseMap] = useState(-1);
     const [requestDataSourceOpen, setRequestDataSourceOpen] = useState(false);
-
 
     function updateBaseMap(newBaseMapId: number, sources) {
         setBaseMap(newBaseMapId);
@@ -283,7 +279,7 @@ export function MapDrawer(props: Props) {
                     thumbnail_url: provider.thumbnail_url,
                 } as BaseMapSource;
             })
-        ])
+        ]);
     }, [providers]);
 
     const drawerOpen = !!selectedTab;
