@@ -56,7 +56,6 @@ import {makeAllRunsSelector} from '../../selectors/runSelector';
 import {updateAoiInfo, clearAoiInfo, clearExportInfo} from '../../actions/datacartActions';
 import {Breakpoint} from '@material-ui/core/styles/createBreakpoints';
 import withRef from '../../utils/withRef';
-import {Button, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle} from "@material-ui/core";
 
 
 export const RED_STYLE = new Style({

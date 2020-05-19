@@ -220,16 +220,13 @@ services:
     links:
       - eventkit
       - map
-#      - webpack
+      - webpack
       - mkdocs
-    extra_hosts:
-      - "webpack:${SITE_IP}"
     ports:
       - "80:80"
       - "9229:9229"
     environment:
       - SITE_NAME=${SITE_NAME}
-      - SITE_IP=${SITE_IP}
       - LOG_LEVEL=warn
   flower:
     image: eventkit/eventkit-base:1.6.0
@@ -260,29 +257,29 @@ services:
       - EXPORT_DOWNLOAD_ROOT
       - PYTHONWARNINGS
       - SSL_VERIFICATION
-#  webpack:
-#    build:
-#      context: .
-#      dockerfile: config/Dockerfile_webpack
-#    volumes:
-#      - ./eventkit_cloud:/var/lib/eventkit/eventkit_cloud
-#      - ./coverage/coveralls:/var/lib/eventkit/coverage/coveralls
-#      - ./package.json:/var/lib/eventkit/package.json
-#      - ./config/ui/.eslintrc.json:/var/lib/eventkit/.eslintrc.json
-#      - ./config/ui/.eslintignore:/var/lib/eventkit/.eslintignore
-#      - ./config/ui/webpack.config.js:/var/lib/eventkit/webpack.config.js
-#      - ./config/ui/babel.config.js:/var/lib/eventkit/babel.config.js
-#      - ./config/ui/setupFile.js:/var/lib/eventkit/setupFile.js
-#      - ./config/ui/tsconfig.json:/var/lib/eventkit/tsconfig.json
-#      - ./config/ui/tslint.json:/var/lib/eventkit/tslint.json
-#      - ./.git:/var/lib/eventkit/.git
-#    user: eventkit
-#    ports:
-#      - "8080:8080"
-#    expose:
-#      - "9229"
-#    extra_hosts:
-#      - "${SITE_NAME}:${SITE_IP}"
+  webpack:
+    build:
+      context: .
+      dockerfile: config/Dockerfile_webpack
+    volumes:
+      - ./eventkit_cloud:/var/lib/eventkit/eventkit_cloud
+      - ./coverage/coveralls:/var/lib/eventkit/coverage/coveralls
+      - ./package.json:/var/lib/eventkit/package.json
+      - ./config/ui/.eslintrc.json:/var/lib/eventkit/.eslintrc.json
+      - ./config/ui/.eslintignore:/var/lib/eventkit/.eslintignore
+      - ./config/ui/webpack.config.js:/var/lib/eventkit/webpack.config.js
+      - ./config/ui/babel.config.js:/var/lib/eventkit/babel.config.js
+      - ./config/ui/setupFile.js:/var/lib/eventkit/setupFile.js
+      - ./config/ui/tsconfig.json:/var/lib/eventkit/tsconfig.json
+      - ./config/ui/tslint.json:/var/lib/eventkit/tslint.json
+      - ./.git:/var/lib/eventkit/.git
+    user: eventkit
+    ports:
+      - "8080:8080"
+    expose:
+      - "9229"
+    extra_hosts:
+      - "${SITE_NAME}:${SITE_IP}"
     #if wishing to use the dev server uncomment this or run it via the command line
     # command: node --debug-brk --inspect=${SITE_NAME}:9229 ./node_modules/.bin/jest --runInBand
 volumes:

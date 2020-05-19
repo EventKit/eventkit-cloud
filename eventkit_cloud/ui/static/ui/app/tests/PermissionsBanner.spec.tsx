@@ -38,6 +38,7 @@ describe('PermissionsBanner component', () => {
         expect(wrapper.find(ExpandLessIcon)).toHaveLength(0);
         expect(wrapper.find(CloseIcon)).toHaveLength(1);
     });
+
     it('handleExpand should change the expand more btn to be an expand less btn', () => {
         expect(wrapper.find(PermissionsBanner).props().isOpen).toBe(false);
         expect(wrapper.find(ExpandMoreIcon).exists()).toBe(true);
