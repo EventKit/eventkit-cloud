@@ -152,7 +152,7 @@ class ExportRunFile(UIDMixin, TimeStampedModelMixin):
     The ExportRunFile stores additional files to be added to each ExportRun zip archive.
     """
 
-    file = models.FileField(verbose_name="File")
+    file = models.FileField(verbose_name="File", upload_to="export_run_files")
     directory = models.CharField(
         max_length=100, null=True, blank=True, help_text="An optional directory name to store the file in."
     )

@@ -23,9 +23,9 @@ The SITE_URL is used when prividing links for users.  This should include the SI
 #### S3 Storage
 If you want your export files to be stored on S3 rather than locally add:
 <pre>USE_S3=True
-AWS_BUCKET_NAME='my-bucket'
-AWS_ACCESS_KEY='my-access-key'
-AWS_SECRET_KEY='my-secret-key'</pre>
+AWS_STORAGE_BUCKET_NAME='my-bucket'
+AWS_ACCESS_KEY_ID='my-access-key'
+AWS_SECRET_ACCESS_KEY='my-secret-key'</pre>
 
 #### Database
 To use your own database connection string add:

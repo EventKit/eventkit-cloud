@@ -21,7 +21,7 @@ class Migration(migrations.Migration):
                 ('updated_at', models.DateTimeField(default=django.utils.timezone.now, editable=False)),
                 ('id', models.AutoField(editable=False, primary_key=True, serialize=False)),
                 ('uid', models.UUIDField(db_index=True, default=uuid.uuid4, editable=False, unique=True)),
-                ('file', models.FileField(upload_to='', verbose_name='File')),
+                ('file', models.FileField(upload_to='export_run_files', verbose_name='File')),
                 ('directory', models.CharField(blank=True, help_text='An optional directory name to store the file in.', max_length=100, null=True)),
                 ('provider', models.ForeignKey(blank=True, help_text='An optional data provider to associate the file with.', null=True, on_delete=django.db.models.deletion.CASCADE, related_name='file_provider', to='jobs.DataProvider')),
             ],

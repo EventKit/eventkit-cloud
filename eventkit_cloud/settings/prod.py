@@ -307,20 +307,22 @@ UI_CONFIG = {
 
 USE_S3 = is_true(os.getenv("USE_S3"))
 
+if USE_S3:
+    DEFAULT_FILE_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
 
-AWS_BUCKET_NAME = AWS_ACCESS_KEY = AWS_SECRET_KEY = None
+AWS_STORAGE_BUCKET_NAME = AWS_ACCESS_KEY_ID = AWS_SECRET_ACCESS_KEY = None
 if os.getenv("VCAP_SERVICES"):
     for service, listings in json.loads(os.getenv("VCAP_SERVICES")).items():
         if "s3" in service.lower():
             try:
-                AWS_BUCKET_NAME = listings[0]["credentials"]["bucket"]
-                AWS_ACCESS_KEY = listings[0]["credentials"]["access_key_id"]
-                AWS_SECRET_KEY = listings[0]["credentials"]["secret_access_key"]
+                AWS_STORAGE_BUCKET_NAME = listings[0]["credentials"]["bucket"]
+                AWS_ACCESS_KEY_ID = listings[0]["credentials"]["access_key_id"]
+                AWS_SECRET_ACCESS_KEY = listings[0]["credentials"]["secret_access_key"]
             except (KeyError, TypeError) as e:
                 continue
-AWS_BUCKET_NAME = AWS_BUCKET_NAME or os.getenv("AWS_BUCKET_NAME")
-AWS_ACCESS_KEY = AWS_ACCESS_KEY or os.getenv("AWS_ACCESS_KEY")
-AWS_SECRET_KEY = AWS_SECRET_KEY or os.getenv("AWS_SECRET_KEY")
+AWS_STORAGE_BUCKET_NAME = AWS_STORAGE_BUCKET_NAME or os.getenv("AWS_STORAGE_BUCKET_NAME")
+AWS_ACCESS_KEY_ID = AWS_ACCESS_KEY_ID or os.getenv("AWS_ACCESS_KEY_ID")
+AWS_SECRET_ACCESS_KEY = AWS_SECRET_ACCESS_KEY or os.getenv("AWS_SECRET_ACCESS_KEY")
 
 
 MAPPROXY_CONCURRENCY = os.getenv("MAPPROXY_CONCURRENCY", 1)
