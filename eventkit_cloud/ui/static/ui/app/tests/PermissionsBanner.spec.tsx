@@ -71,4 +71,20 @@ describe('PermissionsBanner component', () => {
         expect(wrapper.find(ExpandMoreIcon).exists()).toBe(true);
         expect(wrapper.find(ExpandLessIcon).exists()).toBe(false);
     });
+    it('clicking on the close icon btn should trigger the handleClosedPermissionsBanner function', () => {
+        const mockFunction = jest.fn();
+        const component = mount(
+            <PermissionsBanner isOpen={false} handleClosedPermissionsBanner={mockFunction}/>
+        );
+        expect(component.find(PermissionsBanner).exists()).toBe(true);
+
+        act(() => {
+            component
+                .find(ButtonBase)
+                .at(1)
+                .simulate("click");
+        });
+        component.update();
+        expect(mockFunction).toHaveBeenCalled();
+    });
 });
