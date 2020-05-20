@@ -134,7 +134,8 @@ class ExportTask(EventKitBaseTask):
         task_uid = kwargs.get("task_uid")
 
         try:
-            task = ExportTaskRecord.objects.get(uid=task_uid)
+            task = ExportTaskRecord.objects.select_related("export_provider_task__run__job").select_related(
+                "export_provider_task__provider").get(uid=task_uid)
 
             check_cached_task_failures(task.name, task_uid)
 
@@ -170,10 +171,8 @@ class ExportTask(EventKitBaseTask):
                 raise Exception("This task was skipped due to previous failures/cancellations.")
 
             try:
-                add_metadata(task.export_provider_task.run.job, task.export_provider_task.slug, retval)
+                add_metadata(task.export_provider_task.run.job, task.export_provider_task.provider, retval)
             except Exception:
-                import traceback
-
                 logger.error(traceback.format_exc())
                 logger.error("Failed to add metadata.")
 
@@ -260,8 +259,6 @@ class ExportTask(EventKitBaseTask):
             task.finished_at = timezone.now()
             task.save()
         except Exception:
-            import traceback
-
             logger.error(traceback.format_exc())
             logger.error(
                 "Cannot update the status of ExportTaskRecord object: no such object has been created for "
@@ -487,7 +484,7 @@ def osm_data_collection_task(
     return result
 
 
-def add_metadata(job, provider_slug, retval):
+def add_metadata(job, provider, retval):
     """
     Accepts a job, provider slug, and return value from a task and applies metadata to the relevant file.
 
@@ -500,10 +497,9 @@ def add_metadata(job, provider_slug, retval):
     if result_file is None:
         return
     task = metadata_tasks.get(os.path.splitext(result_file)[1], None)
-    if provider_slug == "run":
+    if not provider:
         return
     if task is not None:
-        provider = DataProvider.objects.get(slug=provider_slug)
         task(filepath=result_file, job=job, provider=provider)
 
 
@@ -913,7 +909,7 @@ def wcs_export_task(
             name=name,
             task_uid=task_uid,
             fmt="gtiff",
-            slug=task.export_provider_task.slug,
+            slug=task.export_provider_task.provider.slug,
             user_details=user_details,
             eta=eta,
         )
@@ -1128,6 +1124,12 @@ def create_zip_task(result=None, data_provider_task_uid=None, *args, **kwargs):
         result = {}
 
     data_provider_task = DataProviderTaskRecord.objects.get(uid=data_provider_task_uid)
+
+    if data_provider_task.provider:
+        data_provider_task_slug = data_provider_task.provider.slug
+    else:
+        data_provider_task_slug = data_provider_task.slug
+
     metadata = get_metadata(data_provider_task_uid)
 
     include_files = metadata.get("include_files", None)
@@ -1149,7 +1151,7 @@ def create_zip_task(result=None, data_provider_task_uid=None, *args, **kwargs):
         result["result"] = zip_files(
             include_files=include_files,
             file_path=os.path.join(
-                get_provider_staging_dir(metadata["run_uid"], data_provider_task.slug),
+                get_provider_staging_dir(metadata["run_uid"], data_provider_task_slug),
                 "{0}.zip".format(metadata["name"]),
             ),
             static_files=get_style_files(),

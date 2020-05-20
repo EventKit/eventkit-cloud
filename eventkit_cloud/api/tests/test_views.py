@@ -975,6 +975,7 @@ class TestExportTaskViewSet(APITestCase):
         self.celery_uid = str(uuid.uuid4())
         self.export_provider_task = DataProviderTaskRecord.objects.create(run=self.export_run,
                                                                           name='Shapefile Export',
+                                                                          provider=provider,
                                                                           status=TaskStates.PENDING.value)
         self.task = ExportTaskRecord.objects.create(export_provider_task=self.export_provider_task,
                                                     name='Shapefile Export',
@@ -1533,7 +1534,6 @@ class TestDataProviderRequestViewSet(APITestCase):
         url = reverse('api:provider_requests-detail', args=[self.provider_request.uid])
         self.assertEqual(expected, url)
         response = self.client.get(url)
-
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
         self.assertEqual(response['Content-Type'], 'application/json')
         self.assertEqual(response['Content-Language'], 'en')

@@ -1,5 +1,5 @@
 from django.contrib.auth.models import User, Group
-from eventkit_cloud.core.models import remove_permissions
+from eventkit_cloud.jobs.models import remove_permissions
 from django.dispatch.dispatcher import receiver
 from django.db.models.signals import pre_delete
 

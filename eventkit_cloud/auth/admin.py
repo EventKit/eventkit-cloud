@@ -6,6 +6,7 @@ from django.contrib.auth.models import User
 from rest_framework.authtoken.models import Token
 
 from eventkit_cloud.auth.models import OAuth
+from eventkit_cloud.core.models import AttributeClass
 from eventkit_cloud.jobs.models import UserLicense
 
 logger = logging.getLogger(__name__)
@@ -34,11 +35,20 @@ class UserLicenseInline(admin.TabularInline):
     extra = 0
 
 
-UserAdmin.inlines = [OAuthInline, UserLicenseInline]
-UserAdmin.readonly_fields += "last_login", "date_joined"
+class CustomUserAdmin(UserAdmin):
+
+    inlines = [OAuthInline, UserLicenseInline]
+
+    readonly_fields = UserAdmin.readonly_fields + ("last_login", "date_joined", "attribute_classes")
+
+    def attribute_classes(self, obj):
+        attribute_classes = AttributeClass.objects.filter(users__id=obj.id)
+        return ", ".join([attribute_class.name for attribute_class in attribute_classes])
+
+    fieldsets = UserAdmin.fieldsets + (("Attribute_Classes", {'fields': ('attribute_classes',)}),)
 
 
 admin.site.unregister(Token)
 admin.site.unregister(User)
-admin.site.register(User, UserAdmin)
+admin.site.register(User, CustomUserAdmin)
 admin.site.register(OAuth, OAuthAdmin)

@@ -19,7 +19,7 @@ class Migration(migrations.Migration):
             fields=[
                 ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
                 ('max_data_size', models.DecimalField(decimal_places=3, default=100, help_text='This is the maximum data size in MB that can be exported from this provider in a single DataPack.', max_digits=12, verbose_name='Max data size')),
-                ('max_selection_size', models.DecimalField(decimal_places=3, default=100, help_text='This is the maximum area in square kilometers that can be exported from this provider in a single DataPack. This rule is generally superseded by data size.', max_digits=12, verbose_name='Max data size')),
+                ('max_selection_size', models.DecimalField(decimal_places=3, default=100, help_text='This is the maximum area in square kilometers that can be exported from this provider in a single DataPack. This rule is generally superseded by data size.', max_digits=12, verbose_name='Max AOI selection size')),
                 ('provider', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='jobs.DataProvider')),
                 ('user', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to=settings.AUTH_USER_MODEL)),
             ],
