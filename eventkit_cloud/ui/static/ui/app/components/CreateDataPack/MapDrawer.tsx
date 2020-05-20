@@ -260,7 +260,7 @@ export function MapDrawer(props: Props) {
     useEffect(() => {
         setSources([
             ...providers.filter(provider =>
-                !!provider.preview_url && !!provider.display).map(provider => {
+                !provider.hidden && !!provider.preview_url && !!provider.display).map(provider => {
                 let footprintsLayer;
                 if (!!provider.footprint_url) {
                     footprintsLayer = {

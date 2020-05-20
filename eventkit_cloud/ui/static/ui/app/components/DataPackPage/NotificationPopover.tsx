@@ -27,7 +27,7 @@ const jss = (theme: Eventkit.Theme & Theme) => createStyles({
         padding: '8px',
         color: theme.eventkit.colors.running,
         '&:hover': {
-            backgroundColor: theme.eventkit.colors.white,
+            backgroundColor: 'rgb(245, 245, 245)',
         },
     },
     title: {
@@ -132,13 +132,12 @@ export function NotificationPopover(props: Props) {
     return (
         <div className={classes.popoverBlock}>
             <IconButton
-                // className={classes.warningIconBtn}
+                className={classes.warningIconBtn}
                 onClick={handlePopoverOpen}
             >
                 <WarningIcon style={{color: theme.eventkit.colors.running}}/>
-                {/*<AlertError/>*/}
             </IconButton>
-            <span>
+            <span style={{paddingTop: '3px', paddingLeft: '3px'}}>
                 <Typography variant="h6" gutterBottom className={classes.permissionNotificationText}>
                     Permission Notification
                 </Typography>
