@@ -304,7 +304,10 @@ export class DataPackListItem extends React.Component<Props, State> {
                                         }
                                     </div>
                                 </div>
-                                <div>{this.getStatusIcon(this.props.run.status)}</div>
+                                <div>
+                                    <span>Processing Status:</span>
+                                    {this.getStatusIcon(this.props.run.status)}
+                                </div>
                                 <div style={{ display: 'flex', flex: '1 1 auto' }}>
                                     <NotificationPopover/>
                                 </div>

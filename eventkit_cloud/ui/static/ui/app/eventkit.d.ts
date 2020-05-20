@@ -150,6 +150,7 @@ declare namespace Eventkit {
         export_provider_type: number;
         supported_formats: Format[];
         thumbnail_url: string;
+        hidden: boolean;
     }
 
     interface Format {

@@ -136,6 +136,7 @@ export function NotificationPopover(props: Props) {
                 onClick={handlePopoverOpen}
             >
                 <WarningIcon style={{color: theme.eventkit.colors.running}}/>
+                {/*<AlertError/>*/}
             </IconButton>
             <span>
                 <Typography variant="h6" gutterBottom className={classes.permissionNotificationText}>

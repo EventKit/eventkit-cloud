@@ -203,19 +203,22 @@ export class FormatSelector extends React.Component<Props, {}> {
 
     render() {
         const {formats} = this.props;
-
-        return (
-            <div className={`qa-FormatSelector-Container`} key={this.props.provider.slug}>
-                {formats.map((format) => (
-                    <div
-                        key={format.slug}
-                        className={`qa-FormatSelector-ListItem`}
-                    >
-                        {this.getCheckBox(format)}
-                    </div>
-                ))}
-            </div>
-        );
+        if (formats) {
+            return (
+                <div className={`qa-FormatSelector-Container`} key={this.props.provider.slug}>
+                    {formats.map((format) => (
+                        <div
+                            key={format.slug}
+                            className={`qa-FormatSelector-ListItem`}
+                        >
+                            {this.getCheckBox(format)}
+                        </div>
+                    ))}
+                </div>
+            );
+        } else {
+            return null;
+        }
     }
 }
 

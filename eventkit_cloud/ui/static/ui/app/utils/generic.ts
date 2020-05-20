@@ -199,27 +199,29 @@ export function unsupportedFormats(projection: number, formats: Eventkit.Format[
 }
 
 export function getDefaultFormat(provider: Partial<Eventkit.Provider>) {
-    const supportedFormats = provider.supported_formats;
+    if (provider.hidden === false) {
+        const supportedFormats = provider.supported_formats;
 
-    const defaultFormatsList = [];
-    if (supportedFormats.length !== 0) {
-        if (provider.type.toLowerCase() === 'wcs') {
-            if (supportedFormats.map(format => format.slug).indexOf('gpkg') >= 0) {
+        const defaultFormatsList = [];
+        if (supportedFormats.length !== 0) {
+            if (provider.type.toLowerCase() === 'wcs') {
+                if (supportedFormats.map(format => format.slug).indexOf('gpkg') >= 0) {
+                    defaultFormatsList.push('gpkg');
+                } else if (supportedFormats.map(format => format.slug).indexOf('gtiff') >= 0) {
+                    defaultFormatsList.push('gtiff');
+                }
+            } else if (supportedFormats.map(format => format.slug).indexOf('gpkg') >= 0) {
                 defaultFormatsList.push('gpkg');
-            } else if (supportedFormats.map(format => format.slug).indexOf('gtiff') >= 0) {
-                defaultFormatsList.push('gtiff');
             }
-        } else if (supportedFormats.map(format => format.slug).indexOf('gpkg') >= 0) {
-            defaultFormatsList.push('gpkg');
         }
+        if (defaultFormatsList.length === 0) {
+            defaultFormatsList.push(supportedFormats[0].slug);
+        }
+        return defaultFormatsList;
     }
-    if (defaultFormatsList.length === 0) {
-        defaultFormatsList.push(supportedFormats[0].slug);
-    }
-    return defaultFormatsList;
 }
 
-export function getFeatureUrl(mapLayer, z, y, x, i, j) : string {
+export function getFeatureUrl(mapLayer, z, y, x, i, j): string {
     // MapProxy identifies the zoom level by the TileMatrix name which are named like so, 00, 01, 02...18, 19.
     const tileMatrixId = z.toString().padStart(1, '2');
     return `${mapLayer.metadata.url}?FORMAT=application%2Fjson&InfoFormat=application%2Fjson&LAYER=${mapLayer.slug}&`
@@ -227,6 +229,6 @@ export function getFeatureUrl(mapLayer, z, y, x, i, j) : string {
         + `TILECOL=${x}&TILEMATRIX=${tileMatrixId}&TILEMATRIXSET=default&TILEROW=${y}&VERSION=1.0.0&i=${i}&j=${j}`;
 }
 
-export function arrayHasValue(array: any[], val: any) : boolean {
+export function arrayHasValue(array: any[], val: any): boolean {
     return array.indexOf(val) !== -1;
 }
