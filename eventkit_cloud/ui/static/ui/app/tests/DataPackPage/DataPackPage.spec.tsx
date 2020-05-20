@@ -287,9 +287,9 @@ describe('DataPackPage component', () => {
 
     it('componentWillUnmount should clear interval', () => {
         const intervalSpy = sinon.spy(global, 'clearInterval');
-        const { fetch } = instance;
+        const { autoFetchKey } = instance;
         wrapper.unmount();
-        expect(intervalSpy.calledWith(fetch)).toBe(true);
+        expect(intervalSpy.calledWith(autoFetchKey)).toBe(true);
         intervalSpy.restore();
     });
 
@@ -319,10 +319,10 @@ describe('DataPackPage component', () => {
         // jest.useFakeTimers();
         const clearStub = sinon.stub(window, 'clearInterval');
         // expect(clearInterval.mock.calls.length).toEqual(0);
-        const { fetch } = instance;
+        const { autoFetchKey } = instance;
         wrapper.unmount();
         expect(clearStub.calledOnce).toBe(true);
-        expect(clearStub.calledWith(fetch)).toBe(true);
+        expect(clearStub.calledWith(autoFetchKey)).toBe(true);
         // expect(clearInterval.mock.calls.length).toEqual(1);
         // expect(clearInterval.mock.calls[0][0]).toEqual(fetch);
     });
