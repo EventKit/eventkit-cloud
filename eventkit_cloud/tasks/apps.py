@@ -9,4 +9,5 @@ class EventKitTasks(AppConfig):
         from eventkit_cloud.tasks.signals import (  # NOQA
             exportrun_delete_exports,
             exporttaskresult_delete_exports,
+            export_run_file_delete,
         )
