@@ -204,6 +204,7 @@ class DataProviderTaskRecordSerializer(serializers.ModelSerializer):
     tasks = serializers.SerializerMethodField()
     url = serializers.HyperlinkedIdentityField(view_name="api:provider_tasks-detail", lookup_field="uid")
     preview_url = serializers.SerializerMethodField()
+    hidden = serializers.ReadOnlyField(default=False)
 
     def get_provider(self, obj):
         return DataProviderSerializer(obj.provider, context=self.context).data
@@ -252,13 +253,18 @@ class DataProviderTaskRecordSerializer(serializers.ModelSerializer):
             "estimated_size",
             "estimated_duration",
             "preview_url",
+            "hidden",
         )
+
 
 class FilteredDataProviderTaskRecordSerializer(serializers.ModelSerializer):
 
+    hidden = serializers.ReadOnlyField(default=True)
+
     class Meta:
         model = DataProviderTaskRecord
-        fields = ("id", "uid",)
+        fields = ("id", "uid", "hidden")
+
 
 class DataProviderListSerializer(serializers.BaseSerializer):
     def to_representation(self, obj):
@@ -715,10 +721,12 @@ class ExportFormatSerializer(serializers.ModelSerializer):
 
 class FilteredDataProviderSerializer(serializers.ModelSerializer):
 
+    hidden = serializers.ReadOnlyField(default=True)
+
     class Meta:
         model = DataProvider
-        fields = ("id", "uid")
-        read_only_fields = ("id", "uid")
+        fields = ("id", "uid", "hidden")
+        read_only_fields = ("id", "uid", "hidden")
 
 
 class DataProviderSerializer(serializers.ModelSerializer):
@@ -731,6 +739,7 @@ class DataProviderSerializer(serializers.ModelSerializer):
     footprint_url = serializers.SerializerMethodField(read_only=True)
     max_data_size = serializers.SerializerMethodField(read_only=True)
     max_selection = serializers.SerializerMethodField(read_only=True)
+    hidden = serializers.ReadOnlyField(default=False)
 
     class Meta:
         model = DataProvider
