@@ -18,7 +18,6 @@ import FeaturedFlag from './FeaturedFlag';
 import DataPackShareDialog from '../DataPackShareDialog/DataPackShareDialog';
 import { makeFullRunSelector } from '../../selectors/runSelector';
 import history from '../../utils/history';
-import {SvgIconProps} from "@material-ui/core/SvgIcon/SvgIcon";
 
 export interface Props {
     run: Eventkit.Run;
@@ -185,6 +184,16 @@ export class DataPackListItem extends React.Component<Props, State> {
                 textOverflow: 'ellipsis',
                 whiteSpace: 'nowrap' as 'nowrap',
             },
+            permissionNotificationText: {
+                color: this.props.theme.eventkit.colors.primary,
+                flex: '1 1 auto',
+                paddingTop: '6px',
+            },
+            alertIcon: {
+                color: colors.warning,
+                height: '18px',
+                marginTop: '3px'
+            }
         };
 
         const cardTitleStyle = (this.props.run.job.featured) ? styles.cardTitleFeatured : styles.cardTitle;
@@ -301,7 +310,13 @@ export class DataPackListItem extends React.Component<Props, State> {
 
                                             <Lock className="qa-DataPackListItem-Lock" style={styles.unpublishedIcon} />
                                         }
-                                        {this.getStatusIcon(this.props.run.status)}
+                                    </div>
+                                </div>
+                                <div>{this.getStatusIcon(this.props.run.status)}</div>
+                                <div style={{ display: 'flex', flex: '1 1 auto' }}>
+                                    <AlertError style={styles.alertIcon}/>
+                                    <div style={styles.permissionNotificationText}>
+                                        Permission Notification
                                     </div>
                                 </div>
                             </div>

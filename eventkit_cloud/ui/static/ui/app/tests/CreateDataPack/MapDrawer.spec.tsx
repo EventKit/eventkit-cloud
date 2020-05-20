@@ -13,7 +13,9 @@ jest.mock("../../components/CreateDataPack/RequestDataSource", () => {
     const React = require('react');
     return (props) => (<div id="dataSource-dialog">{props.open.toString()}</div>);
 });
-
+jest.mock('../../styles/eventkit_theme.js', () => 'colors');
+jest.mock('../../styles/eventkit_theme.js', () => 'images');
+jest.mock('../../../images/AboutPage', () => 'basemap');
 
 describe('FilterDrawer component', () => {
     const providers = [
