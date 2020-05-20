@@ -8,6 +8,7 @@ import CustomScrollbar from '../common/CustomScrollbar';
 import ProvidersFilter from './ProvidersFilter';
 import FormatsFilter from "./FormatsFilter";
 import ProjectionsFilter from "./ProjectionsFilter";
+import UnavailableFilterPopup from "./UnavailableFilterPopup";
 
 export interface Props {
     onFilterApply: (state: State) => void;
@@ -185,6 +186,7 @@ export class FilterDrawer extends React.Component<Props, State> {
                         formats={this.props.formats}
                         selected={this.state.formats}
                     />
+                    <UnavailableFilterPopup />
                 </CustomScrollbar>
             </Drawer>
         );

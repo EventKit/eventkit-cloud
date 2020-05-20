@@ -25,6 +25,7 @@ import FootprintDisplay from "./FootprintDisplay";
 import {MapLayer} from "./CreateExport";
 import RequestDataSource from "./RequestDataSource";
 import {useEffect, useState} from "react";
+import UnavailableFilterPopup from "../DataPackPage/UnavailableFilterPopup";
 
 const jss = (theme: Theme & Eventkit.Theme) => createStyles({
     container: {
@@ -143,6 +144,7 @@ const jss = (theme: Theme & Eventkit.Theme) => createStyles({
         height: '50px',
         width: '100%',
         display: 'flex',
+        bottom: '13%',
     },
     stickyRowItems: {
         flexGrow: 1,
@@ -410,6 +412,10 @@ export function MapDrawer(props: Props) {
                         >
                             Reset
                         </Button>
+                    </div>
+                    {/*{dataprovidertasklist.partial}*/}
+                    <div>
+                        <UnavailableFilterPopup />
                     </div>
                 </Drawer>
             </div>
