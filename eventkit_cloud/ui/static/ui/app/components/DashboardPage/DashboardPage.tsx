@@ -398,6 +398,16 @@ export class DashboardPage extends React.Component<Props, State> {
                 marginRight: '5px',
                 marginBottom: '5px',
             },
+            banner: {
+                position: 'relative' as 'relative',
+                width: '100%',
+                height: '35px'
+            },
+            dashboard: {
+                height: 'calc(100vh - 226px)',
+                position: 'absolute' as 'absolute',
+                width: '100%'
+            }
         };
 
         const iconElementRight = (
@@ -419,21 +429,7 @@ export class DashboardPage extends React.Component<Props, State> {
                 >
                     {iconElementRight}
                 </PageHeader>
-                {/*<div>*/}
-                {/*    {this.state.showPermissionsBanner ?*/}
-                {/*        <PermissionsBanner*/}
-                {/*            handleClosedPermissionsBanner={this.handleClosedPermissionsBanner}*/}
-                {/*            isOpen={this.state.isOpen}*/}
-                {/*        />*/}
-                {/*        : null*/}
-                {/*    }*/}
-                {/*</div>*/}
-                <div className='dashboard' style={{height: 'calc(100vh - 226px)'}}>
-                    {this.isLoading() ?
-                        <PageLoading background="transparent"/>
-                        : null
-                    }
-                    <div style={{width: '100%', position: 'absolute'}}>
+                <div style={styles.banner}>
                     {this.state.showPermissionsBanner ?
                         <PermissionsBanner
                             handleClosedPermissionsBanner={this.handleClosedPermissionsBanner}
@@ -442,6 +438,11 @@ export class DashboardPage extends React.Component<Props, State> {
                         : null
                     }
                 </div>
+                <div className='dashboard' style={styles.dashboard}>
+                    {this.isLoading() ?
+                        <PageLoading background="transparent"/>
+                        : null
+                    }
                     <CustomScrollbar
                         style={styles.customScrollbar}
                     >
