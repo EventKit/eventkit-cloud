@@ -12,17 +12,16 @@ import axios from 'axios';
 import {getCookie} from '../../utils/generic';
 import {useAsyncRequest} from '../../utils/hooks';
 import {connect} from "react-redux";
+import AlertError from "@material-ui/core/SvgIcon/SvgIcon";
+import theme from "../../styles/eventkit_theme";
 
 const jss = (theme: Eventkit.Theme & Theme) => createStyles({
     popoverBlock: {
         display: 'flex',
         height: '35px',
         color: 'primary',
-        borderRadius: '0px',
-        borderTop: '1px solid rgb(128, 128, 128)',
         position: 'sticky',
         bottom: 0,
-        backgroundColor: theme.eventkit.colors.white,
     },
     warningIconBtn: {
         padding: '8px',
@@ -43,6 +42,16 @@ const jss = (theme: Eventkit.Theme & Theme) => createStyles({
             backgroundColor: theme.eventkit.colors.white,
         },
     },
+    alertIcon: {
+        color: theme.eventkit.colors.warning,
+        height: '18px',
+        marginTop: '3px'
+    },
+    permissionNotificationText: {
+        color: theme.eventkit.colors.primary,
+        flex: '1 1 auto',
+        paddingTop: '6px',
+    },
 });
 
 interface Props extends React.HTMLAttributes<HTMLElement> {
@@ -55,7 +64,7 @@ const {CancelToken} = axios;
 
 // const source = CancelToken.source();
 
-export function UnavailableFilterPopup(props: Props) {
+export function NotificationPopover(props: Props) {
     // const [{ status: requestStatus, response }, requestCall] = useAsyncRequest();
     const [anchorElement, setAnchor] = useState(null);
     const {classes} = props;
@@ -123,14 +132,14 @@ export function UnavailableFilterPopup(props: Props) {
     return (
         <div className={classes.popoverBlock}>
             <IconButton
-                className={classes.warningIconBtn}
+                // className={classes.warningIconBtn}
                 onClick={handlePopoverOpen}
             >
-                <WarningIcon/>
+                <WarningIcon style={{color: theme.eventkit.colors.running}}/>
             </IconButton>
             <span>
-                <Typography variant="h6" gutterBottom className={classes.title}>
-                    Some sources are unavailable
+                <Typography variant="h6" gutterBottom className={classes.permissionNotificationText}>
+                    Permission Notification
                 </Typography>
             </span>
             <Popover
@@ -203,4 +212,4 @@ export function UnavailableFilterPopup(props: Props) {
     );
 }
 
-export default withStyles(jss)(UnavailableFilterPopup);
+export default withStyles(jss)(NotificationPopover);
