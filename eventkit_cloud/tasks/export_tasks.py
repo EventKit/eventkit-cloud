@@ -134,7 +134,8 @@ class ExportTask(EventKitBaseTask):
         task_uid = kwargs.get("task_uid")
 
         try:
-            task = ExportTaskRecord.objects.get(uid=task_uid)
+            task = ExportTaskRecord.objects.select_related("export_provider_task__run__job").select_related(
+                "export_provider_task__provider").get(uid=task_uid)
 
             check_cached_task_failures(task.name, task_uid)
 
@@ -170,7 +171,7 @@ class ExportTask(EventKitBaseTask):
                 raise Exception("This task was skipped due to previous failures/cancellations.")
 
             try:
-                add_metadata(task.export_provider_task.run.job, task.export_provider_task.slug, retval)
+                add_metadata(task.export_provider_task.run.job, task.export_provider_task.provider, retval)
             except Exception:
                 logger.error(traceback.format_exc())
                 logger.error("Failed to add metadata.")
@@ -483,7 +484,7 @@ def osm_data_collection_task(
     return result
 
 
-def add_metadata(job, provider_slug, retval):
+def add_metadata(job, provider, retval):
     """
     Accepts a job, provider slug, and return value from a task and applies metadata to the relevant file.
 
@@ -496,10 +497,9 @@ def add_metadata(job, provider_slug, retval):
     if result_file is None:
         return
     task = metadata_tasks.get(os.path.splitext(result_file)[1], None)
-    if provider_slug == "run":
+    if not provider:
         return
     if task is not None:
-        provider = DataProvider.objects.get(slug=provider_slug)
         task(filepath=result_file, job=job, provider=provider)
 
 

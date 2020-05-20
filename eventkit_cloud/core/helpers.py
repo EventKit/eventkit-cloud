@@ -12,6 +12,7 @@ import requests
 from django.conf import settings
 from django.core.cache import cache
 from notifications.signals import notify
+from django.contrib.auth.models import User
 
 logger = logging.getLogger(__name__)
 
@@ -147,3 +148,5 @@ def sendnotification(actor, recipient, verb, action_object, target, level, descr
         )
     except Exception as err:
         logger.debug("notify send error ignored: %s" % err)
+
+

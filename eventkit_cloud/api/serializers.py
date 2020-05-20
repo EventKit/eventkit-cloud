@@ -24,7 +24,6 @@ from . import validators
 from eventkit_cloud.core.models import (
     GroupPermission,
     GroupPermissionLevel,
-    JobPermission,
 )
 from eventkit_cloud.jobs.models import (
     ExportFormat,
@@ -38,7 +37,7 @@ from eventkit_cloud.jobs.models import (
     License,
     UserLicense,
     UserJobActivity,
-)
+    JobPermission)
 from eventkit_cloud.tasks.models import (
     ExportRun,
     ExportTaskRecord,
@@ -48,6 +47,7 @@ from eventkit_cloud.tasks.models import (
 )
 from eventkit_cloud.user_requests.models import DataProviderRequest, SizeIncreaseRequest
 from eventkit_cloud.utils.s3 import get_presigned_url
+from .filters import attribute_class_filter
 
 try:
     from collections import OrderedDict
@@ -254,6 +254,11 @@ class DataProviderTaskRecordSerializer(serializers.ModelSerializer):
             "preview_url",
         )
 
+class FilteredDataProviderTaskRecordSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = DataProviderTaskRecord
+        fields = ("id", "uid",)
 
 class DataProviderListSerializer(serializers.BaseSerializer):
     def to_representation(self, obj):
@@ -289,7 +294,6 @@ class SimpleJobSerializer(serializers.Serializer):
     url = serializers.HyperlinkedIdentityField(view_name="api:jobs-detail", lookup_field="uid")
     extent = serializers.SerializerMethodField()
     original_selection = serializers.SerializerMethodField(read_only=True)
-    # bounds = serializers.SerializerMethodField()
     published = serializers.BooleanField()
     visibility = serializers.CharField()
     featured = serializers.BooleanField()
@@ -321,10 +325,10 @@ class SimpleJobSerializer(serializers.Serializer):
         user = request.user
         return JobPermission.get_user_permissions(user, obj.uid)
 
-    @staticmethod
-    def get_formats(obj):
+    def get_formats(self, obj):
         formats = []
-        for provider_task in obj.provider_tasks.all():
+        provider_tasks, filtered_tasks = attribute_class_filter(obj.provider_tasks.all(), self.context["request"].user)
+        for provider_task in provider_tasks:
             if hasattr(provider_task, "formats"):
                 for format in provider_task.formats.all():
                     if format.slug not in formats:
@@ -345,6 +349,7 @@ class ExportRunSerializer(serializers.ModelSerializer):
 
     url = serializers.HyperlinkedIdentityField(view_name="api:runs-detail", lookup_field="uid")
     job = serializers.SerializerMethodField()  # nest the job details
+    provider_task_list_status = serializers.SerializerMethodField()
     provider_tasks = serializers.SerializerMethodField()
     user = serializers.SerializerMethodField()
     zipfile_url = serializers.SerializerMethodField()
@@ -370,29 +375,44 @@ class ExportRunSerializer(serializers.ModelSerializer):
             "user",
             "status",
             "job",
+            "provider_task_list_status",
             "provider_tasks",
             "zipfile_url",
             "expiration",
             "deleted",
         )
-        read_only_fields = ("created_at", "updated_at")
+        read_only_fields = ("created_at", "updated_at", "provider_task_list_status")
 
     @staticmethod
     def get_user(obj):
         if not obj.deleted:
             return obj.user.username
 
+    def get_provider_task_list_status(self, obj):
+        request = self.context["request"]
+        return get_provider_task_list_status(request.user, obj.provider_tasks.all())
+
     def get_provider_tasks(self, obj):
         if not obj.deleted:
             request = self.context["request"]
-            if request.query_params.get("slim"):
-                return DataProviderListSerializer(obj.provider_tasks, many=True, context=self.context).data
-            else:
-                return DataProviderTaskRecordSerializer(obj.provider_tasks, many=True, context=self.context).data
+            data = []
+            provider_tasks, filtered_provider_tasks = attribute_class_filter(obj.provider_tasks.all(), request.user)
+            if provider_tasks.count() > 1:  # The will always be a run task.
+                if request.query_params.get("slim"):
+                    data = DataProviderListSerializer(provider_tasks, many=True, context=self.context).data
+                else:
+                    data = DataProviderTaskRecordSerializer(provider_tasks, many=True, context=self.context).data
+            if filtered_provider_tasks:
+                if request.query_params.get("slim"):
+                    data += DataProviderListSerializer(filtered_provider_tasks, many=True, context=self.context).data
+                else:
+                    data += FilteredDataProviderTaskRecordSerializer(filtered_provider_tasks, many=True, context=self.context).data
+            return data
 
     def get_zipfile_url(self, obj):
         request = self.context["request"]
-        if obj.provider_tasks.filter(name="run"):
+        provider_tasks, filtered_provider_tasks = attribute_class_filter(obj.provider_tasks.all(), request.user)
+        if obj.provider_tasks.filter(name="run") and not filtered_provider_tasks:
             task_downloadable = obj.provider_tasks.get(name="run").tasks.filter(name__icontains="zip")[0].result
             if task_downloadable:
                 return request.build_absolute_uri("/download?uid={}".format(task_downloadable.uid))
@@ -693,6 +713,14 @@ class ExportFormatSerializer(serializers.ModelSerializer):
         return obj.supported_projections.all().values("uid", "name", "srid", "description")
 
 
+class FilteredDataProviderSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = DataProvider
+        fields = ("id", "uid")
+        read_only_fields = ("id", "uid")
+
+
 class DataProviderSerializer(serializers.ModelSerializer):
     model_url = serializers.HyperlinkedIdentityField(view_name="api:providers-detail", lookup_field="slug")
     type = serializers.SerializerMethodField(read_only=True)
@@ -843,7 +871,7 @@ class JobSerializer(serializers.Serializer):
     This is the core representation of the API.
     """
 
-    provider_tasks = ProviderTaskSerializer(many=True)
+    provider_tasks = serializers.SerializerMethodField()
 
     uid = serializers.UUIDField(read_only=True)
     url = serializers.HyperlinkedIdentityField(view_name="api:jobs-detail", lookup_field="uid")
@@ -892,7 +920,7 @@ class JobSerializer(serializers.Serializer):
         data["the_geom"] = selection
         original_selection = validators.validate_original_selection(self.context["request"].data)
         data["original_selection"] = original_selection
-        data.pop("provider_tasks")
+        data.pop("provider_tasks", None)
 
         return data
 
@@ -907,28 +935,44 @@ class JobSerializer(serializers.Serializer):
     def get_exports(self, obj):
         """Return the export formats selected for this export."""
         exports = []
-        for provider_task in obj.provider_tasks.all():
+        provider_tasks, filtered_tasks = attribute_class_filter(obj.provider_tasks.all(), self.context["request"].user)
+        for provider_task in provider_tasks:
             serializer = ExportFormatSerializer(
                 provider_task.formats, many=True, context={"request": self.context["request"]},
             )
             exports.append({"provider": provider_task.provider.name, "formats": serializer.data})
+        for provider_task in filtered_tasks:
+            exports.append({"provider": provider_task.uid})
         return exports
+
+    def get_provider_task_list_status(self, obj):
+        request = self.context["request"]
+        return get_provider_task_list_status(request.user, obj.provider_tasks.all())
 
     def get_provider_tasks(self, obj):
         """Return the export formats selected for this export."""
         exports = []
-        for provider_task in obj.provider_tasks.all():
-            serializer = ProviderTaskSerializer(
-                provider_task.formats, many=True, context={"request": self.context["request"]},
-            )
-            exports.append({provider_task.provider.name: serializer.data})
+        provider_tasks, filtered_tasks = attribute_class_filter(obj.provider_tasks.all(), self.context["request"].user)
+        for provider_task in provider_tasks:
+            if hasattr(provider_task, "formats"):
+                serializer = ExportFormatSerializer(
+                    provider_task.formats, many=True, context={"request": self.context["request"]},
+                )
+                if hasattr(provider_task, "provider"):
+                    exports.append({provider_task.provider.name: serializer.data})
+        for provider_task in filtered_tasks:
+            if hasattr(provider_task, "formats"):
+                exports.append({provider_task.provider.uid: serializer.data})
         return exports
 
     def get_providers(self, obj):
         """Return the export formats selected for this export."""
-        providers = [provider_format for provider_format in obj.providers.all()]
-        serializer = DataProviderSerializer(providers, many=True, context={"request": self.context["request"]})
-        return serializer.data
+        providers, filtered_providers = attribute_class_filter(obj.providers.all(), self.context["request"].user)
+        providers = [provider_format for provider_format in providers]
+        provider_serializer = DataProviderSerializer(providers, many=True, context={"request": self.context["request"]})
+        filtered_providers = [provider_format for provider_format in filtered_providers]
+        filtered_providers_serializer = DataProviderSerializer(filtered_providers, many=True, context={"request": self.context["request"]})
+        return provider_serializer.data + filtered_providers_serializer.data
 
     @staticmethod
     def get_tags(obj):
@@ -1184,3 +1228,12 @@ def get_selection_dict(obj):
         feature["geometry"] = geojson_geom
         feature_collection["features"].append(feature)
     return feature_collection
+
+
+def get_provider_task_list_status(user, provider_tasks):
+    provider_tasks, filtered_provider_tasks = attribute_class_filter(provider_tasks, user)
+    if not provider_tasks:
+        return "EMPTY"
+    if not filtered_provider_tasks:
+        return "COMPLETE"
+    return "PARTIAL"

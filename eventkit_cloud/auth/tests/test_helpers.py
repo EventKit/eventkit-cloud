@@ -11,7 +11,7 @@ from django.contrib.auth.models import User
 from django.test import TestCase, override_settings
 from mock import patch
 
-from eventkit_cloud.auth.helpers import validate_object
+from eventkit_cloud.core.models import validate_object
 
 logger = logging.getLogger(__name__)
 
