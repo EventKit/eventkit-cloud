@@ -250,7 +250,7 @@ export class ExportAOI extends React.Component<Props, State> {
 
         const steps = joyride.ExportAOI as any[];
         this.joyrideAddSteps(steps);
-        await this.isRestricted();
+        await this.makePermissionsRequest();
     }
 
     componentDidUpdate(prevProps: Props) {
@@ -285,7 +285,7 @@ export class ExportAOI extends React.Component<Props, State> {
                 return mapLayers.includes(p1);
             })) {
                 // Valid slugs -> all layers that should remain selected and visible, including base layer
-                let currentLayers = this.map.getLayers().getArray();
+                const currentLayers = this.map.getLayers().getArray();
                 const validSlugs = [...mapLayers.map(layer => layer.slug), this.baseLayer.get('name')];
                 const layersToBeRemoved = currentLayers.filter(layer => validSlugs.indexOf(layer.get('name')) === -1);
                 layersToBeRemoved.forEach(layer => this.map.removeLayer(layer));
@@ -605,7 +605,6 @@ export class ExportAOI extends React.Component<Props, State> {
             handleMoveEvent: this.moveEvent,
             handleUpEvent: this.upEvent,
         });
-
 
         // Hook up the click to query feature data
         this.map.on('click', (event) => {
@@ -1051,37 +1050,27 @@ export class ExportAOI extends React.Component<Props, State> {
         this.setState({mapLayers});
     }
 
-    private async isRestricted() {
-        // make call to get user's attributes
-        await this.makeRequest();
-        // if (user.attribute === ?) {
-        //     this.setState({ showPermissionsBanner: true });
-        // }
-    }
-
     private csrfmiddlewaretoken = getCookie('csrftoken');
-    private makeRequest = async () => {
-        //     // const userAttributes = user.attributes.classification
-        //     requestCall({
-        //         url: `/api/providers/requests/size`,
-        //         method: 'get',
-        //         data: {
-        //             // user: user.id.attribute
-        //         },
-        //         headers: { 'X-CSRFToken': this.csrfmiddlewaretoken },
-        //         cancelToken: source.token,
-        //     });
+    private makePermissionsRequest = async () => {
+        let responseData;
         return axios({
-            url: `/api/providers/requests`,
+            url: `/api/providers`,
             method: 'get',
-            data: {provider: 'provider'}
         }).then((response) => {
-            this.setState({showPermissionsBanner: true, isOpen: true});
-            return response.data[0];
-        }).catch(() => {
-            this.setState({showPermissionsBanner: true, isOpen: true});
+            if (Object.entries(response.data).length === 0) {
+                responseData = 'No data providers found.';
+                return responseData;
+            }
+            const providers = response.data;
+            providers.forEach((provider) => {
+                if (provider.hidden || provider.display === false) {
+                    this.setState({showPermissionsBanner: true, isOpen: true});
+                }
+            });
+        }).catch((e) => {
+            console.log(e);
         });
-    }
+    };
 
     private handleClosedPermissionsBanner() {
         this.setState({showPermissionsBanner: false, isOpen: false});
