@@ -409,11 +409,11 @@ export class ProviderRow extends React.Component<Props, State> {
 
     private handleProviderOpen() {
         const {provider} = this.props;
-        let providerDesc;
+        // let providerDesc;
         const propsProvider = this.props.providers.find(x => x.slug === provider.slug);
-        if (propsProvider) {
-            providerDesc = propsProvider.service_description;
-        }
+        // if (propsProvider) {
+        const providerDesc = propsProvider.service_description;
+        // }
         this.setState({providerDesc, providerDialogOpen: true});
     }
 

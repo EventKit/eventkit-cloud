@@ -143,8 +143,11 @@ const jss = (theme: Theme & Eventkit.Theme) => createStyles({
         position: 'absolute',
         height: '50px',
         width: '100%',
-        display: 'flex',
-        bottom: '13%',
+        display: 'block',
+    },
+    stickyRowSources: {
+        height: '100px',
+        bottom: '50px',
     },
     stickyRowItems: {
         flexGrow: 1,
@@ -285,6 +288,7 @@ export function MapDrawer(props: Props) {
     }, [providers]);
 
     const drawerOpen = !!selectedTab;
+    const areProvidersHidden = providers.find(provider => provider.hidden === true);
 
     return (
         <div
@@ -389,7 +393,10 @@ export function MapDrawer(props: Props) {
                         </CustomScrollbar>
                     </div>
                     <Divider style={{margin: '0 5px 0 5px'}}/>
-                    <div className={classes.stickyRow}>
+
+                    <div
+                        className={`${classes.stickyRow} ${areProvidersHidden ? classes.stickyRowSources : ''}`}
+                    >
                         <div className={classes.stickyRowItems} style={{paddingLeft: '8px', paddingTop: '8px'}}>
                             <RequestDataSource open={requestDataSourceOpen}
                                                onClose={() => setRequestDataSourceOpen(false)}/>
@@ -413,12 +420,7 @@ export function MapDrawer(props: Props) {
                         >
                             Reset
                         </Button>
-                    </div>
-                    <div>
-                        {providers.find(provider => provider.hidden === true) ?
-                            <UnavailableFilterPopup/>
-                            : null
-                        }
+                        {areProvidersHidden && <UnavailableFilterPopup/>}
                     </div>
                 </Drawer>
             </div>

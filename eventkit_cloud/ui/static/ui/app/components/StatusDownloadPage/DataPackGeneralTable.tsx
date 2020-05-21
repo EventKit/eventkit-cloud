@@ -43,7 +43,7 @@ export class DataPackGeneralTable extends React.Component<Props, State> {
         const { colors } = this.props.theme.eventkit;
 
         const providerTasks = this.props.dataPack.provider_tasks.filter(task => (
-            task.display
+            task.display && !task.hidden
         ));
 
         const styles = {

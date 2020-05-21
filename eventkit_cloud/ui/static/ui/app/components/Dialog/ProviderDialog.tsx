@@ -84,7 +84,23 @@ export class ProviderDialog extends React.Component<Props, State> {
             width: '100%',
             height: '75px',
         };
-        const permissionMsg = 'Some sources are unavailable due to user permissions. If you believe this is an error, please contact your administrator.';
+        const someSourcesHiddenMsg = "Some sources are unavailable due to user permissions. If you believe this is an error, please contact your administrator.";
+        const allSourcesHiddenMsg = "All data sources are unavailable due to user permissions. If you believe this is an error, please contact your administrator.";
+        const providers = [];
+        this.props.uids.map((uid, ix) => {
+            const providerTask = this.props.providerTasks[uid];
+            if (!providerTask || providerTask.hidden) {
+                return;
+            }
+            const provider = this.props.providers.find(p => p.slug === providerTask.slug);
+            if (!provider || provider.hidden) {
+                return;
+            }
+            providers.push(provider);
+        });
+
+        // count will always be at least one due to the hidden provider
+        const hiddenProviderCount = this.props.uids.length - providers.length;
         return (
             <BaseDialog
                 className="qa-DataPackGridItem-BaseDialog"
@@ -97,42 +113,37 @@ export class ProviderDialog extends React.Component<Props, State> {
                         <Progress size={50}/>
                     </div>
                     :
-                    <List>
-                        {this.props.uids.map((uid, ix) => {
-                            const providerTask = this.props.providerTasks[uid];
-                            if (!providerTask) {
-                                return;
+                    (<>
+                            {hiddenProviderCount === this.props.uids.length &&
+                            (<div>{allSourcesHiddenMsg}</div>)
                             }
-                            if (providerTask.hidden === true) {
-                                return permissionMsg;
+                            {hiddenProviderCount < this.props.uids.length && hiddenProviderCount > 1 &&
+                            (<div>{someSourcesHiddenMsg}</div>)
                             }
-                            const provider = this.props.providers.find(p => p.slug === providerTask.slug);
-                            if (!provider) {
-                                return;
-                            }
-                            if (provider.hidden === true) {
-                                return permissionMsg;
-                            }
+                            <List>
+                                {providers.map((provider, ix) => {
+                                    const {job} = this.state;
+                                    const dataProviderTask = job && job.provider_tasks.find(obj => obj.provider === provider.name)
 
-                            const {job} = this.state;
-                            const dataProviderTask = job && job.provider_tasks.find(obj => obj.provider === provider.name)
+                                    // If available, get custom zoom levels from DataProviderTask otherwise use Provider defaults.
+                                    const min_zoom = dataProviderTask && dataProviderTask.min_zoom || provider && provider.level_from
+                                    const max_zoom = dataProviderTask && dataProviderTask.max_zoom || provider && provider.level_to
 
-                            // If available, get custom zoom levels from DataProviderTask otherwise use Provider defaults.
-                            const min_zoom = dataProviderTask && dataProviderTask.min_zoom || provider && provider.level_from
-                            const max_zoom = dataProviderTask && dataProviderTask.max_zoom || provider && provider.level_to
+                                    return (
 
-                            return (
-                                <DropDownListItem
-                                    title={provider.name}
-                                    key={provider.slug}
-                                    alt={ix % 2 !== 0}
-                                >
-                                    <div>Zoom Levels {min_zoom} - {max_zoom}</div>
-                                    <div>{provider.service_description}</div>
-                                </DropDownListItem>
-                            );
-                        })}
-                    </List>
+                                        <DropDownListItem
+                                            title={provider.name}
+                                            key={provider.slug}
+                                            alt={ix % 2 !== 0}
+                                        >
+                                            <div>Zoom Levels {min_zoom} - {max_zoom}</div>
+                                            <div>{provider.service_description}</div>
+                                        </DropDownListItem>
+                                    );
+                                })}
+                            </List>
+                        </>
+                    )
                 }
             </BaseDialog>
         );

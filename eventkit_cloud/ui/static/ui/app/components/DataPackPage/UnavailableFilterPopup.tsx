@@ -19,8 +19,6 @@ const jss = (theme: Eventkit.Theme & Theme) => createStyles({
         display: 'flex',
         height: '35px',
         color: 'primary',
-        borderRadius: '0px',
-        borderTop: '1px solid rgb(128, 128, 128)',
         position: 'sticky',
         bottom: 0,
         backgroundColor: theme.eventkit.colors.white,
