@@ -55,6 +55,7 @@ from eventkit_cloud.tasks.helpers import (
     get_metadata,
     get_provider_staging_preview,
     check_cached_task_failures,
+    add_export_run_files_to_zip,
     PREVIEW_TAIL,
 )
 from eventkit_cloud.tasks.metadata import metadata_tasks
@@ -73,7 +74,6 @@ from eventkit_cloud.tasks.models import (
     DataProviderTaskRecord,
     FileProducingTaskResult,
     ExportRun,
-    ExportRunFile,
 )
 from eventkit_cloud.jobs.models import DataProvider, DataProviderTask
 
@@ -1262,14 +1262,7 @@ def zip_files(include_files, file_path=None, static_files=None, *args, **kwargs)
                 filename = get_archive_data_path(provider_slug, download_filename)
             zipfile.write(filepath, arcname=filename)
 
-        # Add additional files stored in ExportRunFile objects.
-        export_run_files = ExportRunFile.objects.all()
-        for export_run_file in export_run_files:
-            if export_run_file.provider:
-                arcname = os.path.join("data", export_run_file.provider.slug, export_run_file.file.name)
-                zipfile.write(export_run_file.file.path, arcname=arcname)
-            else:
-                zipfile.write(export_run_file.file.path, export_run_file.file.name)
+        add_export_run_files_to_zip(zipfile)
 
         if zipfile.testzip():
             raise Exception("The zipped file was corrupted.")

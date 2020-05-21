@@ -27,7 +27,7 @@ from eventkit_cloud.utils.generic import cd, get_file_paths  # NOQA
 
 from eventkit_cloud.jobs.models import DataProvider
 from eventkit_cloud.tasks.exceptions import FailedException
-from eventkit_cloud.tasks.models import DataProviderTaskRecord
+from eventkit_cloud.tasks.models import DataProviderTaskRecord, ExportRunFile
 import urllib.parse
 
 logger = logging.getLogger()
@@ -629,3 +629,27 @@ def check_cached_task_failures(task_name, task_uid):
     cache.set(cache_key, task_attempts)
     if task_attempts > settings.MAX_TASK_ATTEMPTS:
         raise FailedException(task_name=task_name)
+
+
+def add_export_run_files_to_zip(zipfile):
+    """
+    Add additional files stored in ExportRunFile objects to a zipfile.
+    """
+    if not os.path.exists(settings.EXPORT_RUN_FILES):
+        os.makedirs(settings.EXPORT_RUN_FILES)
+
+    export_run_files = ExportRunFile.objects.all()
+    for export_run_file in export_run_files:
+        export_run_file_path = os.path.join(settings.EXPORT_RUN_FILES, export_run_file.file.name)
+
+        request = requests.get(export_run_file.file.url)
+        with open(export_run_file_path, "wb+") as file:
+            file.write(request.content)
+
+        extra_directory = export_run_file.directory or ""
+        if export_run_file.provider:
+            arcname = os.path.join("data", export_run_file.provider.slug, extra_directory, export_run_file.file.name)
+            zipfile.write(export_run_file_path, arcname=arcname)
+        else:
+            arcname = os.path.join(extra_directory, export_run_file.file.name)
+            zipfile.write(export_run_file_path, arcname)
