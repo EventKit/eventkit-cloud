@@ -194,10 +194,10 @@ export interface Props {
     classes: { [className: string]: string };
 }
 
-MapDrawer.defaultProps = { sources: [] } as Props;
+MapDrawer.defaultProps = {sources: []} as Props;
 
 export function MapDrawer(props: Props) {
-    const { providers, classes } = props;
+    const {providers, classes} = props;
 
     const [expandedSources, setExpandedSources] = useState([]);
     const [selectedTab, setSelectedTab] = useState(false);
@@ -208,7 +208,7 @@ export function MapDrawer(props: Props) {
         setBaseMap(newBaseMapId);
         let mapLayer = {} as MapLayer;
         if ((!!newBaseMapId || newBaseMapId === 0) && newBaseMapId !== -1) {
-            mapLayer = { ...sources[newBaseMapId] }.mapLayer;
+            mapLayer = {...sources[newBaseMapId]}.mapLayer;
         }
         props.updateBaseMap(mapLayer);
     }
@@ -292,14 +292,14 @@ export function MapDrawer(props: Props) {
         >
             <div
                 className={classes.flexContainer}
-                style={{ zIndex: 5, marginRight: (drawerOpen) ? '250px' : '0px' }}
+                style={{zIndex: 5, marginRight: (drawerOpen) ? '250px' : '0px'}}
             >
                 <Drawer
                     className="qa-MapDrawer-Drawer"
                     variant="persistent"
                     anchor="right"
                     open={drawerOpen}
-                    style={{ flexShrink: 0 }}
+                    style={{flexShrink: 0}}
                     PaperProps={{
                         className: classes.drawerPaper,
                         // style: {visibility: selectedTab === 'basemap' ? 'visible' as 'visible' : 'hidden' as 'hidden'},
@@ -318,7 +318,7 @@ export function MapDrawer(props: Props) {
                             }}
                             label={(
                                 <Card className={classes.tabHeader}>
-                                    <Icon classes={{ root: classes.iconRoot }}>
+                                    <Icon classes={{root: classes.iconRoot}}>
                                         <img
                                             className={classes.imageIcon}
                                             src={theme.eventkit.images.basemap}
@@ -329,19 +329,19 @@ export function MapDrawer(props: Props) {
                                 </Card>)}
                         />
                     </VerticalTabs>
-                    <div style={{ display: 'flex' }}>
+                    <div style={{display: 'flex'}}>
                         <strong className={classes.heading}>Select a basemap</strong>
                         <Clear className={classes.clear} color="primary" onClick={(event) => setSelectedTab(false)}/>
                     </div>
-                    <Divider style={{ margin: '0 5px 0 5px' }}/>
+                    <Divider style={{margin: '0 5px 0 5px'}}/>
                     <div className={classes.scrollBar}>
                         <CustomScrollbar>
-                            <List style={{ padding: '10px' }}>
+                            <List style={{padding: '10px'}}>
                                 {sources.map((source, ix) =>
                                     (
                                         <div key={ix}>
                                             <ListItem className={`${classes.listItem} ${classes.noPadding}`}>
-                                                    <span style={{ marginRight: '2px' }}>
+                                                    <span style={{marginRight: '2px'}}>
                                                         <Radio
                                                             checked={selectedBaseMap === ix}
                                                             value={ix}
@@ -353,7 +353,7 @@ export function MapDrawer(props: Props) {
                                                         />
                                                     </span>
                                                 <div>
-                                                    <div style={{ display: 'flex' }}>
+                                                    <div style={{display: 'flex'}}>
                                                         {source.thumbnail_url &&
                                                         <CardMedia
                                                             className={classes.thumbnail}
@@ -388,17 +388,18 @@ export function MapDrawer(props: Props) {
                             </List>
                         </CustomScrollbar>
                     </div>
-                    <Divider style={{ margin: '0 5px 0 5px' }}/>
+                    <Divider style={{margin: '0 5px 0 5px'}}/>
                     <div className={classes.stickyRow}>
                         <div className={classes.stickyRowItems} style={{paddingLeft: '8px', paddingTop: '8px'}}>
-                        <RequestDataSource open={requestDataSourceOpen}
-                                           onClose={() => setRequestDataSourceOpen(false)}/>
-                        <div>
-                            Data Source Missing?
-                        </div>
-                        <Link onClick={() => setRequestDataSourceOpen(true)} style={{fontSize: '12px', cursor: 'pointer'}}>
-                            Request New Data Source
-                        </Link>
+                            <RequestDataSource open={requestDataSourceOpen}
+                                               onClose={() => setRequestDataSourceOpen(false)}/>
+                            <div>
+                                Data Source Missing?
+                            </div>
+                            <Link onClick={() => setRequestDataSourceOpen(true)}
+                                  style={{fontSize: '12px', cursor: 'pointer'}}>
+                                Request New Data Source
+                            </Link>
                         </div>
                         <Button
                             className={`${classes.button} ${classes.stickRowyItems}`}
@@ -413,9 +414,11 @@ export function MapDrawer(props: Props) {
                             Reset
                         </Button>
                     </div>
-                    {/*{dataprovidertasklist.partial}*/}
                     <div>
-                        <UnavailableFilterPopup />
+                        {providers.find(provider => provider.hidden === true) ?
+                            <UnavailableFilterPopup/>
+                            : null
+                        }
                     </div>
                 </Drawer>
             </div>

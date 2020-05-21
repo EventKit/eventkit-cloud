@@ -9,9 +9,10 @@ import {
 } from '@material-ui/core';
 import CloseIcon from '@material-ui/icons/Close';
 import axios from 'axios';
+import {connect} from 'react-redux';
 import {getCookie} from '../../utils/generic';
-import {useAsyncRequest} from '../../utils/hooks';
-import {connect} from "react-redux";
+import {useAsyncRequest, useEffectOnMount} from '../../utils/hooks';
+import {MapContainer} from '../../utils/mapBuilder';
 
 const jss = (theme: Eventkit.Theme & Theme) => createStyles({
     popoverBlock: {
@@ -46,36 +47,37 @@ const jss = (theme: Eventkit.Theme & Theme) => createStyles({
 });
 
 interface Props extends React.HTMLAttributes<HTMLElement> {
-    // provider: Eventkit.Provider;
-    // providerInfo: Eventkit.Store.ProviderInfo;
     classes: { [className: string]: string };
 }
 
-const {CancelToken} = axios;
-
-// const source = CancelToken.source();
-
 export function UnavailableFilterPopup(props: Props) {
-    // const [{ status: requestStatus, response }, requestCall] = useAsyncRequest();
     const [anchorElement, setAnchor] = useState(null);
     const {classes} = props;
 
-    const csrfmiddlewaretoken = getCookie('csrftoken');
-    // const makeRequest = async () => {
-    //     const estimatedSize = providerInfo.estimates.size;
-    //     requestCall({
-    //         url: `/api/providers/requests/size`,
-    //         method: 'post',
-    //         data: {
-    //             provider: provider.id,
-    //             selection: geojson,
-    //             requested_aoi_size: Math.round(aoiArea),
-    //             requested_data_size: estimatedSize ? Math.trunc(estimatedSize.value) : undefined,
-    //         },
-    //         headers: { 'X-CSRFToken': csrfmiddlewaretoken },
-    //         cancelToken: source.token,
+    // const makePermissionsRequest = async () => {
+    //     let responseData;
+    //     return axios({
+    //         url: '/api/providers',
+    //         method: 'get',
+    //     }).then((response) => {
+    //         if (Object.entries(response.data).length === 0) {
+    //             responseData = 'No data providers found.';
+    //             return responseData;
+    //         }
+    //         const providers = response.data;
+    //         providers.forEach((provider) => {
+    //             if (provider.hidden) {
+    //                 this.setState({ showPermissionsBanner: true, isOpen: true });
+    //             }
+    //         });
+    //     }).catch((e) => {
+    //         console.log(e);
     //     });
     // };
+    //
+    // useEffectOnMount(() => {
+    //     makePermissionsRequest();
+    // });
 
     const handlePopoverOpen = (e: React.MouseEvent<HTMLElement>) => {
         setAnchor(e.currentTarget);
@@ -84,18 +86,6 @@ export function UnavailableFilterPopup(props: Props) {
     const handlePopoverClose = () => {
         setAnchor(null);
     };
-
-    // async const handleSubmissionOpen = () => {
-    //    if (Object.keys(props.geojson).length === 0) {
-    //         return null;
-    //     }
-    //     await makeRequest();
-    //     setSubmissionOpen(true);
-    // }
-
-    // const handleSubmissionClose = () => {
-    //     setSubmissionOpen(false);
-    // }
 
     // const handleErrorMessage = (response) => {
     //     const { data = {errors: []} } = !!response ? response.response : {};
@@ -119,7 +109,6 @@ export function UnavailableFilterPopup(props: Props) {
     // };
 
     const openEl = Boolean(anchorElement);
-    // if (dataProviderListTasks.partial) {
     return (
         <div className={classes.popoverBlock}>
             <IconButton
@@ -136,7 +125,7 @@ export function UnavailableFilterPopup(props: Props) {
             <Popover
                 // id={id}
                 PaperProps={{
-                    style: {padding: '16px', width: '30%'}
+                    style: {padding: '16px', width: '30%'},
                 }}
                 open={openEl}
                 anchorEl={anchorElement}
@@ -162,41 +151,6 @@ export function UnavailableFilterPopup(props: Props) {
                         Some filters are unavailable due to user permissions. If you believe this is an error,
                         contact your administrator.
                     </div>
-                    <span>
-                        {/* <BaseDialog */}
-                        {/*    actionsStyle={{ */}
-                        {/*        margin: 'auto', */}
-                        {/*        flexDirection: 'initial', */}
-                        {/*        justifyContent: 'initial', */}
-                        {/*        paddingBottom: '20px', */}
-                        {/*    }} */}
-                        {/*    titleStyle={{display: 'None'}} */}
-                        {/*    bodyStyle={{padding: '35px 0px', textAlign: 'center', color: '#000'}} */}
-                        {/*    buttonText="OK" */}
-                        {/*    show={isSubmissionOpen} */}
-                        {/*    onClose={handleSubmissionClose} */}
-                        {/* > */}
-                        {/*    <div> */}
-                        {/*        {requestStatus !== 'error' && ( */}
-                        {/*            <> */}
-                        {/*                {requestStatus === 'pending' && ( */}
-                        {/*                    <div>Pending Request</div> */}
-                        {/*                )} */}
-                        {/*                {requestStatus === 'success' && ( */}
-                        {/*                    <div> */}
-                        {/*                        <strong>Your increased data request has been submitted.</strong> */}
-                        {/*                    </div> */}
-                        {/*                )} */}
-                        {/*            </> */}
-                        {/*        )} */}
-                        {/*        {requestStatus === 'error' && ( */}
-                        {/*            <div> */}
-                        {/*                Request Failure due to {handleErrorMessage(response)}. */}
-                        {/*            </div> */}
-                        {/*        )} */}
-                        {/*    </div> */}
-                        {/* </BaseDialog> */}
-                    </span>
                 </div>
             </Popover>
         </div>

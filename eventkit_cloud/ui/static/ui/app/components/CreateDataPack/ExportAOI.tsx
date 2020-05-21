@@ -1050,11 +1050,10 @@ export class ExportAOI extends React.Component<Props, State> {
         this.setState({mapLayers});
     }
 
-    private csrfmiddlewaretoken = getCookie('csrftoken');
     private makePermissionsRequest = async () => {
         let responseData;
         return axios({
-            url: `/api/providers`,
+            url: '/api/providers',
             method: 'get',
         }).then((response) => {
             if (Object.entries(response.data).length === 0) {
@@ -1063,14 +1062,14 @@ export class ExportAOI extends React.Component<Props, State> {
             }
             const providers = response.data;
             providers.forEach((provider) => {
-                if (provider.hidden || provider.display === false) {
+                if (provider.hidden) {
                     this.setState({showPermissionsBanner: true, isOpen: true});
                 }
             });
         }).catch((e) => {
             console.log(e);
         });
-    };
+    }
 
     private handleClosedPermissionsBanner() {
         this.setState({showPermissionsBanner: false, isOpen: false});
