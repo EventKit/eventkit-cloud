@@ -29,7 +29,7 @@ class ListFilter(django_filters.Filter):
 def attribute_class_filter(queryset, user=None):
 
     if not user:
-        return queryset
+        return queryset, []
 
     # Get all of the classes that we aren't in.
     restricted_attribute_classes = AttributeClass.objects.exclude(users=user)

@@ -260,10 +260,12 @@ class DataProviderTaskRecordSerializer(serializers.ModelSerializer):
 class FilteredDataProviderTaskRecordSerializer(serializers.ModelSerializer):
 
     hidden = serializers.ReadOnlyField(default=True)
+    display = serializers.ReadOnlyField(default=False)
 
     class Meta:
         model = DataProviderTaskRecord
-        fields = ("id", "uid", "hidden")
+        fields = ("id", "uid", "hidden", "display")
+        read_only_fields = ("id", "uid", "hidden", "display")
 
 
 class DataProviderListSerializer(serializers.BaseSerializer):
@@ -722,11 +724,12 @@ class ExportFormatSerializer(serializers.ModelSerializer):
 class FilteredDataProviderSerializer(serializers.ModelSerializer):
 
     hidden = serializers.ReadOnlyField(default=True)
+    display = serializers.ReadOnlyField(default=False)
 
     class Meta:
         model = DataProvider
-        fields = ("id", "uid", "hidden")
-        read_only_fields = ("id", "uid", "hidden")
+        fields = ("id", "uid", "hidden", "display")
+        read_only_fields = ("id", "uid", "hidden", "display")
 
 
 class DataProviderSerializer(serializers.ModelSerializer):
