@@ -11,7 +11,7 @@ from django.core.files import File
 from django.test import TestCase
 from mock import MagicMock, patch
 
-from eventkit_cloud.jobs.models import ExportFormat, Job, DataProviderTask, DataProvider
+from eventkit_cloud.jobs.models import  DatamodelPreset, DataProviderTask, DataProvider, ExportFormat, Job
 from eventkit_cloud.tasks.enumerations import TaskStates
 from eventkit_cloud.tasks.models import ExportRun, ExportRunFile, ExportTaskRecord, FileProducingTaskResult, DataProviderTaskRecord
 
@@ -218,3 +218,66 @@ class TestExportTask(TestCase):
             result.delete()
         delete_from_s3.assert_called_once_with(download_url=download_url)
         remove.assert_called_once_with(full_download_path)
+
+
+class TestDataProviderTaskRecord(TestCase):
+    """
+    Test cases for DataProviderTaskRecord model
+    """
+    fixtures = ('osm_provider.json', 'datamodel_presets.json')
+
+    def setUp(self):
+        group, created = Group.objects.get_or_create(name='TestDefaultExportExtentGroup')
+        with patch('eventkit_cloud.jobs.signals.Group') as mock_group:
+            mock_group.objects.get.return_value = group
+            self.user = User.objects.create_user(username='demo', email='demo@demo.com', password='demo', is_active=True)
+        self.export_provider = DataProvider.objects.get(slug='osm-generic')
+        bbox = Polygon.from_bbox((-10.85, 6.25, -10.62, 6.40))
+        tags = DatamodelPreset.objects.get(name='hdm').json_tags
+        self.assertEqual(259, len(tags))
+        the_geom = GEOSGeometry(bbox, srid=4326)
+        self.job = Job.objects.create(
+            name='TestJob',
+            description='Test description',
+            user=self.user,
+            the_geom=the_geom,
+            json_tags=tags
+        )
+        self.job.feature_save = True
+        self.job.feature_pub = True
+        self.job.save()
+        self.run = ExportRun.objects.create(job=self.job, user=self.user)
+
+    def test_data_provider_task_record(self):
+        export_provider_task = DataProviderTaskRecord.objects.create(name=self.export_provider.name,
+                                                                     slug=self.export_provider.slug,
+                                                                     provider=self.export_provider,
+                                                                     run=self.run,
+                                                                     status=TaskStates.PENDING.value,
+                                                                     display=False,
+                                                                     estimated_size=100.95,
+                                                                     estimated_duration=5.5)
+
+        self.assertEqual(self.export_provider.name, export_provider_task.name)
+        self.assertEqual(self.export_provider.slug, export_provider_task.slug)
+        self.assertEqual(self.export_provider, export_provider_task.provider)
+        self.assertEqual(self.run, export_provider_task.run)
+        self.assertEqual(TaskStates.PENDING.value, export_provider_task.status)
+        self.assertEqual(False, export_provider_task.display)
+        self.assertEqual(100.95, export_provider_task.estimated_size)
+        self.assertEqual(5.5, export_provider_task.estimated_duration)
+
+    def test_data_provider_task_record_run_slug(self):
+        export_provider_task = DataProviderTaskRecord.objects.create(name=self.export_provider.name,
+                                                                     slug="run",
+                                                                     provider=self.export_provider,
+                                                                     run=self.run,
+                                                                     status=TaskStates.PENDING.value)
+        self.assertEqual("run", export_provider_task.slug)
+
+    def test_data_provider_task_record_no_slug(self):
+        export_provider_task = DataProviderTaskRecord.objects.create(name=self.export_provider.name,
+                                                                     provider=self.export_provider,
+                                                                     run=self.run,
+                                                                     status=TaskStates.PENDING.value)
+        self.assertEqual("", export_provider_task.slug)

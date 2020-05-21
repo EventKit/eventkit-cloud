@@ -9,6 +9,7 @@ from django.contrib.gis.db import models
 from django.core.cache import cache
 from django.contrib.contenttypes.fields import GenericForeignKey
 from django.contrib.contenttypes.models import ContentType
+from django.db.models import Q
 from django.utils import timezone
 from enum import Enum
 from notifications.models import Notification
@@ -134,7 +135,7 @@ class GroupPermission(TimeStampedModelMixin):
     """
 
     user = models.ForeignKey(User, on_delete=models.CASCADE)
-    group = models.ForeignKey(Group, on_delete=models.CASCADE)
+    group = models.ForeignKey(Group, on_delete=models.CASCADE, related_name="group_permissions")
     permission = models.CharField(choices=[("NONE", "None"), ("MEMBER", "Member"), ("ADMIN", "Admin")], max_length=10,)
 
     def __str__(self):
@@ -159,9 +160,9 @@ class JobPermission(TimeStampedModelMixin):
     Model associates users or groups with jobs
     """
 
-    job = models.ForeignKey(Job, on_delete=models.CASCADE)
+    job = models.ForeignKey(Job, on_delete=models.CASCADE, related_name="permissions")
     content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE)
-    object_id = models.PositiveIntegerField()
+    object_id = models.PositiveIntegerField(db_index=True)
     content_object = GenericForeignKey("content_type", "object_id")
 
     permission = models.CharField(choices=[("NONE", "None"), ("READ", "Read"), ("ADMIN", "Admin")], max_length=10)
@@ -169,6 +170,7 @@ class JobPermission(TimeStampedModelMixin):
     @staticmethod
     def jobpermissions(job):
         permissions = {"groups": {}, "members": {}}
+
         for jp in JobPermission.objects.filter(job=job):
             if jp.content_type == ContentType.objects.get_for_model(User):
                 try:
@@ -188,60 +190,47 @@ class JobPermission(TimeStampedModelMixin):
                     logger.error(
                         "The user id: {jp.object_id} is associated with the job: {job}, but the user doesn't exist."
                     )
-
         return permissions
 
     @staticmethod
     def userjobs(user, level, include_groups=True):
-        perms = []
-        job_ids = []
-
-        # get all the jobs this user has been explicitly assigned to
-
-        for jp in JobPermission.objects.filter(
-            content_type=ContentType.objects.get_for_model(User), object_id=user.id
-        ).select_related("job"):
-            if level == JobPermissionLevel.READ.value or jp.permission == level:
-                perms.append(jp)
-                job_ids.append(jp.job.id)
-
-        if not include_groups:
-            return (perms, job_ids)
-
-        # Now do the same for groups that the user belongs to
-
-        group_ids = []
-        for gp in GroupPermission.objects.filter(user=user):
-            group_ids.append(gp.group.id)
-        for jp in JobPermission.objects.filter(
-            content_type=ContentType.objects.get_for_model(Group), object_id__in=group_ids,
-        ):
-            if level == JobPermissionLevel.READ.value or jp.permission == level:
-                perms.append(jp)
-                job_ids.append(jp.job.id)
 
         # super users can do anything to any job
-
+        jobs = Job.objects.all()
         if user.is_superuser:
-            job_ids = [job.id for job in Job.objects.all()]
+            return jobs
 
-        return (perms, job_ids)
+        # Get jobs for groups that the user belongs to
+        if include_groups:
+            groups = Group.objects.filter(group_permissions__user=user)
+            group_query = [
+                Q(permissions__content_type=ContentType.objects.get_for_model(Group)),
+                Q(permissions__object_id__in=groups),
+            ]
+            if level != JobPermissionLevel.READ.value:
+                group_query.append(Q(permissions__permission=level))
+
+        # get all the jobs this user has been explicitly assigned to
+        user_query = [
+            Q(permissions__content_type=ContentType.objects.get_for_model(User)),
+            Q(permissions__object_id=user.id),
+        ]
+        if level != JobPermissionLevel.READ.value:
+            user_query.append(Q(permissions__permission=level))
+
+        return jobs.filter(Q(*user_query) | Q(*group_query))
 
     @staticmethod
     def groupjobs(group, level):
-        perms = []
-        job_ids = []
-
         # get all the jobs for which this group has the given permission level
+        query = [
+            Q(permissions__content_type=ContentType.objects.get_for_model(Group)),
+            Q(permissions__object_id=group.id),
+        ]
+        if level != JobPermissionLevel.READ.value:
+            query.append(Q(permissions__permission=level))
 
-        for jp in JobPermission.objects.filter(
-            content_type=ContentType.objects.get_for_model(Group), object_id=group.id
-        ):
-            if level == JobPermissionLevel.READ.value or jp.permission == level:
-                perms.append(jp)
-                job_ids.append(jp.job.id)
-
-        return (perms, job_ids)
+        return Job.objects.filter(*query)
 
     @staticmethod
     def get_user_permissions(user, job_id):
@@ -271,10 +260,9 @@ class JobPermission(TimeStampedModelMixin):
             return JobPermissionLevel.ADMIN.value
 
         # Get all the ADMIN level group permissions for the user
-        users_groups = [
-            gp.group.pk
-            for gp in GroupPermission.objects.filter(user=user).filter(permission=GroupPermissionLevel.ADMIN.value)
-        ]
+        users_groups = Group.objects.filter(
+            group_permissions__user=user, group_permissions__permission=GroupPermissionLevel.ADMIN.value
+        )
 
         # Check if any of the groups the user is an admin of have group-admin permission to the job.
         jp_group_admin = (
@@ -293,7 +281,7 @@ class JobPermission(TimeStampedModelMixin):
             return JobPermissionLevel.READ.value
 
         # Get all the group permissions for groups the user is in.
-        users_groups = [gp.group.pk for gp in GroupPermission.objects.filter(user=user)]
+        users_groups = Group.objects.filter(group_permissions__user=user)
 
         # Check if any of the groups the user is in have group-read permission to the job.
         jp_group_member = (
@@ -304,7 +292,7 @@ class JobPermission(TimeStampedModelMixin):
 
         # If any of the groups the user is in have READ permissions we can return.
         if jp_group_member.count() > 0:
-            JobPermissionLevel.READ.value
+            return JobPermissionLevel.READ.value
 
         # If user does not have any explicit or implicit permission to the job we return none.
         return ""

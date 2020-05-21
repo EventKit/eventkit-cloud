@@ -227,7 +227,7 @@ def create_run(job_uid, user=None):
             max_runs = settings.EXPORT_MAX_RUNS
 
             # get the number of existing runs for this job
-            job = Job.objects.get(uid=job_uid)
+            job = Job.objects.select_related("user").get(uid=job_uid)
             if not job.provider_tasks.all():
                 raise Error(
                     "This job does not have any data sources or formats associated with it, "
@@ -243,8 +243,8 @@ def create_run(job_uid, user=None):
             if not user:
                 user = job.user
 
-            perms, job_ids = JobPermission.userjobs(user, JobPermissionLevel.ADMIN.value)
-            if job.id not in job_ids:
+            jobs = JobPermission.userjobs(user, JobPermissionLevel.ADMIN.value)
+            if not jobs.filter(id=job.id):
                 raise Unauthorized(
                     "The user: {0} is not authorized to create a run based on the job: {1}.".format(
                         job.user.username, job.name
@@ -300,6 +300,12 @@ def create_task(
         user_details = {"username": "unknown-create_task"}
 
     export_provider_task = DataProviderTaskRecord.objects.get(uid=data_provider_task_uid)
+
+    if export_provider_task.provider:
+        export_provider_task_slug = export_provider_task.provider.slug
+    else:
+        export_provider_task_slug = export_provider_task.slug
+
     export_task = create_export_task_record(
         task_name=task.name,
         export_provider_task=export_provider_task,
@@ -312,7 +318,7 @@ def create_task(
         task_uid=export_task.uid,
         selection=selection,
         stage_dir=stage_dir,
-        provider_slug=export_provider_task.slug,
+        provider_slug=export_provider_task_slug,
         data_provider_task_uid=data_provider_task_uid,
         job_name=job_name,
         user_details=user_details,
