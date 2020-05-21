@@ -18,7 +18,6 @@ import FeaturedFlag from './FeaturedFlag';
 import DataPackShareDialog from '../DataPackShareDialog/DataPackShareDialog';
 import { makeFullRunSelector } from '../../selectors/runSelector';
 import history from '../../utils/history';
-import UnavailableFilterPopup from "./UnavailableFilterPopup";
 import NotificationPopover from "./NotificationPopover";
 
 export interface Props {

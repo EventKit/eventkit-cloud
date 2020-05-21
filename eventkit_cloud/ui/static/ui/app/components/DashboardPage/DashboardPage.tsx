@@ -18,7 +18,6 @@ import DashboardSection from './DashboardSection';
 import DataPackGridItem from '../DataPackPage/DataPackGridItem';
 import DataPackFeaturedItem from './DataPackFeaturedItem';
 import NotificationGridItem from '../Notification/NotificationGridItem';
-import PermissionsBanner from "../PermissionsBanner";
 import {updateDataCartPermissions} from '../../actions/datacartActions';
 import {joyride} from '../../joyride.config';
 import history from '../../utils/history';
@@ -59,8 +58,6 @@ interface State {
     steps: object[];
     isRunning: boolean;
     width: string;
-    showPermissionsBanner: boolean;
-    isOpen: boolean;
 }
 
 export class DashboardPage extends React.Component<Props, State> {
@@ -89,14 +86,11 @@ export class DashboardPage extends React.Component<Props, State> {
         this.isLoading = this.isLoading.bind(this);
         this.handleWalkthroughClick = this.handleWalkthroughClick.bind(this);
         this.callback = this.callback.bind(this);
-        this.handleClosedPermissionsBanner = this.handleClosedPermissionsBanner.bind(this);
         this.state = {
             loadingPage: this.isLoading(),
             steps: [],
             isRunning: false,
             width: this.getWidth(),
-            showPermissionsBanner: true,
-            isOpen: false,
         };
         this.onResize = debounce(this.setScreenSize, 166);
     }
@@ -334,10 +328,6 @@ export class DashboardPage extends React.Component<Props, State> {
         }
     }
 
-    handleClosedPermissionsBanner() {
-        this.setState({showPermissionsBanner: false, isOpen: false});
-    }
-
     render() {
         const {colors, images} = this.props.theme.eventkit;
 
@@ -429,15 +419,6 @@ export class DashboardPage extends React.Component<Props, State> {
                 >
                     {iconElementRight}
                 </PageHeader>
-                <div style={styles.banner}>
-                    {this.state.showPermissionsBanner ?
-                        <PermissionsBanner
-                            handleClosedPermissionsBanner={this.handleClosedPermissionsBanner}
-                            isOpen={this.state.isOpen}
-                        />
-                        : null
-                    }
-                </div>
                 <div className='dashboard' style={styles.dashboard}>
                     {this.isLoading() ?
                         <PageLoading background="transparent"/>
