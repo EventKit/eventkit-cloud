@@ -191,15 +191,14 @@ class AttributeClass(UIDMixin, TimeStampedModelMixin):
         verbose_name_plural = "Attribute Classes"
         verbose_name = "Attribute Class"
 
-    def save(self):
+    def save(self, *args, **kwargs):
         # Save is here twice because if this is a NEW object it won't have an ID yet which is required.
-        super(AttributeClass, self).save()
+        super(AttributeClass, self).save(*args, **kwargs)
         if any([self.filter != self.__original_filter,
                 self.exclude != self.__original_exclude,
                 self.complex != self.__original_complex]):
             # If this changes we need to ensure that all users correctly reflect the updates.
             update_all_users_with_attribute_class(self)
-        super(AttributeClass, self).save()
         self.__original_filter = self.filter
         self.__original_exclude = self.exclude
         self.__original_complex = self.complex

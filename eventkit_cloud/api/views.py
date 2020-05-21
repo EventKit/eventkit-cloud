@@ -1358,13 +1358,16 @@ class DataProviderTaskViewSet(viewsets.ModelViewSet):
         * return: A list of data provider task objects.
         """
         queryset = self.get_queryset()
-        logger.error(f"queryset: {queryset}")
         providers_tasks, filtered_provider_task = attribute_class_filter(self.get_queryset(),
                                                                          self.request.user)
         logger.error(f"providers_tasks: {providers_tasks}")
-        logger.error(f"filtered_provider_task: {filtered_provider_task}")
+
         data = DataProviderTaskRecordSerializer(providers_tasks, many=True, context={"request": request}).data
+        logger.error(f"DataProviderTaskRecordSerializer: {data}")
+        logger.error(f"filtered_provider_task: {filtered_provider_task}")
+
         data += FilteredDataProviderTaskRecordSerializer(filtered_provider_task, many=True).data
+        logger.error(f"RESPONSE: {data}")
         return Response(data)
 
     def create(self, request, uid=None, *args, **kwargs):
