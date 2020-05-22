@@ -19,7 +19,6 @@ const jss = (theme: Eventkit.Theme & Theme) => createStyles({
         bottom: 0,
     },
     warningIconBtn: {
-        padding: '8px',
         color: theme.eventkit.colors.running,
         '&:hover': {
             backgroundColor: 'rgb(245, 245, 245)',
