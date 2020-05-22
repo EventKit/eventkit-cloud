@@ -89,15 +89,17 @@ export class ProviderDialog extends React.Component<Props, State> {
         const providers = [];
         this.props.uids.map((uid, ix) => {
             const providerTask = this.props.providerTasks[uid];
-            if (!providerTask || providerTask.hidden) {
+            if (!providerTask || providerTask.hidden || !providerTask.display) {
                 return;
             }
-            const provider = this.props.providers.find(p => p.slug === providerTask.slug);
-            if (!provider || provider.hidden) {
+            const provider = providerTask.provider;
+            if (!provider || provider.hidden || !provider.display) {
                 return;
             }
             providers.push(provider);
         });
+
+
 
         // count will always be at least one due to the hidden provider
         const hiddenProviderCount = this.props.uids.length - providers.length;
