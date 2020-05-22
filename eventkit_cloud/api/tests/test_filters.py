@@ -40,26 +40,34 @@ class TestAttributeClassFilter(APITestCase):
         self.job.provider_tasks.add(self.data_provider_task)
         run = ExportRun.objects.create(job=self.job, user=self.user, status="COMPLETED")
         self.data_provider_task_record = DataProviderTaskRecord.objects.create(name=self.data_provider.name,
-                                                                                   display=True,
-                                                                                   run=run,
-                                                                                   status="SUCCESS")
+                                                                               display=True,
+                                                                               run=run,
+                                                                               status="SUCCESS",
+                                                                               provider=self.data_provider)
+
+    def check_filter_result(self, queryset):
+        returned, excluded = attribute_class_filter(queryset, user=self.user)
+        self.assertCountEqual((list(returned), list(excluded)), (list(queryset), list()))
+
+    def check_excluded_result(self, queryset):
+        returned, excluded = attribute_class_filter(queryset, user=self.user)
+        self.assertCountEqual((list(returned), list(excluded)), (list(), list(queryset)))
 
     def test_attribute_class_filter(self):
 
         # First test that objects are returned when user is assigned to the attribute class.
         self.attribute_class.users.add(self.user)
-
-        expected = Job.objects.filter(id=self.job.id)
-        returned, excluded = attribute_class_filter(Job.objects.filter(id=self.job.id), user=self.user)
-        self.assertEquals((list(returned), list(excluded)), (list(expected), list()))
+        self.check_filter_result(Job.objects.filter(id=self.job.id))
+        self.check_filter_result(DataProvider.objects.filter(id=self.data_provider.id))
+        self.check_filter_result(DataProviderTask.objects.filter(id=self.data_provider_task.id))
+        self.check_filter_result(DataProviderTaskRecord.objects.filter(id=self.data_provider_task_record.id))
 
         # Ensure user is not assigned to attribute class.
         self.attribute_class.users.remove(self.user)
-
-        expected = Job.objects.filter(id=self.job.id)
-        returned, excluded = attribute_class_filter(Job.objects.filter(id=self.job.id), user=self.user)
-        self.assertEquals((list(returned), list(excluded)), (list(), list(expected)))
-
+        self.check_excluded_result(Job.objects.filter(id=self.job.id))
+        self.check_excluded_result(DataProvider.objects.filter(id=self.data_provider.id))
+        self.check_excluded_result(DataProviderTask.objects.filter(id=self.data_provider_task.id))
+        self.check_excluded_result(DataProviderTaskRecord.objects.filter(id=self.data_provider_task_record.id))
 
 
 class TestJobFilter(APITestCase):
