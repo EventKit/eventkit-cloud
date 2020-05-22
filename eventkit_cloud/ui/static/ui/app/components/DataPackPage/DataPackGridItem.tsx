@@ -220,14 +220,14 @@ export class DataPackGridItem extends React.Component<Props, State> {
     private getStatusIcon(status: Eventkit.Run['status']) {
         const {colors} = this.props.theme.eventkit;
         if (status === 'COMPLETED') {
-            return <NavigationCheck className="qa-DataPackTableItem-NavigationCheck" style={{color: colors.success}}/>;
+            return <NavigationCheck className="qa-DataPackTableItem-NavigationCheck" style={{color: colors.success, marginBottom: '-4px'}}/>;
         } else if (status === 'RUNNING' || status === 'SUBMITTED') {
             return <NotificationSync className="qa-DataPackTableItem-NotificationSync"
-                                     style={{color: colors.running}}/>;
+                                     style={{color: colors.running, marginBottom: '-4px'}}/>;
         }
         return <AlertError
             className="qa-DataPackTableItem-AlertError"
-            style={{color: colors.warning, opacity: 0.6, height: '22px'}}
+            style={{color: colors.warning, opacity: 0.6, height: '22px', marginBottom: '-4px'}}
         />;
     }
 
@@ -410,7 +410,6 @@ export class DataPackGridItem extends React.Component<Props, State> {
                     </Collapse>
                     <CardActions className="qa-DataPackGridItem-CardActions" style={{height: '45px', padding: '8px'}}>
                         <div style={{width: '100%'}}>
-                            {this.getStatusIcon(this.props.run.status)}
                             {this.props.run.user === this.props.userData.user.username ?
                                 <p style={styles.ownerLabel}>My DataPack</p>
                                 :
@@ -423,10 +422,19 @@ export class DataPackGridItem extends React.Component<Props, State> {
                             }
                         </div>
                     </CardActions>
-                    <CardActions className="qa-DataPackGridItem-CardActions-Permissions" style={{height: '45px', padding: '8px'}}>
+                    <CardActions className="qa-DataPackGridItem-CardActions-Status" style={{height: '15px', padding: '8px'}}>
                         <div style={{width: '100%'}}>
-                          {this.props.providers.filter(provider => provider.hidden) &&
-                        <NotificationPopover/>
+                            {this.getStatusIcon(this.props.run.status)}
+                            <span style={{padding: '4px', color: 'rgba(0, 0, 0, 0.54)', fontSize: '12.5px'}}>
+                                Export Status
+                            </span>
+                        </div>
+                    </CardActions>
+                    <CardActions className="qa-DataPackGridItem-CardActions-Permissions"
+                                 style={{height: '45px', padding: '8px'}}>
+                        <div style={{width: '100%'}}>
+                            {this.props.providers.filter(provider => provider.hidden) &&
+                            <NotificationPopover/>
                             }
                         </div>
                     </CardActions>

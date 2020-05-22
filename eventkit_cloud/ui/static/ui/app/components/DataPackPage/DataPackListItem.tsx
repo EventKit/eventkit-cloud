@@ -99,7 +99,7 @@ export class DataPackListItem extends React.Component<Props, State> {
         if (status === 'COMPLETED') {
             return <NavigationCheck className="qa-DataPackTableItem-NavigationCheck" style={{ color: colors.success, height: '20px' }} />;
         } else if (status === 'RUNNING' || status === 'SUBMITTED') {
-            return <NotificationSync className="qa-DataPackTableItem-NotificationSync" style={{color: colors.running, height: '20px'}}/>;
+            return <NotificationSync className="qa-DataPackTableItem-NotificationSync" style={{color: colors.running, height: '20px' }}/>;
         }
         return <AlertError
                 className="qa-DataPackTableItem-AlertError"
@@ -303,9 +303,9 @@ export class DataPackListItem extends React.Component<Props, State> {
                                         }
                                     </div>
                                 </div>
-                                <div>
-                                    <span>Processing Status:</span>
+                                <div style={{ display: 'flex', flex: '1 1 auto', paddingTop: '4px'}}>
                                     {this.getStatusIcon(this.props.run.status)}
+                                    <span style={{padding: '4px'}}>Export Status</span>
                                 </div>
                                 <div style={{ display: 'flex', flex: '1 1 auto' }}>
                                     <NotificationPopover/>
