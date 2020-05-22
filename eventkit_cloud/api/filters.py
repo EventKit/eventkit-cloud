@@ -11,7 +11,7 @@ from eventkit_cloud.core.models import GroupPermission, AttributeClass
 from eventkit_cloud.jobs.models import Job, VisibilityState, UserJobActivity
 from eventkit_cloud.tasks.models import ExportRun
 from audit_logging.models import AuditEvent
-from typing import Callable
+
 
 logger = logging.getLogger(__name__)
 

@@ -307,9 +307,9 @@ def validate_user_attribute_class(user: User, attribute_class: AttributeClass) -
     :param attribute_class: An AttributeClass object.
     :return: True if the user is added, otherwise False.
     """
-    query_filter = getattr(attribute_class, 'filter', {})
-    query_exclude = getattr(attribute_class, 'exclude', {})
-    complex_filter = getattr(attribute_class, 'complex', {})
+    query_filter = getattr(attribute_class, 'filter') or dict()
+    query_exclude = getattr(attribute_class, 'exclude') or dict()
+    complex_filter = getattr(attribute_class, 'complex') or dict()
     if query_filter or query_exclude:
         user = User.objects.filter(**query_filter).exclude(**query_exclude).filter(id=user.id)
         if user:
@@ -321,11 +321,12 @@ def validate_user_attribute_class(user: User, attribute_class: AttributeClass) -
     return False
 
 
-def get_users_from_attribute_class(attribute_class: AttributeClass):
-    query_filter = getattr(attribute_class, 'filter', {})
-    query_exclude = getattr(attribute_class, 'exclude', {})
-    complex_filter = getattr(attribute_class, 'complex', {})
+def get_users_from_attribute_class(attribute_class: AttributeClass) -> List[User]:
+    query_filter = getattr(attribute_class, 'filter') or dict()
+    query_exclude = getattr(attribute_class, 'exclude') or dict()
+    complex_filter = getattr(attribute_class, 'complex') or dict()
     users = []
+
     if query_filter or query_exclude:
         users = User.objects.filter(**query_filter).exclude(**query_exclude)
     elif complex_filter:
@@ -337,13 +338,13 @@ def get_users_from_attribute_class(attribute_class: AttributeClass):
 
 
 @transaction.atomic()
-def update_all_users_with_attribute_class(attribute_class: AttributeClass):
+def update_all_users_with_attribute_class(attribute_class: AttributeClass) -> None:
     users = get_users_from_attribute_class(attribute_class)
     attribute_class.users.set(users, clear=True)
 
 
 @transaction.atomic()
-def update_all_attribute_classes_with_user(user: User):
+def update_all_attribute_classes_with_user(user: User) -> None:
     for attribute_class in AttributeClass.objects.all():
         if validate_user_attribute_class(user, attribute_class):
             attribute_class.users.add(user)

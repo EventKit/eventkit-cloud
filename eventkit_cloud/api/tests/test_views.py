@@ -18,7 +18,7 @@ from rest_framework.reverse import reverse
 from rest_framework.test import APITestCase
 from eventkit_cloud.api.pagination import LinkHeaderPagination
 from eventkit_cloud.api.views import get_models, get_provider_task, ExportRunViewSet
-from eventkit_cloud.core.models import GroupPermission, GroupPermissionLevel
+from eventkit_cloud.core.models import GroupPermission, GroupPermissionLevel, AttributeClass
 from eventkit_cloud.jobs.models import ExportFormat, Job, DataProvider, \
     DataProviderType, DataProviderTask, bbox_to_geojson, DatamodelPreset, License, VisibilityState, UserJobActivity
 from eventkit_cloud.tasks.enumerations import TaskStates
@@ -56,6 +56,9 @@ class TestJobViewSet(APITestCase):
         self.path = os.path.dirname(os.path.realpath(__file__))
         self.group, created = Group.objects.get_or_create(name='TestDefaultExportExtentGroup')
         self.user = User.objects.create_user(username='demo', email='demo@demo.com', password='demo')
+        self.attribute_class = AttributeClass.objects.create(name="test", slug="test", filter="username=demo")
+        self.attribute_class.users.add(self.user)
+        self.attribute_class.save()
         extents = (-3.9, 16.1, 7.0, 27.6)
         bbox = Polygon.from_bbox(extents)
         original_selection = GeometryCollection(Point(1, 1), LineString((5.625, 48.458), (0.878, 44.339)))
@@ -65,6 +68,8 @@ class TestJobViewSet(APITestCase):
 
         formats = ExportFormat.objects.all()
         self.provider = DataProvider.objects.first()
+        self.provider.attribute_class = self.attribute_class
+        self.provider.save()
         provider_task = DataProviderTask.objects.create(provider=self.provider)
         provider_task.formats.add(*formats)
 
@@ -179,6 +184,22 @@ class TestJobViewSet(APITestCase):
         self.assertEqual(response.data['uid'], data['uid'])
         self.assertEqual(response.data['url'], data['url'])
         self.assertEqual(response.data['exports'][0]['formats'][0]['url'], data['exports'][0]['formats'][0]['url'])
+
+    def test_get_job_detail_no_attribute_class(self, ):
+        self.attribute_class.users.remove(self.user)
+        expected = '/api/jobs/{0}'.format(self.job.uid)
+        url = reverse('api:jobs-detail', args=[self.job.uid])
+        self.assertEqual(expected, url)
+        data = {"uid": str(self.job.uid),
+                "provider_task_list_status": 'PARTIAL'}
+        response = self.client.get(url)
+        # test the response headers
+        print(response.content)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        # test significant content
+        self.assertEqual(response.data['provider_task_list_status'], data['provider_task_list_status'])
+
 
     def test_get_job_detail_no_permissions(self, ):
         user = User.objects.create_user(username='demo2', email='demo2@demo.com', password='demo')

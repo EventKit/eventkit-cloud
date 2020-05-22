@@ -884,7 +884,7 @@ class JobSerializer(serializers.Serializer):
     """
 
     provider_tasks = serializers.SerializerMethodField()
-
+    provider_task_list_status = serializers.SerializerMethodField()
     uid = serializers.UUIDField(read_only=True)
     url = serializers.HyperlinkedIdentityField(view_name="api:jobs-detail", lookup_field="uid")
     name = serializers.CharField(max_length=100,)
@@ -972,9 +972,6 @@ class JobSerializer(serializers.Serializer):
                 )
                 if hasattr(provider_task, "provider"):
                     exports.append({provider_task.provider.name: serializer.data})
-        for provider_task in filtered_tasks:
-            if hasattr(provider_task, "formats"):
-                exports.append({provider_task.provider.uid: serializer.data})
         return exports
 
     def get_providers(self, obj):
