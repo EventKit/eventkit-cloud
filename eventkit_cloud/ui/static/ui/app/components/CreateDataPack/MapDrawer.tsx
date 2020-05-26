@@ -284,7 +284,7 @@ export function MapDrawer(props: Props) {
     }, [providers]);
 
     const drawerOpen = !!selectedTab;
-    const areProvidersHidden = providers.find(provider => provider.hidden === true) || true;
+    const areProvidersHidden = providers.find(provider => provider.hidden === true);
 
     return (
         <div
