@@ -14,7 +14,7 @@ from eventkit_cloud.api.views import (
     JobViewSet,
     RegionViewSet,
     DataProviderViewSet,
-    DataProviderTaskViewSet,
+    DataProviderTaskRecordViewSet,
     UserDataViewSet,
     GroupViewSet,
     LicenseViewSet,
@@ -40,7 +40,7 @@ router.register(r"providers/requests", DataProviderRequestViewSet, basename="pro
 router.register(r"providers", DataProviderViewSet, basename="providers")
 router.register(r"licenses", LicenseViewSet, basename="licenses")
 router.register(r"runs", ExportRunViewSet, basename="runs")
-router.register(r"provider_tasks", DataProviderTaskViewSet, basename="provider_tasks")
+router.register(r"provider_tasks", DataProviderTaskRecordViewSet, basename="provider_tasks")
 router.register(r"tasks", ExportTaskViewSet, basename="tasks")
 router.register(r"regions", RegionViewSet, basename="regions")
 router.register(r"users", UserDataViewSet, basename="users")

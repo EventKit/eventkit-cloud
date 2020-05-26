@@ -37,7 +37,8 @@ from eventkit_cloud.jobs.models import (
     License,
     UserLicense,
     UserJobActivity,
-    JobPermission)
+    JobPermission,
+)
 from eventkit_cloud.tasks.models import (
     ExportRun,
     ExportTaskRecord,
@@ -260,12 +261,15 @@ class DataProviderTaskRecordSerializer(serializers.ModelSerializer):
 class FilteredDataProviderTaskRecordSerializer(serializers.ModelSerializer):
 
     hidden = serializers.ReadOnlyField(default=True)
-    display = serializers.ReadOnlyField(default=False)
+    display = serializers.SerializerMethodField(read_only=True)
 
     class Meta:
         model = DataProviderTaskRecord
         fields = ("id", "uid", "hidden", "display")
-        read_only_fields = ("id", "uid", "hidden", "display")
+        read_only_fields = ("id", "uid")
+
+    def get_display(self, obj):
+        return False
 
 
 class DataProviderListSerializer(serializers.BaseSerializer):
@@ -414,7 +418,9 @@ class ExportRunSerializer(serializers.ModelSerializer):
                 if request.query_params.get("slim"):
                     data += DataProviderListSerializer(filtered_provider_tasks, many=True, context=self.context).data
                 else:
-                    data += FilteredDataProviderTaskRecordSerializer(filtered_provider_tasks, many=True, context=self.context).data
+                    data += FilteredDataProviderTaskRecordSerializer(
+                        filtered_provider_tasks, many=True, context=self.context
+                    ).data
             return data
 
     def get_zipfile_url(self, obj):
@@ -724,12 +730,15 @@ class ExportFormatSerializer(serializers.ModelSerializer):
 class FilteredDataProviderSerializer(serializers.ModelSerializer):
 
     hidden = serializers.ReadOnlyField(default=True)
-    display = serializers.ReadOnlyField(default=False)
+    display = serializers.SerializerMethodField(read_only=True)
 
     class Meta:
         model = DataProvider
         fields = ("id", "uid", "hidden", "display")
         read_only_fields = ("id", "uid", "hidden", "display")
+
+    def get_display(self, obj):
+        return False
 
 
 class DataProviderSerializer(serializers.ModelSerializer):
@@ -980,7 +989,9 @@ class JobSerializer(serializers.Serializer):
         providers = [provider_format for provider_format in providers]
         provider_serializer = DataProviderSerializer(providers, many=True, context={"request": self.context["request"]})
         filtered_providers = [provider_format for provider_format in filtered_providers]
-        filtered_providers_serializer = DataProviderSerializer(filtered_providers, many=True, context={"request": self.context["request"]})
+        filtered_providers_serializer = FilteredDataProviderSerializer(
+            filtered_providers, many=True, context={"request": self.context["request"]}
+        )
         return provider_serializer.data + filtered_providers_serializer.data
 
     @staticmethod

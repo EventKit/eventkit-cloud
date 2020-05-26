@@ -45,7 +45,7 @@ class CustomUserAdmin(UserAdmin):
         attribute_classes = AttributeClass.objects.filter(users__id=obj.id)
         return ", ".join([attribute_class.name for attribute_class in attribute_classes])
 
-    fieldsets = UserAdmin.fieldsets + (("Attribute_Classes", {'fields': ('attribute_classes',)}),)
+    fieldsets = UserAdmin.fieldsets + (("Attribute_Classes", {"fields": ("attribute_classes",)}),)
 
 
 admin.site.unregister(Token)

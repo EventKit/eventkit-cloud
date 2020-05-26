@@ -33,7 +33,7 @@ export class DataPackGeneralTable extends React.Component<Props, State> {
     }
 
     private handleProviderOpen(runProviders: Eventkit.ProviderTask) {
-        const propsProvider = this.props.providers.find(x => x.slug === runProviders.slug);
+        const propsProvider = this.props.providers.find(x => x.slug === runProviders.provider.slug);
         const providerDescription = propsProvider.service_description.toString();
         const providerName = propsProvider.name.toString();
         this.setState({ providerDescription, providerName, providerDialogOpen: true });
