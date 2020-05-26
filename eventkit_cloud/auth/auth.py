@@ -12,7 +12,6 @@ from django.contrib.auth.models import User
 from django.shortcuts import redirect
 
 from eventkit_cloud.auth.models import OAuth
-from eventkit_cloud.core.models import update_all_attribute_classes_with_user
 from eventkit_cloud.ui.helpers import set_session_user_last_active_at
 
 logger = logging.getLogger(__name__)

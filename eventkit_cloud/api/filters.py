@@ -4,13 +4,14 @@ import logging
 
 import django_filters
 from django.contrib.auth.models import User, Group
-from django.db.models import Q, QuerySet, Exists
+from django.db.models import Q, QuerySet
 from django.db import models
 
 from eventkit_cloud.core.models import GroupPermission, AttributeClass
 from eventkit_cloud.jobs.models import Job, VisibilityState, UserJobActivity
 from eventkit_cloud.tasks.models import ExportRun
 from audit_logging.models import AuditEvent
+from typing import Tuple
 
 
 logger = logging.getLogger(__name__)
@@ -26,7 +27,7 @@ class ListFilter(django_filters.Filter):
             return qs
 
 
-def attribute_class_filter(queryset, user=None):
+def attribute_class_filter(queryset: QuerySet, user: User = None) -> Tuple[QuerySet, QuerySet]:
 
     if not user:
         return queryset, []
@@ -38,15 +39,14 @@ def attribute_class_filter(queryset, user=None):
         "Job": {"provider_tasks__provider__attribute_class__in": restricted_attribute_classes},
         "DataProvider": {"attribute_class__in": restricted_attribute_classes},
         "DataProviderTask": {"provider__attribute_class__in": restricted_attribute_classes},
-        "DataProviderTaskRecord": {"provider__attribute_class__in": restricted_attribute_classes}}
+        "DataProviderTaskRecord": {"provider__attribute_class__in": restricted_attribute_classes},
+    }
     item = queryset.first()
     attribute_class_query = {}
 
     if item:
         # Get all of the objects that don't include attribute classes that we aren't in.
         attribute_class_query = attribute_class_queries.get(type(item).__name__, {})
-    logger.error(f"attribute_class_query ({type(item).__name__}): {attribute_class_query}")
-
     filtered = queryset.filter(**attribute_class_query).distinct()
     queryset = queryset.exclude(**attribute_class_query).distinct()
     return queryset, filtered

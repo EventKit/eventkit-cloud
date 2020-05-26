@@ -30,7 +30,9 @@ from eventkit_cloud.api.filters import (
     UserFilter,
     GroupFilter,
     UserJobActivityFilter,
-    LogFilter, attribute_class_filter)
+    LogFilter,
+    attribute_class_filter,
+)
 from eventkit_cloud.api.pagination import LinkHeaderPagination
 from eventkit_cloud.api.permissions import IsOwnerOrReadOnly
 from eventkit_cloud.api.renderers import (
@@ -58,7 +60,9 @@ from eventkit_cloud.api.serializers import (
     AuditEventSerializer,
     DataProviderRequestSerializer,
     SizeIncreaseRequestSerializer,
-    FilteredDataProviderSerializer, FilteredDataProviderTaskRecordSerializer)
+    FilteredDataProviderSerializer,
+    FilteredDataProviderTaskRecordSerializer,
+)
 from eventkit_cloud.api.validators import validate_bbox_params, validate_search_bbox
 from eventkit_cloud.core.helpers import (
     sendnotification,
@@ -81,7 +85,9 @@ from eventkit_cloud.jobs.models import (
     License,
     VisibilityState,
     UserJobActivity,
-    JobPermission, JobPermissionLevel)
+    JobPermission,
+    JobPermissionLevel,
+)
 from eventkit_cloud.tasks.export_tasks import (
     pick_up_run_task,
     cancel_export_provider_task,
@@ -1032,11 +1038,11 @@ class ExportRunViewSet(viewsets.ModelViewSet):
         jobs = JobPermission.userjobs(self.request.user, "READ")
         if self.request.query_params.get("slim"):
             return ExportRun.objects.filter(
-                Q(job__in=jobs) | Q(job__visibility=VisibilityState.PUBLIC.value)).select_related("job")
+                Q(job__in=jobs) | Q(job__visibility=VisibilityState.PUBLIC.value)
+            ).select_related("job")
         else:
             return prefetch_export_runs(
-                (ExportRun.objects.filter(Q(job__in=jobs) | Q(job__visibility=VisibilityState.PUBLIC.value)).filter(
-                    ))
+                (ExportRun.objects.filter(Q(job__in=jobs) | Q(job__visibility=VisibilityState.PUBLIC.value)).filter())
             )
 
     def retrieve(self, request, uid=None, *args, **kwargs):
@@ -1097,7 +1103,6 @@ class ExportRunViewSet(viewsets.ModelViewSet):
         :return: the serialized runs
         """
         queryset = self.filter_queryset(self.get_queryset())
-        logger.error(f"Filter_QuerySet: {queryset}")
         try:
             self.validate_licenses(queryset, user=request.user)
         except InvalidLicense as il:
@@ -1297,7 +1302,7 @@ class ExportTaskViewSet(viewsets.ReadOnlyModelViewSet):
         return super(ExportTaskViewSet, self).list(self, request, uid, *args, **kwargs)
 
 
-class DataProviderTaskViewSet(viewsets.ModelViewSet):
+class DataProviderTaskRecordViewSet(viewsets.ModelViewSet):
     """
     Provides List and Retrieve endpoints for ExportTasks.
     """
@@ -1309,8 +1314,9 @@ class DataProviderTaskViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         """Return all objects user can view."""
         jobs = JobPermission.userjobs(self.request.user, "READ")
-        logger.error(jobs)
-        return DataProviderTaskRecord.objects.filter(Q(run__job__visibility=VisibilityState.PUBLIC.value) | Q(run__job__in=jobs))
+        return DataProviderTaskRecord.objects.filter(
+            Q(run__job__visibility=VisibilityState.PUBLIC.value) | Q(run__job__in=jobs)
+        )
 
     def retrieve(self, request, uid=None, *args, **kwargs):
         """
@@ -1322,12 +1328,13 @@ class DataProviderTaskViewSet(viewsets.ModelViewSet):
         Returns:
             the serialized ExportTaskRecord data
         """
-        providers_tasks, filtered_provider_task = attribute_class_filter(self.get_queryset().filter(uid=uid),
-                                                                         self.request.user)
+        providers_tasks, filtered_provider_task = attribute_class_filter(
+            self.get_queryset().filter(uid=uid), self.request.user
+        )
         if providers_tasks:
-            serializer = DataProviderTaskRecordSerializer(providers_tasks, many=True, context={"request": request})
+            serializer = DataProviderTaskRecordSerializer(providers_tasks.first(), context={"request": request})
         else:
-            serializer = FilteredDataProviderTaskRecordSerializer(providers_tasks, many=True)
+            serializer = FilteredDataProviderTaskRecordSerializer(filtered_provider_task.first())
         return Response(serializer.data, status=status.HTTP_200_OK)
 
     def partial_update(self, request, uid=None, *args, **kwargs):
@@ -1338,10 +1345,11 @@ class DataProviderTaskViewSet(viewsets.ModelViewSet):
                   they must be asking for one of their own export provider tasks), then 403 forbidden will be returned.
         """
 
-        providers_tasks, filtered_provider_task = attribute_class_filter(self.get_queryset().filter(uid=uid),
-                                                                         self.request.user)
+        providers_tasks, filtered_provider_task = attribute_class_filter(
+            self.get_queryset().filter(uid=uid), self.request.user
+        )
         if not providers_tasks:
-            return Response(status=status.HTTP_401_UNAUTHORIZED)
+            return Response({"success": False}, status=status.HTTP_401_UNAUTHORIZED)
 
         data_provider_task_record = providers_tasks.get(uid=uid)
 
@@ -1357,17 +1365,9 @@ class DataProviderTaskViewSet(viewsets.ModelViewSet):
         """
         * return: A list of data provider task objects.
         """
-        queryset = self.get_queryset()
-        providers_tasks, filtered_provider_task = attribute_class_filter(self.get_queryset(),
-                                                                         self.request.user)
-        logger.error(f"providers_tasks: {providers_tasks}")
-
+        providers_tasks, filtered_provider_task = attribute_class_filter(self.get_queryset(), self.request.user)
         data = DataProviderTaskRecordSerializer(providers_tasks, many=True, context={"request": request}).data
-        logger.error(f"DataProviderTaskRecordSerializer: {data}")
-        logger.error(f"filtered_provider_task: {filtered_provider_task}")
-
         data += FilteredDataProviderTaskRecordSerializer(filtered_provider_task, many=True).data
-        logger.error(f"RESPONSE: {data}")
         return Response(data)
 
     def create(self, request, uid=None, *args, **kwargs):
@@ -1376,11 +1376,12 @@ class DataProviderTaskViewSet(viewsets.ModelViewSet):
         * uid: optional lookup field
         * return: The status of the object creation.
         """
-        providers_tasks, filtered_provider_task = attribute_class_filter(self.get_queryset().filter(uid=uid),
-                                                                         self.request.user)
+        providers_tasks, filtered_provider_task = attribute_class_filter(
+            self.get_queryset().filter(uid=uid), self.request.user
+        )
         if not providers_tasks:
             return Response(status=status.HTTP_401_UNAUTHORIZED)
-        return super(DataProviderTaskViewSet, self).create(self, request, uid, *args, **kwargs)
+        return super(DataProviderTaskRecordViewSet, self).create(self, request, uid, *args, **kwargs)
 
     def destroy(self, request, uid=None, *args, **kwargs):
         """
@@ -1388,10 +1389,12 @@ class DataProviderTaskViewSet(viewsets.ModelViewSet):
         * uid: optional lookup field
         * return: The status of the deletion.
         """
-        providers_tasks, filtered_provider_task = attribute_class_filter(self.get_queryset().filter(uid=uid), self.request.user)
+        providers_tasks, filtered_provider_task = attribute_class_filter(
+            self.get_queryset().filter(uid=uid), self.request.user
+        )
         if not providers_tasks:
             return Response(status=status.HTTP_401_UNAUTHORIZED)
-        return super(DataProviderTaskViewSet, self).destroy(self, request, uid, *args, **kwargs)
+        return super(DataProviderTaskRecordViewSet, self).destroy(self, request, uid, *args, **kwargs)
 
     def update(self, request, uid=None, *args, **kwargs):
         """
@@ -1399,11 +1402,12 @@ class DataProviderTaskViewSet(viewsets.ModelViewSet):
         * uid: optional lookup field
         * return: The status of the update.
         """
-        providers_tasks, filtered_provider_task = attribute_class_filter(self.get_queryset().filter(uid=uid),
-                                                                         self.request.user)
+        providers_tasks, filtered_provider_task = attribute_class_filter(
+            self.get_queryset().filter(uid=uid), self.request.user
+        )
         if not providers_tasks:
             return Response(status=status.HTTP_401_UNAUTHORIZED)
-        return super(DataProviderTaskViewSet, self).update(self, request, uid, *args, **kwargs)
+        return super(DataProviderTaskRecordViewSet, self).update(self, request, uid, *args, **kwargs)
 
 
 class UserDataViewSet(viewsets.GenericViewSet):

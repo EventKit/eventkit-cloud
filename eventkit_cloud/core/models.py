@@ -45,7 +45,6 @@ class LowerCaseCharField(models.CharField):
         return getattr(model_instance, self.attname)
 
 
-
 class TimeStampedModelMixin(models.Model):
     """
     Mixin for timestamped models.
@@ -169,15 +168,24 @@ class AttributeClass(UIDMixin, TimeStampedModelMixin):
 
     name = models.CharField(max_length=100, blank=False, unique=True)
     slug = LowerCaseCharField(max_length=40, blank=False, unique=True, db_index=True)
-    filter = JSONField(null=True, blank=True,
-                       help_text="This field should be a dict which is passed directly to the user model for filtering users. "
-                                 "For help see django docs on filtering models.")
-    exclude = JSONField(null=True, blank=True,
-                        help_text="This field should be a dict which is passed directly to the user model for excluding users. "
-                                  "For help see django docs on excluding models.")
-    complex = JSONField(null=True, blank=True, unique=True,
-                        help_text="""This is a thruple of nested thruples represented as lists. 
-                        Example: '["blue","==","color"]'.""")
+    filter = JSONField(
+        null=True,
+        blank=True,
+        help_text="This field should be a dict which is passed directly to the user model for filtering users. "
+        "For help see django docs on filtering models.",
+    )
+    exclude = JSONField(
+        null=True,
+        blank=True,
+        help_text="This field should be a dict which is passed directly to the user model for excluding users. "
+        "For help see django docs on excluding models.",
+    )
+    complex = JSONField(
+        null=True,
+        blank=True,
+        unique=True,
+        help_text='This is a thruple of nested thruples represented as lists. Example: \'["blue","==","color"]\'.',
+    )
     users = models.ManyToManyField(User)
 
     def __init__(self, *args, **kwargs):
@@ -194,9 +202,13 @@ class AttributeClass(UIDMixin, TimeStampedModelMixin):
     def save(self, *args, **kwargs):
         # Save is here twice because if this is a NEW object it won't have an ID yet which is required.
         super(AttributeClass, self).save(*args, **kwargs)
-        if any([self.filter != self.__original_filter,
+        if any(
+            [
+                self.filter != self.__original_filter,
                 self.exclude != self.__original_exclude,
-                self.complex != self.__original_complex]):
+                self.complex != self.__original_complex,
+            ]
+        ):
             # If this changes we need to ensure that all users correctly reflect the updates.
             update_all_users_with_attribute_class(self)
         self.__original_filter = self.filter
@@ -307,9 +319,9 @@ def validate_user_attribute_class(user: User, attribute_class: AttributeClass) -
     :param attribute_class: An AttributeClass object.
     :return: True if the user is added, otherwise False.
     """
-    query_filter = getattr(attribute_class, 'filter') or dict()
-    query_exclude = getattr(attribute_class, 'exclude') or dict()
-    complex_filter = getattr(attribute_class, 'complex') or dict()
+    query_filter = getattr(attribute_class, "filter") or dict()
+    query_exclude = getattr(attribute_class, "exclude") or dict()
+    complex_filter = getattr(attribute_class, "complex") or dict()
     if query_filter or query_exclude:
         user = User.objects.filter(**query_filter).exclude(**query_exclude).filter(id=user.id)
         if user:
@@ -322,9 +334,9 @@ def validate_user_attribute_class(user: User, attribute_class: AttributeClass) -
 
 
 def get_users_from_attribute_class(attribute_class: AttributeClass) -> List[User]:
-    query_filter = getattr(attribute_class, 'filter') or dict()
-    query_exclude = getattr(attribute_class, 'exclude') or dict()
-    complex_filter = getattr(attribute_class, 'complex') or dict()
+    query_filter = getattr(attribute_class, "filter") or dict()
+    query_exclude = getattr(attribute_class, "exclude") or dict()
+    complex_filter = getattr(attribute_class, "complex") or dict()
     users = []
 
     if query_filter or query_exclude:
@@ -350,5 +362,3 @@ def update_all_attribute_classes_with_user(user: User) -> None:
             attribute_class.users.add(user)
         else:
             attribute_class.users.remove(user)
-
-

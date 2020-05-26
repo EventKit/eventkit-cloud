@@ -21,7 +21,8 @@ from eventkit_cloud.jobs.models import (
     License,
     DataProviderStatus,
     DataProviderTask,
-    JobPermission)
+    JobPermission,
+)
 from eventkit_cloud.tasks.helpers import clean_config
 
 logger = logging.getLogger(__name__)
@@ -136,7 +137,7 @@ class DataProviderForm(forms.ModelForm):
             "license",
             "zip",
             "display",
-            "attribute_class"
+            "attribute_class",
         ]
 
     def clean_config(self):
