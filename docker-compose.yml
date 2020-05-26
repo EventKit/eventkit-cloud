@@ -141,6 +141,10 @@ services:
       - CONTAINER_CODE_PATH
       - DEV_MACHINE_CODE_PATH
       - MAX_TASK_ATTEMPTS
+      - USE_S3
+      - AWS_STORAGE_BUCKET_NAME
+      - AWS_ACCESS_KEY_ID
+      - AWS_SECRET_ACCESS_KEY
     extra_hosts:
       - "${SITE_NAME}:${SITE_IP}"
     command: /home/eventkit/miniconda3/envs/eventkit-cloud/lib/python3.6/site-packages/scripts/run-celery.sh
