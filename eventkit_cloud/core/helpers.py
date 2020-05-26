@@ -17,7 +17,7 @@ from django.contrib.auth.models import User
 logger = logging.getLogger(__name__)
 
 
-def get_id(user):
+def get_id(user: User):
     if hasattr(user, "oauth"):
         return user.oauth.identification
     else:
@@ -148,5 +148,3 @@ def sendnotification(actor, recipient, verb, action_object, target, level, descr
         )
     except Exception as err:
         logger.debug("notify send error ignored: %s" % err)
-
-

@@ -74,7 +74,7 @@ from eventkit_cloud.tasks.models import (
     FileProducingTaskResult,
     ExportRun,
 )
-from eventkit_cloud.jobs.models import DataProvider, DataProviderTask
+from eventkit_cloud.jobs.models import DataProviderTask
 
 BLACKLISTED_ZIP_EXTS = [".ini", ".om5", ".osm", ".lck", ".pyc"]
 
@@ -134,8 +134,11 @@ class ExportTask(EventKitBaseTask):
         task_uid = kwargs.get("task_uid")
 
         try:
-            task = ExportTaskRecord.objects.select_related("export_provider_task__run__job").select_related(
-                "export_provider_task__provider").get(uid=task_uid)
+            task = (
+                ExportTaskRecord.objects.select_related("export_provider_task__run__job")
+                .select_related("export_provider_task__provider")
+                .get(uid=task_uid)
+            )
 
             check_cached_task_failures(task.name, task_uid)
 

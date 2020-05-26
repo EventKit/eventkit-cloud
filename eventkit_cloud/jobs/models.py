@@ -24,8 +24,15 @@ from enum import Enum
 from django.db.models import Q
 
 
-from eventkit_cloud.core.models import CachedModelMixin, DownloadableMixin, TimeStampedModelMixin, UIDMixin, \
-    AttributeClass, logger, GroupPermissionLevel, LowerCaseCharField
+from eventkit_cloud.core.models import (
+    CachedModelMixin,
+    DownloadableMixin,
+    TimeStampedModelMixin,
+    UIDMixin,
+    AttributeClass,
+    GroupPermissionLevel,
+    LowerCaseCharField,
+)
 from eventkit_cloud.utils.mapproxy import get_mapproxy_metadata_url, get_mapproxy_footprint_url
 
 logger = logging.getLogger(__name__)
@@ -239,8 +246,13 @@ class DataProvider(UIDMixin, TimeStampedModelMixin, CachedModelMixin):
         on_delete=models.SET_NULL,
         help_text="A thumbnail image generated to give a high level" " preview of what a provider's data looks like.",
     )
-    attribute_class = models.ForeignKey(AttributeClass, blank=True, null=True, on_delete=models.SET_NULL,
-                                        help_text="The attribute class is used to limit users access to resources using this data provider.")
+    attribute_class = models.ForeignKey(
+        AttributeClass,
+        blank=True,
+        null=True,
+        on_delete=models.SET_NULL,
+        help_text="The attribute class is used to limit users access to resources using this data provider.",
+    )
 
     class Meta:  # pragma: no cover
         managed = True
@@ -310,7 +322,6 @@ class DataProvider(UIDMixin, TimeStampedModelMixin, CachedModelMixin):
             return user_rule.max_selection_size
         except UserSizeRule.DoesNotExist:
             return self.max_selection
-
 
 
 class DataProviderStatus(UIDMixin, TimeStampedModelMixin):
