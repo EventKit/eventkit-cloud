@@ -643,9 +643,10 @@ def add_export_run_files_to_zip(zipfile):
     for export_run_file in export_run_files:
         export_run_file_path = os.path.join(settings.EXPORT_RUN_FILES, export_run_file.file.name)
 
-        request = requests.get(export_run_file.file.url)
-        with open(export_run_file_path, "wb+") as file:
-            file.write(request.content)
+        if settings.USE_S3:
+            request = requests.get(export_run_file.file.url)
+            with open(export_run_file_path, "wb+") as file:
+                file.write(request.content)
 
         extra_directory = export_run_file.directory or ""
         if export_run_file.provider:

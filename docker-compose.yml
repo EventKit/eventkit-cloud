@@ -220,6 +220,7 @@ services:
       - ./config/eventkit-docker.conf:/usr/local/apache2/conf/httpd.conf
       - ./eventkit_cloud:/var/lib/eventkit/eventkit_cloud
       - ./exports_download:/var/lib/eventkit/exports_download
+      - ./exports_stage:/var/lib/eventkit/exports_stage
       - ./site:/var/lib/eventkit/site
     links:
       - eventkit

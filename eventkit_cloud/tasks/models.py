@@ -3,10 +3,14 @@
 
 import logging
 
+from django.conf import settings
 from django.contrib.auth.models import User
 from django.contrib.contenttypes.models import ContentType
+from django.core.files.storage import FileSystemStorage
 from django.db import models
 from django.utils import timezone
+
+from storages.backends.s3boto3 import S3Boto3Storage
 
 from eventkit_cloud.core.helpers import (
     sendnotification,
@@ -151,8 +155,13 @@ class ExportRunFile(UIDMixin, TimeStampedModelMixin):
     """
     The ExportRunFile stores additional files to be added to each ExportRun zip archive.
     """
+    storage = None
+    if settings.USE_S3:
+        storage = S3Boto3Storage()
+    else:
+        storage = FileSystemStorage(location=settings.EXPORT_RUN_FILES, base_url=settings.EXPORT_RUN_FILES_DOWNLOAD)
 
-    file = models.FileField(verbose_name="File")
+    file = models.FileField(verbose_name="File", storage=storage)
     directory = models.CharField(
         max_length=100, null=True, blank=True, help_text="An optional directory name to store the file in."
     )

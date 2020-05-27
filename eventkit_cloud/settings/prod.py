@@ -62,8 +62,11 @@ if not TILE_CACHE_DIR:
 # where map image snapshots are stored (e.g. thumbnails)
 IMAGES_STAGING = os.path.join(EXPORT_STAGING_ROOT, "images")
 
-# where extra files to be added to every datapack are stored
+# where export run files to be added to every datapack are stored
 EXPORT_RUN_FILES = os.path.join(EXPORT_STAGING_ROOT, "export_run_files")
+
+# where export run files can be downloaded
+EXPORT_RUN_FILES_DOWNLOAD = os.getenv("EXPORT_RUN_FILES_DOWNLOAD", "/export_run_files/")
 
 # where exports are stored for public download
 EXPORT_DOWNLOAD_ROOT = os.getenv("EXPORT_DOWNLOAD_ROOT", "/var/lib/eventkit/exports_download/")
