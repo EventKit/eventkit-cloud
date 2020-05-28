@@ -10,12 +10,15 @@ import GroupRow from './GroupRow';
 import GroupsHeaderRow, { GroupOrder, SharedOrder } from './GroupsHeaderRow';
 import GroupBodyTooltip from './ShareBodyTooltip';
 import { getGroups } from '../../actions/groupActions';
+import axios from "axios";
+import {getHeaderPageInfo} from "../../utils/generic";
 
 export interface Props {
-    getGroups: (args: any, append: boolean) => void;
+    job: Eventkit.Job;
+    // getGroups: (args: any, append: boolean) => void;
     nextPage: boolean;
     groups: Eventkit.Group[];
-    selectedGroups: Eventkit.Permissions['groups'];
+    selectedGroups: Eventkit.Permissions.Groups;
     groupsText: any;
     onUncheckAll: () => void;
     onCheckAll: () => void;
@@ -84,14 +87,38 @@ export class GroupsBody extends React.Component<Props, State> {
         window.removeEventListener('wheel', this.handleScroll);
     }
 
+    private async getAllGroups(jobUid, permissions, groupOrder, append: boolean, params: any) {
+        return axios({
+            url: `/api/groups?job_uid=${jobUid}&ordering=${permissions},${groupOrder}`,
+            method: 'get',
+            // params,
+            // payload: {append},
+        }).then((response) => {
+                const totalGroups = Number(response.headers['total-groups']);
+                const { nextPage, range } = getHeaderPageInfo(response);
+                return {
+                    groups: response.data,
+                    total: totalGroups,
+                    range,
+                    nextPage,
+                };
+            }).catch((e) => console.log(e));
+    }
+
     private async getGroups(params = {}, append = true) {
         this.setState({ loading: true });
-        await this.props.getGroups({
-            page: this.state.page,
-            ordering: this.state.groupOrder,
-            search: this.state.search,
-            ...params,
-        }, append);
+
+        const selectedGroups = this.props.selectedGroups;
+        const jobUid = this.props.job.uid;
+        let permissions;
+        if (Object.values(selectedGroups).find(value => value === 'ADMIN')) {
+            permissions = 'admin_shared';
+        } else {
+            permissions = 'shared';
+        }
+        const groupOrder = (this.state.groupOrder === 'name' ? 'name' : '-name');
+
+        await this.getAllGroups(jobUid, permissions, groupOrder, append, params);
         this.setState({ loading: false });
     }
 
@@ -271,14 +298,15 @@ export class GroupsBody extends React.Component<Props, State> {
             },
         };
 
+        // Remove sorting logic here since backend is sorting?
         let { groups } = this.props;
-        if (this.state.activeOrder.includes('shared')) {
-            if (this.state.activeOrder.includes('admin')) {
-                groups = this.sortByAdmin([...groups], this.props.selectedGroups, !this.state.sharedOrder.includes('-admin'));
-            } else {
-                groups = this.sortByShared([...groups], this.props.selectedGroups, !this.state.sharedOrder.includes('-'));
-            }
-        }
+        // if (this.state.activeOrder.includes('shared')) {
+        //     if (this.state.activeOrder.includes('admin')) {
+        //         groups = this.sortByAdmin([...groups], this.props.selectedGroups, !this.state.sharedOrder.includes('-admin'));
+        //     } else {
+        //         groups = this.sortByShared([...groups], this.props.selectedGroups, !this.state.sharedOrder.includes('-'));
+        //     }
+        // }
 
         const selectedCount = Object.keys(this.props.selectedGroups).length;
         const adminCount = Object.keys(this.props.groups).filter(group => this.props.selectedGroups[group] === 'ADMIN').length;

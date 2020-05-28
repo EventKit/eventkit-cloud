@@ -10,6 +10,7 @@ import BaseDialog from '../Dialog/BaseDialog';
 import { Permissions, Levels } from '../../utils/permissions';
 
 export interface Props {
+    job: Eventkit.Job;
     show: boolean;
     onClose: () => void;
     onSave: (perms: Eventkit.Permissions) => void;
@@ -305,6 +306,7 @@ export class DataPackShareDialog extends React.Component<Props, State> {
                 </div>
                 {this.state.view === 'groups' ?
                     <GroupsBody
+                        job={this.props.job}
                         selectedGroups={this.state.permissions.groups}
                         groupsText={this.props.groupsText}
                         onGroupCheck={this.handleGroupCheck}

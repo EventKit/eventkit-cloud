@@ -17,6 +17,7 @@ export interface Props {
     statusFontColor: string;
     adminPermissions: boolean;
     user: Eventkit.User;
+    job: Eventkit.Job;
 }
 
 export class DataPackStatusTable extends React.Component<Props, {}> {
@@ -63,6 +64,7 @@ export class DataPackStatusTable extends React.Component<Props, {}> {
                         permissions={this.props.permissions}
                         adminPermissions={this.props.adminPermissions}
                         handlePermissionsChange={this.props.handlePermissionsChange}
+                        job={this.props.job}
                     />
                 </CustomTableRow>
             </div>
