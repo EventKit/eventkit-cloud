@@ -1380,8 +1380,7 @@ class UserDataViewSet(viewsets.GenericViewSet):
     filter_class = UserFilter
     filter_backends = (
         DjangoFilterBackend,
-        filters.SearchFilter,
-        filters.OrderingFilter,
+        filters.SearchFilter
     )
     lookup_field = "username"
     lookup_value_regex = "[^/]+"
@@ -1599,7 +1598,7 @@ class GroupViewSet(viewsets.ModelViewSet):
     pagination_class = LinkHeaderPagination
     parser_classes = (JSONParser,)
     filter_class = GroupFilter
-    filter_backends = (DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter)
+    filter_backends = (DjangoFilterBackend, filters.SearchFilter)
     lookup_field = "id"
     lookup_value_regex = "[^/]+"
     search_fields = ("name",)
@@ -1648,7 +1647,6 @@ class GroupViewSet(viewsets.ModelViewSet):
         queryset = JobPermission.get_orderable_queryset_for_job(job, Group)
         total = queryset.count()
         filtered_queryset = self.filter_queryset(queryset)
-
         page = None
         if not request.query_params.get("disable_page"):
             page = self.paginate_queryset(filtered_queryset)
