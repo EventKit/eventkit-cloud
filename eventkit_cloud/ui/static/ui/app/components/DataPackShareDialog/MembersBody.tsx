@@ -1,20 +1,22 @@
 import * as React from 'react';
-import { connect } from 'react-redux';
-import { withTheme, Theme } from '@material-ui/core/styles';
+import {connect} from 'react-redux';
+import {withTheme, Theme} from '@material-ui/core/styles';
 import ButtonBase from '@material-ui/core/ButtonBase';
 import Button from '@material-ui/core/Button';
 import CircularProgress from '@material-ui/core/CircularProgress';
 import InfoIcon from '@material-ui/icons/InfoOutlined';
 import CustomTextField from '../common/CustomTextField';
 import BaseDialog from '../Dialog/BaseDialog';
-import MembersHeaderRow, { SharedOrder, MemberOrder } from './MembersHeaderRow';
+import MembersHeaderRow, {SharedOrder, MemberOrder} from './MembersHeaderRow';
 import MemberRow from './MemberRow';
 import MembersBodyTooltip from './ShareBodyTooltip';
-import { getUsers } from '../../actions/usersActions';
+import {getPermissionUsers, getUsers} from '../../actions/usersActions';
 
 export interface Props {
     public: boolean;
-    getUsers: (args: any, append: boolean) => void;
+    job: Eventkit.Job;
+    // getUsers: (args: any, append: boolean) => void;
+    getPermissionUsers: (args: any, groupOrder: any, params: {}) => void;
     nextPage: boolean;
     userCount: number;
     users: Eventkit.User[];
@@ -48,10 +50,12 @@ export class MembersBody extends React.Component<Props, State> {
     static defaultProps = {
         membersText: '',
         canUpdateAdmin: false,
-        handleShowShareInfo: () => { /* do nothing */ },
+        handleShowShareInfo: () => { /* do nothing */
+        },
     };
 
     private body: HTMLElement;
+
     constructor(props: Props) {
         super(props);
         this.handleUncheckAll = this.handleUncheckAll.bind(this);
@@ -86,32 +90,76 @@ export class MembersBody extends React.Component<Props, State> {
 
     componentDidMount() {
         window.addEventListener('wheel', this.handleScroll);
-        this.getUsers({ page: this.state.page }, false);
+        // this.getUsers({page: this.state.page}, false);
+        const jobUid = this.props.job.uid;
+        this.getPermissionUsers(jobUid, this.getPermissions(), "shared", {page: this.state.page}, false);
+
     }
 
     componentWillUnmount() {
         window.removeEventListener('wheel', this.handleScroll);
     }
 
-    private async getUsers(params = {}, append = true) {
-        this.setState({ loading: true });
-        await this.props.getUsers({
-            page: this.state.page,
-            exclude_self: 'true',
-            ordering: this.state.memberOrder,
-            search: this.state.search,
-            ...params,
-        }, append);
-        this.setState({ loading: false });
+    // private async getUsers(params = {}, append = true) {
+    //     this.setState({loading: true});
+    //     await this.props.getUsers({
+    //         page: this.state.page,
+    //         exclude_self: 'true',
+    //         ordering: this.state.memberOrder,
+    //         search: this.state.search,
+    //         ...params,
+    //     }, append);
+    //     this.setState({loading: false});
+    // }
+
+    private getPermissions() {
+        let permissions;
+        const {selectedMembers} = this.props;
+        if (Object.values(selectedMembers).find(value => value === 'ADMIN')) {
+            permissions = 'admin_shared';
+        } else {
+            permissions = 'shared';
+        }
+        return permissions;
+    }
+
+    private getMemberOrder() {
+        let name;
+        if (this.state.memberOrder === 'username') {
+            name = 'username';
+        } else {
+            name = '-username';
+        }
+        return name;
+    }
+
+    private async getPermissionUsers(jobUid, permissions, memberOrder, params: {}, append = true) {
+        this.setState({loading: true});
+        if (this.state.search) {
+            params['search'] = this.state.search;
+        }
+        await this.props.getPermissionUsers(
+            jobUid,
+            {
+                permissions,
+                ordering: memberOrder,
+                page: this.state.page,
+                ...params,
+            },
+            append
+        );
+        this.setState({loading: false});
     }
 
     private loadMore() {
-        this.getUsers({ page: this.state.page + 1 });
-        this.setState({ page: this.state.page + 1 });
+        // this.getUsers({page: this.state.page + 1});
+        const jobUid = this.props.job.uid;
+        this.getPermissionUsers(jobUid, this.getPermissions(), this.getMemberOrder(), {page: this.state.page + 1});
+        this.setState({page: this.state.page + 1});
     }
 
     private closeConfirm() {
-        this.setState({ checkAllConfirm: false });
+        this.setState({checkAllConfirm: false});
     }
 
     private handleUncheckAll() {
@@ -120,7 +168,7 @@ export class MembersBody extends React.Component<Props, State> {
 
     // open dialog to give user option to select visible members or all members in system
     private handleCheckAll() {
-        this.setState({ checkAllConfirm: true });
+        this.setState({checkAllConfirm: true});
     }
 
     // called if user chooses to select only visible members (SHARED)
@@ -147,12 +195,12 @@ export class MembersBody extends React.Component<Props, State> {
 
     // show the admin button tooltip
     private handleAdminMouseOver(target: HTMLElement, admin: boolean) {
-        this.setState({ tooltip: { target, admin } });
+        this.setState({tooltip: {target, admin}});
     }
 
     // hide the admin button tooltip
     private handleAdminMouseOut() {
-        this.setState({ tooltip: { target: null, admin: false } });
+        this.setState({tooltip: {target: null, admin: false}});
     }
 
     // if user scrolls up we hide any existing tooltip
@@ -167,11 +215,14 @@ export class MembersBody extends React.Component<Props, State> {
         if (event.key === 'Enter') {
             const text = (event.target as HTMLInputElement).value || '';
             if (text) {
-                this.setState({ page: 1 });
-                this.getUsers({
-                    page: 1,
-                    search: text,
-                }, false);
+                this.setState({page: 1});
+                this.getPermissionUsers(
+                    this.props.job.uid,
+                    this.getPermissions(),
+                    this.getMemberOrder(),
+                    {page: 1, search: text},
+                    false
+                );
             }
         }
     }
@@ -179,20 +230,41 @@ export class MembersBody extends React.Component<Props, State> {
     // commit text to search state, if search is empty make a getUser request
     private handleSearchInput(e: React.ChangeEvent<HTMLInputElement>) {
         if (this.state.search && !e.target.value) {
-            this.getUsers({ page: 1 }, false);
-            this.setState({ search: e.target.value, page: 1 });
+            // this.getUsers({page: 1}, false);
+            this.getPermissionUsers(
+                this.props.job.uid,
+                this.getPermissions(),
+                this.getMemberOrder(),
+                {page: 1, search: e.target.value},
+                false
+            );
+            this.setState({search: e.target.value, page: 1});
         } else {
-            this.setState({ search: e.target.value });
+            this.setState({search: e.target.value});
         }
     }
 
     private reverseMemberOrder(v: MemberOrder) {
-        this.getUsers({ page: 1, ordering: v }, false);
-        this.setState({ memberOrder: v, activeOrder: v, page: 1 });
+        // this.getUsers({page: 1, ordering: v}, false);
+        this.getPermissionUsers(
+            this.props.job.uid,
+            this.getPermissions(),
+            this.getMemberOrder(),
+            {page: 1, ordering: v},
+            false
+        );
+        this.setState({memberOrder: v, activeOrder: v, page: 1});
     }
 
     private reverseSharedOrder(v: SharedOrder) {
-        this.setState({ sharedOrder: v, activeOrder: v });
+        this.getPermissionUsers(
+            this.props.job.uid,
+            this.getPermissions(),
+            this.getMemberOrder(),
+            {page: 1, ordering: v},
+            false
+        );
+        this.setState({sharedOrder: v, activeOrder: v});
     }
 
     private sortByShared(members: Eventkit.User[], selectedMembers: Eventkit.Permissions['members'], descending: boolean) {
@@ -254,7 +326,7 @@ export class MembersBody extends React.Component<Props, State> {
     }
 
     render() {
-        const { colors } = this.props.theme.eventkit;
+        const {colors} = this.props.theme.eventkit;
 
         const styles = {
             fixedHeader: {
@@ -303,14 +375,14 @@ export class MembersBody extends React.Component<Props, State> {
             },
         };
 
-        let { users } = this.props;
-        if (this.state.activeOrder.includes('shared')) {
-            if (this.state.activeOrder.includes('admin')) {
-                users = this.sortByAdmin([...users], this.props.selectedMembers, !this.state.sharedOrder.includes('-admin'));
-            } else {
-                users = this.sortByShared([...users], this.props.selectedMembers, !this.state.sharedOrder.includes('-'));
-            }
-        }
+        let {users} = this.props;
+        // if (this.state.activeOrder.includes('shared')) {
+        //     if (this.state.activeOrder.includes('admin')) {
+        //         users = this.sortByAdmin([...users], this.props.selectedMembers, !this.state.sharedOrder.includes('-admin'));
+        //     } else {
+        //         users = this.sortByShared([...users], this.props.selectedMembers, !this.state.sharedOrder.includes('-'));
+        //     }
+        // }
 
         const visibleCount = users.filter(m => m.user.username in this.props.selectedMembers).length;
         const selectedCount = Object.keys(this.props.selectedMembers).length;
@@ -326,7 +398,7 @@ export class MembersBody extends React.Component<Props, State> {
                         onClick={this.props.handleShowShareInfo}
                         style={styles.shareInfoButton}
                     >
-                        <InfoIcon style={styles.shareInfoIcon} className="qa-MembersBody-shareInfo-icon" />
+                        <InfoIcon style={styles.shareInfoIcon} className="qa-MembersBody-shareInfo-icon"/>
                         Sharing Rights
                     </ButtonBase>
                     <span style={styles.shareInfoText} className="qa-MembersBody-shareInfo-text">
@@ -337,9 +409,11 @@ export class MembersBody extends React.Component<Props, State> {
         }
 
         return (
-            <div style={{ position: 'relative' }} ref={(input) => { this.body = input; }}>
+            <div style={{position: 'relative'}} ref={(input) => {
+                this.body = input;
+            }}>
                 <div style={styles.fixedHeader}>
-                    <div style={{ fontSize: '14px', padding: '10px 0px' }} className="qa-MembersBody-membersText">
+                    <div style={{fontSize: '14px', padding: '10px 0px'}} className="qa-MembersBody-membersText">
                         {this.props.membersText}
                     </div>
                     <CustomTextField
@@ -351,7 +425,10 @@ export class MembersBody extends React.Component<Props, State> {
                         onKeyDown={this.handleSearchKeyDown}
                         value={this.state.search}
                         style={styles.textField}
-                        InputProps={{ style: { paddingLeft: '16px', lineHeight: '36px', fontSize: '14px' }, disableUnderline: true }}
+                        InputProps={{
+                            style: {paddingLeft: '16px', lineHeight: '36px', fontSize: '14px'},
+                            disableUnderline: true
+                        }}
                         charsRemainingStyle={styles.characterLimit}
                     />
                     {shareInfo}
@@ -390,8 +467,8 @@ export class MembersBody extends React.Component<Props, State> {
                         );
                     })
                     :
-                    <div style={{ display: 'flex', justifyContent: 'center', margin: '50px auto' }}>
-                        <CircularProgress />
+                    <div style={{display: 'flex', justifyContent: 'center', margin: '50px auto'}}>
+                        <CircularProgress/>
                     </div>
                 }
                 <MembersBodyTooltip
@@ -400,7 +477,7 @@ export class MembersBody extends React.Component<Props, State> {
                     target={this.state.tooltip.target}
                     body={this.body}
                     text={this.state.tooltip.admin ? 'Remove administrative rights from member' : 'Share administrative rights with member'}
-                    textContainerStyle={{ justifyContent: 'flex-end' }}
+                    textContainerStyle={{justifyContent: 'flex-end'}}
                 />
                 {!this.state.loading && (
                     <Button
@@ -417,7 +494,7 @@ export class MembersBody extends React.Component<Props, State> {
                     show={this.state.checkAllConfirm}
                     onClose={this.closeConfirm}
                     title="SHARE WITH ALL MEMBERS"
-                    overlayStyle={{ zIndex: 1501 }}
+                    overlayStyle={{zIndex: 1501}}
                     actions={[
                         <Button
                             variant="contained"
@@ -431,7 +508,7 @@ export class MembersBody extends React.Component<Props, State> {
                 >
                     <p>
                         By selecting all, you can select just the currently displayed members
-                            or you can select all members in the system.
+                        or you can select all members in the system.
                     </p>
                     <Button
                         variant="text"
@@ -465,8 +542,11 @@ const mapStateToProps = state => (
 
 const mapDispatchToProps = dispatch => (
     {
-        getUsers: (params, append) => (
-            dispatch(getUsers(params, append))
+        // getUsers: (params, append) => (
+        //     dispatch(getUsers(params, append))
+        // ),
+        getPermissionUsers: (jobUid, params, append) => (
+            dispatch(getPermissionUsers(jobUid, params, append))
         ),
     }
 );

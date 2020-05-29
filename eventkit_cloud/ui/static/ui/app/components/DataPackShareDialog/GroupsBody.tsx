@@ -83,9 +83,8 @@ export class GroupsBody extends React.Component<Props, State> {
 
     componentDidMount() {
         window.addEventListener('wheel', this.handleScroll);
-        // this.getGroups({ page: this.state.page }, false);
         const jobUid = this.props.job.uid;
-        this.getPermissionGroups(jobUid, this.getPermissions(), this.getGroupOrder(), {page: this.state.page}, false);
+        this.getPermissionGroups(jobUid, this.getPermissions(), "shared", {page: this.state.page}, false);
     }
 
     componentWillUnmount() {
@@ -113,18 +112,6 @@ export class GroupsBody extends React.Component<Props, State> {
         return name;
     }
 
-    // OLD -redux needs to know every time getGroups is called to update state; can groupActions be updated?
-    // private async getGroups(params = {}, append = true) {
-    //     this.setState({loading: true});
-    //     await this.props.getGroups({
-    //         page: this.state.page,
-    //         ordering: this.state.groupOrder,
-    //         search: this.state.search,
-    //         ...params,
-    //     }, append);
-    //     this.setState({loading: false});
-    // }
-
     private async getPermissionGroups(jobUid, permissions, groupOrder, params: {}, append = true) {
         this.setState({loading: true});
         if (this.state.search) {
@@ -143,44 +130,7 @@ export class GroupsBody extends React.Component<Props, State> {
         this.setState({loading: false});
     }
 
-    // private async getPermissionGroups(jobUid, permissions, groupOrder, append: boolean, params: any) {
-    //     return axios({
-    //         url: `/api/groups?job_uid=${jobUid}&ordering=${permissions},${groupOrder}`,
-    //         method: 'get',
-    //         // params,
-    //         // payload: {append},
-    //     }).then((response) => {
-    //             const totalGroups = Number(response.headers['total-groups']);
-    //             const { nextPage, range } = getHeaderPageInfo(response);
-    //             return {
-    //                 // how to update store's/state's groups to be returned in props.groups?
-    //                 groups: response.data,
-    //                 total: totalGroups,
-    //                 range,
-    //                 nextPage,
-    //             };
-    //         }).catch((e) => console.log(e));
-    // }
-
-    // private async getGroups(params = {}, append = true) {
-    //     this.setState({ loading: true });
-    //
-    //     const selectedGroups = this.props.selectedGroups;
-    //     const jobUid = this.props.job.uid;
-    //     let permissions;
-    //     if (Object.values(selectedGroups).find(value => value === 'ADMIN')) {
-    //         permissions = 'admin_shared';
-    //     } else {
-    //         permissions = 'shared';
-    //     }
-    //     const groupOrder = (this.state.groupOrder === 'name' ? 'name' : '-name');
-    //
-    //     await this.getAllGroups(jobUid, permissions, groupOrder, append, params);
-    //     this.setState({ loading: false });
-    // }
-
     private loadMore() {
-        // this.getGroups({page: this.state.page + 1});
         const jobUid = this.props.job.uid;
         this.getPermissionGroups(jobUid, this.getPermissions(), this.getGroupOrder(), {page: this.state.page + 1});
         this.setState({page: this.state.page + 1});
@@ -222,10 +172,6 @@ export class GroupsBody extends React.Component<Props, State> {
             const text = (event.target as HTMLInputElement).value || '';
             if (text) {
                 this.setState({page: 1});
-                // this.getGroups({
-                //     page: 1,
-                //     search: text,
-                // }, false);
                 this.getPermissionGroups(
                     this.props.job.uid,
                     this.getPermissions(),
@@ -240,7 +186,6 @@ export class GroupsBody extends React.Component<Props, State> {
     // commit text to search state, if search is empty make a getGroups request
     private handleSearchInput(e: React.ChangeEvent<HTMLInputElement>) {
         if (this.state.search && !e.target.value) {
-            // this.getGroups({page: 1, search: e.target.value}, false);
             this.getPermissionGroups(
                 this.props.job.uid,
                 this.getPermissions(),
@@ -255,7 +200,6 @@ export class GroupsBody extends React.Component<Props, State> {
     }
 
     private reverseGroupOrder(v: GroupOrder) {
-        // this.getGroups({page: 1, ordering: v}, false);
         this.getPermissionGroups(
             this.props.job.uid,
             this.getPermissions(),
@@ -275,64 +219,6 @@ export class GroupsBody extends React.Component<Props, State> {
             false
         );
         this.setState({sharedOrder: v, activeOrder: v});
-    }
-
-    private sortByShared(groups: Eventkit.Group[], selectedGroups: Eventkit.Permissions['groups'], descending: boolean) {
-        if (descending === true) {
-            groups.sort((a, b) => {
-                const aSelected = a.name in selectedGroups;
-                const bSelected = b.name in selectedGroups;
-                if (aSelected && !bSelected) {
-                    return -1;
-                }
-                if (!aSelected && bSelected) {
-                    return 1;
-                }
-                return 0;
-            });
-        } else {
-            groups.sort((a, b) => {
-                const aSelected = a.name in selectedGroups;
-                const bSelected = b.name in selectedGroups;
-                if (!aSelected && bSelected) {
-                    return -1;
-                }
-                if (aSelected && !bSelected) {
-                    return 1;
-                }
-                return 0;
-            });
-        }
-        return groups;
-    }
-
-    private sortByAdmin(groups: Eventkit.Group[], selectedGroups: Eventkit.Permissions['groups'], descending: boolean) {
-        if (descending === true) {
-            groups.sort((a, b) => {
-                const aAdmin = selectedGroups[a.name] === 'ADMIN';
-                const bAdmin = selectedGroups[b.name] === 'ADMIN';
-                if (aAdmin && !bAdmin) {
-                    return -1;
-                }
-                if (!aAdmin && bAdmin) {
-                    return 1;
-                }
-                return 0;
-            });
-        } else {
-            groups.sort((a, b) => {
-                const aAdmin = selectedGroups[a.name] === 'ADMIN';
-                const bAdmin = selectedGroups[b.name] === 'ADMIN';
-                if (!aAdmin && bAdmin) {
-                    return -1;
-                }
-                if (aAdmin && !bAdmin) {
-                    return 1;
-                }
-                return 0;
-            });
-        }
-        return groups;
     }
 
     render() {
@@ -385,16 +271,7 @@ export class GroupsBody extends React.Component<Props, State> {
             },
         };
 
-        // Remove sorting logic here since backend is sorting?
-        let {groups} = this.props;
-        // if (this.state.activeOrder.includes('shared')) {
-        //     if (this.state.activeOrder.includes('admin')) {
-        //         groups = this.sortByAdmin([...groups], this.props.selectedGroups, !this.state.sharedOrder.includes('-admin'));
-        //     } else {
-        //         groups = this.sortByShared([...groups], this.props.selectedGroups, !this.state.sharedOrder.includes('-'));
-        //     }
-        // }
-
+        const {groups} = this.props;
         const selectedCount = Object.keys(this.props.selectedGroups).length;
         const adminCount = Object.keys(this.props.groups).filter(group => this.props.selectedGroups[group] === 'ADMIN').length;
 
@@ -515,11 +392,7 @@ const mapStateToProps = state => (
 
 const mapDispatchToProps = dispatch => (
     {
-        // getGroups: (params, append) => (
-        //     dispatch(getGroups(params, append))
-        // ),
         getPermissionGroups: (jobUid, params, append) => (
-            // dispatch(getPermissionGroups(jobUid, permissions, groupOrder, params, append))
             dispatch(getPermissionGroups(jobUid, params, append))
         ),
     }

@@ -318,6 +318,7 @@ export class DataPackShareDialog extends React.Component<Props, State> {
                     />
                     :
                     <MembersBody
+                        job={this.props.job}
                         public={this.state.permissions.value === 'PUBLIC'}
                         selectedMembers={this.state.permissions.members}
                         membersText={this.props.membersText}
