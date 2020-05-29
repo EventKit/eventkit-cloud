@@ -1,21 +1,22 @@
 import * as React from 'react';
-import { connect } from 'react-redux';
-import { withTheme, Theme } from '@material-ui/core/styles';
+import {connect} from 'react-redux';
+import {withTheme, Theme} from '@material-ui/core/styles';
 import CircularProgress from '@material-ui/core/CircularProgress';
 import ButtonBase from '@material-ui/core/ButtonBase';
 import Button from '@material-ui/core/Button';
 import InfoIcon from '@material-ui/icons/InfoOutlined';
 import CustomTextField from '../common/CustomTextField';
 import GroupRow from './GroupRow';
-import GroupsHeaderRow, { GroupOrder, SharedOrder } from './GroupsHeaderRow';
+import GroupsHeaderRow, {GroupOrder, SharedOrder} from './GroupsHeaderRow';
 import GroupBodyTooltip from './ShareBodyTooltip';
-import { getGroups } from '../../actions/groupActions';
+import {getGroups, getPermissionGroups} from '../../actions/groupActions';
 import axios from "axios";
 import {getHeaderPageInfo} from "../../utils/generic";
 
 export interface Props {
     job: Eventkit.Job;
     // getGroups: (args: any, append: boolean) => void;
+    getPermissionGroups: (args: any, append: boolean, groupOrder: any, params: {}, b: boolean) => void;
     nextPage: boolean;
     groups: Eventkit.Group[];
     selectedGroups: Eventkit.Permissions.Groups;
@@ -46,10 +47,12 @@ export class GroupsBody extends React.Component<Props, State> {
     static defaultProps = {
         groupsText: '',
         canUpdateAdmin: false,
-        handleShowShareInfo: () => { /* do nothing */},
+        handleShowShareInfo: () => { /* do nothing */
+        },
     };
 
     private body: HTMLElement;
+
     constructor(props: Props) {
         super(props);
         this.handleUncheckAll = this.handleUncheckAll.bind(this);
@@ -80,51 +83,106 @@ export class GroupsBody extends React.Component<Props, State> {
 
     componentDidMount() {
         window.addEventListener('wheel', this.handleScroll);
-        this.getGroups({ page: this.state.page }, false);
+        // this.getGroups({ page: this.state.page }, false);
+        const jobUid = this.props.job.uid;
+        this.getPermissionGroups(jobUid, this.getPermissions, this.getGroupOrder(), {page: this.state.page}, false);
     }
 
     componentWillUnmount() {
         window.removeEventListener('wheel', this.handleScroll);
     }
 
-    private async getAllGroups(jobUid, permissions, groupOrder, append: boolean, params: any) {
-        return axios({
-            url: `/api/groups?job_uid=${jobUid}&ordering=${permissions},${groupOrder}`,
-            method: 'get',
-            // params,
-            // payload: {append},
-        }).then((response) => {
-                const totalGroups = Number(response.headers['total-groups']);
-                const { nextPage, range } = getHeaderPageInfo(response);
-                return {
-                    groups: response.data,
-                    total: totalGroups,
-                    range,
-                    nextPage,
-                };
-            }).catch((e) => console.log(e));
-    }
-
-    private async getGroups(params = {}, append = true) {
-        this.setState({ loading: true });
-
-        const selectedGroups = this.props.selectedGroups;
-        const jobUid = this.props.job.uid;
+    private getPermissions() {
         let permissions;
+        const selectedGroups = this.props.selectedGroups;
         if (Object.values(selectedGroups).find(value => value === 'ADMIN')) {
             permissions = 'admin_shared';
         } else {
             permissions = 'shared';
         }
-        const groupOrder = (this.state.groupOrder === 'name' ? 'name' : '-name');
-
-        await this.getAllGroups(jobUid, permissions, groupOrder, append, params);
-        this.setState({ loading: false });
+        return permissions;
     }
 
+    private getGroupOrder() {
+        let name;
+        if (this.state.groupOrder === 'name') {
+            name = 'name';
+        } else {
+            name = '-name';
+        }
+        return name;
+    }
+
+    // OLD -redux needs to know every time getGroups is called to update state; can groupActions be updated?
+    // private async getGroups(params = {}, append = true) {
+    //     this.setState({loading: true});
+    //     await this.props.getGroups({
+    //         page: this.state.page,
+    //         ordering: this.state.groupOrder,
+    //         search: this.state.search,
+    //         ...params,
+    //     }, append);
+    //     this.setState({loading: false});
+    // }
+
+    private async getPermissionGroups(jobUid, permissions, groupOrder, params: {}, append = true) {
+        this.setState({loading: true});
+        await this.props.getPermissionGroups(
+            jobUid,
+            permissions,
+            groupOrder,
+            {
+                page: this.state.page,
+                ordering: groupOrder,
+                search: this.state.search,
+                ...params,
+            },
+            append
+        );
+        this.setState({loading: false});
+    }
+
+    // private async getPermissionGroups(jobUid, permissions, groupOrder, append: boolean, params: any) {
+    //     return axios({
+    //         url: `/api/groups?job_uid=${jobUid}&ordering=${permissions},${groupOrder}`,
+    //         method: 'get',
+    //         // params,
+    //         // payload: {append},
+    //     }).then((response) => {
+    //             const totalGroups = Number(response.headers['total-groups']);
+    //             const { nextPage, range } = getHeaderPageInfo(response);
+    //             return {
+    //                 // how to update store's/state's groups to be returned in props.groups?
+    //                 groups: response.data,
+    //                 total: totalGroups,
+    //                 range,
+    //                 nextPage,
+    //             };
+    //         }).catch((e) => console.log(e));
+    // }
+
+    // private async getGroups(params = {}, append = true) {
+    //     this.setState({ loading: true });
+    //
+    //     const selectedGroups = this.props.selectedGroups;
+    //     const jobUid = this.props.job.uid;
+    //     let permissions;
+    //     if (Object.values(selectedGroups).find(value => value === 'ADMIN')) {
+    //         permissions = 'admin_shared';
+    //     } else {
+    //         permissions = 'shared';
+    //     }
+    //     const groupOrder = (this.state.groupOrder === 'name' ? 'name' : '-name');
+    //
+    //     await this.getAllGroups(jobUid, permissions, groupOrder, append, params);
+    //     this.setState({ loading: false });
+    // }
+
     private loadMore() {
-        this.getGroups({ page: this.state.page + 1 });
-        this.setState({ page: this.state.page + 1 });
+        // this.getGroups({page: this.state.page + 1});
+        const jobUid = this.props.job.uid;
+        this.getPermissionGroups(jobUid, this.getPermissions(), this.getGroupOrder(), {page: this.state.page + 1});
+        this.setState({page: this.state.page + 1});
     }
 
     private handleUncheckAll() {
@@ -144,11 +202,11 @@ export class GroupsBody extends React.Component<Props, State> {
     }
 
     private handleAdminMouseOver(target: HTMLElement, admin: boolean) {
-        this.setState({ tooltip: { target, admin } });
+        this.setState({tooltip: {target, admin}});
     }
 
     private handleAdminMouseOut() {
-        this.setState({ tooltip: { target: null, admin: false } });
+        this.setState({tooltip: {target: null, admin: false}});
     }
 
     private handleScroll() {
@@ -162,11 +220,18 @@ export class GroupsBody extends React.Component<Props, State> {
         if (event.key === 'Enter') {
             const text = (event.target as HTMLInputElement).value || '';
             if (text) {
-                this.setState({ page: 1 });
-                this.getGroups({
-                    page: 1,
-                    search: text,
-                }, false);
+                this.setState({page: 1});
+                // this.getGroups({
+                //     page: 1,
+                //     search: text,
+                // }, false);
+                this.getPermissionGroups(
+                    this.props.job.uid,
+                    this.getPermissions(),
+                    this.getGroupOrder(),
+                    {page: 1, search: text},
+                    false
+                );
             }
         }
     }
@@ -174,20 +239,34 @@ export class GroupsBody extends React.Component<Props, State> {
     // commit text to search state, if search is empty make a getGroups request
     private handleSearchInput(e: React.ChangeEvent<HTMLInputElement>) {
         if (this.state.search && !e.target.value) {
-            this.getGroups({ page: 1, search: e.target.value }, false);
-            this.setState({ search: e.target.value, page: 1 });
+            // this.getGroups({page: 1, search: e.target.value}, false);
+            this.getPermissionGroups(
+                this.props.job.uid,
+                this.getPermissions(),
+                this.getGroupOrder(),
+                {page: 1, search: e.target.value},
+                false
+            );
+            this.setState({search: e.target.value, page: 1});
         } else {
-            this.setState({ search: e.target.value });
+            this.setState({search: e.target.value});
         }
     }
 
     private reverseGroupOrder(v: GroupOrder) {
-        this.getGroups({ page: 1, ordering: v }, false);
-        this.setState({ groupOrder: v, activeOrder: v, page: 1 });
+        // this.getGroups({page: 1, ordering: v}, false);
+        this.getPermissionGroups(
+            this.props.job.uid,
+            this.getPermissions(),
+            this.getGroupOrder(),
+            {page: 1, ordering: v},
+            false
+        );
+        this.setState({groupOrder: v, activeOrder: v, page: 1});
     }
 
     private reverseSharedOrder(v: SharedOrder) {
-        this.setState({ sharedOrder: v, activeOrder: v });
+        this.setState({sharedOrder: v, activeOrder: v});
     }
 
     private sortByShared(groups: Eventkit.Group[], selectedGroups: Eventkit.Permissions['groups'], descending: boolean) {
@@ -249,7 +328,7 @@ export class GroupsBody extends React.Component<Props, State> {
     }
 
     render() {
-        const { colors } = this.props.theme.eventkit;
+        const {colors} = this.props.theme.eventkit;
 
         const styles = {
             fixedHeader: {
@@ -299,7 +378,7 @@ export class GroupsBody extends React.Component<Props, State> {
         };
 
         // Remove sorting logic here since backend is sorting?
-        let { groups } = this.props;
+        let {groups} = this.props;
         // if (this.state.activeOrder.includes('shared')) {
         //     if (this.state.activeOrder.includes('admin')) {
         //         groups = this.sortByAdmin([...groups], this.props.selectedGroups, !this.state.sharedOrder.includes('-admin'));
@@ -320,7 +399,7 @@ export class GroupsBody extends React.Component<Props, State> {
                         onClick={this.props.handleShowShareInfo}
                         style={styles.shareInfoButton}
                     >
-                        <InfoIcon style={styles.shareInfoIcon} className="qa-GroupsBody-shareInfo-icon" />
+                        <InfoIcon style={styles.shareInfoIcon} className="qa-GroupsBody-shareInfo-icon"/>
                         Sharing Rights
                     </ButtonBase>
                     <span style={styles.shareInfoText} className="qa-GroupsBody-shareInfo-text">
@@ -331,9 +410,11 @@ export class GroupsBody extends React.Component<Props, State> {
         }
 
         return (
-            <div style={{ position: 'relative' }} ref={(input) => { this.body = input; }}>
+            <div style={{position: 'relative'}} ref={(input) => {
+                this.body = input;
+            }}>
                 <div style={styles.fixedHeader}>
-                    <div style={{ fontSize: '14px', padding: '10px 0px' }} className="qa-GroupsBody-groupsText">
+                    <div style={{fontSize: '14px', padding: '10px 0px'}} className="qa-GroupsBody-groupsText">
                         {this.props.groupsText}
                     </div>
                     <CustomTextField
@@ -344,7 +425,10 @@ export class GroupsBody extends React.Component<Props, State> {
                         onChange={this.handleSearchInput}
                         onKeyDown={this.handleSearchKeyDown}
                         value={this.state.search}
-                        InputProps={{ style: { paddingLeft: '16px', lineHeight: '36px', fontSize: '14px' }, disableUnderline: true }}
+                        InputProps={{
+                            style: {paddingLeft: '16px', lineHeight: '36px', fontSize: '14px'},
+                            disableUnderline: true
+                        }}
                         style={styles.textField}
                         charsRemainingStyle={styles.characterLimit}
                     />
@@ -383,8 +467,8 @@ export class GroupsBody extends React.Component<Props, State> {
                         );
                     })
                     :
-                    <div style={{ display: 'flex', justifyContent: 'center', margin: '50px auto' }}>
-                        <CircularProgress />
+                    <div style={{display: 'flex', justifyContent: 'center', margin: '50px auto'}}>
+                        <CircularProgress/>
                     </div>
                 }
                 <GroupBodyTooltip
@@ -423,8 +507,11 @@ const mapStateToProps = state => (
 
 const mapDispatchToProps = dispatch => (
     {
-        getGroups: (params, append) => (
-            dispatch(getGroups(params, append))
+        // getGroups: (params, append) => (
+        //     dispatch(getGroups(params, append))
+        // ),
+        getPermissionGroups: (jobUid, permissions, groupOrder, params, append) => (
+            dispatch(getPermissionGroups(jobUid, permissions, groupOrder, params, append))
         ),
     }
 );
