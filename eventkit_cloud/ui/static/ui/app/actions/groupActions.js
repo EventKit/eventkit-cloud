@@ -43,14 +43,14 @@ export function getGroups(params, append = false) {
     };
 }
 
-export function getPermissionGroups(jobUid, permissions, groupOrder, params, append = false) {
+export function getPermissionGroups(jobUid, params, append = false) {
     return {
         types: [
             types.FETCHING_GROUPS,
             types.FETCHED_GROUPS,
             types.FETCH_GROUPS_ERROR,
         ],
-        url: `/api/groups?job_uid=${jobUid}&ordering=${permissions},${groupOrder}`,
+        url: `/api/groups?job_uid=${jobUid}`,
         method: 'GET',
         params,
         payload: { append },

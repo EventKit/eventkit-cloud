@@ -16,7 +16,7 @@ import {getHeaderPageInfo} from "../../utils/generic";
 export interface Props {
     job: Eventkit.Job;
     // getGroups: (args: any, append: boolean) => void;
-    getPermissionGroups: (args: any, append: boolean, groupOrder: any, params: {}, b: boolean) => void;
+    getPermissionGroups: (args: any, groupOrder: any, params: {}) => void;
     nextPage: boolean;
     groups: Eventkit.Group[];
     selectedGroups: Eventkit.Permissions.Groups;
@@ -85,7 +85,7 @@ export class GroupsBody extends React.Component<Props, State> {
         window.addEventListener('wheel', this.handleScroll);
         // this.getGroups({ page: this.state.page }, false);
         const jobUid = this.props.job.uid;
-        this.getPermissionGroups(jobUid, this.getPermissions, this.getGroupOrder(), {page: this.state.page}, false);
+        this.getPermissionGroups(jobUid, this.getPermissions(), this.getGroupOrder(), {page: this.state.page}, false);
     }
 
     componentWillUnmount() {
@@ -127,14 +127,15 @@ export class GroupsBody extends React.Component<Props, State> {
 
     private async getPermissionGroups(jobUid, permissions, groupOrder, params: {}, append = true) {
         this.setState({loading: true});
+        if (this.state.search) {
+            params['search'] = this.state.search;
+        }
         await this.props.getPermissionGroups(
             jobUid,
-            permissions,
-            groupOrder,
             {
-                page: this.state.page,
+                permissions,
                 ordering: groupOrder,
-                search: this.state.search,
+                page: this.state.page,
                 ...params,
             },
             append
@@ -266,6 +267,13 @@ export class GroupsBody extends React.Component<Props, State> {
     }
 
     private reverseSharedOrder(v: SharedOrder) {
+        this.getPermissionGroups(
+            this.props.job.uid,
+            this.getPermissions(),
+            this.getGroupOrder(),
+            {page: 1, ordering: v},
+            false
+        );
         this.setState({sharedOrder: v, activeOrder: v});
     }
 
@@ -510,8 +518,9 @@ const mapDispatchToProps = dispatch => (
         // getGroups: (params, append) => (
         //     dispatch(getGroups(params, append))
         // ),
-        getPermissionGroups: (jobUid, permissions, groupOrder, params, append) => (
-            dispatch(getPermissionGroups(jobUid, permissions, groupOrder, params, append))
+        getPermissionGroups: (jobUid, params, append) => (
+            // dispatch(getPermissionGroups(jobUid, permissions, groupOrder, params, append))
+            dispatch(getPermissionGroups(jobUid, params, append))
         ),
     }
 );
