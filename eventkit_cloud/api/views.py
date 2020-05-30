@@ -31,7 +31,6 @@ from eventkit_cloud.api.filters import (
     GroupFilter,
     UserJobActivityFilter,
     LogFilter,
-    SharedOrderFilter
 )
 from eventkit_cloud.api.pagination import LinkHeaderPagination
 from eventkit_cloud.api.permissions import IsOwnerOrReadOnly
@@ -1378,10 +1377,7 @@ class UserDataViewSet(viewsets.GenericViewSet):
     parser_classes = (JSONParser,)
     pagination_class = LinkHeaderPagination
     filter_class = UserFilter
-    filter_backends = (
-        DjangoFilterBackend,
-        filters.SearchFilter
-    )
+    filter_backends = (DjangoFilterBackend, filters.SearchFilter)
     lookup_field = "username"
     lookup_value_regex = "[^/]+"
     search_fields = ("username", "last_name", "first_name", "email")

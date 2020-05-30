@@ -30,6 +30,7 @@ def normalize_unicode_str(self):
 # with the logger.
 Notification.__str__ = normalize_unicode_str
 
+
 class TimeStampedModelMixin(models.Model):
     """
     Mixin for timestamped models.
@@ -170,7 +171,9 @@ class JobPermission(TimeStampedModelMixin):
     def get_orderable_queryset_for_job(job: Job, model: Union[User, Group]) -> QuerySet:
         admin = shared = unshared = []
         if job:
-            job_permissions = job.permissions.prefetch_related("content_object").filter(content_type=ContentType.objects.get_for_model(model))
+            job_permissions = job.permissions.prefetch_related("content_object").filter(
+                content_type=ContentType.objects.get_for_model(model)
+            )
             admin_ids = []
             shared_ids = []
             for job_permission in job_permissions:
@@ -180,9 +183,9 @@ class JobPermission(TimeStampedModelMixin):
                     shared_ids += [job_permission.content_object.id]
             admin = model.objects.filter(pk__in=admin_ids)
             shared = model.objects.filter(pk__in=shared_ids)
-            total = admin_ids+shared_ids
+            total = admin_ids + shared_ids
             unshared = model.objects.exclude(pk__in=total)
-            queryset = (admin | shared | unshared)
+            queryset = admin | shared | unshared
         else:
             queryset = model.objects.all()
         # https://docs.djangoproject.com/en/3.0/ref/models/conditional-expressions/#case
@@ -210,9 +213,9 @@ class JobPermission(TimeStampedModelMixin):
         permissions = {"groups": {}, "members": {}}
         for jp in job.permissions.prefetch_related("content_object"):
             if isinstance(jp.content_object, User):
-                permissions['members'][jp.content_object.username] = jp.permission
+                permissions["members"][jp.content_object.username] = jp.permission
             else:
-                permissions['groups'][jp.content_object.name] = jp.permission
+                permissions["groups"][jp.content_object.name] = jp.permission
         return permissions
 
     @staticmethod
