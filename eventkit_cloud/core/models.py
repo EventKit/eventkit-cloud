@@ -30,7 +30,6 @@ def normalize_unicode_str(self):
 # with the logger.
 Notification.__str__ = normalize_unicode_str
 
-
 class TimeStampedModelMixin(models.Model):
     """
     Mixin for timestamped models.
@@ -165,7 +164,6 @@ class JobPermission(TimeStampedModelMixin):
     content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE)
     object_id = models.PositiveIntegerField(db_index=True)
     content_object = GenericForeignKey("content_type", "object_id")
-
     permission = models.CharField(choices=[("NONE", "None"), ("READ", "Read"), ("ADMIN", "Admin")], max_length=10)
 
     @staticmethod
