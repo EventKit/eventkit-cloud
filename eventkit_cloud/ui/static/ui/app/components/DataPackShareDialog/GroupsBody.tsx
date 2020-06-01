@@ -13,7 +13,7 @@ import {getPermissionGroups} from '../../actions/groupActions';
 
 export interface Props {
     job: Eventkit.Job;
-    getPermissionGroups: (args: any, groupOrder: any, params: {}) => void;
+    getPermissionGroups: (jobUid: any, params: {}, append: boolean) => void;
     nextPage: boolean;
     groups: Eventkit.Group[];
     selectedGroups: Eventkit.Permissions.Groups;
@@ -117,6 +117,7 @@ export class GroupsBody extends React.Component<Props, State> {
         await this.props.getPermissionGroups(
             jobUid,
             {
+                exclude_self: 'true',
                 ordering: `${permissions},${groupOrder}`,
                 page: this.state.page,
                 ...params,
@@ -199,7 +200,7 @@ export class GroupsBody extends React.Component<Props, State> {
         this.getPermissionGroups(
             this.props.job.uid,
             this.getPermissions(),
-            this.getGroupOrder(),
+            v,
             {page: 1},
             false
         );
@@ -209,7 +210,7 @@ export class GroupsBody extends React.Component<Props, State> {
     private reverseSharedOrder(v: SharedOrder) {
         this.getPermissionGroups(
             this.props.job.uid,
-            this.getPermissions(),
+            v,
             this.getGroupOrder(),
             {page: 1},
             false

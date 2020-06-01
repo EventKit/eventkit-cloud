@@ -99,26 +99,26 @@ describe('GroupBody component', () => {
         ' should set loading states and call props.getPermissionGroups' +
         '', async () => {
         const getStub = sinon.stub().returns(new Promise(resolve => resolve()));
-        setup({ getPermissionGroups
-                : getStub });
+        setup({getPermissionGroups
+                : getStub});
         const stateStub = sinon.stub(wrapper.instance(), 'setState');
         const jobUid = 'xx222';
         const permissions = 'shared';
-        const groupOrder = 'name';
+        const groupOrder = wrapper.state('groupOrder');
         const params = {
+            exclude_self: 'true',
+            ordering: `${permissions},${groupOrder}`,
             page: 1,
-            // ordering: wrapper.state('groupOrder'),
-            search: wrapper.state('search'),
         };
         await wrapper.instance().getPermissionGroups
-        ('xx222', 'shared', 'name', params, false);
+        (jobUid, 'shared', 'name', {}, false);
         expect(stateStub.calledTwice).toBe(true);
         expect(stateStub.calledWith({ loading: true })).toBe(true);
         expect(stateStub.calledWith({ loading: false })).toBe(true);
         expect(props.getPermissionGroups
             .calledOnce).toBe(true);
         expect(props.getPermissionGroups
-            .calledWith(jobUid, permissions, groupOrder, params, false)).toBe(true);
+            .calledWith(jobUid, params, false)).toBe(true);
     });
 
     it('loadMore should call getPermissionGroups' +
@@ -126,9 +126,10 @@ describe('GroupBody component', () => {
         const getStub = sinon.stub(wrapper.instance(), 'getPermissionGroups');
         const stateStub = sinon.stub(wrapper.instance(), 'setState');
         const page = wrapper.state('page');
+        const jobUid = 'xx222';
         wrapper.instance().loadMore();
         expect(getStub.calledOnce).toBe(true);
-        expect(getStub.calledWith({ page: page + 1 })).toBe(true);
+        expect(getStub.calledWith(jobUid, 'shared', 'name', { page: page + 1 })).toBe(true);
         expect(stateStub.calledOnce).toBe(true);
         expect(stateStub.calledWith({ page: page + 1 })).toBe(true);
     });
@@ -222,9 +223,12 @@ describe('GroupBody component', () => {
 
     it('reverseShareOrder should update shareOrder and activeOrder', () => {
         const stateStub = sinon.stub(wrapper.instance(), 'setState');
+        const getStub = sinon.stub(wrapper.instance(), 'getPermissionGroups' +
+            '');
         const v = 'newValue';
         wrapper.instance().reverseSharedOrder(v);
         expect(stateStub.calledOnce).toBe(true);
         expect(stateStub.calledWith({ sharedOrder: v, activeOrder: v }));
+        expect(getStub.calledOnce).toBe(true);
     });
 });

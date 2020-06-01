@@ -102,27 +102,30 @@ describe('MembersBody component', () => {
         const getStub = sinon.stub().returns(new Promise(resolve => resolve()));
         setup({ getPermissionUsers: getStub });
         const stateStub = sinon.stub(wrapper.instance(), 'setState');
+        const jobUid = 'xx222';
+        const permissions = 'shared';
+        const memberOrder = wrapper.state('memberOrder');
         const params = {
-            page: 1,
             exclude_self: 'true',
-            ordering: wrapper.state('memberOrder'),
-            search: wrapper.state('search'),
+            ordering: `${permissions},${memberOrder}`,
+            page: 1,
         };
-        await wrapper.instance().getPermissionUsers({}, false);
+        await wrapper.instance().getPermissionUsers(jobUid, 'shared', 'username', {}, false);
         expect(stateStub.calledTwice).toBe(true);
         expect(stateStub.calledWith({ loading: true })).toBe(true);
         expect(stateStub.calledWith({ loading: false })).toBe(true);
         expect(props.getPermissionUsers.calledOnce).toBe(true);
-        expect(props.getPermissionUsers.calledWith(params, false)).toBe(true);
+        expect(props.getPermissionUsers.calledWith(jobUid, params, false)).toBe(true);
     });
 
     it('loadMore should call getPermissionUsers and setState with incremented page number', () => {
         const getStub = sinon.stub(wrapper.instance(), 'getPermissionUsers');
         const stateStub = sinon.stub(wrapper.instance(), 'setState');
         const page = wrapper.state('page');
+        const jobUid = 'xx222';
         wrapper.instance().loadMore();
         expect(getStub.calledOnce).toBe(true);
-        expect(getStub.calledWith({ page: page + 1 })).toBe(true);
+        expect(getStub.calledWith(jobUid, 'shared', 'username', { page: page + 1 })).toBe(true);
         expect(stateStub.calledOnce).toBe(true);
         expect(stateStub.calledWith({ page: page + 1 })).toBe(true);
     });
@@ -206,12 +209,13 @@ describe('MembersBody component', () => {
     it('handleSearchInput should call getPermissionUsers and update page state', () => {
         const stateStub = sinon.stub(wrapper.instance(), 'setState');
         const getStub = sinon.stub(wrapper.instance(), 'getPermissionUsers');
+        const jobUid = 'xx222';
         const e = { target: { value: 'search text' }, key: 'Enter' };
         wrapper.instance().handleSearchKeyDown(e);
         expect(stateStub.calledOnce).toBe(true);
         expect(stateStub.calledWith({ page: 1 }));
         expect(getStub.calledOnce).toBe(true);
-        expect(getStub.calledWith({ page: 1, search: 'search text' })).toBe(true);
+        expect(getStub.calledWith(jobUid, 'shared', 'username', { page: 1, search: 'search text' })).toBe(true);
     });
 
     it('handleSearchInput should set state with target value', () => {
@@ -246,9 +250,11 @@ describe('MembersBody component', () => {
 
     it('reverseSharedOrder should update shareOrder and activeOrder', () => {
         const stateStub = sinon.stub(wrapper.instance(), 'setState');
+        const getStub = sinon.stub(wrapper.instance(), 'getPermissionUsers');
         const v = 'newValue';
         wrapper.instance().reverseSharedOrder(v);
         expect(stateStub.calledOnce).toBe(true);
         expect(stateStub.calledWith({ sharedOrder: v, activeOrder: v }));
+        expect(getStub.calledOnce).toBe(true);
     });
 });

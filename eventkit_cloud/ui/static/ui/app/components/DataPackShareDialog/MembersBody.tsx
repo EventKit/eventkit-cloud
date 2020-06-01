@@ -15,7 +15,7 @@ import {getPermissionUsers} from '../../actions/usersActions';
 export interface Props {
     public: boolean;
     job: Eventkit.Job;
-    getPermissionUsers: (args: any, groupOrder: any, params: {}) => void;
+    getPermissionUsers: (jobUid: any, params: {}, append: boolean) => void;
     nextPage: boolean;
     userCount: number;
     users: Eventkit.User[];
@@ -128,6 +128,7 @@ export class MembersBody extends React.Component<Props, State> {
             jobUid,
             {
                 ordering: `${permissions},${memberOrder}`,
+                exclude_self: 'true',
                 page: this.state.page,
                 ...params,
             },
@@ -231,7 +232,7 @@ export class MembersBody extends React.Component<Props, State> {
         this.getPermissionUsers(
             this.props.job.uid,
             this.getPermissions(),
-            this.getMemberOrder(),
+            v,
             {page: 1},
             false
         );
@@ -241,7 +242,7 @@ export class MembersBody extends React.Component<Props, State> {
     private reverseSharedOrder(v: SharedOrder) {
         this.getPermissionUsers(
             this.props.job.uid,
-            this.getPermissions(),
+            v,
             this.getMemberOrder(),
             {page: 1},
             false
