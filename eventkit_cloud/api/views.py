@@ -31,7 +31,7 @@ from eventkit_cloud.api.filters import (
     GroupFilter,
     UserJobActivityFilter,
     LogFilter,
-    SharedOrderFilter
+    SharedOrderFilter,
 )
 from eventkit_cloud.api.pagination import LinkHeaderPagination
 from eventkit_cloud.api.permissions import IsOwnerOrReadOnly
@@ -1378,10 +1378,7 @@ class UserDataViewSet(viewsets.GenericViewSet):
     parser_classes = (JSONParser,)
     pagination_class = LinkHeaderPagination
     filter_class = UserFilter
-    filter_backends = (
-        DjangoFilterBackend,
-        filters.SearchFilter
-    )
+    filter_backends = (DjangoFilterBackend, filters.SearchFilter)
     lookup_field = "username"
     lookup_value_regex = "[^/]+"
     search_fields = ("username", "last_name", "first_name", "email")
@@ -1431,6 +1428,7 @@ class UserDataViewSet(viewsets.GenericViewSet):
         queryset = JobPermission.get_orderable_queryset_for_job(job, User)
         total = queryset.count()
         filtered_queryset = self.filter_queryset(queryset)
+
         if request.query_params.get("exclude_self"):
             filtered_queryset = filtered_queryset.exclude(username=request.user.username)
         elif request.query_params.get("prepend_self"):
