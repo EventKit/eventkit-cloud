@@ -101,7 +101,7 @@ interface State {
 export class DataPackPage extends React.Component<Props, State> {
     private pageSize: number;
     private defaultQuery;
-    private fetch: number;
+    private autoFetchKey: number;
     private view: any;
     private joyride: Joyride.default;
 
@@ -177,7 +177,7 @@ export class DataPackPage extends React.Component<Props, State> {
         this.props.getProjections();
 
         this.makeRunRequest();
-        this.fetch = window.setInterval(this.autoRunRequest, 10000);
+        this.autoFetchKey = window.setInterval(this.autoRunRequest, 10000);
         // make sure no geojson upload is in the state
         this.props.resetGeoJSONFile();
     }
@@ -245,7 +245,7 @@ export class DataPackPage extends React.Component<Props, State> {
     }
 
     componentWillUnmount() {
-        window.clearInterval(this.fetch);
+        window.clearInterval(this.autoFetchKey);
         // save view and order to redux state so it can be set next time the page is visited
         if (this.props.runsMeta.order !== queryString.parse(this.props.location.search).order) {
             this.props.setOrder(queryString.parse(this.props.location.search).order);
@@ -352,7 +352,10 @@ export class DataPackPage extends React.Component<Props, State> {
     private autoRunRequest() {
         // Call make run request and pass true to indicate this is an auto run request
         // The auto run request will not have the power to cancel any current requests
-        this.makeRunRequest(true);
+        // In order to prevent overloading the server, do not re run the auto request if there is a pending request.
+        if (!this.props.runsFetching) {
+            this.makeRunRequest(true);
+        }
     }
 
     private makeRunRequest(isAuto = false) {
