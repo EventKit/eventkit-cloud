@@ -9,13 +9,10 @@ import CustomTextField from '../common/CustomTextField';
 import GroupRow from './GroupRow';
 import GroupsHeaderRow, {GroupOrder, SharedOrder} from './GroupsHeaderRow';
 import GroupBodyTooltip from './ShareBodyTooltip';
-import {getGroups, getPermissionGroups} from '../../actions/groupActions';
-import axios from "axios";
-import {getHeaderPageInfo} from "../../utils/generic";
+import {getPermissionGroups} from '../../actions/groupActions';
 
 export interface Props {
     job: Eventkit.Job;
-    // getGroups: (args: any, append: boolean) => void;
     getPermissionGroups: (args: any, groupOrder: any, params: {}) => void;
     nextPage: boolean;
     groups: Eventkit.Group[];
@@ -84,7 +81,7 @@ export class GroupsBody extends React.Component<Props, State> {
     componentDidMount() {
         window.addEventListener('wheel', this.handleScroll);
         const jobUid = this.props.job.uid;
-        this.getPermissionGroups(jobUid, this.getPermissions(), "shared", {page: this.state.page}, false);
+        this.getPermissionGroups(jobUid, this.getPermissions(), this.getGroupOrder(), {page: this.state.page}, false);
     }
 
     componentWillUnmount() {
@@ -120,8 +117,7 @@ export class GroupsBody extends React.Component<Props, State> {
         await this.props.getPermissionGroups(
             jobUid,
             {
-                permissions,
-                ordering: groupOrder,
+                ordering: `${permissions},${groupOrder}`,
                 page: this.state.page,
                 ...params,
             },
@@ -204,7 +200,7 @@ export class GroupsBody extends React.Component<Props, State> {
             this.props.job.uid,
             this.getPermissions(),
             this.getGroupOrder(),
-            {page: 1, ordering: v},
+            {page: 1},
             false
         );
         this.setState({groupOrder: v, activeOrder: v, page: 1});
@@ -215,7 +211,7 @@ export class GroupsBody extends React.Component<Props, State> {
             this.props.job.uid,
             this.getPermissions(),
             this.getGroupOrder(),
-            {page: 1, ordering: v},
+            {page: 1},
             false
         );
         this.setState({sharedOrder: v, activeOrder: v});

@@ -29,8 +29,10 @@ describe('GroupBody component', () => {
                 administrators: ['user_two'],
             },
         ],
+        job: {uid: 'xx222'},
         nextPage: false,
-        getGroups: sinon.spy(),
+        getPermissionGroups
+            : sinon.spy(),
         selectedGroups: {},
         groupsText: 'Test text',
         onUncheckAll: sinon.spy(),
@@ -58,18 +60,6 @@ describe('GroupBody component', () => {
         expect(wrapper.find(CustomTextField)).toHaveLength(1);
         expect(wrapper.find(GroupsHeaderRow)).toHaveLength(1);
         expect(wrapper.find(GroupRow)).toHaveLength(props.groups.length);
-    });
-
-    it('should sort groups by admin-share', () => {
-        const sortSpy = sinon.spy(wrapper.instance(), 'sortByAdmin');
-        wrapper.setState({ activeOrder: 'admin-shared' });
-        expect(sortSpy.calledOnce).toBe(true);
-    });
-
-    it('should sort groups by shared', () => {
-        const sortSpy = sinon.spy(wrapper.instance(), 'sortByShared');
-        wrapper.setState({ activeOrder: 'shared' });
-        expect(sortSpy.calledOnce).toBe(true);
     });
 
     it('should show shareInfo', () => {
@@ -105,25 +95,35 @@ describe('GroupBody component', () => {
         removeStub.restore();
     });
 
-    it('getGroups should set loading states and call props.getGroups', async () => {
+    it('getPermissionGroups' +
+        ' should set loading states and call props.getPermissionGroups' +
+        '', async () => {
         const getStub = sinon.stub().returns(new Promise(resolve => resolve()));
-        setup({ getGroups: getStub });
+        setup({ getPermissionGroups
+                : getStub });
         const stateStub = sinon.stub(wrapper.instance(), 'setState');
+        const jobUid = 'xx222';
+        const permissions = 'shared';
+        const groupOrder = 'name';
         const params = {
             page: 1,
-            ordering: wrapper.state('groupOrder'),
+            // ordering: wrapper.state('groupOrder'),
             search: wrapper.state('search'),
         };
-        await wrapper.instance().getGroups({}, false);
+        await wrapper.instance().getPermissionGroups
+        ('xx222', 'shared', 'name', params, false);
         expect(stateStub.calledTwice).toBe(true);
         expect(stateStub.calledWith({ loading: true })).toBe(true);
         expect(stateStub.calledWith({ loading: false })).toBe(true);
-        expect(props.getGroups.calledOnce).toBe(true);
-        expect(props.getGroups.calledWith(params, false)).toBe(true);
+        expect(props.getPermissionGroups
+            .calledOnce).toBe(true);
+        expect(props.getPermissionGroups
+            .calledWith(jobUid, permissions, groupOrder, params, false)).toBe(true);
     });
 
-    it('loadMore should call getGroups and setState with incremented page number', () => {
-        const getStub = sinon.stub(wrapper.instance(), 'getGroups');
+    it('loadMore should call getPermissionGroups' +
+        ' and setState with incremented page number', () => {
+        const getStub = sinon.stub(wrapper.instance(), 'getPermissionGroups');
         const stateStub = sinon.stub(wrapper.instance(), 'setState');
         const page = wrapper.state('page');
         wrapper.instance().loadMore();
@@ -195,10 +195,12 @@ describe('GroupBody component', () => {
         stateStub.restore();
     });
 
-    it('handleSearchInput should call getGroups if input is empty', () => {
+    it('handleSearchInput should call getPermissionGroups' +
+        ' if input is empty', () => {
         wrapper.setState({ search: 'some search text' });
         const stateStub = sinon.stub(wrapper.instance(), 'setState');
-        const getStub = sinon.stub(wrapper.instance(), 'getGroups');
+        const getStub = sinon.stub(wrapper.instance(), 'getPermissionGroups' +
+            '');
         const e = { target: { value: '' } };
         wrapper.instance().handleSearchInput(e);
         expect(stateStub.calledOnce).toBe(true);
@@ -206,9 +208,11 @@ describe('GroupBody component', () => {
         expect(getStub.calledOnce).toBe(true);
     });
 
-    it('reverseGroupOrder should call getGroups and update order state', () => {
+    it('reverseGroupOrder should call getPermissionGroups' +
+        ' and update order state', () => {
         const stateStub = sinon.stub(wrapper.instance(), 'setState');
-        const getStub = sinon.stub(wrapper.instance(), 'getGroups');
+        const getStub = sinon.stub(wrapper.instance(), 'getPermissionGroups' +
+            '');
         const v = 'newValue';
         wrapper.instance().reverseGroupOrder(v);
         expect(stateStub.calledOnce).toBe(true);
@@ -222,53 +226,5 @@ describe('GroupBody component', () => {
         wrapper.instance().reverseSharedOrder(v);
         expect(stateStub.calledOnce).toBe(true);
         expect(stateStub.calledWith({ sharedOrder: v, activeOrder: v }));
-    });
-
-    it('sortByShared should sort by selected', () => {
-        const groups = [...props.groups];
-        const expected = [...props.groups];
-        const selected = { group_one: 'READ' };
-        const ret = wrapper.instance().sortByShared(groups, selected, true);
-        expect(ret).toEqual(expected);
-    });
-
-    it('sortByShared should sort by not selected', () => {
-        const groups = [...props.groups];
-        const expected = [...props.groups].reverse();
-        const selected = { group_one: 'READ' };
-        const ret = wrapper.instance().sortByShared(groups, selected, false);
-        expect(ret).toEqual(expected);
-    });
-
-    it('sortByShared should not change the order', () => {
-        const groups = [...props.groups];
-        const expected = [...props.groups];
-        const selected = { group_one: 'READ', group_two: 'READ' };
-        const ret = wrapper.instance().sortByShared(groups, selected, false);
-        expect(ret).toEqual(expected);
-    });
-
-    it('sortByAdmin should sort by admin status', () => {
-        const groups = [...props.groups];
-        const expected = [...props.groups];
-        const selected = { group_one: 'ADMIN', group_two: 'READ' };
-        const ret = wrapper.instance().sortByAdmin(groups, selected, true);
-        expect(ret).toEqual(expected);
-    });
-
-    it('sortByAdmin should sort by no admin status', () => {
-        const groups = [...props.groups];
-        const expected = [...props.groups].reverse();
-        const selected = { group_one: 'ADMIN', group_two: 'READ' };
-        const ret = wrapper.instance().sortByAdmin(groups, selected, false);
-        expect(ret).toEqual(expected);
-    });
-
-    it('sortByAdmin should not modify the order', () => {
-        const groups = [...props.groups];
-        const expected = [...props.groups];
-        const selected = { group_one: 'ADMIN', group_two: 'ADMIN' };
-        const ret = wrapper.instance().sortByAdmin(groups, selected, false);
-        expect(ret).toEqual(expected);
     });
 });

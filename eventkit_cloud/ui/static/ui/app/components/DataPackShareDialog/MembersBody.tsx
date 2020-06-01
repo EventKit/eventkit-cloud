@@ -10,12 +10,11 @@ import BaseDialog from '../Dialog/BaseDialog';
 import MembersHeaderRow, {SharedOrder, MemberOrder} from './MembersHeaderRow';
 import MemberRow from './MemberRow';
 import MembersBodyTooltip from './ShareBodyTooltip';
-import {getPermissionUsers, getUsers} from '../../actions/usersActions';
+import {getPermissionUsers} from '../../actions/usersActions';
 
 export interface Props {
     public: boolean;
     job: Eventkit.Job;
-    // getUsers: (args: any, append: boolean) => void;
     getPermissionUsers: (args: any, groupOrder: any, params: {}) => void;
     nextPage: boolean;
     userCount: number;
@@ -90,27 +89,14 @@ export class MembersBody extends React.Component<Props, State> {
 
     componentDidMount() {
         window.addEventListener('wheel', this.handleScroll);
-        // this.getUsers({page: this.state.page}, false);
         const jobUid = this.props.job.uid;
-        this.getPermissionUsers(jobUid, this.getPermissions(), "shared", {page: this.state.page}, false);
+        this.getPermissionUsers(jobUid, this.getPermissions(), this.getMemberOrder(), {page: this.state.page}, false);
 
     }
 
     componentWillUnmount() {
         window.removeEventListener('wheel', this.handleScroll);
     }
-
-    // private async getUsers(params = {}, append = true) {
-    //     this.setState({loading: true});
-    //     await this.props.getUsers({
-    //         page: this.state.page,
-    //         exclude_self: 'true',
-    //         ordering: this.state.memberOrder,
-    //         search: this.state.search,
-    //         ...params,
-    //     }, append);
-    //     this.setState({loading: false});
-    // }
 
     private getPermissions() {
         let permissions;
@@ -141,8 +127,7 @@ export class MembersBody extends React.Component<Props, State> {
         await this.props.getPermissionUsers(
             jobUid,
             {
-                permissions,
-                ordering: memberOrder,
+                ordering: `${permissions},${memberOrder}`,
                 page: this.state.page,
                 ...params,
             },
@@ -152,7 +137,6 @@ export class MembersBody extends React.Component<Props, State> {
     }
 
     private loadMore() {
-        // this.getUsers({page: this.state.page + 1});
         const jobUid = this.props.job.uid;
         this.getPermissionUsers(jobUid, this.getPermissions(), this.getMemberOrder(), {page: this.state.page + 1});
         this.setState({page: this.state.page + 1});
@@ -230,7 +214,6 @@ export class MembersBody extends React.Component<Props, State> {
     // commit text to search state, if search is empty make a getUser request
     private handleSearchInput(e: React.ChangeEvent<HTMLInputElement>) {
         if (this.state.search && !e.target.value) {
-            // this.getUsers({page: 1}, false);
             this.getPermissionUsers(
                 this.props.job.uid,
                 this.getPermissions(),
@@ -245,12 +228,11 @@ export class MembersBody extends React.Component<Props, State> {
     }
 
     private reverseMemberOrder(v: MemberOrder) {
-        // this.getUsers({page: 1, ordering: v}, false);
         this.getPermissionUsers(
             this.props.job.uid,
             this.getPermissions(),
             this.getMemberOrder(),
-            {page: 1, ordering: v},
+            {page: 1},
             false
         );
         this.setState({memberOrder: v, activeOrder: v, page: 1});
@@ -261,68 +243,10 @@ export class MembersBody extends React.Component<Props, State> {
             this.props.job.uid,
             this.getPermissions(),
             this.getMemberOrder(),
-            {page: 1, ordering: v},
+            {page: 1},
             false
         );
         this.setState({sharedOrder: v, activeOrder: v});
-    }
-
-    private sortByShared(members: Eventkit.User[], selectedMembers: Eventkit.Permissions['members'], descending: boolean) {
-        if (descending === true) {
-            members.sort((a, b) => {
-                const aSelected = a.user.username in selectedMembers;
-                const bSelected = b.user.username in selectedMembers;
-                if (aSelected && !bSelected) {
-                    return -1;
-                }
-                if (!aSelected && bSelected) {
-                    return 1;
-                }
-                return 0;
-            });
-        } else {
-            members.sort((a, b) => {
-                const aSelected = a.user.username in selectedMembers;
-                const bSelected = b.user.username in selectedMembers;
-                if (!aSelected && bSelected) {
-                    return -1;
-                }
-                if (aSelected && !bSelected) {
-                    return 1;
-                }
-                return 0;
-            });
-        }
-        return members;
-    }
-
-    private sortByAdmin(members: Eventkit.User[], selectedMembers: Eventkit.Permissions['members'], descending: boolean) {
-        if (descending === true) {
-            members.sort((a, b) => {
-                const aAdmin = selectedMembers[a.user.username] === 'ADMIN';
-                const bAdmin = selectedMembers[b.user.username] === 'ADMIN';
-                if (aAdmin && !bAdmin) {
-                    return -1;
-                }
-                if (!aAdmin && bAdmin) {
-                    return 1;
-                }
-                return 0;
-            });
-        } else {
-            members.sort((a, b) => {
-                const aAdmin = selectedMembers[a.user.username] === 'ADMIN';
-                const bAdmin = selectedMembers[b.user.username] === 'ADMIN';
-                if (!aAdmin && bAdmin) {
-                    return -1;
-                }
-                if (aAdmin && !bAdmin) {
-                    return 1;
-                }
-                return 0;
-            });
-        }
-        return members;
     }
 
     render() {
@@ -375,15 +299,7 @@ export class MembersBody extends React.Component<Props, State> {
             },
         };
 
-        let {users} = this.props;
-        // if (this.state.activeOrder.includes('shared')) {
-        //     if (this.state.activeOrder.includes('admin')) {
-        //         users = this.sortByAdmin([...users], this.props.selectedMembers, !this.state.sharedOrder.includes('-admin'));
-        //     } else {
-        //         users = this.sortByShared([...users], this.props.selectedMembers, !this.state.sharedOrder.includes('-'));
-        //     }
-        // }
-
+        const {users} = this.props;
         const visibleCount = users.filter(m => m.user.username in this.props.selectedMembers).length;
         const selectedCount = Object.keys(this.props.selectedMembers).length;
         const adminCount = Object.keys(this.props.selectedMembers).filter(m => this.props.selectedMembers[m] === 'ADMIN').length;
@@ -542,9 +458,6 @@ const mapStateToProps = state => (
 
 const mapDispatchToProps = dispatch => (
     {
-        // getUsers: (params, append) => (
-        //     dispatch(getUsers(params, append))
-        // ),
         getPermissionUsers: (jobUid, params, append) => (
             dispatch(getPermissionUsers(jobUid, params, append))
         ),
