@@ -8,6 +8,9 @@ import MembersBody from '../../components/DataPackShareDialog/MembersBody';
 import ShareInfoBody from '../../components/DataPackShareDialog/ShareInfoBody';
 import { DataPackShareDialog, Props } from '../../components/DataPackShareDialog/DataPackShareDialog';
 import { Permissions, Levels } from '../../utils/permissions';
+import {PermissionsFilterGroupsBody} from "../../components/DataPackShareDialog/PermissionsFilterGroupsBody";
+import {PermissionsFilterMembersBody} from "../../components/DataPackShareDialog/PermissionsFilterMembersBody";
+import {mount} from "enzyme";
 
 describe('DataPackPage component', () => {
     let shallow;
@@ -101,17 +104,11 @@ describe('DataPackPage component', () => {
     it('should render all the basic components', () => {
         const header = shallow(wrapper.find(ShareBaseDialog).props().children[0]);
         expect(header.find(Button)).toHaveLength(2);
-        expect(wrapper.find(GroupsBody)).toHaveLength(1);
     });
 
     it('should display the ShareInfoBody', () => {
         wrapper.setState({ showShareInfo: true });
         expect(wrapper.find(ShareInfoBody)).toHaveLength(1);
-    });
-
-    it('should display the MembersBody', () => {
-        wrapper.setState({ view: 'members' });
-        expect(wrapper.find(MembersBody)).toHaveLength(1);
     });
 
     it('should display the selected count on the header buttons', () => {
@@ -426,5 +423,12 @@ describe('DataPackPage component', () => {
         expect(stateStub.calledOnce).toBe(true);
         expect(stateStub.calledWith({ view: 'groups' })).toBe(true);
         stateStub.restore();
+    });
+
+    it('renderSharedPermissionsWithJob should render GroupsBody component if there is a job', () => {
+        setup({ job: {uid: 'xx222'}, groups: { group_one: Levels.READ } });
+        instance.renderSharedPermissionsWithJob();
+        expect(wrapper.find(GroupsBody)).toHaveLength(1);
+        wrapper.unmount();
     });
 });
