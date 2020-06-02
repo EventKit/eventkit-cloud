@@ -6,9 +6,12 @@ from django.contrib.auth.decorators import login_required
 from django.views.decorators.cache import never_cache
 
 
-from eventkit_cloud.tasks.views import download
+from eventkit_cloud.tasks.views import download, generate_zipfile
 
 urlpatterns = []
 
 
-urlpatterns += [re_path(r"^download", never_cache(login_required(download)))]
+urlpatterns += [
+    re_path(r"^download", never_cache(login_required(download))),
+    re_path(r"^generate_zipfile", generate_zipfile)
+]

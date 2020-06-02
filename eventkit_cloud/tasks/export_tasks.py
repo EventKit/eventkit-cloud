@@ -8,6 +8,7 @@ import shutil
 import socket
 import time
 import traceback
+from typing import List
 
 from zipfile import ZipFile, ZIP_DEFLATED
 
@@ -1114,7 +1115,7 @@ def wait_for_providers_task(result=None, apply_args=None, run_uid=None, callback
 
 
 @app.task(name="Project File (.zip)", base=FormatTask, acks_late=True)
-def create_zip_task(result=None, data_provider_task_uid=None, *args, **kwargs):
+def create_zip_task(result: dict = None, data_provider_task_uids: List[str] = None, *args, **kwargs):
     """
     :param result: The celery task result value, it should be a dict with the current state.
     :param data_provider_task_uid: A data provider to zip (this or run_uid must be passed).
@@ -1123,15 +1124,12 @@ def create_zip_task(result=None, data_provider_task_uid=None, *args, **kwargs):
     if not result:
         result = {}
 
-    data_provider_task = DataProviderTaskRecord.objects.get(uid=data_provider_task_uid)
-
-    if data_provider_task.provider:
-        data_provider_task_slug = data_provider_task.provider.slug
+    if len(data_provider_task_uids) > 1:
+        data_provider_task_slug = "run"
     else:
-        data_provider_task_slug = data_provider_task.slug
+        data_provider_task_slug = DataProviderTaskRecord.objects.get(uid=data_provider_task_uids[0]).slug
 
-    metadata = get_metadata(data_provider_task_uid)
-
+    metadata = get_metadata(data_provider_task_uids)
     include_files = metadata.get("include_files", None)
     if include_files:
         arcgis_dir = os.path.join(get_run_staging_dir(metadata["run_uid"]), Directory.ARCGIS.value)

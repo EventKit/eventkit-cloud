@@ -131,8 +131,10 @@ class TaskFactory:
             )
             stage_dir = get_provider_staging_dir(run_dir, run_task_record.slug)
             os.makedirs(stage_dir, 6600)
+            provider_task_records = job.provider_tasks.exclude(provider=None)
+            provider_task_record_uids = [provider_task_record.uid for provider_task_record in provider_task_records]
             run_zip_task_chain = get_zip_task_chain(
-                data_provider_task_uid=run_task_record.uid, stage_dir=get_run_staging_dir(run_uid), worker=worker,
+                data_provider_task_uid=run_task_record.uid, data_provider_task_uids=provider_task_record_uids, stage_dir=get_run_staging_dir(run_uid), worker=worker,
             )
             for provider_task_record in job.provider_tasks.all():
 
@@ -277,6 +279,7 @@ def create_run(job_uid, user=None):
 
 def create_task(
     data_provider_task_uid=None,
+    data_provider_task_uids=None,
     stage_dir=None,
     worker=None,
     selection=None,
@@ -298,7 +301,6 @@ def create_task(
     # This is just to make it easier to trace when user_details haven't been sent
     if user_details is None:
         user_details = {"username": "unknown-create_task"}
-
     export_provider_task = DataProviderTaskRecord.objects.get(uid=data_provider_task_uid)
 
     if export_provider_task.provider:
@@ -320,6 +322,7 @@ def create_task(
         stage_dir=stage_dir,
         provider_slug=export_provider_task_slug,
         data_provider_task_uid=data_provider_task_uid,
+        data_provider_task_uids=data_provider_task_uids,
         job_name=job_name,
         user_details=user_details,
         bbox=export_provider_task.run.job.extents,
@@ -327,10 +330,10 @@ def create_task(
     ).set(queue=queue_group, routing_key=queue_group)
 
 
-def get_zip_task_chain(data_provider_task_uid=None, worker=None, stage_dir=None):
+def get_zip_task_chain(data_provider_task_uid=None, data_provider_task_uids=None, worker=None, stage_dir=None):
     return chain(
         create_task(
-            data_provider_task_uid=data_provider_task_uid, stage_dir=stage_dir, worker=worker, task=create_zip_task,
+            data_provider_task_uid=data_provider_task_uid, data_provider_task_uids=data_provider_task_uids, stage_dir=stage_dir, worker=worker, task=create_zip_task,
         )
     )
 

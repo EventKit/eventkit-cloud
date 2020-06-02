@@ -8,6 +8,7 @@ import re
 import requests
 import signal
 from time import sleep
+from typing import List
 
 from numpy import linspace
 import yaml
@@ -318,7 +319,7 @@ def pickle_exception(exception):
     return pickle.dumps(exception, 0).decode()
 
 
-def get_metadata(data_provider_task_uid):
+def get_metadata(data_provider_task_uids: List[str]):
     """
     A object to hold metadata about the run for the sake of being passed to various scripts for the creation of
     style files or metadata documents for within the datapack.
@@ -372,18 +373,13 @@ def get_metadata(data_provider_task_uid):
     from eventkit_cloud.tasks.enumerations import TaskStates
     from eventkit_cloud.tasks.export_tasks import create_zip_task
 
-    data_provider_task = DataProviderTaskRecord.objects.get(uid=data_provider_task_uid)
+    data_provider_task_records = DataProviderTaskRecord.objects.filter(uid__in=data_provider_task_uids)
 
-    run = data_provider_task.run
+    run = data_provider_task_records.first().run
 
     projections = []
     for projection in run.job.projections.all():
         projections.append(projection.srid)
-
-    if data_provider_task.name == "run":
-        provider_tasks = run.provider_tasks.filter(~Q(name="run"))
-    else:
-        provider_tasks = [data_provider_task]
 
     # To prepare for the zipfile task, the files need to be checked to ensure they weren't
     # deleted during cancellation.
@@ -405,33 +401,33 @@ def get_metadata(data_provider_task_uid):
         "has_raster": False,
         "has_elevation": False,
     }
-    for provider_task in provider_tasks:
-        data_provider = DataProvider.objects.get(slug=provider_task.provider.slug)
+    for data_provider_task_record in data_provider_task_records:
+        data_provider = DataProvider.objects.get(slug=data_provider_task_record.provider.slug)
         provider_type = data_provider.export_provider_type.type_name
 
-        provider_staging_dir = get_provider_staging_dir(run.uid, provider_task.provider.slug)
+        provider_staging_dir = get_provider_staging_dir(run.uid, data_provider_task_record.provider.slug)
         conf = yaml.safe_load(data_provider.config) or dict()
         cert_var = conf.get("cert_var", data_provider.slug)
-        metadata["data_sources"][provider_task.provider.slug] = {
-            "uid": str(provider_task.uid),
-            "slug": provider_task.provider.slug,
-            "name": provider_task.name,
+        metadata["data_sources"][data_provider_task_record.provider.slug] = {
+            "uid": str(data_provider_task_record.uid),
+            "slug": data_provider_task_record.provider.slug,
+            "name": data_provider_task_record.name,
             "files": [],
-            "type": get_data_type_from_provider(provider_task.provider.slug),
+            "type": get_data_type_from_provider(data_provider_task_record.provider.slug),
             "description": str(data_provider.service_description).replace("\r\n", "\n").replace("\n", "\r\n\t"),
             "last_update": get_last_update(data_provider.url, provider_type, cert_var=cert_var),
             "metadata": get_metadata_url(data_provider.url, provider_type),
             "copyright": data_provider.service_copyright,
         }
-        if metadata["data_sources"][provider_task.provider.slug].get("type") == "raster":
+        if metadata["data_sources"][data_provider_task_record.provider.slug].get("type") == "raster":
             metadata["has_raster"] = True
-        if metadata["data_sources"][provider_task.provider.slug].get("type") == "elevation":
+        if metadata["data_sources"][data_provider_task_record.provider.slug].get("type") == "elevation":
             metadata["has_elevation"] = True
 
-        if provider_task.preview is not None:
-            include_files += [get_provider_staging_preview(run.uid, provider_task.provider.slug)]
+        if data_provider_task_record.preview is not None:
+            include_files += [get_provider_staging_preview(run.uid, data_provider_task_record.provider.slug)]
 
-        for export_task in provider_task.tasks.all():
+        for export_task in data_provider_task_record.tasks.all():
             if TaskStates[export_task.status] in TaskStates.get_incomplete_states():
                 continue
 
@@ -440,7 +436,7 @@ def get_metadata(data_provider_task_uid):
             except Exception:
                 continue
             full_file_path = os.path.join(provider_staging_dir, filename)
-            current_files = metadata["data_sources"][provider_task.provider.slug]["files"]
+            current_files = metadata["data_sources"][data_provider_task_record.provider.slug]["files"]
 
             if full_file_path not in map(itemgetter("full_file_path"), current_files):
                 file_ext = os.path.splitext(filename)[1]
@@ -450,17 +446,17 @@ def get_metadata(data_provider_task_uid):
                         os.path.splitext(os.path.basename(filename))[0],
                         timezone.now(),
                         file_ext,
-                        additional_descriptors=[provider_task.provider.slug],
-                        data_provider_slug=provider_task.provider.slug,
+                        additional_descriptors=[data_provider_task_record.provider.slug],
+                        data_provider_slug=data_provider_task_record.provider.slug,
                     )
-                    filepath = get_archive_data_path(provider_task.provider.slug, download_filename)
+                    filepath = get_archive_data_path(data_provider_task_record.provider.slug, download_filename)
 
                     file_data = {
                         "file_path": filepath,
                         "full_file_path": full_file_path,
                         "file_ext": file_ext,
                     }
-                    if metadata["data_sources"][provider_task.provider.slug].get("type") == "elevation":
+                    if metadata["data_sources"][data_provider_task_record.provider.slug].get("type") == "elevation":
                         # Get statistics to update ranges in template.
                         band_stats = get_band_statistics(full_file_path)
                         logger.info("Band Stats {0}: {1}".format(full_file_path, band_stats))
@@ -472,7 +468,7 @@ def get_metadata(data_provider_task_uid):
                         except TypeError:
                             file_data["ramp_shader_steps"] = None
 
-                    metadata["data_sources"][provider_task.provider.slug]["files"] += [file_data]
+                    metadata["data_sources"][data_provider_task_record.provider.slug]["files"] += [file_data]
 
             if not os.path.isfile(full_file_path):
                 logger.error("Could not find file {0} for export {1}.".format(full_file_path, export_task.name))
@@ -482,7 +478,7 @@ def get_metadata(data_provider_task_uid):
                 include_files += [full_file_path]
 
         # add the license for this provider if there are other files already
-        license_file = create_license_file(provider_task)
+        license_file = create_license_file(data_provider_task_record)
         if license_file:
             include_files += [license_file]
 
