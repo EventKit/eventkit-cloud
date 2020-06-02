@@ -31,7 +31,6 @@ from eventkit_cloud.api.filters import (
     GroupFilter,
     UserJobActivityFilter,
     LogFilter,
-    SharedOrderFilter,
 )
 from eventkit_cloud.api.pagination import LinkHeaderPagination
 from eventkit_cloud.api.permissions import IsOwnerOrReadOnly
