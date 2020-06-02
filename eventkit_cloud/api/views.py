@@ -413,7 +413,7 @@ class JobViewSet(viewsets.ModelViewSet):
 
                                 # Don't rely solely on max_data_size as estimates can sometimes be inaccurate
                                 # Allow user to get a job that passes max_data_size or max_selection condition:
-                                if (size and max_data_size) is not None:
+                                if size and max_data_size is not None:
                                     # max_data_size is an optional configuration
                                     if size <= max_data_size:
                                         continue

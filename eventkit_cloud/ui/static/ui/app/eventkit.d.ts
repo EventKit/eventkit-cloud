@@ -111,6 +111,7 @@ declare namespace Eventkit {
         zipfile_url: string;
         expiration: string;
         deleted: boolean;
+        provider_task_list_status: string;
     }
 
     interface FullRun extends Omit<Run, 'provider_tasks'> {

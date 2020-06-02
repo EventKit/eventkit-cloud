@@ -170,10 +170,10 @@ export class FilterDrawer extends React.Component<Props, State> {
                         onChange={this.handlePermissionsChange}
                         permissions={this.state.permissions}
                     />
-                    <SourcePermissionFilter
-                        // change event handler logic to match api
-                        // onChange={this.handleSourcePermissionChange}
-                    />
+                    {/*<SourcePermissionFilter*/}
+                    {/*    // change event handler logic to match api*/}
+                    {/*    // onChange={this.handleSourcePermissionChange}*/}
+                    {/*/>*/}
                     <StatusFilter
                         onChange={this.handleStatusChange}
                         completed={this.state.status.completed}

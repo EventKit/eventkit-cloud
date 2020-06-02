@@ -59,7 +59,6 @@ import MapDisplayBar from "./MapDisplayBar";
 import {useJobValidationContext} from "./context/JobValidation";
 import {useEffect} from "react";
 import {useEffectOnMount} from "../../utils/hooks";
-import PermissionsBanner from "../PermissionsBanner";
 import MapDrawer from "./MapDrawer";
 
 export const WGS84 = 'EPSG:4326';
@@ -81,6 +80,7 @@ export interface Props {
     nextEnabled: boolean;
     selectedBaseMap: MapLayer;
     mapLayers: MapLayer[];
+    isPermissionsBannerOpen?: boolean;
     theme: Eventkit.Theme & Theme;
     width: Breakpoint;
 }
@@ -106,7 +106,6 @@ export interface State {
     zoomLevel: number;
     selectedBaseMap: MapLayer;
     mapLayers: MapLayer[];
-    showPermissionsBanner: boolean;
     isOpen: boolean;
 }
 
@@ -222,7 +221,6 @@ export class ExportAOI extends React.Component<Props, State> {
             zoomLevel: 2,
             selectedBaseMap: {mapUrl: ''} as MapLayer,
             mapLayers: [] as MapLayer[],
-            showPermissionsBanner: false,
             isOpen: false,
         };
     }
@@ -250,7 +248,6 @@ export class ExportAOI extends React.Component<Props, State> {
 
         const steps = joyride.ExportAOI as any[];
         this.joyrideAddSteps(steps);
-        await this.makePermissionsRequest();
     }
 
     componentDidUpdate(prevProps: Props) {
@@ -1050,31 +1047,6 @@ export class ExportAOI extends React.Component<Props, State> {
         this.setState({mapLayers});
     }
 
-    private makePermissionsRequest = async () => {
-        let responseData;
-        return axios({
-            url: '/api/providers',
-            method: 'get',
-        }).then((response) => {
-            if (Object.entries(response.data).length === 0) {
-                responseData = 'No data providers found.';
-                return responseData;
-            }
-            const providers = response.data;
-            providers.forEach((provider) => {
-                if (provider.hidden) {
-                    this.setState({showPermissionsBanner: true, isOpen: true});
-                }
-            });
-        }).catch((e) => {
-            console.log(e);
-        });
-    }
-
-    private handleClosedPermissionsBanner() {
-        this.setState({showPermissionsBanner: false, isOpen: false});
-    }
-
     render() {
         const {theme} = this.props;
         const {steps, isRunning} = this.state;
@@ -1093,7 +1065,7 @@ export class ExportAOI extends React.Component<Props, State> {
             mapStyle.left = '0px';
         }
 
-        if (this.state.showPermissionsBanner) {
+        if (this.props.isPermissionsBannerOpen) {
             mapStyle.height = 'calc(100vh - 226px)';
         }
 
@@ -1125,15 +1097,6 @@ export class ExportAOI extends React.Component<Props, State> {
                     }}
                     run={isRunning}
                 />
-                <div>
-                    {this.state.showPermissionsBanner ?
-                        <PermissionsBanner
-                            handleClosedPermissionsBanner={this.handleClosedPermissionsBanner}
-                            isOpen={this.state.isOpen}
-                        />
-                        : null
-                    }
-                </div>
                 <div id="map" className={css.map} style={mapStyle}>
                     <div className='basemap-tab'>
                         <MapDrawer

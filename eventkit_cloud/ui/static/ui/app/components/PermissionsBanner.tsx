@@ -17,7 +17,7 @@ const jss = (theme: Eventkit.Theme & Theme) => createStyles({
         borderRadius: 0,
         flexGrow: 1,
         position: 'relative',
-        display: 'flex'
+        display: 'flex',
     },
     nonExpandedText: {
         fontSize: '13px',
@@ -39,7 +39,6 @@ const jss = (theme: Eventkit.Theme & Theme) => createStyles({
 
 export interface Props {
     handleClosedPermissionsBanner: () => void;
-    isOpen: boolean;
     classes: { [className: string]: string };
 }
 
@@ -60,60 +59,29 @@ function PermissionsBanner(props: Props) {
             <CssBaseline />
             <Paper elevation={0} className={classes.paper}>
                 <Grid container spacing={32} justify="space-between">
-                    {!isOpen
-                        ? (
-                            <>
-                                <Grid item xs={10}>
-                                    <div className={classes.nonExpandedText}>
-                                    If you believe this is an error, Lorem ipsum dolor sit amet, consectetur
-                                    adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna
-                                    aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut
-                                    aliquip ex ea commodo consequat.
-                                    </div>
-                                </Grid>
-                                <Grid item>
-                                    <ButtonBase
-                                        className="qa-NotificationsTableItem-ActionButtons-Expand"
-                                        onClick={handleExpand}
-                                    >
-                                        <ExpandMoreIcon />
-                                    </ButtonBase>
-                                    <ButtonBase
-                                        className="qa-NotificationsTableItem-ActionButtons-Remove"
-                                        onClick={props.handleClosedPermissionsBanner}
-                                    >
-                                        <CloseIcon fontSize="small" />
-                                    </ButtonBase>
-                                </Grid>
-                            </>
-                        )
-                        : (
-                            <>
-                                <Grid item xs={10}>
-                                    <div className={classes.expandedText}>
-                                    If you believe this is an error, Lorem ipsum dolor sit amet, consectetur
-                                    adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna
-                                    aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut
-                                    aliquip ex ea commodo consequat.
-                                    </div>
-                                </Grid>
-                                <Grid item>
-                                    <ButtonBase
-                                        className="qa-NotificationsTableItem-ActionButtons-Expand"
-                                        onClick={handleCloseExpand}
-                                    >
-                                        <ExpandLessIcon />
-                                    </ButtonBase>
-                                    <ButtonBase
-                                        className="qa-NotificationsTableItem-ActionButtons-Remove"
-                                        onClick={props.handleClosedPermissionsBanner}
-                                    >
-                                        <CloseIcon fontSize="small" />
-                                    </ButtonBase>
-                                </Grid>
-                            </>
-                        )
-                    }
+                    <Grid item xs={10}>
+                        <div className={(!isOpen) ? classes.nonExpandedText : classes.expandedText}>
+                            If you believe this is an error, Lorem ipsum dolor sit amet, consectetur
+                            adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna
+                            aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut
+                            aliquip ex ea commodo consequat.
+                        </div>
+                    </Grid>
+                    <Grid item>
+                        <ButtonBase
+                            className="qa-NotificationsTableItem-ActionButtons-Expand"
+                            onClick={(!isOpen) ? handleExpand : handleCloseExpand}
+                        >
+                            {!isOpen && (<ExpandMoreIcon />)}
+                            {isOpen && (<ExpandLessIcon />)}
+                        </ButtonBase>
+                        <ButtonBase
+                            className="qa-NotificationsTableItem-ActionButtons-Remove"
+                            onClick={props.handleClosedPermissionsBanner}
+                        >
+                            <CloseIcon fontSize="small" />
+                        </ButtonBase>
+                    </Grid>
                 </Grid>
             </Paper>
             <Divider />

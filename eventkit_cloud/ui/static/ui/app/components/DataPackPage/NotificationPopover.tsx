@@ -5,7 +5,7 @@ import WarningIcon from '@material-ui/icons/Warning';
 import Typography from '@material-ui/core/Typography';
 import {useState} from 'react';
 import {
-    createStyles, IconButton, Theme, withStyles,
+    createStyles, IconButton, Link, Theme, withStyles,
 } from '@material-ui/core';
 import CloseIcon from '@material-ui/icons/Close';
 import theme from "../../styles/eventkit_theme";
@@ -39,12 +39,13 @@ const jss = (theme: Eventkit.Theme & Theme) => createStyles({
     alertIcon: {
         color: theme.eventkit.colors.warning,
         height: '18px',
-        marginTop: '3px'
+        marginTop: '3px',
     },
     permissionNotificationText: {
         color: theme.eventkit.colors.primary,
         flex: '1 1 auto',
         paddingTop: '6px',
+        cursor: 'pointer',
     },
 });
 
@@ -57,10 +58,12 @@ export function NotificationPopover(props: Props) {
     const {classes} = props;
 
     const handlePopoverOpen = (e: React.MouseEvent<HTMLElement>) => {
+        e.stopPropagation();
         setAnchor(e.currentTarget);
     };
 
-    const handlePopoverClose = () => {
+    const handlePopoverClose = (e: React.MouseEvent<HTMLElement>) => {
+        e.stopPropagation();
         setAnchor(null);
     };
 
@@ -74,12 +77,19 @@ export function NotificationPopover(props: Props) {
                 <WarningIcon style={{color: theme.eventkit.colors.running}}/>
             </IconButton>
             <span style={{paddingTop: '3px', paddingLeft: '3px'}}>
-                <Typography variant="h6" gutterBottom className={classes.permissionNotificationText}>
-                    Permission Notification
-                </Typography>
+                <Link
+                    className={props.classes.name}
+                    onClick={handlePopoverOpen}
+                >
+                    <Typography
+                        variant="h6"
+                        gutterBottom
+                        className={classes.permissionNotificationText} >
+                        Permission Notification
+                    </Typography>
+                </Link>
             </span>
             <Popover
-                // id={id}
                 PaperProps={{
                     style: {padding: '16px', width: '30%'}
                 }}
@@ -104,7 +114,7 @@ export function NotificationPopover(props: Props) {
                         <CloseIcon/>
                     </IconButton>
                     <div>
-                        Some filters are unavailable due to user permissions. If you believe this is an error,
+                        Some source are unavailable due to user permissions. If you believe this is an error,
                         contact your administrator.
                     </div>
                 </div>

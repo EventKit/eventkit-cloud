@@ -13,7 +13,6 @@ describe('PermissionsBanner component', () => {
 
     const getProps = () => ({
         handleClosedPermissionsBanner: sinon.stub(),
-        isOpen: false,
         classes: {},
         ...(global as any).eventkit_test_props,
     });
@@ -74,7 +73,7 @@ describe('PermissionsBanner component', () => {
     it('clicking on the close icon btn should trigger the handleClosedPermissionsBanner function', () => {
         const mockFunction = jest.fn();
         const component = mount(
-            <PermissionsBanner isOpen={false} handleClosedPermissionsBanner={mockFunction}/>
+            <PermissionsBanner handleClosedPermissionsBanner={mockFunction}/>
         );
         expect(component.find(PermissionsBanner).exists()).toBe(true);
 
