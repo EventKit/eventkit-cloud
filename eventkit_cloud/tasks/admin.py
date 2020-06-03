@@ -1,11 +1,6 @@
 from django.contrib import admin
 
-from eventkit_cloud.tasks.models import (
-    DataProviderTaskRecord,
-    ExportRun,
-    UserDownload,
-    ExportTaskRecord,
-)
+from eventkit_cloud.tasks.models import DataProviderTaskRecord, ExportRun, UserDownload, ExportTaskRecord, RunZipFile
 
 import logging
 import pickle
@@ -112,7 +107,12 @@ class UserDownloadAdmin(admin.ModelAdmin):
         return False
 
 
+class RunZipFileAdmin(admin.ModelAdmin):
+    list_display = ["run", "downloadable_file"]
+
+
 admin.site.register(DataProviderTaskRecord, DataProviderTaskRecordAdmin)
 admin.site.register(ExportRun, ExportRunAdmin)
 admin.site.register(UserDownload, UserDownloadAdmin)
 admin.site.register(ExportTaskRecord, ExportTaskRecordAdmin)
+admin.site.register(RunZipFile, RunZipFileAdmin)

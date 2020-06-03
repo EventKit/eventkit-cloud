@@ -13,5 +13,5 @@ urlpatterns = []
 
 urlpatterns += [
     re_path(r"^download", never_cache(login_required(download))),
-    re_path(r"^generate_zipfile", generate_zipfile)
+    re_path(r"^generate_zipfile", generate_zipfile),
 ]

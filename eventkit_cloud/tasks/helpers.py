@@ -19,7 +19,6 @@ from django.core.cache import cache
 from django.template.loader import render_to_string
 from django.utils import timezone
 from django.utils.text import slugify
-from django.db.models import Q
 
 from eventkit_cloud.core.helpers import get_cached_model
 from eventkit_cloud.utils import auth_requests
@@ -319,7 +318,7 @@ def pickle_exception(exception):
     return pickle.dumps(exception, 0).decode()
 
 
-def get_metadata(data_provider_task_uids: List[str]):
+def get_metadata(data_provider_task_record_uids: List[str]):
     """
     A object to hold metadata about the run for the sake of being passed to various scripts for the creation of
     style files or metadata documents for within the datapack.
@@ -373,8 +372,7 @@ def get_metadata(data_provider_task_uids: List[str]):
     from eventkit_cloud.tasks.enumerations import TaskStates
     from eventkit_cloud.tasks.export_tasks import create_zip_task
 
-    data_provider_task_records = DataProviderTaskRecord.objects.filter(uid__in=data_provider_task_uids)
-
+    data_provider_task_records = DataProviderTaskRecord.objects.filter(uid__in=data_provider_task_record_uids)
     run = data_provider_task_records.first().run
 
     projections = []

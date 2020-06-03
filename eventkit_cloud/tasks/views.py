@@ -52,18 +52,23 @@ def download(request):
 
 def generate_zipfile(request):
     data = json.loads(request.body)
-    data_provider_task_uids = data.get("data_provider_task_uids")
-
+    data_provider_task_record_uids = data.get("data_provider_task_record_uids")
     # Check to make sure the UIDs are all from the same ExportRun.
-    runs = ExportRun.objects.filter(provider_tasks__in=data_provider_task_uids).distinct()
+    runs = ExportRun.objects.filter(provider_tasks__uid__in=data_provider_task_record_uids).distinct()
     if runs.count() != 1:
-        return HttpResponse(json.dumps({"error": "Cannot zip files from different datapacks."}), content_type="application/json", status=400)
+        return HttpResponse(
+            json.dumps({"error": "Cannot zip files from different datapacks."}),
+            content_type="application/json",
+            status=400,
+        )
 
     # TODO: Before we can zip up anything, we need to download the files to their correct locations in the export_stage directory.
-
     # Kick off the zip process with get_zip_task_chain
+    run = runs.first()
     run_zip_task_chain = get_zip_task_chain(
-        data_provider_task_uids=data_provider_task_uids, stage_dir=get_run_staging_dir(runs.first().uid),
+        data_provider_task_record_uid=run.provider_tasks.get(slug="run").uid,
+        data_provider_task_record_uids=data_provider_task_record_uids,
+        stage_dir=get_run_staging_dir(run.uid),
     )
     run_zip_task_chain.apply_async()
     # TODO: Once the task finishes, we need to store the file somewhere, and create a class to store that files location in.

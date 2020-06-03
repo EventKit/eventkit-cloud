@@ -74,6 +74,7 @@ from eventkit_cloud.tasks.models import (
     DataProviderTaskRecord,
     FileProducingTaskResult,
     ExportRun,
+    RunZipFile,
 )
 from eventkit_cloud.jobs.models import DataProvider, DataProviderTask
 
@@ -230,6 +231,7 @@ class ExportTask(EventKitBaseTask):
             task.status = TaskStates.SUCCESS.value
             task.save()
             retval["status"] = TaskStates.SUCCESS.value
+            retval["file_producing_task_result_id"] = result.id
             return retval
         except CancelException as e:
             return {"status": TaskStates.CANCELED.value}
@@ -328,6 +330,27 @@ class FormatTask(ExportTask):
 
     name = "FormatTask"
     display = True
+
+
+class ZipFileTask(FormatTask):
+    def __call__(self, *args, **kwargs):
+        retval = super(ZipFileTask, self).__call__(*args, **kwargs)
+
+        if not kwargs["data_provider_task_record_uids"]:
+            data_provider_task_record = DataProviderTaskRecord.objects.get(uid=kwargs["data_provider_task_record_uid"])
+            data_provider_task_records = data_provider_task_record.run.provider_tasks.exclude(slug="run")
+            data_provider_task_record_uids = [
+                data_provider_task_record.uid for data_provider_task_record in data_provider_task_records
+            ]
+        else:
+            data_provider_task_record_uids = kwargs["data_provider_task_record_uids"]
+
+        run = ExportRun.objects.get(uid=kwargs["run_uid"])
+        data_provider_task_records = DataProviderTaskRecord.objects.filter(uid__in=data_provider_task_record_uids)
+        downloadable_file = FileProducingTaskResult.objects.get(id=retval["file_producing_task_result_id"])
+        run_zip_file = RunZipFile.objects.create(run=run, downloadable_file=downloadable_file)
+        run_zip_file.data_provider_task_records.set(data_provider_task_records)
+        return retval
 
 
 @gdalutils.retry
@@ -1114,8 +1137,14 @@ def wait_for_providers_task(result=None, apply_args=None, run_uid=None, callback
         raise Exception("A run could not be found for uid {0}".format(run_uid))
 
 
-@app.task(name="Project File (.zip)", base=FormatTask, acks_late=True)
-def create_zip_task(result: dict = None, data_provider_task_uids: List[str] = None, *args, **kwargs):
+@app.task(name="Project File (.zip)", base=ZipFileTask, acks_late=True)
+def create_zip_task(
+    result: dict = None,
+    data_provider_task_record_uid: str = None,
+    data_provider_task_record_uids: List[str] = None,
+    *args,
+    **kwargs,
+):
     """
     :param result: The celery task result value, it should be a dict with the current state.
     :param data_provider_task_uid: A data provider to zip (this or run_uid must be passed).
@@ -1124,12 +1153,19 @@ def create_zip_task(result: dict = None, data_provider_task_uids: List[str] = No
     if not result:
         result = {}
 
-    if len(data_provider_task_uids) > 1:
-        data_provider_task_slug = "run"
-    else:
-        data_provider_task_slug = DataProviderTaskRecord.objects.get(uid=data_provider_task_uids[0]).slug
+    if not data_provider_task_record_uids:
+        data_provider_task_record = DataProviderTaskRecord.objects.get(uid=data_provider_task_record_uid)
+        data_provider_task_records = data_provider_task_record.run.provider_tasks.exclude(slug="run")
+        data_provider_task_record_uids = [
+            data_provider_task_record.uid for data_provider_task_record in data_provider_task_records
+        ]
 
-    metadata = get_metadata(data_provider_task_uids)
+    if len(data_provider_task_record_uids) > 1:
+        data_provider_task_record_slug = "run"
+    elif len(data_provider_task_record_uids) == 1:
+        data_provider_task_record_slug = DataProviderTaskRecord.objects.get(uid=data_provider_task_record_uids[0]).slug
+
+    metadata = get_metadata(data_provider_task_record_uids)
     include_files = metadata.get("include_files", None)
     if include_files:
         arcgis_dir = os.path.join(get_run_staging_dir(metadata["run_uid"]), Directory.ARCGIS.value)
@@ -1149,7 +1185,7 @@ def create_zip_task(result: dict = None, data_provider_task_uids: List[str] = No
         result["result"] = zip_files(
             include_files=include_files,
             file_path=os.path.join(
-                get_provider_staging_dir(metadata["run_uid"], data_provider_task_slug),
+                get_provider_staging_dir(metadata["run_uid"], data_provider_task_record_slug),
                 "{0}.zip".format(metadata["name"]),
             ),
             static_files=get_style_files(),
