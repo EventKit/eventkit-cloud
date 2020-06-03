@@ -88,6 +88,7 @@ describe('ProviderRow component', () => {
             url: 'http://cloud.eventkit.test/api/provider_tasks/123',
             display: true,
             slug: 'osm',
+            provider: providers[0],
         },
         selectedProviders,
         providers,
