@@ -61,10 +61,8 @@ function PermissionsBanner(props: Props) {
                 <Grid container spacing={32} justify="space-between">
                     <Grid item xs={10}>
                         <div className={(!isOpen) ? classes.nonExpandedText : classes.expandedText}>
-                            If you believe this is an error, Lorem ipsum dolor sit amet, consectetur
-                            adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna
-                            aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut
-                            aliquip ex ea commodo consequat.
+                            Some sources may have been limited based on your permissions. If you believe this is an
+                            error, please contact an administrator.
                         </div>
                     </Grid>
                     <Grid item>
