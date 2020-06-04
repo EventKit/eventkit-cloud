@@ -434,7 +434,9 @@ export class DataPackGridItem extends React.Component<Props, State> {
                                  style={{height: '45px', padding: '8px'}}>
                         <div style={{width: '100%'}}>
                             {this.props.run.provider_task_list_status !== 'COMPLETE' &&
-                            <NotificationPopover/>
+                            <NotificationPopover
+                                someProvidersAvailable={this.props.run.provider_task_list_status === 'PARTIAL'}
+                            />
                             }
                         </div>
                     </CardActions>

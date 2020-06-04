@@ -3,12 +3,13 @@ import * as React from 'react';
 import Popover from '@material-ui/core/Popover';
 import WarningIcon from '@material-ui/icons/Warning';
 import Typography from '@material-ui/core/Typography';
-import {useState} from 'react';
+import {useCallback, useState} from 'react';
 import {
     createStyles, IconButton, Link, Theme, withStyles,
 } from '@material-ui/core';
 import CloseIcon from '@material-ui/icons/Close';
 import theme from "../../styles/eventkit_theme";
+import AlertError from "@material-ui/icons/Error";
 
 const jss = (theme: Eventkit.Theme & Theme) => createStyles({
     popoverBlock: {
@@ -50,6 +51,7 @@ const jss = (theme: Eventkit.Theme & Theme) => createStyles({
 });
 
 interface Props extends React.HTMLAttributes<HTMLElement> {
+    someProvidersAvailable: boolean;
     classes: { [className: string]: string };
 }
 
@@ -67,6 +69,30 @@ export function NotificationPopover(props: Props) {
         setAnchor(null);
     };
 
+    const getIcon = useCallback(() => {
+        if (props.someProvidersAvailable) {
+            return (
+                <WarningIcon
+                    className="qa-PermissionNotification-AlertError"
+                    style={{ color: theme.eventkit.colors.running }}
+                />
+            );
+        }
+        return (
+            <AlertError
+                className="qa-PermissionNotification-AlertWarning"
+                style={{ color: theme.eventkit.colors.warning, opacity: 0.6 }}
+            />
+        );
+    }, [props.someProvidersAvailable]);
+
+    const getMessage = useCallback(() => {
+        if (props.someProvidersAvailable) {
+            return 'Some source are unavailable due to user permissions.';
+        }
+        return 'No sources are available due to user permissions.';
+    }, [props.someProvidersAvailable]);
+
     const openEl = Boolean(anchorElement);
     return (
         <div className={classes.popoverBlock}>
@@ -74,7 +100,7 @@ export function NotificationPopover(props: Props) {
                 className={classes.warningIconBtn}
                 onClick={handlePopoverOpen}
             >
-                <WarningIcon style={{color: theme.eventkit.colors.running}}/>
+                {getIcon()}
             </IconButton>
             <span style={{paddingTop: '3px', paddingLeft: '3px'}}>
                 <Link
@@ -84,7 +110,7 @@ export function NotificationPopover(props: Props) {
                     <Typography
                         variant="h6"
                         gutterBottom
-                        className={classes.permissionNotificationText} >
+                        className={classes.permissionNotificationText}>
                         Permission Notification
                     </Typography>
                 </Link>
@@ -114,8 +140,7 @@ export function NotificationPopover(props: Props) {
                         <CloseIcon/>
                     </IconButton>
                     <div>
-                        Some source are unavailable due to user permissions. If you believe this is an error,
-                        contact your administrator.
+                        {getMessage()}  If you believe this is an error, contact your administrator.
                     </div>
                 </div>
             </Popover>

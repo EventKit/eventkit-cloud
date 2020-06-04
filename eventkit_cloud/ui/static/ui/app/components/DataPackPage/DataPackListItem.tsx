@@ -321,14 +321,15 @@ export class DataPackListItem extends React.Component<Props, State> {
                                 </div>
                                 {this.props.run.provider_task_list_status !== 'COMPLETE' && (
                                     <div style={{display: 'flex', flex: '1 1 auto'}}>
-                                        <NotificationPopover/>
+                                        <NotificationPopover
+                                            someProvidersAvailable={this.props.run.provider_task_list_status === 'PARTIAL'}
+                                        />
                                     </div>
                                 )}
                             </div>
                         }
                     />
                     <DataPackShareDialog
-                        job={this.props.run.job}
                         show={this.state.shareDialogOpen}
                         onClose={this.handleShareClose}
                         onSave={this.handleShareSave}
