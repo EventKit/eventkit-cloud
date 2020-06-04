@@ -155,6 +155,7 @@ class ExportRunFile(UIDMixin, TimeStampedModelMixin):
     """
     The ExportRunFile stores additional files to be added to each ExportRun zip archive.
     """
+
     storage = None
     if settings.USE_S3:
         storage = S3Boto3Storage()
