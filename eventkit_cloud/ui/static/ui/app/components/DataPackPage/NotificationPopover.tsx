@@ -84,7 +84,7 @@ export function NotificationPopover(props: Props) {
                     <Typography
                         variant="h6"
                         gutterBottom
-                        className={classes.permissionNotificationText} >
+                        className={classes.permissionNotificationText}>
                         Permission Notification
                     </Typography>
                 </Link>

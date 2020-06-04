@@ -5,10 +5,12 @@ import CardHeader from '@material-ui/core/CardHeader';
 import CheckBoxOutline from '@material-ui/icons/CheckBoxOutlineBlank';
 import CheckBox from '@material-ui/icons/CheckBox';
 import AdminShare from '../icons/AdminShareIcon';
+import NotificationIconPopover from "../DataPackPage/NotificationIconPopover";
 
 export interface Props {
     className?: string;
     member: Eventkit.User;
+    view: 'groups' | 'members';
     selected: boolean;
     admin: boolean;
     showAdmin: boolean;
@@ -100,6 +102,9 @@ export class MemberRow extends React.Component<Props, {}> {
                 color: colors.text_primary,
                 padding: '10px 16px 0px',
             },
+            notificationIcon: {
+                paddingRight: '10px',
+            },
         };
 
         // Assume group is not selected by default
@@ -162,6 +167,10 @@ export class MemberRow extends React.Component<Props, {}> {
                                     {email}
                                 </div>
                             </div>
+                            {
+                                // this.props.member.isRestricted &&
+                                <span style={styles.notificationIcon}><NotificationIconPopover view={this.props.view}/></span>
+                            }
                             {adminButton}
                             {groupIcon}
                         </div>

@@ -28,7 +28,6 @@ describe('PermissionsBanner component', () => {
     beforeEach(setup);
 
     it('should render the initial collapsed elements', () => {
-        console.log(wrapper.debug());
         expect(wrapper.find(CssBaseline)).toHaveLength(1);
         expect(wrapper.find(Paper)).toHaveLength(1);
         expect(wrapper.find(Grid)).toHaveLength(3);

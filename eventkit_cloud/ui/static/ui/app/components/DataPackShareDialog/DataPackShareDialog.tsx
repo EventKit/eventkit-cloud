@@ -305,6 +305,7 @@ export class DataPackShareDialog extends React.Component<Props, State> {
                 </div>
                 {this.state.view === 'groups' ?
                     <GroupsBody
+                        view={this.state.view}
                         selectedGroups={this.state.permissions.groups}
                         groupsText={this.props.groupsText}
                         onGroupCheck={this.handleGroupCheck}
@@ -316,6 +317,7 @@ export class DataPackShareDialog extends React.Component<Props, State> {
                     />
                     :
                     <MembersBody
+                        view={this.state.view}
                         public={this.state.permissions.value === 'PUBLIC'}
                         selectedMembers={this.state.permissions.members}
                         membersText={this.props.membersText}

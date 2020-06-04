@@ -19,6 +19,7 @@ export interface Props {
     userCount: number;
     users: Eventkit.User[];
     selectedMembers: Eventkit.Permissions['members'];
+    view: 'groups' | 'members';
     membersText: any;
     onMemberCheck: (username: string) => void;
     onAdminCheck: (username: string) => void;
@@ -376,6 +377,7 @@ export class MembersBody extends React.Component<Props, State> {
                         const admin = this.props.selectedMembers[member.user.username] === 'ADMIN';
                         return (
                             <MemberRow
+                                view={this.props.view}
                                 key={member.user.username}
                                 showAdmin={this.props.canUpdateAdmin}
                                 member={member}

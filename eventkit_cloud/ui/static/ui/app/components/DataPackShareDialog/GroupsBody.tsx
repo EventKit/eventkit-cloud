@@ -16,6 +16,7 @@ export interface Props {
     nextPage: boolean;
     groups: Eventkit.Group[];
     selectedGroups: Eventkit.Permissions['groups'];
+    view: 'groups' | 'members';
     groupsText: any;
     onUncheckAll: () => void;
     onCheckAll: () => void;
@@ -341,6 +342,7 @@ export class GroupsBody extends React.Component<Props, State> {
                         const admin = selected === 'ADMIN';
                         return (
                             <GroupRow
+                                view={this.props.view}
                                 key={group.name}
                                 group={group}
                                 selected={!!selected}

@@ -2,13 +2,12 @@ import * as React from 'react';
 
 import Popover from '@material-ui/core/Popover';
 import WarningIcon from '@material-ui/icons/Warning';
-import Typography from '@material-ui/core/Typography';
-import {useState} from 'react';
+import { useState } from 'react';
 import {
-    createStyles, IconButton, Link, Theme, withStyles,
+    createStyles, IconButton, Link, Menu, Theme, withStyles,
 } from '@material-ui/core';
 import CloseIcon from '@material-ui/icons/Close';
-import theme from "../../styles/eventkit_theme";
+import theme from '../../styles/eventkit_theme';
 
 const jss = (theme: Eventkit.Theme & Theme) => createStyles({
     popoverBlock: {
@@ -47,15 +46,20 @@ const jss = (theme: Eventkit.Theme & Theme) => createStyles({
         paddingTop: '6px',
         cursor: 'pointer',
     },
+    popoverText: {
+        display: 'inline-flex',
+        paddingTop: '5px',
+    },
 });
 
 interface Props extends React.HTMLAttributes<HTMLElement> {
+    view: 'groups' | 'members';
     classes: { [className: string]: string };
 }
 
 export function NotificationIconPopover(props: Props) {
     const [anchorElement, setAnchor] = useState(null);
-    const {classes} = props;
+    const { classes } = props;
 
     const handlePopoverOpen = (e: React.MouseEvent<HTMLElement>) => {
         e.stopPropagation();
@@ -74,24 +78,11 @@ export function NotificationIconPopover(props: Props) {
                 className={classes.warningIconBtn}
                 onClick={handlePopoverOpen}
             >
-                <WarningIcon style={{color: theme.eventkit.colors.running}}/>
+                <WarningIcon style={{ color: theme.eventkit.colors.running }} />
             </IconButton>
-            <span style={{paddingTop: '3px', paddingLeft: '3px'}}>
-                {/*<Link*/}
-                {/*    className={props.classes.name}*/}
-                {/*    onClick={handlePopoverOpen}*/}
-                {/*>*/}
-                    {/*<Typography*/}
-                    {/*    variant="h6"*/}
-                    {/*    gutterBottom*/}
-                    {/*    className={classes.permissionNotificationText} >*/}
-                    {/*    Permission Notification*/}
-                    {/*</Typography>*/}
-                {/*</Link>*/}
-            </span>
             <Popover
                 PaperProps={{
-                    style: {padding: '16px', width: '30%'}
+                    style: { padding: '16px', width: '35%' },
                 }}
                 open={openEl}
                 anchorEl={anchorElement}
@@ -111,11 +102,21 @@ export function NotificationIconPopover(props: Props) {
                         type="button"
                         onClick={handlePopoverClose}
                     >
-                        <CloseIcon/>
+                        <CloseIcon />
                     </IconButton>
-                    <div>
-                        Some of the users in this group may not have access to some of the resources you are trying to share.
-                    </div>
+                    {props.view === 'groups'
+                        ? (
+                            <div style={{ display: 'inline-flex', paddingTop: '5px' }}>
+                            Some of the users in this group may not have access to some of the resources you are trying
+                            to share.
+                            </div>
+                        )
+                        : (
+                            <div className={classes.popoverText}>
+                            This user may not have access to some of the resources you are trying to share.
+                            </div>
+                        )
+                    }
                 </div>
             </Popover>
         </div>
