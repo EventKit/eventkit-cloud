@@ -1427,6 +1427,7 @@ class UserDataViewSet(viewsets.GenericViewSet):
         queryset = JobPermission.get_orderable_queryset_for_job(job, User)
         total = queryset.count()
         filtered_queryset = self.filter_queryset(queryset)
+
         if request.query_params.get("exclude_self"):
             filtered_queryset = filtered_queryset.exclude(username=request.user.username)
         elif request.query_params.get("prepend_self"):
@@ -1643,7 +1644,6 @@ class GroupViewSet(viewsets.ModelViewSet):
         queryset = JobPermission.get_orderable_queryset_for_job(job, Group)
         total = queryset.count()
         filtered_queryset = self.filter_queryset(queryset)
-
         page = None
         if not request.query_params.get("disable_page"):
             page = self.paginate_queryset(filtered_queryset)

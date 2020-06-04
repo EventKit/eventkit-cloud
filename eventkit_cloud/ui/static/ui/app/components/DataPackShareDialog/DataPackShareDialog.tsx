@@ -1,15 +1,18 @@
-import { connect } from 'react-redux';
+import {connect} from 'react-redux';
 import * as React from 'react';
-import { withTheme, Theme } from '@material-ui/core/styles';
+import {withTheme, Theme} from '@material-ui/core/styles';
 import Button from '@material-ui/core/Button';
 import ShareBaseDialog from './ShareBaseDialog';
 import GroupsBody from './GroupsBody';
 import MembersBody from './MembersBody';
 import ShareInfoBody from './ShareInfoBody';
 import BaseDialog from '../Dialog/BaseDialog';
-import { Permissions, Levels } from '../../utils/permissions';
+import {Permissions, Levels} from '../../utils/permissions';
+import PermissionsFilterGroupsBody from "./PermissionsFilterGroupsBody";
+import PermissionsFilterMembersBody from "./PermissionsFilterMembersBody";
 
 export interface Props {
+    job?: Eventkit.Job;
     show: boolean;
     onClose: () => void;
     onSave: (perms: Eventkit.Permissions) => void;
@@ -45,6 +48,7 @@ export class DataPackShareDialog extends React.Component<Props, State> {
     };
 
     private permissions: Permissions;
+
     constructor(props: Props) {
         super(props);
         this.handleSave = this.handleSave.bind(this);
@@ -62,6 +66,8 @@ export class DataPackShareDialog extends React.Component<Props, State> {
         this.showPublicWarning = this.showPublicWarning.bind(this);
         this.hidePublicWarning = this.hidePublicWarning.bind(this);
         this.toggleView = this.toggleView.bind(this);
+        this.renderSharedPermissionsWithJob = this.renderSharedPermissionsWithJob.bind(this);
+        this.renderSharedPermissionsWithoutJob = this.renderSharedPermissionsWithoutJob.bind(this);
         this.permissions = new Permissions(this.props.permissions);
         this.state = {
             view: 'groups',
@@ -77,7 +83,7 @@ export class DataPackShareDialog extends React.Component<Props, State> {
             this.permissions.setPermissions(this.props.permissions);
             this.permissions.setUsername(this.props.user ? this.props.user.user.username : undefined);
             this.permissions.extractCurrentUser();
-            this.setState({ permissions: this.permissions.getPermissions() });
+            this.setState({permissions: this.permissions.getPermissions()});
         }
     }
 
@@ -92,10 +98,10 @@ export class DataPackShareDialog extends React.Component<Props, State> {
             }
         } else if (this.props.warnPublic) {
             if (!this.state.showPublicWarning) {
-                this.setState({ showPublicWarning: true });
+                this.setState({showPublicWarning: true});
                 return;
             }
-            this.setState({ showPublicWarning: false });
+            this.setState({showPublicWarning: false});
         }
 
         if (this.permissions.getUserPermissions()) {
@@ -114,7 +120,7 @@ export class DataPackShareDialog extends React.Component<Props, State> {
         } else {
             this.permissions.setMemberPermission(username, Levels.READ);
         }
-        this.setState({ permissions: this.permissions.getPermissions() });
+        this.setState({permissions: this.permissions.getPermissions()});
     }
 
     private handleGroupCheck(groupname: string) {
@@ -123,7 +129,7 @@ export class DataPackShareDialog extends React.Component<Props, State> {
         } else {
             this.permissions.setGroupPermission(groupname, Levels.READ);
         }
-        this.setState({ permissions: this.permissions.getPermissions() });
+        this.setState({permissions: this.permissions.getPermissions()});
     }
 
     private handleAdminCheck(username: string) {
@@ -132,7 +138,7 @@ export class DataPackShareDialog extends React.Component<Props, State> {
         } else {
             this.permissions.setMemberPermission(username, Levels.ADMIN);
         }
-        this.setState({ permissions: this.permissions.getPermissions() });
+        this.setState({permissions: this.permissions.getPermissions()});
     }
 
     private handleAdminGroupCheck(groupname: string) {
@@ -141,32 +147,32 @@ export class DataPackShareDialog extends React.Component<Props, State> {
         } else {
             this.permissions.setGroupPermission(groupname, Levels.ADMIN);
         }
-        this.setState({ permissions: this.permissions.getPermissions() });
+        this.setState({permissions: this.permissions.getPermissions()});
     }
 
     private handleCurrentCheck() {
         this.props.users.forEach((user) => {
-            const { username } = user.user;
+            const {username} = user.user;
             if (!this.permissions.userHasPermission(username)) {
                 this.permissions.setMemberPermission(username, Levels.READ);
             }
         });
-        this.setState({ permissions: this.permissions.getPermissions() });
+        this.setState({permissions: this.permissions.getPermissions()});
     }
 
     private handlePublicCheck() {
         this.permissions.makePublic();
-        this.setState({ permissions: this.permissions.getPermissions() });
+        this.setState({permissions: this.permissions.getPermissions()});
     }
 
     private handleGroupCheckAll() {
         this.props.groups.forEach((group) => {
-            const { name } = group;
+            const {name} = group;
             if (!this.permissions.groupHasPermission(name)) {
                 this.permissions.setGroupPermission(name, Levels.READ);
             }
         });
-        this.setState({ permissions: this.permissions.getPermissions() });
+        this.setState({permissions: this.permissions.getPermissions()});
     }
 
     private handleUncheckAll() {
@@ -174,35 +180,103 @@ export class DataPackShareDialog extends React.Component<Props, State> {
         if (this.permissions.isPublic()) {
             this.permissions.makeShared();
         }
-        this.setState({ permissions: this.permissions.getPermissions() });
+        this.setState({permissions: this.permissions.getPermissions()});
     }
 
     private handleGroupUncheckAll() {
         this.permissions.setGroups({});
-        this.setState({ permissions: this.permissions.getPermissions() });
+        this.setState({permissions: this.permissions.getPermissions()});
     }
 
     private showShareInfo() {
-        this.setState({ showShareInfo: true });
+        this.setState({showShareInfo: true});
     }
 
     private hideShareInfo() {
-        this.setState({ showShareInfo: false });
+        this.setState({showShareInfo: false});
     }
 
     private showPublicWarning() {
-        this.setState({ showPublicWarning: true });
+        this.setState({showPublicWarning: true});
     }
 
     private hidePublicWarning() {
-        this.setState({ showPublicWarning: false });
+        this.setState({showPublicWarning: false});
     }
 
     private toggleView() {
         if (this.state.view === 'groups') {
-            this.setState({ view: 'members' });
+            this.setState({view: 'members'});
         } else {
-            this.setState({ view: 'groups' });
+            this.setState({view: 'groups'});
+        }
+    }
+
+    // new functionality where members/groups are saving and needs reference to a job
+    private renderSharedPermissionsWithJob() {
+        if (this.state.view === 'groups') {
+            return (
+                <GroupsBody
+                    job={this.props.job}
+                    selectedGroups={this.state.permissions.groups}
+                    groupsText={this.props.groupsText}
+                    onGroupCheck={this.handleGroupCheck}
+                    onAdminCheck={this.handleAdminGroupCheck}
+                    onCheckAll={this.handleGroupCheckAll}
+                    onUncheckAll={this.handleGroupUncheckAll}
+                    canUpdateAdmin={this.props.canUpdateAdmin}
+                    handleShowShareInfo={this.showShareInfo}
+                />
+            );
+        } else {
+            return (
+                <MembersBody
+                    job={this.props.job}
+                    public={this.state.permissions.value === 'PUBLIC'}
+                    selectedMembers={this.state.permissions.members}
+                    membersText={this.props.membersText}
+                    onMemberCheck={this.handleUserCheck}
+                    onAdminCheck={this.handleAdminCheck}
+                    onCheckCurrent={this.handleCurrentCheck}
+                    onCheckAll={this.handlePublicCheck}
+                    onUncheckAll={this.handleUncheckAll}
+                    canUpdateAdmin={this.props.canUpdateAdmin}
+                    handleShowShareInfo={this.showShareInfo}
+                />
+            );
+        }
+    }
+
+    // old functionality where members/groups are not saving and needs no reference to a job
+    private renderSharedPermissionsWithoutJob() {
+        if (this.state.view === 'groups') {
+            return (
+                <PermissionsFilterGroupsBody
+                    selectedGroups={this.state.permissions.groups}
+                    groupsText={this.props.groupsText}
+                    onGroupCheck={this.handleGroupCheck}
+                    onAdminCheck={this.handleAdminGroupCheck}
+                    onCheckAll={this.handleGroupCheckAll}
+                    onUncheckAll={this.handleGroupUncheckAll}
+                    canUpdateAdmin={this.props.canUpdateAdmin}
+                    handleShowShareInfo={this.showShareInfo}
+                />
+            );
+        } else {
+            return (
+                <PermissionsFilterMembersBody
+                        public={this.state.permissions.value === 'PUBLIC'}
+                        selectedMembers={this.state.permissions.members}
+                        membersText={this.props.membersText}
+                        onMemberCheck={this.handleUserCheck}
+                        onAdminCheck={this.handleAdminCheck}
+                        onCheckCurrent={this.handleCurrentCheck}
+                        onCheckAll={this.handlePublicCheck}
+                        onUncheckAll={this.handleUncheckAll}
+                        canUpdateAdmin={this.props.canUpdateAdmin}
+                        handleShowShareInfo={this.showShareInfo}
+                />
+            );
         }
     }
 
@@ -211,7 +285,7 @@ export class DataPackShareDialog extends React.Component<Props, State> {
             return null;
         }
 
-        const { colors } = this.props.theme.eventkit;
+        const {colors} = this.props.theme.eventkit;
 
         const styles = {
             fixedHeader: {
@@ -274,7 +348,7 @@ export class DataPackShareDialog extends React.Component<Props, State> {
                 <div style={styles.fixedHeader} className="qa-DataPackShareDialog-container">
                     <div
                         className="qa-DataPackShareDialog-headers"
-                        style={{ display: 'flex', flexWrap: 'wrap' }}
+                        style={{display: 'flex', flexWrap: 'wrap'}}
                     >
                         <Button
                             className="qa-DataPackShareDialog-Button-groups"
@@ -303,39 +377,16 @@ export class DataPackShareDialog extends React.Component<Props, State> {
                         />
                     </div>
                 </div>
-                {this.state.view === 'groups' ?
-                    <GroupsBody
-                        selectedGroups={this.state.permissions.groups}
-                        groupsText={this.props.groupsText}
-                        onGroupCheck={this.handleGroupCheck}
-                        onAdminCheck={this.handleAdminGroupCheck}
-                        onCheckAll={this.handleGroupCheckAll}
-                        onUncheckAll={this.handleGroupUncheckAll}
-                        canUpdateAdmin={this.props.canUpdateAdmin}
-                        handleShowShareInfo={this.showShareInfo}
-                    />
-                    :
-                    <MembersBody
-                        public={this.state.permissions.value === 'PUBLIC'}
-                        selectedMembers={this.state.permissions.members}
-                        membersText={this.props.membersText}
-                        onMemberCheck={this.handleUserCheck}
-                        onAdminCheck={this.handleAdminCheck}
-                        onCheckCurrent={this.handleCurrentCheck}
-                        onCheckAll={this.handlePublicCheck}
-                        onUncheckAll={this.handleUncheckAll}
-                        canUpdateAdmin={this.props.canUpdateAdmin}
-                        handleShowShareInfo={this.showShareInfo}
-                    />
-                }
+                {this.props.job && this.renderSharedPermissionsWithJob()}
+                {!this.props.job && this.renderSharedPermissionsWithoutJob()}
                 <BaseDialog
                     show={this.state.showPublicWarning}
                     onClose={this.hidePublicWarning}
                     title="SHARE WITH ALL MEMBERS"
-                    overlayStyle={{ zIndex: 1501 }}
+                    overlayStyle={{zIndex: 1501}}
                     actions={[
                         <Button
-                            style={{ margin: '0px' }}
+                            style={{margin: '0px'}}
                             variant="contained"
                             color="primary"
                             onClick={this.handleSave}
@@ -344,7 +395,7 @@ export class DataPackShareDialog extends React.Component<Props, State> {
                             SHARE
                         </Button>,
                         <Button
-                            style={{ margin: '0px', float: 'left' }}
+                            style={{margin: '0px', float: 'left'}}
                             variant="text"
                             color="primary"
                             onClick={this.hidePublicWarning}
