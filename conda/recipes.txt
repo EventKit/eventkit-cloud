@@ -5,6 +5,7 @@ django-auth-ldap
 django-celery-beat
 django-celery-results
 django-notifications-hq
+django-storages
 django-timezone-field
 mapproxy
 eventkit-cloud
