@@ -7,6 +7,7 @@ from eventkit_cloud.tasks.models import (
     UserDownload,
     ExportTaskRecord,
     RunZipFile,
+    FileProducingTaskResult,
 )
 
 import logging
@@ -118,6 +119,10 @@ class UserDownloadAdmin(admin.ModelAdmin):
         return False
 
 
+class FileProducingTaskResultAdmin(admin.ModelAdmin):
+    list_display = ["filename", "size", "download_url", "deleted"]
+
+
 class RunZipFileAdmin(admin.ModelAdmin):
     list_display = ["run", "downloadable_file"]
 
@@ -127,4 +132,5 @@ admin.site.register(ExportRun, ExportRunAdmin)
 admin.site.register(ExportRunFile, ExportRunFileAdmin)
 admin.site.register(UserDownload, UserDownloadAdmin)
 admin.site.register(ExportTaskRecord, ExportTaskRecordAdmin)
+admin.site.register(FileProducingTaskResult, FileProducingTaskResultAdmin)
 admin.site.register(RunZipFile, RunZipFileAdmin)
