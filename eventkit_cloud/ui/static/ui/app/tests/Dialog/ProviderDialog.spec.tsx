@@ -19,12 +19,14 @@ const providers = [
         name: 'one',
         service_description: 'one info',
         hidden: false,
+        display: true,
     },
     {
         slug: 'three-slug',
         name: 'three',
         service_description: 'three info',
         hidden: false,
+        display: true,
     }
 ];
 
@@ -42,12 +44,14 @@ describe('ProviderDialog component', () => {
                 slug: 'one-slug',
                 provider: providers[0],
                 hidden: false,
+                display: true,
             },
             '3': {
                 uid: '3',
                 slug: 'three-slug',
                 provider: providers[1],
                 hidden: false,
+                display: true,
             },
         },
         providers,
@@ -130,12 +134,6 @@ describe('ProviderDialog component', () => {
 
     it('should show only available provider info', () => {
         setup({providers: [props.providers[0]]});
-        wrapper.setState({loading: false});
-        expect(wrapper.find(BaseDialog).dive().find(DropDownListItem)).toHaveLength(1);
-    });
-
-    it('should show only available providerTask provider info', () => {
-        setup({providerTasks: {'1': props.providerTasks['1']}});
         wrapper.setState({loading: false});
         expect(wrapper.find(BaseDialog).dive().find(DropDownListItem)).toHaveLength(1);
     });

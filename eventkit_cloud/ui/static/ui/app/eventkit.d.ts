@@ -95,6 +95,7 @@ declare namespace Eventkit {
         permissions: Permissions;
         provider_tasks: DataProviderTask[];
         projections: Projection[];
+        provider_task_list_status: string;
     }
 
     interface Run {
