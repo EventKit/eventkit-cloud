@@ -433,7 +433,7 @@ export class DataPackGridItem extends React.Component<Props, State> {
                     <CardActions className="qa-DataPackGridItem-CardActions-Permissions"
                                  style={{height: '45px', padding: '8px'}}>
                         <div style={{width: '100%'}}>
-                            {this.props.providers.filter(provider => provider.hidden) &&
+                            {this.props.run.provider_task_list_status !== 'COMPLETE' &&
                             <NotificationPopover/>
                             }
                         </div>
