@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 import logging
 import os
-from unittest.mock import Mock
 
 from django.contrib.auth.models import Group, User
 from django.contrib.gis.db.models.functions import Area
@@ -14,7 +13,7 @@ import yaml
 
 from eventkit_cloud.jobs.models import (
     ExportFormat, ExportProfile, Job, Region,
-    DataProvider, DataProviderTask, DatamodelPreset, MapImageSnapshot)
+    DataProvider, DataProviderTask, DatamodelPreset)
 
 logger = logging.getLogger(__name__)
 

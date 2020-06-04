@@ -1,14 +1,16 @@
 # -*- coding: utf-8 -*-
 
-import logging
 from unittest.mock import patch, MagicMock
-from django.test import TestCase
 
 from eventkit_cloud.auth.models import OAuth
 from eventkit_cloud.core.models import AttributeClass, update_all_attribute_classes_with_user, \
     update_all_users_with_attribute_class, get_users_from_attribute_class, validate_user_attribute_class
-from django.contrib.auth.models import User
 import json
+import logging
+from django.contrib.auth.models import User
+
+from django.test import TestCase
+
 
 logger = logging.getLogger(__name__)
 

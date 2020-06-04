@@ -14,6 +14,7 @@ from notifications.models import Notification
 import logging
 from typing import Union, List, Callable
 from django.contrib.postgres.fields import JSONField
+from typing import Union
 
 logger = logging.getLogger(__name__)
 
@@ -293,6 +294,7 @@ def validate_filter(filter: Union[List[any], bool]) -> bool:
             logger.info(ve)
             logger.info(f"Filter is a {type(filter)}")
             raise Exception(f"Unable to process {filter}, please ensure that there are three values in list.")
+
 
     if isinstance(left, list):
         if not validate_filter(left):

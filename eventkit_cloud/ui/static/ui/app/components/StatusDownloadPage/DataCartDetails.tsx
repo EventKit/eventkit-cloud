@@ -137,6 +137,7 @@ export class DataCartDetails extends React.Component<Props, State> {
                         statusColor={statusBackgroundColor}
                         statusFontColor={statusFontColor}
                         adminPermissions={this.props.cartDetails.job.relationship === 'ADMIN'}
+                        job={this.props.job}
                     />
                 </div>
                 <div style={styles.container} className="qa-DataCartDetails-div-downloadOptionsContainer" id="DownloadOptions">

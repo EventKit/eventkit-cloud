@@ -439,6 +439,7 @@ export class DataPackGridItem extends React.Component<Props, State> {
                         </div>
                     </CardActions>
                     <DataPackShareDialog
+                        job={this.props.run.job}
                         show={this.state.shareDialogOpen}
                         onClose={this.handleShareClose}
                         onSave={this.handleShareSave}

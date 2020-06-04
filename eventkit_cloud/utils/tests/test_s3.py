@@ -12,9 +12,9 @@ from eventkit_cloud.utils.s3 import (
 )
 
 
-@override_settings(AWS_BUCKET_NAME='test-bucket')
-@override_settings(AWS_ACCESS_KEY='d3adb33f')
-@override_settings(AWS_SECRET_KEY='d3adb33f')
+@override_settings(AWS_STORAGE_BUCKET_NAME='test-bucket')
+@override_settings(AWS_ACCESS_KEY_ID='d3adb33f')
+@override_settings(AWS_SECRET_ACCESS_KEY='d3adb33f')
 class TestS3Util(TestCase):
     def setUp(self):
         settings.EXPORT_DOWNLOAD_ROOT = 'test'
@@ -69,13 +69,13 @@ class TestS3Util(TestCase):
         test_url = "http://s3/run_uid/file.txt"
         expected_key = "run_uid/file.txt"
         expected_bucket = 'test_bucket'
-        with self.settings(AWS_BUCKET_NAME=expected_bucket):
+        with self.settings(AWS_STORAGE_BUCKET_NAME=expected_bucket):
             get_presigned_url(download_url=test_url)
         client.generate_presigned_url.assert_called_with('get_object',
                                                          Params={'Bucket': expected_bucket, 'Key': expected_key},
                                                          ExpiresIn=300)
 
-        with self.settings(AWS_BUCKET_NAME=expected_bucket):
+        with self.settings(AWS_STORAGE_BUCKET_NAME=expected_bucket):
             get_presigned_url(download_url=test_url, client=client)
         client.generate_presigned_url.assert_called_with('get_object',
                                                          Params={'Bucket': expected_bucket, 'Key': expected_key},

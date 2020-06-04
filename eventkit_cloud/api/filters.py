@@ -128,11 +128,38 @@ class ExportRunFilter(django_filters.FilterSet):
         )
 
 
+class SharedOrderFilter(django_filters.OrderingFilter):
+    def __init__(self, *args, **kwargs):
+        # if not kwargs.get("choices"):
+        #     kwargs['choices'] = []
+        super(SharedOrderFilter, self).__init__(*args, **kwargs)
+
+        self.extra["choices"] += (
+            ("admin_shared", "Admin Shared"),
+            ("-admin_shared", "Admin Shared (descending)"),
+            ("shared", "Shared"),
+            ("-shared", "Shared (descending)"),
+        )
+
+
 class UserFilter(django_filters.FilterSet):
     min_date = django_filters.DateFilter(field_name="date_joined", lookup_expr="gte")
     max_date = django_filters.DateFilter(field_name="date_joined", lookup_expr="lte")
     started_at = django_filters.IsoDateTimeFilter(field_name="date_joined", lookup_expr="exact")
     groups = django_filters.CharFilter(method="group_filter")
+
+    ordering = SharedOrderFilter(
+        # tuple-mapping retains order
+        fields=(
+            ("admin_shared", "admin_shared"),
+            ("shared", "shared"),
+            ("username", "username"),
+            ("last_name", "last_name"),
+            ("first_name", "first_name"),
+            ("email", "email"),
+            ("date_joined", "date_joined"),
+        )
+    )
 
     class Meta:
         model = User
@@ -174,6 +201,10 @@ class UserFilter(django_filters.FilterSet):
 
 class GroupFilter(django_filters.FilterSet):
     name = django_filters.CharFilter(field_name="name", lookup_expr="icontains")
+    ordering = SharedOrderFilter(
+        # tuple-mapping retains order
+        fields=(("admin_shared", "admin_shared"), ("shared", "shared"), ("name", "name"),)
+    )
 
     class Meta:
         model = Group
