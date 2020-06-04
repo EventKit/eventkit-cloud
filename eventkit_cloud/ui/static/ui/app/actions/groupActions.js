@@ -43,6 +43,33 @@ export function getGroups(params, append = false) {
     };
 }
 
+export function getPermissionGroups(jobUid, params, append = false) {
+    return {
+        types: [
+            types.FETCHING_GROUPS,
+            types.FETCHED_GROUPS,
+            types.FETCH_GROUPS_ERROR,
+        ],
+        url: `/api/groups?job_uid=${jobUid}`,
+        method: 'GET',
+        params,
+        payload: { append },
+        getCancelSource: state => state.groups.cancelSource,
+        cancellable: true,
+        onSuccess: (response) => {
+            // get the total count from the header
+            const totalGroups = Number(response.headers['total-groups']);
+            const { nextPage, range } = getHeaderPageInfo(response);
+            return {
+                groups: response.data,
+                total: totalGroups,
+                range,
+                nextPage,
+            };
+        },
+    };
+}
+
 export function deleteGroup(groupId) {
     return {
         types: [

@@ -308,6 +308,7 @@ export class DataPackListItem extends React.Component<Props, State> {
                         }
                     />
                     <DataPackShareDialog
+                        job={this.props.run.job}
                         show={this.state.shareDialogOpen}
                         onClose={this.handleShareClose}
                         onSave={this.handleShareSave}
