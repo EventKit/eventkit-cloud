@@ -15,13 +15,19 @@ from django.contrib.gis.geos import (
     Polygon,
     MultiPolygon,
 )
+from django.contrib.contenttypes.fields import GenericForeignKey
+from django.contrib.contenttypes.models import ContentType
 from django.contrib.postgres.fields.jsonb import JSONField
 from django.core.serializers import serialize
 from django.contrib.gis.db import models
 from django.core.cache import cache
+
+from django.db.models import Q, QuerySet, Case, Value, When
+
 from django.utils import timezone
 from enum import Enum
 from django.db.models import Q, QuerySet, Case, Value, When
+
 from typing import Union
 
 from eventkit_cloud.core.models import (
@@ -251,6 +257,7 @@ class DataProvider(UIDMixin, TimeStampedModelMixin, CachedModelMixin):
         blank=True,
         null=True,
         on_delete=models.SET_NULL,
+        related_name="data_providers",
         help_text="The attribute class is used to limit users access to resources using this data provider.",
     )
 
@@ -577,12 +584,21 @@ def bbox_to_geojson(bbox=None):
     return {"type": "Feature", "geometry": geometry}
 
 
+def remove_permissions(model, id):
+    JobPermission.objects.filter(content_type=ContentType.objects.get_for_model(model), object_id=id).delete()
+
+
+class JobPermissionLevel(Enum):
+    NONE = "NONE"
+    READ = "READ"
+    ADMIN = "ADMIN"
+
+
 class JobPermission(TimeStampedModelMixin):
 
     """
     Model associates users or groups with jobs
     """
-
     job = models.ForeignKey(Job, on_delete=models.CASCADE, related_name="permissions")
     content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE)
     object_id = models.PositiveIntegerField(db_index=True)

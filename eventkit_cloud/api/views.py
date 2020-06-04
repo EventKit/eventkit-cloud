@@ -31,7 +31,6 @@ from eventkit_cloud.api.filters import (
     GroupFilter,
     UserJobActivityFilter,
     LogFilter,
-    attribute_class_filter,
 )
 from eventkit_cloud.api.pagination import LinkHeaderPagination
 from eventkit_cloud.api.permissions import IsOwnerOrReadOnly
@@ -72,7 +71,7 @@ from eventkit_cloud.core.helpers import (
 from eventkit_cloud.core.models import (
     GroupPermission,
     GroupPermissionLevel,
-)
+    annotate_users_restricted, attribute_class_filter)
 from eventkit_cloud.jobs.models import (
     ExportFormat,
     Projection,
@@ -1471,7 +1470,7 @@ class UserDataViewSet(viewsets.GenericViewSet):
         queryset = JobPermission.get_orderable_queryset_for_job(job, User)
         total = queryset.count()
         filtered_queryset = self.filter_queryset(queryset)
-
+        filtered_queryset = annotate_users_restricted(filtered_queryset, job)
         if request.query_params.get("exclude_self"):
             filtered_queryset = filtered_queryset.exclude(username=request.user.username)
         elif request.query_params.get("prepend_self"):

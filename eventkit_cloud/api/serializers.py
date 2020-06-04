@@ -24,7 +24,7 @@ from . import validators
 from eventkit_cloud.core.models import (
     GroupPermission,
     GroupPermissionLevel,
-)
+    attribute_class_filter)
 from eventkit_cloud.jobs.models import (
     ExportFormat,
     Projection,
@@ -48,7 +48,6 @@ from eventkit_cloud.tasks.models import (
 )
 from eventkit_cloud.user_requests.models import DataProviderRequest, SizeIncreaseRequest
 from eventkit_cloud.utils.s3 import get_presigned_url
-from .filters import attribute_class_filter
 
 try:
     from collections import OrderedDict
@@ -621,6 +620,7 @@ class UserDataSerializer(serializers.Serializer):
     user = serializers.SerializerMethodField()
     accepted_licenses = serializers.SerializerMethodField()
     groups = serializers.SerializerMethodField()
+    restricted = serializers.SerializerMethodField()
 
     class Meta:
         fields = ("user", "accepted_licenses")
@@ -638,6 +638,12 @@ class UserDataSerializer(serializers.Serializer):
             else:
                 licenses[license.slug] = False
         return licenses
+
+    @staticmethod
+    def get_restricted(instance):
+        if hasattr(instance, "restricted"):
+            return instance.restricted
+        return False
 
     def get_user(self, instance):
         request = self.context["request"]

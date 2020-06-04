@@ -2,11 +2,10 @@
 
 from django.db import migrations
 
-from eventkit_cloud.jobs.models import VisibilityState
+from eventkit_cloud.jobs.models import VisibilityState, JobPermissionLevel
 
 
 def update_permissions(apps, schema_editor):
-    from eventkit_cloud.core.models import JobPermissionLevel
     ContentType = apps.get_model('contenttypes', 'ContentType')
     Job = apps.get_model('jobs', 'Job')
     JobPermission = apps.get_model('core', 'JobPermission')
