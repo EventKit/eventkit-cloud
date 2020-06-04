@@ -1,5 +1,5 @@
 {% set name = "eventkit-cloud" %}
-{% set version = "1.6.0" %}
+{% set version = "1.7.0" %}
 
 package:
   name: "{{ name|lower }}"
@@ -38,6 +38,7 @@ requirements:
     - django-extensions =2.1.6
     - django-filter =2.2.0
     - django-notifications-hq =1.5.0
+    - django-storages =1.6.6
     - djangorestframework =3.11.0
     - djangorestframework-gis =0.14
     - eventlet =0.23.0
@@ -83,6 +84,7 @@ requirements:
     - django-extensions =2.1.6
     - django-filter =2.2.0
     - django-notifications-hq =1.5.0
+    - django-storages =1.6.6
     - djangorestframework =3.11.0
     - djangorestframework-gis =0.14
     - eventlet =0.23.0

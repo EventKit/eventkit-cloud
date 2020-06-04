@@ -1,22 +1,21 @@
 import * as React from 'react';
-import {connect} from 'react-redux';
-import {withTheme, Theme} from '@material-ui/core/styles';
+import { connect } from 'react-redux';
+import { withTheme, Theme } from '@material-ui/core/styles';
 import CircularProgress from '@material-ui/core/CircularProgress';
 import ButtonBase from '@material-ui/core/ButtonBase';
 import Button from '@material-ui/core/Button';
 import InfoIcon from '@material-ui/icons/InfoOutlined';
 import CustomTextField from '../common/CustomTextField';
 import GroupRow from './GroupRow';
-import GroupsHeaderRow, {GroupOrder, SharedOrder} from './GroupsHeaderRow';
+import GroupsHeaderRow, { GroupOrder, SharedOrder } from './GroupsHeaderRow';
 import GroupBodyTooltip from './ShareBodyTooltip';
-import {getPermissionGroups} from '../../actions/groupActions';
+import { getGroups } from '../../actions/groupActions';
 
 export interface Props {
-    job: Eventkit.Job;
-    getPermissionGroups: (jobUid: any, params: {}, append: boolean) => void;
+    getGroups: (args: any, append: boolean) => void;
     nextPage: boolean;
     groups: Eventkit.Group[];
-    selectedGroups: Eventkit.Permissions.Groups;
+    selectedGroups: Eventkit.Permissions['groups'];
     groupsText: any;
     onUncheckAll: () => void;
     onCheckAll: () => void;
@@ -40,16 +39,14 @@ export interface State {
     loading: boolean;
 }
 
-export class GroupsBody extends React.Component<Props, State> {
+export class PermissionsFilterGroupsBody extends React.Component<Props, State> {
     static defaultProps = {
         groupsText: '',
         canUpdateAdmin: false,
-        handleShowShareInfo: () => { /* do nothing */
-        },
+        handleShowShareInfo: () => { /* do nothing */},
     };
 
     private body: HTMLElement;
-
     constructor(props: Props) {
         super(props);
         this.handleUncheckAll = this.handleUncheckAll.bind(this);
@@ -80,57 +77,27 @@ export class GroupsBody extends React.Component<Props, State> {
 
     componentDidMount() {
         window.addEventListener('wheel', this.handleScroll);
-        const jobUid = this.props.job.uid;
-        this.getPermissionGroups(jobUid, this.getPermissions(), this.getGroupOrder(), {page: this.state.page}, false);
+        this.getGroups({ page: this.state.page }, false);
     }
 
     componentWillUnmount() {
         window.removeEventListener('wheel', this.handleScroll);
     }
 
-    private getPermissions() {
-        let permissions;
-        const selectedGroups = this.props.selectedGroups;
-        if (Object.values(selectedGroups).find(value => value === 'ADMIN')) {
-            permissions = 'admin_shared';
-        } else {
-            permissions = 'shared';
-        }
-        return permissions;
-    }
-
-    private getGroupOrder() {
-        let name;
-        if (this.state.groupOrder === 'name') {
-            name = 'name';
-        } else {
-            name = '-name';
-        }
-        return name;
-    }
-
-    private async getPermissionGroups(jobUid, permissions, groupOrder, params: {}, append = true) {
-        this.setState({loading: true});
-        if (this.state.search) {
-            params['search'] = this.state.search;
-        }
-        await this.props.getPermissionGroups(
-            jobUid,
-            {
-                exclude_self: 'true',
-                ordering: `${permissions},${groupOrder}`,
-                page: this.state.page,
-                ...params,
-            },
-            append
-        );
-        this.setState({loading: false});
+    private async getGroups(params = {}, append = true) {
+        this.setState({ loading: true });
+        await this.props.getGroups({
+            page: this.state.page,
+            ordering: this.state.groupOrder,
+            search: this.state.search,
+            ...params,
+        }, append);
+        this.setState({ loading: false });
     }
 
     private loadMore() {
-        const jobUid = this.props.job.uid;
-        this.getPermissionGroups(jobUid, this.getPermissions(), this.getGroupOrder(), {page: this.state.page + 1});
-        this.setState({page: this.state.page + 1});
+        this.getGroups({ page: this.state.page + 1 });
+        this.setState({ page: this.state.page + 1 });
     }
 
     private handleUncheckAll() {
@@ -150,11 +117,11 @@ export class GroupsBody extends React.Component<Props, State> {
     }
 
     private handleAdminMouseOver(target: HTMLElement, admin: boolean) {
-        this.setState({tooltip: {target, admin}});
+        this.setState({ tooltip: { target, admin } });
     }
 
     private handleAdminMouseOut() {
-        this.setState({tooltip: {target: null, admin: false}});
+        this.setState({ tooltip: { target: null, admin: false } });
     }
 
     private handleScroll() {
@@ -168,14 +135,11 @@ export class GroupsBody extends React.Component<Props, State> {
         if (event.key === 'Enter') {
             const text = (event.target as HTMLInputElement).value || '';
             if (text) {
-                this.setState({page: 1});
-                this.getPermissionGroups(
-                    this.props.job.uid,
-                    this.getPermissions(),
-                    this.getGroupOrder(),
-                    {page: 1, search: text},
-                    false
-                );
+                this.setState({ page: 1 });
+                this.getGroups({
+                    page: 1,
+                    search: text,
+                }, false);
             }
         }
     }
@@ -183,43 +147,82 @@ export class GroupsBody extends React.Component<Props, State> {
     // commit text to search state, if search is empty make a getGroups request
     private handleSearchInput(e: React.ChangeEvent<HTMLInputElement>) {
         if (this.state.search && !e.target.value) {
-            this.getPermissionGroups(
-                this.props.job.uid,
-                this.getPermissions(),
-                this.getGroupOrder(),
-                {page: 1, search: e.target.value},
-                false
-            );
-            this.setState({search: e.target.value, page: 1});
+            this.getGroups({ page: 1, search: e.target.value }, false);
+            this.setState({ search: e.target.value, page: 1 });
         } else {
-            this.setState({search: e.target.value});
+            this.setState({ search: e.target.value });
         }
     }
 
     private reverseGroupOrder(v: GroupOrder) {
-        this.getPermissionGroups(
-            this.props.job.uid,
-            this.getPermissions(),
-            v,
-            {page: 1},
-            false
-        );
-        this.setState({groupOrder: v, activeOrder: v, page: 1});
+        this.getGroups({ page: 1, ordering: v }, false);
+        this.setState({ groupOrder: v, activeOrder: v, page: 1 });
     }
 
     private reverseSharedOrder(v: SharedOrder) {
-        this.getPermissionGroups(
-            this.props.job.uid,
-            v,
-            this.getGroupOrder(),
-            {page: 1},
-            false
-        );
-        this.setState({sharedOrder: v, activeOrder: v});
+        this.setState({ sharedOrder: v, activeOrder: v });
+    }
+
+    private sortByShared(groups: Eventkit.Group[], selectedGroups: Eventkit.Permissions['groups'], descending: boolean) {
+        if (descending === true) {
+            groups.sort((a, b) => {
+                const aSelected = a.name in selectedGroups;
+                const bSelected = b.name in selectedGroups;
+                if (aSelected && !bSelected) {
+                    return -1;
+                }
+                if (!aSelected && bSelected) {
+                    return 1;
+                }
+                return 0;
+            });
+        } else {
+            groups.sort((a, b) => {
+                const aSelected = a.name in selectedGroups;
+                const bSelected = b.name in selectedGroups;
+                if (!aSelected && bSelected) {
+                    return -1;
+                }
+                if (aSelected && !bSelected) {
+                    return 1;
+                }
+                return 0;
+            });
+        }
+        return groups;
+    }
+
+    private sortByAdmin(groups: Eventkit.Group[], selectedGroups: Eventkit.Permissions['groups'], descending: boolean) {
+        if (descending === true) {
+            groups.sort((a, b) => {
+                const aAdmin = selectedGroups[a.name] === 'ADMIN';
+                const bAdmin = selectedGroups[b.name] === 'ADMIN';
+                if (aAdmin && !bAdmin) {
+                    return -1;
+                }
+                if (!aAdmin && bAdmin) {
+                    return 1;
+                }
+                return 0;
+            });
+        } else {
+            groups.sort((a, b) => {
+                const aAdmin = selectedGroups[a.name] === 'ADMIN';
+                const bAdmin = selectedGroups[b.name] === 'ADMIN';
+                if (!aAdmin && bAdmin) {
+                    return -1;
+                }
+                if (aAdmin && !bAdmin) {
+                    return 1;
+                }
+                return 0;
+            });
+        }
+        return groups;
     }
 
     render() {
-        const {colors} = this.props.theme.eventkit;
+        const { colors } = this.props.theme.eventkit;
 
         const styles = {
             fixedHeader: {
@@ -268,7 +271,15 @@ export class GroupsBody extends React.Component<Props, State> {
             },
         };
 
-        const {groups} = this.props;
+        let { groups } = this.props;
+        if (this.state.activeOrder.includes('shared')) {
+            if (this.state.activeOrder.includes('admin')) {
+                groups = this.sortByAdmin([...groups], this.props.selectedGroups, !this.state.sharedOrder.includes('-admin'));
+            } else {
+                groups = this.sortByShared([...groups], this.props.selectedGroups, !this.state.sharedOrder.includes('-'));
+            }
+        }
+
         const selectedCount = Object.keys(this.props.selectedGroups).length;
         const adminCount = Object.keys(this.props.groups).filter(group => this.props.selectedGroups[group] === 'ADMIN').length;
 
@@ -281,7 +292,7 @@ export class GroupsBody extends React.Component<Props, State> {
                         onClick={this.props.handleShowShareInfo}
                         style={styles.shareInfoButton}
                     >
-                        <InfoIcon style={styles.shareInfoIcon} className="qa-GroupsBody-shareInfo-icon"/>
+                        <InfoIcon style={styles.shareInfoIcon} className="qa-GroupsBody-shareInfo-icon" />
                         Sharing Rights
                     </ButtonBase>
                     <span style={styles.shareInfoText} className="qa-GroupsBody-shareInfo-text">
@@ -292,11 +303,9 @@ export class GroupsBody extends React.Component<Props, State> {
         }
 
         return (
-            <div style={{position: 'relative'}} ref={(input) => {
-                this.body = input;
-            }}>
+            <div style={{ position: 'relative' }} ref={(input) => { this.body = input; }}>
                 <div style={styles.fixedHeader}>
-                    <div style={{fontSize: '14px', padding: '10px 0px'}} className="qa-GroupsBody-groupsText">
+                    <div style={{ fontSize: '14px', padding: '10px 0px' }} className="qa-GroupsBody-groupsText">
                         {this.props.groupsText}
                     </div>
                     <CustomTextField
@@ -307,10 +316,7 @@ export class GroupsBody extends React.Component<Props, State> {
                         onChange={this.handleSearchInput}
                         onKeyDown={this.handleSearchKeyDown}
                         value={this.state.search}
-                        InputProps={{
-                            style: {paddingLeft: '16px', lineHeight: '36px', fontSize: '14px'},
-                            disableUnderline: true
-                        }}
+                        InputProps={{ style: { paddingLeft: '16px', lineHeight: '36px', fontSize: '14px' }, disableUnderline: true }}
                         style={styles.textField}
                         charsRemainingStyle={styles.characterLimit}
                     />
@@ -349,8 +355,8 @@ export class GroupsBody extends React.Component<Props, State> {
                         );
                     })
                     :
-                    <div style={{display: 'flex', justifyContent: 'center', margin: '50px auto'}}>
-                        <CircularProgress/>
+                    <div style={{ display: 'flex', justifyContent: 'center', margin: '50px auto' }}>
+                        <CircularProgress />
                     </div>
                 }
                 <GroupBodyTooltip
@@ -389,10 +395,10 @@ const mapStateToProps = state => (
 
 const mapDispatchToProps = dispatch => (
     {
-        getPermissionGroups: (jobUid, params, append) => (
-            dispatch(getPermissionGroups(jobUid, params, append))
+        getGroups: (params, append) => (
+            dispatch(getGroups(params, append))
         ),
     }
 );
 
-export default withTheme()(connect(mapStateToProps, mapDispatchToProps)(GroupsBody));
+export default withTheme()(connect(mapStateToProps, mapDispatchToProps)(PermissionsFilterGroupsBody));

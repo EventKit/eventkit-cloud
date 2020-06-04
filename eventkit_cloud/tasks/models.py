@@ -3,10 +3,14 @@
 
 import logging
 
+from django.conf import settings
 from django.contrib.auth.models import User
 from django.contrib.contenttypes.models import ContentType
+from django.core.files.storage import FileSystemStorage
 from django.db import models
 from django.utils import timezone
+
+from storages.backends.s3boto3 import S3Boto3Storage
 
 from eventkit_cloud.core.helpers import (
     sendnotification,
@@ -145,6 +149,38 @@ class ExportRun(UIDMixin, TimeStampedModelMixin, TimeTrackingModelMixin, Notific
         cancel_run(export_run_uid=self.uid, canceling_username=username, delete=True)
         self.save()
         self.soft_delete_notifications(*args, **kwargs)
+
+
+class ExportRunFile(UIDMixin, TimeStampedModelMixin):
+    """
+    The ExportRunFile stores additional files to be added to each ExportRun zip archive.
+    """
+
+    storage = None
+    if settings.USE_S3:
+        storage = S3Boto3Storage()
+    else:
+        storage = FileSystemStorage(location=settings.EXPORT_RUN_FILES, base_url=settings.EXPORT_RUN_FILES_DOWNLOAD)
+
+    file = models.FileField(verbose_name="File", storage=storage)
+    directory = models.CharField(
+        max_length=100, null=True, blank=True, help_text="An optional directory name to store the file in."
+    )
+    provider = models.ForeignKey(
+        DataProvider,
+        on_delete=models.CASCADE,
+        related_name="file_provider",
+        null=True,
+        blank=True,
+        help_text="An optional data provider to associate the file with.",
+    )
+
+    def save(self, *args, **kwargs):
+        if self.pk:
+            export_run_file = ExportRunFile.objects.get(id=self.id)
+            if export_run_file.file != self.file:
+                export_run_file.file.delete(save=False)
+        super(ExportRunFile, self).save(*args, **kwargs)
 
 
 class DataProviderTaskRecord(UIDMixin, TimeStampedModelMixin, TimeTrackingModelMixin):
