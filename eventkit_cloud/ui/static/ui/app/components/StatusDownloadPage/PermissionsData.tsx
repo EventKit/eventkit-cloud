@@ -15,6 +15,7 @@ interface Props {
     adminPermissions: boolean;
     user: Eventkit.User;
     theme: Eventkit.Theme & Theme;
+    job: Eventkit.Job;
 }
 
 interface State {
@@ -218,6 +219,7 @@ export class PermissionsData extends React.Component<Props, State> {
                         Member sharing is managed separately from group sharing"
                         canUpdateAdmin
                         warnPublic
+                        job={this.props.job}
                     />
                 </React.Fragment>
             );

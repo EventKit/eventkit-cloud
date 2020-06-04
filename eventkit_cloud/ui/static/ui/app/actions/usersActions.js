@@ -38,3 +38,30 @@ export function getUsers(params, append = false) {
         },
     };
 }
+
+export function getPermissionUsers(jobUid, params, append = false) {
+    return {
+        types: [
+            types.FETCHING_USERS,
+            types.FETCHED_USERS,
+            types.FETCH_USERS_ERROR,
+        ],
+        url: `/api/users?job_uid=${jobUid}`,
+        method: 'GET',
+        params,
+        payload: { append },
+        getCancelSource: state => state.groups.cancelSource,
+        cancellable: true,
+        onSuccess: (response) => {
+            // get the total count from the header
+            const totalUsers = Number(response.headers['total-users']);
+            const { nextPage, range } = getHeaderPageInfo(response);
+            return {
+                users: response.data,
+                total: totalUsers,
+                range,
+                nextPage,
+            };
+        },
+    };
+}
