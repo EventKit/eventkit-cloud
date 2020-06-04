@@ -1251,7 +1251,9 @@ def get_selection_dict(obj):
 
 
 def get_provider_task_list_status(user, provider_tasks):
-    provider_tasks, filtered_provider_tasks = attribute_class_filter(provider_tasks.exclude(slug="run"), user)
+    if provider_tasks and isinstance(provider_tasks.first(), DataProviderTaskRecord):
+        provider_tasks = provider_tasks.exclude(slug="run")
+    provider_tasks, filtered_provider_tasks = attribute_class_filter(provider_tasks, user)
     if not provider_tasks:
         return "EMPTY"
     if not filtered_provider_tasks:
