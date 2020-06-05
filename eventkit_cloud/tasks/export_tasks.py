@@ -1157,7 +1157,6 @@ def wait_for_providers_task(result=None, apply_args=None, run_uid=None, callback
 @app.task(name="Project File (.zip)", base=ZipFileTask, acks_late=True)
 def create_zip_task(
     result: dict = None,
-    data_provider_task_record_uid: str = None,
     data_provider_task_record_uids: List[str] = None,
     *args,
     **kwargs,

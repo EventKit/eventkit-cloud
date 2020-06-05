@@ -65,7 +65,6 @@ def generate_zipfile(request):
         )
 
     run = runs.first()
-    # TODO: Before we can zip up anything, we need to download the files to their correct locations in the export_stage directory.
     stage_dir = get_run_staging_dir(run.uid)
     download_dir = get_run_download_dir(run.uid)
 
@@ -83,7 +82,6 @@ def generate_zipfile(request):
         stage_dir=stage_dir,
     )
     run_zip_task_chain.apply_async()
-    # TODO: Once the task finishes, we need to store the file somewhere, and create a class to store that files location in.
 
     # TODO: We need to keep the user updated, when the zip is finished it should populate their frontend button to say Download DataPack instead of Generate Zipfile.
     return HttpResponse(status=200)
