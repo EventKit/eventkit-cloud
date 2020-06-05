@@ -115,7 +115,6 @@ export class GroupRow extends React.Component<Props, State> {
         this.loadMembers = this.loadMembers.bind(this);
         this.onAdminMouseOut = this.onAdminMouseOut.bind(this);
         this.onAdminMouseOver = this.onAdminMouseOver.bind(this);
-        this.checkUserRestrictions = this.checkUserRestrictions.bind(this);
         this.state = {
             expanded: false,
             loadingMembers: false,
@@ -174,12 +173,6 @@ export class GroupRow extends React.Component<Props, State> {
         this.setState({expanded: !this.state.expanded});
     }
 
-    private checkUserRestrictions() {
-        // if (this.props.group.members.find(member => member.isRestricted)) {
-        //     return true;
-        // }
-    }
-
     render() {
         const {classes} = this.props;
         const {colors} = this.props.theme.eventkit;
@@ -226,7 +219,7 @@ export class GroupRow extends React.Component<Props, State> {
                                 {this.props.group.name}
                             </div>
                             {
-                                // this.checkUserRestrictions &&
+                                this.props.group.restricted &&
                                 <span className={classes.notificationIcon}><NotificationIconPopover view={this.props.view}/></span>
                             }
                             <div className={`qa-GroupRow-CardHeader-icons ${classes.groupIcons}`}>

@@ -81,8 +81,10 @@ export class GroupsBody extends React.Component<Props, State> {
 
     componentDidMount() {
         window.addEventListener('wheel', this.handleScroll);
-        const jobUid = this.props.job.uid;
-        this.getPermissionGroups(jobUid, this.getPermissions(), this.getGroupOrder(), {page: this.state.page}, false);
+        if (this.props.job) {
+            const jobUid = this.props.job.uid;
+            this.getPermissionGroups(jobUid, this.getPermissions(), this.getGroupOrder(), {page: this.state.page}, false);
+        }
     }
 
     componentWillUnmount() {

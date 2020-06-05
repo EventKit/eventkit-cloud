@@ -168,7 +168,7 @@ export class MemberRow extends React.Component<Props, {}> {
                                 </div>
                             </div>
                             {
-                                // this.props.member.isRestricted &&
+                                this.props.member.restricted &&
                                 <span style={styles.notificationIcon}><NotificationIconPopover view={this.props.view}/></span>
                             }
                             {adminButton}

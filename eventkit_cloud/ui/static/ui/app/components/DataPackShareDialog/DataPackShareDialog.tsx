@@ -377,33 +377,6 @@ export class DataPackShareDialog extends React.Component<Props, State> {
                         />
                     </div>
                 </div>
-                {this.state.view === 'groups' ?
-                    <GroupsBody
-                        view={this.state.view}
-                        selectedGroups={this.state.permissions.groups}
-                        groupsText={this.props.groupsText}
-                        onGroupCheck={this.handleGroupCheck}
-                        onAdminCheck={this.handleAdminGroupCheck}
-                        onCheckAll={this.handleGroupCheckAll}
-                        onUncheckAll={this.handleGroupUncheckAll}
-                        canUpdateAdmin={this.props.canUpdateAdmin}
-                        handleShowShareInfo={this.showShareInfo}
-                    />
-                    :
-                    <MembersBody
-                        view={this.state.view}
-                        public={this.state.permissions.value === 'PUBLIC'}
-                        selectedMembers={this.state.permissions.members}
-                        membersText={this.props.membersText}
-                        onMemberCheck={this.handleUserCheck}
-                        onAdminCheck={this.handleAdminCheck}
-                        onCheckCurrent={this.handleCurrentCheck}
-                        onCheckAll={this.handlePublicCheck}
-                        onUncheckAll={this.handleUncheckAll}
-                        canUpdateAdmin={this.props.canUpdateAdmin}
-                        handleShowShareInfo={this.showShareInfo}
-                    />
-                }
                 {this.props.job && this.renderSharedPermissionsWithJob()}
                 {!this.props.job && this.renderSharedPermissionsWithoutJob()}
                 <BaseDialog

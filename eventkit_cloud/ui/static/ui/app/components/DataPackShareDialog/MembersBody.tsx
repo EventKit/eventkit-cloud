@@ -90,9 +90,10 @@ export class MembersBody extends React.Component<Props, State> {
 
     componentDidMount() {
         window.addEventListener('wheel', this.handleScroll);
-        const jobUid = this.props.job.uid;
-        this.getPermissionUsers(jobUid, this.getPermissions(), this.getMemberOrder(), {page: this.state.page}, false);
-
+        if (this.props.job) {
+            const jobUid = this.props.job.uid;
+            this.getPermissionUsers(jobUid, this.getPermissions(), this.getMemberOrder(), {page: this.state.page}, false);
+        }
     }
 
     componentWillUnmount() {
