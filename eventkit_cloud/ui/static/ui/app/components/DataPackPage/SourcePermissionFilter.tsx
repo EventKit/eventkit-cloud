@@ -43,8 +43,6 @@ const jss = (theme: Eventkit.Theme & Theme) => createStyles({
 
 export interface Props {
     classes: { [className: string]: string };
-    // permissions: Eventkit.Permissions;
-    // onChange: (perms: Eventkit.Permissions | { value: Eventkit.Permissions.Visibility }) => void;
 }
 
 export function SourcePermissionFilter(props: Props) {
