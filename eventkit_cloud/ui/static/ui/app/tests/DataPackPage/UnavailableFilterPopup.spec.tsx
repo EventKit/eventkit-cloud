@@ -30,7 +30,6 @@ describe('PermissionsBanner component', () => {
 
     it('should render the initial collapsed elements', () => {
         expect(wrapper.find(IconButton)).toHaveLength(1);
-        expect(wrapper.find(Typography)).toHaveLength(1);
         expect(wrapper.find(WarningIcon)).toHaveLength(1);
         expect(wrapper.find(Popover)).toHaveLength(1);
         expect(wrapper.find(CloseIcon)).toHaveLength(0);

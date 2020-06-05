@@ -4,15 +4,13 @@ import logging
 
 import django_filters
 from django.contrib.auth.models import User, Group
-from django.db.models import Q, QuerySet
+from django.db.models import Q
 from django.db import models
 
-from eventkit_cloud.core.models import GroupPermission, AttributeClass
+from eventkit_cloud.core.models import GroupPermission
 from eventkit_cloud.jobs.models import Job, VisibilityState, UserJobActivity
 from eventkit_cloud.tasks.models import ExportRun
 from audit_logging.models import AuditEvent
-from typing import Tuple
-
 
 logger = logging.getLogger(__name__)
 
@@ -25,31 +23,6 @@ class ListFilter(django_filters.Filter):
             return self.get_method(qs)(**{lookup: value_list}).distinct()
         else:
             return qs
-
-
-def attribute_class_filter(queryset: QuerySet, user: User = None) -> Tuple[QuerySet, QuerySet]:
-
-    if not user:
-        return queryset, []
-
-    # Get all of the classes that we aren't in.
-    restricted_attribute_classes = AttributeClass.objects.exclude(users=user)
-    attribute_class_queries = {
-        "ExportRun": {"job__provider_tasks__provider__attribute_class__in": restricted_attribute_classes},
-        "Job": {"provider_tasks__provider__attribute_class__in": restricted_attribute_classes},
-        "DataProvider": {"attribute_class__in": restricted_attribute_classes},
-        "DataProviderTask": {"provider__attribute_class__in": restricted_attribute_classes},
-        "DataProviderTaskRecord": {"provider__attribute_class__in": restricted_attribute_classes},
-    }
-    item = queryset.first()
-    attribute_class_query = {}
-
-    if item:
-        # Get all of the objects that don't include attribute classes that we aren't in.
-        attribute_class_query = attribute_class_queries.get(type(item).__name__, {})
-    filtered = queryset.filter(**attribute_class_query).distinct()
-    queryset = queryset.exclude(**attribute_class_query).distinct()
-    return queryset, filtered
 
 
 class JobFilter(django_filters.FilterSet):
@@ -128,11 +101,38 @@ class ExportRunFilter(django_filters.FilterSet):
         )
 
 
+class SharedOrderFilter(django_filters.OrderingFilter):
+    def __init__(self, *args, **kwargs):
+        # if not kwargs.get("choices"):
+        #     kwargs['choices'] = []
+        super(SharedOrderFilter, self).__init__(*args, **kwargs)
+
+        self.extra["choices"] += (
+            ("admin_shared", "Admin Shared"),
+            ("-admin_shared", "Admin Shared (descending)"),
+            ("shared", "Shared"),
+            ("-shared", "Shared (descending)"),
+        )
+
+
 class UserFilter(django_filters.FilterSet):
     min_date = django_filters.DateFilter(field_name="date_joined", lookup_expr="gte")
     max_date = django_filters.DateFilter(field_name="date_joined", lookup_expr="lte")
     started_at = django_filters.IsoDateTimeFilter(field_name="date_joined", lookup_expr="exact")
     groups = django_filters.CharFilter(method="group_filter")
+
+    ordering = SharedOrderFilter(
+        # tuple-mapping retains order
+        fields=(
+            ("admin_shared", "admin_shared"),
+            ("shared", "shared"),
+            ("username", "username"),
+            ("last_name", "last_name"),
+            ("first_name", "first_name"),
+            ("email", "email"),
+            ("date_joined", "date_joined"),
+        )
+    )
 
     class Meta:
         model = User
@@ -174,6 +174,10 @@ class UserFilter(django_filters.FilterSet):
 
 class GroupFilter(django_filters.FilterSet):
     name = django_filters.CharFilter(field_name="name", lookup_expr="icontains")
+    ordering = SharedOrderFilter(
+        # tuple-mapping retains order
+        fields=(("admin_shared", "admin_shared"), ("shared", "shared"), ("name", "name"),)
+    )
 
     class Meta:
         model = Group

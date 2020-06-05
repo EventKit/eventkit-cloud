@@ -7,22 +7,24 @@ import uuid
 import yaml
 
 from django.contrib.auth.models import Group, User
-from django.contrib.contenttypes.fields import GenericForeignKey
-from django.contrib.contenttypes.models import ContentType
 from django.contrib.gis.geos import (
     GEOSGeometry,
     GeometryCollection,
     Polygon,
     MultiPolygon,
 )
+from django.contrib.contenttypes.fields import GenericForeignKey
+from django.contrib.contenttypes.models import ContentType
 from django.contrib.postgres.fields.jsonb import JSONField
 from django.core.serializers import serialize
 from django.contrib.gis.db import models
 from django.core.cache import cache
+
 from django.utils import timezone
 from enum import Enum
-from django.db.models import Q
+from django.db.models import Q, QuerySet, Case, Value, When
 
+from typing import Union
 
 from eventkit_cloud.core.models import (
     CachedModelMixin,
@@ -251,6 +253,7 @@ class DataProvider(UIDMixin, TimeStampedModelMixin, CachedModelMixin):
         blank=True,
         null=True,
         on_delete=models.SET_NULL,
+        related_name="data_providers",
         help_text="The attribute class is used to limit users access to resources using this data provider.",
     )
 
@@ -577,6 +580,16 @@ def bbox_to_geojson(bbox=None):
     return {"type": "Feature", "geometry": geometry}
 
 
+def remove_permissions(model, id):
+    JobPermission.objects.filter(content_type=ContentType.objects.get_for_model(model), object_id=id).delete()
+
+
+class JobPermissionLevel(Enum):
+    NONE = "NONE"
+    READ = "READ"
+    ADMIN = "ADMIN"
+
+
 class JobPermission(TimeStampedModelMixin):
 
     """
@@ -590,28 +603,54 @@ class JobPermission(TimeStampedModelMixin):
     permission = models.CharField(choices=[("NONE", "None"), ("READ", "Read"), ("ADMIN", "Admin")], max_length=10)
 
     @staticmethod
-    def jobpermissions(job):
-        permissions = {"groups": {}, "members": {}}
+    def get_orderable_queryset_for_job(job: Job, model: Union[User, Group]) -> QuerySet:
+        admin = shared = unshared = []
+        if job:
+            job_permissions = job.permissions.prefetch_related("content_object").filter(
+                content_type=ContentType.objects.get_for_model(model)
+            )
+            admin_ids = []
+            shared_ids = []
+            for job_permission in job_permissions:
+                if job_permission.permission == JobPermissionLevel.ADMIN.value:
+                    admin_ids += [job_permission.content_object.id]
+                else:
+                    shared_ids += [job_permission.content_object.id]
+            admin = model.objects.filter(pk__in=admin_ids)
+            shared = model.objects.filter(pk__in=shared_ids)
+            total = admin_ids + shared_ids
+            unshared = model.objects.exclude(pk__in=total)
+            queryset = admin | shared | unshared
+        else:
+            queryset = model.objects.all()
+        # https://docs.djangoproject.com/en/3.0/ref/models/conditional-expressions/#case
+        queryset = queryset.annotate(
+            admin_shared=Case(
+                When(id__in=admin, then=Value(0)),
+                When(id__in=shared, then=Value(1)),
+                When(id__in=unshared, then=Value(2)),
+                default=Value(2),
+                output_field=models.IntegerField(),
+            )
+        ).annotate(
+            shared=Case(
+                When(id__in=admin, then=Value(0)),
+                When(id__in=shared, then=Value(0)),
+                When(id__in=unshared, then=Value(1)),
+                default=Value(1),
+                output_field=models.IntegerField(),
+            )
+        )
+        return queryset
 
-        for jp in JobPermission.objects.filter(job=job):
-            if jp.content_type == ContentType.objects.get_for_model(User):
-                try:
-                    user = User.objects.get(pk=jp.object_id)
-                    permissions["members"][user.username] = jp.permission
-                except User.DoesNotExist as e:
-                    logger.error(e)
-                    logger.error(
-                        "The user id: {jp.object_id} is associated with the job: {job}, but the user doesn't exist."
-                    )
+    @staticmethod
+    def jobpermissions(job: Job) -> dict:
+        permissions = {"groups": {}, "members": {}}
+        for jp in job.permissions.prefetch_related("content_object"):
+            if isinstance(jp.content_object, User):
+                permissions["members"][jp.content_object.username] = jp.permission
             else:
-                try:
-                    group = Group.objects.get(pk=jp.object_id)
-                    permissions["groups"][group.name] = jp.permission
-                except Group.DoesNotExist as e:
-                    logger.error(e)
-                    logger.error(
-                        "The user id: {jp.object_id} is associated with the job: {job}, but the user doesn't exist."
-                    )
+                permissions["groups"][jp.content_object.name] = jp.permission
         return permissions
 
     @staticmethod
@@ -724,13 +763,3 @@ class JobPermission(TimeStampedModelMixin):
 
     def __unicode__(self):
         return "{0} - {1}: {2}: {3}".format(self.content_type, self.object_id, self.job, self.permission)
-
-
-def remove_permissions(model, id):
-    JobPermission.objects.filter(content_type=ContentType.objects.get_for_model(model), object_id=id).delete()
-
-
-class JobPermissionLevel(Enum):
-    NONE = "NONE"
-    READ = "READ"
-    ADMIN = "ADMIN"

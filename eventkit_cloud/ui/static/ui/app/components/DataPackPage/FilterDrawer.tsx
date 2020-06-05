@@ -22,7 +22,6 @@ export interface Props {
 
 export interface State {
     permissions: Eventkit.Permissions;
-    // sourcePermission: any;
     minDate: null | string;
     maxDate: null | string;
     status: {
@@ -42,7 +41,6 @@ export class FilterDrawer extends React.Component<Props, State> {
         this.handleFilterApply = this.handleFilterApply.bind(this);
         this.handleFilterClear = this.handleFilterClear.bind(this);
         this.handlePermissionsChange = this.handlePermissionsChange.bind(this);
-        // this.handleSourcePermissionChange = this.handleSourcePermissionChange.bind(this);
         this.handleProvidersChange = this.handleProvidersChange.bind(this);
         this.handleFormatsChange = this.handleFormatsChange.bind(this);
         this.handleProjectionsChange = this.handleProjectionsChange.bind(this);
@@ -59,10 +57,6 @@ export class FilterDrawer extends React.Component<Props, State> {
                 groups: {},
                 members: {},
             },
-            // sourcePermission: {
-            //     value: '' as Eventkit.Permissions.Visibility,
-            //     sources?
-            // },
             minDate: null,
             maxDate: null,
             status: {
@@ -88,10 +82,6 @@ export class FilterDrawer extends React.Component<Props, State> {
     private handlePermissionsChange(permissions: Eventkit.Permissions) {
         this.setState({permissions: {...this.state.permissions, ...permissions}});
     }
-
-    // private handleSourcePermissionChange(permissions: Eventkit.Permissions) {
-    //     this.setState({ permissions: { ...this.state.permissions, ...permissions } });
-    // }
 
     private handleStatusChange(stateChange: State) {
         let {status} = this.state;

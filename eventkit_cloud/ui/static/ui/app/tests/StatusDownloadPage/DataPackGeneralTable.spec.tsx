@@ -1,8 +1,8 @@
 import * as React from 'react';
 import * as sinon from 'sinon';
-import { createShallow } from '@material-ui/core/test-utils';
+import {createShallow} from '@material-ui/core/test-utils';
 import CustomTableRow from '../../components/common/CustomTableRow';
-import { DataPackGeneralTable } from '../../components/StatusDownloadPage/DataPackGeneralTable';
+import {DataPackGeneralTable} from '../../components/StatusDownloadPage/DataPackGeneralTable';
 
 describe('DataPackGeneralTable component', () => {
     let shallow;
@@ -12,6 +12,20 @@ describe('DataPackGeneralTable component', () => {
     });
 
     const projections = [{srid: 4326, name: "TEST:4326"}];
+    const providers = [
+        {
+            display: true,
+            slug: 'one',
+            name: 'one',
+            service_description: 'number one service',
+        },
+        {
+            display: false,
+            slug: 'two',
+            name: 'two',
+            service_description: 'number two service',
+        },
+    ];
 
     const getProps = () => ({
         dataPack: {
@@ -27,29 +41,19 @@ describe('DataPackGeneralTable component', () => {
                     slug: 'one',
                     name: 'one',
                     description: 'number one',
+                    hidden: false,
+                    provider: providers[0],
                 },
                 {
                     display: false,
                     slug: 'two',
                     name: 'two',
                     description: 'number two',
+                    hidden: false,
                 },
             ],
         },
-        providers: [
-            {
-                display: true,
-                slug: 'one',
-                name: 'one',
-                service_description: 'number one service',
-            },
-            {
-                display: false,
-                slug: 'two',
-                name: 'two',
-                service_description: 'number two service',
-            },
-        ],
+        providers,
         ...(global as any).eventkit_test_props,
     });
 
@@ -57,7 +61,7 @@ describe('DataPackGeneralTable component', () => {
     let wrapper;
     let instance;
     const setup = (overrides = {}) => {
-        props = { ...getProps(), ...overrides };
+        props = {...getProps(), ...overrides};
         wrapper = shallow(<DataPackGeneralTable {...props} />);
         instance = wrapper.instance();
     };
@@ -94,7 +98,7 @@ describe('DataPackGeneralTable component', () => {
         expect(statestub.called).toBe(false);
         instance.handleProviderClose();
         expect(statestub.calledOnce).toBe(true);
-        expect(statestub.calledWith({ providerDialogOpen: false })).toBe(true);
+        expect(statestub.calledWith({providerDialogOpen: false})).toBe(true);
         statestub.restore();
     });
 });

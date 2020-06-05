@@ -1,0 +1,38 @@
+{% set name = "django-storages" %}
+{% set version = "1.6.6" %}
+{% set sha256 = "7339070cf0c8042f5a885783a0a909175a8dbb68e7f5697d597571c830a460c4" %}
+
+package:
+  name: "{{ name|lower }}"
+  version: "{{ version }}"
+
+source:
+  url: https://files.pythonhosted.org/packages/54/e0/12e721b4887dfc039781d6e620ac5363365ea929f0452b862a153cd2410b/django-storages-1.6.6.tar.gz
+  sha256: "{{ sha256 }}"
+
+build:
+  number: 0
+  script: "{{ PYTHON }} -m pip install . --no-deps -vv "
+
+requirements:
+  host:
+    - pip
+    - python
+    - setuptools
+  run:
+    - python
+    - django >=1.8, <3.0
+
+about:
+  home: https://github.com/jschneier/django-storages
+  license: BSD-3-Clause
+  license_family: BSD
+  license_file: LICENSE
+  summary: 'django-storages is a project to provide a variety of storage backends in a single library.'
+  description:
+    This repo began as a fork of the original library under the package name of django-storages-redux
+    and became the official successor (releasing under django-storages on PyPI) in February of 2016.
+    This library is usually compatible with the currently supported versions of Django.
+    Check the Trove classifiers in setup.py to be sure.
+  doc_url: https://django-storages.readthedocs.io/en/latest/
+  dev_url: https://github.com/jschneier/django-storages

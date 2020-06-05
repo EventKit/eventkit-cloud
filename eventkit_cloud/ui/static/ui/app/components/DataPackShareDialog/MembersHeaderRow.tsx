@@ -14,7 +14,7 @@ import IndeterminateIcon from '../icons/IndeterminateIcon';
 import { Breakpoint } from '@material-ui/core/styles/createBreakpoints';
 
 export type MemberOrder = 'username' | '-username';
-export type SharedOrder = 'shared' | '-shared' | 'admin-shared' | '-admin-shared';
+export type SharedOrder = 'shared' | '-shared' | 'admin_shared' | '-admin_shared';
 
 export interface Props {
     className?: string;
@@ -149,8 +149,8 @@ export class MembersHeaderRow extends React.Component<Props, State> {
         const LABELS = {
             shared: 'SHARED',
             '-shared': 'NOT SHARED',
-            'admin-shared': 'ADMIN SHARED',
-            '-admin-shared': 'NOT ADMIN SHARED',
+            'admin_shared': 'ADMIN SHARED',
+            '-admin_shared': 'NOT ADMIN SHARED',
         };
 
         let sharedSort = null;
@@ -235,16 +235,16 @@ export class MembersHeaderRow extends React.Component<Props, State> {
                                     NOT SHARED
                                 </MenuItem>
                                 <MenuItem
-                                    value="admin-shared"
+                                    value="admin_shared"
                                     style={styles.menuItem}
-                                    onClick={() => this.handleChange('admin-shared')}
+                                    onClick={() => this.handleChange('admin_shared')}
                                 >
                                     ADMIN SHARED
                                 </MenuItem>
                                 <MenuItem
-                                    value="-admin-shared"
+                                    value="-admin_shared"
                                     style={styles.menuItem}
-                                    onClick={() => this.handleChange('-admin-shared')}
+                                    onClick={() => this.handleChange('-admin_shared')}
                                 >
                                     NOT ADMIN SHARED
                                 </MenuItem>

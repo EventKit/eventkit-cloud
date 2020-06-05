@@ -232,3 +232,16 @@ export function getFeatureUrl(mapLayer, z, y, x, i, j): string {
 export function arrayHasValue(array: any[], val: any): boolean {
     return array.indexOf(val) !== -1;
 }
+
+
+// Searches for the full provider object in a list of providers that matches the provider task.
+// The ProviderTask representation of provider lacks certain fields that the full provider has.
+export function getProviderFromProviderTask(providerTask: Eventkit.ProviderTask, providers: Eventkit.Provider[]) : Eventkit.Provider {
+    return providers.find(provider => provider.slug === providerTask.provider.slug);
+}
+
+// A variety of objects, Provider/Provider Task, have the display and hidden fields
+// This is a utility that examines both fields to determine if the UI should allow the given object to be displayed
+export function shouldDisplay(hideableObject: {hidden: boolean, display: boolean}) {
+    return hideableObject.display && !hideableObject.hidden;
+}

@@ -6,7 +6,7 @@ import Progress from '@material-ui/core/CircularProgress';
 import BaseDialog from './BaseDialog';
 import DropDownListItem from '../common/DropDownListItem';
 import {getProviderTask} from '../../actions/providerActions';
-import {getJobDetails} from "../../utils/generic"
+import {getJobDetails, getProviderFromProviderTask, shouldDisplay} from "../../utils/generic"
 
 interface OwnProps {
     uids: string[];
@@ -87,22 +87,18 @@ export class ProviderDialog extends React.Component<Props, State> {
         const someSourcesHiddenMsg = "Some sources are unavailable due to user permissions. If you believe this is an error, please contact your administrator.";
         const allSourcesHiddenMsg = "All data sources are unavailable due to user permissions. If you believe this is an error, please contact your administrator.";
         const providers = [];
-        this.props.uids.map((uid, ix) => {
-            const providerTask = this.props.providerTasks[uid];
-            if (!providerTask || providerTask.hidden || !providerTask.display) {
-                return;
+        (Object.values(this.props.providerTasks) || []).map(
+            providerTask => {
+                if(shouldDisplay(providerTask)) {
+                    const provider = getProviderFromProviderTask(providerTask, this.props.providers);
+                    // Realistically, we shouldn't ever even be checking to see if we should display a hidden provider,
+                    // as the provider task itself should already be hidden, but gaps might exist.
+                    if (!!provider && shouldDisplay(provider)) {
+                        providers.push(provider);
+                    }
+                }
             }
-            const provider = providerTask.provider;
-            if (!provider || provider.hidden || !provider.display) {
-                return;
-            }
-            providers.push(provider);
-        });
-
-
-
-        // count will always be at least one due to the hidden provider
-        const hiddenProviderCount = this.props.uids.length - providers.length;
+        );
         return (
             <BaseDialog
                 className="qa-DataPackGridItem-BaseDialog"
@@ -116,10 +112,10 @@ export class ProviderDialog extends React.Component<Props, State> {
                     </div>
                     :
                     (<>
-                            {hiddenProviderCount === this.props.uids.length &&
+                            {this.state.job && this.state.job.provider_task_list_status === 'EMPTY' &&
                             (<div>{allSourcesHiddenMsg}</div>)
                             }
-                            {hiddenProviderCount < this.props.uids.length && hiddenProviderCount > 1 &&
+                            {this.state.job && this.state.job.provider_task_list_status === 'PARTIAL' &&
                             (<div>{someSourcesHiddenMsg}</div>)
                             }
                             <List>

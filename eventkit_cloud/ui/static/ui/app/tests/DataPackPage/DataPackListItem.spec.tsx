@@ -147,29 +147,19 @@ describe('DataPackListItem component', () => {
     describe('getStatusIcon should return correct icon and icon styles', () => {
         it('getStatusIcon should return a Sync icon', () => {
             const syncIcon = wrapper.instance().getStatusIcon('RUNNING');
-            expect(syncIcon).toEqual(
-                <NotificationSync
-                    className="qa-DataPackTableItem-NotificationSync"
-                    style={{color: '#f4d225'}}
-                />);
+            expect(syncIcon.props.style.color).toBe('#f4d225');
+            expect(syncIcon.props.className).toBe("qa-DataPackTableItem-NotificationSync");
         });
         it('getStatusIcon should return a Check icon', () => {
             const checkIcon = wrapper.instance().getStatusIcon('COMPLETED');
-            expect(checkIcon).toEqual((
-                <NavigationCheck
-                    className="qa-DataPackTableItem-NavigationCheck"
-                    style={{color: '#55ba63'}}
-                />
-            ));
+            expect(checkIcon.props.style.color).toBe('#55ba63');
+            expect(checkIcon.props.className).toBe("qa-DataPackTableItem-NavigationCheck");
         });
         it('getStatusIcon should return an Error icon', () => {
             const errorIcon = wrapper.instance().getStatusIcon('INCOMPLETE');
-            expect(errorIcon).toEqual((
-                <AlertError
-                    className="qa-DataPackTableItem-AlertError"
-                    style={{color: '#ce4427', opacity: 0.6, height: '22px'}}
-                />
-                ));
+            expect(errorIcon.props.style.color).toBe('#ce4427');
+            expect(errorIcon.props.style.opacity).toBe(0.6);
+            expect(errorIcon.props.className).toBe("qa-DataPackTableItem-AlertError");
         });
     });
 });

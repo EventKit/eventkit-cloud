@@ -5,7 +5,7 @@ import WarningIcon from '@material-ui/icons/Warning';
 import Typography from '@material-ui/core/Typography';
 import {useState} from 'react';
 import {
-    createStyles, IconButton, Theme, withStyles,
+    createStyles, IconButton, Link, Theme, withStyles,
 } from '@material-ui/core';
 import CloseIcon from '@material-ui/icons/Close';
 import axios from 'axios';
@@ -35,6 +35,7 @@ const jss = (theme: Eventkit.Theme & Theme) => createStyles({
         paddingLeft: '5px',
         paddingTop: '9px',
         fontWeight: 600,
+        cursor: 'pointer',
     },
     iconBtn: {
         float: 'right',
@@ -52,31 +53,6 @@ export function UnavailableFilterPopup(props: Props) {
     const [anchorElement, setAnchor] = useState(null);
     const {classes} = props;
 
-    // const makePermissionsRequest = async () => {
-    //     let responseData;
-    //     return axios({
-    //         url: '/api/providers',
-    //         method: 'get',
-    //     }).then((response) => {
-    //         if (Object.entries(response.data).length === 0) {
-    //             responseData = 'No data providers found.';
-    //             return responseData;
-    //         }
-    //         const providers = response.data;
-    //         providers.forEach((provider) => {
-    //             if (provider.hidden) {
-    //                 this.setState({ showPermissionsBanner: true, isOpen: true });
-    //             }
-    //         });
-    //     }).catch((e) => {
-    //         console.log(e);
-    //     });
-    // };
-    //
-    // useEffectOnMount(() => {
-    //     makePermissionsRequest();
-    // });
-
     const handlePopoverOpen = (e: React.MouseEvent<HTMLElement>) => {
         setAnchor(e.currentTarget);
     };
@@ -84,27 +60,6 @@ export function UnavailableFilterPopup(props: Props) {
     const handlePopoverClose = () => {
         setAnchor(null);
     };
-
-    // const handleErrorMessage = (response) => {
-    //     const { data = {errors: []} } = !!response ? response.response : {};
-    //     return (
-    //         data.errors.map((error, ix) => (
-    //             <span key={ix} title={error.title}>
-    //                 {error.title}
-    //             </span>
-    //         ))
-    //     )
-    // }
-
-    // const style = {
-    //     base: {
-    //         ...props.baseStyle,
-    //     },
-    //     icon: {
-    //         verticalAlign: 'top',
-    //         ...props.iconStyle,
-    //     },
-    // };
 
     const openEl = Boolean(anchorElement);
     return (
@@ -116,12 +71,16 @@ export function UnavailableFilterPopup(props: Props) {
                 <WarningIcon/>
             </IconButton>
             <span>
-                <Typography variant="h6" gutterBottom className={classes.title}>
-                    Some sources are unavailable
-                </Typography>
+                <Link
+                    className={props.classes.name}
+                    onClick={handlePopoverOpen}
+                >
+                    <Typography variant="h6" gutterBottom className={classes.title}>
+                        Some sources are unavailable
+                    </Typography>
+                </Link>
             </span>
             <Popover
-                // id={id}
                 PaperProps={{
                     style: {padding: '16px', width: '30%'},
                 }}

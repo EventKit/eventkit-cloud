@@ -25,6 +25,7 @@ describe('ProvidersFilter component', () => {
             zip: false,
             display: true,
             export_provider_type: 2,
+            hidden: false,
         },
     ];
     const getProps = () => ({

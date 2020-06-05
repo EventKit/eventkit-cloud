@@ -4,7 +4,7 @@ services:
     build:
       context: .
       dockerfile: config/Dockerfile
-    image: eventkit/eventkit-base:1.6.0
+    image: eventkit/eventkit-base:1.7.0
     volumes:
       - ./:/var/lib/eventkit/
     user: eventkit
@@ -37,9 +37,9 @@ services:
       - SSL_VERIFICATION
       - MAX_EXPORTRUN_EXPIRATION_DAYS
       - USE_S3
-      - AWS_BUCKET_NAME
-      - AWS_ACCESS_KEY
-      - AWS_SECRET_KEY
+      - AWS_STORAGE_BUCKET_NAME
+      - AWS_ACCESS_KEY_ID
+      - AWS_SECRET_ACCESS_KEY
       - CONTAINER_CODE_PATH
       - DEV_MACHINE_CODE_PATH
       - DJANGO_MODEL_LOGIN=True
@@ -63,7 +63,7 @@ services:
     extra_hosts:
       - "${SITE_NAME}:${SITE_IP}"
   map:
-    image: eventkit/eventkit-base:1.6.0
+    image: eventkit/eventkit-base:1.7.0
     volumes:
       # using the root directory here will break mapproxy tile locks.
       - ./scripts:/var/lib/eventkit/scripts
@@ -96,14 +96,14 @@ services:
       - PYTHONWARNINGS
       - SSL_VERIFICATION
       - USE_S3
-      - AWS_BUCKET_NAME
-      - AWS_ACCESS_KEY
-      - AWS_SECRET_KEY
+      - AWS_STORAGE_BUCKET_NAME
+      - AWS_ACCESS_KEY_ID
+      - AWS_SECRET_ACCESS_KEY
       - TILE_CACHE_DIR
     extra_hosts:
       - "${SITE_NAME}:${SITE_IP}"
   celery:
-    image: eventkit/eventkit-base:1.6.0
+    image: eventkit/eventkit-base:1.7.0
     volumes:
       - ./:/var/lib/eventkit/
       - ./scripts/run-celery.sh:/home/eventkit/miniconda3/envs/eventkit-cloud/lib/python3.6/site-packages/scripts/run-celery.sh
@@ -141,17 +141,21 @@ services:
       - CONTAINER_CODE_PATH
       - DEV_MACHINE_CODE_PATH
       - MAX_TASK_ATTEMPTS
+      - USE_S3
+      - AWS_STORAGE_BUCKET_NAME
+      - AWS_ACCESS_KEY_ID
+      - AWS_SECRET_ACCESS_KEY
     extra_hosts:
       - "${SITE_NAME}:${SITE_IP}"
     command: /home/eventkit/miniconda3/envs/eventkit-cloud/lib/python3.6/site-packages/scripts/run-celery.sh
   memcached:
-    image: eventkit/eventkit-base:1.6.0
+    image: eventkit/eventkit-base:1.7.0
     expose:
       - "11211"
     entrypoint: >
       /bin/bash -c "source activate eventkit-cloud && memcached -m 2048"
   celery-beat:
-    image: eventkit/eventkit-base:1.6.0
+    image: eventkit/eventkit-base:1.7.0
     volumes:
       - ./:/var/lib/eventkit/
       - ./scripts/run-celery-beat.sh:/home/eventkit/miniconda3/envs/eventkit-cloud/lib/python3.6/site-packages/scripts/run-celery-beat.sh
@@ -216,6 +220,7 @@ services:
       - ./config/eventkit-docker.conf:/usr/local/apache2/conf/httpd.conf
       - ./eventkit_cloud:/var/lib/eventkit/eventkit_cloud
       - ./exports_download:/var/lib/eventkit/exports_download
+      - ./exports_stage:/var/lib/eventkit/exports_stage
       - ./site:/var/lib/eventkit/site
     links:
       - eventkit
@@ -229,7 +234,7 @@ services:
       - SITE_NAME=${SITE_NAME}
       - LOG_LEVEL=warn
   flower:
-    image: eventkit/eventkit-base:1.6.0
+    image: eventkit/eventkit-base:1.7.0
     volumes:
       - ./:/var/lib/eventkit/
     user: eventkit

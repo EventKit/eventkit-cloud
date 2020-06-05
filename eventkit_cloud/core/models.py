@@ -8,12 +8,15 @@ from django.contrib.auth.models import User, Group
 from django.contrib.gis.db import models
 from django.core.cache import cache
 from django.db import transaction
+from django.db.models import QuerySet, Case, Value, When
 from django.utils import timezone
 from enum import Enum
 from notifications.models import Notification
 import logging
-from typing import Union, List, Callable
+from typing import List, Callable, Tuple
 from django.contrib.postgres.fields import JSONField
+from typing import Union
+
 
 logger = logging.getLogger(__name__)
 
@@ -186,7 +189,7 @@ class AttributeClass(UIDMixin, TimeStampedModelMixin):
         unique=True,
         help_text='This is a thruple of nested thruples represented as lists. Example: \'["blue","==","color"]\'.',
     )
-    users = models.ManyToManyField(User)
+    users = models.ManyToManyField(User, related_name="attribute_classes")
 
     def __init__(self, *args, **kwargs):
         super(AttributeClass, self).__init__(*args, **kwargs)
@@ -362,3 +365,61 @@ def update_all_attribute_classes_with_user(user: User) -> None:
             attribute_class.users.add(user)
         else:
             attribute_class.users.remove(user)
+
+
+def get_restricted_users(users: QuerySet, job) -> QuerySet:
+    # If there is no job then there is nothing to compare users against and none are restricted.
+    if not job:
+        return []
+
+    attribute_classes = [provider_task.provider.attribute_class for provider_task in job.provider_tasks.all()]
+    restricted = users.all()
+    for attribute_class in attribute_classes:
+        if attribute_class:
+            restricted = restricted.exclude(attribute_classes=attribute_class)
+        restricted = restricted.distinct()
+    return restricted
+
+
+def annotate_users_restricted(users: QuerySet, job):
+    restricted = get_restricted_users(users, job)
+    users = users.annotate(
+        restricted=Case(When(id__in=restricted, then=True), default=Value(False), output_field=models.BooleanField())
+    )
+    return users
+
+
+def annotate_groups_restricted(groups: QuerySet, job):
+    restricted_users = get_restricted_users(User.objects.all(), job)
+    restricted_groups = groups.filter(group_permissions__user__in=restricted_users)
+    groups = groups.annotate(
+        restricted=Case(
+            When(id__in=restricted_groups, then=True), default=Value(False), output_field=models.BooleanField()
+        )
+    )
+    return groups
+
+
+def attribute_class_filter(queryset: QuerySet, user: User = None) -> Tuple[QuerySet, QuerySet]:
+
+    if not user:
+        return queryset, []
+
+    # Get all of the classes that we aren't in.
+    restricted_attribute_classes = AttributeClass.objects.exclude(users=user)
+    attribute_class_queries = {
+        "ExportRun": {"job__provider_tasks__provider__attribute_class__in": restricted_attribute_classes},
+        "Job": {"provider_tasks__provider__attribute_class__in": restricted_attribute_classes},
+        "DataProvider": {"attribute_class__in": restricted_attribute_classes},
+        "DataProviderTask": {"provider__attribute_class__in": restricted_attribute_classes},
+        "DataProviderTaskRecord": {"provider__attribute_class__in": restricted_attribute_classes},
+    }
+    item = queryset.first()
+    attribute_class_query = {}
+
+    if item:
+        # Get all of the objects that don't include attribute classes that we aren't in.
+        attribute_class_query = attribute_class_queries.get(type(item).__name__, {})
+    filtered = queryset.filter(**attribute_class_query).distinct()
+    queryset = queryset.exclude(**attribute_class_query).distinct()
+    return queryset, filtered

@@ -1,7 +1,7 @@
 import * as React from 'react';
 import * as sinon from 'sinon';
-import { shallow } from 'enzyme';
-import { Link } from 'react-router-dom';
+import {shallow} from 'enzyme';
+import {Link} from 'react-router-dom';
 import TableRow from '@material-ui/core/TableRow';
 import TableCell from '@material-ui/core/TableCell';
 import AlertError from '@material-ui/icons/Error';
@@ -10,7 +10,7 @@ import SocialGroup from '@material-ui/icons/Group';
 import NavigationCheck from '@material-ui/icons/Check';
 import NotificationSync from '@material-ui/icons/Sync';
 import IconMenu from '../../components/common/IconMenu';
-import { DataPackTableItem } from '../../components/DataPackPage/DataPackTableItem';
+import {DataPackTableItem} from '../../components/DataPackPage/DataPackTableItem';
 import DataPackShareDialog from '../../components/DataPackShareDialog/DataPackShareDialog';
 
 describe('DataPackTableItem component', () => {
@@ -66,29 +66,29 @@ describe('DataPackTableItem component', () => {
         url: 'http://cloud.eventkit.test/api/provider_tasks/e261d619-2a02-4ba5-a58c-be0908f97d04',
     }];
     const run = {
-            uid: '6870234f-d876-467c-a332-65fdf0399a0d',
-            url: 'http://cloud.eventkit.test/api/runs/6870234f-d876-467c-a332-65fdf0399a0d',
-            started_at: '2017-03-10T15:52:35.637331Z',
-            finished_at: '2017-03-10T15:52:39.837Z',
-            duration: '0:00:04.199825',
-            user: 'admin',
-            status: 'COMPLETED',
-            job: {
-                uid: '7643f806-1484-4446-b498-7ddaa65d011a',
-                name: 'Test1',
-                event: 'Test1 event',
-                description: 'Test1 description',
-                url: 'http://cloud.eventkit.test/api/jobs/7643f806-1484-4446-b498-7ddaa65d011a',
-                extent: {},
-                permissions: {
-                    value: 'PRIVATE',
-                    groups: {},
-                    members: {},
-                },
+        uid: '6870234f-d876-467c-a332-65fdf0399a0d',
+        url: 'http://cloud.eventkit.test/api/runs/6870234f-d876-467c-a332-65fdf0399a0d',
+        started_at: '2017-03-10T15:52:35.637331Z',
+        finished_at: '2017-03-10T15:52:39.837Z',
+        duration: '0:00:04.199825',
+        user: 'admin',
+        status: 'COMPLETED',
+        job: {
+            uid: '7643f806-1484-4446-b498-7ddaa65d011a',
+            name: 'Test1',
+            event: 'Test1 event',
+            description: 'Test1 description',
+            url: 'http://cloud.eventkit.test/api/jobs/7643f806-1484-4446-b498-7ddaa65d011a',
+            extent: {},
+            permissions: {
+                value: 'PRIVATE',
+                groups: {},
+                members: {},
             },
-            provider_tasks: providerTasks,
-            zipfile_url: 'http://cloud.eventkit.test/downloads/68/TestGPKG-WMTS-TestProject-eventkit-20170310.zip',
-            expiration: '2017-03-24T15:52:35.637258Z',
+        },
+        provider_tasks: providerTasks,
+        zipfile_url: 'http://cloud.eventkit.test/downloads/68/TestGPKG-WMTS-TestProject-eventkit-20170310.zip',
+        expiration: '2017-03-24T15:52:35.637258Z',
     }
 
     const getProps = () => ({
@@ -244,29 +244,19 @@ describe('DataPackTableItem component', () => {
     describe('getStatusIcon should return correct icon and icon styles', () => {
         it('getStatusIcon should return a Sync icon', () => {
             const syncIcon = wrapper.instance().getStatusIcon('RUNNING');
-            expect(syncIcon).toEqual(
-                <NotificationSync
-                    className="qa-DataPackTableItem-NotificationSync"
-                    style={{color: '#f4d225'}}
-                />);
+            expect(syncIcon.props.style.color).toBe('#f4d225');
+            expect(syncIcon.props.className).toBe("qa-DataPackTableItem-NotificationSync");
         });
         it('getStatusIcon should return a Check icon', () => {
             const checkIcon = wrapper.instance().getStatusIcon('COMPLETED');
-            expect(checkIcon).toEqual((
-                <NavigationCheck
-                    className="qa-DataPackTableItem-NavigationCheck"
-                    style={{color: '#55ba63'}}
-                />
-            ));
+            expect(checkIcon.props.style.color).toBe('#55ba63');
+            expect(checkIcon.props.className).toBe("qa-DataPackTableItem-NavigationCheck");
         });
         it('getStatusIcon should return an Error icon', () => {
             const errorIcon = wrapper.instance().getStatusIcon('INCOMPLETE');
-            expect(errorIcon).toEqual((
-                <AlertError
-                    className="qa-DataPackTableItem-AlertError"
-                    style={{color: '#ce4427', opacity: 0.6, height: '22px'}}
-                />
-                ));
+            expect(errorIcon.props.style.color).toBe('#ce4427');
+            expect(errorIcon.props.style.opacity).toBe(0.6);
+            expect(errorIcon.props.className).toBe("qa-DataPackTableItem-AlertError");
         });
     });
 });

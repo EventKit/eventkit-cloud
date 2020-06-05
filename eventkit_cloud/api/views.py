@@ -31,7 +31,6 @@ from eventkit_cloud.api.filters import (
     GroupFilter,
     UserJobActivityFilter,
     LogFilter,
-    attribute_class_filter,
 )
 from eventkit_cloud.api.pagination import LinkHeaderPagination
 from eventkit_cloud.api.permissions import IsOwnerOrReadOnly
@@ -72,6 +71,9 @@ from eventkit_cloud.core.helpers import (
 from eventkit_cloud.core.models import (
     GroupPermission,
     GroupPermissionLevel,
+    annotate_users_restricted,
+    attribute_class_filter,
+    annotate_groups_restricted,
 )
 from eventkit_cloud.jobs.models import (
     ExportFormat,
@@ -1421,15 +1423,10 @@ class UserDataViewSet(viewsets.GenericViewSet):
     parser_classes = (JSONParser,)
     pagination_class = LinkHeaderPagination
     filter_class = UserFilter
-    filter_backends = (
-        DjangoFilterBackend,
-        filters.SearchFilter,
-        filters.OrderingFilter,
-    )
+    filter_backends = (DjangoFilterBackend, filters.SearchFilter)
     lookup_field = "username"
     lookup_value_regex = "[^/]+"
     search_fields = ("username", "last_name", "first_name", "email")
-    ordering_fields = ("username", "last_name", "first_name", "email", "date_joined")
 
     def get_queryset(self):
         return User.objects.all()
@@ -1470,9 +1467,13 @@ class UserDataViewSet(viewsets.GenericViewSet):
         Get a list of users.
         * return: A list of all users.
         """
-        queryset = self.get_queryset()
+        job = None
+        if request.query_params.get("job_uid"):
+            job = Job.objects.get(uid=request.query_params["job_uid"])
+        queryset = JobPermission.get_orderable_queryset_for_job(job, User)
         total = queryset.count()
         filtered_queryset = self.filter_queryset(queryset)
+        filtered_queryset = annotate_users_restricted(filtered_queryset, job)
         if request.query_params.get("exclude_self"):
             filtered_queryset = filtered_queryset.exclude(username=request.user.username)
         elif request.query_params.get("prepend_self"):
@@ -1480,7 +1481,6 @@ class UserDataViewSet(viewsets.GenericViewSet):
                 filtered_queryset = filtered_queryset.exclude(username=request.user.username)
                 filtered_queryset = [qs for qs in filtered_queryset]
                 filtered_queryset = [request.user] + filtered_queryset
-
         page = None
         if not request.query_params.get("disable_page"):
             page = self.paginate_queryset(filtered_queryset)
@@ -1641,11 +1641,10 @@ class GroupViewSet(viewsets.ModelViewSet):
     pagination_class = LinkHeaderPagination
     parser_classes = (JSONParser,)
     filter_class = GroupFilter
-    filter_backends = (filters.SearchFilter, filters.OrderingFilter)
+    filter_backends = (DjangoFilterBackend, filters.SearchFilter)
     lookup_field = "id"
     lookup_value_regex = "[^/]+"
     search_fields = ("name",)
-    ordering_fields = ("name",)
 
     def useradmin(self, group, request):
         serializer = GroupSerializer(group)
@@ -1685,10 +1684,13 @@ class GroupViewSet(viewsets.ModelViewSet):
 
         """
 
-        queryset = self.get_queryset()
+        job = None
+        if request.query_params.get("job_uid"):
+            job = Job.objects.get(uid=request.query_params["job_uid"])
+        queryset = JobPermission.get_orderable_queryset_for_job(job, Group)
         total = queryset.count()
         filtered_queryset = self.filter_queryset(queryset)
-
+        filtered_queryset = annotate_groups_restricted(filtered_queryset, job)
         page = None
         if not request.query_params.get("disable_page"):
             page = self.paginate_queryset(filtered_queryset)

@@ -285,6 +285,7 @@ export class DataPackTableItem extends React.Component<Props, State> {
                     />
                 </TableCell>
                 <DataPackShareDialog
+                    job={this.props.run.job}
                     show={this.state.shareDialogOpen}
                     onClose={this.handleShareClose}
                     onSave={this.handleShareSave}

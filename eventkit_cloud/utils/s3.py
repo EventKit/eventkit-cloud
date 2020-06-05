@@ -8,7 +8,9 @@ logger = logging.getLogger(__name__)
 
 
 def get_s3_client():
-    return boto3.client("s3", aws_access_key_id=settings.AWS_ACCESS_KEY, aws_secret_access_key=settings.AWS_SECRET_KEY,)
+    return boto3.client(
+        "s3", aws_access_key_id=settings.AWS_ACCESS_KEY_ID, aws_secret_access_key=settings.AWS_SECRET_ACCESS_KEY,
+    )
 
 
 def upload_to_s3(run_uuid, source_path, destination_filename, client=None, user_details=None):
@@ -27,10 +29,10 @@ def upload_to_s3(run_uuid, source_path, destination_filename, client=None, user_
     from audit_logging.file_logging import logging_open
 
     with logging_open(source_path, "rb", user_details=user_details) as asset_file:
-        client.upload_fileobj(Bucket=settings.AWS_BUCKET_NAME, Key=asset_remote_path, Fileobj=asset_file)
+        client.upload_fileobj(Bucket=settings.AWS_STORAGE_BUCKET_NAME, Key=asset_remote_path, Fileobj=asset_file)
 
     return client.generate_presigned_url(
-        "get_object", Params={"Bucket": settings.AWS_BUCKET_NAME, "Key": asset_remote_path},
+        "get_object", Params={"Bucket": settings.AWS_STORAGE_BUCKET_NAME, "Key": asset_remote_path},
     ).split("?")[0]
 
 
@@ -47,7 +49,7 @@ def delete_from_s3(run_uid=None, download_url=None, client=None):
         client = get_s3_client()
 
     if run_uid:
-        path_objects = client.list_objects(Bucket=settings.AWS_BUCKET_NAME, Prefix=run_uid)
+        path_objects = client.list_objects(Bucket=settings.AWS_STORAGE_BUCKET_NAME, Prefix=run_uid)
         items = path_objects.get("Contents", [])
 
     if download_url:
@@ -56,8 +58,8 @@ def delete_from_s3(run_uid=None, download_url=None, client=None):
 
     for item in items:
         _key = item["Key"]
-        client.delete_object(Bucket=settings.AWS_BUCKET_NAME, Key=_key)
-        if "Contents" in client.list_objects(Bucket=settings.AWS_BUCKET_NAME, Prefix=_key):
+        client.delete_object(Bucket=settings.AWS_STORAGE_BUCKET_NAME, Key=_key)
+        if "Contents" in client.list_objects(Bucket=settings.AWS_STORAGE_BUCKET_NAME, Prefix=_key):
             logger.warn("Could not delete {0} from S3.".format(_key))
 
 
@@ -69,5 +71,5 @@ def get_presigned_url(download_url=None, client=None):
     parts = download_url.split("/")
     key = "{0}/{1}".format(parts[-2], parts[-1])
     return client.generate_presigned_url(
-        "get_object", Params={"Bucket": settings.AWS_BUCKET_NAME, "Key": key}, ExpiresIn=300,
+        "get_object", Params={"Bucket": settings.AWS_STORAGE_BUCKET_NAME, "Key": key}, ExpiresIn=300,
     )

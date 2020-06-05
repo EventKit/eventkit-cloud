@@ -1,8 +1,8 @@
 from django.conf import settings
-from django.db.models.signals import pre_delete
+from django.db.models.signals import pre_delete, post_delete
 from django.dispatch.dispatcher import receiver
 
-from eventkit_cloud.tasks.models import ExportRun, FileProducingTaskResult
+from eventkit_cloud.tasks.models import ExportRun, ExportRunFile, FileProducingTaskResult
 from eventkit_cloud.utils.s3 import delete_from_s3
 
 import os
@@ -45,3 +45,8 @@ def exporttaskresult_delete_exports(sender, instance, *args, **kwargs):
     except OSError:
         logger.warn("The file {0} was already removed or does not exist.".format(full_file_download_path))
     instance.delete_notifications()
+
+
+@receiver(post_delete, sender=ExportRunFile)
+def export_run_file_delete(sender, instance, using, **kwargs):
+    instance.file.delete(save=False)

@@ -1,16 +1,34 @@
 import * as React from 'react';
 import * as sinon from 'sinon';
-import { createShallow } from '@material-ui/core/test-utils';
+import {createShallow} from '@material-ui/core/test-utils';
 import List from '@material-ui/core/List';
 import Progress from '@material-ui/core/CircularProgress';
 import DropDownListItem from '../../components/common/DropDownListItem';
-import { ProviderDialog } from '../../components/Dialog/ProviderDialog';
+import {ProviderDialog} from '../../components/Dialog/ProviderDialog';
 
 import BaseDialog from "../../components/Dialog/BaseDialog";
+
 jest.mock("../../components/Dialog/BaseDialog", () => {
     const React = require('react');
     return (props) => (<div id="basedialog">{props.children}</div>);
 });
+
+const providers = [
+    {
+        slug: 'one-slug',
+        name: 'one',
+        service_description: 'one info',
+        hidden: false,
+        display: true,
+    },
+    {
+        slug: 'three-slug',
+        name: 'three',
+        service_description: 'three info',
+        hidden: false,
+        display: true,
+    }
+];
 
 describe('ProviderDialog component', () => {
     let shallow: any;
@@ -18,30 +36,25 @@ describe('ProviderDialog component', () => {
     let props;
 
     const getProps = () => ({
-        open : true,
+        open: true,
         uids: ['1', '3'],
         providerTasks: {
             '1': {
                 uid: '1',
-                slug: 'one-slug'
+                slug: 'one-slug',
+                provider: providers[0],
+                hidden: false,
+                display: true,
             },
             '3': {
                 uid: '3',
                 slug: 'three-slug',
+                provider: providers[1],
+                hidden: false,
+                display: true,
             },
         },
-        providers: [
-            {
-                slug: 'one-slug',
-                name: 'one',
-                service_description: 'one info',
-            },
-            {
-                slug: 'three-slug',
-                name: 'three',
-                service_description: 'three info',
-            }
-        ],
+        providers,
         onClose: sinon.stub(),
         getProviderTask: sinon.stub(),
         classes: {},
@@ -51,7 +64,7 @@ describe('ProviderDialog component', () => {
     const getWrapper = p => shallow(<ProviderDialog {...p} />);
 
     const setup = (customProps = {}) => {
-        props = { ...getProps(), ...customProps };
+        props = {...getProps(), ...customProps};
         wrapper = getWrapper(props);
     };
 
@@ -76,22 +89,22 @@ describe('ProviderDialog component', () => {
     });
 
     it('should return null when not open', () => {
-        wrapper.setProps({ open: false });
+        wrapper.setProps({open: false});
         expect(wrapper.get(0)).toBe(null);
     });
 
     it('should call getProviders on mount', () => {
-        const  getStub = sinon.stub(wrapper.instance(), 'getProviders');
+        const getStub = sinon.stub(wrapper.instance(), 'getProviders');
         wrapper.instance().componentDidMount();
         expect(getStub.calledOnce).toBe(true);
         expect(getStub.calledWith(props.uids));
     });
 
     it('should call getProviders if component updates to "open"', () => {
-        setup({ open: false });
+        setup({open: false});
         const getStub = sinon.stub(wrapper.instance(), 'getProviders');
         expect(getStub.called).toBe(false);
-        wrapper.setProps({ open: true });
+        wrapper.setProps({open: true});
         expect(getStub.calledOnce).toBe(true);
         expect(getStub.calledWith(props.uids)).toBe(true);
     });
@@ -103,31 +116,25 @@ describe('ProviderDialog component', () => {
         await wrapper.instance().getProviders(uids);
         expect(stateStub.calledTwice).toBe(true);
         expect(props.getProviderTask.callCount).toEqual(uids.length);
-        expect(stateStub.calledWith({ loading: true })).toBe(true);
-        expect(stateStub.calledWith({ loading: false })).toBe(true);
+        expect(stateStub.calledWith({loading: true})).toBe(true);
+        expect(stateStub.calledWith({loading: false})).toBe(true);
     });
 
     it('should show progress indicator', () => {
         expect(wrapper.find(Progress)).toHaveLength(0);
-        wrapper.setState({ loading: true });
+        wrapper.setState({loading: true});
         expect(wrapper.find(Progress)).toHaveLength(1);
     });
 
     it('should show List with items for each provider', () => {
-        wrapper.setState({ loading: false });
+        wrapper.setState({loading: false});
         expect(wrapper.find(BaseDialog).dive().find(List)).toHaveLength(1);
         expect(wrapper.find(BaseDialog).dive().find(DropDownListItem)).toHaveLength(2);
     });
 
     it('should show only available provider info', () => {
-        setup({ providers: [props.providers[0]] });
-        wrapper.setState({ loading: false });
-        expect(wrapper.find(BaseDialog).dive().find(DropDownListItem)).toHaveLength(1);
-    });
-
-    it('should show only available providerTask provider info', () => {
-        setup({ providerTasks: { '1': props.providerTasks['1'] } });
-        wrapper.setState({ loading: false });
+        setup({providers: [props.providers[0]]});
+        wrapper.setState({loading: false});
         expect(wrapper.find(BaseDialog).dive().find(DropDownListItem)).toHaveLength(1);
     });
 });

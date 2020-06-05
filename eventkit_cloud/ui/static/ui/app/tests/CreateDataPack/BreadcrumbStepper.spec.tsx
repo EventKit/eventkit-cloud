@@ -256,6 +256,7 @@ describe('BreadcrumbStepper component', () => {
             onWalkthroughReset={props.onWalkthroughReset}
             walkthroughClicked={props.walkthroughClicked}
             mapLayers={props.mapLayers}
+            isPermissionsBannerOpen={false}
         />);
 
         content = wrapper.instance().getStepContent(1);

@@ -1,14 +1,17 @@
 # -*- coding: utf-8 -*-
 
-import logging
 from unittest.mock import patch, MagicMock
-from django.test import TestCase
 
 from eventkit_cloud.auth.models import OAuth
 from eventkit_cloud.core.models import AttributeClass, update_all_attribute_classes_with_user, \
-    update_all_users_with_attribute_class, get_users_from_attribute_class, validate_user_attribute_class
-from django.contrib.auth.models import User
+    update_all_users_with_attribute_class, get_users_from_attribute_class, validate_user_attribute_class, \
+    get_restricted_users, annotate_users_restricted
 import json
+import logging
+from django.contrib.auth.models import User
+
+from django.test import TestCase
+
 
 logger = logging.getLogger(__name__)
 
@@ -91,3 +94,24 @@ class TestCoreModels(TestCase):
         self.attribute_class.complex = ["red", "==", "color"]
         self.attribute_class.save()
         self.assertFalse(validate_user_attribute_class(self.user2, self.attribute_class))
+
+    @patch("eventkit_cloud.core.models.get_restricted_users")
+    def test_annotate_users_restricted(self, mock_get_restricted_users):
+        expected_restricted_users = User.objects.filter(username="demo2")
+        mock_get_restricted_users.return_value = expected_restricted_users
+        users = User.objects.all()
+        job = MagicMock()
+        users = annotate_users_restricted(users, job)
+        self.assertTrue(users[1].restricted)
+        self.assertFalse(users[0].restricted)
+
+    def test_get_restricted_users(self):
+        job = MagicMock()
+        provider_task = MagicMock()
+        provider_task.provider.attribute_class = self.attribute_class
+        job.provider_tasks.all.return_value = [provider_task]
+        self.attribute_class.users.set([self.user1])
+        users = User.objects.all()
+        restricted_users = get_restricted_users(users, job)
+        self.assertEqual(len(restricted_users), 1)
+        self.assertEqual(self.user2, restricted_users.first())
