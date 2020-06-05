@@ -38,26 +38,29 @@ from eventkit_cloud.feature_selection.feature_selection import FeatureSelection
 from eventkit_cloud.tasks.enumerations import TaskStates
 from eventkit_cloud.tasks.exceptions import CancelException, DeleteException
 from eventkit_cloud.tasks.helpers import (
-    normalize_name,
-    get_archive_data_path,
-    get_run_download_url,
-    get_download_filename,
-    get_run_staging_dir,
-    get_provider_staging_dir,
-    get_run_download_dir,
     Directory,
-    progressive_kill,
-    get_style_files,
-    generate_qgs_style,
-    get_human_readable_metadata_document,
-    pickle_exception,
-    get_arcgis_metadata,
-    clean_config,
-    get_metadata,
-    get_provider_staging_preview,
-    check_cached_task_failures,
-    add_export_run_files_to_zip,
     PREVIEW_TAIL,
+    add_export_run_files_to_zip,
+    check_cached_task_failures,
+    clean_config,
+    generate_qgs_style,
+    get_arcgis_metadata,
+    get_archive_data_path,
+    get_download_filename,
+    get_export_filename,
+    get_human_readable_metadata_document,
+    get_metadata,
+    get_provider_download_dir,
+    get_provider_slug,
+    get_provider_staging_dir,
+    get_provider_staging_preview,
+    get_run_download_dir,
+    get_run_download_url,
+    get_run_staging_dir,
+    get_style_files,
+    normalize_name,
+    pickle_exception,
+    progressive_kill,
 )
 from eventkit_cloud.tasks.metadata import metadata_tasks
 from eventkit_cloud.tasks.task_process import update_progress
@@ -100,12 +103,15 @@ def make_file_downloadable(
         @direct: If true, return the direct download URL and skip the Downloadable tracking step
         @return A url to reach filepath.
     """
-    staging_dir = get_run_staging_dir(run_uid)
+
     if provider_slug:
         staging_dir = get_provider_staging_dir(run_uid, provider_slug)
-    run_download_dir = get_run_download_dir(run_uid)
-    run_download_url = get_run_download_url(run_uid)
+        run_download_dir = get_provider_download_dir(run_uid, provider_slug)
+    else:
+        staging_dir = get_run_staging_dir(run_uid)
+        run_download_dir = get_run_download_dir(run_uid)
 
+    run_download_url = get_run_download_url(run_uid, provider_slug)
     filename = os.path.basename(filepath)
     if download_filename is None:
         download_filename = filename
@@ -207,13 +213,9 @@ class ExportTask(EventKitBaseTask):
             name, ext = os.path.splitext(filename)
             if provider_slug == "run":
                 event = normalize_name(task.export_provider_task.run.job.event)
-                download_filename = get_download_filename(
-                    name, finished, ext, additional_descriptors=[event, "eventkit"]
-                )
+                download_filename = get_download_filename(name, ext, additional_descriptors=[event, "eventkit"])
             else:
-                download_filename = get_download_filename(
-                    name, finished, ext, additional_descriptors=[provider_slug], data_provider_slug=provider_slug
-                )
+                download_filename = get_download_filename(name, ext, data_provider_slug=provider_slug)
 
             # construct the download url
             skip_copy = task.name == "OverpassQuery"
@@ -394,7 +396,8 @@ def osm_data_collection_pipeline(
     pbf_filepath = pbf.OSMToPBF(osm=osm_filename, pbffile=pbf_filename, task_uid=export_task_record_uid).convert()
 
     # --- Generate thematic gpkg from PBF
-    geopackage_filepath = os.path.join(stage_dir, "{0}-{1}.gpkg".format(job_name, projection))
+    provider_slug = get_provider_slug(export_task_record_uid)
+    gpkg_filepath = get_export_filename(stage_dir, job_name, projection, provider_slug, "gpkg")
 
     if config is None:
         logger.error("No configuration was provided for OSM export")
@@ -409,7 +412,7 @@ def osm_data_collection_pipeline(
     geom = Polygon.from_bbox(bbox)
     g = geopackage.Geopackage(
         pbf_filepath,
-        geopackage_filepath,
+        gpkg_filepath,
         stage_dir,
         feature_selection,
         geom,
@@ -431,19 +434,19 @@ def osm_data_collection_pipeline(
     gdalutils.convert(
         boundary=bbox,
         input_file=in_dataset,
-        output_file=geopackage_filepath,
+        output_file=gpkg_filepath,
         layers=["land_polygons"],
         fmt="gpkg",
         is_raster=False,
     )
 
-    ret_geopackage_filepath = g.results[0].parts[0]
-    assert ret_geopackage_filepath == geopackage_filepath
+    ret_gpkg_filepath = g.results[0].parts[0]
+    assert ret_gpkg_filepath == gpkg_filepath
     update_progress(
         export_task_record_uid, progress=100, eta=eta, msg="Completed OSM data collection pipeline",
     )
 
-    return geopackage_filepath
+    return gpkg_filepath
 
 
 @app.task(name="OSM (.gpkg)", bind=True, base=FormatTask, abort_on_error=True, acks_late=True)
@@ -546,7 +549,8 @@ def shp_export_task(
     """
     result = result or {}
     gpkg = parse_result(result, "source")
-    shapefile = os.path.join(stage_dir, "{0}-{1}_shp".format(job_name, projection))
+    provider_slug = get_provider_slug(task_uid)
+    shapefile = get_export_filename(stage_dir, job_name, projection, provider_slug, "shp")
 
     try:
         ogr = OGR(task_uid=task_uid)
@@ -584,7 +588,8 @@ def kml_export_task(
     result = result or {}
 
     gpkg = parse_result(result, "source")
-    kmlfile = os.path.join(stage_dir, "{0}-{1}.kml".format(job_name, projection))
+    provider_slug = get_provider_slug(task_uid)
+    kmlfile = get_export_filename(stage_dir, job_name, projection, provider_slug, "kml")
     try:
         ogr = OGR(task_uid=task_uid)
         out = ogr.convert(file_format="KML", in_file=gpkg, out_file=kmlfile)
@@ -617,7 +622,8 @@ def sqlite_export_task(
     result = result or {}
 
     gpkg = parse_result(result, "source")
-    sqlitefile = os.path.join(stage_dir, "{0}-{1}.sqlite".format(job_name, projection))
+    provider_slug = get_provider_slug(task_uid)
+    sqlitefile = get_export_filename(stage_dir, job_name, projection, provider_slug, "sqlite")
     try:
         ogr = OGR(task_uid=task_uid)
         out = ogr.convert(file_format="SQLite", in_file=gpkg, out_file=sqlitefile)
@@ -682,7 +688,9 @@ def geopackage_export_task(
     result = result or {}
 
     gpkg_in_dataset = parse_result(result, "source")
-    gpkg_out_dataset = os.path.join(stage_dir, "{0}-{1}.gpkg".format(job_name, projection))
+
+    provider_slug = get_provider_slug(task_uid)
+    gpkg_out_dataset = get_export_filename(stage_dir, job_name, projection, provider_slug, "gpkg")
 
     gpkg = gdalutils.convert(fmt="gpkg", input_file=gpkg_in_dataset, output_file=gpkg_out_dataset, task_uid=task_uid)
 
@@ -702,7 +710,8 @@ def geotiff_export_task(
     result = result or {}
 
     gtiff_in_dataset = parse_result(result, "source")
-    gtiff_out_dataset = os.path.join(stage_dir, "{0}-{1}.tif".format(job_name, projection))
+    provider_slug = get_provider_slug(task_uid)
+    gtiff_out_dataset = get_export_filename(stage_dir, job_name, projection, provider_slug, "tif")
     selection = parse_result(result, "selection")
 
     if "tif" in os.path.splitext(gtiff_in_dataset)[1]:
@@ -739,7 +748,8 @@ def nitf_export_task(
     result = result or {}
 
     nitf_in_dataset = parse_result(result, "source")
-    nitf_out_dataset = os.path.join(stage_dir, "{0}-{1}.nitf".format(job_name, projection))
+    provider_slug = get_provider_slug(task_uid)
+    nitf_out_dataset = get_export_filename(stage_dir, job_name, projection, provider_slug, "nitf")
 
     params = "-co ICORDS=G"
     nitf = gdalutils.convert(
@@ -775,7 +785,8 @@ def hfa_export_task(
     result = result or {}
 
     hfa_in_dataset = parse_result(result, "source")
-    hfa_out_dataset = os.path.join(stage_dir, "{0}-{1}.img".format(job_name, projection))
+    provider_slug = get_provider_slug(task_uid)
+    hfa_out_dataset = get_export_filename(stage_dir, job_name, projection, provider_slug, "img")
     hfa = gdalutils.convert(fmt="hfa", input_file=hfa_in_dataset, output_file=hfa_out_dataset, task_uid=task_uid,)
 
     result["file_format"] = "hfa"
@@ -810,10 +821,8 @@ def reprojection_task(
         file_extension = file_format
 
     in_dataset = parse_result(result, "source")
-    out_dataset = os.path.join(stage_dir, "{0}-{1}.{2}".format(job_name, projection, file_extension))
-
-    if file_format == "ESRI Shapefile":
-        out_dataset = os.path.join(stage_dir, "{0}-{1}_shp".format(job_name, projection))
+    provider_slug = get_provider_slug(task_uid)
+    out_dataset = get_export_filename(stage_dir, job_name, projection, provider_slug, file_extension)
 
     if "tif" in os.path.splitext(in_dataset)[1]:
         in_dataset = f"GTIFF_RAW:{in_dataset}"
@@ -856,7 +865,8 @@ def wfs_export_task(
     """
     result = result or {}
 
-    gpkg = os.path.join(stage_dir, "{0}-{1}.gpkg".format(job_name, projection))
+    provider_slug = get_provider_slug(task_uid)
+    gpkg = get_export_filename(stage_dir, job_name, projection, provider_slug, "gpkg")
 
     # Strip out query string parameters that might conflict
     service_url = re.sub(r"(?i)(?<=[?&])(version|service|request|typename|srsname)=.*?(&|$)", "", service_url,)
@@ -918,7 +928,9 @@ def wcs_export_task(
     Class defining export for WCS services
     """
     result = result or {}
-    out = os.path.join(stage_dir, "{0}-{1}.tif".format(job_name, projection))
+
+    provider_slug = get_provider_slug(task_uid)
+    out = get_export_filename(stage_dir, job_name, projection, provider_slug, "tif")
 
     eta = ETA(task_uid=task_uid)
     task = ExportTaskRecord.objects.get(uid=task_uid)
@@ -966,7 +978,9 @@ def arcgis_feature_service_export_task(
     Class defining sqlite export for ArcFeatureService service.
     """
     result = result or {}
-    gpkg = os.path.join(stage_dir, "{0}-{1}.gpkg".format(job_name, projection))
+
+    provider_slug = get_provider_slug(task_uid)
+    gpkg = get_export_filename(stage_dir, job_name, projection, provider_slug, "gpkg")
     try:
         if not os.path.exists(os.path.dirname(gpkg)):
             os.makedirs(os.path.dirname(gpkg), 6600)
@@ -1052,7 +1066,9 @@ def mapproxy_export_task(
     result = result or {}
     selection = parse_result(result, "selection")
 
-    gpkgfile = os.path.join(stage_dir, "{0}-{1}.gpkg".format(job_name, projection))
+    provider_slug = get_provider_slug(task_uid)
+    gpkgfile = get_export_filename(stage_dir, job_name, projection, provider_slug, "gpkg")
+
     try:
         w2g = mapproxy.MapproxyGeopackage(
             gpkgfile=gpkgfile,
@@ -1280,21 +1296,13 @@ def zip_files(include_files, file_path=None, static_files=None, *args, **kwargs)
                 # put the metadata file in arcgis folder unless it becomes more useful.
                 filename = os.path.join(Directory.ARCGIS.value, "{0}{1}".format(name, ext))
             elif filepath.endswith(PREVIEW_TAIL):
-                download_filename = get_download_filename(
-                    "preview",
-                    timezone.now(),
-                    ext,
-                    additional_descriptors=[provider_slug],
-                    data_provider_slug=provider_slug,
-                )
+                download_filename = get_download_filename("preview", ext, data_provider_slug=provider_slug,)
                 filename = get_archive_data_path(provider_slug, download_filename)
             else:
                 # Put the files into directories based on their provider_slug
                 # prepend with `data`
 
-                download_filename = get_download_filename(
-                    name, timezone.now(), ext, additional_descriptors=[provider_slug], data_provider_slug=provider_slug
-                )
+                download_filename = get_download_filename(name, ext, data_provider_slug=provider_slug)
                 filename = get_archive_data_path(provider_slug, download_filename)
             zipfile.write(filepath, arcname=filename)
 

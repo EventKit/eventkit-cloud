@@ -7,7 +7,7 @@ import pickle
 import re
 import requests
 import signal
-from time import sleep
+import time
 from typing import List
 
 from numpy import linspace
@@ -27,7 +27,7 @@ from eventkit_cloud.utils.generic import cd, get_file_paths  # NOQA
 
 from eventkit_cloud.jobs.models import DataProvider
 from eventkit_cloud.tasks.exceptions import FailedException
-from eventkit_cloud.tasks.models import DataProviderTaskRecord, ExportRunFile
+from eventkit_cloud.tasks.models import DataProviderTaskRecord, ExportRunFile, ExportTaskRecord
 import urllib.parse
 
 logger = logging.getLogger()
@@ -62,13 +62,18 @@ def get_run_download_dir(run_uid):
     return os.path.join(settings.EXPORT_DOWNLOAD_ROOT.rstrip("\/"), str(run_uid))
 
 
-def get_run_download_url(run_uid):
+def get_run_download_url(run_uid, provider_slug=None):
     """
     A URL path to the run data
     :param run_uid: The unique identifier for the run data.
     :return: The url context. (e.g. /downloads/123e4567-e89b-12d3-a456-426655440000)
     """
-    return "{0}/{1}".format(settings.EXPORT_MEDIA_ROOT.rstrip("\/"), str(run_uid))
+    if provider_slug:
+        url = f"{settings.EXPORT_MEDIA_ROOT.rstrip('/')}/{str(run_uid)}/{provider_slug}"
+    else:
+        url = f"{settings.EXPORT_MEDIA_ROOT.rstrip('/')}/{str(run_uid)}"
+
+    return url
 
 
 def get_provider_staging_dir(run_uid, provider_slug):
@@ -83,6 +88,18 @@ def get_provider_staging_dir(run_uid, provider_slug):
     return os.path.join(run_staging_dir, provider_slug)
 
 
+def get_provider_download_dir(run_uid, provider_slug):
+    """
+    The provider staging dir is where all files are stored after they are processed.
+    It is a unique space to ensure that files aren't being improperly modified.
+    :param run_uid: The unique id for the run.
+    :param provider_slug: The unique value to store the directory for the provider data.
+    :return: The path to the provider directory.
+    """
+    run_download_dir = get_run_download_dir(run_uid)
+    return os.path.join(run_download_dir, provider_slug)
+
+
 def get_provider_staging_preview(run_uid, provider_slug):
     """
     The provider staging dir is where all files are stored while they are being processed.
@@ -95,16 +112,12 @@ def get_provider_staging_preview(run_uid, provider_slug):
     return os.path.join(run_staging_dir, provider_slug, PREVIEW_TAIL)
 
 
-def get_download_filename(
-    name: str, time, ext: str, additional_descriptors: list = None, data_provider_slug: str = None
-):
+def get_download_filename(name: str, ext: str, additional_descriptors: List[str] = [], data_provider_slug: str = None):
     """
     This provides specific formatting for the names of the downloadable files.
     :param name: A name for the file, typically the job name.
-    :param time:  A python datetime object.
     :param ext: The file extension (e.g. .gpkg)
-    :param additional_descriptors: Additional descriptors, typically the provider slug or project name
-        or any list of items.
+    :param additional_descriptors: Additional descriptors, any list of items.
     :param data_provider_slug: Slug of the data provider for this filename, used to get the label
         of that data provider to add on to the filename
     :return: The formatted file name (e.g. Boston-example-20180711.gpkg)
@@ -119,10 +132,12 @@ def get_download_filename(
         except DataProvider.DoesNotExist:
             logger.info(f"{data_provider_slug} does not map to any known DataProvider.")
 
-    # Allow numbers or strings.
-    if not isinstance(additional_descriptors, (list, tuple)):
-        additional_descriptors = [str(additional_descriptors)]
-    return "{0}-{1}-{2}{3}".format(name, "-".join(filter(None, additional_descriptors)), default_format_time(time), ext)
+    if additional_descriptors:
+        download_filename = f"{name}-{'-'.join(additional_descriptors)}{ext}"
+    else:
+        download_filename = f"{name}{ext}"
+
+    return download_filename
 
 
 def get_archive_data_path(provider_slug=None, file_name=None):
@@ -150,6 +165,35 @@ def normalize_name(name):
     # Replace all whitespace with a single underscore
     s = re.sub(r"\s+", "_", s)
     return s.lower()
+
+
+def get_provider_slug(export_task_record_uid):
+    """
+    Gets a provider slug from the ExportTaskRecord.
+    :param export_task_record_uid: The UID of an ExportTaskRecord.
+    :return provider_slug: The associated provider_slug value.
+    """
+    return ExportTaskRecord.objects.get(uid=export_task_record_uid).export_provider_task.provider.slug
+
+
+def get_export_filename(stage_dir, job_name, projection, provider_slug, extension):
+    """
+    Gets a filename for an export.
+    :param stage_dir: The staging directory to place files in while they process.
+    :param job_name: The name of the job being processed.
+    :param projection: A projection as an int referencing an EPSG code (e.g. 4326 = EPSG:4326)
+    :pram provider_slug
+    """
+    if extension == "shp":
+        filename = os.path.join(
+            stage_dir, f"{job_name}-{projection}-{provider_slug}-{default_format_time(time)}_{extension}"
+        )
+    else:
+        filename = os.path.join(
+            stage_dir, f"{job_name}-{projection}-{provider_slug}-{default_format_time(time)}.{extension}"
+        )
+
+    return filename
 
 
 def get_style_files():
@@ -304,11 +348,11 @@ def progressive_kill(pid):
     try:
         logger.info("Trying to kill pid {0} with SIGTERM.".format(pid))
         os.kill(pid, signal.SIGTERM)
-        sleep(5)
+        time.sleep(5)
 
         logger.info("Trying to kill pid {0} with SIGKILL.".format(pid))
         os.kill(pid, signal.SIGKILL)
-        sleep(1)
+        time.sleep(1)
 
     except OSError:
         logger.info("{0} PID no longer exists.".format(pid))
@@ -444,7 +488,6 @@ def get_metadata(data_provider_task_record_uids: List[str]):
                         os.path.splitext(os.path.basename(filename))[0],
                         timezone.now(),
                         file_ext,
-                        additional_descriptors=[data_provider_task_record.provider.slug],
                         data_provider_slug=data_provider_task_record.provider.slug,
                     )
                     filepath = get_archive_data_path(data_provider_task_record.provider.slug, download_filename)
