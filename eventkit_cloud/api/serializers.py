@@ -21,10 +21,7 @@ from rest_framework import serializers
 from rest_framework_gis import serializers as geo_serializers
 
 from . import validators
-from eventkit_cloud.core.models import (
-    GroupPermission,
-    GroupPermissionLevel,
-    attribute_class_filter)
+from eventkit_cloud.core.models import GroupPermission, GroupPermissionLevel, attribute_class_filter
 from eventkit_cloud.jobs.models import (
     ExportFormat,
     Projection,
@@ -478,10 +475,17 @@ class JobPermissionSerializer(serializers.ModelSerializer):
 class GroupSerializer(serializers.ModelSerializer):
     members = serializers.SerializerMethodField()
     administrators = serializers.SerializerMethodField()
+    restricted = serializers.SerializerMethodField()
 
     class Meta:
         model = Group
-        fields = ("id", "name", "members", "administrators")
+        fields = ("id", "name", "members", "administrators", "restricted")
+
+    @staticmethod
+    def get_restricted(instance):
+        if hasattr(instance, "restricted"):
+            return instance.restricted
+        return False
 
     @staticmethod
     def get_group_permissions(instance):

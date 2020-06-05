@@ -71,7 +71,10 @@ from eventkit_cloud.core.helpers import (
 from eventkit_cloud.core.models import (
     GroupPermission,
     GroupPermissionLevel,
-    annotate_users_restricted, attribute_class_filter)
+    annotate_users_restricted,
+    attribute_class_filter,
+    annotate_groups_restricted,
+)
 from eventkit_cloud.jobs.models import (
     ExportFormat,
     Projection,
@@ -1687,6 +1690,7 @@ class GroupViewSet(viewsets.ModelViewSet):
         queryset = JobPermission.get_orderable_queryset_for_job(job, Group)
         total = queryset.count()
         filtered_queryset = self.filter_queryset(queryset)
+        filtered_queryset = annotate_groups_restricted(filtered_queryset, job)
         page = None
         if not request.query_params.get("disable_page"):
             page = self.paginate_queryset(filtered_queryset)

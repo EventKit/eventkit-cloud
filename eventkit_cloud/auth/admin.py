@@ -6,7 +6,6 @@ from django.contrib.auth.models import User
 from rest_framework.authtoken.models import Token
 
 from eventkit_cloud.auth.models import OAuth
-from eventkit_cloud.core.models import AttributeClass
 from eventkit_cloud.jobs.models import UserLicense
 
 logger = logging.getLogger(__name__)
@@ -39,13 +38,16 @@ class CustomUserAdmin(UserAdmin):
 
     inlines = [OAuthInline, UserLicenseInline]
 
-    readonly_fields = UserAdmin.readonly_fields + ("last_login", "date_joined", "attribute_classes")
+    readonly_fields = UserAdmin.readonly_fields + ("last_login", "date_joined", "attribute_class_list")
 
-    def attribute_classes(self, obj):
-        attribute_classes = AttributeClass.objects.filter(users__id=obj.id)
+    def attribute_class_list(self, obj):
+        attribute_classes = obj.attribute_classes.all()
+        logger.error(f"attribute_classes:{attribute_classes}")
+        if not attribute_classes:
+            return ""
         return ", ".join([attribute_class.name for attribute_class in attribute_classes])
 
-    fieldsets = UserAdmin.fieldsets + (("Attribute_Classes", {"fields": ("attribute_classes",)}),)
+    fieldsets = UserAdmin.fieldsets + (("Attribute_Classes", {"fields": ("attribute_class_list",)}),)
 
 
 admin.site.unregister(Token)

@@ -297,7 +297,6 @@ def validate_filter(filter: Union[List[any], bool]) -> bool:
             logger.info(f"Filter is a {type(filter)}")
             raise Exception(f"Unable to process {filter}, please ensure that there are three values in list.")
 
-
     if isinstance(left, list):
         if not validate_filter(left):
             raise Exception(f"The left side value {left} is invalid.")
@@ -368,23 +367,37 @@ def update_all_attribute_classes_with_user(user: User) -> None:
             attribute_class.users.remove(user)
 
 
-def annotate_users_restricted(users: QuerySet, job):
+def get_restricted_users(users: QuerySet, job) -> QuerySet:
+    # If there is no job then there is nothing to compare users against and none are restricted.
+    if not job:
+        return []
+
     attribute_classes = [provider_task.provider.attribute_class for provider_task in job.provider_tasks.all()]
-    unrestricted = users.filter(attribute_classes__in=attribute_classes).distinct()
-    restricted = users.exclude(attribute_classes__in=attribute_classes).distinct()
-    logger.error(f"unrestricted:{unrestricted}")
-    logger.error(f"restricted:{restricted}")
+    restricted = users.all()
+    for attribute_class in attribute_classes:
+        if attribute_class:
+            restricted = restricted.exclude(attribute_classes=attribute_class)
+        restricted = restricted.distinct()
+    return restricted
+
+
+def annotate_users_restricted(users: QuerySet, job):
+    restricted = get_restricted_users(users, job)
     users = users.annotate(
-               restricted=Case(
-                   When(id__in=unrestricted,
-                        then=False),
-                   When(id__in=restricted,
-                        then=True),
-                   default=Value(False),
-                   output_field=models.BooleanField()))
-    logger.error(f"dir(users):{dir(users)}")
-    logger.error(f"dir(users[0]):{dir(users[0])}")
+        restricted=Case(When(id__in=restricted, then=True), default=Value(False), output_field=models.BooleanField())
+    )
     return users
+
+
+def annotate_groups_restricted(groups: QuerySet, job):
+    restricted_users = get_restricted_users(User.objects.all(), job)
+    restricted_groups = groups.filter(group_permissions__user__in=restricted_users)
+    groups = groups.annotate(
+        restricted=Case(
+            When(id__in=restricted_groups, then=True), default=Value(False), output_field=models.BooleanField()
+        )
+    )
+    return groups
 
 
 def attribute_class_filter(queryset: QuerySet, user: User = None) -> Tuple[QuerySet, QuerySet]:

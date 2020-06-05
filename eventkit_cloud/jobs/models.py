@@ -7,8 +7,6 @@ import uuid
 import yaml
 
 from django.contrib.auth.models import Group, User
-from django.contrib.contenttypes.fields import GenericForeignKey
-from django.contrib.contenttypes.models import ContentType
 from django.contrib.gis.geos import (
     GEOSGeometry,
     GeometryCollection,
@@ -21,8 +19,6 @@ from django.contrib.postgres.fields.jsonb import JSONField
 from django.core.serializers import serialize
 from django.contrib.gis.db import models
 from django.core.cache import cache
-
-from django.db.models import Q, QuerySet, Case, Value, When
 
 from django.utils import timezone
 from enum import Enum
@@ -599,6 +595,7 @@ class JobPermission(TimeStampedModelMixin):
     """
     Model associates users or groups with jobs
     """
+
     job = models.ForeignKey(Job, on_delete=models.CASCADE, related_name="permissions")
     content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE)
     object_id = models.PositiveIntegerField(db_index=True)
@@ -766,13 +763,3 @@ class JobPermission(TimeStampedModelMixin):
 
     def __unicode__(self):
         return "{0} - {1}: {2}: {3}".format(self.content_type, self.object_id, self.job, self.permission)
-
-
-def remove_permissions(model, id):
-    JobPermission.objects.filter(content_type=ContentType.objects.get_for_model(model), object_id=id).delete()
-
-
-class JobPermissionLevel(Enum):
-    NONE = "NONE"
-    READ = "READ"
-    ADMIN = "ADMIN"
