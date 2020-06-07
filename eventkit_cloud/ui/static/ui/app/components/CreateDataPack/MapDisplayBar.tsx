@@ -2,7 +2,7 @@ import * as React from 'react';
 import { withTheme, Theme, withStyles, createStyles } from '@material-ui/core/styles';
 import withWidth, { isWidthUp } from '@material-ui/core/withWidth';
 import { Breakpoint } from '@material-ui/core/styles/createBreakpoints';
-import {Tab, Tabs, Typography} from "@material-ui/core";;
+import {Tab, Tabs, Typography} from "@material-ui/core";
 import AoiInfobar from "./AoiInfobar";
 import {MapQueryDisplay} from "./MapQueryDisplay";
 import {MapLayer} from "./CreateExport";
@@ -83,8 +83,8 @@ export interface State {
 }
 
 enum TabNum {
-    AoiInfo=1,
-    PoiInfo=2,
+    AoiInfo= 1,
+    PoiInfo= 2,
 }
 
 export class MapDisplayBar extends React.Component<Props, State> {
@@ -94,7 +94,7 @@ export class MapDisplayBar extends React.Component<Props, State> {
             selectedTab: false,
             infoBarOpen: false,
             queryBoxVisible: false,
-        }
+        };
     }
 
     componentDidUpdate(prevProps: Readonly<Props>, prevState: Readonly<State>, snapshot?: any): void {
@@ -119,9 +119,9 @@ export class MapDisplayBar extends React.Component<Props, State> {
 
         if (!selectedTab || (prevInfoBarOpen !== infoBarOpen || prevQueryBoxVisible !== queryBoxVisible)) {
             if (infoBarOpen) {
-                this.setState({selectedTab: TabNum.AoiInfo})
+                this.setState({selectedTab: TabNum.AoiInfo});
             } else if (queryBoxVisible) {
-                this.setState({selectedTab: TabNum.PoiInfo})
+                this.setState({selectedTab: TabNum.PoiInfo});
             }
         }
     }
@@ -130,7 +130,7 @@ export class MapDisplayBar extends React.Component<Props, State> {
         if (this.state.selectedTab !== newValue) {
             this.setState({selectedTab: newValue});
         }
-    };
+    }
 
     render() {
         const { classes } = this.props;
@@ -140,7 +140,7 @@ export class MapDisplayBar extends React.Component<Props, State> {
 
         return (
             <div className={`qa-MapDisplayBar`}>
-                <div className={classes.wrapper} style={{bottom: (aoiTabVisible && poiTabVisible) ? '70px' : '40px',}}>
+                <div className={classes.wrapper} style={{bottom: (aoiTabVisible && poiTabVisible) ? '70px' : '40px', }}>
                     {isWidthUp('sm', this.props.width) &&
                     <div className={`qa-qa-MapDisplayBar-container ${classes.infobar} ${classes.large}`}>
                         <AoiInfobar
@@ -151,7 +151,7 @@ export class MapDisplayBar extends React.Component<Props, State> {
                             maxHeight={185}
                             // Passes a ref up to ExportAOI to hook in the click event to our query function.
                             ref={child => {
-                                this.props.setRef(child)
+                                this.props.setRef(child);
                             }}
                             selectedLayer={this.props.selectedBaseMap}
                         />
@@ -199,11 +199,11 @@ export class MapDisplayBar extends React.Component<Props, State> {
                                 style={{ height: '200px', position: 'absolute'}}
                                 maxHeight={185}
                                 ref={child => {
-                                    this.props.setRef(child)
+                                    this.props.setRef(child);
                                 }}
                                 selectedLayer={this.props.selectedBaseMap}
                                 setVisibility={(visibility) => {
-                                    this.setState({ queryBoxVisible: visibility })
+                                    this.setState({ queryBoxVisible: visibility });
                                 }}
                             />
                         </div>

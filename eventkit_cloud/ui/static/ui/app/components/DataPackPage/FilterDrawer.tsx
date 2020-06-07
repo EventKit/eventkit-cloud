@@ -8,6 +8,8 @@ import CustomScrollbar from '../common/CustomScrollbar';
 import ProvidersFilter from './ProvidersFilter';
 import FormatsFilter from "./FormatsFilter";
 import ProjectionsFilter from "./ProjectionsFilter";
+import UnavailableFilterPopup from "./UnavailableFilterPopup";
+import SourcePermissionFilter from "./SourcePermissionFilter";
 
 export interface Props {
     onFilterApply: (state: State) => void;
@@ -78,54 +80,54 @@ export class FilterDrawer extends React.Component<Props, State> {
     }
 
     private handlePermissionsChange(permissions: Eventkit.Permissions) {
-        this.setState({ permissions: { ...this.state.permissions, ...permissions } });
+        this.setState({permissions: {...this.state.permissions, ...permissions}});
     }
 
     private handleStatusChange(stateChange: State) {
-        let { status } = this.state;
+        let {status} = this.state;
         status = Object.assign(status, stateChange);
-        this.setState({ status });
+        this.setState({status});
     }
 
     private handleProvidersChange(slug: string, isSelected: boolean) {
-        const { providers } = this.state;
+        const {providers} = this.state;
         if (isSelected) {
             providers[slug] = true;
         } else {
             delete providers[slug];
         }
 
-        this.setState({ providers });
+        this.setState({providers});
     }
 
     private handleFormatsChange(slug: string, isSelected: boolean) {
-        const { formats } = this.state;
+        const {formats} = this.state;
         if (isSelected) {
             formats[slug] = true;
         } else {
             delete formats[slug];
         }
 
-        this.setState({ formats });
+        this.setState({formats});
     }
 
     private handleProjectionsChange(srid: number, isSelected: boolean) {
-        const { projections } = this.state;
+        const {projections} = this.state;
         if (isSelected) {
             projections[srid] = true;
         } else {
             delete projections[srid];
         }
 
-        this.setState({ projections });
+        this.setState({projections});
     }
 
     private handleMinDate(date: string) {
-        this.setState({ minDate: date });
+        this.setState({minDate: date});
     }
 
     private handleMaxDate(date: string) {
-        this.setState({ maxDate: date });
+        this.setState({maxDate: date});
     }
 
     render() {
@@ -147,7 +149,7 @@ export class FilterDrawer extends React.Component<Props, State> {
                 variant="persistent"
                 anchor="right"
                 open={this.props.open}
-                PaperProps={{ style: styles.containerStyle }}
+                PaperProps={{style: styles.containerStyle}}
             >
                 <CustomScrollbar>
                     <FilterHeader
@@ -158,6 +160,10 @@ export class FilterDrawer extends React.Component<Props, State> {
                         onChange={this.handlePermissionsChange}
                         permissions={this.state.permissions}
                     />
+                    {/*<SourcePermissionFilter*/}
+                    {/*    // change event handler logic to match api*/}
+                    {/*    // onChange={this.handleSourcePermissionChange}*/}
+                    {/*/>*/}
                     <StatusFilter
                         onChange={this.handleStatusChange}
                         completed={this.state.status.completed}
@@ -185,6 +191,10 @@ export class FilterDrawer extends React.Component<Props, State> {
                         formats={this.props.formats}
                         selected={this.state.formats}
                     />
+                    {this.props.providers.find(provider => provider.hidden === true) ?
+                        <UnavailableFilterPopup/>
+                        : null
+                    }
                 </CustomScrollbar>
             </Drawer>
         );

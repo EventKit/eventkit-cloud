@@ -16,7 +16,7 @@ export class ProvidersFilter extends React.Component<Props, {}> {
 
         let providers = [];
         if (this.props.providers) {
-            providers = this.props.providers.filter(provider => provider.display);
+            providers = this.props.providers.filter(provider => !provider.hidden && provider.display);
         }
 
         const styles = {

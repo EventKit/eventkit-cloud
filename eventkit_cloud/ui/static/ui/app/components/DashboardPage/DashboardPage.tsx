@@ -1,25 +1,25 @@
 import * as React from 'react';
-import { connect } from 'react-redux';
+import {connect} from 'react-redux';
 import debounce from 'lodash/debounce';
-import { withTheme, Theme } from '@material-ui/core/styles';
-import { Link } from 'react-router-dom';
+import {withTheme, Theme} from '@material-ui/core/styles';
+import {Link} from 'react-router-dom';
 import Joyride from 'react-joyride';
 import Help from '@material-ui/icons/Help';
 import Paper from '@material-ui/core/Paper';
 import ButtonBase from '@material-ui/core/ButtonBase';
 import PageHeader from '../common/PageHeader';
 import PageLoading from '../common/PageLoading';
-import { deleteRun, getFeaturedRuns, getRuns } from '../../actions/datapackActions';
-import { getViewedJobs } from '../../actions/userActivityActions';
-import { getNotifications } from '../../actions/notificationsActions';
+import {deleteRun, getFeaturedRuns, getRuns} from '../../actions/datapackActions';
+import {getViewedJobs} from '../../actions/userActivityActions';
+import {getNotifications} from '../../actions/notificationsActions';
 import CustomScrollbar from '../common/CustomScrollbar';
-import { getProviders } from '../../actions/providerActions';
+import {getProviders} from '../../actions/providerActions';
 import DashboardSection from './DashboardSection';
 import DataPackGridItem from '../DataPackPage/DataPackGridItem';
 import DataPackFeaturedItem from './DataPackFeaturedItem';
 import NotificationGridItem from '../Notification/NotificationGridItem';
-import { updateDataCartPermissions } from '../../actions/datacartActions';
-import { joyride } from '../../joyride.config';
+import {updateDataCartPermissions} from '../../actions/datacartActions';
+import {joyride} from '../../joyride.config';
 import history from '../../utils/history';
 
 export const CUSTOM_BREAKPOINTS = {
@@ -50,7 +50,6 @@ interface Props {
     updatePermission: Eventkit.Store.UpdatePermissions;
     updateDataCartPermissions: () => void;
     theme: Eventkit.Theme;
-
     userData: any;
 }
 
@@ -99,7 +98,7 @@ export class DashboardPage extends React.Component<Props, State> {
     componentDidMount() {
         this.props.getProviders();
         this.props.getNotifications({
-            pageSize: this.getNotificationsColumns({ getMax: true }) * this.getNotificationsRows() * 3,
+            pageSize: this.getNotificationsColumns({getMax: true}) * this.getNotificationsRows() * 3,
         });
         this.refresh();
         this.autoRefreshIntervalId = window.setInterval(this.autoRefresh, this.autoRefreshInterval);
@@ -130,7 +129,7 @@ export class DashboardPage extends React.Component<Props, State> {
             p.featuredRunsFetched !== this.props.featuredRunsFetched ||
             p.viewedRunsFetched !== this.props.viewedRunsFetched
         ) {
-                return this.state.loadingPage;
+            return this.state.loadingPage;
         }
         // if the status is not the update we can default to true
         return true;
@@ -138,9 +137,9 @@ export class DashboardPage extends React.Component<Props, State> {
 
     componentDidUpdate(prevProps) {
         // Only show page loading once, before all sections have initially loaded.
-        const { loadingPage } = this.state;
+        const {loadingPage} = this.state;
         if (loadingPage && !this.isLoading()) {
-            this.setState({ loadingPage: false });
+            this.setState({loadingPage: false});
         }
 
         // Deleted datapack.
@@ -180,7 +179,7 @@ export class DashboardPage extends React.Component<Props, State> {
         const width = this.getWidth();
 
         if (width !== this.state.width) {
-            this.setState({ width });
+            this.setState({width});
         }
     }
 
@@ -188,8 +187,8 @@ export class DashboardPage extends React.Component<Props, State> {
         return this.state.width !== 'xs' ? 6 : 2;
     }
 
-    private getGridColumns({ getMax = false } = {}) {
-        const { width } = this.state;
+    private getGridColumns({getMax = false} = {}) {
+        const {width} = this.state;
         if (width === 'xl' || getMax) {
             return 6;
         } else if (width === 'lg') {
@@ -203,7 +202,7 @@ export class DashboardPage extends React.Component<Props, State> {
         return 2;
     }
 
-    private getGridWideColumns({ getMax = false } = {}) {
+    private getGridWideColumns({getMax = false} = {}) {
         if (this.state.width === 'lg' || this.state.width === 'xl' || getMax) {
             return 2;
         }
@@ -211,7 +210,7 @@ export class DashboardPage extends React.Component<Props, State> {
         return 1;
     }
 
-    private getNotificationsColumns({ getMax = false } = {}) {
+    private getNotificationsColumns({getMax = false} = {}) {
         if (this.state.width === 'lg' || this.state.width === 'xl' || getMax) {
             return 3;
         } else if (this.state.width === 'md') {
@@ -225,37 +224,37 @@ export class DashboardPage extends React.Component<Props, State> {
         return 3;
     }
 
-    private refreshMyDataPacks({ isAuto = false } = {}) {
+    private refreshMyDataPacks({isAuto = false} = {}) {
         this.props.getRuns({
-            pageSize: this.getGridColumns({ getMax: true }) * 3,
+            pageSize: this.getGridColumns({getMax: true}) * 3,
             ordering: '-started_at',
             ownerFilter: this.props.userData.user.username,
             isAuto,
         });
     }
 
-    private refreshFeatured({ isAuto = false } = {}) {
+    private refreshFeatured({isAuto = false} = {}) {
         this.props.getFeaturedRuns({
-            pageSize: this.getGridWideColumns({ getMax: true }) * 3,
+            pageSize: this.getGridWideColumns({getMax: true}) * 3,
             isAuto,
         });
     }
 
-    private refreshRecentlyViewed({ isAuto = false } = {}) {
+    private refreshRecentlyViewed({isAuto = false} = {}) {
         this.props.getViewedJobs({
-            pageSize: this.getGridColumns({ getMax: true }) * 3,
+            pageSize: this.getGridColumns({getMax: true}) * 3,
             isAuto,
         });
     }
 
-    private refresh({ isAuto = false } = {}) {
-        this.refreshMyDataPacks({ isAuto });
-        this.refreshFeatured({ isAuto });
-        this.refreshRecentlyViewed({ isAuto });
+    private refresh({isAuto = false} = {}) {
+        this.refreshMyDataPacks({isAuto});
+        this.refreshFeatured({isAuto});
+        this.refreshRecentlyViewed({isAuto});
     }
 
     private autoRefresh() {
-        this.refresh({ isAuto: true });
+        this.refresh({isAuto: true});
     }
 
     private handleNotificationsViewAll() {
@@ -288,19 +287,21 @@ export class DashboardPage extends React.Component<Props, State> {
             newSteps = [newSteps];
         }
 
-        if (!newSteps.length) { return; }
+        if (!newSteps.length) {
+            return;
+        }
 
         this.setState(currentState => {
-            const nextState = { ...currentState };
+            const nextState = {...currentState};
             nextState.steps = nextState.steps.concat(newSteps);
             return nextState;
         });
     }
 
     private callback(data) {
-        const { action, step, type } = data;
+        const {action, step, type} = data;
         if (action === 'close' || action === 'skip' || type === 'finished') {
-            this.setState({ isRunning: false });
+            this.setState({isRunning: false});
             this.joyride.reset(true);
             window.location.hash = '';
         }
@@ -312,11 +313,11 @@ export class DashboardPage extends React.Component<Props, State> {
 
     private handleWalkthroughClick() {
         if (this.state.isRunning) {
-            this.setState({ isRunning: false });
+            this.setState({isRunning: false});
             this.joyride.reset(true);
         } else {
             const [...steps] = joyride.DashboardPage;
-            this.setState({ isRunning: true, steps: [] });
+            this.setState({isRunning: true, steps: []});
             if (this.props.featuredIds.length === 0) {
                 const ix = steps.findIndex(s => s.selector === '.qa-DashboardSection-Featured');
                 if (ix > -1) {
@@ -328,7 +329,7 @@ export class DashboardPage extends React.Component<Props, State> {
     }
 
     render() {
-        const { colors, images } = this.props.theme.eventkit;
+        const {colors, images} = this.props.theme.eventkit;
 
         const mainAppBarHeight = 95;
         const pageAppBarHeight = 35;
@@ -387,6 +388,16 @@ export class DashboardPage extends React.Component<Props, State> {
                 marginRight: '5px',
                 marginBottom: '5px',
             },
+            banner: {
+                position: 'relative' as 'relative',
+                width: '100%',
+                height: '35px'
+            },
+            dashboard: {
+                height: 'calc(100vh - 226px)',
+                position: 'absolute' as 'absolute',
+                width: '100%'
+            }
         };
 
         const iconElementRight = (
@@ -394,7 +405,7 @@ export class DashboardPage extends React.Component<Props, State> {
                 onClick={this.handleWalkthroughClick}
                 style={styles.tourButton}
             >
-                <Help style={styles.tourIcon} />
+                <Help style={styles.tourIcon}/>
                 Page Tour
             </ButtonBase>
         );
@@ -408,184 +419,188 @@ export class DashboardPage extends React.Component<Props, State> {
                 >
                     {iconElementRight}
                 </PageHeader>
-                {this.isLoading() ?
-                    <PageLoading background="transparent" />
-                    : null
-                }
-                <CustomScrollbar
-                    style={styles.customScrollbar}
-                >
-                    <Joyride
-                        callback={this.callback}
-                        ref={instance => { this.joyride = instance; }}
-                        // @ts-ignore
-                        steps={this.state.steps}
-                        autoStart
-                        type="continuous"
-                        showSkipButton
-                        showStepsProgress
-                        locale={{
+                <div className='dashboard' style={styles.dashboard}>
+                    {this.isLoading() ?
+                        <PageLoading background="transparent"/>
+                        : null
+                    }
+                    <CustomScrollbar
+                        style={styles.customScrollbar}
+                    >
+                        <Joyride
+                            callback={this.callback}
+                            ref={instance => {
+                                this.joyride = instance;
+                            }}
                             // @ts-ignore
-                            back: (<span>Back</span>),
-                            // @ts-ignore
-                            close: (<span>Close</span>),
-                            // @ts-ignore
-                            last: (<span>Done</span>),
-                            // @ts-ignore
-                            next: (<span>Next</span>),
-                            // @ts-ignore
-                            skip: (<span>Skip</span>),
-                        }}
-                        run={this.state.isRunning}
-                        styles={{
-                            options: {
-                                overlayColor: colors.primary,
-                                backgroundColor: colors.primary,
-                                primaryColor: colors.white,
-                            },
-                        }}
-                    />
-                    {this.state.loadingPage ?
-                        null
-                        :
-                        <div style={styles.content}>
-                            {/* Notifications */}
-                            <DashboardSection
-                                className="qa-DashboardSection-Notifications"
-                                title="Notifications"
-                                name="Notifications"
-                                columns={this.getNotificationsColumns()}
-                                rows={this.getNotificationsRows()}
-                                gridPadding={this.getGridPadding()}
-                                onViewAll={this.handleNotificationsViewAll}
-                                noDataElement={
-                                    <Paper
-                                        className="qa-DashboardSection-Notifications-NoData"
-                                        style={styles.noData}
-                                    >
-                                        <span>{"You don't have any notifications."}</span>
-                                    </Paper>
-                                }
-                                rowMajor={false}
-                            >
-                                {this.props.notificationsData.notificationsSorted.map(notification => (
-                                    <NotificationGridItem
-                                        key={`Notification-${notification.id}`}
-                                        notification={notification}
-                                        history={this.props.history}
-                                    />
-                                ))}
-                            </DashboardSection>
-
-                            {/* Recently Viewed */}
-                            <DashboardSection
-                                className="qa-DashboardSection-RecentlyViewed"
-                                title="Recently Viewed"
-                                name="RecentlyViewed"
-                                columns={this.getGridColumns()}
-                                gridPadding={this.getGridPadding()}
-                                noDataElement={
-                                    <Paper
-                                        className="qa-DashboardSection-RecentlyViewed-NoData"
-                                        style={styles.noData}
-                                    >
-                                        <span>{"You don't have any recently viewed DataPacks."}&nbsp;</span>
-                                        <Link
-                                            to="/exports"
-                                            href="/exports"
-                                            style={styles.link}
-                                        >
-                                            View DataPack Library
-                                        </Link>
-                                    </Paper>
-                                }
-                            >
-                                {this.props.viewedIds.map((id, index) => {
-                                    return (
-                                        <DataPackGridItem
-                                            className="qa-DashboardSection-RecentlyViewedGrid-Item"
-                                            runId={id}
-                                            userData={this.props.userData}
-                                            key={`RecentlyViewedDataPack-${id}`}
-                                            onRunDelete={this.props.deleteRun}
-                                            onRunShare={this.props.updateDataCartPermissions}
-                                            providers={this.props.providers}
-                                            gridName="RecentlyViewed"
-                                            index={index}
-                                            showFeaturedFlag={false}
-                                        />
-                                    );
-                                })}
-                            </DashboardSection>
-
-                            {/* Featured */}
-                            {this.props.featuredIds.length === 0 ?
-                                null
-                                :
+                            steps={this.state.steps}
+                            autoStart
+                            type="continuous"
+                            showSkipButton
+                            showStepsProgress
+                            locale={{
+                                // @ts-ignore
+                                back: (<span>Back</span>),
+                                // @ts-ignore
+                                close: (<span>Close</span>),
+                                // @ts-ignore
+                                last: (<span>Done</span>),
+                                // @ts-ignore
+                                next: (<span>Next</span>),
+                                // @ts-ignore
+                                skip: (<span>Skip</span>),
+                            }}
+                            run={this.state.isRunning}
+                            styles={{
+                                options: {
+                                    overlayColor: colors.primary,
+                                    backgroundColor: colors.primary,
+                                    primaryColor: colors.white,
+                                },
+                            }}
+                        />
+                        {this.state.loadingPage ?
+                            null
+                            :
+                            <div style={styles.content}>
+                                {/* Notifications */}
                                 <DashboardSection
-                                    className="qa-DashboardSection-Featured"
-                                    title="Featured"
-                                    name="Featured"
-                                    columns={this.getGridWideColumns()}
+                                    className="qa-DashboardSection-Notifications"
+                                    title="Notifications"
+                                    name="Notifications"
+                                    columns={this.getNotificationsColumns()}
+                                    rows={this.getNotificationsRows()}
                                     gridPadding={this.getGridPadding()}
-                                    cellHeight={this.state.width !== 'xs' ? 335 : 435}
-                                    onViewAll={this.handleFeaturedViewAll}
+                                    onViewAll={this.handleNotificationsViewAll}
+                                    noDataElement={
+                                        <Paper
+                                            className="qa-DashboardSection-Notifications-NoData"
+                                            style={styles.noData}
+                                        >
+                                            <span>{"You don't have any notifications."}</span>
+                                        </Paper>
+                                    }
+                                    rowMajor={false}
                                 >
-                                    {this.props.featuredIds.map((id, index) => (
-                                        <DataPackFeaturedItem
-                                            className="qa-DashboardSection-FeaturedGrid-WideItem"
-                                            runId={id}
-                                            key={`FeaturedDataPack-${id}`}
-                                            gridName="Featured"
-                                            index={index}
-                                            height={this.state.width !== 'xs' ? '335px' : '435px'}
+                                    {this.props.notificationsData.notificationsSorted.map(notification => (
+                                        <NotificationGridItem
+                                            key={`Notification-${notification.id}`}
+                                            notification={notification}
+                                            history={this.props.history}
                                         />
                                     ))}
                                 </DashboardSection>
-                            }
 
-                            {/* My DataPacks */}
-                            <DashboardSection
-                                className="qa-DashboardSection-MyDataPacks"
-                                title="My DataPacks"
-                                name="MyDataPacks"
-                                columns={this.getGridColumns()}
-                                gridPadding={this.getGridPadding()}
-                                onViewAll={this.handleMyDataPacksViewAll}
-                                noDataElement={
-                                    <Paper
-                                        className="qa-DashboardSection-MyDataPacks-NoData"
-                                        style={styles.noData}
-                                    >
-                                        <span>{"You don't have any DataPacks."}&nbsp;</span>
-                                        <Link
-                                            to="/create"
-                                            href="/create"
-                                            style={styles.link}
+                                {/* Recently Viewed */}
+                                <DashboardSection
+                                    className="qa-DashboardSection-RecentlyViewed"
+                                    title="Recently Viewed"
+                                    name="RecentlyViewed"
+                                    columns={this.getGridColumns()}
+                                    gridPadding={this.getGridPadding()}
+                                    noDataElement={
+                                        <Paper
+                                            className="qa-DashboardSection-RecentlyViewed-NoData"
+                                            style={styles.noData}
                                         >
-                                            Create DataPack
-                                        </Link>
-                                    </Paper>
+                                            <span>{"You don't have any recently viewed DataPacks."}&nbsp;</span>
+                                            <Link
+                                                to="/exports"
+                                                href="/exports"
+                                                style={styles.link}
+                                            >
+                                                View DataPack Library
+                                            </Link>
+                                        </Paper>
+                                    }
+                                >
+                                    {this.props.viewedIds.map((id, index) => {
+                                        return (
+                                            <DataPackGridItem
+                                                className="qa-DashboardSection-RecentlyViewedGrid-Item"
+                                                runId={id}
+                                                userData={this.props.userData}
+                                                key={`RecentlyViewedDataPack-${id}`}
+                                                onRunDelete={this.props.deleteRun}
+                                                onRunShare={this.props.updateDataCartPermissions}
+                                                providers={this.props.providers}
+                                                gridName="RecentlyViewed"
+                                                index={index}
+                                                showFeaturedFlag={false}
+                                            />
+                                        );
+                                    })}
+                                </DashboardSection>
+
+                                {/* Featured */}
+                                {this.props.featuredIds.length === 0 ?
+                                    null
+                                    :
+                                    <DashboardSection
+                                        className="qa-DashboardSection-Featured"
+                                        title="Featured"
+                                        name="Featured"
+                                        columns={this.getGridWideColumns()}
+                                        gridPadding={this.getGridPadding()}
+                                        cellHeight={this.state.width !== 'xs' ? 335 : 435}
+                                        onViewAll={this.handleFeaturedViewAll}
+                                    >
+                                        {this.props.featuredIds.map((id, index) => (
+                                            <DataPackFeaturedItem
+                                                className="qa-DashboardSection-FeaturedGrid-WideItem"
+                                                runId={id}
+                                                key={`FeaturedDataPack-${id}`}
+                                                gridName="Featured"
+                                                index={index}
+                                                height={this.state.width !== 'xs' ? '335px' : '435px'}
+                                            />
+                                        ))}
+                                    </DashboardSection>
                                 }
-                            >
-                                {this.props.ownIds.map((id, index) => (
-                                    <DataPackGridItem
-                                        className="qa-DashboardSection-MyDataPacksGrid-Item"
-                                        runId={id}
-                                        userData={this.props.userData}
-                                        key={`MyDataPacksDataPack-${id}`}
-                                        onRunDelete={this.props.deleteRun}
-                                        onRunShare={this.props.updateDataCartPermissions}
-                                        providers={this.props.providers}
-                                        gridName="MyDataPacks"
-                                        index={index}
-                                        showFeaturedFlag={false}
-                                    />
-                                ))}
-                            </DashboardSection>
-                        </div>
-                    }
-                </CustomScrollbar>
+
+                                {/* My DataPacks */}
+                                <DashboardSection
+                                    className="qa-DashboardSection-MyDataPacks"
+                                    title="My DataPacks"
+                                    name="MyDataPacks"
+                                    columns={this.getGridColumns()}
+                                    gridPadding={this.getGridPadding()}
+                                    onViewAll={this.handleMyDataPacksViewAll}
+                                    noDataElement={
+                                        <Paper
+                                            className="qa-DashboardSection-MyDataPacks-NoData"
+                                            style={styles.noData}
+                                        >
+                                            <span>{"You don't have any DataPacks."}&nbsp;</span>
+                                            <Link
+                                                to="/create"
+                                                href="/create"
+                                                style={styles.link}
+                                            >
+                                                Create DataPack
+                                            </Link>
+                                        </Paper>
+                                    }
+                                >
+                                    {this.props.ownIds.map((id, index) => (
+                                        <DataPackGridItem
+                                            className="qa-DashboardSection-MyDataPacksGrid-Item"
+                                            runId={id}
+                                            userData={this.props.userData}
+                                            key={`MyDataPacksDataPack-${id}`}
+                                            onRunDelete={this.props.deleteRun}
+                                            onRunShare={this.props.updateDataCartPermissions}
+                                            providers={this.props.providers}
+                                            gridName="MyDataPacks"
+                                            index={index}
+                                            showFeaturedFlag={false}
+                                        />
+                                    ))}
+                                </DashboardSection>
+                            </div>
+                        }
+                    </CustomScrollbar>
+                </div>
             </div>
         );
     }

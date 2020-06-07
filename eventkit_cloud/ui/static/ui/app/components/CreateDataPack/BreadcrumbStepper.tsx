@@ -30,6 +30,11 @@ import {getProjections} from "../../actions/projectionActions";
 import {MapLayer} from "./CreateExport";
 import InfoDialog from "../Dialog/InfoDialog";
 import EstimateLabel from "./EstimateLabel";
+import PermissionsBanner from "../PermissionsBanner";
+import {userStatusReducer} from "../../reducers/userReducer";
+import {useState} from "react";
+import {useEffectOnMount} from "../../utils/hooks";
+import {CreatePagePermissionsBanner} from "./CreatePagePermissionsBanner";
 
 export interface JobData {
     name: string;
@@ -94,6 +99,7 @@ export interface State {
     isLoading: boolean;
     selectedExports: string[];
     areEstimatesLoading: boolean;
+    isBannerOpen: boolean;
 }
 
 export class BreadcrumbStepper extends React.Component<Props, State> {
@@ -122,6 +128,7 @@ export class BreadcrumbStepper extends React.Component<Props, State> {
         this.routeLeaveHook = this.routeLeaveHook.bind(this);
         this.handleLeaveWarningDialogCancel = this.handleLeaveWarningDialogCancel.bind(this);
         this.handleLeaveWarningDialogConfirm = this.handleLeaveWarningDialogConfirm.bind(this);
+        this.setBannerOpen = this.setBannerOpen.bind(this);
         this.state = {
             stepIndex: 0,
             showError: false,
@@ -132,7 +139,8 @@ export class BreadcrumbStepper extends React.Component<Props, State> {
             estimateExplanationOpen: false,
             isLoading: false,
             selectedExports: [],
-            areEstimatesLoading: false
+            areEstimatesLoading: false,
+            isBannerOpen: false,
         };
         this.leaveRoute = null;
     }
@@ -162,7 +170,7 @@ export class BreadcrumbStepper extends React.Component<Props, State> {
         }
         if (!isEqual(this.props.aoiInfo, prevProps.aoiInfo) ||
             !isEqual(this.props.exportInfo, prevProps.exportInfo)) {
-            this.setState({ modified: true });
+            this.setState({modified: true});
         }
     }
 
@@ -172,10 +180,14 @@ export class BreadcrumbStepper extends React.Component<Props, State> {
         this.props.clearJobInfo();
     }
 
+    private setBannerOpen(shouldOpen: boolean) {
+        this.setState({isBannerOpen: shouldOpen});
+    }
+
     private getErrorMessage(title: string, detail: string, ix: number) {
         return (
             <div className="BreadcrumbStepper-error-container" key={`${title}-${detail}`}>
-                {ix > 0 ? <Divider style={{ marginBottom: '10px' }}/> : null}
+                {ix > 0 ? <Divider style={{marginBottom: '10px'}}/> : null}
                 <p className="BreadcrumbStepper-error-title">
                     <Warning style={{
                         fill: this.props.theme.eventkit.colors.warning,
@@ -213,7 +225,7 @@ export class BreadcrumbStepper extends React.Component<Props, State> {
             case 0:
                 return (
                     <div className="qa-BreadcrumbStepper-step1Label" style={labelStyle}>
-                        <Typography style={{ ...textStyle }}>
+                        <Typography style={{...textStyle}}>
                             STEP 1 OF 3: Define Area of Interest
                         </Typography>
                     </div>
@@ -221,7 +233,7 @@ export class BreadcrumbStepper extends React.Component<Props, State> {
             case 1:
                 return (
                     <div className="qa-BreadcrumbStepper-step2Label" style={labelStyle}>
-                        <Typography style={{ ...textStyle, display: 'inline' }}>
+                        <Typography style={{...textStyle, display: 'inline'}}>
                             STEP 2 OF 3: Select Data & Formats
                         </Typography>
                     </div>
@@ -229,7 +241,7 @@ export class BreadcrumbStepper extends React.Component<Props, State> {
             case 2:
                 return (
                     <div className="qa-BreadcrumbStepper-step3Label" style={labelStyle}>
-                        <Typography style={{ ...textStyle }}>
+                        <Typography style={{...textStyle}}>
                             STEP 3 OF 3: Review & Submit
                         </Typography>
                     </div>
@@ -252,6 +264,8 @@ export class BreadcrumbStepper extends React.Component<Props, State> {
                         onWalkthroughReset={this.props.onWalkthroughReset}
                         selectedBaseMap={this.props.selectedBaseMap}
                         mapLayers={this.props.mapLayers}
+                        isPermissionsBannerOpen={this.state.isBannerOpen}
+
                     />
                 );
             case 1:
@@ -377,12 +391,12 @@ export class BreadcrumbStepper extends React.Component<Props, State> {
 
         // We must have started making changes. Save the route we're trying to navigate to and show a warning.
         this.leaveRoute = info.pathname;
-        this.setState({ showLeaveWarningDialog: true });
+        this.setState({showLeaveWarningDialog: true});
         return false;
     }
 
     private submitDatapack() {
-        this.setState({ modified: false });
+        this.setState({modified: false});
         this.showLoading();
         // wait a moment before calling handleSubmit because
         // flattenFeatureCollection may lock up the browser
@@ -392,8 +406,8 @@ export class BreadcrumbStepper extends React.Component<Props, State> {
 
     private handleSubmit() {
         const providerTasks = [];
-        const { exportOptions } = this.props.exportInfo;
-        const { providers, projections } = this.props.exportInfo;
+        const {exportOptions} = this.props.exportInfo;
+        const {providers, projections} = this.props.exportInfo;
 
 
         providers.forEach((provider) => {
@@ -436,36 +450,36 @@ export class BreadcrumbStepper extends React.Component<Props, State> {
     }
 
     private handleNext() {
-        const { stepIndex } = this.state;
-        this.setState({ stepIndex: stepIndex + 1 });
+        const {stepIndex} = this.state;
+        this.setState({stepIndex: stepIndex + 1});
     }
 
     private handlePrev() {
-        const { stepIndex } = this.state;
+        const {stepIndex} = this.state;
         if (stepIndex > 0) {
-            this.setState({ stepIndex: stepIndex - 1 });
+            this.setState({stepIndex: stepIndex - 1});
         }
     }
 
     private showError(error: any) {
-        this.setState({ showError: true, error });
+        this.setState({showError: true, error});
         this.props.clearJobInfo();
     }
 
     private hideError() {
-        this.setState({ showError: false });
+        this.setState({showError: false});
     }
 
     private showLoading() {
-        this.setState({ loading: true });
+        this.setState({loading: true});
     }
 
     private hideLoading() {
-        this.setState({ loading: false });
+        this.setState({loading: false});
     }
 
     private handleLeaveWarningDialogCancel() {
-        this.setState({ showLeaveWarningDialog: false });
+        this.setState({showLeaveWarningDialog: false});
         this.leaveRoute = null;
     }
 
@@ -474,10 +488,10 @@ export class BreadcrumbStepper extends React.Component<Props, State> {
     }
 
     render() {
-        const { colors } = this.props.theme.eventkit;
+        const {colors} = this.props.theme.eventkit;
         let message = [];
         if (this.state.error) {
-            const responseError = { ...this.state.error };
+            const responseError = {...this.state.error};
             const errors = [...responseError.errors];
             message = errors.map((error, ix) => (
                 this.getErrorMessage(error.title, error.detail, ix)
@@ -488,16 +502,16 @@ export class BreadcrumbStepper extends React.Component<Props, State> {
         }
 
         return (
-            <div className="qa-BreadcrumbStepper-div-content" style={{ backgroundColor: colors.background }}>
+            <div className="qa-BreadcrumbStepper-div-content" style={{backgroundColor: colors.background}}>
                 <div className="qa-BreadcrumbStepper-div-stepLabel"
-                     style={{ width: '100%', height: '50px', display: 'inline-block' }}
+                     style={{width: '100%', height: '50px', display: 'inline-block'}}
                 >
-                    <div style={{ position: 'relative', display: 'flex' }}>
+                    <div style={{position: 'relative', display: 'flex'}}>
                         {this.getStepLabel(this.state.stepIndex)}
-                        <div style={{ marginLeft: 'auto', zIndex: 5, pointerEvents: 'none' }}>
+                        <div style={{marginLeft: 'auto', zIndex: 5, pointerEvents: 'none'}}>
                             <div
                                 className="qa-BreadcrumbStepper-div-buttons"
-                                style={{ float: 'right', padding: '5px', pointerEvents: 'auto' }}
+                                style={{float: 'right', padding: '5px', pointerEvents: 'auto'}}
                             >
                                 {this.getPreviousButtonContent(this.state.stepIndex)}
                                 {this.getButtonContent(this.state.stepIndex)}
@@ -513,6 +527,13 @@ export class BreadcrumbStepper extends React.Component<Props, State> {
                         />
                     </div>
                 </div>
+                {!!this.props.providers && this.props.providers.length && (
+                    <CreatePagePermissionsBanner
+                        providers={this.props.providers}
+                        setBannerOpen={this.setBannerOpen}
+                        step={this.state.stepIndex}
+                    />
+                )}
                 <div className="qa-BreadcrumbStepper-div-stepContent">{this.getStepContent(this.state.stepIndex)}</div>
                 <BaseDialog
                     show={this.state.showError}

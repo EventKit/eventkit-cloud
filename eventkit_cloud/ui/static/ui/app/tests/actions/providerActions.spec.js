@@ -44,9 +44,9 @@ describe('providerActions', () => {
         });
 
         it('onSuccess should return first item of data array', () => {
-            const response = { data: [{ task: 'example task' }] };
+            const response = { data: { task: 'example task' } };
             expect(actions.getProviderTask().onSuccess(response)).toEqual({
-                data: response.data[0],
+                data: response.data,
             });
         });
     });

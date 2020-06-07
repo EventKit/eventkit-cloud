@@ -47,7 +47,7 @@ import {
     getDominantGeometry, getResolutions, wrapX, getTileCoordinateFromClick, TileCoordinate
 } from '../../utils/mapUtils';
 
-import {getSqKm} from '../../utils/generic';
+import {getCookie, getSqKm} from '../../utils/generic';
 import ZoomLevelLabel from '../MapTools/ZoomLevelLabel';
 import globe from '../../../images/globe-americas.svg';
 import {joyride} from '../../joyride.config';
@@ -59,6 +59,7 @@ import MapDisplayBar from "./MapDisplayBar";
 import {useJobValidationContext} from "./context/JobValidation";
 import {useEffect} from "react";
 import {useEffectOnMount} from "../../utils/hooks";
+import MapDrawer from "./MapDrawer";
 
 export const WGS84 = 'EPSG:4326';
 export const WEB_MERCATOR = 'EPSG:3857';
@@ -79,6 +80,7 @@ export interface Props {
     nextEnabled: boolean;
     selectedBaseMap: MapLayer;
     mapLayers: MapLayer[];
+    isPermissionsBannerOpen?: boolean;
     theme: Eventkit.Theme & Theme;
     width: Breakpoint;
 }
@@ -102,11 +104,24 @@ export interface State {
     fakeData: boolean;
     showReset: boolean;
     zoomLevel: number;
+    selectedBaseMap: MapLayer;
+    mapLayers: MapLayer[];
+    isOpen: boolean;
+}
+
+export interface MapLayer {
+    mapUrl: string;
+    metadata?: {
+        type: string;
+        url: string;
+    };
+    slug: string;
+    copyright?: string;
 }
 
 function StepValidator(props: Props) {
-    const { setNextEnabled, setNextDisabled, nextEnabled } = props;
-    const { aoiHasArea } = useJobValidationContext();
+    const {setNextEnabled, setNextDisabled, nextEnabled} = props;
+    const {aoiHasArea} = useJobValidationContext();
 
     useEffectOnMount(() => {
         setNextDisabled();
@@ -116,7 +131,7 @@ function StepValidator(props: Props) {
         const setEnabled = aoiHasArea;
         if (setEnabled && !nextEnabled) {
             setNextEnabled();
-        } else if(!setEnabled && nextEnabled) {
+        } else if (!setEnabled && nextEnabled) {
             setNextDisabled();
         }
     });
@@ -128,7 +143,7 @@ export class ExportAOI extends React.Component<Props, State> {
     static contextTypes = {
         config: PropTypes.object,
     };
-    static defaultProps = { selectedBaseMap: { mapUrl: '', slug: 'DEFAULT' } };
+    static defaultProps = {selectedBaseMap: {mapUrl: '', slug: 'DEFAULT'}};
 
     private bufferFunction: (val: any) => void;
     private drawLayer;
@@ -180,6 +195,9 @@ export class ExportAOI extends React.Component<Props, State> {
         this.resetAoi = this.resetAoi.bind(this);
         this.updateZoomLevel = this.updateZoomLevel.bind(this);
         this.setDisplayBofRef = this.setDisplayBofRef.bind(this);
+        this.updateBaseMap = this.updateBaseMap.bind(this);
+        this.addFootprintsLayer = this.addFootprintsLayer.bind(this);
+        this.removeFootprintsLayer = this.removeFootprintsLayer.bind(this);
         this.bufferFunction = () => { /* do nothing */
         };
         this.state = {
@@ -201,15 +219,18 @@ export class ExportAOI extends React.Component<Props, State> {
             fakeData: false,
             showReset: false,
             zoomLevel: 2,
+            selectedBaseMap: {mapUrl: ''} as MapLayer,
+            mapLayers: [] as MapLayer[],
+            isOpen: false,
         };
     }
 
-    componentDidMount() {
+    async componentDidMount() {
         // set up debounce functions for user text input
         this.bufferFunction = debounce((val) => {
             const valid = this.handleBufferChange(val);
             if (valid !== this.state.validBuffer) {
-                this.setState({ validBuffer: valid });
+                this.setState({validBuffer: valid});
             }
         }, 10);
 
@@ -236,11 +257,11 @@ export class ExportAOI extends React.Component<Props, State> {
 
         if (this.props.walkthroughClicked && !prevProps.walkthroughClicked && this.state.isRunning === false) {
             this.joyride.reset(true);
-            this.setState({ isRunning: true });
+            this.setState({isRunning: true});
         }
 
         this.map.updateSize();
-        const { mapUrl } = this.props.selectedBaseMap;
+        const {mapUrl} = this.props.selectedBaseMap;
         const prevBaseMapUrl = prevProps.selectedBaseMap.mapUrl;
         if (mapUrl !== prevBaseMapUrl) {
             const newSource = new XYZ({
@@ -261,7 +282,7 @@ export class ExportAOI extends React.Component<Props, State> {
                 return mapLayers.includes(p1);
             })) {
                 // Valid slugs -> all layers that should remain selected and visible, including base layer
-                let currentLayers = this.map.getLayers().getArray();
+                const currentLayers = this.map.getLayers().getArray();
                 const validSlugs = [...mapLayers.map(layer => layer.slug), this.baseLayer.get('name')];
                 const layersToBeRemoved = currentLayers.filter(layer => validSlugs.indexOf(layer.get('name')) === -1);
                 layersToBeRemoved.forEach(layer => this.map.removeLayer(layer));
@@ -277,7 +298,7 @@ export class ExportAOI extends React.Component<Props, State> {
     }
 
     private setButtonSelected(iconName: string) {
-        const icons = { ...this.state.toolbarIcons };
+        const icons = {...this.state.toolbarIcons};
         Object.keys(icons).forEach((key) => {
             if (key === iconName) {
                 icons[key] = 'SELECTED';
@@ -285,15 +306,15 @@ export class ExportAOI extends React.Component<Props, State> {
                 icons[key] = 'INACTIVE';
             }
         });
-        this.setState({ toolbarIcons: icons });
+        this.setState({toolbarIcons: icons});
     }
 
     private setAllButtonsDefault() {
-        const icons = { ...this.state.toolbarIcons };
+        const icons = {...this.state.toolbarIcons};
         Object.keys(icons).forEach((key) => {
             icons[key] = 'DEFAULT';
         });
-        this.setState({ toolbarIcons: icons });
+        this.setState({toolbarIcons: icons});
     }
 
     private setMapView() {
@@ -321,17 +342,17 @@ export class ExportAOI extends React.Component<Props, State> {
 
     private toggleImportModal(show: boolean) {
         if (show !== undefined) {
-            this.setState({ showImportModal: show });
+            this.setState({showImportModal: show});
         } else {
-            this.setState({ showImportModal: !this.state.showImportModal });
+            this.setState({showImportModal: !this.state.showImportModal});
         }
     }
 
     private showInvalidDrawWarning(show: boolean) {
         if (show !== undefined) {
-            this.setState({ showInvalidDrawWarning: show });
+            this.setState({showInvalidDrawWarning: show});
         } else {
-            this.setState({ showInvalidDrawWarning: !this.state.showInvalidDrawWarning });
+            this.setState({showInvalidDrawWarning: !this.state.showInvalidDrawWarning});
         }
     }
 
@@ -394,7 +415,7 @@ export class ExportAOI extends React.Component<Props, State> {
     }
 
     private handleGeoJSONUpload(importGeom: Eventkit.Store.ImportGeom) {
-        const { featureCollection, filename } = importGeom;
+        const {featureCollection, filename} = importGeom;
         clearDraw(this.drawLayer);
         const reader = new GeoJSONFormat();
         const features = reader.readFeatures(featureCollection, {
@@ -432,7 +453,7 @@ export class ExportAOI extends React.Component<Props, State> {
             this.drawFreeInteraction.setActive(true);
         }
         // update the state
-        this.setState({ mode });
+        this.setState({mode});
     }
 
     private handleDrawEnd(event: any) {
@@ -444,7 +465,7 @@ export class ExportAOI extends React.Component<Props, State> {
         const geojson = createGeoJSON(geometry) as GeoJSON.FeatureCollection;
         // Since this is a controlled draw we make the assumption
         // that there is only one feature in the collection
-        const { bbox } = geojson.features[0];
+        const {bbox} = geojson.features[0];
         // make sure the user didnt create a polygon with no area
         if (bbox[0] !== bbox[2] && bbox[1] !== bbox[3]) {
             if (this.state.mode === MODE_DRAW_FREE) {
@@ -495,12 +516,12 @@ export class ExportAOI extends React.Component<Props, State> {
 
         this.markerLayer.setStyle(new Style({
             image: new Circle({
-                fill: new Fill({ color: this.props.theme.eventkit.colors.text_primary }),
-                stroke: new Stroke({ color: this.props.theme.eventkit.colors.warning, width: 1.25 }),
+                fill: new Fill({color: this.props.theme.eventkit.colors.text_primary}),
+                stroke: new Stroke({color: this.props.theme.eventkit.colors.warning, width: 1.25}),
                 radius: 5,
             }),
-            fill: new Fill({ color: this.props.theme.eventkit.colors.text_primary }),
-            stroke: new Stroke({ color: '#3399CC', width: 1.25 }),
+            fill: new Fill({color: this.props.theme.eventkit.colors.text_primary}),
+            stroke: new Stroke({color: '#3399CC', width: 1.25}),
         }));
 
         this.bufferLayer.setStyle(new Style({
@@ -533,7 +554,7 @@ export class ExportAOI extends React.Component<Props, State> {
         // Order matters here
         // Above comment assumed to refer to the order of the parameters to XYZ()
         // Comment moved with code, originally offered no further explanation.
-        const { mapUrl } = this.props.selectedBaseMap;
+        const {mapUrl} = this.props.selectedBaseMap;
         this.baseLayer = this.createRasterTileLayer((!!mapUrl) ? mapUrl : this.context.config.BASEMAP_URL, 'baseLayer');
 
         this.map = new Map({
@@ -582,7 +603,6 @@ export class ExportAOI extends React.Component<Props, State> {
             handleUpEvent: this.upEvent,
         });
 
-
         // Hook up the click to query feature data
         this.map.on('click', (event) => {
                 if (this.state.mode === MODE_NORMAL && this.displayBoxRef) {
@@ -619,7 +639,7 @@ export class ExportAOI extends React.Component<Props, State> {
         // Order matters here
         // Above comment assumed to refer to the order of the parameters to XYZ() --
         // -- comment moved with code, originally offered no further explanation.
-        const { copyright } = this.props.selectedBaseMap;
+        const {copyright} = this.props.selectedBaseMap;
         const layer = new Tile({
             source: new XYZ({
                 projection: 'EPSG:4326',
@@ -636,7 +656,7 @@ export class ExportAOI extends React.Component<Props, State> {
     private updateZoomLevel() {
         const lvl = Math.floor(this.map.getView().getZoom());
         if (lvl !== this.state.zoomLevel) {
-            this.setState({ zoomLevel: lvl });
+            this.setState({zoomLevel: lvl});
         }
     }
 
@@ -708,12 +728,12 @@ export class ExportAOI extends React.Component<Props, State> {
     }
 
     private moveEvent(evt: any) {
-        const { map } = evt;
-        const { pixel } = evt;
+        const {map} = evt;
+        const {pixel} = evt;
         if (this.markerLayer.getSource().getFeatures().length > 0) {
             clearDraw(this.markerLayer);
         }
-        const opts = { layerFilter: layer => (layer === this.drawLayer) };
+        const opts = {layerFilter: layer => (layer === this.drawLayer)};
         if (map.hasFeatureAtPixel(pixel, opts)) {
             const mapFeatures = map.getFeaturesAtPixel(pixel, opts);
             for (const feature of mapFeatures) {
@@ -735,9 +755,9 @@ export class ExportAOI extends React.Component<Props, State> {
     }
 
     private downEvent(evt: any) {
-        const { map } = evt;
-        const { pixel } = evt;
-        const opts = { layerFilter: layer => (layer === this.drawLayer) };
+        const {map} = evt;
+        const {pixel} = evt;
+        const opts = {layerFilter: layer => (layer === this.drawLayer)};
         if (map.hasFeatureAtPixel(pixel, opts)) {
             const mapFeatures = map.getFeaturesAtPixel(pixel, opts);
             for (const feature of mapFeatures) {
@@ -772,7 +792,7 @@ export class ExportAOI extends React.Component<Props, State> {
     }
 
     private bufferMapFeature() {
-        const { bufferFeatures } = this;
+        const {bufferFeatures} = this;
         if (!bufferFeatures) {
             return false;
         }
@@ -794,7 +814,7 @@ export class ExportAOI extends React.Component<Props, State> {
 
     private handleBufferClick() {
         this.bufferMapFeature();
-        this.setState({ showBuffer: false, validBuffer: true });
+        this.setState({showBuffer: false, validBuffer: true});
         this.bufferFeatures = null;
     }
 
@@ -803,28 +823,28 @@ export class ExportAOI extends React.Component<Props, State> {
         // but it gives you the option to await the state change to be complete
         return new Promise(async (resolve) => {
             // resolve only when setState is completed
-            this.setState({ showBuffer: true }, resolve);
+            this.setState({showBuffer: true}, resolve);
         });
     }
 
     private closeBufferDialog() {
-        this.setState({ showBuffer: false, validBuffer: true });
+        this.setState({showBuffer: false, validBuffer: true});
         this.bufferFeatures = null;
-        this.props.updateAoiInfo({ ...this.props.aoiInfo, buffer: 0 });
+        this.props.updateAoiInfo({...this.props.aoiInfo, buffer: 0});
         clearDraw(this.bufferLayer);
     }
 
     private handleBufferChange(value: string) {
         const buffer = Number(value);
         if (buffer <= 10000 && buffer >= 0) {
-            this.props.updateAoiInfo({ ...this.props.aoiInfo, buffer });
-            const { geojson } = this.props.aoiInfo;
+            this.props.updateAoiInfo({...this.props.aoiInfo, buffer});
+            const {geojson} = this.props.aoiInfo;
             if (Object.keys(geojson).length === 0) {
                 return false;
             }
             const reader = new GeoJSONFormat();
             const bufferedFeatureCollection = bufferGeojson(geojson, buffer, true);
-            this.bufferFeatures = { ...bufferedFeatureCollection };
+            this.bufferFeatures = {...bufferedFeatureCollection};
             const newFeatures = reader.readFeatures(bufferedFeatureCollection, {
                 dataProjection: 'EPSG:4326',
                 featureProjection: 'EPSG:4326',
@@ -840,15 +860,15 @@ export class ExportAOI extends React.Component<Props, State> {
     }
 
     private openResetDialog() {
-        this.setState({ showReset: true });
+        this.setState({showReset: true});
     }
 
     private closeResetDialog() {
-        this.setState({ showReset: false });
+        this.setState({showReset: false});
     }
 
     private resetAoi() {
-        const { originalGeojson } = this.props.aoiInfo;
+        const {originalGeojson} = this.props.aoiInfo;
 
         const reader = new GeoJSONFormat();
         const newFeatures = reader.readFeatures(originalGeojson, {
@@ -862,7 +882,7 @@ export class ExportAOI extends React.Component<Props, State> {
             geojson: originalGeojson,
             buffer: 0,
         });
-        this.setState({ showReset: false });
+        this.setState({showReset: false});
     }
 
     private joyrideAddSteps(steps: Step[]) {
@@ -877,7 +897,7 @@ export class ExportAOI extends React.Component<Props, State> {
         }
 
         this.setState((currentState: State) => {
-            const nextState = { ...currentState };
+            const nextState = {...currentState};
             nextState.steps = nextState.steps.concat(newSteps);
             return nextState;
         });
@@ -896,7 +916,7 @@ export class ExportAOI extends React.Component<Props, State> {
             // part of an attempt to re-render a step and we want to immediately go forward again.
             // ** See the very long comment at end of function for more details **
             this.bounceBack = false;
-            this.setState({ stepIndex: index + 1 });
+            this.setState({stepIndex: index + 1});
             return;
         }
 
@@ -911,13 +931,13 @@ export class ExportAOI extends React.Component<Props, State> {
                 this.props.clearExportInfo();
                 this.setAllButtonsDefault();
                 if (this.state.showBuffer) {
-                    this.setState({ showBuffer: false });
+                    this.setState({showBuffer: false});
                 }
                 this.handleResetMap();
-                this.setState({ fakeData: false });
+                this.setState({fakeData: false});
             }
 
-            this.setState({ isRunning: false, stepIndex: 0 });
+            this.setState({isRunning: false, stepIndex: 0});
             this.props.onWalkthroughReset();
             this.joyride.reset(true);
         } else {
@@ -925,7 +945,7 @@ export class ExportAOI extends React.Component<Props, State> {
                 //  if there is no aoi we load some fake data
                 if (this.props.aoiInfo.description === null) {
                     this.drawFakeBbox();
-                    this.setState({ fakeData: true });
+                    this.setState({fakeData: true});
                 } else { // otherwise just zoom to whats already there
                     this.handleZoomToSelection();
                 }
@@ -958,10 +978,10 @@ export class ExportAOI extends React.Component<Props, State> {
                     await this.openBufferDialog();
                     // once the dialog is open we go back to the previous step which will then forward to this step again,
                     // causing the tour step to render correctly this time
-                    this.setState({ stepIndex: index - 1 });
+                    this.setState({stepIndex: index - 1});
                 } else {
                     // If we are not accounting for the stupid buffer issue, just go the the proper step index
-                    this.setState({ stepIndex: index + (action === 'back' ? -1 : 1) });
+                    this.setState({stepIndex: index + (action === 'back' ? -1 : 1)});
                 }
             }
         }
@@ -1003,20 +1023,50 @@ export class ExportAOI extends React.Component<Props, State> {
         this.displayBoxRef = ref;
     }
 
+    private updateBaseMap(mapLayer: MapLayer) {
+        this.setState({selectedBaseMap: mapLayer});
+    }
+
+    private addFootprintsLayer(mapLayer: MapLayer) {
+        const mapLayers = [...this.state.mapLayers];
+        const index = mapLayers.map(x => x.slug).indexOf(mapLayer.slug);
+        if (index !== -1) {
+            return;
+        }
+        mapLayers.push(mapLayer);
+        this.setState({mapLayers});
+    }
+
+    private removeFootprintsLayer(mapLayer: MapLayer) {
+        const mapLayers = [...this.state.mapLayers];
+        const index = mapLayers.map(x => x.slug).indexOf(mapLayer.slug);
+        if (index === -1) {
+            return;
+        }
+        mapLayers.splice(index, 1);
+        this.setState({mapLayers});
+    }
+
     render() {
-        const { theme } = this.props;
-        const { steps, isRunning } = this.state;
+        const {theme} = this.props;
+        const {steps, isRunning} = this.state;
 
         const mapStyle = {
             left: undefined,
             right: '0px',
             backgroundImage: `url(${theme.eventkit.images.topo_light})`,
+            height: 'calc(100vh - 180px)',
+            bottom: '0px',
         };
 
         if (this.props.drawer === 'open' && isWidthUp('xl', this.props.width)) {
             mapStyle.left = '200px';
         } else {
             mapStyle.left = '0px';
+        }
+
+        if (this.props.isPermissionsBannerOpen) {
+            mapStyle.height = 'calc(100vh - 226px)';
         }
 
         let aoi = this.props.aoiInfo.geojson;
@@ -1048,6 +1098,13 @@ export class ExportAOI extends React.Component<Props, State> {
                     run={isRunning}
                 />
                 <div id="map" className={css.map} style={mapStyle}>
+                    <div className='basemap-tab'>
+                        <MapDrawer
+                            updateBaseMap={this.updateBaseMap}
+                            addFootprintsLayer={this.addFootprintsLayer}
+                            removeFootprintsLayer={this.removeFootprintsLayer}
+                        />
+                    </div>
                     <MapDisplayBar
                         aoiInfoBarProps={{
                             aoiInfo: this.props.aoiInfo,

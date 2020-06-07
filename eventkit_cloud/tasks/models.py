@@ -21,8 +21,9 @@ from eventkit_cloud.core.models import (
     UIDMixin,
     TimeStampedModelMixin,
     TimeTrackingModelMixin,
+    LowerCaseCharField,
 )
-from eventkit_cloud.jobs.models import Job, LowerCaseCharField, DataProvider
+from eventkit_cloud.jobs.models import Job, DataProvider, JobPermissionLevel, JobPermission
 from eventkit_cloud.tasks.enumerations import TaskStates
 from eventkit_cloud.tasks import (
     DEFAULT_CACHE_EXPIRATION,
@@ -98,6 +99,36 @@ class FileProducingTaskResult(UIDMixin, NotificationModelMixin):
         self.deleted = True
         self.export_task.display = False
         self.save()
+
+    def user_can_download(self, user: User):
+        """
+            Checks to see if the user has all of the required permissions to download the file.  To not make these
+            requests slower ideally the downloadable will have already
+            select_related("export_task__export_provider_task__provider", "export_task__export_provider_task__run")
+            :param user: The user requesting the file.
+            :param downloadable: The downloadable file.
+            :return:
+            """
+
+        jobs = JobPermission.userjobs(user, JobPermissionLevel.READ.value)
+        job = jobs.filter(runs__provider_tasks__tasks__result=self).first()
+
+        if not job:
+            return False
+
+        # If there is one provider there is one class, but if the download is associated with the whole run, there
+        # can be multiple classes and the user would need to be associated with all of those classes to download.
+        attribute_classes = []
+        if self.export_task.export_provider_task.provider:
+            attribute_classes.append(self.export_task.export_provider_task.provider.attribute_class)
+        else:
+            attribute_classes = self.export_task.export_provider_task.run.job.attribute_classes
+
+        for attribute_class in attribute_classes:
+            if attribute_class and not attribute_class.users.filter(id=user.id):
+                return False
+
+        return True
 
     class Meta:
         managed = True

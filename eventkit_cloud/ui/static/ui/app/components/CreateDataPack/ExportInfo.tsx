@@ -29,6 +29,7 @@ import RequestDataSource from "./RequestDataSource";
 import {Link} from "@material-ui/core";
 import Drawer from "@material-ui/core/Drawer";
 import {useState} from "react";
+import PermissionsBanner from "../PermissionsBanner";
 
 const jss = (theme: Eventkit.Theme & Theme) => createStyles({
     underlineStyle: {
@@ -635,7 +636,7 @@ export class ExportInfo extends React.Component<Props, State> {
     private getProviders() {
         // During rapid state updates, it is possible that duplicate providers get added to the list.
         // They need to be deduplicated, so that they don't render duplicate elements or cause havoc on the DOM.
-        let providers = this.state.providers.filter(provider => (provider.display !== false));
+        let providers = this.state.providers.filter(provider => (!provider.hidden && provider.display));
         providers = [...new Map(providers.map(x => [x.slug, x])).values()];
         return providers;
     }
@@ -688,6 +689,7 @@ export class ExportInfo extends React.Component<Props, State> {
 
         return (
             <div id="root" className={`qa-ExportInfo-root ${classes.root}`}>
+                {/*<PermissionsBanner isOpen={true} handleClosedPermissionsBanner={() => {}}/>*/}
                 <StepValidator {...this.props}/>
                 <Joyride
                     callback={this.callback}

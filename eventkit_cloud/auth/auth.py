@@ -90,6 +90,7 @@ def get_user(user_data, orig_data=None):
     :return:
     """
     oauth = OAuth.objects.filter(identification=user_data.get("identification")).first()
+    user = None
     if not oauth:
         if orig_data is None:
             orig_data = {}
@@ -125,12 +126,12 @@ def get_user(user_data, orig_data=None):
             raise e
         user_data["identification"] = identification
         user_data["commonname"] = commonname
-        return user
     else:
         # If logging back in, update their info.
         oauth.user_info = orig_data or oauth.user_info
         oauth.save()
-        return oauth.user
+        user = oauth.user
+    return user
 
 
 def get_user_data_from_schema(data):

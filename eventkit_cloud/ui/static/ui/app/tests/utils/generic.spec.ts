@@ -83,6 +83,7 @@ describe('test generic utils', () => {
         const provider: Partial<Eventkit.Provider> = {
             supported_formats: supportedFormats,
             type: 'wms',
+            hidden: false,
         };
         expect(getDefaultFormat(provider)).toEqual(['gpkg']);
     });
@@ -94,6 +95,7 @@ describe('test generic utils', () => {
         const provider: Partial<Eventkit.Provider> = {
             supported_formats: supportedFormats,
             type: 'wcs',
+            hidden: false,
         };
         expect(getDefaultFormat(provider)).toEqual(['gtiff']);
     });
@@ -104,6 +106,7 @@ describe('test generic utils', () => {
         const provider: Partial<Eventkit.Provider> = {
             supported_formats: supportedFormats,
             type: 'wcs',
+            hidden: false,
         };
         expect(getDefaultFormat(provider)).toEqual(['hdr']);
     });

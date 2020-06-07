@@ -92,7 +92,7 @@ export function ProviderStatusCheck(props: Props) {
         });
     };
 
-    function handlePopoverOpen(e: React.MouseEvent<HTMLElement>) {
+    function handlePopoverOpen(e: { currentTarget: any }) {
         setAnchor(e.currentTarget);
     }
 

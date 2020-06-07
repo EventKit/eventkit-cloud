@@ -35,7 +35,7 @@ export function getProviderTask(uid) {
         payload: { uid },
         params: { slim: 'true' },
         shouldCallApi: state => state.providerTasks.data[uid] === undefined,
-        onSuccess: response => ({ data: response.data[0] }),
+        onSuccess: response => ({ data: response.data }),
     };
 }
 

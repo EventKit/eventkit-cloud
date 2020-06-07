@@ -16,7 +16,6 @@ import Card from '@material-ui/core/Card';
 
 import Radio from "@material-ui/core/Radio";
 import {Tab, Tabs} from "@material-ui/core";
-import * as PropTypes from "prop-types";
 import Typography from "@material-ui/core/Typography";
 import ListItemText from "@material-ui/core/ListItemText";
 import Button from "@material-ui/core/Button";
@@ -26,7 +25,7 @@ import FootprintDisplay from "./FootprintDisplay";
 import {MapLayer} from "./CreateExport";
 import RequestDataSource from "./RequestDataSource";
 import {useEffect, useState} from "react";
-
+import UnavailableFilterPopup from "../DataPackPage/UnavailableFilterPopup";
 
 const jss = (theme: Theme & Eventkit.Theme) => createStyles({
     container: {
@@ -72,7 +71,7 @@ const jss = (theme: Theme & Eventkit.Theme) => createStyles({
         borderBottomLeftRadius: '5px',
         borderBottomRightRadius: '0px',
         height: 'auto',
-        marginTop: '17px',
+        marginTop: '14px',
         backgroundColor: theme.eventkit.colors.secondary,
         boxShadow: '0px 3px 15px rgba(0, 0, 0, 0.2) ',
     },
@@ -141,19 +140,19 @@ const jss = (theme: Theme & Eventkit.Theme) => createStyles({
     checked: {},
     selected: {},
     stickyRow: {
-        position: 'absolute',
         height: '50px',
         width: '100%',
-        display: 'flex',
+        display: 'block',
+    },
+    stickyRowSources: {
+        height: '100px',
+        bottom: '50px',
     },
     stickyRowItems: {
         flexGrow: 1,
     },
     button: {
         color: theme.eventkit.colors.white,
-        position: 'absolute',
-        right: '10px',
-        top: '10px',
     },
     thumbnail: {
         flexShrink: 0,
@@ -196,7 +195,6 @@ export interface Props {
 
 MapDrawer.defaultProps = { sources: [] } as Props;
 
-
 export function MapDrawer(props: Props) {
     const { providers, classes } = props;
 
@@ -204,7 +202,6 @@ export function MapDrawer(props: Props) {
     const [selectedTab, setSelectedTab] = useState(false);
     const [selectedBaseMap, setBaseMap] = useState(-1);
     const [requestDataSourceOpen, setRequestDataSourceOpen] = useState(false);
-
 
     function updateBaseMap(newBaseMapId: number, sources) {
         setBaseMap(newBaseMapId);
@@ -262,7 +259,7 @@ export function MapDrawer(props: Props) {
     useEffect(() => {
         setSources([
             ...providers.filter(provider =>
-                !!provider.preview_url && !!provider.display).map(provider => {
+                !provider.hidden && !!provider.preview_url && !!provider.display).map(provider => {
                 let footprintsLayer;
                 if (!!provider.footprint_url) {
                     footprintsLayer = {
@@ -283,10 +280,11 @@ export function MapDrawer(props: Props) {
                     thumbnail_url: provider.thumbnail_url,
                 } as BaseMapSource;
             })
-        ])
+        ]);
     }, [providers]);
 
     const drawerOpen = !!selectedTab;
+    const areProvidersHidden = providers.find(provider => provider.hidden === true);
 
     return (
         <div
@@ -336,7 +334,7 @@ export function MapDrawer(props: Props) {
                         <Clear className={classes.clear} color="primary" onClick={(event) => setSelectedTab(false)}/>
                     </div>
                     <Divider style={{ margin: '0 5px 0 5px' }}/>
-                    <div className={classes.scrollBar}>
+                    <div className={classes.scrollBar} style={areProvidersHidden ? {} : {height: 'calc(100% - 100px)'}}>
                         <CustomScrollbar>
                             <List style={{ padding: '10px' }}>
                                 {sources.map((source, ix) =>
@@ -391,29 +389,41 @@ export function MapDrawer(props: Props) {
                         </CustomScrollbar>
                     </div>
                     <Divider style={{ margin: '0 5px 0 5px' }}/>
-                    <div className={classes.stickyRow}>
-                        <div className={classes.stickyRowItems} style={{paddingLeft: '8px', paddingTop: '8px'}}>
-                        <RequestDataSource open={requestDataSourceOpen}
-                                           onClose={() => setRequestDataSourceOpen(false)}/>
-                        <div>
-                            Data Source Missing?
-                        </div>
-                        <Link onClick={() => setRequestDataSourceOpen(true)} style={{fontSize: '12px', cursor: 'pointer'}}>
-                            Request New Data Source
-                        </Link>
-                        </div>
-                        <Button
-                            className={`${classes.button} ${classes.stickRowyItems}`}
-                            color="primary"
-                            variant="contained"
-                            disabled={selectedBaseMap === -1 || (!selectedBaseMap && selectedBaseMap !== 0)}
-                            // -1 clear the map
-                            onClick={() => {
-                                updateBaseMap(-1, sources);
-                            }}
+
+                    <div
+                        className={`${classes.stickyRow} ${areProvidersHidden ? classes.stickyRowSources : ''}`}
+                    >
+                        <div
+                            className={classes.stickyRowItems}
+                            style={{ paddingLeft: '8px', paddingTop: '8px', display: 'flex', }}
                         >
-                            Reset
-                        </Button>
+                            <div style={{ marginRight: '8px' }}>
+                                <RequestDataSource open={requestDataSourceOpen}
+                                                   onClose={() => setRequestDataSourceOpen(false)}/>
+                                <div>
+                                    Data Source Missing?
+                                </div>
+                                <Link onClick={() => setRequestDataSourceOpen(true)}
+                                      style={{ fontSize: '12px', cursor: 'pointer' }}>
+                                    Request New Data Source
+                                </Link>
+                            </div>
+                            <div>
+                                <Button
+                                    className={`${classes.button} ${classes.stickRowyItems}`}
+                                    color="primary"
+                                    variant="contained"
+                                    disabled={selectedBaseMap === -1 || (!selectedBaseMap && selectedBaseMap !== 0)}
+                                    // -1 clear the map
+                                    onClick={() => {
+                                        updateBaseMap(-1, sources);
+                                    }}
+                                >
+                                    Reset
+                                </Button>
+                            </div>
+                        </div>
+                        {areProvidersHidden && <UnavailableFilterPopup/>}
                     </div>
                 </Drawer>
             </div>

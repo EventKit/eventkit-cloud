@@ -59,6 +59,8 @@ from eventkit_cloud.api.serializers import (
     AuditEventSerializer,
     DataProviderRequestSerializer,
     SizeIncreaseRequestSerializer,
+    FilteredDataProviderSerializer,
+    FilteredDataProviderTaskRecordSerializer,
 )
 from eventkit_cloud.api.validators import validate_bbox_params, validate_search_bbox
 from eventkit_cloud.core.helpers import (
@@ -69,8 +71,9 @@ from eventkit_cloud.core.helpers import (
 from eventkit_cloud.core.models import (
     GroupPermission,
     GroupPermissionLevel,
-    JobPermission,
-    JobPermissionLevel,
+    annotate_users_restricted,
+    attribute_class_filter,
+    annotate_groups_restricted,
 )
 from eventkit_cloud.jobs.models import (
     ExportFormat,
@@ -84,6 +87,8 @@ from eventkit_cloud.jobs.models import (
     License,
     VisibilityState,
     UserJobActivity,
+    JobPermission,
+    JobPermissionLevel,
 )
 from eventkit_cloud.tasks.export_tasks import (
     pick_up_run_task,
@@ -169,7 +174,6 @@ class JobViewSet(viewsets.ModelViewSet):
         """Return all objects user can view."""
 
         jobs = JobPermission.userjobs(self.request.user, JobPermissionLevel.READ.value)
-
         return Job.objects.filter(Q(visibility=VisibilityState.PUBLIC.value) | Q(pk__in=jobs))
 
     def list(self, request, *args, **kwargs):
@@ -411,7 +415,7 @@ class JobViewSet(viewsets.ModelViewSet):
 
                                 # Don't rely solely on max_data_size as estimates can sometimes be inaccurate
                                 # Allow user to get a job that passes max_data_size or max_selection condition:
-                                if (size and max_data_size) is not None:
+                                if size and max_data_size is not None:
                                     # max_data_size is an optional configuration
                                     if size <= max_data_size:
                                         continue
@@ -674,7 +678,8 @@ class JobViewSet(viewsets.ModelViewSet):
             if admins == 0:
                 return Response([{"detail": "This job has no administrators."}], status.HTTP_400_BAD_REQUEST,)
 
-            # throw out all current permissions and rewrite them
+            # The request represents all expected permissions for the file not a partial update of the permissions.
+            # Therefore we delete the existing permissions, because the new permissions should be the only permissions.
             with transaction.atomic():
                 job.permissions.all().delete()
                 user_objects = User.objects.filter(username__in=users)
@@ -882,15 +887,15 @@ class DataProviderViewSet(viewsets.ReadOnlyModelViewSet):
         """
         try:
             geojson = self.request.data.get("geojson", None)
-            provider = DataProvider.objects.get(slug=slug)
+            providers, filtered_provider = attribute_class_filter(self.get_queryset(), self.request.user)
+            provider = providers.get(slug=slug)
             return Response(perform_provider_check(provider, geojson), status=status.HTTP_200_OK)
 
-        except DataProvider.DoesNotExist as e:
+        except DataProvider.DoesNotExist:
             return Response([{"detail": _("Provider not found")}], status=status.HTTP_400_BAD_REQUEST,)
 
         except Exception as e:
             logger.error(e)
-
             return Response([{"detail": _("Internal Server Error")}], status=status.HTTP_500_INTERNAL_SERVER_ERROR,)
 
     def list(self, request, slug=None, *args, **kwargs):
@@ -899,7 +904,10 @@ class DataProviderViewSet(viewsets.ReadOnlyModelViewSet):
         * slug: optional lookup field
         * return: A list of data providers.
         """
-        return super(DataProviderViewSet, self).list(self, request, slug, *args, **kwargs)
+        providers, filtered_providers = attribute_class_filter(self.get_queryset(), self.request.user)
+        data = DataProviderSerializer(providers, many=True, context={"request": request}).data
+        data += FilteredDataProviderSerializer(filtered_providers, many=True).data
+        return Response(data)
 
     def retrieve(self, request, slug=None, *args, **kwargs):
         """
@@ -907,7 +915,11 @@ class DataProviderViewSet(viewsets.ReadOnlyModelViewSet):
         * slug: optional lookup field
         * return: The data provider with the given slug.
         """
-        return super(DataProviderViewSet, self).retrieve(self, request, slug, *args, **kwargs)
+        providers, filtered_providers = attribute_class_filter(self.get_queryset().filter(slug=slug), self.request.user)
+        if providers:
+            return Response(DataProviderSerializer(providers.get(slug=slug), context={"request": request}).data)
+        elif filtered_providers:
+            return Response(FilteredDataProviderSerializer(providers.get(slug=slug)).data)
 
 
 class RegionViewSet(viewsets.ReadOnlyModelViewSet):
@@ -1026,14 +1038,13 @@ class ExportRunViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         jobs = JobPermission.userjobs(self.request.user, "READ")
-
         if self.request.query_params.get("slim"):
             return ExportRun.objects.filter(
                 Q(job__in=jobs) | Q(job__visibility=VisibilityState.PUBLIC.value)
             ).select_related("job")
         else:
             return prefetch_export_runs(
-                (ExportRun.objects.filter(Q(job__in=jobs) | Q(job__visibility=VisibilityState.PUBLIC.value)))
+                (ExportRun.objects.filter(Q(job__in=jobs) | Q(job__visibility=VisibilityState.PUBLIC.value)).filter())
             )
 
     def retrieve(self, request, uid=None, *args, **kwargs):
@@ -1094,7 +1105,6 @@ class ExportRunViewSet(viewsets.ModelViewSet):
         :return: the serialized runs
         """
         queryset = self.filter_queryset(self.get_queryset())
-
         try:
             self.validate_licenses(queryset, user=request.user)
         except InvalidLicense as il:
@@ -1121,6 +1131,7 @@ class ExportRunViewSet(viewsets.ModelViewSet):
         :param kwargs:
         :return: the serialized runs
         """
+        status_code = status.HTTP_200_OK
         queryset = self.filter_queryset(self.get_queryset())
 
         if "permissions" in request.data:
@@ -1169,10 +1180,12 @@ class ExportRunViewSet(viewsets.ModelViewSet):
         page = self.paginate_queryset(queryset)
         if page is not None:
             serializer = self.get_serializer(page, many=True, context={"request": request, "no_license": True})
-            return self.get_paginated_response(serializer.data)
+            response = self.get_paginated_response(serializer.data)
+            response.status_code = status_code
+            return response
         else:
             serializer = self.get_serializer(queryset, many=True, context={"request": request, "no_license": True})
-            return Response(serializer.data, status=status.HTTP_200_OK)
+            return Response(serializer.data, status=status_code)
 
     @transaction.atomic
     def partial_update(self, request, uid=None, *args, **kwargs):
@@ -1291,7 +1304,7 @@ class ExportTaskViewSet(viewsets.ReadOnlyModelViewSet):
         return super(ExportTaskViewSet, self).list(self, request, uid, *args, **kwargs)
 
 
-class DataProviderTaskViewSet(viewsets.ModelViewSet):
+class DataProviderTaskRecordViewSet(viewsets.ModelViewSet):
     """
     Provides List and Retrieve endpoints for ExportTasks.
     """
@@ -1302,7 +1315,10 @@ class DataProviderTaskViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         """Return all objects user can view."""
-        return DataProviderTaskRecord.objects.filter(Q(run__user=self.request.user) | Q(run__job__published=True))
+        jobs = JobPermission.userjobs(self.request.user, "READ")
+        return DataProviderTaskRecord.objects.filter(
+            Q(run__job__visibility=VisibilityState.PUBLIC.value) | Q(run__job__in=jobs)
+        )
 
     def retrieve(self, request, uid=None, *args, **kwargs):
         """
@@ -1314,7 +1330,13 @@ class DataProviderTaskViewSet(viewsets.ModelViewSet):
         Returns:
             the serialized ExportTaskRecord data
         """
-        serializer = self.get_serializer(self.get_queryset().filter(uid=uid), many=True, context={"request": request})
+        providers_tasks, filtered_provider_task = attribute_class_filter(
+            self.get_queryset().filter(uid=uid), self.request.user
+        )
+        if providers_tasks:
+            serializer = DataProviderTaskRecordSerializer(providers_tasks.first(), context={"request": request})
+        else:
+            serializer = FilteredDataProviderTaskRecordSerializer(filtered_provider_task.first())
         return Response(serializer.data, status=status.HTTP_200_OK)
 
     def partial_update(self, request, uid=None, *args, **kwargs):
@@ -1325,7 +1347,13 @@ class DataProviderTaskViewSet(viewsets.ModelViewSet):
                   they must be asking for one of their own export provider tasks), then 403 forbidden will be returned.
         """
 
-        data_provider_task_record = DataProviderTaskRecord.objects.get(uid=uid)
+        providers_tasks, filtered_provider_task = attribute_class_filter(
+            self.get_queryset().filter(uid=uid), self.request.user
+        )
+        if not providers_tasks:
+            return Response({"success": False}, status=status.HTTP_401_UNAUTHORIZED)
+
+        data_provider_task_record = providers_tasks.get(uid=uid)
 
         if data_provider_task_record.run.user != request.user and not request.user.is_superuser:
             return Response({"success": False}, status=status.HTTP_403_FORBIDDEN)
@@ -1339,7 +1367,10 @@ class DataProviderTaskViewSet(viewsets.ModelViewSet):
         """
         * return: A list of data provider task objects.
         """
-        return super(DataProviderTaskViewSet, self).list(self, request, *args, **kwargs)
+        providers_tasks, filtered_provider_task = attribute_class_filter(self.get_queryset(), self.request.user)
+        data = DataProviderTaskRecordSerializer(providers_tasks, many=True, context={"request": request}).data
+        data += FilteredDataProviderTaskRecordSerializer(filtered_provider_task, many=True).data
+        return Response(data)
 
     def create(self, request, uid=None, *args, **kwargs):
         """
@@ -1347,7 +1378,12 @@ class DataProviderTaskViewSet(viewsets.ModelViewSet):
         * uid: optional lookup field
         * return: The status of the object creation.
         """
-        return super(DataProviderTaskViewSet, self).create(self, request, uid, *args, **kwargs)
+        providers_tasks, filtered_provider_task = attribute_class_filter(
+            self.get_queryset().filter(uid=uid), self.request.user
+        )
+        if not providers_tasks:
+            return Response(status=status.HTTP_401_UNAUTHORIZED)
+        return super(DataProviderTaskRecordViewSet, self).create(self, request, uid, *args, **kwargs)
 
     def destroy(self, request, uid=None, *args, **kwargs):
         """
@@ -1355,7 +1391,12 @@ class DataProviderTaskViewSet(viewsets.ModelViewSet):
         * uid: optional lookup field
         * return: The status of the deletion.
         """
-        return super(DataProviderTaskViewSet, self).destroy(self, request, uid, *args, **kwargs)
+        providers_tasks, filtered_provider_task = attribute_class_filter(
+            self.get_queryset().filter(uid=uid), self.request.user
+        )
+        if not providers_tasks:
+            return Response(status=status.HTTP_401_UNAUTHORIZED)
+        return super(DataProviderTaskRecordViewSet, self).destroy(self, request, uid, *args, **kwargs)
 
     def update(self, request, uid=None, *args, **kwargs):
         """
@@ -1363,7 +1404,12 @@ class DataProviderTaskViewSet(viewsets.ModelViewSet):
         * uid: optional lookup field
         * return: The status of the update.
         """
-        return super(DataProviderTaskViewSet, self).update(self, request, uid, *args, **kwargs)
+        providers_tasks, filtered_provider_task = attribute_class_filter(
+            self.get_queryset().filter(uid=uid), self.request.user
+        )
+        if not providers_tasks:
+            return Response(status=status.HTTP_401_UNAUTHORIZED)
+        return super(DataProviderTaskRecordViewSet, self).update(self, request, uid, *args, **kwargs)
 
 
 class UserDataViewSet(viewsets.GenericViewSet):
@@ -1427,7 +1473,7 @@ class UserDataViewSet(viewsets.GenericViewSet):
         queryset = JobPermission.get_orderable_queryset_for_job(job, User)
         total = queryset.count()
         filtered_queryset = self.filter_queryset(queryset)
-
+        filtered_queryset = annotate_users_restricted(filtered_queryset, job)
         if request.query_params.get("exclude_self"):
             filtered_queryset = filtered_queryset.exclude(username=request.user.username)
         elif request.query_params.get("prepend_self"):
@@ -1644,6 +1690,7 @@ class GroupViewSet(viewsets.ModelViewSet):
         queryset = JobPermission.get_orderable_queryset_for_job(job, Group)
         total = queryset.count()
         filtered_queryset = self.filter_queryset(queryset)
+        filtered_queryset = annotate_groups_restricted(filtered_queryset, job)
         page = None
         if not request.query_params.get("disable_page"):
             page = self.paginate_queryset(filtered_queryset)
