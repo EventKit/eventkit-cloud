@@ -55,11 +55,6 @@ describe('GroupRow component', () => {
         expect(wrapper.find(CardContent)).toHaveLength(1);
     });
 
-    it('should render the warning icon next to a group that includes any users who are restricted to view any data sources', () => {
-        const newWrapper = mount(<GroupRow {...getProps()}/>);
-        expect(newWrapper.find(NotificationIconPopover)).toHaveLength(1);
-    });
-
     it('onAdminMouseOver should call call handleAdminMouseOver', () => {
         wrapper.setProps({selected: true});
         const tooltip = {key: 'value'};
