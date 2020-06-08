@@ -5,20 +5,19 @@ from unittest.mock import patch, MagicMock
 from eventkit_cloud.auth.models import OAuth
 from eventkit_cloud.core.models import AttributeClass, update_all_attribute_classes_with_user, \
     update_all_users_with_attribute_class, get_users_from_attribute_class, validate_user_attribute_class, \
-    get_restricted_users, annotate_users_restricted
+    annotate_users_restricted, get_unrestricted_users
 import json
 import logging
 from django.contrib.auth.models import User
 
 from django.test import TestCase
 
-
 logger = logging.getLogger(__name__)
 
 
 class TestCoreModels(TestCase):
 
-    def setUp(self,):
+    def setUp(self, ):
         self.user1 = User.objects.create_user(
             username='demo1', email='demo@demo.com', password='demo1'
         )
@@ -55,7 +54,6 @@ class TestCoreModels(TestCase):
 
     @patch("eventkit_cloud.core.models.validate_object")
     def test_get_users_from_attribute_class(self, mock_validate_object):
-
         self.attribute_class.filter = {"username": "demo1"}
         self.attribute_class.save()
         users = get_users_from_attribute_class(self.attribute_class)
@@ -95,23 +93,23 @@ class TestCoreModels(TestCase):
         self.attribute_class.save()
         self.assertFalse(validate_user_attribute_class(self.user2, self.attribute_class))
 
-    @patch("eventkit_cloud.core.models.get_restricted_users")
-    def test_annotate_users_restricted(self, mock_get_restricted_users):
-        expected_restricted_users = User.objects.filter(username="demo2")
-        mock_get_restricted_users.return_value = expected_restricted_users
+    @patch("eventkit_cloud.core.models.get_unrestricted_users")
+    def test_annotate_users_restricted(self, mock_get_unrestricted_users):
+        expected_unrestricted_users = User.objects.filter(username="demo2")
+        mock_get_unrestricted_users.return_value = expected_unrestricted_users
         users = User.objects.all()
         job = MagicMock()
         users = annotate_users_restricted(users, job)
-        self.assertTrue(users[1].restricted)
-        self.assertFalse(users[0].restricted)
+        self.assertTrue(users[0].restricted)
+        self.assertFalse(users[1].restricted)
 
-    def test_get_restricted_users(self):
+    def test_get_unrestricted_users(self):
         job = MagicMock()
         provider_task = MagicMock()
         provider_task.provider.attribute_class = self.attribute_class
         job.provider_tasks.all.return_value = [provider_task]
         self.attribute_class.users.set([self.user1])
         users = User.objects.all()
-        restricted_users = get_restricted_users(users, job)
-        self.assertEqual(len(restricted_users), 1)
-        self.assertEqual(self.user2, restricted_users.first())
+        unrestricted_users = get_unrestricted_users(users, job)
+        self.assertEqual(len(unrestricted_users), 1)
+        self.assertEqual(self.user1, unrestricted_users.first())
