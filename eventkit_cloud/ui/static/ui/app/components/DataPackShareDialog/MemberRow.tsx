@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { withTheme, Theme } from '@material-ui/core/styles';
+import {withTheme, Theme} from '@material-ui/core/styles';
 import Card from '@material-ui/core/Card';
 import CardHeader from '@material-ui/core/CardHeader';
 import CheckBoxOutline from '@material-ui/icons/CheckBoxOutlineBlank';
@@ -25,13 +25,17 @@ export class MemberRow extends React.Component<Props, {}> {
     static defaultProps = {
         showAdmin: false,
         admin: false,
-        handleAdminCheck: () => { /* do nothing */ },
-        handleAdminMouseOver: () => { /* do nothing */ },
-        handleAdminMouseOut: () => { /* do nothing */ },
+        handleAdminCheck: () => { /* do nothing */
+        },
+        handleAdminMouseOver: () => { /* do nothing */
+        },
+        handleAdminMouseOut: () => { /* do nothing */
+        },
     };
 
     private handleCheck: () => void;
     private tooltip: HTMLElement;
+
     constructor(props: Props) {
         super(props);
         this.handleCheck = this.props.handleCheck.bind(this, this.props.member);
@@ -65,7 +69,7 @@ export class MemberRow extends React.Component<Props, {}> {
     }
 
     render() {
-        const { colors } = this.props.theme.eventkit;
+        const {colors} = this.props.theme.eventkit;
 
         const styles = {
             card: {
@@ -108,11 +112,11 @@ export class MemberRow extends React.Component<Props, {}> {
         };
 
         // Assume group is not selected by default
-        let groupIcon = <CheckBoxOutline style={styles.checkIcon} onClick={this.handleCheck} color="primary" />;
+        let groupIcon = <CheckBoxOutline style={styles.checkIcon} onClick={this.handleCheck} color="primary"/>;
 
         // Check if group is selected
         if (this.props.selected) {
-            groupIcon = <CheckBox style={styles.checkIcon} onClick={this.handleCheck} color="primary" />;
+            groupIcon = <CheckBox style={styles.checkIcon} onClick={this.handleCheck} color="primary"/>;
         }
 
         let adminButton = null;
@@ -126,7 +130,9 @@ export class MemberRow extends React.Component<Props, {}> {
             }
 
             adminButton = (
-                <div ref={(input) => { this.tooltip = input; }} style={{ display: 'flex', alignItems: 'center' }}>
+                <div ref={(input) => {
+                    this.tooltip = input;
+                }} style={{display: 'flex', alignItems: 'center'}}>
                     <AdminShare
                         className="qa-MemberRow-AdminShare"
                         onClick={this.handleAdminCheck}
@@ -156,14 +162,14 @@ export class MemberRow extends React.Component<Props, {}> {
                 <CardHeader
                     className="qa-MemberRow-CardHeader"
                     title={
-                        <div style={{ display: 'flex', alignItems: 'center' }}>
+                        <div style={{display: 'flex', alignItems: 'center'}}>
                             <div style={styles.text} className="qa-MemberRow-CardHeader-text">
-                                <div style={{ wordBreak: 'break-word' }}>
+                                <div style={{wordBreak: 'break-word'}}>
                                     <strong>
                                         {name}
                                     </strong>
                                 </div>
-                                <div style={{ wordBreak: 'break-word' }}>
+                                <div style={{wordBreak: 'break-word'}}>
                                     {email}
                                 </div>
                             </div>
@@ -175,7 +181,7 @@ export class MemberRow extends React.Component<Props, {}> {
                             {groupIcon}
                         </div>
                     }
-                    style={{ padding: '6px' }}
+                    style={{padding: '6px'}}
                 />
             </Card>
         );

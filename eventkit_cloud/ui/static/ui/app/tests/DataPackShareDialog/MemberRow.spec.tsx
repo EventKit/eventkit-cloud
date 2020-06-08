@@ -4,10 +4,17 @@ import {mount, shallow} from 'enzyme';
 import Card from '@material-ui/core/Card';
 import CardHeader from '@material-ui/core/CardHeader';
 import {MemberRow} from '../../components/DataPackShareDialog/MemberRow';
-// import {NotificationIconPopover} from "../../components/DataPackPage/NotificationIconPopover";
 import NotificationIconPopover from "../../components/DataPackPage/NotificationIconPopover";
 
-describe('GroupRow component', () => {
+jest.mock('../../components/DataPackPage/NotificationIconPopover');
+jest.mock('../../styles/eventkit_theme.js', () => ({
+        eventkit: {
+            colors: {}
+        }
+    })
+);
+
+describe('MemberRow component', () => {
     const getProps = () => ({
         member: {
             user: {
@@ -16,9 +23,9 @@ describe('GroupRow component', () => {
                 last_name: 'one',
                 email: 'user.one@email.com',
             },
-            restricted: false,
+            restricted: true,
             groups: [1],
-            accepted_licenses: { ['']: false },
+            accepted_licenses: {['']: false},
         },
         selected: false,
         handleCheck: sinon.spy(),
@@ -45,27 +52,6 @@ describe('GroupRow component', () => {
     it('should render the basic elements', () => {
         expect(wrapper.find(Card)).toHaveLength(1);
         expect(wrapper.find(CardHeader)).toHaveLength(1);
-        expect(wrapper.find(NotificationIconPopover)).toHaveLength(0);
-    });
-
-    it('should render the warning icon next to a user who is restricted to view any data sources', () => {
-        const restrictedUser = {
-            member: {
-                user: {
-                    username: 'user_one',
-                    first_name: 'user',
-                    last_name: 'one',
-                    email: 'user.one@email.com',
-                },
-                restricted: true,
-                groups: [1],
-                accepted_licenses: { ['']: false },
-            },
-        };
-        wrapper.setProps(restrictedUser);
-        console.log(wrapper.debug());
-        expect(wrapper).toContain(NotificationIconPopover);
-        expect(wrapper.find(NotificationIconPopover)).toHaveLength(1);
     });
 
     it('onAdminMouseOver should call handleAdminMouseOver', () => {
@@ -118,5 +104,10 @@ describe('GroupRow component', () => {
         wrapper.setProps({showAdmin: true, selected: false});
         instance.handleAdminCheck();
         expect(props.handleAdminCheck.called).toBe(false);
+    });
+
+    it('should render the warning icon next to a user who is restricted to view any data sources', () => {
+        const newWrapper = mount(<MemberRow {...getProps()}/>);
+        expect(newWrapper.find(NotificationIconPopover)).toHaveLength(1);
     });
 });
