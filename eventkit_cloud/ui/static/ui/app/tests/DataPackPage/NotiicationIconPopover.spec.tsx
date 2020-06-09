@@ -4,10 +4,12 @@ import {mount} from "enzyme";
 import {act} from "react-dom/test-utils";
 import {NotificationIconPopover} from "../../components/DataPackPage/NotificationIconPopover";
 
-jest.mock('../../styles/eventkit_theme.js', () => ({eventkit: {
+jest.mock('../../styles/eventkit_theme.js', () => ({
+        eventkit: {
             images: {},
             colors: {}
-            }})
+        }
+    })
 );
 
 describe('NotificationIconPopover component', () => {
@@ -34,20 +36,6 @@ describe('NotificationIconPopover component', () => {
         expect(wrapper.find(IconButton)).toHaveLength(1);
         expect(wrapper.find(Popover)).toHaveLength(1);
     });
-
-    // it('clicking on the icon should trigger handlePopoverOpen() and open popover', () => {
-    //     expect(wrapper.find(Popover).props().open).toBe(true);
-    //     expect(wrapper.find(IconButton).exists()).toBe(true);
-    //
-    //     act(() => {
-    //         wrapper
-    //             .find(IconButton)
-    //             .first()
-    //             .simulate("click");
-    //     });
-    //     wrapper.update();
-    //     expect(wrapper.find(Popover).props().open).toBe(true);
-    // });
     it('clicking on the close icon btn should trigger handlePopoverClose() and close popover', () => {
         expect(wrapper.find(Popover).props().open).toBe(false);
 
