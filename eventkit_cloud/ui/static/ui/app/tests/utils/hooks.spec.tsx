@@ -4,7 +4,7 @@ import { act } from 'react-dom/test-utils';
 import MockAdapter from 'axios-mock-adapter';
 import axios from 'axios';
 import { mount } from 'enzyme';
-import { useAsyncRequest } from '../../utils/hooks';
+import { useAsyncRequest } from '../../utils/hooks/hooks';
 
 
 let container = null;

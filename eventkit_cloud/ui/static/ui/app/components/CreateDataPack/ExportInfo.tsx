@@ -22,7 +22,7 @@ import {joyride} from '../../joyride.config';
 import {getSqKmString} from '../../utils/generic';
 import BaseDialog from "../Dialog/BaseDialog";
 import AlertWarning from '@material-ui/icons/Warning';
-import {useDebouncedState, useEffectOnMount} from "../../utils/hooks";
+import {useDebouncedState, useEffectOnMount} from "../../utils/hooks/hooks";
 import {useEffect} from "react";
 import {useJobValidationContext} from "./context/JobValidation";
 import RequestDataSource from "./RequestDataSource";

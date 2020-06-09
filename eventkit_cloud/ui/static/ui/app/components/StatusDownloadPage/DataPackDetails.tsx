@@ -12,6 +12,7 @@ import ProviderRow from './ProviderRow';
 import BaseDialog from '../Dialog/BaseDialog';
 import {Breakpoint} from '@material-ui/core/styles/createBreakpoints';
 import ProviderPreview from "./ProviderPreview";
+import CreateDataPackButton from "./CreateDataPackButton";
 
 const jss = (theme: Eventkit.Theme & Theme) => ({
     btn: {
@@ -80,24 +81,6 @@ export class DataPackDetails extends React.Component<Props, State> {
             }
         });
         this.setState({selectedProviders});
-    }
-
-    private getCloudDownloadIcon() {
-        const {colors} = this.props.theme.eventkit;
-        if (!this.props.zipFileProp) {
-            return (
-                <CloudDownload
-                    className="qa-DataPackDetails-CloudDownload-disabled"
-                    style={{fill: colors.grey, verticalAlign: 'middle', marginRight: '5px'}}
-                />
-            );
-        }
-        return (
-            <CloudDownload
-                className="qa-DataPackDetails-CloudDownload-enabled"
-                style={{fill: colors.primary, verticalAlign: 'middle', marginRight: '5px'}}
-            />
-        );
     }
 
     private getTextFontSize() {
@@ -232,42 +215,7 @@ export class DataPackDetails extends React.Component<Props, State> {
                                 className="qa-DataPackDetails-TableCell-zipButton"
                                 style={styles.download}
                             >
-                                <Button
-                                    id="CompleteDownload"
-                                    href={this.props.zipFileProp}
-                                    variant="contained"
-                                    className="qa-DataPackDetails-Button-zipButton"
-                                    classes={{root: classes.btn}}
-                                    disabled={!this.isZipFileCompleted()}
-                                    style={{fontSize: textFontSize, lineHeight: 'initial'}}
-                                >
-                                    {this.getCloudDownloadIcon()}
-                                    {this.props.zipFileProp ? 'DOWNLOAD DATAPACK (.ZIP)' : 'CREATING DATAPACK ZIP'}
-
-                                </Button>
-                                <Info
-                                    className="qa-DataPackDetails-info"
-                                    onClick={this.handleInfoOpen}
-                                    style={styles.info}
-                                />
-                                <BaseDialog
-                                    className="qa-DataPackDetails-info-dialog"
-                                    show={this.state.infoOpen}
-                                    title="DataPack Information"
-                                    onClose={this.handleInfoClose}
-                                >
-                                    <div style={{paddingBottom: '10px', wordWrap: 'break-word'}}>
-                                        For convenience, EventKit bundles all the individual data sources into a single
-                                        download
-                                        (formatted as a .zip file).
-                                        Additionally, this file contains GIS application files (QGIS and ArcMap),
-                                        cartographic styles, metadata, and associated documents.
-                                        See the Page Tour for more details about other elements of the Status and
-                                        Download page.
-                                        Detailed information about how to use the DataPacks in QGIS and ArcMap are in
-                                        the About EventKit page and in the metadata of the DataPack.
-                                    </div>
-                                </BaseDialog>
+                                <CreateDataPackButton fontSize={textFontSize}/>
                             </TableCell>
                             <TableCell
                                 className="qa-DataPackDetails-TableCell-fileSize"

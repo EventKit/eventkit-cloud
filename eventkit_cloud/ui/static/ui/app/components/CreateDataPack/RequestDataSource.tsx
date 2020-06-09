@@ -8,12 +8,12 @@ import {useEffect} from "react";
 import {getCookie} from "../../utils/generic";
 import {
     useAccessibleRef,
-    useAsyncRequest,
     useDebouncedState,
-} from "../../utils/hooks";
+} from "../../utils/hooks/hooks";
 import {isWidthUp} from "@material-ui/core/withWidth";
 import withWidth from "@material-ui/core/withWidth/withWidth";
 import {Breakpoint} from "@material-ui/core/styles/createBreakpoints";
+import {useAsyncRequest} from "../../utils/hooks/api";
 
 interface Props {
     open: boolean;
