@@ -6,6 +6,7 @@ from eventkit_cloud.auth.models import OAuth
 from eventkit_cloud.core.models import AttributeClass, update_all_attribute_classes_with_user, \
     update_all_users_with_attribute_class, get_users_from_attribute_class, validate_user_attribute_class, \
     annotate_users_restricted, get_unrestricted_users
+
 import json
 import logging
 from django.contrib.auth.models import User
@@ -18,6 +19,7 @@ logger = logging.getLogger(__name__)
 class TestCoreModels(TestCase):
 
     def setUp(self, ):
+
         self.user1 = User.objects.create_user(
             username='demo1', email='demo@demo.com', password='demo1'
         )
