@@ -31,7 +31,6 @@ describe('SourcePermissionFilter component', () => {
     beforeEach(setup);
 
     it('should render the initial collapsed elements', () => {
-        console.log(wrapper.debug());
         expect(wrapper.find(RadioGroup)).toHaveLength(1);
         expect(wrapper.find(Radio)).toHaveLength(3);
         expect(wrapper.find(FormControlLabel)).toHaveLength(3);
