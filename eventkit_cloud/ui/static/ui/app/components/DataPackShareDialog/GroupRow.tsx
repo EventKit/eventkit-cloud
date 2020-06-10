@@ -1,6 +1,6 @@
 import * as React from 'react';
 import axios from 'axios';
-import { withStyles, withTheme, createStyles, Theme } from '@material-ui/core/styles';
+import {withStyles, withTheme, createStyles, Theme} from '@material-ui/core/styles';
 import CircularProgress from '@material-ui/core/CircularProgress';
 import Card from '@material-ui/core/Card';
 import CardHeader from '@material-ui/core/CardHeader';
@@ -13,6 +13,7 @@ import ArrowUp from '@material-ui/icons/KeyboardArrowUp';
 import Eye from '@material-ui/icons/RemoveRedEye';
 import AdminShare from '../icons/AdminShareIcon';
 import GroupMemberRow from './GroupMemberRow';
+import NotificationIconPopover from "../DataPackPage/NotificationIconPopover";
 
 const jss = (theme: Eventkit.Theme & Theme) => createStyles({
     noData: {
@@ -36,7 +37,6 @@ const jss = (theme: Eventkit.Theme & Theme) => createStyles({
     },
     groupIcons: {
         display: 'flex',
-        flex: '1 1 auto',
         alignItems: 'center',
         flexDirection: 'row-reverse',
     },
@@ -63,11 +63,15 @@ const jss = (theme: Eventkit.Theme & Theme) => createStyles({
         height: '20px',
         verticalAlign: 'text-top',
     },
+    notificationIcon: {
+        paddingRight: '10px',
+    },
 });
 
 export interface Props {
     className?: string;
     group: Eventkit.Group;
+    view: 'groups' | 'members';
     selected: boolean;
     handleCheck: (group: Eventkit.Group) => void;
     handleAdminCheck: (group: Eventkit.Group) => void;
@@ -90,13 +94,17 @@ export class GroupRow extends React.Component<Props, State> {
     static defaultProps = {
         admin: false,
         showAdmin: false,
-        handleAdminCheck: () => { /* do nothing */ },
-        handleAdminMouseOver: () => { /* do nothing */ },
-        handleAdminMouseOut: () => { /* do nothing */ },
+        handleAdminCheck: () => { /* do nothing */
+        },
+        handleAdminMouseOver: () => { /* do nothing */
+        },
+        handleAdminMouseOut: () => { /* do nothing */
+        },
     };
 
     private handleCheck: () => void;
     private tooltip: HTMLElement;
+
     constructor(props: Props) {
         super(props);
         this.toggleExpanded = this.toggleExpanded.bind(this);
@@ -137,7 +145,7 @@ export class GroupRow extends React.Component<Props, State> {
             const response = await axios({
                 url: `/api/groups/${this.props.group.id}/users`,
                 method: 'GET',
-                params: { limit: 4 },
+                params: {limit: 4},
             });
             return response.data.members;
         } catch (e) {
@@ -147,9 +155,9 @@ export class GroupRow extends React.Component<Props, State> {
     }
 
     private async loadMembers() {
-        this.setState({ loadingMembers: true });
+        this.setState({loadingMembers: true});
         const members = await this.getMembers();
-        this.setState({ loadingMembers: false, members, membersFetched: true });
+        this.setState({loadingMembers: false, members, membersFetched: true});
     }
 
     private handleAdminCheck() {
@@ -162,19 +170,19 @@ export class GroupRow extends React.Component<Props, State> {
         if (!this.state.membersFetched && !this.state.expanded) {
             this.loadMembers();
         }
-        this.setState({ expanded: !this.state.expanded });
+        this.setState({expanded: !this.state.expanded});
     }
 
     render() {
-        const { classes } = this.props;
-        const { colors } = this.props.theme.eventkit;
+        const {classes} = this.props;
+        const {colors} = this.props.theme.eventkit;
 
         // Assume group is not selected by default
-        let groupIcon = <CheckBoxOutline className={classes.checkIcon} onClick={this.handleCheck} color="primary" />;
+        let groupIcon = <CheckBoxOutline className={classes.checkIcon} onClick={this.handleCheck} color="primary"/>;
 
         // Check if group is selected
         if (this.props.selected) {
-            groupIcon = <CheckBox className={classes.checkIcon} onClick={this.handleCheck} color="primary" />;
+            groupIcon = <CheckBox className={classes.checkIcon} onClick={this.handleCheck} color="primary"/>;
         }
 
         const adminStyle = {
@@ -200,25 +208,33 @@ export class GroupRow extends React.Component<Props, State> {
         return (
             <Card
                 key={this.props.group.name}
-                classes={{ root: classes.card }}
+                classes={{root: classes.card}}
                 className="qa-GroupRow-Card"
             >
                 <CardHeader
                     className="qa-GroupRow-CardHeader"
                     title={
-                        <div style={{ display: 'flex', alignItems: 'center', fontSize: '15px' }}>
+                        <div style={{display: 'flex', alignItems: 'center', fontSize: '15px'}}>
                             <div className={`qa-GroupRow-CardHeader-text ${classes.groupText}`}>
                                 {this.props.group.name}
                             </div>
+                            {
+                                this.props.group.restricted &&
+                                <span className={classes.notificationIcon}><NotificationIconPopover view={this.props.view}/></span>
+                            }
                             <div className={`qa-GroupRow-CardHeader-icons ${classes.groupIcons}`}>
                                 {this.state.expanded ?
-                                    <ArrowUp className={classes.expandIcon} onClick={this.toggleExpanded} color="primary" />
+                                    <ArrowUp className={classes.expandIcon} onClick={this.toggleExpanded}
+                                             color="primary"/>
                                     :
-                                    <ArrowDown className={classes.expandIcon} onClick={this.toggleExpanded} color="primary" />
+                                    <ArrowDown className={classes.expandIcon} onClick={this.toggleExpanded}
+                                               color="primary"/>
                                 }
                                 {groupIcon}
                                 {this.props.showAdmin && (
-                                    <div ref={(input) => { this.tooltip = input; }} style={{ display: 'flex', alignItems: 'center' }}>
+                                    <div ref={(input) => {
+                                        this.tooltip = input;
+                                    }} style={{display: 'flex', alignItems: 'center'}}>
                                         <AdminShare
                                             className="qa-GroupRow-AdminShare"
                                             onClick={this.handleAdminCheck}
@@ -234,7 +250,7 @@ export class GroupRow extends React.Component<Props, State> {
                             </div>
                         </div>
                     }
-                    style={{ padding: '12px' }}
+                    style={{padding: '12px'}}
                 />
                 <Collapse in={this.state.expanded}>
                     <CardContent className={classes.cardText}>
@@ -246,14 +262,17 @@ export class GroupRow extends React.Component<Props, State> {
                         ))}
                         {this.state.members.length === 4 ?
                             <div className={`qa-GroupRow-viewMore ${classes.viewContainer}`}>
-                                <Eye className={classes.viewIcon} color="primary" />
-                                <a href={`/groups?groups=${this.props.group.id}`}>View all on Members and Groups Page</a>
+                                <Eye className={classes.viewIcon} color="primary"/>
+                                <a href={`/groups?groups=${this.props.group.id}`}>View all on Members and Groups
+                                    Page</a>
                             </div>
                             :
                             null
                         }
-                        {this.state.loadingMembers && <div className={classes.noData}><CircularProgress size={20} /></div>}
-                        {this.state.membersFetched && !this.state.members.length && <div className={classes.noData}>No Members</div>}
+                        {this.state.loadingMembers &&
+                        <div className={classes.noData}><CircularProgress size={20}/></div>}
+                        {this.state.membersFetched && !this.state.members.length &&
+                        <div className={classes.noData}>No Members</div>}
                     </CardContent>
                 </Collapse>
             </Card>

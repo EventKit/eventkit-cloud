@@ -20,6 +20,7 @@ export interface Props {
     userCount: number;
     users: Eventkit.User[];
     selectedMembers: Eventkit.Permissions['members'];
+    view: 'groups' | 'members';
     membersText: any;
     onMemberCheck: (username: string) => void;
     onAdminCheck: (username: string) => void;
@@ -89,9 +90,10 @@ export class MembersBody extends React.Component<Props, State> {
 
     componentDidMount() {
         window.addEventListener('wheel', this.handleScroll);
-        const jobUid = this.props.job.uid;
-        this.getPermissionUsers(jobUid, this.getPermissions(), this.getMemberOrder(), {page: this.state.page}, false);
-
+        if (this.props.job) {
+            const jobUid = this.props.job.uid;
+            this.getPermissionUsers(jobUid, this.getPermissions(), this.getMemberOrder(), {page: this.state.page}, false);
+        }
     }
 
     componentWillUnmount() {
@@ -370,6 +372,7 @@ export class MembersBody extends React.Component<Props, State> {
                         const admin = this.props.selectedMembers[member.user.username] === 'ADMIN';
                         return (
                             <MemberRow
+                                view={this.props.view}
                                 key={member.user.username}
                                 showAdmin={this.props.canUpdateAdmin}
                                 member={member}

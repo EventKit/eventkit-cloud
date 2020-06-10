@@ -8,7 +8,7 @@ from django.contrib.auth.models import User, Group
 from django.contrib.gis.db import models
 from django.core.cache import cache
 from django.db import transaction
-from django.db.models import QuerySet, Case, Value, When
+from django.db.models import QuerySet, Case, Value, When, Q
 from django.utils import timezone
 from enum import Enum
 from notifications.models import Notification
@@ -367,34 +367,36 @@ def update_all_attribute_classes_with_user(user: User) -> None:
             attribute_class.users.remove(user)
 
 
-def get_restricted_users(users: QuerySet, job) -> QuerySet:
+def get_unrestricted_users(users: QuerySet, job) -> QuerySet:
     # If there is no job then there is nothing to compare users against and none are restricted.
     if not job:
-        return []
+        return users
 
     attribute_classes = [provider_task.provider.attribute_class for provider_task in job.provider_tasks.all()]
-    restricted = users.all()
+    unrestricted = users.all()
     for attribute_class in attribute_classes:
         if attribute_class:
-            restricted = restricted.exclude(attribute_classes=attribute_class)
-        restricted = restricted.distinct()
-    return restricted
+            unrestricted = unrestricted.filter(attribute_classes=attribute_class)
+        unrestricted = unrestricted.distinct()
+    return unrestricted
 
 
 def annotate_users_restricted(users: QuerySet, job):
-    restricted = get_restricted_users(users, job)
+    unrestricted = get_unrestricted_users(users, job)
     users = users.annotate(
-        restricted=Case(When(id__in=restricted, then=True), default=Value(False), output_field=models.BooleanField())
+        restricted=Case(When(id__in=unrestricted, then=False), default=Value(True), output_field=models.BooleanField())
     )
     return users
 
 
 def annotate_groups_restricted(groups: QuerySet, job):
-    restricted_users = get_restricted_users(User.objects.all(), job)
-    restricted_groups = groups.filter(group_permissions__user__in=restricted_users)
+    unrestricted_users = get_unrestricted_users(User.objects.all(), job)
+    unrestricted_groups = groups.filter(
+        Q(group_permissions__user__in=unrestricted_users) | Q(group_permissions__user__isnull=True)
+    )
     groups = groups.annotate(
         restricted=Case(
-            When(id__in=restricted_groups, then=True), default=Value(False), output_field=models.BooleanField()
+            When(id__in=unrestricted_groups, then=False), default=Value(True), output_field=models.BooleanField()
         )
     )
     return groups

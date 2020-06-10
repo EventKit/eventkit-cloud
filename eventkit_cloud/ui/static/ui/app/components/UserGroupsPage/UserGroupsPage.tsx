@@ -790,6 +790,7 @@ export class UserGroupsPage extends React.Component<Props, State> {
                                 commonname: undefined,
                                 identification: undefined,
                             },
+                            restricted: undefined,
                             groups: [],
                             accepted_licenses: undefined,
                         };
