@@ -173,8 +173,6 @@ class ExportTask(EventKitBaseTask):
             try:
                 add_metadata(task.export_provider_task.run.job, task.export_provider_task.slug, retval)
             except Exception:
-                import traceback
-
                 logger.error(traceback.format_exc())
                 logger.error("Failed to add metadata.")
 
@@ -261,8 +259,6 @@ class ExportTask(EventKitBaseTask):
             task.finished_at = timezone.now()
             task.save()
         except Exception:
-            import traceback
-
             logger.error(traceback.format_exc())
             logger.error(
                 "Cannot update the status of ExportTaskRecord object: no such object has been created for "
