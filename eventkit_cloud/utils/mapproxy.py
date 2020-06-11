@@ -204,7 +204,7 @@ class MapproxyGeopackage(object):
         #  Customizations...
         mapproxy.seed.seeder.exp_backoff = get_custom_exp_backoff(max_repeat=int(conf_dict.get("max_repeat", 5)))
 
-        logger.error("Beginning seeding to {0}".format(self.gpkgfile))
+        logger.info("Beginning seeding to {0}".format(self.gpkgfile))
         try:
             conf = yaml.safe_load(self.config) or dict()
             cert_var = conf.get("cert_var")
