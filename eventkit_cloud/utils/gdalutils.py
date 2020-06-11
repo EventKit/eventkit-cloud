@@ -451,8 +451,12 @@ def convert_raster(
     warp_params = clean_options({"outputType": band_type, "dstAlpha": dst_alpha, "srcSRS": src_srs, "dstSRS": dst_srs})
     if boundary:
         warp_params.update({"cutlineDSName": boundary, "cropToCutline": True})
+    # Keep the name imagery which is used when seeding the geopackages.
+    # Needed because arcpy can't change table names.
+    if fmt.lower() == "gpkg":
+        options["creationOptions"] = options.get("creationOptions", []) + ["RASTER_TABLE=imagery"]
     logger.info(
-        f"calling gdal.Warp('{output_file}', [{', '.join(input_files)}], "
+        f"calling gdal.Warp('{output_file}', [{', '.join(input_files)}],"
         f"{stringify_params(options)}, {stringify_params(warp_params)},)"
     )
     gdal.Warp(output_file, input_files, **options, **warp_params)
