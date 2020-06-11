@@ -35,9 +35,9 @@ class TestS3Util(TestCase):
         mock_client = MagicMock()
         mock_get_s3_client.return_value = mock_client
         example_filename = os.path.join(settings.EXPORT_STAGING_ROOT, self._uuid, self._filename)
-        expected_download_path = f"{self._uuid}/self._filename"
+        expected_download_path = f"{self._uuid}/{self._filename}"
         with patch('audit_logging.file_logging.logging_open', mock_open(read_data='test'), create=True) as mock_open_obj:
-            upload_to_s3(self._uuid, example_filename, expected_download_path)
+            upload_to_s3(example_filename, expected_download_path)
 
         mock_client.upload_fileobj.assert_called_once()
         mock_isfile.assert_called_once_with(example_filename)
