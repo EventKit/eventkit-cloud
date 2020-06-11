@@ -149,7 +149,7 @@ export class DataPackDetails extends React.Component<Props, State> {
         }
 
         return (
-          <span>
+            <span>
               Preview: <span style={{fontWeight: 'normal', fontSize: '14px'}}>{jobElement}{providerElement}</span>
           </span>
         );
@@ -215,7 +215,17 @@ export class DataPackDetails extends React.Component<Props, State> {
                                 className="qa-DataPackDetails-TableCell-zipButton"
                                 style={styles.download}
                             >
-                                <CreateDataPackButton fontSize={textFontSize}/>
+                                <CreateDataPackButton
+                                    fontSize={textFontSize}
+                                    // Pass through all non-hidden, displayed providerTasks (as UIDs)
+                                    providerTaskUids={
+                                        this.props.providerTasks.filter(
+                                            providerTask => !providerTask.hidden && providerTask.display
+                                        ).map(
+                                            providerTask => providerTask.uid
+                                        )}
+                                    zipFileProp={this.props.zipFileProp}
+                                />
                             </TableCell>
                             <TableCell
                                 className="qa-DataPackDetails-TableCell-fileSize"

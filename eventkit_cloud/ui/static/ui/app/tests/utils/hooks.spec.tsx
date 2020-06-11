@@ -1,10 +1,9 @@
 import React from 'react';
-import { render, unmountComponentAtNode } from 'react-dom';
-import { act } from 'react-dom/test-utils';
+import { unmountComponentAtNode } from 'react-dom';
 import MockAdapter from 'axios-mock-adapter';
 import axios from 'axios';
 import { mount } from 'enzyme';
-import { useAsyncRequest } from '../../utils/hooks/hooks';
+import {useAsyncRequest} from "../../utils/hooks/api";
 
 
 let container = null;

@@ -32,6 +32,7 @@ const jss = (theme: Eventkit.Theme & Theme) => ({
 
 interface Props {
     fontSize: string;
+    zipFileProp: string;
     classes: { [className: string]: string; }
     providerTaskUids: string[];
     theme: Eventkit.Theme & Theme;
@@ -41,18 +42,36 @@ interface Props {
 function CreateDataPackButton(props: Props) {
     const {fontSize, providerTaskUids, classes, theme} = props;
 
-    const [{ zipAvailableStatus, zipAvailableResponse }, zipAvailAbleCall, clearZipAvailable] = useAsyncRequest();
-    const makeRequest = () => {
+    const [{ status: zipAvailableStatus, response: zipAvailableResponse }, zipAvailAbleCall, clearZipAvailable] = useAsyncRequest();
+    const checkZipAvailable = () => {
         // Returned promise is ignored, we don't need it.
         zipAvailAbleCall({
-            url: `/api/providers/requests`,
+            // url: `/api/providers/requests`,
+            url: props.zipFileProp,
             method: 'GET',
-            data: {
-                uids: providerTaskUids,
-            },
+            // data: {
+            //     uids: providerTaskUids,
+            // },
             headers: { 'X-CSRFToken': getCookie('csrftoken') },
         });
     };
+
+    function isZipAvailable() {
+        return !!zipAvailableStatus && zipAvailableStatus === 'success'
+    }
+
+    // const [{ zipRequestStatus, zipRequestReponse }, zipRequestCall, clearZipRequest] = useAsyncRequest();
+    // const requestZip = () => {
+    //     // Returned promise is ignored, we don't need it.
+    //     zipAvailAbleCall({
+    //         url: `/api/providers/requests`,
+    //         method: 'GET',
+    //         data: {
+    //             uids: providerTaskUids,
+    //         },
+    //         headers: { 'X-CSRFToken': getCookie('csrftoken') },
+    //     });
+    // };
 
     function getCloudDownloadIcon() {
         const {colors} = theme.eventkit;
@@ -72,16 +91,18 @@ function CreateDataPackButton(props: Props) {
         );
     }
 
+
+
     return (
         <>
             <Button
                 id="CompleteDownload"
-                href={''}
                 variant="contained"
                 className="qa-DataPackDetails-Button-zipButton"
                 classes={{root: classes.btn}}
                 disabled={false}
                 style={{fontSize: fontSize, lineHeight: 'initial'}}
+                onClick={() => checkZipAvailable()}
             >
                 {getCloudDownloadIcon()}
                 {false ? 'DOWNLOAD DATAPACK (.ZIP)' : 'CREATING DATAPACK ZIP'}
