@@ -1,12 +1,21 @@
 import * as React from 'react';
 import * as sinon from 'sinon';
 import axios from 'axios';
-import { shallow } from 'enzyme';
+import {mount, shallow} from 'enzyme';
 import MockAdapter from 'axios-mock-adapter';
 import Card from '@material-ui/core/Card';
 import CardHeader from '@material-ui/core/CardHeader';
 import CardContent from '@material-ui/core/CardContent';
-import { GroupRow } from '../../components/DataPackShareDialog/GroupRow';
+import {GroupRow} from '../../components/DataPackShareDialog/GroupRow';
+import NotificationIconPopover from "../../components/DataPackPage/NotificationIconPopover";
+
+jest.mock('../../components/DataPackPage/NotificationIconPopover');
+jest.mock('../../styles/eventkit_theme.js', () => ({
+        eventkit: {
+            colors: {}
+        }
+    })
+);
 
 describe('GroupRow component', () => {
     const getProps = () => ({
@@ -15,6 +24,7 @@ describe('GroupRow component', () => {
             name: 'group_one',
             members: ['user_one', 'user_two'],
             administrators: ['user_one'],
+            restricted: true,
         },
         selected: false,
         handleCheck: sinon.spy(),
@@ -32,7 +42,7 @@ describe('GroupRow component', () => {
     let instance;
 
     const setup = (params = {}, options = {}) => {
-        props = { ...getProps(), ...params };
+        props = {...getProps(), ...params};
         wrapper = shallow(<GroupRow {...props} />, options);
         instance = wrapper.instance();
     };
@@ -46,8 +56,8 @@ describe('GroupRow component', () => {
     });
 
     it('onAdminMouseOver should call call handleAdminMouseOver', () => {
-        wrapper.setProps({ selected: true });
-        const tooltip = { key: 'value' };
+        wrapper.setProps({selected: true});
+        const tooltip = {key: 'value'};
         instance.tooltip = tooltip;
         instance.onAdminMouseOver();
         expect(props.handleAdminMouseOver.calledOnce).toBe(true);
@@ -55,7 +65,7 @@ describe('GroupRow component', () => {
     });
 
     it('onAdminMouseOver should not call props.handleAdminMouseOver', () => {
-        wrapper.setProps({ selected: false });
+        wrapper.setProps({selected: false});
         instance.onAdminMouseOver();
         expect(props.handleAdminMouseOver.called).toBe(false);
     });
@@ -67,10 +77,10 @@ describe('GroupRow component', () => {
 
     it('onKeyDown should call handleAdminCheck', () => {
         const checkStub = sinon.stub(instance, 'handleAdminCheck');
-        const e = { which: 13 };
+        const e = {which: 13};
         instance.onKeyDown(e);
         expect(checkStub.calledOnce).toBe(true);
-        const e2 = { keyCode: 13 };
+        const e2 = {keyCode: 13};
         instance.onKeyDown(e2);
         expect(checkStub.calledTwice).toBe(true);
         checkStub.restore();
@@ -78,15 +88,15 @@ describe('GroupRow component', () => {
 
     it('onKeyDown should not call handleAdminCheck', () => {
         const checkStub = sinon.stub(instance, 'handleAdminCheck');
-        const e = { which: 12, keyCode: 12 };
+        const e = {which: 12, keyCode: 12};
         instance.onKeyDown(e);
         expect(checkStub.called).toBe(false);
         checkStub.restore();
     });
 
     it('getMembers should make api request and return members', async () => {
-        const members = [{ name: 'john doe' }];
-        const mock = new MockAdapter(axios, { delayResponse: 10 });
+        const members = [{name: 'john doe'}];
+        const mock = new MockAdapter(axios, {delayResponse: 10});
         mock.onGet(`/api/groups/${props.group.id}/users`).reply(200, {
             members,
             name: 'mock group',
@@ -96,7 +106,7 @@ describe('GroupRow component', () => {
     });
 
     it('getMembers should handle a request error', async () => {
-        const mock = new MockAdapter(axios, { delayResponse: 10 });
+        const mock = new MockAdapter(axios, {delayResponse: 10});
         mock.onGet(`/api/groups/${props.group.id}/users`).reply(400);
         const m = await instance.getMembers();
         expect(m).toEqual([]);
@@ -107,20 +117,20 @@ describe('GroupRow component', () => {
         const getStub = sinon.stub(instance, 'getMembers').returns(new Promise(resolve => resolve([])));
         await instance.loadMembers();
         expect(stateStub.calledTwice).toBe(true);
-        expect(stateStub.calledWith({ loadingMembers: true })).toBe(true);
-        expect(stateStub.calledWith({ loadingMembers: false, membersFetched: true, members: [] })).toBe(true);
+        expect(stateStub.calledWith({loadingMembers: true})).toBe(true);
+        expect(stateStub.calledWith({loadingMembers: false, membersFetched: true, members: []})).toBe(true);
         expect(getStub.calledOnce).toBe(true);
     });
 
     it('handleAdminCheck should call props.handleAdminCheck', () => {
-        wrapper.setProps({ showAdmin: true, selected: true });
+        wrapper.setProps({showAdmin: true, selected: true});
         instance.handleAdminCheck();
         expect(props.handleAdminCheck.calledOnce).toBe(true);
         expect(props.handleAdminCheck.calledWith(props.group)).toBe(true);
     });
 
     it('handleAdminCheck should not call props.handleAdminCheck', () => {
-        wrapper.setProps({ showAdmin: true, selected: false });
+        wrapper.setProps({showAdmin: true, selected: false});
         instance.handleAdminCheck();
         expect(props.handleAdminCheck.called).toBe(false);
     });
@@ -134,11 +144,16 @@ describe('GroupRow component', () => {
     });
 
     it('toggleExpanded should set expanded to the opposite state and not call loadmembers', () => {
-        wrapper.setState({ membersFetched: true });
+        wrapper.setState({membersFetched: true});
         const state = wrapper.state().expanded;
         const stateStub = sinon.stub(instance, 'setState');
         instance.toggleExpanded();
         expect(stateStub.calledOnce).toBe(true);
-        expect(stateStub.calledWith({ expanded: !state })).toBe(true);
+        expect(stateStub.calledWith({expanded: !state})).toBe(true);
+    });
+
+    it('should render the warning icon next to a group who is restricted to view any data sources', () => {
+        const newWrapper = mount(<GroupRow {...getProps()}/>);
+        expect(newWrapper.find(NotificationIconPopover)).toHaveLength(1);
     });
 });
