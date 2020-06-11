@@ -9,10 +9,10 @@ from django.conf import settings
 from django.http import HttpResponse
 from django.shortcuts import redirect
 
-from eventkit_cloud.core.models import JobPermission, JobPermissionLevel
 from eventkit_cloud.tasks.helpers import get_run_download_dir, get_run_staging_dir
-from eventkit_cloud.tasks.models import ExportRun, FileProducingTaskResult, UserDownload
+from eventkit_cloud.tasks.models import ExportRun
 from eventkit_cloud.tasks.task_factory import get_zip_task_chain
+from eventkit_cloud.tasks.models import FileProducingTaskResult, UserDownload
 from eventkit_cloud.utils.s3 import get_presigned_url
 
 logger = getLogger(__name__)
@@ -31,12 +31,13 @@ def download(request):
 
     download_uid = request.GET.get("uid")
     try:
-        downloadable = FileProducingTaskResult.objects.get(uid=download_uid)
-        jobs = JobPermission.userjobs(current_user, JobPermissionLevel.READ.value)
-        jobs = jobs.filter(runs__provider_tasks__tasks__result=downloadable)
-        if not jobs:
+        downloadable = FileProducingTaskResult.objects.select_related(
+            "export_task__export_provider_task__provider", "export_task__export_provider_task__run"
+        ).get(uid=download_uid)
+
+        if not downloadable.user_can_download(current_user):
             return HttpResponse(
-                status=401, content=f"User {current_user.username} does not have permission to download this file."
+                status=401, content=f"The user: {current_user.username} does not have permission to download it."
             )
     except FileProducingTaskResult.DoesNotExist:
         return HttpResponse(status=400, content="Download not found for requested id value.")

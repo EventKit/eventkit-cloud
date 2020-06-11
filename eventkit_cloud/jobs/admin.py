@@ -21,6 +21,7 @@ from eventkit_cloud.jobs.models import (
     License,
     DataProviderStatus,
     DataProviderTask,
+    JobPermission,
 )
 from eventkit_cloud.tasks.helpers import clean_config
 
@@ -136,6 +137,7 @@ class DataProviderForm(forms.ModelForm):
             "license",
             "zip",
             "display",
+            "attribute_class",
         ]
 
     def clean_config(self):
@@ -184,7 +186,7 @@ class DataProviderAdmin(admin.ModelAdmin):
         "slug",
         "label",
         "export_provider_type",
-        "user",
+        "attribute_class",
         "license",
         "display",
     ]
@@ -255,3 +257,4 @@ admin.site.register(CrontabSchedule, CrontabScheduleAdmin)
 admin.site.register(Job, JobAdmin)
 admin.site.register(DataProvider, DataProviderAdmin)
 admin.site.register(DataProviderStatus, DataProviderStatusAdmin)
+admin.site.register(JobPermission)

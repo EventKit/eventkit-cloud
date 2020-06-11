@@ -12,6 +12,7 @@ import GroupBodyTooltip from './ShareBodyTooltip';
 import { getGroups } from '../../actions/groupActions';
 
 export interface Props {
+    view: 'groups' | 'members';
     getGroups: (args: any, append: boolean) => void;
     nextPage: boolean;
     groups: Eventkit.Group[];
@@ -341,6 +342,7 @@ export class PermissionsFilterGroupsBody extends React.Component<Props, State> {
                         const admin = selected === 'ADMIN';
                         return (
                             <GroupRow
+                                view={this.props.view}
                                 key={group.name}
                                 group={group}
                                 selected={!!selected}

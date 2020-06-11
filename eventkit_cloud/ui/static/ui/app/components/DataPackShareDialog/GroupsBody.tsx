@@ -16,6 +16,7 @@ export interface Props {
     getPermissionGroups: (jobUid: any, params: {}, append: boolean) => void;
     nextPage: boolean;
     groups: Eventkit.Group[];
+    view: 'groups' | 'members';
     selectedGroups: Eventkit.Permissions.Groups;
     groupsText: any;
     onUncheckAll: () => void;
@@ -80,8 +81,10 @@ export class GroupsBody extends React.Component<Props, State> {
 
     componentDidMount() {
         window.addEventListener('wheel', this.handleScroll);
-        const jobUid = this.props.job.uid;
-        this.getPermissionGroups(jobUid, this.getPermissions(), this.getGroupOrder(), {page: this.state.page}, false);
+        if (this.props.job) {
+            const jobUid = this.props.job.uid;
+            this.getPermissionGroups(jobUid, this.getPermissions(), this.getGroupOrder(), {page: this.state.page}, false);
+        }
     }
 
     componentWillUnmount() {
@@ -335,6 +338,7 @@ export class GroupsBody extends React.Component<Props, State> {
                         const admin = selected === 'ADMIN';
                         return (
                             <GroupRow
+                                view={this.props.view}
                                 key={group.name}
                                 group={group}
                                 selected={!!selected}

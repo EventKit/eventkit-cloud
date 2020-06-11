@@ -154,7 +154,7 @@ export class StatusDownload extends React.Component<Props, State> {
             // If the counter is greater than 1, that
             // means that at least one task is not completed, so do not stop the timer
             if (clearTimer && (datacart[0].status === 'COMPLETED' || datacart[0].status === 'INCOMPLETE')) {
-                const providerTasks = datacart[0].provider_tasks;
+                const providerTasks = datacart[0].provider_tasks.filter(task => !task.hidden);
                 providerTasks.forEach((tasks) => {
                     clearTimer = tasks.tasks.every((task) => {
                         if ((task.status !== 'SUCCESS') && (task.status !== 'CANCELED') && (task.status !== 'FAILED')) {

@@ -8,10 +8,64 @@ from rest_framework.authtoken.models import Token
 from rest_framework.reverse import reverse
 from rest_framework.test import APITestCase
 
-from eventkit_cloud.jobs.models import ExportFormat, Job, DataProvider, DataProviderTask, Projection
-from eventkit_cloud.tasks.models import ExportRun
+from eventkit_cloud.jobs.models import ExportFormat, Job, DataProvider, DataProviderTask, Projection, DatamodelPreset
+from eventkit_cloud.tasks.models import ExportRun, DataProviderTaskRecord
+from eventkit_cloud.core.models import AttributeClass, attribute_class_filter
 
 logger = logging.getLogger(__name__)
+
+
+class TestAttributeClassFilter(APITestCase):
+
+    def setUp(self,):
+        self.user = User.objects.create_user(
+            username='demo1', email='demo@demo.com', password='demo'
+        )
+        self.attribute_class = AttributeClass.objects.create(name="test1", slug="test1")
+        extents = (-3.9, 16.1, 7.0, 27.6)
+        bbox = Polygon.from_bbox(extents)
+        the_geom = GEOSGeometry(bbox, srid=4326)
+        self.data_provider = DataProvider.objects.create(name="test1", slug="test1", attribute_class=self.attribute_class)
+        self.data_providers = DataProvider.objects.all()
+        self.job = Job.objects.create(
+            name="test1",
+            description='Test description',
+            the_geom=the_geom,
+            user=self.user,
+            json_tags={}
+        )
+        self.data_provider_task = DataProviderTask.objects.create(provider=self.data_provider)
+        self.job.provider_tasks.add(self.data_provider_task)
+        run = ExportRun.objects.create(job=self.job, user=self.user, status="COMPLETED")
+        self.data_provider_task_record = DataProviderTaskRecord.objects.create(name=self.data_provider.name,
+                                                                               display=True,
+                                                                               run=run,
+                                                                               status="SUCCESS",
+                                                                               provider=self.data_provider)
+
+    def check_filter_result(self, queryset):
+        returned, excluded = attribute_class_filter(queryset, user=self.user)
+        self.assertCountEqual((list(returned), list(excluded)), (list(queryset), list()))
+
+    def check_excluded_result(self, queryset):
+        returned, excluded = attribute_class_filter(queryset, user=self.user)
+        self.assertCountEqual((list(returned), list(excluded)), (list(), list(queryset)))
+
+    def test_attribute_class_filter(self):
+
+        # First test that objects are returned when user is assigned to the attribute class.
+        self.attribute_class.users.add(self.user)
+        self.check_filter_result(Job.objects.filter(id=self.job.id))
+        self.check_filter_result(DataProvider.objects.filter(id=self.data_provider.id))
+        self.check_filter_result(DataProviderTask.objects.filter(id=self.data_provider_task.id))
+        self.check_filter_result(DataProviderTaskRecord.objects.filter(id=self.data_provider_task_record.id))
+
+        # Ensure user is not assigned to attribute class.
+        self.attribute_class.users.remove(self.user)
+        self.check_excluded_result(Job.objects.filter(id=self.job.id))
+        self.check_excluded_result(DataProvider.objects.filter(id=self.data_provider.id))
+        self.check_excluded_result(DataProviderTask.objects.filter(id=self.data_provider_task.id))
+        self.check_excluded_result(DataProviderTaskRecord.objects.filter(id=self.data_provider_task_record.id))
 
 
 class TestJobFilter(APITestCase):

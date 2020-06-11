@@ -13,7 +13,11 @@ jest.mock("../../components/CreateDataPack/RequestDataSource", () => {
     const React = require('react');
     return (props) => (<div id="dataSource-dialog">{props.open.toString()}</div>);
 });
-
+jest.mock('../../styles/eventkit_theme.js', () => ({eventkit: {
+            images: {},
+            colors: {}
+            }})
+);
 
 describe('FilterDrawer component', () => {
     const providers = [
@@ -83,7 +87,7 @@ describe('FilterDrawer component', () => {
         updateBaseMap: (mapUrl: string) => {
         },
         classes: {},
-        ...(global as any).eventkit_test_props,
+        ...(global as any).eventkit_test_props
     });
 
     let props;

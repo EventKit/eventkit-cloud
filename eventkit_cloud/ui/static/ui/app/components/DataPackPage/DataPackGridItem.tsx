@@ -1,9 +1,8 @@
-
 import * as PropTypes from 'prop-types';
 import * as React from 'react';
-import { connect } from 'react-redux';
-import { withTheme, withStyles, createStyles, StyledComponentProps } from '@material-ui/core/styles';
-import { Link } from 'react-router-dom';
+import {connect} from 'react-redux';
+import {withTheme, withStyles, createStyles, StyledComponentProps} from '@material-ui/core/styles';
+import {Link} from 'react-router-dom';
 import Collapse from '@material-ui/core/Collapse';
 import Card from '@material-ui/core/Card';
 import CardHeader from '@material-ui/core/CardHeader';
@@ -22,10 +21,11 @@ import IconMenu from '../common/IconMenu';
 import DeleteDataPackDialog from '../Dialog/DeleteDataPackDialog';
 import FeaturedFlag from './FeaturedFlag';
 import DataPackShareDialog from '../DataPackShareDialog/DataPackShareDialog';
-import { makeFullRunSelector } from '../../selectors/runSelector';
+import {makeFullRunSelector} from '../../selectors/runSelector';
 import ProviderDialog from '../Dialog/ProviderDialog';
 import history from '../../utils/history';
 import {MapView} from "../common/MapView";
+import NotificationPopover from "./NotificationPopover";
 
 const jss = (theme: any) => createStyles({
     cardTitle: {
@@ -141,6 +141,7 @@ export class DataPackGridItem extends React.Component<Props, State> {
     };
 
     private map;
+
     constructor(props) {
         super(props);
         this.toggleExpanded = this.toggleExpanded.bind(this);
@@ -176,7 +177,7 @@ export class DataPackGridItem extends React.Component<Props, State> {
     }
 
     private handleProviderClose() {
-        this.setState({ providerDialogOpen: false });
+        this.setState({providerDialogOpen: false});
     }
 
     private handleProviderOpen() {
@@ -186,15 +187,15 @@ export class DataPackGridItem extends React.Component<Props, State> {
     }
 
     private toggleExpanded() {
-        this.setState({ expanded: !this.state.expanded });
+        this.setState({expanded: !this.state.expanded});
     }
 
     private showDeleteDialog() {
-        this.setState({ deleteDialogOpen: true });
+        this.setState({deleteDialogOpen: true});
     }
 
     private hideDeleteDialog() {
-        this.setState({ deleteDialogOpen: false });
+        this.setState({deleteDialogOpen: false});
     }
 
     private handleDelete() {
@@ -203,33 +204,35 @@ export class DataPackGridItem extends React.Component<Props, State> {
     }
 
     private handleShareOpen() {
-        this.setState({ shareDialogOpen: true });
+        this.setState({shareDialogOpen: true});
     }
 
     private handleShareClose() {
-        this.setState({ shareDialogOpen: false });
+        this.setState({shareDialogOpen: false});
     }
 
     private handleShareSave(perms) {
         this.handleShareClose();
-        const permissions = { ...perms };
+        const permissions = {...perms};
         this.props.onRunShare(this.props.run.job.uid, permissions);
     }
+
     private getStatusIcon(status: Eventkit.Run['status']) {
-        const { colors } = this.props.theme.eventkit;
+        const {colors} = this.props.theme.eventkit;
         if (status === 'COMPLETED') {
-            return <NavigationCheck className="qa-DataPackTableItem-NavigationCheck" style={{ color: colors.success }} />;
+            return <NavigationCheck className="qa-DataPackTableItem-NavigationCheck" style={{color: colors.success, marginBottom: '-4px'}}/>;
         } else if (status === 'RUNNING' || status === 'SUBMITTED') {
-            return <NotificationSync className="qa-DataPackTableItem-NotificationSync" style={{color: colors.running}}/>;
+            return <NotificationSync className="qa-DataPackTableItem-NotificationSync"
+                                     style={{color: colors.running, marginBottom: '-4px'}}/>;
         }
         return <AlertError
-                className="qa-DataPackTableItem-AlertError"
-                style={{ color: colors.warning, opacity: 0.6, height: '22px' }}
+            className="qa-DataPackTableItem-AlertError"
+            style={{color: colors.warning, opacity: 0.6, height: '22px', marginBottom: '-4px'}}
         />;
     }
 
     render() {
-        const { colors } = this.props.theme.eventkit;
+        const {colors} = this.props.theme.eventkit;
         const cardTextFontSize = 12;
 
         const styles: { [s: string]: React.CSSProperties } = {
@@ -281,7 +284,7 @@ export class DataPackGridItem extends React.Component<Props, State> {
             <div style={styles.gridItem} key={this.props.run.uid}>
                 <Card
                     className="qa-DataPackGridItem-Card"
-                    style={{ backgroundColor: colors.secondary }}
+                    style={{backgroundColor: colors.secondary}}
                 >
                     <CardHeader
                         className="qa-DataPackGridItem-CardTitle"
@@ -292,7 +295,7 @@ export class DataPackGridItem extends React.Component<Props, State> {
                         }}
                         title={
                             <div className={this.props.classes.cardTitle}>
-                                <FeaturedFlag show={this.props.showFeaturedFlag && this.props.run.job.featured} />
+                                <FeaturedFlag show={this.props.showFeaturedFlag && this.props.run.job.featured}/>
                                 <div
                                     className={`${this.props.classes.nameContainer} qa-DataPackGridItem-name`}
                                 >
@@ -311,7 +314,7 @@ export class DataPackGridItem extends React.Component<Props, State> {
                                     <MenuItem
                                         key="map"
                                         className="qa-DataPackGridItem-MenuItem-showHideMap"
-                                        style={{ fontSize: cardTextFontSize }}
+                                        style={{fontSize: cardTextFontSize}}
                                         onClick={this.toggleExpanded}
                                     >
                                         {this.state.expanded ? 'Hide Map' : 'Show Map'}
@@ -319,15 +322,17 @@ export class DataPackGridItem extends React.Component<Props, State> {
                                     <MenuItem
                                         key="status"
                                         className="qa-DataPackGridItem-MenuItem-goToStatus"
-                                        style={{ fontSize: cardTextFontSize }}
-                                        onClick={() => { history.push(`/status/${this.props.run.job.uid}`); }}
+                                        style={{fontSize: cardTextFontSize}}
+                                        onClick={() => {
+                                            history.push(`/status/${this.props.run.job.uid}`);
+                                        }}
                                     >
                                         Status & Download
                                     </MenuItem>
                                     <MenuItem
                                         key="providers"
                                         className="qa-DataPackGridItem-MenuItem-viewProviders"
-                                        style={{ fontSize: cardTextFontSize }}
+                                        style={{fontSize: cardTextFontSize}}
                                         onClick={this.handleProviderOpen}
                                     >
                                         View Data Sources
@@ -336,7 +341,7 @@ export class DataPackGridItem extends React.Component<Props, State> {
                                         <MenuItem
                                             key="delete"
                                             className="qa-DataPackGridItem-MenuItem-delete"
-                                            style={{ fontSize: cardTextFontSize }}
+                                            style={{fontSize: cardTextFontSize}}
                                             onClick={this.showDeleteDialog}
                                         >
                                             Delete Export
@@ -347,7 +352,7 @@ export class DataPackGridItem extends React.Component<Props, State> {
                                         <MenuItem
                                             key="share"
                                             className="qa-DataPackGridItem-MenuItem-share"
-                                            style={{ fontSize: cardTextFontSize }}
+                                            style={{fontSize: cardTextFontSize}}
                                             onClick={this.handleShareOpen}
                                         >
                                             Share
@@ -371,14 +376,14 @@ export class DataPackGridItem extends React.Component<Props, State> {
                             </div>
                         }
                         subheader={
-                            <div className="qa-DataPackGridItem-div-subtitle" style={{ fontSize: cardTextFontSize }}>
+                            <div className="qa-DataPackGridItem-div-subtitle" style={{fontSize: cardTextFontSize}}>
                                 <div
-                                    style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}
+                                    style={{overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap'}}
                                 >
                                     {`Event: ${this.props.run.job.event}`}
                                 </div>
-                                <span>{`Added: ${moment(this.props.run.started_at).format('M/D/YY')}`}</span><br />
-                                <span>{`Expires: ${moment(this.props.run.expiration).format('M/D/YY')}`}</span><br />
+                                <span>{`Added: ${moment(this.props.run.started_at).format('M/D/YY')}`}</span><br/>
+                                <span>{`Expires: ${moment(this.props.run.expiration).format('M/D/YY')}`}</span><br/>
                             </div>
                         }
                     />
@@ -392,29 +397,46 @@ export class DataPackGridItem extends React.Component<Props, State> {
                         </span>
                     </CardContent>
                     <Collapse in={this.state.expanded}>
-                        <CardContent className="qa-DataPackGridItem-CardMedia" style={{ padding: '0px' }}>
+                        <CardContent className="qa-DataPackGridItem-CardMedia" style={{padding: '0px'}}>
                             <MapView
                                 id={this.getMapId()}
                                 selectedBaseMap={this.context.config.BASEMAP_URL}
                                 copyright={this.context.config.BASEMAP_COPYRIGHT}
-                                geojson = {this.props.run.job.extent}
+                                geojson={this.props.run.job.extent}
                                 minZoom={2}
                                 maxZoom={20}
                             />
                         </CardContent>
                     </Collapse>
-                    <CardActions className="qa-DataPackGridItem-CardActions" style={{ height: '45px', padding: '8px' }}>
-                        <div style={{ width: '100%' }}>
-                            {this.getStatusIcon(this.props.run.status)}
+                    <CardActions className="qa-DataPackGridItem-CardActions" style={{height: '45px', padding: '8px'}}>
+                        <div style={{width: '100%'}}>
                             {this.props.run.user === this.props.userData.user.username ?
                                 <p style={styles.ownerLabel}>My DataPack</p>
                                 :
                                 <p style={styles.ownerLabel}>{this.props.run.user}</p>
                             }
                             {this.props.run.job.permissions.value !== 'PRIVATE' ?
-                                <SocialGroup style={styles.publishedIcon} />
+                                <SocialGroup style={styles.publishedIcon}/>
                                 :
-                                <Lock style={styles.unpublishedIcon} />
+                                <Lock style={styles.unpublishedIcon}/>
+                            }
+                        </div>
+                    </CardActions>
+                    <CardActions className="qa-DataPackGridItem-CardActions-Status" style={{height: '15px', padding: '8px'}}>
+                        <div style={{width: '100%'}}>
+                            {this.getStatusIcon(this.props.run.status)}
+                            <span style={{padding: '4px', color: 'rgba(0, 0, 0, 0.54)', fontSize: '12.5px'}}>
+                                Export Status
+                            </span>
+                        </div>
+                    </CardActions>
+                    <CardActions className="qa-DataPackGridItem-CardActions-Permissions"
+                                 style={{height: '45px', padding: '8px'}}>
+                        <div style={{width: '100%'}}>
+                            {this.props.run.provider_task_list_status !== 'COMPLETE' &&
+                            <NotificationPopover
+                                someProvidersAvailable={this.props.run.provider_task_list_status === 'PARTIAL'}
+                            />
                             }
                         </div>
                     </CardActions>
@@ -448,7 +470,6 @@ const makeMapStateToProps = () => {
     return mapStateToProps;
 };
 
-export default
-    withTheme()(
-        withStyles(jss)(
-            connect(makeMapStateToProps)(DataPackGridItem)));
+export default withTheme()(
+    withStyles(jss)(
+        connect(makeMapStateToProps)(DataPackGridItem)));

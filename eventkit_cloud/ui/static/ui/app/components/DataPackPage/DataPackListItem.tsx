@@ -1,8 +1,8 @@
 import * as React from 'react';
-import { connect } from 'react-redux';
-import { withTheme, Theme } from '@material-ui/core/styles';
+import {connect} from 'react-redux';
+import {withTheme, Theme} from '@material-ui/core/styles';
 import moment from 'moment';
-import { Link } from 'react-router-dom';
+import {Link} from 'react-router-dom';
 import Card from '@material-ui/core/Card';
 import CardHeader from '@material-ui/core/CardHeader';
 import MenuItem from '@material-ui/core/MenuItem';
@@ -16,9 +16,9 @@ import DeleteDataPackDialog from '../Dialog/DeleteDataPackDialog';
 import ProviderDialog from '../Dialog/ProviderDialog';
 import FeaturedFlag from './FeaturedFlag';
 import DataPackShareDialog from '../DataPackShareDialog/DataPackShareDialog';
-import { makeFullRunSelector } from '../../selectors/runSelector';
+import {makeFullRunSelector} from '../../selectors/runSelector';
 import history from '../../utils/history';
-import {SvgIconProps} from "@material-ui/core/SvgIcon/SvgIcon";
+import NotificationPopover from "./NotificationPopover";
 
 export interface Props {
     run: Eventkit.Run;
@@ -59,7 +59,7 @@ export class DataPackListItem extends React.Component<Props, State> {
     }
 
     private handleProviderClose() {
-        this.setState({ providerDialogOpen: false });
+        this.setState({providerDialogOpen: false});
     }
 
     private handleProviderOpen() {
@@ -69,11 +69,11 @@ export class DataPackListItem extends React.Component<Props, State> {
     }
 
     private showDeleteDialog() {
-        this.setState({ deleteDialogOpen: true });
+        this.setState({deleteDialogOpen: true});
     }
 
     private hideDeleteDialog() {
-        this.setState({ deleteDialogOpen: false });
+        this.setState({deleteDialogOpen: false});
     }
 
     private handleDelete() {
@@ -82,33 +82,36 @@ export class DataPackListItem extends React.Component<Props, State> {
     }
 
     private handleShareOpen() {
-        this.setState({ shareDialogOpen: true });
+        this.setState({shareDialogOpen: true});
     }
 
     private handleShareClose() {
-        this.setState({ shareDialogOpen: false });
+        this.setState({shareDialogOpen: false});
     }
 
     private handleShareSave(perms) {
         this.handleShareClose();
-        const permissions = { ...perms };
+        const permissions = {...perms};
         this.props.onRunShare(this.props.run.job.uid, permissions);
     }
+
     private getStatusIcon(status: Eventkit.Run['status']) {
-        const { colors } = this.props.theme.eventkit;
+        const {colors} = this.props.theme.eventkit;
         if (status === 'COMPLETED') {
-            return <NavigationCheck className="qa-DataPackTableItem-NavigationCheck" style={{ color: colors.success }} />;
+            return <NavigationCheck className="qa-DataPackTableItem-NavigationCheck"
+                                    style={{color: colors.success, height: '20px'}}/>;
         } else if (status === 'RUNNING' || status === 'SUBMITTED') {
-            return <NotificationSync className="qa-DataPackTableItem-NotificationSync" style={{color: colors.running}}/>;
+            return <NotificationSync className="qa-DataPackTableItem-NotificationSync"
+                                     style={{color: colors.running, height: '20px'}}/>;
         }
         return <AlertError
-                className="qa-DataPackTableItem-AlertError"
-                style={{ color: colors.warning, opacity: 0.6, height: '22px' }}
+            className="qa-DataPackTableItem-AlertError"
+            style={{color: colors.warning, opacity: 0.6}}
         />;
     }
 
     render() {
-        const { colors } = this.props.theme.eventkit;
+        const {colors} = this.props.theme.eventkit;
         const subtitleFontSize = 12;
 
         const styles = {
@@ -188,9 +191,15 @@ export class DataPackListItem extends React.Component<Props, State> {
         };
 
         const cardTitleStyle = (this.props.run.job.featured) ? styles.cardTitleFeatured : styles.cardTitle;
-        const onMouseEnter = this.props.onHoverStart ? () => { this.props.onHoverStart(this.props.run.uid); } : null;
-        const onMouseLeave = this.props.onHoverEnd ? () => { this.props.onHoverEnd(this.props.run.uid); } : null;
-        const onClick = this.props.onClick ? () => { this.props.onClick(this.props.run.uid); } : null;
+        const onMouseEnter = this.props.onHoverStart ? () => {
+            this.props.onHoverStart(this.props.run.uid);
+        } : null;
+        const onMouseLeave = this.props.onHoverEnd ? () => {
+            this.props.onHoverEnd(this.props.run.uid);
+        } : null;
+        const onClick = this.props.onClick ? () => {
+            this.props.onClick(this.props.run.uid);
+        } : null;
         return (
             <div style={styles.gridItem}>
                 <Card
@@ -201,7 +210,7 @@ export class DataPackListItem extends React.Component<Props, State> {
                     onMouseLeave={onMouseLeave}
                     onClick={onClick}
                 >
-                    <FeaturedFlag show={this.props.run.job.featured} style={{ top: 0, right: 0 }} />
+                    <FeaturedFlag show={this.props.run.job.featured} style={{top: 0, right: 0}}/>
                     <CardHeader
                         className="qa-DataPackListItem-CardTitle"
                         style={cardTitleStyle}
@@ -212,7 +221,7 @@ export class DataPackListItem extends React.Component<Props, State> {
                                         <Link
                                             to={`/status/${this.props.run.job.uid}`}
                                             href={`/status/${this.props.run.job.uid}`}
-                                            style={{ color: 'inherit' }}
+                                            style={{color: 'inherit'}}
                                         >
                                             {this.props.run.job.name}
                                         </Link>
@@ -224,15 +233,17 @@ export class DataPackListItem extends React.Component<Props, State> {
                                     <MenuItem
                                         key="link"
                                         className="qa-DataPackListItem-MenuItem-statusDownloadLink"
-                                        style={{ fontSize: subtitleFontSize }}
-                                        onClick={() => { history.push(`/status/${this.props.run.job.uid}`); }}
+                                        style={{fontSize: subtitleFontSize}}
+                                        onClick={() => {
+                                            history.push(`/status/${this.props.run.job.uid}`);
+                                        }}
                                     >
                                         Status & Download
                                     </MenuItem>
                                     <MenuItem
                                         key="sources"
                                         className="qa-DataPackListItem-MenuItem-viewDataSources"
-                                        style={{ fontSize: subtitleFontSize }}
+                                        style={{fontSize: subtitleFontSize}}
                                         onClick={this.handleProviderOpen}
                                     >
                                         View Data Sources
@@ -242,7 +253,7 @@ export class DataPackListItem extends React.Component<Props, State> {
                                         <MenuItem
                                             key="delete"
                                             className="qa-DataPackListItem-MenuItem-deleteExport"
-                                            style={{ fontSize: subtitleFontSize }}
+                                            style={{fontSize: subtitleFontSize}}
                                             onClick={this.showDeleteDialog}
                                         >
                                             Delete Export
@@ -253,7 +264,7 @@ export class DataPackListItem extends React.Component<Props, State> {
                                         <MenuItem
                                             key="share"
                                             className="qa-DataPackListItem-MenuItem-share"
-                                            style={{ fontSize: subtitleFontSize }}
+                                            style={{fontSize: subtitleFontSize}}
                                             onClick={this.handleShareOpen}
                                         >
                                             Share
@@ -277,13 +288,13 @@ export class DataPackListItem extends React.Component<Props, State> {
                             </div>
                         }
                         subheader={
-                            <div style={{ fontSize: '12px' }}>
+                            <div style={{fontSize: '12px'}}>
                                 <div className="qa-DataPackListItem-subtitle-event" style={styles.eventText}>
                                     {`Event: ${this.props.run.job.event}`}
                                 </div>
                                 <div
                                     className="qa-DataPackListItem-subtitle-date"
-                                    style={{ lineHeight: '18px', display: 'inline-block', width: '100%' }}
+                                    style={{lineHeight: '18px', display: 'inline-block', width: '100%'}}
                                 >
                                     {`Added: ${moment(this.props.run.started_at).format('M/D/YY')}`}
                                     {this.props.run.user === this.props.user.data.user.username ?
@@ -293,22 +304,32 @@ export class DataPackListItem extends React.Component<Props, State> {
                                     }
                                     <div
                                         className="qa-DataPackListItem-subtitle-status tour-datapack-status"
-                                        style={{ display: 'inline-block', float: 'right' }}
+                                        style={{display: 'inline-block', float: 'right'}}
                                     >
                                         {this.props.run.job.permissions.value !== 'PRIVATE' ?
-                                            <SocialGroup className="qa-DataPackListItem-SocialGroup" style={styles.publishedIcon} />
+                                            <SocialGroup className="qa-DataPackListItem-SocialGroup"
+                                                         style={styles.publishedIcon}/>
                                             :
 
-                                            <Lock className="qa-DataPackListItem-Lock" style={styles.unpublishedIcon} />
+                                            <Lock className="qa-DataPackListItem-Lock" style={styles.unpublishedIcon}/>
                                         }
-                                        {this.getStatusIcon(this.props.run.status)}
                                     </div>
                                 </div>
+                                <div style={{display: 'flex', flex: '1 1 auto', paddingTop: '4px'}}>
+                                    {this.getStatusIcon(this.props.run.status)}
+                                    <span style={{padding: '4px'}}>Export Status</span>
+                                </div>
+                                {this.props.run.provider_task_list_status !== 'COMPLETE' && (
+                                    <div style={{display: 'flex', flex: '1 1 auto'}}>
+                                        <NotificationPopover
+                                            someProvidersAvailable={this.props.run.provider_task_list_status === 'PARTIAL'}
+                                        />
+                                    </div>
+                                )}
                             </div>
                         }
                     />
                     <DataPackShareDialog
-                        job={this.props.run.job}
                         show={this.state.shareDialogOpen}
                         onClose={this.handleShareClose}
                         onSave={this.handleShareSave}

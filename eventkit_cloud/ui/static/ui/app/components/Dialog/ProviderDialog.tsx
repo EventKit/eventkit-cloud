@@ -1,13 +1,12 @@
-
 import * as React from 'react';
-import { connect } from 'react-redux';
-import { withTheme, StyledComponentProps } from '@material-ui/core/styles';
+import {connect} from 'react-redux';
+import {withTheme, StyledComponentProps} from '@material-ui/core/styles';
 import List from '@material-ui/core/List';
 import Progress from '@material-ui/core/CircularProgress';
 import BaseDialog from './BaseDialog';
 import DropDownListItem from '../common/DropDownListItem';
-import { getProviderTask } from '../../actions/providerActions';
-import { getJobDetails } from "../../utils/generic"
+import {getProviderTask} from '../../actions/providerActions';
+import {getJobDetails, getProviderFromProviderTask, shouldDisplay} from "../../utils/generic"
 
 interface OwnProps {
     uids: string[];
@@ -70,7 +69,7 @@ export class ProviderDialog extends React.Component<Props, State> {
         });
 
         await Promise.all(promises);
-        this.setState({ loading: false });
+        this.setState({loading: false});
     }
 
     render() {
@@ -83,9 +82,23 @@ export class ProviderDialog extends React.Component<Props, State> {
             justifyContent: 'center',
             alignItems: 'center',
             width: '100%',
-            height: '75px' ,
+            height: '75px',
         };
-
+        const someSourcesHiddenMsg = "Some sources are unavailable due to user permissions. If you believe this is an error, please contact your administrator.";
+        const allSourcesHiddenMsg = "All data sources are unavailable due to user permissions. If you believe this is an error, please contact your administrator.";
+        const providers = [];
+        (Object.values(this.props.providerTasks) || []).map(
+            providerTask => {
+                if(shouldDisplay(providerTask)) {
+                    const provider = getProviderFromProviderTask(providerTask, this.props.providers);
+                    // Realistically, we shouldn't ever even be checking to see if we should display a hidden provider,
+                    // as the provider task itself should already be hidden, but gaps might exist.
+                    if (!!provider && shouldDisplay(provider)) {
+                        providers.push(provider);
+                    }
+                }
+            }
+        );
         return (
             <BaseDialog
                 className="qa-DataPackGridItem-BaseDialog"
@@ -95,39 +108,40 @@ export class ProviderDialog extends React.Component<Props, State> {
             >
                 {this.state.loading ?
                     <div style={loadingStyle}>
-                        <Progress size={50} />
+                        <Progress size={50}/>
                     </div>
-                :
-                    <List>
-                        {this.props.uids.map((uid, ix) => {
-                            const providerTask = this.props.providerTasks[uid];
-                            if (!providerTask) {
-                                return;
+                    :
+                    (<>
+                            {this.state.job && this.state.job.provider_task_list_status === 'EMPTY' &&
+                            (<div>{allSourcesHiddenMsg}</div>)
                             }
-                            const provider = this.props.providers.find(p => p.slug === providerTask.slug);
-                            if (!provider) {
-                                return;
+                            {this.state.job && this.state.job.provider_task_list_status === 'PARTIAL' &&
+                            (<div>{someSourcesHiddenMsg}</div>)
                             }
+                            <List>
+                                {providers.map((provider, ix) => {
+                                    const {job} = this.state;
+                                    const dataProviderTask = job && job.provider_tasks.find(obj => obj.provider === provider.name)
 
-                            const { job } = this.state
-                            const dataProviderTask = job && job.provider_tasks.find(obj => obj.provider === provider.name)
+                                    // If available, get custom zoom levels from DataProviderTask otherwise use Provider defaults.
+                                    const min_zoom = dataProviderTask && dataProviderTask.min_zoom || provider && provider.level_from
+                                    const max_zoom = dataProviderTask && dataProviderTask.max_zoom || provider && provider.level_to
 
-                            // If available, get custom zoom levels from DataProviderTask otherwise use Provider defaults.
-                            const min_zoom = dataProviderTask && dataProviderTask.min_zoom || provider && provider.level_from
-                            const max_zoom = dataProviderTask && dataProviderTask.max_zoom || provider && provider.level_to
+                                    return (
 
-                            return (
-                                <DropDownListItem
-                                    title={provider.name}
-                                    key={provider.slug}
-                                    alt={ix % 2 !== 0}
-                                >
-                                    <div>Zoom Levels {min_zoom} - {max_zoom}</div>
-                                    <div>{provider.service_description}</div>
-                                </DropDownListItem>
-                            );
-                        })}
-                    </List>
+                                        <DropDownListItem
+                                            title={provider.name}
+                                            key={provider.slug}
+                                            alt={ix % 2 !== 0}
+                                        >
+                                            <div>Zoom Levels {min_zoom} - {max_zoom}</div>
+                                            <div>{provider.service_description}</div>
+                                        </DropDownListItem>
+                                    );
+                                })}
+                            </List>
+                        </>
+                    )
                 }
             </BaseDialog>
         );
@@ -148,6 +162,5 @@ const mapDispatchToProps = (dispatch) => (
     }
 );
 
-export default
-    withTheme()(
-        connect(mapStateToProps, mapDispatchToProps)(ProviderDialog));
+export default withTheme()(
+    connect(mapStateToProps, mapDispatchToProps)(ProviderDialog));

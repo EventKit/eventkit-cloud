@@ -179,7 +179,7 @@ export class DataPackDetails extends React.Component<Props, State> {
         const toggleCellWidth = this.getToggleCellWidth();
         const textFontSize = this.getTextFontSize();
 
-        const providers = this.props.providerTasks.filter(provider => (provider.display));
+        const providers = this.props.providerTasks.filter(provider => (provider.display && !provider.hidden));
 
         const styles = {
             subHeading: {

@@ -217,6 +217,7 @@ export class DataPackShareDialog extends React.Component<Props, State> {
         if (this.state.view === 'groups') {
             return (
                 <GroupsBody
+                    view={this.state.view}
                     job={this.props.job}
                     selectedGroups={this.state.permissions.groups}
                     groupsText={this.props.groupsText}
@@ -231,6 +232,7 @@ export class DataPackShareDialog extends React.Component<Props, State> {
         } else {
             return (
                 <MembersBody
+                    view={this.state.view}
                     job={this.props.job}
                     public={this.state.permissions.value === 'PUBLIC'}
                     selectedMembers={this.state.permissions.members}
@@ -252,6 +254,7 @@ export class DataPackShareDialog extends React.Component<Props, State> {
         if (this.state.view === 'groups') {
             return (
                 <PermissionsFilterGroupsBody
+                    view={this.state.view}
                     selectedGroups={this.state.permissions.groups}
                     groupsText={this.props.groupsText}
                     onGroupCheck={this.handleGroupCheck}
@@ -265,16 +268,17 @@ export class DataPackShareDialog extends React.Component<Props, State> {
         } else {
             return (
                 <PermissionsFilterMembersBody
-                        public={this.state.permissions.value === 'PUBLIC'}
-                        selectedMembers={this.state.permissions.members}
-                        membersText={this.props.membersText}
-                        onMemberCheck={this.handleUserCheck}
-                        onAdminCheck={this.handleAdminCheck}
-                        onCheckCurrent={this.handleCurrentCheck}
-                        onCheckAll={this.handlePublicCheck}
-                        onUncheckAll={this.handleUncheckAll}
-                        canUpdateAdmin={this.props.canUpdateAdmin}
-                        handleShowShareInfo={this.showShareInfo}
+                    view={this.state.view}
+                    public={this.state.permissions.value === 'PUBLIC'}
+                    selectedMembers={this.state.permissions.members}
+                    membersText={this.props.membersText}
+                    onMemberCheck={this.handleUserCheck}
+                    onAdminCheck={this.handleAdminCheck}
+                    onCheckCurrent={this.handleCurrentCheck}
+                    onCheckAll={this.handlePublicCheck}
+                    onUncheckAll={this.handleUncheckAll}
+                    canUpdateAdmin={this.props.canUpdateAdmin}
+                    handleShowShareInfo={this.showShareInfo}
                 />
             );
         }

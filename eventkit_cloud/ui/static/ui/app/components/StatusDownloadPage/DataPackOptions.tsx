@@ -86,11 +86,14 @@ export class DataPackOptions extends React.Component<Props, State> {
         const providerInfo = {};
         let supportedFormats = null;
         this.props.dataPack.provider_tasks.forEach((providerTask) => {
-            if (providerTask.display === true) {
+            // Strictly speaking, any hidden provider SHOULD always be parked with `display: false`
+            // But the check is still included for an abundance of caution.
+            if (providerTask.display === true && !providerTask.hidden) {
                 // Map the provider task to its Provider to ensure we have all needed data for the Provider.
-                const fullProvider = this.props.providers.find((provider) => providerTask.slug === provider.slug);
+                const provider = this.props.providers.find(provider => provider.slug === providerTask.provider.slug);
                 // Cannot clone a provider without the full set of info.
-                if (!fullProvider || !fullProvider.display) {
+                // We *shouldn't* have a hidden provider as we filter out hidden provider tasks, but check for caution.
+                if (!provider || !provider.display || provider.hidden) {
                     return;
                 }
                 const dataProviderTask = this.props.job.provider_tasks.find((jobProviderTask) =>
@@ -101,16 +104,16 @@ export class DataPackOptions extends React.Component<Props, State> {
                 );
                 if (!!dataProviderTask) {
                     supportedFormats = dataProviderTask.formats.filter(slug =>
-                        arrayHasValue(fullProvider.supported_formats.map((format: Eventkit.Format) => format.slug), slug)
+                        arrayHasValue(provider.supported_formats.map((format: Eventkit.Format) => format.slug), slug)
                     );
                     exportOptions[providerTask.slug] = {
-                        minZoom: (dataProviderTask.min_zoom) ? dataProviderTask.min_zoom : fullProvider.level_from,
-                        maxZoom: (dataProviderTask.max_zoom <= fullProvider.level_to) ? dataProviderTask.max_zoom : fullProvider.level_to,
+                        minZoom: (dataProviderTask.min_zoom) ? dataProviderTask.min_zoom : provider.level_from,
+                        maxZoom: (dataProviderTask.max_zoom <= provider.level_to) ? dataProviderTask.max_zoom : provider.level_to,
                         formats: supportedFormats
                     }
                 }
                 // Cannot clone a provider without the full set of info.
-                providerArray.push(fullProvider);
+                providerArray.push(provider);
             }
         });
         this.props.onClone(this.props.dataPack, providerArray, exportOptions, providerInfo);

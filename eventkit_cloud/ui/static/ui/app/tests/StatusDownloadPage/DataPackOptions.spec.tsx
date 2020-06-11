@@ -1,10 +1,10 @@
 import * as React from 'react';
 import * as sinon from 'sinon';
-import { createShallow } from '@material-ui/core/test-utils';
+import {createShallow} from '@material-ui/core/test-utils';
 import Button from '@material-ui/core/Button';
 import BaseDialog from '../../components/Dialog/BaseDialog';
 import DeleteDataPackDialog from '../../components/Dialog/DeleteDataPackDialog';
-import { DataPackOptions } from '../../components/StatusDownloadPage/DataPackOptions';
+import {DataPackOptions} from '../../components/StatusDownloadPage/DataPackOptions';
 
 describe('DataPackOptions component', () => {
     let shallow;
@@ -12,6 +12,28 @@ describe('DataPackOptions component', () => {
     beforeAll(() => {
         shallow = createShallow();
     });
+
+    const providers = [{
+        uid: '123',
+        slug: 'test1',
+        name: 'test1',
+        display: true,
+        max_selection: '10000',
+        type: 'wmts',
+        service_description: 'test description',
+        license: {
+            text: 'test license text',
+            name: 'test license',
+        },
+        level_from: 0,
+        level_to: 10,
+        supported_formats: [{
+            uid: '135',
+            name: 'tested_name',
+            slug: 'gpkg',
+            description: 'tested_description'
+        }]
+    }];
 
     const getProps = () => ({
         rerunDisabled: false,
@@ -24,8 +46,15 @@ describe('DataPackOptions component', () => {
                 uid: '67890',
             },
             provider_tasks: [
-                { slug: 'test1', name: 'test1', display: true },
-                { slug: 'test2', name: 'test2', display: false },
+                {slug: 'test1', name: 'test1', display: true, provider: providers[0]},
+                {
+                    slug: 'test2',
+                    name: 'test2',
+                    display: false,
+                    provider: {
+                        ...providers[0], slug: 'test2',
+                    },
+                },
             ],
         },
         job: {
@@ -51,27 +80,7 @@ describe('DataPackOptions component', () => {
                 max_zoom: 3,
             }]
         },
-        providers: [{
-            uid: '123',
-            slug: 'test1',
-            name: 'test1',
-            display: true,
-            max_selection: '10000',
-            type: 'wmts',
-            service_description: 'test description',
-            license: {
-                text: 'test license text',
-                name: 'test license',
-            },
-            level_from: 0,
-            level_to: 10,
-            supported_formats: [{
-                uid: '135',
-                name: 'tested_name',
-                slug: 'gpkg',
-                description: 'tested_description'
-            }]
-        }],
+        providers,
         ...(global as any).eventkit_test_props,
     });
 
@@ -79,7 +88,7 @@ describe('DataPackOptions component', () => {
     let wrapper;
     let instance;
     const setup = (overrides = {}) => {
-        props = { ...getProps(), ...overrides };
+        props = {...getProps(), ...overrides};
         wrapper = shallow(<DataPackOptions {...props} />);
         instance = wrapper.instance();
     };
@@ -96,7 +105,7 @@ describe('DataPackOptions component', () => {
         expect(stateStub.called).toBe(false);
         instance.handleDeleteOpen();
         expect(stateStub.calledOnce).toBe(true);
-        expect(stateStub.calledWith({ showDeleteDialog: true })).toBe(true);
+        expect(stateStub.calledWith({showDeleteDialog: true})).toBe(true);
         stateStub.restore();
     });
 
@@ -105,7 +114,7 @@ describe('DataPackOptions component', () => {
         expect(stateStub.called).toBe(false);
         instance.handleDeleteClose();
         expect(stateStub.calledOnce).toBe(true);
-        expect(stateStub.calledWith({ showDeleteDialog: false })).toBe(true);
+        expect(stateStub.calledWith({showDeleteDialog: false})).toBe(true);
         stateStub.restore();
     });
 
@@ -114,7 +123,7 @@ describe('DataPackOptions component', () => {
         expect(stateStub.called).toBe(false);
         instance.handleRerunOpen();
         expect(stateStub.calledOnce).toBe(true);
-        expect(stateStub.calledWith({ showRerunDialog: true })).toBe(true);
+        expect(stateStub.calledWith({showRerunDialog: true})).toBe(true);
         stateStub.restore();
     });
 
@@ -123,7 +132,7 @@ describe('DataPackOptions component', () => {
         expect(stateStub.called).toBe(false);
         instance.handleRerunClose();
         expect(stateStub.calledOnce).toBe(true);
-        expect(stateStub.calledWith({ showRerunDialog: false })).toBe(true);
+        expect(stateStub.calledWith({showRerunDialog: false})).toBe(true);
         stateStub.restore();
     });
 
@@ -132,7 +141,7 @@ describe('DataPackOptions component', () => {
         expect(stateStub.called).toBe(false);
         instance.handleCloneOpen();
         expect(stateStub.calledOnce).toBe(true);
-        expect(stateStub.calledWith({ showCloneDialog: true })).toBe(true);
+        expect(stateStub.calledWith({showCloneDialog: true})).toBe(true);
         stateStub.restore();
     });
 
@@ -141,7 +150,7 @@ describe('DataPackOptions component', () => {
         expect(stateStub.called).toBe(false);
         instance.handleCloneClose();
         expect(stateStub.calledOnce).toBe(true);
-        expect(stateStub.calledWith({ showCloneDialog: false })).toBe(true);
+        expect(stateStub.calledWith({showCloneDialog: false})).toBe(true);
         stateStub.restore();
     });
 
@@ -151,7 +160,7 @@ describe('DataPackOptions component', () => {
         expect(props.onDelete.calledOnce).toBe(true);
         expect(props.onDelete.calledWith(props.dataPack.uid)).toBe(true);
         expect(stateStub.calledOnce).toBe(true);
-        expect(stateStub.calledWith({ showDeleteDialog: false })).toBe(true);
+        expect(stateStub.calledWith({showDeleteDialog: false})).toBe(true);
         stateStub.restore();
     });
 
@@ -161,7 +170,7 @@ describe('DataPackOptions component', () => {
         expect(props.onRerun.calledOnce).toBe(true);
         expect(props.onRerun.calledWith(props.dataPack.job.uid)).toBe(true);
         expect(stateStub.calledOnce).toBe(true);
-        expect(stateStub.calledWith({ showRerunDialog: false })).toBe(true);
+        expect(stateStub.calledWith({showRerunDialog: false})).toBe(true);
         stateStub.restore();
     });
 
@@ -179,7 +188,7 @@ describe('DataPackOptions component', () => {
         expect(props.onClone.calledOnce).toBe(true);
         expect(props.onClone.calledWith(props.dataPack, [props.providers[0]], exportInfo)).toBe(true);
         expect(stateStub.calledOnce).toBe(true);
-        expect(stateStub.calledWith({ showCloneDialog: false })).toBe(true);
+        expect(stateStub.calledWith({showCloneDialog: false})).toBe(true);
         stateStub.restore();
     });
 });

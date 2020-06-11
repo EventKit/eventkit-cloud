@@ -80,7 +80,7 @@ from eventkit_cloud.tasks.models import (
     ExportRun,
     RunZipFile,
 )
-from eventkit_cloud.jobs.models import DataProvider, DataProviderTask
+from eventkit_cloud.jobs.models import DataProviderTask
 
 BLACKLISTED_ZIP_EXTS = [".ini", ".om5", ".osm", ".lck", ".pyc"]
 
@@ -117,7 +117,8 @@ def make_file_downloadable(
         download_filename = filename
 
     if getattr(settings, "USE_S3", False):
-        download_url = s3.upload_to_s3(run_uid, os.path.join(staging_dir, filename), download_filename,)
+        download_path = f"{run_uid}/{download_filename}"
+        download_url = s3.upload_to_s3(os.path.join(staging_dir, filename), download_path)
     else:
         make_dirs(run_download_dir)
 
@@ -143,7 +144,11 @@ class ExportTask(EventKitBaseTask):
         task_uid = kwargs.get("task_uid")
 
         try:
-            task = ExportTaskRecord.objects.get(uid=task_uid)
+            task = (
+                ExportTaskRecord.objects.select_related("export_provider_task__run__job")
+                .select_related("export_provider_task__provider")
+                .get(uid=task_uid)
+            )
 
             check_cached_task_failures(task.name, task_uid)
 
@@ -179,7 +184,7 @@ class ExportTask(EventKitBaseTask):
                 raise Exception("This task was skipped due to previous failures/cancellations.")
 
             try:
-                add_metadata(task.export_provider_task.run.job, task.export_provider_task.slug, retval)
+                add_metadata(task.export_provider_task.run.job, task.export_provider_task.provider, retval)
             except Exception:
                 logger.error(traceback.format_exc())
                 logger.error("Failed to add metadata.")
@@ -511,7 +516,7 @@ def osm_data_collection_task(
     return result
 
 
-def add_metadata(job, provider_slug, retval):
+def add_metadata(job, provider, retval):
     """
     Accepts a job, provider slug, and return value from a task and applies metadata to the relevant file.
 
@@ -524,10 +529,9 @@ def add_metadata(job, provider_slug, retval):
     if result_file is None:
         return
     task = metadata_tasks.get(os.path.splitext(result_file)[1], None)
-    if provider_slug == "run":
+    if not provider:
         return
     if task is not None:
-        provider = DataProvider.objects.get(slug=provider_slug)
         task(filepath=result_file, job=job, provider=provider)
 
 
@@ -1540,7 +1544,8 @@ def create_datapack_preview(
         fit_to_area(preview)
         preview.save(filepath)
 
-        snapshot = make_snapshot_downloadable(filepath, copy=True)
+        download_filename = f"{run_uid}/{provider.slug}/{PREVIEW_TAIL}"
+        snapshot = make_snapshot_downloadable(filepath, download_filename=download_filename, copy=True)
         provider_task_record.preview = snapshot
         provider_task_record.save()
         result["result"] = filepath

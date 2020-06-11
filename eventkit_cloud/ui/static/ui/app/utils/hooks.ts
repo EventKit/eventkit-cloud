@@ -34,18 +34,21 @@ interface RequestState {
     onCancel: () => void;
 }
 
-const initialState = { status: null, response: {}, onCancel: () => {} } as RequestState;
+const initialState = {
+    status: null, response: {}, onCancel: () => {
+    }
+} as RequestState;
 
-function submitReducer(state = initialState, { type = undefined, response = undefined, onCancel=undefined } = {}): RequestState {
+function submitReducer(state = initialState, {type = undefined, response = undefined, onCancel = undefined} = {}): RequestState {
     switch (type) {
         case ACTIONS.FETCHING:
-            return { ...initialState, status: 'fetching', onCancel: onCancel ? onCancel : initialState.onCancel };
+            return {...initialState, status: 'fetching', onCancel: onCancel ? onCancel : initialState.onCancel};
         case ACTIONS.SUCCESS:
-            return { ...state, status: 'success', response };
+            return {...state, status: 'success', response};
         case ACTIONS.ERROR:
-            return { ...state, status: 'error', response };
+            return {...state, status: 'error', response};
         case ACTIONS.CANCEL:
-            return { ...initialState };
+            return {...initialState};
         default:
             return state;
     }
@@ -62,14 +65,14 @@ interface Dispatcher {
 export function useAsyncRequest_Control(): [RequestState, Dispatcher] {
     const [state, dispatch] = useReducer(submitReducer, initialState);
     const dispatches = {
-        fetching: (onCancel: () => void) => dispatch({ onCancel, type: ACTIONS.FETCHING }),
-        success: (response) => dispatch({ type: ACTIONS.SUCCESS, response }),
-        error: (response) => dispatch({ type: ACTIONS.ERROR, response }),
+        fetching: (onCancel: () => void) => dispatch({onCancel, type: ACTIONS.FETCHING}),
+        success: (response) => dispatch({type: ACTIONS.SUCCESS, response}),
+        error: (response) => dispatch({type: ACTIONS.ERROR, response}),
         cancel: () => {
             if (state.onCancel) {
                 state.onCancel();
             }
-            dispatch({ type: ACTIONS.CANCEL })
+            dispatch({type: ACTIONS.CANCEL})
         },
     };
     return [state, dispatches]
@@ -139,11 +142,13 @@ export class DepsHashers {
 
     static stringHash(value: string): number {
         let h;
-        for (let i = 0; i < value.length; i += 1) {
-            // eslint-disable-next-line no-bitwise
-            h = Math.imul(31, h) + value.charCodeAt(i) | 0;
+        if (value) {
+            for (let i = 0; i < value.length; i += 1) {
+                // eslint-disable-next-line no-bitwise
+                h = Math.imul(31, h) + value.charCodeAt(i) | 0;
+            }
+            return h;
         }
-        return h;
     }
 
     static arrayHash(arrayIn: any[], hasher?: (val: any) => number | string): number {
@@ -160,7 +165,7 @@ export class DepsHashers {
     }
 
     static providerEstimate(estimates: Eventkit.Store.Estimates): number {
-        const { size = undefined, time = undefined } = estimates || {};
+        const {size = undefined, time = undefined} = estimates || {};
         if (!size && !time) {
             return DepsHashers.emptyEstimate;
         }
@@ -187,6 +192,7 @@ export function useProvidersLoading(providers: Eventkit.Provider[]): [boolean, (
         slugMap.current[provider.slug] = isLoading;
         setFlag(flag => !flag);
     }
+
     return [areProvidersLoading, setProviderLoading];
 }
 

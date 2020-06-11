@@ -67,6 +67,8 @@ declare namespace Eventkit {
         license: License;
         service_description: string;
         preview_url: string;
+        provider: Provider;
+        hidden: boolean;
     }
 
     interface DataProviderTask {
@@ -93,6 +95,7 @@ declare namespace Eventkit {
         permissions: Permissions;
         provider_tasks: DataProviderTask[];
         projections: Projection[];
+        provider_task_list_status: string;
     }
 
     interface Run {
@@ -109,6 +112,7 @@ declare namespace Eventkit {
         zipfile_url: string;
         expiration: string;
         deleted: boolean;
+        provider_task_list_status: string;
     }
 
     interface FullRun extends Omit<Run, 'provider_tasks'> {
@@ -150,6 +154,7 @@ declare namespace Eventkit {
         export_provider_type: number;
         supported_formats: Format[];
         thumbnail_url: string;
+        hidden: boolean;
     }
 
     interface Format {
@@ -176,6 +181,7 @@ declare namespace Eventkit {
         user: UserData;
         accepted_licenses: { [s: string]: boolean };
         groups: number[];
+        restricted: boolean;
     }
 
     interface Group {
@@ -183,6 +189,7 @@ declare namespace Eventkit {
         name: string;
         members: string[];
         administrators: string[];
+        restricted: boolean;
     }
 
     interface Notification {

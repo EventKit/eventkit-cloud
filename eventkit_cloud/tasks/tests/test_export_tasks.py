@@ -111,7 +111,7 @@ class ExportTaskBase(TestCase):
         self.job.save()
         self.run = ExportRun.objects.create(job=self.job, user=self.user)
         self.provider = DataProvider.objects.first()
-        print(f"{self.provider} EXISTS")
+
 
 class TestExportTasks(ExportTaskBase):
     @patch('celery.app.task.Task.request')

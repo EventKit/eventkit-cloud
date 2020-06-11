@@ -12,11 +12,12 @@ import requests
 from django.conf import settings
 from django.core.cache import cache
 from notifications.signals import notify
+from django.contrib.auth.models import User
 
 logger = logging.getLogger(__name__)
 
 
-def get_id(user):
+def get_id(user: User):
     if hasattr(user, "oauth"):
         return user.oauth.identification
     else:

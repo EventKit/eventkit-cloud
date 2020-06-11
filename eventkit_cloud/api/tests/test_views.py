@@ -18,7 +18,7 @@ from rest_framework.reverse import reverse
 from rest_framework.test import APITestCase
 from eventkit_cloud.api.pagination import LinkHeaderPagination
 from eventkit_cloud.api.views import get_models, get_provider_task, ExportRunViewSet
-from eventkit_cloud.core.models import GroupPermission, GroupPermissionLevel
+from eventkit_cloud.core.models import GroupPermission, GroupPermissionLevel, AttributeClass
 from eventkit_cloud.jobs.models import ExportFormat, Job, DataProvider, \
     DataProviderType, DataProviderTask, bbox_to_geojson, DatamodelPreset, License, VisibilityState, UserJobActivity
 from eventkit_cloud.tasks.enumerations import TaskStates
@@ -56,6 +56,9 @@ class TestJobViewSet(APITestCase):
         self.path = os.path.dirname(os.path.realpath(__file__))
         self.group, created = Group.objects.get_or_create(name='TestDefaultExportExtentGroup')
         self.user = User.objects.create_user(username='demo', email='demo@demo.com', password='demo')
+        self.attribute_class = AttributeClass.objects.create(name="test", slug="test", filter="username=demo")
+        self.attribute_class.users.add(self.user)
+        self.attribute_class.save()
         extents = (-3.9, 16.1, 7.0, 27.6)
         bbox = Polygon.from_bbox(extents)
         original_selection = GeometryCollection(Point(1, 1), LineString((5.625, 48.458), (0.878, 44.339)))
@@ -65,6 +68,8 @@ class TestJobViewSet(APITestCase):
 
         formats = ExportFormat.objects.all()
         self.provider = DataProvider.objects.first()
+        self.provider.attribute_class = self.attribute_class
+        self.provider.save()
         provider_task = DataProviderTask.objects.create(provider=self.provider)
         provider_task.formats.add(*formats)
 
@@ -179,6 +184,22 @@ class TestJobViewSet(APITestCase):
         self.assertEqual(response.data['uid'], data['uid'])
         self.assertEqual(response.data['url'], data['url'])
         self.assertEqual(response.data['exports'][0]['formats'][0]['url'], data['exports'][0]['formats'][0]['url'])
+
+    def test_get_job_detail_no_attribute_class(self, ):
+        self.attribute_class.users.remove(self.user)
+        expected = '/api/jobs/{0}'.format(self.job.uid)
+        url = reverse('api:jobs-detail', args=[self.job.uid])
+        self.assertEqual(expected, url)
+        data = {"uid": str(self.job.uid),
+                "provider_task_list_status": 'EMPTY',
+                "provider_tasks": []}
+        response = self.client.get(url)
+        # test the response headers
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        # test significant content
+        self.assertEqual(response.data['provider_task_list_status'], data['provider_task_list_status'])
+        self.assertEqual(response.data['provider_tasks'], data['provider_tasks'])
 
     def test_get_job_detail_no_permissions(self, ):
         user = User.objects.create_user(username='demo2', email='demo2@demo.com', password='demo')
@@ -715,6 +736,9 @@ class TestExportRunViewSet(APITestCase):
     def setUp(self, ):
         self.group, created = Group.objects.get_or_create(name='TestDefaultExportExtentGroup')
         self.user = User.objects.create_user(username='demo', email='demo@demo.com', password='demo')
+        self.attribute_class = AttributeClass.objects.create(name="test", slug="test", filter="username=demo")
+        self.attribute_class.users.add(self.user)
+        self.attribute_class.save()
 
         token = Token.objects.create(user=self.user)
         self.client.credentials(HTTP_AUTHORIZATION='Token ' + token.key,
@@ -727,8 +751,10 @@ class TestExportRunViewSet(APITestCase):
         self.job = Job.objects.create(name='TestJob', description='Test description', user=self.user,
                                       the_geom=the_geom)
         formats = ExportFormat.objects.all()
-        provider = DataProvider.objects.first()
-        provider_task = DataProviderTask.objects.create(provider=provider)
+        self.provider = DataProvider.objects.first()
+        self.provider.attribute_class = self.attribute_class
+        self.provider.save()
+        provider_task = DataProviderTask.objects.create(provider=self.provider)
         provider_task.formats.add(*formats)
 
         self.job.provider_tasks.add(provider_task)
@@ -815,6 +841,21 @@ class TestExportRunViewSet(APITestCase):
         result = response.data
         # make sure we get the correct uid back out
         self.assertEqual(self.run_uid, result[0].get('uid'))
+
+    def test_retrieve_run_no_attribute_class(self, ):
+        expected = '/api/runs/{0}'.format(self.run_uid)
+        self.attribute_class.users.remove(self.user)
+        url = reverse('api:runs-detail', args=[self.run_uid])
+        self.assertEqual(expected, url)
+        response = self.client.get(url)
+        self.assertIsNotNone(response)
+        expected_result = {"provider_tasks": [],
+                           "provider_task_list_status": "EMPTY"}
+        result = response.data
+        # make sure we get the correct uid back out
+        self.assertEqual(self.run_uid, result[0].get('uid'))
+        self.assertEqual(expected_result['provider_tasks'], result[0]['provider_tasks'])
+        self.assertEqual(expected_result['provider_task_list_status'], result[0]['provider_task_list_status'])
 
     @patch('eventkit_cloud.api.views.ExportRunViewSet.validate_licenses')
     def test_retrieve_run_invalid_license(self, mock_validate_licenses):
@@ -929,6 +970,143 @@ class TestExportRunViewSet(APITestCase):
         self.assertEqual(0, len(result))
 
 
+class TestDataProviderTaskRecordViewSet(APITestCase):
+    """
+    Test cases for ExportTaskViewSet
+    """
+
+    fixtures = ('osm_provider.json', 'datamodel_presets.json',)
+
+    def __init__(self, *args, **kwargs):
+        super(TestDataProviderTaskRecordViewSet, self).__init__(*args, **kwargs)
+        self.user = None
+        self.path = None
+        self.job = None
+        self.celery_uid = None
+        self.client = None
+        self.export_run = None
+        self.data_provider_task_record = None
+        self.task = None
+        self.task_uid = None
+
+    def setUp(self, ):
+        self.path = os.path.dirname(os.path.realpath(__file__))
+        self.group, created = Group.objects.get_or_create(name='TestDefaultExportExtentGroup')
+        self.user = User.objects.create_user(username='demo', email='demo@demo.com', password='demo')
+        self.attribute_class = AttributeClass.objects.create(name="test", slug="test", filter="username=demo")
+        self.attribute_class.users.add(self.user)
+        self.attribute_class.save()
+        bbox = Polygon.from_bbox((-7.96, 22.6, -8.14, 27.12))
+        the_geom = GEOSGeometry(bbox, srid=4326)
+        self.job = Job.objects.create(name='TestJob', description='Test description', user=self.user,
+                                      the_geom=the_geom, visibility=VisibilityState.PUBLIC.value)
+
+        formats = ExportFormat.objects.all()
+        self.provider = DataProvider.objects.first()
+        self.provider.attribute_class = self.attribute_class
+        self.provider.save()
+        provider_task = DataProviderTask.objects.create(provider=self.provider)
+        provider_task.formats.add(*formats)
+
+        self.job.provider_tasks.add(provider_task)
+        self.job.save()
+
+        # setup token authentication
+        token = Token.objects.create(user=self.user)
+        self.client.credentials(HTTP_AUTHORIZATION='Token ' + token.key,
+                                HTTP_ACCEPT='application/json; version=1.0',
+                                HTTP_ACCEPT_LANGUAGE='en',
+                                HTTP_HOST='testserver')
+        self.export_run = ExportRun.objects.create(job=self.job, user=self.user)
+        self.celery_uid = str(uuid.uuid4())
+        self.data_provider_task_record = DataProviderTaskRecord.objects.create(run=self.export_run,
+                                                                               name='Shapefile Export',
+                                                                               provider=self.provider,
+                                                                               status=TaskStates.PENDING.value)
+        self.task = ExportTaskRecord.objects.create(export_provider_task=self.data_provider_task_record,
+                                                    name='Shapefile Export',
+                                                    celery_uid=self.celery_uid, status='SUCCESS')
+        self.task_uid = str(self.task.uid)
+
+    def test_retrieve(self, ):
+        url = reverse('api:provider_tasks-detail', args=[self.data_provider_task_record.uid])
+        response = self.client.get(url)
+        self.assertIsNotNone(response)
+        self.assertEqual(200, response.status_code)
+        # make sure we get the correct uid back out
+        expected_response = {"hidden": False, "display": False}
+        self.assertEqual(str(response.data.get('uid')), str(self.data_provider_task_record.uid))
+
+        self.assertEqual(response.data["hidden"], expected_response['hidden'])
+        self.assertEqual(response.data["display"], expected_response['display'])
+        self.attribute_class.users.remove(self.user)
+        response = self.client.get(url)
+        expected_response = {"hidden": True, "display": False}
+        self.assertEqual(str(response.data.get('uid')), str(self.data_provider_task_record.uid))
+        self.assertEqual(response.data["hidden"], expected_response['hidden'])
+        self.assertEqual(response.data["display"], expected_response['display'])
+
+    def test_list(self, ):
+        url = reverse('api:provider_tasks-list')
+        response = self.client.get(url)
+        self.assertIsNotNone(response)
+        self.assertEqual(200, response.status_code)
+        # make sure we get the correct uid back out
+        expected_response = {"hidden": False, "display": False}
+        self.assertEqual(str(response.data[0].get('uid')), str(self.data_provider_task_record.uid))
+        self.assertEqual(response.data[0]["hidden"], expected_response['hidden'])
+        self.assertEqual(response.data[0]["display"], expected_response['display'])
+        self.attribute_class.users.remove(self.user)
+        response = self.client.get(url)
+        expected_response = {"hidden": True, "display": False}
+        self.assertEqual(str(response.data[0].get('uid')), str(self.data_provider_task_record.uid))
+        self.assertEqual(response.data[0]["hidden"], expected_response['hidden'])
+        self.assertEqual(response.data[0]["display"], expected_response['display'])
+
+    def test_patch_cancel_task(self, ):
+        expected = '/api/provider_tasks/{0}'.format(self.data_provider_task_record.uid)
+        url = reverse('api:provider_tasks-list') + '/%s' % (self.data_provider_task_record.uid,)
+        self.assertEqual(expected, url)
+        response = self.client.patch(url)
+        # test significant content
+        self.assertEqual(response.data, {'success': True})
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        pt = DataProviderTaskRecord.objects.get(uid=self.data_provider_task_record.uid)
+        et = pt.tasks.last()
+
+        self.assertEqual(pt.status, TaskStates.CANCELED.value)
+        self.assertEqual(et.status, TaskStates.SUCCESS.value)
+
+    def test_patch_cancel_task_no_permissions(self, ):
+        user = User.objects.create_user(username='demo2', email='demo2@demo.com', password='demo')
+        self.attribute_class.users.add(user)
+        token = Token.objects.create(user=user)
+        # reset the client credentials to the new user
+        self.client.credentials(HTTP_AUTHORIZATION='Token ' + token.key,
+                                HTTP_ACCEPT='application/json; version=1.0',
+                                HTTP_ACCEPT_LANGUAGE='en',
+                                HTTP_HOST='testserver')
+        expected = '/api/provider_tasks/{0}'.format(self.data_provider_task_record.uid)
+        url = reverse('api:provider_tasks-list') + '/%s' % (self.data_provider_task_record.uid,)
+        self.assertEqual(expected, url)
+        response = self.client.patch(url)
+        # test the response headers
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+        self.assertEqual(response.data, {'success': False})
+        self.assertEqual(response['Content-Type'], 'application/json')
+        self.assertEqual(response['Content-Language'], 'en')
+        self.attribute_class.users.remove(user)
+        response = self.client.patch(url)
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+        self.assertEqual(response.data, {'success': False})
+
+    def test_export_provider_task_get(self):
+        url = reverse('api:provider_tasks-list')
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 200)
+
+
 class TestExportTaskViewSet(APITestCase):
     """
     Test cases for ExportTaskViewSet
@@ -952,14 +1130,17 @@ class TestExportTaskViewSet(APITestCase):
         self.path = os.path.dirname(os.path.realpath(__file__))
         self.group, created = Group.objects.get_or_create(name='TestDefaultExportExtentGroup')
         self.user = User.objects.create_user(username='demo', email='demo@demo.com', password='demo')
+        self.attribute_class = AttributeClass.objects.create(name="test", slug="test", filter="username=demo")
+        self.attribute_class.users.add(self.user)
+        self.attribute_class.save()
         bbox = Polygon.from_bbox((-7.96, 22.6, -8.14, 27.12))
         the_geom = GEOSGeometry(bbox, srid=4326)
         self.job = Job.objects.create(name='TestJob', description='Test description', user=self.user,
                                       the_geom=the_geom, visibility=VisibilityState.PUBLIC.value)
 
         formats = ExportFormat.objects.all()
-        provider = DataProvider.objects.first()
-        provider_task = DataProviderTask.objects.create(provider=provider)
+        self.provider = DataProvider.objects.first()
+        provider_task = DataProviderTask.objects.create(provider=self.provider)
         provider_task.formats.add(*formats)
 
         self.job.provider_tasks.add(provider_task)
@@ -975,7 +1156,7 @@ class TestExportTaskViewSet(APITestCase):
         self.celery_uid = str(uuid.uuid4())
         self.export_provider_task = DataProviderTaskRecord.objects.create(run=self.export_run,
                                                                           name='Shapefile Export',
-                                                                          provider=provider,
+                                                                          provider=self.provider,
                                                                           status=TaskStates.PENDING.value)
         self.task = ExportTaskRecord.objects.create(export_provider_task=self.export_provider_task,
                                                     name='Shapefile Export',
@@ -993,6 +1174,7 @@ class TestExportTaskViewSet(APITestCase):
         data = json.loads(result)
         # make sure we get the correct uid back out
         self.assertEqual(self.task_uid, data[0].get('uid'))
+        response = self.client.get(url)
 
     def test_list(self, ):
         expected = '/api/tasks'.format(self.task_uid)
@@ -1007,46 +1189,6 @@ class TestExportTaskViewSet(APITestCase):
         self.assertEqual(1, len(data))
         # make sure we get the correct uid back out
         self.assertEqual(self.task_uid, data[0].get('uid'))
-
-    def test_patch_cancel_task(self, ):
-        expected = '/api/provider_tasks/{0}'.format(self.export_provider_task.uid)
-        url = reverse('api:provider_tasks-list') + '/%s' % (self.export_provider_task.uid,)
-        self.assertEqual(expected, url)
-        response = self.client.patch(url)
-        # test significant content
-        self.assertEqual(response.data, {'success': True})
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-
-        pt = DataProviderTaskRecord.objects.get(uid=self.export_provider_task.uid)
-        et = pt.tasks.last()
-
-        self.assertEqual(pt.status, TaskStates.CANCELED.value)
-        self.assertEqual(et.status, TaskStates.SUCCESS.value)
-
-    def test_patch_cancel_task_no_permissions(self, ):
-        user = User.objects.create_user(username='demo2', email='demo2@demo.com', password='demo')
-        token = Token.objects.create(user=user)
-        # reset the client credentials to the new user
-        self.client.credentials(HTTP_AUTHORIZATION='Token ' + token.key,
-                                HTTP_ACCEPT='application/json; version=1.0',
-                                HTTP_ACCEPT_LANGUAGE='en',
-                                HTTP_HOST='testserver')
-        expected = '/api/provider_tasks/{0}'.format(self.export_provider_task.uid)
-        url = reverse('api:provider_tasks-list') + '/%s' % (self.export_provider_task.uid,)
-        self.assertEqual(expected, url)
-        response = self.client.patch(url)
-        # test the response headers
-        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
-        self.assertEqual(response['Content-Type'], 'application/json')
-        self.assertEqual(response['Content-Language'], 'en')
-
-        # test significant content
-        self.assertEqual(response.data, {'success': False})
-
-    def test_export_provider_task_get(self):
-        url = reverse('api:provider_tasks-list')
-        response = self.client.get(url)
-        self.assertEqual(response.status_code, 200)
 
 
 class TestStaticFunctions(APITestCase):

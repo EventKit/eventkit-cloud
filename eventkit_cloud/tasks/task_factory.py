@@ -15,8 +15,7 @@ from eventkit_cloud.core.helpers import (
     NotificationVerb,
     NotificationLevel,
 )
-from eventkit_cloud.core.models import JobPermission, JobPermissionLevel
-from eventkit_cloud.jobs.models import Job
+from eventkit_cloud.jobs.models import Job, JobPermission, JobPermissionLevel
 from eventkit_cloud.tasks.export_tasks import (
     finalize_export_provider_task,
     TaskPriority,

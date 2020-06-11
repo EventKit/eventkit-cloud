@@ -1,4 +1,4 @@
-import { createSelector } from 'reselect';
+import {createSelector} from 'reselect';
 
 export const getAllRuns = state => state.exports.data.runs;
 
@@ -23,6 +23,11 @@ export const getPropsJob = createSelector(
 );
 
 export const toFullProviderTask = (providerTask, exportTasks) => {
+    if (providerTask.hidden) {
+        return {
+            ...providerTask,
+        };
+    }
     const tasks = providerTask.tasks.map(id => exportTasks[id]);
     return {
         ...providerTask,
@@ -33,7 +38,7 @@ export const toFullProviderTask = (providerTask, exportTasks) => {
 export const toFullRun = (run, jobs, providerTasks?, exportTasks?) => {
     const runJob = jobs[run.job];
     // check run.provider_tasks, it may be null for deleted tasks, in this case let it be an empty array
-    let runTasks = Array.isArray(run.provider_tasks) ? run.provider_tasks  : [];
+    let runTasks = Array.isArray(run.provider_tasks) ? run.provider_tasks : [];
     if (providerTasks && exportTasks && runTasks) {
         // if provider tasks are present and the full representations are provided, map each
         // provider task to the full provider task representation

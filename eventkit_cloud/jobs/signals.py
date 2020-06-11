@@ -5,8 +5,7 @@ from django.contrib.auth.models import Group, User
 from django.db.models.signals import post_save, pre_delete, pre_save
 from django.dispatch.dispatcher import receiver
 
-from eventkit_cloud.core.models import JobPermission, JobPermissionLevel
-from eventkit_cloud.jobs.models import Job, DataProvider, MapImageSnapshot
+from eventkit_cloud.jobs.models import Job, DataProvider, MapImageSnapshot, JobPermission, JobPermissionLevel
 from eventkit_cloud.jobs.helpers import (
     get_provider_image_dir,
     get_provider_thumbnail_name,
