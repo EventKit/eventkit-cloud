@@ -69,6 +69,7 @@ def get_presigned_url(download_url=None, client=None):
 
     parsed = urlparse(download_url)
     return client.generate_presigned_url(
-        "get_object", Params={"Bucket": settings.AWS_STORAGE_BUCKET_NAME,
-                              "Key": parsed.path.lstrip("/")}, ExpiresIn=300,
+        "get_object",
+        Params={"Bucket": settings.AWS_STORAGE_BUCKET_NAME, "Key": parsed.path.lstrip("/")},
+        ExpiresIn=300,
     )
