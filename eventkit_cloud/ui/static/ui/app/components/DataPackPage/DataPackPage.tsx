@@ -1,8 +1,8 @@
 import * as PropTypes from 'prop-types';
 import * as React from 'react';
-import { connect } from 'react-redux';
-import { withTheme, Theme } from '@material-ui/core/styles';
-import withWidth, { isWidthUp } from '@material-ui/core/withWidth';
+import {connect} from 'react-redux';
+import {withTheme, Theme} from '@material-ui/core/styles';
+import withWidth, {isWidthUp} from '@material-ui/core/withWidth';
 import queryString from 'query-string';
 import * as Joyride from 'react-joyride';
 import Help from '@material-ui/icons/Help';
@@ -20,15 +20,15 @@ import DataPackFilterButton from './DataPackFilterButton';
 import DataPackOwnerSort from './DataPackOwnerSort';
 import DataPackLinkButton from './DataPackLinkButton';
 import FilterDrawer from './FilterDrawer';
-import { getRuns, deleteRun } from '../../actions/datapackActions';
-import { getProviders } from '../../actions/providerActions';
-import { processGeoJSONFile, resetGeoJSONFile } from '../../actions/fileActions';
-import { updateDataCartPermissions } from '../../actions/datacartActions';
-import { setPageOrder, setPageView } from '../../actions/uiActions';
-import { flattenFeatureCollection } from '../../utils/mapUtils';
-import { joyride } from '../../joyride.config';
+import {getRuns, deleteRun} from '../../actions/datapackActions';
+import {getProviders} from '../../actions/providerActions';
+import {processGeoJSONFile, resetGeoJSONFile} from '../../actions/fileActions';
+import {updateDataCartPermissions} from '../../actions/datacartActions';
+import {setPageOrder, setPageView} from '../../actions/uiActions';
+import {flattenFeatureCollection} from '../../utils/mapUtils';
+import {joyride} from '../../joyride.config';
 import history from '../../utils/history';
-import { Breakpoint } from '@material-ui/core/styles/createBreakpoints';
+import {Breakpoint} from '@material-ui/core/styles/createBreakpoints';
 import isEqual from 'lodash/isEqual';
 import {getFormats} from "../../actions/formatActions";
 import {getProjections} from "../../actions/projectionActions";
@@ -110,6 +110,7 @@ export class DataPackPage extends React.Component<Props, State> {
             DATAPACK_PAGE_SIZE: PropTypes.string,
         }),
     };
+
     constructor(props: Props, context) {
         super(props);
         this.getViewRef = this.getViewRef.bind(this);
@@ -198,25 +199,28 @@ export class DataPackPage extends React.Component<Props, State> {
     componentDidUpdate(prevProps: Props) {
         if (prevProps.runsFetched === null && this.props.runsFetched) {
             if (this.state.pageLoading) {
-                this.setState({ pageLoading: false });
+                this.setState({pageLoading: false});
             }
         }
 
         // if a run was just deleted we need to update our state
         if (this.props.runDeletion.deleted && !prevProps.runDeletion.deleted) {
-            this.setState({ loading: true }, this.makeRunRequest);
+            this.setState({loading: true}, this.makeRunRequest);
         }
 
         // if a run was just updated we need to update our state
         if (this.props.updatePermissions.updated && !prevProps.updatePermissions.updated) {
-            this.setState({ loading: true }, this.makeRunRequest);
+            this.setState({loading: true}, this.makeRunRequest);
         }
 
         // if the location query has changed we need to update our state
         let changedQuery = false;
         if (Object.keys(queryString.parse(this.props.location.search)).length
-                !== Object.keys(queryString.parse(prevProps.location.search)).length) {
+            !== Object.keys(queryString.parse(prevProps.location.search)).length) {
             changedQuery = true;
+        }
+        if (this.props.location.search === '') {
+            changedQuery = false;
         } else {
             const keys = Object.keys(queryString.parse(this.props.location.search));
             const previousQuery = queryString.parse(prevProps.location.search);
@@ -227,20 +231,28 @@ export class DataPackPage extends React.Component<Props, State> {
         }
 
         if (changedQuery) {
-            this.setState({ loading: true });
+            this.setState({loading: true});
             this.makeRunRequest();
         }
 
         // if loading is active and we just received updated runs we can stop the loading view
         if (this.state.loading) {
             if (prevProps.runsFetching && !this.props.runsFetching) {
-                this.setState({ loading: false });
+                this.setState({loading: false});
             }
         }
 
-        if (queryString.parse(prevProps.location.search).view !== queryString.parse(this.props.location.search).view) {
-            const steps = this.getJoyRideSteps();
-            this.joyrideAddSteps(steps);
+        if (this.props.location.search === '') {
+            const query = {
+                ...this.defaultQuery,
+            };
+            this.updateLocationQuery(query);
+        } else {
+            if (
+                queryString.parse(prevProps.location.search).view !== queryString.parse(this.props.location.search).view) {
+                const steps = this.getJoyRideSteps();
+                this.joyrideAddSteps(steps);
+            }
         }
     }
 
@@ -256,7 +268,7 @@ export class DataPackPage extends React.Component<Props, State> {
     }
 
     private onSearch(searchText: string) {
-        this.updateLocationQuery({ search: searchText });
+        this.updateLocationQuery({search: searchText});
     }
 
     private getViewRef(instance: HTMLElement) {
@@ -264,6 +276,9 @@ export class DataPackPage extends React.Component<Props, State> {
     }
 
     private getJoyRideSteps(): any[] {
+        if (this.props.location.search === '') {
+            return joyride.DataPackPage.map;
+        }
         switch (queryString.parse(this.props.location.search).view) {
             case 'map':
                 return joyride.DataPackPage.map;
@@ -271,7 +286,8 @@ export class DataPackPage extends React.Component<Props, State> {
                 return joyride.DataPackPage.grid;
             case 'list':
                 return joyride.DataPackPage.list;
-            default: return null;
+            default:
+                return null;
         }
     }
 
@@ -317,7 +333,8 @@ export class DataPackPage extends React.Component<Props, State> {
                         customRef={this.getViewRef}
                     />
                 );
-            default: return null;
+            default:
+                return null;
         }
     }
 
@@ -346,7 +363,7 @@ export class DataPackPage extends React.Component<Props, State> {
     }
 
     private handleSortChange(value: string) {
-        this.updateLocationQuery({ order: value });
+        this.updateLocationQuery({order: value});
     }
 
     private autoRunRequest() {
@@ -378,13 +395,13 @@ export class DataPackPage extends React.Component<Props, State> {
     }
 
     private handleOwnerFilter(value: string) {
-        this.updateLocationQuery({ collection: value });
+        this.updateLocationQuery({collection: value});
     }
 
     private handleFilterApply(state: State) {
-        this.setState({ ...this.state, ...state, loading: true }, this.makeRunRequest);
+        this.setState({...this.state, ...state, loading: true}, this.makeRunRequest);
         if (!isWidthUp('xl', this.props.width)) {
-            this.setState({ open: false });
+            this.setState({open: false});
         }
     }
 
@@ -407,7 +424,7 @@ export class DataPackPage extends React.Component<Props, State> {
             loading: true,
         }, this.makeRunRequest);
         if (!isWidthUp('xl', this.props.width)) {
-            this.setState({ open: false });
+            this.setState({open: false});
         }
     }
 
@@ -416,20 +433,20 @@ export class DataPackPage extends React.Component<Props, State> {
         if (geojson) {
             geom = flattenFeatureCollection(geojson).features[0].geometry;
         }
-        this.setState({ geojson_geometry: geom, loading: true }, this.makeRunRequest);
+        this.setState({geojson_geometry: geom, loading: true}, this.makeRunRequest);
     }
 
     private changeView(view: string) {
         const sharedViewOrders = ['started_at', '-started_at', 'job__name', '-job__name', '-job__featured', 'job__featured'];
         if (sharedViewOrders.indexOf(queryString.parse(this.props.location.search).order) < 0) {
-            this.updateLocationQuery({ view, order: '-started_at' });
+            this.updateLocationQuery({view, order: '-started_at'});
         } else {
-            this.updateLocationQuery({ view });
+            this.updateLocationQuery({view});
         }
     }
 
     private handleToggle() {
-        this.setState({ open: !this.state.open });
+        this.setState({open: !this.state.open});
     }
 
     private loadMore() {
@@ -459,45 +476,45 @@ export class DataPackPage extends React.Component<Props, State> {
             return;
         }
 
-        this.setState({ steps: newSteps });
+        this.setState({steps: newSteps});
     }
 
     private callback(data: any) {
         if (data.action === 'close' || data.action === 'skip' || data.type === 'finished') {
             // This explicitly stops the tour (otherwise it displays a "beacon" to resume the tour)
-            this.setState({ isRunning: false, steps: [] });
+            this.setState({isRunning: false, steps: []});
             this.joyride.reset(true);
         }
         if (data.step) {
             if (data.step.title === 'Filters' && data.type === 'step:before') {
                 if (this.state.open === false) {
-                    this.setState({ open: true });
+                    this.setState({open: true});
                 }
             }
             if (data.step.title === 'Filters' && data.type === 'step:after' && !isWidthUp('xl', this.props.width)) {
-                this.setState({ open: false });
+                this.setState({open: false});
             }
             if (data.step.title === 'Featured DataPacks' && data.type === 'step:before' && !isWidthUp('xl', this.props.width)) {
-                this.setState({ open: false });
+                this.setState({open: false});
             }
             if (data.step.title === 'Menu Options'
                 && data.type === 'step:before'
                 && queryString.parse(this.props.location.search).view === 'list'
                 && !isWidthUp('xl', this.props.width)
             ) {
-                this.setState({ open: false });
+                this.setState({open: false});
             }
         }
     }
 
     private handleJoyride() {
-        const { colors } = this.props.theme.eventkit;
+        const {colors} = this.props.theme.eventkit;
 
         if (this.state.isRunning === true) {
-            this.setState({ isRunning: false });
+            this.setState({isRunning: false});
             this.joyride.reset(true);
         } else {
-            let { view } = this;
+            let {view} = this;
             // react-redux connect does not have good support for forwarded refs
             // so if its a connected component we need to access the wrappedInstance
             if (view.wrappedInstance) {
@@ -505,7 +522,7 @@ export class DataPackPage extends React.Component<Props, State> {
             }
             view.getScrollbar().scrollToTop();
 
-            this.setState({ isRunning: true, steps: [] });
+            this.setState({isRunning: true, steps: []});
             const steps = this.getJoyRideSteps();
 
             const hasFeatured = this.props.runIds.some(id => (this.props.featuredIds.indexOf(id) >= 0));
@@ -557,10 +574,10 @@ export class DataPackPage extends React.Component<Props, State> {
     }
 
     render() {
-        const { colors, images } = this.props.theme.eventkit;
+        const {colors, images} = this.props.theme.eventkit;
 
-        const { steps, isRunning } = this.state;
-        const pageTitle = <div style={{ display: 'inline-block', paddingRight: '10px' }}>DataPack Library</div>;
+        const {steps, isRunning} = this.state;
+        const pageTitle = <div style={{display: 'inline-block', paddingRight: '10px'}}>DataPack Library</div>;
 
         const styles = {
             wholeDiv: {
@@ -602,7 +619,7 @@ export class DataPackPage extends React.Component<Props, State> {
                 backgroundImage: `url(${images.topo_dark})`,
             },
             range: !isWidthUp('md', this.props.width) ?
-                { color: colors.text_primary, lineHeight: '36px', fontSize: '12px' }
+                {color: colors.text_primary, lineHeight: '36px', fontSize: '12px'}
                 :
                 {
                     display: 'inline-block',
@@ -640,7 +657,7 @@ export class DataPackPage extends React.Component<Props, State> {
                 onClick={this.handleJoyride}
                 style={styles.tourButton}
             >
-                <Help style={styles.tourIcon} />
+                <Help style={styles.tourIcon}/>
                 Page Tour
             </ButtonBase>
         );
@@ -649,7 +666,9 @@ export class DataPackPage extends React.Component<Props, State> {
             <div style={styles.backgroundStyle}>
                 <Joyride.default
                     callback={this.callback}
-                    ref={(instance) => { this.joyride = instance; }}
+                    ref={(instance) => {
+                        this.joyride = instance;
+                    }}
                     steps={steps as Joyride.Step[]}
                     autoStart
                     type="continuous"
@@ -674,7 +693,7 @@ export class DataPackPage extends React.Component<Props, State> {
                     title={pageTitle}
                 >
                     {iconElementRight}
-                    <DataPackLinkButton />
+                    <DataPackLinkButton/>
                 </PageHeader>
 
                 <Toolbar className="qa-DataPackPage-Toolbar-search" style={styles.toolbarSearch}>
@@ -720,15 +739,15 @@ export class DataPackPage extends React.Component<Props, State> {
                     />
 
                     {this.state.pageLoading ?
-                        <PageLoading background="transparent" />
+                        <PageLoading background="transparent"/>
                         :
-                        <div style={{ position: 'relative' }} className="qa-DataPackPage-view">
+                        <div style={{position: 'relative'}} className="qa-DataPackPage-view">
                             {this.state.loading ||
                             this.props.runDeletion.deleting ||
                             this.props.updatePermissions.updating ||
                             this.props.importGeom.processing ?
                                 <div style={styles.loadingContainer}>
-                                    <PageLoading background="transparent" partial />
+                                    <PageLoading background="transparent" partial/>
                                 </div>
                                 : null
                             }

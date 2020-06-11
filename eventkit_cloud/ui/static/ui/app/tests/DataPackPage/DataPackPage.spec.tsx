@@ -171,13 +171,6 @@ describe('DataPackPage component', () => {
         expect(updateStub.calledWith(expectedDefault)).toBe(true);
     });
 
-    // it('DataPackSortDropDown handleChange should call handleSortChange', () => {
-    //     const changeStub = sinon.stub(instance, 'handleSortChange');
-    //     wrapper.find(DataPackSortDropDown).props().handleChange('value');
-    //     expect(changeStub.calledOnce).toBe(true);
-    //     expect(changeStub.calledWith('value')).toBe(true);
-    // });
-
     it('should use order and view from props or just default to map and featured', () => {
         browserHistory.reset();
         const order = 'job__featured';
@@ -283,6 +276,22 @@ describe('DataPackPage component', () => {
         wrapper.setProps({ location: { search: queryString.stringify(location.search) } });
         expect(getStub.calledOnce).toBe(true);
         expect(addStub.calledOnce).toBe(true);
+    });
+
+    it('componentDidUpdate should call updateLocationQuery with default query on page refresh', () => {
+        const location = { search: '' };
+        const expectedDefault = {
+            collection: 'all',
+            order: '-job__featured',
+            view: 'map',
+            page_size: Number(config.DATAPACK_PAGE_SIZE),
+            search: null
+        };
+
+        const updateStub = sinon.stub(instance, 'updateLocationQuery');
+        wrapper.setProps({ location });
+        expect(updateStub.called).toBe(true);
+        expect(updateStub.calledWith(expectedDefault)).toBe(true);
     });
 
     it('componentWillUnmount should clear interval', () => {

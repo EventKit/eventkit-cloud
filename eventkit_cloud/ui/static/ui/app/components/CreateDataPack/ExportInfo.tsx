@@ -244,7 +244,6 @@ function StepValidator(props: Props) {
     return null;
 }
 
-
 export class ExportInfo extends React.Component<Props, State> {
     static contextTypes = {
         config: PropTypes.object,

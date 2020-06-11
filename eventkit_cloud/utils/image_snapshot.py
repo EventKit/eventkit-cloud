@@ -171,11 +171,12 @@ def make_snapshot_downloadable(staging_filepath, relative_path=None, download_fi
     filesize = os.stat(staging_filepath).st_size
     thumbnail_snapshot = MapImageSnapshot.objects.create(download_url="", filename=filename, size=filesize)
     if getattr(settings, "USE_S3", False):
-        download_url = s3.upload_to_s3(thumbnail_snapshot.uid, staging_filepath, download_filename,)
+        download_url = s3.upload_to_s3(staging_filepath, download_filename)
     else:
         if relative_path is None:
             relative_path = os.path.split(get_relative_path_from_staging(staging_filepath))[0]
         download_path, download_url = get_download_paths(relative_path)
+        download_url = os.path.join(download_url, filename)
         make_dirs(download_path)
         # Source location (from) gets moved/copied to the destination (to)
         from_to = [staging_filepath, os.path.join(download_path, filename)]
@@ -184,7 +185,7 @@ def make_snapshot_downloadable(staging_filepath, relative_path=None, download_fi
         else:
             shutil.move(*from_to)
 
-    thumbnail_snapshot.download_url = os.path.join(download_url, filename)
+    thumbnail_snapshot.download_url = download_url
     thumbnail_snapshot.save()
 
     return thumbnail_snapshot

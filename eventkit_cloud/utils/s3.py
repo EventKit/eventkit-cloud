@@ -3,6 +3,7 @@ import os
 
 import boto3
 from django.conf import settings
+from urllib.parse import urlparse
 
 logger = logging.getLogger(__name__)
 
@@ -13,7 +14,7 @@ def get_s3_client():
     )
 
 
-def upload_to_s3(run_uuid, source_path, destination_filename, client=None, user_details=None):
+def upload_to_s3(source_path, destination_filename, client=None, user_details=None):
     # This is just to make it easier to trace when user_details haven't been sent
     if user_details is None:
         user_details = {"username": "unknown-upload_to_s3"}
@@ -24,15 +25,13 @@ def upload_to_s3(run_uuid, source_path, destination_filename, client=None, user_
     if not os.path.isfile(source_path):
         raise Exception("The file path given to upload to S3:\n {0} \n Does not exist.".format(source_path))
 
-    asset_remote_path = os.path.join(str(run_uuid), destination_filename)
-
     from audit_logging.file_logging import logging_open
 
     with logging_open(source_path, "rb", user_details=user_details) as asset_file:
-        client.upload_fileobj(Bucket=settings.AWS_STORAGE_BUCKET_NAME, Key=asset_remote_path, Fileobj=asset_file)
+        client.upload_fileobj(Bucket=settings.AWS_STORAGE_BUCKET_NAME, Key=destination_filename, Fileobj=asset_file)
 
     return client.generate_presigned_url(
-        "get_object", Params={"Bucket": settings.AWS_STORAGE_BUCKET_NAME, "Key": asset_remote_path},
+        "get_object", Params={"Bucket": settings.AWS_STORAGE_BUCKET_NAME, "Key": destination_filename},
     ).split("?")[0]
 
 
@@ -68,8 +67,9 @@ def get_presigned_url(download_url=None, client=None):
     if not client:
         client = get_s3_client()
 
-    parts = download_url.split("/")
-    key = "{0}/{1}".format(parts[-2], parts[-1])
+    parsed = urlparse(download_url)
     return client.generate_presigned_url(
-        "get_object", Params={"Bucket": settings.AWS_STORAGE_BUCKET_NAME, "Key": key}, ExpiresIn=300,
+        "get_object",
+        Params={"Bucket": settings.AWS_STORAGE_BUCKET_NAME, "Key": parsed.path.lstrip("/")},
+        ExpiresIn=300,
     )
