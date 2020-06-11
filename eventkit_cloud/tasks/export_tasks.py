@@ -108,7 +108,8 @@ def make_file_downloadable(
         download_filename = filename
 
     if getattr(settings, "USE_S3", False):
-        download_url = s3.upload_to_s3(run_uid, os.path.join(staging_dir, filename), download_filename,)
+        download_path = f"{run_uid}/{download_filename}"
+        download_url = s3.upload_to_s3(os.path.join(staging_dir, filename), download_path)
     else:
         make_dirs(run_download_dir)
 
@@ -172,8 +173,6 @@ class ExportTask(EventKitBaseTask):
             try:
                 add_metadata(task.export_provider_task.run.job, task.export_provider_task.slug, retval)
             except Exception:
-                import traceback
-
                 logger.error(traceback.format_exc())
                 logger.error("Failed to add metadata.")
 
@@ -260,8 +259,6 @@ class ExportTask(EventKitBaseTask):
             task.finished_at = timezone.now()
             task.save()
         except Exception:
-            import traceback
-
             logger.error(traceback.format_exc())
             logger.error(
                 "Cannot update the status of ExportTaskRecord object: no such object has been created for "
@@ -1493,7 +1490,8 @@ def create_datapack_preview(
         fit_to_area(preview)
         preview.save(filepath)
 
-        snapshot = make_snapshot_downloadable(filepath, copy=True)
+        download_filename = f"{run_uid}/{provider.slug}/{PREVIEW_TAIL}"
+        snapshot = make_snapshot_downloadable(filepath, download_filename=download_filename, copy=True)
         provider_task_record.preview = snapshot
         provider_task_record.save()
         result["result"] = filepath
