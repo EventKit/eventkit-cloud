@@ -10,7 +10,7 @@ import {SourcePermissionFilter} from "../../components/DataPackPage/SourcePermis
 
 jest.mock('../../styles/eventkit_theme.js', () => 'colors');
 
-describe('PermissionsBanner component', () => {
+describe('SourcePermissionFilter component', () => {
     const getProps = () => ({
         classes: {},
         theme: {},
@@ -31,41 +31,8 @@ describe('PermissionsBanner component', () => {
     beforeEach(setup);
 
     it('should render the initial collapsed elements', () => {
-        console.log(wrapper.debug());
         expect(wrapper.find(RadioGroup)).toHaveLength(1);
         expect(wrapper.find(Radio)).toHaveLength(3);
         expect(wrapper.find(FormControlLabel)).toHaveLength(3);
     });
-    // it('handleExpand should change the expand more btn to be an expand less btn', () => {
-    //     expect(wrapper.find(PermissionsBanner).props().isOpen).toBe(false);
-    //     expect(wrapper.find(ExpandMoreIcon).exists()).toBe(true);
-    //
-    //     act(() => {
-    //         wrapper
-    //             .find(ButtonBase)
-    //             .first()
-    //             .simulate("click");
-    //     });
-    //     wrapper.update();
-    //     expect(wrapper.find(ExpandLessIcon).exists()).toBe(true);
-    // });
-    // it('handleCloseExpand should change the expand less btn to be an expand more btn', () => {
-    //     act(() => {
-    //         wrapper
-    //             .find(ButtonBase)
-    //             .first()
-    //             .simulate("click");
-    //     });
-    //     wrapper.update();
-    //
-    //     act(() => {
-    //         wrapper
-    //             .find(ButtonBase)
-    //             .at(0)
-    //             .simulate("click");
-    //     });
-    //     wrapper.update();
-    //     expect(wrapper.find(ExpandMoreIcon).exists()).toBe(true);
-    //     expect(wrapper.find(ExpandLessIcon).exists()).toBe(false);
-    // });
 });

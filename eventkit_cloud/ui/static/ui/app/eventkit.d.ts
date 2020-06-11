@@ -181,6 +181,7 @@ declare namespace Eventkit {
         user: UserData;
         accepted_licenses: { [s: string]: boolean };
         groups: number[];
+        restricted: boolean;
     }
 
     interface Group {
@@ -188,6 +189,7 @@ declare namespace Eventkit {
         name: string;
         members: string[];
         administrators: string[];
+        restricted: boolean;
     }
 
     interface Notification {
