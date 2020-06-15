@@ -1,11 +1,20 @@
 import * as React from 'react';
 import * as sinon from 'sinon';
-import { shallow } from 'enzyme';
+import {mount, shallow} from 'enzyme';
 import Card from '@material-ui/core/Card';
 import CardHeader from '@material-ui/core/CardHeader';
-import { MemberRow } from '../../components/DataPackShareDialog/MemberRow';
+import {MemberRow} from '../../components/DataPackShareDialog/MemberRow';
+import NotificationIconPopover from "../../components/DataPackPage/NotificationIconPopover";
 
-describe('GroupRow component', () => {
+jest.mock('../../components/DataPackPage/NotificationIconPopover');
+jest.mock('../../styles/eventkit_theme.js', () => ({
+        eventkit: {
+            colors: {}
+        }
+    })
+);
+
+describe('MemberRow component', () => {
     const getProps = () => ({
         member: {
             user: {
@@ -14,7 +23,9 @@ describe('GroupRow component', () => {
                 last_name: 'one',
                 email: 'user.one@email.com',
             },
+            restricted: true,
             groups: [1],
+            accepted_licenses: {['']: false},
         },
         selected: false,
         handleCheck: sinon.spy(),
@@ -31,7 +42,7 @@ describe('GroupRow component', () => {
     let instance;
 
     const setup = (params = {}, options = {}) => {
-        props = { ...getProps(), ...params };
+        props = {...getProps(), ...params};
         wrapper = shallow(<MemberRow {...props} />, options);
         instance = wrapper.instance();
     };
@@ -44,8 +55,8 @@ describe('GroupRow component', () => {
     });
 
     it('onAdminMouseOver should call handleAdminMouseOver', () => {
-        wrapper.setProps({ selected: true });
-        const tooltip = { key: 'value' };
+        wrapper.setProps({selected: true});
+        const tooltip = {key: 'value'};
         instance.tooltip = tooltip;
         instance.onAdminMouseOver();
         expect(props.handleAdminMouseOver.calledOnce).toBe(true);
@@ -53,7 +64,7 @@ describe('GroupRow component', () => {
     });
 
     it('onAdminMouseOver should not call handleAdminMouseOver', () => {
-        wrapper.setProps({ selected: false });
+        wrapper.setProps({selected: false});
         instance.onAdminMouseOver();
         expect(props.handleAdminMouseOver.called).toBe(false);
     });
@@ -65,10 +76,10 @@ describe('GroupRow component', () => {
 
     it('onKeyDown should call handleAdminCheck', () => {
         const checkStub = sinon.stub(instance, 'handleAdminCheck');
-        const e = { which: 13 };
+        const e = {which: 13};
         instance.onKeyDown(e);
         expect(checkStub.calledOnce).toBe(true);
-        const e2 = { keyCode: 13 };
+        const e2 = {keyCode: 13};
         instance.onKeyDown(e2);
         expect(checkStub.calledTwice).toBe(true);
         checkStub.restore();
@@ -76,22 +87,27 @@ describe('GroupRow component', () => {
 
     it('onKeyDown should not call handleAdminCheck', () => {
         const checkStub = sinon.stub(instance, 'handleAdminCheck');
-        const e = { which: 12, keyCode: 12 };
+        const e = {which: 12, keyCode: 12};
         instance.onKeyDown(e);
         expect(checkStub.called).toBe(false);
         checkStub.restore();
     });
 
     it('handleAdminCheck should call props.handleAdminCheck', () => {
-        wrapper.setProps({ showAdmin: true, selected: true });
+        wrapper.setProps({showAdmin: true, selected: true});
         instance.handleAdminCheck();
         expect(props.handleAdminCheck.calledOnce).toBe(true);
         expect(props.handleAdminCheck.calledWith(props.member)).toBe(true);
     });
 
     it('handleAdminCheck should not call props.handleAdminCheck', () => {
-        wrapper.setProps({ showAdmin: true, selected: false });
+        wrapper.setProps({showAdmin: true, selected: false});
         instance.handleAdminCheck();
         expect(props.handleAdminCheck.called).toBe(false);
+    });
+
+    it('should render the warning icon next to a user who is restricted to view any data sources', () => {
+        const newWrapper = mount(<MemberRow {...getProps()}/>);
+        expect(newWrapper.find(NotificationIconPopover)).toHaveLength(1);
     });
 });

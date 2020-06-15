@@ -8,7 +8,7 @@ import {UnavailableFilterPopup} from "../../components/DataPackPage/UnavailableF
 
 jest.mock('../../styles/eventkit_theme.js', () => 'colors');
 
-describe('PermissionsBanner component', () => {
+describe('UnavailableFilterPopup component', () => {
     const getProps = () => ({
         classes: {},
         theme: {},

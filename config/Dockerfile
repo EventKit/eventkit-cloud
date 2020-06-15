@@ -23,7 +23,7 @@ RUN curl -L https://repo.continuum.io/miniconda/Miniconda3-4.7.10-Linux-x86_64.s
     echo "y" | conda update -n root --all && \
     conda config --add channels local && \
     conda config --add channels file://var/lib/eventkit/conda/repo && \
-    conda config --set channel_priority strict && \
+    conda config --set channel_priority flexible && \
     conda env create --file environment-dev.yml python=3.6 && \
     conda clean --yes --all && \
     /home/eventkit/miniconda3/envs/eventkit-cloud/bin/python \

@@ -14,6 +14,7 @@ import {getUsers} from '../../actions/usersActions';
 
 export interface Props {
     public: boolean;
+    view: 'groups' | 'members';
     getUsers: (args: any, append: boolean) => void;
     nextPage: boolean;
     userCount: number;
@@ -376,6 +377,7 @@ export class PermissionsFilterMembersBody extends React.Component<Props, State> 
                         const admin = this.props.selectedMembers[member.user.username] === 'ADMIN';
                         return (
                             <MemberRow
+                                view={this.props.view}
                                 key={member.user.username}
                                 showAdmin={this.props.canUpdateAdmin}
                                 member={member}

@@ -102,7 +102,7 @@ export class ShareBaseDialog extends React.Component<Props, {}> {
         return (
             <Dialog
                 className="qa-ShareBaseDialog-Dialog"
-                style={{ zIndex: 1501 }}
+                style={{ top: '50px' }}
                 open={this.props.show}
                 onClose={this.props.onClose}
                 PaperProps={{ style: styles.dialog }}
