@@ -5,7 +5,7 @@ import CustomTableRow from "../common/CustomTableRow";
 import CustomTextField from "../common/CustomTextField";
 import {CircularProgress, createStyles, Theme, withStyles, withTheme} from "@material-ui/core";
 import {useEffect} from "react";
-import {getCookie} from "../../utils/generic";
+import {ensureErrorShape, getCookie} from "../../utils/generic";
 import {
     useAccessibleRef,
     useAsyncRequest,
@@ -212,7 +212,7 @@ export function RequestDataSource(props: Props) {
     }
 
     function renderErrorMessage() {
-        const { data = { errors: [] } } = !!response ? response.response : {};
+        const {data} = response.response;
         return (
             <>
                 <div
