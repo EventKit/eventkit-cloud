@@ -5,7 +5,7 @@ import CustomTableRow from "../common/CustomTableRow";
 import CustomTextField from "../common/CustomTextField";
 import {CircularProgress, createStyles, Theme, withStyles, withTheme} from "@material-ui/core";
 import {useEffect} from "react";
-import {ensureErrorShape, getCookie} from "../../utils/generic";
+import {getCookie} from "../../utils/generic";
 import {
     useAccessibleRef,
     useAsyncRequest,
