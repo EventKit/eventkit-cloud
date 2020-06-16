@@ -1,13 +1,12 @@
+import dateutil.parser
 import json
 import logging
-from datetime import datetime, timedelta
-
-import dateutil.parser
 import pytz
 import requests
+from datetime import datetime, timedelta
 from django.conf import settings
-from django.contrib.auth import logout as auth_logout
 from django.contrib.auth import authenticate
+from django.contrib.auth import logout as auth_logout
 from django.contrib.auth.models import User
 from django.shortcuts import redirect
 
@@ -77,9 +76,26 @@ def fetch_user_from_token(access_token):
         raise OAuthError(status_code)
 
     orig_data = response.json()
+    logger.debug(f"OAUTH PROFILE DATA: {orig_data}")
     user_data = get_user_data_from_schema(orig_data)
 
     return get_user(user_data, orig_data)
+
+
+def clean_data(user_data: dict) -> dict:
+    """
+    A helper method to remove values that can't be stored in postgres jsonfield
+    https://stackoverflow.com/questions/31671634/handling-unicode-sequences-in-postgresql
+    :param user_data: A dict
+    :return: the dict with "dirty" values removed.
+    """
+    cleaned_data = {}
+    for field, value in user_data.items():
+        try:
+            cleaned_data[field] = value.replace("\u0000", " ")
+        except Exception:
+            logger.debug(f"Unable to encode {field}")
+    return cleaned_data
 
 
 def get_user(user_data, orig_data=None):
@@ -90,7 +106,6 @@ def get_user(user_data, orig_data=None):
     :return:
     """
     oauth = OAuth.objects.filter(identification=user_data.get("identification")).first()
-    user = None
     if not oauth:
         if orig_data is None:
             orig_data = {}
@@ -113,8 +128,9 @@ def get_user(user_data, orig_data=None):
             logger.error(f"USER DATA: {user_data}")
             raise e
         try:
+            cleaned_data = clean_data(orig_data)
             OAuth.objects.create(
-                user=user, identification=identification, commonname=commonname, user_info=orig_data,
+                user=user, identification=identification, commonname=commonname, user_info=cleaned_data,
             )
         except Exception as e:
             logger.error(
@@ -122,10 +138,11 @@ def get_user(user_data, orig_data=None):
                 "it most likely caused by OAUTH_PROFILE_SCHEMA mapping is incorrect and/or not providing "
                 "a valid identification and commonname."
             )
+            logger.error(f"user identification: {identification}")
+            logger.error(f"user commonname: {commonname}")
+            logger.error(f"user orig_data: {orig_data}")
             user.delete()
             raise e
-        user_data["identification"] = identification
-        user_data["commonname"] = commonname
     else:
         # If logging back in, update their info.
         oauth.user_info = orig_data or oauth.user_info
