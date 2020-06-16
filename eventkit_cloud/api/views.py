@@ -11,7 +11,7 @@ from django.contrib.auth.models import User, Group
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.gis.geos import GEOSException, GEOSGeometry
 from django.db import transaction
-from django.db.models import Q
+from django.db.models import Q, Count
 from django.shortcuts import redirect, render
 from django.utils.translation import ugettext as _
 from django_filters.rest_framework import DjangoFilterBackend
@@ -39,30 +39,32 @@ from eventkit_cloud.api.renderers import (
     PlainTextRenderer,
 )
 from eventkit_cloud.api.serializers import (
-    ExportFormatSerializer,
-    ExportRunSerializer,
-    ProjectionSerializer,
-    ExportTaskRecordSerializer,
-    JobSerializer,
-    RegionMaskSerializer,
-    DataProviderTaskRecordSerializer,
-    RegionSerializer,
-    ListJobSerializer,
-    ProviderTaskSerializer,
-    DataProviderSerializer,
-    LicenseSerializer,
-    UserDataSerializer,
-    GroupSerializer,
-    UserJobActivitySerializer,
-    NotificationSerializer,
-    GroupUserSerializer,
     AuditEventSerializer,
     DataProviderRequestSerializer,
-    SizeIncreaseRequestSerializer,
+    DataProviderSerializer,
+    DataProviderTaskRecordSerializer,
+    ExportFormatSerializer,
+    ExportRunSerializer,
+    ExportTaskRecordSerializer,
     FilteredDataProviderSerializer,
     FilteredDataProviderTaskRecordSerializer,
+    GroupSerializer,
+    GroupUserSerializer,
+    JobSerializer,
+    LicenseSerializer,
+    ListJobSerializer,
+    NotificationSerializer,
+    ProjectionSerializer,
+    ProviderTaskSerializer,
+    RegionMaskSerializer,
+    RegionSerializer,
+    RunZipFileSerializer,
+    SizeIncreaseRequestSerializer,
+    UserDataSerializer,
+    UserJobActivitySerializer,
 )
 from eventkit_cloud.api.validators import validate_bbox_params, validate_search_bbox
+from eventkit_cloud.api.utils import get_run_zip_file
 from eventkit_cloud.core.helpers import (
     sendnotification,
     NotificationVerb,
@@ -95,9 +97,10 @@ from eventkit_cloud.tasks.export_tasks import (
     cancel_export_provider_task,
 )
 from eventkit_cloud.tasks.models import (
+    DataProviderTaskRecord,
     ExportRun,
     ExportTaskRecord,
-    DataProviderTaskRecord,
+    RunZipFile,
     prefetch_export_runs,
 )
 from eventkit_cloud.tasks.task_factory import (
@@ -1265,6 +1268,25 @@ class ExportRunViewSet(viewsets.ModelViewSet):
         * return: The status of the update.
         """
         return super(ExportRunViewSet, self).update(self, request, uid, *args, **kwargs)
+
+
+class RunZipFileViewSet(viewsets.ModelViewSet):
+    serializer_class = RunZipFileSerializer
+
+    def get_queryset(self):
+        queryset = RunZipFile.objects.all()
+        query_params = self.request.query_params
+
+        run_uid = query_params.get("run_uid")
+        if run_uid is not None:
+            queryset = queryset.filter(run__uid=run_uid)
+
+        data_provider_task_record_uids = query_params.get("data_provider_task_record_uids", [])
+        if data_provider_task_record_uids:
+            data_provider_task_record_uids = data_provider_task_record_uids.split(",")
+            queryset = get_run_zip_file(data_provider_task_record_uids)
+
+        return queryset
 
 
 class ExportTaskViewSet(viewsets.ReadOnlyModelViewSet):

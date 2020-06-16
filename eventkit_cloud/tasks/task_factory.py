@@ -283,6 +283,7 @@ def create_run(job_uid, user=None):
 def create_task(
     data_provider_task_record_uid=None,
     data_provider_task_record_uids=None,
+    run_zip_file_uid=None,
     stage_dir=None,
     worker=None,
     selection=None,
@@ -326,6 +327,7 @@ def create_task(
         provider_slug=export_provider_task_slug,
         data_provider_task_record_uid=data_provider_task_record_uid,
         data_provider_task_record_uids=data_provider_task_record_uids,
+        run_zip_file_uid=run_zip_file_uid,
         job_name=job_name,
         user_details=user_details,
         bbox=export_provider_task.run.job.extents,
@@ -334,12 +336,13 @@ def create_task(
 
 
 def get_zip_task_chain(
-    data_provider_task_record_uid=None, data_provider_task_record_uids=None, worker=None, stage_dir=None
+    data_provider_task_record_uid=None, data_provider_task_record_uids=None, run_zip_file_uid=None, worker=None, stage_dir=None
 ):
     return chain(
         create_task(
             data_provider_task_record_uid=data_provider_task_record_uid,
             data_provider_task_record_uids=data_provider_task_record_uids,
+            run_zip_file_uid=run_zip_file_uid,
             stage_dir=stage_dir,
             worker=worker,
             task=create_zip_task,

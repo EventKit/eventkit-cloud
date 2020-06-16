@@ -21,6 +21,7 @@ from rest_framework import serializers
 from rest_framework_gis import serializers as geo_serializers
 
 from . import validators
+from eventkit_cloud.api.utils import get_run_zip_file
 from eventkit_cloud.core.models import GroupPermission, GroupPermissionLevel, attribute_class_filter
 from eventkit_cloud.jobs.models import (
     ExportFormat,
@@ -37,12 +38,14 @@ from eventkit_cloud.jobs.models import (
     JobPermission,
 )
 from eventkit_cloud.tasks.models import (
-    ExportRun,
-    ExportTaskRecord,
-    ExportTaskException,
-    FileProducingTaskResult,
     DataProviderTaskRecord,
+    ExportRun,
+    ExportTaskException,
+    ExportTaskRecord,
+    FileProducingTaskResult,
+    RunZipFile,
 )
+from eventkit_cloud.tasks.views import generate_zipfile
 from eventkit_cloud.user_requests.models import DataProviderRequest, SizeIncreaseRequest
 from eventkit_cloud.utils.s3 import get_presigned_url
 
@@ -458,6 +461,72 @@ class ExportRunSerializer(serializers.ModelSerializer):
     def get_expiration(self, obj):
         if not obj.deleted:
             return obj.expiration
+
+
+class RunZipFileSerializer(serializers.ModelSerializer):
+
+    data_provider_task_records = serializers.SerializerMethodField()
+    run = serializers.SerializerMethodField()
+    status = serializers.SerializerMethodField()
+    url = serializers.SerializerMethodField()
+
+    class Meta:
+        model = RunZipFile
+        fields = "__all__"
+
+    def get_data_provider_task_records(self, obj):
+        request = self.context["request"]
+        data = []
+        provider_tasks, filtered_provider_tasks = attribute_class_filter(
+            obj.data_provider_task_records.all(), request.user
+        )
+        if provider_tasks.count() > 1:  # The will always be a run task.
+            data = DataProviderListSerializer(provider_tasks, many=True, context=self.context).data
+
+        if filtered_provider_tasks:
+            data += DataProviderListSerializer(filtered_provider_tasks, many=True, context=self.context).data
+
+        return data
+
+    def get_run(self, obj):
+        if obj.run:
+            return obj.run.uid
+        return ""
+
+    def get_status(self, obj):
+        request = self.context["request"]
+        if obj.run:
+            run = ExportRun.objects.get(uid=obj.run.uid)
+            provider_tasks, filtered_provider_tasks = attribute_class_filter(run.provider_tasks.all(), request.user)
+            if run.provider_tasks.filter(name="run") and not filtered_provider_tasks:
+                return run.provider_tasks.get(name="run").tasks.filter(name__icontains="zip")[0].status
+
+        return ""
+
+    def get_url(self, obj):
+        request = self.context["request"]
+        if obj.run:
+            run = ExportRun.objects.get(uid=obj.run.uid)
+            provider_tasks, filtered_provider_tasks = attribute_class_filter(run.provider_tasks.all(), request.user)
+            if run.provider_tasks.filter(name="run") and not filtered_provider_tasks:
+                task_downloadable = run.provider_tasks.get(name="run").tasks.filter(name__icontains="zip")[0].result
+                if task_downloadable:
+                    return request.build_absolute_uri("/download?uid={}".format(task_downloadable.uid))
+
+        return ""
+
+    def create(self, validated_data, **kwargs):
+        request = self.context["request"]
+        data_provider_task_record_uids = request.data.get("data_provider_task_record_uids")
+        queryset = get_run_zip_file(data_provider_task_record_uids)
+        # If there are no results, that means there's no zip file and we need to create one.
+        if not queryset.exists():
+            obj = RunZipFile.objects.create()
+            generate_zipfile(data_provider_task_record_uids, obj.uid)
+            return obj
+        else:
+            # TODO: I think this could be done better, perhaps in the validator.
+            raise serializers.ValidationError("Duplicate Zip File already exists.")
 
 
 class GroupPermissionSerializer(serializers.ModelSerializer):

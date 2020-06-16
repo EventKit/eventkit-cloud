@@ -348,6 +348,6 @@ def prefetch_export_runs(queryset_list_or_model):
 
 class RunZipFile(UIDMixin, TimeStampedModelMixin, TimeTrackingModelMixin):
 
-    run = models.ForeignKey(ExportRun, on_delete=models.CASCADE, related_name="zip_files")
+    run = models.ForeignKey(ExportRun, on_delete=models.CASCADE, related_name="zip_files", null=True, blank=True)
     data_provider_task_records = models.ManyToManyField(DataProviderTaskRecord)
-    downloadable_file = models.ForeignKey(FileProducingTaskResult, on_delete=models.CASCADE)
+    downloadable_file = models.ForeignKey(FileProducingTaskResult, on_delete=models.CASCADE, null=True, blank=True)

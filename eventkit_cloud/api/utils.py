@@ -1,10 +1,15 @@
 import logging
 
 from django.conf import settings
+from django.db.models import Count
+
+from functools import reduce
 import rest_framework.status
 from rest_framework.exceptions import ValidationError
 from rest_framework.response import Response
 from rest_framework.views import exception_handler
+
+from eventkit_cloud.tasks.models import RunZipFile
 
 logger = logging.getLogger(__name__)
 
@@ -106,3 +111,14 @@ def stringify(item):
         return ""
     else:
         raise Exception("Stringify doesn't support items of type {0}".format(type(item)))
+
+
+def get_run_zip_file(data_provider_task_record_uids):
+    initial_qs = RunZipFile.objects.annotate(cnt=Count("data_provider_task_records")).filter(
+        cnt=len(data_provider_task_record_uids)
+    )
+    queryset = reduce(
+        lambda qs, uid: qs.filter(data_provider_task_records__uid=uid), data_provider_task_record_uids, initial_qs
+    )
+
+    return queryset

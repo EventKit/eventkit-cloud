@@ -342,6 +342,14 @@ class FormatTask(ExportTask):
 
 class ZipFileTask(FormatTask):
     def __call__(self, *args, **kwargs):
+        run = ExportRun.objects.get(uid=kwargs["run_uid"])
+        if kwargs["run_zip_file_uid"]:
+            run_zip_file = RunZipFile.objects.get(uid=kwargs["run_zip_file_uid"])
+            run_zip_file.run = run
+        else:
+            run_zip_file = RunZipFile.objects.create(run=run)
+            kwargs["run_zip_file_uid"] = run_zip_file.uid
+
         retval = super(ZipFileTask, self).__call__(*args, **kwargs)
 
         if not kwargs["data_provider_task_record_uids"]:
@@ -353,11 +361,12 @@ class ZipFileTask(FormatTask):
         else:
             data_provider_task_record_uids = kwargs["data_provider_task_record_uids"]
 
-        run = ExportRun.objects.get(uid=kwargs["run_uid"])
         data_provider_task_records = DataProviderTaskRecord.objects.filter(uid__in=data_provider_task_record_uids)
         downloadable_file = FileProducingTaskResult.objects.get(id=retval["file_producing_task_result_id"])
-        run_zip_file = RunZipFile.objects.create(run=run, downloadable_file=downloadable_file)
+        run_zip_file.downloadable_file = downloadable_file
         run_zip_file.data_provider_task_records.set(data_provider_task_records)
+        run_zip_file.finished_at = timezone.now()
+        run_zip_file.save()
         return retval
 
 
@@ -416,12 +425,7 @@ def osm_data_collection_pipeline(
     )
     geom = Polygon.from_bbox(bbox)
     g = geopackage.Geopackage(
-        pbf_filepath,
-        gpkg_filepath,
-        stage_dir,
-        feature_selection,
-        geom,
-        export_task_record_uid=export_task_record_uid,
+        pbf_filepath, gpkg_filepath, stage_dir, feature_selection, geom, export_task_record_uid=export_task_record_uid,
     )
     g.run(subtask_start=77, subtask_percentage=8, eta=eta)  # 77% to 85%
 
@@ -1161,7 +1165,9 @@ def wait_for_providers_task(result=None, apply_args=None, run_uid=None, callback
 @app.task(name="Project File (.zip)", base=ZipFileTask, acks_late=True)
 def create_zip_task(
     result: dict = None,
+    data_provider_task_record_uid: List[str] = None,
     data_provider_task_record_uids: List[str] = None,
+    run_zip_file_uid=None,
     *args,
     **kwargs,
 ):
@@ -1202,11 +1208,16 @@ def create_zip_task(
         # some intermediate tasks produce files with the same name.
         # and add the static resources
         include_files = set(include_files)
+
+        if run_zip_file_uid:
+            zip_file_name = f"{metadata['name']}-{run_zip_file_uid}.zip"
+        else:
+            zip_file_name = f"{metadata['name']}.zip"
+
         result["result"] = zip_files(
             include_files=include_files,
             file_path=os.path.join(
-                get_provider_staging_dir(metadata["run_uid"], data_provider_task_record_slug),
-                "{0}.zip".format(metadata["name"]),
+                get_provider_staging_dir(metadata["run_uid"], data_provider_task_record_slug), zip_file_name,
             ),
             static_files=get_style_files(),
         )

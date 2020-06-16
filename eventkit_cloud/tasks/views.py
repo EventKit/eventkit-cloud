@@ -53,9 +53,8 @@ def download(request):
     return redirect(url)
 
 
-def generate_zipfile(request):
-    data = json.loads(request.body)
-    data_provider_task_record_uids = data.get("data_provider_task_record_uids")
+def generate_zipfile(data_provider_task_record_uids, run_zip_file_uid):
+
     # Check to make sure the UIDs are all from the same ExportRun.
     runs = ExportRun.objects.filter(provider_tasks__uid__in=data_provider_task_record_uids).distinct()
     if runs.count() != 1:
@@ -80,6 +79,7 @@ def generate_zipfile(request):
     run_zip_task_chain = get_zip_task_chain(
         data_provider_task_record_uid=run.provider_tasks.get(slug="run").uid,
         data_provider_task_record_uids=data_provider_task_record_uids,
+        run_zip_file_uid=run_zip_file_uid,
         stage_dir=stage_dir,
     )
     run_zip_task_chain.apply_async()
