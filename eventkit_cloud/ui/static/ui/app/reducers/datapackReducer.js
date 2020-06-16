@@ -228,6 +228,7 @@ const allViewedIds = (state = exports.viewedInfo.ids, action) => {
 const orderedIdReducer = (state = exports.orderedIds, action) => {
     switch (action.type) {
         case types.RECEIVED_RUNS: {
+            // return isEqual(state, action.payload.orderedIds) ? state : state.concat(action.payload.orderedIds);
             return isEqual(state, action.payload.orderedIds) ? state : action.payload.orderedIds;
         }
         case types.DELETED_RUN: {
@@ -250,6 +251,7 @@ const getStatusReducer = (inputTypeMap, inputState = {}) => {
                 return {
                     ...state,
                     fetching: true,
+                    fetched: false,
                     error: null,
                     cancelSource: action.cancelSource,
                 };
@@ -264,6 +266,9 @@ const getStatusReducer = (inputTypeMap, inputState = {}) => {
                 return {
                     fetching: false,
                     fetched: false,
+                    orderedIds: [],
+                    range: '',
+                    nextPage: false,
                     error: action.error,
                     cancelSource: null,
                 };

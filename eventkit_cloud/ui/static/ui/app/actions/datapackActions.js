@@ -72,7 +72,7 @@ export function clearDataCartDetails() {
     return { type: types.CLEAR_DATACART_DETAILS };
 }
 
-export function getRuns(args = {}) {
+export function getRuns(args = {}, append = false) {
     const status = [];
     if (args.status) {
         Object.keys(args.status).forEach((key) => {
@@ -86,6 +86,7 @@ export function getRuns(args = {}) {
     const projections = (args.projections) ? Object.keys(args.projections) : [];
     const params = { slim: 'true' };
     params.page_size = args.page_size;
+    params.page = args.page;
     if (args.ordering) {
         params.ordering = args.ordering.includes('featured')
             ? `${args.ordering},-started_at`
@@ -127,6 +128,7 @@ export function getRuns(args = {}) {
         ],
         auto: args.isAuto,
         cancellable: true,
+        // payload: { append },
         getCancelSource: state => state.exports.allInfo.status.cancelSource,
         url: '/api/runs/filter',
         method: 'POST',
