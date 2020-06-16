@@ -508,7 +508,7 @@ class Job(UIDMixin, TimeStampedModelMixin):
     @property
     def attribute_classes(self):
         providers = [provider_task.provider for provider_task in self.provider_tasks.all()]
-        return AttributeClass.objects.filter(dataprovider__in=providers).distinct()
+        return AttributeClass.objects.filter(data_providers__in=providers).distinct()
 
 
 class RegionMask(models.Model):
