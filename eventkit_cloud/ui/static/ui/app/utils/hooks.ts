@@ -1,5 +1,8 @@
 import {useCallback, useEffect, useReducer, useRef, useState} from "react";
 import axios from "axios";
+import {Simulate} from "react-dom/test-utils";
+import error = Simulate.error;
+import {ensureErrorShape} from "./generic";
 
 // Convenience function that acts like componentDidMount.
 // useEffect replaces componentDidMount AND componentDidUpdate
@@ -91,7 +94,15 @@ export function useAsyncRequest(): [RequestState, (params: any) => Promise<void>
             });
             dispatches.success(response);
         } catch (e) {
-            dispatches.error(e);
+            // Make sure response conforms to a shape that will prevent crashes.
+            const errorResponse = {
+                ...e,
+                response: {
+                    ...e.response || {data: undefined},
+                }
+            }
+            errorResponse.response.data = ensureErrorShape(errorResponse.response.data)
+            dispatches.error(errorResponse);
         }
     }, []);
     return [state, makeRequest, dispatches.cancel];

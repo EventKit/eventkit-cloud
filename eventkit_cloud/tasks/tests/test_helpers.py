@@ -147,6 +147,7 @@ class TestHelpers(TestCase):
         for fname in [sample_file]:
             mps = MagicMock()
             mps.result.filename = fname
+            mps.name = "something EPSG:4326"
             mps.status = TaskStates.COMPLETED.value
             mocked_provider_subtasks.append(mps)
 
@@ -154,7 +155,7 @@ class TestHelpers(TestCase):
         mocked_provider_task.name = expected_provider_task_name = "example_name"
         mocked_provider_task.status = TaskStates.COMPLETED.value
         mocked_provider_task.provider.slug = expected_provider_slug = 'example_slug'
-        mocked_provider_task.tasks.all.return_value = mocked_provider_subtasks
+        mocked_provider_task.tasks.filter.return_value = mocked_provider_subtasks
         mocked_provider_task.uid = expected_provider_task_uid = '5678'
         mock_DataProviderTaskRecord.objects.get.return_value = mocked_provider_task
 
@@ -203,6 +204,7 @@ class TestHelpers(TestCase):
                                "file_ext": split_file[1],
                                "full_file_path": os.path.join(stage_dir, expected_provider_slug,
                                                               sample_file),
+                               "projection": '4326'
                                }],
                     "last_update": expected_last_update,
                     "metadata": expected_metadata_url,
