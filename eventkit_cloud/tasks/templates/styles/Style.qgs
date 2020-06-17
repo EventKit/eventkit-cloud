@@ -10,7 +10,7 @@
       {% for provider in provider_details %}
       {% if provider.type == "nome" %}
       {% for file_details in provider.files %}
-      <layer-tree-group expanded="0" checked="Qt::Checked" name="{{ provider.name }}_{{ file_details.projection }}_{{ file_details.file_ext|slugify }}">
+      <layer-tree-group expanded="0" checked="Qt::Checked" name="{{ provider.name }}-{{ file_details.projection }}-{{ job_date_time|slice:":8" }}-{{ file_details.file_ext|slugify }}">
         <customproperties/>
         <layer-tree-layer expanded="1" providerKey="ogr" checked="Qt::Checked" id="{{ job_name.split|join:"_" }}_places_points_any_{{ provider.slug}}_{{ file_details.projection }}_{{ job_date_time }}_{{ file_details.file_ext|slugify }}" source="{% if file_details.file_ext == '.zip'%}/vsizip/{% endif %}./{{ file_details.file_path }}|layername=places_points" name="place label">
           <customproperties/>
@@ -71,7 +71,7 @@
       {%  endif %}
       {% if provider.type == "osm" %}
       {% for file_details in provider.files %}
-      <layer-tree-group expanded="0" checked="Qt::Checked" name="{{ provider.name }}_{{ file_details.projection }}_{{ file_details.file_ext|slugify }}">
+      <layer-tree-group expanded="0" checked="Qt::Checked" name="{{ provider.name }}-{{ file_details.projection }}-{{ job_date_time|slice:":8" }}-{{ file_details.file_ext|slugify }}">
         <customproperties/>
         <layer-tree-layer expanded="1" providerKey="ogr" checked="Qt::Checked" id="{{ job_name.split|join:"_" }}_places_points_any_{{ provider.slug}}_{{ file_details.projection }}_{{ job_date_time }}_{{ file_details.file_ext|slugify }}" source="{% if file_details.file_ext == '.zip'%}/vsizip/{% endif %}./{{ file_details.file_path }}|layername=places_points" name="place label">
           <customproperties/>
@@ -146,7 +146,7 @@
       {% if provider.type == "raster" %}
       {% for file_details in provider.files %}
           {{ job_name }}_{{ provider.slug }}_{{ file_details.projection }}_{{ job_date_time }}_{{ file_details.file_ext|slugify }}
-      <layer-tree-layer expanded="1" providerKey="gdal" checked="Qt::Checked" id="{{ job_name }}_{{ provider.slug }}_{{ job_date_time }}_{{ file_details.file_ext|slugify}}" source="{% if file_details.file_ext == '.zip'%}/vsizip/{% endif %}./{{ file_details.file_path }}" name="{{ provider.name }}-{{ file_details.projection }}-{{ file_details.file_ext|slugify }}">
+      <layer-tree-layer expanded="1" providerKey="gdal" checked="Qt::Checked" id="{{ job_name }}_{{ provider.slug }}_{{ job_date_time }}_{{ file_details.file_ext|slugify}}" source="{% if file_details.file_ext == '.zip'%}/vsizip/{% endif %}./{{ file_details.file_path }}" name="{{ provider.name }}-{{ file_details.projection }}-{{ job_date_time|slice:":8" }}-{{ file_details.file_ext|slugify }}">
         <customproperties/>
       </layer-tree-layer>
       {% endfor %}
@@ -160,7 +160,7 @@
       {% for provider in provider_details %}
       {% if provider.type == "elevation" %}
       {% for file_details in provider.files %}
-      <layer-tree-layer expanded="1" providerKey="gdal" checked="Qt::Checked" id="{{ job_name }}_{{ provider.slug }}_{{ file_details.projection }}_{{ job_date_time }}_{{ file_details.file_ext|slugify }}" source="{% if file_details.file_ext == '.zip'%}/vsizip/{% endif %}./{{ file_details.file_path }}" name="{{ provider.name }}-{{ file_details.projection }}-{{ file_details.file_ext|slugify }}">
+      <layer-tree-layer expanded="1" providerKey="gdal" checked="Qt::Checked" id="{{ job_name }}_{{ provider.slug }}_{{ file_details.projection }}_{{ job_date_time }}_{{ file_details.file_ext|slugify }}" source="{% if file_details.file_ext == '.zip'%}/vsizip/{% endif %}./{{ file_details.file_path }}" name="{{ provider.name }}-{{ file_details.projection }}-{{ job_date_time|slice:":8" }}-{{ file_details.file_ext|slugify }}">
         <customproperties/>
       </layer-tree-layer>
       {% endfor %}
