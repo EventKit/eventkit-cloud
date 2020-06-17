@@ -1,7 +1,6 @@
 import axios from 'axios';
 import numeral from 'numeral';
 import GeoJSON from 'ol/format/geojson';
-import {useEffect, useRef} from 'react';
 
 export function getHeaderPageInfo(response) {
     let nextPage = false;
@@ -22,7 +21,7 @@ export function getHeaderPageInfo(response) {
         [, range] = response.headers['content-range'].split('-');
     }
 
-    return {nextPage, range};
+    return { nextPage, range };
 }
 
 export function isMgrsString(c) {
@@ -78,7 +77,8 @@ export function getFeaturesFromGeojson(json) {
             featureProjection: 'EPSG:4326',
             dataProjection: 'EPSG:4326',
         });
-    } else if (json.type === 'Feature') {
+    }
+    if (json.type === 'Feature') {
         return [Geojson.readFeature(json, {
             featureProjection: 'EPSG:4326',
             dataProjection: 'EPSG:4326',
@@ -96,7 +96,7 @@ export function getSqKm(geojson) {
 
     features.forEach((feature) => {
         try {
-            area += feature.getGeometry().transform("EPSG:4326", "EPSG:3857").getArea() / 1000000;
+            area += feature.getGeometry().transform('EPSG:4326', 'EPSG:3857').getArea() / 1000000;
         } catch (e) {
             area += 0;
         }
@@ -117,8 +117,7 @@ export function getDuration(seconds, capEstimate = true) {
     const secondsInDay = 60 * 60 * 24;
     const secondsInHour = 60 * 60;
 
-    if (capEstimate && seconds >= secondsInDay)
-        return `At least 1 day`;
+    if (capEstimate && seconds >= secondsInDay) return 'At least 1 day';
 
     let days: any = Math.floor(remainingSeconds / secondsInDay);
     remainingSeconds -= days * secondsInDay;
@@ -146,16 +145,14 @@ export function formatMegaBytes(megabytes) {
 }
 
 export function getCookie(name) {
-    var v = document.cookie.match('(^|;) ?' + name + '=([^;]*)(;|$)');
+    const v = document.cookie.match(`(^|;) ?${name}=([^;]*)(;|$)`);
     return v ? v[2] : null;
 }
 
 export function getJobDetails(jobuid) {
-    return axios.get('/api/jobs/' + jobuid)
-        .then((result) => {
-            return result.data
-        })
-        .catch(console.log)
+    return axios.get(`/api/jobs/${jobuid}`)
+        .then(result => result.data)
+        .catch(console.log);
 }
 
 export function isZoomLevelInRange(zoomLevel, provider: Eventkit.Provider) {
@@ -236,12 +233,60 @@ export function arrayHasValue(array: any[], val: any): boolean {
 
 // Searches for the full provider object in a list of providers that matches the provider task.
 // The ProviderTask representation of provider lacks certain fields that the full provider has.
-export function getProviderFromProviderTask(providerTask: Eventkit.ProviderTask, providers: Eventkit.Provider[]) : Eventkit.Provider {
+export function getProviderFromProviderTask(providerTask: Eventkit.ProviderTask, providers: Eventkit.Provider[]): Eventkit.Provider {
     return providers.find(provider => provider.slug === providerTask.provider.slug);
 }
 
 // A variety of objects, Provider/Provider Task, have the display and hidden fields
 // This is a utility that examines both fields to determine if the UI should allow the given object to be displayed
-export function shouldDisplay(hideableObject: {hidden: boolean, display: boolean}) {
+export function shouldDisplay(hideableObject: { hidden: boolean, display: boolean }) {
     return hideableObject.display && !hideableObject.hidden;
+}
+
+// We sometimes expect error messages to be a certain shape, if something goes wrong with the error itself, we will
+// modify the error shape or inject a generic error message to prevent crashes.
+// If this error is encountered, the actual response object and be inspected by a developer to understand
+// what went wrong during the request.
+const defaultError = {
+    detail: 'Unexpected error encountered during request.',
+    title: 'Undefined Error',
+    status: 'undefined',
+};
+
+// Expects the data portion of an error response
+export function ensureErrorShape(responseData: any) {
+    // If responseData comes through falsey, we will assign it to the predefined default state.
+    let { errors } = (responseData || { errors: [{ ...defaultError }] });
+    if (!!errors && !Array.isArray(errors)) {
+        // If the errors property is not an array, convert it to one containing itself.
+        errors = [errors];
+    } else if (!errors) {
+        // If errors does not exist at all on the response object, insert the default shape.
+        errors = [{ ...defaultError }];
+    }
+    // For each error now present in errors, validate the existence of the properties we need
+    for (let errorIndex = 0; errorIndex < errors.length; errorIndex += 1) {
+        const error = errors[errorIndex];
+        errors[errorIndex] = {
+            ...error,
+            detail: error.detail || defaultError.detail,
+            title: error.title || defaultError.title,
+            status: error.status || defaultError.status,
+        };
+    }
+    // If response data is some non falsey object, return it with the updated errors property (it may be unchanged)
+    if (!!responseData && typeof responseData === 'object') {
+        return {
+            ...responseData,
+            errors,
+        };
+    }
+    // If responseData is not a valid object, insert it as the content property to avoid losing it
+    // This is done because sometimes the responseData will be a string of HTML which cannot have properties added like
+    // above. In the aforementioned case, undefined, null, numbers, the original response data can be accessed via
+    // the content property.
+    return {
+        content: responseData,
+        errors,
+    };
 }

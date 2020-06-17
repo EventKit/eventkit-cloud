@@ -1,6 +1,7 @@
 # This file is used to create an MXD file based on a datapack.  It needs to be run via the python application that is
-# packaged with arcgis.  For many users this is the default python, for other users they may have to specify this
-# location for example ('C:\Python27\ArcGIS10.5\python create_mxd.py').
+# packaged with arcgis.
+# For many users this is the default python, for other users they may have to specify this location
+# for example ('C:\Python27\ArcGIS10.5\python create_mxd.py').
 
 import os
 import logging
@@ -13,8 +14,7 @@ try:
 except NameError:
     pass
 
-# import argparse
-
+logging.basicConfig()
 logger = logging.getLogger("create_mxd")
 
 logger.warning("Creating an MXD file for your data...")
@@ -31,7 +31,7 @@ except Exception:
     BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 SUPPORTED_VERSIONS = ["10.5.1"]
-VERSIONS = ["10.6", "10.5.1", "10.5", "10.4.1", "10.4"]
+VERSIONS = ["10.6.1", "10.6", "10.5.1", "10.5", "10.4.1", "10.4"]
 
 try:
     import arcpy
@@ -51,7 +51,7 @@ if arcpy.GetInstallInfo().get("Version") not in SUPPORTED_VERSIONS:
         (
             "This script only supports versions {0}.  "
             "It might work for {1} but it will likely not support all of the datasets.".format(
-                SUPPORTED_VERSIONS, [version for version in VERSIONS if version not in SUPPORTED_VERSIONS],
+                SUPPORTED_VERSIONS, [version for version in VERSIONS if version not in SUPPORTED_VERSIONS]
             )
         )
     )
@@ -71,8 +71,9 @@ def update_mxd_from_metadata(file_name, metadata, verify=False):
             # As of arcgis 10.5.1 shapefiles can't be imported as zips.
             if file_info["file_ext"] in [".zip"]:
                 logger.warning(
-                    "This script can't automatically add zipped shapefiles.  You can try to use the osm layer in the "
-                    "template folder then update the source data after extracting the shapefiles."
+                    "This script can't automatically add zipped shapefiles.  "
+                    "You can try to use the osm layer in the template folder then update "
+                    "the source data after extracting the shapefiles."
                 )
                 continue
             file_path = os.path.abspath(os.path.join(BASE_DIR, file_info["file_path"]))
@@ -102,12 +103,11 @@ def update_mxd_from_metadata(file_name, metadata, verify=False):
                 layer_file = os.path.join(template_dir, "{}.lyr".format(kml_layer))
                 try:
                     layer_from_file = arcpy.KMLToLayer_conversion(
-                        in_kml_file=file_path, output_folder=template_dir, output_data=kml_layer,
+                        in_kml_file=file_path, output_folder=template_dir, output_data=kml_layer
                     )
                 except Exception as e:
-                    # This could fail for various reasons including that the file already exists.  If KMLs are very
-                    # important to your workflow please contact us
-                    # and we can make this more robust.
+                    # This could fail for various reasons including that the file already exists.
+                    # If KMLs are very important to your workflow please contact us and we can make this more robust.
                     logger.warning("Could not create a new KML layer file and gdb, it may already exist.")
                     layer_from_file = arcpy.mapping.Layer(layer_file)
                 layer_from_file.name = layer_info["name"] + file_info["file_ext"].replace(".", "_")
@@ -118,11 +118,19 @@ def update_mxd_from_metadata(file_name, metadata, verify=False):
                 layer_from_file = arcpy.mapping.Layer(layer_file)
                 layer_from_file.name = layer_info["name"] + file_info["file_ext"].replace(".", "_")
                 logger.warning(("Adding layer: {0}...".format(layer_from_file.name)))
-                arcpy.mapping.AddLayer(df, layer_from_file, "TOP")
-                # Get instance of layer from MXD, not the template file.
-                del layer_from_file
-                layer = arcpy.mapping.ListLayers(mxd)[0]
-                update_layer(layer, file_path, layer_info["type"], verify=verify)
+                try:
+                    arcpy.mapping.AddLayer(df, layer_from_file, "TOP")
+                    # Get instance of layer from MXD, not the template file.
+                    try:
+                        logger.warning(("Updating layer: {0}...".format(layer_from_file.name)))
+                        layer = arcpy.mapping.ListLayers(mxd)[0]
+                        update_layer(layer, file_path, layer_info["type"], verify=verify)
+                    except Exception:
+                        logger.error("Could not update layer {0}".format(layer_from_file.name))
+                except Exception:
+                    logger.error("Could not add layer {0}".format(layer_from_file.name))
+                finally:
+                    del layer_from_file
 
     logger.debug("Getting dataframes...")
     df = mxd.activeDataFrame
@@ -161,6 +169,9 @@ def get_layer_file(type, version):
     :param version: arcgis version (i.e. 10.5)
     :return: The file path to the correct layer.
     """
+    # Temporarily patch the version
+    if "10.6" in version:
+        version = "10.6"
     layer_basename = "{0}-{1}.lyr".format(type, version.replace(".", "-"))
     layer_file = os.path.abspath(os.path.join(BASE_DIR, "arcgis", "templates", layer_basename))
     logger.warning(("Fetching layer template: {0}".format(layer_file)))
@@ -208,19 +219,22 @@ def update_layer(layer, file_path, type, verify=False):
             try:
                 # Try to update the extents based on the layers
                 logger.debug("Updating layers from {0} to {1}".format(lyr.workspacePath, file_path))
-                if type == "raster":
+                if type == "raster" and os.path.splitext(file_path)[1] != ".gpkg":
+                    logger.debug("Replacing Datasource")
                     lyr.replaceDataSource(
-                        os.path.dirname(file_path), "RASTER_WORKSPACE", os.path.basename(file_path), verify,
+                        os.path.dirname(file_path), "RASTER_WORKSPACE", os.path.basename(file_path), verify
                     )
                 elif type == "elevation":
-                    lyr.replaceDataSource(
-                        os.path.dirname(file_path), "NONE", os.path.basename(file_path), verify,
-                    )
+                    logger.debug("updating elevation")
+                    lyr.replaceDataSource(os.path.dirname(file_path), "NONE", os.path.basename(file_path), verify)
                 else:
+                    logger.debug("updating raster or vector gpkg")
+                    logger.debug("Replacing WorkSpace Path")
                     lyr.findAndReplaceWorkspacePath(lyr.workspacePath, file_path, verify)
                 if lyr.isFeatureLayer:
                     logger.debug(arcpy.RecalculateFeatureClassExtent_management(lyr).getMessages())
-            except AttributeError:
+            except Exception as e:
+                logger.error(e)
                 raise
 
 
@@ -260,15 +274,7 @@ def create_mxd_process(mxd=None, metadata=None, verify=False):
 
 
 if __name__ == "__main__":
-    #  parser = argparse.ArgumentParser(description='Process some integers.')
-    #  parser.add_argument('--mxd', help='an mxd file to write the result to')
-    #  parser.add_argument('--gpkg', help='a gpkg of data')
-    #  parser.add_argument('--verify', default=False, type=bool, help='verify if the mxd is
-    #  valid after adding the gpkg')
-    #  parser.add_argument('--metadata', default='metadata.json', type=bool, help='a metadata file to
-    #  provide information')
 
-    #  args = parser.parse_args()
     try:
         metadata_file = os.path.join(os.path.dirname(__file__), "metadata.json")
 
