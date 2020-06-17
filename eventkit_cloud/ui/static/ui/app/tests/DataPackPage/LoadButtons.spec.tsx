@@ -30,8 +30,8 @@ describe('LoadButtons component', () => {
 
     it('should render all the basic components', () => {
         expect(wrapper.find(Button)).toHaveLength(2);
-        expect(wrapper.find(Button).first().html()).toContain('Show Less');
-        expect(wrapper.find(Button).last().html()).toContain('Show More');
+        expect(wrapper.find(Button).first().html()).toContain('Show Previous');
+        expect(wrapper.find(Button).last().html()).toContain('Show Next');
         expect(wrapper.find(KeyboardArrowDown)).toHaveLength(1);
         expect(wrapper.find(KeyboardArrowUp)).toHaveLength(1);
         expect(wrapper.find('#range')).toHaveLength(1);
