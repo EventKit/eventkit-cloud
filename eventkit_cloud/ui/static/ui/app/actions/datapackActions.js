@@ -128,7 +128,6 @@ export function getRuns(args = {}, append = false) {
         ],
         auto: args.isAuto,
         cancellable: true,
-        // payload: { append },
         getCancelSource: state => state.exports.allInfo.status.cancelSource,
         url: '/api/runs/filter',
         method: 'POST',

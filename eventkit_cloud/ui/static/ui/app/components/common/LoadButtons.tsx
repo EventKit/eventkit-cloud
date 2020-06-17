@@ -3,6 +3,10 @@ import { withTheme, Theme } from '@material-ui/core/styles';
 import Button from '@material-ui/core/Button';
 import KeyboardArrowDown from '@material-ui/icons/KeyboardArrowDown';
 import KeyboardArrowUp from '@material-ui/icons/KeyboardArrowUp';
+import ArrowBackIosIcon from '@material-ui/icons/ArrowBackIos';
+import ArrowForwardIosIcon from '@material-ui/icons/ArrowForwardIos';
+import ArrowLeftIcon from '@material-ui/icons/ArrowLeft';
+import ArrowRightIcon from '@material-ui/icons/ArrowRight';
 
 export interface Props {
     style: object;
@@ -83,8 +87,8 @@ export class LoadButtons extends React.Component<Props, State> {
                             disabled={this.props.loadLessDisabled}
                             onClick={this.props.handleLoadLess}
                         >
-                            Show Less
-                            <KeyboardArrowUp />
+                            <ArrowLeftIcon style={{fontSize: 'x-large'}}/>
+                            Show Previous
                         </Button>
                         :
                         null
@@ -97,8 +101,8 @@ export class LoadButtons extends React.Component<Props, State> {
                         disabled={this.props.loadMoreDisabled}
                         onClick={this.props.handleLoadMore}
                     >
-                        Show More
-                        <KeyboardArrowDown />
+                        Show Next
+                        <ArrowRightIcon style={{fontSize: 'x-large'}}/>
                     </Button>
                 </div>
                 <div className="qa-LoadButtons-range" id="range" style={inlineStyles.range}>

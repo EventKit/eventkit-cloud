@@ -96,7 +96,6 @@ interface State {
     geojson_geometry: null | GeoJSON.Geometry;
     steps: any[];
     isRunning: boolean;
-    runs: string[];
     page: number;
 }
 
@@ -155,7 +154,6 @@ export class DataPackPage extends React.Component<Props, State> {
             geojson_geometry: null,
             steps: [],
             isRunning: false,
-            runs: [],
             page: 1,
         };
 
@@ -341,16 +339,12 @@ export class DataPackPage extends React.Component<Props, State> {
         }
     }
 
-    private isPageLoading() {
-        return this.props.runsFetched === null;
-    }
-
     private updateLocationQuery(query: any) {
         const currentQuery = queryString.parse(this.props.location.search);
         const newQuery = {
             ...currentQuery,
             ...query
-        }
+        };
         if (!isEqual(currentQuery, newQuery)) {
             const queryAsString = queryString.stringify(newQuery);
             history.push({"search": queryAsString});
@@ -396,20 +390,16 @@ export class DataPackPage extends React.Component<Props, State> {
             permissions: this.state.permissions,
             isAuto,
         });
-        this.setState({runs: this.props.runIds});
     }
 
-    private async makePartialRunRequest(isAuto = false, params: {}, append = true) {
-        // const addedruns = this.state.runs;
+    private async makePartialRunRequest(isAuto = false, params: {}) {
         this.setState({loading: true});
         await this.props.getRuns({
             isAuto,
-            append,
             ...params,
         });
-        // const added = addedruns.concat(this.props.runIds);
+        console.log(params)
         this.setState({loading: false});
-        // this.setState({runs: added});
     }
 
     private handleOwnerFilter(value: string) {
@@ -469,25 +459,14 @@ export class DataPackPage extends React.Component<Props, State> {
 
     private loadMore() {
         if (this.props.runsMeta.nextPage) {
-            this.makePartialRunRequest(false, {page: this.state.page + 1, page_size: this.pageSize}, true);
+            this.makePartialRunRequest(false, {page: this.state.page + 1, page_size: this.pageSize});
             this.setState({page: this.state.page + 1});
-            // load orderedIds to state here?
         }
     }
 
     private loadLess() {
-        // TODO: only way to store previous results is to manipulate page_size on the location; we can't manipulate here if dynamically updating query via api call
-        // also the api call is where the state of the orderedIds gets updated
-
-        // if (Number(queryString.parse(this.props.location.search).page_size) > this.pageSize) {
-        const pageSize = Number(queryString.parse(this.props.location.search).page_size);
-        this.makePartialRunRequest(false, {page: this.state.page - 1, page_size: this.pageSize}, true);
-        // return this.props.runIds
+        this.makePartialRunRequest(false, {page: this.state.page - 1, page_size: this.pageSize});
         this.setState({page: this.state.page - 1});
-
-        // const query = queryString.parse(this.props.location.search);
-        // query.page_size = (Number(query.page_size) - this.pageSize).toString();
-        // history.push({ ...this.props.location, "search": queryString.stringify(query) });
     }
 
     private joyrideAddSteps(steps: object[]) {

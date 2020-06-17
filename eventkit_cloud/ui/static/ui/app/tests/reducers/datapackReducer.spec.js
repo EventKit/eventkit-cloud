@@ -2,21 +2,21 @@ import * as reducers from '../../reducers/datapackReducer';
 
 describe('Runs reducer', () => {
     it('it should return the initial state', () => {
-        expect(reducers.runsReducer(undefined, {})).toEqual({ ...reducers.exports });
+        expect(reducers.runsReducer(undefined, {})).toEqual({...reducers.exports});
     });
 
     describe('When handling ADD run data', () => {
         it('handles ADD_RUN', () => {
             expect(reducers.runsReducer(
-                { ...reducers.exports },
+                {...reducers.exports},
                 {
                     type: 'ADD_RUN',
                     payload: {
                         id: '1234',
-                        runs: { 1234: { uid: '1234', user: 'test' } },
-                        jobs: { 1234: { uid: '1234' } },
-                        provider_tasks: { 1234: { uid: '1234' } },
-                        tasks: { 1234: { uid: '1234' } },
+                        runs: {1234: {uid: '1234', user: 'test'}},
+                        jobs: {1234: {uid: '1234'}},
+                        provider_tasks: {1234: {uid: '1234'}},
+                        tasks: {1234: {uid: '1234'}},
                         username: 'test',
                     },
                 },
@@ -25,16 +25,16 @@ describe('Runs reducer', () => {
                 data: {
                     ...reducers.exports.data,
                     runs: {
-                        1234: { uid: '1234', user: 'test' },
+                        1234: {uid: '1234', user: 'test'},
                     },
                     jobs: {
-                        1234: { uid: '1234' },
+                        1234: {uid: '1234'},
                     },
                     provider_tasks: {
-                        1234: { uid: '1234' },
+                        1234: {uid: '1234'},
                     },
                     tasks: {
-                        1234: { uid: '1234' },
+                        1234: {uid: '1234'},
                     },
                 },
                 allInfo: {
@@ -51,7 +51,7 @@ describe('Runs reducer', () => {
     describe('When handling standard RUNS', () => {
         it('should handle FETCHING RUNS', () => {
             expect(reducers.runsReducer(
-                { ...reducers.exports },
+                {...reducers.exports},
                 {
                     type: 'FETCHING_RUNS',
                     cancelSource: 'test',
@@ -63,6 +63,8 @@ describe('Runs reducer', () => {
                     status: {
                         ...reducers.exports.allInfo.status,
                         fetching: true,
+                        fetched: false,
+                        error: null,
                         cancelSource: 'test',
                     },
                 },
@@ -71,7 +73,7 @@ describe('Runs reducer', () => {
 
         it('should handle RECEIVED_RUNS', () => {
             expect(reducers.runsReducer(
-                { ...reducers.exports },
+                {...reducers.exports},
                 {
                     type: 'RECEIVED_RUNS',
                     payload: {
@@ -101,7 +103,7 @@ describe('Runs reducer', () => {
 
         it('should handle FETCH_RUNS_ERROR', () => {
             expect(reducers.runsReducer(
-                { ...reducers.exports },
+                {...reducers.exports},
                 {
                     type: 'FETCH_RUNS_ERROR', error: 'This is an error message',
                 },
@@ -113,6 +115,9 @@ describe('Runs reducer', () => {
                         ...reducers.exports.allInfo.status,
                         fetched: false,
                         fetching: false,
+                        orderedIds: [],
+                        range: '',
+                        nextPage: false,
                         error: 'This is an error message',
                     },
                 },
@@ -123,7 +128,7 @@ describe('Runs reducer', () => {
     describe('When handling FEATURED RUNS', () => {
         it('should handle FETCHING RUNS', () => {
             expect(reducers.runsReducer(
-                { ...reducers.exports },
+                {...reducers.exports},
                 {
                     type: 'FETCHING_FEATURED_RUNS',
                     cancelSource: 'test',
@@ -135,6 +140,8 @@ describe('Runs reducer', () => {
                     status: {
                         ...reducers.exports.featuredInfo.status,
                         fetching: true,
+                        fetched: false,
+                        error: null,
                         cancelSource: 'test',
                     },
                 },
@@ -143,7 +150,7 @@ describe('Runs reducer', () => {
 
         it('should handle RECEIVED_RUNS', () => {
             expect(reducers.runsReducer(
-                { ...reducers.exports },
+                {...reducers.exports},
                 {
                     type: 'RECEIVED_FEATURED_RUNS',
                     payload: {
@@ -173,7 +180,7 @@ describe('Runs reducer', () => {
 
         it('should handle FETCH_RUNS_ERROR', () => {
             expect(reducers.runsReducer(
-                { ...reducers.exports },
+                {...reducers.exports},
                 {
                     type: 'FETCH_FEATURED_RUNS_ERROR', error: 'This is an error message',
                 },
@@ -185,6 +192,9 @@ describe('Runs reducer', () => {
                         ...reducers.exports.featuredInfo.status,
                         fetched: false,
                         fetching: false,
+                        orderedIds: [],
+                        range: '',
+                        nextPage: false,
                         error: 'This is an error message',
                     },
                 },
@@ -195,7 +205,7 @@ describe('Runs reducer', () => {
     describe('When handling VIEWD RUNS', () => {
         it('should handle FETCHING VIEWED JOBS', () => {
             expect(reducers.runsReducer(
-                { ...reducers.exports },
+                {...reducers.exports},
                 {
                     type: 'FETCHING_VIEWED_JOBS',
                     cancelSource: 'test',
@@ -207,6 +217,8 @@ describe('Runs reducer', () => {
                     status: {
                         ...reducers.exports.viewedInfo.status,
                         fetching: true,
+                        fetched: false,
+                        error: null,
                         cancelSource: 'test',
                     },
                 },
@@ -215,7 +227,7 @@ describe('Runs reducer', () => {
 
         it('should handle RECEIVED_VIEWED_JOBS', () => {
             expect(reducers.runsReducer(
-                { ...reducers.exports },
+                {...reducers.exports},
                 {
                     type: 'RECEIVED_VIEWED_JOBS',
                     payload: {
@@ -245,7 +257,7 @@ describe('Runs reducer', () => {
 
         it('should handle FETCH_VIEWED_JOBS_ERROR', () => {
             expect(reducers.runsReducer(
-                { ...reducers.exports },
+                {...reducers.exports},
                 {
                     type: 'FETCH_VIEWED_JOBS_ERROR', error: 'This is an error message',
                 },
@@ -257,6 +269,9 @@ describe('Runs reducer', () => {
                         ...reducers.exports.viewedInfo.status,
                         fetched: false,
                         fetching: false,
+                        orderedIds: [],
+                        range: '',
+                        nextPage: false,
                         error: 'This is an error message',
                     },
                 },
@@ -328,7 +343,7 @@ describe('dataCartDetails reducer', () => {
     it('should handle CLEAR_DATACART_DETAILS', () => {
         expect(reducers.getDatacartDetailsReducer(
             reducers.initialState.datacartDetails,
-            { type: 'CLEAR_DATACART_DETAILS' },
+            {type: 'CLEAR_DATACART_DETAILS'},
         )).toEqual(reducers.initialState.datacartDetails);
     });
 });
