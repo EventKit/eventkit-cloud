@@ -1,5 +1,6 @@
 import logging
 
+from django.conf import settings
 import rest_framework.status
 from rest_framework.exceptions import ValidationError
 from rest_framework.response import Response
@@ -24,6 +25,8 @@ def eventkit_exception_handler(exc, context):
     """
     # Call REST framework's default exception handler first,
     # to get the standard error response. Parse the response accordingly.
+    if getattr(settings, "DEBUG"):
+        raise exc
     response = exception_handler(exc, context)
     if response:
 
