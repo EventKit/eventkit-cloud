@@ -7,7 +7,8 @@ import pickle
 import re
 import requests
 import signal
-from time import sleep
+import time
+from typing import List
 
 from numpy import linspace
 import yaml
@@ -18,7 +19,6 @@ from django.core.cache import cache
 from django.template.loader import render_to_string
 from django.utils import timezone
 from django.utils.text import slugify
-from django.db.models import Q
 
 from eventkit_cloud.core.helpers import get_cached_model
 from eventkit_cloud.utils import auth_requests
@@ -27,7 +27,7 @@ from eventkit_cloud.utils.generic import cd, get_file_paths  # NOQA
 
 from eventkit_cloud.jobs.models import DataProvider
 from eventkit_cloud.tasks.exceptions import FailedException
-from eventkit_cloud.tasks.models import DataProviderTaskRecord, ExportRunFile
+from eventkit_cloud.tasks.models import DataProviderTaskRecord, ExportRunFile, ExportTaskRecord
 import urllib.parse
 
 logger = logging.getLogger()
@@ -62,13 +62,18 @@ def get_run_download_dir(run_uid):
     return os.path.join(settings.EXPORT_DOWNLOAD_ROOT.rstrip("\/"), str(run_uid))
 
 
-def get_run_download_url(run_uid):
+def get_run_download_url(run_uid, provider_slug=None):
     """
     A URL path to the run data
     :param run_uid: The unique identifier for the run data.
     :return: The url context. (e.g. /downloads/123e4567-e89b-12d3-a456-426655440000)
     """
-    return "{0}/{1}".format(settings.EXPORT_MEDIA_ROOT.rstrip("\/"), str(run_uid))
+    if provider_slug:
+        url = f"{settings.EXPORT_MEDIA_ROOT.rstrip('/')}/{str(run_uid)}/{provider_slug}"
+    else:
+        url = f"{settings.EXPORT_MEDIA_ROOT.rstrip('/')}/{str(run_uid)}"
+
+    return url
 
 
 def get_provider_staging_dir(run_uid, provider_slug):
@@ -83,6 +88,18 @@ def get_provider_staging_dir(run_uid, provider_slug):
     return os.path.join(run_staging_dir, provider_slug)
 
 
+def get_provider_download_dir(run_uid, provider_slug):
+    """
+    The provider staging dir is where all files are stored after they are processed.
+    It is a unique space to ensure that files aren't being improperly modified.
+    :param run_uid: The unique id for the run.
+    :param provider_slug: The unique value to store the directory for the provider data.
+    :return: The path to the provider directory.
+    """
+    run_download_dir = get_run_download_dir(run_uid)
+    return os.path.join(run_download_dir, provider_slug)
+
+
 def get_provider_staging_preview(run_uid, provider_slug):
     """
     The provider staging dir is where all files are stored while they are being processed.
@@ -95,16 +112,12 @@ def get_provider_staging_preview(run_uid, provider_slug):
     return os.path.join(run_staging_dir, provider_slug, PREVIEW_TAIL)
 
 
-def get_download_filename(
-    name: str, time, ext: str, additional_descriptors: list = None, data_provider_slug: str = None
-):
+def get_download_filename(name: str, ext: str, additional_descriptors: List[str] = [], data_provider_slug: str = None):
     """
     This provides specific formatting for the names of the downloadable files.
     :param name: A name for the file, typically the job name.
-    :param time:  A python datetime object.
     :param ext: The file extension (e.g. .gpkg)
-    :param additional_descriptors: Additional descriptors, typically the provider slug or project name
-        or any list of items.
+    :param additional_descriptors: Additional descriptors, any list of items.
     :param data_provider_slug: Slug of the data provider for this filename, used to get the label
         of that data provider to add on to the filename
     :return: The formatted file name (e.g. Boston-example-20180711.gpkg)
@@ -119,10 +132,12 @@ def get_download_filename(
         except DataProvider.DoesNotExist:
             logger.info(f"{data_provider_slug} does not map to any known DataProvider.")
 
-    # Allow numbers or strings.
-    if not isinstance(additional_descriptors, (list, tuple)):
-        additional_descriptors = [str(additional_descriptors)]
-    return "{0}-{1}-{2}{3}".format(name, "-".join(filter(None, additional_descriptors)), default_format_time(time), ext)
+    if additional_descriptors:
+        download_filename = f"{name}-{'-'.join(additional_descriptors)}{ext}"
+    else:
+        download_filename = f"{name}{ext}"
+
+    return download_filename
 
 
 def get_archive_data_path(provider_slug=None, file_name=None):
@@ -150,6 +165,35 @@ def normalize_name(name):
     # Replace all whitespace with a single underscore
     s = re.sub(r"\s+", "_", s)
     return s.lower()
+
+
+def get_provider_slug(export_task_record_uid):
+    """
+    Gets a provider slug from the ExportTaskRecord.
+    :param export_task_record_uid: The UID of an ExportTaskRecord.
+    :return provider_slug: The associated provider_slug value.
+    """
+    return ExportTaskRecord.objects.get(uid=export_task_record_uid).export_provider_task.provider.slug
+
+
+def get_export_filename(stage_dir, job_name, projection, provider_slug, extension):
+    """
+    Gets a filename for an export.
+    :param stage_dir: The staging directory to place files in while they process.
+    :param job_name: The name of the job being processed.
+    :param projection: A projection as an int referencing an EPSG code (e.g. 4326 = EPSG:4326)
+    :pram provider_slug
+    """
+    if extension == "shp":
+        filename = os.path.join(
+            stage_dir, f"{job_name}-{projection}-{provider_slug}-{default_format_time(time)}_{extension}"
+        )
+    else:
+        filename = os.path.join(
+            stage_dir, f"{job_name}-{projection}-{provider_slug}-{default_format_time(time)}.{extension}"
+        )
+
+    return filename
 
 
 def get_style_files():
@@ -304,11 +348,11 @@ def progressive_kill(pid):
     try:
         logger.info("Trying to kill pid {0} with SIGTERM.".format(pid))
         os.kill(pid, signal.SIGTERM)
-        sleep(5)
+        time.sleep(5)
 
         logger.info("Trying to kill pid {0} with SIGKILL.".format(pid))
         os.kill(pid, signal.SIGKILL)
-        sleep(1)
+        time.sleep(1)
 
     except OSError:
         logger.info("{0} PID no longer exists.".format(pid))
@@ -318,7 +362,7 @@ def pickle_exception(exception):
     return pickle.dumps(exception, 0).decode()
 
 
-def get_metadata(data_provider_task_uid):
+def get_metadata(data_provider_task_record_uids: List[str]):
     """
     A object to hold metadata about the run for the sake of being passed to various scripts for the creation of
     style files or metadata documents for within the datapack.
@@ -372,18 +416,12 @@ def get_metadata(data_provider_task_uid):
     from eventkit_cloud.tasks.enumerations import TaskStates
     from eventkit_cloud.tasks.export_tasks import create_zip_task
 
-    data_provider_task = DataProviderTaskRecord.objects.get(uid=data_provider_task_uid)
-
-    run = data_provider_task.run
+    data_provider_task_records = DataProviderTaskRecord.objects.filter(uid__in=data_provider_task_record_uids)
+    run = data_provider_task_records.first().run
 
     projections = []
     for projection in run.job.projections.all():
         projections.append(projection.srid)
-
-    if data_provider_task.name == "run":
-        provider_tasks = run.provider_tasks.filter(~Q(name="run"))
-    else:
-        provider_tasks = [data_provider_task]
 
     # To prepare for the zipfile task, the files need to be checked to ensure they weren't
     # deleted during cancellation.
@@ -405,33 +443,33 @@ def get_metadata(data_provider_task_uid):
         "has_raster": False,
         "has_elevation": False,
     }
-    for provider_task in provider_tasks:
-        data_provider = DataProvider.objects.get(slug=provider_task.provider.slug)
+    for data_provider_task_record in data_provider_task_records:
+        data_provider = DataProvider.objects.get(slug=data_provider_task_record.provider.slug)
         provider_type = data_provider.export_provider_type.type_name
 
-        provider_staging_dir = get_provider_staging_dir(run.uid, provider_task.provider.slug)
+        provider_staging_dir = get_provider_staging_dir(run.uid, data_provider_task_record.provider.slug)
         conf = yaml.safe_load(data_provider.config) or dict()
         cert_var = conf.get("cert_var", data_provider.slug)
-        metadata["data_sources"][provider_task.provider.slug] = {
-            "uid": str(provider_task.uid),
-            "slug": provider_task.provider.slug,
-            "name": provider_task.name,
+        metadata["data_sources"][data_provider_task_record.provider.slug] = {
+            "uid": str(data_provider_task_record.uid),
+            "slug": data_provider_task_record.provider.slug,
+            "name": data_provider_task_record.name,
             "files": [],
-            "type": get_data_type_from_provider(provider_task.provider.slug),
+            "type": get_data_type_from_provider(data_provider_task_record.provider.slug),
             "description": str(data_provider.service_description).replace("\r\n", "\n").replace("\n", "\r\n\t"),
             "last_update": get_last_update(data_provider.url, provider_type, cert_var=cert_var),
             "metadata": get_metadata_url(data_provider.url, provider_type),
             "copyright": data_provider.service_copyright,
         }
-        if metadata["data_sources"][provider_task.provider.slug].get("type") == "raster":
+        if metadata["data_sources"][data_provider_task_record.provider.slug].get("type") == "raster":
             metadata["has_raster"] = True
-        if metadata["data_sources"][provider_task.provider.slug].get("type") == "elevation":
+        if metadata["data_sources"][data_provider_task_record.provider.slug].get("type") == "elevation":
             metadata["has_elevation"] = True
 
-        if provider_task.preview is not None:
-            include_files += [get_provider_staging_preview(run.uid, provider_task.provider.slug)]
+        if data_provider_task_record.preview is not None:
+            include_files += [get_provider_staging_preview(run.uid, data_provider_task_record.provider.slug)]
 
-        for export_task in provider_task.tasks.all():
+        for export_task in data_provider_task_record.tasks.all():
             if TaskStates[export_task.status] in TaskStates.get_incomplete_states():
                 continue
 
@@ -440,7 +478,7 @@ def get_metadata(data_provider_task_uid):
             except Exception:
                 continue
             full_file_path = os.path.join(provider_staging_dir, filename)
-            current_files = metadata["data_sources"][provider_task.provider.slug]["files"]
+            current_files = metadata["data_sources"][data_provider_task_record.provider.slug]["files"]
 
             if full_file_path not in map(itemgetter("full_file_path"), current_files):
                 file_ext = os.path.splitext(filename)[1]
@@ -450,17 +488,16 @@ def get_metadata(data_provider_task_uid):
                         os.path.splitext(os.path.basename(filename))[0],
                         timezone.now(),
                         file_ext,
-                        additional_descriptors=[provider_task.provider.slug],
-                        data_provider_slug=provider_task.provider.slug,
+                        data_provider_slug=data_provider_task_record.provider.slug,
                     )
-                    filepath = get_archive_data_path(provider_task.provider.slug, download_filename)
+                    filepath = get_archive_data_path(data_provider_task_record.provider.slug, download_filename)
 
                     file_data = {
                         "file_path": filepath,
                         "full_file_path": full_file_path,
                         "file_ext": file_ext,
                     }
-                    if metadata["data_sources"][provider_task.provider.slug].get("type") == "elevation":
+                    if metadata["data_sources"][data_provider_task_record.provider.slug].get("type") == "elevation":
                         # Get statistics to update ranges in template.
                         band_stats = get_band_statistics(full_file_path)
                         logger.info("Band Stats {0}: {1}".format(full_file_path, band_stats))
@@ -472,7 +509,7 @@ def get_metadata(data_provider_task_uid):
                         except TypeError:
                             file_data["ramp_shader_steps"] = None
 
-                    metadata["data_sources"][provider_task.provider.slug]["files"] += [file_data]
+                    metadata["data_sources"][data_provider_task_record.provider.slug]["files"] += [file_data]
 
             if not os.path.isfile(full_file_path):
                 logger.error("Could not find file {0} for export {1}.".format(full_file_path, export_task.name))
@@ -482,7 +519,7 @@ def get_metadata(data_provider_task_uid):
                 include_files += [full_file_path]
 
         # add the license for this provider if there are other files already
-        license_file = create_license_file(provider_task)
+        license_file = create_license_file(data_provider_task_record)
         if license_file:
             include_files += [license_file]
 

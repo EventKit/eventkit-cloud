@@ -99,23 +99,20 @@ class TestHelpers(TestCase):
     @patch('eventkit_cloud.tasks.helpers.get_cached_model')
     def test_get_download_filename(self, mock_get_cached_model):
         name = "test_datapack"
-        date = timezone.now()
         ext = ".gpkg"
-        descriptors = ["osm"]
+        descriptors = ["test-descriptor"]
         data_provider_slug = "osm"
         label = "testlabel"
 
-        expected_date = date.strftime("%Y%m%d")
         expected_descriptors_string = "-".join(filter(None, descriptors))
 
         mocked_data_provider = MagicMock()
         mocked_data_provider.label = "testlabel"
         mock_get_cached_model.return_value = mocked_data_provider
 
-        expected_value = f"{name}-{expected_descriptors_string}-{label}-{expected_date}{ext}"
+        expected_value = f"{name}-{expected_descriptors_string}-{label}{ext}"
         returned_value = get_download_filename(
             name=name,
-            time=date,
             ext=ext,
             additional_descriptors=descriptors,
             data_provider_slug=data_provider_slug

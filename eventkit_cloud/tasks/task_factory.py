@@ -130,32 +130,35 @@ class TaskFactory:
             )
             stage_dir = get_provider_staging_dir(run_dir, run_task_record.slug)
             os.makedirs(stage_dir, 6600)
-            run_zip_task_chain = get_zip_task_chain(
-                data_provider_task_uid=run_task_record.uid, stage_dir=get_run_staging_dir(run_uid), worker=worker,
-            )
-            for provider_task_record in job.provider_tasks.all():
 
-                if self.type_task_map.get(provider_task_record.provider.export_provider_type.type_name):
+            run_zip_task_chain = get_zip_task_chain(
+                data_provider_task_record_uid=run_task_record.uid,
+                stage_dir=get_run_staging_dir(run_uid),
+                worker=worker,
+            )
+            for provider_task in job.provider_tasks.all():
+
+                if self.type_task_map.get(provider_task.provider.export_provider_type.type_name):
                     # Each task builder has a primary task which pulls the source data, grab that task here...
-                    type_name = provider_task_record.provider.export_provider_type.type_name
+                    type_name = provider_task.provider.export_provider_type.type_name
 
                     primary_export_task = self.type_task_map.get(type_name)
 
-                    stage_dir = get_provider_staging_dir(run_dir, provider_task_record.provider.slug)
+                    stage_dir = get_provider_staging_dir(run_dir, provider_task.provider.slug)
                     os.makedirs(stage_dir, 6600)
 
                     args = {
                         "primary_export_task": primary_export_task,
                         "user": job.user,
-                        "provider_task_uid": provider_task_record.uid,
+                        "provider_task_uid": provider_task.uid,
                         "run": run,
                         "stage_dir": stage_dir,
-                        "service_type": provider_task_record.provider.export_provider_type.type_name,
+                        "service_type": provider_task.provider.export_provider_type.type_name,
                         "worker": worker,
                         "user_details": user_details,
                     }
 
-                    (provider_task_uid, provider_subtask_chain,) = TaskChainBuilder().build_tasks(**args)
+                    (provider_task_record_uid, provider_subtask_chain,) = TaskChainBuilder().build_tasks(**args)
 
                     wait_for_providers_signature = wait_for_providers_task.s(
                         run_uid=run_uid,
@@ -171,7 +174,7 @@ class TaskFactory:
                         # for this provider and save the export provider's status.
 
                         selection_task = create_task(
-                            data_provider_task_uid=provider_task_uid,
+                            data_provider_task_record_uid=provider_task_record_uid,
                             stage_dir=stage_dir,
                             worker=worker,
                             task=output_selection_geojson_task,
@@ -181,15 +184,18 @@ class TaskFactory:
 
                         # create signature to close out the provider tasks
                         finalize_export_provider_signature = finalize_export_provider_task.s(
-                            data_provider_task_uid=provider_task_uid,
+                            data_provider_task_uid=provider_task_record_uid,
                             status=TaskStates.COMPLETED.value,
                             locking_task_key=run_uid,
                         )
 
                         # add zip if required
-                        if provider_task_record.provider.zip:
+                        if provider_task.provider.zip:
                             zip_export_provider_sig = get_zip_task_chain(
-                                data_provider_task_uid=provider_task_uid, stage_dir=stage_dir, worker=worker,
+                                data_provider_task_record_uid=provider_task_record_uid,
+                                data_provider_task_record_uids=[provider_task_record_uid],
+                                stage_dir=stage_dir,
+                                worker=worker,
                             )
                             provider_subtask_chain = chain(provider_subtask_chain, zip_export_provider_sig)
 
@@ -275,7 +281,9 @@ def create_run(job_uid, user=None):
 
 
 def create_task(
-    data_provider_task_uid=None,
+    data_provider_task_record_uid=None,
+    data_provider_task_record_uids=None,
+    run_zip_file_uid=None,
     stage_dir=None,
     worker=None,
     selection=None,
@@ -297,8 +305,7 @@ def create_task(
     # This is just to make it easier to trace when user_details haven't been sent
     if user_details is None:
         user_details = {"username": "unknown-create_task"}
-
-    export_provider_task = DataProviderTaskRecord.objects.get(uid=data_provider_task_uid)
+    export_provider_task = DataProviderTaskRecord.objects.get(uid=data_provider_task_record_uid)
 
     if export_provider_task.provider:
         export_provider_task_slug = export_provider_task.provider.slug
@@ -318,18 +325,27 @@ def create_task(
         selection=selection,
         stage_dir=stage_dir,
         provider_slug=export_provider_task_slug,
-        data_provider_task_uid=data_provider_task_uid,
+        data_provider_task_record_uid=data_provider_task_record_uid,
+        data_provider_task_record_uids=data_provider_task_record_uids,
+        run_zip_file_uid=run_zip_file_uid,
         job_name=job_name,
         user_details=user_details,
         bbox=export_provider_task.run.job.extents,
-        locking_task_key=data_provider_task_uid,
+        locking_task_key=data_provider_task_record_uid,
     ).set(queue=queue_group, routing_key=queue_group)
 
 
-def get_zip_task_chain(data_provider_task_uid=None, worker=None, stage_dir=None):
+def get_zip_task_chain(
+    data_provider_task_record_uid=None, data_provider_task_record_uids=None, run_zip_file_uid=None, worker=None, stage_dir=None
+):
     return chain(
         create_task(
-            data_provider_task_uid=data_provider_task_uid, stage_dir=stage_dir, worker=worker, task=create_zip_task,
+            data_provider_task_record_uid=data_provider_task_record_uid,
+            data_provider_task_record_uids=data_provider_task_record_uids,
+            run_zip_file_uid=run_zip_file_uid,
+            stage_dir=stage_dir,
+            worker=worker,
+            task=create_zip_task,
         )
     )
 

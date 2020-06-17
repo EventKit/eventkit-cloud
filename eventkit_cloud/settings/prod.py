@@ -204,7 +204,7 @@ DJANGO_MODEL_LOGIN = os.getenv("DJANGO_MODEL_LOGIN")
 AUTHENTICATION_BACKENDS += ("django.contrib.auth.backends.ModelBackend",)
 
 # Set debug to True for development
-DEBUG = os.getenv("DEBUG", False)
+DEBUG = is_true(os.getenv("DEBUG", False))
 
 ALLOWED_HOSTS = [HOSTNAME, SITE_NAME]
 

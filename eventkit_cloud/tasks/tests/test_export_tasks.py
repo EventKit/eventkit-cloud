@@ -663,11 +663,11 @@ class TestExportTasks(ExportTaskBase):
                 "/var/lib/eventkit/exports_stage/7fadf34e-58f9-4bb8-ab57-adc1015c4269/osm/osm_selection.geojson"],
             "name": "test", "project": "Test", "run_uid": "7fadf34e-58f9-4bb8-ab57-adc1015c4269",
             "url": "http://cloud.eventkit.test/status/2010025c-6d61-4a0b-8d5d-ff9c657259eb"}
-        provider_task_uid = "0d08ddf6-35c1-464f-b271-75f6911c3f78"
+        data_provider_task_record_uids = ["0d08ddf6-35c1-464f-b271-75f6911c3f78"]
         mock_get_metadata.return_value = metadata
         expected_zip = "{0}.zip".format(metadata['name'])
         mock_zip_files.return_value = expected_zip
-        returned_zip = create_zip_task.run(data_provider_task_uid=provider_task_uid)
+        returned_zip = create_zip_task.run(data_provider_task_record_uids=data_provider_task_record_uids)
         mock_generate_qgs_style.assert_called_once_with(metadata)
         mock_open.assert_called_once()
         mock_zip_files.assert_called_once_with(file_path=expected_zip,
