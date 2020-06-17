@@ -113,12 +113,21 @@ def stringify(item):
         raise Exception("Stringify doesn't support items of type {0}".format(type(item)))
 
 
-def get_run_zip_file(data_provider_task_record_uids):
+def get_run_zip_file(field=None, values=[]):
+    """
+    TODO: Docstring
+    """
     initial_qs = RunZipFile.objects.annotate(cnt=Count("data_provider_task_records")).filter(
-        cnt=len(data_provider_task_record_uids)
-    )
-    queryset = reduce(
-        lambda qs, uid: qs.filter(data_provider_task_records__uid=uid), data_provider_task_record_uids, initial_qs
+        cnt=len(values)
     )
 
-    return queryset
+    if field:
+        field = f"__{field}"
+    else:
+        field = ""
+
+    queryset = reduce(
+        lambda qs, value: qs.filter(**{f"data_provider_task_records{field}":value}), values, initial_qs
+    )
+
+    return queryset.select_related("downloadable_file")

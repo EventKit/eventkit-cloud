@@ -1173,8 +1173,9 @@ def create_zip_task(
 ):
     """
     :param result: The celery task result value, it should be a dict with the current state.
-    :param data_provider_task_uid: A data provider to zip (this or run_uid must be passed).
-    :return: The run files, or a single zip file if data_provider_task_uid is passed.
+    :param data_provider_task_record_uid: A data provider task record UID to zip.
+    :param data_provider_task_record_uids: A list of data provider task record UIDs to zip.
+    :return: The run files, or a single zip file if data_provider_task_record_uid is passed.
     """
     if not result:
         result = {}
@@ -1189,7 +1190,7 @@ def create_zip_task(
     if len(data_provider_task_record_uids) > 1:
         data_provider_task_record_slug = "run"
     elif len(data_provider_task_record_uids) == 1:
-        data_provider_task_record_slug = DataProviderTaskRecord.objects.get(uid=data_provider_task_record_uids[0]).slug
+        data_provider_task_record_slug = DataProviderTaskRecord.objects.select_related("provider").get(uid=data_provider_task_record_uids[0]).provider.slug
 
     metadata = get_metadata(data_provider_task_record_uids)
     include_files = metadata.get("include_files", None)
