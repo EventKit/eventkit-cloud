@@ -363,7 +363,7 @@ class ExportRunSerializer(serializers.ModelSerializer):
     provider_task_list_status = serializers.SerializerMethodField()
     provider_tasks = serializers.SerializerMethodField()
     user = serializers.SerializerMethodField()
-    zipfile_url = serializers.SerializerMethodField()
+    zipfile = serializers.SerializerMethodField()
     expiration = serializers.SerializerMethodField()
     created_at = serializers.SerializerMethodField()
     started_at = serializers.SerializerMethodField()
@@ -388,7 +388,7 @@ class ExportRunSerializer(serializers.ModelSerializer):
             "job",
             "provider_task_list_status",
             "provider_tasks",
-            "zipfile_url",
+            "zipfile",
             "expiration",
             "deleted",
         )
@@ -422,14 +422,23 @@ class ExportRunSerializer(serializers.ModelSerializer):
                     ).data
             return data
 
-    def get_zipfile_url(self, obj):
+    def get_zipfile(self, obj):
         request = self.context["request"]
-        provider_tasks, filtered_provider_tasks = attribute_class_filter(obj.provider_tasks.all(), request.user)
-        if obj.provider_tasks.filter(name="run") and not filtered_provider_tasks:
-            task_downloadable = obj.provider_tasks.get(name="run").tasks.filter(name__icontains="zip")[0].result
-            if task_downloadable:
-                return request.build_absolute_uri("/download?uid={}".format(task_downloadable.uid))
-        return ""
+        provider_tasks, filtered_provider_tasks = attribute_class_filter(obj.provider_tasks.exclude(slug="run"), request.user)
+
+        if filtered_provider_tasks:
+            data = None
+        else:
+            data = {
+                "status": "PENDING" # TODO: Import this from task status enumeration
+            }
+
+        run_zip_file = get_run_zip_file(values=provider_tasks).first()
+        if run_zip_file:
+            data = RunZipFileSerializer(run_zip_file, context=self.context).data
+
+        return data
+
 
     def get_created_at(self, obj):
         if not obj.deleted:
@@ -466,6 +475,7 @@ class ExportRunSerializer(serializers.ModelSerializer):
 class RunZipFileSerializer(serializers.ModelSerializer):
 
     data_provider_task_records = serializers.SerializerMethodField()
+    message = serializers.SerializerMethodField()
     run = serializers.SerializerMethodField()
     status = serializers.SerializerMethodField()
     url = serializers.SerializerMethodField()
@@ -476,17 +486,15 @@ class RunZipFileSerializer(serializers.ModelSerializer):
 
     def get_data_provider_task_records(self, obj):
         request = self.context["request"]
-        data = []
         provider_tasks, filtered_provider_tasks = attribute_class_filter(
             obj.data_provider_task_records.all(), request.user
         )
-        if provider_tasks.count() > 1:  # The will always be a run task.
-            data = DataProviderListSerializer(provider_tasks, many=True, context=self.context).data
 
-        if filtered_provider_tasks:
-            data += DataProviderListSerializer(filtered_provider_tasks, many=True, context=self.context).data
+        return DataProviderListSerializer(provider_tasks, many=True, context=self.context).data
 
-        return data
+    def get_message(self, obj):
+        # TODO: Add a property to run zip file model, use the progress updates
+        return "Placeholder Message"
 
     def get_run(self, obj):
         if obj.run:
@@ -505,20 +513,18 @@ class RunZipFileSerializer(serializers.ModelSerializer):
 
     def get_url(self, obj):
         request = self.context["request"]
-        if obj.run:
-            run = ExportRun.objects.get(uid=obj.run.uid)
-            provider_tasks, filtered_provider_tasks = attribute_class_filter(run.provider_tasks.all(), request.user)
-            if run.provider_tasks.filter(name="run") and not filtered_provider_tasks:
-                task_downloadable = run.provider_tasks.get(name="run").tasks.filter(name__icontains="zip")[0].result
-                if task_downloadable:
-                    return request.build_absolute_uri("/download?uid={}".format(task_downloadable.uid))
+        provider_tasks, filtered_provider_tasks = attribute_class_filter(obj.data_provider_task_records, request.user)
+        run_zip_file = get_run_zip_file(values=provider_tasks).first()
+        if run_zip_file:
+            if run_zip_file.downloadable_file:
+                return request.build_absolute_uri("/download?uid={}".format(run_zip_file.downloadable_file.uid))
 
         return ""
 
     def create(self, validated_data, **kwargs):
         request = self.context["request"]
         data_provider_task_record_uids = request.data.get("data_provider_task_record_uids")
-        queryset = get_run_zip_file(data_provider_task_record_uids)
+        queryset = get_run_zip_file(field="uid", values=data_provider_task_record_uids)
         # If there are no results, that means there's no zip file and we need to create one.
         if not queryset.exists():
             obj = RunZipFile.objects.create()
