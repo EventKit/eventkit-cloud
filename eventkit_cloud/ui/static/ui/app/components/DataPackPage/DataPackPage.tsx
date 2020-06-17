@@ -398,7 +398,6 @@ export class DataPackPage extends React.Component<Props, State> {
             isAuto,
             ...params,
         });
-        console.log(params)
         this.setState({loading: false});
     }
 
