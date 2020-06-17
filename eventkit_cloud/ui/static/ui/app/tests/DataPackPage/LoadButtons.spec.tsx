@@ -2,8 +2,8 @@ import * as React from 'react';
 import * as sinon from 'sinon';
 import { mount } from 'enzyme';
 import Button from '@material-ui/core/Button';
-import KeyboardArrowDown from '@material-ui/icons/KeyboardArrowDown';
-import KeyboardArrowUp from '@material-ui/icons/KeyboardArrowUp';
+import ArrowLeftIcon from '@material-ui/icons/ArrowLeft';
+import ArrowRightIcon from '@material-ui/icons/ArrowRight';
 import { LoadButtons } from '../../components/common/LoadButtons';
 
 describe('LoadButtons component', () => {
@@ -32,8 +32,8 @@ describe('LoadButtons component', () => {
         expect(wrapper.find(Button)).toHaveLength(2);
         expect(wrapper.find(Button).first().html()).toContain('Show Previous');
         expect(wrapper.find(Button).last().html()).toContain('Show Next');
-        expect(wrapper.find(KeyboardArrowDown)).toHaveLength(1);
-        expect(wrapper.find(KeyboardArrowUp)).toHaveLength(1);
+        expect(wrapper.find(ArrowLeftIcon)).toHaveLength(1);
+        expect(wrapper.find(ArrowRightIcon)).toHaveLength(1);
         expect(wrapper.find('#range')).toHaveLength(1);
         expect(wrapper.find('#range').html()).toContain('12 of 26');
     });

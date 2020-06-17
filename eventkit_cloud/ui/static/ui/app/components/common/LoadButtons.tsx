@@ -1,10 +1,6 @@
 import * as React from 'react';
 import { withTheme, Theme } from '@material-ui/core/styles';
 import Button from '@material-ui/core/Button';
-import KeyboardArrowDown from '@material-ui/icons/KeyboardArrowDown';
-import KeyboardArrowUp from '@material-ui/icons/KeyboardArrowUp';
-import ArrowBackIosIcon from '@material-ui/icons/ArrowBackIos';
-import ArrowForwardIosIcon from '@material-ui/icons/ArrowForwardIos';
 import ArrowLeftIcon from '@material-ui/icons/ArrowLeft';
 import ArrowRightIcon from '@material-ui/icons/ArrowRight';
 
