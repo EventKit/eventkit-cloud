@@ -431,7 +431,6 @@ def get_metadata(data_provider_task_uid):
 
         # Only include tasks with a specific projection in the metadata.
         # TODO: Refactor to make explicit which files are included in map documents.
-
         query = reduce(lambda q, value: q | Q(name__icontains=value), projections, Q())
         for export_task in provider_task.tasks.filter(query):
             if TaskStates[export_task.status] in TaskStates.get_incomplete_states():
