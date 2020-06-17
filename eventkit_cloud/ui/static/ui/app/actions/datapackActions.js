@@ -72,7 +72,7 @@ export function clearDataCartDetails() {
     return { type: types.CLEAR_DATACART_DETAILS };
 }
 
-export function getRuns(args = {}, append = false) {
+export function getRuns(args = {}) {
     const status = [];
     if (args.status) {
         Object.keys(args.status).forEach((key) => {
