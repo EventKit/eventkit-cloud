@@ -4,8 +4,13 @@ import InfoDialog from "../Dialog/InfoDialog";
 import {Theme, withStyles, withTheme} from "@material-ui/core/styles";
 import withWidth, {isWidthUp} from "@material-ui/core/withWidth";
 import CloudDownload from "@material-ui/icons/CloudDownload";
-import {useAsyncRequest} from "../../utils/hooks/api";
+import {useAsyncRequest, ApiStatuses} from "../../utils/hooks/api";
 import {getCookie} from "../../utils/generic";
+import {useRunContext} from "./RunFileContext";
+import {useEffect} from "react";
+import {DepsHashers, usePrevious} from "../../utils/hooks/hooks";
+import axios from "axios";
+import {CircularProgress} from "@material-ui/core";
 
 const jss = (theme: Eventkit.Theme & Theme) => ({
     btn: {
@@ -32,7 +37,6 @@ const jss = (theme: Eventkit.Theme & Theme) => ({
 
 interface Props {
     fontSize: string;
-    zipFileProp: string;
     classes: { [className: string]: string; }
     providerTaskUids: string[];
     theme: Eventkit.Theme & Theme;
@@ -41,57 +45,133 @@ interface Props {
 
 function CreateDataPackButton(props: Props) {
     const {fontSize, providerTaskUids, classes, theme} = props;
+    const {run} = useRunContext();
 
-    const [{ status: zipAvailableStatus, response: zipAvailableResponse }, zipAvailAbleCall, clearZipAvailable] = useAsyncRequest();
+    const requestOptions = {
+        url: `/api/runs/zipfiles`,
+        headers: {'X-CSRFToken': getCookie('csrftoken')},
+    }
+
+    const [{status: zipAvailableStatus, response: zipAvailableResponse}, zipAvailAbleCall, clearZipAvailable] = useAsyncRequest();
     const checkZipAvailable = () => {
         // Returned promise is ignored, we don't need it.
         zipAvailAbleCall({
-            // url: `/api/providers/requests`,
-            url: props.zipFileProp,
+            ...requestOptions,
             method: 'GET',
-            // data: {
-            //     uids: providerTaskUids,
-            // },
-            headers: { 'X-CSRFToken': getCookie('csrftoken') },
+            params: {
+                data_provider_task_record_uids: providerTaskUids.join(','),
+            }
         });
     };
 
-    function isZipAvailable() {
-        return !!zipAvailableStatus && zipAvailableStatus === 'success'
+    const [{status: requestZipFileStatus, response: requestZipFileResponse}, requestZipFileCall, clearRequestZipFile] = useAsyncRequest();
+    const postZipRequest = () => {
+
+        // Returned promise is ignored, we don't need it.
+        requestZipFileCall({
+            ...requestOptions,
+            method: 'POST',
+            data: {
+                data_provider_task_record_uids: providerTaskUids,
+            },
+        });
+    };
+
+    useEffect(() => {
+        clearZipAvailable();
+    }, [DepsHashers.arrayHash(providerTaskUids), run.status]);
+
+    useEffect(() => {
+        let timeoutId;
+        if (zipAvailableStatus === ApiStatuses.hookActions.NOT_FIRED) {
+            checkZipAvailable();
+        } else {
+            if (zipAvailableStatus === ApiStatuses.hookActions.SUCCESS &&
+                requestZipFileStatus !== ApiStatuses.hookActions.NOT_FIRED &&
+                !isZipAvailable()) {
+                timeoutId = setTimeout(() => {
+                    checkZipAvailable();
+                }, 5000);
+            }
+        }
+        return () => {
+            if (timeoutId) {
+                clearTimeout(timeoutId);
+            }
+        }
+    }, [zipAvailableStatus]);
+
+    function isRunCompleted() {
+        // TODO: add enum for run statuses to ApiStatuses object
+        return run.status === 'COMPLETED';
     }
 
-    // const [{ zipRequestStatus, zipRequestReponse }, zipRequestCall, clearZipRequest] = useAsyncRequest();
-    // const requestZip = () => {
-    //     // Returned promise is ignored, we don't need it.
-    //     zipAvailAbleCall({
-    //         url: `/api/providers/requests`,
-    //         method: 'GET',
-    //         data: {
-    //             uids: providerTaskUids,
-    //         },
-    //         headers: { 'X-CSRFToken': getCookie('csrftoken') },
-    //     });
-    // };
+    function isZipAvailable() {
+        return zipAvailableStatus === ApiStatuses.hookActions.SUCCESS &&
+            zipAvailableResponse.data.length &&
+            zipAvailableResponse.data[0].status === ApiStatuses.files.SUCCESS;
+    }
+
+    function getButtonText() {
+        if (!isRunCompleted()) {
+            return 'Job Processing...';
+        }
+        if (isZipAvailable()) {
+            return 'DOWNLOAD DATAPACK (.ZIP)';
+        }
+        if (!!zipAvailableResponse && zipAvailableResponse.status === 'PENDING' || zipAvailableStatus === ApiStatuses.hookActions.FETCHING) {
+            return 'Processing Zip...'
+        }
+        return 'CREATE DATAPACK (.ZIP)';
+    }
+
+    function shouldEnableButton() {
+        if (isZipAvailable()) {
+            return true;
+        }
+        return isRunCompleted() && requestZipFileStatus === ApiStatuses.hookActions.NOT_FIRED;
+    }
+
+    async function buttonAction() {
+        if (!isZipAvailable()) {
+            postZipRequest();
+            clearZipAvailable();
+        }
+    }
+
+    const buttonEnabled = shouldEnableButton();
 
     function getCloudDownloadIcon() {
         const {colors} = theme.eventkit;
-        if (false) {
-            return (
-                <CloudDownload
-                    className="qa-DataPackDetails-CloudDownload-disabled"
-                    style={{fill: colors.grey, verticalAlign: 'middle', marginRight: '5px'}}
-                />
-            );
+        let iconProps: { style?: any; className?: string; };
+        if (buttonEnabled) {
+            iconProps = {
+                style: {fill: colors.primary},
+                className: 'qa-DataPack-button-enabled',
+            }
+
+        } else {
+            iconProps = {
+                style: {fill: colors.grey},
+                className: 'qa-DataPack-button-disabled"',
+            }
+        }
+        iconProps.style = {
+            ...iconProps.style,
+            ...{
+                verticalAlign: 'middle', marginRight: '5px',
+            }
+        }
+        let Component: any = CloudDownload;
+        if (!isRunCompleted() || !isZipAvailable()) {
+            Component = CircularProgress;
         }
         return (
-            <CloudDownload
-                className="qa-DataPackDetails-CloudDownload-enabled"
-                style={{fill: colors.primary, verticalAlign: 'middle', marginRight: '5px'}}
+            <Component
+                {...iconProps}
             />
         );
     }
-
-
 
     return (
         <>
@@ -100,12 +180,19 @@ function CreateDataPackButton(props: Props) {
                 variant="contained"
                 className="qa-DataPackDetails-Button-zipButton"
                 classes={{root: classes.btn}}
-                disabled={false}
+                disabled={!buttonEnabled}
                 style={{fontSize: fontSize, lineHeight: 'initial'}}
-                onClick={() => checkZipAvailable()}
+                onClick={buttonAction}
+                {...(() => {
+                    const extraProps = {} as { href: string };
+                    if (isZipAvailable()) {
+                        extraProps.href = zipAvailableResponse.data[0].url;
+                    }
+                    return extraProps
+                })()}
             >
                 {getCloudDownloadIcon()}
-                {false ? 'DOWNLOAD DATAPACK (.ZIP)' : 'CREATING DATAPACK ZIP'}
+                {getButtonText()}
 
             </Button>
             <InfoDialog

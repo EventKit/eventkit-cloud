@@ -2,11 +2,24 @@ import {useCallback, useReducer} from "react";
 import axios from "axios";
 
 
-enum ACTIONS {
-    FETCHING,
-    SUCCESS,
-    ERROR,
-    CANCEL,
+export enum ACTIONS {
+    FETCHING='fetching',
+    SUCCESS='success',
+    ERROR='error',
+    CANCEL='cancel',
+    NOT_FIRED='not_fired',
+}
+
+enum FileStatus {
+    PENDING='PENDING',
+    RUNNING='RUNNING',
+    SUCCESS='SUCCESS',
+    FAILED='FAILED',
+}
+
+export class ApiStatuses {
+    static readonly hookActions = ACTIONS;
+    static readonly files = FileStatus;
 }
 
 interface RequestState {
@@ -16,18 +29,18 @@ interface RequestState {
 }
 
 const initialState = {
-    status: null, response: {}, onCancel: () => {
+    status: ACTIONS.NOT_FIRED, response: {}, onCancel: () => {
     }
 } as RequestState;
 
 function submitReducer(state = initialState, {type = undefined, response = undefined, onCancel = undefined} = {}): RequestState {
     switch (type) {
         case ACTIONS.FETCHING:
-            return {...initialState, status: 'fetching', onCancel: onCancel ? onCancel : initialState.onCancel};
+            return {...initialState, status: ACTIONS.FETCHING, onCancel: onCancel ? onCancel : initialState.onCancel};
         case ACTIONS.SUCCESS:
-            return {...state, status: 'success', response};
+            return {...state, status: ACTIONS.SUCCESS, response};
         case ACTIONS.ERROR:
-            return {...state, status: 'error', response};
+            return {...state, status: ACTIONS.ERROR, response};
         case ACTIONS.CANCEL:
             return {...initialState};
         default:
@@ -59,12 +72,12 @@ export function useAsyncRequest_Control(): [RequestState, Dispatcher] {
     return [state, dispatches]
 }
 
-export function useAsyncRequest(): [RequestState, (params: any) => Promise<void>, () => void] {
+export function useAsyncRequest(cancelMessage=''): [RequestState, (params: any) => Promise<void>, () => void] {
     const [state, dispatches] = useAsyncRequest_Control();
     const makeRequest = useCallback(async (params: any) => {
         const CancelToken = axios.CancelToken;
         const source = CancelToken.source();
-        dispatches.fetching(() => source.cancel(''));
+        dispatches.fetching(() => source.cancel(cancelMessage));
         try {
             const response = await axios({
                 ...params,

@@ -42,7 +42,6 @@ export interface Props {
     onProviderCancel: (uid: string) => void;
     providers: Eventkit.Provider[];
     job: Eventkit.Job;
-    zipFileProp: string;
     classes: { [className: string]: string };
     theme: Eventkit.Theme & Theme;
     width: Breakpoint;
@@ -106,13 +105,6 @@ export class DataPackDetails extends React.Component<Props, State> {
 
     private getToggleCellWidth() {
         return '86px';
-    }
-
-    private isZipFileCompleted() {
-        if (!this.props.zipFileProp) {
-            return false;
-        }
-        return true;
     }
 
     private handleInfoOpen() {
@@ -224,7 +216,6 @@ export class DataPackDetails extends React.Component<Props, State> {
                                         ).map(
                                             providerTask => providerTask.uid
                                         )}
-                                    zipFileProp={this.props.zipFileProp}
                                 />
                             </TableCell>
                             <TableCell

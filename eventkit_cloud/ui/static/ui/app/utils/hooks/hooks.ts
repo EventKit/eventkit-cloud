@@ -13,7 +13,7 @@ export const useEffectOnMount = (effect: () => void) => useEffect(effect, []);
 // Example usage:
 // --- const [count, setCount] = useState(0);
 // --- const prevCount = usePrevious(count);
-function usePrevious(stateValue) {
+export function usePrevious(stateValue) {
     const ref = useRef();
     useEffect(() => {
         ref.current = stateValue;
