@@ -1,34 +1,31 @@
 import copy
-from enum import Enum
 import logging
-from operator import itemgetter
 import os
 import pickle
 import re
 import requests
 import signal
-from time import sleep
-
-from numpy import linspace
+import urllib.parse
 import yaml
-
-
 from django.conf import settings
 from django.core.cache import cache
+from django.db.models import Q
 from django.template.loader import render_to_string
 from django.utils import timezone
 from django.utils.text import slugify
-from django.db.models import Q
+from enum import Enum
+from functools import reduce
+from numpy import linspace
+from operator import itemgetter
+from time import sleep
 
 from eventkit_cloud.core.helpers import get_cached_model
-from eventkit_cloud.utils import auth_requests
-from eventkit_cloud.utils.gdalutils import get_band_statistics
-from eventkit_cloud.utils.generic import cd, get_file_paths  # NOQA
-
 from eventkit_cloud.jobs.models import DataProvider
 from eventkit_cloud.tasks.exceptions import FailedException
 from eventkit_cloud.tasks.models import DataProviderTaskRecord, ExportRunFile
-import urllib.parse
+from eventkit_cloud.utils import auth_requests
+from eventkit_cloud.utils.gdalutils import get_band_statistics
+from eventkit_cloud.utils.generic import cd, get_file_paths  # NOQA
 
 logger = logging.getLogger()
 
@@ -369,7 +366,11 @@ def get_metadata(data_provider_task_uid):
     from eventkit_cloud.tasks.enumerations import TaskStates
     from eventkit_cloud.tasks.export_tasks import create_zip_task
 
-    data_provider_task = DataProviderTaskRecord.objects.get(uid=data_provider_task_uid)
+    data_provider_task = (
+        DataProviderTaskRecord.objects.select_related("run__job")
+        .prefetch_related("run__job__projections")
+        .get(uid=data_provider_task_uid)
+    )
 
     run = data_provider_task.run
 
@@ -430,7 +431,8 @@ def get_metadata(data_provider_task_uid):
 
         # Only include tasks with a specific projection in the metadata.
         # TODO: Refactor to make explicit which files are included in map documents.
-        for export_task in provider_task.tasks.filter(Q(name__icontains="3857") | Q(name__icontains="4326")):
+        query = reduce(lambda q, value: q | Q(name__icontains=value), projections, Q())
+        for export_task in provider_task.tasks.filter(query):
             if TaskStates[export_task.status] in TaskStates.get_incomplete_states():
                 continue
 
