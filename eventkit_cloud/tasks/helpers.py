@@ -212,20 +212,17 @@ def generate_qgs_style(metadata):
 
     style_file = os.path.join(stage_dir, style_file_name)
 
+    context = {
+        "job_name": job_name,
+        "job_date_time": "{0}".format(timezone.now().strftime("%Y%m%d%H%M%S%f")[:-3]),
+        "provider_details": provider_details,
+        "bbox": metadata["bbox"],
+        "has_raster": metadata["has_raster"],
+        "has_elevation": metadata["has_elevation"],
+    }
+
     with open(style_file, "wb") as open_file:
-        open_file.write(
-            render_to_string(
-                "styles/Style.qgs",
-                context={
-                    "job_name": job_name,
-                    "job_date_time": "{0}".format(timezone.now().strftime("%Y%m%d%H%M%S%f")[:-3]),
-                    "provider_details": provider_details,
-                    "bbox": metadata["bbox"],
-                    "has_raster": metadata["has_raster"],
-                    "has_elevation": metadata["has_elevation"],
-                },
-            ).encode()
-        )
+        open_file.write(render_to_string("styles/Style.qgs", context=context,).encode())
     return style_file
 
 
@@ -431,7 +428,9 @@ def get_metadata(data_provider_task_uid):
         if provider_task.preview is not None:
             include_files += [get_provider_staging_preview(run.uid, provider_task.provider.slug)]
 
-        for export_task in provider_task.tasks.all():
+        # Only include tasks with a specific projection in the metadata.
+        # TODO: Refactor to make explicit which files are included in map documents.
+        for export_task in provider_task.tasks.filter(Q(name__icontains="3857") | Q(name__icontains="4326")):
             if TaskStates[export_task.status] in TaskStates.get_incomplete_states():
                 continue
 
@@ -454,11 +453,13 @@ def get_metadata(data_provider_task_uid):
                         data_provider_slug=provider_task.provider.slug,
                     )
                     filepath = get_archive_data_path(provider_task.provider.slug, download_filename)
-
+                    pattern = re.compile(".*EPSG:(?P<projection>3857|4326).*$")
+                    projection = pattern.match(export_task.name).groupdict().get("projection")
                     file_data = {
                         "file_path": filepath,
                         "full_file_path": full_file_path,
                         "file_ext": file_ext,
+                        "projection": projection,
                     }
                     if metadata["data_sources"][provider_task.provider.slug].get("type") == "elevation":
                         # Get statistics to update ranges in template.
