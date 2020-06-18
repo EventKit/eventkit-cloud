@@ -366,6 +366,7 @@ class ZipFileTask(FormatTask):
         run_zip_file.downloadable_file = downloadable_file
         run_zip_file.data_provider_task_records.set(data_provider_task_records)
         run_zip_file.finished_at = timezone.now()
+        run_zip_file.message = "Completed"
         run_zip_file.save()
         return retval
 
@@ -1217,6 +1218,7 @@ def create_zip_task(
 
         result["result"] = zip_files(
             include_files=include_files,
+            run_zip_file_uid=run_zip_file_uid,
             file_path=os.path.join(
                 get_provider_staging_dir(metadata["run_uid"], data_provider_task_record_slug), zip_file_name,
             ),
@@ -1255,7 +1257,7 @@ def finalize_export_provider_task(result=None, data_provider_task_uid=None, stat
 
 
 @gdalutils.retry
-def zip_files(include_files, file_path=None, static_files=None, *args, **kwargs):
+def zip_files(include_files, run_zip_file_uid, file_path=None, static_files=None, *args, **kwargs):
     """
     Contains the organization for the files within the archive.
     :param include_files: A list of files to be included.
@@ -1272,6 +1274,8 @@ def zip_files(include_files, file_path=None, static_files=None, *args, **kwargs)
     if not file_path:
         logger.error("zip_file_task called with no file path.")
         raise Exception("zip_file_task called with no file path.")
+
+    run_zip_file = RunZipFile.objects.get(uid=run_zip_file_uid)
 
     files = [filename for filename in include_files if os.path.splitext(filename)[-1] not in BLACKLISTED_ZIP_EXTS]
 
@@ -1298,6 +1302,7 @@ def zip_files(include_files, file_path=None, static_files=None, *args, **kwargs)
                         )
                 zipfile.write(absolute_file_path, arcname=filename)
         for filepath in files:
+            run_zip_file.message = f"Adding {filename} to zip archive."
             # This takes files from the absolute stage paths and puts them in the provider directories in the data dir.
             # (e.g. staging_root/run_uid/provider_slug/file_name.ext -> data/provider_slug/file_name.ext)
             name, ext = os.path.splitext(filepath)
@@ -1321,7 +1326,7 @@ def zip_files(include_files, file_path=None, static_files=None, *args, **kwargs)
                 filename = get_archive_data_path(provider_slug, download_filename)
             zipfile.write(filepath, arcname=filename)
 
-        add_export_run_files_to_zip(zipfile)
+        add_export_run_files_to_zip(zipfile, run_zip_file)
 
         if zipfile.testzip():
             raise Exception("The zipped file was corrupted.")

@@ -669,7 +669,7 @@ def check_cached_task_failures(task_name, task_uid):
         raise FailedException(task_name=task_name)
 
 
-def add_export_run_files_to_zip(zipfile):
+def add_export_run_files_to_zip(zipfile, run_zip_file):
     """
     Add additional files stored in ExportRunFile objects to a zipfile.
     """
@@ -678,6 +678,7 @@ def add_export_run_files_to_zip(zipfile):
 
     export_run_files = ExportRunFile.objects.all()
     for export_run_file in export_run_files:
+        run_zip_file.message = f"Adding {export_run_file.file.name} to zip archive."
         export_run_file_path = os.path.join(settings.EXPORT_RUN_FILES, export_run_file.file.name)
 
         if settings.USE_S3:

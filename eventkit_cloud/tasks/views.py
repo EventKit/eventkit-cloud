@@ -12,7 +12,7 @@ from django.shortcuts import redirect
 from eventkit_cloud.tasks.helpers import get_run_download_dir, get_run_staging_dir
 from eventkit_cloud.tasks.models import ExportRun
 from eventkit_cloud.tasks.task_factory import get_zip_task_chain
-from eventkit_cloud.tasks.models import FileProducingTaskResult, UserDownload
+from eventkit_cloud.tasks.models import FileProducingTaskResult, RunZipFile, UserDownload
 from eventkit_cloud.utils.s3 import get_presigned_url
 
 logger = getLogger(__name__)
@@ -65,6 +65,9 @@ def generate_zipfile(data_provider_task_record_uids, run_zip_file_uid):
         )
 
     run = runs.first()
+
+    run_zip_file = RunZipFile.objects.get(uid=run_zip_file_uid)
+    run_zip_file.message = "Downloading files to be zipped..."
     stage_dir = get_run_staging_dir(run.uid)
     download_dir = get_run_download_dir(run.uid)
 
@@ -84,5 +87,4 @@ def generate_zipfile(data_provider_task_record_uids, run_zip_file_uid):
     )
     run_zip_task_chain.apply_async()
 
-    # TODO: We need to keep the user updated, when the zip is finished it should populate their frontend button to say Download DataPack instead of Generate Zipfile.
     return HttpResponse(status=200)

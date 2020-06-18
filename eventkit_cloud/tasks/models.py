@@ -351,3 +351,11 @@ class RunZipFile(UIDMixin, TimeStampedModelMixin, TimeTrackingModelMixin):
     run = models.ForeignKey(ExportRun, on_delete=models.CASCADE, related_name="zip_files", null=True, blank=True)
     data_provider_task_records = models.ManyToManyField(DataProviderTaskRecord)
     downloadable_file = models.ForeignKey(FileProducingTaskResult, on_delete=models.CASCADE, null=True, blank=True)
+
+    @property
+    def message(self):
+        return get_cache_value(obj=self, attribute="message", default="")
+
+    @message.setter
+    def message(self, value, expiration=DEFAULT_CACHE_EXPIRATION):
+        return set_cache_value(obj=self, attribute="message", value=value, expiration=expiration)
