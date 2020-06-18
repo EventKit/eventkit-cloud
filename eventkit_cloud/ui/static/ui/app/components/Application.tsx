@@ -1,11 +1,11 @@
 import * as PropTypes from 'prop-types';
 import * as React from 'react';
-import { connect } from 'react-redux';
+import {connect} from 'react-redux';
 import axios from 'axios';
 import queryString from 'query-string';
-import { withTheme, withStyles, createStyles } from '@material-ui/core/styles';
-import withWidth, { isWidthUp } from '@material-ui/core/withWidth';
-import { Breakpoint } from '@material-ui/core/styles/createBreakpoints';
+import {withTheme, withStyles, createStyles} from '@material-ui/core/styles';
+import withWidth, {isWidthUp} from '@material-ui/core/withWidth';
+import {Breakpoint} from '@material-ui/core/styles/createBreakpoints';
 import AppBar from '@material-ui/core/AppBar';
 import IconButton from '@material-ui/core/IconButton';
 import Menu from '@material-ui/icons/Menu';
@@ -13,14 +13,15 @@ import Notifications from '@material-ui/icons/Notifications';
 import Banner from './Banner';
 import Drawer from './Drawer';
 import BaseDialog from './Dialog/BaseDialog';
-import { DrawerTimeout } from '../actions/uiActions';
+import {DrawerTimeout} from '../actions/uiActions';
 import {login, userActive} from '../actions/userActions';
-import { getNotifications, getNotificationsUnreadCount } from '../actions/notificationsActions';
+import {getNotifications, getNotificationsUnreadCount} from '../actions/notificationsActions';
 import NotificationsDropdown from './Notification/NotificationsDropdown';
 import Loadable from 'react-loadable';
-import { connectedReduxRedirect } from 'redux-auth-wrapper/history4/redirect';
-import { Redirect, Route, RouteComponentProps } from 'react-router';
-import { routerActions } from 'connected-react-router';
+import {connectedReduxRedirect} from 'redux-auth-wrapper/history4/redirect';
+import createBrowserHistory from '../utils/history';
+import {Redirect, Route, RouteComponentProps, Router} from 'react-router';
+import {routerActions} from 'connected-react-router';
 import debounce from 'lodash/debounce';
 import PageLoading from './common/PageLoading';
 import theme from "../styles/eventkit_theme";
@@ -35,7 +36,7 @@ require('../fonts/index.css');
 const Loading = (args) => {
     if (args.pastDelay) {
         return (
-            <PageLoading background="pattern" />
+            <PageLoading background="pattern"/>
         );
     }
 
@@ -145,12 +146,14 @@ interface Props {
 }
 
 interface State {
-    childContext: { config: {
-        DATAPACK_PAGE_SIZE?: string;
-        NOTIFICATIONS_PAGE_SIZE?: string;
-        CONTACT_URL?: string;
-        SERVE_ESTIMATES?: boolean
-    }};
+    childContext: {
+        config: {
+            DATAPACK_PAGE_SIZE?: string;
+            NOTIFICATIONS_PAGE_SIZE?: string;
+            CONTACT_URL?: string;
+            SERVE_ESTIMATES?: boolean
+        }
+    };
     autoLogoutWarningText: string;
     showAutoLogoutWarningDialog: boolean;
     showAutoLoggedOutDialog: boolean;
@@ -158,7 +161,7 @@ interface State {
     notificationsLoading: boolean;
     loggedIn: boolean;
     isMounted: false;
-    user: {data: any, status: any};
+    user: { data: any, status: any };
 }
 
 const Loader = Loadable({
@@ -168,7 +171,7 @@ const Loader = Loadable({
 
 const UserIsAuthenticated = connectedReduxRedirect({
     authenticatedSelector: (state: State) => !!state.user.data,
-    authenticatingSelector: (state: State) => state.user.status.isLoading ,
+    authenticatingSelector: (state: State) => state.user.status.isLoading,
     AuthenticatingComponent: Loader,
     redirectAction: routerActions.replace,
     wrapperDisplayName: 'UserIsAuthenticated',
@@ -265,27 +268,34 @@ const NotificationsPage = Loadable({
     loader: () => import('./NotificationsPage/NotificationsPage'),
 });
 
+const history = createBrowserHistory;
 const routes = (
-    <div>
-        <Route exact path="/login/error" component={UserCanViewErrorPage(LoginErrorPage)} />
-        <Route exact path="/login" component={UserIsNotAuthenticated(LoginPage)} />
+    <Router history={history}>
+        <div>
+            <Route exact path="/login/error" component={UserCanViewErrorPage(LoginErrorPage)}/>
+            <Route exact path="/login" component={UserIsNotAuthenticated(LoginPage)}/>
 
-        <Route path="/logout" component={Logout} />
-        <Route path="/dashboard" component={UserIsAuthenticated(UserHasAgreed(DashboardPage))} />
-        <Route path="/exports" component={UserIsAuthenticated(UserHasAgreed(DataPackPage))} />
-        <Route path="/create" component={UserIsAuthenticated(UserHasAgreed(CreateExport))} />
-        <Route
-            path="/status/:jobuid"
-            component={UserIsAuthenticated(UserHasAgreed(StatusDownload))}
-        />
-        <Route path="/about" component={UserIsAuthenticated(About)} />
-        <Route path="/account" component={UserIsAuthenticated(Account)} />
-        <Route path="/groups" component={UserIsAuthenticated(UserGroupsPage)} />
-        <Route path="/notifications" component={UserIsAuthenticated(NotificationsPage)} />
-        <Route exact path="/" render={() => (
-            <Redirect to="/dashboard" />
-        )} />
-    </div>
+            <Route path="/logout" component={Logout}/>
+            <Route path="/dashboard" component={UserIsAuthenticated(UserHasAgreed(DashboardPage))}/>
+            <Route path="/exports" component={UserIsAuthenticated(UserHasAgreed(DataPackPage))}/>
+            <Route path="/create" component={UserIsAuthenticated(UserHasAgreed(CreateExport))}/>
+            <Route
+                path="/status/:jobuid"
+                component={UserIsAuthenticated(UserHasAgreed(StatusDownload))}
+            />
+            <Route path="/about" component={UserIsAuthenticated(About)}/>
+            <Route path="/account" component={UserIsAuthenticated(Account)}/>
+            <Route path="/groups" component={UserIsAuthenticated(UserGroupsPage)}/>
+            <Route path="/notifications" component={UserIsAuthenticated(NotificationsPage)}/>
+            <Route
+                exact
+                path="/"
+                render={() => (
+                    <Redirect to="/dashboard"/>
+                )}
+            />
+        </div>
+    </Router>
 );
 
 export class Application extends React.Component<Props, State> {
@@ -299,8 +309,8 @@ export class Application extends React.Component<Props, State> {
     private autoLogoutWarningIntervalId: number | null;
     private isSendingUserActivePings: boolean;
     private handleUserActiveInput = debounce(() => {
-            this.props.userActive();
-        }, 30 * 1000);
+        this.props.userActive();
+    }, 30 * 1000);
 
     static defaultProps = {
         children: null,
@@ -345,7 +355,7 @@ export class Application extends React.Component<Props, State> {
         this.handleNotificationsButtonClick = this.handleNotificationsButtonClick.bind(this);
         this.handleNotificationsDropdownNavigate = this.handleNotificationsDropdownNavigate.bind(this);
         this.state = {
-            childContext: { config: {} },
+            childContext: {config: {}},
             autoLogoutWarningText: '',
             showAutoLogoutWarningDialog: false,
             showAutoLoggedOutDialog: false,
@@ -379,7 +389,7 @@ export class Application extends React.Component<Props, State> {
     }
 
     componentDidUpdate(prevProps, prevState) {
-        const { favicon, reddotfavicon } = theme.eventkit.images;
+        const {favicon, reddotfavicon} = theme.eventkit.images;
         const domFavicon = document.getElementById('favicon') as HTMLInputElement;
 
         if (domFavicon) {
@@ -408,19 +418,19 @@ export class Application extends React.Component<Props, State> {
             }
         }
         if (!this.state.loggedIn && this.props.userData) {
-            this.setState({ loggedIn: true });
+            this.setState({loggedIn: true});
             if (this.props.width === 'xl') {
                 this.props.openDrawer();
             }
         } else if (this.state.loggedIn && !this.props.userData) {
-            this.setState({ loggedIn: false });
+            this.setState({loggedIn: false});
             this.stopCheckingForAutoLogout();
             this.stopSendingUserActivePings();
             this.stopListeningForNotifications();
         }
 
         if (this.props.notificationsStatus.fetched && !prevProps.notificationsStatus.fetched) {
-            this.setState({ notificationsLoading: false });
+            this.setState({notificationsLoading: false});
         }
     }
 
@@ -482,7 +492,7 @@ export class Application extends React.Component<Props, State> {
     }
 
     handleCloseAutoLoggedOutDialog() {
-        this.setState({ showAutoLoggedOutDialog: false });
+        this.setState({showAutoLoggedOutDialog: false});
     }
 
     handleToggle() {
@@ -535,7 +545,7 @@ export class Application extends React.Component<Props, State> {
     }
 
     autoGetNotificationsUnreadCount() {
-        this.props.getNotificationsUnreadCount({ isAuto: true });
+        this.props.getNotificationsUnreadCount({isAuto: true});
     }
 
     autoGetNotifications() {
@@ -643,7 +653,7 @@ export class Application extends React.Component<Props, State> {
         };
 
         updateAutoLogoutWarningText();
-        this.setState({ showAutoLogoutWarningDialog: true });
+        this.setState({showAutoLogoutWarningDialog: true});
 
         // Stop automatically sending user active pings during this time, so that the user
         // has to press a button to stay logged in.
@@ -659,7 +669,7 @@ export class Application extends React.Component<Props, State> {
             return;
         }
 
-        this.setState({ showAutoLogoutWarningDialog: false });
+        this.setState({showAutoLogoutWarningDialog: false});
 
         window.clearInterval(this.autoLogoutWarningIntervalId);
         this.autoLogoutWarningIntervalId = null;
@@ -673,7 +683,7 @@ export class Application extends React.Component<Props, State> {
         }
         // Close the notifications dropdown if it's open and we click outside of it.
         if (this.state.showNotificationsDropdown) {
-            this.setState({ showNotificationsDropdown: false });
+            this.setState({showNotificationsDropdown: false});
         }
     }
 
@@ -686,7 +696,7 @@ export class Application extends React.Component<Props, State> {
     }
 
     handleNotificationsDropdownNavigate() {
-        this.setState({ showNotificationsDropdown: false });
+        this.setState({showNotificationsDropdown: false});
         // Allow navigation to proceed.
         return true;
     }
@@ -703,14 +713,14 @@ export class Application extends React.Component<Props, State> {
     }
 
     render() {
-        const { classes } = this.props;
-        const { colors, images } = this.props.theme.eventkit;
+        const {classes} = this.props;
+        const {colors, images} = this.props.theme.eventkit;
         const mainAppBarHeight = 95;
         const styles = {
             content: {
                 transition: 'margin-left 450ms cubic-bezier(0.23, 1, 0.32, 1)',
                 marginLeft: (this.props.drawer === 'open' || this.props.drawer === 'opening')
-                    && isWidthUp('xl', this.props.width) ? 200 : 0,
+                && isWidthUp('xl', this.props.width) ? 200 : 0,
                 background: 'rgb(17, 24, 35)',
                 backgroundImage: `url(${images.topo_dark})`,
                 height: `calc(100vh - ${mainAppBarHeight}px)`,
@@ -725,44 +735,44 @@ export class Application extends React.Component<Props, State> {
 
         return (
             <AppConfigProvider value={this.state.childContext.config}>
-                <div style={{ backgroundColor: colors.black }}>
+                <div style={{backgroundColor: colors.black}}>
                     <AppBar
                         className={`qa-Application-AppBar ${classes.appBar}`}
                     >
-                        <Banner />
+                        <Banner/>
                         <div className={classes.title}>
-                            <img className={classes.img} src={images.logo} alt="EventKit" />
+                            <img className={classes.img} src={images.logo} alt="EventKit"/>
                         </div>
-                        {this.state.loggedIn ? <div style={{ position: 'absolute', left: '0', top: '25px' }}>
+                        {this.state.loggedIn ? <div style={{position: 'absolute', left: '0', top: '25px'}}>
                             <IconButton
                                 className={`qa-Application-AppBar-MenuButton ${classes.menuButton}`}
                                 color="secondary"
                                 onClick={this.handleToggle}
                             >
-                                <Menu style={{ width: '36px', height: '36px' }} />
+                                <Menu style={{width: '36px', height: '36px'}}/>
                             </IconButton>
-                                <div style={{ display: 'inline-block', position: 'relative' }}>
-                                    <IconButton
-                                        className={`qa-Application-AppBar-NotificationsButton ${classes.notificationsButton}`}
-                                        style={{
-                                            backgroundColor: (this.props.history.location.pathname.indexOf('/notifications') === 0) ?
-                                                colors.primary : '',
-                                            padding: 0
-                                        }}
-                                        color="secondary"
-                                        onClick={this.handleNotificationsButtonClick}
-                                    >
-                                        <Notifications style={{ width: '38px', height: '38px' }} />
-                                    </IconButton>
-                            <div
-                                className={`qa-Application-AppBar-badgeNotificationsIndicator ${classes.badgeNotificationsIndicator}`}
-                                style={{
-                                    transform: (this.props.notificationsCount > 0) ? 'scale(1)' : 'scale(0)',
-                                    transition: 'transform 0.25s cubic-bezier(0.23, 1, 0.32, 1)',
-                                }}
-                            >
-                                { this.handleNotificationCount() }
-                            </div>
+                            <div style={{display: 'inline-block', position: 'relative'}}>
+                                <IconButton
+                                    className={`qa-Application-AppBar-NotificationsButton ${classes.notificationsButton}`}
+                                    style={{
+                                        backgroundColor: (this.props.history.location.pathname.indexOf('/notifications') === 0) ?
+                                            colors.primary : '',
+                                        padding: 0
+                                    }}
+                                    color="secondary"
+                                    onClick={this.handleNotificationsButtonClick}
+                                >
+                                    <Notifications style={{width: '38px', height: '38px'}}/>
+                                </IconButton>
+                                <div
+                                    className={`qa-Application-AppBar-badgeNotificationsIndicator ${classes.badgeNotificationsIndicator}`}
+                                    style={{
+                                        transform: (this.props.notificationsCount > 0) ? 'scale(1)' : 'scale(0)',
+                                        transition: 'transform 0.25s cubic-bezier(0.23, 1, 0.32, 1)',
+                                    }}
+                                >
+                                    {this.handleNotificationCount()}
+                                </div>
                                 <div>
                                     {this.state.showNotificationsDropdown ?
                                         <NotificationsDropdown
@@ -771,7 +781,7 @@ export class Application extends React.Component<Props, State> {
                                             history={this.props.history}
                                             onNavigate={this.handleNotificationsDropdownNavigate}
                                             onClickAway={this.handleClick}
-                                        /> : null }
+                                        /> : null}
                                 </div>
                             </div>
                         </div> : null}
@@ -784,7 +794,7 @@ export class Application extends React.Component<Props, State> {
                     />
                     <div className="qa-Application-content" style={styles.content}>
                         <div>{childrenWithContext}</div>
-                        { routes }
+                        {routes}
                     </div>
                     <BaseDialog
                         show={this.state.showAutoLogoutWarningDialog}
@@ -853,3 +863,13 @@ export default withWidth()(
         )
     )
 );
+
+// export default withWidth()(
+//     withTheme()<any>(
+//         withStyles<any, any>(jss)(withRouter(
+//             connect(mapStateToProps, mapDispatchToProps)(
+//                 Application
+//             ))
+//         )
+//     )
+// );
