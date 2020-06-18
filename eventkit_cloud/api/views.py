@@ -1272,9 +1272,14 @@ class ExportRunViewSet(viewsets.ModelViewSet):
 
 class RunZipFileViewSet(viewsets.ModelViewSet):
     serializer_class = RunZipFileSerializer
+    permission_classes = (permissions.IsAuthenticated,)
+    lookup_field = "uid"
+    http_method_names = ['get', 'post', 'head', 'options']
 
     def get_queryset(self):
-        queryset = RunZipFile.objects.all()
+        jobs = JobPermission.userjobs(self.request.user, "READ")
+        queryset = (RunZipFile.objects.filter(Q(run__job__in=jobs) | Q(run__job__visibility=VisibilityState.PUBLIC.value)).filter())
+
         query_params = self.request.query_params
 
         run_uid = query_params.get("run_uid")
@@ -1287,6 +1292,25 @@ class RunZipFileViewSet(viewsets.ModelViewSet):
             queryset = get_run_zip_file(field="uid", values=data_provider_task_record_uids)
 
         return queryset
+
+    def list(self, request, *args, **kwargs):
+        """
+        List all zipfiles.
+        * return: A list of zipfiles.
+        """
+        run_zip_files, filtered_run_zip_files = attribute_class_filter(self.get_queryset(), self.request.user)
+        serializer = self.get_serializer(run_zip_files, many=True, context={"request": request})
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+    def retrieve(self, request, uid=None, *args, **kwargs):
+        """
+        Look up a single zipfile by uid.
+        * uid: optional lookup field
+        * return: The data provider with the given uid.
+        """
+        run_zip_files, filtered_run_zip_files = attribute_class_filter(self.get_queryset(), self.request.user)
+        serializer = self.get_serializer(run_zip_files, many=True, context={"request": request})
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
 
 class ExportTaskViewSet(viewsets.ReadOnlyModelViewSet):
