@@ -48,6 +48,7 @@ from eventkit_cloud.tasks.models import (
 from eventkit_cloud.tasks.views import generate_zipfile
 from eventkit_cloud.user_requests.models import DataProviderRequest, SizeIncreaseRequest
 from eventkit_cloud.utils.s3 import get_presigned_url
+from eventkit_cloud.tasks.enumerations import TaskStates
 
 try:
     from collections import OrderedDict
@@ -493,8 +494,14 @@ class RunZipFileSerializer(serializers.ModelSerializer):
         return DataProviderListSerializer(provider_tasks, many=True, context=self.context).data
 
     def get_message(self, obj):
-        # TODO: Add a property to run zip file model, use the progress updates
-        return "Placeholder Message"
+        request = self.context["request"]
+        if obj.run:
+            run = ExportRun.objects.get(uid=obj.run.uid)
+            provider_tasks, filtered_provider_tasks = attribute_class_filter(run.provider_tasks.all(), request.user)
+            if run.provider_tasks.filter(name="run") and not filtered_provider_tasks:
+                if TaskStates[run.provider_tasks.get(name="run").tasks.filter(name__icontains="zip")[0].status] in TaskStates.get_finished_states():
+                    return "Completed"
+        return obj.message
 
     def get_run(self, obj):
         if obj.run:
