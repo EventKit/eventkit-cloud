@@ -11,7 +11,7 @@ from django.contrib.auth.models import User, Group
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.gis.geos import GEOSException, GEOSGeometry
 from django.db import transaction
-from django.db.models import Q, Count
+from django.db.models import Q
 from django.shortcuts import redirect, render
 from django.utils.translation import ugettext as _
 from django_filters.rest_framework import DjangoFilterBackend
@@ -1274,11 +1274,13 @@ class RunZipFileViewSet(viewsets.ModelViewSet):
     serializer_class = RunZipFileSerializer
     permission_classes = (permissions.IsAuthenticated,)
     lookup_field = "uid"
-    http_method_names = ['get', 'post', 'head', 'options']
+    http_method_names = ["get", "post", "head", "options"]
 
     def get_queryset(self):
         jobs = JobPermission.userjobs(self.request.user, "READ")
-        queryset = (RunZipFile.objects.filter(Q(run__job__in=jobs) | Q(run__job__visibility=VisibilityState.PUBLIC.value)).filter())
+        queryset = RunZipFile.objects.filter(
+            Q(run__job__in=jobs) | Q(run__job__visibility=VisibilityState.PUBLIC.value)
+        ).filter()
 
         query_params = self.request.query_params
 

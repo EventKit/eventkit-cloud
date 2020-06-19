@@ -425,21 +425,20 @@ class ExportRunSerializer(serializers.ModelSerializer):
 
     def get_zipfile(self, obj):
         request = self.context["request"]
-        provider_tasks, filtered_provider_tasks = attribute_class_filter(obj.provider_tasks.exclude(slug="run"), request.user)
+        provider_tasks, filtered_provider_tasks = attribute_class_filter(
+            obj.provider_tasks.exclude(slug="run"), request.user
+        )
 
         if filtered_provider_tasks:
             data = None
         else:
-            data = {
-                "status": "PENDING" # TODO: Import this from task status enumeration
-            }
+            data = {"status": "PENDING"}  # TODO: Import this from task status enumeration
 
         run_zip_file = get_run_zip_file(values=provider_tasks).first()
         if run_zip_file:
             data = RunZipFileSerializer(run_zip_file, context=self.context).data
 
         return data
-
 
     def get_created_at(self, obj):
         if not obj.deleted:
@@ -499,7 +498,10 @@ class RunZipFileSerializer(serializers.ModelSerializer):
             run = ExportRun.objects.get(uid=obj.run.uid)
             provider_tasks, filtered_provider_tasks = attribute_class_filter(run.provider_tasks.all(), request.user)
             if run.provider_tasks.filter(name="run") and not filtered_provider_tasks:
-                if TaskStates[run.provider_tasks.get(name="run").tasks.filter(name__icontains="zip")[0].status] in TaskStates.get_finished_states():
+                if (
+                    TaskStates[run.provider_tasks.get(name="run").tasks.filter(name__icontains="zip")[0].status]
+                    in TaskStates.get_finished_states()
+                ):
                     return "Completed"
         return obj.message
 
