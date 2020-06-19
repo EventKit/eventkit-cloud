@@ -336,7 +336,11 @@ def create_task(
 
 
 def get_zip_task_chain(
-    data_provider_task_record_uid=None, data_provider_task_record_uids=None, run_zip_file_uid=None, worker=None, stage_dir=None
+    data_provider_task_record_uid=None,
+    data_provider_task_record_uids=None,
+    run_zip_file_uid=None,
+    worker=None,
+    stage_dir=None,
 ):
     return chain(
         create_task(

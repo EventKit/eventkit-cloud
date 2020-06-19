@@ -117,17 +117,13 @@ def get_run_zip_file(field=None, values=[]):
     """
     TODO: Docstring
     """
-    initial_qs = RunZipFile.objects.annotate(cnt=Count("data_provider_task_records")).filter(
-        cnt=len(values)
-    )
+    initial_qs = RunZipFile.objects.annotate(cnt=Count("data_provider_task_records")).filter(cnt=len(values))
 
     if field:
         field = f"__{field}"
     else:
         field = ""
 
-    queryset = reduce(
-        lambda qs, value: qs.filter(**{f"data_provider_task_records{field}":value}), values, initial_qs
-    )
+    queryset = reduce(lambda qs, value: qs.filter(**{f"data_provider_task_records{field}": value}), values, initial_qs)
 
     return queryset.select_related("downloadable_file")

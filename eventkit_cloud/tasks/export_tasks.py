@@ -1191,7 +1191,11 @@ def create_zip_task(
     if len(data_provider_task_record_uids) > 1:
         data_provider_task_record_slug = "run"
     elif len(data_provider_task_record_uids) == 1:
-        data_provider_task_record_slug = DataProviderTaskRecord.objects.select_related("provider").get(uid=data_provider_task_record_uids[0]).provider.slug
+        data_provider_task_record_slug = (
+            DataProviderTaskRecord.objects.select_related("provider")
+            .get(uid=data_provider_task_record_uids[0])
+            .provider.slug
+        )
 
     metadata = get_metadata(data_provider_task_record_uids)
     include_files = metadata.get("include_files", None)
