@@ -568,7 +568,7 @@ describe('DataPackPage component', () => {
         const stateSpy = sinon.spy(instance, 'setState');
         wrapper.setProps({runsMeta: {...props.runsMeta, nextPage: true}});
         const requestStub = sinon.stub(instance, 'makePartialRunRequest');
-        instance.loadMore();
+        instance.loadNext();
         expect(requestStub.calledOnce).toBe(true);
         expect(stateSpy.calledOnce).toBe(true);
         expect(stateSpy.calledWith({page: 2}));
@@ -578,7 +578,7 @@ describe('DataPackPage component', () => {
     it('if pageSize is greater than 12, loadless should trigger  makePartialRunRequest', () => {
         const stateSpy = sinon.spy(instance, 'setState');
         const requestStub = sinon.stub(instance, 'makePartialRunRequest');
-        instance.loadLess();
+        instance.loadPrevious();
         expect(requestStub.calledOnce).toBe(true);
         expect(stateSpy.calledOnce).toBe(true);
         expect(stateSpy.calledWith({page: 2}));
@@ -591,10 +591,10 @@ describe('DataPackPage component', () => {
             onRunDelete: props.deleteRun,
             onRunShare: props.updateDataCartPermissions,
             range: props.runsMeta.range,
-            handleLoadLess: instance.loadLess,
-            handleLoadMore: instance.loadMore,
-            loadLessDisabled: props.runIds.length <= 12,
-            loadMoreDisabled: !props.runsMeta.nextPage,
+            handleLoadPrevious: instance.loadPrevious,
+            handleLoadNext: instance.loadNext,
+            loadPreviousDisabled: props.runIds.length <= 12,
+            loadNextDisabled: !props.runsMeta.nextPage,
             providers: [],
             openShare: instance.handleShareOpen,
         };

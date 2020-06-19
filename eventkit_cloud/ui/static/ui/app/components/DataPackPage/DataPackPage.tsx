@@ -124,8 +124,8 @@ export class DataPackPage extends React.Component<Props, State> {
         this.autoRunRequest = this.autoRunRequest.bind(this);
         this.makeRunRequest = this.makeRunRequest.bind(this);
         this.makePartialRunRequest = this.makePartialRunRequest.bind(this);
-        this.loadMore = this.loadMore.bind(this);
-        this.loadLess = this.loadLess.bind(this);
+        this.loadNext = this.loadNext.bind(this);
+        this.loadPrevious = this.loadPrevious.bind(this);
         this.getView = this.getView.bind(this);
         this.callback = this.callback.bind(this);
         this.handleSpatialFilter = this.handleSpatialFilter.bind(this);
@@ -299,10 +299,10 @@ export class DataPackPage extends React.Component<Props, State> {
             onRunDelete: this.props.deleteRun,
             onRunShare: this.props.updateDataCartPermissions,
             range: this.props.runsMeta.range,
-            handleLoadLess: this.loadLess,
-            handleLoadMore: this.loadMore,
-            loadLessDisabled: this.state.page === 1 && this.props.runIds.length <= this.pageSize,
-            loadMoreDisabled: !this.props.runsMeta.nextPage,
+            handleLoadPrevious: this.loadPrevious,
+            handleLoadNext: this.loadNext,
+            loadPreviousDisabled: this.state.page === 1 && this.props.runIds.length <= this.pageSize,
+            loadNextDisabled: !this.props.runsMeta.nextPage,
             providers: this.props.providers,
         };
         switch (view) {
@@ -456,14 +456,14 @@ export class DataPackPage extends React.Component<Props, State> {
         this.setState({open: !this.state.open});
     }
 
-    private loadMore() {
+    private loadNext() {
         if (this.props.runsMeta.nextPage) {
             this.makePartialRunRequest(false, {page: this.state.page + 1, page_size: this.pageSize});
             this.setState({page: this.state.page + 1});
         }
     }
 
-    private loadLess() {
+    private loadPrevious() {
         this.makePartialRunRequest(false, {page: this.state.page - 1, page_size: this.pageSize});
         this.setState({page: this.state.page - 1});
     }
