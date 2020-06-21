@@ -105,18 +105,20 @@ def get_user(user_data, orig_data=None):
     :param orig_data: The original dictionary returned from the OAuth response, not modified to fit our User model.
     :return:
     """
-    oauth = OAuth.objects.filter(identification=user_data.get("identification")).first()
-    if not oauth:
+    try:
+        oauth = OAuth.objects.get(identification=user_data.get("identification"))
+        cleaned_data = clean_data(orig_data)
+    except OAuth.DoesNotExist:
         if orig_data is None:
             orig_data = {}
         try:
-            identification = user_data.pop("identification")
-            commonname = user_data.pop("commonname")
+            identification = cleaned_data.pop("identification")
+            commonname = cleaned_data.pop("commonname")
         except KeyError as ke:
             logger.error("Required field not provided.")
             raise ke
         try:
-            user = User.objects.create(**user_data)
+            user = User.objects.create(**cleaned_data)
         except Exception as e:
             # Call authenticate here to log the failed attempt.
             authenticate(username=identification)
@@ -125,10 +127,9 @@ def get_user(user_data, orig_data=None):
                 "it most likely caused by OAUTH_PROFILE_SCHEMA containing an invalid key, or a change"
                 "to their identification key."
             )
-            logger.error(f"USER DATA: {user_data}")
+            logger.error(f"USER DATA: {cleaned_data}")
             raise e
         try:
-            cleaned_data = clean_data(orig_data)
             OAuth.objects.create(
                 user=user, identification=identification, commonname=commonname, user_info=cleaned_data,
             )
@@ -140,12 +141,22 @@ def get_user(user_data, orig_data=None):
             )
             logger.error(f"user identification: {identification}")
             logger.error(f"user commonname: {commonname}")
+            logger.error(f"user cleaned_data: {cleaned_data}")
             logger.error(f"user orig_data: {orig_data}")
             user.delete()
             raise e
     else:
+        if oauth.commonname != cleaned_data.get("commonname"):
+            logger.error(
+                f"The login commonname ({oauth.commonname}), "
+                f"doesn't match the stored commonname ({cleaned_data.get('commonname')})."
+            )
+            logger.error(
+                "This is likely a misconfiguration.  If the information changed it can be updated in the admin console."
+            )
+            raise Exception("Login Failure: User info does not match.")
         # If logging back in, update their info.
-        oauth.user_info = orig_data or oauth.user_info
+        oauth.user_info = cleaned_data or oauth.user_info
         oauth.save()
         user = oauth.user
     return user
