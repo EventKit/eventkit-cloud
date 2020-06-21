@@ -1,34 +1,31 @@
 import copy
-from enum import Enum
 import logging
-from operator import itemgetter
 import os
 import pickle
 import re
 import requests
 import signal
-from time import sleep
-
-from numpy import linspace
+import urllib.parse
 import yaml
-
-
 from django.conf import settings
 from django.core.cache import cache
+from django.db.models import Q
 from django.template.loader import render_to_string
 from django.utils import timezone
 from django.utils.text import slugify
-from django.db.models import Q
+from enum import Enum
+from functools import reduce
+from numpy import linspace
+from operator import itemgetter
+from time import sleep
 
 from eventkit_cloud.core.helpers import get_cached_model
-from eventkit_cloud.utils import auth_requests
-from eventkit_cloud.utils.gdalutils import get_band_statistics
-from eventkit_cloud.utils.generic import cd, get_file_paths  # NOQA
-
 from eventkit_cloud.jobs.models import DataProvider
 from eventkit_cloud.tasks.exceptions import FailedException
 from eventkit_cloud.tasks.models import DataProviderTaskRecord, ExportRunFile
-import urllib.parse
+from eventkit_cloud.utils import auth_requests
+from eventkit_cloud.utils.gdalutils import get_band_statistics
+from eventkit_cloud.utils.generic import cd, get_file_paths  # NOQA
 
 logger = logging.getLogger()
 
@@ -212,20 +209,17 @@ def generate_qgs_style(metadata):
 
     style_file = os.path.join(stage_dir, style_file_name)
 
+    context = {
+        "job_name": job_name,
+        "job_date_time": "{0}".format(timezone.now().strftime("%Y%m%d%H%M%S%f")[:-3]),
+        "provider_details": provider_details,
+        "bbox": metadata["bbox"],
+        "has_raster": metadata["has_raster"],
+        "has_elevation": metadata["has_elevation"],
+    }
+
     with open(style_file, "wb") as open_file:
-        open_file.write(
-            render_to_string(
-                "styles/Style.qgs",
-                context={
-                    "job_name": job_name,
-                    "job_date_time": "{0}".format(timezone.now().strftime("%Y%m%d%H%M%S%f")[:-3]),
-                    "provider_details": provider_details,
-                    "bbox": metadata["bbox"],
-                    "has_raster": metadata["has_raster"],
-                    "has_elevation": metadata["has_elevation"],
-                },
-            ).encode()
-        )
+        open_file.write(render_to_string("styles/Style.qgs", context=context,).encode())
     return style_file
 
 
@@ -372,7 +366,11 @@ def get_metadata(data_provider_task_uid):
     from eventkit_cloud.tasks.enumerations import TaskStates
     from eventkit_cloud.tasks.export_tasks import create_zip_task
 
-    data_provider_task = DataProviderTaskRecord.objects.get(uid=data_provider_task_uid)
+    data_provider_task = (
+        DataProviderTaskRecord.objects.select_related("run__job")
+        .prefetch_related("run__job__projections")
+        .get(uid=data_provider_task_uid)
+    )
 
     run = data_provider_task.run
 
@@ -431,7 +429,10 @@ def get_metadata(data_provider_task_uid):
         if provider_task.preview is not None:
             include_files += [get_provider_staging_preview(run.uid, provider_task.provider.slug)]
 
-        for export_task in provider_task.tasks.all():
+        # Only include tasks with a specific projection in the metadata.
+        # TODO: Refactor to make explicit which files are included in map documents.
+        query = reduce(lambda q, value: q | Q(name__icontains=value), projections, Q())
+        for export_task in provider_task.tasks.filter(query):
             if TaskStates[export_task.status] in TaskStates.get_incomplete_states():
                 continue
 
@@ -454,11 +455,13 @@ def get_metadata(data_provider_task_uid):
                         data_provider_slug=provider_task.provider.slug,
                     )
                     filepath = get_archive_data_path(provider_task.provider.slug, download_filename)
-
+                    pattern = re.compile(".*EPSG:(?P<projection>3857|4326).*$")
+                    projection = pattern.match(export_task.name).groupdict().get("projection")
                     file_data = {
                         "file_path": filepath,
                         "full_file_path": full_file_path,
                         "file_ext": file_ext,
+                        "projection": projection,
                     }
                     if metadata["data_sources"][provider_task.provider.slug].get("type") == "elevation":
                         # Get statistics to update ranges in template.
