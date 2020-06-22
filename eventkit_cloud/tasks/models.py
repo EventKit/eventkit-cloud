@@ -116,13 +116,12 @@ class FileProducingTaskResult(UIDMixin, NotificationModelMixin):
         if not job:
             return False
 
-        # If there is one provider there is one class, but if the download is associated with the whole run, there
-        # can be multiple classes and the user would need to be associated with all of those classes to download.
+        # Check the associated RunZipFile for attribute classes.
         attribute_classes = []
-        if self.export_task.export_provider_task.provider:
-            attribute_classes.append(self.export_task.export_provider_task.provider.attribute_class)
-        else:
-            attribute_classes = self.export_task.export_provider_task.run.job.attribute_classes
+        for run_zip_file in self.runzipfile_set.all():
+            for data_provider_task_record in run_zip_file.data_provider_task_records.all():
+                if data_provider_task_record.provider.attribute_class:
+                    attribute_classes.append(data_provider_task_record.provider.attribute_class)
 
         for attribute_class in attribute_classes:
             if attribute_class and not attribute_class.users.filter(id=user.id):
