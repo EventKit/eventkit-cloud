@@ -236,6 +236,7 @@ function CreateDataPackButton(props: Props) {
         }
         return '';
     }
+
     const popoverText = getPopoverMessage();
 
     function shouldEnableButton() {
@@ -261,7 +262,9 @@ function CreateDataPackButton(props: Props) {
         }
     }
 
-    function getCloudDownloadIcon() {
+    // Builds the icon that is displayed to the left of the button text.
+    // Can be a spinner during processing, cloud download icon, or error icon.
+    function getButtonIcon() {
         const {colors} = theme.eventkit;
         let iconProps: any = {
             style: {
@@ -281,15 +284,11 @@ function CreateDataPackButton(props: Props) {
                 verticalAlign: 'middle', marginRight: '5px',
             },
         }
-        iconProps.style = {
-            ...iconProps.style,
-            marginRight: '5px',
-        };
-        let Component: any = CloudDownload;
+        let IconComponent: React.ComponentType<any> = CloudDownload;
         if (badResponse) {
             // This case controls for when we get no response back at all, usually an empty array.
             // This probably means no file could be retrieved for the specified provider tasks uids combo.
-            Component = AlertError;
+            IconComponent = AlertError;
             iconProps.style = {
                 ...iconProps.style,
                 fill: colors.warning,
@@ -299,11 +298,11 @@ function CreateDataPackButton(props: Props) {
             zipIsProcessing() ||
             buttonText === 'Processing Zip...'
         ) {
-            Component = CircularProgress;
+            IconComponent = CircularProgress;
             iconProps.size = 18;
         }
         return (
-            <Component
+            <IconComponent
                 {...iconProps}
             />
         );
@@ -329,9 +328,13 @@ function CreateDataPackButton(props: Props) {
                 })()}
             >
                 {!buttonEnabled && (
+                    // This div is placed over top of the main button when it is disabled.
+                    // It then acts as a button that allows users to open popovers.
+                    // This allows us to leverage the built in disabled functionality on the MUI component
+                    // while still being able to click the button
                     <div onClick={buttonAction} className={classes.fakeButton}/>
                 )}
-                {getCloudDownloadIcon()}
+                {getButtonIcon()}
                 <span className={`qa-textSpan ${!buttonEnabled ? classes.disabledText : ''}`}>{buttonText}</span>
                 {displayCreatingMessage && (
                     <CenteredPopup
@@ -347,8 +350,18 @@ function CreateDataPackButton(props: Props) {
                                 <CloseIcon/>
                             </IconButton>
                             <div style={{marginTop: '5px', fontSize: '20px'}}>
-                                We are creating your zip file. We will let you know in the notifications panel when it
-                                is ready.
+                                {!isZipAvailable() ? (
+                                    <p>
+                                        We are creating your zip file. We will let you know in the notifications panel
+                                        when it
+                                        is ready.
+                                    </p>
+                                ) : (
+                                    <p>
+                                        DataPack (.ZIP) ready for download.
+                                    </p>
+                                )}
+
                             </div>
                         </div>
                     </CenteredPopup>
