@@ -863,13 +863,3 @@ export default withWidth()(
         )
     )
 );
-
-// export default withWidth()(
-//     withTheme()<any>(
-//         withStyles<any, any>(jss)(withRouter(
-//             connect(mapStateToProps, mapDispatchToProps)(
-//                 Application
-//             ))
-//         )
-//     )
-// );
