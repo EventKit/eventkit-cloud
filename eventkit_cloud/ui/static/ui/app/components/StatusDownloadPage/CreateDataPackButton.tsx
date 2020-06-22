@@ -234,8 +234,9 @@ function CreateDataPackButton(props: Props) {
             }
             return 'Processing zip file.'
         }
-        return 'Unknown error';
+        return '';
     }
+    const popoverText = getPopoverMessage();
 
     function shouldEnableButton() {
         if (isZipAvailable()) {
@@ -253,7 +254,7 @@ function CreateDataPackButton(props: Props) {
         if (!isZipAvailable() && buttonEnabled) {
             postZipRequest();
             // Clear the zipAvailableStatus
-            setTimeout(() => clearZipAvailable(), 150);
+            setTimeout(() => clearZipAvailable(), 10000);
             setDisplayCreatingMessage(true);
         } else if (!isZipAvailable()) {
             handlePopoverOpen(e);
@@ -295,7 +296,8 @@ function CreateDataPackButton(props: Props) {
             }
         } else if (!isRunCompleted() ||
             zipAvailableStatus === ApiStatuses.hookActions.FETCHING ||
-            zipIsProcessing()
+            zipIsProcessing() ||
+            buttonText === 'Processing Zip...'
         ) {
             Component = CircularProgress;
             iconProps.size = 18;
@@ -333,10 +335,22 @@ function CreateDataPackButton(props: Props) {
                 <span className={`qa-textSpan ${!buttonEnabled ? classes.disabledText : ''}`}>{buttonText}</span>
                 {displayCreatingMessage && (
                     <CenteredPopup
-                        onClose={ () => setDisplayCreatingMessage(false)}
+                        onClose={() => setDisplayCreatingMessage(false)}
                         open={true}
                     >
-                        We are creating your zip file. We will let you know in the notifications panel when it is ready.
+                        <div style={{display: 'contents' as 'contents'}}>
+                            <IconButton
+                                className={classes.iconButton}
+                                type="button"
+                                onClick={handlePopoverClose}
+                            >
+                                <CloseIcon/>
+                            </IconButton>
+                            <div style={{marginTop: '5px', fontSize: '20px'}}>
+                                We are creating your zip file. We will let you know in the notifications panel when it
+                                is ready.
+                            </div>
+                        </div>
                     </CenteredPopup>
                 )}
                 <div className={classes.popoverBlock}>
@@ -345,7 +359,7 @@ function CreateDataPackButton(props: Props) {
                             PaperProps: {
                                 style: {padding: '16px', width: '30%'}
                             },
-                            open: !!anchor,
+                            open: !!anchor && !!popoverText,
                             anchorEl: anchor,
                             onClose: handlePopoverClose,
                             anchorOrigin: {
@@ -367,7 +381,7 @@ function CreateDataPackButton(props: Props) {
                                 <CloseIcon/>
                             </IconButton>
                             <div style={{marginTop: '5px'}}>
-                                {getPopoverMessage()}
+                                {popoverText}
                             </div>
                         </div>
                     </Popover>

@@ -2,39 +2,13 @@ import * as React from "react";
 import {Theme, withStyles} from "@material-ui/core/styles";
 import withWidth from "@material-ui/core/withWidth";
 import {useRef} from "react";
-import { IconButton} from "@material-ui/core";
-import CloseIcon from "@material-ui/icons/Close";
 import Popover from "@material-ui/core/Popover";
+import Button from "@material-ui/core/Button";
 
 
 const jss = (theme: Eventkit.Theme & Theme) => ({
-    button: {
-        backgroundColor: theme.eventkit.colors.selected_primary,
-        color: theme.eventkit.colors.primary,
-        fontWeight: 'bold' as 'bold',
-        cursor: 'pointer',
-        '&:hover': {
-            backgroundColor: theme.eventkit.colors.selected_primary_dark,
-            color: theme.eventkit.colors.primary,
-        },
-        '&:disabled': {
-            backgroundColor: theme.eventkit.colors.white,
-            color: theme.eventkit.colors.primary,
-            justifyContent: 'start',
-            fontSize: '16px',
-        }
-    },
-    buttonDisabled: {
-        backgroundColor: theme.eventkit.colors.selected_primary,
-        color: theme.eventkit.colors.primary,
-        fontWeight: 'bold' as 'bold',
-        textTransform: 'none' as 'none',
-        fontSize: '24px',
-        '&:disabled': {
-            backgroundColor: theme.eventkit.colors.white,
-            color: theme.eventkit.colors.primary,
-            justifyContent: 'start',
-        }
+    dialog: {
+        margin: '10px',
     },
     popoverBlock: {
         display: 'flex',
@@ -43,29 +17,10 @@ const jss = (theme: Eventkit.Theme & Theme) => ({
         position: 'sticky' as 'sticky',
         bottom: 0,
     },
-    fakeButton: {
-        cursor: 'pointer',
-        position: 'absolute' as 'absolute',
-        width: '100%', height: '100%',
-        pointerEvents: 'auto' as 'auto',
-    },
-    disabledText: {
-        textTransform: 'none' as 'none',
-        fontWeight: 'normal' as 'normal',
-        fontSize: '20px',
-    },
-    preview: {
-        height: '1000px',
-        width: '1000px',
-    },
-    dialog: {
-        margin: '10px',
-    },
-    iconButton: {
+    button: {
+        color: theme.eventkit.colors.secondary,
+        fontWeight: 'bold' as 'bold',
         float: 'right' as 'right',
-        '&:hover': {
-            backgroundColor: theme.eventkit.colors.white,
-        },
     },
 });
 
@@ -106,10 +61,19 @@ function CenteredPopup(props: React.PropsWithChildren<Props>) {
                             horizontal: 'center',
                         }}
                     >
-                        <div style={{display: 'contents' as 'contents'}}>
+                        <div>
                             <div style={{marginTop: '5px'}}>
                                 {props.children}
                             </div>
+                            <Button
+                                key="close"
+                                className={`qa-BaseDialog-Button ${classes.button}`}
+                                variant="contained"
+                                color="primary"
+                                onClick={props.onClose}
+                            >
+                                Close
+                            </Button>
                         </div>
                     </Popover>
                 }
