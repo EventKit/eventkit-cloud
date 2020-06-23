@@ -1265,7 +1265,7 @@ def zip_files(include_files, run_zip_file_uid, file_path=None, static_files=None
     """
     Contains the organization for the files within the archive.
     :param include_files: A list of files to be included.
-    :param run_uid: The UUID of the export run.
+    :param run_zip_file_uid: The UUID of the zip file.
     :param file_path: An optional name for the archive.
     :param static_files: Files that are in the same location for every datapack (i.e. templates and metadata files).
     :return: The zipfile path.
@@ -1306,7 +1306,6 @@ def zip_files(include_files, run_zip_file_uid, file_path=None, static_files=None
                         )
                 zipfile.write(absolute_file_path, arcname=filename)
         for filepath in files:
-            run_zip_file.message = f"Adding {filename} to zip archive."
             # This takes files from the absolute stage paths and puts them in the provider directories in the data dir.
             # (e.g. staging_root/run_uid/provider_slug/file_name.ext -> data/provider_slug/file_name.ext)
             name, ext = os.path.splitext(filepath)
@@ -1328,6 +1327,7 @@ def zip_files(include_files, run_zip_file_uid, file_path=None, static_files=None
 
                 download_filename = get_download_filename(name, ext, data_provider_slug=provider_slug)
                 filename = get_archive_data_path(provider_slug, download_filename)
+            run_zip_file.message = f"Adding {filename} to zip archive."
             zipfile.write(filepath, arcname=filename)
 
         add_export_run_files_to_zip(zipfile, run_zip_file)

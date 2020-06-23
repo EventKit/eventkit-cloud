@@ -351,6 +351,9 @@ class RunZipFile(UIDMixin, TimeStampedModelMixin, TimeTrackingModelMixin):
     data_provider_task_records = models.ManyToManyField(DataProviderTaskRecord)
     downloadable_file = models.ForeignKey(FileProducingTaskResult, on_delete=models.CASCADE, null=True, blank=True)
 
+    def __str__(self):
+        return f"RunZipFile uid: {self.uid}"
+
     @property
     def message(self):
         return get_cache_value(obj=self, attribute="message", default="")

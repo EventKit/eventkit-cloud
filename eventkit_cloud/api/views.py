@@ -1310,8 +1310,13 @@ class RunZipFileViewSet(viewsets.ModelViewSet):
         * uid: optional lookup field
         * return: The data provider with the given uid.
         """
-        run_zip_files, filtered_run_zip_files = attribute_class_filter(self.get_queryset(), self.request.user)
-        serializer = self.get_serializer(run_zip_files, many=True, context={"request": request})
+        run_zip_files, filtered_run_zip_files = attribute_class_filter(
+            self.get_queryset().filter(uid=uid), self.request.user
+        )
+        if run_zip_files:
+            serializer = self.get_serializer(run_zip_files.first(), context={"request": request})
+        else:
+            serializer = self.get_serializer(filtered_run_zip_files.first(), context={"request": request})
         return Response(serializer.data, status=status.HTTP_200_OK)
 
 

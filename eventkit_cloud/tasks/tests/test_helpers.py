@@ -34,9 +34,9 @@ class TestHelpers(TestCase):
             self.assertEqual(parent_path, os.getcwd())
         self.assertEqual(current_path, os.getcwd())
 
-    @patch('eventkit_cloud.tasks.helpers.sleep')
+    @patch('eventkit_cloud.tasks.helpers.time.sleep')
     @patch('eventkit_cloud.tasks.helpers.os')
-    def test_progessive_kill(self, mock_os, mock_sleep):
+    def test_progressive_kill(self, mock_os, mock_sleep):
         pid = 1
         # Test no PID.
         mock_os.kill.side_effect = [OSError()]
@@ -153,7 +153,12 @@ class TestHelpers(TestCase):
         mocked_provider_task.provider.slug = expected_provider_slug = 'example_slug'
         mocked_provider_task.tasks.all.return_value = mocked_provider_subtasks
         mocked_provider_task.uid = expected_provider_task_uid = '5678'
-        mock_DataProviderTaskRecord.objects.get.return_value = mocked_provider_task
+
+        mocked_queryset = MagicMock()
+        mocked_queryset.return_value = [mocked_provider_task]
+        mocked_queryset.first.return_value = mocked_provider_task
+        mocked_queryset.__iter__.return_value = [mocked_provider_task]
+        mock_DataProviderTaskRecord.objects.filter.return_value = mocked_queryset
 
         mocked_data_provider = MagicMock()
         mocked_data_provider.slug = expected_provider_slug
@@ -224,7 +229,7 @@ class TestHelpers(TestCase):
             "run_uid": run_uid,
             "url": "{}/status/{}".format(getattr(settings, 'SITE_URL'), expected_job_uid)
         }
-        returned_metadata = get_metadata(mocked_provider_task.uid)
+        returned_metadata = get_metadata([mocked_provider_task.uid])
         self.maxDiff = None
         self.assertEqual(expected_metadata, returned_metadata)
 
