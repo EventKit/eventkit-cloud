@@ -436,6 +436,14 @@ describe('notificationsReducer', () => {
         });
     });
 
+    it('should handle CLEAR_NOTIFICATIONS', () => {
+        const action = {
+            type: types.CLEAR_NOTIFICATIONS,
+        };
+
+        expect(notificationsReducer(mockNotifications, action)).toEqual(initialState.notifications);
+    });
+
     it('should handle USER_LOGGED_OUT', () => {
         const action = {
             type: types.USER_LOGGED_OUT,
