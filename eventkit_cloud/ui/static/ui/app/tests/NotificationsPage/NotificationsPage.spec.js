@@ -1,12 +1,11 @@
 import React from 'react';
-import {createShallow} from '@material-ui/core/test-utils';
+import { createShallow } from '@material-ui/core/test-utils';
 import sinon from 'sinon';
 import PageLoading from '../../components/common/PageLoading';
-import {NotificationsPage} from '../../components/NotificationsPage/NotificationsPage';
+import { NotificationsPage } from '../../components/NotificationsPage/NotificationsPage';
 import NotificationsTable from '../../components/Notification/NotificationsTable';
 import LoadButtons from '../../components/common/LoadButtons';
 import NotificationGridItem from '../../components/Notification/NotificationGridItem';
-import {Application} from "../../components/Application";
 
 const mockNotifications = {
     1: {
@@ -65,7 +64,7 @@ describe('NotificationsPage component', () => {
         };
     }
 
-    const config = {NOTIFICATIONS_PAGE_SIZE: '12'};
+    const config = { NOTIFICATIONS_PAGE_SIZE: '12' };
 
     function setup(propsOverride = {}) {
         const props = {
@@ -73,7 +72,7 @@ describe('NotificationsPage component', () => {
             ...propsOverride,
         };
         wrapper = shallow(<NotificationsPage {...props} />, {
-            context: {config},
+            context: { config },
         });
         instance = wrapper.instance();
     }
@@ -205,7 +204,7 @@ describe('NotificationsPage component', () => {
         describe('and window width is <= 768', () => {
             beforeEach(() => {
                 setup();
-                wrapper.setProps({width: 'sm'});
+                wrapper.setProps({ width: 'sm' });
                 loadNotifications();
             });
 
