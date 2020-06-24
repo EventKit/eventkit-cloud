@@ -25,10 +25,10 @@ export interface Props {
     order: string;
     providers: Eventkit.Provider[];
     range: string;
-    handleLoadLess: () => void;
-    handleLoadMore: () => void;
-    loadLessDisabled: boolean;
-    loadMoreDisabled: boolean;
+    handleLoadPrevious: () => void;
+    handleLoadNext: () => void;
+    loadPreviousDisabled: boolean;
+    loadNextDisabled: boolean;
     theme: Eventkit.Theme & Theme;
     width: Breakpoint;
 }
@@ -145,10 +145,10 @@ export class DataPackList extends React.Component<Props, {}> {
             <LoadButtons
                 style={{ paddingTop: '10px' }}
                 range={this.props.range}
-                handleLoadLess={this.props.handleLoadLess}
-                handleLoadMore={this.props.handleLoadMore}
-                loadLessDisabled={this.props.loadLessDisabled}
-                loadMoreDisabled={this.props.loadMoreDisabled}
+                handleLoadPrevious={this.props.handleLoadPrevious}
+                handleLoadNext={this.props.handleLoadNext}
+                loadPreviousDisabled={this.props.loadPreviousDisabled}
+                loadNextDisabled={this.props.loadNextDisabled}
             />
         );
 

@@ -6,7 +6,6 @@ import withWidth, {isWidthUp} from '@material-ui/core/withWidth';
 import GridList from '@material-ui/core/GridList';
 import Dot from '@material-ui/icons/FiberManualRecord';
 import axios from 'axios';
-
 import Map from 'ol/map';
 import Feature from 'ol/feature';
 import View from 'ol/view';
@@ -84,10 +83,10 @@ export interface Props {
     onRunDelete: (uid: string) => void;
     onRunShare: (uid: string, perms: Eventkit.Permissions) => void;
     range: string;
-    handleLoadLess: () => void;
-    handleLoadMore: () => void;
-    loadLessDisabled: boolean;
-    loadMoreDisabled: boolean;
+    handleLoadPrevious: () => void;
+    handleLoadNext: () => void;
+    loadPreviousDisabled: boolean;
+    loadNextDisabled: boolean;
     providers: Eventkit.Provider[];
     importGeom: {
         processed: boolean;
@@ -1000,10 +999,10 @@ export class MapView extends React.Component<Props, State> {
 
         const load = (<LoadButtons
             range={this.props.range}
-            handleLoadLess={this.props.handleLoadLess}
-            handleLoadMore={this.props.handleLoadMore}
-            loadLessDisabled={this.props.loadLessDisabled}
-            loadMoreDisabled={this.props.loadMoreDisabled}
+            handleLoadPrevious={this.props.handleLoadPrevious}
+            handleLoadNext={this.props.handleLoadNext}
+            loadPreviousDisabled={this.props.loadPreviousDisabled}
+            loadNextDisabled={this.props.loadNextDisabled}
         />);
 
         const selectedFeature = this.state.selectedFeature ?
