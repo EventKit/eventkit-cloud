@@ -20,7 +20,6 @@ export class NotificationsPage extends React.Component {
         this.getGridPadding = this.getGridPadding.bind(this);
         this.getRange = this.getRange.bind(this);
         this.handleLoadMore = this.handleLoadMore.bind(this);
-        this.loadMoreDisabled = this.loadMoreDisabled.bind(this);
         this.itemsPerPage = Number(context.config.NOTIFICATIONS_PAGE_SIZE) || 10;
         this.state = {
             loadingPage: true,
@@ -84,10 +83,6 @@ export class NotificationsPage extends React.Component {
                 pageSize: prevState.pageSize + this.itemsPerPage,
             }), this.refresh);
         }
-    }
-
-    loadMoreDisabled() {
-        return !this.props.notificationsData.nextPage;
     }
 
     render() {
@@ -196,7 +191,7 @@ export class NotificationsPage extends React.Component {
                                             <LoadButtons
                                                 range={this.getRange(notifications)}
                                                 handleLoadMore={this.handleLoadMore}
-                                                loadMoreDisabled={this.loadMoreDisabled}
+                                                loadMoreDisabled={!this.props.notificationsData.nextPage}
                                             />
                                         </div>
                                     )
