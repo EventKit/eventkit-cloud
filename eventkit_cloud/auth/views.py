@@ -55,9 +55,11 @@ def callback(request):
         else:
             logger.error("User could not be logged in.")
             return HttpResponse('{"error":"User could not be logged in"}', content_type="application/json", status=401,)
-    except Exception:
-        # Unless otherwise noted, we want any excepltion to redirect to the error page.
+    except Exception as e:
+        # Unless otherwise noted, we want any exception to redirect to the error page.
         logger.error("Exception occurred during oauth, redirecting user.")
+        if getattr(settings, "DEBUG"):
+            raise e
         return redirect("/login/error")
 
 
