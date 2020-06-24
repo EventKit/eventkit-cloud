@@ -16,6 +16,7 @@ export const types = {
     RERUN_EXPORT_ERROR: 'RERUN_EXPORT_ERROR',
     RERUN_EXPORT_SUCCESS: 'RERUN_EXPORT_SUCCESS',
     CLEAR_RERUN_INFO: 'CLEAR_RERUN_INFO',
+    CLEAR_UPDATING_PERMISSION: 'CLEAR_UPDATING_PERMISSION',
 };
 
 export function updateAoiInfo(aoiInfo) {
@@ -57,7 +58,7 @@ export function submitJob(data) {
         types: [
             types.SUBMITTING_JOB,
             types.JOB_SUBMITTED_SUCCESS,
-            types.JOB_SUBMITTED_ERROR,
+            types.JOB_SUBMITTED_ERROR, ,
         ],
         url: '/api/jobs',
         method: 'POST',
@@ -93,6 +94,12 @@ export function updateDataCartPermissions(uid, permissions) {
         url: `/api/jobs/${uid}`,
         method: 'PATCH',
         data,
+    };
+}
+
+export function clearDataCartPermissions() {
+    return {
+        type: types.CLEAR_UPDATING_PERMISSION,
     };
 }
 

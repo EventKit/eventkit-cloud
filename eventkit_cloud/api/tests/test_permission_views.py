@@ -106,7 +106,7 @@ class TestJobPermissions(APITestCase):
 
         response = self.client.patch(url, data=json.dumps(request_data), content_type='application/json; version=1.0')
         self.assertEqual(status.HTTP_400_BAD_REQUEST, response.status_code)
-        self.assertEqual(response.data[0]['detail'], 'This job has no administrators.')
+        self.assertEqual(response.data[0]['detail'], 'Cannot update job permissions with no administrator.')
 
         request_data = {"permissions": {"members": {"user_1": "ADMIN", "user_2": "ADMEN"}, "groups": {}}}
 

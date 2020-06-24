@@ -132,6 +132,14 @@ export class StatusDownload extends React.Component<Props, State> {
         if (this.props.permissionState.updated && !prevProps.permissionState.updated) {
             this.props.getDatacartDetails(this.props.match.params.jobuid);
         }
+        // if (this.props.permissionState.error && !prevProps.permissionState.error) {
+        //     this.setState({
+        //         error: this.props.permissionState.error,
+        //         // steps: [],
+        //         // isRunning: false,
+        //         // job: job,
+        //     });
+        // }
         if (this.props.detailsFetched && !prevProps.detailsFetched) {
             if (this.state.isLoading) {
                 this.setState({ isLoading: false });

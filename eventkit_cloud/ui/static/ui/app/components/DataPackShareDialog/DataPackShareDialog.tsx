@@ -20,6 +20,7 @@ export interface Props {
     groups: Eventkit.Group[];
     users: Eventkit.User[];
     permissions: Eventkit.Permissions;
+    permissionState: Eventkit.Store.UpdatePermissions;
     groupsText: any;
     membersText: any;
     canUpdateAdmin: boolean;
@@ -85,6 +86,9 @@ export class DataPackShareDialog extends React.Component<Props, State> {
             this.permissions.extractCurrentUser();
             this.setState({permissions: this.permissions.getPermissions()});
         }
+        // if (!prevProps.permissionState.error && this.props.permissionState.error){
+        //     this.setState({permissions: prevProps.permissions})
+        // }
     }
 
     private handleSave() {
@@ -422,6 +426,7 @@ const mapStateToProps = state => (
         groups: state.groups.groups,
         users: state.users.users,
         userCount: state.users.total - 1,
+        permissionState: state.updatePermission,
     }
 );
 

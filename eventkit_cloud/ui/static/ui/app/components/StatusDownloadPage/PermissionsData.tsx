@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { withTheme, Theme } from '@material-ui/core/styles';
+import {withTheme, Theme} from '@material-ui/core/styles';
 import MenuItem from '@material-ui/core/MenuItem';
 import ButtonBase from '@material-ui/core/ButtonBase';
 import SocialGroup from '@material-ui/icons/Group';
@@ -8,6 +8,7 @@ import Lock from '@material-ui/icons/LockOutlined';
 import 'react-day-picker/lib/style.css';
 import DropDownMenu from '../common/DropDownMenu';
 import DataPackShareDialog from '../DataPackShareDialog/DataPackShareDialog';
+import {connect} from "react-redux";
 
 interface Props {
     permissions: Eventkit.Permissions;
@@ -16,10 +17,12 @@ interface Props {
     user: Eventkit.User;
     theme: Eventkit.Theme & Theme;
     job: Eventkit.Job;
+    permissionState: Eventkit.Store.UpdatePermissions;
 }
 
 interface State {
     shareDialogOpen: boolean;
+    dataPermissions: Eventkit.Permissions;
 }
 
 export class PermissionsData extends React.Component<Props, State> {
@@ -31,7 +34,20 @@ export class PermissionsData extends React.Component<Props, State> {
         this.handleDropDownChange = this.handleDropDownChange.bind(this);
         this.state = {
             shareDialogOpen: false,
+            dataPermissions: this.props.permissions,
         };
+    }
+
+    componentDidUpdate(prevProps: Props) {
+        if (!!this.state.shareDialogOpen) {
+            if (prevProps.permissionState.updating && !this.props.permissionState.updating && !this.props.permissionState.error) {
+                this.handleShareDialogClose();
+            }
+        }
+        // else {
+        //     // if (!prevProps.permissionState.error && !this.props.permissionState.error) {
+        //         this.setState({dataPermissions: prevProps.permissions});
+        // }
     }
 
     private getGroupsText(count: number) {
@@ -61,22 +77,21 @@ export class PermissionsData extends React.Component<Props, State> {
     }
 
     private handleShareDialogOpen() {
-        this.setState({ shareDialogOpen: true });
+        this.setState({shareDialogOpen: true});
     }
 
     private handleShareDialogClose() {
-        this.setState({ shareDialogOpen: false });
+        this.setState({shareDialogOpen: false});
     }
 
     private handleShareDialogSave(permissions: Eventkit.Permissions) {
-        this.props.handlePermissionsChange({ ...permissions });
-        this.handleShareDialogClose();
+        this.props.handlePermissionsChange({...permissions});
     }
 
     private handleDropDownChange(value: Eventkit.Permissions['value']) {
         // update the value in permissions
         // if new value is private, remove all but the logged in user
-        const permissions = { ...this.props.permissions, value };
+        const permissions = {...this.props.permissions, value};
         if (value === 'PRIVATE') {
             permissions.groups = {};
             if (permissions.members[this.props.user.user.username] === 'ADMIN') {
@@ -90,7 +105,7 @@ export class PermissionsData extends React.Component<Props, State> {
     }
 
     render() {
-        const { colors } = this.props.theme.eventkit;
+        const {colors} = this.props.theme.eventkit;
 
         const styles = {
             dropDown: {
@@ -127,9 +142,9 @@ export class PermissionsData extends React.Component<Props, State> {
             },
         };
 
-        const checkIcon = <Check style={styles.checkIcon} />;
-        const privateIcon = <Lock style={styles.permissionsIcon} />;
-        const membersIcon = <SocialGroup style={styles.permissionsIcon} />;
+        const checkIcon = <Check style={styles.checkIcon}/>;
+        const privateIcon = <Lock style={styles.permissionsIcon}/>;
+        const membersIcon = <SocialGroup style={styles.permissionsIcon}/>;
         const privateCheck = this.props.permissions.value === 'PRIVATE' ? checkIcon : null;
         const membersCheck = this.props.permissions.value !== 'PRIVATE' ? checkIcon : null;
 
@@ -160,7 +175,7 @@ export class PermissionsData extends React.Component<Props, State> {
                         className="qa-PermissionsData-MembersAndGroups-button"
                         key="membersAndGroupsButton"
                         onClick={this.handleShareDialogOpen}
-                        style={{ color: colors.primary, textDecoration: 'underline', padding: '0px 5px' }}
+                        style={{color: colors.primary, textDecoration: 'underline', padding: '0px 5px'}}
                         disabled={!this.props.adminPermissions}
                     >
                         {memberText} / {groupText}
@@ -227,4 +242,9 @@ export class PermissionsData extends React.Component<Props, State> {
     }
 }
 
-export default withTheme()(PermissionsData);
+const mapStateToProps = state => (
+    {
+        permissionState: state.updatePermission,
+    }
+);
+export default withTheme()(connect(mapStateToProps)(PermissionsData));

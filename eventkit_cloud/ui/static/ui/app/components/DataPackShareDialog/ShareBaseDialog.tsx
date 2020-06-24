@@ -1,6 +1,6 @@
 import * as React from 'react';
-import { withTheme, Theme } from '@material-ui/core/styles';
-import withWidth, { isWidthDown } from '@material-ui/core/withWidth';
+import {withTheme, Theme} from '@material-ui/core/styles';
+import withWidth, {isWidthDown} from '@material-ui/core/withWidth';
 import Button from '@material-ui/core/Button';
 import Dialog from '@material-ui/core/Dialog';
 import DialogTitle from '@material-ui/core/DialogTitle';
@@ -8,7 +8,12 @@ import DialogActions from '@material-ui/core/DialogActions';
 import DialogContent from '@material-ui/core/DialogContent';
 import Clear from '@material-ui/icons/Clear';
 import CustomScrollbar from '../common/CustomScrollbar';
-import { Breakpoint } from '@material-ui/core/styles/createBreakpoints';
+import {Breakpoint} from '@material-ui/core/styles/createBreakpoints';
+import BaseDialog from "../Dialog/BaseDialog";
+import Divider from "@material-ui/core/Divider";
+import Warning from "@material-ui/core/SvgIcon/SvgIcon";
+import {connect} from "react-redux";
+import {clearDataCartPermissions} from "../../actions/datacartActions";
 
 export interface Props {
     className?: string;
@@ -20,6 +25,8 @@ export interface Props {
     submitButtonLabel: string;
     theme: Eventkit.Theme & Theme;
     width: Breakpoint;
+    permissionState: Eventkit.Store.UpdatePermissions;
+    clearDataCartPermissions: () => void;
 }
 
 export class ShareBaseDialog extends React.Component<Props, {}> {
@@ -29,13 +36,56 @@ export class ShareBaseDialog extends React.Component<Props, {}> {
         submitButtonLabel: 'SAVE',
     };
 
+    constructor(props: Props) {
+        super(props);
+        this.getErrorMessage = this.getErrorMessage.bind(this);
+        this.clearError = this.clearError.bind(this);
+        this.handleClose = this.handleClose.bind(this);
+        this.state = {
+            shareDialogOpen: this.props.onClose,
+        };
+    }
+
+    getErrorMessage() {
+        if (!this.props.permissionState.error) {
+            return null;
+        }
+
+        const messages = this.props.permissionState.error.map((error, ix) => (
+            <div className="GroupsBody-error-container" key={error.detail}>
+                {ix > 0 ? <Divider style={{marginBottom: '5px'}}/> : null}
+                <p className="GroupsBody-error-title">
+                    <Warning style={{
+                        fill: this.props.theme.eventkit.colors.warning,
+                        verticalAlign: 'bottom',
+                        marginRight: '10px'
+                    }}/>
+                </p>
+                <p className="GroupsBody-error-detail">
+                    {error.detail}
+                </p>
+            </div>
+        ));
+        return messages;
+    }
+
+    clearError() {
+        this.props.clearDataCartPermissions();
+    }
+
+    handleClose() {
+        this.setState({shareDialogOpen: false});
+    }
+
     render() {
+        const errorMessages = this.getErrorMessage();
+
         if (!this.props.show) {
             return null;
         }
 
-        const { colors } = this.props.theme.eventkit;
-        const { width } = this.props;
+        const {colors} = this.props.theme.eventkit;
+        const {width} = this.props;
         const marginSubtract = isWidthDown('sm', width) ? 32 : 96;
         const styles = {
             dialog: {
@@ -72,7 +122,7 @@ export class ShareBaseDialog extends React.Component<Props, {}> {
             <Button
                 key="cancel"
                 className="qa-ShareBaseDialog-cancel"
-                style={{ fontWeight: 'bold' }}
+                style={{fontWeight: 'bold'}}
                 variant="text"
                 color="primary"
                 onClick={this.props.onClose}
@@ -82,7 +132,7 @@ export class ShareBaseDialog extends React.Component<Props, {}> {
             <Button
                 key="save"
                 className="qa-ShareBaseDialog-save"
-                style={{ fontWeight: 'bold' }}
+                style={{fontWeight: 'bold'}}
                 variant="contained"
                 color="primary"
                 onClick={this.props.handleSave}
@@ -95,30 +145,56 @@ export class ShareBaseDialog extends React.Component<Props, {}> {
         const title = (
             <div className="qa-ShareBaseDialog-title">
                 <strong>{this.props.title}</strong>
-                <Clear style={styles.clear} onClick={this.props.onClose} color="primary" />
+                <Clear style={styles.clear} onClick={this.props.onClose} color="primary"/>
             </div>
         );
 
         return (
-            <Dialog
-                className="qa-ShareBaseDialog-Dialog"
-                style={{ top: '50px' }}
-                open={this.props.show}
-                onClose={this.props.onClose}
-                PaperProps={{ style: styles.dialog }}
-            >
-                <DialogTitle style={styles.title} disableTypography>{title}</DialogTitle>
-                <DialogContent style={styles.body}>
-                    <CustomScrollbar
-                        style={{ height: `calc(100vh - ${marginSubtract + 76 + 80}px)` }}
+            <>
+                <Dialog
+                    className="qa-ShareBaseDialog-Dialog"
+                    style={{top: '50px'}}
+                    open={this.props.show}
+                    onClose={this.props.onClose}
+                    PaperProps={{style: styles.dialog}}
+                >
+                    <DialogTitle style={styles.title} disableTypography>{title}</DialogTitle>
+                    <DialogContent style={styles.body}>
+                        <CustomScrollbar
+                            style={{height: `calc(100vh - ${marginSubtract + 76 + 80}px)`}}
+                        >
+                            {this.props.children}
+                        </CustomScrollbar>
+                    </DialogContent>
+                    <DialogActions style={styles.actions}>{actions}</DialogActions>
+                </Dialog>
+                {this.props.permissionState.error &&
+                    <BaseDialog
+                        className="qa-GroupsBody-BaseDialog-error"
+                        show={!!this.props.permissionState.error}
+                        title="ERROR"
+                        onClose={this.clearError}
                     >
-                        {this.props.children}
-                    </CustomScrollbar>
-                </DialogContent>
-                <DialogActions style={styles.actions}>{actions}</DialogActions>
-            </Dialog>
+                        {errorMessages}
+                    </BaseDialog>
+                }
+            </>
         );
     }
 }
 
-export default withWidth()(withTheme()(ShareBaseDialog));
+const mapStateToProps = state => (
+    {
+        permissionState: state.updatePermission,
+    }
+);
+
+const mapDispatchToProps = dispatch => (
+    {
+        clearDataCartPermissions: () => (
+            dispatch(clearDataCartPermissions())
+        ),
+    }
+);
+
+export default withTheme()(connect(mapStateToProps, mapDispatchToProps)(ShareBaseDialog));
