@@ -13,7 +13,7 @@ from eventkit_cloud.tasks.helpers import get_run_download_dir, get_run_staging_d
 from eventkit_cloud.tasks.models import ExportRun
 from eventkit_cloud.tasks.task_factory import get_zip_task_chain
 from eventkit_cloud.tasks.models import FileProducingTaskResult, RunZipFile, UserDownload
-from eventkit_cloud.utils.s3 import get_presigned_url
+from eventkit_cloud.utils.s3 import download_folder_from_s3, get_presigned_url
 
 logger = getLogger(__name__)
 
@@ -72,8 +72,7 @@ def generate_zipfile(data_provider_task_record_uids, run_zip_file_uid):
     download_dir = get_run_download_dir(run.uid)
 
     if getattr(settings, "USE_S3", False):
-        # TODO: get_presigned_url and download the files, except for the zip.
-        pass
+        download_folder_from_s3(str(run.uid))
     else:
         if not os.path.exists(stage_dir):
             shutil.copytree(download_dir, stage_dir, ignore=shutil.ignore_patterns("*.zip"))

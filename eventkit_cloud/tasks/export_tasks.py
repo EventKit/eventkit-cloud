@@ -117,8 +117,12 @@ def make_file_downloadable(
         download_filename = filename
 
     if getattr(settings, "USE_S3", False):
-        download_path = f"{run_uid}/{download_filename}"
-        download_url = s3.upload_to_s3(os.path.join(staging_dir, filename), download_path)
+        source_path = os.path.join(staging_dir, filename)
+        if provider_slug:
+            download_filepath = os.path.join(run_uid, provider_slug, download_filename)
+        else:
+            download_filepath = os.path.join(run_uid, download_filename)
+        download_url = s3.upload_to_s3(source_path, download_filepath)
     else:
         make_dirs(run_download_dir)
 

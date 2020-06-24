@@ -432,7 +432,7 @@ class ExportRunSerializer(serializers.ModelSerializer):
         if filtered_provider_tasks:
             data = None
         else:
-            data = {"status": "PENDING"}  # TODO: Import this from task status enumeration
+            data = {"status": TaskStates.PENDING.value}
 
         run_zip_file = get_run_zip_file(values=provider_tasks).first()
         if run_zip_file:
@@ -540,7 +540,6 @@ class RunZipFileSerializer(serializers.ModelSerializer):
             generate_zipfile(data_provider_task_record_uids, obj.uid)
             return obj
         else:
-            # TODO: I think this could be done better, perhaps in the validator.
             raise serializers.ValidationError("Duplicate Zip File already exists.")
 
 
