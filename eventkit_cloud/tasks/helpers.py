@@ -6,12 +6,8 @@ import re
 import requests
 import signal
 import time
-
-from typing import List
-
-from numpy import linspace
-
 import yaml
+
 from django.conf import settings
 from django.core.cache import cache
 from django.db.models import Q
@@ -23,13 +19,13 @@ from enum import Enum
 from functools import reduce
 from numpy import linspace
 from operator import itemgetter
+from typing import List
+import urllib.parse
 
 from eventkit_cloud.core.helpers import get_cached_model
 from eventkit_cloud.jobs.models import DataProvider
 from eventkit_cloud.tasks.exceptions import FailedException
-
 from eventkit_cloud.tasks.models import DataProviderTaskRecord, ExportRunFile, ExportTaskRecord
-import urllib.parse
 from eventkit_cloud.utils import auth_requests
 from eventkit_cloud.utils.gdalutils import get_band_statistics
 from eventkit_cloud.utils.generic import cd, get_file_paths  # NOQA
@@ -418,7 +414,11 @@ def get_metadata(data_provider_task_record_uids: List[str]):
     from eventkit_cloud.tasks.enumerations import TaskStates
     from eventkit_cloud.tasks.export_tasks import create_zip_task
 
-    data_provider_task_records = DataProviderTaskRecord.objects.select_related("run__job").prefetch_related("run__job__projections").filter(uid__in=data_provider_task_record_uids)
+    data_provider_task_records = (
+        DataProviderTaskRecord.objects.select_related("run__job")
+        .prefetch_related("run__job__projections")
+        .filter(uid__in=data_provider_task_record_uids)
+    )
     run = data_provider_task_records.first().run
 
     projections = []
