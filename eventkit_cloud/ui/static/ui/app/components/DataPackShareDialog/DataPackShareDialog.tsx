@@ -93,10 +93,6 @@ export class DataPackShareDialog extends React.Component<Props, State> {
             this.permissions.extractCurrentUser();
             this.setState({permissions: this.permissions.getPermissions()});
         }
-        // this is where prevState can be compared to currentState or currentProps; how to update parent PermissionsData's state?
-        // if (!this.props.show && prevProps.permissions !== prevState.permissions) {
-        //     this.setState({permissions: prevState.permissions});
-        // }
     }
 
     private handleSave() {

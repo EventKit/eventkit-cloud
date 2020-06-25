@@ -90,7 +90,7 @@ export class ShareBaseDialog extends React.Component<Props, {}> {
         const styles = {
             dialog: {
                 width: 'calc(100% - 32px)',
-                height: '100%',
+                height: '90%',
                 minWidth: '325px',
                 maxWidth: '650px',
                 margin: 'auto',

@@ -48,11 +48,6 @@ export class PermissionsData extends React.Component<Props, State> {
                 this.handleShareDialogClose();
             }
         }
-        // if (!this.state.shareDialogOpen) {
-        //     if (prevState.dataPermissions !== this.props.permissions) {
-        //         this.setState({dataPermissions: prevState.dataPermissions});
-        //     }
-        // }
     }
 
     private getGroupsText(count: number) {
@@ -84,13 +79,6 @@ export class PermissionsData extends React.Component<Props, State> {
     private handleShareDialogOpen() {
         this.setState({shareDialogOpen: true});
     }
-
-    // private handleShareDialogCancel() {
-    //     if (this.state.shareDialogOpen && this.props.permissions !== this.state.dataPermissions) {
-    //         this.setState({dataPermissions: this.props.permissions});
-    //     }
-    //     this.setState({shareDialogOpen: false});
-    // }
 
     private handleShareDialogClose() {
         this.setState({shareDialogOpen: false});
@@ -175,9 +163,6 @@ export class PermissionsData extends React.Component<Props, State> {
             if (this.props.permissions.value !== 'PRIVATE') {
                 const groupCount = Object.keys(this.props.permissions.groups).length;
                 const memberCount = Object.keys(this.props.permissions.members).length;
-                // if (this.props.permissions.members[this.props.user.user.username] !== undefined) {
-                //     memberCount -= 1;
-                // }
 
                 const groupText = this.getGroupsText(groupCount);
                 const memberText = this.getMembersText(memberCount);
