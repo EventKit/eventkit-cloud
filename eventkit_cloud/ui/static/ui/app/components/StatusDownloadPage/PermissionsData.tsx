@@ -9,6 +9,7 @@ import 'react-day-picker/lib/style.css';
 import DropDownMenu from '../common/DropDownMenu';
 import DataPackShareDialog from '../DataPackShareDialog/DataPackShareDialog';
 import {connect} from "react-redux";
+import {Permissions} from "../../utils/permissions";
 
 interface Props {
     permissions: Eventkit.Permissions;
@@ -26,27 +27,31 @@ interface State {
 }
 
 export class PermissionsData extends React.Component<Props, State> {
+    private permissions: Permissions;
+
     constructor(props: Props) {
         super(props);
         this.handleShareDialogOpen = this.handleShareDialogOpen.bind(this);
         this.handleShareDialogClose = this.handleShareDialogClose.bind(this);
         this.handleShareDialogSave = this.handleShareDialogSave.bind(this);
         this.handleDropDownChange = this.handleDropDownChange.bind(this);
+        this.permissions = new Permissions(this.props.permissions);
         this.state = {
             shareDialogOpen: false,
-            dataPermissions: this.props.permissions,
+            dataPermissions: this.permissions.getPermissions(),
         };
     }
 
-    componentDidUpdate(prevProps: Props) {
+    componentDidUpdate(prevProps: Props, prevState: State) {
         if (!!this.state.shareDialogOpen) {
             if (prevProps.permissionState.updating && !this.props.permissionState.updating && !this.props.permissionState.error) {
                 this.handleShareDialogClose();
             }
         }
-        // else {
-        //     // if (!prevProps.permissionState.error && !this.props.permissionState.error) {
-        //         this.setState({dataPermissions: prevProps.permissions});
+        // if (!this.state.shareDialogOpen) {
+        //     if (prevState.dataPermissions !== this.props.permissions) {
+        //         this.setState({dataPermissions: prevState.dataPermissions});
+        //     }
         // }
     }
 
@@ -79,6 +84,13 @@ export class PermissionsData extends React.Component<Props, State> {
     private handleShareDialogOpen() {
         this.setState({shareDialogOpen: true});
     }
+
+    // private handleShareDialogCancel() {
+    //     if (this.state.shareDialogOpen && this.props.permissions !== this.state.dataPermissions) {
+    //         this.setState({dataPermissions: this.props.permissions});
+    //     }
+    //     this.setState({shareDialogOpen: false});
+    // }
 
     private handleShareDialogClose() {
         this.setState({shareDialogOpen: false});
@@ -222,20 +234,22 @@ export class PermissionsData extends React.Component<Props, State> {
                         </MenuItem>
                     </DropDownMenu>
                     {membersAndGroups}
-                    <DataPackShareDialog
-                        show={this.state.shareDialogOpen}
-                        user={this.props.user}
-                        onClose={this.handleShareDialogClose}
-                        onSave={this.handleShareDialogSave}
-                        permissions={this.props.permissions}
-                        groupsText="You may share view and edit rights with groups exclusively.
-                        Group sharing is managed separately from member sharing"
-                        membersText="You may share view and edit rights with members exclusively.
-                        Member sharing is managed separately from group sharing"
-                        canUpdateAdmin
-                        warnPublic
-                        job={this.props.job}
-                    />
+                    {this.state.shareDialogOpen &&
+                        <DataPackShareDialog
+                            show={this.state.shareDialogOpen}
+                            user={this.props.user}
+                            onClose={this.handleShareDialogClose}
+                            onSave={this.handleShareDialogSave}
+                            permissions={this.props.permissions}
+                            groupsText="You may share view and edit rights with groups exclusively.
+                            Group sharing is managed separately from member sharing"
+                            membersText="You may share view and edit rights with members exclusively.
+                            Member sharing is managed separately from group sharing"
+                            canUpdateAdmin
+                            warnPublic
+                            job={this.props.job}
+                        />
+                    }
                 </React.Fragment>
             );
         }

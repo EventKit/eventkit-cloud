@@ -69,25 +69,33 @@ export class DataPackShareDialog extends React.Component<Props, State> {
         this.toggleView = this.toggleView.bind(this);
         this.renderSharedPermissionsWithJob = this.renderSharedPermissionsWithJob.bind(this);
         this.renderSharedPermissionsWithoutJob = this.renderSharedPermissionsWithoutJob.bind(this);
-        this.permissions = new Permissions(this.props.permissions);
+        // this.permissions = new Permissions(this.props.permissions);
         this.state = {
             view: 'groups',
             // Make a copy of the permissions so we can modify it locally
-            permissions: this.permissions.getPermissions(),
+            permissions: null,
             showShareInfo: false,
             showPublicWarning: false,
         };
     }
 
-    componentDidUpdate(prevProps: Props) {
+    componentDidMount() {
+        this.permissions = new Permissions(this.props.permissions);
+        this.setState({
+            permissions: this.permissions.getPermissions()
+        });
+    }
+
+    componentDidUpdate(prevProps: Props, prevState: State) {
         if (!prevProps.show && this.props.show) {
             this.permissions.setPermissions(this.props.permissions);
             this.permissions.setUsername(this.props.user ? this.props.user.user.username : undefined);
             this.permissions.extractCurrentUser();
             this.setState({permissions: this.permissions.getPermissions()});
         }
-        // if (!prevProps.permissionState.error && this.props.permissionState.error){
-        //     this.setState({permissions: prevProps.permissions})
+        // this is where prevState can be compared to currentState or currentProps; how to update parent PermissionsData's state?
+        // if (!this.props.show && prevProps.permissions !== prevState.permissions) {
+        //     this.setState({permissions: prevState.permissions});
         // }
     }
 
@@ -289,7 +297,7 @@ export class DataPackShareDialog extends React.Component<Props, State> {
     }
 
     render() {
-        if (!this.props.show) {
+        if (!this.props.show || !this.permissions) {
             return null;
         }
 
