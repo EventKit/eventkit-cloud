@@ -947,6 +947,8 @@ class TestRunZipFileViewSet(APITestCase):
     Test cases for RunZipFileViewSet
     """
 
+    fixtures = ('osm_provider.json',)
+
     list_url = reverse("api:zipfiles-list")
 
     def setUp(self):
@@ -965,11 +967,21 @@ class TestRunZipFileViewSet(APITestCase):
                                       the_geom=the_geom, visibility=VisibilityState.PUBLIC.value)
         self.run = ExportRun.objects.create(job=self.job, user=self.user)
 
+        self.provider = DataProvider.objects.first()
+        self.celery_uid = str(uuid.uuid4())
+        self.data_provider_task_record = DataProviderTaskRecord.objects.create(run=self.run,
+                                                                               name='Shapefile Export',
+                                                                               provider=self.provider,
+                                                                               status=TaskStates.PENDING.value)
+
         filename = "test.zip"
         self.downloadable_file = FileProducingTaskResult.objects.create(filename=filename, size=10)
+        self.task = ExportTaskRecord.objects.create(export_provider_task=self.data_provider_task_record,
+                                            name='Shapefile Export',
+                                            celery_uid=self.celery_uid, status='SUCCESS',
+                                            result=self.downloadable_file)
         self.run_zip_file = RunZipFile.objects.create(run=self.run, downloadable_file=self.downloadable_file)
 
-        self.data_provider_task_record = DataProviderTaskRecord.objects.create(run=self.run)
         self.data_provider_task_records = [self.data_provider_task_record]
         self.run_zip_file.data_provider_task_records.set(self.data_provider_task_records)
 
