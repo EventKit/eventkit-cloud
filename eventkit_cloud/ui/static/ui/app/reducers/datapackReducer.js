@@ -250,6 +250,7 @@ const getStatusReducer = (inputTypeMap, inputState = {}) => {
                 return {
                     ...state,
                     fetching: true,
+                    fetched: false,
                     error: null,
                     cancelSource: action.cancelSource,
                 };
@@ -264,6 +265,9 @@ const getStatusReducer = (inputTypeMap, inputState = {}) => {
                 return {
                     fetching: false,
                     fetched: false,
+                    orderedIds: [],
+                    range: '',
+                    nextPage: false,
                     error: action.error,
                     cancelSource: null,
                 };
