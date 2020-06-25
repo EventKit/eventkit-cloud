@@ -2,7 +2,6 @@ import Button from "@material-ui/core/Button";
 import * as React from "react";
 import InfoDialog from "../Dialog/InfoDialog";
 import {Theme, withStyles, withTheme} from "@material-ui/core/styles";
-import withWidth, {isWidthUp} from "@material-ui/core/withWidth";
 import CloudDownload from "@material-ui/icons/CloudDownload";
 import {useAsyncRequest, ApiStatuses} from "../../utils/hooks/api";
 import {getCookie} from "../../utils/generic";
@@ -78,7 +77,7 @@ const jss = (theme: Eventkit.Theme & Theme) => ({
 });
 
 interface Props {
-    fontSize: string;
+    fontSize: string;  // Pass through font size to be consistent with parent.
     classes: { [className: string]: string; }
     providerTaskUids: string[];
     theme: Eventkit.Theme & Theme;
@@ -239,14 +238,14 @@ function CreateDataPackButton(props: Props) {
 
     const popoverText = getPopoverMessage();
 
+    // Whether the button is enabled in a manner that triggers an action (download/POST)
+    // This will enable the MUI button, but we also allow clicks
     function shouldEnableButton() {
         if (isZipAvailable()) {
             return true;
         }
         return isRunCompleted() && requestZipFileStatus === ApiStatuses.hookActions.NOT_FIRED;
     }
-
-    // Whether the button is enabled in a manner that triggers an action (download/POST)
     const buttonEnabled = shouldEnableButton();
 
     const [displayCreatingMessage, setDisplayCreatingMessage] = useState(false);
@@ -255,7 +254,7 @@ function CreateDataPackButton(props: Props) {
         if (!isZipAvailable() && buttonEnabled) {
             postZipRequest();
             // Clear the zipAvailableStatus
-            setTimeout(() => clearZipAvailable(), 10000);
+            setTimeout(() => clearZipAvailable(), 150);
             setDisplayCreatingMessage(true);
         } else if (!isZipAvailable()) {
             handlePopoverOpen(e);
@@ -313,7 +312,7 @@ function CreateDataPackButton(props: Props) {
             <Button
                 id="CompleteDownload"
                 variant="contained"
-                className={`qa-DataPackDetails-Button-zipButton`}
+                className={`qa-CreateDataPackButton-Button-zipButton`}
                 classes={{root: (buttonEnabled) ? classes.button : classes.buttonDisabled}}
                 disabled={!buttonEnabled}
                 style={{fontSize: fontSize, lineHeight: 'initial', width: '250px'}}
@@ -331,8 +330,8 @@ function CreateDataPackButton(props: Props) {
                     // This div is placed over top of the main button when it is disabled.
                     // It then acts as a button that allows users to open popovers.
                     // This allows us to leverage the built in disabled functionality on the MUI component
-                    // while still being able to click the button
-                    <div onClick={buttonAction} className={classes.fakeButton}/>
+                    // while still being able to click the button. MUI stops all onClick events when disabled.
+                    <div onClick={buttonAction} className={classes.fakeButton} id="qa-CreateDataPackButton-fakeButton"/>
                 )}
                 {getButtonIcon()}
                 <span className={`qa-textSpan ${!buttonEnabled ? classes.disabledText : ''}`}>{buttonText}</span>
@@ -422,4 +421,4 @@ function CreateDataPackButton(props: Props) {
 }
 
 
-export default withWidth()(withTheme()(withStyles(jss)(CreateDataPackButton)));
+export default withTheme()(withStyles(jss)(CreateDataPackButton));

@@ -97,11 +97,6 @@ describe('DataPackDetails component', () => {
         const table = wrapper.find(Table).dive();
         expect(table.find(TableRow)).toHaveLength(1);
         expect(table.find(TableCell)).toHaveLength(5);
-        expect(wrapper.find(Table).find(TableCell)
-            .at(0)
-            .find(Button)
-            .html())
-            .toContain('CREATING DATAPACK ZIP');
         expect(table.find(TableCell).at(1).dive().html()).toContain('FILE SIZE');
         expect(table.find(TableCell).at(2).dive().html()).toContain('ESTIMATED FINISH');
         expect(table.find(TableCell).at(3).dive().html()).toContain('PROGRESS');
@@ -133,37 +128,6 @@ describe('DataPackDetails component', () => {
         expect(instance.getTableCellWidth()).toEqual('120px');
     });
 
-    it('isZipFileCompleted should return true or false', () => {
-        props.zipFileProp = null;
-        instance.isZipFileCompleted();
-        expect(instance.isZipFileCompleted()).toEqual(false);
-        const nextProps = { ...props };
-        nextProps.zipFileProp = 'TESTING.zip';
-        wrapper.setProps(nextProps);
-        instance.isZipFileCompleted();
-        expect(instance.isZipFileCompleted()).toEqual(true);
-    });
-
-    it('getCloudDownloadIcon should be called with correct data', () => {
-        props.zipFileProp = null;
-        instance.getCloudDownloadIcon();
-        expect(instance.getCloudDownloadIcon()).toEqual((
-            <CloudDownload
-                className="qa-DataPackDetails-CloudDownload-disabled"
-                style={{ fill: '#808080', marginRight: '5px', verticalAlign: 'middle' }}
-            />
-        ));
-        const nextProps = { ...props };
-        nextProps.zipFileProp = 'TESTING.zip';
-        wrapper.setProps(nextProps);
-        instance.getCloudDownloadIcon();
-        expect(instance.getCloudDownloadIcon()).toEqual((
-            <CloudDownload
-                className="qa-DataPackDetails-CloudDownload-enabled"
-                style={{ fill: '#4598bf', marginRight: '5px', verticalAlign: 'middle' }}
-            />
-        ));
-    });
 
     it('handleInfoOpen should set infoOpen true', () => {
         const stateStub = sinon.stub(instance, 'setState');
