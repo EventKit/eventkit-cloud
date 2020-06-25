@@ -174,10 +174,10 @@ export class PermissionsData extends React.Component<Props, State> {
             let membersAndGroups = null;
             if (this.props.permissions.value !== 'PRIVATE') {
                 const groupCount = Object.keys(this.props.permissions.groups).length;
-                let memberCount = Object.keys(this.props.permissions.members).length;
-                if (this.props.permissions.members[this.props.user.user.username] !== undefined) {
-                    memberCount -= 1;
-                }
+                const memberCount = Object.keys(this.props.permissions.members).length;
+                // if (this.props.permissions.members[this.props.user.user.username] !== undefined) {
+                //     memberCount -= 1;
+                // }
 
                 const groupText = this.getGroupsText(groupCount);
                 const memberText = this.getMembersText(memberCount);
