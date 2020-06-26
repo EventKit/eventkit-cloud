@@ -150,7 +150,7 @@ class TaskChainBuilder(object):
                     )
                     .set(queue=queue_group, routing_key=queue_group)
                 )
-                projections = get_metadata(data_provider_task_record.uid)["projections"]
+                projections = get_metadata([data_provider_task_record.uid])["projections"]
 
                 for projection in projections:
                     # Source data is already in 4326, no need to reproject.

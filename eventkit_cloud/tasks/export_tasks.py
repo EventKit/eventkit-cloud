@@ -8,6 +8,7 @@ import shutil
 import socket
 import time
 import traceback
+from typing import List
 
 from zipfile import ZipFile, ZIP_DEFLATED
 
@@ -37,26 +38,29 @@ from eventkit_cloud.feature_selection.feature_selection import FeatureSelection
 from eventkit_cloud.tasks.enumerations import TaskStates
 from eventkit_cloud.tasks.exceptions import CancelException, DeleteException
 from eventkit_cloud.tasks.helpers import (
-    normalize_name,
-    get_archive_data_path,
-    get_run_download_url,
-    get_download_filename,
-    get_run_staging_dir,
-    get_provider_staging_dir,
-    get_run_download_dir,
     Directory,
-    progressive_kill,
-    get_style_files,
-    generate_qgs_style,
-    get_human_readable_metadata_document,
-    pickle_exception,
-    get_arcgis_metadata,
-    clean_config,
-    get_metadata,
-    get_provider_staging_preview,
-    check_cached_task_failures,
-    add_export_run_files_to_zip,
     PREVIEW_TAIL,
+    add_export_run_files_to_zip,
+    check_cached_task_failures,
+    clean_config,
+    generate_qgs_style,
+    get_arcgis_metadata,
+    get_archive_data_path,
+    get_download_filename,
+    get_export_filename,
+    get_human_readable_metadata_document,
+    get_metadata,
+    get_provider_download_dir,
+    get_provider_slug,
+    get_provider_staging_dir,
+    get_provider_staging_preview,
+    get_run_download_dir,
+    get_run_download_url,
+    get_run_staging_dir,
+    get_style_files,
+    normalize_name,
+    pickle_exception,
+    progressive_kill,
 )
 from eventkit_cloud.tasks.metadata import metadata_tasks
 from eventkit_cloud.tasks.task_process import update_progress
@@ -74,6 +78,7 @@ from eventkit_cloud.tasks.models import (
     DataProviderTaskRecord,
     FileProducingTaskResult,
     ExportRun,
+    RunZipFile,
 )
 from eventkit_cloud.jobs.models import DataProviderTask
 
@@ -98,19 +103,26 @@ def make_file_downloadable(
         @direct: If true, return the direct download URL and skip the Downloadable tracking step
         @return A url to reach filepath.
     """
-    staging_dir = get_run_staging_dir(run_uid)
+
     if provider_slug:
         staging_dir = get_provider_staging_dir(run_uid, provider_slug)
-    run_download_dir = get_run_download_dir(run_uid)
-    run_download_url = get_run_download_url(run_uid)
+        run_download_dir = get_provider_download_dir(run_uid, provider_slug)
+    else:
+        staging_dir = get_run_staging_dir(run_uid)
+        run_download_dir = get_run_download_dir(run_uid)
 
+    run_download_url = get_run_download_url(run_uid, provider_slug)
     filename = os.path.basename(filepath)
     if download_filename is None:
         download_filename = filename
 
     if getattr(settings, "USE_S3", False):
-        download_path = f"{run_uid}/{download_filename}"
-        download_url = s3.upload_to_s3(os.path.join(staging_dir, filename), download_path)
+        source_path = os.path.join(staging_dir, filename)
+        if provider_slug:
+            download_filepath = os.path.join(run_uid, provider_slug, download_filename)
+        else:
+            download_filepath = os.path.join(run_uid, download_filename)
+        download_url = s3.upload_to_s3(source_path, download_filepath)
     else:
         make_dirs(run_download_dir)
 
@@ -210,13 +222,9 @@ class ExportTask(EventKitBaseTask):
             name, ext = os.path.splitext(filename)
             if provider_slug == "run":
                 event = normalize_name(task.export_provider_task.run.job.event)
-                download_filename = get_download_filename(
-                    name, finished, ext, additional_descriptors=[event, "eventkit"]
-                )
+                download_filename = get_download_filename(name, ext, additional_descriptors=[event, "eventkit"])
             else:
-                download_filename = get_download_filename(
-                    name, finished, ext, additional_descriptors=[provider_slug], data_provider_slug=provider_slug
-                )
+                download_filename = get_download_filename(name, ext, data_provider_slug=provider_slug)
 
             # construct the download url
             skip_copy = task.name == "OverpassQuery"
@@ -235,6 +243,7 @@ class ExportTask(EventKitBaseTask):
             task.status = TaskStates.SUCCESS.value
             task.save()
             retval["status"] = TaskStates.SUCCESS.value
+            retval["file_producing_task_result_id"] = result.id
             return retval
         except CancelException as e:
             return {"status": TaskStates.CANCELED.value}
@@ -335,6 +344,37 @@ class FormatTask(ExportTask):
     display = True
 
 
+class ZipFileTask(FormatTask):
+    def __call__(self, *args, **kwargs):
+        run = ExportRun.objects.get(uid=kwargs["run_uid"])
+        if kwargs["run_zip_file_uid"]:
+            run_zip_file = RunZipFile.objects.get(uid=kwargs["run_zip_file_uid"])
+            run_zip_file.run = run
+        else:
+            run_zip_file = RunZipFile.objects.create(run=run)
+            kwargs["run_zip_file_uid"] = run_zip_file.uid
+
+        retval = super(ZipFileTask, self).__call__(*args, **kwargs)
+
+        if not kwargs["data_provider_task_record_uids"]:
+            data_provider_task_record = DataProviderTaskRecord.objects.get(uid=kwargs["data_provider_task_record_uid"])
+            data_provider_task_records = data_provider_task_record.run.provider_tasks.exclude(slug="run")
+            data_provider_task_record_uids = [
+                data_provider_task_record.uid for data_provider_task_record in data_provider_task_records
+            ]
+        else:
+            data_provider_task_record_uids = kwargs["data_provider_task_record_uids"]
+
+        data_provider_task_records = DataProviderTaskRecord.objects.filter(uid__in=data_provider_task_record_uids)
+        downloadable_file = FileProducingTaskResult.objects.get(id=retval["file_producing_task_result_id"])
+        run_zip_file.downloadable_file = downloadable_file
+        run_zip_file.data_provider_task_records.set(data_provider_task_records)
+        run_zip_file.finished_at = timezone.now()
+        run_zip_file.message = "Completed"
+        run_zip_file.save()
+        return retval
+
+
 @gdalutils.retry
 def osm_data_collection_pipeline(
     export_task_record_uid,
@@ -375,7 +415,8 @@ def osm_data_collection_pipeline(
     pbf_filepath = pbf.OSMToPBF(osm=osm_filename, pbffile=pbf_filename, task_uid=export_task_record_uid).convert()
 
     # --- Generate thematic gpkg from PBF
-    geopackage_filepath = os.path.join(stage_dir, "{0}-{1}.gpkg".format(job_name, projection))
+    provider_slug = get_provider_slug(export_task_record_uid)
+    gpkg_filepath = get_export_filename(stage_dir, job_name, projection, provider_slug, "gpkg")
 
     if config is None:
         logger.error("No configuration was provided for OSM export")
@@ -389,12 +430,7 @@ def osm_data_collection_pipeline(
     )
     geom = Polygon.from_bbox(bbox)
     g = geopackage.Geopackage(
-        pbf_filepath,
-        geopackage_filepath,
-        stage_dir,
-        feature_selection,
-        geom,
-        export_task_record_uid=export_task_record_uid,
+        pbf_filepath, gpkg_filepath, stage_dir, feature_selection, geom, export_task_record_uid=export_task_record_uid,
     )
     g.run(subtask_start=77, subtask_percentage=8, eta=eta)  # 77% to 85%
 
@@ -412,19 +448,19 @@ def osm_data_collection_pipeline(
     gdalutils.convert(
         boundary=bbox,
         input_file=in_dataset,
-        output_file=geopackage_filepath,
+        output_file=gpkg_filepath,
         layers=["land_polygons"],
         fmt="gpkg",
         is_raster=False,
     )
 
-    ret_geopackage_filepath = g.results[0].parts[0]
-    assert ret_geopackage_filepath == geopackage_filepath
+    ret_gpkg_filepath = g.results[0].parts[0]
+    assert ret_gpkg_filepath == gpkg_filepath
     update_progress(
         export_task_record_uid, progress=100, eta=eta, msg="Completed OSM data collection pipeline",
     )
 
-    return geopackage_filepath
+    return gpkg_filepath
 
 
 @app.task(name="OSM (.gpkg)", bind=True, base=FormatTask, abort_on_error=True, acks_late=True)
@@ -526,7 +562,8 @@ def shp_export_task(
     """
     result = result or {}
     gpkg = parse_result(result, "source")
-    shapefile = os.path.join(stage_dir, "{0}-{1}_shp".format(job_name, projection))
+    provider_slug = get_provider_slug(task_uid)
+    shapefile = get_export_filename(stage_dir, job_name, projection, provider_slug, "shp")
 
     try:
         ogr = OGR(task_uid=task_uid)
@@ -564,7 +601,8 @@ def kml_export_task(
     result = result or {}
 
     gpkg = parse_result(result, "source")
-    kmlfile = os.path.join(stage_dir, "{0}-{1}.kml".format(job_name, projection))
+    provider_slug = get_provider_slug(task_uid)
+    kmlfile = get_export_filename(stage_dir, job_name, projection, provider_slug, "kml")
     try:
         ogr = OGR(task_uid=task_uid)
         out = ogr.convert(file_format="KML", in_file=gpkg, out_file=kmlfile)
@@ -597,7 +635,8 @@ def sqlite_export_task(
     result = result or {}
 
     gpkg = parse_result(result, "source")
-    sqlitefile = os.path.join(stage_dir, "{0}-{1}.sqlite".format(job_name, projection))
+    provider_slug = get_provider_slug(task_uid)
+    sqlitefile = get_export_filename(stage_dir, job_name, projection, provider_slug, "sqlite")
     try:
         ogr = OGR(task_uid=task_uid)
         out = ogr.convert(file_format="SQLite", in_file=gpkg, out_file=sqlitefile)
@@ -662,7 +701,9 @@ def geopackage_export_task(
     result = result or {}
 
     gpkg_in_dataset = parse_result(result, "source")
-    gpkg_out_dataset = os.path.join(stage_dir, "{0}-{1}.gpkg".format(job_name, projection))
+
+    provider_slug = get_provider_slug(task_uid)
+    gpkg_out_dataset = get_export_filename(stage_dir, job_name, projection, provider_slug, "gpkg")
 
     gpkg = gdalutils.convert(fmt="gpkg", input_file=gpkg_in_dataset, output_file=gpkg_out_dataset, task_uid=task_uid)
 
@@ -682,7 +723,8 @@ def geotiff_export_task(
     result = result or {}
 
     gtiff_in_dataset = parse_result(result, "source")
-    gtiff_out_dataset = os.path.join(stage_dir, "{0}-{1}.tif".format(job_name, projection))
+    provider_slug = get_provider_slug(task_uid)
+    gtiff_out_dataset = get_export_filename(stage_dir, job_name, projection, provider_slug, "tif")
     selection = parse_result(result, "selection")
 
     if "tif" in os.path.splitext(gtiff_in_dataset)[1]:
@@ -719,7 +761,8 @@ def nitf_export_task(
     result = result or {}
 
     nitf_in_dataset = parse_result(result, "source")
-    nitf_out_dataset = os.path.join(stage_dir, "{0}-{1}.nitf".format(job_name, projection))
+    provider_slug = get_provider_slug(task_uid)
+    nitf_out_dataset = get_export_filename(stage_dir, job_name, projection, provider_slug, "nitf")
 
     creation_options = ["ICORDS=G"]
     nitf = gdalutils.convert(
@@ -755,7 +798,8 @@ def hfa_export_task(
     result = result or {}
 
     hfa_in_dataset = parse_result(result, "source")
-    hfa_out_dataset = os.path.join(stage_dir, "{0}-{1}.img".format(job_name, projection))
+    provider_slug = get_provider_slug(task_uid)
+    hfa_out_dataset = get_export_filename(stage_dir, job_name, projection, provider_slug, "img")
     hfa = gdalutils.convert(fmt="hfa", input_file=hfa_in_dataset, output_file=hfa_out_dataset, task_uid=task_uid,)
 
     result["file_extension"] = "img"
@@ -791,10 +835,8 @@ def reprojection_task(
         file_extension = file_format
 
     in_dataset = parse_result(result, "source")
-    out_dataset = os.path.join(stage_dir, "{0}-{1}.{2}".format(job_name, projection, file_extension))
-
-    if file_format == "ESRI Shapefile":
-        out_dataset = os.path.join(stage_dir, "{0}-{1}_shp".format(job_name, projection))
+    provider_slug = get_provider_slug(task_uid)
+    out_dataset = get_export_filename(stage_dir, job_name, projection, provider_slug, file_extension)
 
     if "tif" in os.path.splitext(in_dataset)[1]:
         in_dataset = f"GTIFF_RAW:{in_dataset}"
@@ -837,7 +879,8 @@ def wfs_export_task(
     """
     result = result or {}
 
-    gpkg = os.path.join(stage_dir, "{0}-{1}.gpkg".format(job_name, projection))
+    provider_slug = get_provider_slug(task_uid)
+    gpkg = get_export_filename(stage_dir, job_name, projection, provider_slug, "gpkg")
 
     # Strip out query string parameters that might conflict
     service_url = re.sub(r"(?i)(?<=[?&])(version|service|request|typename|srsname)=.*?(&|$)", "", service_url,)
@@ -899,7 +942,9 @@ def wcs_export_task(
     Class defining export for WCS services
     """
     result = result or {}
-    out = os.path.join(stage_dir, "{0}-{1}.tif".format(job_name, projection))
+
+    provider_slug = get_provider_slug(task_uid)
+    out = get_export_filename(stage_dir, job_name, projection, provider_slug, "tif")
 
     eta = ETA(task_uid=task_uid)
     task = ExportTaskRecord.objects.get(uid=task_uid)
@@ -947,7 +992,9 @@ def arcgis_feature_service_export_task(
     Class defining sqlite export for ArcFeatureService service.
     """
     result = result or {}
-    gpkg = os.path.join(stage_dir, "{0}-{1}.gpkg".format(job_name, projection))
+
+    provider_slug = get_provider_slug(task_uid)
+    gpkg = get_export_filename(stage_dir, job_name, projection, provider_slug, "gpkg")
     try:
         if not os.path.exists(os.path.dirname(gpkg)):
             os.makedirs(os.path.dirname(gpkg), 6600)
@@ -1033,7 +1080,9 @@ def mapproxy_export_task(
     result = result or {}
     selection = parse_result(result, "selection")
 
-    gpkgfile = os.path.join(stage_dir, "{0}-{1}.gpkg".format(job_name, projection))
+    provider_slug = get_provider_slug(task_uid)
+    gpkgfile = get_export_filename(stage_dir, job_name, projection, provider_slug, "gpkg")
+
     try:
         w2g = mapproxy.MapproxyGeopackage(
             gpkgfile=gpkgfile,
@@ -1119,25 +1168,41 @@ def wait_for_providers_task(result=None, apply_args=None, run_uid=None, callback
         raise Exception("A run could not be found for uid {0}".format(run_uid))
 
 
-@app.task(name="Project File (.zip)", base=FormatTask, acks_late=True)
-def create_zip_task(result=None, data_provider_task_uid=None, *args, **kwargs):
+@app.task(name="Project File (.zip)", base=ZipFileTask, acks_late=True)
+def create_zip_task(
+    result: dict = None,
+    data_provider_task_record_uid: List[str] = None,
+    data_provider_task_record_uids: List[str] = None,
+    run_zip_file_uid=None,
+    *args,
+    **kwargs,
+):
     """
     :param result: The celery task result value, it should be a dict with the current state.
-    :param data_provider_task_uid: A data provider to zip (this or run_uid must be passed).
-    :return: The run files, or a single zip file if data_provider_task_uid is passed.
+    :param data_provider_task_record_uid: A data provider task record UID to zip.
+    :param data_provider_task_record_uids: A list of data provider task record UIDs to zip.
+    :return: The run files, or a single zip file if data_provider_task_record_uid is passed.
     """
     if not result:
         result = {}
 
-    data_provider_task = DataProviderTaskRecord.objects.get(uid=data_provider_task_uid)
+    if not data_provider_task_record_uids:
+        data_provider_task_record = DataProviderTaskRecord.objects.get(uid=data_provider_task_record_uid)
+        data_provider_task_records = data_provider_task_record.run.provider_tasks.exclude(slug="run")
+        data_provider_task_record_uids = [
+            data_provider_task_record.uid for data_provider_task_record in data_provider_task_records
+        ]
 
-    if data_provider_task.provider:
-        data_provider_task_slug = data_provider_task.provider.slug
-    else:
-        data_provider_task_slug = data_provider_task.slug
+    if len(data_provider_task_record_uids) > 1:
+        data_provider_task_record_slug = "run"
+    elif len(data_provider_task_record_uids) == 1:
+        data_provider_task_record_slug = (
+            DataProviderTaskRecord.objects.select_related("provider")
+            .get(uid=data_provider_task_record_uids[0])
+            .provider.slug
+        )
 
-    metadata = get_metadata(data_provider_task_uid)
-
+    metadata = get_metadata(data_provider_task_record_uids)
     include_files = metadata.get("include_files", None)
     if include_files:
         arcgis_dir = os.path.join(get_run_staging_dir(metadata["run_uid"]), Directory.ARCGIS.value)
@@ -1154,11 +1219,17 @@ def create_zip_task(result=None, data_provider_task_uid=None, *args, **kwargs):
         # some intermediate tasks produce files with the same name.
         # and add the static resources
         include_files = set(include_files)
+
+        if run_zip_file_uid:
+            zip_file_name = f"{metadata['name']}-{run_zip_file_uid}.zip"
+        else:
+            zip_file_name = f"{metadata['name']}.zip"
+
         result["result"] = zip_files(
             include_files=include_files,
+            run_zip_file_uid=run_zip_file_uid,
             file_path=os.path.join(
-                get_provider_staging_dir(metadata["run_uid"], data_provider_task_slug),
-                "{0}.zip".format(metadata["name"]),
+                get_provider_staging_dir(metadata["run_uid"], data_provider_task_record_slug), zip_file_name,
             ),
             static_files=get_style_files(),
         )
@@ -1195,11 +1266,11 @@ def finalize_export_provider_task(result=None, data_provider_task_uid=None, stat
 
 
 @gdalutils.retry
-def zip_files(include_files, file_path=None, static_files=None, *args, **kwargs):
+def zip_files(include_files, run_zip_file_uid, file_path=None, static_files=None, *args, **kwargs):
     """
     Contains the organization for the files within the archive.
     :param include_files: A list of files to be included.
-    :param run_uid: The UUID of the export run.
+    :param run_zip_file_uid: The UUID of the zip file.
     :param file_path: An optional name for the archive.
     :param static_files: Files that are in the same location for every datapack (i.e. templates and metadata files).
     :return: The zipfile path.
@@ -1212,6 +1283,8 @@ def zip_files(include_files, file_path=None, static_files=None, *args, **kwargs)
     if not file_path:
         logger.error("zip_file_task called with no file path.")
         raise Exception("zip_file_task called with no file path.")
+
+    run_zip_file = RunZipFile.objects.get(uid=run_zip_file_uid)
 
     files = [filename for filename in include_files if os.path.splitext(filename)[-1] not in BLACKLISTED_ZIP_EXTS]
 
@@ -1251,25 +1324,18 @@ def zip_files(include_files, file_path=None, static_files=None, *args, **kwargs)
                 # put the metadata file in arcgis folder unless it becomes more useful.
                 filename = os.path.join(Directory.ARCGIS.value, "{0}{1}".format(name, ext))
             elif filepath.endswith(PREVIEW_TAIL):
-                download_filename = get_download_filename(
-                    "preview",
-                    timezone.now(),
-                    ext,
-                    additional_descriptors=[provider_slug],
-                    data_provider_slug=provider_slug,
-                )
+                download_filename = get_download_filename("preview", ext, data_provider_slug=provider_slug,)
                 filename = get_archive_data_path(provider_slug, download_filename)
             else:
                 # Put the files into directories based on their provider_slug
                 # prepend with `data`
 
-                download_filename = get_download_filename(
-                    name, timezone.now(), ext, additional_descriptors=[provider_slug], data_provider_slug=provider_slug
-                )
+                download_filename = get_download_filename(name, ext, data_provider_slug=provider_slug)
                 filename = get_archive_data_path(provider_slug, download_filename)
+            run_zip_file.message = f"Adding {filename} to zip archive."
             zipfile.write(filepath, arcname=filename)
 
-        add_export_run_files_to_zip(zipfile)
+        add_export_run_files_to_zip(zipfile, run_zip_file)
 
         if zipfile.testzip():
             raise Exception("The zipped file was corrupted.")
