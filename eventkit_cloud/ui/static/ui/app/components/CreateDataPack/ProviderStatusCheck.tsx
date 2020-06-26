@@ -51,17 +51,17 @@ interface Props extends React.HTMLAttributes<HTMLElement> {
 }
 
 enum STATUS {
-    SUCCESS='SUCCESS',
-    FATAL='FATAL',
-    ERR='ERR',
-    WARN='WARN',
-    PENDING='PENDING',
-    ESTIMATES_PENDING=1,
+    SUCCESS = 'SUCCESS',
+    FATAL = 'FATAL',
+    ERR = 'ERR',
+    WARN = 'WARN',
+    PENDING = 'PENDING',
+    ESTIMATES_PENDING = 1,
     OVER_DATA_SIZE,
     OVER_AREA_SIZE
 }
 
-ProviderStatusCheck.defaultProps = { availability: { status: '', type: '', message: '' } } as Props;
+ProviderStatusCheck.defaultProps = {availability: {status: '', type: '', message: ''}} as Props;
 
 const CancelToken = axios.CancelToken;
 const source = CancelToken.source();
@@ -69,11 +69,12 @@ const source = CancelToken.source();
 export function ProviderStatusCheck(props: Props) {
     const {
         areEstimatesLoading, providerHasEstimates,
-        aoiArea, providerInfo, provider, geojson } = props;
-    const [ anchorElement, setAnchor ] = useState(null);
-    const [ isSubmissionOpen, setSubmissionOpen ] = useState(false);
-    const [{ status: requestStatus, response }, requestCall] = useAsyncRequest();
-    const { classes } = props;
+        aoiArea, providerInfo, provider, geojson
+    } = props;
+    const [anchorElement, setAnchor] = useState(null);
+    const [isSubmissionOpen, setSubmissionOpen] = useState(false);
+    const [{status: requestStatus, response}, requestCall] = useAsyncRequest();
+    const {classes} = props;
 
     const csrfmiddlewaretoken = getCookie('csrftoken');
     const makeRequest = async () => {
@@ -87,7 +88,7 @@ export function ProviderStatusCheck(props: Props) {
                 requested_aoi_size: Math.round(aoiArea),
                 requested_data_size: estimatedSize ? Math.trunc(estimatedSize.value) : undefined,
             },
-            headers: { 'X-CSRFToken': csrfmiddlewaretoken },
+            headers: {'X-CSRFToken': csrfmiddlewaretoken},
             cancelToken: source.token,
         });
     };
@@ -101,7 +102,7 @@ export function ProviderStatusCheck(props: Props) {
     }
 
     async function handleSubmissionOpen() {
-       if (Object.keys(props.geojson).length === 0) {
+        if (Object.keys(props.geojson).length === 0) {
             return null;
         }
         await makeRequest();
@@ -113,7 +114,7 @@ export function ProviderStatusCheck(props: Props) {
     }
 
     function handleErrorMessage(response) {
-        const { data = {errors: []} } = !!response ? response.response : {};
+        const {data} = response.response;
         return (
             data.errors.map((error, ix) => (
                 <span key={ix} title={error.title}>
@@ -135,13 +136,13 @@ export function ProviderStatusCheck(props: Props) {
 
     const avail = props.availability.status ?
         props.availability :
-        { status: 'PENDING', type: 'PENDING', message: "This data provider's availability is being checked." };
+        {status: 'PENDING', type: 'PENDING', message: "This data provider's availability is being checked."};
 
 
     let StatusIcon;
     let title;
     let message;
-    const makeMessage = (prefix: string, useMessage=true) => prefix + ((useMessage) ? avail.message : '');
+    const makeMessage = (prefix: string, useMessage = true) => prefix + ((useMessage) ? avail.message : '');
     let otherProps = {};
     let status = avail.status as STATUS;
 
@@ -210,7 +211,7 @@ export function ProviderStatusCheck(props: Props) {
                 StatusIcon = CircularProgress;
                 title = 'CHECKING AVAILABILITY';
                 message = makeMessage('');
-                otherProps = { thickness: 2, size: 20, color: 'primary' };
+                otherProps = {thickness: 2, size: 20, color: 'primary'};
                 break;
         }
     }
@@ -218,42 +219,42 @@ export function ProviderStatusCheck(props: Props) {
     let popoverBlock;
     const openEl = Boolean(anchorElement);
     const id = open ? 'simple-popover' : undefined;
-        if (status !== STATUS.OVER_DATA_SIZE && status !== STATUS.OVER_AREA_SIZE) {
-            popoverBlock = (
-                <div style={style.base} className="qa-ProviderStatusIcon">
-                    <StatusIcon
-                        style={style.icon}
-                        title={props.availability.message}
-                        onMouseEnter={handlePopoverOpen}
-                        onMouseLeave={handlePopoverClose}
-                        {...otherProps}
-                    />
-                    <Popover
-                        style={{pointerEvents: 'none'}}
-                        PaperProps={{
-                            style: {padding: '16px'},
-                        }}
-                        open={!!anchorElement}
-                        anchorEl={anchorElement}
-                        onClose={handlePopoverClose}
-                        anchorOrigin={{
-                            vertical: 'top',
-                            horizontal: 'center',
-                        }}
-                        transformOrigin={{
-                            vertical: 'bottom',
-                            horizontal: 'center',
-                        }}
-                    >
-                        <div style={{maxWidth: 400}}>
-                            <Typography variant="h6" gutterBottom style={{fontWeight: 600}}>
-                                {title}
-                            </Typography>
-                            <div>{message}</div>
-                        </div>
-                    </Popover>
-                </div>
-            )
+    if (status !== STATUS.OVER_DATA_SIZE && status !== STATUS.OVER_AREA_SIZE) {
+        popoverBlock = (
+            <div style={style.base} className="qa-ProviderStatusIcon">
+                <StatusIcon
+                    style={style.icon}
+                    title={props.availability.message}
+                    onMouseEnter={handlePopoverOpen}
+                    onMouseLeave={handlePopoverClose}
+                    {...otherProps}
+                />
+                <Popover
+                    style={{pointerEvents: 'none'}}
+                    PaperProps={{
+                        style: {padding: '16px'},
+                    }}
+                    open={!!anchorElement}
+                    anchorEl={anchorElement}
+                    onClose={handlePopoverClose}
+                    anchorOrigin={{
+                        vertical: 'top',
+                        horizontal: 'center',
+                    }}
+                    transformOrigin={{
+                        vertical: 'bottom',
+                        horizontal: 'center',
+                    }}
+                >
+                    <div style={{maxWidth: 400}}>
+                        <Typography variant="h6" gutterBottom style={{fontWeight: 600}}>
+                            {title}
+                        </Typography>
+                        <div>{message}</div>
+                    </div>
+                </Popover>
+            </div>
+        )
     } else {
         popoverBlock = (
             <div style={style.base} className="qa-ProviderStatusIcon">
@@ -344,7 +345,7 @@ export function ProviderStatusCheck(props: Props) {
     }
 
     return (
-        <div style={style.base} className="qa-ProviderStatusIcon" >
+        <div style={style.base} className="qa-ProviderStatusIcon">
             {popoverBlock}
         </div>
     );

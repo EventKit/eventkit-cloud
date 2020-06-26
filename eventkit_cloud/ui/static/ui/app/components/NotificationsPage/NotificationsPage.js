@@ -50,7 +50,7 @@ export class NotificationsPage extends React.Component {
             if (this.context.config.NOTIFICATIONS_PAGE_SIZE) {
                 this.itemsPerPage = Number(this.context.config.NOTIFICATIONS_PAGE_SIZE);
                 // reconsider setting state in componentDidUpdate in the future
-                this.setState({ pageSize: this.itemsPerPage }, this.refresh); // eslint-disable-line
+                this.setState({pageSize: this.itemsPerPage}, this.refresh); // eslint-disable-line
             }
         }
     }
@@ -233,8 +233,8 @@ function mapDispatchToProps(dispatch) {
     };
 }
 
-export default
-@withWidth()
+export default @withWidth()
 @withTheme()
 @connect(mapStateToProps, mapDispatchToProps)
-class Default extends NotificationsPage {}
+class Default extends NotificationsPage {
+}

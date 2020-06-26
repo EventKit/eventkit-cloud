@@ -96,12 +96,12 @@ interface State {
     geojson_geometry: null | GeoJSON.Geometry;
     steps: any[];
     isRunning: boolean;
+    page: number;
 }
 
 export class DataPackPage extends React.Component<Props, State> {
     private pageSize: number;
     private defaultQuery;
-    private autoFetchKey: number;
     private view: any;
     private joyride: Joyride.default;
 
@@ -123,8 +123,9 @@ export class DataPackPage extends React.Component<Props, State> {
         this.changeView = this.changeView.bind(this);
         this.autoRunRequest = this.autoRunRequest.bind(this);
         this.makeRunRequest = this.makeRunRequest.bind(this);
-        this.loadMore = this.loadMore.bind(this);
-        this.loadLess = this.loadLess.bind(this);
+        this.makePartialRunRequest = this.makePartialRunRequest.bind(this);
+        this.loadNext = this.loadNext.bind(this);
+        this.loadPrevious = this.loadPrevious.bind(this);
         this.getView = this.getView.bind(this);
         this.callback = this.callback.bind(this);
         this.handleSpatialFilter = this.handleSpatialFilter.bind(this);
@@ -153,6 +154,7 @@ export class DataPackPage extends React.Component<Props, State> {
             geojson_geometry: null,
             steps: [],
             isRunning: false,
+            page: 1,
         };
 
         this.defaultQuery = {
@@ -178,7 +180,6 @@ export class DataPackPage extends React.Component<Props, State> {
         this.props.getProjections();
 
         this.makeRunRequest();
-        this.autoFetchKey = window.setInterval(this.autoRunRequest, 10000);
         // make sure no geojson upload is in the state
         this.props.resetGeoJSONFile();
     }
@@ -222,10 +223,11 @@ export class DataPackPage extends React.Component<Props, State> {
         if (this.props.location.search === '') {
             changedQuery = false;
         } else {
-            const keys = Object.keys(queryString.parse(this.props.location.search));
+            const searchKeys = Object.keys(queryString.parse(this.props.location.search));
             const previousQuery = queryString.parse(prevProps.location.search);
             const newQuery = queryString.parse(this.props.location.search);
-            if (!keys.every(key => previousQuery[key] === newQuery[key])) {
+
+            if (!searchKeys.every(key => previousQuery[key] === newQuery[key])) {
                 changedQuery = true;
             }
         }
@@ -257,7 +259,6 @@ export class DataPackPage extends React.Component<Props, State> {
     }
 
     componentWillUnmount() {
-        window.clearInterval(this.autoFetchKey);
         // save view and order to redux state so it can be set next time the page is visited
         if (this.props.runsMeta.order !== queryString.parse(this.props.location.search).order) {
             this.props.setOrder(queryString.parse(this.props.location.search).order);
@@ -298,10 +299,10 @@ export class DataPackPage extends React.Component<Props, State> {
             onRunDelete: this.props.deleteRun,
             onRunShare: this.props.updateDataCartPermissions,
             range: this.props.runsMeta.range,
-            handleLoadLess: this.loadLess,
-            handleLoadMore: this.loadMore,
-            loadLessDisabled: this.props.runIds.length <= this.pageSize,
-            loadMoreDisabled: !this.props.runsMeta.nextPage,
+            handleLoadPrevious: this.loadPrevious,
+            handleLoadNext: this.loadNext,
+            loadPreviousDisabled: this.state.page === 1 && this.props.runIds.length <= this.pageSize,
+            loadNextDisabled: !this.props.runsMeta.nextPage,
             providers: this.props.providers,
         };
         switch (view) {
@@ -338,16 +339,12 @@ export class DataPackPage extends React.Component<Props, State> {
         }
     }
 
-    private isPageLoading() {
-        return this.props.runsFetched === null;
-    }
-
     private updateLocationQuery(query: any) {
         const currentQuery = queryString.parse(this.props.location.search);
         const newQuery = {
             ...currentQuery,
             ...query
-        }
+        };
         if (!isEqual(currentQuery, newQuery)) {
             const queryAsString = queryString.stringify(newQuery);
             history.push({"search": queryAsString});
@@ -375,13 +372,14 @@ export class DataPackPage extends React.Component<Props, State> {
         }
     }
 
-    private makeRunRequest(isAuto = false) {
+    private async makeRunRequest(isAuto = false) {
         const params = queryString.parse(this.props.location.search);
-        return this.props.getRuns({
+        await this.props.getRuns({
             page_size: Number(params.page_size),
             ordering: params.order,
             ownerFilter: params.collection,
             search: params.search,
+            page: this.state.page,
             status: this.state.status,
             minDate: this.state.minDate,
             maxDate: this.state.maxDate,
@@ -392,6 +390,15 @@ export class DataPackPage extends React.Component<Props, State> {
             permissions: this.state.permissions,
             isAuto,
         });
+    }
+
+    private async makePartialRunRequest(isAuto = false, params: {}) {
+        this.setState({loading: true});
+        await this.props.getRuns({
+            isAuto,
+            ...params,
+        });
+        this.setState({loading: false});
     }
 
     private handleOwnerFilter(value: string) {
@@ -449,20 +456,16 @@ export class DataPackPage extends React.Component<Props, State> {
         this.setState({open: !this.state.open});
     }
 
-    private loadMore() {
+    private loadNext() {
         if (this.props.runsMeta.nextPage) {
-            this.updateLocationQuery({
-                page_size: Number(queryString.parse(this.props.location.search).page_size) + this.pageSize,
-            });
+            this.makePartialRunRequest(false, {page: this.state.page + 1, page_size: this.pageSize});
+            this.setState({page: this.state.page + 1});
         }
     }
 
-    private loadLess() {
-        if (Number(queryString.parse(this.props.location.search).page_size) > this.pageSize) {
-            this.updateLocationQuery({
-                page_size: Number(queryString.parse(this.props.location.search).page_size) - this.pageSize,
-            });
-        }
+    private loadPrevious() {
+        this.makePartialRunRequest(false, {page: this.state.page - 1, page_size: this.pageSize});
+        this.setState({page: this.state.page - 1});
     }
 
     private joyrideAddSteps(steps: object[]) {

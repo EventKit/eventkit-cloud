@@ -124,7 +124,7 @@ class FileProducingTaskResultAdmin(admin.ModelAdmin):
 
 
 class RunZipFileAdmin(admin.ModelAdmin):
-    list_display = ["run", "downloadable_file"]
+    list_display = ["uid", "run", "downloadable_file"]
 
 
 admin.site.register(DataProviderTaskRecord, DataProviderTaskRecordAdmin)

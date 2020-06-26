@@ -115,7 +115,9 @@ def stringify(item):
 
 def get_run_zip_file(field=None, values=[]):
     """
-    TODO: Docstring
+    :param field: The field you want to filter on.
+    :param values: The values you want to filter for.
+    :return: A queryset with the selected run_zip_file.
     """
     initial_qs = RunZipFile.objects.annotate(cnt=Count("data_provider_task_records")).filter(cnt=len(values))
 

@@ -212,7 +212,7 @@ export function RequestDataSource(props: Props) {
     }
 
     function renderErrorMessage() {
-        const { data = { errors: [] } } = !!response ? response.response : {};
+        const {data} = response.response;
         return (
             <>
                 <div

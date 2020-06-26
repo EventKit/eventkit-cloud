@@ -34,9 +34,9 @@ class TestHelpers(TestCase):
             self.assertEqual(parent_path, os.getcwd())
         self.assertEqual(current_path, os.getcwd())
 
-    @patch('eventkit_cloud.tasks.helpers.sleep')
+    @patch('eventkit_cloud.tasks.helpers.time.sleep')
     @patch('eventkit_cloud.tasks.helpers.os')
-    def test_progessive_kill(self, mock_os, mock_sleep):
+    def test_progressive_kill(self, mock_os, mock_sleep):
         pid = 1
         # Test no PID.
         mock_os.kill.side_effect = [OSError()]
@@ -144,6 +144,7 @@ class TestHelpers(TestCase):
         for fname in [sample_file]:
             mps = MagicMock()
             mps.result.filename = fname
+            mps.name = "something EPSG:4326"
             mps.status = TaskStates.COMPLETED.value
             mocked_provider_subtasks.append(mps)
 
@@ -151,9 +152,14 @@ class TestHelpers(TestCase):
         mocked_provider_task.name = expected_provider_task_name = "example_name"
         mocked_provider_task.status = TaskStates.COMPLETED.value
         mocked_provider_task.provider.slug = expected_provider_slug = 'example_slug'
-        mocked_provider_task.tasks.all.return_value = mocked_provider_subtasks
+        mocked_provider_task.tasks.filter.return_value = mocked_provider_subtasks
         mocked_provider_task.uid = expected_provider_task_uid = '5678'
-        mock_DataProviderTaskRecord.objects.get.return_value = mocked_provider_task
+
+        mocked_queryset = MagicMock()
+        mocked_queryset.return_value = [mocked_provider_task]
+        mocked_queryset.first.return_value = mocked_provider_task
+        mocked_queryset.__iter__.return_value = [mocked_provider_task]
+        mock_DataProviderTaskRecord.objects.select_related().prefetch_related().filter.return_value = mocked_queryset
 
         mocked_data_provider = MagicMock()
         mocked_data_provider.slug = expected_provider_slug
@@ -164,6 +170,7 @@ class TestHelpers(TestCase):
         mocked_data_provider.service_description = expected_data_provider_desc = 'example_description'
         mock_DataProvider.objects.get.return_value = mocked_data_provider
 
+
         mocked_run = MagicMock()
         mocked_run.uid = run_uid
         mocked_run.job.uid = expected_job_uid = '7890'
@@ -173,6 +180,7 @@ class TestHelpers(TestCase):
         mocked_run.job.extents = expected_extents = [-1, -1, 0, 0]
         mocked_run.job.event = expected_project_name = 'mocked_project_name'
         mocked_run.job.description = expected_job_desc = 'mocked_job_desc'
+        mocked_run.job.projections.all.return_value = [Mock(srid=4326)]
 
         mocked_run.provider_tasks.all.return_value = [mocked_provider_task]
         mocked_provider_task.run = mocked_run
@@ -200,6 +208,7 @@ class TestHelpers(TestCase):
                                "file_ext": split_file[1],
                                "full_file_path": os.path.join(stage_dir, expected_provider_slug,
                                                               sample_file),
+                               "projection": '4326'
                                }],
                     "last_update": expected_last_update,
                     "metadata": expected_metadata_url,
@@ -220,11 +229,11 @@ class TestHelpers(TestCase):
             ],
             "name": expected_job_name,
             "project": expected_project_name,
-            "projections": [],
+            "projections": [4326],
             "run_uid": run_uid,
             "url": "{}/status/{}".format(getattr(settings, 'SITE_URL'), expected_job_uid)
         }
-        returned_metadata = get_metadata(mocked_provider_task.uid)
+        returned_metadata = get_metadata([mocked_provider_task.uid])
         self.maxDiff = None
         self.assertEqual(expected_metadata, returned_metadata)
 

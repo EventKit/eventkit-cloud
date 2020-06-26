@@ -117,8 +117,12 @@ def make_file_downloadable(
         download_filename = filename
 
     if getattr(settings, "USE_S3", False):
-        download_path = f"{run_uid}/{download_filename}"
-        download_url = s3.upload_to_s3(os.path.join(staging_dir, filename), download_path)
+        source_path = os.path.join(staging_dir, filename)
+        if provider_slug:
+            download_filepath = os.path.join(run_uid, provider_slug, download_filename)
+        else:
+            download_filepath = os.path.join(run_uid, download_filename)
+        download_url = s3.upload_to_s3(source_path, download_filepath)
     else:
         make_dirs(run_download_dir)
 
@@ -1265,7 +1269,7 @@ def zip_files(include_files, run_zip_file_uid, file_path=None, static_files=None
     """
     Contains the organization for the files within the archive.
     :param include_files: A list of files to be included.
-    :param run_uid: The UUID of the export run.
+    :param run_zip_file_uid: The UUID of the zip file.
     :param file_path: An optional name for the archive.
     :param static_files: Files that are in the same location for every datapack (i.e. templates and metadata files).
     :return: The zipfile path.
@@ -1328,6 +1332,7 @@ def zip_files(include_files, run_zip_file_uid, file_path=None, static_files=None
 
                 download_filename = get_download_filename(name, ext, data_provider_slug=provider_slug)
                 filename = get_archive_data_path(provider_slug, download_filename)
+            run_zip_file.message = f"Adding {filename} to zip archive."
             zipfile.write(filepath, arcname=filename)
 
         add_export_run_files_to_zip(zipfile, run_zip_file)

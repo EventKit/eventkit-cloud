@@ -432,7 +432,7 @@ class ExportRunSerializer(serializers.ModelSerializer):
         if filtered_provider_tasks:
             data = None
         else:
-            data = {"status": "PENDING"}  # TODO: Import this from task status enumeration
+            data = {"status": TaskStates.PENDING.value}
 
         run_zip_file = get_run_zip_file(values=provider_tasks).first()
         if run_zip_file:
@@ -485,24 +485,11 @@ class RunZipFileSerializer(serializers.ModelSerializer):
         fields = "__all__"
 
     def get_data_provider_task_records(self, obj):
-        request = self.context["request"]
-        provider_tasks, filtered_provider_tasks = attribute_class_filter(
-            obj.data_provider_task_records.all(), request.user
-        )
-
-        return DataProviderListSerializer(provider_tasks, many=True, context=self.context).data
+        return DataProviderListSerializer(obj.data_provider_task_records, many=True, context=self.context).data
 
     def get_message(self, obj):
-        request = self.context["request"]
-        if obj.run:
-            run = ExportRun.objects.get(uid=obj.run.uid)
-            provider_tasks, filtered_provider_tasks = attribute_class_filter(run.provider_tasks.all(), request.user)
-            if run.provider_tasks.filter(name="run"):
-                if (
-                    TaskStates[run.provider_tasks.get(name="run").tasks.filter(name__icontains="zip")[0].status]
-                    in TaskStates.get_finished_states()
-                ):
-                    return "Completed"
+        if obj.finished_at:
+            return "Completed"
         return obj.message
 
     def get_run(self, obj):
@@ -511,23 +498,14 @@ class RunZipFileSerializer(serializers.ModelSerializer):
         return ""
 
     def get_status(self, obj):
-        request = self.context["request"]
-        if obj.run:
-            run = ExportRun.objects.get(uid=obj.run.uid)
-            provider_tasks, filtered_provider_tasks = attribute_class_filter(run.provider_tasks.all(), request.user)
-            if run.provider_tasks.filter(name="run"):
-                return run.provider_tasks.get(name="run").tasks.filter(name__icontains="zip")[0].status
-
+        if obj.downloadable_file:
+            return ExportTaskRecord.objects.get(result=obj.downloadable_file).status
         return ""
 
     def get_url(self, obj):
         request = self.context["request"]
-        provider_tasks, filtered_provider_tasks = attribute_class_filter(obj.data_provider_task_records, request.user)
-        run_zip_file = get_run_zip_file(values=provider_tasks).first()
-        if run_zip_file:
-            if run_zip_file.downloadable_file:
-                return request.build_absolute_uri("/download?uid={}".format(run_zip_file.downloadable_file.uid))
-
+        if obj.downloadable_file:
+            return request.build_absolute_uri("/download?uid={}".format(obj.downloadable_file.uid))
         return ""
 
     def create(self, validated_data, **kwargs):
@@ -540,7 +518,6 @@ class RunZipFileSerializer(serializers.ModelSerializer):
             generate_zipfile(data_provider_task_record_uids, obj.uid)
             return obj
         else:
-            # TODO: I think this could be done better, perhaps in the validator.
             raise serializers.ValidationError("Duplicate Zip File already exists.")
 
 
