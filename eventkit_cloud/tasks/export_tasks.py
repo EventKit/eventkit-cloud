@@ -1310,7 +1310,6 @@ def zip_files(include_files, run_zip_file_uid, file_path=None, static_files=None
                         )
                 zipfile.write(absolute_file_path, arcname=filename)
         for filepath in files:
-            run_zip_file.message = f"Adding {filename} to zip archive."
             # This takes files from the absolute stage paths and puts them in the provider directories in the data dir.
             # (e.g. staging_root/run_uid/provider_slug/file_name.ext -> data/provider_slug/file_name.ext)
             name, ext = os.path.splitext(filepath)

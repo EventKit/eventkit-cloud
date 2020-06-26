@@ -14,6 +14,9 @@ import Popover from "@material-ui/core/Popover";
 import AlertError from "@material-ui/icons/Error";
 import CenteredPopup from "../common/CenteredPopup";
 
+// Interval in ms
+const ZIP_POLLING_INTERVAL = 5000;
+
 const jss = (theme: Eventkit.Theme & Theme) => ({
     button: {
         backgroundColor: theme.eventkit.colors.selected_primary,
@@ -128,9 +131,18 @@ function CreateDataPackButton(props: Props) {
     };
 
     useEffect(() => {
-        clearZipAvailable();
+        // If the list of provider task UID's changes, or the status of the run changes,
+        // We will attempt to clear the status of the zip available api hook.
+        // This will cancel any pending request (for a different set of UID's, or it will trigger a check
+        // once the job completes.
+        if (zipAvailableStatus !== ApiStatuses.hookActions.NOT_FIRED) {
+            clearZipAvailable();
+        }
     }, [DepsHashers.arrayHash(providerTaskUids), run.status]);
 
+    // Keeps track of the cumulative number of bad responses (could be error codes OR empty responses)
+    // We do this to allow the backend some leeway in preparing the response and account for some intermittent
+    // network issues.
     const [badResponseCount, setBadResponseCount] = useState(0);
     const [badResponse, setBadResponse] = useState(false);
     useEffect(() => {
@@ -142,18 +154,23 @@ function CreateDataPackButton(props: Props) {
         } else {
             // Check to see if the zip GET request returned successfully, and the zip POST request has been fired,
             // and then finally that the zip is not yet available.
-            if (zipAvailableStatus === ApiStatuses.hookActions.SUCCESS &&
+            if (
+                (zipAvailableStatus === ApiStatuses.hookActions.SUCCESS || zipAvailableStatus === ApiStatuses.hookActions.ERROR) &&
                 requestZipFileStatus !== ApiStatuses.hookActions.NOT_FIRED &&
-                !isZipAvailable()) {
+                !isZipAvailable()
+            ) {
+                // Request completed, check to see if we're already at the limit for bad responses
                 if (badResponseCount >= 2) {
                     setBadResponse(true);
                 } else {
-                    if (!zipAvailableResponse.data.length) {
+                    // Deal with bad responses, increase the count.
+                    if (!zipAvailableResponse.data.length || zipAvailableStatus === ApiStatuses.hookActions.SUCCESS) {
                         setBadResponseCount(count => count + 1);
                     }
+                    // Set a time out to re-poll for the status of the zip after five seconds.
                     timeoutId = setTimeout(() => {
                         checkZipAvailable();
-                    }, 5000);
+                    }, ZIP_POLLING_INTERVAL);
                 }
             }
         }
