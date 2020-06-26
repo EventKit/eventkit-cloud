@@ -411,6 +411,7 @@ def attribute_class_filter(queryset: QuerySet, user: User = None) -> Tuple[Query
     restricted_attribute_classes = AttributeClass.objects.exclude(users=user)
     attribute_class_queries = {
         "ExportRun": {"job__provider_tasks__provider__attribute_class__in": restricted_attribute_classes},
+        "RunZipFile": {"data_provider_task_records__provider__attribute_class__in": restricted_attribute_classes},
         "Job": {"provider_tasks__provider__attribute_class__in": restricted_attribute_classes},
         "DataProvider": {"attribute_class__in": restricted_attribute_classes},
         "DataProviderTask": {"provider__attribute_class__in": restricted_attribute_classes},

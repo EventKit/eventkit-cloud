@@ -1,10 +1,15 @@
 import logging
 
 from django.conf import settings
+from django.db.models import Count
+
+from functools import reduce
 import rest_framework.status
 from rest_framework.exceptions import ValidationError
 from rest_framework.response import Response
 from rest_framework.views import exception_handler
+
+from eventkit_cloud.tasks.models import RunZipFile
 
 logger = logging.getLogger(__name__)
 
@@ -106,3 +111,21 @@ def stringify(item):
         return ""
     else:
         raise Exception("Stringify doesn't support items of type {0}".format(type(item)))
+
+
+def get_run_zip_file(field=None, values=[]):
+    """
+    :param field: The field you want to filter on.
+    :param values: The values you want to filter for.
+    :return: A queryset with the selected run_zip_file.
+    """
+    initial_qs = RunZipFile.objects.annotate(cnt=Count("data_provider_task_records")).filter(cnt=len(values))
+
+    if field:
+        field = f"__{field}"
+    else:
+        field = ""
+
+    queryset = reduce(lambda qs, value: qs.filter(**{f"data_provider_task_records{field}": value}), values, initial_qs)
+
+    return queryset.select_related("downloadable_file")
