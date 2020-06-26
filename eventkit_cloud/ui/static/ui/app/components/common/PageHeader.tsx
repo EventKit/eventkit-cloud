@@ -6,7 +6,7 @@ export interface Props {
     id?: string;
     className?: string;
     title: any;
-    children: any;
+    children?: any;
     theme: Eventkit.Theme & Theme;
 }
 

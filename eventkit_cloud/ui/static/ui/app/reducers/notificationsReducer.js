@@ -312,6 +312,8 @@ export function notificationsReducer(state = initialState, action) {
                     },
                 },
             };
+        case types.CLEAR_NOTIFICATIONS:
+            return initialState;
         case types.USER_LOGGED_OUT:
             return initialState;
         default:
