@@ -679,7 +679,12 @@ class JobPermission(TimeStampedModelMixin):
         if level != JobPermissionLevel.READ.value:
             user_query.append(Q(permissions__permission=level))
 
-        return jobs.filter(Q(*user_query) | Q(*group_query))
+        # If not requesting Admin level permission (i.e. to make admin changes), then also include public datasets.
+        public_query = Q()
+        if level == JobPermissionLevel.READ.value:
+            public_query = Q(visibility=VisibilityState.PUBLIC.value)
+
+        return jobs.filter(Q(*user_query) | Q(*group_query) | public_query)
 
     @staticmethod
     def groupjobs(group, level):
@@ -691,7 +696,12 @@ class JobPermission(TimeStampedModelMixin):
         if level != JobPermissionLevel.READ.value:
             query.append(Q(permissions__permission=level))
 
-        return Job.objects.filter(*query)
+        # If not requesting Admin level permission (i.e. to make admin changes), then also include public datasets.
+        public_query = Q()
+        if level == JobPermissionLevel.READ.value:
+            public_query = Q(visibility=VisibilityState.PUBLIC.value)
+
+        return Job.objects.filter(Q(*query) | public_query)
 
     @staticmethod
     def get_user_permissions(user, job_id):
