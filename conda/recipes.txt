@@ -4,6 +4,7 @@ django-audit-logging
 django-auth-ldap
 django-celery-beat
 django-celery-results
+swapper
 django-notifications-hq
 django-storages
 django-timezone-field

@@ -13,103 +13,59 @@ build:
 
 requirements:
   build:
-    - python =3.6
+    - python
     - pip
     - setuptools
     - wheel
     - nodejs
     - ruby
     - git
-    - django-audit-logging =0.2.1
-    - gdal =2.4.1
-    - osmctools =0.7.0
-    - openldap =2.4.46
-    - python-ldap =3.1.0
-    - amqp =2.4.2
-    - billiard =3.5.0.4
-    - boto3 =1.9.141
-    - celery =4.2.1
-    - certifi =2019.3.9
-    - django =2.2.5
-    - dj-database-url =0.4.2
-    - django-auth-ldap =1.7.0
-    - django-celery-beat =1.4.0
-    - django-celery-results =1.0.4
-    - django-extensions =2.1.6
-    - django-filter =2.2.0
-    - django-notifications-hq =1.5.0
-    - django-storages =1.6.6
-    - djangorestframework =3.11.0
-    - djangorestframework-gis =0.14
-    - eventlet =0.23.0
-    - gunicorn =19.9.0
-    - kombu =4.2.1
-    - lxml =4.3.3
-    - MapProxy =1.12.0
-    - Markdown =3.1
-    - numpy =1.16.3
-    - Pillow =6.0.0
-    - psycopg2 =2.8.2
-    - PyJWT =1.7.1
-    - pyparsing =2.4.0
-    - python-dateutil =2.8.0
-    - python-magic =0.4.15
-    - python-memcached =1.59
-    - pytz =2019.1
-    - PyYAML =5.1
-    - requests =2.21.0
-    - Shapely =1.6.4
-    - simplejson =3.16.0
-    - sqlparse =0.3.0
-    - uritemplate =3.0.1
-    - webtest =2.0.33
-    - whitenoise =4.1.2
   run:
-    - python =3.6
-    - django-audit-logging =0.2.1
-    - gdal =2.4.1
-    - osmctools =0.7.0
-    - openldap =2.4.46
-    - python-ldap =3.1.0
-    - amqp =2.4.2
-    - billiard =3.5.0.4
-    - boto3 =1.9.141
-    - celery =4.2.1
-    - certifi =2019.3.9
-    - django =2.2.5
-    - dj-database-url =0.4.2
-    - django-auth-ldap =1.7.0
-    - django-celery-beat =1.4.0
-    - django-celery-results =1.0.4
-    - django-extensions =2.1.6
-    - django-filter =2.2.0
-    - django-notifications-hq =1.5.0
-    - django-storages =1.6.6
-    - djangorestframework =3.11.0
-    - djangorestframework-gis =0.14
-    - eventlet =0.23.0
-    - gunicorn =19.9.0
-    - kombu =4.2.1
-    - lxml =4.3.3
-    - MapProxy =1.12.0
-    - Markdown =3.1
-    - numpy =1.16.3
-    - Pillow =6.0.0
-    - psycopg2 =2.8.2
-    - PyJWT =1.7.1
-    - pyparsing =2.4.0
-    - python-dateutil =2.8.0
-    - python-magic =0.4.15
-    - python-memcached =1.59
-    - pytz =2019.1
-    - PyYAML =5.1
-    - requests =2.21.0
-    - Shapely =1.6.4
-    - simplejson =3.16.0
-    - sqlparse =0.3.0
-    - uritemplate =3.0.1
-    - webtest =2.0.33
-    - whitenoise =4.1.2
+    - python
+    - django-audit-logging
+    - gdal >=2.0.0
+    - osmctools
+    - openldap
+    - python-ldap
+    - amqp
+    - billiard
+    - boto3
+    - celery
+    - certifi
+    - django
+    - dj-database-url
+    - django-auth-ldap
+    - django-celery-beat
+    - django-celery-results
+    - django-extensions
+    - django-filter
+    - django-notifications-hq
+    - django-storages
+    - djangorestframework
+    - djangorestframework-gis
+    - eventlet
+    - gunicorn
+    - kombu
+    - lxml
+    - MapProxy
+    - Markdown
+    - numpy
+    - Pillow
+    - psycopg2
+    - PyJWT
+    - pyparsing
+    - python-dateutil
+    - python-magic
+    - python-memcached
+    - pytz
+    - PyYAML
+    - requests
+    - Shapely
+    - simplejson
+    - sqlparse
+    - uritemplate
+    - webtest
+    - whitenoise
 
 about:
   home: https://github.com/eventkit/eventkit-cloud

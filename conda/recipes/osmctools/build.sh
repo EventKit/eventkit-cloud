@@ -1,8 +1,18 @@
-#!/bin/sh
+#!/usr/bin/env bash
 
-set -e
+BIN_DIR="${PREFIX}/bin"
+OSMCTOOLS_SHARE="${PREFIX}/osmctools-share"
+OSMCTOOLS_DOC="${PREFIX}/osmctools-doc"
 
-ls -al
-gcc src/osmupdate.c -o $PREFIX/bin/osmupdate
-gcc src/osmfilter.c -O3 -o $PREFIX/bin/osmfilter
-gcc src/osmconvert.c -lz -O3 -o $PREFIX/bin/osmconvert
+mkdir "${OSMCTOOLS_SHARE}" "${OSMCTOOLS_DOC}"
+
+autoreconf --install
+
+./configure --prefix="${PREFIX}" \
+            --bindir="${BIN_DIR}" \
+            --datarootdir="${OSMCTOOLS_SHARE}" \
+            --docdir="${OSMCTOOLS_DOC}" \
+
+make install
+
+rm -rf "${OSMCTOOLS_SHARE}" "${OSMCTOOLS_DOC}"

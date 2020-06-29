@@ -28,10 +28,10 @@ about:
   home: https://github.com/django-auth-ldap/django-auth-ldap
   license: BSD
   license_family: BSD
-  license_file: 
+  license_file:
   summary: Django LDAP authentication backend
-  doc_url: 
-  dev_url: 
+  doc_url:
+  dev_url:
 
 extra:
   recipe-maintainers:
