@@ -121,6 +121,9 @@ export class NotificationsTable extends React.Component {
                 ...styles.cell,
                 width: '54px',
             },
+            selectAllCheckbox: {
+                color: colors.primary,
+            },
             contentHeaderColumn: {
                 ...styles.cell,
                 fontWeight: 'bold',
@@ -152,7 +155,7 @@ export class NotificationsTable extends React.Component {
                                 style={styles.checkboxHeaderColumn}
                             >
                                 <Checkbox
-                                    color="primary"
+                                    style={styles.selectAllCheckbox}
                                     className="qa-NotificationsTable-SelectAllCheckbox"
                                     checked={selectedCount > 0}
                                     checkedIcon={this.getSelectAllCheckedIcon()}
