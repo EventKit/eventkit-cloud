@@ -204,7 +204,7 @@ DJANGO_MODEL_LOGIN = os.getenv("DJANGO_MODEL_LOGIN")
 AUTHENTICATION_BACKENDS += ("django.contrib.auth.backends.ModelBackend",)
 
 # Set debug to True for development
-DEBUG = os.getenv("DEBUG", False)
+DEBUG = is_true(os.getenv("DEBUG", False))
 
 ALLOWED_HOSTS = [HOSTNAME, SITE_NAME]
 
@@ -305,7 +305,7 @@ UI_CONFIG = {
     "BASEMAP_COPYRIGHT": os.getenv("BASEMAP_COPYRIGHT", "© OpenStreetMap"),
     "MAX_DATAPACK_EXPIRATION_DAYS": os.getenv("MAX_DATAPACK_EXPIRATION_DAYS", "30"),
     "USER_GROUPS_PAGE_SIZE": os.getenv("USER_GROUPS_PAGE_SIZE", "20"),
-    "DATAPACK_PAGE_SIZE": os.getenv("DATAPACK_PAGE_SIZE", "10"),
+    "DATAPACK_PAGE_SIZE": os.getenv("DATAPACK_PAGE_SIZE", "100"),
     "NOTIFICATIONS_PAGE_SIZE": os.getenv("NOTIFICATIONS_PAGE_SIZE", "10"),
     "SERVE_ESTIMATES": SERVE_ESTIMATES,
 }

@@ -1,11 +1,11 @@
 import * as React from 'react';
-import withWidth, { isWidthUp } from '@material-ui/core/withWidth';
+import withWidth, {isWidthUp} from '@material-ui/core/withWidth';
 import GridList from '@material-ui/core/GridList';
 import DataPackGridItem from './DataPackGridItem';
 import CustomScrollbar from '../common/CustomScrollbar';
 import LoadButtons from '../common/LoadButtons';
 import withRef from '../../utils/withRef';
-import { Breakpoint } from '@material-ui/core/styles/createBreakpoints';
+import {Breakpoint} from '@material-ui/core/styles/createBreakpoints';
 
 export interface Props {
     customRef?: any;
@@ -15,10 +15,10 @@ export interface Props {
     onRunShare: () => void;
     providers: Eventkit.Provider[];
     range: string;
-    handleLoadLess: () => void;
-    handleLoadMore: () => void;
-    loadLessDisabled: boolean;
-    loadMoreDisabled: boolean;
+    handleLoadPrevious: () => void;
+    handleLoadNext: () => void;
+    loadPreviousDisabled: boolean;
+    loadNextDisabled: boolean;
     name: string;
     width: Breakpoint;
 }
@@ -60,8 +60,10 @@ export class DataPackGrid extends React.Component<Props, {}> {
 
         return (
             <CustomScrollbar
-                ref={(instance) => { this.scrollbar = instance; }}
-                style={{ height: 'calc(100vh - 236px)', width: '100%' }}
+                ref={(instance) => {
+                    this.scrollbar = instance;
+                }}
+                style={{height: 'calc(100vh - 236px)', width: '100%'}}
             >
                 <div style={styles.root} className="qa-div-root">
                     <GridList
@@ -89,10 +91,10 @@ export class DataPackGrid extends React.Component<Props, {}> {
                 </div>
                 <LoadButtons
                     range={this.props.range}
-                    handleLoadLess={this.props.handleLoadLess}
-                    handleLoadMore={this.props.handleLoadMore}
-                    loadLessDisabled={this.props.loadLessDisabled}
-                    loadMoreDisabled={this.props.loadMoreDisabled}
+                    handleLoadPrevious={this.props.handleLoadPrevious}
+                    handleLoadNext={this.props.handleLoadNext}
+                    loadPreviousDisabled={this.props.loadPreviousDisabled}
+                    loadNextDisabled={this.props.loadNextDisabled}
                 />
             </CustomScrollbar>
         );
