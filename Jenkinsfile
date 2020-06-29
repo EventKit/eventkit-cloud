@@ -58,7 +58,7 @@ END
         try{
             postStatus(getPendingStatus("Running the linters..."))
             sh "docker-compose run --rm -T  webpack npm run eslint"
-            sh "docker-compose run --rm eventkit black --config /var/lib/eventkit/config/pyproject.toml --check /home/eventkit/miniconda3/envs/eventkit-cloud/lib/python3.6/site-packages/eventkit_cloud"
+            sh "docker-compose run --rm eventkit black --config /var/lib/eventkit/config/pyproject.toml --check /home/eventkit/miniconda3/envs/eventkit-cloud/lib/python3.8/site-packages/eventkit_cloud"
             sh "docker-compose run --rm eventkit flake8 --config /var/lib/eventkit/config/setup.cfg eventkit_cloud"
             sh "docker-compose run --rm eventkit manage.py makemigrations eventkit_cloud | grep -i \"No changes detected\""
         }catch(Exception e) {

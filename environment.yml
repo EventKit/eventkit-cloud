@@ -2,6 +2,6 @@ name: eventkit-cloud
 channels:
   - local
 dependencies:
-  - python=3.6
+  - python=3.8
   - eventkit-cloud
   - memcached=1.6.5

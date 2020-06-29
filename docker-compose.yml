@@ -106,7 +106,7 @@ services:
     image: eventkit/eventkit-base:1.8.0
     volumes:
       - ./:/var/lib/eventkit/
-      - ./scripts/run-celery.sh:/home/eventkit/miniconda3/envs/eventkit-cloud/lib/python3.6/site-packages/scripts/run-celery.sh
+      - ./scripts/run-celery.sh:/home/eventkit/miniconda3/envs/eventkit-cloud/lib/python3.8/site-packages/scripts/run-celery.sh
     user: eventkit
     depends_on:
       - postgis
@@ -147,18 +147,18 @@ services:
       - AWS_SECRET_ACCESS_KEY
     extra_hosts:
       - "${SITE_NAME}:${SITE_IP}"
-    command: /home/eventkit/miniconda3/envs/eventkit-cloud/lib/python3.6/site-packages/scripts/run-celery.sh
+    command: /home/eventkit/miniconda3/envs/eventkit-cloud/lib/python3.8/site-packages/scripts/run-celery.sh
   memcached:
-    image: eventkit/eventkit-base:1.7.0
+    image: eventkit/eventkit-base:1.8.0
     expose:
       - "11211"
     entrypoint: >
       /bin/bash -c "source activate eventkit-cloud && memcached -m 2048"
   celery-beat:
-    image: eventkit/eventkit-base:1.7.0
+    image: eventkit/eventkit-base:1.8.0
     volumes:
       - ./:/var/lib/eventkit/
-      - ./scripts/run-celery-beat.sh:/home/eventkit/miniconda3/envs/eventkit-cloud/lib/python3.6/site-packages/scripts/run-celery-beat.sh
+      - ./scripts/run-celery-beat.sh:/home/eventkit/miniconda3/envs/eventkit-cloud/lib/python3.8/site-packages/scripts/run-celery-beat.sh
     user: eventkit
     depends_on:
       - postgis
@@ -188,7 +188,7 @@ services:
       - DEV_MACHINE_CODE_PATH
     extra_hosts:
       - "${SITE_NAME}:${SITE_IP}"
-    command: /home/eventkit/miniconda3/envs/eventkit-cloud/lib/python3.6/site-packages/scripts/run-celery-beat.sh
+    command: /home/eventkit/miniconda3/envs/eventkit-cloud/lib/python3.8/site-packages/scripts/run-celery-beat.sh
   postgis:
     image: kartoza/postgis:11.5-2.5
     environment:
