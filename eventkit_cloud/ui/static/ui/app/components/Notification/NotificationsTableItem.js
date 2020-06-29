@@ -122,8 +122,7 @@ export class NotificationsTableItem extends React.Component {
                 >
                     <Checkbox
                         className="qa-NotificationsTableItem-Checkbox"
-                        color="primary"
-                        style={{ width: '24px', height: '24px' }}
+                        style={{ width: '24px', height: '24px', color: colors.primary }}
                         checked={this.props.isSelected}
                         onChange={(e, isChecked) => this.props.setSelected(this.props.notification, isChecked)}
                     />

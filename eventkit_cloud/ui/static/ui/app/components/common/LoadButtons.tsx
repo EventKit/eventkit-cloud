@@ -1,8 +1,9 @@
 import * as React from 'react';
-import { withTheme, Theme } from '@material-ui/core/styles';
+import {withTheme, Theme} from '@material-ui/core/styles';
 import Button from '@material-ui/core/Button';
-import KeyboardArrowDown from '@material-ui/icons/KeyboardArrowDown';
-import KeyboardArrowUp from '@material-ui/icons/KeyboardArrowUp';
+import ArrowLeftIcon from '@material-ui/icons/ArrowLeft';
+import ArrowRightIcon from '@material-ui/icons/ArrowRight';
+import {KeyboardArrowDown, KeyboardArrowUp} from "@material-ui/icons";
 
 export interface Props {
     style: object;
@@ -11,6 +12,10 @@ export interface Props {
     handleLoadMore: () => void;
     loadLessDisabled: boolean;
     loadMoreDisabled: boolean;
+    handleLoadPrevious: () => void;
+    handleLoadNext: () => void;
+    loadPreviousDisabled: boolean;
+    loadNextDisabled: boolean;
     theme: Eventkit.Theme & Theme;
 }
 
@@ -20,6 +25,7 @@ export interface State {
 
 export class LoadButtons extends React.Component<Props, State> {
     private self = React.createRef<HTMLDivElement>();
+
     constructor(props) {
         super(props);
         this.setWidth = this.setWidth.bind(this);
@@ -39,12 +45,12 @@ export class LoadButtons extends React.Component<Props, State> {
     private setWidth() {
         const width = this.self.current.clientWidth;
         if (width !== this.state.width) {
-            this.setState({ width });
+            this.setState({width});
         }
     }
 
     render() {
-        const { colors } = this.props.theme.eventkit;
+        const {colors} = this.props.theme.eventkit;
 
         const range = this.props.range ? this.props.range.split('/') : null;
         const inlineStyles = {
@@ -73,33 +79,65 @@ export class LoadButtons extends React.Component<Props, State> {
 
         return (
             <div style={inlineStyles.container} ref={this.self}>
-                <div style={{ display: 'inline-block' }}>
+                <div style={{display: 'inline-block'}}>
                     {this.props.handleLoadLess ?
                         <Button
                             className="qa-LoadButtons-RaisedButton-showLess'"
                             variant="contained"
                             color="secondary"
-                            style={{ minWidth: '145px', margin: '5px 2.5px' }}
+                            style={{minWidth: '145px', margin: '5px 2.5px'}}
                             disabled={this.props.loadLessDisabled}
                             onClick={this.props.handleLoadLess}
                         >
                             Show Less
-                            <KeyboardArrowUp />
+                            <KeyboardArrowUp/>
                         </Button>
                         :
                         null
                     }
-                    <Button
-                        className="qa-LoadButtons-RaisedButton-showLess"
-                        variant="contained"
-                        color="secondary"
-                        style={{ minWidth: '145px', margin: '5px 2.5px' }}
-                        disabled={this.props.loadMoreDisabled}
-                        onClick={this.props.handleLoadMore}
-                    >
-                        Show More
-                        <KeyboardArrowDown />
-                    </Button>
+                    {this.props.handleLoadMore ?
+                        <Button
+                            className="qa-LoadButtons-RaisedButton-showMore"
+                            variant="contained"
+                            color="secondary"
+                            style={{minWidth: '145px', margin: '5px 2.5px'}}
+                            disabled={this.props.loadMoreDisabled}
+                            onClick={this.props.handleLoadMore}
+                        >
+                            Show More
+                            <KeyboardArrowDown/>
+                        </Button>
+                        : null
+                    }
+                    {this.props.handleLoadPrevious ?
+                        <Button
+                            className="qa-LoadButtons-RaisedButton-showPrevious"
+                            variant="contained"
+                            color="secondary"
+                            style={{minWidth: '168px', margin: '5px 2.5px'}}
+                            disabled={this.props.loadPreviousDisabled}
+                            onClick={this.props.handleLoadPrevious}
+                        >
+                            <ArrowLeftIcon style={{fontSize: 'x-large'}}/>
+                            Show Previous
+                        </Button>
+                        : null
+                    }
+                    {this.props.handleLoadNext ?
+                        <Button
+                            className="qa-LoadButtons-RaisedButton-showNext"
+                            variant="contained"
+                            color="secondary"
+                            style={{minWidth: '168px', margin: '5px 2.5px'}}
+                            disabled={this.props.loadNextDisabled}
+                            onClick={this.props.handleLoadNext}
+                        >
+                            Show Next
+                            <ArrowRightIcon style={{fontSize: 'x-large'}}/>
+                        </Button>
+                        :
+                        null
+                    }
                 </div>
                 <div className="qa-LoadButtons-range" id="range" style={inlineStyles.range}>
                     {range ? `${range[0]} of ${range[1]}` : ''}
