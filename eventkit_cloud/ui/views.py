@@ -9,7 +9,7 @@ from django.contrib.auth import authenticate, login
 from django.contrib.auth import logout as auth_logout
 from django.urls import reverse
 from django.http import HttpResponse
-from django.shortcuts import redirect, render_to_response
+from django.shortcuts import redirect, render
 from django.template import RequestContext
 from django.template.context_processors import csrf
 from django.views.decorators.http import require_http_methods
@@ -42,7 +42,7 @@ def create_export(request):
     extent = max_extent.get("extent")
     context = {"user": user, "max_extent": extent}
     context.update(csrf(request))
-    return render_to_response("ui/create.html", context, RequestContext(request))
+    return render(request, "ui/create.html", context)
 
 
 # @user_verification_required
@@ -59,7 +59,7 @@ def clone_export(request, uuid=None):
     extent = max_extent.get("extent")
     context = {"user": user, "max_extent": extent}
     context.update(csrf(request))
-    return render_to_response("ui/clone.html", context, RequestContext(request))
+    return render(request, "ui/clone.html", context)
 
 
 # @user_verification_required
@@ -70,7 +70,7 @@ def view_export(request, uuid=None):  # NOQA
     """
     user = request.user
     context = {"user": user}
-    return render_to_response("ui/detail.html", context, RequestContext(request))
+    return render(request, "ui/detail.html", context)
 
 
 def auth(request):
@@ -121,7 +121,7 @@ def require_email(request):
     View to handle email collection for new user log in with OSM account.
     """
     backend = request.session["partial_pipeline"]["backend"]
-    return render_to_response("osm/email.html", {"backend": backend}, RequestContext(request))
+    return render(request, "osm/email.html", {"backend": backend})
 
 
 @require_http_methods(["GET"])
@@ -285,49 +285,49 @@ def reverse_geocode(request):
 def about(request):
     exports_url = reverse("list")
     help_url = reverse("help")
-    return render_to_response(
-        "ui/about.html", {"exports_url": exports_url, "help_url": help_url}, RequestContext(request),
+    return render(
+        request, "ui/about.html", {"exports_url": exports_url, "help_url": help_url}
     )
 
 
 @require_http_methods(["GET"])
 def help_main(request):
-    return render_to_response("help/help.html", {}, RequestContext(request))
+    return render(request, "help/help.html", {})
 
 
 @require_http_methods(["GET"])
 def help_create(request):
     create_url = reverse("create")
     help_features_url = reverse("help_features")
-    return render_to_response(
+    return render(
+        request,
         "help/help_create.html",
-        {"create_url": create_url, "help_features_url": help_features_url},
-        RequestContext(request),
+        {"create_url": create_url, "help_features_url": help_features_url}
     )
 
 
 @require_http_methods(["GET"])
 def help_features(request):
-    return render_to_response("help/help_features.html", {}, RequestContext(request))
+    return render(request, "help/help_features.html", {})
 
 
 @require_http_methods(["GET"])
 def help_exports(request):
     export_url = reverse("list")
-    return render_to_response("help/help_exports.html", {"export_url": export_url}, RequestContext(request))
+    return render(request, "help/help_exports.html", {"export_url": export_url})
 
 
 @require_http_methods(["GET"])
 def help_formats(request):
-    return render_to_response("help/help_formats.html", {}, RequestContext(request))
+    return render(request, "help/help_formats.html", {})
 
 
 @require_http_methods(["GET"])
 def help_presets(request):
     configurations_url = reverse("configurations")
-    return render_to_response(
-        "help/help_presets.html", {"configurations_url": configurations_url}, RequestContext(request),
-    )
+    return render(
+        request, "help/help_presets.html", {"configurations_url": configurations_url},
+        )
 
 
 @require_http_methods(["GET"])
@@ -377,16 +377,16 @@ def user_active(request):
 # error views
 @require_http_methods(["GET"])
 def create_error_view(request):
-    return render_to_response("ui/error.html", {}, RequestContext(request), status=500)
+    return render(request, "ui/error.html", {}, status=500)
 
 
 def internal_error_view(request):
-    return render_to_response("ui/500.html", {}, RequestContext(request), status=500)
+    return render(request, "ui/500.html", {}, status=500)
 
 
 def not_found_error_view(request):
-    return render_to_response("ui/404.html", {}, RequestContext(request), status=404)
+    return render(request, "ui/404.html", {}, status=404)
 
 
 def not_allowed_error_view(request):
-    return render_to_response("ui/403.html", {}, RequestContext(request), status=403)
+    return render(request, "ui/403.html", {}, status=403)
