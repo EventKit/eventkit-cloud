@@ -58,7 +58,7 @@ export function submitJob(data) {
         types: [
             types.SUBMITTING_JOB,
             types.JOB_SUBMITTED_SUCCESS,
-            types.JOB_SUBMITTED_ERROR, ,
+            types.JOB_SUBMITTED_ERROR,
         ],
         url: '/api/jobs',
         method: 'POST',
