@@ -676,7 +676,9 @@ class JobViewSet(viewsets.ModelViewSet):
                         admins += 1
 
             if admins == 0:
-                return Response([{"detail": "Cannot update job permissions with no administrator."}], status.HTTP_400_BAD_REQUEST,)
+                return Response(
+                    [{"detail": "Cannot update job permissions with no administrator."}], status.HTTP_400_BAD_REQUEST,
+                )
 
             # The request represents all expected permissions for the file not a partial update of the permissions.
             # Therefore we delete the existing permissions, because the new permissions should be the only permissions.
