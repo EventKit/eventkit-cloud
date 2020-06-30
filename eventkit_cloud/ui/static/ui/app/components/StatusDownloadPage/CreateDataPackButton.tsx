@@ -39,7 +39,6 @@ const jss = (theme: Eventkit.Theme & Theme) => ({
         color: theme.eventkit.colors.primary,
         fontWeight: 'bold' as 'bold',
         textTransform: 'none' as 'none',
-        fontSize: '24px',
         '&:disabled': {
             backgroundColor: theme.eventkit.colors.white,
             color: theme.eventkit.colors.primary,
