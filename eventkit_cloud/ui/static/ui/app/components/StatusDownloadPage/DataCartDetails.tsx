@@ -1,16 +1,17 @@
 import * as PropTypes from 'prop-types';
 import * as React from 'react';
-import { withTheme, Theme } from '@material-ui/core/styles';
+import {withTheme, Theme} from '@material-ui/core/styles';
 import moment from 'moment';
 import DataPackDetails from './DataPackDetails';
 import CustomTableRow from '../common/CustomTableRow';
 import DataPackStatusTable from './DataPackStatusTable';
 import DataPackOptions from './DataPackOptions';
 import DataPackGeneralTable from './DataPackGeneralTable';
-import { DataCartInfoTable } from './DataCartInfoTable';
-import { MapView } from "../common/MapView";
-import { getSqKmString } from "../../utils/generic"
+import {DataCartInfoTable} from './DataCartInfoTable';
+import {MapView} from "../common/MapView";
+import {getSqKmString} from "../../utils/generic"
 import {MapLayer} from "../CreateDataPack/CreateExport";
+import {RunProvider} from "./RunFileContext";
 
 export interface Props {
     cartDetails: Eventkit.FullRun;
@@ -66,7 +67,7 @@ export class DataCartDetails extends React.Component<Props, State> {
         const m = moment(d);
         m.add(maxDays, 'days');
         const maxDate = m.toDate();
-        this.setState({ minDate, maxDate });
+        this.setState({minDate, maxDate});
     }
 
     private handlePermissionsChange(permissions: Eventkit.Permissions) {
@@ -78,8 +79,8 @@ export class DataCartDetails extends React.Component<Props, State> {
     }
 
     render() {
-        const { colors } = this.props.theme.eventkit;
-        const selectedBasemap = { mapUrl: this.context.config.BASEMAP_URL } as MapLayer;
+        const {colors} = this.props.theme.eventkit;
+        const selectedBasemap = {mapUrl: this.context.config.BASEMAP_URL} as MapLayer;
 
         const styles = {
             container: {
@@ -110,101 +111,106 @@ export class DataCartDetails extends React.Component<Props, State> {
         }
 
         return (
-            <div>
-                <div className="qa-DataCartDetails-div-name" id="Name">
-                    <CustomTableRow
-                        className="qa-DataCartDetails-name"
-                        title="Name"
-                        dataStyle={{ wordBreak: 'break-all' }}
-                    >
-                        {this.props.cartDetails.job.name}
-                    </CustomTableRow>
-                </div>
-                <div style={styles.container} className="qa-DataCartDetails-div-StatusContainer" id="Status">
-                    <div className="qa-DataCartDetails-div-status" style={styles.subHeading}>
-                        Status
-                    </div>
-                    <DataPackStatusTable
-                        className="qa-DataCartDetails-DataPackStatusTable"
-                        user={this.props.user.data}
-                        status={this.props.cartDetails.status}
-                        expiration={this.props.cartDetails.expiration}
-                        permissions={this.props.cartDetails.job.permissions}
-                        minDate={this.state.minDate}
-                        maxDate={this.state.maxDate}
-                        handleExpirationChange={this.handleExpirationChange}
-                        handlePermissionsChange={this.handlePermissionsChange}
-                        statusColor={statusBackgroundColor}
-                        statusFontColor={statusFontColor}
-                        adminPermissions={this.props.cartDetails.job.relationship === 'ADMIN'}
-                        job={this.props.job}
-                    />
-                </div>
-                <div style={styles.container} className="qa-DataCartDetails-div-downloadOptionsContainer" id="DownloadOptions">
-                    <DataPackDetails
-                        providerTasks={this.props.cartDetails.provider_tasks}
-                        onProviderCancel={this.props.onProviderCancel}
-                        providers={this.props.providers}
-                        job={this.props.job}
-                        zipFileProp={this.props.cartDetails.zipfile_url}
-                    />
-                </div>
-                <div style={styles.container} className="qa-DataCartDetails-div-otherOptionsContainer" id="OtherOptions">
-                    <div className="qa-DataCartDetails-div-otherOptions" style={styles.subHeading}>
-                        Other Options
-                    </div>
-                    <DataPackOptions
-                        onRerun={this.props.onRunRerun}
-                        onClone={this.props.onClone}
-                        onDelete={this.props.onRunDelete}
-                        dataPack={this.props.cartDetails}
-                        job={this.props.job}
-                        providers={this.props.providers}
-                        adminPermissions={this.props.cartDetails.job.relationship === 'ADMIN'}
-                    />
-                </div>
-                <div style={styles.container} className="qa-DataCartDetails-div-generalInfoContainer" id="GeneralInfo">
-                    <div className="qa-DataCartDetails-div-generalInfo" style={styles.subHeading}>
-                        General Information
-                    </div>
-                    <DataPackGeneralTable
-                        dataPack={this.props.cartDetails}
-                        providers={this.props.providers}
-                    />
-                </div>
-                <div style={styles.container} id="Map">
-                    <div className="qa-DataCartDetails-div-aoi" style={styles.subHeading}>
-                        Selected Area of Interest (AOI)
-                    </div>
-                    <div>
+            <RunProvider value={{run: this.props.cartDetails}}>
+                <div>
+                    <div className="qa-DataCartDetails-div-name" id="Name">
                         <CustomTableRow
-                            className="qa-DataPackAoiInfo-area"
-                            title="Area"
+                            className="qa-DataCartDetails-name"
+                            title="Name"
                             dataStyle={{wordBreak: 'break-all'}}
                         >
-                            {getSqKmString(this.props.cartDetails.job.extent)}
+                            {this.props.cartDetails.job.name}
                         </CustomTableRow>
-                        <div className="qa-DataPackAoiInfo-div-map" style={{ marginTop: '10px'}}>
-                            <MapView
-                                id={"summaryMap"}
-                                selectedBaseMap={selectedBasemap}
-                                copyright={this.context.config.BASEMAP_COPYRIGHT}
-                                geojson={this.props.cartDetails.job.extent}
-                                minZoom={2}
-                                maxZoom={20}
-                            />
+                    </div>
+                    <div style={styles.container} className="qa-DataCartDetails-div-StatusContainer" id="Status">
+                        <div className="qa-DataCartDetails-div-status" style={styles.subHeading}>
+                            Status
+                        </div>
+                        <DataPackStatusTable
+                            className="qa-DataCartDetails-DataPackStatusTable"
+                            user={this.props.user.data}
+                            status={this.props.cartDetails.status}
+                            expiration={this.props.cartDetails.expiration}
+                            permissions={this.props.cartDetails.job.permissions}
+                            minDate={this.state.minDate}
+                            maxDate={this.state.maxDate}
+                            handleExpirationChange={this.handleExpirationChange}
+                            handlePermissionsChange={this.handlePermissionsChange}
+                            statusColor={statusBackgroundColor}
+                            statusFontColor={statusFontColor}
+                            adminPermissions={this.props.cartDetails.job.relationship === 'ADMIN'}
+                            job={this.props.job}
+                        />
+                    </div>
+                    <div style={styles.container} className="qa-DataCartDetails-div-downloadOptionsContainer"
+                         id="DownloadOptions">
+                        <DataPackDetails
+                            providerTasks={this.props.cartDetails.provider_tasks}
+                            onProviderCancel={this.props.onProviderCancel}
+                            providers={this.props.providers}
+                            job={this.props.job}
+                        />
+                    </div>
+                    <div style={styles.container} className="qa-DataCartDetails-div-otherOptionsContainer"
+                         id="OtherOptions">
+                        <div className="qa-DataCartDetails-div-otherOptions" style={styles.subHeading}>
+                            Other Options
+                        </div>
+                        <DataPackOptions
+                            onRerun={this.props.onRunRerun}
+                            onClone={this.props.onClone}
+                            onDelete={this.props.onRunDelete}
+                            dataPack={this.props.cartDetails}
+                            job={this.props.job}
+                            providers={this.props.providers}
+                            adminPermissions={this.props.cartDetails.job.relationship === 'ADMIN'}
+                        />
+                    </div>
+                    <div style={styles.container} className="qa-DataCartDetails-div-generalInfoContainer"
+                         id="GeneralInfo">
+                        <div className="qa-DataCartDetails-div-generalInfo" style={styles.subHeading}>
+                            General Information
+                        </div>
+                        <DataPackGeneralTable
+                            dataPack={this.props.cartDetails}
+                            providers={this.props.providers}
+                        />
+                    </div>
+                    <div style={styles.container} id="Map">
+                        <div className="qa-DataCartDetails-div-aoi" style={styles.subHeading}>
+                            Selected Area of Interest (AOI)
+                        </div>
+                        <div>
+                            <CustomTableRow
+                                className="qa-DataPackAoiInfo-area"
+                                title="Area"
+                                dataStyle={{wordBreak: 'break-all'}}
+                            >
+                                {getSqKmString(this.props.cartDetails.job.extent)}
+                            </CustomTableRow>
+                            <div className="qa-DataPackAoiInfo-div-map" style={{marginTop: '10px'}}>
+                                <MapView
+                                    id={"summaryMap"}
+                                    selectedBaseMap={selectedBasemap}
+                                    copyright={this.context.config.BASEMAP_COPYRIGHT}
+                                    geojson={this.props.cartDetails.job.extent}
+                                    minZoom={2}
+                                    maxZoom={20}
+                                />
+                            </div>
                         </div>
                     </div>
-                </div>
-                <div style={styles.container} className="qa-DataCartDetails-div-exportInfoContainer" id="ExportInfo">
-                    <div className="qa-DataCartDetails-div-exportInfo" style={styles.subHeading}>
-                        Export Information
+                    <div style={styles.container} className="qa-DataCartDetails-div-exportInfoContainer"
+                         id="ExportInfo">
+                        <div className="qa-DataCartDetails-div-exportInfo" style={styles.subHeading}>
+                            Export Information
+                        </div>
+                        <DataCartInfoTable
+                            dataPack={this.props.cartDetails}
+                        />
                     </div>
-                    <DataCartInfoTable
-                        dataPack={this.props.cartDetails}
-                    />
                 </div>
-            </div>
+            </RunProvider>
         );
     }
 }

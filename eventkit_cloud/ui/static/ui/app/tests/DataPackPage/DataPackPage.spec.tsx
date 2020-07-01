@@ -22,7 +22,6 @@ import * as utils from '../../utils/mapUtils';
 import {joyride} from '../../joyride.config';
 import history from '../../utils/history';
 import queryString from 'query-string';
-import * as actions from "../../actions/notificationsActions";
 
 describe('DataPackPage component', () => {
     const getProps = () => ({

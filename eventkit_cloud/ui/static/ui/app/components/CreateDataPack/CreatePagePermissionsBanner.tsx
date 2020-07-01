@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { useEffectOnMount } from '../../utils/hooks';
+import { useEffectOnMount } from '../../utils/hooks/hooks';
 import PermissionsBanner from '../PermissionsBanner';
 import {useState} from "react";
 
