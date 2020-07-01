@@ -131,7 +131,6 @@ export function updatePermissionReducer(state = initialState.updatePermission, a
         case types.UPDATE_PERMISSION_SUCCESS:
             return { updating: false, updated: true, error: null };
         case types.UPDATE_PERMISSION_ERROR:
-            // return { updating: false, updated: false, error: action.error };
             return { updating: false, updated: true, error: action.error };
         case types.CLEAR_UPDATING_PERMISSION:
             return { ...initialState.updatePermission };
