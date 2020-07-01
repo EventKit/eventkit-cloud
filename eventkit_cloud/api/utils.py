@@ -39,13 +39,19 @@ def eventkit_exception_handler(exc, context):
         else:
             detail = error
 
+        # If get_codes returns a dict, grab the values and turn them into a string for the title.
         if hasattr(exc, "get_codes"):
-            title = json.dumps(exc.get_codes())
+            code = exc.get_codes()
+            title = ""
+            if isinstance(code, dict):
+                for key, value in code.items():
+                    title += stringify(value)
+            else:
+                title = code
         else:
             title = error_class
 
-        error_response = {"status": status, "title": stringify(title), "detail": detail, "type": error_class}
-
+        error_response = {"status": status, "title": stringify(title), "detail": str(detail), "type": error_class}
         if isinstance(error, dict) and error.get("id") and error.get("message"):
             # if both id and message are present we can assume that this error was generated from validators.py
             # and use them as the title and detail

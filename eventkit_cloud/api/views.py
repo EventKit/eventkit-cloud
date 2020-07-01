@@ -460,7 +460,7 @@ class JobViewSet(viewsets.ModelViewSet):
                             job.save()
                     except Exception as e:
                         logger.error(e)
-                        raise APIException(code="server_error", detail=f"Error creating export job: {e}")
+                        raise
                 else:
                     # TODO: Specify which provider task is invalid.
                     raise ValidationError(code="invalid_provider_task", detail=f"One or more provider tasks are invalid: {provider_tasks}.")
