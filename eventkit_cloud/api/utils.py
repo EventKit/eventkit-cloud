@@ -1,8 +1,9 @@
+import json
 import logging
 
 from django.conf import settings
 import rest_framework.status
-from rest_framework.exceptions import ValidationError
+from rest_framework.exceptions import APIException, ValidationError
 from rest_framework.response import Response
 from rest_framework.views import exception_handler
 
@@ -18,15 +19,14 @@ def eventkit_exception_handler(exc, context):
                 "status": "422",
                 "source": {"pointer": "/data/attributes/first-name"},
                 "title": "Invalid Attribute",
-                "detail": "First name must contain at least three characters."
+                "detail": "First name must contain at least three characters.",
+                "type": "ValidationError"
             }
         ]
     }
     """
     # Call REST framework's default exception handler first,
     # to get the standard error response. Parse the response accordingly.
-    if getattr(settings, "DEBUG"):
-        raise exc
     response = exception_handler(exc, context)
     if response:
 
@@ -34,7 +34,17 @@ def eventkit_exception_handler(exc, context):
         status = response.status_code
         error_class = exc.__class__.__name__
 
-        error_response = {"status": status, "title": error_class, "detail": error}
+        if hasattr(exc, "detail"):
+            detail = exc.detail
+        else:
+            detail = error
+
+        if hasattr(exc, "get_codes"):
+            title = json.dumps(exc.get_codes())
+        else:
+            title = error_class
+
+        error_response = {"status": status, "title": stringify(title), "detail": detail, "type": error_class}
 
         if isinstance(error, dict) and error.get("id") and error.get("message"):
             # if both id and message are present we can assume that this error was generated from validators.py
@@ -60,6 +70,7 @@ def eventkit_exception_handler(exc, context):
 
             error_response["detail"] = detail
 
+        error_response["title"] = error_response["title"].title().replace("_", " ") #TODO: Might be a better way?
         response.data = {"errors": [error_response]}
     # exception_handler doesn't handle generic exceptions, so we need to handle that here.
     else:
