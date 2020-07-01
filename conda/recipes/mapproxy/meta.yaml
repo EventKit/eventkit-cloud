@@ -21,9 +21,7 @@ requirements:
     - pillow
     - pip
     - python
-    - pyyaml
     - setuptools
-    - proj4
   run:
     - pillow
     - python
@@ -69,4 +67,4 @@ about:
 
 extra:
   recipe-maintainers:
-    - your-github-id-here
+    - Coop56
