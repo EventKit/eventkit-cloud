@@ -62,15 +62,15 @@ class TestJobPermissions(APITestCase):
 
         group1, created = Group.objects.get_or_create(name="group_one")
         self.group1id = group1.id
-        gp = GroupPermission.objects.create(group=group1, user=self.user1,
+        GroupPermission.objects.create(group=group1, user=self.user1,
                                             permission=GroupPermissionLevel.ADMIN.value)
-        gp = GroupPermission.objects.create(group=group1, user=self.user2,
+        GroupPermission.objects.create(group=group1, user=self.user2,
                                             permission=GroupPermissionLevel.MEMBER.value)
         group2, created = Group.objects.get_or_create(name="group_two")
         self.group2id = group2.id
-        gp = GroupPermission.objects.create(group=group2, user=self.user1,
+        GroupPermission.objects.create(group=group2, user=self.user1,
                                             permission=GroupPermissionLevel.ADMIN.value)
-        gp = GroupPermission.objects.create(group=group2, user=self.user2,
+        GroupPermission.objects.create(group=group2, user=self.user2,
                                             permission=GroupPermissionLevel.MEMBER.value)
 
     def test_list(self, ):
@@ -298,7 +298,7 @@ class TestExportRunViewSet(APITestCase):
     def setUp(self, ):
         self.group, created = Group.objects.get_or_create(name='TestDefaultExportExtentGroup')
         self.user1 = User.objects.create_user(username='user_1', email='demo@demo.com', password='demo')
-        self.user2= User.objects.create_user(username='user_2', email='demo@demo.com', password='demo')
+        self.user2 = User.objects.create_user(username='user_2', email='demo@demo.com', password='demo')
         token = Token.objects.create(user=self.user1)
         self.client.credentials(HTTP_AUTHORIZATION='Token ' + token.key,
                                 HTTP_ACCEPT='application/json; version=1.0',
@@ -320,29 +320,40 @@ class TestExportRunViewSet(APITestCase):
         self.export_run = ExportRun.objects.create(job=self.job, user=self.user1)
         self.run_uid = str(self.export_run.uid)
 
-        group1, created = Group.objects.get_or_create(name="group_one")
-        self.group1id = group1.id
-        gp = GroupPermission.objects.create(group=group1, user=self.user1,
-                                            permission=GroupPermissionLevel.ADMIN.value)
-        gp = GroupPermission.objects.create(group=group1, user=self.user2,
-                                            permission=GroupPermissionLevel.MEMBER.value)
-        group2, created = Group.objects.get_or_create(name="group_two")
-        self.group2id = group2.id
-        gp = GroupPermission.objects.create(group=group2, user=self.user1,
-                                            permission=GroupPermissionLevel.ADMIN.value)
+        self.group1, created = Group.objects.get_or_create(name="group_one")
+        GroupPermission.objects.create(group=self.group1, user=self.user1,
+                                       permission=GroupPermissionLevel.ADMIN.value)
+        GroupPermission.objects.create(group=self.group1, user=self.user2,
+                                       permission=GroupPermissionLevel.MEMBER.value)
+        self.group2, created = Group.objects.get_or_create(name="group_two")
+        GroupPermission.objects.create(group=self.group2, user=self.user1,
+                                       permission=GroupPermissionLevel.ADMIN.value)
+        self.job_url = reverse('api:jobs-detail', args=[self.job.uid])
+        self.run_url = reverse('api:runs-detail', args=[self.run_uid])
 
+
+    def assert_user_access(self, user):
+
+        token = Token.objects.create(user=user)
+        self.client.credentials(HTTP_AUTHORIZATION='Token ' + token.key,
+                                HTTP_ACCEPT='application/json; version=1.0',
+                                HTTP_ACCEPT_LANGUAGE='en',
+                                HTTP_HOST='testserver')
+
+        url = reverse('api:runs-detail', args=[self.run_uid])
+        response = self.client.get(url)
+        result = response.data
+        self.assertEqual(self.run_uid, result[0].get('uid'))
 
     def test_retrieve_run(self,):
         expected = '/api/runs/{0}'.format(self.run_uid)
 
-        url = reverse('api:runs-detail', args=[self.run_uid])
-        self.assertEqual(expected, url)
-        response = self.client.get(url)
+        self.assertEqual(expected, self.run_url)
+        response = self.client.get(self.run_url)
         self.assertIsNotNone(response)
         result = response.data
         # make sure we get the correct uid back out
         self.assertEqual(self.run_uid, result[0].get('uid'))
-
 
     def test_private_run(self, ):
         token = Token.objects.create(user=self.user2)
@@ -351,65 +362,58 @@ class TestExportRunViewSet(APITestCase):
                                 HTTP_ACCEPT_LANGUAGE='en',
                                 HTTP_HOST='testserver')
 
-        url = reverse('api:runs-detail', args=[self.run_uid])
-        response = self.client.get(url)
+        response = self.client.get(self.run_url)
         result = response.data
         self.assertEqual(result, [])
 
-    def test_user_sharing(self, ):
+    def test_public_sharing(self, ):
 
         joburl = reverse('api:jobs-detail', args=[self.job.uid])
 
-        request_data = {"permissions": {"members": {"user_1": "ADMIN","user_2": "ADMIN"}, }}
+        request_data = {"permissions": {"value": "PUBLIC", "members": {self.user1.username: "ADMIN"}, "groups": {}},
+                        "visibility": "PUBLIC"}
 
-        response = self.client.patch(joburl, data=json.dumps(request_data), content_type='application/json; version=1.0')
+        response = self.client.patch(joburl, data=json.dumps(request_data),
+                                     content_type='application/json; version=1.0')
         self.assertEqual(status.HTTP_200_OK, response.status_code)
 
-        token = Token.objects.create(user=self.user2)
-        self.client.credentials(HTTP_AUTHORIZATION='Token ' + token.key,
-                                HTTP_ACCEPT='application/json; version=1.0',
-                                HTTP_ACCEPT_LANGUAGE='en',
-                                HTTP_HOST='testserver')
+        self.assert_user_access(self.user2)
 
-        url = reverse('api:runs-detail', args=[self.run_uid])
-        response = self.client.get(url)
-        result = response.data
-        self.assertEqual(self.run_uid, result[0].get('uid'))
+    def test_user_sharing(self, ):
+        request_data = {"permissions": {"members": {self.user1.username: "ADMIN", self.user2.username: "ADMIN"}, }}
 
-        request_data = {"permissions": {"members": {"user_1": "ADMIN"}  }}
-
-        response = self.client.patch(joburl, data=json.dumps(request_data), content_type='application/json; version=1.0')
+        response = self.client.patch(self.job_url, data=json.dumps(request_data),
+                                     content_type='application/json; version=1.0')
         self.assertEqual(status.HTTP_200_OK, response.status_code)
 
-        response = self.client.get(url)
+        self.assert_user_access(self.user2)
+
+        request_data = {"permissions": {"members": {self.user1.username: "ADMIN"}}}
+
+        response = self.client.patch(self.job_url, data=json.dumps(request_data),
+                                     content_type='application/json; version=1.0')
+        self.assertEqual(status.HTTP_200_OK, response.status_code)
+
+        response = self.client.get(self.run_url)
         result = response.data
         self.assertEqual(result, [])
 
     def test_group_sharing(self, ):
 
-        joburl = reverse('api:jobs-detail', args=[self.job.uid])
+        request_data = {"permissions": {"groups": {self.group1.name: "ADMIN"} }}
 
-        request_data = {"permissions": {"groups": {"group_one": "ADMIN"} }}
-
-        response = self.client.patch(joburl, data=json.dumps(request_data), content_type='application/json; version=1.0')
+        response = self.client.patch(self.job_url, data=json.dumps(request_data),
+                                     content_type='application/json; version=1.0')
         self.assertEqual(status.HTTP_200_OK, response.status_code)
 
-        token = Token.objects.create(user=self.user2)
-        self.client.credentials(HTTP_AUTHORIZATION='Token ' + token.key,
-                                HTTP_ACCEPT='application/json; version=1.0',
-                                HTTP_ACCEPT_LANGUAGE='en',
-                                HTTP_HOST='testserver')
+        self.assert_user_access(self.user2)
 
-        url = reverse('api:runs-detail', args=[self.run_uid])
-        response = self.client.get(url)
-        result = response.data
-        self.assertEqual(self.run_uid, result[0].get('uid'))
+        request_data = {"permissions": {"groups": {self.group2.name: "ADMIN"}}}
 
-        request_data = {"permissions": {"groups": {"group_two": "ADMIN"} }}
-
-        response = self.client.patch(joburl, data=json.dumps(request_data), content_type='application/json; version=1.0')
+        response = self.client.patch(self.job_url, data=json.dumps(request_data),
+                                     content_type='application/json; version=1.0')
         self.assertEqual(status.HTTP_200_OK, response.status_code)
 
-        response = self.client.get(url)
+        response = self.client.get(self.run_url)
         result = response.data
         self.assertEqual(result, [])
