@@ -11,6 +11,8 @@ import MembersHeaderRow, {SharedOrder, MemberOrder} from './MembersHeaderRow';
 import MemberRow from './MemberRow';
 import MembersBodyTooltip from './ShareBodyTooltip';
 import {getPermissionUsers} from '../../actions/usersActions';
+import Divider from "@material-ui/core/Divider";
+import Warning from "@material-ui/core/SvgIcon/SvgIcon";
 
 export interface Props {
     public: boolean;
@@ -130,7 +132,7 @@ export class MembersBody extends React.Component<Props, State> {
             jobUid,
             {
                 ordering: `${permissions},${memberOrder}`,
-                exclude_self: 'true',
+                prepend_self: 'true',
                 page: this.state.page,
                 ...params,
             },

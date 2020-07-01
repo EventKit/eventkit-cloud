@@ -8,7 +8,6 @@ import DialogActions from '@material-ui/core/DialogActions';
 import DialogContent from '@material-ui/core/DialogContent';
 import Clear from '@material-ui/icons/Clear';
 import CustomScrollbar from '../common/CustomScrollbar';
-import {CompatibilityInfo} from "../CreateDataPack/ExportInfo";
 
 
 const jss = (theme: Theme & Eventkit.Theme) => createStyles({
