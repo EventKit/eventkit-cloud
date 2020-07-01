@@ -1,7 +1,7 @@
 import React, {useState, useEffect, useRef} from 'react';
 import {MapContainer} from "../../../utils/mapBuilder";
 import {OlMapProvider, OlZoomProvider} from "../context/OpenLayersContext";
-import {useEffectOnMount} from "../../../utils/hooks";
+import {useEffectOnMount} from "../../../utils/hooks/hooks";
 
 export interface MapComponentProps {
     divId: string;
