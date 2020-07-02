@@ -14,6 +14,7 @@ from django.template import RequestContext
 from django.template.context_processors import csrf
 from django.views.decorators.http import require_http_methods
 from rest_framework.renderers import JSONRenderer
+from rest_framework.exceptions import APIException, AuthenticationFailed, NotFound, PermissionDenied, ValidationError
 
 from eventkit_cloud.api.serializers import UserDataSerializer
 from eventkit_cloud.ui.helpers import (
@@ -89,7 +90,8 @@ def auth(request):
             password = request.POST.get("password")
             user_data = authenticate(username=username, password=password)
             if user_data is None:
-                return HttpResponse(status=401)
+                raise AuthenticationFailed(code="user_authenticate_failure",
+                                           detail="Unable to authenticate your credentials.")
             else:
                 login(request, user_data)
                 set_session_user_last_active_at(request)
@@ -103,7 +105,7 @@ def auth(request):
             # the login form.
             return HttpResponse(status=200)
     else:
-        return HttpResponse(status=400)
+        raise ValidationError(detail="Invalid authentication request.")
 
 
 def logout(request):
@@ -140,17 +142,22 @@ def search(request):
     if is_mgrs(q):
         # check for necessary settings
         if getattr(settings, "CONVERT_API_URL") is None:
-            return HttpResponse("No Convert API specified", status=501)
+            print(f'APIException STATUS_CODE: {APIException.status_code}')
+            raise APIException(code="server_error", detail="No Convert API specified.")
 
         if getattr(settings, "REVERSE_GEOCODING_API_URL") is None:
-            return HttpResponse("No Reverse Geocode API specified", status=501)
+            print(f'APIException STATUS_CODE_2: {APIException.status_code}')
+            raise APIException(code="server_error", detail="No Reverse Geocode API specified.")
 
         # make call to convert which should return a geojson feature of the MGRS location
         convert = CoordinateConverter()
         try:
             mgrs_data = convert.get(q)
+            print(f'mgrs_data: {mgrs_data}')
         except Exception:
-            return HttpResponse(content=error_string, status=500)
+            print(f'DETAIL: {error_string}')
+            raise APIException(code="server_error", detail=error_string)
+
 
         # if no feature geom return nothing
         if not mgrs_data or not mgrs_data.get("geometry"):
@@ -179,27 +186,27 @@ def search(request):
                 }
             )
         except Exception:
-            return HttpResponse(content=error_string, status=500)
+            raise APIException(code="server_error", detail=error_string)
 
         if result.get("features"):
             # add the mgrs feature with the search results and return together
             result["features"] = features + result["features"]
             return HttpResponse(content=json.dumps(result), status=200, content_type="application/json")
         # if no results just return the MGRS feature in the response
-        return HttpResponse(content=json.dumps({"features": features}), status=200, content_type="application/json",)
+        return HttpResponse(content=json.dumps({"features": features}), status=200, content_type="application/json", )
 
     elif is_lat_lon(q):
         coords = is_lat_lon(q)
         # if no reverse url return 501
         if getattr(settings, "REVERSE_GEOCODING_API_URL") is None:
-            return HttpResponse("No Reverse Geocode API specified", status=501)
+            raise APIException(code="server_error", detail="No Reverse Geocode API specified.")
 
         # make call to reverse geocode
         reverse = ReverseGeocode()
         try:
             result = reverse.search({"lat": coords[0], "lon": coords[1]})
         except Exception as e:
-            return HttpResponse(content=error_string, status=500)
+            raise APIException(code="server_error", detail=error_string)
 
         # create a feature representing the exact lat/lon being searched
         point_feature = {
@@ -235,7 +242,7 @@ def search(request):
             result = geocode.search(q)
         except Exception as e:
             logger.error(e)
-            return HttpResponse(content=error_string, status=500)
+            raise APIException(code="server_error", detail=error_string)
         return HttpResponse(content=json.dumps(result), status=200, content_type="application/json")
 
 
@@ -262,7 +269,7 @@ def convert(request):
         else:
             return HttpResponse(status=204, content_type="application/json")
     else:
-        return HttpResponse("No Convert API specified", status=501)
+        raise APIException(code="server_error", detail="No Convert API specified.")
 
 
 @require_http_methods(["GET"])
@@ -278,7 +285,7 @@ def reverse_geocode(request):
         else:
             return HttpResponse(status=204, content_type="application/json")
     else:
-        return HttpResponse("No Reverse Geocode API specified", status=501)
+        raise APIException(code="server_error", detail="No Reverse Geocode API specified.")
 
 
 @require_http_methods(["GET"])
@@ -344,13 +351,13 @@ def get_config(request):
 def convert_to_geojson(request):
     file = request.FILES.get("file", None)
     if not file:
-        return HttpResponse("No file supplied in the POST request", status=400)
+        raise ValidationError(code="invalid_request", detail="No file supplied in the POST request.")
     try:
         geojson = file_to_geojson(file)
         return HttpResponse(json.dumps(geojson), content_type="application/json", status=200)
     except Exception as e:
         logger.error(e)
-        return HttpResponse(str(e), status=400)
+        raise ValidationError(code="invalid_request", detail=e)
 
 
 def user_active(request):
