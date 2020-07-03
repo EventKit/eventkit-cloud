@@ -21,51 +21,45 @@ requirements:
     - ruby
     - git
   run:
-    - python
-    - django-audit-logging
-    - gdal >=2.0.0
-    - osmctools
-    - openldap
-    - python-ldap
-    - amqp
-    - billiard
-    - boto3
-    - celery
-    - certifi
-    - django
-    - dj-database-url
-    - django-auth-ldap
-    - django-celery-beat
-    - django-celery-results
-    - django-extensions
-    - django-filter
-    - django-notifications-hq
-    - django-storages
-    - djangorestframework
-    - djangorestframework-gis
-    - eventlet
-    - gunicorn
-    - kombu
-    - lxml
-    - MapProxy
-    - Markdown
-    - numpy
-    - Pillow
-    - psycopg2
-    - PyJWT
-    - pyparsing
-    - python-dateutil
-    - python-magic
-    - python-memcached
-    - pytz
-    - PyYAML
-    - requests
-    - Shapely
-    - simplejson
-    - sqlparse
-    - uritemplate
-    - webtest
-    - whitenoise
+    - python =3.8
+    - gdal =2.4.3
+    - osmctools =0.9.0
+    - openldap =2.4.46
+    - python-ldap =3.2.0
+    - billiard =3.6.3.0
+    - boto3 =1.14.15
+    - celery =4.4.6
+    - django =3.0.8
+    - dj-database-url =0.5.0
+    - django-audit-logging =0.2.1
+    - django-auth-ldap =2.2.0
+    - django-celery-beat =2.0.0
+    - django-celery-results =1.2.1
+    - django-extensions =3.0.2
+    - django-filter =2.3.0
+    - django-notifications-hq =1.6.0
+    - django-storages =1.9.1
+    - djangorestframework =3.11.0
+    - djangorestframework-gis =0.15.0
+    - eventlet =0.25.2
+    - gunicorn =20.0.4
+    - MapProxy =1.12.0
+    - numpy =1.18.5
+    - Pillow =7.1.2
+    - psycopg2 =2.8.4
+    - PyJWT =1.7.1
+    - pyparsing =2.4.7
+    - python-dateutil =2.8.1
+    - python-magic =0.4.15
+    - python-memcached =1.59
+    - pytz =2020.1
+    - PyYAML =5.3.1
+    - requests =2.24.0
+    - Shapely =1.6.4
+    - sqlparse =0.3.1
+    - uritemplate =3.0.1
+    - webtest =2.0.35
+    - whitenoise =4.1.4
 
 about:
   home: https://github.com/eventkit/eventkit-cloud
