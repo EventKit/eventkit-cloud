@@ -10,7 +10,6 @@ from django.contrib.auth import logout as auth_logout
 from django.urls import reverse
 from django.http import HttpResponse
 from django.shortcuts import redirect, render
-from django.template import RequestContext
 from django.template.context_processors import csrf
 from django.views.decorators.http import require_http_methods
 from rest_framework.renderers import JSONRenderer
@@ -198,7 +197,7 @@ def search(request):
         reverse = ReverseGeocode()
         try:
             result = reverse.search({"lat": coords[0], "lon": coords[1]})
-        except Exception as e:
+        except Exception:
             return HttpResponse(content=error_string, status=500)
 
         # create a feature representing the exact lat/lon being searched
@@ -285,9 +284,7 @@ def reverse_geocode(request):
 def about(request):
     exports_url = reverse("list")
     help_url = reverse("help")
-    return render(
-        request, "ui/about.html", {"exports_url": exports_url, "help_url": help_url}
-    )
+    return render(request, "ui/about.html", {"exports_url": exports_url, "help_url": help_url})
 
 
 @require_http_methods(["GET"])
@@ -299,11 +296,7 @@ def help_main(request):
 def help_create(request):
     create_url = reverse("create")
     help_features_url = reverse("help_features")
-    return render(
-        request,
-        "help/help_create.html",
-        {"create_url": create_url, "help_features_url": help_features_url}
-    )
+    return render(request, "help/help_create.html", {"create_url": create_url, "help_features_url": help_features_url})
 
 
 @require_http_methods(["GET"])
@@ -325,9 +318,7 @@ def help_formats(request):
 @require_http_methods(["GET"])
 def help_presets(request):
     configurations_url = reverse("configurations")
-    return render(
-        request, "help/help_presets.html", {"configurations_url": configurations_url},
-        )
+    return render(request, "help/help_presets.html", {"configurations_url": configurations_url},)
 
 
 @require_http_methods(["GET"])

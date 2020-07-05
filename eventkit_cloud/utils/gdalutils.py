@@ -518,7 +518,7 @@ def convert_vector(
             "reproject": src_srs != dst_srs,
             "skipFailures": True,
             "spatFilter": bbox,
-            "options": [f"-clipSrc", boundary] if boundary and not bbox else None,
+            "options": ["-clipSrc", boundary] if boundary and not bbox else None,
         }
     )
     logger.info(f"calling gdal.VectorTranslate('{output_file}', '{input_file}', {stringify_params(options)})")

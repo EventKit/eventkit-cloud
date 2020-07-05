@@ -6,7 +6,6 @@ from django.contrib import admin
 from django.contrib import messages
 from django.contrib.gis.admin import OSMGeoAdmin
 from django.shortcuts import render
-from django.template import RequestContext
 from django.utils.html import format_html
 from django_celery_beat.models import IntervalSchedule, CrontabSchedule
 
@@ -66,9 +65,7 @@ class JobAdmin(OSMGeoAdmin):
 
         # noinspection PyProtectedMember
         return render(
-            request,
-            self.update_template,
-            {"regions": regions, "selected": selected, "opts": self.model._meta},
+            request, self.update_template, {"regions": regions, "selected": selected, "opts": self.model._meta},
         )
 
     select_exports.short_description = "Assign a region to the selected exports"

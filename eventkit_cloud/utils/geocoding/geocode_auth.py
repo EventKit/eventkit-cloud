@@ -54,7 +54,7 @@ def authenticate():
             cache.set(CACHE_TOKEN_KEY, token or url, CACHE_TOKEN_TIMEOUT)
             return token
         return None
-    except requests.exceptions.RequestException as e:
+    except requests.exceptions.RequestException:
         logger.error("FAILED TO AUTHENTICATE.")
         if auth_response:
             logger.error(auth_response.content)

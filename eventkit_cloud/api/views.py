@@ -499,7 +499,7 @@ class JobViewSet(viewsets.ModelViewSet):
                     projection_db_objects = Projection.objects.filter(srid__in=projections)
                     job.projections.add(*projection_db_objects)
                     job.save()
-                except Exception as e:
+                except Exception:
                     status_code = status.HTTP_400_BAD_REQUEST
                     error_data = {
                         "errors": [
@@ -576,9 +576,9 @@ class JobViewSet(viewsets.ModelViewSet):
             pick_up_run_task.apply_async(
                 queue="runs", routing_key="runs", kwargs={"run_uid": run_uid, "user_details": user_details},
             )
-            logger.debug("Getting Run Data.".format(run.uid))
+            logger.debug("Getting Run Data.")
             running = ExportRunSerializer(run, context={"request": request})
-            logger.debug("Returning Run Data.".format(run.uid))
+            logger.debug("Returning Run Data.")
 
             return Response(running.data, status=status.HTTP_202_ACCEPTED)
 

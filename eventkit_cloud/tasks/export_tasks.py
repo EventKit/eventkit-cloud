@@ -236,7 +236,7 @@ class ExportTask(EventKitBaseTask):
             task.save()
             retval["status"] = TaskStates.SUCCESS.value
             return retval
-        except CancelException as e:
+        except CancelException:
             return {"status": TaskStates.CANCELED.value}
         except Exception as e:
             tb = traceback.format_exc()

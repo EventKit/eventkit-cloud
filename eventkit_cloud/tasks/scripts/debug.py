@@ -38,7 +38,7 @@ def final_provider_task(result=None, job_num=None, provider_name=None):
 
 @task(base=TestTask)
 def final_task(result=None, job_num=None, task_num=None):
-    print(("ALL PROVIDERS HAVE RAN AND CLEANUP HAS OCCURED.".format(task_num)))
+    print(("ALL PROVIDERS HAVE RAN AND CLEANUP HAS OCCURED."))
 
 
 @task(base=TestTask)
