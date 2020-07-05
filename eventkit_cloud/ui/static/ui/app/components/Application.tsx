@@ -855,7 +855,7 @@ function mapDispatchToProps(dispatch) {
 }
 
 export default withWidth()(
-    withTheme()<any>(
+    withTheme<any>(
         withStyles<any, any>(jss)(
             connect(mapStateToProps, mapDispatchToProps)(
                 Application

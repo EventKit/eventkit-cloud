@@ -7,7 +7,7 @@ import Button from '@material-ui/core/Button';
 import TextField from '@material-ui/core/TextField';
 import AlertWarning from '@material-ui/icons/Warning';
 import Clear from '@material-ui/icons/Clear';
-import Slider from '@material-ui/lab/Slider';
+import Slider from '@material-ui/core/Slider';
 import { useState } from 'react';
 import AlertCallout from './AlertCallout';
 import { getSqKm, getSqKmString } from '../../utils/generic';
@@ -99,7 +99,7 @@ export interface Props {
     value: number;
     valid: boolean;
     handleBufferClick: () => void;
-    handleBufferChange: (value: number | string) => void;
+    handleBufferChange: (value: unknown) => void;
     closeBufferDialog: () => void;
     aoi: object;
     theme: Eventkit.Theme & Theme;
@@ -276,4 +276,4 @@ export function BufferDialog(props: Props) {
     );
 }
 
-export default withTheme()(withStyles(jss)(BufferDialog));
+export default withTheme(withStyles(jss)(BufferDialog));

@@ -437,4 +437,4 @@ function CreateDataPackButton(props: Props) {
 }
 
 
-export default withTheme()(withStyles(jss)(CreateDataPackButton));
+export default withTheme(withStyles(jss)(CreateDataPackButton));

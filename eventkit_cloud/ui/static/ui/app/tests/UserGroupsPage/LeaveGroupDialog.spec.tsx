@@ -22,7 +22,7 @@ describe('LeaveGroupDialog component', () => {
     it('should render a BaseDialog with message', () => {
         const wrapper = shallow(<LeaveGroupDialog {...props} />);
         expect(wrapper.find(BaseDialog)).toHaveLength(1);
-        expect(wrapper.find(BaseDialog).props().children)
+        expect(wrapper.find(BaseDialog).children())
             .toEqual("I'd like to opt out of all shared rights for the 'Test Group' group.");
     });
 });

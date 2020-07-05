@@ -192,4 +192,4 @@ function EstimateLabel(props: Props) {
     );
 }
 
-export default withWidth()(withTheme()(EstimateLabel));
+export default withWidth()(withTheme(EstimateLabel));

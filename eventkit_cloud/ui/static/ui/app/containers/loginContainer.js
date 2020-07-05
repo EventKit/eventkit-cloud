@@ -221,4 +221,4 @@ function mapStateToProps(state) {
     };
 }
 
-export default withTheme()(connect(mapStateToProps, mapDispatchToProps)(Form));
+export default withTheme(connect(mapStateToProps, mapDispatchToProps)(Form));

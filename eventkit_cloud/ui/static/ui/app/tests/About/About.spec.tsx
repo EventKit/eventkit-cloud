@@ -28,7 +28,7 @@ describe('About component', () => {
 
     it('should not show the version tag if no version in context', () => {
         const wrapper = getWrapper({VERSION: ''});
-        expect(wrapper.find(PageHeader).props().children).toEqual('');
+        expect(wrapper.find(PageHeader).children()).toEqual('');
     });
 
     it('should not show the contact link if no contact url in context', () => {
@@ -38,7 +38,7 @@ describe('About component', () => {
 
     it('should render the version tag', () => {
         const wrapper = getWrapper({ VERSION: '1.3.0'});
-        expect(wrapper.find(PageHeader).props().children).toEqual('1.3.0');
+        expect(wrapper.find(PageHeader).children()).toEqual('1.3.0');
     });
 
     it('should show the contact link', () => {

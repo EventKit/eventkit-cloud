@@ -354,4 +354,4 @@ const jss = (theme: Eventkit.Theme & Theme) => createStyles({
 });
 
 
-export default withWidth()(withTheme()(withStyles(jss)(RequestDataSource)));
+export default withWidth()(withTheme(withStyles(jss)(RequestDataSource)));

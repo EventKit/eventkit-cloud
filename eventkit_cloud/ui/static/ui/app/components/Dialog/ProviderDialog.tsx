@@ -162,5 +162,5 @@ const mapDispatchToProps = (dispatch) => (
     }
 );
 
-export default withTheme()(
+export default withTheme(
     connect(mapStateToProps, mapDispatchToProps)(ProviderDialog));

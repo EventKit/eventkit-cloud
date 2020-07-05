@@ -189,5 +189,5 @@ NotificationMessage.defaultProps = {
 };
 
 export default
-@withTheme()
+@withTheme
 class Default extends NotificationMessage {}

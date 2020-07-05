@@ -155,7 +155,7 @@ function mapDispatchToProps(dispatch) {
     };
 }
 
-export default withTheme()(connect(
+export default withTheme(connect(
     null,
     mapDispatchToProps,
 )(NotificationMenu));

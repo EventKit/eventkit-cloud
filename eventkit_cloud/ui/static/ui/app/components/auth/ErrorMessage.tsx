@@ -85,4 +85,4 @@ export class ErrorMessage extends React.Component<Props, {}> {
     }
 }
 
-export default withTheme()(ErrorMessage);
+export default withTheme(ErrorMessage);

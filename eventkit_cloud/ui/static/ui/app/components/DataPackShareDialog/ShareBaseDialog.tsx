@@ -197,4 +197,4 @@ const mapDispatchToProps = dispatch => (
     }
 );
 
-export default withWidth()(withTheme()(connect(mapStateToProps, mapDispatchToProps)(ShareBaseDialog)));
+export default withWidth()(withTheme(connect(mapStateToProps, mapDispatchToProps)(ShareBaseDialog)));

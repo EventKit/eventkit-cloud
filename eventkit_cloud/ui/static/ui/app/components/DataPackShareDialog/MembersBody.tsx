@@ -470,4 +470,4 @@ const mapDispatchToProps = dispatch => (
     }
 );
 
-export default withTheme()(connect(mapStateToProps, mapDispatchToProps)(MembersBody));
+export default withTheme(connect(mapStateToProps, mapDispatchToProps)(MembersBody));

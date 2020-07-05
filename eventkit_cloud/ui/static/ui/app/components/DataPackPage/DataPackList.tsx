@@ -328,4 +328,4 @@ export class DataPackList extends React.Component<Props, {}> {
     }
 }
 
-export default withWidth()(withTheme()(withRef()(DataPackList)));
+export default withWidth()(withTheme(withRef()(DataPackList)));

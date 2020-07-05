@@ -82,4 +82,4 @@ export function TypeaheadMenuItem(props: Props) {
     );
 }
 
-export default withTheme()(withStyles<any, any>(jss)(TypeaheadMenuItem));
+export default withTheme(withStyles<any, any>(jss)(TypeaheadMenuItem));

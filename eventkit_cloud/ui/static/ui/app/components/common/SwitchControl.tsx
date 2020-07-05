@@ -40,4 +40,4 @@ const jss = (theme: Theme & Eventkit.Theme) => createStyles({
     checked: {},
 });
 
-export default withTheme()(withStyles<any, any>(jss)(SwitchControl));
+export default withTheme(withStyles<any, any>(jss)(SwitchControl));

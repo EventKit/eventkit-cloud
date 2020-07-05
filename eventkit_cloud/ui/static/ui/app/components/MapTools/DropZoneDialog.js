@@ -109,4 +109,4 @@ DropZoneDialog.propTypes = {
     theme: PropTypes.object.isRequired,
 };
 
-export default withTheme()(DropZoneDialog);
+export default withTheme(DropZoneDialog);
