@@ -277,4 +277,4 @@ export class GroupsDrawer extends React.Component<Props, {}> {
     }
 }
 
-export default withTheme()(withStyles(jss)(GroupsDrawer));
+export default withTheme(withStyles(jss)(GroupsDrawer));

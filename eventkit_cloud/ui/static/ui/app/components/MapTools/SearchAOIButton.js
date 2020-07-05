@@ -98,4 +98,4 @@ SearchAOIButton.propTypes = {
     theme: PropTypes.object.isRequired,
 };
 
-export default withTheme()(SearchAOIButton);
+export default withTheme(SearchAOIButton);

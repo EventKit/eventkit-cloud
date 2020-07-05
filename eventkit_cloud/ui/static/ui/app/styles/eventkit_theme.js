@@ -53,7 +53,7 @@ export const images = {
 // define a global theme for the application
 export const theme = {
     // add in all the eventkit specific styles so they are accessible to all JSS styled components
-    // or components using withTheme() https://material-ui.com/customization/themes/#withtheme-component-component
+    // or components using withTheme https://material-ui.com/customization/themes/#withtheme-component-component
     eventkit: {
         colors: { ...colors },
         images: { ...images },
@@ -153,6 +153,9 @@ export const theme = {
             colorSecondary: {
                 color: colors.white,
             },
+            root: {
+                fontSize: '24px',
+            }
         },
         MuiTypography: {
             root: {
@@ -160,7 +163,7 @@ export const theme = {
             },
         },
         MuiSwitch: {
-            bar: {
+            track: {
                 backgroundColor: colors.white,
                 "$checked$checked + &": {
                     opacity: 1.0,

@@ -61,7 +61,7 @@ describe('OwnUserRow component', () => {
             isAdmin: true,
         });
         const dropdown = wrapper.find(IconMenu);
-        expect(dropdown.props().children).toHaveLength(2);
+        expect(dropdown.children()).toHaveLength(2);
         expect(wrapper.find('.qa-OwnUserRow-adminLabel')).toHaveLength(1);
     });
 

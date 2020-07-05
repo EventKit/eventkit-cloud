@@ -1159,4 +1159,4 @@ function mapDispatchToProps(dispatch) {
     };
 }
 
-export default withWidth()(withTheme()(connect(makeMapStateToProps, mapDispatchToProps, null, {forwardRef: true})(withRef()(MapView))));
+export default withWidth()(withTheme(connect(makeMapStateToProps, mapDispatchToProps, null, {forwardRef: true})(withRef()(MapView))));

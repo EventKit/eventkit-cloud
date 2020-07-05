@@ -68,7 +68,7 @@ describe('GroupsDrawer component', () => {
         const item = wrapper.find('.qa-GroupsDrawer-groupItem');
         expect(item.find(IconMenu)).toHaveLength(1);
         expect(props.onRenameGroupClick.calledOnce).toBe(false);
-        item.find(IconMenu).props().children[0].props.onClick();
+        item.find(IconMenu).children()[0].props.onClick();
         expect(props.onRenameGroupClick.calledOnce).toBe(true);
     });
 
@@ -76,7 +76,7 @@ describe('GroupsDrawer component', () => {
         const item = wrapper.find('.qa-GroupsDrawer-groupItem');
         expect(item.find(IconMenu)).toHaveLength(1);
         expect(props.onDeleteGroupClick.calledOnce).toBe(false);
-        item.find(IconMenu).props().children[2].props.onClick();
+        item.find(IconMenu).children()[2].props.onClick();
         expect(props.onDeleteGroupClick.calledOnce).toBe(true);
     });
 
@@ -84,7 +84,7 @@ describe('GroupsDrawer component', () => {
         const item = wrapper.find('.qa-GroupsDrawer-sharedGroupItem');
         expect(item.find(IconMenu)).toHaveLength(1);
         expect(props.onLeaveGroupClick.called).toBe(false);
-        item.find(IconMenu).props().children[1].props.onClick();
+        item.find(IconMenu).children()[1].props.onClick();
         expect(props.onLeaveGroupClick.calledOnce).toBe(true);
         expect(props.onLeaveGroupClick.calledWith(props.sharedGroups[0])).toBe(true);
     });

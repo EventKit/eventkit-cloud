@@ -188,4 +188,4 @@ export class MemberRow extends React.Component<Props, {}> {
     }
 }
 
-export default withTheme()(MemberRow);
+export default withTheme(MemberRow);

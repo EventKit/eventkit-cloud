@@ -112,4 +112,4 @@ export class ShareInfoBody extends React.Component<Props, {}> {
     }
 }
 
-export default withTheme()(ShareInfoBody);
+export default withTheme(ShareInfoBody);

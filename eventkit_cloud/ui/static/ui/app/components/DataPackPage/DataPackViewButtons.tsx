@@ -73,4 +73,4 @@ export class DataPackViewButtons extends React.Component<Props, {}> {
     }
 }
 
-export default withTheme()(DataPackViewButtons);
+export default withTheme(DataPackViewButtons);

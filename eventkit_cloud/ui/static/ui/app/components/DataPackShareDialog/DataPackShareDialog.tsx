@@ -434,4 +434,4 @@ const mapStateToProps = state => (
     }
 );
 
-export default withTheme()(connect(mapStateToProps)(DataPackShareDialog));
+export default withTheme(connect(mapStateToProps)(DataPackShareDialog));

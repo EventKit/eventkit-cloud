@@ -97,4 +97,4 @@ export class DeleteNotificationsDialog extends React.Component<Props, {}> {
     }
 }
 
-export default withTheme()(withStyles(jss)(DeleteNotificationsDialog));
+export default withTheme(withStyles(jss)(DeleteNotificationsDialog));

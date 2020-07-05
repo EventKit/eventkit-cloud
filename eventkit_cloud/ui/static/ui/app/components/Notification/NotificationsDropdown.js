@@ -213,6 +213,6 @@ function mapDispatchToProps(dispatch) {
 
 export default
 @withWidth()
-@withTheme()
+@withTheme
 @connect(null, mapDispatchToProps)
 class Default extends NotificationsDropdown {}

@@ -32,7 +32,7 @@ describe('DropZoneError component', () => {
         nextProps.importGeom.error = 'An error has occured';
         wrapper.setProps(nextProps);
         expect(wrapper.find(BaseDialog)).toHaveLength(1);
-        const children = shallow(wrapper.find(BaseDialog).props().children);
+        const children = shallow(wrapper.find(BaseDialog).children());
         expect(children.find('.qa-DropZoneError-error')).toHaveLength(1);
         expect(children.find('.qa-DropZoneError-error').text()).toEqual('An error has occured');
     });

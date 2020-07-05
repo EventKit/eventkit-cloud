@@ -46,7 +46,7 @@ export class PermissionsFilter extends React.Component<Props, State> {
         this.handleClose();
     }
 
-    handleSelection(e: React.ChangeEvent<HTMLFormElement>) {
+    handleSelection(e: React.ChangeEvent<HTMLInputElement>) {
         const v = e.target.value;
         // Dont do anything if the value is already selected
         if (v === this.props.permissions.value) {
@@ -207,4 +207,4 @@ export class PermissionsFilter extends React.Component<Props, State> {
     }
 }
 
-export default withTheme()(PermissionsFilter);
+export default withTheme(PermissionsFilter);

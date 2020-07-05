@@ -303,4 +303,4 @@ export class DashboardSection extends React.Component<Props, State> {
     }
 }
 
-export default withWidth()(withTheme()(withStyles(jss)(DashboardSection)));
+export default withWidth()(withTheme(withStyles(jss)(DashboardSection)));

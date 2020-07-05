@@ -1215,4 +1215,4 @@ function mapDispatchToProps(dispatch) {
     };
 }
 
-export default withWidth()(withTheme()(connect(mapStateToProps, mapDispatchToProps)(ExportAOI)));
+export default withWidth()(withTheme(connect(mapStateToProps, mapDispatchToProps)(ExportAOI)));

@@ -20,7 +20,7 @@ describe('MemberInfoDialog component', () => {
     it('should render a BaseDialog with a body', () => {
         const wrapper = shallow(<MemberInfoDialog {...props} />);
         expect(wrapper.find(BaseDialog)).toHaveLength(1);
-        const body = shallow(wrapper.find(BaseDialog).props().children);
+        const body = shallow(wrapper.find(BaseDialog).children());
         expect(body.find('.qa-MemberInfoDialog-body')).toHaveLength(1);
     });
 

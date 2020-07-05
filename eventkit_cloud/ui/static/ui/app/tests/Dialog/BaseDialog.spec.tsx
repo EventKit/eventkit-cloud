@@ -43,7 +43,7 @@ describe('BaseDialog component', () => {
         const props = getProps();
         props.actions = actions;
         const wrapper = getWrapper(props);
-        expect(wrapper.find(DialogActions).props().children).toEqual(actions);
+        expect(wrapper.find(DialogActions).children()).toEqual(actions);
     });
 
     it('should give the dialog the passed in title', () => {

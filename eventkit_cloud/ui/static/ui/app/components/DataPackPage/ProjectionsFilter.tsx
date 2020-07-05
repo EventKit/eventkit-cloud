@@ -76,4 +76,4 @@ export class ProjectionsFilter extends React.Component<Props, {}> {
     }
 }
 
-export default withTheme()(ProjectionsFilter);
+export default withTheme(ProjectionsFilter);

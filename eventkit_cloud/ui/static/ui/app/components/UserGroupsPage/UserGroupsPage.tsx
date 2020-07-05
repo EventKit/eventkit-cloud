@@ -1244,4 +1244,4 @@ function mapDispatchToProps(dispatch) {
     };
 }
 
-export default withWidth()(withTheme()(withStyles(jss)(connect(mapStateToProps, mapDispatchToProps)(UserGroupsPage))));
+export default withWidth()(withTheme(withStyles(jss)(connect(mapStateToProps, mapDispatchToProps)(UserGroupsPage))));

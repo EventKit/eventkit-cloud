@@ -39,7 +39,7 @@ describe('LeaveGroupDialog component', () => {
         const wrapper = mount(<RenameGroupDialog {...props} />);
 
         expect(wrapper.find(BaseDialog)).toHaveLength(1);
-        const child = mount(wrapper.find(BaseDialog).props().children[0]);
+        const child = mount(wrapper.find(BaseDialog).children()[0]);
         expect(child.text()).toEqual('Name unavailable');
     });
 

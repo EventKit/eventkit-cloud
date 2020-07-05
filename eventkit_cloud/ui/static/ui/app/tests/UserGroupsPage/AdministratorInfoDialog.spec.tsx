@@ -20,7 +20,7 @@ describe('AdministratorInfoDialog component', () => {
     it('should render a BaseDialog with a body', () => {
         const wrapper = shallow(<AdministratorInfoDialog {...props} />);
         expect(wrapper.find(BaseDialog)).toHaveLength(1);
-        const body = shallow(wrapper.find(BaseDialog).props().children);
+        const body = shallow(wrapper.find(BaseDialog).children());
         expect(body.find('.qa-AdministratorInfoDialog-body')).toHaveLength(1);
     });
 

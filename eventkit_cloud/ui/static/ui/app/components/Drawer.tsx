@@ -13,8 +13,9 @@ import SocialGroup from '@material-ui/icons/Group';
 import ActionExitToApp from '@material-ui/icons/ExitToApp';
 import Mail from '@material-ui/icons/MailOutlined';
 import ConfirmDialog from './Dialog/ConfirmDialog';
+import {Theme} from "@material-ui/core";
 
-const jss = (theme: any) => createStyles({
+const jss = (theme: Theme & Eventkit.Theme) => createStyles({
     link: {
         padding: '0px 0px 0px 5px',
         width: '100%',
@@ -80,16 +81,8 @@ interface Props {
     handleLogout: () => void;
     handleMenuItemClick: () => void;
     contactUrl?: string;
-    width: Breakpoint;
-    theme: Eventkit.Theme;
-    classes: {
-        link: string;
-        activeLink: string;
-        menuItem: string;
-        drawer: string;
-        icon: string;
-        contact: string;
-    };
+    theme: Eventkit.Theme & Theme;
+    classes: { [className: string]: string };
 }
 
 interface State {
@@ -258,4 +251,4 @@ export class Drawer extends React.Component<Props, State> {
     }
 }
 
-export default withTheme()(withStyles(jss)(Drawer));
+export default withTheme(withStyles(jss)(Drawer));

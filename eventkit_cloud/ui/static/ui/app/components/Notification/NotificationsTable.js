@@ -241,5 +241,5 @@ NotificationsTable.defaultProps = {
 
 export default
 @withWidth()
-@withTheme()
+@withTheme
 class Default extends NotificationsTable {}

@@ -120,4 +120,4 @@ export class DataPackGeneralTable extends React.Component<Props, State> {
     }
 }
 
-export default withTheme()(DataPackGeneralTable);
+export default withTheme(DataPackGeneralTable);

@@ -98,7 +98,7 @@ const jss = (theme: Eventkit.Theme & Theme) => createStyles({
         lineHeight: '24px',
     },
     selectAll: {
-        padding: '0px 10px 10px 10px',
+        padding: '0px 10px 10px 16px',
         display: 'flex',
         lineHeight: '24px',
     },
@@ -1035,7 +1035,7 @@ function DebouncedTextField(props: any) {
     )
 }
 
-export default withTheme()(withStyles(jss)(connect(
+export default withTheme(withStyles(jss)(connect(
     mapStateToProps,
     mapDispatchToProps,
 )(ExportInfo)));

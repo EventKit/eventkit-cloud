@@ -626,4 +626,4 @@ export class ProviderRow extends React.Component<Props, State> {
     }
 }
 
-export default withWidth()(withTheme()(withStyles(jss)(ProviderRow)));
+export default withWidth()(withTheme(withStyles(jss)(ProviderRow)));
