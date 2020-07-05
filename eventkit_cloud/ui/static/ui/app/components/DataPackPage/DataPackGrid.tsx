@@ -4,11 +4,9 @@ import GridList from '@material-ui/core/GridList';
 import DataPackGridItem from './DataPackGridItem';
 import CustomScrollbar from '../common/CustomScrollbar';
 import LoadButtons from '../common/LoadButtons';
-import withRef from '../../utils/withRef';
 import {Breakpoint} from '@material-ui/core/styles/createBreakpoints';
 
 export interface Props {
-    customRef?: any;
     runIds: string[];
     user: Eventkit.Store.User;
     onRunDelete: () => void;
@@ -101,4 +99,4 @@ export class DataPackGrid extends React.Component<Props, {}> {
     }
 }
 
-export default withWidth()(withRef()(DataPackGrid));
+export default withWidth()((DataPackGrid));

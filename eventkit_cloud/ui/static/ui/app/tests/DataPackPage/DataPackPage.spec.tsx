@@ -602,7 +602,6 @@ describe('DataPackPage component', () => {
                     {...commonProps}
                     onSort={instance.handleSortChange}
                     order={queryString.parse(props.location.search).order}
-                    customRef={instance.getViewRef}
                 />
             ),
         );
@@ -611,7 +610,6 @@ describe('DataPackPage component', () => {
             <DataPackGrid
                 {...commonProps}
                 name="DataPackLibrary"
-                customRef={instance.getViewRef}
             />
         ));
 
@@ -622,7 +620,6 @@ describe('DataPackPage component', () => {
                 processGeoJSONFile={props.processGeoJSONFile}
                 resetGeoJSONFile={props.resetGeoJSONFile}
                 onMapFilter={instance.handleSpatialFilter}
-                customRef={instance.getViewRef}
             />
         ));
         expect(instance.getView('bad case')).toEqual(null);

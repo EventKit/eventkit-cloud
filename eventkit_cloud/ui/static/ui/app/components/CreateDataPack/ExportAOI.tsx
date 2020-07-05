@@ -109,16 +109,6 @@ export interface State {
     isOpen: boolean;
 }
 
-export interface MapLayer {
-    mapUrl: string;
-    metadata?: {
-        type: string;
-        url: string;
-    };
-    slug: string;
-    copyright?: string;
-}
-
 function StepValidator(props: Props) {
     const {setNextEnabled, setNextDisabled, nextEnabled} = props;
     const {aoiHasArea} = useJobValidationContext();
