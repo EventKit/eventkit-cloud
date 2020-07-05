@@ -308,7 +308,7 @@ export class DataPackPage extends React.Component<Props, State> {
         switch (view) {
             case 'list':
                 return (
-                    <Dat    aPackList
+                    <DataPackList
                         {...commonProps}
                         onSort={this.handleSortChange}
                         order={queryString.parse(this.props.location.search).order}
