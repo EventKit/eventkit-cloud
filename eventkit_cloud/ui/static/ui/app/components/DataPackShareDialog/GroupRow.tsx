@@ -133,7 +133,7 @@ export class GroupRow extends React.Component<Props, State> {
         this.props.handleAdminMouseOut();
     }
 
-    private onKeyDown(e: React.KeyboardEvent<HTMLElement>) {
+    private onKeyDown(e: any) {
         const key = e.which || e.keyCode;
         if (key === 13) {
             this.handleAdminCheck();

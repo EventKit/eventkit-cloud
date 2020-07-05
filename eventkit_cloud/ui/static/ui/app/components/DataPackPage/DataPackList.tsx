@@ -12,11 +12,9 @@ import DataPackListItem from './DataPackListItem';
 import DataPackTableItem from './DataPackTableItem';
 import LoadButtons from '../common/LoadButtons';
 import CustomScrollbar from '../common/CustomScrollbar';
-import withRef from '../../utils/withRef';
 import { Breakpoint } from '@material-ui/core/styles/createBreakpoints';
 
 export interface Props {
-    customRef?: any;
     runIds: string[];
     user: Eventkit.Store.User;
     onRunDelete: () => void;
@@ -328,4 +326,4 @@ export class DataPackList extends React.Component<Props, {}> {
     }
 }
 
-export default withWidth()(withTheme(withRef()(DataPackList)));
+export default withWidth()(withTheme((DataPackList)));

@@ -308,11 +308,10 @@ export class DataPackPage extends React.Component<Props, State> {
         switch (view) {
             case 'list':
                 return (
-                    <DataPackList
+                    <Dat    aPackList
                         {...commonProps}
                         onSort={this.handleSortChange}
                         order={queryString.parse(this.props.location.search).order}
-                        customRef={this.getViewRef}
                     />
                 );
             case 'grid':
@@ -320,7 +319,6 @@ export class DataPackPage extends React.Component<Props, State> {
                     <DataPackGrid
                         {...commonProps}
                         name="DataPackLibrary"
-                        customRef={this.getViewRef}
                     />
                 );
             case 'map':
@@ -331,7 +329,6 @@ export class DataPackPage extends React.Component<Props, State> {
                         processGeoJSONFile={this.props.processGeoJSONFile}
                         resetGeoJSONFile={this.props.resetGeoJSONFile}
                         onMapFilter={this.handleSpatialFilter}
-                        customRef={this.getViewRef}
                     />
                 );
             default:
