@@ -13,6 +13,8 @@ import {
     markNotificationsAsUnread,
     removeNotifications,
 } from '../../actions/notificationsActions';
+import withWidth from "@material-ui/core/withWidth";
+import {NotificationGridItem} from "./NotificationGridItem";
 
 export class NotificationMenu extends React.Component {
     constructor(props) {
@@ -155,7 +157,4 @@ function mapDispatchToProps(dispatch) {
     };
 }
 
-export default withTheme(connect(
-    null,
-    mapDispatchToProps,
-)(NotificationMenu));
+export default withTheme(connect(null, mapDispatchToProps)(NotificationMenu));

@@ -229,7 +229,5 @@ function mapDispatchToProps(dispatch) {
     };
 }
 
-export default withTheme(connect(
-    null,
-    mapDispatchToProps,
-)(NotificationsTableMenu));
+export default withTheme(connect(null, mapDispatchToProps)(NotificationsTableMenu));
+

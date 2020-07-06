@@ -188,6 +188,4 @@ NotificationMessage.defaultProps = {
     onLinkClick: () => (true),
 };
 
-export default
-@withTheme
-class Default extends NotificationMessage {}
+export default withTheme(NotificationMessage);

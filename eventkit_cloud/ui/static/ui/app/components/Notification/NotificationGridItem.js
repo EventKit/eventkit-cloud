@@ -129,8 +129,4 @@ function mapDispatchToProps(dispatch) {
     };
 }
 
-export default
-@withWidth()
-@withTheme
-@connect(null, mapDispatchToProps)
-class Default extends NotificationGridItem {}
+export default withWidth()(withTheme(connect(null, mapDispatchToProps)(NotificationGridItem)));
