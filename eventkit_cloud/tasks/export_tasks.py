@@ -721,13 +721,13 @@ def nitf_export_task(
     nitf_in_dataset = parse_result(result, "source")
     nitf_out_dataset = os.path.join(stage_dir, "{0}-{1}.nitf".format(job_name, projection))
 
-    params = "-co ICORDS=G"
+    creation_options = ["ICORDS=G"]
     nitf = gdalutils.convert(
         fmt="nitf",
         input_file=nitf_in_dataset,
         output_file=nitf_out_dataset,
         task_uid=task_uid,
-        creation_options=params,
+        creation_options=creation_options,
     )
 
     result["file_format"] = "nitf"

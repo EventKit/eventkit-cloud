@@ -20,6 +20,7 @@ export interface Props {
     groups: Eventkit.Group[];
     users: Eventkit.User[];
     permissions: Eventkit.Permissions;
+    permissionState: Eventkit.Store.UpdatePermissions;
     groupsText: any;
     membersText: any;
     canUpdateAdmin: boolean;
@@ -68,17 +69,24 @@ export class DataPackShareDialog extends React.Component<Props, State> {
         this.toggleView = this.toggleView.bind(this);
         this.renderSharedPermissionsWithJob = this.renderSharedPermissionsWithJob.bind(this);
         this.renderSharedPermissionsWithoutJob = this.renderSharedPermissionsWithoutJob.bind(this);
-        this.permissions = new Permissions(this.props.permissions);
+        // this.permissions = new Permissions(this.props.permissions);
         this.state = {
             view: 'groups',
             // Make a copy of the permissions so we can modify it locally
-            permissions: this.permissions.getPermissions(),
+            permissions: null,
             showShareInfo: false,
             showPublicWarning: false,
         };
     }
 
-    componentDidUpdate(prevProps: Props) {
+    componentDidMount() {
+        this.permissions = new Permissions(this.props.permissions);
+        this.setState({
+            permissions: this.permissions.getPermissions()
+        });
+    }
+
+    componentDidUpdate(prevProps: Props, prevState: State) {
         if (!prevProps.show && this.props.show) {
             this.permissions.setPermissions(this.props.permissions);
             this.permissions.setUsername(this.props.user ? this.props.user.user.username : undefined);
@@ -285,7 +293,7 @@ export class DataPackShareDialog extends React.Component<Props, State> {
     }
 
     render() {
-        if (!this.props.show) {
+        if (!this.props.show || !this.permissions) {
             return null;
         }
 
@@ -422,6 +430,7 @@ const mapStateToProps = state => (
         groups: state.groups.groups,
         users: state.users.users,
         userCount: state.users.total - 1,
+        permissionState: state.updatePermission,
     }
 );
 
