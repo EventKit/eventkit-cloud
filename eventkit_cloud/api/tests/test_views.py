@@ -866,7 +866,7 @@ class TestExportRunViewSet(APITestCase):
         response = self.client.get(url)
         self.assertIsNotNone(response)
         result = response.data
-        self.assertTrue("InvalidLicense" in result[0].get('detail'))
+        self.assertTrue("InvalidLicense" in result["errors"][0].get('detail'))
         self.assertEqual(response.status_code, 400)
 
     @patch('eventkit_cloud.api.views.get_invalid_licenses')
@@ -903,7 +903,7 @@ class TestExportRunViewSet(APITestCase):
         response = self.client.get(url)
         self.assertIsNotNone(response)
         result = response.data
-        self.assertTrue("InvalidLicense" in result[0].get('detail'))
+        self.assertTrue("InvalidLicense" in result["errors"][0].get('detail'))
         self.assertEqual(response.status_code, 400)
 
     def test_filter_runs(self, ):

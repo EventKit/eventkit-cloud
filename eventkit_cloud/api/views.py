@@ -2,7 +2,6 @@
 import logging
 
 # -*- coding: utf-8 -*-
-from collections import OrderedDict
 from datetime import datetime, timedelta
 from django.core.cache import cache
 from dateutil import parser
@@ -217,7 +216,6 @@ class JobViewSet(viewsets.ModelViewSet):
                 "ymax": extents[3],
             }
             try:
-                logger.info(f"Trying to validate.")
                 bbox_extents = validate_bbox_params(data)
                 bbox = validate_search_bbox(bbox_extents)
                 queryset = self.filter_queryset(Job.objects.filter(the_geom__within=bbox))
@@ -228,11 +226,9 @@ class JobViewSet(viewsets.ModelViewSet):
                 else:
                     serializer = ListJobSerializer(queryset, many=True, context={"request": request})
                     return Response(serializer.data)
-                raise ValidationError("We broke it")
             except ValidationError as e:
-                logger.info(f"WE HIT THE ERROR")
                 logger.debug(e.detail)
-                raise ValidationError(detail=e.detail) #TODO fix this one.
+                raise ValidationError(code="validation_error", detail=e.detail)
 
     def create(self, request, *args, **kwargs):
         """
@@ -385,8 +381,9 @@ class JobViewSet(viewsets.ModelViewSet):
                             job.provider_tasks.add(*provider_serializer.save())
                             job.save()
                         except ValidationError:
-                            raise ValidationError(code="invalid_provider_task", detail="A provider and an export format must be selected.")
-
+                            raise ValidationError(
+                                code="invalid_provider_task", detail="A provider and an export format must be selected."
+                            )
                         # Check max area (skip for superusers)
                         if not self.request.user.is_superuser:
                             error_data = {"errors": []}
@@ -463,7 +460,10 @@ class JobViewSet(viewsets.ModelViewSet):
                         raise
                 else:
                     # TODO: Specify which provider task is invalid.
-                    raise ValidationError(code="invalid_provider_task", detail=f"One or more provider tasks are invalid: {provider_tasks}.")
+                    raise ValidationError(
+                        code="invalid_provider_task",
+                        detail=f"One or more provider tasks are invalid: {provider_tasks}.",
+                    )
 
                 try:
                     projection_db_objects = Projection.objects.filter(srid__in=projections)
@@ -471,7 +471,9 @@ class JobViewSet(viewsets.ModelViewSet):
                     job.save()
                 except Exception as e:
                     # TODO: Specify which projection is invalid.
-                    raise ValidationError(code="invalid_projection", detail=f"One or more projections are invalid: {projections}.")
+                    raise ValidationError(
+                        code="invalid_projection", detail=f"One or more projections are invalid: {projections}."
+                    )
 
             # run the tasks
             job_uid = str(job.uid)
@@ -480,13 +482,10 @@ class JobViewSet(viewsets.ModelViewSet):
             try:
                 # run needs to be created so that the UI can be updated with the task list.
                 run_uid = create_run(job_uid=job_uid, user=request.user)
-            except InvalidLicense as il: #TODO: Decide on this one.
-                status_code = status.HTTP_400_BAD_REQUEST
-                error_data = {"errors": [{"status": status_code, "title": _("Invalid License"), "detail": _(str(il))}]}
-                return Response(error_data, status=status_code)
-                # Run is passed to celery to start the tasks.
+            except InvalidLicense as il:
+                raise ValidationError(code="invalid_license", detail=str(il))
             except Unauthorized as ua:
-                raise PermissionDenied(code="invalid_license", detail=str(ua))
+                raise PermissionDenied(code="permission_denied", detail=str(ua))
 
             running = JobSerializer(job, context={"request": request})
 
@@ -526,7 +525,9 @@ class JobViewSet(viewsets.ModelViewSet):
             return Response([{"detail": _(str(err))}], status.HTTP_400_BAD_REQUEST)
         # Run is passed to celery to start the tasks.
         except Unauthorized:
-            raise PermissionDenied(code="permission_denied", detail="ADMIN permission is required to run this DataPack.")
+            raise PermissionDenied(
+                code="permission_denied", detail="ADMIN permission is required to run this DataPack."
+            )
         run = ExportRun.objects.get(uid=run_uid)
         if run:
             logger.debug("Placing pick_up_run_task for {0} on the queue.".format(run.uid))
@@ -1026,8 +1027,8 @@ class ExportRunViewSet(viewsets.ModelViewSet):
             queryset = queryset.filter(deleted=False)
         try:
             self.validate_licenses(queryset, user=request.user)
-        except InvalidLicense as il: #TODO Fix this
-            return Response([{"detail": _(str(il))}], status.HTTP_400_BAD_REQUEST)
+        except InvalidLicense as il:
+            raise ValidationError(code="invalid_license", detail=str(il))
         serializer = self.get_serializer(queryset, many=True, context={"request": request})
         return Response(serializer.data, status=status.HTTP_200_OK)
 
@@ -1062,8 +1063,8 @@ class ExportRunViewSet(viewsets.ModelViewSet):
         queryset = self.filter_queryset(self.get_queryset())
         try:
             self.validate_licenses(queryset, user=request.user)
-        except InvalidLicense as il: # TODO
-            return Response([{"detail": _(str(il))}], status.HTTP_400_BAD_REQUEST)
+        except InvalidLicense as il:
+            raise ValidationError(code="invalid_license", detail=str(il))
         # This is to display deleted runs on the status and download
         if not request.query_params.get("job_uid"):
             queryset = queryset.filter(deleted=False)
@@ -1100,7 +1101,7 @@ class ExportRunViewSet(viewsets.ModelViewSet):
                 queryset = queryset.filter(job__the_geom__intersects=geom)
             except ValidationError as e:
                 logger.debug(e.detail)
-                raise ValidationError(detail=e.detail)
+                raise ValidationError(code="validation_error", detail=e.detail)
 
         search_bbox = self.request.query_params.get("bbox", None)
         if search_bbox is not None and len(search_bbox.split(",")) == 4:
@@ -1119,7 +1120,7 @@ class ExportRunViewSet(viewsets.ModelViewSet):
 
             except ValidationError as e:
                 logger.debug(e.detail)
-                raise ValidationError(detail=e.detail)
+                raise ValidationError(code="validation_error", detail=e.detail)
 
         search_term = self.request.query_params.get("search_term", None)
         if search_term is not None:
@@ -1580,7 +1581,7 @@ class UserJobActivityViewSet(mixins.CreateModelMixin, mixins.ListModelMixin, vie
             job = Job.objects.get(uid=job_uid)
             UserJobActivity.objects.create(user=self.request.user, job=job, type=UserJobActivity.VIEWED)
         else:
-            raise exceptions.ValidationError(detail=f"Activity type {activity_type} is invalid.")
+            raise ValidationError(code="invalid_activity_type", detail=f"Activity type {activity_type} is invalid.")
 
         return Response({}, content_type="application/json", status=status.HTTP_200_OK)
 
@@ -2098,7 +2099,9 @@ def get_models(model_list, model_object, model_index):
             models.append(model)
         except model_object.DoesNotExist:
             logger.warn(f"{str(model_object)} with {model_index}: {model_id} does not exist.")
-            raise NotFound(code="not_found", detail=f"{str(model_object)} with {model_index}: {model_id} does not exist.")
+            raise NotFound(
+                code="not_found", detail=f"{str(model_object)} with {model_index}: {model_id} does not exist."
+            )
     return models
 
 
@@ -2141,15 +2144,19 @@ def geojson_to_geos(geojson_geom, srid=None):
     :return: A GEOSGeometry object
     """
     if not geojson_geom:
-        raise ValidationError(detail="No geojson geometry string supplied.")
+        raise ValidationError(code="missing_geojson", detail="No geojson geometry string supplied.")
     if not srid:
         srid = 4326
     try:
         geom = GEOSGeometry(geojson_geom, srid=srid)
     except GEOSException:
-        raise ValidationError(detail="Could not convert geojson geometry, check that your geometry is valid.")
+        raise ValidationError(
+            code="invalid_geometry", detail="Could not convert geojson geometry, check that your geometry is valid."
+        )
     if not geom.valid:
-        raise ValidationError(detail="GEOSGeometry invalid, check that your geojson geometry is valid.")
+        raise ValidationError(
+            code="invalid_geometry", detail="GEOSGeometry invalid, check that your geojson geometry is valid."
+        )
     return geom
 
 

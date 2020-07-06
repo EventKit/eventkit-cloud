@@ -1,9 +1,7 @@
-import json
 import logging
 
-from django.conf import settings
 import rest_framework.status
-from rest_framework.exceptions import APIException, ValidationError
+from rest_framework.exceptions import ValidationError
 from rest_framework.response import Response
 from rest_framework.views import exception_handler
 
@@ -17,7 +15,6 @@ def eventkit_exception_handler(exc, context):
         "errors": [
             {
                 "status": "422",
-                "source": {"pointer": "/data/attributes/first-name"},
                 "title": "Invalid Attribute",
                 "detail": "First name must contain at least three characters.",
                 "type": "ValidationError"
@@ -76,7 +73,7 @@ def eventkit_exception_handler(exc, context):
 
             error_response["detail"] = detail
 
-        error_response["title"] = error_response["title"].title().replace("_", " ") #TODO: Might be a better way?
+        error_response["title"] = error_response["title"].title().replace("_", " ")
         response.data = {"errors": [error_response]}
     # exception_handler doesn't handle generic exceptions, so we need to handle that here.
     else:
