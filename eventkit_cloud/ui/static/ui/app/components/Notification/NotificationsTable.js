@@ -239,7 +239,5 @@ NotificationsTable.defaultProps = {
     onView: undefined,
 };
 
-export default
-@withWidth()
-@withTheme
-class Default extends NotificationsTable {}
+export default withWidth()(withTheme(NotificationsTable));
+

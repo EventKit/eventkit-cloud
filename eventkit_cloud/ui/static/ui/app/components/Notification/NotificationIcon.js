@@ -8,6 +8,9 @@ import ErrorIcon from '@material-ui/icons/Error';
 import AddCircleIcon from '@material-ui/icons/AddCircle';
 import RemoveCircleIcon from '@material-ui/icons/RemoveCircle';
 import { verbs } from '../../utils/notificationUtils';
+import withWidth from "@material-ui/core/withWidth";
+import {connect} from "react-redux";
+import {NotificationGridItem} from "./NotificationGridItem";
 
 export class NotificationIcon extends Component {
     render() {
@@ -123,6 +126,4 @@ NotificationIcon.defaultProps = {
     iconStyle: {},
 };
 
-export default
-@withTheme
-class Default extends NotificationIcon {}
+export default withTheme(NotificationIcon);

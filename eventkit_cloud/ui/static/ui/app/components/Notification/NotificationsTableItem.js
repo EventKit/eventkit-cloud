@@ -268,8 +268,5 @@ function mapDispatchToProps(dispatch) {
     };
 }
 
-export default
-@withWidth()
-@withTheme
-@connect(null, mapDispatchToProps)
-class Default extends NotificationsTableItem {}
+export default withWidth()(withTheme(connect(null, mapDispatchToProps)(NotificationsTableItem)));
+
