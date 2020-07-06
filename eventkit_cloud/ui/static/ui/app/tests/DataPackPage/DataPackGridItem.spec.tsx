@@ -9,9 +9,6 @@ import SocialGroup from '@material-ui/icons/Group';
 import Lock from '@material-ui/icons/LockOutlined';
 import { DataPackGridItem } from '../../components/DataPackPage/DataPackGridItem';
 import DataPackShareDialog from '../../components/DataPackShareDialog/DataPackShareDialog';
-import NotificationSync from "@material-ui/icons/Sync";
-import NavigationCheck from "@material-ui/icons/Check";
-import AlertError from "@material-ui/icons/Error";
 
 function getRuns() {
     return [

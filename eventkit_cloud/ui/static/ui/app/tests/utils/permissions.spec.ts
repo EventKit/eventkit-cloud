@@ -32,19 +32,30 @@ describe('Permissions class', () => {
 
     it('getUserPermissions should return user permissions if they have be set', () => {
         expect(permissions.getUserPermissions()).toEqual(undefined);
-        permissions.setMembers({ admin: utils.Levels.ADMIN });
+        permissions.setMembers({admin: utils.Levels.ADMIN});
         permissions.setUsername('admin');
         permissions.extractCurrentUser();
-        expect(permissions.getUserPermissions()).toEqual({ admin: utils.Levels.ADMIN });
+        expect(permissions.getUserPermissions()).toEqual({admin: utils.Levels.ADMIN});
     });
 
     it('isPublic should return true or false for the permission value', () => {
+        const p = {
+            value: 'SHARED',
+        };
+        const users = {
+            one: utils.Levels.ADMIN,
+            two: utils.Levels.READ,
+        };
+        permissions.setPermissions(p);
+        permissions.setMembers({...users, admin: utils.Levels.ADMIN});
         expect(permissions.isPublic()).toBe(false);
         permissions.makePublic();
         expect(permissions.isPublic()).toBe(true);
     });
 
     it('insertCurrentUser should do nothing if there is no user', () => {
+        const users = {};
+        permissions.setMembers({...users});
         expect(permissions.getMemberCount()).toEqual(0);
         permissions.insertCurrentUser();
         expect(permissions.getMemberCount()).toEqual(0);
@@ -55,7 +66,7 @@ describe('Permissions class', () => {
             one: utils.Levels.ADMIN,
             two: utils.Levels.READ,
         };
-        permissions.setMembers({ ...users, admin: utils.Levels.ADMIN });
+        permissions.setMembers({...users, admin: utils.Levels.ADMIN});
         expect(permissions.getMemberCount()).toEqual(3);
         permissions.extractCurrentUser();
         expect(permissions.getMemberCount()).toEqual(3);
@@ -66,7 +77,7 @@ describe('Permissions class', () => {
             one: utils.Levels.ADMIN,
             two: utils.Levels.READ,
         };
-        permissions.setMembers({ ...users, admin: utils.Levels.ADMIN });
+        permissions.setMembers({...users, admin: utils.Levels.ADMIN});
         permissions.setUsername('admin');
         expect(permissions.getMemberCount()).toEqual(3);
         permissions.extractCurrentUser();
@@ -114,8 +125,8 @@ describe('Permissions class', () => {
     it('makePrivate should clear groups and members and set value to PRIVATE', () => {
         const p = {
             value: 'SHARED',
-            groups: { one: utils.Levels.ADMIN },
-            members: { one: utils.Levels.ADMIN },
+            groups: {one: utils.Levels.ADMIN},
+            members: {one: utils.Levels.ADMIN},
         };
         permissions.setPermissions(p);
         expect(permissions.isShared()).toBe(true);
@@ -126,8 +137,17 @@ describe('Permissions class', () => {
     });
 
     it('makeShared should add users and groups to permissions', () => {
+        const p = {
+            value: 'SHARED',
+        };
+        const members = {};
+        const group = {};
+        permissions.setPermissions(p);
+        permissions.setGroups(group);
+        permissions.setMembers(members);
+
         expect(permissions.getPermissions()).toEqual({
-            value: 'PRIVATE',
+            value: 'SHARED',
             members: {},
             groups: {},
         });
@@ -137,14 +157,14 @@ describe('Permissions class', () => {
         permissions.makeShared(users, groups);
         const expected = {
             value: 'SHARED',
-            members: { one: utils.Levels.READ, two: utils.Levels.READ },
-            groups: { one: utils.Levels.READ, two: utils.Levels.READ },
+            members: {one: utils.Levels.READ, two: utils.Levels.READ},
+            groups: {one: utils.Levels.READ, two: utils.Levels.READ},
         };
         expect(permissions.getPermissions()).toEqual(expected);
     });
 
     it('groupHasPermission should return true or false for a specified level', () => {
-        const group = { one: utils.Levels.ADMIN };
+        const group = {one: utils.Levels.ADMIN};
         permissions.setGroups(group);
         expect(permissions.groupHasPermission('one', utils.Levels.READ)).toBe(false);
         expect(permissions.groupHasPermission('one', utils.Levels.ADMIN)).toBe(true);
@@ -169,7 +189,7 @@ describe('Permissions class', () => {
     });
 
     it('userHasPermission should return true or false for a specified level', () => {
-        const user = { one: utils.Levels.ADMIN };
+        const user = {one: utils.Levels.ADMIN};
         permissions.setMembers(user);
         expect(permissions.userHasPermission('one', utils.Levels.READ)).toBe(false);
         expect(permissions.userHasPermission('one', utils.Levels.ADMIN)).toBe(true);

@@ -106,7 +106,7 @@ describe('MembersBody component', () => {
         const permissions = 'shared';
         const memberOrder = wrapper.state('memberOrder');
         const params = {
-            exclude_self: 'true',
+            prepend_self: 'true',
             ordering: `${permissions},${memberOrder}`,
             page: 1,
         };

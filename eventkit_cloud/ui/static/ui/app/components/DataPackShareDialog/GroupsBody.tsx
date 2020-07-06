@@ -10,6 +10,9 @@ import GroupRow from './GroupRow';
 import GroupsHeaderRow, {GroupOrder, SharedOrder} from './GroupsHeaderRow';
 import GroupBodyTooltip from './ShareBodyTooltip';
 import {getPermissionGroups} from '../../actions/groupActions';
+import BaseDialog from "../Dialog/BaseDialog";
+import Divider from "@material-ui/core/Divider";
+import Warning from "@material-ui/core/SvgIcon/SvgIcon";
 
 export interface Props {
     job: Eventkit.Job;
@@ -120,7 +123,7 @@ export class GroupsBody extends React.Component<Props, State> {
         await this.props.getPermissionGroups(
             jobUid,
             {
-                exclude_self: 'true',
+                prepend_self: 'true',
                 ordering: `${permissions},${groupOrder}`,
                 page: this.state.page,
                 ...params,
