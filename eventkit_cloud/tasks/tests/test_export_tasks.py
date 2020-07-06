@@ -22,8 +22,9 @@ from eventkit_cloud.tasks.export_tasks import (ExportTask, export_task_error_han
                                                kml_export_task, mapproxy_export_task, geopackage_export_task,
                                                shp_export_task, arcgis_feature_service_export_task, pick_up_run_task,
                                                cancel_export_provider_task, kill_task, geotiff_export_task,
-                                               bounds_export_task, parse_result, finalize_export_provider_task,
-                                               FormatTask, wait_for_providers_task, create_zip_task,
+                                               nitf_export_task, bounds_export_task, parse_result,
+                                               finalize_export_provider_task, FormatTask, wait_for_providers_task,
+                                               create_zip_task,
                                                )
 from eventkit_cloud.tasks.helpers import default_format_time
 from eventkit_cloud.tasks.task_base import LockingTask
@@ -222,6 +223,24 @@ class TestExportTasks(ExportTaskBase):
         mock_gdalutils.convert.assert_called_once_with(boundary="selection", fmt='gtiff',
                                                        input_file=f'GTIFF_RAW:{example_geotiff}',
                                                        output_file=expected_outfile, task_uid=task_uid)
+
+    @patch('eventkit_cloud.tasks.export_tasks.gdalutils')
+    def test_nitf_export_task(self, mock_gdalutils):
+        ExportTask.__call__ = lambda *args, **kwargs: celery.Task.__call__(*args, **kwargs)
+        example_nitf = "example.nitf"
+        example_result = {"source": example_nitf}
+        task_uid = '1234'
+        expected_outfile = 'stage/job-4326.nitf'
+        nitf_export_task(result=example_result, task_uid=task_uid, stage_dir='stage', job_name='job')
+        mock_gdalutils.convert.return_value = expected_outfile
+        mock_gdalutils.convert.assert_called_once_with(creation_options=['ICORDS=G'], fmt='nitf',
+                                                       input_file=example_nitf, output_file=expected_outfile,
+                                                       task_uid=task_uid)
+        mock_gdalutils.reset_mock()
+        nitf_export_task(result=example_result, task_uid=task_uid, stage_dir='stage', job_name='job')
+        mock_gdalutils.convert.assert_called_once_with(creation_options=['ICORDS=G'], fmt='nitf',
+                                                       input_file=example_nitf, output_file=expected_outfile,
+                                                       task_uid=task_uid)
 
     @patch('celery.app.task.Task.request')
     @patch('eventkit_cloud.tasks.export_tasks.OGR')

@@ -1,12 +1,9 @@
 import * as React from 'react';
 import * as sinon from 'sinon';
-import { shallow } from 'enzyme';
+import {shallow} from 'enzyme';
 import Card from '@material-ui/core/Card';
-import { DataPackListItem } from '../../components/DataPackPage/DataPackListItem';
+import {DataPackListItem} from '../../components/DataPackPage/DataPackListItem';
 import DataPackShareDialog from '../../components/DataPackShareDialog/DataPackShareDialog';
-import NotificationSync from "@material-ui/icons/Sync";
-import NavigationCheck from "@material-ui/icons/Check";
-import AlertError from "@material-ui/icons/Error";
 
 describe('DataPackListItem component', () => {
     const run = {
@@ -37,7 +34,7 @@ describe('DataPackListItem component', () => {
 
     const getProps = () => ({
         run,
-        user: { data: { user: { username: 'admin' } } },
+        user: {data: {user: {username: 'admin'}}},
         users: [],
         groups: [],
         onRunDelete: sinon.spy(),
@@ -50,7 +47,7 @@ describe('DataPackListItem component', () => {
     let wrapper;
     let instance;
     const setup = (overrides = {}) => {
-        props = { ...getProps(), ...overrides };
+        props = {...getProps(), ...overrides};
         wrapper = shallow(<DataPackListItem {...props} />);
         instance = wrapper.instance();
     };
@@ -66,7 +63,7 @@ describe('DataPackListItem component', () => {
         expect(stateStub.called).toBe(false);
         instance.handleProviderClose();
         expect(stateStub.calledOnce).toBe(true);
-        expect(stateStub.calledWith({ providerDialogOpen: false })).toBe(true);
+        expect(stateStub.calledWith({providerDialogOpen: false})).toBe(true);
         stateStub.restore();
     });
 
@@ -97,7 +94,7 @@ describe('DataPackListItem component', () => {
         expect(stateStub.called).toBe(false);
         instance.hideDeleteDialog();
         expect(stateStub.calledOnce).toBe(true);
-        expect(stateStub.calledWith({ deleteDialogOpen: false }));
+        expect(stateStub.calledWith({deleteDialogOpen: false}));
         stateStub.restore();
     });
 
@@ -125,13 +122,13 @@ describe('DataPackListItem component', () => {
         const stateStub = sinon.stub(instance, 'setState');
         instance.handleShareClose();
         expect(stateStub.callCount).toBe(1);
-        expect(stateStub.calledWithExactly({ shareDialogOpen: false }));
+        expect(stateStub.calledWithExactly({shareDialogOpen: false}));
         stateStub.restore();
     });
 
     it('handleShareSave should close share dialog and call onRunShare with job id and permissions', () => {
         instance.handleShareClose = sinon.spy();
-        const permissions = { some: 'permissions' };
+        const permissions = {some: 'permissions'};
         instance.handleShareSave(permissions);
         expect(instance.handleShareClose.callCount).toBe(1);
         expect(instance.props.onRunShare.callCount).toBe(1);
@@ -141,7 +138,7 @@ describe('DataPackListItem component', () => {
     it('should set share dialog open prop with shareDialogOpen value', () => {
         expect(wrapper.state().shareDialogOpen).toBe(false);
         expect(wrapper.find(DataPackShareDialog).props().show).toBe(false);
-        wrapper.setState({ shareDialogOpen: true });
+        wrapper.setState({shareDialogOpen: true});
         expect(wrapper.find(DataPackShareDialog).props().show).toBe(true);
     });
     describe('getStatusIcon should return correct icon and icon styles', () => {

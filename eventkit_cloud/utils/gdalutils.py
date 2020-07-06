@@ -427,7 +427,7 @@ def convert_raster(
     :param output_file: The file to convert.
     :param fmt: The file format to convert.
     :param creation_options: Special GDAL options for conversion.
-        Seardh for "gdal driver <format> creation options" creation options for driver specific implementation.
+        Search for "gdal driver <format> creation options" creation options for driver specific implementation.
     :param band_type: The GDAL data type (e.g. gdal.GDT_BYTE).
     :param dst_alpha: If including an alpha band in the destination file.
     :param boundary: The boundary to be used for clipping, this must be a file.
@@ -492,7 +492,7 @@ def convert_vector(
     :param output_file: The file to convert.
     :param fmt: The file format to convert.
     :param creation_options: Special GDAL options for conversion.
-        Seardh for "gdal driver <format> creation options" creation options for driver specific implementation.
+        Search for "gdal driver <format> creation options" creation options for driver specific implementation.
     :param access_mode: The access mode for the file (e.g. "append" or "overwrite")
     :param bbox: A bounding box as a list (w,s,e,n) to be used for limiting the AOI that is used during conversion.
     :param boundary: The boundary to be used for clipping.

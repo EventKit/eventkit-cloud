@@ -106,7 +106,7 @@ describe('GroupBody component', () => {
         const permissions = 'shared';
         const groupOrder = wrapper.state('groupOrder');
         const params = {
-            exclude_self: 'true',
+            prepend_self: 'true',
             ordering: `${permissions},${groupOrder}`,
             page: 1,
         };

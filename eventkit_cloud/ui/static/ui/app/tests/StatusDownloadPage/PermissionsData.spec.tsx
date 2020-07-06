@@ -7,6 +7,7 @@ import Lock from '@material-ui/icons/LockOutlined';
 import DropDownMenu from '../../components/common/DropDownMenu';
 import DataPackShareDialog from '../../components/DataPackShareDialog/DataPackShareDialog';
 import { PermissionsData } from '../../components/StatusDownloadPage/PermissionsData';
+import {Button} from "@material-ui/core";
 
 describe('PermissionsData component', () => {
     let shallow;
@@ -20,6 +21,11 @@ describe('PermissionsData component', () => {
             value: 'PRIVATE',
             groups: {},
             members: { admin: 'ADMIN' },
+        },
+        permissionState: {
+            updated: null,
+            updating: null,
+            error: null,
         },
         handlePermissionsChange: sinon.spy(),
         members: [
@@ -76,7 +82,13 @@ describe('PermissionsData component', () => {
     });
 
     it('should display the correct members and groups text', () => {
-        wrapper.setProps({ permissions: { ...props.permissions, value: 'SHARED' }});
+        let newProps = getProps();
+        newProps.permissions = {
+            value: 'SHARED',
+            groups: {},
+            members: {},
+        };
+        wrapper.setProps(newProps);
         let button = wrapper.find(ButtonBase);
         expect(button).toHaveLength(1);
         expect(button.html()).toContain('No Members / No Groups');
@@ -128,8 +140,7 @@ describe('PermissionsData component', () => {
         stateStub.restore();
     });
 
-    it('handleShareDialogSave should call handleChange and Close', () => {
-        const closeStub = sinon.stub(instance, 'handleShareDialogClose');
+    it('handleShareDialogSave should call handlePermissionsChange', () => {
         const newPermissions = {
             value: 'SHARED',
             members: { user_one: 'ADMIN', user_two: 'READ' },
@@ -138,8 +149,6 @@ describe('PermissionsData component', () => {
         instance.handleShareDialogSave(newPermissions);
         expect(props.handlePermissionsChange.calledOnce).toBe(true);
         expect(props.handlePermissionsChange.calledWith({ ...newPermissions })).toBe(true);
-        expect(closeStub.calledOnce).toBe(true);
-        closeStub.restore();
     });
 
     it('handleDropDownChange should update the permission value', () => {
