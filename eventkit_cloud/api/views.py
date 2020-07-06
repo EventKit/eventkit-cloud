@@ -2,7 +2,6 @@
 import logging
 
 # -*- coding: utf-8 -*-
-from collections import OrderedDict
 from datetime import datetime, timedelta
 from django.core.cache import cache
 from dateutil import parser
@@ -16,9 +15,9 @@ from django.shortcuts import redirect, render
 from django.utils.translation import ugettext as _
 from django_filters.rest_framework import DjangoFilterBackend
 from notifications.models import Notification
-from rest_framework import exceptions
 from rest_framework import filters, permissions, status, views, viewsets, mixins
 from rest_framework.decorators import action
+from rest_framework.exceptions import APIException, NotFound, PermissionDenied
 from rest_framework.parsers import JSONParser
 from rest_framework.renderers import JSONRenderer
 from rest_framework.response import Response
@@ -207,11 +206,7 @@ class JobViewSet(viewsets.ModelViewSet):
                 serializer = ListJobSerializer(queryset, many=True, context={"request": request})
                 return Response(serializer.data)
         if len(params.split(",")) < 4:
-            errors = OrderedDict()
-            errors["errors"] = {}
-            errors["errors"]["id"] = _("missing_bbox_parameter")
-            errors["errors"]["message"] = _("Missing bounding box parameter")
-            return Response(errors, status=status.HTTP_400_BAD_REQUEST)
+            raise ValidationError(code="missing_bbox_parameter", detail="Missing bounding box parameter")
         else:
             extents = params.split(",")
             data = {
@@ -233,7 +228,7 @@ class JobViewSet(viewsets.ModelViewSet):
                     return Response(serializer.data)
             except ValidationError as e:
                 logger.debug(e.detail)
-                return Response(e.detail, status=status.HTTP_400_BAD_REQUEST)
+                raise ValidationError(code="validation_error", detail=e.detail)
 
     def create(self, request, *args, **kwargs):
         """
@@ -386,18 +381,9 @@ class JobViewSet(viewsets.ModelViewSet):
                             job.provider_tasks.add(*provider_serializer.save())
                             job.save()
                         except ValidationError:
-                            status_code = status.HTTP_400_BAD_REQUEST
-                            error_data = {
-                                "errors": [
-                                    {
-                                        "status": status_code,
-                                        "title": _("Invalid provider task."),
-                                        "detail": _("A provider and an export format must be selected."),
-                                    }
-                                ]
-                            }
-                            return Response(error_data, status=status_code)
-
+                            raise ValidationError(
+                                code="invalid_provider_task", detail="A provider and an export format must be selected."
+                            )
                         # Check max area (skip for superusers)
                         if not self.request.user.is_superuser:
                             error_data = {"errors": []}
@@ -471,46 +457,23 @@ class JobViewSet(viewsets.ModelViewSet):
                             job.save()
                     except Exception as e:
                         logger.error(e)
-                        status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
-                        error_data = {
-                            "errors": [
-                                {
-                                    "status": status_code,
-                                    "title": _("Server Error"),
-                                    "detail": _("Error creating export job: {0}".format(e)),
-                                }
-                            ]
-                        }
-                        return Response(error_data, status=status_code)
+                        raise
                 else:
-                    status_code = status.HTTP_400_BAD_REQUEST
-                    error_data = {
-                        "errors": [
-                            {
-                                "status": status_code,
-                                "title": _("Invalid provider task"),
-                                "detail": _("One or more: {0} are invalid".format(provider_tasks)),
-                            }
-                        ]
-                    }
-                    return Response(error_data, status=status_code)
+                    # TODO: Specify which provider task is invalid.
+                    raise ValidationError(
+                        code="invalid_provider_task",
+                        detail=f"One or more provider tasks are invalid: {provider_tasks}.",
+                    )
 
                 try:
                     projection_db_objects = Projection.objects.filter(srid__in=projections)
                     job.projections.add(*projection_db_objects)
                     job.save()
                 except Exception as e:
-                    status_code = status.HTTP_400_BAD_REQUEST
-                    error_data = {
-                        "errors": [
-                            {
-                                "status": status_code,
-                                "title": _("Invalid projection specified."),
-                                "detail": _("One or more: {0} are invalid".format(projections)),
-                            }
-                        ]
-                    }
-                    return Response(error_data, status=status_code)
+                    # TODO: Specify which projection is invalid.
+                    raise ValidationError(
+                        code="invalid_projection", detail=f"One or more projections are invalid: {projections}."
+                    )
 
             # run the tasks
             job_uid = str(job.uid)
@@ -520,14 +483,9 @@ class JobViewSet(viewsets.ModelViewSet):
                 # run needs to be created so that the UI can be updated with the task list.
                 run_uid = create_run(job_uid=job_uid, user=request.user)
             except InvalidLicense as il:
-                status_code = status.HTTP_400_BAD_REQUEST
-                error_data = {"errors": [{"status": status_code, "title": _("Invalid License"), "detail": _(str(il))}]}
-                return Response(error_data, status=status_code)
-                # Run is passed to celery to start the tasks.
+                raise ValidationError(code="invalid_license", detail=str(il))
             except Unauthorized as ua:
-                status_code = status.HTTP_403_FORBIDDEN
-                error_data = {"errors": [{"status": status_code, "title": _("Invalid License"), "detail": _(str(ua))}]}
-                return Response(error_data, status=status_code)
+                raise PermissionDenied(code="permission_denied", detail=str(ua))
 
             running = JobSerializer(job, context={"request": request})
 
@@ -567,8 +525,8 @@ class JobViewSet(viewsets.ModelViewSet):
             return Response([{"detail": _(str(err))}], status.HTTP_400_BAD_REQUEST)
         # Run is passed to celery to start the tasks.
         except Unauthorized:
-            return Response(
-                [{"detail": "ADMIN permission is required to run this DataPack."}], status.HTTP_403_FORBIDDEN,
+            raise PermissionDenied(
+                code="permission_denied", detail="ADMIN permission is required to run this DataPack."
             )
         run = ExportRun.objects.get(uid=run_uid)
         if run:
@@ -733,7 +691,7 @@ class JobViewSet(viewsets.ModelViewSet):
         """
 
         if "permissions" not in request.data:
-            return Response([{"detail": "missing permissions attribute"}], status.HTTP_400_BAD_REQUEST,)
+            raise PermissionDenied(code="permission_denied", detail="Missing permissions attribute.")
 
         jobs = get_jobs_via_permissions(request.data["permissions"])
         serializer = ListJobSerializer(jobs, many=True, context={"request": request})
@@ -753,9 +711,7 @@ class JobViewSet(viewsets.ModelViewSet):
         jobs = JobPermission.userjobs(request.user, JobPermissionLevel.ADMIN.value)
 
         if not jobs.filter(id=job.id):
-            return Response(
-                [{"detail": "ADMIN permission is required to delete this job."}], status.HTTP_400_BAD_REQUEST,
-            )
+            raise PermissionDenied(code="permission_denied", detail="ADMIN permission is required to delete this job.")
 
         super(JobViewSet, self).destroy(request, *args, **kwargs)
         return Response(status=status.HTTP_204_NO_CONTENT)
@@ -843,7 +799,7 @@ class LicenseViewSet(viewsets.ReadOnlyModelViewSet):
             response["Content-Disposition"] = 'attachment; filename="{}.txt"'.format(slug)
             return response
         except Exception:
-            return Response([{"detail": _("Not found")}], status=status.HTTP_400_BAD_REQUEST)
+            raise NotFound(code="not_found", detail="Could not find requested license.")
 
     def list(self, request, slug=None, *args, **kwargs):
         """
@@ -894,11 +850,11 @@ class DataProviderViewSet(viewsets.ReadOnlyModelViewSet):
             return Response(perform_provider_check(provider, geojson), status=status.HTTP_200_OK)
 
         except DataProvider.DoesNotExist:
-            return Response([{"detail": _("Provider not found")}], status=status.HTTP_400_BAD_REQUEST,)
+            raise NotFound(code="not_found", detail="Could not find the requested provider.")
 
         except Exception as e:
             logger.error(e)
-            return Response([{"detail": _("Internal Server Error")}], status=status.HTTP_500_INTERNAL_SERVER_ERROR,)
+            raise APIException("server_error", detail="Internal server error.")
 
     def list(self, request, slug=None, *args, **kwargs):
         """
@@ -1074,7 +1030,7 @@ class ExportRunViewSet(viewsets.ModelViewSet):
         try:
             self.validate_licenses(queryset, user=request.user)
         except InvalidLicense as il:
-            return Response([{"detail": _(str(il))}], status.HTTP_400_BAD_REQUEST)
+            raise ValidationError(code="invalid_license", detail=str(il))
         serializer = self.get_serializer(queryset, many=True, context={"request": request})
         return Response(serializer.data, status=status.HTTP_200_OK)
 
@@ -1110,7 +1066,7 @@ class ExportRunViewSet(viewsets.ModelViewSet):
         try:
             self.validate_licenses(queryset, user=request.user)
         except InvalidLicense as il:
-            return Response([{"detail": _(str(il))}], status.HTTP_400_BAD_REQUEST)
+            raise ValidationError(code="invalid_license", detail=str(il))
         # This is to display deleted runs on the status and download
         if not request.query_params.get("job_uid"):
             queryset = queryset.filter(deleted=False)
@@ -1147,7 +1103,7 @@ class ExportRunViewSet(viewsets.ModelViewSet):
                 queryset = queryset.filter(job__the_geom__intersects=geom)
             except ValidationError as e:
                 logger.debug(e.detail)
-                return Response(e.detail, status=status.HTTP_400_BAD_REQUEST)
+                raise ValidationError(code="validation_error", detail=e.detail)
 
         search_bbox = self.request.query_params.get("bbox", None)
         if search_bbox is not None and len(search_bbox.split(",")) == 4:
@@ -1166,7 +1122,7 @@ class ExportRunViewSet(viewsets.ModelViewSet):
 
             except ValidationError as e:
                 logger.debug(e.detail)
-                return Response(e.detail, status=status.HTTP_400_BAD_REQUEST)
+                raise ValidationError(code="validation_error", detail=e.detail)
 
         search_term = self.request.query_params.get("search_term", None)
         if search_term is not None:
@@ -1627,7 +1583,7 @@ class UserJobActivityViewSet(mixins.CreateModelMixin, mixins.ListModelMixin, vie
             job = Job.objects.get(uid=job_uid)
             UserJobActivity.objects.create(user=self.request.user, job=job, type=UserJobActivity.VIEWED)
         else:
-            raise exceptions.ValidationError("Activity type '%s' is invalid." % activity_type)
+            raise ValidationError(code="invalid_activity_type", detail=f"Activity type {activity_type} is invalid.")
 
         return Response({}, content_type="application/json", status=status.HTTP_200_OK)
 
@@ -1925,7 +1881,7 @@ class GroupViewSet(viewsets.ModelViewSet):
         try:
             group = Group.objects.get(id=id)
         except Group.DoesNotExist:
-            return Response(status=status.HTTP_404_NOT_FOUND)
+            raise NotFound(code="not_found", detail="Could not find the requested group.")
 
         serializer = GroupUserSerializer(group, context={"request": request})
         return Response(data=serializer.data, status=status.HTTP_200_OK)
@@ -2144,8 +2100,9 @@ def get_models(model_list, model_object, model_index):
             model = model_object.objects.get(**{model_index: model_id})
             models.append(model)
         except model_object.DoesNotExist:
-            logger.warn(
-                "%s with %s: %s does not exist", str(model_object), model_index, model_id,
+            logger.warn(f"{str(model_object)} with {model_index}: {model_id} does not exist.")
+            raise NotFound(
+                code="not_found", detail=f"{str(model_object)} with {model_index}: {model_id} does not exist."
             )
     return models
 
@@ -2189,15 +2146,19 @@ def geojson_to_geos(geojson_geom, srid=None):
     :return: A GEOSGeometry object
     """
     if not geojson_geom:
-        raise exceptions.ValidationError("No geojson geometry string supplied")
+        raise ValidationError(code="missing_geojson", detail="No geojson geometry string supplied.")
     if not srid:
         srid = 4326
     try:
         geom = GEOSGeometry(geojson_geom, srid=srid)
     except GEOSException:
-        raise exceptions.ValidationError("Could not convert geojson geometry, check that your geometry is valid")
+        raise ValidationError(
+            code="invalid_geometry", detail="Could not convert geojson geometry, check that your geometry is valid."
+        )
     if not geom.valid:
-        raise exceptions.ValidationError("GEOSGeometry invalid, check that your geojson geometry is valid")
+        raise ValidationError(
+            code="invalid_geometry", detail="GEOSGeometry invalid, check that your geojson geometry is valid."
+        )
     return geom
 
 
