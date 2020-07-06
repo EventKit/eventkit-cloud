@@ -1,5 +1,6 @@
 """Provides classes for handling API requests."""
 import logging
+import sys, traceback
 
 # -*- coding: utf-8 -*-
 from collections import OrderedDict
@@ -472,6 +473,7 @@ class JobViewSet(viewsets.ModelViewSet):
                     except Exception as e:
                         logger.error(e)
                         status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
+                        traceback.print_exc(file=sys.stdout)
                         error_data = {
                             "errors": [
                                 {

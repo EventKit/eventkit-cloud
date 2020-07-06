@@ -9,7 +9,7 @@ from time import sleep
 import requests
 from django.conf import settings
 from django.urls import reverse
-from django.test import TestCase
+from django.test import TestCase, TransactionTestCase
 from django.utils import timezone
 
 from eventkit_cloud.jobs.models import DataProvider, DataProviderType, Job
@@ -21,9 +21,9 @@ logger = logging.getLogger(__name__)
 
 
 # Default length of time to let a single test case run.
-DEFAULT_TIMEOUT = 600
+DEFAULT_TIMEOUT = 300
 
-
+# TODO: Add arcgis-feature-service back when that is working correctly.
 class TestJob(TestCase):
     """
     Test cases for Job model
@@ -52,11 +52,17 @@ class TestJob(TestCase):
         self.client.get(self.base_url)
         self.client.get(self.create_export_url)
         self.csrftoken = self.client.cookies['csrftoken']
-        self.selection = {"type": "FeatureCollection", "features": [{"type": "Feature", "properties": {},
-                                                              "geometry": {"type": "Polygon", "coordinates": [
-                                                                  [[31.128165, 29.971509], [31.128521, 29.971509],
-                                                                   [31.128521, 29.971804], [31.128165, 29.971804],
-                                                                   [31.128165, 29.971509]]]}}]}
+        self.selection = {"type":"FeatureCollection",
+                          "features":[
+                              {"type":"Feature",
+                               "bbox":[-71.04186,42.34308,-71.0281,42.35088],
+                               "geometry":
+                                   {"type":"Polygon","coordinates":
+                                       [[[-71.04185643996556,42.34307891013324],
+                                         [-71.02810402354902,42.34307891013324],
+                                         [-71.02810402354902,42.350881699101784],
+                                         [-71.04185643996556,42.350881699101784],
+                                         [-71.04185643996556,42.34307891013324]]]}}]}
 
     def tearDown(self):
         if os.path.exists(self.download_dir):
@@ -117,17 +123,7 @@ class TestJob(TestCase):
         job_data = {"csrfmiddlewaretoken": self.csrftoken, "name": "TestThematicGPKG",
                     "description": "Test Description",
                     "event": "TestProject", "selection": self.selection, "tags": [],
-                    "provider_tasks": [{"provider": "OpenStreetMap Data (Themes)", "formats": ["gpkg"]}]}
-        self.assertTrue(self.run_job(job_data))
-
-    def test_osm_sqlite(self):
-        """
-        This test is to ensure that an OSM will export a sqlite file.
-        :return:
-        """
-        job_data = {"csrfmiddlewaretoken": self.csrftoken, "name": "TestSQLITE", "description": "Test Description",
-                    "event": "TestProject", "selection": self.selection, "tags": [],
-                    "provider_tasks": [{"provider": "OpenStreetMap Data (Generic)", "formats": ["sqlite"]}]}
+                    "provider_tasks": [{"provider": "osm", "formats": ["gpkg"]}]}
         self.assertTrue(self.run_job(job_data))
 
     def test_osm_sqlite(self):
@@ -138,7 +134,7 @@ class TestJob(TestCase):
         job_data = {"csrfmiddlewaretoken": self.csrftoken, "name": "TestThematicSQLITE",
                     "description": "Test Description",
                     "event": "TestProject", "selection": self.selection, "tags": [],
-                    "provider_tasks": [{"provider": "OpenStreetMap Data (Themes)", "formats": ["sqlite"]}]}
+                    "provider_tasks": [{"provider": "osm", "formats": ["sqlite"]}]}
         self.assertTrue(self.run_job(job_data, run_timeout=DEFAULT_TIMEOUT))
 
     def test_osm_shp(self):
@@ -148,17 +144,7 @@ class TestJob(TestCase):
         """
         job_data = {"csrfmiddlewaretoken": self.csrftoken, "name": "TestSHP", "description": "Test Description",
                     "event": "TestProject", "selection": self.selection, "tags": [],
-                    "provider_tasks": [{"provider": "OpenStreetMap Data (Generic)", "formats": ["shp"]}]}
-        self.assertTrue(self.run_job(job_data))
-
-    def test_osm_shp(self):
-        """
-        This test is to ensure that an OSM job will export a shp.
-        :returns:
-        """
-        job_data = {"csrfmiddlewaretoken": self.csrftoken, "name": "TestThematicSHP", "description": "Test Description",
-                    "event": "TestProject", "selection": self.selection, "tags": [],
-                    "provider_tasks": [{"provider": "OpenStreetMap Data (Themes)", "formats": ["shp"]}]}
+                    "provider_tasks": [{"provider": "osm", "formats": ["shp"]}]}
         self.assertTrue(self.run_job(job_data))
 
     def test_osm_kml(self):
@@ -168,7 +154,7 @@ class TestJob(TestCase):
         """
         job_data = {"csrfmiddlewaretoken": self.csrftoken, "name": "TestKML", "description": "Test Description",
                     "event": "TestProject", "selection": self.selection, "tags": [],
-                    "provider_tasks": [{"provider": "OpenStreetMap Data (Generic)", "formats": ["kml"]}]}
+                    "provider_tasks": [{"provider": "osm", "formats": ["kml"]}]}
         self.assertTrue(self.run_job(job_data))
 
 
@@ -179,7 +165,7 @@ class TestJob(TestCase):
         """
         job_data = {"csrfmiddlewaretoken": self.csrftoken, "name": "TestThematicKML", "description": "Test Description",
                     "event": "TestProject", "selection": self.selection, "tags": [],
-                    "provider_tasks": [{"provider": "OpenStreetMap Data (Themes)", "formats": ["kml"]}]}
+                    "provider_tasks": [{"provider": "osm", "formats": ["kml"]}]}
         self.assertTrue(self.run_job(job_data))
 
 
@@ -281,21 +267,21 @@ class TestJob(TestCase):
         :return:
         """
         job_data = {"csrfmiddlewaretoken": self.csrftoken, "name": "test", "description": "test",
-                    "event": "test", "selection": self.selection,
+                    "event": "eventkit-integration-test", "selection": self.selection,
                     "tags": [], "provider_tasks": [{"provider": "eventkit-integration-test-wms",
-                                                    "formats": ["shp", "gpkg", "kml", "sqlite"]},
-                                                   {"provider": "OpenStreetMap Data (Generic)",
-                                                    "formats": ["shp", "gpkg", "kml", "sqlite"]},
-                                                   {"provider": "OpenStreetMap Data (Themes)",
+                                                    "formats": ["gpkg", "gtiff"]},
+                                                   # {"provider": "osm-generic",
+                                                   #  "formats": ["shp", "gpkg", "kml", "sqlite"]},
+                                                   {"provider": "osm",
                                                     "formats": ["shp", "gpkg", "kml", "sqlite"]},
                                                    {"provider": "eventkit-integration-test-wmts",
-                                                    "formats": ["shp", "gpkg", "kml", "sqlite"]},
+                                                    "formats": ["gpkg", "gtiff"]},
                                                    {"provider": "eventkit-integration-test-arc-raster",
-                                                    "formats": ["shp", "gpkg", "kml", "sqlite"]},
+                                                    "formats": ["gpkg", "gtiff"]},
                                                    {"provider": "eventkit-integration-test-wfs",
-                                                    "formats": ["shp", "gpkg", "kml", "sqlite"]},
+                                                    "formats": ["shp", "gpkg", "kml"]},
                                                    {"provider": "eventkit-integration-test-wcs",
-                                                    "formats": ["gpkg"]},
+                                                    "formats": ["gpkg", "gtiff"]}
                                                    # {"provider": "eventkit-integration-test-arc-fs",
                                                    #  "formats": ["shp", "gpkg", "kml", "sqlite"]}
                                                    ]}
@@ -307,10 +293,10 @@ class TestJob(TestCase):
         :return: This test will run all currently loaded providers.
         """
         provider_tasks = []
-        for data_provider in get_all_providers():
+        for data_provider in get_all_displayed_providers():
             provider_tasks += [{"provider": data_provider,
                             "formats": ["gpkg"]}]
-        job_data = {"csrfmiddlewaretoken": self.csrftoken, "name": "Pyramids of Queens",
+        job_data = {"csrfmiddlewaretoken": self.csrftoken, "name": "Integration Tests - Pavillion",
                     "description": "An Integration Test ", "event": "Integration Tests",
                     "include_zipfile": True,
                     "provider_tasks": provider_tasks,
@@ -325,21 +311,21 @@ class TestJob(TestCase):
         :return:
         """
         job_data = {"csrfmiddlewaretoken": self.csrftoken, "name": "test", "description": "test",
-                    "event": "test", "selection": self.selection,
+                    "event": "eventkit-integration-test", "selection": self.selection,
                     "tags": [], "provider_tasks": [{"provider": "eventkit-integration-test-wms",
-                                                    "formats": ["shp", "gpkg", "kml", "sqlite"]},
-                                                   {"provider": "OpenStreetMap Data (Generic)",
-                                                    "formats": ["shp", "gpkg", "kml", "sqlite"]},
-                                                   {"provider": "OpenStreetMap Data (Themes)",
+                                                    "formats": ["gpkg", "gtiff"]},
+                                                   # {"provider": "osm-generic",
+                                                   #  "formats": ["shp", "gpkg", "kml", "sqlite"]},
+                                                   {"provider": "osm",
                                                     "formats": ["shp", "gpkg", "kml", "sqlite"]},
                                                    {"provider": "eventkit-integration-test-wmts",
-                                                    "formats": ["shp", "gpkg", "kml", "sqlite"]},
+                                                    "formats": ["gpkg", "gtiff"]},
                                                    {"provider": "eventkit-integration-test-arc-raster",
-                                                    "formats": ["shp", "gpkg", "kml", "sqlite"]},
+                                                    "formats": ["gpkg", "gtiff"]},
                                                    {"provider": "eventkit-integration-test-wfs",
-                                                    "formats": ["shp", "gpkg", "kml", "sqlite"]},
+                                                    "formats": ["shp", "gpkg", "kml"]},
                                                    {"provider": "eventkit-integration-test-wcs",
-                                                    "formats": ["gpkg"]},
+                                                    "formats": ["gpkg", "gtiff"]}
                                                    # {"provider": "eventkit-integration-test-arc-fs",
                                                    #  "formats": ["shp", "gpkg", "kml", "sqlite"]}
                                                    ]}
@@ -347,6 +333,7 @@ class TestJob(TestCase):
                                     json=job_data,
                                     headers={'X-CSRFToken': self.csrftoken,
                                              'Referer': self.create_export_url})
+        print(response.content)
         self.assertEqual(response.status_code, 202)
         job = response.json()
 
@@ -399,8 +386,8 @@ class TestJob(TestCase):
 
         run = self.wait_for_run(job.get('uid'), run_timeout=run_timeout)
         self.orm_job = orm_job = Job.objects.get(uid=job.get('uid'))
-        self.orm_run = orm_run = orm_job.runs.last()
-        date = timezone.now().strftime('%Y%m%d')
+        self.orm_run = orm_job.runs.last()
+        timezone.now().strftime('%Y%m%d')
 
         # Get the filename for the zip, to ensure that it exists.
         for provider_task in run['provider_tasks']:
@@ -453,7 +440,6 @@ class TestJob(TestCase):
         finished = False
         response = None
         first_check = datetime.now()
-        last_check = datetime.now()
         while not finished:
             sleep(1)
             response = self.client.get(
@@ -496,62 +482,92 @@ def get_providers_list():
         "updated_at": "2016-10-06T17:44:54.837Z",
         "name": "eventkit-integration-test-wms",
         "slug": "eventkit-integration-test-wms",
-        "url": "http://basemap.nationalmap.gov/arcgis/services/USGSImageryOnly/MapServer/WmsServer?",
-        "layer": "0",
+        "url": "https://basemap.nationalmap.gov:443/arcgis/services/USGSImageryOnly/MapServer/WmsServer",
+        "layer": "default",
         "export_provider_type": DataProviderType.objects.using('default').get(type_name='wms'),
-        "level_from": 0,
-        "level_to": 2,
-        "config": ""
-
+        "level_from": 5,
+        "level_to": 6,
+        "max_selection": "2000.000",
+        "config": "layers:\r\n - name: default\r\n   title: imagery\r\n   sources: [default]\r\n\r\n"
+                  "sources:\r\n"
+                  "  default:\r\n"
+                  "    type: wms\r\n"
+                  "    grid: default\r\n"
+                  "    req:\r\n"
+                  "      url: https://basemap.nationalmap.gov/arcgis/services/USGSImageryOnly/MapServer/WMSServer\r\n"
+                  "      layers: 0\r\n"
+                  "grids:\r\n"
+                  "  default:\r\n"
+                  "    srs: EPSG:4326\r\n"
+                  "    tile_size: [256, 256]\r\n"
+                  "    origin: nw\r\n"
+                  "    res: [0.7031249999999999, 0.35156249999999994, 0.17578124999999997, 0.08789062499999999,\r\n"
+                  "      0.04394531249999999, 0.021972656249999997, 0.010986328124999998, 0.005493164062499999,\r\n"
+                  "      0.0027465820312499996, 0.0013732910156249998, 0.0006866455078124999, 0.00034332275390624995,\r\n"
+                  "      0.00017166137695312497, 8.583068847656249e-05, 4.291534423828124e-05, 2.145767211914062e-05,\r\n"
+                  "      1.072883605957031e-05, 5.364418029785155e-06, 2.6822090148925777e-06, 1.3411045074462889e-06,\r\n"
+                  "      6.705522537231444e-07]",
     }, {
         "created_at": "2016-10-06T17:45:46.213Z",
         "updated_at": "2016-10-06T17:45:46.213Z",
         "name": "eventkit-integration-test-wmts",
         "slug": "eventkit-integration-test-wmts",
-        "url": "https://basemap.nationalmap.gov/arcgis/rest/services/USGSShadedReliefOnly/MapServer/WMTS?SERVICE=WMTS&REQUEST=GetTile&VERSION=1.0.0&LAYER=USGSShadedReliefOnly&TILEMATRIXSET=WEBMERCATOR&TILEMATRIX=%(z)s&TILEROW=%(y)s&TILECOL=%(x)s&FORMAT=image%%2Fpng",
-        "layer": "imagery",
+        "url": "https://basemap.nationalmap.gov/arcgis/rest/services/USGSImageryOnly/MapServer/WMTS/tile/1.0.0/USGSImageryOnly/default/default028mm/%(z)s/%(y)s/%(x)s",
+        "layer": "default",
         "export_provider_type": DataProviderType.objects.using('default').get(type_name='wmts'),
-        "level_from": 0,
-        "level_to": 2,
-        "config": "layers:\r\n - name: imagery\r\n   title: imagery\r\n   sources: [cache]\r\n\r\n"
+        "level_from": 5,
+        "level_to": 6,
+        "config": "layers:\r\n - name: default\r\n   title: imagery\r\n   sources: [default]\r\n\r\n"
                   "sources:\r\n"
-                  "  imagery_wmts:\r\n"
+                  "  default:\r\n"
                   "    type: tile\r\n"
-                  "    grid: webmercator\r\n"
-                  "    url: https://basemap.nationalmap.gov/arcgis/rest/services/USGSShadedReliefOnly/MapServer/WMTS?SERVICE=WMTS&REQUEST=GetTile&VERSION=1.0.0&LAYER=USGSShadedReliefOnly&TILEMATRIXSET=WEBMERCATOR&TILEMATRIX=%(z)s&TILEROW=%(y)s&TILECOL=%(x)s&FORMAT=image%%2Fpng\r\n\r\n"
-                  "grids:\r\n  webmercator:\r\n    srs: EPSG:3857\r\n    tile_size: [256, 256]\r\n    origin: nw"
-
+                  "    url: https://basemap.nationalmap.gov/arcgis/rest/services/USGSImageryOnly/MapServer/WMTS/tile/1.0.0/USGSImageryOnly/default/default028mm/%(z)s/%(y)s/%(x)s\r\n"
+                  "    grid: default\r\n\r\n"
+                  "grids:\r\n  default:\r\n    srs: EPSG:4326\r\n    tile_size: [256, 256]\r\n    origin: nw\r\n"
+                  "    res: [0.7031249999999999, 0.35156249999999994, 0.17578124999999997, 0.08789062499999999,\r\n"
+                  "      0.04394531249999999, 0.021972656249999997, 0.010986328124999998, 0.005493164062499999,\r\n"
+                  "      0.0027465820312499996, 0.0013732910156249998, 0.0006866455078124999, 0.00034332275390624995,\r\n"
+                  "      0.00017166137695312497, 8.583068847656249e-05, 4.291534423828124e-05, 2.145767211914062e-05,\r\n"
+                  "      1.072883605957031e-05, 5.364418029785155e-06, 2.6822090148925777e-06, 1.3411045074462889e-06,\r\n"
+                  "      6.705522537231444e-07]"
     }, {
         "created_at": "2016-10-06T19:17:28.770Z",
         "updated_at": "2016-10-06T19:17:28.770Z",
         "name": "eventkit-integration-test-arc-raster",
         "slug": "eventkit-integration-test-arc-raster",
-        "url": "http://server.arcgisonline.com/arcgis/rest/services/ESRI_Imagery_World_2D/MapServer",
-        "layer": "imagery",
+        "url": "https://basemap.nationalmap.gov/arcgis/rest/services/USGSImageryOnly/MapServer",
+        "layer": "default",
         "export_provider_type": DataProviderType.objects.using('default').get(type_name='arcgis-raster'),
-        "level_from": 0,
-        "level_to": 2,
-        "config": "layer:\r\n  - name: imagery\r\n    title: imagery\r\n    sources: [cache]\r\n\r\n"
+        "level_from": 5,
+        "level_to": 6,
+        "config": "layers:\r\n  - name: default\r\n    title: default\r\n    sources: [default]\r\n\r\n"
                   "sources:\r\n"
-                  "  imagery_arcgis-raster:\r\n"
+                  "  default:\r\n"
                   "    type: arcgis\r\n"
-                  "    grid: webmercator\r\n"
+                  "    grid: default\r\n"
                   "    req:\r\n"
-                  "      url: http://server.arcgisonline.com/arcgis/rest/services/ESRI_Imagery_World_2D/MapServer\r\n"
+                  "      url: https://basemap.nationalmap.gov/arcgis/rest/services/USGSImageryOnly/MapServer\r\n"
                   "      layers: \r\n"
                   "        show: 0\r\n\r\n"
-                  "grids:\r\n  webmercator:\r\n    srs: EPSG:3857\r\n    tile_size: [256, 256]\r\n    origin: nw"
+                  
+                  "grids:\r\n  default:\r\n    srs: EPSG:4326\r\n    tile_size: [256, 256]\r\n    origin: nw\r\n"
+                  "    res: [0.7031249999999999, 0.35156249999999994, 0.17578124999999997, 0.08789062499999999,\r\n"
+                  "      0.04394531249999999, 0.021972656249999997, 0.010986328124999998, 0.005493164062499999,\r\n"
+                  "      0.0027465820312499996, 0.0013732910156249998, 0.0006866455078124999, 0.00034332275390624995,\r\n"
+                  "      0.00017166137695312497, 8.583068847656249e-05, 4.291534423828124e-05, 2.145767211914062e-05,\r\n"
+                  "      1.072883605957031e-05, 5.364418029785155e-06, 2.6822090148925777e-06, 1.3411045074462889e-06,\r\n"
+                  "      6.705522537231444e-07]\r\n  webmercator:\r\n    srs: EPSG:3857\r\n    tile_size: [256, 256]\r\n    origin: nw"
 
     }, {
         "created_at": "2016-10-13T17:23:26.890Z",
         "updated_at": "2016-10-13T17:23:26.890Z",
         "name": "eventkit-integration-test-wfs",
         "slug": "eventkit-integration-test-wfs",
-        "url": "http://geonode.state.gov/geoserver/wfs?SERVICE=WFS&VERSION=1.0.0&REQUEST=GetFeature&TYPENAME=geonode:Eurasia_Oceania_LSIB7a_gen_polygons&SRSNAME=EPSG:4326",
-        "layer": "geonode:Eurasia_Oceania_LSIB7a_gen_polygons",
+        "url": "https://cartowfs.nationalmap.gov/arcgis/services/structures/MapServer/WFSServer?SERVICE=WFS&VERSION=1.0.0&REQUEST=GetFeature&TYPENAME=structures:USGS_TNM_Structures&SRSNAME=EPSG:4326",
+        "layer": "structures:USGS_TNM_Structures",
         "export_provider_type": DataProviderType.objects.using('default').get(type_name='wfs'),
         "level_from": 0,
-        "level_to": 2,
+        "level_to": 8,
         "config": ""
 
     }, {
@@ -559,21 +575,20 @@ def get_providers_list():
         "updated_at": "2016-10-13T17:23:26.890Z",
         "name": "eventkit-integration-test-wcs",
         "slug": "eventkit-integration-test-wcs",
-        "url": "http://demo.pixia.com/wcsserver/?",
-        "layer": "3",
+        "url": "https://elevation.nationalmap.gov/arcgis/services/3DEPElevation/ImageServer/WCSServer",
+        "layer": "DEP3Elevation",
         "export_provider_type": DataProviderType.objects.using('default').get(type_name='wcs'),
         "level_from": 0,
         "level_to": 2,
-        "config": ""
-
+        "config": "service:\r\n  scale: \"15\"\r\n  coverages: \"DEP3Elevation\"\r\nparams:\r\n  TRANSPARENT: true\r\n  FORMAT: geotiff\r\n  VERSION: '1.0.0'\r\n  CRS: 'EPSG:4326'\r\n  REQUEST: 'GetCoverage'",
     }
     #     , {
     #     "created_at": "2016-10-21T14:30:27.066Z",
     #     "updated_at": "2016-10-21T14:30:27.066Z",
     #     "name": "eventkit-integration-test-arc-fs",
     #     "slug": "eventkit-integration-test-arc-fs",
-    #     "url": "http://services1.arcgis.com/0IrmI40n5ZYxTUrV/ArcGIS/rest/services/ONS_Boundaries_02/FeatureServer/0/query?where=objectid%3Dobjectid&outfields=*&f=json",
-    #     "layer": "0",
+    #     "url": "https://cartowfs.nationalmap.gov/arcgis/services/structures/MapServer",
+    #     "layer": "2",
     #     "export_provider_type": DataProviderType.objects.using('default').get(type_name='arcgis-feature'),
     #     "level_from": 0,
     #     "level_to": 2,
@@ -592,11 +607,11 @@ def delete_providers():
     export_providers = get_providers_list()
     for export_provider in export_providers:
         provider = DataProvider.objects.using('default').filter(
-            name=export_provider.get('name')
+            slug=export_provider.get('slug')
         ).first()
         if provider:
             provider.delete(using='default')
 
 
-def get_all_providers():
-    return [provider.name for provider in DataProvider.objects.all()]
+def get_all_displayed_providers():
+    return [provider.slug for provider in DataProvider.objects.filter(display=True)]

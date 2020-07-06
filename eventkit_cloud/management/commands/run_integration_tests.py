@@ -14,13 +14,14 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         if options["tests"]:
             suite = unittest.TestLoader().loadTestsFromNames(options["tests"])
+            result = unittest.TextTestRunner(verbosity=2).run(suite)
         else:
             print("Loading test providers")
             delete_providers()
             load_providers()
             suite = unittest.TestLoader().loadTestsFromTestCase(TestJob)
+            result = unittest.TextTestRunner(verbosity=2).run(suite)
             print("Removing test providers")
             delete_providers()
-        result = unittest.TextTestRunner(verbosity=2).run(suite)
         if result.errors or result.failures:
             exit(1)
