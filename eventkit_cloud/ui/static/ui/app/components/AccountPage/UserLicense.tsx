@@ -46,6 +46,7 @@ export class UserLicense extends React.Component<Props, State> {
                 height: '24px',
                 verticalAlign: 'middle',
                 marginRight: '10px',
+                color: colors.primary,
             },
             cardText: {
                 border: `2px solid ${colors.secondary}`,
@@ -79,7 +80,6 @@ export class UserLicense extends React.Component<Props, State> {
                                 style={styles.checkbox}
                                 checked={this.props.checked}
                                 onChange={(e, v) => { this.props.onCheck(this.props.license.slug, v); }}
-                                color="primary"
                                 disabled={this.props.disabled}
                             />
                             <span className="qa-UserLicense-agreement" style={{ lineHeight: '24px' }}>
