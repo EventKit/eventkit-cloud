@@ -30,6 +30,7 @@ import {Link} from "@material-ui/core";
 import Drawer from "@material-ui/core/Drawer";
 import {useState} from "react";
 import PermissionsBanner from "../PermissionsBanner";
+import EventkitJoyride from "../common/JoyrideWrapper";
 
 const jss = (theme: Eventkit.Theme & Theme) => createStyles({
     underlineStyle: {
@@ -691,7 +692,7 @@ export class ExportInfo extends React.Component<Props, State> {
             <div id="root" className={`qa-ExportInfo-root ${classes.root}`}>
                 {/*<PermissionsBanner isOpen={true} handleClosedPermissionsBanner={() => {}}/>*/}
                 <StepValidator {...this.props}/>
-                <Joyride
+                <EventkitJoyride
                     callback={this.callback}
                     ref={this.joyride}
                     steps={steps}

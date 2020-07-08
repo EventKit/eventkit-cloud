@@ -33,6 +33,7 @@ import isEqual from 'lodash/isEqual';
 import {getFormats} from "../../actions/formatActions";
 import {getProjections} from "../../actions/projectionActions";
 import {StoreHelpers} from "react-joyride";
+import EventkitJoyride from "../common/JoyrideWrapper";
 
 interface Props {
     runIds: string[];
@@ -666,7 +667,7 @@ export class DataPackPage extends React.Component<Props, State> {
 
         return (
             <div style={styles.backgroundStyle}>
-                <Joyride.default
+                <EventkitJoyride
                     callback={this.callback}
                     ref={(instance) => {
                         this.joyride = instance;
@@ -689,6 +690,11 @@ export class DataPackPage extends React.Component<Props, State> {
                         skip: (<span>Skip</span>),
                     }}
                     run={isRunning}
+                    styles={{
+                        options: {
+                            zIndex: 5000,
+                        }
+                    }}
                 />
                 <PageHeader
                     className="qa-DataPackPage-PageHeader"

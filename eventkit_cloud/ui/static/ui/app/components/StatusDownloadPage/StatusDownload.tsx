@@ -31,6 +31,7 @@ import { Location } from 'history';
 import { Breakpoint } from '@material-ui/core/styles/createBreakpoints';
 import history from "../../utils/history";
 import { getJobDetails } from "../../utils/generic"
+import EventkitJoyride from "../common/JoyrideWrapper";
 
 export interface Props {
     runs: Eventkit.FullRun[];
@@ -420,7 +421,7 @@ export class StatusDownload extends React.Component<Props, State> {
                     style={{ height: 'calc(100vh - 130px)', width: '100%' }}
                 >
                     <div className="qa-StatusDownload-div-content" style={styles.content}>
-                        <Joyride
+                        <EventkitJoyride
                             callback={this.callback}
                             ref={(instance) => { this.joyride = instance; }}
                             steps={steps}

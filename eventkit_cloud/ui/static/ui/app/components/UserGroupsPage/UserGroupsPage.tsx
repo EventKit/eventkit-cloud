@@ -34,6 +34,7 @@ import {DrawerTimeout} from '../../actions/uiActions';
 import {joyride} from '../../joyride.config';
 import {Breakpoint} from '@material-ui/core/styles/createBreakpoints';
 import history from '../../utils/history';
+import EventkitJoyride from "../common/JoyrideWrapper";
 
 const jss = (theme: Eventkit.Theme & Theme) => createStyles({
     header: {
@@ -932,7 +933,7 @@ export class UserGroupsPage extends React.Component<Props, State> {
 
         return (
             <div style={{backgroundColor: colors.white, position: 'relative'}}>
-                <Joyride
+                <EventkitJoyride
                     callback={this.callback}
                     ref={(instance) => {
                         this.joyride = instance;
