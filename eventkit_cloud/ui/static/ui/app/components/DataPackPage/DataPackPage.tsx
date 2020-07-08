@@ -152,7 +152,12 @@ export class DataPackPage extends React.Component<Props, State> {
             providers: {},
             formats: {},
             projections: {},
-            pageLoading: props.runsFetched === null,
+            // TODO: Investigate the logic of pageLoading.
+            // The previous logic caused the DataPack Library page to get stuck on the loading state when refreshing
+            // the page. The only time the page worked was when using the drawer coming from another page.
+            // Setting it to false by default seems to nullify the behavior.
+            //pageLoading: props.runsFetched === null,
+            pageLoading: false,
             loading: true,
             geojson_geometry: null,
             steps: [],
