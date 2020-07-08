@@ -202,10 +202,9 @@ export class Account extends React.Component<Props, State> {
                     callback={this.callback}
                     ref={(instance) => { this.joyride = instance; }}
                     steps={steps}
-                    autoStart
-                    type="continuous"
+                    continuous
                     showSkipButton
-                    showStepsProgress
+                    showProgress
                     locale={{
                         // @ts-ignore
                         back: (<span>Back</span>),

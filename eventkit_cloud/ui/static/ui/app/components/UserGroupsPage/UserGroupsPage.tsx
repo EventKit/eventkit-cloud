@@ -3,7 +3,7 @@ import * as React from 'react';
 import {connect} from 'react-redux';
 import {withTheme, Theme, withStyles, createStyles} from '@material-ui/core/styles';
 import withWidth, {isWidthDown} from '@material-ui/core/withWidth';
-import Joyride, {Step} from 'react-joyride';
+import Joyride, {Step, StoreHelpers} from 'react-joyride';
 import queryString from 'query-string';
 import Help from '@material-ui/icons/Help';
 import Button from '@material-ui/core/Button';
@@ -236,6 +236,7 @@ export class UserGroupsPage extends React.Component<Props, State> {
 
     private pageSize: number;
     private joyride: Joyride;
+    private helpers: StoreHelpers;
     private scrollbar;
 
     constructor(props: Props, context) {
@@ -732,10 +733,10 @@ export class UserGroupsPage extends React.Component<Props, State> {
 
         if (isWidthDown('xs', this.props.width)) {
             const ix = newSteps.findIndex(step => (
-                step.selector === '.qa-UserGroupsPage-Button-create'
+                step.target === '.qa-UserGroupsPage-Button-create'
             ));
             if (ix > -1) {
-                newSteps[ix + 1].text = newSteps[ix].text;
+                newSteps[ix + 1].content = newSteps[ix].content;
                 newSteps.splice(ix, 1);
             }
         }
@@ -765,7 +766,7 @@ export class UserGroupsPage extends React.Component<Props, State> {
                 this.props.users.users.splice(fakeIx, 1);
             }
             this.setState({isRunning: false, stepIndex: 0});
-            this.joyride.reset(true);
+            this?.helpers.reset(true);
         } else {
             if (step.selector === '.qa-GroupsDrawer-addGroup' && isWidthDown('sm', this.props.width) && !this.state.drawerOpen) {
                 // because the next step will render immediately after (before the drawer is fully open)
@@ -820,7 +821,7 @@ export class UserGroupsPage extends React.Component<Props, State> {
             this.toggleDrawer();
         }
         if (this.state.isRunning === true) {
-            this.joyride.reset(true);
+            this?.helpers.reset(true);
             this.setState({isRunning: true});
         } else {
             this.setState({isRunning: true});
@@ -938,10 +939,10 @@ export class UserGroupsPage extends React.Component<Props, State> {
                     }}
                     steps={steps}
                     stepIndex={this.state.stepIndex}
-                    autoStart
-                    type="continuous"
+                    continuous
+                    getHelpers={(helpers: any) => {this.helpers = helpers}}
                     showSkipButton
-                    showStepsProgress
+                    showProgress
                     locale={{
                         back: (<span>Back</span>) as any,
                         close: (<span>Close</span>) as any,

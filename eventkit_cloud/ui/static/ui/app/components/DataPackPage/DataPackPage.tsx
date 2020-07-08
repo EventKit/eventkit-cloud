@@ -32,6 +32,7 @@ import {Breakpoint} from '@material-ui/core/styles/createBreakpoints';
 import isEqual from 'lodash/isEqual';
 import {getFormats} from "../../actions/formatActions";
 import {getProjections} from "../../actions/projectionActions";
+import {StoreHelpers} from "react-joyride";
 
 interface Props {
     runIds: string[];
@@ -102,8 +103,9 @@ interface State {
 export class DataPackPage extends React.Component<Props, State> {
     private pageSize: number;
     private defaultQuery;
-    private view: any;
+    private scrollbarRef: any;
     private joyride: Joyride.default;
+    private helpers: StoreHelpers;
 
     static contextTypes = {
         config: PropTypes.shape({
@@ -273,7 +275,7 @@ export class DataPackPage extends React.Component<Props, State> {
     }
 
     private getViewRef(instance: HTMLElement) {
-        this.view = instance;
+        this.scrollbarRef = instance;
     }
 
     private getJoyRideSteps(): any[] {
@@ -312,6 +314,7 @@ export class DataPackPage extends React.Component<Props, State> {
                         {...commonProps}
                         onSort={this.handleSortChange}
                         order={queryString.parse(this.props.location.search).order}
+                        // ref={ref => this.getViewRef(ref)}
                     />
                 );
             case 'grid':
@@ -319,6 +322,7 @@ export class DataPackPage extends React.Component<Props, State> {
                     <DataPackGrid
                         {...commonProps}
                         name="DataPackLibrary"
+                        setScrollbar={ref => this.getViewRef(ref)}
                     />
                 );
             case 'map':
@@ -329,6 +333,7 @@ export class DataPackPage extends React.Component<Props, State> {
                         processGeoJSONFile={this.props.processGeoJSONFile}
                         resetGeoJSONFile={this.props.resetGeoJSONFile}
                         onMapFilter={this.handleSpatialFilter}
+                        setScrollbar={ref => this.getViewRef(ref)}
                     />
                 );
             default:
@@ -483,7 +488,7 @@ export class DataPackPage extends React.Component<Props, State> {
         if (data.action === 'close' || data.action === 'skip' || data.type === 'finished') {
             // This explicitly stops the tour (otherwise it displays a "beacon" to resume the tour)
             this.setState({isRunning: false, steps: []});
-            this.joyride.reset(true);
+            this?.helpers.reset(true);
         }
         if (data.step) {
             if (data.step.title === 'Filters' && data.type === 'step:before') {
@@ -512,15 +517,12 @@ export class DataPackPage extends React.Component<Props, State> {
 
         if (this.state.isRunning === true) {
             this.setState({isRunning: false});
-            this.joyride.reset(true);
+            this?.helpers.reset(true);
         } else {
-            let {view} = this;
+            let {scrollbarRef} = this;
             // react-redux connect does not have good support for forwarded refs
             // so if its a connected component we need to access the wrappedInstance
-            if (view.wrappedInstance) {
-                view = view.wrappedInstance;
-            }
-            view.getScrollbar().scrollToTop();
+            scrollbarRef.scrollbar.scrollToTop();
 
             this.setState({isRunning: true, steps: []});
             const steps = this.getJoyRideSteps();
@@ -669,11 +671,11 @@ export class DataPackPage extends React.Component<Props, State> {
                     ref={(instance) => {
                         this.joyride = instance;
                     }}
+                    getHelpers={(helpers: any) => {this.helpers = helpers}}
                     steps={steps as Joyride.Step[]}
-                    autoStart
-                    type="continuous"
+                    continuous
                     showSkipButton
-                    showStepsProgress
+                    showProgress
                     locale={{
                         // @ts-ignore
                         back: (<span>Back</span>),
