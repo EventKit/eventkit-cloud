@@ -82,14 +82,14 @@ export const joyride = {
                 You will only be required to re-visit this page in the future if new Licenses and
                 Terms of Use are introduced with a new data provider.`,
             target: '.qa-PageHeader',
-            position: 'top',
+            placement: 'top',
             style: JoyRideStyles.welcomeTooltipStyle,
         },
         {
             title: 'License Agreement Info',
             content: 'You can expand the license text and scroll down to review.  You can download the license text if you so choose.',
             target: '.qa-UserLicense-expand',
-            position: 'bottom',
+            placement: 'bottom',
             style: JoyRideStyles.tooltipStyle,
 
         },
@@ -97,7 +97,7 @@ export const joyride = {
             title: 'Agree to Licenses',
             content: 'Once you’ve reviewed the licenses, you must agree to them. You can agree to each license individually.',
             target: '.qa-UserLicense-Checkbox',
-            position: 'bottom',
+            placement: 'bottom',
             style: JoyRideStyles.tooltipStyle,
 
         },
@@ -105,28 +105,28 @@ export const joyride = {
             title: 'Agree to Licenses',
             content: 'Or you can agree to them collectively.',
             target: '.qa-LicenseInfo-Checkbox',
-            position: 'bottom',
+            placement: 'bottom',
             style: JoyRideStyles.tooltipStyle,
         },
         {
             title: 'Save Agreements',
             content: 'Once you have agreed to the licenses, click Save Changes.',
             target: '.qa-SaveButton-Button-SaveChanges',
-            position: 'top',
+            placement: 'top',
             style: JoyRideStyles.tooltipStyle,
         },
         {
             title: 'Navigate Application',
             content: 'Once you have saved the license agreements, you can navigate away from the page to browse DataPacks.',
             target: '.qa-Drawer-MenuItem-exports',
-            position: 'top',
+            placement: 'top',
             style: JoyRideStyles.tooltipStyle,
         },
         {
             title: 'Navigate Application',
             content: 'Or to create your own DataPack.',
             target: '.qa-Drawer-MenuItem-create',
-            position: 'top',
+            placement: 'top',
             style: JoyRideStyles.tooltipStyle,
         },
     ]),
@@ -137,7 +137,7 @@ export const joyride = {
             content: `Creating DataPacks is the core function of EventKit.
                 The process begins with defining an Area of Interest (AOI), then selecting Data Sources and output formats.`,
             target: '.qa-BreadcrumbStepper-div-content',
-            position: 'bottom',
+            placement: 'bottom',
             style: JoyRideStyles.welcomeTooltipStyle,
         },
         {
@@ -149,7 +149,7 @@ export const joyride = {
                 If the result is a point, the map will zoom to that location and an AOI will have to be drawn.
                 </br>MGRS coordinates can also be used.`,
             target: '.qa-SearchAOIToolbar-typeahead',
-            position: 'bottom',
+            placement: 'right',
             style: JoyRideStyles.tooltipStyle,
         },
         {
@@ -159,7 +159,7 @@ export const joyride = {
                 The Import function supports a range of file uploads, including GeoJSON, KML, GeoPackage, and zipped shapefile.
                 After drawing or importing an AOI, it can be edited by moving any individual node.`,
             target: '.qa-DrawAOIToolbar-div',
-            position: 'left',
+            placement: 'left',
             style: JoyRideStyles.tooltipStyle,
         },
         {
@@ -169,7 +169,7 @@ export const joyride = {
                 Note, there may be multiple maximum AOI sizes, as they can vary between individual data sources.
                 Finally, this dialog contains the Buffer button, which is described in the next step.`,
             target: '.qa-AoiInfobar-body',
-            position: 'top',
+            placement: 'top',
             style: JoyRideStyles.tooltipStyle,
         },
         {
@@ -187,7 +187,7 @@ export const joyride = {
             title: 'Cancel Selection',
             content: 'Delete the AOI by clicking the "X".',
             target: '#selected_icon',
-            position: 'left',
+            placement: 'left',
             style: JoyRideStyles.tooltipStyle,
         },
         {
@@ -196,7 +196,7 @@ export const joyride = {
                 move to the next step in the Create DataPack process by clicking the green arrow button.
                 This will take you to the Select Data and Formats page`,
             target: '.qa-BreadcrumbStepper-Button-next',
-            position: 'left',
+            placement: 'left',
             style: JoyRideStyles.tooltipStyle,
         },
     ]),
@@ -208,7 +208,7 @@ export const joyride = {
                 First, text information about the DataPack will be entered by the user,
                 and second, selecting the data sources to be included in the DataPack.`,
             target: '.qa-BreadcrumbStepper-div-stepLabel',
-            position: 'bottom',
+            placement: 'bottom',
             style: JoyRideStyles.welcomeTooltipStyle,
         },
         {
@@ -219,7 +219,7 @@ export const joyride = {
                 </br>
                 Note, all the text entered here is indexed and can be search across in the DataPack Library.`,
             target: '.qa-ExportInfo-general-info',
-            position: 'bottom',
+            placement: 'bottom',
             scrollToId: 'GeneralInfo',
             style: JoyRideStyles.tooltipStyle,
         },
@@ -228,7 +228,7 @@ export const joyride = {
             content: `Select the individual data sources to be included in the DataPack.
                 For each data source, additional information can be found by clicking the dropdown arrow on the right.`,
             target: '.qa-ExportInfo-List',
-            position: 'left',
+            placement: 'left',
             scrollToId: 'ProviderList',
             style: JoyRideStyles.tooltipStyle,
         },
@@ -244,7 +244,7 @@ export const joyride = {
                 This way if you “Run Export Again” at a later time, the data source may have become available.
                 Exceptions to this include if the selected AOI exceeds the size limit for that data source.`,
             target: '.qa-ProviderStatusIcon',
-            position: 'left',
+            placement: 'left',
             scrollToId: 'ProviderStatus',
             style: JoyRideStyles.tooltipStyle,
         },
@@ -252,7 +252,7 @@ export const joyride = {
             title: 'Additional Options',
             content: 'Click here for additional information and options for the Data Source.',
             target: '.qa-DataProvider-ListItem-Expand',
-            position: 'bottom',
+            placement: 'bottom',
             scrollToId: 'ExpandButton',
             style: JoyRideStyles.tooltipStyle,
         },
@@ -261,7 +261,7 @@ export const joyride = {
             content: 'Use The zoom bar to zoom in on the map.  That zoom level will be used to limit the data that is exported. '
                 + 'Updating the map will update the estimated data size.',
             target: '.qa-DataProvider-ListItem-zoomSelection',
-            position: 'bottom',
+            placement: 'bottom',
             scrollToId: 'ZoomSelection',
             style: JoyRideStyles.tooltipStyle,
         },
@@ -270,7 +270,7 @@ export const joyride = {
             content: 'Different formats can be selected.  Data source types might have different options depending on if the source is '
                 + 'elevation, raster, or vector data.',
             target: '.qa-DataProvider-ListItem-provFormats',
-            position: 'bottom',
+            placement: 'bottom',
             scrollToId: 'FormatSelection',
             style: JoyRideStyles.tooltipStyle,
         },
@@ -279,7 +279,7 @@ export const joyride = {
             content: 'EventKit can output in different projections. '
                 + 'Additional projection support can be added in subsequent versions of EventKit.',
             target: '.qa-ExportInfo-projections',
-            position: 'left',
+            placement: 'left',
             scrollToId: 'Projections',
             style: JoyRideStyles.tooltipStyle,
         },
@@ -287,7 +287,7 @@ export const joyride = {
             title: 'Review Selected AOI',
             content: 'Expand the map to review the AOI that was selected on the previous screen.',
             target: '.qa-MapCard-Card-map',
-            position: 'left',
+            placement: 'left',
             scrollToId: 'Map',
             style: JoyRideStyles.tooltipStyle,
         },
@@ -297,7 +297,7 @@ export const joyride = {
                 move to the next step in the Create DataPack process by clicking the green arrow button.
                 This will take you to the Review & Submit page.`,
             target: '.qa-BreadcrumbStepper-Button-next',
-            position: 'left',
+            placement: 'left',
             scrollToId: 'Next',
             style: JoyRideStyles.tooltipStyle,
         },
@@ -309,14 +309,14 @@ export const joyride = {
             content: `The Review & Submit page provides you the opportunity to
                 review the details of the DataPack before submitting it for processing.`,
             target: '.qa-BreadcrumbStepper-div-stepLabel',
-            position: 'bottom',
+            placement: 'bottom',
             style: JoyRideStyles.welcomeTooltipStyle,
         },
         {
             title: 'Verify Information',
             content: 'Verify the information entered is correct before proceeding.',
             target: '.qa-ExportSummary-div',
-            position: 'bottom',
+            placement: 'bottom',
             scrollToId: 'Summary',
             style: JoyRideStyles.tooltipStyle,
         }, {
@@ -324,7 +324,7 @@ export const joyride = {
             content: `Once ready, click the large green button to complete the Create DataPack process.
                 You will automatically be taken to the Status & Download page, where you can monitor the progress of the DataPack export.`,
             target: '.qa-BreadcrumbStepper-Button-previous',
-            position: 'bottom',
+            placement: 'bottom',
             scrollToId: 'Previous',
             style: JoyRideStyles.tooltipStyle,
         },
@@ -333,7 +333,7 @@ export const joyride = {
             content: `Once ready, click the large green button to kick off the DataPack submission process.
                 You will be redirected to the Status & Download page.`,
             target: '.qa-BreadcrumbStepper-Button-next',
-            position: 'bottom',
+            placement: 'bottom',
             scrollToId: 'Next',
             style: JoyRideStyles.tooltipStyle,
         },
@@ -346,14 +346,14 @@ export const joyride = {
                 Area of Interest, and which data is included.
                 Most importantly, you can download the data.`,
             target: '.qa-PageHeader',
-            position: 'top',
+            placement: 'top',
             style: JoyRideStyles.welcomeTooltipStyle,
         },
         {
             title: 'DataPack Info',
             content: 'This is the name that was entered for the name of the DataPack upon creation.',
             target: '.qa-DataCartDetails-div-name',
-            position: 'bottom',
+            placement: 'bottom',
             scrollToId: 'Name',
             style: JoyRideStyles.tooltipStyle,
         },
@@ -362,7 +362,7 @@ export const joyride = {
             content: `This is the status of the DataPack.  Status reports include: submitted, completed, and failed.
                 Here you can change the expiration date of the DataPack and also set the permission: Private or Shared.`,
             target: '.qa-DataCartDetails-div-StatusContainer',
-            position: 'bottom',
+            placement: 'bottom',
             scrollToId: 'Status',
             style: JoyRideStyles.tooltipStyle,
         },
@@ -372,7 +372,7 @@ export const joyride = {
                 Therefore, each data source has a drop down that provides information on its progress,
                 and links to directly download its data.`,
             target: '.qa-DataPackDetails-providers',
-            position: 'bottom',
+            placement: 'bottom',
             scrollToId: 'DownloadOptions',
             style: JoyRideStyles.tooltipStyle,
         },
@@ -382,7 +382,7 @@ export const joyride = {
                 Additionally, this file contains GIS application files (QGIS and ArcMap),
                 cartographic styles, metadata, and associated documents.`,
             target: '.qa-DataPackDetails-Button-zipButton',
-            position: 'bottom',
+            placement: 'bottom',
             scrollToId: 'DownloadOptions',
             style: JoyRideStyles.tooltipStyle,
         },
@@ -394,7 +394,7 @@ export const joyride = {
                 which can then be customized as needed. “Delete” will delete the entire DataPack.
                 If you created the DataPack or have Admin rights, you can “Run Export Again” or “Delete”, otherwise you can only “Clone”.`,
             target: '.qa-DataCartDetails-div-otherOptionsContainer',
-            position: 'bottom',
+            placement: 'bottom',
             scrollToId: 'OtherOptions',
             style: JoyRideStyles.tooltipStyle,
         },
@@ -402,7 +402,7 @@ export const joyride = {
             title: 'General Information',
             content: 'Here you will find additional information about the DataPack, including its data sources, projection, and formats.',
             target: '.qa-DataCartDetails-div-generalInfoContainer',
-            position: 'bottom',
+            placement: 'bottom',
             scrollToId: 'GeneralInfo',
             style: JoyRideStyles.tooltipStyle,
         },
@@ -411,7 +411,7 @@ export const joyride = {
             content: `This is the selected Area of Interest for the DataPack.
                 The map window is interactive, allowing you to pan and zoom around the AOI.`,
             target: '.qa-DataPackAoiInfo-div-map',
-            position: 'bottom',
+            placement: 'bottom',
             scrollToId: 'Map',
             style: JoyRideStyles.tooltipStyle,
 
@@ -421,7 +421,7 @@ export const joyride = {
             content: `Here you will find specific information related to the processing of the DataPack.
                 This information may be useful in reporting errors or problems with the DataPack.`,
             target: '.qa-DataCartDetails-div-exportInfoContainer',
-            position: 'top',
+            placement: 'top',
             scrollToId: 'ExportInfo',
             style: JoyRideStyles.tooltipStyle,
         },
@@ -436,7 +436,7 @@ export const joyride = {
                     search based on name, date, and data source, and find “Featured DataPacks”.`,
                 target: '.qa-DataPackPage-Toolbar-sort',
                 style: JoyRideStyles.welcomeTooltipStyle,
-                position: 'top',
+                placement: 'top',
             },
             {
                 title: 'DataPacks',
@@ -445,14 +445,14 @@ export const joyride = {
                     or use the other search functions (explained in the following steps).`,
                 target: '.qa-DataPackList-root',
                 style: JoyRideStyles.tooltipStyle,
-                position: 'bottom',
+                placement: 'bottom',
             },
             {
                 title: 'Text Search',
                 content: `The text search function filters across all DataPacks based on the name,
                     description, and project fields provided for each DataPack.`,
                 target: '.qa-DataPackSearchBar-TextField',
-                position: 'bottom',
+                placement: 'bottom',
                 style: JoyRideStyles.tooltipStyle,
             },
             {
@@ -461,14 +461,14 @@ export const joyride = {
                     To filter Shared DataPacks, select Shared and click on the “All Members / All Groups” link.
                     This will open the “Filter Shared DataPacks” dialog box to select specific users or groups.`,
                 target: '.qa-FilterDrawer-Drawer > div',
-                position: 'left',
+                placement: 'left',
                 style: JoyRideStyles.tooltipStyle,
             },
             {
                 title: 'DataPack Status',
                 content: 'Check the status (complete, running, error) of previously created DataPacks.',
                 target: '.tour-datapack-status',
-                position: 'bottom',
+                placement: 'bottom',
                 style: JoyRideStyles.tooltipStyle,
             },
             {
@@ -476,7 +476,7 @@ export const joyride = {
                 content: `Use this menu to navigate to the “Status & Download” page where you can download the DataPack files,
                     share the DataPack with other EventKit users, or delete the datapack.`,
                 target: '.tour-datapack-options',
-                position: 'bottom',
+                placement: 'bottom',
                 style: JoyRideStyles.tooltipStyle,
             },
             {
@@ -484,7 +484,7 @@ export const joyride = {
                 content: `Change the view of the DataPack Library, options include the default map view,
                     a “baseball card” view, and traditional table view.`,
                 target: '.qa-DataPackViewButtons-Icons',
-                position: 'bottom',
+                placement: 'bottom',
                 style: JoyRideStyles.tooltipStyle,
             },
             {
@@ -492,7 +492,7 @@ export const joyride = {
                 content: `Click here to begin creating a DataPack.
                     This will leave the DataPack Library and take you to the Create DataPack page.`,
                 target: '.qa-DataPackLinkButton-Button',
-                position: 'bottom',
+                placement: 'bottom',
                 style: JoyRideStyles.tooltipStyle,
             },
         ]),
@@ -505,7 +505,7 @@ export const joyride = {
                     search based on name, date, and data source, and find “Featured DataPacks”.`,
                 target: '.qa-DataPackPage-Toolbar-sort',
                 style: JoyRideStyles.welcomeTooltipStyle,
-                position: 'top',
+                placement: 'top',
             },
             {
                 title: 'DataPacks',
@@ -514,14 +514,14 @@ export const joyride = {
                     or use the other search functions (explained in the following steps).`,
                 target: '.qa-DataPackPage-view',
                 style: JoyRideStyles.tooltipStyle,
-                position: 'bottom',
+                placement: 'bottom',
             },
             {
                 title: 'Text Search',
                 content: `The text search function filters across all DataPacks based on the name,
                     description, and project fields provided for each DataPack.`,
                 target: '.qa-DataPackSearchBar-TextField',
-                position: 'bottom',
+                placement: 'bottom',
                 style: JoyRideStyles.tooltipStyle,
             },
             {
@@ -530,14 +530,14 @@ export const joyride = {
                     To filter Shared DataPacks, select Shared and click on the “All Members / All Groups” link.
                     This will open the “Filter Shared DataPacks” dialog box to select specific users or groups.`,
                 target: '.qa-FilterDrawer-Drawer > div',
-                position: 'bottom',
+                placement: 'bottom',
                 style: JoyRideStyles.tooltipStyle,
             },
             {
                 title: 'DataPack Status',
                 content: 'Check the status (complete, running, error) of previously created DataPacks.',
                 target: '.qa-DataPackGridItem-CardActions',
-                position: 'bottom',
+                placement: 'bottom',
                 style: JoyRideStyles.tooltipStyle,
             },
             {
@@ -545,7 +545,7 @@ export const joyride = {
                 content: `Use this menu to navigate to the “Status & Download” page where you can download the DataPack files,
                     share the DataPack with other EventKit users, or delete the datapack.`,
                 target: '.tour-datapack-options',
-                position: 'bottom',
+                placement: 'bottom',
                 style: JoyRideStyles.tooltipStyle,
             },
             {
@@ -553,7 +553,7 @@ export const joyride = {
                 content: `Change the view of the DataPack Library,
                     options include the default map view, a “baseball card” view, and traditional table view.`,
                 target: '.qa-DataPackViewButtons-Icons',
-                position: 'bottom',
+                placement: 'bottom',
                 style: JoyRideStyles.tooltipStyle,
             },
             {
@@ -561,7 +561,7 @@ export const joyride = {
                 content: `Click here to begin creating a DataPack.
                     This will leave the DataPack Library and take you to the Create DataPack page.`,
                 target: '.qa-DataPackLinkButton-Button',
-                position: 'bottom',
+                placement: 'bottom',
                 style: JoyRideStyles.tooltipStyle,
             },
         ]),
@@ -574,7 +574,7 @@ export const joyride = {
                     search based on name, date, and data source, and find “Featured DataPacks”.`,
                 target: '.qa-DataPackPage-Toolbar-sort',
                 style: JoyRideStyles.welcomeTooltipStyle,
-                position: 'top',
+                placement: 'top',
             },
             {
                 title: 'DataPacks',
@@ -584,14 +584,14 @@ export const joyride = {
                     or use the other search functions (explained in the following steps).`,
                 target: '.qa-MapView-GridList',
                 style: JoyRideStyles.tooltipStyle,
-                position: 'right',
+                placement: 'right',
             },
             {
                 title: 'Text Search',
                 content: `The text search function filters across all DataPacks based on the name,
                     description, and project fields provided for each DataPack.`,
                 target: '.qa-DataPackSearchBar-TextField',
-                position: 'bottom',
+                placement: 'bottom',
                 style: JoyRideStyles.tooltipStyle,
             },
             {
@@ -599,8 +599,8 @@ export const joyride = {
                 content: `Filter DataPacks based on sharing permissions, date range, job status, and data sources.
                     To filter Shared DataPacks, select Shared and click on the “All Members / All Groups” link.
                     This will open the “Filter Shared DataPacks” dialog box to select specific users or groups.`,
-                target: '.qa-FilterDrawer-Drawer > div',
-                position: 'bottom',
+                target: '.qa-FilterDrawer-Drawer > div > div > div > .qa-DateFilter-div',
+                placement: 'left',
                 style: JoyRideStyles.tooltipStyle,
             },
             {
@@ -609,7 +609,7 @@ export const joyride = {
                     If a placename has an associated polygon, EventKit will return all DataPacks that intersect the polygon.
                     If the placename is a point or an MGRS coordinate, then EventKit will return all DataPacks that contain that point.`,
                 target: '.qa-SearchAOIToolbar-typeahead',
-                position: 'bottom',
+                placement: 'bottom',
                 style: JoyRideStyles.tooltipStyle,
             },
             {
@@ -619,7 +619,7 @@ export const joyride = {
                     EventKit will return all DataPacks that intersect with a spatial filter.
                     A spatial filter can be removed by clicking the “X” button.`,
                 target: '.qa-DrawAOIToolbar-div',
-                position: 'left',
+                placement: 'left',
                 style: JoyRideStyles.tooltipStyle,
             },
             {
@@ -627,14 +627,14 @@ export const joyride = {
                 content: `Use this menu to navigate to the “Status & Download” page where you can download the DataPack files,
                     share the DataPack with other EventKit users, or delete the datapack.`,
                 target: '.tour-datapack-options',
-                position: 'bottom',
+                placement: 'bottom',
                 style: JoyRideStyles.tooltipStyle,
             },
             {
                 title: 'DataPack Status',
                 content: 'Check the status (complete, running, error) of previously created DataPacks.',
                 target: '.qa-DataPackListItem-subtitle-date',
-                position: 'bottom',
+                placement: 'bottom',
                 style: JoyRideStyles.tooltipStyle,
             },
             {
@@ -642,7 +642,7 @@ export const joyride = {
                 content: `Change the view of the DataPack Library, options include the default map view,
                     a “baseball card” view, and traditional table view.`,
                 target: '.qa-DataPackViewButtons-Icons',
-                position: 'bottom',
+                placement: 'bottom',
                 style: JoyRideStyles.tooltipStyle,
             },
             {
@@ -650,7 +650,7 @@ export const joyride = {
                 content: `Click here to begin creating a DataPack.
                     This will leave the DataPack Library and take you to the Create DataPack page.`,
                 target: '.qa-DataPackLinkButton-Button',
-                position: 'bottom',
+                placement: 'bottom',
                 style: JoyRideStyles.tooltipStyle,
 
             },
@@ -664,35 +664,35 @@ export const joyride = {
                 Here, you can create and administer groups, allowing you to share DataPacks with your team,
                 customers, community of interest, etc.`,
             target: '.qa-PageHeader',
-            position: 'top',
+            placement: 'top',
             style: JoyRideStyles.welcomeTooltipStyle,
         },
         {
             title: 'Search',
             content: 'You can search for users of EventKit by using this text search.  Search by name, username, or email.',
             target: '.qa-UserGroupsPage-search',
-            position: 'top',
+            placement: 'top',
             style: JoyRideStyles.tooltipStyle,
         },
         {
             title: 'Sort Members',
             content: 'You can sort the members list by Name, Date Joined, and Administrator status.',
             target: '.qa-UserHeader-sort',
-            position: 'top',
+            placement: 'top',
             style: JoyRideStyles.tooltipStyle,
         },
         {
             title: 'Create Group',
             content: 'You can click the New Group button to create a new group.',
             target: '.qa-UserGroupsPage-Button-create',
-            position: 'top',
+            placement: 'top',
             style: JoyRideStyles.tooltipStyle,
         },
         {
             title: 'Create Group',
             content: 'You can click the New Group button to create a new group.',
             target: '.qa-GroupsDrawer-addGroup',
-            position: 'bottom',
+            placement: 'bottom',
             style: JoyRideStyles.tooltipStyle,
         },
         {
@@ -700,7 +700,7 @@ export const joyride = {
             content: `Any group that you have Administrator rights to will appear in this section.
                 For a further explanation of Administrator rights, click on the info icon next to the “ADMINSTRATOR” label.`,
             target: '.qa-GroupsDrawer-groupsHeading',
-            position: 'bottom',
+            placement: 'bottom',
             style: JoyRideStyles.tooltipStyle,
         },
         {
@@ -708,28 +708,28 @@ export const joyride = {
             content: `From dropdown menu you can add a user to an existing group or a new group.
                 Additionally, within a group, you can grant or remove Administrator rights to a user.`,
             target: '.qa-UserRow-options',
-            position: 'bottom',
+            placement: 'bottom',
             style: JoyRideStyles.tooltipStyle,
         },
         {
             title: 'Select Individual Users',
             content: 'Click the check box to select the user you would like to add to the group. Multiple selections can be made.',
             target: '.qa-UserRow-checkbox',
-            position: 'bottom',
+            placement: 'bottom',
             style: JoyRideStyles.tooltipStyle,
         },
         {
             title: 'Select All Users',
             content: 'Clicking this checkbox selects all the users. ',
             target: '.qa-UserHeader-checkbox',
-            position: 'bottom',
+            placement: 'bottom',
             style: JoyRideStyles.tooltipStyle,
         },
         {
             title: 'Add Users to Groups',
             content: 'If multiple users are selected, the actions in this dropdown menu will apply to the set of selected users.',
             target: '.qa-UserHeader-options',
-            position: 'bottom',
+            placement: 'bottom',
             style: JoyRideStyles.tooltipStyle,
         },
         {
@@ -737,7 +737,7 @@ export const joyride = {
             content: `Any group that has been shared with you, and that you do not have administrator rights, will appear in this section.
                 For a further explanation of Member rights, click on the info button next to the “MEMBER ONLY” label.`,
             target: '.qa-GroupsDrawer-sharedGroupsHeading',
-            position: 'bottom',
+            placement: 'bottom',
             style: JoyRideStyles.tooltipStyle,
         },
     ]),
@@ -750,7 +750,7 @@ export const joyride = {
                 and have easy access to the Featured DataPacks.
                 You’ll land on this page each time you login to EventKit.`,
             target: '.qa-PageHeader',
-            position: 'top',
+            placement: 'top',
             scrollToId: 'Dashboard',
             style: JoyRideStyles.welcomeTooltipStyle,
         },
@@ -761,7 +761,7 @@ export const joyride = {
                 To view all of your notifcations and manage them, click view all,
                 or select the notification bell icon in the upper left of the screen.`,
             target: '.qa-DashboardSection-Notifications',
-            position: 'top',
+            placement: 'top',
             scrollToId: 'DashboardSectionNotifications',
             style: JoyRideStyles.tooltipStyle,
         },
@@ -771,7 +771,7 @@ export const joyride = {
                 The DataPacks are organized chronologically – meaning the first DataPack you see on the left
                 will be the most recent one you viewed`,
             target: '.qa-DashboardSection-Recently.Viewed',
-            position: 'bottom',
+            placement: 'bottom',
             scrollToId: 'DashboardSectionRecently Viewed',
             style: JoyRideStyles.tooltipStyle,
         },
@@ -781,7 +781,7 @@ export const joyride = {
                 may be relevant to a large section of the community e.g., a recent hurricane. 
                 If you want to suggest promoting one of your DataPacks, reach out to the EventKit team from the About page.`,
             target: '.qa-DashboardSection-Featured',
-            position: 'bottom',
+            placement: 'bottom',
             scrollToId: 'DashboardSectionFeatured',
             style: JoyRideStyles.tooltipStyle,
         },
@@ -791,7 +791,7 @@ export const joyride = {
                 Keep in mind that by default DataPacks expire after two weeks,
                 though you can reset the expiration as often as you need to by clicking on the DataPack and hitting the Expires field.`,
             target: '.qa-DashboardSection-My.DataPacks',
-            position: 'top',
+            placement: 'top',
             scrollToId: 'DashboardSectionMy DataPacks',
             style: JoyRideStyles.tooltipStyle,
         },

@@ -5,7 +5,7 @@ import withWidth, {isWidthUp} from '@material-ui/core/withWidth';
 import {connect} from 'react-redux';
 import axios from 'axios';
 import debounce from 'lodash/debounce';
-import Joyride, {Step, StoreHelpers} from 'react-joyride';
+import {Step, StoreHelpers} from 'react-joyride';
 
 import Map from 'ol/map';
 import View from 'ol/view';
@@ -60,6 +60,7 @@ import {useJobValidationContext} from "./context/JobValidation";
 import {useEffect} from "react";
 import {useEffectOnMount} from "../../utils/hooks/hooks";
 import MapDrawer from "./MapDrawer";
+import EventkitJoyride from "../common/JoyrideWrapper";
 
 export const WGS84 = 'EPSG:4326';
 export const WEB_MERCATOR = 'EPSG:3857';
@@ -150,7 +151,7 @@ export class ExportAOI extends React.Component<Props, State> {
     private coordinate;
     private bufferFeatures;
     private bounceBack: boolean;
-    private joyride: Joyride;
+    private joyride: any;
     private displayBoxRef;
     private helpers: StoreHelpers;
 
@@ -1067,7 +1068,7 @@ export class ExportAOI extends React.Component<Props, State> {
         return (
             <div>
                 <StepValidator {...this.props}/>
-                <Joyride
+                <EventkitJoyride
                     callback={this.callback}
                     ref={(instance) => {
                         this.joyride = instance;
@@ -1086,6 +1087,11 @@ export class ExportAOI extends React.Component<Props, State> {
                         skip: (<span>Skip</span>) as any,
                     }}
                     run={isRunning}
+                    styles={{
+                        options: {
+                            zIndex: 5000,
+                        }
+                    }}
                 />
                 <div id="map" className={css.map} style={mapStyle}>
                     <div className='basemap-tab'>

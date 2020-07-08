@@ -21,6 +21,7 @@ import NotificationGridItem from '../Notification/NotificationGridItem';
 import {updateDataCartPermissions} from '../../actions/datacartActions';
 import {joyride} from '../../joyride.config';
 import history from '../../utils/history';
+import EventkitJoyride from "../common/JoyrideWrapper";
 
 export const CUSTOM_BREAKPOINTS = {
     xl: 1920,
@@ -428,7 +429,7 @@ export class DashboardPage extends React.Component<Props, State> {
                     <CustomScrollbar
                         style={styles.customScrollbar}
                     >
-                        <Joyride
+                        <EventkitJoyride
                             callback={this.callback}
                             ref={instance => {
                                 this.joyride = instance;
@@ -453,13 +454,13 @@ export class DashboardPage extends React.Component<Props, State> {
                                 skip: (<span>Skip</span>),
                             }}
                             run={this.state.isRunning}
-                            styles={{
-                                options: {
-                                    overlayColor: colors.primary,
-                                    backgroundColor: colors.primary,
-                                    primaryColor: colors.white,
-                                },
-                            }}
+                            // styles={{
+                            //     options: {
+                            //         overlayColor: colors.primary,
+                            //         backgroundColor: colors.primary,
+                            //         primaryColor: colors.white,
+                            //     },
+                            // }}
                         />
                         {this.state.loadingPage ?
                             null

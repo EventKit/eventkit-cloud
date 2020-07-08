@@ -11,6 +11,7 @@ import { joyride } from '../../joyride.config';
 import {isZoomLevelInRange, supportsZoomLevels} from "../../utils/generic";
 import InfoDialog from "../Dialog/InfoDialog";
 import {Link} from "@material-ui/core";
+import EventkitJoyride from "../common/JoyrideWrapper";
 
 const jss = (theme: Eventkit.Theme & Theme) => createStyles({
     root: {
@@ -264,7 +265,7 @@ export class ExportSummary extends React.Component<Props, State> {
 
         return (
             <div id="root" className={classes.root}>
-                <Joyride
+                <EventkitJoyride
                     callback={this.callback}
                     ref={(instance) => { this.joyride = instance; }}
                     steps={steps}
