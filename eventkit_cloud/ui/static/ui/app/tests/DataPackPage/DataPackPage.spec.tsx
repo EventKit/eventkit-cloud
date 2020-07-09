@@ -601,7 +601,7 @@ describe('DataPackPage component', () => {
                 <DataPackList
                     {...commonProps}
                     onSort={instance.handleSortChange}
-                    order={queryString.parse(props.location.search).order}
+                    order={queryString.parse(props.location.search).order as string}
                 />
             ),
         );

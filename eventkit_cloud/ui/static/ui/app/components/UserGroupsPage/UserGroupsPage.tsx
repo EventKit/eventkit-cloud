@@ -380,7 +380,7 @@ export class UserGroupsPage extends React.Component<Props, State> {
         return `${group.name} Members`;
     }
 
-    private makeUserRequest(options = {groups: null, ordering: null, search: null}) {
+    private makeUserRequest(options = {groups: null, ordering: null, search: null} as any) {
         const params = queryString.parse(this.props.location.search);
 
         if (options.search === undefined && params.search) {
@@ -410,8 +410,11 @@ export class UserGroupsPage extends React.Component<Props, State> {
             params.groups = options.groups;
         }
 
-        params.prepend_self = true;
-        this.props.getUsers(params);
+        this.props.getUsers({
+            ...params,
+            // typescript complains if we try to assign preprend_self directly on params.
+            prepend_self: true
+        });
     }
 
     private toggleDrawer() {
@@ -1000,7 +1003,7 @@ export class UserGroupsPage extends React.Component<Props, State> {
                             onSelect={this.handleSelectAll}
                             selectedUsers={this.state.selectedUsers}
                             selectedGroup={queryGroup}
-                            orderingValue={queryString.parse(this.props.location.search).ordering || 'username'}
+                            orderingValue={queryString.parse(this.props.location.search).ordering as string || 'username'}
                             handleOrderingChange={this.handleOrderingChange}
                             handleRemoveUsers={this.handleBatchRemoveUser}
                             handleNewGroup={this.handleNewGroup}
