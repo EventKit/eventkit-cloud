@@ -29,26 +29,14 @@ describe('DataPackGrid component', () => {
 
     beforeEach(setup);
 
-    it('should render a DataPackGridItem for each runId', () => {
-        const getColumnSpy = sinon.spy(DataPackGrid.prototype, 'getColumns');
-        setup();
-        expect(wrapper.find(GridList)).toHaveLength(1);
-        expect(wrapper.find(DataPackGridItem)).toHaveLength(3);
-        expect(getColumnSpy.calledOnce).toBe(true);
-        getColumnSpy.restore();
-    });
-
     it('getColumns should return 2, 3, or 4 depending on screensize', () => {
         wrapper.setProps({ width: 'sm' });
-        let cols = instance.getColumns();
-        expect(cols).toEqual(2);
+        expect(wrapper.find(GridList).props().cols).toEqual(2);
 
         wrapper.setProps({ width: 'lg' });
-        cols = instance.getColumns();
-        expect(cols).toEqual(3);
+        expect(wrapper.find(GridList).props().cols).toEqual(3);
 
         wrapper.setProps({ width: 'xl' });
-        cols = instance.getColumns();
-        expect(cols).toEqual(4);
+        expect(wrapper.find(GridList).props().cols).toEqual(4);
     });
 });

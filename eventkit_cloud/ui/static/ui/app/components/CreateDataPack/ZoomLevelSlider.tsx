@@ -131,7 +131,7 @@ export function ZoomLevelSlider(props: Props) {
                         value={maxZoom}
                         aria-labelledby="label"
                         onChange={(e, v) => setMaxZoom(Number(v))}
-                        onDragEnd={() => updateMax(null, maxZoom)}
+                        onChangeCommitted={() => updateMax(null, maxZoom)}
                         min={props.minZoom}
                         max={props.maxZoom}
                         step={1}
