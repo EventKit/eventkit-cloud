@@ -62,8 +62,8 @@ interface Props {
     };
     processGeoJSONFile: (file: File) => void;
     resetGeoJSONFile: () => void;
-    setOrder: (order: string) => void;
-    setView: (view: string) => void;
+    setOrder: (order: string | string[]) => void;
+    setView: (view: string | string[]) => void;
     providers: Eventkit.Provider[];
     formats: Eventkit.Format[];
     projections: Eventkit.Projection[];
@@ -319,7 +319,7 @@ export class DataPackPage extends React.Component<Props, State> {
                     <DataPackList
                         {...commonProps}
                         onSort={this.handleSortChange}
-                        order={queryString.parse(this.props.location.search).order}
+                        order={queryString.parse(this.props.location.search).order as string}
                         // ref={ref => this.getViewRef(ref)}
                     />
                 );
@@ -453,7 +453,7 @@ export class DataPackPage extends React.Component<Props, State> {
 
     private changeView(view: string) {
         const sharedViewOrders = ['started_at', '-started_at', 'job__name', '-job__name', '-job__featured', 'job__featured'];
-        if (sharedViewOrders.indexOf(queryString.parse(this.props.location.search).order) < 0) {
+        if (sharedViewOrders.indexOf(queryString.parse(this.props.location.search).order as string) < 0) {
             this.updateLocationQuery({view, order: '-started_at'});
         } else {
             this.updateLocationQuery({view});
@@ -713,14 +713,14 @@ export class DataPackPage extends React.Component<Props, State> {
                     <DataPackSearchbar
                         onSearchChange={this.checkForEmptySearch}
                         onSearchSubmit={this.onSearch}
-                        defaultValue={queryString.parse(this.props.location.search).search}
+                        defaultValue={queryString.parse(this.props.location.search).search as string}
                     />
                 </Toolbar>
 
                 <Toolbar className="qa-DataPackPage-Toolbar-sort" style={styles.toolbarSort}>
                     <DataPackOwnerSort
                         handleChange={this.handleOwnerFilter}
-                        value={queryString.parse(this.props.location.search).collection || 'all'}
+                        value={queryString.parse(this.props.location.search).collection as string || 'all'}
                         owner={this.props.user.data.user.username}
                     />
                     <DataPackFilterButton
@@ -732,12 +732,12 @@ export class DataPackPage extends React.Component<Props, State> {
                         :
                         <DataPackSortDropDown
                             handleChange={this.handleSortChange}
-                            value={queryString.parse(this.props.location.search).order || '-job__featured'}
+                            value={queryString.parse(this.props.location.search).order as string || '-job__featured'}
                         />
                     }
                     <DataPackViewButtons
                         handleViewChange={this.changeView}
-                        view={queryString.parse(this.props.location.search).view || 'map'}
+                        view={queryString.parse(this.props.location.search).view as string || 'map'}
                     />
                 </Toolbar>
 
@@ -764,7 +764,7 @@ export class DataPackPage extends React.Component<Props, State> {
                                 </div>
                                 : null
                             }
-                            {this.getView(queryString.parse(this.props.location.search).view)}
+                            {this.getView(queryString.parse(this.props.location.search).view as string)}
                         </div>
                     }
                 </div>
