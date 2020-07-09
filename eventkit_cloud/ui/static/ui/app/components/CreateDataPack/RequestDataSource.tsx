@@ -13,7 +13,7 @@ import {
 import {isWidthUp} from "@material-ui/core/withWidth";
 import withWidth from "@material-ui/core/withWidth/withWidth";
 import {Breakpoint} from "@material-ui/core/styles/createBreakpoints";
-import {useAsyncRequest} from "../../utils/hooks/api";
+import {ApiStatuses, useAsyncRequest} from "../../utils/hooks/api";
 
 interface Props {
     open: boolean;
@@ -115,7 +115,7 @@ export function RequestDataSource(props: Props) {
         const infoMessage = "Please provide a link to the service and the specific layers that you need." +
             "  Additionally please provide a description of the service, if the link does not provide one.";
         const getDisplayProps = (field) => {
-            const submitted = status === 'success';
+            const submitted = status === ApiStatuses.hookActions.SUCCESS;
             const displayValue = field.value;
             return {
                 value: (submitted) ? displayValue || ' ' : undefined,
@@ -138,7 +138,7 @@ export function RequestDataSource(props: Props) {
                     id="mainHeading"
                     className={`qa-RequestDataSource-heading ${classes.heading} ${status ? classes.submittedHeading : ''}`}
                 >
-                    {status !== 'success' ? infoMessage : (
+                    {status !== ApiStatuses.hookActions.SUCCESS ? infoMessage : (
                         <>
                             <p>
                                 Request successfully submitted.
@@ -150,7 +150,7 @@ export function RequestDataSource(props: Props) {
                     )}
                 </div>
                 {/*The conditional can be removed here if we want to show a user what data they submitted.*/}
-                {status !== 'success' && (<>
+                {status !== ApiStatuses.hookActions.SUCCESS && (<>
                     <div className={classes.entryRow}>
                         <strong className={classes.left}>Source Name:</strong>
                         <div className={classes.right}>
@@ -252,7 +252,7 @@ export function RequestDataSource(props: Props) {
                 margin: '10px',
             }
         }
-        if (!status) {
+        if (status === ApiStatuses.hookActions.NOT_FIRED) {
             // Status is undefined, meaning we haven't submitted anything yet, so we need the submit button to display
             dialogProps['actions'] = [(
                 <Button
@@ -291,11 +291,11 @@ export function RequestDataSource(props: Props) {
             {...getDialogProps()}
         >
             <div className={`${!isSmallScreen() ? classes.outerContainer : classes.outerContainerSm}`}>
-                {(!status || status === 'success') && renderMainBody()}
-                {status === 'pending' && (
+                {(status === ApiStatuses.hookActions.NOT_FIRED || status === ApiStatuses.hookActions.SUCCESS) && renderMainBody()}
+                {status === ApiStatuses.hookActions.FETCHING && (
                     <CircularProgress size={50}/>
                 )}
-                {status === 'error' && renderErrorMessage()}
+                {status === ApiStatuses.hookActions.ERROR && renderErrorMessage()}
             </div>
         </BaseDialog>
     );

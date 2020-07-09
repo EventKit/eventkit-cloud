@@ -90,6 +90,7 @@ const jss = (theme: Eventkit.Theme & Theme) => createStyles({
         position: 'absolute',
         width: '100%',
         bottom: 0,
+        left: 0,
         padding: '21px 0px',
     },
 });

@@ -101,6 +101,7 @@ var config = {
                     options: {
                         limit: 100000,
                         name: 'images/[hash].[ext]',
+                        esModule: false,
                     },
                 },
             }
