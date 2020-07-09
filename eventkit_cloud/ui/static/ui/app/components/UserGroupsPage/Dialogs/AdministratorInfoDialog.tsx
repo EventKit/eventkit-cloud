@@ -9,13 +9,10 @@ export interface Props {
 
 export class AdministratorInfoDialog extends React.Component<Props, {}> {
     render() {
-        if (!this.props.show) {
-            return null;
-        }
 
         return (
             <BaseDialog
-                show
+                show={this.props.show}
                 onClose={this.props.onClose}
                 title="ADMINISTRATOR GROUPS"
                 className="qa-AdministratorInfoDialog"

@@ -23,10 +23,4 @@ describe('AdministratorInfoDialog component', () => {
         const body = shallow(wrapper.find(BaseDialog).children());
         expect(body.find('.qa-AdministratorInfoDialog-body')).toHaveLength(1);
     });
-
-    it('should return null', () => {
-        props.show = false;
-        const wrapper = shallow(<AdministratorInfoDialog {...props} />);
-        expect(wrapper.find(BaseDialog)).toHaveLength(0);
-    });
 });
