@@ -274,55 +274,55 @@ export function GroupsDrawer(props: Props) {
                 onChange={handleChange}
             >
                 <Tab
-                    style={{width: '32%'}}
+                    style={{width: '32%', display: 'grid'}}
                     value="admin"
                     classes={{
                         root: classes.tab,
                         selected: classes.selected,
                     }}
                     label={(
-                        <span style={{display: "inline"}}>
+                        <>
                             <div><strong>Admin</strong></div>
                             {/*<div style={{fontStyle: 'italic', color: 'grey'}}>*/}
                             {/* TODO: figure out how to display response.totalGroup count here*/}
                             {/*({props.ownedGroupsCount})*/}
                             {/*({props.total})*/}
                             {/*</div>*/}
-                        </span>
+                        </>
                     )}
                 />
                 <Tab
-                    style={{width: '32%'}}
+                    style={{width: '32%', display: 'grid'}}
                     value="member"
                     classes={{
                         root: classes.tab,
                         selected: classes.selected,
                     }}
                     label={(
-                        <span style={{display: "inline"}}>
+                        <>
                             <div><strong>Member</strong></div>
                             {/*<div style={{fontStyle: 'italic', color: 'grey'}}>*/}
                             {/*({props.sharedGroupsCount})*/}
                             {/*({props.total})*/}
                             {/*</div>*/}
-                        </span>
+                        </>
                     )}
                 />
                 <Tab
-                    style={{width: '32%'}}
+                    style={{width: '32%', display: 'grid'}}
                     value="none"
                     classes={{
                         root: classes.tab,
                         selected: classes.selected,
                     }}
                     label={(
-                        <span style={{display: "inline"}}>
+                        <>
                             <div><strong>Other</strong></div>
                             {/*<div style={{fontStyle: 'italic', color: 'grey'}}>*/}
                             {/*({props.otherGroupsCount})*/}
                             {/*({props.total})*/}
                             {/*</div>*/}
-                        </span>
+                        </>
                     )}
                 />
             </Tabs>

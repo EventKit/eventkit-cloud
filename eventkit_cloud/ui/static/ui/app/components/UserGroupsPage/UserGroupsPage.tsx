@@ -866,8 +866,6 @@ export class UserGroupsPage extends React.Component<Props, State> {
         }
     }
 
-
-
     render() {
         const {colors} = this.props.theme.eventkit;
         const {classes} = this.props;
