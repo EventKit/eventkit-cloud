@@ -1,5 +1,5 @@
 
-import { getHeaderPageInfo } from '../utils/generic';
+import {getGroupCategories, getHeaderPageInfo} from '../utils/generic';
 
 export const types = {
     FETCHING_GROUPS: 'FETCHING_GROUPS',
@@ -32,10 +32,76 @@ export function getGroups(params, append = false) {
         onSuccess: (response) => {
             // get the total count from the header
             const totalGroups = Number(response.headers['total-groups']);
+            const { ownedGroups, sharedGroups, otherGroups } = getGroupCategories(response);
             const { nextPage, range } = getHeaderPageInfo(response);
             return {
                 groups: response.data,
                 total: totalGroups,
+                ownedGroups,
+                sharedGroups,
+                otherGroups,
+                range,
+                nextPage,
+            };
+        },
+    };
+}
+
+export function getCollectiveGroups(params, append = false) {
+    return {
+        types: [
+            types.FETCHING_GROUPS,
+            types.FETCHED_GROUPS,
+            types.FETCH_GROUPS_ERROR,
+        ],
+        url: '/api/groups',
+        method: 'GET',
+        params,
+        payload: { append },
+        getCancelSource: state => state.groups.cancelSource,
+        cancellable: true,
+        onSuccess: (response) => {
+            // get the total count from the header
+            const totalGroups = Number(response.headers['total-groups']);
+            const { ownedGroups, sharedGroups, otherGroups } = getGroupCategories(response);
+            // const { nextPage, range } = getHeaderPageInfo(response);
+            return {
+                // groups: response.data,
+                total: totalGroups,
+                ownedGroups,
+                sharedGroups,
+                otherGroups,
+                // range,
+                // nextPage,
+            };
+        },
+    };
+}
+
+export function getOneGroup(params, append = false) {
+    return {
+        types: [
+            types.FETCHING_GROUPS,
+            types.FETCHED_GROUPS,
+            types.FETCH_GROUPS_ERROR,
+        ],
+        url: '/api/groups',
+        method: 'GET',
+        params,
+        payload: { append },
+        getCancelSource: state => state.groups.cancelSource,
+        cancellable: true,
+        onSuccess: (response) => {
+            // get the total count from the header
+            const totalGroups = Number(response.headers['total-groups']);
+            const { nextPage, range } = getHeaderPageInfo(response);
+            // const { ownedGroups, sharedGroups, otherGroups } = getGroupCategories(response);
+            return {
+                groups: response.data,
+                total: totalGroups,
+                // ownedGroups,
+                // sharedGroups,
+                // otherGroups,
                 range,
                 nextPage,
             };
