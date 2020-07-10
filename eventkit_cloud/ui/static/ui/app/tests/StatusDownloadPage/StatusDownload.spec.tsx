@@ -171,7 +171,7 @@ describe('StatusDownload component', () => {
         nextProps.runIds = [exampleRun.uid];
         wrapper.setProps(nextProps);
         expect(wrapper.find(DataCartDetails)).toHaveLength(1);
-        expect(wrapper.find(Joyride)).toHaveLength(1);
+
     });
 
     it('should render a loading icon if data has not been received yet', () => {

@@ -144,7 +144,7 @@ describe('UserGroupsPage component', () => {
         expect(wrapper.find(LeaveGroupDialog)).toHaveLength(1);
         expect(wrapper.find(DeleteGroupDialog)).toHaveLength(1);
         expect(wrapper.find(BaseDialog)).toHaveLength(1);
-        expect(wrapper.find(Joyride)).toHaveLength(1);
+
         expect(wrapper.find(Help)).toHaveLength(1);
     });
 

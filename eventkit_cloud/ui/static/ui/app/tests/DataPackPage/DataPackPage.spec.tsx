@@ -147,7 +147,7 @@ describe('DataPackPage component', () => {
         expect(wrapper.find(DataPackSortDropDown)).toHaveLength(1);
         expect(wrapper.find(DataPackViewButtons)).toHaveLength(1);
         expect(wrapper.find(FilterDrawer)).toHaveLength(1);
-        expect(wrapper.find(Joyride)).toHaveLength(1);
+
         expect(wrapper.find(Help)).toHaveLength(1);
         // Should show loading before datapacks have been fetched
         expect(wrapper.find(PageLoading)).toHaveLength(1);

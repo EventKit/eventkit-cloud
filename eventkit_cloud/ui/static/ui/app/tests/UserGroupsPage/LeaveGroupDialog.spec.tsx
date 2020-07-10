@@ -1,8 +1,7 @@
 import * as React from 'react';
 import * as sinon from 'sinon';
-import {createShallow} from '@material-ui/core/test-utils';
-import {render, screen} from '@testing-library/react';
 import {LeaveGroupDialog} from '../../components/UserGroupsPage/Dialogs/LeaveGroupDialog';
+import {render, screen} from '@testing-library/react';
 
 jest.mock("../../components/Dialog/BaseDialog", () => {
     const React = require('react');
@@ -10,11 +9,6 @@ jest.mock("../../components/Dialog/BaseDialog", () => {
 });
 
 describe('LeaveGroupDialog component', () => {
-    let shallow;
-
-    beforeAll(() => {
-        shallow = createShallow();
-    });
 
     const props = {
         show: true,
