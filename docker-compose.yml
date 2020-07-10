@@ -5,6 +5,8 @@ services:
       context: .
       dockerfile: config/Dockerfile
     image: eventkit/eventkit-base:1.7.0
+    hostname: eventkit
+    container_name: eventkit
     volumes:
       - ./:/var/lib/eventkit/
     user: eventkit
@@ -65,6 +67,8 @@ services:
       - "${SITE_NAME}:${SITE_IP}"
   map:
     image: eventkit/eventkit-base:1.7.0
+    hostname: map
+    container_name: map
     volumes:
       # using the root directory here will break mapproxy tile locks.
       - ./scripts:/var/lib/eventkit/scripts
@@ -105,6 +109,8 @@ services:
       - "${SITE_NAME}:${SITE_IP}"
   celery:
     image: eventkit/eventkit-base:1.7.0
+    hostname: celery
+    container_name: celery
     volumes:
       - ./:/var/lib/eventkit/
       - ./scripts/run-celery.sh:/home/eventkit/miniconda3/envs/eventkit-cloud/lib/python3.6/site-packages/scripts/run-celery.sh
@@ -151,12 +157,16 @@ services:
     command: /home/eventkit/miniconda3/envs/eventkit-cloud/lib/python3.6/site-packages/scripts/run-celery.sh
   memcached:
     image: eventkit/eventkit-base:1.7.0
+    hostname: memcached
+    container_name: memcached
     expose:
       - "11211"
     entrypoint: >
       /bin/bash -c "source activate eventkit-cloud && memcached -m 2048"
   celery-beat:
     image: eventkit/eventkit-base:1.7.0
+    hostname: celery-beat
+    container_name: celery-beat
     volumes:
       - ./:/var/lib/eventkit/
       - ./scripts/run-celery-beat.sh:/home/eventkit/miniconda3/envs/eventkit-cloud/lib/python3.6/site-packages/scripts/run-celery-beat.sh
@@ -192,6 +202,8 @@ services:
     command: /home/eventkit/miniconda3/envs/eventkit-cloud/lib/python3.6/site-packages/scripts/run-celery-beat.sh
   postgis:
     image: kartoza/postgis:11.5-2.5
+    hostname: postgis
+    container_name: postgis
     environment:
       - POSTGRES_USER=eventkit
       - POSTGRES_PASS=eventkit_exports
@@ -203,11 +215,15 @@ services:
       - "postgis_database:/var/lib/postgresql"
   rabbitmq:
     image: rabbitmq:3.6.6-management
+    hostname: rabbitmq
+    container_name: rabbitmq
     expose:
       - "5672"
       - "15672"
   mkdocs:
     image: cfinfrastructure/mkdocs
+    hostname: mkdocs
+    container_name: mkdocs
     working_dir: /build
     volumes:
       - ./mkdocs.yml:/build/mkdocs.yml
@@ -217,6 +233,8 @@ services:
     # run the development server: docker-compose run --rm -p 8000:8000 mkdocs mkdocs serve -a 0.0.0.0:8000
   httpd:
     image: httpd:2.4.23
+    hostname: httpd
+    container_name: httpd
     volumes:
       - ./config/eventkit-docker.conf:/usr/local/apache2/conf/httpd.conf
       - ./eventkit_cloud:/var/lib/eventkit/eventkit_cloud
@@ -236,6 +254,8 @@ services:
       - LOG_LEVEL=warn
   flower:
     image: eventkit/eventkit-base:1.7.0
+    hostname: flower
+    container_name: flower
     volumes:
       - ./:/var/lib/eventkit/
     user: eventkit
@@ -267,6 +287,8 @@ services:
     build:
       context: .
       dockerfile: config/Dockerfile_webpack
+    hostname: webpack
+    container_name: webpack
     volumes:
       - ./eventkit_cloud:/var/lib/eventkit/eventkit_cloud
       - ./coverage/coveralls:/var/lib/eventkit/coverage/coveralls
