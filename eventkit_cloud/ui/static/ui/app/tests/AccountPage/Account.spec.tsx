@@ -118,7 +118,6 @@ describe('Account Component', () => {
         expect(wrapper.find(CustomScrollbar)).toHaveLength(1);
         expect(wrapper.find(LicenseInfo)).toHaveLength(1);
         expect(wrapper.find(UserInfo)).toHaveLength(1);
-        expect(wrapper.find(Joyride)).toHaveLength(1);
         expect(wrapper.find(Help)).toHaveLength(1);
     });
 

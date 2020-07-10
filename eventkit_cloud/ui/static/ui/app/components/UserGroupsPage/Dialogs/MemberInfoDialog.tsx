@@ -9,13 +9,9 @@ export interface Props {
 
 export class MemberInfoDialog extends React.Component<Props, {}> {
     render() {
-        if (!this.props.show) {
-            return null;
-        }
-
         return (
             <BaseDialog
-                show
+                show={this.props.show}
                 onClose={this.props.onClose}
                 title="MEMBER GROUPS"
                 className="qa-MemberInfoDialog"

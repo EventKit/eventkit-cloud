@@ -13,6 +13,7 @@ import ExportInfo from '../../components/CreateDataPack/ExportInfo';
 import ExportSummary from '../../components/CreateDataPack/ExportSummary';
 import * as utils from '../../utils/mapUtils';
 import history from '../../utils/history';
+import {Fab} from "@material-ui/core";
 
 const providers = [
     {
@@ -283,15 +284,15 @@ describe('BreadcrumbStepper component', () => {
 
     it('getButtonContent should return the correct content for each stepIndex', () => {
         let content = mount(wrapper.instance().getButtonContent(0));
-        expect(content.find(Button)).toHaveLength(1);
+        expect(content.find(Fab)).toHaveLength(1);
         expect(content.find(NavigationArrowForward)).toHaveLength(1);
 
         content = mount(wrapper.instance().getButtonContent(1));
-        expect(content.find(Button)).toHaveLength(1);
+        expect(content.find(Fab)).toHaveLength(1);
         expect(content.find(NavigationArrowForward)).toHaveLength(1);
 
         content = mount(wrapper.instance().getButtonContent(2));
-        expect(content.find(Button)).toHaveLength(1);
+        expect(content.find(Fab)).toHaveLength(1);
         expect(content.find(NavigationCheck)).toHaveLength(1);
 
         content = mount(wrapper.instance().getButtonContent(3));
@@ -306,7 +307,7 @@ describe('BreadcrumbStepper component', () => {
         expect(content.find(NavigationArrowBack)).toHaveLength(1);
 
         content = mount(wrapper.instance().getPreviousButtonContent(2));
-        expect(content.find(Button)).toHaveLength(1);
+        expect(content.find(Fab)).toHaveLength(1);
         expect(content.find(NavigationArrowBack)).toHaveLength(1);
 
         content = mount(wrapper.instance().getPreviousButtonContent(3));

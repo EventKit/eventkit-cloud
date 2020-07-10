@@ -86,7 +86,7 @@ interface Props {
 }
 
 
-function CreateDataPackButton(props: Props) {
+export function CreateDataPackButton(props: Props) {
     const {fontSize, providerTaskUids, classes, theme} = props;
     const {run} = useRunContext();
 

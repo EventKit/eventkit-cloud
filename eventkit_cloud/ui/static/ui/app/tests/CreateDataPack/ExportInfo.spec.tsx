@@ -177,7 +177,7 @@ describe('ExportInfo component', () => {
         expect(wrapper.find('.qa-ExportInfo-projectionHeader').text()).toEqual('Select Projection');
         expect(wrapper.find('.qa-ExportInfo-projections').find(Checkbox)).toHaveLength(2);
         expect(wrapper.find(MapCard)).toHaveLength(1);
-        expect(wrapper.find(Joyride)).toHaveLength(1);
+
     });
 
     it('componentDidMount should setNextDisabled, setArea, and add joyride steps', () => {

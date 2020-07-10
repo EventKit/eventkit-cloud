@@ -6,6 +6,12 @@ import DialogTitle from '@material-ui/core/DialogTitle';
 import DialogContent from '@material-ui/core/DialogContent';
 import DialogActions from '@material-ui/core/DialogActions';
 import { BaseDialog } from '../../components/Dialog/BaseDialog';
+import {render, screen} from '@testing-library/react';
+
+jest.mock("@material-ui/core/DialogActions", () => {
+    const React = require('react');
+    return (props) => (<div id="dialogactions">{props.children}</div>);
+});
 
 describe('BaseDialog component', () => {
     const getProps = () => ({
@@ -33,17 +39,14 @@ describe('BaseDialog component', () => {
                 className="qa-BaseDialog-Button"
                 style={{ margin: '0px' }}
                 onClick={() => {}}
-            />,
-            <Button
-                className="qa-BaseDialog-Button"
-                style={{ margin: '0px' }}
-                onClick={() => {}}
-            />,
+            >
+                Test Pass through Button
+            </Button>,
         ];
         const props = getProps();
         props.actions = actions;
-        const wrapper = getWrapper(props);
-        expect(wrapper.find(DialogActions).children()).toEqual(actions);
+        render(<BaseDialog {...props}/>)
+        screen.getByText('Test Pass through Button');
     });
 
     it('should give the dialog the passed in title', () => {

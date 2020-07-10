@@ -31,7 +31,7 @@ export class AdministratorInfoDialog extends React.Component<Props, {}> {
                         </ul>
                         <span>
                             You may leave any administrator group. By doing so, you opt out of notifications, data, and your admin rights.
-                            If there are no other administrators you must appoint one before leaving
+                            If there are no other administrators you must appoint one before leaving.
                         </span>
                     </div>
                 </div>
