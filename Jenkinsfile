@@ -88,13 +88,13 @@ END
                 withEnv([
                     "BASE_URL=http://cloud.eventkit.test:6080",
                     "SITE_NAME=cloud.eventkit.test",
-                    "SITE_IP=127.0.0.1"
+                    "SITE_IP=127.0.0.1",
+                    "SSL_VERIFICATION=False"
                 ]) {
                     sh "docker-compose run --rm -T eventkit manage.py migrate"
                     sh "docker-compose run --rm -T eventkit manage.py loaddata admin_user osm_provider datamodel_presets"
                     sh "docker-compose up -d"
                     sh "docker-compose exec -T eventkit bash -c 'source activate eventkit-cloud && manage.py run_integration_tests'"
-                    sh "docker-compose run --rm -T eventkit manage.py run_integration_tests"
                 }
                 postStatus(getSuccessStatus("All tests passed!"))
         }catch(Exception e) {

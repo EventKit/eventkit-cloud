@@ -77,8 +77,8 @@ class TestJob(TestCase):
                 sleep(1)
         if not client:
             raise Exception(
-                "Could not login to the url: {} using username:{} or certificate:{}".format(args.url, user,
-                                                                                            certificate))
+                f"Could not login to the url: {url} using username:{user} or certificate:{certificate}"
+            )
         return client
 
     # TODO: add test_cancel_mapproxy_job
