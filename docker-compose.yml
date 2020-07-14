@@ -60,6 +60,7 @@ services:
       - TILE_CACHE_DIR
       - ROCKETCHAT_NOTIFICATIONS
       - LAND_DATA_URL
+      - BASE_URL
     extra_hosts:
       - "${SITE_NAME}:${SITE_IP}"
   map:

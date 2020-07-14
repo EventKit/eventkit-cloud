@@ -377,7 +377,7 @@ describe('updatePermissions Reducer', () => {
             },
         )).toEqual({
             updating: false,
-            updated: false,
+            updated: true,
             error: 'This is an error',
         });
     });

@@ -2,6 +2,7 @@ import * as React from 'react';
 import Checkbox from '@material-ui/core/Checkbox';
 import Warning from './Warning';
 import UserLicense from './UserLicense';
+import theme from "../../styles/eventkit_theme";
 
 const USAGE_STATEMENT = (
     <strong>You must agree to all license agreements and/or terms of use!</strong>
@@ -21,12 +22,15 @@ export class LicenseInfo extends React.Component<Props, {}> {
     }
 
     render() {
+        const { colors } = theme.eventkit;
+
         const styles = {
             checkbox: {
                 width: '24px',
                 height: '24px',
                 verticalAlign: 'middle',
                 marginRight: '10px',
+                color: colors.primary,
             },
             checkboxContainer: {
                 width: '100%',
@@ -49,7 +53,6 @@ export class LicenseInfo extends React.Component<Props, {}> {
                 <div style={styles.checkboxContainer}>
                     <Checkbox
                         className="qa-LicenseInfo-Checkbox"
-                        color="primary"
                         style={styles.checkbox}
                         disabled={allAgreedSaved}
                         checked={allAgreedUnsaved}
