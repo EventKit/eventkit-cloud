@@ -137,10 +137,7 @@ class EventKitClient(object):
         """
         url = f"{self.jobs_url}/{job_uid}/run?format=json"
 
-        response = self.client.post(
-            url,
-            headers={"X-CSRFToken": self.csrftoken, "Referer": self.create_export_url},
-        )
+        response = self.client.post(url, headers={"X-CSRFToken": self.csrftoken, "Referer": self.create_export_url},)
         if not response.ok:
             logger.error(response.content.decode())
             logger.error(url)

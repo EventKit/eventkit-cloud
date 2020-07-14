@@ -1,7 +1,5 @@
 """Provides classes for handling API requests."""
 import logging
-import sys
-import traceback
 from audit_logging.models import AuditEvent
 # -*- coding: utf-8 -*-
 from datetime import datetime, timedelta
