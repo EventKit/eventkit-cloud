@@ -759,6 +759,7 @@ def hfa_export_task(
     hfa_out_dataset = os.path.join(stage_dir, "{0}-{1}.img".format(job_name, projection))
     hfa = gdalutils.convert(fmt="hfa", input_file=hfa_in_dataset, output_file=hfa_out_dataset, task_uid=task_uid,)
 
+    result["file_extension"] = "img"
     result["file_format"] = "hfa"
     result["result"] = hfa
     result["hfa"] = hfa
