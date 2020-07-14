@@ -296,12 +296,12 @@ def progressive_kill(pid):
     :return: None.
     """
     try:
-        logger.info("Trying to kill pid {0} with SIGTERM.".format(pid))
-        os.kill(pid, signal.SIGTERM)
+        logger.info("Trying to terminate process group {0} with SIGTERM.".format(pid))
+        os.killpg(pid, signal.SIGTERM)
         sleep(5)
 
-        logger.info("Trying to kill pid {0} with SIGKILL.".format(pid))
-        os.kill(pid, signal.SIGKILL)
+        logger.info("Trying to kill process group {0} with SIGKILL.".format(pid))
+        os.killpg(pid, signal.SIGKILL)
         sleep(1)
 
     except OSError:

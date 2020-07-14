@@ -1055,8 +1055,8 @@ def mapproxy_export_task(
 
         return result
     except Exception as e:
-        logger.error("Raised exception in raster service export, %s", str(e))
-        raise Exception(e)
+        logger.error(f"Raised exception in raster service export, {e}")
+        raise e
 
 
 @app.task(name="Pickup Run", bind=True, base=UserDetailsBase)
