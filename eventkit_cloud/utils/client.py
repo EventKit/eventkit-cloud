@@ -250,7 +250,7 @@ class EventKitClient(object):
         finished = False
         response = None
         first_check = datetime.now()
-        errors = None
+        errors = []
         while not finished:
             sleep(1)
             run_url = self.runs_url.rstrip("/"), run_uid
