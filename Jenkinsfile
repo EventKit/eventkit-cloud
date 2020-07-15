@@ -106,19 +106,13 @@ END
 
 
 def postStatus(status){
-
-  def git_url = sh(returnStdout: true, script: 'git config remote.origin.url').trim()
-  if(git_url.contains('github')){
-      def status_url = getStatusURL()
-      sh "curl -b --header 'Content-Type: application/json' --request POST --data '${status}' ${status_url}"
-  }
-}
-
-
-def getStatusURL(){
     withCredentials([string(credentialsId: 'githubToken', variable: 'GITHUB_TOKEN')])  {
-        def git_sha = getGitSHA()
-        return "https://api.github.com/repos/eventkit/eventkit-cloud/statuses/${git_sha}?access_token=${GITHUB_TOKEN}"
+      def git_url = sh(returnStdout: true, script: 'git config remote.origin.url').trim()
+      if(git_url.contains('github')){
+          def status_url = getStatusURL()
+          def git_sha = getGitSHA()
+          sh "curl -b -H 'Authorization: token ${GITHUB_TOKEN}' -H 'Content-Type: application/json' --request POST --data '${status}' https://api.github.com/repos/eventkit/eventkit-cloud/statuses/${git_sha}"
+      }
     }
 }
 
