@@ -110,7 +110,7 @@ class TestJob(TestCase):
         export_provider_task = self.client.get_provider_task(uid=export_provider_task['uid'])
         self.assertEqual(export_provider_task['status'], TaskStates.CANCELED.value)
 
-        run = self.client.wait_for_run(run['uid'])
+        run = self.client.wait_for_run(run['uid'], run_timeout=180)  # Shouldn't need a lot of time to stop.
         self.assertIn(run['status'], [TaskStates.CANCELED.value, TaskStates.INCOMPLETE.value])
 
         # The code here is to temporarily increase the zoom level it is commented out to be implemented in

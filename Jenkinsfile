@@ -44,11 +44,6 @@ END
             sh "chmod g+w -R ./*"
             // sh "cd conda && docker-compose up --build && cd .."
             sh "docker-compose build --no-cache"
-            // Exit 0 provided for when setup has already ran on a previous build.
-            // This could hide errors at this step but they will show up again during the tests.
-            // No use bringing up containers if integration tests aren't configured.
-            // sh "docker-compose run --rm -T eventkit manage.py runinitial setup || exit 0"
-            // sh "docker-compose up --force-recreate -d"
         }catch(Exception e) {
            handleErrors("Failed to build the docker containers.")
         }
@@ -93,7 +88,7 @@ END
                 ]) {
                     sh "docker-compose run --rm -T eventkit manage.py migrate"
                     sh "docker-compose run --rm -T eventkit manage.py loaddata admin_user osm_provider datamodel_presets"
-                    sh "docker-compose up -d"
+                    sh "docker-compose up -d --scale celery=3"
                     sh "docker-compose exec -T eventkit bash -c 'source activate eventkit-cloud && manage.py run_integration_tests'"
                 }
                 postStatus(getSuccessStatus("All tests passed!"))

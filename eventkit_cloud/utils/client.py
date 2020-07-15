@@ -270,7 +270,9 @@ class EventKitClient(object):
                 for provider_task in run_details["provider_tasks"]:
                     for task in provider_task["tasks"]:
                         if task["status"] == "FAILED":
-                            errors += [f"{type}: {message}" for type, message in task.get("errors", {}).items()]
+                            for error in task.get("errors", []):
+                                for type, message in error.items():
+                                    errors.append(f"{type}: {message}")
             if last_check - first_check > timedelta(seconds=run_timeout):
                 raise Exception("Run timeout ({}s) exceeded".format(run_timeout))
         if errors:
