@@ -2,7 +2,7 @@ import * as PropTypes from 'prop-types';
 import * as React from 'react';
 import { withTheme, Theme, withStyles, createStyles } from '@material-ui/core/styles';
 import { connect } from 'react-redux';
-import Joyride, { Step } from 'react-joyride';
+import Joyride, {Step, StoreHelpers} from 'react-joyride';
 import Paper from '@material-ui/core/Paper';
 import MapCard from '../common/MapCard';
 import CustomScrollbar from '../common/CustomScrollbar';
@@ -133,6 +133,7 @@ export class ExportSummary extends React.Component<Props, State> {
     };
 
     private joyride: Joyride;
+    private helpers: StoreHelpers;
     private infoDialogRef;
 
     constructor(props: Props) {
@@ -153,7 +154,7 @@ export class ExportSummary extends React.Component<Props, State> {
 
     componentDidUpdate(prevProps: Props) {
         if (this.props.walkthroughClicked && !prevProps.walkthroughClicked && !this.state.isRunning) {
-            this.joyride.reset(true);
+            this?.helpers.reset(true);
             this.setState({ isRunning: true });
         }
     }
@@ -181,7 +182,7 @@ export class ExportSummary extends React.Component<Props, State> {
         if (action === 'close' || action === 'skip' || type === 'finished') {
             this.setState({ isRunning: false });
             this.props.onWalkthroughReset();
-            this.joyride.reset(true);
+            this?.helpers.reset(true);
             window.location.hash = '';
         }
 
@@ -267,10 +268,10 @@ export class ExportSummary extends React.Component<Props, State> {
                     callback={this.callback}
                     ref={(instance) => { this.joyride = instance; }}
                     steps={steps}
-                    autoStart
-                    type="continuous"
+                    continuous
                     showSkipButton
-                    showStepsProgress
+                    showProgress
+                    getHelpers={(helpers: any) => {this.helpers = helpers}}
                     locale={{
                         back: (<span>Back</span>) as any,
                         close: (<span>Close</span>) as any,

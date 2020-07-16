@@ -3,7 +3,7 @@ import {connect} from 'react-redux';
 import debounce from 'lodash/debounce';
 import {withTheme, Theme} from '@material-ui/core/styles';
 import {Link} from 'react-router-dom';
-import Joyride from 'react-joyride';
+import Joyride, {StoreHelpers} from 'react-joyride';
 import Help from '@material-ui/icons/Help';
 import Paper from '@material-ui/core/Paper';
 import ButtonBase from '@material-ui/core/ButtonBase';
@@ -65,6 +65,7 @@ export class DashboardPage extends React.Component<Props, State> {
     private autoRefreshInterval: number = 10000;
     private onResize: () => void;
     private joyride;
+    private helpers: StoreHelpers;
 
     constructor(props) {
         super(props);
@@ -302,7 +303,7 @@ export class DashboardPage extends React.Component<Props, State> {
         const {action, step, type} = data;
         if (action === 'close' || action === 'skip' || type === 'finished') {
             this.setState({isRunning: false});
-            this.joyride.reset(true);
+            this?.helpers.reset(true);
             window.location.hash = '';
         }
 
@@ -314,7 +315,7 @@ export class DashboardPage extends React.Component<Props, State> {
     private handleWalkthroughClick() {
         if (this.state.isRunning) {
             this.setState({isRunning: false});
-            this.joyride.reset(true);
+            this?.helpers.reset(true);
         } else {
             const [...steps] = joyride.DashboardPage;
             this.setState({isRunning: true, steps: []});
@@ -434,10 +435,11 @@ export class DashboardPage extends React.Component<Props, State> {
                             }}
                             // @ts-ignore
                             steps={this.state.steps}
+                            getHelpers={(helpers: any) => {this.helpers = helpers}}
                             autoStart
-                            type="continuous"
+                            continuous
                             showSkipButton
-                            showStepsProgress
+                            showProgress
                             locale={{
                                 // @ts-ignore
                                 back: (<span>Back</span>),

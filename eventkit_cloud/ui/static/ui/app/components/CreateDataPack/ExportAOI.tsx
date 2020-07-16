@@ -5,7 +5,7 @@ import withWidth, {isWidthUp} from '@material-ui/core/withWidth';
 import {connect} from 'react-redux';
 import axios from 'axios';
 import debounce from 'lodash/debounce';
-import Joyride, {Step} from 'react-joyride';
+import Joyride, {Step, StoreHelpers} from 'react-joyride';
 
 import Map from 'ol/map';
 import View from 'ol/view';
@@ -152,7 +152,7 @@ export class ExportAOI extends React.Component<Props, State> {
     private bounceBack: boolean;
     private joyride: Joyride;
     private displayBoxRef;
-    private infoBarRef;
+    private helpers: StoreHelpers;
 
     constructor(props: Props) {
         super(props);
@@ -246,7 +246,7 @@ export class ExportAOI extends React.Component<Props, State> {
         }
 
         if (this.props.walkthroughClicked && !prevProps.walkthroughClicked && this.state.isRunning === false) {
-            this.joyride.reset(true);
+            this?.helpers.reset(true);
             this.setState({isRunning: true});
         }
 
@@ -929,7 +929,7 @@ export class ExportAOI extends React.Component<Props, State> {
 
             this.setState({isRunning: false, stepIndex: 0});
             this.props.onWalkthroughReset();
-            this.joyride.reset(true);
+            this.helpers.reset(true);
         } else {
             if (index === 2 && type === 'step:before') {
                 //  if there is no aoi we load some fake data
@@ -1072,12 +1072,12 @@ export class ExportAOI extends React.Component<Props, State> {
                     ref={(instance) => {
                         this.joyride = instance;
                     }}
+                    getHelpers={(helpers: any) => {this.helpers = helpers}}
                     steps={steps}
                     stepIndex={this.state.stepIndex}
-                    autoStart
-                    type="continuous"
+                    continuous
                     showSkipButton
-                    showStepsProgress
+                    showProgress
                     locale={{
                         back: (<span>Back</span>) as any,
                         close: (<span>Close</span>) as any,

@@ -4,7 +4,7 @@ import {createStyles, Theme, withStyles, withTheme} from '@material-ui/core/styl
 import {connect} from 'react-redux';
 import axios from 'axios';
 import {arrayHasValue, unsupportedFormats} from '../../utils/generic';
-import Joyride, {Step} from 'react-joyride';
+import Joyride, {Step, StoreHelpers} from 'react-joyride';
 import List from '@material-ui/core/List';
 import Paper from '@material-ui/core/Paper';
 import Popover from '@material-ui/core/Popover';
@@ -249,6 +249,7 @@ export class ExportInfo extends React.Component<Props, State> {
         config: PropTypes.object,
     };
 
+    private helpers: StoreHelpers;
     joyride;
     dataProvider;
     private bounceBack: boolean;
@@ -615,7 +616,7 @@ export class ExportInfo extends React.Component<Props, State> {
             this.resetDrawer();
             this.setState({ isRunning: false });
             this.props.onWalkthroughReset();
-            this.joyride.current.reset(true);
+            this?.helpers.reset(true);
             window.location.hash = '';
         } else {
             if (data.index === 9 && data.type === 'tooltip:before') {
@@ -694,10 +695,10 @@ export class ExportInfo extends React.Component<Props, State> {
                     callback={this.callback}
                     ref={this.joyride}
                     steps={steps}
-                    autoStart
-                    type="continuous"
+                    getHelpers={(helpers: any) => {this.helpers = helpers}}
+                    continuous
                     showSkipButton
-                    showStepsProgress
+                    showProgress
                     locale={{
                         back: (<span>Back</span>) as any,
                         close: (<span>Close</span>) as any,
