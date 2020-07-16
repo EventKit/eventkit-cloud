@@ -18,7 +18,9 @@ export const initialState = {
     ownedGroups: [],
     sharedGroups: [],
     otherGroups: [],
+    data: [],
 };
+
 export function userGroupsReducer(state = initialState, action) {
     switch (action.type) {
         case types.FETCHING_GROUPS:
@@ -26,6 +28,7 @@ export function userGroupsReducer(state = initialState, action) {
                 ...state,
                 fetching: true,
                 fetched: false,
+                data: [],
                 error: null,
                 cancelSource: action.cancelSource,
             };
@@ -34,6 +37,7 @@ export function userGroupsReducer(state = initialState, action) {
                 ...state,
                 fetching: false,
                 fetched: true,
+                data: action.groups,
                 groups: action.append ? [...state.groups, ...action.groups] : action.groups,
                 ownedGroups: action.append ? [...state.ownedGroups, ...action.ownedGroups] : action.ownedGroups,
                 sharedGroups: action.append ? [...state.sharedGroups, ...action.sharedGroups] : action.sharedGroups,
@@ -49,6 +53,7 @@ export function userGroupsReducer(state = initialState, action) {
                 ...state,
                 fetching: false,
                 fetched: false,
+                data: [],
                 groups: [],
                 error: action.error,
                 cancelSource: null,
@@ -107,6 +112,8 @@ export function userGroupsReducer(state = initialState, action) {
                 updated: false,
                 error: action.error,
             };
+        case types.FETCH_GROUPS_EMPTY:
+            return initialState;
 
         default:
             return state;

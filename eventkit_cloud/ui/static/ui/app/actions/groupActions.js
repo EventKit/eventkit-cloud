@@ -1,5 +1,4 @@
-
-import {getGroupCategories, getHeaderPageInfo} from '../utils/generic';
+import { getHeaderPageInfo } from '../utils/generic';
 
 export const types = {
     FETCHING_GROUPS: 'FETCHING_GROUPS',
@@ -14,6 +13,7 @@ export const types = {
     UPDATING_GROUP: 'UPDATING_GROUP',
     UPDATED_GROUP: 'UPDATED_GROUP',
     UPDATING_GROUP_ERROR: 'UPDATING_GROUP_ERROR',
+    FETCH_GROUPS_EMPTY: 'FETCH_GROUPS_EMPTY',
 };
 
 export function getGroups(params, append = false) {
@@ -32,14 +32,10 @@ export function getGroups(params, append = false) {
         onSuccess: (response) => {
             // get the total count from the header
             const totalGroups = Number(response.headers['total-groups']);
-            const { ownedGroups, sharedGroups, otherGroups } = getGroupCategories(response);
             const { nextPage, range } = getHeaderPageInfo(response);
             return {
                 groups: response.data,
                 total: totalGroups,
-                ownedGroups,
-                sharedGroups,
-                otherGroups,
                 range,
                 nextPage,
             };
@@ -47,37 +43,31 @@ export function getGroups(params, append = false) {
     };
 }
 
-export function getCollectiveGroups(params, append = false) {
+export function getSearchedGroups(query) {
     return {
         types: [
             types.FETCHING_GROUPS,
             types.FETCHED_GROUPS,
             types.FETCH_GROUPS_ERROR,
         ],
-        url: '/api/groups',
-        method: 'GET',
-        params,
-        payload: { append },
-        getCancelSource: state => state.groups.cancelSource,
+        getCancelSource: state => state.geocode.cancelSource,
         cancellable: true,
-        onSuccess: (response) => {
-            // get the total count from the header
-            const totalGroups = Number(response.headers['total-groups']);
-            const { ownedGroups, sharedGroups, otherGroups } = getGroupCategories(response);
-            // const { nextPage, range } = getHeaderPageInfo(response);
-            return {
-                // groups: response.data,
-                total: totalGroups,
-                ownedGroups,
-                sharedGroups,
-                otherGroups,
-                // range,
-                // nextPage,
-            };
+        url: `/api/groups?search=${query}`,
+        method: 'GET',
+        onSuccess: response => ({
+            groups: response.data || [],
+        }),
+        onError: (e) => {
+            let error = e.response.data;
+            if (!error) {
+                error = 'An unknown error has occurred';
+            }
+            return { error };
         },
     };
 }
 
+// api call for getting a permission_level-specific group ('admin', 'member', 'none')
 export function getOneGroup(params, append = false) {
     return {
         types: [
@@ -95,13 +85,9 @@ export function getOneGroup(params, append = false) {
             // get the total count from the header
             const totalGroups = Number(response.headers['total-groups']);
             const { nextPage, range } = getHeaderPageInfo(response);
-            // const { ownedGroups, sharedGroups, otherGroups } = getGroupCategories(response);
             return {
                 groups: response.data,
                 total: totalGroups,
-                // ownedGroups,
-                // sharedGroups,
-                // otherGroups,
                 range,
                 nextPage,
             };

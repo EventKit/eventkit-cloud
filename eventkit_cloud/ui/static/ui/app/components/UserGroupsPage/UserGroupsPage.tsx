@@ -201,8 +201,7 @@ export interface Props {
     otherGroups: Eventkit.Store.Groups;
     users: Eventkit.Store.Users;
     getGroups: (args: any) => void;
-    getOneGroup: (args: any) => void;
-    // nextPage: boolean;
+    getOneGroup: (args: any, append: boolean) => void;
     deleteGroup: (id: string | number) => void;
     createGroup: (name: string, usernames: string[]) => void;
     updateGroup: (id: string | number, args: any) => void;
@@ -297,13 +296,14 @@ export class UserGroupsPage extends React.Component<Props, State> {
         }
     }
 
-    async componentDidMount() {
+    componentDidMount() {
         this.makeUserRequest();
-        // TODO: is user being checked to know which groups to be displayed for the categories?
-        // make one separate api call for different groups: 'admin', 'member', 'none'
-        await this.props.getOneGroup({
-            user: this.props.user.username, page_size: this.pageSize, page: this.state.page, permission_level: 'admin'
-        });
+        this.props.getOneGroup({
+            user: this.props.user.username,
+            page_size: this.pageSize,
+            page: this.state.page,
+            permission_level: 'admin'
+        }, true);
 
         const steps = joyride.UserGroupsPage as any[];
         this.joyrideAddSteps(steps);
@@ -316,7 +316,8 @@ export class UserGroupsPage extends React.Component<Props, State> {
             changedQuery = true;
         } else {
             const keys = Object.keys(queryString.parse(this.props.location.search));
-            if (!keys.every(key => queryString.parse(this.props.location.search)[key] === queryString.parse(prevProps.location.search)[key])) {
+            if (!keys.every(key => queryString.parse(this.props.location.search)[key] === queryString.parse(
+                prevProps.location.search)[key])) {
                 changedQuery = true;
             }
         }
@@ -342,17 +343,26 @@ export class UserGroupsPage extends React.Component<Props, State> {
         }
         if (this.props.groups.updated && !prevProps.groups.updated) {
             this.makeUserRequest();
-            this.props.getGroups({disable_page: true});
+            this.props.getOneGroup({
+                page_size: this.pageSize,
+                page: this.state.page,
+            }, true);
         }
         if (this.props.groups.created && !prevProps.groups.created) {
-            this.props.getGroups({disable_page: true});
+            this.props.getOneGroup({
+                page_size: this.pageSize,
+                page: this.state.page,
+            }, true);
             if (this.state.createUsers.length) {
                 this.makeUserRequest();
                 this.setState({createUsers: []});
             }
         }
         if (this.props.groups.deleted && !prevProps.groups.deleted) {
-            this.props.getGroups({disable_page: true});
+            this.props.getOneGroup({
+                page_size: this.pageSize,
+                page: this.state.page,
+            }, true);
             const query = queryString.parse(this.props.location.search);
             if (query.groups) {
                 query.groups = null;
@@ -375,6 +385,10 @@ export class UserGroupsPage extends React.Component<Props, State> {
         if (this.props.users.error && !prevProps.users.error) {
             this.showErrorDialog(this.props.users.error);
         }
+    }
+
+    private handlePage = (page) => {
+        this.setState({page});
     }
 
     private getQueryGroup(targetGroups = null) {
@@ -429,26 +443,6 @@ export class UserGroupsPage extends React.Component<Props, State> {
 
         params.prepend_self = true;
         this.props.getUsers(params);
-    }
-
-    private getGroupsRange(groups) {
-        if (this.props.groups.range) {
-            const rangeParts = this.props.groups.range.split('/');
-            let startIndex;
-            if (this.state.page === 1) {
-                startIndex = 1;
-            } else {
-                // TODO: dynamically set start index here
-                // startIndex = parseInt(rangeParts[1]) - parseInt(rangeParts[0]);
-                startIndex = '';
-            }
-            const endIndex = '';
-            if (rangeParts.length !== 2) {
-                return '';
-            }
-            return `(${startIndex}-${rangeParts[0]} of ${rangeParts[1]})`;
-        }
-        return '';
     }
 
     private toggleDrawer() {
@@ -968,15 +962,6 @@ export class UserGroupsPage extends React.Component<Props, State> {
 
         const loadMoreDisabled = !this.props.users.nextPage;
         const loadLessDisabled = pageSize <= this.pageSize || this.pageSize >= len;
-        // adding group changes here
-        const groupsPageSize = Number(queryString.parse(this.props.location.search).page_size);
-        // const groupLen = queryGroup ? queryGroup.members.length : this.props.users.total;
-        const groupLen = this.props.groups.groups ? this.props.groups.groups.length : this.props.groups.total;
-        // const ownedGroupLen = ownedGroups.length ? ownedGroups.length : null;
-        // const sharedGroupLen = sharedGroups.length ? sharedGroups.length : null;
-        // const otherGroupLen = otherGroups.length ? otherGroups.length : null;
-
-        const groups = this.props.groups.groups.slice(0, this.pageSize);
 
         return (
             <div style={{backgroundColor: colors.white, position: 'relative'}}>
@@ -1116,8 +1101,8 @@ export class UserGroupsPage extends React.Component<Props, State> {
                     sharedGroups={sharedGroups}
                     otherGroups={otherGroups}
                     usersCount={this.props.users.total}
+                    handlePage={this.handlePage}
                     page={this.state.page}
-                    range={this.getGroupsRange(groups)}
                     onNewGroupClick={this.handleCreateOpen}
                     onAdministratorInfoClick={this.showAdministratorInfoDialog}
                     onMemberInfoClick={this.showMemberInfoDialog}
@@ -1261,7 +1246,7 @@ export class UserGroupsPage extends React.Component<Props, State> {
         this.showOtherInfoDialog = this.showOtherInfoDialog.bind(this);
         this.hideOtherInfoDialog = this.hideOtherInfoDialog.bind(this);
         this.handleJoyride = this.handleJoyride.bind(this);
-        this.getGroupsRange = this.getGroupsRange.bind(this);
+        this.handlePage = this.handlePage.bind(this);
     }
 }
 
@@ -1270,10 +1255,6 @@ function mapStateToProps(state) {
         user: state.user.data.user,
         users: state.users,
         groups: state.groups,
-        ownedGroups: state.ownedGroups,
-        sharedGroups: state.sharedGroups,
-        otherGroups: state.otherGroups,
-        // nextPage: state.groups.nextPage,
     };
 }
 

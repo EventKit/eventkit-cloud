@@ -24,25 +24,6 @@ export function getHeaderPageInfo(response) {
     return {nextPage, range};
 }
 
-export function getGroupCategories(response) {
-    const ownedGroups = [];
-    const sharedGroups = [];
-    const otherGroups = [];
-    // split the user group into groups owned by the logged in user,
-    // and groups shared with logged in user
-    const groups = response.data;
-    groups.forEach((group) => {
-        if (group.administrators.includes(response.config.params.user.username)) {
-            ownedGroups.push(group);
-        } else if (group.members.includes(response.config.params.user.username)) {
-            sharedGroups.push(group);
-        } else {
-            otherGroups.push(group);
-        }
-    });
-    return {ownedGroups, sharedGroups, otherGroups};
-}
-
 export function isMgrsString(c) {
     const coord = c.replace(/\s+/g, '');
     const MGRS = /^(\d{1,2})([C-HJ-NP-X])\s*([A-HJ-NP-Z])([A-HJ-NP-V])\s*(\d{1,5}\s*\d{1,5})$/i;

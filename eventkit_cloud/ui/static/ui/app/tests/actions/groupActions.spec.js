@@ -26,6 +26,49 @@ describe('userGroups actions', () => {
         });
     });
 
+    describe('getOneGroup action', () => {
+        it('should return the correct types', () => {
+            expect(actions.getOneGroup().types).toEqual([
+                actions.types.FETCHING_GROUPS,
+                actions.types.FETCHED_GROUPS,
+                actions.types.FETCH_GROUPS_ERROR,
+            ]);
+        });
+
+        it('getCancelSource should return the source', () => {
+            const state = { groups: { cancelSource: 'test' } };
+            expect(actions.getGroups().getCancelSource(state)).toEqual('test');
+        });
+
+        it('onSuccess should return group that has permission_level "admin"', () => {
+            const ret = {
+                data: [{
+                    id: 1213,
+                    name: 'GroupA',
+                    administrators: 'admin',
+                    members: 'admin',
+                    restricted: false,
+                }],
+                headers: {
+                    'total-groups': '12',
+                },
+            };
+            const params = {
+                page_size: 1,
+                page: 1,
+                permission_level: 'admin',
+                user: 'admin',
+            };
+            expect(actions.getOneGroup(params).params).toEqual(params);
+            expect(actions.getOneGroup().onSuccess(ret)).toEqual({
+                groups: ret.data,
+                nextPage: false,
+                range: '',
+                total: 12,
+            });
+        });
+    });
+
     describe('deleteGroup action', () => {
         it('should return the correct types', () => {
             expect(actions.deleteGroup().types).toEqual([
