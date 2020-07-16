@@ -22,6 +22,7 @@ class EventKitClient(object):
         self.jobs_url = self.base_url + "/api/jobs"
         self.runs_url = self.base_url + "/api/runs"
         self.providers_url = self.base_url + "/api/providers"
+        self.provider_tasks_url = self.base_url + "/api/provider_tasks"
 
         self.client = requests.session()
         self.client.verify = verify
@@ -49,6 +50,17 @@ class EventKitClient(object):
     def get_providers(self,):
         response = self.client.get(
             self.providers_url, headers={"X-CSRFToken": self.csrftoken, "Referer": self.create_export_url},
+        )
+        if response.status_code != 200:
+            logger.error("There was an error getting the providers.")
+            logger.error(response.text)
+            raise Exception("Unable to get providers.")
+        return response.json()
+
+    def get_provider_task(self, uid):
+        response = self.client.get(
+            f"{self.provider_tasks_url.rstrip('/')}/{uid}",
+            headers={"X-CSRFToken": self.csrftoken, "Referer": self.create_export_url},
         )
         if response.status_code != 200:
             logger.error("There was an error getting the providers.")
@@ -84,7 +96,9 @@ class EventKitClient(object):
             raise Exception("Could not search for runs with params: {}".format(params))
         return response.json()
 
-    def create_job(self, **kwargs):
+    def create_job(
+        self, name, description, project, selection, provider_tasks, tags=[], include_zipfile=True, **kwargs
+    ):
         """
         :param name: A name for the datapack.
         :param description: A description for the datapack.
@@ -98,19 +112,14 @@ class EventKitClient(object):
               }]
         :return:
         """
-        if not all(kwargs.values()):
-            for kwarg in kwargs:
-                if not kwargs[kwarg]:
-                    logger.error("Attempted to create a job without a {0}.".format(kwarg))
-                    raise Exception("Attempted to create a job without a {0}.".format(kwarg))
         data = {
-            "name": kwargs.get("name"),
-            "description": kwargs.get("description"),
-            "event": kwargs.get("project"),
-            "include_zipfile": True,
-            "selection": kwargs.get("selection"),
+            "name": name,
+            "description": description,
+            "event": project,
+            "include_zipfile": include_zipfile,
+            "selection": selection,
             "tags": [],
-            "provider_tasks": kwargs.get("provider_tasks"),
+            "provider_tasks": provider_tasks,
         }
         response = self.client.post(
             self.jobs_url, json=data, headers={"X-CSRFToken": self.csrftoken, "Referer": self.create_export_url},
@@ -118,7 +127,7 @@ class EventKitClient(object):
         if response.status_code != 202:
             logger.error("There was an error creating the job: {0}".format(kwargs.get("name")))
             logger.error(response.content.decode())
-            raise Exception("Unable to get create Job.")
+            raise Exception("Unable to create Job.")
         return response.json()
 
     def rerun_job(self, job_uid):
@@ -126,13 +135,13 @@ class EventKitClient(object):
         :param job_uid: The Job UID to rerun.
         :return:
         """
-        response = self.client.get(
-            "{0}/{1}/run".format(self.jobs_url, job_uid),
-            headers={"X-CSRFToken": self.csrftoken, "Referer": self.create_export_url},
-        )
+        url = f"{self.jobs_url}/{job_uid}/run?format=json"
+
+        response = self.client.post(url, headers={"X-CSRFToken": self.csrftoken, "Referer": self.create_export_url},)
         if not response.ok:
-            logger.error(response.json())
-        return
+            logger.error(response.content.decode())
+            logger.error(url)
+        return response.json()
 
     def get_averages(self, runs):
         """
@@ -221,15 +230,31 @@ class EventKitClient(object):
             logger.info(response.content.decode())
             raise Exception("Failed to properly delete run: {}".format(run_uid))
 
+    def delete_job(self, job_uid):
+        url = "{}/{}".format(self.jobs_url.rstrip("/"), job_uid)
+        response = self.client.delete(url, headers={"X-CSRFToken": self.csrftoken, "Referer": url})
+        if response.status_code != 204:
+            logger.info(response.status_code)
+            logger.info(response.content.decode())
+            raise Exception("Failed to properly delete job: {}".format(job_uid))
+
+    def cancel_provider(self, provider_uid):
+        url = "{}/{}".format(self.provider_tasks_url.rstrip("/"), provider_uid)
+        response = self.client.patch(url, headers={"X-CSRFToken": self.csrftoken, "Referer": url})
+        if response.status_code != 200:
+            logger.info(response.status_code)
+            logger.info(response.content.decode())
+            raise Exception("Failed to properly cancel provider task: {}".format(provider_uid))
+
     def wait_for_run(self, run_uid, run_timeout=DEFAULT_TIMEOUT):
         finished = False
         response = None
         first_check = datetime.now()
-        errors = None
+        errors = []
         while not finished:
             sleep(1)
             run_url = self.runs_url.rstrip("/"), run_uid
-            logger.info(run_url)
+            logger.debug(run_url)
             response = self.client.get(
                 "{}/{}".format(self.runs_url.rstrip("/"), run_uid), headers={"X-CSRFToken": self.csrftoken},
             )
@@ -245,15 +270,25 @@ class EventKitClient(object):
                 for provider_task in run_details["provider_tasks"]:
                     for task in provider_task["tasks"]:
                         if task["status"] == "FAILED":
-                            errors += [
-                                "{}: {}".format(k, v)
-                                for error_dict in task["errors"]
-                                for k, v in list(error_dict.items())
-                            ]
+                            for error in task.get("errors", []):
+                                for type, message in error.items():
+                                    errors.append(f"{type}: {message}")
             if last_check - first_check > timedelta(seconds=run_timeout):
                 raise Exception("Run timeout ({}s) exceeded".format(run_timeout))
         if errors:
             raise Exception("The run failed with errors: {}".format("\n".join(errors)))
+        return response[0]
+
+    def wait_for_task_pickup(self, job_uid):
+        picked_up = False
+        response = None
+        while not picked_up:
+            sleep(1)
+            response = self.client.get(
+                self.runs_url, params={"job_uid": job_uid}, headers={"X-CSRFToken": self.csrftoken}
+            ).json()
+            if response[0].get("provider_tasks"):
+                picked_up = True
         return response[0]
 
     def check_provider(self, provider_slug):

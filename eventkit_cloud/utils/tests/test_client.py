@@ -58,18 +58,16 @@ class TestClient(TestCase):
     def test_run_job(self):
         expected_response = {"runs": "runs"}
         self.mock_requests.post(self.client.jobs_url, text=json.dumps(expected_response), status_code=202)
-        job_response = self.client.create_job(name='Name', description='Description', project='Project')
+        job_response = self.client.create_job(name='Name', description='Description', project='Project',
+                                              selection=None, provider_tasks=None)
         self.assertEqual(expected_response, job_response)
 
         with self.assertRaises(Exception):
             self.mock_requests.post(self.client.jobs_url, text=json.dumps(expected_response), status_code=400)
-            self.client.create_job(name='Name', description='Description', project='Project')
+            self.client.create_job(name='Name', description='Description', project='Project',
+                                              selection=None, provider_tasks=None)
 
-        with self.assertRaises(Exception):
-            self.mock_requests.post(self.client.jobs_url, text=json.dumps(expected_response), status_code=202)
-            self.client.create_job(name=None)
-
-    def test_delete(self):
+    def test_delete_run(self):
         example_run_uid = uuid.uuid4()
         expected_status = 204
         url = "{}/{}".format(self.client.runs_url.rstrip('/'), example_run_uid)
@@ -80,6 +78,31 @@ class TestClient(TestCase):
             wrong_status = 500
             self.mock_requests.delete(url, status_code=wrong_status)
             self.client.delete_run(example_run_uid)
+
+    def test_delete_job(self):
+        example_job_uid = uuid.uuid4()
+        expected_status = 204
+        url = "{}/{}".format(self.client.jobs_url.rstrip('/'), example_job_uid)
+        self.mock_requests.delete(url, status_code=expected_status)
+        self.client.delete_job(example_job_uid)
+
+        with self.assertRaises(Exception):
+            wrong_status = 500
+            self.mock_requests.delete(url, status_code=wrong_status)
+            self.client.delete_job(example_job_uid)
+
+    def test_cancel_export_provider_task(self):
+        example_job_uid = uuid.uuid4()
+        expected_status = 200
+        url = "{}/{}".format(self.client.provider_tasks_url.rstrip('/'), example_job_uid)
+        self.mock_requests.patch(url, status_code=expected_status)
+        self.client.cancel_provider(example_job_uid)
+
+        with self.assertRaises(Exception):
+            wrong_status = 500
+            self.mock_requests.patch(url, status_code=wrong_status)
+            self.client.cancel_provider(example_job_uid)
+
 
     def test_wait_for_run(self):
         example_run_uid = uuid.uuid4()
