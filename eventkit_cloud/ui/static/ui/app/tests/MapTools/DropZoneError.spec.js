@@ -4,6 +4,11 @@ import { createShallow } from '@material-ui/core/test-utils';
 import BaseDialog from '../../components/Dialog/BaseDialog';
 import { DropZoneError } from '../../components/MapTools/DropZoneError';
 
+jest.mock("../../components/Dialog/BaseDialog", () => {
+    const React = require('react');
+    return (props) => (<div id="basedialog">{props.children}</div>);
+});
+
 describe('DropZoneError component', () => {
     let shallow;
 
@@ -32,7 +37,7 @@ describe('DropZoneError component', () => {
         nextProps.importGeom.error = 'An error has occured';
         wrapper.setProps(nextProps);
         expect(wrapper.find(BaseDialog)).toHaveLength(1);
-        const children = shallow(wrapper.find(BaseDialog).children());
+        const children = wrapper.find(BaseDialog).children()
         expect(children.find('.qa-DropZoneError-error')).toHaveLength(1);
         expect(children.find('.qa-DropZoneError-error').text()).toEqual('An error has occured');
     });
