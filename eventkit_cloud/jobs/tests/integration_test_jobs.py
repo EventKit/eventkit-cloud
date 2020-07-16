@@ -18,10 +18,16 @@ from eventkit_cloud.utils.geopackage import check_content_exists, check_zoom_lev
 logger = logging.getLogger(__name__)
 
 # Default length of time to let a single test case run.
-DEFAULT_TIMEOUT = 300
+DEFAULT_TIMEOUT = 600
 
 
 # TODO: Add arcgis-feature-service back when that is working correctly.
+# These test are designed to test a couple critical features such as the ability to run all of the various
+# provider types.  Run one provider for raster, osm, and elevation and convert it successfully.  Cancel runs.
+# Download data. Ensure there is data in downloaded file.
+# The various tests are commented out because running all of them takes a long time and the tests are fairly
+# redundant.  They are left here to provide a quick utility for a dev to test when adding a feature or debugging.
+
 class TestJob(TestCase):
     """
     Test cases for Job model
@@ -44,17 +50,18 @@ class TestJob(TestCase):
             os.makedirs(self.download_dir, mode=0o660)
         self.client = self.get_client(self.base_url, user=user, password=password, certificate=certificate,
                                       verify=verify)
-        self.selection = {"type": "FeatureCollection",
-                          "features": [
-                              {"type": "Feature",
-                               "bbox": [-71.04186, 42.34308, -71.0281, 42.35088],
-                               "geometry":
-                                   {"type": "Polygon", "coordinates":
-                                       [[[-71.04185643996556, 42.34307891013324],
-                                         [-71.02810402354902, 42.34307891013324],
-                                         [-71.02810402354902, 42.380881699101784],
-                                         [-71.04185643996556, 42.380881699101784],
-                                         [-71.04185643996556, 42.34307891013324]]]}}]}
+        self.selection ={"type": "FeatureCollection",
+                         "features": [
+                             {"type": "Feature",
+                              "bbox": [-71.04186, 42.34308, -71.0281, 42.35088],
+                              "geometry":
+                                  {"type": "Polygon", "coordinates":
+                                      [[[-71.04859415183688, 42.34438197542646],
+                                        [-71.03884066043621, 42.34438197542646],
+                                        [-71.03884066043621, 42.35148251665268],
+                                        [-71.04859415183688, 42.35148251665268],
+                                        [-71.04859415183688, 42.34438197542646]]]}}]}
+
 
     def tearDown(self):
         if os.path.exists(self.download_dir):
@@ -110,7 +117,7 @@ class TestJob(TestCase):
         export_provider_task = self.client.get_provider_task(uid=export_provider_task['uid'])
         self.assertEqual(export_provider_task['status'], TaskStates.CANCELED.value)
 
-        run = self.client.wait_for_run(run['uid'], run_timeout=180)  # Shouldn't need a lot of time to stop.
+        run = self.client.wait_for_run(run['uid'])
         self.assertIn(run['status'], [TaskStates.CANCELED.value, TaskStates.INCOMPLETE.value])
 
         # The code here is to temporarily increase the zoom level it is commented out to be implemented in
@@ -121,37 +128,37 @@ class TestJob(TestCase):
         # export_provider.save()
 
 
-    def test_osm_geopackage(self):
-        """
-        This test is to ensure that an OSM job will export a GeoPackage.
-        :returns:
-        """
-        job_data = {"name": "TestThematicGPKG", "include_zipfile": True,
-                    "description": "Test Description",
-                    "project": "TestProject", "selection": self.selection, "tags": [],
-                    "provider_tasks": [{"provider": "osm", "formats": ["gpkg"]}]}
-        self.assertTrue(self.run_job(job_data))
+    # def test_osm_geopackage(self):
+    #     """
+    #     This test is to ensure that an OSM job will export a GeoPackage.
+    #     :returns:
+    #     """
+    #     job_data = {"name": "TestThematicGPKG", "include_zipfile": True,
+    #                 "description": "Test Description",
+    #                 "project": "TestProject", "selection": self.selection, "tags": [],
+    #                 "provider_tasks": [{"provider": "osm", "formats": ["gpkg"]}]}
+    #     self.assertTrue(self.run_job(job_data))
 
-    def test_osm_sqlite(self):
-        """
-        This test is to ensure that an OSM job will export a sqlite file.
-        :returns:
-        """
-        job_data = {"name": "TestThematicSQLITE", "include_zipfile": True,
-                    "description": "Test Description",
-                    "project": "TestProject", "selection": self.selection, "tags": [],
-                    "provider_tasks": [{"provider": "osm", "formats": ["sqlite"]}]}
-        self.assertTrue(self.run_job(job_data, run_timeout=DEFAULT_TIMEOUT))
+    # def test_osm_sqlite(self):
+    #     """
+    #     This test is to ensure that an OSM job will export a sqlite file.
+    #     :returns:
+    #     """
+    #     job_data = {"name": "TestThematicSQLITE", "include_zipfile": True,
+    #                 "description": "Test Description",
+    #                 "project": "TestProject", "selection": self.selection, "tags": [],
+    #                 "provider_tasks": [{"provider": "osm", "formats": ["sqlite"]}]}
+    #     self.assertTrue(self.run_job(job_data, run_timeout=DEFAULT_TIMEOUT))
 
-    def test_osm_shp(self):
-        """
-        This test is to ensure that an OSM job will export a shp.
-        :returns:
-        """
-        job_data = {"name": "TestSHP", "description": "Test Description", "include_zipfile": True,
-                    "project": "TestProject", "selection": self.selection, "tags": [],
-                    "provider_tasks": [{"provider": "osm", "formats": ["shp"]}]}
-        self.assertTrue(self.run_job(job_data))
+    # def test_osm_shp(self):
+    #     """
+    #     This test is to ensure that an OSM job will export a shp.
+    #     :returns:
+    #     """
+    #     job_data = {"name": "TestSHP", "description": "Test Description", "include_zipfile": True,
+    #                 "project": "TestProject", "selection": self.selection, "tags": [],
+    #                 "provider_tasks": [{"provider": "osm", "formats": ["shp"]}]}
+    #     self.assertTrue(self.run_job(job_data))
 
     def test_osm_kml(self):
         """
@@ -163,35 +170,25 @@ class TestJob(TestCase):
                     "provider_tasks": [{"provider": "osm", "formats": ["kml"]}]}
         self.assertTrue(self.run_job(job_data))
 
-    def test_osm_kml(self):
-        """
-        This test is to ensure that an OSM job will export a kml file.
-        :returns:
-        """
-        job_data = {"name": "TestThematicKML", "description": "Test Description", "include_zipfile": True,
-                    "project": "TestProject", "selection": self.selection, "tags": [],
-                    "provider_tasks": [{"provider": "osm", "formats": ["kml"]}]}
-        self.assertTrue(self.run_job(job_data))
+    # def test_wms_gpkg(self):
+    #     """
+    #     This test is to ensure that an WMS job will export a gpkg file.
+    #     :returns:
+    #     """
+    #     job_data = {"name": "TestGPKG-WMS", "description": "Test Description", "include_zipfile": True,
+    #                 "project": "TestProject", "selection": self.selection, "tags": [],
+    #                 "provider_tasks": [{"provider": "eventkit-integration-test-wms", "formats": ["gpkg"]}]}
+    #     self.assertTrue(self.run_job(job_data))
 
-    def test_wms_gpkg(self):
-        """
-        This test is to ensure that an WMS job will export a gpkg file.
-        :returns:
-        """
-        job_data = {"name": "TestGPKG-WMS", "description": "Test Description", "include_zipfile": True,
-                    "project": "TestProject", "selection": self.selection, "tags": [],
-                    "provider_tasks": [{"provider": "eventkit-integration-test-wms", "formats": ["gpkg"]}]}
-        self.assertTrue(self.run_job(job_data))
-
-    def test_wmts_gpkg(self):
-        """
-        This test is to ensure that an WMTS job will export a gpkg file.
-        :returns:
-        """
-        job_data = {"name": "TestGPKG-WMTS", "description": "Test Description", "include_zipfile": True,
-                    "project": "TestProject", "selection": self.selection, "tags": [],
-                    "provider_tasks": [{"provider": "eventkit-integration-test-wmts", "formats": ["gpkg"]}]}
-        self.assertTrue(self.run_job(job_data))
+    # def test_wmts_gpkg(self):
+    #     """
+    #     This test is to ensure that an WMTS job will export a gpkg file.
+    #     :returns:
+    #     """
+    #     job_data = {"name": "TestGPKG-WMTS", "description": "Test Description", "include_zipfile": True,
+    #                 "project": "TestProject", "selection": self.selection, "tags": [],
+    #                 "provider_tasks": [{"provider": "eventkit-integration-test-wmts", "formats": ["gpkg"]}]}
+    #     self.assertTrue(self.run_job(job_data))
 
     def test_wmts_gtiff(self):
         """
@@ -203,58 +200,58 @@ class TestJob(TestCase):
                     "provider_tasks": [{"provider": "eventkit-integration-test-wmts", "formats": ["gtiff"]}]}
         self.assertTrue(self.run_job(job_data))
 
-    def test_arcgis_gpkg(self):
-        """
-        This test is to ensure that an ArcGIS job will export a gpkg file.
-        :returns:
-        """
-        job_data = {"name": "TestGPKG-Arc-Raster",
-                    "description": "Test Description",
-                    "project": "TestProject", "selection": self.selection, "tags": [], "include_zipfile": True,
-                    "provider_tasks": [{"provider": "eventkit-integration-test-arc-raster", "formats": ["gpkg"]}]}
-        self.assertTrue(self.run_job(job_data))
+    # def test_arcgis_gpkg(self):
+    #     """
+    #     This test is to ensure that an ArcGIS job will export a gpkg file.
+    #     :returns:
+    #     """
+    #     job_data = {"name": "TestGPKG-Arc-Raster",
+    #                 "description": "Test Description",
+    #                 "project": "TestProject", "selection": self.selection, "tags": [], "include_zipfile": True,
+    #                 "provider_tasks": [{"provider": "eventkit-integration-test-arc-raster", "formats": ["gpkg"]}]}
+    #     self.assertTrue(self.run_job(job_data))
 
-    def test_wfs_gpkg(self):
-        """
-        This test is to ensure that an WFS job will export a gpkg file.
-        :returns:
-        """
-        job_data = {"name": "TestGPKG-WFS", "description": "Test Description",
-                    "project": "TestProject", "selection": self.selection, "tags": [], "include_zipfile": True,
-                    "provider_tasks": [{"provider": "eventkit-integration-test-wfs", "formats": ["gpkg"]}]}
-        self.assertTrue(self.run_job(job_data))
+    # def test_wfs_gpkg(self):
+    #     """
+    #     This test is to ensure that an WFS job will export a gpkg file.
+    #     :returns:
+    #     """
+    #     job_data = {"name": "TestGPKG-WFS", "description": "Test Description",
+    #                 "project": "TestProject", "selection": self.selection, "tags": [], "include_zipfile": True,
+    #                 "provider_tasks": [{"provider": "eventkit-integration-test-wfs", "formats": ["gpkg"]}]}
+    #     self.assertTrue(self.run_job(job_data))
 
-    def test_wfs_shp(self):
-        """
-        This test is to ensure that an WFS job will export a shp file.
-        :returns:
-        """
-        job_data = {"name": "TestSHP-WFS", "description": "Test Description", "include_zipfile": True,
-                    "project": "TestProject", "selection": self.selection, "tags": [],
-                    "provider_tasks": [{"provider": "eventkit-integration-test-wfs", "formats": ["shp"]}]}
-        self.assertTrue(self.run_job(job_data, run_timeout=DEFAULT_TIMEOUT))
+    # def test_wfs_shp(self):
+    #     """
+    #     This test is to ensure that an WFS job will export a shp file.
+    #     :returns:
+    #     """
+    #     job_data = {"name": "TestSHP-WFS", "description": "Test Description", "include_zipfile": True,
+    #                 "project": "TestProject", "selection": self.selection, "tags": [],
+    #                 "provider_tasks": [{"provider": "eventkit-integration-test-wfs", "formats": ["shp"]}]}
+    #     self.assertTrue(self.run_job(job_data, run_timeout=DEFAULT_TIMEOUT))
 
-    def test_wfs_sqlite(self):
-        """
-        This test is to ensure that an WFS job will export a sqlite file.
-        :returns:
-        """
-        job_data = {"name": "TestSQLITE-WFS", "description": "Test Description", "include_zipfile": True,
-                    "project": "TestProject", "selection": self.selection, "tags": [],
-                    "provider_tasks": [{"provider": "eventkit-integration-test-wfs", "formats": ["sqlite"]}]}
-        self.assertTrue(self.run_job(job_data))
+    # def test_wfs_sqlite(self):
+    #     """
+    #     This test is to ensure that an WFS job will export a sqlite file.
+    #     :returns:
+    #     """
+    #     job_data = {"name": "TestSQLITE-WFS", "description": "Test Description", "include_zipfile": True,
+    #                 "project": "TestProject", "selection": self.selection, "tags": [],
+    #                 "provider_tasks": [{"provider": "eventkit-integration-test-wfs", "formats": ["sqlite"]}]}
+    #     self.assertTrue(self.run_job(job_data))
 
-    def test_wfs_kml(self):
-        """
-        This test is to ensure that an WFS job will export a kml file.
-        :returns:
-        """
-        job_data = {"name": "TestKML-WFS", "description": "Test Description", "include_zipfile": True,
-                    "project": "TestProject", "selection": self.selection, "tags": [],
-                    "provider_tasks": [{"provider": "eventkit-integration-test-wfs", "formats": ["kml"]}]}
-        self.assertTrue(self.run_job(job_data))
+    # def test_wfs_kml(self):
+    #     """
+    #     This test is to ensure that an WFS job will export a kml file.
+    #     :returns:
+    #     """
+    #     job_data = {"name": "TestKML-WFS", "description": "Test Description", "include_zipfile": True,
+    #                 "project": "TestProject", "selection": self.selection, "tags": [],
+    #                 "provider_tasks": [{"provider": "eventkit-integration-test-wfs", "formats": ["kml"]}]}
+    #     self.assertTrue(self.run_job(job_data))
 
-    def test_wcs_gpkg(self):
+    def test_wcs_hfa(self):
         """
         This test is to ensure that a WCS job will export a gpkg file.
         :returns:
@@ -262,7 +259,7 @@ class TestJob(TestCase):
         job_data = {"name": "TestGPKG-WCS",
                     "description": "Test Description", "include_zipfile": True,
                     "project": "TestProject", "selection": self.selection, "tags": [],
-                    "provider_tasks": [{"provider": "eventkit-integration-test-wcs", "formats": ["gpkg"]}]}
+                    "provider_tasks": [{"provider": "eventkit-integration-test-wcs", "formats": ["hfa"]}]}
         self.assertTrue(self.run_job(job_data))
 
     # def test_arcgis_feature_service(self):
@@ -290,7 +287,7 @@ class TestJob(TestCase):
                     "provider_tasks": provider_tasks,
                     "selection": self.selection,
                     "tags": []}
-        self.assertTrue(self.run_job(job_data, run_timeout=600))  # This needs more time to complete
+        self.assertTrue(self.run_job(job_data, run_timeout=1200))  # This needs more time to complete
 
     def test_all(self):
         """
@@ -301,27 +298,27 @@ class TestJob(TestCase):
         job_data = {"name": "Integration Test - Test All Test Fixtures", "description": "test", "include_zipfile": True,
                     "project": "eventkit-integration-test", "selection": self.selection,
                     "tags": [], "provider_tasks": [
-                                                   # {"provider": "eventkit-integration-test-wms",
-                                                   #  "formats": ["gpkg", "gtiff"]},
-                                                   # # {"provider": "osm-generic",
-                                                   # #  "formats": ["shp", "gpkg", "kml", "sqlite"]},
-                                                   # {"provider": "osm",
+                                                   {"provider": "eventkit-integration-test-wms",
+                                                    "formats": ["gpkg", "gtiff"]},
+                                                   # {"provider": "osm-generic",
                                                    #  "formats": ["shp", "gpkg", "kml", "sqlite"]},
-                                                   # {"provider": "eventkit-integration-test-wmts",
-                                                   #  "formats": ["gpkg", "gtiff"]},
-                                                   # {"provider": "eventkit-integration-test-arc-raster",
-                                                   #  "formats": ["gpkg", "gtiff"]},
-                                                   # {"provider": "eventkit-integration-test-wfs",
-                                                   #  "formats": ["shp", "gpkg", "kml"]},
+                                                   {"provider": "osm",
+                                                    "formats": ["shp", "gpkg", "kml", "sqlite"]},
+                                                   {"provider": "eventkit-integration-test-wmts",
+                                                    "formats": ["gpkg", "gtiff"]},
+                                                   {"provider": "eventkit-integration-test-arc-raster",
+                                                    "formats": ["gpkg", "gtiff"]},
+                                                   {"provider": "eventkit-integration-test-wfs",
+                                                    "formats": ["shp", "gpkg", "kml"]},
                                                    {"provider": "eventkit-integration-test-wcs",
-                                                    "formats": ["gtiff"]}
+                                                    "formats": ["gtiff", "hfa"]}
                                                    # {"provider": "eventkit-integration-test-arc-fs",
                                                    #  "formats": ["shp", "gpkg", "kml", "sqlite"]}
                                                    ]}
         # This is to test creating an initial job.
-        run = self.run_job(job_data, keep_job=True, run_timeout=600)  # This needs more time to complete
+        run = self.run_job(job_data, keep_job=True, run_timeout=1200)  # This needs more time to complete
         # This is to test rerunning that job.
-        run = self.run_job(job_uid=run['job']['uid'], run_timeout=600)  # This needs more time to complete
+        self.run_job(job_uid=run['job']['uid'], run_timeout=1200)  # This needs more time to complete
 
     def run_job(self, data=None, wait_for_run=True, run_timeout=DEFAULT_TIMEOUT, job_uid=None, keep_job=False):
 
@@ -397,8 +394,8 @@ def get_providers_list():
         "url": "https://basemap.nationalmap.gov:443/arcgis/services/USGSImageryOnly/MapServer/WmsServer",
         "layer": "default",
         "export_provider_type": DataProviderType.objects.using('default').get(type_name='wms'),
-        "level_from": 5,
-        "level_to": 6,
+        "level_from": 10,
+        "level_to": 10,
         "max_selection": "2000.000",
         "config": "layers:\r\n - name: default\r\n   title: imagery\r\n   sources: [default]\r\n\r\n"
                   "sources:\r\n"
@@ -427,8 +424,8 @@ def get_providers_list():
         "url": "https://basemap.nationalmap.gov/arcgis/rest/services/USGSImageryOnly/MapServer/WMTS/tile/1.0.0/USGSImageryOnly/default/default028mm/%(z)s/%(y)s/%(x)s",
         "layer": "default",
         "export_provider_type": DataProviderType.objects.using('default').get(type_name='wmts'),
-        "level_from": 5,
-        "level_to": 6,
+        "level_from": 10,
+        "level_to": 10,
         "config": "layers:\r\n - name: default\r\n   title: imagery\r\n   sources: [default]\r\n\r\n"
                   "sources:\r\n"
                   "  default:\r\n"
@@ -450,8 +447,8 @@ def get_providers_list():
         "url": "https://basemap.nationalmap.gov/arcgis/rest/services/USGSImageryOnly/MapServer",
         "layer": "default",
         "export_provider_type": DataProviderType.objects.using('default').get(type_name='arcgis-raster'),
-        "level_from": 5,
-        "level_to": 6,
+        "level_from": 10,
+        "level_to": 10,
         "config": "layers:\r\n  - name: default\r\n    title: default\r\n    sources: [default]\r\n\r\n"
                   "sources:\r\n"
                   "  default:\r\n"
@@ -490,8 +487,8 @@ def get_providers_list():
         "url": "https://elevation.nationalmap.gov/arcgis/services/3DEPElevation/ImageServer/WCSServer",
         "layer": "DEP3Elevation",
         "export_provider_type": DataProviderType.objects.using('default').get(type_name='wcs'),
-        "level_from": 0,
-        "level_to": 2,
+        "level_from": 10,
+        "level_to": 10,
         "config": "service:\r\n  scale: \"15\"\r\n  coverages: \"DEP3Elevation\"\r\nparams:\r\n  TRANSPARENT: true\r\n  FORMAT: geotiff\r\n  VERSION: '1.0.0'\r\n  CRS: 'EPSG:4326'\r\n  REQUEST: 'GetCoverage'",
     }
         #     , {

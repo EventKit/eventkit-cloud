@@ -29,11 +29,6 @@ END
         }
     }
 
-    stage("Remove volumes"){
-     // have to remove the volumes from docker because they mount stuff in jenkins
-        removeVolumes()
-    }
-
     stage("Build"){
         try{
             postStatus(getPendingStatus("Building the docker containers..."))
@@ -41,7 +36,7 @@ END
             sh "docker system prune -f"
             sh "ls -al ."
             sh "ls -al conda/*"
-            sh "chmod g+w -R ./*"
+            sh "docker-compose run --rm --user=root -T eventkit chown eventkit:eventkit ."
             // sh "cd conda && docker-compose up --build && cd .."
             sh "docker-compose build --no-cache"
         }catch(Exception e) {
@@ -67,8 +62,6 @@ END
             postStatus(getPendingStatus("Running the unit tests..."))
             sh "docker-compose run --rm -T eventkit manage.py test -v=2 --noinput eventkit_cloud"
             sh "docker-compose run --rm -T webpack npm test"
-            postStatus(getSuccessStatus("All tests passed!"))
-            sh "docker-compose down"
         }catch(Exception e) {
              sh "docker-compose logs --tail=50 eventkit webpack"
              handleErrors("Unit tests failed.")
@@ -79,19 +72,22 @@ END
     // Point to the internal django container instead at port 6080.
     stage("Run integration tests"){
         try{
-                postStatus(getPendingStatus("Running the integration tests..."))
-                withEnv([
-                    "BASE_URL=http://cloud.eventkit.test:6080",
-                    "SITE_NAME=cloud.eventkit.test",
-                    "SITE_IP=127.0.0.1",
-                    "SSL_VERIFICATION=False"
-                ]) {
-                    sh "docker-compose run --rm -T eventkit manage.py migrate"
-                    sh "docker-compose run --rm -T eventkit manage.py loaddata admin_user osm_provider datamodel_presets"
-                    sh "docker-compose up -d --scale celery=3"
-                    sh "docker-compose exec -T eventkit bash -c 'source activate eventkit-cloud && manage.py run_integration_tests'"
-                }
-                postStatus(getSuccessStatus("All tests passed!"))
+            postStatus(getPendingStatus("Running the integration tests..."))
+            withEnv([
+                "BASE_URL=http://cloud.eventkit.test:6080",
+                "SITE_NAME=cloud.eventkit.test",
+                "SITE_IP=127.0.0.1",
+                "SSL_VERIFICATION=False"
+            ]) {
+                sh "docker-compose run --rm -T eventkit manage.py migrate"
+                sh "docker-compose up -d --scale celery=3"
+                // Stop unnecessary services
+                sh "docker-compose stop flower map mkdocs"
+                sh "docker-compose run --rm -T eventkit manage.py loaddata admin_user osm_provider datamodel_presets"
+                sh "docker-compose exec -T eventkit bash -c 'source activate eventkit-cloud && manage.py run_integration_tests'"
+            }
+            postStatus(getSuccessStatus("All tests passed!"))
+            sh "docker-compose down"
         }catch(Exception e) {
             sh "docker-compose logs --tail=50"
             handleErrors("Integration tests failed.")
