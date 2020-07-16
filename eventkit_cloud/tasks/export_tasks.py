@@ -864,7 +864,7 @@ def wfs_export_task(
 
     try:
         ogr = OGR(task_uid=task_uid)
-        out = ogr.convert(file_format="GPKG", in_file=f"WFS:{url}".format(url), out_file=gpkg, params=params,)
+        out = ogr.convert(file_format="GPKG", in_file=f"WFS:{url}", out_file=gpkg, params=params,)
         result["result"] = out
         result["source"] = out
         # Check for geopackage contents; gdal wfs driver fails silently
