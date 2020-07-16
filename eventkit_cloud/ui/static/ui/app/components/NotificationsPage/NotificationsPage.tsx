@@ -1,8 +1,8 @@
 import PropTypes from 'prop-types';
 import React from 'react';
-import { connect } from 'react-redux';
-import { withTheme } from '@material-ui/core/styles';
-import withWidth, { isWidthUp } from '@material-ui/core/withWidth';
+import {connect} from 'react-redux';
+import {Theme, withTheme} from '@material-ui/core/styles';
+import withWidth, {isWidthUp} from '@material-ui/core/withWidth';
 import GridList from '@material-ui/core/GridList';
 import Paper from '@material-ui/core/Paper';
 import PageHeader from '../common/PageHeader';
@@ -11,10 +11,35 @@ import CustomScrollbar from '../common/CustomScrollbar';
 import NotificationsTable from '../Notification/NotificationsTable';
 import NotificationGridItem from '../Notification/NotificationGridItem';
 import LoadButtons from '../common/LoadButtons';
-import { getNotifications } from '../../actions/notificationsActions';
+import {clearNotifications, getNotifications} from '../../actions/notificationsActions';
+import {Breakpoint} from "@material-ui/core/styles/createBreakpoints";
 
-export class NotificationsPage extends React.Component {
-    constructor(props, context) {
+interface Props {
+    history: any;
+    notificationsData: Eventkit.Store.NotificationsData;
+    notificationsStatus: Eventkit.Store.NotificationsStatus;
+    getNotifications: (args: object) => void;
+    clearNotifications: () => void;
+    theme: Eventkit.Theme & Theme;
+    width: Breakpoint;
+}
+
+interface State {
+    loading: boolean;
+    loadingPage: boolean;
+    pageSize: number;
+}
+
+export class NotificationsPage extends React.Component<Props, State> {
+    private itemsPerPage: number;
+
+    static contextTypes = {
+        config: PropTypes.shape({
+            NOTIFICATIONS_PAGE_SIZE: PropTypes.string,
+        }),
+    };
+
+    constructor(props: Props, context) {
         super(props);
         this.refresh = this.refresh.bind(this);
         this.getGridPadding = this.getGridPadding.bind(this);
@@ -28,11 +53,15 @@ export class NotificationsPage extends React.Component {
         };
     }
 
+    async componentWillMount() {
+        await this.props.clearNotifications();
+    }
+
     componentDidMount() {
         this.refresh();
     }
 
-    componentDidUpdate(prevProps) {
+    componentDidUpdate(prevProps: Props) {
         if (this.props.notificationsStatus.fetched && !prevProps.notificationsStatus.fetched) {
             // reconsider setting state in componentDidUpdate in the future
             this.setState({  // eslint-disable-line
@@ -72,28 +101,29 @@ export class NotificationsPage extends React.Component {
         return '';
     }
 
-    refresh() {
-        this.setState({ loading: true });
-        this.props.getNotifications({ pageSize: this.state.pageSize });
+    async refresh() {
+        this.setState({loading: true});
+        await this.props.getNotifications({pageSize: this.state.pageSize});
     }
 
     handleLoadMore() {
         if (this.props.notificationsData.nextPage) {
             this.setState(prevState => ({
-                pageSize: prevState.pageSize + this.itemsPerPage,
-            }), this.refresh);
+                    pageSize: prevState.pageSize + this.itemsPerPage,
+                }), this.refresh
+            );
         }
     }
 
     render() {
-        const { colors, images } = this.props.theme.eventkit;
+        const {colors, images} = this.props.theme.eventkit;
 
         const mainAppBarHeight = 95;
         const pageAppBarHeight = 35;
-        const spacing = isWidthUp('sm') ? '10px' : '2px';
+        const spacing = isWidthUp('sm', this.props.width as Breakpoint) ? '10px' : '2px';
         const styles = {
             root: {
-                position: 'relative',
+                position: 'relative' as 'relative',
                 height: `calc(100vh - ${mainAppBarHeight}px)`,
                 width: '100%',
                 backgroundImage: `url(${images.topo_dark})`,
@@ -140,7 +170,7 @@ export class NotificationsPage extends React.Component {
                     title="Notifications"
                 />
                 {this.state.loading
-                    ? <PageLoading background="transparent" style={{ zIndex: 10 }} />
+                    ? <PageLoading background="transparent" style={{zIndex: 10}}/>
                     : null
                 }
                 <CustomScrollbar style={styles.customScrollbar}>
@@ -205,21 +235,6 @@ export class NotificationsPage extends React.Component {
     }
 }
 
-NotificationsPage.contextTypes = {
-    config: PropTypes.shape({
-        NOTIFICATIONS_PAGE_SIZE: PropTypes.string,
-    }),
-};
-
-NotificationsPage.propTypes = {
-    history: PropTypes.object.isRequired,
-    notificationsData: PropTypes.object.isRequired,
-    notificationsStatus: PropTypes.object.isRequired,
-    getNotifications: PropTypes.func.isRequired,
-    theme: PropTypes.object.isRequired,
-    width: PropTypes.string.isRequired,
-};
-
 function mapStateToProps(state) {
     return {
         notificationsStatus: state.notifications.status,
@@ -230,11 +245,8 @@ function mapStateToProps(state) {
 function mapDispatchToProps(dispatch) {
     return {
         getNotifications: args => dispatch(getNotifications(args)),
+        clearNotifications: () => dispatch(clearNotifications()),
     };
 }
 
-export default @withWidth()
-@withTheme()
-@connect(mapStateToProps, mapDispatchToProps)
-class Default extends NotificationsPage {
-}
+export default withWidth()(withTheme()(connect(mapStateToProps, mapDispatchToProps)(NotificationsPage)));

@@ -1,9 +1,9 @@
 import * as PropTypes from 'prop-types';
 import * as React from 'react';
-import { connect } from 'react-redux';
-import { withTheme, Theme, withStyles, createStyles } from '@material-ui/core/styles';
-import withWidth, { isWidthDown } from '@material-ui/core/withWidth';
-import Joyride, { Step } from 'react-joyride';
+import {connect} from 'react-redux';
+import {withTheme, Theme, withStyles, createStyles} from '@material-ui/core/styles';
+import withWidth, {isWidthDown} from '@material-ui/core/withWidth';
+import Joyride, {Step} from 'react-joyride';
 import queryString from 'query-string';
 import Help from '@material-ui/icons/Help';
 import Button from '@material-ui/core/Button';
@@ -28,11 +28,11 @@ import OtherInfoDialog from './Dialogs/OtherInfoDialog';
 import AddMembersDialog from './Dialogs/AddMembersDialog';
 import BaseDialog from '../Dialog/BaseDialog';
 import LoadButtons from '../common/LoadButtons';
-import { getGroups, deleteGroup, createGroup, updateGroup } from '../../actions/groupActions';
-import { getUsers } from '../../actions/usersActions';
-import { DrawerTimeout } from '../../actions/uiActions';
-import { joyride } from '../../joyride.config';
-import { Breakpoint } from '@material-ui/core/styles/createBreakpoints';
+import {getGroups, deleteGroup, createGroup, updateGroup} from '../../actions/groupActions';
+import {getUsers} from '../../actions/usersActions';
+import {DrawerTimeout} from '../../actions/uiActions';
+import {joyride} from '../../joyride.config';
+import {Breakpoint} from '@material-ui/core/styles/createBreakpoints';
 import history from '../../utils/history';
 
 const jss = (theme: Eventkit.Theme & Theme) => createStyles({
@@ -237,6 +237,7 @@ export class UserGroupsPage extends React.Component<Props, State> {
     private pageSize: number;
     private joyride: Joyride;
     private scrollbar;
+
     constructor(props: Props, context) {
         super(props);
         this.bindMethods();
@@ -267,7 +268,7 @@ export class UserGroupsPage extends React.Component<Props, State> {
 
     componentWillMount() {
         // If there is no ordering specified default to username
-        let { ordering, page_size } = queryString.parse(this.props.location.search);
+        let {ordering, page_size} = queryString.parse(this.props.location.search);
         let changedQuery = false
         if (!ordering) {
             ordering = 'username';
@@ -278,14 +279,13 @@ export class UserGroupsPage extends React.Component<Props, State> {
             changedQuery = true
         }
         if (changedQuery) {
-            history.replace({ ...this.props.location, "search": queryString.stringify({ordering, page_size}) });
+            history.replace({...this.props.location, "search": queryString.stringify({ordering, page_size})});
         }
     }
 
     componentDidMount() {
-        // make api request for users/groups
         this.makeUserRequest();
-        this.props.getGroups({ disable_page: true });
+        this.props.getGroups({disable_page: true});
         const steps = joyride.UserGroupsPage as any[];
         this.joyrideAddSteps(steps);
     }
@@ -318,22 +318,22 @@ export class UserGroupsPage extends React.Component<Props, State> {
                         fixedSelection.push(newUser);
                     }
                 });
-                this.setState({ selectedUsers: fixedSelection });
+                this.setState({selectedUsers: fixedSelection});
             }
         }
         if (this.props.groups.updated && !prevProps.groups.updated) {
             this.makeUserRequest();
-            this.props.getGroups({ disable_page: true });
+            this.props.getGroups({disable_page: true});
         }
         if (this.props.groups.created && !prevProps.groups.created) {
-            this.props.getGroups({ disable_page: true });
+            this.props.getGroups({disable_page: true});
             if (this.state.createUsers.length) {
                 this.makeUserRequest();
-                this.setState({ createUsers: [] });
+                this.setState({createUsers: []});
             }
         }
         if (this.props.groups.deleted && !prevProps.groups.deleted) {
-            this.props.getGroups({ disable_page: true });
+            this.props.getGroups({disable_page: true});
             const query = queryString.parse(this.props.location.search);
             if (query.groups) {
                 query.groups = null;
@@ -343,7 +343,7 @@ export class UserGroupsPage extends React.Component<Props, State> {
                 query.search = null;
                 delete query.search;
             }
-            this.setState({ search: '' });
+            this.setState({search: ''});
 
             history.push({
                 ...this.props.location,
@@ -378,7 +378,7 @@ export class UserGroupsPage extends React.Component<Props, State> {
         return `${group.name} Members`;
     }
 
-    private makeUserRequest(options = { groups: null, ordering: null, search: null }) {
+    private makeUserRequest(options = {groups: null, ordering: null, search: null}) {
         const params = queryString.parse(this.props.location.search);
 
         if (options.search === undefined && params.search) {
@@ -419,7 +419,7 @@ export class UserGroupsPage extends React.Component<Props, State> {
         return new Promise(async (resolve) => {
             // wait for the state change to be complete
             await new Promise((r2) => {
-                this.setState({ drawerOpen: !this.state.drawerOpen }, r2);
+                this.setState({drawerOpen: !this.state.drawerOpen}, r2);
             });
             // wait for drawer to be fully open (transition of 450ms)
             setTimeout(resolve, 450);
@@ -437,7 +437,7 @@ export class UserGroupsPage extends React.Component<Props, State> {
             });
         } else {
             // if all are deselected we need to set selected to an empty array
-            this.setState({ selectedUsers: [] });
+            this.setState({selectedUsers: []});
         }
     }
 
@@ -449,7 +449,7 @@ export class UserGroupsPage extends React.Component<Props, State> {
         } else {
             selected.push(user);
         }
-        this.setState({ selectedUsers: selected });
+        this.setState({selectedUsers: selected});
     }
 
     private handleSearchKeyDown(event: React.KeyboardEvent<HTMLInputElement>) {
@@ -459,7 +459,7 @@ export class UserGroupsPage extends React.Component<Props, State> {
                 const query = queryString.parse(this.props.location.search);
                 query.search = text;
                 query.page_size = this.pageSize.toString();
-                history.push({ ...this.props.location, "search": queryString.stringify(query) });
+                history.push({...this.props.location, "search": queryString.stringify(query)});
             }
         }
     }
@@ -467,7 +467,7 @@ export class UserGroupsPage extends React.Component<Props, State> {
     private handleSearchChange(event: React.ChangeEvent<HTMLInputElement>) {
         const text = event.target.value || '';
         // always update state since that is what will show in the searchbar
-        this.setState({ search: text });
+        this.setState({search: text});
         // if text is empty we need to clear the search and page size
         if (!text && queryString.parse(this.props.location.search).search) {
             // we need to undo any search
@@ -475,38 +475,38 @@ export class UserGroupsPage extends React.Component<Props, State> {
             query.search = null;
             delete query.search;
             query.page_size = this.pageSize.toString();
-            history.push({ ...this.props.location, "search": queryString.stringify(query) });
+            history.push({...this.props.location, "search": queryString.stringify(query)});
         }
     }
 
     private handleOrderingChange(value: string) {
         const query = queryString.parse(this.props.location.search);
         query.ordering = value;
-        history.push({ ...this.props.location, "search": queryString.stringify(query) });
+        history.push({...this.props.location, "search": queryString.stringify(query)});
     }
 
     private handleLoadMore() {
         const query = queryString.parse(this.props.location.search);
         query.page_size = (Number(query.page_size) + this.pageSize).toString();
-        history.push({ ...this.props.location, "search": queryString.stringify(query) });
+        history.push({...this.props.location, "search": queryString.stringify(query)});
     }
 
     private handleLoadLess() {
         const query = queryString.parse(this.props.location.search);
         query.page_size = (Number(query.page_size) - this.pageSize).toString();
-        history.push({ ...this.props.location, "search": queryString.stringify(query) });
+        history.push({...this.props.location, "search": queryString.stringify(query)});
     }
 
     private handleCreateOpen() {
-        this.setState({ showCreate: true });
+        this.setState({showCreate: true});
     }
 
     private handleCreateClose() {
-        this.setState({ showCreate: false, createInput: '' });
+        this.setState({showCreate: false, createInput: ''});
     }
 
     private handleCreateInput(e: React.ChangeEvent<HTMLInputElement>) {
-        this.setState({ createInput: e.target.value });
+        this.setState({createInput: e.target.value});
     }
 
     private handleCreateSave() {
@@ -516,52 +516,52 @@ export class UserGroupsPage extends React.Component<Props, State> {
     }
 
     private handleRenameOpen(group: Eventkit.Group) {
-        this.setState({ showRename: true, targetGroup: group });
+        this.setState({showRename: true, targetGroup: group});
     }
 
     private handleRenameClose() {
-        this.setState({ showRename: false, renameInput: '', targetGroup: null });
+        this.setState({showRename: false, renameInput: '', targetGroup: null});
     }
 
     private handleRenameInput(e: React.ChangeEvent<HTMLInputElement>) {
-        this.setState({ renameInput: e.target.value });
+        this.setState({renameInput: e.target.value});
     }
 
     private handleRenameSave() {
-        this.props.updateGroup(this.state.targetGroup.id, { name: this.state.renameInput });
+        this.props.updateGroup(this.state.targetGroup.id, {name: this.state.renameInput});
         this.handleRenameClose();
     }
 
     private handleNewGroup(users: Eventkit.User[]) {
         if (users.length) {
-            this.setState({ createUsers: users });
+            this.setState({createUsers: users});
         }
         this.handleCreateOpen();
     }
 
     private handleAddUsers(users: Eventkit.User[]) {
         if (users.length) {
-            this.setState({ addUsers: users });
+            this.setState({addUsers: users});
             this.showAddUsersDialog();
         }
     }
 
     private handleLeaveGroupClick(group: Eventkit.Group) {
-        this.setState({ targetGroup: group });
+        this.setState({targetGroup: group});
         this.handleLeaveOpen();
     }
 
     private handleDeleteGroupClick(group: Eventkit.Group) {
-        this.setState({ targetGroup: group });
+        this.setState({targetGroup: group});
         this.handleDeleteOpen();
     }
 
     private handleLeaveOpen() {
-        this.setState({ showLeave: true });
+        this.setState({showLeave: true});
     }
 
     private handleLeaveClose() {
-        this.setState({ showLeave: false });
+        this.setState({showLeave: false});
     }
 
     private handleLeaveClick() {
@@ -571,17 +571,17 @@ export class UserGroupsPage extends React.Component<Props, State> {
             .filter(username => username !== this.props.user.username);
         const members = this.state.targetGroup.members
             .filter(username => username !== this.props.user.username);
-        const options = { administrators, members };
+        const options = {administrators, members};
         this.props.updateGroup(this.state.targetGroup.id, options);
         this.handleLeaveClose();
     }
 
     private handleDeleteOpen() {
-        this.setState({ showDelete: true });
+        this.setState({showDelete: true});
     }
 
     private handleDeleteClose() {
-        this.setState({ showDelete: false });
+        this.setState({showDelete: false});
     }
 
     private handleDeleteClick() {
@@ -598,11 +598,11 @@ export class UserGroupsPage extends React.Component<Props, State> {
             query.groups = value;
         }
         // because we are navigating to new group we need to reset the page size and the search
-        this.setState({ search: '' });
+        this.setState({search: ''});
         query.search = null;
         delete query.search;
         query.page_size = this.pageSize.toString();
-        history.push({ ...this.props.location, "search": queryString.stringify(query) });
+        history.push({...this.props.location, "search": queryString.stringify(query)});
     }
 
     private handleMakeAdmin(user: Eventkit.User) {
@@ -611,7 +611,7 @@ export class UserGroupsPage extends React.Component<Props, State> {
             return;
         }
         const administrators = [...group.administrators, user.user.username];
-        this.props.updateGroup(group.id, { administrators });
+        this.props.updateGroup(group.id, {administrators});
     }
 
     private handleDemoteAdmin(user: Eventkit.User) {
@@ -621,7 +621,7 @@ export class UserGroupsPage extends React.Component<Props, State> {
         }
         const administrators = [...group.administrators];
         administrators.splice(administrators.indexOf(user.user.username), 1);
-        this.props.updateGroup(group.id, { administrators });
+        this.props.updateGroup(group.id, {administrators});
     }
 
     private handleRemoveUser(user: Eventkit.User) {
@@ -633,7 +633,7 @@ export class UserGroupsPage extends React.Component<Props, State> {
             .filter(username => username !== user.user.username);
         const members = group.members
             .filter(username => username !== user.user.username);
-        this.props.updateGroup(group.id, { administrators, members });
+        this.props.updateGroup(group.id, {administrators, members});
     }
 
     private handleBatchRemoveUser(users: Eventkit.User[]) {
@@ -666,7 +666,7 @@ export class UserGroupsPage extends React.Component<Props, State> {
         } else {
             administrators = [...group.administrators, ...usernames];
         }
-        this.props.updateGroup(group.id, { administrators });
+        this.props.updateGroup(group.id, {administrators});
     }
 
     private handleAddUsersSave(groups: Eventkit.Group[], users: Eventkit.User[]) {
@@ -674,49 +674,49 @@ export class UserGroupsPage extends React.Component<Props, State> {
         const usernames = users.map(user => user.user.username);
         groups.forEach((group) => {
             const members = [...group.members, ...usernames];
-            this.props.updateGroup(group.id, { members });
+            this.props.updateGroup(group.id, {members});
         });
     }
 
     private showAddUsersDialog() {
-        this.setState({ showAddUsers: true });
+        this.setState({showAddUsers: true});
     }
 
     private hideAddUsersDialog() {
-        this.setState({ showAddUsers: false });
+        this.setState({showAddUsers: false});
     }
 
     private showErrorDialog(message: any) {
-        const { errors } = message;
-        this.setState({ errors });
+        const {errors} = message;
+        this.setState({errors});
     }
 
     private hideErrorDialog() {
-        this.setState({ errors: [] });
+        this.setState({errors: []});
     }
 
     private showAdministratorInfoDialog() {
-        this.setState({ showAdministratorInfo: true });
+        this.setState({showAdministratorInfo: true});
     }
 
     private hideAdministratorInfoDialog() {
-        this.setState({ showAdministratorInfo: false });
+        this.setState({showAdministratorInfo: false});
     }
 
     private showMemberInfoDialog() {
-        this.setState({ showMemberInfo: true });
+        this.setState({showMemberInfo: true});
     }
 
     private hideMemberInfoDialog() {
-        this.setState({ showMemberInfo: false });
+        this.setState({showMemberInfo: false});
     }
 
     private showOtherInfoDialog() {
-        this.setState({ showOtherInfo: true });
+        this.setState({showOtherInfo: true});
     }
 
     private hideOtherInfoDialog() {
-        this.setState({ showOtherInfo: false });
+        this.setState({showOtherInfo: false});
     }
 
     private joyrideAddSteps(steps: Step[]) {
@@ -741,7 +741,7 @@ export class UserGroupsPage extends React.Component<Props, State> {
         }
 
         this.setState((currentState: State) => {
-            const nextState = { ...currentState };
+            const nextState = {...currentState};
             nextState.steps = nextState.steps.concat(newSteps);
             return nextState;
         });
@@ -764,7 +764,7 @@ export class UserGroupsPage extends React.Component<Props, State> {
             if (fakeIx > -1) {
                 this.props.users.users.splice(fakeIx, 1);
             }
-            this.setState({ isRunning: false, stepIndex: 0 });
+            this.setState({isRunning: false, stepIndex: 0});
             this.joyride.reset(true);
         } else {
             if (step.selector === '.qa-GroupsDrawer-addGroup' && isWidthDown('sm', this.props.width) && !this.state.drawerOpen) {
@@ -810,7 +810,7 @@ export class UserGroupsPage extends React.Component<Props, State> {
             }
 
             if (type === 'step:after' || type === 'error:target_not_found') {
-                this.setState({ stepIndex: index + (action === 'back' ? -1 : 1) });
+                this.setState({stepIndex: index + (action === 'back' ? -1 : 1)});
             }
         }
     }
@@ -821,16 +821,16 @@ export class UserGroupsPage extends React.Component<Props, State> {
         }
         if (this.state.isRunning === true) {
             this.joyride.reset(true);
-            this.setState({ isRunning: true });
+            this.setState({isRunning: true});
         } else {
-            this.setState({ isRunning: true });
+            this.setState({isRunning: true});
         }
     }
 
     render() {
-        const { colors } = this.props.theme.eventkit;
-        const { classes } = this.props;
-        const { steps, isRunning } = this.state;
+        const {colors} = this.props.theme.eventkit;
+        const {classes} = this.props;
+        const {steps, isRunning} = this.state;
         const smallViewport = isWidthDown('sm', this.props.width);
 
         const tourButton = (
@@ -930,10 +930,12 @@ export class UserGroupsPage extends React.Component<Props, State> {
         const loadLessDisabled = pageSize <= this.pageSize || this.pageSize >= len;
 
         return (
-            <div style={{ backgroundColor: colors.white, position: 'relative' }}>
+            <div style={{backgroundColor: colors.white, position: 'relative'}}>
                 <Joyride
                     callback={this.callback}
-                    ref={(instance) => { this.joyride = instance; }}
+                    ref={(instance) => {
+                        this.joyride = instance;
+                    }}
                     steps={steps}
                     stepIndex={this.state.stepIndex}
                     autoStart
@@ -961,7 +963,7 @@ export class UserGroupsPage extends React.Component<Props, State> {
                             onClick={this.handleCreateOpen}
                             className={`qa-UserGroupsPage-Button-create ${classes.createButton}`}
                         >
-                            <AddCircle className={classes.newGroupIcon} />
+                            <AddCircle className={classes.newGroupIcon}/>
                             New Group
                         </Button>
 
@@ -986,7 +988,7 @@ export class UserGroupsPage extends React.Component<Props, State> {
                             type="text"
                             placeholder="Search Users"
                             value={queryString.parse(this.props.location.search).search}
-                            InputProps={{ className: classes.input }}
+                            InputProps={{className: classes.input}}
                             onChange={this.handleSearchChange}
                             onKeyDown={this.handleSearchKeyDown}
                             className={`qa-UserGroupsPage-search ${classes.container}`}
@@ -1008,11 +1010,13 @@ export class UserGroupsPage extends React.Component<Props, State> {
                         />
 
                     </div>
-                    <div style={{ maxWidth: '1000px', margin: 'auto', position: 'relative' }}>
+                    <div style={{maxWidth: '1000px', margin: 'auto', position: 'relative'}}>
                         <CustomScrollbar
-                            style={{ height: 'calc(100vh - 130px - 155px)', width: '100%' }}
+                            style={{height: 'calc(100vh - 130px - 155px)', width: '100%'}}
                             className="qa-UserGroupsPage-CustomScrollbar"
-                            ref={(instance) => { this.scrollbar = instance; }}
+                            ref={(instance) => {
+                                this.scrollbar = instance;
+                            }}
                         >
                             <div className={classes.groups}>
                                 <div>
@@ -1040,10 +1044,10 @@ export class UserGroupsPage extends React.Component<Props, State> {
                                             className="qa-UserGroupsPage-UserRow"
                                         />
                                     ))}
-                                    <div style={{ width: '100%', borderTop: '1px solid #e0e0e0' }} />
+                                    <div style={{width: '100%', borderTop: '1px solid #e0e0e0'}}/>
                                 </div>
                                 <LoadButtons
-                                    style={{ paddingTop: '10px' }}
+                                    style={{paddingTop: '10px'}}
                                     range={this.props.users.range}
                                     handleLoadMore={this.handleLoadMore}
                                     handleLoadLess={this.handleLoadLess}
@@ -1113,11 +1117,11 @@ export class UserGroupsPage extends React.Component<Props, State> {
                     }
                     className="qa-UserGroupsPage-RenameGroupDialog"
                 />
-                { this.props.groups.fetching || this.props.users.fetching
+                {this.props.groups.fetching || this.props.users.fetching
                 || this.props.groups.creating || this.props.groups.deleting
                 || this.props.groups.updating ?
                     <div className={classes.loadingContainer}>
-                        <PageLoading background="transparent" partial />
+                        <PageLoading background="transparent" partial/>
                     </div>
                     :
                     null

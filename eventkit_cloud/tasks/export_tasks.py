@@ -764,13 +764,13 @@ def nitf_export_task(
     provider_slug = get_provider_slug(task_uid)
     nitf_out_dataset = get_export_filename(stage_dir, job_name, projection, provider_slug, "nitf")
 
-    params = "-co ICORDS=G"
+    creation_options = ["ICORDS=G"]
     nitf = gdalutils.convert(
         fmt="nitf",
         input_file=nitf_in_dataset,
         output_file=nitf_out_dataset,
         task_uid=task_uid,
-        creation_options=params,
+        creation_options=creation_options,
     )
 
     result["file_format"] = "nitf"
@@ -802,6 +802,7 @@ def hfa_export_task(
     hfa_out_dataset = get_export_filename(stage_dir, job_name, projection, provider_slug, "img")
     hfa = gdalutils.convert(fmt="hfa", input_file=hfa_in_dataset, output_file=hfa_out_dataset, task_uid=task_uid,)
 
+    result["file_extension"] = "img"
     result["file_format"] = "hfa"
     result["result"] = hfa
     result["hfa"] = hfa

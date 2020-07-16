@@ -1,3 +1,5 @@
+import {cloneDeep} from 'lodash';
+
 export const Levels = {
     ADMIN: 'ADMIN' as Eventkit.Permissions.Level,
     READ: 'READ' as Eventkit.Permissions.Level,
@@ -21,12 +23,12 @@ export class Permissions {
     private userPermissions?: { [s: string]: Eventkit.Permissions.Level };
 
     constructor(permissions?: Eventkit.Permissions, currentUsername?: string) {
-        this.permissions = permissions || DefaultPermissions;
+        this.permissions = cloneDeep(permissions);
         this.username = currentUsername;
     }
 
     public setPermissions(perms: Eventkit.Permissions) {
-        this.permissions = perms;
+        this.permissions = cloneDeep(perms);
     }
 
     public setUsername(username: string) {

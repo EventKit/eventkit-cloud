@@ -332,6 +332,7 @@ declare namespace Eventkit {
             error: any;
             fetched: boolean;
             fetching: boolean;
+            deleted: boolean;
         }
 
         interface NotificationsData {

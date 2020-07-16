@@ -37,8 +37,6 @@ const mockNotifications = {
 };
 
 describe('NotificationsPage component', () => {
-    let wrapper;
-    let instance;
     let shallow;
 
     beforeAll(() => {
@@ -60,14 +58,19 @@ describe('NotificationsPage component', () => {
                 push: sinon.spy(),
             },
             getNotifications: sinon.spy(),
+            clearNotifications: sinon.spy(),
             ...global.eventkit_test_props,
         };
     }
 
     const config = { NOTIFICATIONS_PAGE_SIZE: '12' };
 
-    function setup(propsOverride = {}) {
-        const props = {
+    let props;
+    let wrapper;
+    let instance;
+
+    const setup = (propsOverride = {}) => {
+        props = {
             ...defaultProps(),
             ...propsOverride,
         };
@@ -75,7 +78,7 @@ describe('NotificationsPage component', () => {
             context: { config },
         });
         instance = wrapper.instance();
-    }
+    };
 
     beforeEach(() => {
         window.resizeTo(1920, 1080);
@@ -111,6 +114,15 @@ describe('NotificationsPage component', () => {
     });
 
     describe('initial state', () => {
+        it('componentWillMount should fire clearNotifications for initializing state', () => {
+            sinon.stub(instance, 'componentWillMount');
+            expect(props.clearNotifications.calledOnce).toBe(true);
+        });
+
+        it('requests notifications', () => {
+            expect(instance.props.getNotifications.callCount).toBe(1);
+        });
+
         it('renders loading spinner', () => {
             expect(wrapper.find(PageLoading)).toHaveLength(1);
         });

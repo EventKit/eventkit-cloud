@@ -241,8 +241,8 @@ class TestJobViewSet(APITestCase):
         url = reverse('api:jobs-detail', args=[self.job.uid])
         response = self.client.delete(url)
         # test the response headers
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertEqual(response.data[0]['detail'], 'ADMIN permission is required to delete this job.')
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+        self.assertEqual(response.data['errors'][0]['detail'], 'ADMIN permission is required to delete this job.')
 
     @patch('eventkit_cloud.api.views.pick_up_run_task')
     @patch('eventkit_cloud.api.views.create_run')
@@ -454,7 +454,7 @@ class TestJobViewSet(APITestCase):
         self.assertEqual(status.HTTP_400_BAD_REQUEST, response.status_code)
         self.assertEqual(response['Content-Type'], 'application/json')
         self.assertEqual(response['Content-Language'], 'en')
-        self.assertEqual('no geometry', response.data['errors'][0]['title'])
+        self.assertEqual('No Geometry', response.data['errors'][0]['title'])
 
     def test_empty_string_param(self, ):
         url = reverse('api:jobs-list')
@@ -487,7 +487,7 @@ class TestJobViewSet(APITestCase):
         self.assertEqual(status.HTTP_400_BAD_REQUEST, response.status_code)
         self.assertEqual(response['Content-Type'], 'application/json')
         self.assertEqual(response['Content-Language'], 'en')
-        self.assertEqual('ValidationError', response.data['errors'][0]['title'])
+        self.assertEqual('Max Length', response.data['errors'][0]['title'])
         self.assertEqual('name: Ensure this field has no more than 100 characters.',
                          response.data['errors'][0]['detail'])
 
@@ -556,7 +556,7 @@ class TestJobViewSet(APITestCase):
         self.assertEqual(status.HTTP_400_BAD_REQUEST, response.status_code)
         self.assertEqual(response['Content-Type'], 'application/json')
         self.assertEqual(response['Content-Language'], 'en')
-        self.assertEqual('invalid_extents', response.data['errors'][0]['title'])
+        self.assertEqual('Invalid Extents', response.data['errors'][0]['title'])
 
     @patch('eventkit_cloud.api.views.get_estimate_cache_key')
     @patch('eventkit_cloud.api.views.cache')
@@ -701,7 +701,7 @@ class TestBBoxSearch(APITestCase):
         self.assertEqual(status.HTTP_400_BAD_REQUEST, response.status_code)
         self.assertEqual(response['Content-Type'], 'application/json')
         self.assertEqual(response['Content-Language'], 'en')
-        self.assertEqual('missing_bbox_parameter', response.data['errors']['id'])
+        self.assertEqual('Missing Bbox Parameter', response.data['errors'][0]['title'])
 
     def test_bbox_missing_coord(self, ):
         url = reverse('api:jobs-list')
@@ -711,7 +711,7 @@ class TestBBoxSearch(APITestCase):
         self.assertEqual(status.HTTP_400_BAD_REQUEST, response.status_code)
         self.assertEqual(response['Content-Type'], 'application/json')
         self.assertEqual(response['Content-Language'], 'en')
-        self.assertEqual('missing_bbox_parameter', response.data['errors']['id'])
+        self.assertEqual('Missing Bbox Parameter', response.data['errors'][0]['title'])
 
 
 class TestPagination(APITestCase):
@@ -838,7 +838,7 @@ class TestExportRunViewSet(APITestCase):
         response = self.client.get(url)
         self.assertIsNotNone(response)
         result = response.data
-        self.assertTrue("InvalidLicense" in result[0].get('detail'))
+        self.assertTrue("InvalidLicense" in result["errors"][0].get('detail'))
         self.assertEqual(response.status_code, 400)
 
     @patch('eventkit_cloud.api.views.get_invalid_licenses')
@@ -875,7 +875,7 @@ class TestExportRunViewSet(APITestCase):
         response = self.client.get(url)
         self.assertIsNotNone(response)
         result = response.data
-        self.assertTrue("InvalidLicense" in result[0].get('detail'))
+        self.assertTrue("InvalidLicense" in result["errors"][0].get('detail'))
         self.assertEqual(response.status_code, 400)
 
     def test_filter_runs(self, ):
@@ -1316,8 +1316,8 @@ class TestLicenseViewSet(APITestCase):
         self.assertEqual(expected_bad_url, bad_url)
         bad_response = self.client.get(bad_url);
         self.assertIsNotNone(bad_response)
-        self.assertEqual(400, bad_response.status_code)
-        self.assertEqual(str({'detail': _('Not found')}), bad_response.content.decode())
+        self.assertEqual(404, bad_response.status_code)
+        self.assertEqual('Not Found', bad_response.data['errors'][0]['title'])
 
 
 class TestUserDataViewSet(APITestCase):
