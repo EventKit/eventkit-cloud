@@ -344,13 +344,13 @@ def progressive_kill(pid):
     :return: None.
     """
     try:
-        logger.info("Trying to kill pid {0} with SIGTERM.".format(pid))
-        os.kill(pid, signal.SIGTERM)
-        time.sleep(5)
+        logger.info("Trying to terminate process group {0} with SIGTERM.".format(pid))
+        os.killpg(pid, signal.SIGTERM)
+        sleep(5)
 
-        logger.info("Trying to kill pid {0} with SIGKILL.".format(pid))
-        os.kill(pid, signal.SIGKILL)
-        time.sleep(1)
+        logger.info("Trying to kill process group {0} with SIGKILL.".format(pid))
+        os.killpg(pid, signal.SIGKILL)
+        sleep(1)
 
     except OSError:
         logger.info("{0} PID no longer exists.".format(pid))
@@ -499,8 +499,10 @@ def get_metadata(data_provider_task_record_uids: List[str]):
 
                     filepath = get_archive_data_path(data_provider_task_record.provider.slug, download_filename)
                     pattern = re.compile(".*EPSG:(?P<projection>3857|4326).*$")
-                    projection = pattern.match(export_task.name).groupdict().get("projection")
-
+                    matches = pattern.match(export_task.name)
+                    projection = "4326"
+                    if matches:
+                        projection = pattern.match(export_task.name).groupdict().get("projection")
                     file_data = {
                         "file_path": filepath,
                         "full_file_path": full_file_path,

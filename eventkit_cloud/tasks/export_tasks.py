@@ -268,6 +268,7 @@ class ExportTask(EventKitBaseTask):
             5. run export_task_error_handler if the run should be aborted
                - this is only for initial tasks on which subsequent export tasks depend
         """
+        # TODO: If there is a failure before the task was created this will fail to run.
         try:
             task = ExportTaskRecord.objects.get(uid=task_id)
             task.finished_at = timezone.now()
@@ -906,12 +907,12 @@ def wfs_export_task(
 
     try:
         ogr = OGR(task_uid=task_uid)
-        out = ogr.convert(file_format="GPKG", in_file='WFS:"{}"'.format(url), out_file=gpkg, params=params,)
+        out = ogr.convert(file_format="GPKG", in_file=f"WFS:{url}", out_file=gpkg, params=params,)
         result["result"] = out
         result["source"] = out
         # Check for geopackage contents; gdal wfs driver fails silently
         if not geopackage.check_content_exists(out):
-            raise Exception("Empty response: Unknown layer name '{}' or invalid AOI bounds".format(layer))
+            logger.warning("Empty response: Unknown layer name '{}' or invalid AOI bounds".format(layer))
         return result
     except Exception as e:
         logger.error("Raised exception in wfs export: {}".format(str(e)))
@@ -1104,8 +1105,8 @@ def mapproxy_export_task(
 
         return result
     except Exception as e:
-        logger.error("Raised exception in raster service export, %s", str(e))
-        raise Exception(e)
+        logger.error(f"Raised exception in raster service export, {e}")
+        raise e
 
 
 @app.task(name="Pickup Run", bind=True, base=UserDetailsBase)

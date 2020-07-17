@@ -39,20 +39,20 @@ class TestHelpers(TestCase):
     def test_progressive_kill(self, mock_os, mock_sleep):
         pid = 1
         # Test no PID.
-        mock_os.kill.side_effect = [OSError()]
+        mock_os.killpg.side_effect = [OSError()]
         progressive_kill(pid)
         mock_os.reset_mock
 
         # Test kill with SIGTERM
-        mock_os.kill.side_effect = [None, OSError()]
+        mock_os.killpg.side_effect = [None, OSError()]
         progressive_kill(pid)
-        mock_os.kill.has_calls([call(pid, signal.SIGTERM)])
+        mock_os.killpg.has_calls([call(pid, signal.SIGTERM)])
         mock_os.reset_mock
 
         # Test kill with SIGKILL
-        mock_os.kill.side_effect = [None, None]
+        mock_os.killpg.side_effect = [None, None]
         progressive_kill(pid)
-        mock_os.kill.has_calls([call(pid, signal.SIGTERM), call(pid, signal.SIGTERM)])
+        mock_os.killpg.has_calls([call(pid, signal.SIGTERM), call(pid, signal.SIGTERM)])
         mock_os.reset_mock
 
     def test_get_style_files(self):
