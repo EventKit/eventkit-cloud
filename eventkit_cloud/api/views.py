@@ -1,14 +1,16 @@
+# -*- coding: utf-8 -*-
+
 """Provides classes for handling API requests."""
 import logging
+from audit_logging.models import AuditEvent
 
-# -*- coding: utf-8 -*-
 from datetime import datetime, timedelta
-from django.core.cache import cache
 from dateutil import parser
 from django.conf import settings
 from django.contrib.auth.models import User, Group
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.gis.geos import GEOSException, GEOSGeometry
+from django.core.cache import cache
 from django.db import transaction
 from django.db.models import Q
 from django.shortcuts import redirect, render
@@ -22,7 +24,7 @@ from rest_framework.parsers import JSONParser
 from rest_framework.renderers import JSONRenderer
 from rest_framework.response import Response
 from rest_framework.serializers import ValidationError
-from audit_logging.models import AuditEvent
+
 from eventkit_cloud.api.filters import (
     ExportRunFilter,
     JobFilter,
@@ -595,7 +597,7 @@ class JobViewSet(viewsets.ModelViewSet):
                 msg = "unidentified job attribute - %s" % attribute
                 return Response([{"detail": msg}], status.HTTP_400_BAD_REQUEST)
 
-        # update permissions if present.  Insure we are not left with 0 admministrators
+        # update permissions if present.  Ensure we are not left with 0 admministrators
         # users and / or groups may be updated.  If no update info is provided, maintain
         # the current set of permissions.
 
