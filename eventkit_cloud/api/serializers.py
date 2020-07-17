@@ -73,7 +73,11 @@ class ProviderTaskSerializer(serializers.ModelSerializer):
     def create(validated_data, **kwargs):
         """Creates an export DataProviderTask."""
         formats = validated_data.pop("formats")
-        provider_model = DataProvider.objects.get(slug=validated_data.get("provider"))
+        provider_slug = validated_data.get("provider")
+        try:
+            provider_model = DataProvider.objects.get(slug=provider_slug)
+        except DataProvider.DoesNotExist:
+            raise Exception(f"The DataProvider for {provider_slug} does not exist.")
         provider_task = DataProviderTask.objects.create(provider=provider_model)
         provider_task.formats.add(*formats)
         provider_task.min_zoom = validated_data.pop("min_zoom", None)
