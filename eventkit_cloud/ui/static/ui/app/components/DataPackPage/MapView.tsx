@@ -1010,7 +1010,7 @@ export class MapView extends React.Component<Props, State> {
             this.source.getFeatureById(this.state.selectedFeature) : null;
         return (
             <div style={{height: 'calc(100vh - 236px)'}}>
-                <ScrollBarRefWrap style={styles} setScrollbar={this.props.setScrollbar}>
+                <ScrollBarRefWrap style={styles.list} setScrollbar={this.props.setScrollbar}>
                     <div style={styles.root}>
                         <GridList
                             className="qa-MapView-GridList"
@@ -1158,7 +1158,7 @@ function mapDispatchToProps(dispatch) {
     };
 }
 
-function ScrollBarRefWrap(props: any) {
+export function ScrollBarRefWrap(props: any) {
     const [scrollbar, setScrollbar] = useState(undefined);
     useEffect(() => {
         if (!!scrollbar) {
@@ -1167,7 +1167,7 @@ function ScrollBarRefWrap(props: any) {
     }, [scrollbar]);
 
     return (
-        <CustomScrollbar style={props.style.list} ref={(instance) => {
+        <CustomScrollbar style={props.style} ref={(instance) => {
             setScrollbar(instance)
         }}>
             {props.children}

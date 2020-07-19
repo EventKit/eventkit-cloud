@@ -183,7 +183,7 @@ export class ExportSummary extends React.Component<Props, State> {
         if (action === 'close' || action === 'skip' || type === 'finished') {
             this.setState({ isRunning: false });
             this.props.onWalkthroughReset();
-            this?.helpers.reset(true);
+            this?.helpers?.reset(true);
             window.location.hash = '';
         }
 

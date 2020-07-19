@@ -597,31 +597,31 @@ describe('DataPackPage component', () => {
             providers: [],
             openShare: instance.handleShareOpen,
         };
-        expect(instance.getView('list')).toEqual((
-                <DataPackList
-                    {...commonProps}
-                    onSort={instance.handleSortChange}
-                    order={queryString.parse(props.location.search).order as string}
-                />
-            ),
-        );
 
-        expect(instance.getView('grid')).toEqual((
-            <DataPackGrid
-                {...commonProps}
-                name="DataPackLibrary"
-            />
-        ));
+        let viewProps = {...instance.getView('list').props as any};
+        delete viewProps.setScrollbar;
+        expect(viewProps).toEqual({
+            ...commonProps,
+            onSort:instance.handleSortChange,
+            order:queryString.parse(props.location.search).order as string,
+        });
 
-        expect(instance.getView('map')).toEqual((
-            <MapView
-                {...commonProps}
-                importGeom={props.importGeom}
-                processGeoJSONFile={props.processGeoJSONFile}
-                resetGeoJSONFile={props.resetGeoJSONFile}
-                onMapFilter={instance.handleSpatialFilter}
-            />
-        ));
+        viewProps = {...instance.getView('grid').props as any};
+        delete viewProps.setScrollbar;
+        expect(instance.getView('grid')).toEqual({
+            ...commonProps,
+            name:"DataPackLibrary",
+        });
+
+        viewProps = {...instance.getView('map').props as any};
+        delete viewProps.setScrollbar;
+        expect(instance.getView('map')).toEqual({
+            ...commonProps,
+            importGeom:props.importGeom,
+            processGeoJSONFile:props.processGeoJSONFile,
+            resetGeoJSONFile:props.resetGeoJSONFile,
+            onMapFilter:instance.handleSpatialFilter,
+        });
         expect(instance.getView('bad case')).toEqual(null);
     });
 

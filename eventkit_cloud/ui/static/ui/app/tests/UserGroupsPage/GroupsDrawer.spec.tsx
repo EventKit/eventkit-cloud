@@ -56,32 +56,51 @@ describe('GroupsDrawer component', () => {
         expect(screen.getByText('MEMBERS')).toBeInTheDocument();
     });
 
-    it('should show both MY GROUPS and SHARED GROUPS', () => {
-        expect(screen.getByText(/Change Group Name/)).toBeInTheDocument();
-        //expect(wrapper.find('.qa-GroupsDrawer-sharedGroupItem')).toHaveLength(1);
-        //expect(wrapper.find('.qa-GroupsDrawer-groupItem')).toHaveLength(1);
+    it('should render menu items for the group menu', () => {
+        const {container} = setup();
+        // Find the menu expander
+        const menuIcon = container.querySelector('.qa-GroupsDrawer-groupOptions');
+        expect(menuIcon).toBeInTheDocument();
+        // Simulate the user clicking it
+        fireEvent.click(menuIcon)
+        expect(screen.getByText('Change Group Name')).toBeInTheDocument();
+        expect(screen.getByText('Leave Group')).toBeInTheDocument();
+        expect(screen.getByText('Delete Group')).toBeInTheDocument();
     });
 
     it('Change Group Name should call onRenameGroupClick', () => {
+        const {container} = setup();
+        // Find the menu expander
+        const menuIcon = container.querySelector('.qa-GroupsDrawer-groupOptions');
+        expect(menuIcon).toBeInTheDocument();
+        // Simulate the user clicking it
+        fireEvent.click(menuIcon)
         expect(props.onRenameGroupClick.calledOnce).toBe(false);
-        fireEvent.click(screen.getByText(/Change Group Name/))
+        fireEvent.click(screen.getByText('Change Group Name'))
         expect(props.onRenameGroupClick.calledOnce).toBe(true);
     });
 
-    // it('Delete Group Name should call onDeleteGroupClick', () => {
-    //     const item = wrapper.find('.qa-GroupsDrawer-groupItem');
-    //     expect(item.find(IconMenu)).toHaveLength(1);
-    //     expect(props.onDeleteGroupClick.calledOnce).toBe(false);
-    //     item.find(IconMenu).children()[2].props.onClick();
-    //     expect(props.onDeleteGroupClick.calledOnce).toBe(true);
-    // });
-    //
-    // it('clicking on indeterminate icon should call leave group', () => {
-    //     const item = wrapper.find('.qa-GroupsDrawer-sharedGroupItem');
-    //     expect(item.find(IconMenu)).toHaveLength(1);
-    //     expect(props.onLeaveGroupClick.called).toBe(false);
-    //     item.find(IconMenu).children()[1].props.onClick();
-    //     expect(props.onLeaveGroupClick.calledOnce).toBe(true);
-    //     expect(props.onLeaveGroupClick.calledWith(props.sharedGroups[0])).toBe(true);
-    // });
+    it('Delete Group Name should call onDeleteGroupClick', () => {
+        const {container} = setup();
+        // Find the menu expander
+        const menuIcon = container.querySelector('.qa-GroupsDrawer-groupOptions');
+        expect(menuIcon).toBeInTheDocument();
+        // Simulate the user clicking it
+        fireEvent.click(menuIcon)
+        expect(props.onDeleteGroupClick.calledOnce).toBe(false);
+        fireEvent.click(screen.getByText('Delete Group'))
+        expect(props.onDeleteGroupClick.calledOnce).toBe(true);
+    });
+
+    it('clicking on indeterminate icon should call leave group', () => {
+        const {container} = setup();
+        // Find the menu expander
+        const menuIcon = container.querySelector('.qa-GroupsDrawer-groupOptions');
+        expect(menuIcon).toBeInTheDocument();
+        // Simulate the user clicking it
+        fireEvent.click(menuIcon)
+        expect(props.onLeaveGroupClick.calledOnce).toBe(false);
+        fireEvent.click(screen.getByText('Leave Group'))
+        expect(props.onLeaveGroupClick.calledOnce).toBe(true);
+    });
 });

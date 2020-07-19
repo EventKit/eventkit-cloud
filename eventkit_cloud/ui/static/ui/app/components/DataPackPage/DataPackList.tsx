@@ -13,6 +13,7 @@ import DataPackTableItem from './DataPackTableItem';
 import LoadButtons from '../common/LoadButtons';
 import CustomScrollbar from '../common/CustomScrollbar';
 import { Breakpoint } from '@material-ui/core/styles/createBreakpoints';
+import {ScrollBarRefWrap} from "./MapView";
 
 export interface Props {
     runIds: string[];
@@ -29,6 +30,7 @@ export interface Props {
     loadNextDisabled: boolean;
     theme: Eventkit.Theme & Theme;
     width: Breakpoint;
+    setScrollbar?: (ref: any) => void;
 }
 
 export class DataPackList extends React.Component<Props, {}> {
@@ -152,7 +154,7 @@ export class DataPackList extends React.Component<Props, {}> {
 
         if (!isWidthUp('md', this.props.width)) {
             return (
-                <CustomScrollbar
+                <ScrollBarRefWrap
                     ref={(instance) => { this.scrollbar = instance; }}
                     style={{ height: 'calc(100vh - 236px)', width: '100%' }}
                 >
@@ -177,7 +179,7 @@ export class DataPackList extends React.Component<Props, {}> {
                             {load}
                         </GridList>
                     </div>
-                </CustomScrollbar>
+                </ScrollBarRefWrap>
             );
         }
 
