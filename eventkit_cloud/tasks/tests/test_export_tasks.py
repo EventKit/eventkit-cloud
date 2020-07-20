@@ -225,13 +225,16 @@ class TestExportTasks(ExportTaskBase):
                                                        input_file=f'GTIFF_RAW:{example_geotiff}',
                                                        output_file=expected_outfile, task_uid=task_uid)
 
+    @patch('eventkit_cloud.tasks.export_tasks.get_provider_slug')
     @patch('eventkit_cloud.tasks.export_tasks.gdalutils')
-    def test_nitf_export_task(self, mock_gdalutils):
+    def test_nitf_export_task(self, mock_gdalutils, mock_get_provider_slug):
         ExportTask.__call__ = lambda *args, **kwargs: celery.Task.__call__(*args, **kwargs)
         example_nitf = "example.nitf"
         example_result = {"source": example_nitf}
         task_uid = '1234'
-        expected_outfile = 'stage/job-4326.nitf'
+        provider_slug = mock_get_provider_slug.return_value = "osm-generic"
+        date = default_format_time(timezone.now())
+        expected_outfile = f"stage/job-4326-{provider_slug}-{date}.nitf"
         nitf_export_task(result=example_result, task_uid=task_uid, stage_dir='stage', job_name='job')
         mock_gdalutils.convert.return_value = expected_outfile
         mock_gdalutils.convert.assert_called_once_with(creation_options=['ICORDS=G'], fmt='nitf',
