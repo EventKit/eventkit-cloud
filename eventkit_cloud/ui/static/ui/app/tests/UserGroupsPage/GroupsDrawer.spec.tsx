@@ -1,12 +1,8 @@
 import * as React from 'react';
 import * as sinon from 'sinon';
-import { createShallow } from '@material-ui/core/test-utils';
-import Drawer from '@material-ui/core/Drawer';
-import IconMenu from '../../components/common/IconMenu';
 import { GroupsDrawer } from '../../components/UserGroupsPage/GroupsDrawer';
 import {render, screen, fireEvent} from '@testing-library/react';
 import '@testing-library/jest-dom/extend-expect'
-import {CreateDataPackButton} from "../../components/StatusDownloadPage/CreateDataPackButton";
 
 describe('GroupsDrawer component', () => {
     const getProps = () => ({

@@ -27,7 +27,7 @@ import DrawAOIToolbar from '../../components/MapTools/DrawAOIToolbar';
 import InvalidDrawWarning from '../../components/MapTools/InvalidDrawWarning';
 import DropZone from '../../components/MapTools/DropZone';
 import * as utils from '../../utils/mapUtils';
-import { MapView, RED_STYLE, BLUE_STYLE } from '../../components/DataPackPage/MapView';
+import {MapView, RED_STYLE, BLUE_STYLE, ScrollBarRefWrap} from '../../components/DataPackPage/MapView';
 import ZoomLevelLabel from '../../components/MapTools/ZoomLevelLabel';
 
 const providers = [{
@@ -260,7 +260,8 @@ describe('MapView component', () => {
     });
 
     it('should render all the basic components', () => {
-        expect(wrapper.find(CustomScrollbar)).toHaveLength(2);
+        expect(wrapper.find(CustomScrollbar)).toHaveLength(1);
+        expect(wrapper.find(ScrollBarRefWrap)).toHaveLength(1);
         expect(wrapper.find(GridList)).toHaveLength(1);
         expect(wrapper.find(LoadButtons)).toHaveLength(1);
         expect(wrapper.find(DataPackListItem)).toHaveLength(props.runs.length);
