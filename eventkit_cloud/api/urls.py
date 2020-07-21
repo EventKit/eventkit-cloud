@@ -54,7 +54,7 @@ urlpatterns = [
     re_path(r"^api/docs/$", api_docs_view, name="swagger-ui"),
     re_path(
         r"^api/openapi",
-        get_schema_view(title="EventKit", description="Documentation for the EventKit API."),
+        get_schema_view(title="EventKit", description="Documentation for the EventKit API.", version="1.7.0"),
         name="openapi-schema",
     ),
     re_path(r"^api/", include(router.urls)),
