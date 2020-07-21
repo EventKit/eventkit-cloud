@@ -80,7 +80,7 @@ describe('ProviderRow component', () => {
     ];
 
     const getProps = () => ({
-        provider: {
+        providerTask: {
             name: 'OpenStreetMap Data (Themes)',
             status: 'COMPLETED',
             tasks,
@@ -121,7 +121,7 @@ describe('ProviderRow component', () => {
 
     it('should render the cancel menu item if the task is pending/running and the cancel menu item should call onProviderCancel', () => {
         const props = { ...getProps() };
-        props.provider.status = 'PENDING';
+        props.providerTask.status = 'PENDING';
         props.onProviderCancel = sinon.spy();
         const wrapper = getWrapper(props);
         expect(wrapper.find(IconMenu)).toHaveLength(1);
@@ -145,7 +145,7 @@ describe('ProviderRow component', () => {
         const wrapper = shallow(<ProviderRow {...props} />);
         wrapper.find(IconMenu).childAt(0).simulate('click');
         expect(props.onProviderCancel.calledOnce).toBe(true);
-        expect(props.onProviderCancel.calledWith(props.provider.uid)).toBe(true);
+        expect(props.onProviderCancel.calledWith(props.providerTask.uid)).toBe(true);
     });
 
     it('View source MenuItem should call handleProviderOpen', () => {
@@ -188,7 +188,7 @@ describe('ProviderRow component', () => {
         const props = getProps();
         const wrapper = getWrapper(props);
         const nextProps = getProps();
-        nextProps.provider.status = 'some new status';
+        nextProps.providerTask.status = 'some new status';
         const fileSize = 1.234;
         const stateSpy = sinon.spy(wrapper.instance(), 'setState');
         wrapper.setProps(nextProps);
@@ -205,20 +205,20 @@ describe('ProviderRow component', () => {
     it('getTaskStatus should be called with the correct status from a given task', () => {
         const props = getProps();
         const wrapper = getWrapper(props);
-        props.provider.tasks[0].status = 'SUCCESS';
-        expect(wrapper.instance().getTaskStatus(props.provider.tasks[0])).toEqual((
+        props.providerTask.tasks[0].status = 'SUCCESS';
+        expect(wrapper.instance().getTaskStatus(props.providerTask.tasks[0])).toEqual((
             <Check
                 className="qa-ProviderRow-Check-taskStatus"
                 style={{ fill: '#55ba63', verticalAlign: 'middle', marginBottom: '2px' }}
             />
         ));
-        props.provider.tasks[0].status = 'FAILED';
-        expect(wrapper.instance().getTaskStatus(props.provider.tasks[0])).toEqual((
-            <TaskError task={props.provider.tasks[0]} />
+        props.providerTask.tasks[0].status = 'FAILED';
+        expect(wrapper.instance().getTaskStatus(props.providerTask.tasks[0])).toEqual((
+            <TaskError task={props.providerTask.tasks[0]} />
         ));
-        props.provider.tasks[0].status = 'PENDING';
-        expect(wrapper.instance().getTaskStatus(props.provider.tasks[0])).toEqual('WAITING');
-        props.provider.tasks[0].status = 'RUNNING';
+        props.providerTask.tasks[0].status = 'PENDING';
+        expect(wrapper.instance().getTaskStatus(props.providerTask.tasks[0])).toEqual('WAITING');
+        props.providerTask.tasks[0].status = 'RUNNING';
         expect(wrapper.instance().getTaskStatus({ status: 'RUNNING', progress: 100 })).toEqual((
             <span className="qa-ProviderRow-span-taskStatus">
                 <LinearProgress variant="determinate" value={100} />
@@ -241,23 +241,23 @@ describe('ProviderRow component', () => {
     it('getProviderStatus should be called with the correct icon from a given provider status', () => {
         const props = getProps();
         const wrapper = getWrapper(props);
-        props.provider.status = 'COMPLETED';
-        expect(wrapper.instance().getProviderStatus(props.provider)).toEqual((
+        props.providerTask.status = 'COMPLETED';
+        expect(wrapper.instance().getProviderStatus(props.providerTask)).toEqual((
             <Check
                 className="qa-ProviderRow-Check-providerStatus"
                 style={{ fill: '#55ba63', verticalAlign: 'middle', marginBottom: '2px' }}
             />
         ));
-        props.provider.status = 'INCOMPLETE';
-        expect(wrapper.instance().getProviderStatus(props.provider)).toEqual((
-            <ProviderError provider={props.provider} key={props.provider.uid} />
+        props.providerTask.status = 'INCOMPLETE';
+        expect(wrapper.instance().getProviderStatus(props.providerTask)).toEqual((
+            <ProviderError provider={props.providerTask} key={props.providerTask.uid} />
         ));
-        props.provider.status = 'PENDING';
-        expect(wrapper.instance().getProviderStatus(props.provider)).toEqual('WAITING');
-        props.provider.status = 'RUNNING';
-        expect(wrapper.instance().getProviderStatus(props.provider)).toEqual('IN PROGRESS');
-        props.provider.status = 'CANCELED';
-        expect(wrapper.instance().getProviderStatus(props.provider)).toEqual((
+        props.providerTask.status = 'PENDING';
+        expect(wrapper.instance().getProviderStatus(props.providerTask)).toEqual('WAITING');
+        props.providerTask.status = 'RUNNING';
+        expect(wrapper.instance().getProviderStatus(props.providerTask)).toEqual('IN PROGRESS');
+        props.providerTask.status = 'CANCELED';
+        expect(wrapper.instance().getProviderStatus(props.providerTask)).toEqual((
             <span
                 className="qa-ProviderRow-span-providerStatus"
                 style={{

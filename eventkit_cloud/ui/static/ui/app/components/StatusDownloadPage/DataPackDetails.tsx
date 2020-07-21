@@ -316,7 +316,7 @@ export class DataPackDetails extends React.Component<Props, State> {
                             backgroundColor={ix % 2 === 0 ? colors.secondary : colors.white}
                             key={provider.uid}
                             onProviderCancel={this.props.onProviderCancel}
-                            provider={provider}
+                            providerTask={provider}
                             job={this.props.job}
                             selectedProviders={this.state.selectedProviders}
                             selectProvider={this.selectPreview}
