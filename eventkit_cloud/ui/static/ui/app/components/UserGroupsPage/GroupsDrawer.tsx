@@ -8,20 +8,16 @@ import {Drawer, Divider} from '@material-ui/core';
 import MenuList from '@material-ui/core/MenuList';
 import MenuItem from '@material-ui/core/MenuItem';
 import ButtonBase from '@material-ui/core/ButtonBase';
-import InfoIcon from '@material-ui/icons/InfoOutlined';
 import AddCircleIcon from '@material-ui/icons/AddCircle';
 import Button from '@material-ui/core/Button';
 import ArrowLeftIcon from '@material-ui/icons/ArrowLeft';
 import ArrowRightIcon from '@material-ui/icons/ArrowRight';
-import {
-    Tab, Tabs,
-} from '@material-ui/core';
-import {useState} from 'react';
-import CustomScrollbar from '../common/CustomScrollbar';
-import IconMenu from '../common/IconMenu';
+import {useEffect, useState} from 'react';
 import {connect} from "react-redux";
-import {getOneGroup} from "../../actions/groupActions";
+import {getGroups, types} from "../../actions/groupActions";
 import SearchGroupsToolbar from "./SearchGroupsToolbar";
+import GroupsHeaderTabs from "./GroupsHeaderTabs";
+import GroupPanelBody from "./GroupPanelBody";
 
 const jss = (theme: Theme & Eventkit.Theme) => createStyles({
     drawer: {
@@ -43,11 +39,6 @@ const jss = (theme: Theme & Eventkit.Theme) => createStyles({
         display: 'block',
         fontSize: '18px',
     },
-    subHeading: {
-        padding: '10px 20px 5px',
-        color: theme.eventkit.colors.text_primary,
-        display: 'block',
-    },
     newGroupIcon: {
         fill: theme.eventkit.colors.primary,
         height: '24px',
@@ -63,73 +54,8 @@ const jss = (theme: Theme & Eventkit.Theme) => createStyles({
         lineHeight: '24px',
         padding: '0px 10px',
     },
-    groupName: {
-        textOverflow: 'ellipsis',
-        overflow: 'hidden',
-        flex: '0 1 auto',
-        paddingRight: '5px',
-    },
-    infoIcon: {
-        fill: theme.eventkit.colors.primary,
-        height: '20px',
-        width: '17px',
-        marginLeft: '10px',
-        verticalAlign: 'text-top',
-        cursor: 'pointer',
-    },
-    itemWarn: {
-        color: theme.eventkit.colors.warning,
-        opacity: 0.7,
-        fontSize: '14px',
-    },
-    itemRename: {
-        color: theme.eventkit.colors.text_primary,
-        fontSize: '14px',
-    },
     divider: {
         backgroundColor: theme.eventkit.colors.text_primary,
-    },
-    tabs: {
-        visibility: 'visible',
-        marginLeft: '25px',
-        marginRight: '-1px',
-        color: theme.eventkit.colors.text_primary,
-    },
-    tab: {
-        opacity: 0.9,
-        textTransform: 'none',
-        fontSize: '11px',
-        minWidth: '0',
-        borderTopRightRadius: '5px',
-        borderTopLeftRadius: '5px',
-        backgroundColor: '#d6d6d6',
-        border: 'solid 1px #707274',
-        margin: '1px',
-        '&$disabled': {
-            opacity: 1,
-        },
-        '&$selected': {
-            backgroundColor: theme.eventkit.colors.white,
-        },
-    },
-    selected: {},
-    disabled: {},
-    paginationRange: {
-        marginLeft: '5px',
-        fontSize: '10px',
-        fontStyle: 'italic'
-    },
-    noResultsContainer: {
-        textAlign: 'center',
-        marginTop: '80%',
-    },
-    noGroupTitle: {
-        fontSize: '10px,'
-    },
-    noGroupResultsText: {
-        fontStyle: 'italic',
-        fontSize: '10px',
-        color: theme.eventkit.colors.grey,
     },
     showButtons: {
         minWidth: '117px',
@@ -158,7 +84,8 @@ export interface Props {
     onLeaveGroupClick: (group: Eventkit.Group) => void;
     onDeleteGroupClick: (group: Eventkit.Group) => void;
     onRenameGroupClick: (group: Eventkit.Group) => void;
-    getOneGroup: (args: any) => void;
+    getGroups: (args: any) => void;
+    setFetchingGroups: () => void;
     theme: Eventkit.Theme & Theme;
     classes: { [className: string]: string };
     user: Eventkit.User['user'];
@@ -168,15 +95,28 @@ export interface Props {
 
 export function GroupsDrawer(props: Props) {
     const pageSize = 20;
-    const {classes} = props;
+    const {classes, page} = props;
     const [selectedTab, setSelectedTab] = useState('admin');
-    const [page, setPage] = useState(props.page);
+    const [query, setQuery] = useState('');
 
-    const makePartialGroupsRequest = async (params: {}) => {
-        await props.getOneGroup({
-            ...params,
-        });
-    };
+    useEffect(() => {
+        if (query !== '') {
+            props.getGroups({
+                user: props.user.username,
+                pageSize,
+                permission_level: selectedTab,
+                search: query,
+            });
+        } else {
+            props.getGroups({
+                user: props.user.username,
+                pageSize,
+                page,
+                permission_level: selectedTab,
+                search: query,
+            });
+        }
+    }, [props.user.username, pageSize, page, selectedTab, query]);
 
     const getGroupsRange = () => {
         if (props.groups.groups.length > 0) {
@@ -203,35 +143,17 @@ export function GroupsDrawer(props: Props) {
             setSelectedTab('');
         } else {
             setSelectedTab(newValue);
-            makePartialGroupsRequest({
-                page: 1,
-                page_size: pageSize,
-                permission_level: newValue
-            });
-            setPage(1);
             props.handlePage(1);
         }
     };
 
     const loadNext = () => {
         if (props.nextPage) {
-            makePartialGroupsRequest({
-                page: page + 1,
-                page_size: pageSize,
-                permission_level: selectedTab
-            });
-            setPage(page + 1);
             props.handlePage(page + 1);
         }
     };
 
     const loadPrevious = () => {
-        makePartialGroupsRequest({
-            page: page - 1,
-            page_size: pageSize,
-            permission_level: selectedTab
-        });
-        setPage(page - 1);
         props.handlePage(page - 1);
     };
 
@@ -300,9 +222,7 @@ export function GroupsDrawer(props: Props) {
                         props.usersCount})`}
                 </MenuItem>
             </MenuList>
-
             <Divider className={classes.divider}/>
-
             <span
                 className={`qa-GroupsDrawer-membersHeading ${classes.heading}`}
             >
@@ -318,253 +238,24 @@ export function GroupsDrawer(props: Props) {
                     <strong>NEW GROUP</strong>
                 </ButtonBase>
             </span>
-            <Tabs
-                className={classes.tabs}
-                value={(selectedTab) || false}
-                onChange={handleChange}
-            >
-                <Tab
-                    style={{width: '32%', display: 'grid'}}
-                    value="admin"
-                    classes={{
-                        root: classes.tab,
-                        selected: classes.selected,
-                        disabled: classes.disabled,
-                    }}
-                    label={(<div><strong>Admin</strong></div>)}
-                    disabled={selectedTab === 'admin'}
-                />
-                <Tab
-                    style={{width: '32%', display: 'grid'}}
-                    value="member"
-                    classes={{
-                        root: classes.tab,
-                        selected: classes.selected,
-                        disabled: classes.disabled,
-                    }}
-                    label={(<div><strong>Member</strong></div>)}
-                    disabled={selectedTab === 'member'}
-                />
-                <Tab
-                    style={{width: '32%', display: 'grid'}}
-                    value="none"
-                    classes={{
-                        root: classes.tab,
-                        selected: classes.selected,
-                        disabled: classes.disabled,
-                    }}
-                    label={(<div><strong>Other</strong></div>)}
-                    disabled={selectedTab === 'none'}
-                />
-            </Tabs>
+            <GroupsHeaderTabs selectedTab={selectedTab} handleChange={handleChange}/>
             <Divider className={classes.divider}/>
-            {selectedTab === 'admin' &&
-            <>
-                    <span className={`qa-GroupsDrawer-groupsHeading ${classes.subHeading}`}>
-                        <strong>ADMINISTRATOR</strong>
-                        <span
-                            className={classes.paginationRange}
-                            id="range"
-                        >
-                            {getGroupsRange()}
-                        </span>
-                        <InfoIcon
-                            onClick={
-                                props.onAdministratorInfoClick}
-                            className={`qa-GroupsDrawer-infoIcon ${classes.infoIcon}`}
-                        />
-                    </span>
-                <CustomScrollbar className="qa-GroupsDrawer-CustomScrollbar" style={{height: 'calc(100% - 145px)'}}>
-                    <MenuList className="qa-GroupsDrawer-MenuList">
-                        {
-                            props.ownedGroups.length > 0 ? props.ownedGroups.map(group => (
-                                    <MenuItem
-                                        key={group.name}
-                                        value={group.id}
-                                        onClick={() => props.onSelectionChange(group.id)}
-                                        selected={
-                                            props.selectedValue === group.id}
-                                        className={`qa-GroupsDrawer-ownedGroupItem ${classes.item}`}
-                                    >
-                                        <div style={{display: 'flex', flex: '1 1 auto', maxWidth: 250 - 40 - 32}}>
-                                            <div className={classes.groupName}>
-                                                {group.name}
-                                            </div>
-                                            <div style={{flex: '0 0 auto'}}>
-                                                ({group.members.length})
-                                            </div>
-                                        </div>
-                                        <IconMenu
-                                            className="qa-GroupsDrawer-groupOptions"
-                                            style={{height: '32px', width: '32px', padding: '0px'}}
-                                        >
-                                            <MenuItem
-                                                key="rename"
-                                                className={`qa-GroupsDrawer-group-rename ${classes.itemRename}`}
-                                                onClick={() => {
-                                                    props.onRenameGroupClick(group);
-                                                }}
-                                            >
-                                                Change Group Name
-                                            </MenuItem>
-                                            <MenuItem
-                                                key="leave"
-                                                className={`qa-GroupsDrawer-group-leave ${classes.itemWarn}`}
-                                                onClick={() => {
-                                                    props.onLeaveGroupClick(group);
-                                                }}
-                                            >
-                                                Leave Group
-                                            </MenuItem>
-                                            <MenuItem
-                                                key="delete"
-                                                className={`qa-GroupsDrawer-group-delete ${classes.itemWarn}`}
-                                                onClick={() => {
-                                                    props.onDeleteGroupClick(group);
-                                                }}
-                                            >
-                                                Delete Group
-                                            </MenuItem>
-                                        </IconMenu>
-                                    </MenuItem>
-                                ))
-                                :
-                                <div className={classes.noResultsContainer}>
-                                    <div className={classes.noGroupTitle}>
-                                        No Results Found in this Group.
-                                    </div>
-                                    <div className={classes.noGroupResultsText}>
-                                        There may be results in the Member and Other tabs.
-                                    </div>
-                                </div>
-                        }
-                    </MenuList>
-                </CustomScrollbar>
-            </>
-            }
-            {selectedTab === 'member' &&
-            <>
-                <span
-                    className={`qa-GroupsDrawer-sharedGroupsHeading ${classes.subHeading}`}
-                >
-                        <strong>MEMBER ONLY</strong>
-                        <span
-                            className={classes.paginationRange}
-                            id="range"
-                        >
-                            {getGroupsRange()}
-                        </span>
-                        <InfoIcon
-                            onClick={
-                                props.onMemberInfoClick}
-                            className={`qa-GroupsDrawer-infoIcon ${classes.infoIcon}`}
-                        />
-                </span>
-                <CustomScrollbar style={{height: 'calc(100% - 145px)'}}>
-                    <MenuList className="qa-GroupsDrawer-MenuList">
-                        {props.sharedGroups.length > 0 ? props.sharedGroups.map(group => (
-                                <MenuItem
-                                    key={group.name}
-                                    value={group.id}
-                                    onClick={() => props.onSelectionChange(group.id)}
-                                    selected={
-                                        props.selectedValue === group.id}
-                                    className={`qa-GroupsDrawer-sharedGroupItem ${classes.item}`}
-                                >
-                                    <div style={{display: 'flex', flex: '1 1 auto', maxWidth: 250 - 40 - 32}}>
-                                        <div className={classes.groupName}>
-                                            {group.name}
-                                        </div>
-                                        <div style={{flex: '0 0 auto'}}>
-                                            ({group.members.length})
-                                        </div>
-                                    </div>
-                                    <IconMenu
-                                        className="qa-GroupsDrawer-groupOptions"
-                                        style={{width: '32px', height: '32px'}}
-                                    >
-                                        [
-                                        <MenuItem
-                                            key="leave"
-                                            className={`qa-GroupsDrawer-group-leave ${classes.itemWarn}`}
-                                            onClick={() => {
-                                                props.onLeaveGroupClick(group);
-                                            }}
-                                        >
-                                            Leave Group
-                                        </MenuItem>
-                                        ]
-                                    </IconMenu>
-                                </MenuItem>
-                            ))
-                            :
-                            <div className={classes.noResultsContainer}>
-                                <div className={classes.noGroupTitle}>
-                                    No Results Found in this Group.
-                                </div>
-                                <div className={classes.noGroupResultsText}>
-                                    There may be results in the Admin and Other tabs.
-                                </div>
-                            </div>
-                        }
-                    </MenuList>
-                </CustomScrollbar>
-            </>
-            }
-            {selectedTab === 'none' &&
-            <>
-                <span
-                    className={`qa-GroupsDrawer-allGroupsHeading ${classes.subHeading}`}
-                >
-                <strong>ALL OTHERS</strong>
-                <span
-                    className={classes.paginationRange}
-                    id="range"
-                >
-                        {getGroupsRange()}
-                </span>
-                <InfoIcon
-                    onClick={
-                        props.onOtherInfoClick}
-                    className={`qa-GroupsDrawer-infoIcon ${classes.infoIcon}`}
+                <GroupPanelBody
+                    ownedGroups={props.ownedGroups}
+                    sharedGroups={props.sharedGroups}
+                    otherGroups={props.otherGroups}
+                    selectedTab={selectedTab}
+                    selectedValue={props.selectedValue}
+                    onRenameGroupClick={props.onRenameGroupClick}
+                    onLeaveGroupClick={props.onLeaveGroupClick}
+                    onDeleteGroupClick={props.onDeleteGroupClick}
+                    onSelectionChange={props.onSelectionChange}
+                    onAdministratorInfoClick={props.onAdministratorInfoClick}
+                    onMemberInfoClick={props.onMemberInfoClick}
+                    onOtherInfoClick={props.onOtherInfoClick}
+                    getGroupsRange={getGroupsRange}
+                    setFetchingGroups={props.setFetchingGroups}
                 />
-                </span>
-                <CustomScrollbar style={{height: 'calc(100% - 145px)'}}>
-                    <MenuList className="qa-GroupsDrawer-MenuList">
-                        {
-                            props.otherGroups.length > 0 ? props.otherGroups.map(group => (
-                                    <MenuItem
-                                        key={group.name}
-                                        value={group.id}
-                                        onClick={() => props.onSelectionChange(group.id)}
-                                        selected={
-                                            props.selectedValue === group.id}
-                                        className={`qa-GroupsDrawer-otherGroupItem ${classes.item}`}
-                                    >
-                                        <div style={{display: 'flex', maxWidth: 250 - 40 - 32}}>
-                                            <div className={classes.groupName}>
-                                                {group.name}
-                                            </div>
-                                            <div style={{flex: '0 0 auto'}}>
-                                                ({group.members.length})
-                                            </div>
-                                        </div>
-                                    </MenuItem>
-                                ))
-                                :
-                                <div className={classes.noResultsContainer}>
-                                    <div className={classes.noGroupTitle}>
-                                        No Results Found in this Group.
-                                    </div>
-                                    <div className={classes.noGroupResultsText}>
-                                        There may be results in the Admin and Member tabs.
-                                    </div>
-                                </div>
-                        }
-                    </MenuList>
-                </CustomScrollbar>
-            </>
-            }
             <div
                 className="show-buttons"
                 style={{display: 'flex', marginLeft: '2px'}}
@@ -599,6 +290,7 @@ export function GroupsDrawer(props: Props) {
                     pageSize={pageSize}
                     page={page}
                     permission_level={selectedTab}
+                    setQuery={setQuery}
                 />
             </div>
         </Drawer>
@@ -616,9 +308,12 @@ function mapStateToProps(state) {
 
 function mapDispatchToProps(dispatch) {
     return {
-        getOneGroup: params => (
-            dispatch(getOneGroup(params))
+        getGroups: params => (
+            dispatch(getGroups(params))
         ),
+        setFetchingGroups: () => {
+            dispatch({type: types.FETCHING_GROUPS});
+        },
     };
 }
 

@@ -4,9 +4,8 @@ import {createStyles, Theme, withStyles, withTheme} from '@material-ui/core/styl
 import 'react-bootstrap-typeahead/css/Typeahead.css';
 import '../../styles/typeaheadStyles.css';
 import debounce from 'lodash/debounce';
-import CircularProgress from '@material-ui/core/CircularProgress';
 import {Menu, Typeahead} from 'react-bootstrap-typeahead';
-import {getOneGroup, getSearchedGroups, types} from "../../actions/groupActions";
+import {getGroups, types} from "../../actions/groupActions";
 import TypeaheadMenuItem from "../MapTools/TypeaheadMenuItem";
 import SearchAOIButton from "../MapTools/SearchAOIButton";
 
@@ -60,13 +59,13 @@ interface Props {
         fetching: boolean;
         empty: boolean;
     };
-    getOneGroup: (args: any, append: boolean) => void;
-    getSearchedGroups: (args: any) => void;
+    getGroups: (args: any, append: boolean) => void;
     setFetchingGroups: () => void;
     user: Eventkit.User['user'];
     pageSize: number;
     page: number;
     permission_level: string;
+    setQuery: (value: string) => void;
     theme: any;
     classes: { [className: string]: string };
 }
@@ -122,18 +121,7 @@ export class SearchGroupsToolbar extends React.Component<Props, State> {
     }
 
     handleChange(e) {
-        const {user, pageSize, page, permission_level} = this.props;
-        const query = e.slice(0, 1000);
-        if (query === '') {
-            this.props.getOneGroup({
-                user: user.username,
-                pageSize,
-                page,
-                permission_level,
-            }, true);
-        } else {
-            this.props.getSearchedGroups(query);
-        }
+        this.props.setQuery(e);
     }
 
     setAllButtonsDefault() {
@@ -214,18 +202,7 @@ export class SearchGroupsToolbar extends React.Component<Props, State> {
                         minLength={0}
                         renderMenu={renderer}
                         className="qa-SearchGroupsToolbar-typeahead"
-                    >
-                        {this.props.groups.fetching ?
-                            <span className={classes.spinnerContainer}>
-                                <CircularProgress
-                                    size={25}
-                                    color="primary"
-                                    className={classes.spinner}
-                                />
-                            </span>
-                            : null
-                        }
-                    </Typeahead>
+                    />
                 </div>
                 <div className={classes.buttonContainer}>
                     <SearchAOIButton
@@ -246,14 +223,11 @@ function mapStateToProps(state) {
 
 function mapDispatchToProps(dispatch) {
     return {
-        getSearchedGroups: (query) => {
-            dispatch(getSearchedGroups(query));
-        },
         setFetchingGroups: () => {
             dispatch({type: types.FETCHING_GROUPS});
         },
-        getOneGroup: params => (
-            dispatch(getOneGroup(params))
+        getGroups: params => (
+            dispatch(getGroups(params))
         ),
     };
 }

@@ -24,9 +24,10 @@ describe('SearchAOIToolbar button', () => {
             data: [],
             cancelSource: false,
         },
-        getOneGroup: sinon.spy(),
+        getGroups: sinon.spy(),
         getSearchedGroups: sinon.spy(),
         setFetchingGroups: sinon.spy(),
+        setQuery: sinon.spy(),
         user: {},
         pageSize: 10,
         page: 1,
@@ -85,19 +86,5 @@ describe('SearchAOIToolbar button', () => {
         expect(wrapper.state().suggestions).toEqual(suggestions);
         wrapper.instance().handleInputChange('e');
         expect(wrapper.state().suggestions.length).toEqual(0);
-    });
-
-    it('handleChange should call getSearchedGroups if query is not empty', () => {
-        const props = getProps();
-        const wrapper = getWrapper(props);
-        wrapper.instance().handleChange('xxx');
-        expect(props.getSearchedGroups.calledWith('xxx')).toEqual(true);
-    });
-
-    it('handleChange should call getOneGroup if query is empty', () => {
-        const props = getProps();
-        const wrapper = getWrapper(props);
-        wrapper.instance().handleChange('');
-        expect(props.getOneGroup.calledOnce).toBe(true);
     });
 });

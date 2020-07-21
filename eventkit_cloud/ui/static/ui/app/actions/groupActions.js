@@ -43,58 +43,6 @@ export function getGroups(params, append = false) {
     };
 }
 
-export function getSearchedGroups(query) {
-    return {
-        types: [
-            types.FETCHING_GROUPS,
-            types.FETCHED_GROUPS,
-            types.FETCH_GROUPS_ERROR,
-        ],
-        getCancelSource: state => state.geocode.cancelSource,
-        cancellable: true,
-        url: `/api/groups?search=${query}`,
-        method: 'GET',
-        onSuccess: response => ({
-            groups: response.data || [],
-        }),
-        onError: (e) => {
-            let error = e.response.data;
-            if (!error) {
-                error = 'An unknown error has occurred';
-            }
-            return { error };
-        },
-    };
-}
-
-// api call for getting a permission_level-specific group ('admin', 'member', 'none')
-export function getOneGroup(params, append = false) {
-    return {
-        types: [
-            types.FETCHING_GROUPS,
-            types.FETCHED_GROUPS,
-            types.FETCH_GROUPS_ERROR,
-        ],
-        url: '/api/groups',
-        method: 'GET',
-        params,
-        payload: { append },
-        getCancelSource: state => state.groups.cancelSource,
-        cancellable: true,
-        onSuccess: (response) => {
-            // get the total count from the header
-            const totalGroups = Number(response.headers['total-groups']);
-            const { nextPage, range } = getHeaderPageInfo(response);
-            return {
-                groups: response.data,
-                total: totalGroups,
-                range,
-                nextPage,
-            };
-        },
-    };
-}
-
 export function getPermissionGroups(jobUid, params, append = false) {
     return {
         types: [

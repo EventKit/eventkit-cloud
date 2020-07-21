@@ -130,7 +130,6 @@ describe('UserGroupsPage component', () => {
             total: 0,
         },
         getGroups: sinon.spy(),
-        getOneGroup: sinon.spy(),
         deleteGroup: sinon.spy(),
         createGroup: sinon.spy(),
         updateGroup: sinon.spy(),
@@ -179,11 +178,11 @@ describe('UserGroupsPage component', () => {
         expect(wrapper.find(Help)).toHaveLength(1);
     });
 
-    it('componentDidMount should call makeUserRequest, getOneGroup and joyrideAddSteps', () => {
+    it('componentDidMount should call makeUserRequest, getGroups and joyrideAddSteps', () => {
         const makeRequestStub = sinon.stub(UserGroupsPage.prototype, 'makeUserRequest');
         const joyrideStub = sinon.stub(UserGroupsPage.prototype, 'joyrideAddSteps');
         setup();
-        expect(props.getOneGroup.calledOnce).toBe(true);
+        expect(props.getGroups.calledOnce).toBe(true);
         expect(makeRequestStub.calledOnce).toBe(true);
         expect(joyrideStub.calledOnce).toBe(true);
         makeRequestStub.restore();
@@ -220,20 +219,20 @@ describe('UserGroupsPage component', () => {
 
     it('componentDidUpdate should handle updated', () => {
         const makeRequestStub = sinon.stub(instance, 'makeUserRequest');
-        const groupsCallCount = props.getOneGroup.callCount;
+        const groupsCallCount = props.getGroups.callCount;
         const userCallCount = makeRequestStub.callCount;
         wrapper.setProps({groups: {...props.groups, updated: true}});
-        expect(props.getOneGroup.callCount).toEqual(groupsCallCount + 1);
+        expect(props.getGroups.callCount).toEqual(groupsCallCount + 1);
         expect(makeRequestStub.callCount).toEqual(userCallCount + 1);
         makeRequestStub.restore();
     });
 
     it('componentDidUpdate should handle created with no users', () => {
         const makeRequestStub = sinon.stub(instance, 'makeUserRequest');
-        const groupsCallCount = props.getOneGroup.callCount;
+        const groupsCallCount = props.getGroups.callCount;
         const userCallCount = makeRequestStub.callCount;
         wrapper.setProps({groups: {...props.groups, created: true}});
-        expect(props.getOneGroup.callCount).toEqual(groupsCallCount + 1);
+        expect(props.getGroups.callCount).toEqual(groupsCallCount + 1);
         expect(makeRequestStub.callCount).toEqual(userCallCount);
         makeRequestStub.restore();
     });
@@ -241,11 +240,11 @@ describe('UserGroupsPage component', () => {
     it('componentDidUpdate should handle created with users', () => {
         const stateSpy = sinon.spy(instance, 'setState');
         const makeRequestStub = sinon.stub(instance, 'makeUserRequest');
-        const groupsCallCount = props.getOneGroup.callCount;
+        const groupsCallCount = props.getGroups.callCount;
         const userCallCount = makeRequestStub.callCount;
         wrapper.setState({createUsers: ['user_one']});
         wrapper.setProps({groups: {...props.groups, created: true}});
-        expect(props.getOneGroup.callCount).toEqual(groupsCallCount + 1);
+        expect(props.getGroups.callCount).toEqual(groupsCallCount + 1);
         expect(makeRequestStub.callCount).toEqual(userCallCount + 1);
         expect(stateSpy.calledWith({createUsers: []}));
         makeRequestStub.restore();
@@ -255,10 +254,10 @@ describe('UserGroupsPage component', () => {
     it('componentDidUpdate should handle deleted', () => {
         setup({location: {query: {groups: '12'}}});
         const makeRequestStub = sinon.stub(instance, 'makeUserRequest');
-        const groupsCallCount = props.getOneGroup.callCount;
+        const groupsCallCount = props.getGroups.callCount;
         browserHistory.reset();
         wrapper.setProps({groups: {...props.groups, deleted: true}});
-        expect(props.getOneGroup.callCount).toEqual(groupsCallCount + 1);
+        expect(props.getGroups.callCount).toEqual(groupsCallCount + 1);
         expect(browserHistory.calledOnce).toBe(true);
         expect(browserHistory.calledWith({...props.location, query: {}}));
         makeRequestStub.restore();

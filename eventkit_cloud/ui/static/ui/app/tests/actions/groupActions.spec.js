@@ -24,21 +24,6 @@ describe('userGroups actions', () => {
                 total: 12,
             });
         });
-    });
-
-    describe('getOneGroup action', () => {
-        it('should return the correct types', () => {
-            expect(actions.getOneGroup().types).toEqual([
-                actions.types.FETCHING_GROUPS,
-                actions.types.FETCHED_GROUPS,
-                actions.types.FETCH_GROUPS_ERROR,
-            ]);
-        });
-
-        it('getCancelSource should return the source', () => {
-            const state = { groups: { cancelSource: 'test' } };
-            expect(actions.getGroups().getCancelSource(state)).toEqual('test');
-        });
 
         it('onSuccess should return group that has permission_level "admin"', () => {
             const ret = {
@@ -59,8 +44,8 @@ describe('userGroups actions', () => {
                 permission_level: 'admin',
                 user: 'admin',
             };
-            expect(actions.getOneGroup(params).params).toEqual(params);
-            expect(actions.getOneGroup().onSuccess(ret)).toEqual({
+            expect(actions.getGroups(params).params).toEqual(params);
+            expect(actions.getGroups().onSuccess(ret)).toEqual({
                 groups: ret.data,
                 nextPage: false,
                 range: '',

@@ -33,7 +33,6 @@ import {
     deleteGroup,
     createGroup,
     updateGroup,
-    getOneGroup
 } from '../../actions/groupActions';
 import {getUsers} from '../../actions/usersActions';
 import {DrawerTimeout} from '../../actions/uiActions';
@@ -200,8 +199,7 @@ export interface Props {
     sharedGroups: Eventkit.Store.Groups;
     otherGroups: Eventkit.Store.Groups;
     users: Eventkit.Store.Users;
-    getGroups: (args: any) => void;
-    getOneGroup: (args: any, append: boolean) => void;
+    getGroups: (args: any, append: boolean) => void;
     deleteGroup: (id: string | number) => void;
     createGroup: (name: string, usernames: string[]) => void;
     updateGroup: (id: string | number, args: any) => void;
@@ -298,11 +296,11 @@ export class UserGroupsPage extends React.Component<Props, State> {
 
     componentDidMount() {
         this.makeUserRequest();
-        this.props.getOneGroup({
+        this.props.getGroups({
             user: this.props.user.username,
             page_size: this.pageSize,
             page: this.state.page,
-            permission_level: 'admin'
+            permission_level: 'admin',
         }, true);
 
         const steps = joyride.UserGroupsPage as any[];
@@ -343,13 +341,13 @@ export class UserGroupsPage extends React.Component<Props, State> {
         }
         if (this.props.groups.updated && !prevProps.groups.updated) {
             this.makeUserRequest();
-            this.props.getOneGroup({
+            this.props.getGroups({
                 page_size: this.pageSize,
                 page: this.state.page,
             }, true);
         }
         if (this.props.groups.created && !prevProps.groups.created) {
-            this.props.getOneGroup({
+            this.props.getGroups({
                 page_size: this.pageSize,
                 page: this.state.page,
             }, true);
@@ -359,7 +357,7 @@ export class UserGroupsPage extends React.Component<Props, State> {
             }
         }
         if (this.props.groups.deleted && !prevProps.groups.deleted) {
-            this.props.getOneGroup({
+            this.props.getGroups({
                 page_size: this.pageSize,
                 page: this.state.page,
             }, true);
@@ -1154,7 +1152,7 @@ export class UserGroupsPage extends React.Component<Props, State> {
                     }
                     className="qa-UserGroupsPage-RenameGroupDialog"
                 />
-                {this.props.groups.fetching || this.props.users.fetching
+                {this.props.users.fetching
                 || this.props.groups.creating || this.props.groups.deleting
                 || this.props.groups.updating ?
                     <div className={classes.loadingContainer}>
@@ -1263,9 +1261,6 @@ function mapDispatchToProps(dispatch) {
     return {
         getGroups: params => (
             dispatch(getGroups(params))
-        ),
-        getOneGroup: params => (
-            dispatch(getOneGroup(params))
         ),
         deleteGroup: id => (
             dispatch(deleteGroup(id))

@@ -1,9 +1,9 @@
 import * as React from 'react';
 import * as sinon from 'sinon';
 import {GroupsDrawer} from "../../components/UserGroupsPage/GroupsDrawer";
-import {Button, Drawer, Tab, Tabs} from "@material-ui/core";
+import {Button, Drawer} from "@material-ui/core";
 import {createShallow} from "@material-ui/core/test-utils";
-import IconMenu from "../../components/common/IconMenu";
+import GroupPanelBody from "../../components/UserGroupsPage/GroupPanelBody";
 
 describe('GroupsDrawer component', () => {
     let shallow: any;
@@ -73,6 +73,7 @@ describe('GroupsDrawer component', () => {
             members: ['user3', 'user2'],
             administrators: ['user3'],
         }],
+        user: {},
         usersCount: 2,
         onNewGroupClick: sinon.spy(),
         onSharedInfoClick: sinon.spy(),
@@ -89,61 +90,7 @@ describe('GroupsDrawer component', () => {
         const props = getProps();
         const wrapper = getWrapper(props);
         expect(wrapper.find(Drawer)).toHaveLength(1);
-        expect(wrapper.find(Tabs)).toHaveLength(1);
-        expect(wrapper.find(Tab)).toHaveLength(3);
         expect(wrapper.find(Button)).toHaveLength(2);
-    });
-
-    it('should default to show only MY GROUPS', () => {
-        const props = getProps();
-        const wrapper = getWrapper(props);
-        expect(wrapper.find('.qa-GroupsDrawer-ownedGroupItem')).toHaveLength(1);
-    });
-
-    it('clicking on "Member" tab should fire handleChange to show Shared Groups', () => {
-        const props = getProps();
-        const wrapper = getWrapper(props);
-        const mockedEvent = sinon.spy();
-        const mockCallBack = sinon.spy();
-        const value = 'member';
-        expect(wrapper
-            .find(Tab)
-            .at(0)
-            .props().value)
-            .toBe('admin');
-        mockCallBack(mockedEvent, value);
-        wrapper.find(Tab).at(0).simulate('change');
-        expect(mockCallBack.calledOnce).toBe(true);
-    });
-
-    it('Change Group Name should call onRenameGroupClick', () => {
-        const props = getProps();
-        const wrapper = getWrapper(props);
-        const item = wrapper.find('.qa-GroupsDrawer-ownedGroupItem');
-        expect(item.find(IconMenu)).toHaveLength(1);
-        expect(props.onRenameGroupClick.calledOnce).toBe(false);
-        item.find(IconMenu).props().children[0].props.onClick();
-        expect(props.onRenameGroupClick.calledOnce).toBe(true);
-    });
-
-    it('Delete Group Name should call onDeleteGroupClick', () => {
-        const props = getProps();
-        const wrapper = getWrapper(props);
-        const item = wrapper.find('.qa-GroupsDrawer-ownedGroupItem');
-        expect(item.find(IconMenu)).toHaveLength(1);
-        expect(props.onDeleteGroupClick.calledOnce).toBe(false);
-        item.find(IconMenu).props().children[2].props.onClick();
-        expect(props.onDeleteGroupClick.calledOnce).toBe(true);
-    });
-
-    it('clicking on indeterminate icon should call leave group', () => {
-        const props = getProps();
-        const wrapper = getWrapper(props);
-        const item = wrapper.find('.qa-GroupsDrawer-ownedGroupItem');
-        expect(item.find(IconMenu)).toHaveLength(1);
-        expect(props.onLeaveGroupClick.called).toBe(false);
-        item.find(IconMenu).props().children[1].props.onClick();
-        expect(props.onLeaveGroupClick.calledOnce).toBe(true);
-        expect(props.onLeaveGroupClick.calledWith(props.ownedGroups[0])).toBe(true);
+        expect(wrapper.find(GroupPanelBody)).toHaveLength(1);
     });
 });
