@@ -597,7 +597,7 @@ class JobViewSet(viewsets.ModelViewSet):
                 msg = "unidentified job attribute - %s" % attribute
                 return Response([{"detail": msg}], status.HTTP_400_BAD_REQUEST)
 
-        # update permissions if present.  Insure we are not left with 0 admministrators
+        # update permissions if present.  Ensure we are not left with 0 admministrators
         # users and / or groups may be updated.  If no update info is provided, maintain
         # the current set of permissions.
 
