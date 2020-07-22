@@ -98,7 +98,7 @@ describe('DataPackPage component', () => {
     });
 
     it('should render all the basic components', () => {
-        const header = shallow(wrapper.find(ShareBaseDialog).children()[0]);
+        const header = shallow(wrapper.find(ShareBaseDialog).props().children[0]);
         expect(header.find(Button)).toHaveLength(2);
     });
 
@@ -108,7 +108,7 @@ describe('DataPackPage component', () => {
     });
 
     it('should display the selected count on the header buttons', () => {
-        const header = shallow(wrapper.find(ShareBaseDialog).children()[0]);
+        const header = shallow(wrapper.find(ShareBaseDialog).props().children[0]);
         expect(header.find('.qa-DataPackShareDialog-Button-groups').html()).toContain('GROUPS (0)');
         expect(header.find('.qa-DataPackShareDialog-Button-members').html()).toContain('MEMBERS (0)');
     });
@@ -119,7 +119,7 @@ describe('DataPackPage component', () => {
         p.permissions.groups = { group_one: '', group_two: '', group_three: '' };
         p.permissions.members = { user_one: '', user_two: '', user_three: '' };
         setup(p);
-        const header = shallow(wrapper.find(ShareBaseDialog).children()[0]);
+        const header = shallow(wrapper.find(ShareBaseDialog).props().children[0]);
         expect(header.find('.qa-DataPackShareDialog-Button-groups').html()).toContain('GROUPS (3)');
         expect(header.find('.qa-DataPackShareDialog-Button-members').html()).toContain('MEMBERS (3)');
     });

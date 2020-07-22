@@ -304,7 +304,7 @@ export class DashboardPage extends React.Component<Props, State> {
         const {action, step, type} = data;
         if (action === 'close' || action === 'skip' || type === 'finished') {
             this.setState({isRunning: false});
-            this?.helpers.reset(true);
+            this?.helpers?.reset(true);
             window.location.hash = '';
         }
 

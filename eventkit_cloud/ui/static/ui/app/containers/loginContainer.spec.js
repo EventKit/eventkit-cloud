@@ -124,7 +124,10 @@ describe('loginContainer', () => {
         const wrapper = shallow(<Form {...props} />);
         const event = { preventDefault: sinon.spy() };
         const locationSpy = sinon.spy();
-        window.location.assign = locationSpy;
+        Object.defineProperty(window, 'location', {
+            writable: true,
+            value: { assign: locationSpy }
+        });
         wrapper.instance().handleOAuth(event);
         expect(event.preventDefault.calledOnce).toBe(true);
         expect(locationSpy.calledOnce).toBe(true);
