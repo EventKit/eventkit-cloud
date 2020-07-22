@@ -192,7 +192,8 @@ class TestExportTasks(ExportTaskBase):
                                             stage_dir=stage_dir, job_name=job_name, projection=projection)
         mock_convert.assert_called_once_with(fmt='gpkg', input_file=expected_output_path,
                                              output_file=expected_output_path,
-                                             task_uid=str(saved_export_task.uid))
+                                             task_uid=str(saved_export_task.uid),
+                                             projection=4326, boundary=None)
 
         self.assertEqual(expected_output_path, result['result'])
         self.assertEqual(expected_output_path, result['source'])

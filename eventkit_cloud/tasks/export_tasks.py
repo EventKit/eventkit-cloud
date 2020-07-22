@@ -665,8 +665,14 @@ def geopackage_export_task(
     gpkg_out_dataset = os.path.join(stage_dir, "{0}-{1}.gpkg".format(job_name, projection))
     selection = parse_result(result, "selection")
 
-    gpkg = gdalutils.convert(fmt="gpkg", input_file=gpkg_in_dataset, output_file=gpkg_out_dataset, task_uid=task_uid,
-                             boundary=selection, projection=projection)
+    gpkg = gdalutils.convert(
+        fmt="gpkg",
+        input_file=gpkg_in_dataset,
+        output_file=gpkg_out_dataset,
+        task_uid=task_uid,
+        boundary=selection,
+        projection=projection,
+    )
 
     result["file_format"] = "gpkg"
     result["result"] = gpkg
