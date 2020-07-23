@@ -114,7 +114,7 @@ class TestJobViewSet(APITestCase):
         get_estimate_cache_key_mock.return_value = self.cache_key
 
     def test_list(self, ):
-        expected = '/api/'
+        expected = '/api/jobs'
         url = reverse('api:jobs-list')
         self.assertEqual(expected, url)
 
