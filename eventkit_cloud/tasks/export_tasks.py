@@ -357,6 +357,9 @@ class ZipFileTask(FormatTask):
 
         retval = super(ZipFileTask, self).__call__(*args, **kwargs)
 
+        if retval["status"] == "CANCELED":
+            return retval
+
         if not kwargs["data_provider_task_record_uids"]:
             data_provider_task_record = DataProviderTaskRecord.objects.get(uid=kwargs["data_provider_task_record_uid"])
             data_provider_task_records = data_provider_task_record.run.provider_tasks.exclude(slug="run")
