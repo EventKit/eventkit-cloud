@@ -374,9 +374,16 @@ declare namespace Eventkit {
             error: any;
             fetched: boolean;
             fetching: boolean;
+            allGroups: Eventkit.Group[];
             groups: Eventkit.Group[];
+            ownedGroups: Eventkit.Group[];
+            sharedGroups: Eventkit.Group[];
+            otherGroups: Eventkit.Group[];
             updated: boolean;
             updating: boolean;
+            range: string;
+            nextPage: boolean;
+            total: number;
         }
 
         interface UserActivity {
