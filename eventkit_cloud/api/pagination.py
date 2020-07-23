@@ -16,7 +16,7 @@ class LinkHeaderPagination(PageNumberPagination):
     More information at http://www.django-rest-framework.org/api-guide/pagination/#header-based-pagination
     """
 
-    page_size = 10  # default page size
+    page_size = 20  # default page size
     page_size_query_param = "page_size"
 
     def get_paginated_response(self, data):

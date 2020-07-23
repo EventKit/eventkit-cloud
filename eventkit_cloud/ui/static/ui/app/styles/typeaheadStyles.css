@@ -14,6 +14,7 @@ has no support for inline styles :(
 .typeahead > div > div > input {
     height: 50px;
     color: #707274;
+    font-size: 12px;
     padding: 6px 48px 6px 12px !important;
     border: 0;
     border-top-right-radius: 5px;
