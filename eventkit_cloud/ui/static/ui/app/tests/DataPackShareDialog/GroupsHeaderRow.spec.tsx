@@ -40,10 +40,10 @@ describe('GroupsHeaderRow component', () => {
         expect(shallow(wrapper.find(CardHeader).props().title).find(ButtonBase)).toHaveLength(2);
     });
 
-    it('should render the indeterminate icon', () => {
+    it('should render the indeterminate icon', () => { 
         wrapper.setProps({ selectedCount: 1 });
         expect(shallow(wrapper.find(CardHeader).props().title).find(IndeterminateIcon)).toHaveLength(1);
-    } );
+    });
 
     it('handleClick should setState to open popover', () => {
         wrapper.setProps({ canUpdateAdmin: true });
