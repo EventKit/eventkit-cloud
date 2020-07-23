@@ -1651,6 +1651,23 @@ class GroupViewSet(viewsets.ModelViewSet):
         total = queryset.count()
         filtered_queryset = self.filter_queryset(queryset)
         filtered_queryset = annotate_groups_restricted(filtered_queryset, job)
+
+        permission_level = request.query_params.get("permission_level")
+        if permission_level == "admin":
+            filtered_queryset = filtered_queryset.filter(
+                group_permissions__user=request.user, group_permissions__permission=GroupPermissionLevel.ADMIN.value
+            )
+        elif permission_level == "member":
+            filtered_queryset = filtered_queryset.filter(
+                group_permissions__user=request.user, group_permissions__permission=GroupPermissionLevel.MEMBER.value
+            )
+        elif permission_level == "none":
+            filtered_queryset = filtered_queryset.exclude(
+                group_permissions__user=request.user, group_permissions__permission=GroupPermissionLevel.ADMIN.value
+            ).exclude(
+                group_permissions__user=request.user, group_permissions__permission=GroupPermissionLevel.MEMBER.value
+            )
+
         page = None
         if not request.query_params.get("disable_page"):
             page = self.paginate_queryset(filtered_queryset)

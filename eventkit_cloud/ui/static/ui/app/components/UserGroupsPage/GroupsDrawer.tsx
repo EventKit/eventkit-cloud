@@ -1,16 +1,25 @@
 import * as React from 'react';
-import { withTheme, Theme, withStyles, createStyles } from '@material-ui/core/styles';
-import Drawer from '@material-ui/core/Drawer';
+import {
+    createStyles, Theme,
+    withStyles,
+    withTheme
+} from "@material-ui/core/styles";
+import {Drawer, Divider} from '@material-ui/core';
 import MenuList from '@material-ui/core/MenuList';
 import MenuItem from '@material-ui/core/MenuItem';
-import Divider from '@material-ui/core/Divider';
 import ButtonBase from '@material-ui/core/ButtonBase';
-import InfoIcon from '@material-ui/icons/InfoOutlined';
 import AddCircleIcon from '@material-ui/icons/AddCircle';
-import IconMenu from '../common/IconMenu';
-import CustomScrollbar from '../common/CustomScrollbar';
+import Button from '@material-ui/core/Button';
+import ArrowLeftIcon from '@material-ui/icons/ArrowLeft';
+import ArrowRightIcon from '@material-ui/icons/ArrowRight';
+import {useEffect, useState} from 'react';
+import {connect} from "react-redux";
+import {getGroups, types} from "../../actions/groupActions";
+import SearchGroupsToolbar from "./SearchGroupsToolbar";
+import GroupsHeaderTabs from "./GroupsHeaderTabs";
+import GroupPanelBody from "./GroupPanelBody";
 
-const jss = (theme: Eventkit.Theme & Theme) => createStyles({
+const jss = (theme: Theme & Eventkit.Theme) => createStyles({
     drawer: {
         backgroundColor: theme.eventkit.colors.white,
         top: '130px',
@@ -30,11 +39,6 @@ const jss = (theme: Eventkit.Theme & Theme) => createStyles({
         display: 'block',
         fontSize: '18px',
     },
-    subHeading: {
-        padding: '10px 20px 5px',
-        color: theme.eventkit.colors.text_primary,
-        display: 'block',
-    },
     newGroupIcon: {
         fill: theme.eventkit.colors.primary,
         height: '24px',
@@ -50,28 +54,14 @@ const jss = (theme: Eventkit.Theme & Theme) => createStyles({
         lineHeight: '24px',
         padding: '0px 10px',
     },
-    groupName: {
-        textOverflow: 'ellipsis',
-        overflow: 'hidden',
-        flex: '0 1 auto',
-        paddingRight: '5px',
+    divider: {
+        backgroundColor: theme.eventkit.colors.text_primary,
     },
-    infoIcon: {
-        fill: theme.eventkit.colors.primary,
-        height: '20px',
-        width: '17px',
-        marginLeft: '10px',
-        verticalAlign: 'text-top',
-        cursor: 'pointer',
-    },
-    itemWarn: {
-        color: theme.eventkit.colors.warning,
-        opacity: 0.7,
-        fontSize: '14px',
-    },
-    itemRename: {
-        color: theme.eventkit.colors.text_primary,
-        fontSize: '14px',
+    showButtons: {
+        minWidth: '117px',
+        margin: '5px 2.5px',
+        fontSize: '12px',
+        border: 'solid 1px #707274',
     },
 });
 
@@ -80,10 +70,13 @@ export interface Props {
     selectedValue: number | string;
     onSelectionChange: (value: string | number) => void;
     open: boolean;
+    groups: Eventkit.Store.Groups;
     ownedGroups: Eventkit.Group[];
     sharedGroups: Eventkit.Group[];
     otherGroups: Eventkit.Group[];
     usersCount: number;
+    nextPage: boolean;
+    total: number;
     onNewGroupClick: () => void;
     onAdministratorInfoClick: () => void;
     onMemberInfoClick: () => void;
@@ -91,190 +84,237 @@ export interface Props {
     onLeaveGroupClick: (group: Eventkit.Group) => void;
     onDeleteGroupClick: (group: Eventkit.Group) => void;
     onRenameGroupClick: (group: Eventkit.Group) => void;
+    getGroups: (args: any) => void;
+    setFetchingGroups: () => void;
     theme: Eventkit.Theme & Theme;
     classes: { [className: string]: string };
+    user: Eventkit.User['user'];
+    handlePage: (args: any) => void;
+    page: number;
 }
 
-export class GroupsDrawer extends React.Component<Props, {}> {
-    render() {
-        const { classes } = this.props;
+export function GroupsDrawer(props: Props) {
+    const pageSize = 20;
+    const {classes, page} = props;
+    const [selectedTab, setSelectedTab] = useState('admin');
+    const [query, setQuery] = useState('');
 
-        return (
-            <Drawer
-                variant="persistent"
-                anchor="right"
-                open={this.props.open}
-                className="qa-GroupsDrawer-Drawer"
-                classes={{ paper: classes.drawer }}
+    useEffect(() => {
+        if (query !== '') {
+            props.getGroups({
+                user: props.user.username,
+                pageSize,
+                permission_level: selectedTab,
+                search: query,
+            });
+        } else {
+            props.getGroups({
+                user: props.user.username,
+                pageSize,
+                page,
+                permission_level: selectedTab,
+                search: query,
+            });
+        }
+    }, [props.user.username, pageSize, page, selectedTab, query]);
+
+    const getGroupsRange = () => {
+        if (props.groups.groups.length > 0) {
+            if (props.groups.range) {
+                const rangeParts = props.groups.range.split('/');
+                if (rangeParts.length !== 2) {
+                    return '';
+                }
+                const startIndex = (page - 1) * pageSize + 1;
+                const endIndex = pageSize * page;
+                if (endIndex <= parseInt(rangeParts[1])) {
+                    return `(${startIndex}-${endIndex} of ${rangeParts[1]})`;
+                } else {
+                    return `(${startIndex}-${rangeParts[1]} of ${rangeParts[1]})`;
+                }
+            }
+            return '';
+        }
+        return '(0 of 0)';
+    };
+
+    const handleChange = (event, newValue) => {
+        if (selectedTab === newValue) {
+            setSelectedTab('');
+        } else {
+            setSelectedTab(newValue);
+            props.handlePage(1);
+        }
+    };
+
+    const loadNext = () => {
+        if (props.nextPage) {
+            props.handlePage(page + 1);
+        }
+    };
+
+    const loadPrevious = () => {
+        props.handlePage(page - 1);
+    };
+
+    const loadNextDisabled = () => {
+        if (selectedTab === 'admin') {
+            if (!props.nextPage) {
+                return true;
+            }
+        }
+        if (selectedTab === 'member') {
+            if (!props.nextPage) {
+                return true;
+            }
+        }
+        if (selectedTab === 'none') {
+            if (!props.nextPage) {
+                return true;
+            }
+        }
+    };
+
+    const loadPreviousDisabled = () => {
+        if (selectedTab === 'admin') {
+            if (page === 1) {
+                return true;
+            }
+        }
+        if (selectedTab === 'member') {
+            if (page === 1) {
+                return true;
+            }
+        }
+        if (selectedTab === 'none') {
+            if (page === 1) {
+                return true;
+            }
+        }
+    };
+
+    return (
+        <Drawer
+            variant="persistent"
+            anchor="right"
+            open={
+                props.open}
+            className="qa-GroupsDrawer-Drawer"
+            classes={{paper: classes.drawer}}
+        >
+            <MenuList
+                className="qa-GroupsDrawer-MenuList"
+                style={{padding: '16px 0px'}}
             >
-                <MenuList
-                    className="qa-GroupsDrawer-MenuList"
-                    style={{ padding: '16px 0px' }}
-                >
-                    <span
-                        className={`qa-GroupsDrawer-membersHeading ${classes.heading}`}
-                    >
-                        <strong>MEMBERS</strong>
-                    </span>
-                    <MenuItem
-                        className={`qa-GroupsDrawer-allMembers ${classes.item}`}
-                        value="all"
-                        onClick={() => this.props.onSelectionChange('all')}
-                        selected={this.props.selectedValue === 'all'}
-                    >
-                        {`All (${this.props.usersCount})`}
-                    </MenuItem>
-                </MenuList>
-
-                <Divider className="qa-GroupsDrawer-Divider" />
-
                 <span
                     className={`qa-GroupsDrawer-membersHeading ${classes.heading}`}
                 >
-                    <strong>GROUPS</strong>
-                    <ButtonBase
-                        onClick={this.props.onNewGroupClick}
-                        className={`qa-GroupsDrawer-addGroup ${classes.newGroupBtn}`}
-                    >
-                        <AddCircleIcon
-                            className={`qa-GroupsDrawer-newGroupIcon ${classes.newGroupIcon}`}
-                        />
-                        <strong>NEW GROUP</strong>
-                    </ButtonBase>
+                    <strong>MEMBERS</strong>
                 </span>
-
-                <CustomScrollbar className="qa-GroupsDrawer-CustomScrollbar" style={{ height: 'calc(100% - 145px)' }} >
-                    <MenuList
-                        className="qa-GroupsDrawer-MenuList"
-                    >
-                        <span
-                            className={`qa-GroupsDrawer-groupsHeading ${classes.subHeading}`}
-                        >
-                            <strong>ADMINISTRATOR</strong>
-                            <InfoIcon
-                                onClick={this.props.onAdministratorInfoClick}
-                                className={`qa-GroupsDrawer-infoIcon ${classes.infoIcon}`}
-                            />
-                        </span>
-                        {this.props.ownedGroups.map(group => (
-                            <MenuItem
-                                key={group.name}
-                                value={group.id}
-                                onClick={() => this.props.onSelectionChange(group.id)}
-                                selected={this.props.selectedValue === group.id}
-                                className={`qa-GroupsDrawer-groupItem ${classes.item}`}
-                            >
-                                <div style={{ display: 'flex', flex: '1 1 auto', maxWidth: 250 - 40 - 32 }}>
-                                    <div className={classes.groupName}>
-                                        {group.name}
-                                    </div>
-                                    <div style={{ flex: '0 0 auto' }}>
-                                        ({group.members.length})
-                                    </div>
-                                </div>
-                                <IconMenu
-                                    className="qa-GroupsDrawer-groupOptions"
-                                    style={{ height: '32px', width: '32px', padding: '0px' }}
-                                >
-                                    <MenuItem
-                                        key="rename"
-                                        className={`qa-GroupsDrawer-group-rename ${classes.itemRename}`}
-                                        onClick={() => { this.props.onRenameGroupClick(group); }}
-                                    >
-                                        Change Group Name
-                                    </MenuItem>
-                                    <MenuItem
-                                        key="leave"
-                                        className={`qa-GroupsDrawer-group-leave ${classes.itemWarn}`}
-                                        onClick={() => { this.props.onLeaveGroupClick(group); }}
-                                    >
-                                        Leave Group
-                                    </MenuItem>
-                                    <MenuItem
-                                        key="delete"
-                                        className={`qa-GroupsDrawer-group-delete ${classes.itemWarn}`}
-                                        onClick={() => { this.props.onDeleteGroupClick(group); }}
-                                    >
-                                        Delete Group
-                                    </MenuItem>
-                                </IconMenu>
-                            </MenuItem>
-                        ))}
-
-                        <span
-                            className={`qa-GroupsDrawer-sharedGroupsHeading ${classes.subHeading}`}
-                        >
-                            <strong>MEMBER ONLY</strong>
-                            <InfoIcon
-                                onClick={this.props.onMemberInfoClick}
-                                className={`qa-GroupsDrawer-infoIcon ${classes.infoIcon}`}
-                            />
-                        </span>
-                        {this.props.sharedGroups.map(group => (
-                            <MenuItem
-                                key={group.name}
-                                value={group.id}
-                                onClick={() => this.props.onSelectionChange(group.id)}
-                                selected={this.props.selectedValue === group.id}
-                                className={`qa-GroupsDrawer-sharedGroupItem ${classes.item}`}
-                            >
-                                <div style={{ display: 'flex', flex: '1 1 auto', maxWidth: 250 - 40 - 32 }}>
-                                    <div className={classes.groupName}>
-                                        {group.name}
-                                    </div>
-                                    <div style={{ flex: '0 0 auto' }}>
-                                        ({group.members.length})
-                                    </div>
-                                </div>
-                                <IconMenu
-                                    className="qa-GroupsDrawer-groupOptions"
-                                    style={{ width: '32px', height: '32px' }}
-                                >
-                                    [
-                                    <MenuItem
-                                        key="leave"
-                                        className={`qa-GroupsDrawer-group-leave ${classes.itemWarn}`}
-                                        onClick={() => { this.props.onLeaveGroupClick(group); }}
-                                    >
-                                        Leave Group
-                                    </MenuItem>
-                                    ]
-                                </IconMenu>
-                            </MenuItem>
-                        ))}
-
-                        <span
-                            className={`qa-GroupsDrawer-allGroupsHeading ${classes.subHeading}`}
-                        >
-                            <strong>ALL OTHERS</strong>
-                            <InfoIcon
-                                onClick={this.props.onOtherInfoClick}
-                                className={`qa-GroupsDrawer-infoIcon ${classes.infoIcon}`}
-                            />
-                        </span>
-                        {this.props.otherGroups.map(group => (
-                            <MenuItem
-                                key={group.name}
-                                value={group.id}
-                                onClick={() => this.props.onSelectionChange(group.id)}
-                                selected={this.props.selectedValue === group.id}
-                                className={`qa-GroupsDrawer-otherGroupItem ${classes.item}`}
-                            >
-                                <div style={{ display: 'flex', maxWidth: 250 - 40 - 32 }}>
-                                    <div className={classes.groupName}>
-                                        {group.name}
-                                    </div>
-                                    <div style={{ flex: '0 0 auto' }}>
-                                        ({group.members.length})
-                                    </div>
-                                </div>
-                            </MenuItem>
-                        ))}
-                    </MenuList>
-                </CustomScrollbar>
-            </Drawer>
-        );
-    }
+                <MenuItem
+                    className={`qa-GroupsDrawer-allMembers ${classes.item}`}
+                    value="all"
+                    onClick={() => props.onSelectionChange('all')}
+                    selected={
+                        props.selectedValue === 'all'}
+                >
+                    {`All (${
+                        props.usersCount})`}
+                </MenuItem>
+            </MenuList>
+            <Divider className={classes.divider}/>
+            <span
+                className={`qa-GroupsDrawer-membersHeading ${classes.heading}`}
+            >
+                <strong>GROUPS</strong>
+                <ButtonBase
+                    onClick={
+                        props.onNewGroupClick}
+                    className={`qa-GroupsDrawer-addGroup ${classes.newGroupBtn}`}
+                >
+                    <AddCircleIcon
+                        className={`qa-GroupsDrawer-newGroupIcon ${classes.newGroupIcon}`}
+                    />
+                    <strong>NEW GROUP</strong>
+                </ButtonBase>
+            </span>
+            <GroupsHeaderTabs selectedTab={selectedTab} handleChange={handleChange}/>
+            <Divider className={classes.divider}/>
+                <GroupPanelBody
+                    ownedGroups={props.ownedGroups}
+                    sharedGroups={props.sharedGroups}
+                    otherGroups={props.otherGroups}
+                    selectedTab={selectedTab}
+                    selectedValue={props.selectedValue}
+                    onRenameGroupClick={props.onRenameGroupClick}
+                    onLeaveGroupClick={props.onLeaveGroupClick}
+                    onDeleteGroupClick={props.onDeleteGroupClick}
+                    onSelectionChange={props.onSelectionChange}
+                    onAdministratorInfoClick={props.onAdministratorInfoClick}
+                    onMemberInfoClick={props.onMemberInfoClick}
+                    onOtherInfoClick={props.onOtherInfoClick}
+                    getGroupsRange={getGroupsRange}
+                    setFetchingGroups={props.setFetchingGroups}
+                />
+            <div
+                className="show-buttons"
+                style={{display: 'flex', marginLeft: '2px'}}
+            >
+                <Button
+                    className={classes.showButtons}
+                    variant="contained"
+                    color="secondary"
+                    disabled={
+                        loadPreviousDisabled()}
+                    onClick={loadPrevious}
+                >
+                    <ArrowLeftIcon style={{fontSize: 'x-large'}}/>
+                    PREVIOUS
+                </Button>
+                <Button
+                    className={classes.showButtons}
+                    variant="contained"
+                    color="secondary"
+                    disabled={
+                        loadNextDisabled()}
+                    onClick={loadNext}
+                >
+                    NEXT
+                    <ArrowRightIcon style={{fontSize: 'x-large'}}/>
+                </Button>
+            </div>
+            <Divider className={classes.divider}/>
+            <div className="search-groups-toolbar">
+                <SearchGroupsToolbar
+                    user={props.user}
+                    pageSize={pageSize}
+                    page={page}
+                    permission_level={selectedTab}
+                    setQuery={setQuery}
+                />
+            </div>
+        </Drawer>
+    );
 }
 
-export default withTheme()(withStyles(jss)(GroupsDrawer));
+function mapStateToProps(state) {
+    return {
+        groups: state.groups,
+        user: state.user.data.user,
+        nextPage: state.groups.nextPage,
+        total: state.groups.total,
+    };
+}
+
+function mapDispatchToProps(dispatch) {
+    return {
+        getGroups: params => (
+            dispatch(getGroups(params))
+        ),
+        setFetchingGroups: () => {
+            dispatch({type: types.FETCHING_GROUPS});
+        },
+    };
+}
+
+export default withTheme()(withStyles(jss)(connect(mapStateToProps, mapDispatchToProps)(GroupsDrawer)));
