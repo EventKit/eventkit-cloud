@@ -2203,23 +2203,5 @@ def get_jobs_via_permissions(permissions):
 def api_docs_view(request):
     if request.user.is_authenticated:
         return render(request, template_name="swagger-ui.html", context={"schema_url": "api:openapi-schema"})
-
-
     else:
         return redirect("/api/login?next=/api/docs")
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
