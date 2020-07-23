@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { createShallow } from '@material-ui/core/test-utils';
+import {createShallow} from '@material-ui/core/test-utils';
 import * as sinon from 'sinon';
 import Joyride from 'react-joyride';
 import Help from '@material-ui/icons/Help';
@@ -11,7 +11,7 @@ import BaseDialog from '../../components/Dialog/BaseDialog';
 import UserRow from '../../components/UserGroupsPage/UserRow';
 import OwnUserRow from '../../components/UserGroupsPage/OwnUserRow';
 import UserHeader from '../../components/UserGroupsPage/UserHeader';
-import { UserGroupsPage } from '../../components/UserGroupsPage/UserGroupsPage';
+import {UserGroupsPage} from '../../components/UserGroupsPage/UserGroupsPage';
 import history from '../../utils/history';
 import queryString from 'query-string';
 
@@ -64,6 +64,36 @@ describe('UserGroupsPage component', () => {
             updated: false,
             error: null,
         },
+        ownedGroups: {
+            ownedGroups: [
+                {
+                name: 'owned group',
+                id: 1,
+                administrators: ['user_one'],
+                members: ['user_one', 'user_two'],
+            }
+            ]
+        },
+         sharedGroups: {
+            sharedGroups: [
+                {
+                name: 'shared group',
+                id: 2,
+                administrators: ['user_two'],
+                members: ['user_two'],
+            }
+            ]
+        },
+         otherGroups: {
+            otherGroups: [
+                {
+                name: 'other group',
+                id: 3,
+                administrators: ['user_three'],
+                members: ['user_three', 'user_two'],
+            }
+            ]
+        },
         users: {
             users: [
                 {
@@ -108,15 +138,15 @@ describe('UserGroupsPage component', () => {
         classes: {},
     });
 
-    const config = { USER_GROUPS_PAGE_SIZE: '20' };
+    const config = {USER_GROUPS_PAGE_SIZE: '20'};
 
     let props;
     let wrapper;
     let instance;
     const setup = (overrides = {}) => {
-        props = { ...getProps(), ...overrides };
+        props = {...getProps(), ...overrides};
         wrapper = shallow(<UserGroupsPage {...props} />, {
-            context: { config },
+            context: {config},
         });
         instance = wrapper.instance();
     };
@@ -160,15 +190,15 @@ describe('UserGroupsPage component', () => {
     });
 
     it('componentDidUpdate should handle a query change', () => {
-        setup({ location: { search: queryString.stringify({ ordering: 'username', group: '2' }) } });
+        setup({location: {search: queryString.stringify({ordering: 'username', group: '2'})}});
         const requestStub = sinon.stub(instance, 'makeUserRequest');
         const nextProps = getProps();
-        nextProps.location.search = queryString.stringify({ ordering: 'username', group: '1' });
+        nextProps.location.search = queryString.stringify({ordering: 'username', group: '1'});
         wrapper.setProps(nextProps);
         expect(requestStub.calledOnce).toBe(true);
         expect(requestStub.calledWith(queryString.parse(nextProps.location.search))).toBe(true);
         const lastProps = getProps();
-        lastProps.location.search = queryString.stringify({ ordering: 'username' });
+        lastProps.location.search = queryString.stringify({ordering: 'username'});
         wrapper.setProps(lastProps);
         expect(requestStub.calledTwice).toBe(true);
         expect(requestStub.calledWith(queryString.parse(lastProps.location.search))).toBe(true);
@@ -176,14 +206,14 @@ describe('UserGroupsPage component', () => {
     });
 
     it('componentDidUpdate should handle users fetched', () => {
-        wrapper.setState({ selectedUsers: [props.users.users[1], props.users.users[2]] });
+        wrapper.setState({selectedUsers: [props.users.users[1], props.users.users[2]]});
         const stateStub = sinon.stub(instance, 'setState');
         const nextProps = getProps();
         nextProps.users.fetched = true;
         nextProps.users.users = [nextProps.users.users[0], nextProps.users.users[1]];
         wrapper.setProps(nextProps);
         expect(stateStub.calledOnce).toBe(true);
-        expect(stateStub.calledWith({ selectedUsers: [nextProps.users.users[1]] })).toBe(true);
+        expect(stateStub.calledWith({selectedUsers: [nextProps.users.users[1]]})).toBe(true);
         stateStub.restore();
     });
 
@@ -191,7 +221,7 @@ describe('UserGroupsPage component', () => {
         const makeRequestStub = sinon.stub(instance, 'makeUserRequest');
         const groupsCallCount = props.getGroups.callCount;
         const userCallCount = makeRequestStub.callCount;
-        wrapper.setProps({ groups: { ...props.groups, updated: true } });
+        wrapper.setProps({groups: {...props.groups, updated: true}});
         expect(props.getGroups.callCount).toEqual(groupsCallCount + 1);
         expect(makeRequestStub.callCount).toEqual(userCallCount + 1);
         makeRequestStub.restore();
@@ -201,7 +231,7 @@ describe('UserGroupsPage component', () => {
         const makeRequestStub = sinon.stub(instance, 'makeUserRequest');
         const groupsCallCount = props.getGroups.callCount;
         const userCallCount = makeRequestStub.callCount;
-        wrapper.setProps({ groups: { ...props.groups, created: true } });
+        wrapper.setProps({groups: {...props.groups, created: true}});
         expect(props.getGroups.callCount).toEqual(groupsCallCount + 1);
         expect(makeRequestStub.callCount).toEqual(userCallCount);
         makeRequestStub.restore();
@@ -212,30 +242,30 @@ describe('UserGroupsPage component', () => {
         const makeRequestStub = sinon.stub(instance, 'makeUserRequest');
         const groupsCallCount = props.getGroups.callCount;
         const userCallCount = makeRequestStub.callCount;
-        wrapper.setState({ createUsers: ['user_one'] });
-        wrapper.setProps({ groups: { ...props.groups, created: true } });
+        wrapper.setState({createUsers: ['user_one']});
+        wrapper.setProps({groups: {...props.groups, created: true}});
         expect(props.getGroups.callCount).toEqual(groupsCallCount + 1);
         expect(makeRequestStub.callCount).toEqual(userCallCount + 1);
-        expect(stateSpy.calledWith({ createUsers: [] }));
+        expect(stateSpy.calledWith({createUsers: []}));
         makeRequestStub.restore();
         stateSpy.restore();
     });
 
     it('componentDidUpdate should handle deleted', () => {
-        setup({ location: { query: { groups: '12' }}});
+        setup({location: {query: {groups: '12'}}});
         const makeRequestStub = sinon.stub(instance, 'makeUserRequest');
         const groupsCallCount = props.getGroups.callCount;
         browserHistory.reset();
-        wrapper.setProps({ groups: { ...props.groups, deleted: true } });
+        wrapper.setProps({groups: {...props.groups, deleted: true}});
         expect(props.getGroups.callCount).toEqual(groupsCallCount + 1);
         expect(browserHistory.calledOnce).toBe(true);
-        expect(browserHistory.calledWith({ ...props.location, query: {} }));
+        expect(browserHistory.calledWith({...props.location, query: {}}));
         makeRequestStub.restore();
     });
 
     it('componentDidUpdate should handle groups error', () => {
         const showStub = sinon.stub(instance, 'showErrorDialog');
-        wrapper.setProps({ groups: { ...props.groups, error: 'oh no an error' } });
+        wrapper.setProps({groups: {...props.groups, error: 'oh no an error'}});
         expect(showStub.calledOnce).toBe(true);
         expect(showStub.calledWith('oh no an error')).toBe(true);
         showStub.restore();
@@ -243,41 +273,46 @@ describe('UserGroupsPage component', () => {
 
     it('componentDidUpdate should handle users error', () => {
         const showStub = sinon.stub(instance, 'showErrorDialog');
-        wrapper.setProps({ users: { ...props.users, error: 'oh no an error' } });
+        wrapper.setProps({users: {...props.users, error: 'oh no an error'}});
         expect(showStub.calledOnce).toBe(true);
         expect(showStub.calledWith('oh no an error')).toBe(true);
         showStub.restore();
     });
 
     it('getQueryGroup should return null if there is no query group found', () => {
-        setup({ location: { query: { ordering: 'username' }}});
+        setup({location: {query: {ordering: 'username'}}});
         expect(instance.getQueryGroup()).toBe(null);
     });
 
     it('getQueryGroup should return the correct group object', () => {
-        const location = { search: queryString.stringify({ ordering: 'username', groups: String(props.groups.groups[0].id) }) };
-        setup({ location });
+        const location = {
+            search: queryString.stringify({
+                ordering: 'username',
+                groups: String(props.groups.groups[0].id)
+            })
+        };
+        setup({location});
         expect(instance.getQueryGroup()).toEqual(props.groups.groups[0]);
     });
 
     it('getGroupTitle should return "All Members"', () => {
-        setup({ location: { query: { ordering: 'username' }}});
+        setup({location: {query: {ordering: 'username'}}});
         expect(instance.getGroupTitle()).toEqual('All Members');
     });
 
     it('getGroupTitle should return "No Members Matching Group Found"', () => {
-        setup({ location: { search: queryString.stringify({ groups: 'some group' })}});
+        setup({location: {search: queryString.stringify({groups: 'some group'})}});
         expect(instance.getGroupTitle()).toEqual('No Members Matching Group Found');
     });
 
     it('getGroupTitle should return the group name', () => {
-        setup({ location: { search: queryString.stringify({ groups: String(props.groups.groups[0]) })}});
+        setup({location: {search: queryString.stringify({groups: String(props.groups.groups[0])})}});
         expect(instance.getGroupTitle(props.groups.groups[0]))
             .toEqual(`${props.groups.groups[0].name} Members`);
     });
 
     it('makeUserRequest should make the default request', () => {
-        setup({ location: { search: queryString.stringify({ ordering: 'username', page_size: 20 }) } })
+        setup({location: {search: queryString.stringify({ordering: 'username', page_size: 20})}})
         props.getUsers.resetHistory();
         const expectedParams = {
             ordering: 'username',
@@ -290,7 +325,7 @@ describe('UserGroupsPage component', () => {
     });
 
     it('makeUserRequest should request users with a search param', () => {
-        setup({ location: { search: queryString.stringify({ ordering: 'username', search: 'my-search' })}});
+        setup({location: {search: queryString.stringify({ordering: 'username', search: 'my-search'})}});
         props.getUsers.resetHistory();
         const expectedParams = {
             ordering: 'username',
@@ -303,7 +338,7 @@ describe('UserGroupsPage component', () => {
     });
 
     it('makeUserRequest should request users in a specific group', () => {
-        setup({ location: { search: queryString.stringify({ groups: 2 })}});
+        setup({location: {search: queryString.stringify({groups: 2})}});
         props.getUsers.resetHistory();
         const expectedParams = {
             groups: '2',
@@ -319,7 +354,7 @@ describe('UserGroupsPage component', () => {
         const drawerState = wrapper.state().drawerOpen;
         instance.toggleDrawer();
         expect(stateStub.calledOnce).toBe(true);
-        expect(stateStub.calledWith({ drawerOpen: !drawerState })).toBe(true);
+        expect(stateStub.calledWith({drawerOpen: !drawerState})).toBe(true);
         stateStub.restore();
     });
 
@@ -328,57 +363,57 @@ describe('UserGroupsPage component', () => {
         let expectedArray = props.users.users.filter(user => user.user.username !== props.user.username);
         instance.handleSelectAll(true);
         expect(stateStub.calledOnce).toBe(true);
-        expect(stateStub.calledWith({ selectedUsers: expectedArray })).toBe(true);
+        expect(stateStub.calledWith({selectedUsers: expectedArray})).toBe(true);
         expectedArray = [];
         instance.handleSelectAll(false);
         expect(stateStub.calledTwice).toBe(true);
-        expect(stateStub.calledWith({ selectedUsers: expectedArray })).toBe(true);
+        expect(stateStub.calledWith({selectedUsers: expectedArray})).toBe(true);
         stateStub.restore();
     });
 
     it('handleUserSelect should remove the user from selection', () => {
         const selection = props.users.users;
-        wrapper.setState({ selectedUsers: selection });
+        wrapper.setState({selectedUsers: selection});
         const stateStub = sinon.stub(instance, 'setState');
         instance.handleUserSelect(props.users.users[0]);
         const [, ...expectedUsers] = props.users.users;
         expect(stateStub.calledOnce).toBe(true);
-        expect(stateStub.calledWith({ selectedUsers: expectedUsers })).toBe(true);
+        expect(stateStub.calledWith({selectedUsers: expectedUsers})).toBe(true);
         stateStub.restore();
     });
 
     it('handleUserSelect should add the user to the selection', () => {
         const selection = props.users.users;
-        wrapper.setState({ selectedUsers: selection });
+        wrapper.setState({selectedUsers: selection});
         const stateStub = sinon.stub(instance, 'setState');
-        const newUser = { user: { username: 'new' } };
+        const newUser = {user: {username: 'new'}};
         instance.handleUserSelect(newUser);
         const expectedUsers = [...selection, newUser];
         expect(stateStub.calledOnce).toBe(true);
-        expect(stateStub.calledWith({ selectedUsers: expectedUsers }));
+        expect(stateStub.calledWith({selectedUsers: expectedUsers}));
     });
 
     it('handleSearchKeyDown should set query with search text', () => {
-        setup({ location: { search: queryString.stringify({ ordering: 'admin' }) } })
+        setup({location: {search: queryString.stringify({ordering: 'admin'})}})
         browserHistory.reset();
-        const fakeEvent = { key: 'Enter', target: { value: 'search text' } };
+        const fakeEvent = {key: 'Enter', target: {value: 'search text'}};
         instance.handleSearchKeyDown(fakeEvent);
         expect(browserHistory.calledOnce).toBe(true);
         expect(browserHistory.calledWith({
             ...props.location,
-            search: queryString.stringify({ ordering: 'admin', page_size: '20', search: 'search text' }),
+            search: queryString.stringify({ordering: 'admin', page_size: '20', search: 'search text'}),
         })).toBe(true);
     });
 
     it('handleSearchChange should clear search query if the input is empty', () => {
-        setup({ location: { search: queryString.stringify({ ordering: 'admin', search: 'search text' })}});
+        setup({location: {search: queryString.stringify({ordering: 'admin', search: 'search text'})}});
         browserHistory.reset();
         const value = '';
-        instance.handleSearchChange({ target: { value } });
+        instance.handleSearchChange({target: {value}});
         expect(browserHistory.calledOnce).toBe(true);
         expect(browserHistory.calledWith({
             ...props.location,
-            search: queryString.stringify({ ordering: 'admin', page_size: instance.pageSize }),
+            search: queryString.stringify({ordering: 'admin', page_size: instance.pageSize}),
         })).toBe(true);
     });
 
@@ -389,7 +424,7 @@ describe('UserGroupsPage component', () => {
         expect(browserHistory.calledOnce).toBe(true);
         expect(browserHistory.calledWith({
             ...props.location,
-            query: { ...props.location.search, ordering: val },
+            query: {...props.location.search, ordering: val},
         }));
     });
 
@@ -397,7 +432,7 @@ describe('UserGroupsPage component', () => {
         const stateStub = sinon.stub(instance, 'setState');
         instance.handleCreateOpen();
         expect(stateStub.calledOnce).toBe(true);
-        expect(stateStub.calledWith({ showCreate: true })).toBe(true);
+        expect(stateStub.calledWith({showCreate: true})).toBe(true);
         stateStub.restore();
     });
 
@@ -405,22 +440,22 @@ describe('UserGroupsPage component', () => {
         const stateStub = sinon.stub(instance, 'setState');
         instance.handleCreateClose();
         expect(stateStub.calledOnce).toBe(true);
-        expect(stateStub.calledWith({ showCreate: false, createInput: '' })).toBe(true);
+        expect(stateStub.calledWith({showCreate: false, createInput: ''})).toBe(true);
         stateStub.restore();
     });
 
     it('handleCreateInput should set createInput state', () => {
         const stateStub = sinon.stub(instance, 'setState');
         const val = 'create name';
-        instance.handleCreateInput({ target: { value: val } });
+        instance.handleCreateInput({target: {value: val}});
         expect(stateStub.calledOnce).toBe(true);
-        expect(stateStub.calledWith({ createInput: val })).toBe(true);
+        expect(stateStub.calledWith({createInput: val})).toBe(true);
         stateStub.restore();
     });
 
     it('handleCreateSave should call createGroup with state values and call create close', () => {
         const closeStub = sinon.stub(instance, 'handleCreateClose');
-        wrapper.setState({ createInput: 'input', createUsers: [props.users.users[0]] });
+        wrapper.setState({createInput: 'input', createUsers: [props.users.users[0]]});
         instance.handleCreateSave();
         expect(props.createGroup.calledOnce).toBe(true);
         expect(props.createGroup.calledWith('input', ['user_one'])).toBe(true);
@@ -430,10 +465,10 @@ describe('UserGroupsPage component', () => {
 
     it('handleRenameOpen should set open and the targetGroup', () => {
         const stateStub = sinon.stub(instance, 'setState');
-        const group = { id: 1 };
+        const group = {id: 1};
         instance.handleRenameOpen(group);
         expect(stateStub.calledOnce).toBe(true);
-        expect(stateStub.calledWith({ showRename: true, targetGroup: group }));
+        expect(stateStub.calledWith({showRename: true, targetGroup: group}));
         stateStub.restore();
     });
 
@@ -441,26 +476,26 @@ describe('UserGroupsPage component', () => {
         const stateStub = sinon.stub(instance, 'setState');
         instance.handleRenameClose();
         expect(stateStub.calledOnce).toBe(true);
-        expect(stateStub.calledWith({ showRename: false, renameInput: '', targetGroup: null }));
+        expect(stateStub.calledWith({showRename: false, renameInput: '', targetGroup: null}));
         stateStub.restore();
     });
 
     it('handleRenameInput should set the input state', () => {
         const stateStub = sinon.stub(instance, 'setState');
-        instance.handleRenameInput({ target: { value: 'test' } });
+        instance.handleRenameInput({target: {value: 'test'}});
         expect(stateStub.calledOnce).toBe(true);
-        expect(stateStub.calledWith({ renameInput: 'test' })).toBe(true);
+        expect(stateStub.calledWith({renameInput: 'test'})).toBe(true);
         stateStub.restore();
     });
 
     it('handleRenameSave should call updateGroup and renameClose', () => {
         const closeStub = sinon.stub(instance, 'handleRenameClose');
-        const group = { id: 1 };
+        const group = {id: 1};
         const input = 'test input';
-        wrapper.setState({ targetGroup: group, renameInput: input });
+        wrapper.setState({targetGroup: group, renameInput: input});
         instance.handleRenameSave();
         expect(props.updateGroup.calledOnce).toBe(true);
-        expect(props.updateGroup.calledWith(group.id, { name: input })).toBe(true);
+        expect(props.updateGroup.calledWith(group.id, {name: input})).toBe(true);
         expect(closeStub.calledOnce).toBe(true);
         closeStub.restore();
     });
@@ -471,7 +506,7 @@ describe('UserGroupsPage component', () => {
         const users = [props.users.users[0]];
         instance.handleNewGroup(users);
         expect(stateStub.calledOnce).toBe(true);
-        expect(stateStub.calledWith({ createUsers: users })).toBe(true);
+        expect(stateStub.calledWith({createUsers: users})).toBe(true);
         expect(openStub.calledOnce).toBe(true);
         openStub.restore();
         stateStub.restore();
@@ -480,10 +515,10 @@ describe('UserGroupsPage component', () => {
     it('handleAddUsers should set state and show Add dialog', () => {
         const stateStub = sinon.stub(instance, 'setState');
         const openStub = sinon.stub(instance, 'showAddUsersDialog');
-        const { users } = props.users;
+        const {users} = props.users;
         instance.handleAddUsers(users);
         expect(stateStub.calledOnce).toBe(true);
-        expect(stateStub.calledWith({ addUsers: users })).toBe(true);
+        expect(stateStub.calledWith({addUsers: users})).toBe(true);
         expect(openStub.calledOnce).toBe(true);
     });
 
@@ -492,7 +527,7 @@ describe('UserGroupsPage component', () => {
         const openStub = sinon.stub(instance, 'handleLeaveOpen');
         instance.handleLeaveGroupClick(props.groups.groups[0]);
         expect(stateStub.calledOnce).toBe(true);
-        expect(stateStub.calledWith({ targetGroup: props.groups.groups[0] })).toBe(true);
+        expect(stateStub.calledWith({targetGroup: props.groups.groups[0]})).toBe(true);
         expect(openStub.calledOnce).toBe(true);
         openStub.restore();
         stateStub.restore();
@@ -503,7 +538,7 @@ describe('UserGroupsPage component', () => {
         const openStub = sinon.stub(instance, 'handleDeleteOpen');
         instance.handleDeleteGroupClick(props.groups.groups[0]);
         expect(stateStub.calledOnce).toBe(true);
-        expect(stateStub.calledWith({ targetGroup: props.groups.groups[0] })).toBe(true);
+        expect(stateStub.calledWith({targetGroup: props.groups.groups[0]})).toBe(true);
         expect(openStub.calledOnce).toBe(true);
         openStub.restore();
         stateStub.restore();
@@ -513,7 +548,7 @@ describe('UserGroupsPage component', () => {
         const stateStub = sinon.stub(instance, 'setState');
         instance.handleLeaveOpen();
         expect(stateStub.calledOnce).toBe(true);
-        expect(stateStub.calledWith({ showLeave: true })).toBe(true);
+        expect(stateStub.calledWith({showLeave: true})).toBe(true);
         stateStub.restore();
     });
 
@@ -521,14 +556,14 @@ describe('UserGroupsPage component', () => {
         const stateStub = sinon.stub(instance, 'setState');
         instance.handleLeaveClose();
         expect(stateStub.calledOnce).toBe(true);
-        expect(stateStub.calledWith({ showLeave: false })).toBe(true);
+        expect(stateStub.calledWith({showLeave: false})).toBe(true);
         stateStub.restore();
     });
 
     it('handleLeaveClick should call updateGroup and leaveClose', () => {
         const closeStub = sinon.stub(instance, 'handleLeaveClose');
         const targetGroup = props.groups.groups[0];
-        wrapper.setState({ targetGroup });
+        wrapper.setState({targetGroup});
         instance.handleLeaveClick();
         expect(props.updateGroup.calledOnce).toBe(true);
         expect(props.updateGroup.calledWith(targetGroup.id)).toBe(true);
@@ -540,7 +575,7 @@ describe('UserGroupsPage component', () => {
         const stateStub = sinon.stub(instance, 'setState');
         instance.handleDeleteOpen();
         expect(stateStub.calledOnce).toBe(true);
-        expect(stateStub.calledWith({ showDelete: true })).toBe(true);
+        expect(stateStub.calledWith({showDelete: true})).toBe(true);
         stateStub.restore();
     });
 
@@ -548,14 +583,14 @@ describe('UserGroupsPage component', () => {
         const stateStub = sinon.stub(instance, 'setState');
         instance.handleDeleteClose();
         expect(stateStub.calledOnce).toBe(true);
-        expect(stateStub.calledWith({ showDelete: false })).toBe(true);
+        expect(stateStub.calledWith({showDelete: false})).toBe(true);
         stateStub.restore();
     });
 
     it('handleDeleteClick should call deleteGroup and handleDeleteClose', () => {
         const closeStub = sinon.stub(instance, 'handleDeleteClose');
         const group = props.groups.groups[0];
-        wrapper.setState({ targetGroup: group });
+        wrapper.setState({targetGroup: group});
         instance.handleDeleteClick();
         expect(props.deleteGroup.calledOnce).toBe(true);
         expect(props.deleteGroup.calledWith(group.id));
@@ -564,7 +599,7 @@ describe('UserGroupsPage component', () => {
     });
 
     it('handleDrawerSelectionChange should clear the group query', () => {
-        setup({ location: { query: { groups: '12' }}});
+        setup({location: {query: {groups: '12'}}});
         browserHistory.reset();
         const fakeValue = 'all';
         instance.handleDrawerSelectionChange(fakeValue);
@@ -582,32 +617,32 @@ describe('UserGroupsPage component', () => {
         expect(browserHistory.calledOnce).toBe(true);
         expect(browserHistory.calledWith({
             ...props.location,
-            query: { ...props.location.search, groups: fakeValue },
+            query: {...props.location.search, groups: fakeValue},
         }));
     });
 
     it('handleMakeAdmin should add the user to group admins and call updateGroup', () => {
         sinon.stub(instance, 'getQueryGroup').returns(props.groups.groups[0]);
-        const newUser = { user: { username: 'new user' } };
+        const newUser = {user: {username: 'new user'}};
         const groupId = props.groups.groups[0].id;
         const expectedAdmins = [...props.groups.groups[0].administrators, newUser.user.username];
         instance.handleMakeAdmin(newUser);
         expect(props.updateGroup.calledOnce).toBe(true);
-        expect(props.updateGroup.calledWith(groupId, { administrators: expectedAdmins })).toBe(true);
+        expect(props.updateGroup.calledWith(groupId, {administrators: expectedAdmins})).toBe(true);
     });
 
     it('handleDemoteAdmin should remove the user from the group admins and call updateGroup', () => {
-        const groups = { ...props.groups };
+        const groups = {...props.groups};
         groups.groups[0].administrators.push('new user');
-        setup({ groups });
+        setup({groups});
         sinon.stub(instance, 'getQueryGroup').returns(props.groups.groups[0]);
-        const newUser = { user: { username: 'new user' } };
+        const newUser = {user: {username: 'new user'}};
         const groupId = props.groups.groups[0].id;
         const expectedAdmins = [...props.groups.groups[0].administrators];
         expectedAdmins.splice(-1, 1);
         instance.handleDemoteAdmin(newUser);
         expect(props.updateGroup.calledOnce).toBe(true);
-        expect(props.updateGroup.calledWith(groupId, { administrators: expectedAdmins })).toBe(true);
+        expect(props.updateGroup.calledWith(groupId, {administrators: expectedAdmins})).toBe(true);
     });
 
     it('handleRemoveUser should not updateGroup if no queryGroup is found', () => {
@@ -616,8 +651,8 @@ describe('UserGroupsPage component', () => {
     });
 
     it('handleRemoveUser should update the group with user removed', () => {
-        props.location.search = queryString.stringify({ groups: '1' });
-        setup({ location: { search: queryString.stringify({ groups: '1' })}});
+        props.location.search = queryString.stringify({groups: '1'});
+        setup({location: {search: queryString.stringify({groups: '1'})}});
         const user = props.users.users[0];
         instance.handleRemoveUser(user);
         expect(props.updateGroup.calledOnce).toBe(true);
@@ -637,12 +672,12 @@ describe('UserGroupsPage component', () => {
             members: ['1', '2', '3'],
             administrators: ['1', '2', '3'],
         };
-        props.location.search = queryString.stringify({ groups: '12' });
+        props.location.search = queryString.stringify({groups: '12'});
         props.groups.groups.push(group);
         setup(props);
         const users = [
-            { user: { username: '1' } },
-            { user: { username: '2' } },
+            {user: {username: '1'}},
+            {user: {username: '2'}},
         ];
         instance.handleBatchRemoveUser(users);
         expect(props.updateGroup.calledOnce).toBe(true);
@@ -658,12 +693,12 @@ describe('UserGroupsPage component', () => {
     });
 
     it('handleBatchAdminRights should update group with new admins', () => {
-        props.location.search = queryString.stringify({ groups: String(props.groups.groups[0].id) });
+        props.location.search = queryString.stringify({groups: String(props.groups.groups[0].id)});
         const users = [
-            { user: { username: '1' } },
-            { user: { username: '2' } },
+            {user: {username: '1'}},
+            {user: {username: '2'}},
         ];
-        setup({ location: { search: queryString.stringify({ groups: String(props.groups.groups[0].id )})}});
+        setup({location: {search: queryString.stringify({groups: String(props.groups.groups[0].id)})}});
         instance.handleBatchAdminRights(users);
         const expectedAdmins = [...props.groups.groups[0].administrators, '1', '2'];
         expect(props.updateGroup.calledOnce).toBe(true);
@@ -673,28 +708,28 @@ describe('UserGroupsPage component', () => {
     });
 
     it('handleBatchAdminRights should update group with removed admins', () => {
-        const users = [{ user: { username: 'user_one' } }];
-        setup({ location: { search: queryString.stringify({ groups: String(props.groups.groups[0].id )})}});
+        const users = [{user: {username: 'user_one'}}];
+        setup({location: {search: queryString.stringify({groups: String(props.groups.groups[0].id)})}});
         instance.handleBatchAdminRights(users);
         expect(props.updateGroup.calledOnce).toBe(true);
-        expect(props.updateGroup.calledWith(props.groups.groups[0].id, { administrators: [] })).toBe(true);
+        expect(props.updateGroup.calledWith(props.groups.groups[0].id, {administrators: []})).toBe(true);
     });
 
     it('handleAddUsersSave should hide the dialog and update each group with new members', () => {
         const groups = [
-            { id: 0, members: [] },
-            { id: 1, members: [] },
+            {id: 0, members: []},
+            {id: 1, members: []},
         ];
         const users = [
-            { user: { username: '1' } },
-            { user: { username: '2' } },
+            {user: {username: '1'}},
+            {user: {username: '2'}},
         ];
         const hideStub = sinon.stub(instance, 'hideAddUsersDialog');
         instance.handleAddUsersSave(groups, users);
         expect(hideStub.calledOnce).toBe(true);
         expect(props.updateGroup.calledTwice).toBe(true);
-        expect(props.updateGroup.calledWith(groups[0].id, { members: ['1', '2'] })).toBe(true);
-        expect(props.updateGroup.calledWith(groups[1].id, { members: ['1', '2'] })).toBe(true);
+        expect(props.updateGroup.calledWith(groups[0].id, {members: ['1', '2']})).toBe(true);
+        expect(props.updateGroup.calledWith(groups[1].id, {members: ['1', '2']})).toBe(true);
         hideStub.restore();
     });
 
@@ -702,22 +737,22 @@ describe('UserGroupsPage component', () => {
         const stateStub = sinon.stub(instance, 'setState');
         instance.showAddUsersDialog();
         expect(stateStub.calledOnce).toBe(true);
-        expect(stateStub.calledWith({ showAddUsers: true })).toBe(true);
+        expect(stateStub.calledWith({showAddUsers: true})).toBe(true);
     });
 
     it('hideAddUsersDialog should set state false', () => {
         const stateStub = sinon.stub(instance, 'setState');
         instance.hideAddUsersDialog();
         expect(stateStub.calledOnce).toBe(true);
-        expect(stateStub.calledWith({ showAddUsers: false })).toBe(true);
+        expect(stateStub.calledWith({showAddUsers: false})).toBe(true);
     });
 
     it('showErrorDialog should set state with errors', () => {
         const stateStub = sinon.stub(instance, 'setState');
-        const message = { errors: [{ detail: 'an error' }] };
+        const message = {errors: [{detail: 'an error'}]};
         instance.showErrorDialog(message);
         expect(stateStub.calledOnce).toBe(true);
-        expect(stateStub.calledWith({ errors: message.errors })).toBe(true);
+        expect(stateStub.calledWith({errors: message.errors})).toBe(true);
         stateStub.restore();
     });
 
@@ -725,7 +760,7 @@ describe('UserGroupsPage component', () => {
         const stateStub = sinon.stub(instance, 'setState');
         instance.hideErrorDialog();
         expect(stateStub.calledOnce).toBe(true);
-        expect(stateStub.calledWith({ errors: [] })).toBe(true);
+        expect(stateStub.calledWith({errors: []})).toBe(true);
         stateStub.restore();
     });
 
@@ -733,7 +768,7 @@ describe('UserGroupsPage component', () => {
         const stateStub = sinon.stub(instance, 'setState');
         instance.showAdministratorInfoDialog();
         expect(stateStub.calledOnce).toBe(true);
-        expect(stateStub.calledWith({ showAdministratorInfo: true })).toBe(true);
+        expect(stateStub.calledWith({showAdministratorInfo: true})).toBe(true);
         stateStub.restore();
     });
 
@@ -741,7 +776,7 @@ describe('UserGroupsPage component', () => {
         const stateStub = sinon.stub(instance, 'setState');
         instance.hideAdministratorInfoDialog();
         expect(stateStub.calledOnce).toBe(true);
-        expect(stateStub.calledWith({ showAdministratorInfo: false })).toBe(true);
+        expect(stateStub.calledWith({showAdministratorInfo: false})).toBe(true);
         stateStub.restore();
     });
 
@@ -749,7 +784,7 @@ describe('UserGroupsPage component', () => {
         const stateStub = sinon.stub(instance, 'setState');
         instance.showMemberInfoDialog();
         expect(stateStub.calledOnce).toBe(true);
-        expect(stateStub.calledWith({ showMemberInfo: true })).toBe(true);
+        expect(stateStub.calledWith({showMemberInfo: true})).toBe(true);
         stateStub.restore();
     });
 
@@ -757,7 +792,7 @@ describe('UserGroupsPage component', () => {
         const stateStub = sinon.stub(instance, 'setState');
         instance.hideMemberInfoDialog();
         expect(stateStub.calledOnce).toBe(true);
-        expect(stateStub.calledWith({ showMemberInfo: false })).toBe(true);
+        expect(stateStub.calledWith({showMemberInfo: false})).toBe(true);
         stateStub.restore();
     });
 
@@ -765,7 +800,7 @@ describe('UserGroupsPage component', () => {
         const stateStub = sinon.stub(instance, 'setState');
         instance.showOtherInfoDialog();
         expect(stateStub.calledOnce).toBe(true);
-        expect(stateStub.calledWith({ showOtherInfo: true })).toBe(true);
+        expect(stateStub.calledWith({showOtherInfo: true})).toBe(true);
         stateStub.restore();
     });
 
@@ -773,7 +808,7 @@ describe('UserGroupsPage component', () => {
         const stateStub = sinon.stub(instance, 'setState');
         instance.hideOtherInfoDialog();
         expect(stateStub.calledOnce).toBe(true);
-        expect(stateStub.calledWith({ showOtherInfo: false })).toBe(true);
+        expect(stateStub.calledWith({showOtherInfo: false})).toBe(true);
         stateStub.restore();
     });
 
@@ -789,7 +824,7 @@ describe('UserGroupsPage component', () => {
         const stateSpy = sinon.stub(instance, 'setState');
         instance.joyrideAddSteps(steps);
         expect(stateSpy.calledOnce).toBe(true);
-        expect(stateSpy.calledWith({ steps }));
+        expect(stateSpy.calledWith({steps}));
         stateSpy.restore();
     });
 
@@ -797,7 +832,7 @@ describe('UserGroupsPage component', () => {
         const stateSpy = sinon.stub(instance, 'setState');
         instance.handleJoyride();
         expect(stateSpy.calledOnce).toBe(true);
-        expect(stateSpy.calledWith({ isRunning: false }));
+        expect(stateSpy.calledWith({isRunning: false}));
         stateSpy.restore();
     });
 
@@ -817,7 +852,7 @@ describe('UserGroupsPage component', () => {
         const stateSpy = sinon.stub(instance, 'setState');
         instance.callback(callbackData);
         expect(stateSpy.calledOnce).toBe(true);
-        expect(stateSpy.calledWith({ isRunning: false }));
+        expect(stateSpy.calledWith({isRunning: false}));
         stateSpy.restore();
     });
 
@@ -830,8 +865,8 @@ describe('UserGroupsPage component', () => {
             },
             type: 'step:fake',
         };
-        wrapper.setProps({ width: 'sm' });
-        wrapper.setState({ drawerOpen: false });
+        wrapper.setProps({width: 'sm'});
+        wrapper.setState({drawerOpen: false});
         const toggleStub = sinon.stub(instance, 'toggleDrawer').returns(Promise.resolve(true));
         instance.callback(data);
         expect(toggleStub.calledOnce).toBe(true);
@@ -848,7 +883,7 @@ describe('UserGroupsPage component', () => {
             type: 'step:before',
         };
         const scrollStub = sinon.stub();
-        instance.scrollbar = { scrollToTop: scrollStub };
+        instance.scrollbar = {scrollToTop: scrollStub};
         instance.callback(data);
         expect(scrollStub.calledOnce).toBe(true);
     });
@@ -862,13 +897,13 @@ describe('UserGroupsPage component', () => {
             },
             type: 'step:after',
         };
-        wrapper.setProps({ width: 'sm' });
+        wrapper.setProps({width: 'sm'});
         const toggleStub = sinon.stub(instance, 'toggleDrawer');
         const stateStub = sinon.stub(instance, 'setState');
         instance.callback(data);
         expect(toggleStub.calledOnce).toBe(true);
         expect(stateStub.calledOnce).toBe(true);
-        expect(stateStub.calledWith({ stepIndex: 3 }));
+        expect(stateStub.calledWith({stepIndex: 3}));
     });
 
     it('callback should selectAll', () => {

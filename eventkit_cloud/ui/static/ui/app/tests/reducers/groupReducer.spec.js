@@ -38,15 +38,22 @@ describe('userGroupsReducer', () => {
                 total: 12,
                 range: '1-12',
                 nextPage: true,
+                otherGroups: [],
+                ownedGroups: [],
+                sharedGroups: [],
             },
         )).toEqual({
             ...state,
             fetching: false,
             fetched: true,
             groups,
+            data: groups,
             total: 12,
             range: '1-12',
             nextPage: true,
+            otherGroups: [],
+            ownedGroups: [],
+            sharedGroups: [],
         });
     });
 
