@@ -34,8 +34,9 @@ describe('GroupsHeaderRow component', () => {
 
     beforeEach(setup);
 
-    it('should render the basic components', () => {
+    it('should render the basic components', () => {    
         expect(wrapper.find(Card)).toHaveLength(1);
+        console.log('tests')
         expect(wrapper.find(CardHeader)).toHaveLength(1);
         expect(shallow(wrapper.find(CardHeader).props().title).find(ButtonBase)).toHaveLength(2);
     });
