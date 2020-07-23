@@ -990,9 +990,7 @@ class JobSerializer(serializers.Serializer):
         provider_tasks, filtered_tasks = attribute_class_filter(obj.provider_tasks.all(), self.context["request"].user)
         for provider_task in provider_tasks:
             if hasattr(provider_task, "formats"):
-                serializer = ProviderTaskSerializer(
-                    provider_task, context={"request": self.context["request"]},
-                )
+                serializer = ProviderTaskSerializer(provider_task, context={"request": self.context["request"]})
                 if hasattr(provider_task, "provider"):
                     exports.append(serializer.data)
         return exports
