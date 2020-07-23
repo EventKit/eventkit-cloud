@@ -2181,7 +2181,7 @@ def geojson_to_geos(geojson_geom, srid=None):
     return geom
 
 
-def get_jobs_via_permissions(permissions):
+def get_jobs_via_permissions(permissions) :
 
     groups = Group.objects.filter(name__in=permissions.get("groups", []))
     group_query = [
