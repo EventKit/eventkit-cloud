@@ -2205,3 +2205,14 @@ def api_docs_view(request):
         return render(request, template_name="swagger-ui.html", context={"schema_url": "api:openapi-schema"})
     else:
         return redirect("/api/login?next=/api/docs")
+
+
+
+
+
+
+
+
+
+
+
