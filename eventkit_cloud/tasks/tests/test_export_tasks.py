@@ -30,12 +30,7 @@ from eventkit_cloud.tasks.helpers import default_format_time
 from eventkit_cloud.tasks.task_base import LockingTask
 from eventkit_cloud.tasks.enumerations import TaskStates
 from eventkit_cloud.tasks.export_tasks import zip_files
-from eventkit_cloud.tasks.models import (
-    ExportRun,
-    ExportTaskRecord,
-    FileProducingTaskResult,
-    DataProviderTaskRecord
-)
+from eventkit_cloud.tasks.models import DataProviderTaskRecord, ExportRun, ExportTaskRecord, FileProducingTaskResult, RunZipFile
 
 logger = logging.getLogger(__name__)
 
@@ -172,9 +167,12 @@ class TestExportTasks(ExportTaskBase):
         type(mock_request).id = PropertyMock(return_value=celery_uid)
         job_name = self.job.name.lower()
         projection = 4326
+        expected_provider_slug = "osm-generic"
+        date = default_format_time(timezone.now())
+        expected_outfile = f"{job_name}-{projection}-{expected_provider_slug}-{date}.gpkg"
         expected_output_path = os.path.join(os.path.join(settings.EXPORT_STAGING_ROOT.rstrip('\/'), str(self.run.uid)),
-                                            '{0}-{1}.gpkg'.format(job_name, projection))
-        expected_provider_slug = "slug"
+                                            expected_outfile)
+
         mock_convert.return_value = expected_output_path
 
         previous_task_result = {'source': expected_output_path}
@@ -197,14 +195,17 @@ class TestExportTasks(ExportTaskBase):
         self.assertEqual(expected_output_path, result['result'])
         self.assertEqual(expected_output_path, result['source'])
 
+    @patch('eventkit_cloud.tasks.export_tasks.get_provider_slug')
     @patch('eventkit_cloud.tasks.export_tasks.gdalutils')
-    def test_geotiff_export_task(self, mock_gdalutils):
+    def test_geotiff_export_task(self, mock_gdalutils, mock_get_provider_slug):
         # TODO: This can be setup as a way to test the other ExportTasks without all the boilerplate.
         ExportTask.__call__ = lambda *args, **kwargs: celery.Task.__call__(*args, **kwargs)
         example_geotiff = "example.tif"
         example_result = {"source": example_geotiff}
         task_uid = '1234'
-        expected_outfile = 'stage/job-4326.tif'
+        provider_slug = mock_get_provider_slug.return_value = "osm-generic"
+        date = default_format_time(timezone.now())
+        expected_outfile = f"stage/job-4326-{provider_slug}-{date}.tif"
         geotiff_export_task(result=example_result, task_uid=task_uid, stage_dir='stage', job_name='job')
         mock_gdalutils.convert.return_value = expected_outfile
         mock_gdalutils.convert.assert_called_once_with(boundary=None, fmt='gtiff',
@@ -224,13 +225,16 @@ class TestExportTasks(ExportTaskBase):
                                                        input_file=f'GTIFF_RAW:{example_geotiff}',
                                                        output_file=expected_outfile, task_uid=task_uid)
 
+    @patch('eventkit_cloud.tasks.export_tasks.get_provider_slug')
     @patch('eventkit_cloud.tasks.export_tasks.gdalutils')
-    def test_nitf_export_task(self, mock_gdalutils):
+    def test_nitf_export_task(self, mock_gdalutils, mock_get_provider_slug):
         ExportTask.__call__ = lambda *args, **kwargs: celery.Task.__call__(*args, **kwargs)
         example_nitf = "example.nitf"
         example_result = {"source": example_nitf}
         task_uid = '1234'
-        expected_outfile = 'stage/job-4326.nitf'
+        provider_slug = mock_get_provider_slug.return_value = "osm-generic"
+        date = default_format_time(timezone.now())
+        expected_outfile = f"stage/job-4326-{provider_slug}-{date}.nitf"
         nitf_export_task(result=example_result, task_uid=task_uid, stage_dir='stage', job_name='job')
         mock_gdalutils.convert.return_value = expected_outfile
         mock_gdalutils.convert.assert_called_once_with(creation_options=['ICORDS=G'], fmt='nitf',
@@ -362,12 +366,13 @@ class TestExportTasks(ExportTaskBase):
                 return None
 
         expected_archived_files = {
-            'data/osm/file1-osm-{0}.txt'.format(default_format_time(timezone.now())): 'osm/file1.txt',
-            'data/osm/file2-osm-{0}.txt'.format(default_format_time(timezone.now())): 'osm/file2.txt'}
+            'data/osm/file1.txt': 'osm/file1.txt',
+            'data/osm/file2.txt': 'osm/file2.txt'}
         run_uid = str(self.run.uid)
         self.run.job.include_zipfile = True
         self.run.job.event = 'test'
         self.run.job.save()
+        run_zip_file = RunZipFile.objects.create(run=self.run)
         zipfile = MockZipFile()
         mock_zipfile.return_value = zipfile
         stage_dir = settings.EXPORT_STAGING_ROOT
@@ -382,7 +387,7 @@ class TestExportTasks(ExportTaskBase):
         date = timezone.now().strftime('%Y%m%d')
         zipfile_name = os.path.join('/downloads', '{0}'.format(run_uid), 'testjob-test-eventkit-{0}.zip'.format(date))
         s3.return_value = "www.s3.eventkit-cloud/{}".format(zipfile_name)
-        result = zip_files(include_files=include_files, file_path=zipfile_path)
+        result = zip_files(include_files=include_files, run_zip_file_uid=run_zip_file.uid, file_path=zipfile_path)
         self.assertEqual(zipfile.files, expected_archived_files)
         self.assertEqual(result, zipfile_path)
 
@@ -682,14 +687,17 @@ class TestExportTasks(ExportTaskBase):
                 "/var/lib/eventkit/exports_stage/7fadf34e-58f9-4bb8-ab57-adc1015c4269/osm/osm_selection.geojson"],
             "name": "test", "project": "Test", "run_uid": "7fadf34e-58f9-4bb8-ab57-adc1015c4269",
             "url": "http://cloud.eventkit.test/status/2010025c-6d61-4a0b-8d5d-ff9c657259eb"}
-        provider_task_uid = "0d08ddf6-35c1-464f-b271-75f6911c3f78"
+        data_provider_task_record_uids = ["0d08ddf6-35c1-464f-b271-75f6911c3f78"]
         mock_get_metadata.return_value = metadata
-        expected_zip = "{0}.zip".format(metadata['name'])
+        run_zip_file = RunZipFile.objects.create(run=self.run)
+        expected_zip = f"{metadata['name']}-{run_zip_file.uid}.zip"
         mock_zip_files.return_value = expected_zip
-        returned_zip = create_zip_task.run(data_provider_task_uid=provider_task_uid)
+
+        returned_zip = create_zip_task.run(data_provider_task_record_uids=data_provider_task_record_uids, run_zip_file_uid=run_zip_file.uid)
         mock_generate_qgs_style.assert_called_once_with(metadata)
         mock_open.assert_called_once()
         mock_zip_files.assert_called_once_with(file_path=expected_zip,
+                                               run_zip_file_uid=run_zip_file.uid,
                                                include_files=set(metadata['include_files']),
                                                static_files=style_files,
                                                )

@@ -11,4 +11,6 @@ from eventkit_cloud.tasks.views import download
 urlpatterns = []
 
 
-urlpatterns += [re_path(r"^download", never_cache(login_required(download)))]
+urlpatterns += [
+    re_path(r"^download", never_cache(login_required(download))),
+]

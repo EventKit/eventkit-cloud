@@ -82,7 +82,7 @@ describe('StatusDownload component', () => {
             },
         },
         provider_tasks: providerTasks,
-        zipfile_url: 'http://cloud.eventkit.test/downloads/68/TestGPKG-WMTS-TestProject-eventkit-20170310.zip',
+        zipfile: {url: 'http://cloud.eventkit.test/downloads/68/TestGPKG-WMTS-TestProject-eventkit-20170310.zip'},
         expiration: '2017-03-24T15:52:35.637258Z',
     };
 

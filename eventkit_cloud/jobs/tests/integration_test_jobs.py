@@ -308,8 +308,9 @@ class TestJob(TestCase):
                                                     "formats": ["gpkg", "gtiff"]},
                                                    {"provider": "eventkit-integration-test-arc-raster",
                                                     "formats": ["gpkg", "gtiff"]},
-                                                   {"provider": "eventkit-integration-test-wfs",
-                                                    "formats": ["shp", "gpkg", "kml"]},
+                                                   # Commented out because the service is down.
+                                                   # {"provider": "eventkit-integration-test-wfs",
+                                                   #  "formats": ["shp", "gpkg", "kml"]},
                                                    {"provider": "eventkit-integration-test-wcs",
                                                     "formats": ["gtiff", "hfa"]}
                                                    # {"provider": "eventkit-integration-test-arc-fs",

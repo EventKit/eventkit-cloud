@@ -23,7 +23,7 @@ import {Breakpoint} from '@material-ui/core/styles/createBreakpoints';
 import moment from 'moment';
 
 interface Props {
-    provider: Eventkit.ProviderTask;
+    providerTask: Eventkit.ProviderTask;
     job: Eventkit.Job;
     selectedProviders: { [uid: string]: boolean };
     selectProvider: (providerTask: Eventkit.ProviderTask) => void;
@@ -160,7 +160,7 @@ export class ProviderRow extends React.Component<Props, State> {
         this.state = {
             openTable: false,
             selectedRows: {},
-            fileSize: this.getFileSize(props.provider.tasks),
+            fileSize: this.getFileSize(props.providerTask.tasks),
             providerDesc: '',
             providerDialogOpen: false,
             previewDialogOpen: false,
@@ -172,14 +172,14 @@ export class ProviderRow extends React.Component<Props, State> {
     componentWillMount() {
         // set state on the provider
         const rows = {};
-        const {uid} = this.props.provider;
+        const {uid} = this.props.providerTask;
         rows[uid] = false;
         this.setState({selectedRows: rows});
     }
 
     componentDidUpdate(prevProps: Props) {
-        if (this.props.provider.status !== prevProps.provider.status) {
-            this.setState({fileSize: this.getFileSize(this.props.provider.tasks)});
+        if (this.props.providerTask.status !== prevProps.providerTask.status) {
+            this.setState({fileSize: this.getFileSize(this.props.providerTask.tasks)});
         }
         if (this.props.selectedProviders !== this.state.selectedRows) {
             this.setState({selectedRows: this.props.selectedProviders});
@@ -408,23 +408,29 @@ export class ProviderRow extends React.Component<Props, State> {
     }
 
     private handleProviderOpen() {
-        const {provider} = this.props;
-        const propsProvider = this.props.providers.find(x => x.slug === provider.provider.slug);
+        const {providerTask} = this.props;
+        const propsProvider = this.props.providers.find(x => x.slug === providerTask.provider.slug);
         const providerDesc = propsProvider.service_description;
         this.setState({providerDesc, providerDialogOpen: true});
     }
 
     render() {
         const {classes} = this.props;
-        const {provider} = this.props;
+        const {providerTask} = this.props;
         const {job} = this.props;
 
-        const dataProviderTask = job && job.provider_tasks.find(obj => obj.provider === provider.name);
-        const propsProvider = this.props.providers.find(obj => obj.slug === provider.slug);
+        const dataProviderTask = job && job.provider_tasks.find(obj => obj.provider === providerTask.name);
+        const propsProvider = this.props.providers.find(obj => obj.slug === providerTask.provider.slug);
 
         // If available, get custom zoom levels from DataProviderTask otherwise use Provider defaults.
-        const min_zoom = dataProviderTask && dataProviderTask.min_zoom || propsProvider && propsProvider.level_from;
-        const max_zoom = dataProviderTask && dataProviderTask.max_zoom || propsProvider && propsProvider.level_to;
+        let min_zoom = (dataProviderTask) ? dataProviderTask.min_zoom : undefined;
+        if (Number.isNaN(min_zoom)) {
+            min_zoom = (propsProvider) ? propsProvider.level_from : 0;
+        }
+        let max_zoom = (dataProviderTask) ? dataProviderTask.max_zoom : undefined;
+        if (Number.isNaN(max_zoom)) {
+            max_zoom = (propsProvider) ? propsProvider.level_to : 0;
+        }
 
         const licenseData = propsProvider && propsProvider.license ?
             <LicenseRow name={propsProvider.license.name} text={propsProvider.license.text}/>
@@ -434,7 +440,7 @@ export class ProviderRow extends React.Component<Props, State> {
         const menuItems = [];
 
         let cancelMenuDisabled;
-        if (provider.status === 'PENDING' || provider.status === 'RUNNING') {
+        if (providerTask.status === 'PENDING' || providerTask.status === 'RUNNING') {
             cancelMenuDisabled = false;
         } else {
             cancelMenuDisabled = true;
@@ -447,7 +453,7 @@ export class ProviderRow extends React.Component<Props, State> {
                 disabled={cancelMenuDisabled}
                 style={{fontSize: '12px'}}
                 onClick={() => {
-                    this.props.onProviderCancel(provider.uid);
+                    this.props.onProviderCancel(providerTask.uid);
                 }}
             >
                 Cancel
@@ -463,18 +469,18 @@ export class ProviderRow extends React.Component<Props, State> {
             <MenuItem
                 className="qa-ProviderRow-MenuItem-preview"
                 key="viewPreviews"
-                disabled={!this.props.provider.preview_url}
+                disabled={!this.props.providerTask.preview_url}
                 style={{fontSize: '12px'}}
                 onClick={(event) => {
                     // provider IS a ProviderTask
-                    this.props.selectProvider(this.props.provider)
+                    this.props.selectProvider(this.props.providerTask)
                 }}
             >
                 View Data Preview
             </MenuItem>,
         );
 
-        const tasks = provider.tasks.filter(task => (task.display !== false));
+        const tasks = providerTask.tasks.filter(task => (task.display !== false));
 
         let tableData;
         if (this.state.openTable) {
@@ -547,7 +553,7 @@ export class ProviderRow extends React.Component<Props, State> {
         return (
             <div>
                 <Table
-                    key={provider.uid}
+                    key={providerTask.uid}
                     className="qa-ProviderRow-Table"
                     style={{width: '100%', backgroundColor: this.props.backgroundColor, tableLayout: 'fixed'}}
                 >
@@ -559,7 +565,7 @@ export class ProviderRow extends React.Component<Props, State> {
                                 className="qa-ProviderRow-TableCell-providerName"
                                 classes={{root: classes.providerColumn}}
                             >
-                                {provider.name}
+                                {providerTask.name}
                             </TableCell>
                             <TableCell
                                 className="qa-ProviderRow-TableCell-fileSize"
@@ -577,7 +583,7 @@ export class ProviderRow extends React.Component<Props, State> {
                                 className="qa-ProviderRow-TableCell-providerStatus"
                                 classes={{root: classes.providerStatusColumn}}
                             >
-                                {this.getProviderStatus(this.props.provider)}
+                                {this.getProviderStatus(this.props.providerTask)}
                             </TableCell>
                             <TableCell
                                 className="qa-ProviderRow-TableCell-menu"
@@ -595,7 +601,7 @@ export class ProviderRow extends React.Component<Props, State> {
                                 <BaseDialog
                                     className="qa-ProviderRow-BaseDialog"
                                     show={this.state.providerDialogOpen}
-                                    title={provider.name}
+                                    title={providerTask.name}
                                     onClose={this.handleProviderClose}
                                 >
                                     <div>Zoom Levels {min_zoom} - {max_zoom}</div>

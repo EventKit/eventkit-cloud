@@ -11,7 +11,7 @@ import {createStyles, IconButton, Theme, withStyles} from "@material-ui/core";
 import CloseIcon from '@material-ui/icons/Close';
 import axios from "axios";
 import {getCookie} from "../../utils/generic";
-import {useAsyncRequest} from "../../utils/hooks";
+import {useAsyncRequest} from "../../utils/hooks/api";
 
 const jss = (theme: Eventkit.Theme & Theme) => createStyles({
     iconBtn: {

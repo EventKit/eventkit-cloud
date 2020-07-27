@@ -116,13 +116,12 @@ class FileProducingTaskResult(UIDMixin, NotificationModelMixin):
         if not job:
             return False
 
-        # If there is one provider there is one class, but if the download is associated with the whole run, there
-        # can be multiple classes and the user would need to be associated with all of those classes to download.
+        # Check the associated RunZipFile for attribute classes.
         attribute_classes = []
-        if self.export_task.export_provider_task.provider:
-            attribute_classes.append(self.export_task.export_provider_task.provider.attribute_class)
-        else:
-            attribute_classes = self.export_task.export_provider_task.run.job.attribute_classes
+        for run_zip_file in self.runzipfile_set.all():
+            for data_provider_task_record in run_zip_file.data_provider_task_records.all():
+                if data_provider_task_record.provider.attribute_class:
+                    attribute_classes.append(data_provider_task_record.provider.attribute_class)
 
         for attribute_class in attribute_classes:
             if attribute_class and not attribute_class.users.filter(id=user.id):
@@ -344,3 +343,21 @@ def prefetch_export_runs(queryset_list_or_model):
     elif isinstance(queryset_list_or_model, ExportRun):
         models.prefetch_related_objects([queryset_list_or_model], *prefetch_args)
     return queryset_list_or_model
+
+
+class RunZipFile(UIDMixin, TimeStampedModelMixin, TimeTrackingModelMixin):
+
+    run = models.ForeignKey(ExportRun, on_delete=models.CASCADE, related_name="zip_files", null=True, blank=True)
+    data_provider_task_records = models.ManyToManyField(DataProviderTaskRecord)
+    downloadable_file = models.ForeignKey(FileProducingTaskResult, on_delete=models.CASCADE, null=True, blank=True)
+
+    def __str__(self):
+        return f"RunZipFile uid: {self.uid}"
+
+    @property
+    def message(self):
+        return get_cache_value(obj=self, attribute="message", default="")
+
+    @message.setter
+    def message(self, value, expiration=DEFAULT_CACHE_EXPIRATION):
+        return set_cache_value(obj=self, attribute="message", value=value, expiration=expiration)
