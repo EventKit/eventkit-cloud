@@ -131,7 +131,8 @@ class UserFilter(django_filters.FilterSet):
             ("first_name", "first_name"),
             ("email", "email"),
             ("date_joined", "date_joined"),
-        )
+        ),
+        label="ordering",
     )
 
     class Meta:
@@ -176,7 +177,8 @@ class GroupFilter(django_filters.FilterSet):
     name = django_filters.CharFilter(field_name="name", lookup_expr="icontains")
     ordering = SharedOrderFilter(
         # tuple-mapping retains order
-        fields=(("admin_shared", "admin_shared"), ("shared", "shared"), ("name", "name"),)
+        fields=(("admin_shared", "admin_shared"), ("shared", "shared"), ("name", "name"),),
+        label="ordering",
     )
 
     class Meta:

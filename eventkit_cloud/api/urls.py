@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 """API url configuration."""
 
+from django.conf import settings
 from django.urls import include, re_path
 
 from rest_framework.routers import DefaultRouter
@@ -56,7 +57,7 @@ urlpatterns = [
     re_path(r"^api/docs/$", api_docs_view, name="swagger-ui"),
     re_path(
         r"^api/openapi",
-        get_schema_view(title="EventKit", description="Documentation for the EventKit API."),
+        get_schema_view(title="EventKit", description="Documentation for the EventKit API.", version=settings.VERSION),
         name="openapi-schema",
     ),
     re_path(r"^api/", include(router.urls)),
