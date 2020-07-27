@@ -1,6 +1,6 @@
 import React, {useEffect} from 'react';
 import {useOlMapContainer, useOlZoom} from "../context/OpenLayersContext";
-import {useEffectOnMount} from "../../../utils/hooks";
+import {useEffectOnMount} from "../../../utils/hooks/hooks";
 import {ReceivesVectorLayer} from "./OlFeatureLayer";
 
 interface Props extends ReceivesVectorLayer {

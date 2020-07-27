@@ -1,4 +1,3 @@
-
 import { getHeaderPageInfo } from '../utils/generic';
 
 export const types = {
@@ -14,6 +13,7 @@ export const types = {
     UPDATING_GROUP: 'UPDATING_GROUP',
     UPDATED_GROUP: 'UPDATED_GROUP',
     UPDATING_GROUP_ERROR: 'UPDATING_GROUP_ERROR',
+    FETCH_GROUPS_EMPTY: 'FETCH_GROUPS_EMPTY',
 };
 
 export function getGroups(params, append = false) {

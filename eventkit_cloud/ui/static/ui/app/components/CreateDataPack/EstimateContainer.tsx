@@ -6,7 +6,7 @@ import {updateExportInfo} from '../../actions/datacartActions';
 import {getProviders} from '../../actions/providerActions';
 import axios from "axios";
 import {connect} from "react-redux";
-import {DepsHashers, useEffectOnMount, useProviderIdentity, useProvidersLoading} from "../../utils/hooks";
+import {DepsHashers, useEffectOnMount, useProviderIdentity, useProvidersLoading} from "../../utils/hooks/hooks";
 import {useAppContext} from "../ApplicationContext";
 import {JobValidationProvider} from "./context/JobValidation";
 

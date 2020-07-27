@@ -37,6 +37,10 @@ export class InfoDialog extends React.Component<Props, State> {
                 <Info
                     color="primary"
                     {...iconProps}
+                    style={{
+                        cursor: 'pointer',
+                        ...iconProps.style || {}
+                    }}
                     className={`qa-Estimate-Info-Icon`}
                     onClick={this.openDialog}
                 />
