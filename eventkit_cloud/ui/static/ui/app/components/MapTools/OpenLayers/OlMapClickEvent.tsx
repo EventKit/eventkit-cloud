@@ -3,7 +3,7 @@ import VectorLayer from "ol/layer/vector";
 import {useOlMapContainer} from "../context/OpenLayersContext";
 import {generateDrawLayer, TileCoordinate, wrapX} from "../../../utils/mapUtils";
 import extent from "ol/extent";
-import {useEffectOnMount} from "../../../utils/hooks";
+import {useEffectOnMount} from "../../../utils/hooks/hooks";
 import Style from 'ol/style/style';
 import Feature from "ol/feature";
 import Point from "ol/geom/point";

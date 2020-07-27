@@ -144,7 +144,7 @@ export class StatusDownload extends React.Component<Props, State> {
 
             const datacart = this.props.runs;
             let clearTimer = true;
-            if (this.props.runs[0].zipfile_url == null) {
+            if (this.props.runs[0].zipfile == null) {
                 clearTimer = false;
             }
 

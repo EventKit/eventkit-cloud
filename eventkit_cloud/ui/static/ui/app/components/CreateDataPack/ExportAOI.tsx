@@ -58,7 +58,7 @@ import {MapLayer} from "./CreateExport";
 import MapDisplayBar from "./MapDisplayBar";
 import {useJobValidationContext} from "./context/JobValidation";
 import {useEffect} from "react";
-import {useEffectOnMount} from "../../utils/hooks";
+import {useEffectOnMount} from "../../utils/hooks/hooks";
 import MapDrawer from "./MapDrawer";
 
 export const WGS84 = 'EPSG:4326';

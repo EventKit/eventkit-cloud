@@ -2,7 +2,7 @@ import React, {useEffect, useRef, useState} from 'react';
 import ReactDOM from 'react-dom';
 import {useOlMapContainer} from "../context/OpenLayersContext";
 import Overlay from 'ol/overlay';
-import {useEffectOnMount} from "../../../utils/hooks";
+import {useEffectOnMount} from "../../../utils/hooks/hooks";
 import {TileCoordinate} from "../../../utils/mapUtils";
 import {
     createStyles,
