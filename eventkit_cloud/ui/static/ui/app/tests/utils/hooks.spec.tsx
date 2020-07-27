@@ -1,10 +1,9 @@
 import React from 'react';
-import { render, unmountComponentAtNode } from 'react-dom';
-import { act } from 'react-dom/test-utils';
+import { unmountComponentAtNode } from 'react-dom';
 import MockAdapter from 'axios-mock-adapter';
 import axios from 'axios';
 import { mount } from 'enzyme';
-import { useAsyncRequest } from '../../utils/hooks';
+import {useAsyncRequest, ApiStatuses} from "../../utils/hooks/api";
 
 
 let container = null;
@@ -31,7 +30,7 @@ function ApiHookTester() {
         data: {},
     });
 
-    if (!status) {
+    if (status === ApiStatuses.hookActions.NOT_FIRED) {
         return (
             <div>
                 {/* eslint-disable-next-line react/button-has-type */}

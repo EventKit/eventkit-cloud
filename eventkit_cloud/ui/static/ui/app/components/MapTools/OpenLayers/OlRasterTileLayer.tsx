@@ -1,7 +1,7 @@
 import React, {useEffect, useRef, useState} from 'react';
 import {MapLayer} from "../../CreateDataPack/CreateExport";
 import {useOlMapContainer} from "../context/OpenLayersContext";
-import {useEffectOnMount} from "../../../utils/hooks";
+import {useEffectOnMount} from "../../../utils/hooks/hooks";
 import set = Reflect.set;
 
 interface Props {

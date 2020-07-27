@@ -3,13 +3,13 @@ import * as React from 'react';
 import Popover from '@material-ui/core/Popover';
 import WarningIcon from '@material-ui/icons/Warning';
 import Typography from '@material-ui/core/Typography';
-import {useCallback, useState} from 'react';
+import { useCallback, useState } from 'react';
 import {
     createStyles, IconButton, Link, Theme, withStyles,
 } from '@material-ui/core';
 import CloseIcon from '@material-ui/icons/Close';
-import theme from "../../styles/eventkit_theme";
-import AlertError from "@material-ui/icons/Error";
+import AlertError from '@material-ui/icons/Error';
+import theme from '../../styles/eventkit_theme';
 
 const jss = (theme: Eventkit.Theme & Theme) => createStyles({
     popoverBlock: {
@@ -57,7 +57,7 @@ interface Props extends React.HTMLAttributes<HTMLElement> {
 
 export function NotificationPopover(props: Props) {
     const [anchorElement, setAnchor] = useState(null);
-    const {classes} = props;
+    const { classes } = props;
 
     const handlePopoverOpen = (e: React.MouseEvent<HTMLElement>) => {
         e.stopPropagation();
@@ -102,7 +102,7 @@ export function NotificationPopover(props: Props) {
             >
                 {getIcon()}
             </IconButton>
-            <span style={{paddingTop: '3px', paddingLeft: '3px'}}>
+            <span style={{ paddingTop: '3px', paddingLeft: '3px' }}>
                 <Link
                     className={props.classes.name}
                     onClick={handlePopoverOpen}
@@ -110,14 +110,15 @@ export function NotificationPopover(props: Props) {
                     <Typography
                         variant="h6"
                         gutterBottom
-                        className={classes.permissionNotificationText}>
+                        className={classes.permissionNotificationText}
+                    >
                         Permission Notification
                     </Typography>
                 </Link>
             </span>
             <Popover
                 PaperProps={{
-                    style: {padding: '16px', width: '30%'}
+                    style: { padding: '16px', width: '30%' },
                 }}
                 open={openEl}
                 anchorEl={anchorElement}
@@ -137,7 +138,7 @@ export function NotificationPopover(props: Props) {
                         type="button"
                         onClick={handlePopoverClose}
                     >
-                        <CloseIcon/>
+                        <CloseIcon />
                     </IconButton>
                     <div>
                         {getMessage()}  If you believe this is an error, contact your administrator.

@@ -8,11 +8,6 @@ import {
     createStyles, IconButton, Link, Theme, withStyles,
 } from '@material-ui/core';
 import CloseIcon from '@material-ui/icons/Close';
-import axios from 'axios';
-import {connect} from 'react-redux';
-import {getCookie} from '../../utils/generic';
-import {useAsyncRequest, useEffectOnMount} from '../../utils/hooks';
-import {MapContainer} from '../../utils/mapBuilder';
 
 const jss = (theme: Eventkit.Theme & Theme) => createStyles({
     popoverBlock: {
