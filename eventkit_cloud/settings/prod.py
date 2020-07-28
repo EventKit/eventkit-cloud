@@ -277,9 +277,7 @@ if os.getenv("MEMCACHED"):
         "default": {
             "BACKEND": "django.core.cache.backends.memcached.MemcachedCache",
             "LOCATION": os.getenv("MEMCACHED"),
-            'OPTIONS': {
-                'server_max_value_length': os.getenv("MEMCACHED_SERVER_MAX_VALUE_LENGTH", 1024 * 1024 * 10),
-            }
+            "OPTIONS": {"server_max_value_length": os.getenv("MEMCACHED_SERVER_MAX_VALUE_LENGTH", 1024 * 1024 * 10)},
         }
     }
 else:
