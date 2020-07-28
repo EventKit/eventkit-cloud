@@ -269,7 +269,7 @@ services:
       dockerfile: config/Dockerfile_webpack
     volumes:
       - ./eventkit_cloud:/var/lib/eventkit/eventkit_cloud
-      - ./coverage:/var/lib/eventkit/coverage
+      - ./coverage/coveralls:/var/lib/eventkit/coverage/coveralls
       - ./package.json:/var/lib/eventkit/package.json
       - ./config/ui/.eslintrc.json:/var/lib/eventkit/.eslintrc.json
       - ./config/ui/.eslintignore:/var/lib/eventkit/.eslintignore
