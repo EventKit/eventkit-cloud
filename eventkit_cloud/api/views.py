@@ -11,8 +11,8 @@ from django.contrib.auth.models import User, Group
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.gis.geos import GEOSException, GEOSGeometry
 from django.core.cache import cache
-from django.db import transaction, models
-from django.db.models import Q, Count, F, Case, When, Value
+from django.db import transaction
+from django.db.models import Q, Count, Case, When
 from django.shortcuts import redirect, render
 from django.utils.translation import ugettext as _
 from django_filters.rest_framework import DjangoFilterBackend
