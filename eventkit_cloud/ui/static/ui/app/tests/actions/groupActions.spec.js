@@ -16,12 +16,15 @@ describe('userGroups actions', () => {
         });
 
         it('onSuccess should return groups', () => {
-            const ret = { data: ['groupOne', 'groupTwo'], headers: { 'total-groups': '12' } };
+            const ret = { data: ['groupOne', 'groupTwo'], headers: { 'total-groups': '12', 'admin-groups': '12', 'shared-groups': '12', 'other-groups': '12'} };
             expect(actions.getGroups().onSuccess(ret)).toEqual({
                 groups: ret.data,
                 nextPage: false,
                 range: '',
                 total: 12,
+                totalAdmin: 12,
+                totalMember: 12,
+                totalOther: 12,
             });
         });
 

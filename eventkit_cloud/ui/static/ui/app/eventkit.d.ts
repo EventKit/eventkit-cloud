@@ -384,6 +384,9 @@ declare namespace Eventkit {
             range: string;
             nextPage: boolean;
             total: number;
+            totalAdmin: number;
+            totalMember: number;
+            totalOther: number;
         }
 
         interface UserActivity {

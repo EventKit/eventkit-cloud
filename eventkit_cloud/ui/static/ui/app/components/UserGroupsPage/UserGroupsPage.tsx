@@ -195,9 +195,6 @@ const jss = (theme: Eventkit.Theme & Theme) => createStyles({
 export interface Props {
     user: Eventkit.User['user'];
     groups: Eventkit.Store.Groups;
-    // ownedGroups: Eventkit.Store.Groups;
-    // sharedGroups: Eventkit.Store.Groups;
-    // otherGroups: Eventkit.Store.Groups;
     users: Eventkit.Store.Users;
     getGroups: (args: any, append: boolean) => void;
     deleteGroup: (id: string | number) => void;

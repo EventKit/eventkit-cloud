@@ -1,5 +1,5 @@
-import { initialState as state, userGroupsReducer } from '../../reducers/groupReducer';
-import { types } from '../../actions/groupActions';
+import {initialState as state, userGroupsReducer} from '../../reducers/groupReducer';
+import {types} from '../../actions/groupActions';
 
 describe('userGroupsReducer', () => {
     it('should return initialState', () => {
@@ -7,7 +7,7 @@ describe('userGroupsReducer', () => {
     });
 
     it('FETCHING_GROUPS should return fetching true and a cancelSource', () => {
-        const cancelSource = { source: 'fake cancel source' };
+        const cancelSource = {source: 'fake cancel source'};
         expect(userGroupsReducer(
             {
                 ...state,
@@ -25,17 +25,20 @@ describe('userGroupsReducer', () => {
     });
 
     it('FETCHED_GROUPS should return fetched true and the groups', () => {
-        const groups = [{ name: 'group1' }, { name: 'group2' }];
+        const groups = [{name: 'group1'}, {name: 'group2'}];
         expect(userGroupsReducer(
             {
                 ...state,
                 fetching: true,
-                cancelSource: { source: 'fake source' },
+                cancelSource: {source: 'fake source'},
             },
             {
                 type: types.FETCHED_GROUPS,
                 groups,
                 total: 12,
+                totalAdmin: 12,
+                totalMember: 12,
+                totalOther: 12,
                 range: '1-12',
                 nextPage: true,
                 otherGroups: [],
@@ -49,6 +52,9 @@ describe('userGroupsReducer', () => {
             groups,
             data: groups,
             total: 12,
+            totalAdmin: 12,
+            totalMember: 12,
+            totalOther: 12,
             range: '1-12',
             nextPage: true,
             otherGroups: [],
@@ -63,7 +69,7 @@ describe('userGroupsReducer', () => {
             {
                 ...state,
                 fetching: true,
-                cancelSource: { source: 'fake source' },
+                cancelSource: {source: 'fake source'},
             },
             {
                 type: types.FETCH_GROUPS_ERROR,
@@ -73,6 +79,7 @@ describe('userGroupsReducer', () => {
             ...state,
             fetched: false,
             fetching: false,
+            totaMember: 0,
             error,
         });
     });
