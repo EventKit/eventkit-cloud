@@ -12,7 +12,7 @@ from django.contrib.contenttypes.models import ContentType
 from django.contrib.gis.geos import GEOSException, GEOSGeometry
 from django.core.cache import cache
 from django.db import transaction
-from django.db.models import Q
+from django.db.models import Q, Count, F, Case, When
 from django.shortcuts import redirect, render
 from django.utils.translation import ugettext as _
 from django_filters.rest_framework import DjangoFilterBackend
@@ -1133,9 +1133,9 @@ class ExportRunViewSet(viewsets.ModelViewSet):
         if search_term is not None:
             queryset = queryset.filter(
                 (
-                    Q(job__name__icontains=search_term)
-                    | Q(job__description__icontains=search_term)
-                    | Q(job__event__icontains=search_term)
+                        Q(job__name__icontains=search_term)
+                        | Q(job__description__icontains=search_term)
+                        | Q(job__event__icontains=search_term)
                 )
             )
         if not request.query_params.get("job_uid"):
@@ -1193,10 +1193,10 @@ class ExportRunViewSet(viewsets.ModelViewSet):
             max_date = now + timedelta(max_days)
             if target_date > max_date.replace(tzinfo=None):
                 message = "expiration date must be before " + max_date.isoformat()
-                return Response({"success": False, "detail": message}, status=status.HTTP_400_BAD_REQUEST,)
+                return Response({"success": False, "detail": message}, status=status.HTTP_400_BAD_REQUEST, )
             if target_date < run.expiration.replace(tzinfo=None):
                 message = "expiration date must be after " + run.expiration.isoformat()
-                return Response({"success": False, "detail": message}, status=status.HTTP_400_BAD_REQUEST,)
+                return Response({"success": False, "detail": message}, status=status.HTTP_400_BAD_REQUEST, )
 
         run.expiration = target_date
         run.save()
@@ -1594,8 +1594,8 @@ class UserJobActivityViewSet(mixins.CreateModelMixin, mixins.ListModelMixin, vie
                     job__last_export_run__isnull=False,
                     job__last_export_run__deleted=False,
                 )
-                .distinct("job")
-                .values_list("id", flat=True)
+                    .distinct("job")
+                    .values_list("id", flat=True)
             )
 
             return activities.filter(id__in=ids).order_by("-created_at")
@@ -1634,7 +1634,7 @@ class UserJobActivityViewSet(mixins.CreateModelMixin, mixins.ListModelMixin, vie
                 last_job_viewed = queryset.first()
                 # Don't save consecutive views of the same job.
                 if str(last_job_viewed.job.uid) == job_uid:
-                    return Response({"ignored": True}, content_type="application/json", status=status.HTTP_200_OK,)
+                    return Response({"ignored": True}, content_type="application/json", status=status.HTTP_200_OK, )
             job = Job.objects.get(uid=job_uid)
             UserJobActivity.objects.create(user=self.request.user, job=job, type=UserJobActivity.VIEWED)
         else:
@@ -1701,9 +1701,31 @@ class GroupViewSet(viewsets.ModelViewSet):
         if request.query_params.get("job_uid"):
             job = Job.objects.get(uid=request.query_params["job_uid"])
         queryset = JobPermission.get_orderable_queryset_for_job(job, Group)
-        total = queryset.count()
+
         filtered_queryset = self.filter_queryset(queryset)
         filtered_queryset = annotate_groups_restricted(filtered_queryset, job)
+        total = queryset.count()
+
+        try:
+            totals = filtered_queryset.values(
+                permission=F('group_permissions__permission')
+            ).annotate(count_user=Count(
+                Case(When(
+                    Q(group_permissions__user=request.user), then=1
+                ))
+            ))
+            logger.info(totals)
+
+            shared_total = totals.filter(permission=GroupPermissionLevel.MEMBER.value)
+            admin_total = totals.filter(permission=GroupPermissionLevel.ADMIN.value)
+            other_total = totals.filter(permissions__isnull=True)
+            admin_total = admin_total[0].get('count_user', 0) if len(admin_total) else 0
+            shared_total = shared_total[0].get('count_user', 0) if len(shared_total) else 0
+            other_total = other_total[0].get('count_not', 0) if len(other_total) else 0
+            logger.info([total, admin_total, shared_total, other_total])
+        except:
+            import traceback
+            traceback.print_exc()
 
         permission_level = request.query_params.get("permission_level")
         if permission_level == "admin":
@@ -1731,7 +1753,10 @@ class GroupViewSet(viewsets.ModelViewSet):
             serializer = self.get_serializer(filtered_queryset, many=True, context={"request": request})
             response = Response(serializer.data, status=status.HTTP_200_OK)
 
-        response["Total-Groups"] = total
+        response["total-groups"] = total
+        response["admin-groups"] = admin_total
+        response["shared-groups"] = shared_total
+        response["other-groups"] = other_total
         return response
 
     @transaction.atomic
@@ -2149,7 +2174,6 @@ class EstimatorView(views.APIView):
         if request.query_params.get("slugs", None):
             estimator = AoiEstimator(bbox=bbox, bbox_srs=srs, min_zoom=min_zoom, max_zoom=max_zoom)
             for slug in request.query_params.get("slugs").split(","):
-
                 size = estimator.get_estimate_from_slug(AoiEstimator.Types.SIZE, slug)[0]
                 time = estimator.get_estimate_from_slug(AoiEstimator.Types.TIME, slug)[0]
                 payload += [
@@ -2235,7 +2259,6 @@ def geojson_to_geos(geojson_geom, srid=None):
 
 
 def get_jobs_via_permissions(permissions):
-
     groups = Group.objects.filter(name__in=permissions.get("groups", []))
     group_query = [
         Q(permissions__content_type=ContentType.objects.get_for_model(Group)),
