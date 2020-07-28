@@ -33,14 +33,14 @@ export function getGroups(params, append = false) {
             // get the total count from the header
             const totalGroups = Number(response.headers['total-groups']);
             const adminGroups = Number(response.headers['admin-groups']);
-            const sharedGroups = Number(response.headers['shared-groups']);
+            const memberGroups = Number(response.headers['member-groups']);
             const otherGroups = Number(response.headers['other-groups']);
             const { nextPage, range } = getHeaderPageInfo(response);
             return {
                 groups: response.data,
                 total: totalGroups,
                 totalAdmin: adminGroups,
-                totalMember: sharedGroups,
+                totalMember: memberGroups,
                 totalOther: otherGroups,
                 range,
                 nextPage,
