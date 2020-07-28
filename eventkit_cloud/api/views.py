@@ -11,8 +11,8 @@ from django.contrib.auth.models import User, Group
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.gis.geos import GEOSException, GEOSGeometry
 from django.core.cache import cache
-from django.db import transaction
-from django.db.models import Q, Count, F, Case, When
+from django.db import transaction, models
+from django.db.models import Q, Count, F, Case, When, Value
 from django.shortcuts import redirect, render
 from django.utils.translation import ugettext as _
 from django_filters.rest_framework import DjangoFilterBackend
@@ -1706,26 +1706,19 @@ class GroupViewSet(viewsets.ModelViewSet):
         filtered_queryset = annotate_groups_restricted(filtered_queryset, job)
         total = queryset.count()
 
-        try:
-            totals = filtered_queryset.values(
-                permission=F('group_permissions__permission')
-            ).annotate(count_user=Count(
-                Case(When(
-                    Q(group_permissions__user=request.user), then=1
-                ))
+        totals = filtered_queryset.values(
+            permission=F('group_permissions__permission')
+        ).annotate(count_user=Count(
+            Case(When(
+                Q(group_permissions__user=request.user), then=1
             ))
-            logger.info(totals)
+        ))
 
-            shared_total = totals.filter(permission=GroupPermissionLevel.MEMBER.value)
-            admin_total = totals.filter(permission=GroupPermissionLevel.ADMIN.value)
-            other_total = totals.filter(permissions__isnull=True)
-            admin_total = admin_total[0].get('count_user', 0) if len(admin_total) else 0
-            shared_total = shared_total[0].get('count_user', 0) if len(shared_total) else 0
-            other_total = other_total[0].get('count_not', 0) if len(other_total) else 0
-            logger.info([total, admin_total, shared_total, other_total])
-        except:
-            import traceback
-            traceback.print_exc()
+        shared_total = totals.filter(permission=GroupPermissionLevel.MEMBER.value)
+        admin_total = totals.filter(permission=GroupPermissionLevel.ADMIN.value)
+        admin_total = admin_total[0].get('count_user', 0) if len(admin_total) else 0
+        shared_total = shared_total[0].get('count_user', 0) if len(shared_total) else 0
+        other_total = total - shared_total
 
         permission_level = request.query_params.get("permission_level")
         if permission_level == "admin":
