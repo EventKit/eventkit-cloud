@@ -11,8 +11,8 @@ from django.contrib.auth.models import User, Group
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.gis.geos import GEOSException, GEOSGeometry
 from django.core.cache import cache
-from django.db import transaction, models
-from django.db.models import Q, Count, F, Case, When, Value
+from django.db import transaction
+from django.db.models import Q, Count, Case, When
 from django.shortcuts import redirect, render
 from django.utils.translation import ugettext as _
 from django_filters.rest_framework import DjangoFilterBackend
@@ -1133,9 +1133,9 @@ class ExportRunViewSet(viewsets.ModelViewSet):
         if search_term is not None:
             queryset = queryset.filter(
                 (
-                        Q(job__name__icontains=search_term)
-                        | Q(job__description__icontains=search_term)
-                        | Q(job__event__icontains=search_term)
+                    Q(job__name__icontains=search_term)
+                    | Q(job__description__icontains=search_term)
+                    | Q(job__event__icontains=search_term)
                 )
             )
         if not request.query_params.get("job_uid"):
@@ -1193,10 +1193,10 @@ class ExportRunViewSet(viewsets.ModelViewSet):
             max_date = now + timedelta(max_days)
             if target_date > max_date.replace(tzinfo=None):
                 message = "expiration date must be before " + max_date.isoformat()
-                return Response({"success": False, "detail": message}, status=status.HTTP_400_BAD_REQUEST, )
+                return Response({"success": False, "detail": message}, status=status.HTTP_400_BAD_REQUEST,)
             if target_date < run.expiration.replace(tzinfo=None):
                 message = "expiration date must be after " + run.expiration.isoformat()
-                return Response({"success": False, "detail": message}, status=status.HTTP_400_BAD_REQUEST, )
+                return Response({"success": False, "detail": message}, status=status.HTTP_400_BAD_REQUEST,)
 
         run.expiration = target_date
         run.save()
@@ -1594,8 +1594,8 @@ class UserJobActivityViewSet(mixins.CreateModelMixin, mixins.ListModelMixin, vie
                     job__last_export_run__isnull=False,
                     job__last_export_run__deleted=False,
                 )
-                    .distinct("job")
-                    .values_list("id", flat=True)
+                .distinct("job")
+                .values_list("id", flat=True)
             )
 
             return activities.filter(id__in=ids).order_by("-created_at")
@@ -1634,7 +1634,7 @@ class UserJobActivityViewSet(mixins.CreateModelMixin, mixins.ListModelMixin, vie
                 last_job_viewed = queryset.first()
                 # Don't save consecutive views of the same job.
                 if str(last_job_viewed.job.uid) == job_uid:
-                    return Response({"ignored": True}, content_type="application/json", status=status.HTTP_200_OK, )
+                    return Response({"ignored": True}, content_type="application/json", status=status.HTTP_200_OK,)
             job = Job.objects.get(uid=job_uid)
             UserJobActivity.objects.create(user=self.request.user, job=job, type=UserJobActivity.VIEWED)
         else:
@@ -1704,21 +1704,20 @@ class GroupViewSet(viewsets.ModelViewSet):
 
         filtered_queryset = self.filter_queryset(queryset)
         filtered_queryset = annotate_groups_restricted(filtered_queryset, job)
+
+        # Total number of inspected groups
         total = queryset.count()
-
-        totals = filtered_queryset.values(
-            permission=F('group_permissions__permission')
-        ).annotate(count_user=Count(
-            Case(When(
-                Q(group_permissions__user=request.user), then=1
-            ))
-        ))
-
-        shared_total = totals.filter(permission=GroupPermissionLevel.MEMBER.value)
-        admin_total = totals.filter(permission=GroupPermissionLevel.ADMIN.value)
-        admin_total = admin_total[0].get('count_user', 0) if len(admin_total) else 0
-        shared_total = shared_total[0].get('count_user', 0) if len(shared_total) else 0
-        other_total = total - shared_total
+        # Computes against all groups where the inspected group has permissions pertaining to this user
+        # counts the number of filtered groups where the permission is ADMIN
+        # counts the number of filtered groups where the permission is MEMBER
+        totals = filtered_queryset.filter(group_permissions__user=request.user).aggregate(
+            admin=Count(Case(When(Q(group_permissions__permission=GroupPermissionLevel.ADMIN.value), then=1),),),
+            member=Count(Case(When(Q(group_permissions__permission=GroupPermissionLevel.MEMBER.value), then=1),)),
+        )
+        admin_total = totals.get("admin")
+        member_total = totals.get("member")
+        # 'other' groups are any groups that the user does not have permissions in, i.e. they are not a member.
+        other_total = total - member_total
 
         permission_level = request.query_params.get("permission_level")
         if permission_level == "admin":
@@ -1748,7 +1747,7 @@ class GroupViewSet(viewsets.ModelViewSet):
 
         response["total-groups"] = total
         response["admin-groups"] = admin_total
-        response["shared-groups"] = shared_total
+        response["member-groups"] = member_total
         response["other-groups"] = other_total
         return response
 
