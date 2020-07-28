@@ -703,13 +703,20 @@ def geopackage_export_task(
     Class defining geopackage export function.
     """
     result = result or {}
-
     gpkg_in_dataset = parse_result(result, "source")
 
     provider_slug = get_provider_slug(task_uid)
     gpkg_out_dataset = get_export_filename(stage_dir, job_name, projection, provider_slug, "gpkg")
+    selection = parse_result(result, "selection")
 
-    gpkg = gdalutils.convert(fmt="gpkg", input_file=gpkg_in_dataset, output_file=gpkg_out_dataset, task_uid=task_uid)
+    gpkg = gdalutils.convert(
+        fmt="gpkg",
+        input_file=gpkg_in_dataset,
+        output_file=gpkg_out_dataset,
+        task_uid=task_uid,
+        boundary=selection,
+        projection=projection,
+    )
 
     result["file_format"] = "gpkg"
     result["result"] = gpkg
