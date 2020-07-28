@@ -1,30 +1,32 @@
 # -*- coding: utf-8 -*-
 """API url configuration."""
 
+from django.conf import settings
 from django.urls import include, re_path
 
 from rest_framework.routers import DefaultRouter
 from rest_framework.schemas import get_schema_view
 
 from eventkit_cloud.api.views import (
+    AuditEventViewSet,
+    DataProviderRequestViewSet,
+    DataProviderTaskRecordViewSet,
+    DataProviderViewSet,
+    EstimatorView,
     ExportFormatViewSet,
     ExportRunViewSet,
-    ProjectionViewSet,
     ExportTaskViewSet,
-    JobViewSet,
-    RegionViewSet,
-    DataProviderViewSet,
-    DataProviderTaskRecordViewSet,
-    UserDataViewSet,
     GroupViewSet,
+    JobViewSet,
     LicenseViewSet,
-    UserJobActivityViewSet,
     NotificationViewSet,
-    EstimatorView,
-    AuditEventViewSet,
-    api_docs_view,
-    DataProviderRequestViewSet,
+    ProjectionViewSet,
+    RegionViewSet,
+    RunZipFileViewSet,
     SizeIncreaseRequestViewSet,
+    UserDataViewSet,
+    UserJobActivityViewSet,
+    api_docs_view,
 )
 
 import notifications.urls
@@ -39,6 +41,7 @@ router.register(r"providers/requests/size", SizeIncreaseRequestViewSet, basename
 router.register(r"providers/requests", DataProviderRequestViewSet, basename="provider_requests")
 router.register(r"providers", DataProviderViewSet, basename="providers")
 router.register(r"licenses", LicenseViewSet, basename="licenses")
+router.register(r"runs/zipfiles", RunZipFileViewSet, basename="zipfiles")
 router.register(r"runs", ExportRunViewSet, basename="runs")
 router.register(r"provider_tasks", DataProviderTaskRecordViewSet, basename="provider_tasks")
 router.register(r"tasks", ExportTaskViewSet, basename="tasks")
@@ -54,7 +57,7 @@ urlpatterns = [
     re_path(r"^api/docs/$", api_docs_view, name="swagger-ui"),
     re_path(
         r"^api/openapi",
-        get_schema_view(title="EventKit", description="Documentation for the EventKit API."),
+        get_schema_view(title="EventKit", description="Documentation for the EventKit API.", version=settings.VERSION),
         name="openapi-schema",
     ),
     re_path(r"^api/", include(router.urls)),

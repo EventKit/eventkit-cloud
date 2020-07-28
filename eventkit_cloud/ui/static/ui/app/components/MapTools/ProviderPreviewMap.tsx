@@ -6,7 +6,7 @@ import {MapLayer} from "../CreateDataPack/CreateExport";
 import OlMapComponent from "./OpenLayers/OlMapComponent";
 import {useAppContext} from "../ApplicationContext";
 import { MapComponentProps } from "./OpenLayers/OlMapComponent";
-import {useEffectOnMount} from "../../utils/hooks";
+import {useEffectOnMount} from "../../utils/hooks/hooks";
 import {useOlMapContainer} from "./context/OpenLayersContext";
 
 interface Props extends MapComponentProps {

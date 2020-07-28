@@ -13,7 +13,7 @@ from mock import MagicMock, patch
 
 from eventkit_cloud.jobs.models import  DatamodelPreset, DataProviderTask, DataProvider, ExportFormat, Job
 from eventkit_cloud.tasks.enumerations import TaskStates
-from eventkit_cloud.tasks.models import ExportRun, ExportRunFile, ExportTaskRecord, FileProducingTaskResult, DataProviderTaskRecord
+from eventkit_cloud.tasks.models import DataProviderTaskRecord, ExportRun, ExportRunFile, ExportTaskRecord, FileProducingTaskResult, RunZipFile
 
 logger = logging.getLogger(__name__)
 
@@ -103,6 +103,44 @@ class TestExportRun(TestCase):
         run.refresh_from_db()
         self.assertTrue(run.deleted)
         mock_run_delete_exports.assert_called_once()
+
+
+class TestRunZipFile(TestCase):
+
+    fixtures = ('osm_provider.json',)
+
+    @classmethod
+    def setUpTestData(cls):
+        formats = ExportFormat.objects.all()
+        group, created = Group.objects.get_or_create(name='TestDefaultExportExtentGroup')
+        with patch('eventkit_cloud.jobs.signals.Group') as mock_group:
+            mock_group.objects.get.return_value = group
+            user = User.objects.create_user(username='demo', email='demo@demo.com', password='demo', is_active=True)
+        bbox = Polygon.from_bbox((-7.96, 22.6, -8.14, 27.12))
+        the_geom = GEOSGeometry(bbox, srid=4326)
+        provider_task = DataProviderTask.objects.create(provider=DataProvider.objects.get(slug='osm-generic'))
+        # add the formats to the provider task
+        provider_task.formats.add(*formats)
+        job = Job.objects.create(name='TestExportRun', description='Test description', user=user, the_geom=the_geom)
+        job.provider_tasks.add(provider_task)
+        run = ExportRun.objects.create(job=job, status='SUBMITTED', user=job.user)
+
+    def test_run_zip_file(self):
+        run = ExportRun.objects.first()
+        run_zip_file = RunZipFile.objects.create(run=run)
+        saved_run_zip_file = RunZipFile.objects.get(uid=str(run_zip_file.uid))
+        self.assertIsNotNone(saved_run_zip_file)
+        self.assertEqual(run_zip_file, saved_run_zip_file)
+
+    def test_get_data_provider_task_records(self):
+        run = ExportRun.objects.first()
+        run_zip_file = RunZipFile.objects.create(run=run)
+        saved_run_zip_file = RunZipFile.objects.get(uid=str(run_zip_file.uid))
+        self.assertEqual(run_zip_file, saved_run_zip_file)
+        data_provider_task_record = DataProviderTaskRecord.objects.create(run=run)
+        data_provider_task_records = [data_provider_task_record]
+        run_zip_file.data_provider_task_records.set(data_provider_task_records)
+        self.assertEqual(run_zip_file.data_provider_task_records, saved_run_zip_file.data_provider_task_records)
 
 
 class TestExportRunFile(TestCase):

@@ -98,6 +98,7 @@ declare namespace Eventkit {
         provider_task_list_status: string;
     }
 
+    // Here provider_tasks is an array of provider task UID's
     interface Run {
         uid: string;
         url: string;
@@ -109,14 +110,21 @@ declare namespace Eventkit {
         status: string;
         job: Job;
         provider_tasks: string[];
-        zipfile_url: string;
+        zipfile: File;
         expiration: string;
         deleted: boolean;
         provider_task_list_status: string;
     }
 
+    // Here provider_tasks is a list of full ProviderTask objects
     interface FullRun extends Omit<Run, 'provider_tasks'> {
         provider_tasks: ProviderTask[];
+    }
+
+    interface File {
+        status: string;
+        url: string;
+        message: string;
     }
 
     interface UserJobActivity {

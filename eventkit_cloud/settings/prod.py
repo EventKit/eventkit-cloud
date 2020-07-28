@@ -294,8 +294,9 @@ STATIC_URL = "/static/"
 STATIC_ROOT = os.path.join(BASE_DIR, "staticfiles")
 STATICFILES_STORAGE = "django.contrib.staticfiles.storage.StaticFilesStorage"
 SERVE_ESTIMATES = is_true(os.getenv("SERVE_ESTIMATES", "true"))
+VERSION = os.getenv("VERSION", "")
 UI_CONFIG = {
-    "VERSION": os.getenv("VERSION", ""),
+    "VERSION": VERSION,
     "CONTACT_URL": os.getenv("CONTACT_URL", "mailto:eventkit.team@gmail.com"),
     "LOGIN_DISCLAIMER": os.getenv("LOGIN_DISCLAIMER", ""),
     "BANNER_BACKGROUND_COLOR": os.getenv("BANNER_BACKGROUND_COLOR", ""),

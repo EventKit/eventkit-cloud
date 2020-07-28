@@ -32,7 +32,7 @@ import SwitchControl from "../common/SwitchControl";
 import Icon from "ol/style/icon";
 import {number, string} from "prop-types";
 import {useEffect, useRef, useState} from "react";
-import {DepsHashers, useEffectOnMount} from "../../utils/hooks";
+import {DepsHashers, useEffectOnMount} from "../../utils/hooks/hooks";
 import {useAppContext} from "../ApplicationContext";
 import {useJobValidationContext} from "./context/JobValidation";
 

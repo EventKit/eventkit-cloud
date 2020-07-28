@@ -1,8 +1,5 @@
 import {useCallback, useEffect, useReducer, useRef, useState} from "react";
 import axios from "axios";
-import {Simulate} from "react-dom/test-utils";
-import error = Simulate.error;
-import {ensureErrorShape} from "./generic";
 
 // Convenience function that acts like componentDidMount.
 // useEffect replaces componentDidMount AND componentDidUpdate
@@ -16,96 +13,12 @@ export const useEffectOnMount = (effect: () => void) => useEffect(effect, []);
 // Example usage:
 // --- const [count, setCount] = useState(0);
 // --- const prevCount = usePrevious(count);
-function usePrevious(stateValue) {
+export function usePrevious(stateValue) {
     const ref = useRef();
     useEffect(() => {
         ref.current = stateValue;
     });
     return ref.current;
-}
-
-enum ACTIONS {
-    FETCHING,
-    SUCCESS,
-    ERROR,
-    CANCEL,
-}
-
-interface RequestState {
-    status: any,
-    response: any
-    onCancel: () => void;
-}
-
-const initialState = {
-    status: null, response: {}, onCancel: () => {
-    }
-} as RequestState;
-
-function submitReducer(state = initialState, {type = undefined, response = undefined, onCancel = undefined} = {}): RequestState {
-    switch (type) {
-        case ACTIONS.FETCHING:
-            return {...initialState, status: 'fetching', onCancel: onCancel ? onCancel : initialState.onCancel};
-        case ACTIONS.SUCCESS:
-            return {...state, status: 'success', response};
-        case ACTIONS.ERROR:
-            return {...state, status: 'error', response};
-        case ACTIONS.CANCEL:
-            return {...initialState};
-        default:
-            return state;
-    }
-}
-
-interface Dispatcher {
-    fetching: (onCancel: () => void) => void;
-    success: (response) => void;
-    error: (response) => void;
-    cancel: () => void;
-}
-
-// Async request hook with more fine grained ability to control the request.
-export function useAsyncRequest_Control(): [RequestState, Dispatcher] {
-    const [state, dispatch] = useReducer(submitReducer, initialState);
-    const dispatches = {
-        fetching: (onCancel: () => void) => dispatch({onCancel, type: ACTIONS.FETCHING}),
-        success: (response) => dispatch({type: ACTIONS.SUCCESS, response}),
-        error: (response) => dispatch({type: ACTIONS.ERROR, response}),
-        cancel: () => {
-            if (state.onCancel) {
-                state.onCancel();
-            }
-            dispatch({type: ACTIONS.CANCEL})
-        },
-    };
-    return [state, dispatches]
-}
-
-export function useAsyncRequest(): [RequestState, (params: any) => Promise<void>, () => void] {
-    const [state, dispatches] = useAsyncRequest_Control();
-    const makeRequest = useCallback(async (params: any) => {
-        const CancelToken = axios.CancelToken;
-        const source = CancelToken.source();
-        dispatches.fetching(() => source.cancel(''));
-        try {
-            const response = await axios({
-                ...params,
-                cancelToken: source.token,
-            });
-            dispatches.success(response);
-        } catch (e) {
-            // Make sure response conforms to a shape that will prevent crashes.
-            const errorResponse = {
-                ...e,
-                response: {
-                    ...e.response || {data: undefined},
-                }
-            }
-            errorResponse.response.data = ensureErrorShape(errorResponse.response.data)
-            dispatches.error(errorResponse);
-        }
-    }, []);
-    return [state, makeRequest, dispatches.cancel];
 }
 
 // Returns a callback function that wraps the passed setter in a debouncer mechanism
