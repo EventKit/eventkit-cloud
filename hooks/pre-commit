@@ -1,10 +1,12 @@
 #!/bin/bash
-#
-# Run Linters
-docker-compose run --rm webpack npm run eslint
-docker-compose run --rm eventkit black --config /var/lib/eventkit/config/pyproject.toml eventkit_cloud
-docker-compose run --rm eventkit flake8 --config /var/lib/eventkit/config/setup.cfg eventkit_cloud
-#
-# Run Tests
-docker-compose run --rm -e COVERAGE=True eventkit python manage.py test -v 3 --noinput eventkit_cloud
-docker-compose run --rm webpack npm test
+
+set -e
+
+echo "Running Linters..."
+docker-compose exec -T webpack npm run eslint
+docker-compose exec -T eventkit bash -c 'source activate eventkit-cloud && black --config /var/lib/eventkit/config/pyproject.toml eventkit_cloud'
+docker-compose exec -T eventkit bash -c 'source activate eventkit-cloud && flake8 --config /var/lib/eventkit/config/setup.cfg eventkit_cloud'
+
+echo "Running Tests..."
+docker-compose exec -T eventkit bash -c 'source activate eventkit-cloud && python manage.py test -v 3 --noinput eventkit_cloud'
+docker-compose exec -T webpack npm test
