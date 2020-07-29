@@ -823,12 +823,7 @@ def hfa_export_task(
     hfa_in_dataset = parse_result(result, "source")
     provider_slug = get_provider_slug(task_uid)
     hfa_out_dataset = get_export_filename(stage_dir, job_name, projection, provider_slug, "img")
-    hfa = gdalutils.convert(
-        fmt="hfa",
-        input_file=hfa_in_dataset,
-        output_file=hfa_out_dataset,
-        task_uid=task_uid,
-    )
+    hfa = gdalutils.convert(fmt="hfa", input_file=hfa_in_dataset, output_file=hfa_out_dataset, task_uid=task_uid,)
 
     result["file_extension"] = "img"
     result["file_format"] = "hfa"
