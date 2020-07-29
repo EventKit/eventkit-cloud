@@ -120,7 +120,8 @@ class TestGdalUtils(TestCase):
         convert(boundary=geojson_file, input_file=in_dataset, output_file=out_dataset, fmt=fmt, task_uid=self.task_uid, projection=3857)
         get_task_command_mock.assert_called_once_with(convert_raster, in_dataset, out_dataset, fmt=fmt, creation_options=None,
                                      band_type=band_type, dst_alpha=dstalpha, boundary=geojson_file,
-                                     src_srs=in_projection, dst_srs=out_projection, task_uid=self.task_uid)
+                                     src_srs=in_projection, dst_srs=out_projection, task_uid=self.task_uid,
+                                     translate_params=None, warp_params=None)
         get_task_command_mock.reset_mock()
         self.task_process().start_process.assert_called_once_with(lambda_mock)
         self.task_process.reset_mock()
@@ -135,7 +136,8 @@ class TestGdalUtils(TestCase):
         get_task_command_mock.assert_called_once_with(convert_raster, in_dataset, out_dataset, fmt=fmt,
                                                       creation_options=None, band_type=band_type, dst_alpha=dstalpha,
                                                       boundary=geojson_file, src_srs=in_projection,
-                                                      dst_srs=in_projection, task_uid=self.task_uid)
+                                                      dst_srs=in_projection, task_uid=self.task_uid,
+                                                      translate_params=None, warp_params=None)
         get_task_command_mock.reset_mock()
         self.task_process().start_process.assert_called_once_with(lambda_mock)
         self.task_process.reset_mock()
@@ -147,7 +149,8 @@ class TestGdalUtils(TestCase):
         get_task_command_mock.assert_called_once_with(convert_raster, in_dataset, out_dataset, fmt=fmt,
                                                       creation_options=None, band_type=band_type, dst_alpha=dstalpha,
                                                       boundary=geojson_file, src_srs=in_projection,
-                                                      dst_srs=in_projection, task_uid=self.task_uid)
+                                                      dst_srs=in_projection, task_uid=self.task_uid,
+                                                      translate_params=None, warp_params=None)
         get_task_command_mock.reset_mock()
         self.task_process().start_process.assert_called_once_with(lambda_mock)
         self.task_process.reset_mock()
@@ -159,7 +162,7 @@ class TestGdalUtils(TestCase):
         get_task_command_mock.assert_called_once_with(convert_vector, in_dataset, out_dataset, fmt=fmt,
                                                       creation_options=None, src_srs=in_projection,
                                                       dst_srs=in_projection, layers=None, boundary=geojson_file, bbox=None,
-                                                      task_uid=self.task_uid)
+                                                      task_uid=self.task_uid, translate_params=None, warp_params=None)
         get_task_command_mock.reset_mock()
         self.task_process().start_process.assert_called_once_with(lambda_mock)
         self.task_process.reset_mock()
@@ -177,7 +180,7 @@ class TestGdalUtils(TestCase):
                                                       creation_options=extra_parameters,
                                                       band_type=band_type, dst_alpha=dstalpha, boundary=None,
                                                       src_srs=in_projection, dst_srs=out_projection,
-                                                      task_uid=self.task_uid)
+                                                      task_uid=self.task_uid, translate_params=None, warp_params=None)
         get_task_command_mock.reset_mock()
         self.task_process().start_process.assert_called_once_with(lambda_mock)
         self.task_process.reset_mock()
@@ -194,7 +197,7 @@ class TestGdalUtils(TestCase):
                                                       creation_options=None,
                                                       band_type=band_type, dst_alpha=dstalpha, boundary=None,
                                                       src_srs=in_projection, dst_srs=out_projection,
-                                                      task_uid=self.task_uid)
+                                                      task_uid=self.task_uid, translate_params=None, warp_params=None)
         get_task_command_mock.reset_mock()
         self.task_process().start_process.assert_called_once_with(lambda_mock)
         self.task_process.reset_mock()
@@ -275,6 +278,20 @@ class TestGdalUtils(TestCase):
                                                     callback=progress_callback, format=fmt,
                                                     callback_data={'task_uid': task_uid, 'subtask_percentage': 50},
                                                     creationOptions=['COMPRESS=LZW', 'TILED=YES', 'BIGTIFF=YES'])
+        mock_gdal.reset_mock()
+        warp_params = {"warp": "params"}
+        translate_params = {"translate": "params"}
+        convert_raster(input_file, output_file, fmt=fmt, boundary=boundary, src_srs=srs, dst_srs=srs, task_uid=task_uid,
+                       warp_params=warp_params, translate_params=translate_params)
+        mock_gdal.Warp.assert_called_once_with(output_file, [input_file],
+                                               callback=progress_callback,
+                                               callback_data={'task_uid': task_uid, 'subtask_percentage': 50},
+                                               cropToCutline=True, cutlineDSName=boundary, format=fmt, warp="params")
+        mock_gdal.Translate.assert_called_once_with(output_file, input_file,
+                                                    callback=progress_callback, format=fmt,
+                                                    callback_data={'task_uid': task_uid, 'subtask_percentage': 50},
+                                                    translate="params")
+
 
     @patch('eventkit_cloud.utils.gdalutils.gdal')
     def test_convert_vector(self, mock_gdal):

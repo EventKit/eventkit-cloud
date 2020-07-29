@@ -279,10 +279,15 @@ def convert(
     task_uid=None,
     projection: int = None,
     creation_options: list = None,
-    is_raster=True,
+    is_raster: bool = True,
+    warp_params: dict = None,
+    translate_params: dict = None,
 ):
     """
     Uses gdal to convert and clip a supported dataset file to a mask if boundary is passed in.
+    :param translate_params: A dict of params to pass into gdal translate.
+    :param warp_params: A dict of params to pass into gdal warp.
+    :param is_raster: A explicit declaration that dataset is raster (for disambiguating mixed mode files...gpkg)
     :param boundary: A geojson file or bbox (xmin, ymin, xmax, ymax) to serve as a cutline
     :param input_file: A raster or vector file to be clipped
     :param output_file: The dataset to put the clipped output in (if not specified will use in_dataset)
@@ -346,6 +351,8 @@ def convert(
             src_srs=src_src,
             dst_srs=dst_src,
             task_uid=task_uid,
+            warp_params=warp_params,
+            translate_params=translate_params,
         )
     else:
         cmd = get_task_command(
@@ -360,6 +367,8 @@ def convert(
             task_uid=task_uid,
             boundary=boundary,
             bbox=bbox,
+            warp_params=warp_params,
+            translate_params=translate_params,
         )
     try:
         task_process = TaskProcess(task_uid=task_uid)
@@ -421,8 +430,13 @@ def convert_raster(
     src_srs=None,
     dst_srs=None,
     task_uid=None,
+    warp_params: dict = None,
+    translate_params: dict = None,
 ):
     """
+    :param warp_params: A dict of options to pass to gdal warp (done first in conversion), overrides other settings.
+    :param translate_params: A dict of options to pass to gdal translate (done second in conversion),
+        overrides other settings.
     :param input_files: A file or list of files to convert.
     :param output_file: The file to convert.
     :param fmt: The file format to convert.
@@ -448,7 +462,10 @@ def convert_raster(
             "format": fmt,
         }
     )
-    warp_params = clean_options({"outputType": band_type, "dstAlpha": dst_alpha, "srcSRS": src_srs, "dstSRS": dst_srs})
+    if not warp_params:
+        warp_params = clean_options(
+            {"outputType": band_type, "dstAlpha": dst_alpha, "srcSRS": src_srs, "dstSRS": dst_srs}
+        )
     if boundary:
         warp_params.update({"cutlineDSName": boundary, "cropToCutline": True})
     # Keep the name imagery which is used when seeding the geopackages.
@@ -460,17 +477,16 @@ def convert_raster(
         f"{stringify_params(options)}, {stringify_params(warp_params)},)"
     )
     gdal.Warp(output_file, input_files, **options, **warp_params)
-    if fmt.lower() == "gtiff":
+
+    if fmt.lower() == "gtiff" or translate_params:
         input_file, output_file = get_dataset_names(output_file, output_file)
+        if translate_params:
+            options.update(translate_params)
+        else:
+            options.update({"creationOptions": ["COMPRESS=LZW", "TILED=YES", "BIGTIFF=YES"]})
 
-        options["creationOptions"] = ["COMPRESS=LZW", "TILED=YES", "BIGTIFF=YES"]
-        translate_params = {}
-
-        logger.info(
-            f"calling gdal.Translate('{output_file}', '{input_file}', "
-            f"{stringify_params(options)}, {stringify_params(translate_params)},)"
-        )
-        gdal.Translate(output_file, input_file, **options, **translate_params)
+        logger.info(f"calling gdal.Translate('{output_file}', '{input_file}', " f"{stringify_params(options)},)")
+        gdal.Translate(output_file, input_file, **options)
     return output_file
 
 
