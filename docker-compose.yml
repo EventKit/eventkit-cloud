@@ -154,7 +154,7 @@ services:
     expose:
       - "11211"
     entrypoint: >
-      /bin/bash -c "source activate eventkit-cloud && memcached -m 2048"
+      /bin/bash -c "source activate eventkit-cloud && memcached -m 2048 -I 10m"
   celery-beat:
     image: eventkit/eventkit-base:1.7.0
     volumes:
