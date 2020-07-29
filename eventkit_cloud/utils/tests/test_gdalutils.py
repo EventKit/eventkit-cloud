@@ -162,7 +162,7 @@ class TestGdalUtils(TestCase):
         get_task_command_mock.assert_called_once_with(convert_vector, in_dataset, out_dataset, fmt=fmt,
                                                       creation_options=None, src_srs=in_projection,
                                                       dst_srs=in_projection, layers=None, boundary=geojson_file, bbox=None,
-                                                      task_uid=self.task_uid, translate_params=None, warp_params=None)
+                                                      task_uid=self.task_uid)
         get_task_command_mock.reset_mock()
         self.task_process().start_process.assert_called_once_with(lambda_mock)
         self.task_process.reset_mock()
