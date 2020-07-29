@@ -376,9 +376,9 @@ declare namespace Eventkit {
             fetching: boolean;
             allGroups: Eventkit.Group[];
             groups: Eventkit.Group[];
-            ownedGroups: Eventkit.Group[];
-            sharedGroups: Eventkit.Group[];
-            otherGroups: Eventkit.Group[];
+            // ownedGroups: Eventkit.Group[];
+            // sharedGroups: Eventkit.Group[];
+            // otherGroups: Eventkit.Group[];
             updated: boolean;
             updating: boolean;
             range: string;

@@ -18,9 +18,6 @@ export const initialState = {
     updating: null,
     updated: null,
     error: null,
-    ownedGroups: [],
-    sharedGroups: [],
-    otherGroups: [],
     data: [],
 };
 
@@ -42,9 +39,6 @@ export function userGroupsReducer(state = initialState, action) {
                 fetched: true,
                 data: action.groups,
                 groups: action.append ? [...state.groups, ...action.groups] : action.groups,
-                ownedGroups: action.append ? [...state.ownedGroups, ...action.ownedGroups] : action.ownedGroups,
-                sharedGroups: action.append ? [...state.sharedGroups, ...action.sharedGroups] : action.sharedGroups,
-                otherGroups: action.append ? [...state.otherGroups, ...action.otherGroups] : action.otherGroups,
                 total: action.total,
                 totalAdmin: action.totalAdmin,
                 totalMember: action.totalMember,
