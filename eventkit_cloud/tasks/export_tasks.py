@@ -743,7 +743,6 @@ def geotiff_export_task(
     selection = parse_result(result, "selection")
 
     warp_params, translate_params = get_creation_options(config, "gtiff")
-    logger.error(f"GEOTIFF config: {config}")
 
     if "tif" in os.path.splitext(gtiff_in_dataset)[1]:
         gtiff_in_dataset = f"GTIFF_RAW:{gtiff_in_dataset}"
@@ -821,7 +820,6 @@ def hfa_export_task(
     Class defining Erdas Imagine HFA (.img) export function.
     """
     result = result or {}
-    creation_options = get_creation_options(config, "hfa")
     hfa_in_dataset = parse_result(result, "source")
     provider_slug = get_provider_slug(task_uid)
     hfa_out_dataset = get_export_filename(stage_dir, job_name, projection, provider_slug, "img")
@@ -830,7 +828,6 @@ def hfa_export_task(
         input_file=hfa_in_dataset,
         output_file=hfa_out_dataset,
         task_uid=task_uid,
-        creation_options=creation_options,
     )
 
     result["file_extension"] = "img"
@@ -1770,6 +1767,7 @@ def get_creation_options(config: str, file_format: str) -> Union[list, None]:
         conf = yaml.safe_load(config) or dict()
         params = conf.get("formats", {}).get(file_format, {})
         return params.get("warp_params"), params.get("translate_params")
+    return None, None
 
 
 def make_dirs(path):

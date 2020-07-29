@@ -367,8 +367,6 @@ def convert(
             task_uid=task_uid,
             boundary=boundary,
             bbox=bbox,
-            warp_params=warp_params,
-            translate_params=translate_params,
         )
     try:
         task_process = TaskProcess(task_uid=task_uid)
