@@ -492,7 +492,6 @@ def get_metadata(data_provider_task_record_uids: List[str]):
                 if export_task.display and ("project file" not in export_task.name.lower()):
                     download_filename = get_download_filename(
                         os.path.splitext(os.path.basename(filename))[0],
-                        timezone.now(),
                         file_ext,
                         data_provider_slug=data_provider_task_record.provider.slug,
                     )

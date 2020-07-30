@@ -147,6 +147,7 @@ class TaskChainBuilder(object):
                         task_uid=task.get("task_uid"),
                         user_details=user_details,
                         locking_task_key=data_provider_task_record.uid,
+                        config=provider_task.provider.config,
                     )
                     .set(queue=queue_group, routing_key=queue_group)
                 )
@@ -183,6 +184,7 @@ class TaskChainBuilder(object):
                             user_details=user_details,
                             locking_task_key=data_provider_task_record.uid,
                             projection=projection,
+                            config=provider_task.provider.config,
                         ).set(queue=queue_group, routing_key=queue_group)
                     )
 

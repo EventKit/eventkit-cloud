@@ -81,6 +81,9 @@ from eventkit_cloud.tasks.models import (
     RunZipFile,
 )
 from eventkit_cloud.jobs.models import DataProviderTask
+from typing import Union
+import yaml
+
 
 BLACKLISTED_ZIP_EXTS = [".ini", ".om5", ".osm", ".lck", ".pyc"]
 
@@ -594,6 +597,7 @@ def kml_export_task(
     task_uid=None,
     stage_dir=None,
     job_name=None,
+    config=None,
     user_details=None,
     projection=4326,
     *args,
@@ -703,13 +707,20 @@ def geopackage_export_task(
     Class defining geopackage export function.
     """
     result = result or {}
-
     gpkg_in_dataset = parse_result(result, "source")
 
     provider_slug = get_provider_slug(task_uid)
     gpkg_out_dataset = get_export_filename(stage_dir, job_name, projection, provider_slug, "gpkg")
+    selection = parse_result(result, "selection")
 
-    gpkg = gdalutils.convert(fmt="gpkg", input_file=gpkg_in_dataset, output_file=gpkg_out_dataset, task_uid=task_uid)
+    gpkg = gdalutils.convert(
+        fmt="gpkg",
+        input_file=gpkg_in_dataset,
+        output_file=gpkg_out_dataset,
+        task_uid=task_uid,
+        boundary=selection,
+        projection=projection,
+    )
 
     result["file_format"] = "gpkg"
     result["result"] = gpkg
@@ -719,7 +730,7 @@ def geopackage_export_task(
 
 @app.task(name="Geotiff (.tif)", bind=True, base=FormatTask, acks_late=True)
 def geotiff_export_task(
-    self, result=None, task_uid=None, stage_dir=None, job_name=None, projection=4326, *args, **kwargs,
+    self, result=None, task_uid=None, stage_dir=None, job_name=None, projection=4326, config=None, *args, **kwargs,
 ):
     """
     Class defining geopackage export function.
@@ -731,11 +742,19 @@ def geotiff_export_task(
     gtiff_out_dataset = get_export_filename(stage_dir, job_name, projection, provider_slug, "tif")
     selection = parse_result(result, "selection")
 
+    warp_params, translate_params = get_creation_options(config, "gtiff")
+
     if "tif" in os.path.splitext(gtiff_in_dataset)[1]:
         gtiff_in_dataset = f"GTIFF_RAW:{gtiff_in_dataset}"
 
     gtiff_out_dataset = gdalutils.convert(
-        fmt="gtiff", input_file=gtiff_in_dataset, output_file=gtiff_out_dataset, task_uid=task_uid, boundary=selection,
+        fmt="gtiff",
+        input_file=gtiff_in_dataset,
+        output_file=gtiff_out_dataset,
+        task_uid=task_uid,
+        boundary=selection,
+        warp_params=warp_params,
+        translate_params=translate_params,
     )
 
     result["file_extension"] = "tif"
@@ -791,6 +810,7 @@ def hfa_export_task(
     task_uid=None,
     stage_dir=None,
     job_name=None,
+    config=None,
     user_details=None,
     projection=4326,
     *args,
@@ -800,7 +820,6 @@ def hfa_export_task(
     Class defining Erdas Imagine HFA (.img) export function.
     """
     result = result or {}
-
     hfa_in_dataset = parse_result(result, "source")
     provider_slug = get_provider_slug(task_uid)
     hfa_out_dataset = get_export_filename(stage_dir, job_name, projection, provider_slug, "img")
@@ -823,6 +842,7 @@ def reprojection_task(
     job_name=None,
     user_details=None,
     projection=None,
+    config=None,
     *args,
     **kwargs,
 ):
@@ -842,6 +862,8 @@ def reprojection_task(
     provider_slug = get_provider_slug(task_uid)
     out_dataset = get_export_filename(stage_dir, job_name, projection, provider_slug, file_extension)
 
+    warp_params, translate_params = get_creation_options(config, file_format)
+
     if "tif" in os.path.splitext(in_dataset)[1]:
         in_dataset = f"GTIFF_RAW:{in_dataset}"
 
@@ -852,6 +874,8 @@ def reprojection_task(
         task_uid=task_uid,
         projection=projection,
         boundary=selection,
+        warp_params=warp_params,
+        translate_params=translate_params,
     )
 
     result["result"] = reprojection
@@ -1725,6 +1749,20 @@ def get_function(function):
     function_object = getattr(module_object, function_name)
 
     return function_object
+
+
+def get_creation_options(config: str, file_format: str) -> Union[list, None]:
+    """
+    Gets a list of options for a specific format or returns None.
+    :param config: The configuration for a datasource.
+    :param file_format: The file format to look for specific creation options.
+    :return: A list of creation options of None
+    """
+    if config:
+        conf = yaml.safe_load(config) or dict()
+        params = conf.get("formats", {}).get(file_format, {})
+        return params.get("warp_params"), params.get("translate_params")
+    return None, None
 
 
 def make_dirs(path):

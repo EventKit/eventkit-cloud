@@ -190,19 +190,24 @@ class TestExportTasks(ExportTaskBase):
                                             stage_dir=stage_dir, job_name=job_name, projection=projection)
         mock_convert.assert_called_once_with(fmt='gpkg', input_file=expected_output_path,
                                              output_file=expected_output_path,
-                                             task_uid=str(saved_export_task.uid))
+                                             task_uid=str(saved_export_task.uid),
+                                             projection=4326, boundary=None)
 
         self.assertEqual(expected_output_path, result['result'])
         self.assertEqual(expected_output_path, result['source'])
 
+    @patch('eventkit_cloud.tasks.export_tasks.get_creation_options')
     @patch('eventkit_cloud.tasks.export_tasks.get_provider_slug')
     @patch('eventkit_cloud.tasks.export_tasks.gdalutils')
-    def test_geotiff_export_task(self, mock_gdalutils, mock_get_provider_slug):
+    def test_geotiff_export_task(self, mock_gdalutils, mock_get_provider_slug, mock_get_creation_options):
         # TODO: This can be setup as a way to test the other ExportTasks without all the boilerplate.
         ExportTask.__call__ = lambda *args, **kwargs: celery.Task.__call__(*args, **kwargs)
         example_geotiff = "example.tif"
         example_result = {"source": example_geotiff}
         task_uid = '1234'
+        warp_params = {"warp": "params"}
+        translate_params = {"translate": "params"}
+        mock_get_creation_options.return_value = warp_params, translate_params
         provider_slug = mock_get_provider_slug.return_value = "osm-generic"
         date = default_format_time(timezone.now())
         expected_outfile = f"stage/job-4326-{provider_slug}-{date}.tif"
@@ -210,12 +215,14 @@ class TestExportTasks(ExportTaskBase):
         mock_gdalutils.convert.return_value = expected_outfile
         mock_gdalutils.convert.assert_called_once_with(boundary=None, fmt='gtiff',
                                                        input_file=f'GTIFF_RAW:{example_geotiff}',
-                                                       output_file=expected_outfile, task_uid=task_uid)
+                                                       output_file=expected_outfile, task_uid=task_uid,
+                                                       warp_params=warp_params, translate_params= translate_params)
         mock_gdalutils.reset_mock()
         geotiff_export_task(result=example_result, task_uid=task_uid, stage_dir='stage', job_name='job')
         mock_gdalutils.convert.assert_called_once_with(boundary=None, fmt='gtiff',
                                                        input_file=f'GTIFF_RAW:{example_geotiff}',
-                                                       output_file=expected_outfile, task_uid=task_uid)
+                                                       output_file=expected_outfile, task_uid=task_uid,
+                                                       warp_params=warp_params, translate_params= translate_params)
         mock_gdalutils.reset_mock()
         example_result = {"source": example_geotiff,
                           "selection": "selection"}
@@ -223,7 +230,8 @@ class TestExportTasks(ExportTaskBase):
         geotiff_export_task(result=example_result, task_uid=task_uid, stage_dir='stage', job_name='job')
         mock_gdalutils.convert.assert_called_once_with(boundary="selection", fmt='gtiff',
                                                        input_file=f'GTIFF_RAW:{example_geotiff}',
-                                                       output_file=expected_outfile, task_uid=task_uid)
+                                                       output_file=expected_outfile, task_uid=task_uid,
+                                                       warp_params=warp_params, translate_params= translate_params)
 
     @patch('eventkit_cloud.tasks.export_tasks.get_provider_slug')
     @patch('eventkit_cloud.tasks.export_tasks.gdalutils')
