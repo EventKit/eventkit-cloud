@@ -12,7 +12,7 @@ from django.contrib.contenttypes.models import ContentType
 from django.contrib.gis.geos import GEOSException, GEOSGeometry
 from django.core.cache import cache
 from django.db import transaction
-from django.db.models import Q, Count, Case, When
+from django.db.models import Q
 from django.shortcuts import redirect, render
 from django.utils.translation import ugettext as _
 from django_filters.rest_framework import DjangoFilterBackend
@@ -77,6 +77,7 @@ from eventkit_cloud.core.models import (
     annotate_users_restricted,
     attribute_class_filter,
     annotate_groups_restricted,
+    get_group_counts,
 )
 from eventkit_cloud.jobs.models import (
     ExportFormat,
@@ -1707,16 +1708,13 @@ class GroupViewSet(viewsets.ModelViewSet):
 
         # Total number of inspected groups
         total = queryset.count()
-        # Computes against all groups where the inspected group has permissions pertaining to this user
-        # counts the number of filtered groups where the permission is ADMIN
-        # counts the number of filtered groups where the permission is MEMBER
-        totals = filtered_queryset.filter(group_permissions__user=request.user).aggregate(
-            admin=Count(Case(When(Q(group_permissions__permission=GroupPermissionLevel.ADMIN.value), then=1),),),
-            member=Count(Case(When(Q(group_permissions__permission=GroupPermissionLevel.MEMBER.value), then=1),)),
-        )
+        # Query for a dictionary containing the number of groups this user is a member of and groups
+        # this user is an admin in.
+        totals = get_group_counts(filtered_queryset, request.user)
         admin_total = totals.get("admin")
         member_total = totals.get("member")
         # 'other' groups are any groups that the user does not have permissions in, i.e. they are not a member.
+        # Users cannot be admin in a group that they are not a member of, so this is a safe calculation.
         other_total = total - member_total
 
         permission_level = request.query_params.get("permission_level")
