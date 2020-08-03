@@ -63,8 +63,8 @@ END
         try{
             postStatus(getPendingStatus("Running the unit tests..."))
             sh "docker-compose exec --user root -T eventkit chown eventkit:eventkit -R ."
-            sh "docker-compose exec -T eventkit bash -c 'ls -al && source activate eventkit-cloud && python manage.py test -v=2 --noinput eventkit_cloud'"
-            sh "docker-compose exec -T webpack npm test"
+            sh "docker-compose exec -T eventkit bash -c 'ls -al && source activate eventkit-cloud && COVERAGE=True COVERAGE_THRESHOLD=80 python manage.py test -v=2 --noinput eventkit_cloud'"
+            sh "docker-compose exec -T webpack npm run coverage"
         }catch(Exception e) {
              sh "docker-compose logs --tail=50 eventkit webpack"
              handleErrors("Unit tests failed.")

@@ -115,6 +115,12 @@
     },
     "testURL": "http://localhost",
     "coverageDirectory": "./coverage",
+    "coverageThreshold": {
+      "global": {
+        "statements": 80,
+        "lines": 80
+      }
+    },
     "collectCoverageFrom": [
       "**/app/**/*.{js,jsx,ts,tsx}",
       "!**/*.d.ts",
