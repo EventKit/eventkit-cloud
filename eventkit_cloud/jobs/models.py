@@ -604,6 +604,7 @@ class JobPermission(TimeStampedModelMixin):
 
     # A user should only have one type of permission per job.
     class Meta:
+        db_table = "jobpermission"
         unique_together = ["job", "content_type", "object_id", "permission"]
 
     @staticmethod
