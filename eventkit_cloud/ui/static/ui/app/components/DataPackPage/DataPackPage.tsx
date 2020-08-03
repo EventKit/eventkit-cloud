@@ -198,7 +198,8 @@ export class DataPackPage extends React.Component<Props, State> {
     }
 
     componentDidUpdate(prevProps: Props) {
-        if (prevProps.runsFetched === null && this.props.runsFetched) {
+        // Runs were being fetched, but now ARE fetched -- we're no longer loading.
+        if (!prevProps.runsFetched && this.props.runsFetched) {
             if (this.state.pageLoading) {
                 this.setState({pageLoading: false});
             }
