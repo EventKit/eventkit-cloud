@@ -31,7 +31,7 @@ class TestCoreModels(TestCase):
         self.attribute_class = AttributeClass.objects.create(name="test", slug="test")
 
         self.testName = "Omaha 319"
-        # 3 groups will exist, the newly created and DefaultExportExtentGroup
+        # 4 groups will exist, the newly created and DefaultExportExtentGroup
         group1, created = Group.objects.get_or_create(name=self.testName + '1')
         group2, created = Group.objects.get_or_create(name=self.testName + '2')
         group3, created = Group.objects.get_or_create(name=self.testName + '3')
