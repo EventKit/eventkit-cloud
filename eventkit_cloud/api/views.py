@@ -12,7 +12,7 @@ from django.contrib.contenttypes.models import ContentType
 from django.contrib.gis.geos import GEOSException, GEOSGeometry
 from django.core.cache import cache
 from django.db import transaction
-from django.db.models import Q
+from django.db.models import Q, Count, Case, When
 from django.shortcuts import redirect, render
 from django.utils.translation import ugettext as _
 from django_filters.rest_framework import DjangoFilterBackend
@@ -1701,9 +1701,23 @@ class GroupViewSet(viewsets.ModelViewSet):
         if request.query_params.get("job_uid"):
             job = Job.objects.get(uid=request.query_params["job_uid"])
         queryset = JobPermission.get_orderable_queryset_for_job(job, Group)
-        total = queryset.count()
+
         filtered_queryset = self.filter_queryset(queryset)
         filtered_queryset = annotate_groups_restricted(filtered_queryset, job)
+
+        # Total number of inspected groups
+        total = queryset.count()
+        # Computes against all groups where the inspected group has permissions pertaining to this user
+        # counts the number of filtered groups where the permission is ADMIN
+        # counts the number of filtered groups where the permission is MEMBER
+        totals = filtered_queryset.filter(group_permissions__user=request.user).aggregate(
+            admin=Count(Case(When(Q(group_permissions__permission=GroupPermissionLevel.ADMIN.value), then=1),),),
+            member=Count(Case(When(Q(group_permissions__permission=GroupPermissionLevel.MEMBER.value), then=1),)),
+        )
+        admin_total = totals.get("admin")
+        member_total = totals.get("member")
+        # 'other' groups are any groups that the user does not have permissions in, i.e. they are not a member.
+        other_total = total - member_total
 
         permission_level = request.query_params.get("permission_level")
         if permission_level == "admin":
@@ -1731,7 +1745,10 @@ class GroupViewSet(viewsets.ModelViewSet):
             serializer = self.get_serializer(filtered_queryset, many=True, context={"request": request})
             response = Response(serializer.data, status=status.HTTP_200_OK)
 
-        response["Total-Groups"] = total
+        response["total-groups"] = total
+        response["admin-groups"] = admin_total
+        response["member-groups"] = member_total
+        response["other-groups"] = other_total
         return response
 
     @transaction.atomic
@@ -2149,7 +2166,6 @@ class EstimatorView(views.APIView):
         if request.query_params.get("slugs", None):
             estimator = AoiEstimator(bbox=bbox, bbox_srs=srs, min_zoom=min_zoom, max_zoom=max_zoom)
             for slug in request.query_params.get("slugs").split(","):
-
                 size = estimator.get_estimate_from_slug(AoiEstimator.Types.SIZE, slug)[0]
                 time = estimator.get_estimate_from_slug(AoiEstimator.Types.TIME, slug)[0]
                 payload += [
@@ -2235,7 +2251,6 @@ def geojson_to_geos(geojson_geom, srid=None):
 
 
 def get_jobs_via_permissions(permissions):
-
     groups = Group.objects.filter(name__in=permissions.get("groups", []))
     group_query = [
         Q(permissions__content_type=ContentType.objects.get_for_model(Group)),
