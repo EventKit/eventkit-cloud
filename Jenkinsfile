@@ -1,4 +1,5 @@
 node() {
+    def branch = ""
 
     stage('Clean Up Workspace') {
         cleanWs()
@@ -6,6 +7,7 @@ node() {
 
     stage("Add Repo"){
         checkout scm
+        branch = sh(script: "git branch --show-current", returnStdout: true).trim()
         postStatus(getPendingStatus("The build is starting..."))
         withCredentials([string(credentialsId: 'condaRepo', variable: 'CONDA_REPO')]){
             sh "ls -al"
@@ -68,6 +70,19 @@ END
         }catch(Exception e) {
              sh "docker-compose logs --tail=50 eventkit webpack"
              handleErrors("Unit tests failed.")
+        }
+    }
+
+    stage("Code Analysis") {
+        dir('eventkit-cloud') {
+            def scannerHome = tool 'SonarQube Runner'
+            withEnv(["SONAR_SCANNER_OPTS=-Xmx512m"]) {
+                // Retrieve sonar token from Jenkins credentials and store in variable to be used by sonar-scanner, masked from log
+                withCredentials([[$class: 'StringBinding', credentialsId: 'eventkit-sonar-token', variable: 'SONAR_TOKEN'],
+                                [$class: 'StringBinding', credentialsId: 'sonar-url', variable: 'SONAR_URL']]) {
+                    sh "${scannerHome}/bin/sonar-scanner -Dsonar.branch.name=${branch} -Dsonar.projectKey=eventkit -Dsonar.host.url=${SONAR_URL} -Dsonar.login=${SONAR_TOKEN}"
+                }
+            }
         }
     }
 
