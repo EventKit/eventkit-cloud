@@ -195,9 +195,6 @@ const jss = (theme: Eventkit.Theme & Theme) => createStyles({
 export interface Props {
     user: Eventkit.User['user'];
     groups: Eventkit.Store.Groups;
-    ownedGroups: Eventkit.Store.Groups;
-    sharedGroups: Eventkit.Store.Groups;
-    otherGroups: Eventkit.Store.Groups;
     users: Eventkit.Store.Users;
     getGroups: (args: any, append: boolean) => void;
     deleteGroup: (id: string | number) => void;
@@ -897,7 +894,7 @@ export class UserGroupsPage extends React.Component<Props, State> {
         // added to or removed from a group
         const commonGroups = [];
         if (this.state.selectedUsers.length) {
-            this.props.ownedGroups.ownedGroups.forEach((group) => {
+            ownedGroups.forEach((group) => {
                 const allSelectedIncluded = this.state.selectedUsers.every((user) => {
                     if (user.groups.includes(Number(group.id))) {
                         return true;

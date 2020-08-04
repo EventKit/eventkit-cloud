@@ -36,11 +36,11 @@ describe('userGroupsReducer', () => {
                 type: types.FETCHED_GROUPS,
                 groups,
                 total: 12,
+                totalAdmin: 12,
+                totalMember: 12,
+                totalOther: 12,
                 range: '1-12',
                 nextPage: true,
-                otherGroups: [],
-                ownedGroups: [],
-                sharedGroups: [],
             },
         )).toEqual({
             ...state,
@@ -49,11 +49,11 @@ describe('userGroupsReducer', () => {
             groups,
             data: groups,
             total: 12,
+            totalAdmin: 12,
+            totalMember: 12,
+            totalOther: 12,
             range: '1-12',
             nextPage: true,
-            otherGroups: [],
-            ownedGroups: [],
-            sharedGroups: [],
         });
     });
 
@@ -73,6 +73,7 @@ describe('userGroupsReducer', () => {
             ...state,
             fetched: false,
             fetching: false,
+            totaMember: 0,
             error,
         });
     });
