@@ -77,6 +77,7 @@ from eventkit_cloud.core.models import (
     annotate_users_restricted,
     attribute_class_filter,
     annotate_groups_restricted,
+    get_group_counts,
 )
 from eventkit_cloud.jobs.models import (
     ExportFormat,
@@ -1701,9 +1702,20 @@ class GroupViewSet(viewsets.ModelViewSet):
         if request.query_params.get("job_uid"):
             job = Job.objects.get(uid=request.query_params["job_uid"])
         queryset = JobPermission.get_orderable_queryset_for_job(job, Group)
-        total = queryset.count()
+
         filtered_queryset = self.filter_queryset(queryset)
         filtered_queryset = annotate_groups_restricted(filtered_queryset, job)
+
+        # Total number of inspected groups
+        total = queryset.count()
+        # Query for a dictionary containing the number of groups this user is a member of and groups
+        # this user is an admin in.
+        totals = get_group_counts(filtered_queryset, request.user)
+        admin_total = totals.get("admin")
+        member_total = totals.get("member")
+        # 'other' groups are any groups that the user does not have permissions in, i.e. they are not a member.
+        # Users cannot be admin in a group that they are not a member of, so this is a safe calculation.
+        other_total = total - member_total
 
         permission_level = request.query_params.get("permission_level")
         if permission_level == "admin":
@@ -1731,7 +1743,10 @@ class GroupViewSet(viewsets.ModelViewSet):
             serializer = self.get_serializer(filtered_queryset, many=True, context={"request": request})
             response = Response(serializer.data, status=status.HTTP_200_OK)
 
-        response["Total-Groups"] = total
+        response["total-groups"] = total
+        response["admin-groups"] = admin_total
+        response["member-groups"] = member_total
+        response["other-groups"] = other_total
         return response
 
     @transaction.atomic
@@ -2149,7 +2164,6 @@ class EstimatorView(views.APIView):
         if request.query_params.get("slugs", None):
             estimator = AoiEstimator(bbox=bbox, bbox_srs=srs, min_zoom=min_zoom, max_zoom=max_zoom)
             for slug in request.query_params.get("slugs").split(","):
-
                 size = estimator.get_estimate_from_slug(AoiEstimator.Types.SIZE, slug)[0]
                 time = estimator.get_estimate_from_slug(AoiEstimator.Types.TIME, slug)[0]
                 payload += [
@@ -2235,7 +2249,6 @@ def geojson_to_geos(geojson_geom, srid=None):
 
 
 def get_jobs_via_permissions(permissions):
-
     groups = Group.objects.filter(name__in=permissions.get("groups", []))
     group_query = [
         Q(permissions__content_type=ContentType.objects.get_for_model(Group)),

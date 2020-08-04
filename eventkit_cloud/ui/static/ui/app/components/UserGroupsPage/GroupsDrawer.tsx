@@ -77,6 +77,9 @@ export interface Props {
     usersCount: number;
     nextPage: boolean;
     total: number;
+    totalAdmin: number;
+    totalMember: number;
+    totalOther: number;
     onNewGroupClick: () => void;
     onAdministratorInfoClick: () => void;
     onMemberInfoClick: () => void;
@@ -238,24 +241,30 @@ export function GroupsDrawer(props: Props) {
                     <strong>NEW GROUP</strong>
                 </ButtonBase>
             </span>
-            <GroupsHeaderTabs selectedTab={selectedTab} handleChange={handleChange}/>
+            <GroupsHeaderTabs
+                selectedTab={selectedTab}
+                handleChange={handleChange}
+                totalAdmin={props.totalAdmin}
+                totalMember={props.totalMember}
+                totalOther={props.totalOther}
+            />
             <Divider className={classes.divider}/>
-                <GroupPanelBody
-                    ownedGroups={props.ownedGroups}
-                    sharedGroups={props.sharedGroups}
-                    otherGroups={props.otherGroups}
-                    selectedTab={selectedTab}
-                    selectedValue={props.selectedValue}
-                    onRenameGroupClick={props.onRenameGroupClick}
-                    onLeaveGroupClick={props.onLeaveGroupClick}
-                    onDeleteGroupClick={props.onDeleteGroupClick}
-                    onSelectionChange={props.onSelectionChange}
-                    onAdministratorInfoClick={props.onAdministratorInfoClick}
-                    onMemberInfoClick={props.onMemberInfoClick}
-                    onOtherInfoClick={props.onOtherInfoClick}
-                    getGroupsRange={getGroupsRange}
-                    setFetchingGroups={props.setFetchingGroups}
-                />
+            <GroupPanelBody
+                ownedGroups={props.ownedGroups}
+                sharedGroups={props.sharedGroups}
+                otherGroups={props.otherGroups}
+                selectedTab={selectedTab}
+                selectedValue={props.selectedValue}
+                onRenameGroupClick={props.onRenameGroupClick}
+                onLeaveGroupClick={props.onLeaveGroupClick}
+                onDeleteGroupClick={props.onDeleteGroupClick}
+                onSelectionChange={props.onSelectionChange}
+                onAdministratorInfoClick={props.onAdministratorInfoClick}
+                onMemberInfoClick={props.onMemberInfoClick}
+                onOtherInfoClick={props.onOtherInfoClick}
+                getGroupsRange={getGroupsRange}
+                setFetchingGroups={props.setFetchingGroups}
+            />
             <div
                 className="show-buttons"
                 style={{display: 'flex', marginLeft: '2px'}}
@@ -303,6 +312,9 @@ function mapStateToProps(state) {
         user: state.user.data.user,
         nextPage: state.groups.nextPage,
         total: state.groups.total,
+        totalAdmin: state.groups.totalAdmin,
+        totalMember: state.groups.totalMember,
+        totalOther: state.groups.totalOther,
     };
 }
 
