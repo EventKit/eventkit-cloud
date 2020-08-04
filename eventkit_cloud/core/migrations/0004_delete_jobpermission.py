@@ -4,13 +4,17 @@ from django.db import migrations
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         ('core', '0003_auto_20200803_1037'),
     ]
 
     operations = [
-        migrations.DeleteModel(
-            name='JobPermission',
-        ),
+        migrations.SeparateDatabaseAndState(
+            state_operations=[
+                migrations.DeleteModel(
+                    name='JobPermission',
+                ),
+            ],
+            database_operations=[],
+        )
     ]
