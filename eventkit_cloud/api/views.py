@@ -1375,6 +1375,7 @@ class DataProviderTaskRecordViewSet(viewsets.ModelViewSet):
         cancel_export_provider_task.run(
             data_provider_task_uid=data_provider_task_record.uid, canceling_username=request.user.username,
         )
+
         return Response({"success": True}, status=status.HTTP_200_OK)
 
     def list(self, request, *args, **kwargs):

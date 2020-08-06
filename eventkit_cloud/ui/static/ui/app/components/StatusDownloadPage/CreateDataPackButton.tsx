@@ -3,7 +3,7 @@ import * as React from "react";
 import InfoDialog from "../Dialog/InfoDialog";
 import {Theme, withStyles, withTheme} from "@material-ui/core/styles";
 import CloudDownload from "@material-ui/icons/CloudDownload";
-import {useAsyncRequest, ApiStatuses} from "../../utils/hooks/api";
+import {useAsyncRequest, ApiStatuses, FileStatus} from "../../utils/hooks/api";
 import {getCookie} from "../../utils/generic";
 import {useRunContext} from "./RunFileContext";
 import {useEffect, useRef, useState} from "react";
@@ -182,7 +182,12 @@ function CreateDataPackButton(props: Props) {
 
     function isRunCompleted() {
         // TODO: add enum for run statuses to ApiStatuses object
-        return run.status === 'COMPLETED';
+        return ApiStatuses.finishedStates.includes(run.status as FileStatus);
+    }
+
+    function isRunCanceled() {
+        // TODO: add enum for run statuses to ApiStatuses object
+        return run.status == ApiStatuses.files.CANCELED;
     }
 
     function zipIsProcessing() {
@@ -191,8 +196,8 @@ function CreateDataPackButton(props: Props) {
         return zipAvailableStatus === ApiStatuses.hookActions.SUCCESS &&
             zipAvailableResponse.data.length &&
             zipAvailableResponse.data[0].status && (
-                zipAvailableResponse.data[0].status === ApiStatuses.files.PENDING ||
-                zipAvailableResponse.data[0].status === ApiStatuses.files.RUNNING
+                [ApiStatuses.files.PENDING,
+                    ApiStatuses.files.RUNNING].includes(zipAvailableResponse.data[0].status as FileStatus)
             )
     }
 
@@ -215,6 +220,10 @@ function CreateDataPackButton(props: Props) {
                 previousFrameText.current = 'Processing Zip...'
             }
             return previousFrameText.current;
+        }
+
+        if(isRunCanceled()){
+            return 'Zip Canceled'
         }
         if (!isRunCompleted()) {
             return 'Job Processing...';
@@ -259,6 +268,9 @@ function CreateDataPackButton(props: Props) {
     function shouldEnableButton() {
         if (isZipAvailable()) {
             return true;
+        }
+        if (isRunCanceled()) {
+            return false;
         }
         return isRunCompleted() && requestZipFileStatus === ApiStatuses.hookActions.NOT_FIRED;
     }
@@ -347,7 +359,8 @@ function CreateDataPackButton(props: Props) {
                     // It then acts as a button that allows users to open popovers.
                     // This allows us to leverage the built in disabled functionality on the MUI component
                     // while still being able to click the button. MUI stops all onClick events when disabled.
-                    <div onClick={buttonAction} className={classes.fakeButton} id="qa-CreateDataPackButton-fakeButton"/>
+                    <div onClick={buttonAction} className={classes.fakeButton}
+                         id="qa-CreateDataPackButton-fakeButton"/>
                 )}
                 {getButtonIcon()}
                 <span className={`qa-textSpan ${!buttonEnabled ? classes.disabledText : ''}`}>{buttonText}</span>
@@ -367,7 +380,8 @@ function CreateDataPackButton(props: Props) {
                             <div style={{marginTop: '5px', fontSize: '20px'}}>
                                 {!isZipAvailable() ? (
                                     <p>
-                                        We are creating your zip file. We will let you know in the notifications panel
+                                        We are creating your zip file. We will let you know in the notifications
+                                        panel
                                         when it
                                         is ready.
                                     </p>
