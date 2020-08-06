@@ -310,6 +310,12 @@ UI_CONFIG = {
     "DATAPACK_PAGE_SIZE": os.getenv("DATAPACK_PAGE_SIZE", "100"),
     "NOTIFICATIONS_PAGE_SIZE": os.getenv("NOTIFICATIONS_PAGE_SIZE", "10"),
     "SERVE_ESTIMATES": SERVE_ESTIMATES,
+    "MATOMO": {
+        "URL": os.getenv('MATOMO_URL', ""),
+        "GX_UID": os.getenv('MATOMO_GX_UID', ""),
+        "SITE_ID": os.getenv('MATOMO_SITE_ID', ""),
+        "APPNAME": os.getenv("MATOMO_APPNAME", "EventKit")
+    }
 }
 
 
