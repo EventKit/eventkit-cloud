@@ -55,7 +55,10 @@ class CustomLogger(ProgressLog):
         # better eta estimates
 
         if self.task_uid:
-            if get_cache_value(uid=self.task_uid, attribute="status", model_name="ExportTaskRecord") == TaskStates.CANCELED.value:
+            if (
+                get_cache_value(uid=self.task_uid, attribute="status", model_name="ExportTaskRecord")
+                == TaskStates.CANCELED.value
+            ):
                 logger.error(f"The task uid: {self.task_uid} was canceled. Exiting...")
                 exit(1)
 
@@ -81,8 +84,10 @@ def get_custom_exp_backoff(max_repeat=None, task_uid=None):
     def custom_exp_backoff(*args, **kwargs):
         if max_repeat:
             kwargs["max_repeat"] = max_repeat
-        if get_cache_value(uid=task_uid, attribute="status",
-                           model_name="ExportTaskRecord") == TaskStates.CANCELED.value:
+        if (
+            get_cache_value(uid=task_uid, attribute="status", model_name="ExportTaskRecord")
+            == TaskStates.CANCELED.value
+        ):
             logger.error(f"The task uid: {task_uid} was canceled. Exiting...")
             exit(1)
         exp_backoff(*args, **kwargs)
@@ -211,8 +216,9 @@ class MapproxyGeopackage(object):
 
         conf_dict, seed_configuration, mapproxy_configuration = self.get_check_config()
         #  Customizations...
-        mapproxy.seed.seeder.exp_backoff = get_custom_exp_backoff(max_repeat=int(conf_dict.get("max_repeat", 5)),
-                                                                  task_uid=self.task_uid)
+        mapproxy.seed.seeder.exp_backoff = get_custom_exp_backoff(
+            max_repeat=int(conf_dict.get("max_repeat", 5)), task_uid=self.task_uid
+        )
 
         logger.info("Beginning seeding to {0}".format(self.gpkgfile))
         try:

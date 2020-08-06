@@ -1681,6 +1681,7 @@ def cancel_export_provider_task(
 
     return result
 
+
 @app.task(name="Cancel Run", base=EventKitBaseTask)
 def cancel_run(
     result=None, export_run_uid=None, canceling_username=None, delete=False, *args, **kwargs,
