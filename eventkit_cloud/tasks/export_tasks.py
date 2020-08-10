@@ -1213,6 +1213,7 @@ def create_zip_task(
     :param data_provider_task_record_uids: A list of data provider task record UIDs to zip.
     :return: The run files, or a single zip file if data_provider_task_record_uid is passed.
     """
+
     if not result:
         result = {}
 

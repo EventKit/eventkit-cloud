@@ -1276,8 +1276,6 @@ class RunZipFileViewSet(viewsets.ModelViewSet):
         )
         if run_zip_files:
             serializer = self.get_serializer(run_zip_files.first(), context={"request": request})
-        else:
-            serializer = self.get_serializer(filtered_run_zip_files.first(), context={"request": request})
         return Response(serializer.data, status=status.HTTP_200_OK)
 
 

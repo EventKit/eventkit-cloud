@@ -26,7 +26,8 @@ export class ApiStatuses {
     static readonly hookActions = ACTIONS;
     static readonly files = FileStatus;
     static readonly finishedStates = [FileStatus.COMPLETED, FileStatus.INCOMPLETE, FileStatus.CANCELED,
-        FileStatus.SUCCESS, FileStatus.FAILED]
+        FileStatus.SUCCESS, FileStatus.FAILED];
+    static readonly inProgressStates = [FileStatus.PENDING, FileStatus.RUNNING, FileStatus.SUBMITTED];
 }
 
 interface RequestState {

@@ -80,11 +80,10 @@ const jss = (theme: Eventkit.Theme & Theme) => ({
 
 interface Props {
     fontSize: string;  // Pass through font size to be consistent with parent.
-    classes: { [className: string]: string; }
+    classes: { [className: string]: string; };
     providerTaskUids: string[];
     theme: Eventkit.Theme & Theme;
 }
-
 
 function CreateDataPackButton(props: Props) {
     const {fontSize, providerTaskUids, classes, theme} = props;
@@ -104,7 +103,7 @@ function CreateDataPackButton(props: Props) {
     const requestOptions = {
         url: `/api/runs/zipfiles`,
         headers: {'X-CSRFToken': getCookie('csrftoken')},
-    }
+    };
     const [{status: zipAvailableStatus, response: zipAvailableResponse}, zipAvailAbleCall, clearZipAvailable] = useAsyncRequest();
     const checkZipAvailable = () => {
         // Returned promise is ignored, we don't need it.
@@ -159,11 +158,11 @@ function CreateDataPackButton(props: Props) {
                 !isZipAvailable()
             ) {
                 // Request completed, check to see if we're already at the limit for bad responses
-                if (badResponseCount >= 2) {
+                if (badResponseCount >= 3) {
                     setBadResponse(true);
                 } else {
                     // Deal with bad responses, increase the count.
-                    if (!zipAvailableResponse.data.length || zipAvailableStatus === ApiStatuses.hookActions.SUCCESS) {
+                    if (!zipAvailableResponse.data.length) {
                         setBadResponseCount(count => count + 1);
                     }
                     // Set a time out to re-poll for the status of the zip after five seconds.
@@ -177,7 +176,7 @@ function CreateDataPackButton(props: Props) {
             if (timeoutId) {
                 clearTimeout(timeoutId);
             }
-        }
+        };
     }, [zipAvailableStatus]);
 
     function isRunCompleted() {
@@ -196,9 +195,8 @@ function CreateDataPackButton(props: Props) {
         return zipAvailableStatus === ApiStatuses.hookActions.SUCCESS &&
             zipAvailableResponse.data.length &&
             zipAvailableResponse.data[0].status && (
-                [ApiStatuses.files.PENDING,
-                    ApiStatuses.files.RUNNING].includes(zipAvailableResponse.data[0].status as FileStatus)
-            )
+                ApiStatuses.inProgressStates.includes(zipAvailableResponse.data[0].status as FileStatus)
+            );
     }
 
     function isZipAvailable() {
@@ -213,17 +211,16 @@ function CreateDataPackButton(props: Props) {
         // We do this to prevent the text from rapidly flickering between different states when we fire
         // off a request.
         if (
-            zipAvailableStatus === ApiStatuses.hookActions.FETCHING ||
-            requestZipFileStatus === ApiStatuses.hookActions.FETCHING
+            (zipAvailableStatus === ApiStatuses.hookActions.FETCHING) ||
+            (requestZipFileStatus === ApiStatuses.hookActions.FETCHING)
         ) {
             if (previousFrameText.current === '') {
-                previousFrameText.current = 'Processing Zip...'
+                previousFrameText.current = 'Processing Zip...';
             }
             return previousFrameText.current;
         }
-
-        if(isRunCanceled()){
-            return 'Zip Canceled'
+        if (isRunCanceled()) {
+            return 'Zip Canceled';
         }
         if (!isRunCompleted()) {
             return 'Job Processing...';
@@ -233,8 +230,6 @@ function CreateDataPackButton(props: Props) {
         }
         if (badResponse) {
             return 'Zip Error';
-        } else if (!!zipAvailableResponse && zipAvailableResponse.status === 'PENDING') {
-            return 'Processing Zip...';
         }
         if (requestZipFileStatus === ApiStatuses.hookActions.NOT_FIRED) {
             return 'CREATE DATAPACK (.ZIP)';
@@ -247,16 +242,22 @@ function CreateDataPackButton(props: Props) {
 
     function getPopoverMessage() {
         if (!isRunCompleted()) {
-            return 'The DataPack is being built. Downloads will be available for request upon completion.'
+            return 'The DataPack is being built. Downloads will be available for request upon completion.';
         }
         if (badResponse) {
-            return 'Could not retrieve zip information, please try again or contact an administrator.'
+            return 'Could not retrieve zip information, please try again or contact an administrator.';
         }
-        if (buttonText === 'Processing Zip...') {
-            if (zipIsProcessing()) {
-                return zipAvailableResponse.data[0].message;
-            }
-            return 'Processing zip file.'
+        if (isRunCanceled()) {
+            return (
+                <p>
+                    The datapack was canceled, so no zip is available. You can Rerun the datapack,
+                    to generate the files. If you don't have permission to rerun you can clone this
+                    datapack to generate the files.
+                </p>
+            );
+        }
+        if (zipIsProcessing()) {
+            return zipAvailableResponse.data[0].message || 'Processing zip file.';
         }
         return '';
     }
@@ -274,6 +275,7 @@ function CreateDataPackButton(props: Props) {
         }
         return isRunCompleted() && requestZipFileStatus === ApiStatuses.hookActions.NOT_FIRED;
     }
+
     const buttonEnabled = shouldEnableButton();
 
     const [displayCreatingMessage, setDisplayCreatingMessage] = useState(false);
@@ -298,19 +300,19 @@ function CreateDataPackButton(props: Props) {
                 fill: colors.primary
             },
             className: 'qa-DataPack-button-enabled',
-        }
+        };
         if (!buttonEnabled) {
             iconProps = {
                 style: {fill: colors.white, color: colors.primary},
                 className: 'qa-DataPack-button-disabled"',
-            }
+            };
         }
         iconProps.style = {
             ...iconProps.style,
             ...{
                 verticalAlign: 'middle', marginRight: '5px',
             },
-        }
+        };
         let IconComponent: React.ComponentType<any> = CloudDownload;
         if (badResponse) {
             // This case controls for when we get no response back at all, usually an empty array.
@@ -319,7 +321,7 @@ function CreateDataPackButton(props: Props) {
             iconProps.style = {
                 ...iconProps.style,
                 fill: colors.warning,
-            }
+            };
         } else if (!isRunCompleted() ||
             zipAvailableStatus === ApiStatuses.hookActions.FETCHING ||
             zipIsProcessing() ||
@@ -343,7 +345,7 @@ function CreateDataPackButton(props: Props) {
                 className={`qa-CreateDataPackButton-Button-zipButton`}
                 classes={{root: (buttonEnabled) ? classes.button : classes.buttonDisabled}}
                 disabled={!buttonEnabled}
-                style={{fontSize: fontSize, lineHeight: 'initial', width: '250px'}}
+                style={{fontSize, lineHeight: 'initial', width: '250px'}}
                 onClick={buttonAction}
                 {...(() => {
                     // If the zip file is available, set the href of the button to the URL.
@@ -351,7 +353,7 @@ function CreateDataPackButton(props: Props) {
                     if (isZipAvailable()) {
                         extraProps.href = zipAvailableResponse.data[0].url;
                     }
-                    return extraProps
+                    return extraProps;
                 })()}
             >
                 {!buttonEnabled && (
@@ -390,7 +392,6 @@ function CreateDataPackButton(props: Props) {
                                         DataPack (.ZIP) ready for download.
                                     </p>
                                 )}
-
                             </div>
                         </div>
                     </CenteredPopup>
@@ -447,8 +448,7 @@ function CreateDataPackButton(props: Props) {
                 </div>
             </InfoDialog>
         </div>
-    )
+    );
 }
-
 
 export default withTheme()(withStyles(jss)(CreateDataPackButton));

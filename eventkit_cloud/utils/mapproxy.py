@@ -55,14 +55,15 @@ class CustomLogger(ProgressLog):
         # better eta estimates
 
         if self.task_uid:
-            if (
-                get_cache_value(uid=self.task_uid, attribute="status", model_name="ExportTaskRecord")
-                == TaskStates.CANCELED.value
-            ):
-                logger.error(f"The task uid: {self.task_uid} was canceled. Exiting...")
-                exit(1)
 
             if self.log_step_counter == 0:
+                if (
+                    get_cache_value(uid=self.task_uid, attribute="status", model_name="ExportTaskRecord")
+                    == TaskStates.CANCELED.value
+                ):
+                    logger.error(f"The task uid: {self.task_uid} was canceled. Exiting...")
+                    raise Exception("The task was canceled.")
+
                 update_progress(self.task_uid, progress=progress.progress * 100, eta=self.eta)
                 self.log_step_counter = self.log_step_step
             self.log_step_counter -= 1
@@ -89,7 +90,7 @@ def get_custom_exp_backoff(max_repeat=None, task_uid=None):
             == TaskStates.CANCELED.value
         ):
             logger.error(f"The task uid: {task_uid} was canceled. Exiting...")
-            exit(1)
+            raise Exception("The task was canceled.")
         exp_backoff(*args, **kwargs)
 
     return custom_exp_backoff
