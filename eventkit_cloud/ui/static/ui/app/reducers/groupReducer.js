@@ -3,6 +3,9 @@ import { types } from '../actions/groupActions';
 export const initialState = {
     groups: [],
     total: 0,
+    totalAdmin: 0,
+    totalMember: 0,
+    totalOther: 0,
     range: '',
     nextPage: false,
     cancelSource: null,
@@ -15,9 +18,6 @@ export const initialState = {
     updating: null,
     updated: null,
     error: null,
-    ownedGroups: [],
-    sharedGroups: [],
-    otherGroups: [],
     data: [],
 };
 
@@ -39,10 +39,10 @@ export function userGroupsReducer(state = initialState, action) {
                 fetched: true,
                 data: action.groups,
                 groups: action.append ? [...state.groups, ...action.groups] : action.groups,
-                ownedGroups: action.append ? [...state.ownedGroups, ...action.ownedGroups] : action.ownedGroups,
-                sharedGroups: action.append ? [...state.sharedGroups, ...action.sharedGroups] : action.sharedGroups,
-                otherGroups: action.append ? [...state.otherGroups, ...action.otherGroups] : action.otherGroups,
                 total: action.total,
+                totalAdmin: action.totalAdmin,
+                totalMember: action.totalMember,
+                totalOther: action.totalOther,
                 range: action.range,
                 nextPage: action.nextPage,
                 error: null,
@@ -58,6 +58,9 @@ export function userGroupsReducer(state = initialState, action) {
                 error: action.error,
                 cancelSource: null,
                 total: 0,
+                totalAdmin: 0,
+                totaMember: 0,
+                totalOther: 0,
                 range: '',
                 nextPage: false,
             };

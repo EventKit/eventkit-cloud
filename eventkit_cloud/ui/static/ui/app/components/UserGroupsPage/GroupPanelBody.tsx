@@ -70,6 +70,7 @@ const jss = (theme: Theme & Eventkit.Theme) => createStyles({
         width: '100%',
         height: '100%',
         zIndex: 1400,
+        pointerEvents: 'none',
     },
 });
 

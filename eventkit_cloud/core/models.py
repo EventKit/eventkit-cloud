@@ -8,7 +8,7 @@ from django.contrib.auth.models import User, Group
 from django.contrib.gis.db import models
 from django.core.cache import cache
 from django.db import transaction
-from django.db.models import QuerySet, Case, Value, When, Q
+from django.db.models import QuerySet, Case, Value, When, Q, Count
 from django.utils import timezone
 from enum import Enum
 from notifications.models import Notification
@@ -404,6 +404,16 @@ def annotate_groups_restricted(groups: QuerySet, job):
         )
     )
     return groups
+
+
+def get_group_counts(groups_queryset, user):
+    # Computes against all groups where the inspected group has permissions pertaining to this user
+    # counts the number of filtered groups where the permission is ADMIN
+    # counts the number of filtered groups where the permission is MEMBER
+    return groups_queryset.filter(group_permissions__user=user).aggregate(
+        admin=Count(Case(When(Q(group_permissions__permission=GroupPermissionLevel.ADMIN.value), then=1))),
+        member=Count(Case(When(Q(group_permissions__permission=GroupPermissionLevel.MEMBER.value), then=1))),
+    )
 
 
 def attribute_class_filter(queryset: QuerySet, user: User = None) -> Tuple[QuerySet, QuerySet]:
