@@ -57,7 +57,7 @@ export function MatomoHandler(props: MatomoProps) {
             document.addEventListener('click', matomoCallback);
         }
         matomoCallback();
-    }, !!user, true)
+    }, !!user)
 
     return null;
 }
