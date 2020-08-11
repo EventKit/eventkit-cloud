@@ -5,7 +5,7 @@ const _paq = (window as any)._paq = (window as any)._paq || [];
 
 function pushData(referrerUrl: string, setUrl: (url: string) => void,
                   userInfo: any, matomoUrl: string, siteId: string, appName: string,
-                  gxDimensionId: number, customVarInfo: any) {
+                  customDimensionId: number, customVarInfo: any) {
     if (!matomoUrl) {
         return;
     }
@@ -16,7 +16,7 @@ function pushData(referrerUrl: string, setUrl: (url: string) => void,
     _paq.push(['setDocumentTitle', appName]);
     /* tracker methods like "setCustomDimension" should be called before "trackPageView" */
     const userGxId = userInfo.identification || 'undefined';
-    _paq.push(['setCustomDimension', gxDimensionId, userGxId]);
+    _paq.push(['setCustomDimension', customDimensionId, userGxId]);
     _paq.push(['setCustomVariable', customVarInfo.id, customVarInfo.name, userGxId, customVarInfo.scope]);
     _paq.push(['setUserId', userInfo.username])
     _paq.push(['trackPageView']);
