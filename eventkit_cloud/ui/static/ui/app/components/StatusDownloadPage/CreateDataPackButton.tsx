@@ -4,7 +4,7 @@ import InfoDialog from "../Dialog/InfoDialog";
 import {Theme, withStyles, withTheme} from "@material-ui/core/styles";
 import CloudDownload from "@material-ui/icons/CloudDownload";
 import {useAsyncRequest, ApiStatuses} from "../../utils/hooks/api";
-import {getCookie} from "../../utils/generic";
+import {formatMegaBytes, getCookie} from "../../utils/generic";
 import {useRunContext} from "./RunFileContext";
 import {useEffect, useRef, useState} from "react";
 import {DepsHashers, usePrevious} from "../../utils/hooks/hooks";
@@ -79,6 +79,7 @@ const jss = (theme: Eventkit.Theme & Theme) => ({
 });
 
 interface Props {
+    zipSize: number;
     fontSize: string;  // Pass through font size to be consistent with parent.
     classes: { [className: string]: string; }
     providerTaskUids: string[];
@@ -205,6 +206,7 @@ function CreateDataPackButton(props: Props) {
     const previousFrameText = useRef('');
 
     function getButtonText() {
+        const sizeText = (props.zipSize) ? formatMegaBytes(props.zipSize, 1) + ' ' : '';
         // We do this to prevent the text from rapidly flickering between different states when we fire
         // off a request.
         if (
@@ -220,7 +222,7 @@ function CreateDataPackButton(props: Props) {
             return 'Job Processing...';
         }
         if (isZipAvailable()) {
-            return 'DOWNLOAD DATAPACK (.ZIP)';
+            return `DOWNLOAD DATAPACK (${sizeText}.ZIP)`;
         }
         if (badResponse) {
             return 'Zip Error';
@@ -228,7 +230,7 @@ function CreateDataPackButton(props: Props) {
             return 'Processing Zip...';
         }
         if (requestZipFileStatus === ApiStatuses.hookActions.NOT_FIRED) {
-            return 'CREATE DATAPACK (.ZIP)';
+            return `CREATE DATAPACK (${sizeText}.ZIP)`;
         }
         return 'Processing Zip...';
     }
