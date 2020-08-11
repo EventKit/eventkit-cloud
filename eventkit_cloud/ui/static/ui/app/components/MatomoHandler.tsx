@@ -5,7 +5,7 @@ const _paq = (window as any)._paq = (window as any)._paq || [];
 
 function pushData(referrerUrl: string, setUrl: (url: string) => void,
                   userInfo: any, matomoUrl: string, siteId: string, appName: string,
-                  gxDimensionId: number) {
+                  gxDimensionId: number, customVarInfo: any) {
     if (!matomoUrl) {
         return;
     }
@@ -17,7 +17,7 @@ function pushData(referrerUrl: string, setUrl: (url: string) => void,
     /* tracker methods like "setCustomDimension" should be called before "trackPageView" */
     const userGxId = userInfo.identification || 'undefined';
     _paq.push(['setCustomDimension', gxDimensionId, userGxId]);
-    _paq.push(['setCustomVariable', 2, 'GxUid', userGxId, 'page']);
+    _paq.push(['setCustomVariable', customVarInfo.id, customVarInfo.name, userGxId, customVarInfo.scope]);
     _paq.push(['setUserId', userInfo.username])
     _paq.push(['trackPageView']);
     _paq.push(['enableLinkTracking']);
@@ -37,12 +37,15 @@ interface MatomoProps {
     SITE_ID: string;
     APPNAME: string;
     URL: string;
-    GX_UID: number;
+    CUSTOM_DIM_ID: number;
+    CUSTOM_VAR_ID: number;
+    CUSTOM_VAR_NAME: string;
+    CUSTOM_VAR_SCOPE: string;
     userData: any;
 }
 
 export function MatomoHandler(props: MatomoProps) {
-    const { SITE_ID, APPNAME, URL, GX_UID } = props;
+    const { SITE_ID, APPNAME, URL, CUSTOM_DIM_ID, CUSTOM_VAR_ID, CUSTOM_VAR_NAME, CUSTOM_VAR_SCOPE } = props;
     const { user = undefined } = props.userData || {};
     const [trackedUrl, setTrackedUrl] = useState<string>(window.location.href);
 
@@ -50,7 +53,8 @@ export function MatomoHandler(props: MatomoProps) {
         pushData(
             trackedUrl, setTrackedUrl,
             {username: user.username, identification: user.identification},
-            URL, SITE_ID, APPNAME, GX_UID,
+            URL, SITE_ID, APPNAME, CUSTOM_DIM_ID,
+            {id: CUSTOM_VAR_ID, name: CUSTOM_VAR_NAME, scope: CUSTOM_VAR_SCOPE }
         )
         // #TODO: replace with optional chaining once we update TypeScript
     }, [(user || {}).username , (user || []).identification])

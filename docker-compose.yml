@@ -61,6 +61,13 @@ services:
       - ROCKETCHAT_NOTIFICATIONS
       - LAND_DATA_URL
       - BASE_URL
+      - MATOMO_URL=http://cloud.eventkit.test:8008/
+      - MATOMO_CUSTOM_DIM_ID=1
+      - MATOMO_CUSTOM_VAR_ID=2
+      - MATOMO_CUSTOM_VAR_NAME=GxUid
+      - MATOMO_CUSTOM_VAR_SCOPE=page
+      - MATOMO_SITE_ID=1
+      - MATOMO_APPNAME=APPNAME
     extra_hosts:
       - "${SITE_NAME}:${SITE_IP}"
   map:
@@ -269,7 +276,7 @@ services:
       dockerfile: config/Dockerfile_webpack
     volumes:
       - ./eventkit_cloud:/var/lib/eventkit/eventkit_cloud
-      - ./coverage:/var/lib/eventkit/coverage
+      - ./coverage/coveralls:/var/lib/eventkit/coverage/coveralls
       - ./package.json:/var/lib/eventkit/package.json
       - ./config/ui/.eslintrc.json:/var/lib/eventkit/.eslintrc.json
       - ./config/ui/.eslintignore:/var/lib/eventkit/.eslintignore
