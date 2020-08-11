@@ -9,10 +9,11 @@ from django.conf import settings
 from django.http import HttpResponse
 from django.shortcuts import redirect
 
+from eventkit_cloud.tasks.enumerations import TaskStates
 from eventkit_cloud.tasks.helpers import get_run_download_dir, get_run_staging_dir
 from eventkit_cloud.tasks.models import ExportRun
 from eventkit_cloud.tasks.task_factory import get_zip_task_chain
-from eventkit_cloud.tasks.models import FileProducingTaskResult, RunZipFile, UserDownload
+from eventkit_cloud.tasks.models import FileProducingTaskResult, UserDownload
 from eventkit_cloud.utils.s3 import download_folder_from_s3, get_presigned_url
 
 logger = getLogger(__name__)
@@ -53,7 +54,7 @@ def download(request):
     return redirect(url)
 
 
-def generate_zipfile(data_provider_task_record_uids, run_zip_file_uid):
+def generate_zipfile(data_provider_task_record_uids, run_zip_file):
 
     # Check to make sure the UIDs are all from the same ExportRun.
     runs = ExportRun.objects.filter(provider_tasks__uid__in=data_provider_task_record_uids).distinct()
@@ -66,8 +67,8 @@ def generate_zipfile(data_provider_task_record_uids, run_zip_file_uid):
 
     run = runs.first()
 
-    run_zip_file = RunZipFile.objects.get(uid=run_zip_file_uid)
     run_zip_file.message = "Downloading files to be zipped..."
+    run_zip_file.status = TaskStates.RUNNING.value
     stage_dir = get_run_staging_dir(run.uid)
     download_dir = get_run_download_dir(run.uid)
 
@@ -81,7 +82,7 @@ def generate_zipfile(data_provider_task_record_uids, run_zip_file_uid):
     run_zip_task_chain = get_zip_task_chain(
         data_provider_task_record_uid=run.provider_tasks.get(slug="run").uid,
         data_provider_task_record_uids=data_provider_task_record_uids,
-        run_zip_file_uid=run_zip_file_uid,
+        run_zip_file_uid=run_zip_file.uid,
         stage_dir=stage_dir,
     )
     run_zip_task_chain.apply_async()
