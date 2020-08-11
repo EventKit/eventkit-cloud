@@ -6,6 +6,9 @@ const _paq = (window as any)._paq = (window as any)._paq || [];
 function pushData(referrerUrl: string, setUrl: (url: string) => void,
                   userInfo: any, matomoUrl: string, siteId: string, appName: string,
                   gxDimensionId: number) {
+    if (!matomoUrl) {
+        return;
+    }
     _paq.push(['setReferrerUrl', referrerUrl]);
     const currentUrl = window.location.href;
     setUrl(currentUrl)
@@ -41,11 +44,11 @@ interface MatomoProps {
 export function MatomoHandler(props: MatomoProps) {
     const { SITE_ID, APPNAME, URL, GX_UID } = props;
     const { user = undefined } = props.userData || {};
-    const [url, setUrl] = useState<string>(window.location.href);
+    const [trackedUrl, setTrackedUrl] = useState<string>(window.location.href);
 
     const matomoCallback = useCallback(() => {
         pushData(
-            url, setUrl,
+            trackedUrl, setTrackedUrl,
             {username: user.username, identification: user.identification},
             URL, SITE_ID, APPNAME, GX_UID,
         )
