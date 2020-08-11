@@ -15,9 +15,9 @@ function pushData(referrerUrl: string, setUrl: (url: string) => void,
     _paq.push(['setCustomUrl', currentUrl]);
     _paq.push(['setDocumentTitle', appName]);
     /* tracker methods like "setCustomDimension" should be called before "trackPageView" */
-    const userGxId = userInfo.identification || 'undefined';
-    _paq.push(['setCustomDimension', customDimensionId, userGxId]);
-    _paq.push(['setCustomVariable', customVarInfo.id, customVarInfo.name, userGxId, customVarInfo.scope]);
+    const userOauthId = userInfo.identification || 'undefined';
+    _paq.push(['setCustomDimension', customDimensionId, userOauthId]);
+    _paq.push(['setCustomVariable', customVarInfo.id, customVarInfo.name, userOauthId, customVarInfo.scope]);
     _paq.push(['setUserId', userInfo.username])
     _paq.push(['trackPageView']);
     _paq.push(['enableLinkTracking']);
