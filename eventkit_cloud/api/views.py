@@ -1276,8 +1276,6 @@ class RunZipFileViewSet(viewsets.ModelViewSet):
         )
         if run_zip_files:
             serializer = self.get_serializer(run_zip_files.first(), context={"request": request})
-        else:
-            serializer = self.get_serializer(filtered_run_zip_files.first(), context={"request": request})
         return Response(serializer.data, status=status.HTTP_200_OK)
 
 
@@ -1375,6 +1373,7 @@ class DataProviderTaskRecordViewSet(viewsets.ModelViewSet):
         cancel_export_provider_task.run(
             data_provider_task_uid=data_provider_task_record.uid, canceling_username=request.user.username,
         )
+
         return Response({"success": True}, status=status.HTTP_200_OK)
 
     def list(self, request, *args, **kwargs):

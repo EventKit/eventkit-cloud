@@ -504,7 +504,7 @@ class RunZipFileSerializer(serializers.ModelSerializer):
     def get_status(self, obj):
         if obj.downloadable_file:
             return ExportTaskRecord.objects.get(result=obj.downloadable_file).status
-        return ""
+        return obj.status or ""
 
     def get_url(self, obj):
         request = self.context["request"]
@@ -519,7 +519,10 @@ class RunZipFileSerializer(serializers.ModelSerializer):
         # If there are no results, that means there's no zip file and we need to create one.
         if not queryset.exists():
             obj = RunZipFile.objects.create()
-            generate_zipfile(data_provider_task_record_uids, obj.uid)
+            obj.status = TaskStates.PENDING.value
+            data_provider_task_records = DataProviderTaskRecord.objects.filter(uid__in=data_provider_task_record_uids)
+            obj.data_provider_task_records.set(data_provider_task_records)
+            generate_zipfile(data_provider_task_record_uids, obj)
             return obj
         else:
             raise serializers.ValidationError("Duplicate Zip File already exists.")
