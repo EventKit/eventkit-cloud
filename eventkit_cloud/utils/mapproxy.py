@@ -17,6 +17,8 @@ from mapproxy.seed.util import ProgressLog, exp_backoff, timestamp, ProgressStor
 from mapproxy.wsgiapp import MapProxyApp
 from webtest import TestApp
 from eventkit_cloud.core.helpers import get_cached_model
+from eventkit_cloud.tasks import get_cache_value
+from eventkit_cloud.tasks.enumerations import TaskStates
 
 import os
 import sqlite3
@@ -53,7 +55,15 @@ class CustomLogger(ProgressLog):
         # better eta estimates
 
         if self.task_uid:
+
             if self.log_step_counter == 0:
+                if (
+                    get_cache_value(uid=self.task_uid, attribute="status", model_name="ExportTaskRecord")
+                    == TaskStates.CANCELED.value
+                ):
+                    logger.error(f"The task uid: {self.task_uid} was canceled. Exiting...")
+                    raise Exception("The task was canceled.")
+
                 update_progress(self.task_uid, progress=progress.progress * 100, eta=self.eta)
                 self.log_step_counter = self.log_step_step
             self.log_step_counter -= 1
@@ -64,18 +74,23 @@ class CustomLogger(ProgressLog):
             return
         if (self._laststep + 0.5) < time.time():
             # log progress at most every 500ms
-            self.out.write(
-                "[%s] %6.2f%%\t%-20s ETA: %s\r"
-                % (timestamp(), progress.progress * 100, progress.progress_str, self.eta,)
+            logger.info(
+                f"[{timestamp()}] {progress.progress * 100:6.2f}%\t{progress.progress_str.ljust(20)} ETA: {self.eta}\r"
             )
-            self.out.flush()
+            # [12:24:08] 100.00%     000000               ETA: 2020-08-06-12:22:30-UTC
             self._laststep = time.time()
 
 
-def get_custom_exp_backoff(max_repeat=None):
+def get_custom_exp_backoff(max_repeat=None, task_uid=None):
     def custom_exp_backoff(*args, **kwargs):
         if max_repeat:
             kwargs["max_repeat"] = max_repeat
+        if (
+            get_cache_value(uid=task_uid, attribute="status", model_name="ExportTaskRecord")
+            == TaskStates.CANCELED.value
+        ):
+            logger.error(f"The task uid: {task_uid} was canceled. Exiting...")
+            raise Exception("The task was canceled.")
         exp_backoff(*args, **kwargs)
 
     return custom_exp_backoff
@@ -202,7 +217,9 @@ class MapproxyGeopackage(object):
 
         conf_dict, seed_configuration, mapproxy_configuration = self.get_check_config()
         #  Customizations...
-        mapproxy.seed.seeder.exp_backoff = get_custom_exp_backoff(max_repeat=int(conf_dict.get("max_repeat", 5)))
+        mapproxy.seed.seeder.exp_backoff = get_custom_exp_backoff(
+            max_repeat=int(conf_dict.get("max_repeat", 5)), task_uid=self.task_uid
+        )
 
         logger.info("Beginning seeding to {0}".format(self.gpkgfile))
         try:
