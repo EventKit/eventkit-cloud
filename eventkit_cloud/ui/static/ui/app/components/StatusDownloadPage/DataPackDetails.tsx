@@ -219,11 +219,20 @@ export class DataPackDetails extends React.Component<Props, State> {
                         this.props.providerTasks.filter(
                             providerTask => shouldDisplay(providerTask)
                         ).map(providerTask => {
+                            // Use the zip task if it exists, otherwise calc based on all available.
                             const zipTask = providerTask.tasks.find(task => task.name === ZIP_TASK_NAME);
-                            if (!!zipTask) {
+                            if (!!zipTask && !!zipTask.result.size) {
                                 return Number(zipTask.result.size.replace(' MB', ''));
                             }
-                            return 0;
+                            let fileSize = 0;
+                            providerTask.tasks.forEach((task) => {
+                                if (task.result != null) {
+                                    if (task.display !== false && task.result.size) {
+                                        fileSize = fileSize + Number(task.result.size.replace(' MB', ''));
+                                    }
+                                }
+                            });
+                            return fileSize;
                         })}
                     setFileSize={(value: number) => this.setState({zipSize: value})}
                 />
