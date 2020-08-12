@@ -54,11 +54,11 @@ describe('CreateDataPackButton component', () => {
                 }
             }
         });
-        expect(wrapper.find(Button).html()).toContain('CREATE DATAPACK (.ZIP)');
+        expect(wrapper.find(Button).html()).toContain('CREATE DATAPACK');
     });
 
     it('should display create text by default when job is done.', () => {
-        expect(wrapper.find(Button).html()).toContain('CREATE DATAPACK (.ZIP)');
+        expect(wrapper.find(Button).html()).toContain('CREATE DATAPACK');
     });
 
     it('should disable button after click and render fake button.', () => {
