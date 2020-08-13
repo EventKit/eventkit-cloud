@@ -1137,7 +1137,7 @@ def mapproxy_export_task(
 
 
 @app.task(name="Pickup Run", bind=True, base=UserDetailsBase)
-def pick_up_run_task(self, result=None, run_uid=None, user_details=None, *args, **kwargs):
+def pick_up_run_task(self, result=None, run_uid=None, user_details=None, data_provider_slugs=None, *args, **kwargs):
     """
     Generates a Celery task to assign a celery pipeline to a specific worker.
     """
@@ -1152,7 +1152,9 @@ def pick_up_run_task(self, result=None, run_uid=None, user_details=None, *args, 
         worker = socket.gethostname()
         run.worker = worker
         run.save()
-        TaskFactory().parse_tasks(worker=worker, run_uid=run_uid, user_details=user_details)
+        TaskFactory().parse_tasks(
+            worker=worker, run_uid=run_uid, user_details=user_details, data_provider_slugs=data_provider_slugs
+        )
     except Exception as e:
         run.status = TaskStates.FAILED.value
         run.save()

@@ -2,6 +2,8 @@
 
 """Provides classes for handling API requests."""
 import logging
+import os
+import shutil
 from audit_logging.models import AuditEvent
 
 from datetime import datetime, timedelta
@@ -98,6 +100,11 @@ from eventkit_cloud.tasks.export_tasks import (
     pick_up_run_task,
     cancel_export_provider_task,
 )
+from eventkit_cloud.tasks.helpers import (
+    get_provider_staging_dir,
+    get_run_download_dir,
+    get_run_staging_dir,
+)
 from eventkit_cloud.tasks.models import (
     DataProviderTaskRecord,
     ExportRun,
@@ -114,6 +121,7 @@ from eventkit_cloud.tasks.task_factory import (
 from eventkit_cloud.user_requests.models import DataProviderRequest, SizeIncreaseRequest
 from eventkit_cloud.utils.gdalutils import get_area
 from eventkit_cloud.utils.provider_check import perform_provider_check
+from eventkit_cloud.utils.s3 import download_folder_from_s3
 from eventkit_cloud.utils.stats.aoi_estimators import AoiEstimator
 from eventkit_cloud.utils.stats.geomutils import get_estimate_cache_key
 
@@ -546,6 +554,51 @@ class JobViewSet(viewsets.ModelViewSet):
 
             return Response(running.data, status=status.HTTP_202_ACCEPTED)
 
+        else:
+            return Response([{"detail": _("Failed to run Export")}], status.HTTP_400_BAD_REQUEST)
+
+    @action(methods=["post"], detail=True)
+    def run_providers(self, request, uid=None, *args, **kwargs):
+
+        job = Job.objects.get(uid=uid)
+        run_uid = job.last_export_run.uid
+        data_provider_slugs = request.data["data_provider_slugs"]
+        download_dir = get_run_download_dir(run_uid)
+        run = ExportRun.objects.get(uid=run_uid)
+        run_dir = get_run_staging_dir(run_uid)
+
+        # Download the data from previous exports so we can rezip.
+        if getattr(settings, "USE_S3", False):
+            download_folder_from_s3(str(run_uid))
+        else:
+            if not os.path.exists(run_dir):
+                shutil.copytree(download_dir, run_dir, ignore=shutil.ignore_patterns("*.zip"))
+
+        # Remove the old data provider task record for the providers we're recreating.
+        for data_provider_task_record in run.provider_tasks.all():
+            if data_provider_task_record.provider is not None:
+                if data_provider_task_record.provider.slug in data_provider_slugs:
+                    data_provider_task_record.delete()
+
+        # Remove the files for the providers we want to recreate.
+        for data_provider_slug in data_provider_slugs:
+            stage_dir = get_provider_staging_dir(run_dir, data_provider_slug)
+            if os.path.exists(stage_dir):
+                shutil.rmtree(stage_dir)
+
+        # This is just to make it easier to trace when user_details haven't been sent
+        user_details = get_user_details(request)
+        if user_details is None:
+            user_details = {"username": "unknown-JobViewSet.run"}
+
+        if run:
+            pick_up_run_task.apply_async(
+                queue="runs",
+                routing_key="runs",
+                kwargs={"run_uid": run_uid, "user_details": user_details, "data_provider_slugs": data_provider_slugs},
+            )
+            running = ExportRunSerializer(run, context={"request": request})
+            return Response(running.data, status=status.HTTP_202_ACCEPTED)
         else:
             return Response([{"detail": _("Failed to run Export")}], status.HTTP_400_BAD_REQUEST)
 
