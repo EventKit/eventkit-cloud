@@ -20,6 +20,11 @@ enum FileStatus {
 export class ApiStatuses {
     static readonly hookActions = ACTIONS;
     static readonly files = FileStatus;
+
+    public static readonly IsFetching = (status: any) => status === ACTIONS.FETCHING;
+    public static readonly IsSuccess = (status: any) => status === ACTIONS.SUCCESS;
+    public static readonly IsNotFired = (status: any) => status === ACTIONS.NOT_FIRED;
+    public static readonly IsError = (status: any) => status === ACTIONS.ERROR;
 }
 
 interface RequestState {

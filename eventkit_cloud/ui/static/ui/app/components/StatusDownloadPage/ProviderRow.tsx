@@ -21,28 +21,10 @@ import BaseDialog from '../Dialog/BaseDialog';
 import LicenseRow from './LicenseRow';
 import {Breakpoint} from '@material-ui/core/styles/createBreakpoints';
 import moment from 'moment';
-
-interface Props {
-    providerTask: Eventkit.ProviderTask;
-    job: Eventkit.Job;
-    selectedProviders: { [uid: string]: boolean };
-    selectProvider: (providerTask: Eventkit.ProviderTask) => void;
-    onProviderCancel: (uid: string) => void;
-    providers: Eventkit.Provider[];
-    backgroundColor: string;
-    theme: Eventkit.Theme & Theme;
-    width: Breakpoint;
-    classes: { [className: string]: string };
-}
-
-interface State {
-    openTable: boolean;
-    selectedRows: { [uid: string]: boolean };
-    fileSize: string;
-    providerDesc: string;
-    providerDialogOpen: boolean;
-    previewDialogOpen: boolean;
-}
+import {useEffect, useState} from "react";
+import {DepsHashers, useEffectOnMount} from "../../utils/hooks/hooks";
+import {useAsyncRequest} from "../../utils/hooks/api";
+import {getCookie} from "../../utils/generic";
 
 const jss = (theme: Eventkit.Theme & Theme) => createStyles({
     insetColumn: {
@@ -150,50 +132,47 @@ const jss = (theme: Eventkit.Theme & Theme) => createStyles({
     },
 });
 
-export class ProviderRow extends React.Component<Props, State> {
-    constructor(props: Props) {
-        super(props);
-        this.handleSingleDownload = this.handleSingleDownload.bind(this);
-        this.handleToggle = this.handleToggle.bind(this);
-        this.handleProviderOpen = this.handleProviderOpen.bind(this);
-        this.handleProviderClose = this.handleProviderClose.bind(this);
-        this.state = {
-            openTable: false,
-            selectedRows: {},
-            fileSize: this.getFileSize(props.providerTask.tasks),
-            providerDesc: '',
-            providerDialogOpen: false,
-            previewDialogOpen: false,
-        };
-    }
+interface Props {
+    providerTask: Eventkit.ProviderTask;
+    job: Eventkit.Job;
+    selectProvider: (providerTask: Eventkit.ProviderTask) => void;
+    onProviderCancel: (uid: string) => void;
+    providers: Eventkit.Provider[];
+    backgroundColor: string;
+    theme: Eventkit.Theme & Theme;
+    width: Breakpoint;
+    classes: { [className: string]: string };
+}
 
-    static defaultProps = {selectedProviders: {}};
+export function ProviderRow(props: Props) {
+    const [openTable, setOpenTable] = useState(false);
+    const [fileSize, setFileSize] = useState(getFileSize(props.providerTask.tasks));
+    const [providerDesc, setProviderDesc] = useState('');
+    const [providerDialogOpen, setProviderDialogOpen] = useState(false);
 
-    componentWillMount() {
-        // set state on the provider
-        const rows = {};
-        const {uid} = this.props.providerTask;
-        rows[uid] = false;
-        this.setState({selectedRows: rows});
-    }
+    const [{ status, response }, requestCall, clearRequest] = useAsyncRequest();
+    const makeRequest = () => {
+        // Returned promise is ignored, we don't need it.
+        requestCall({
+            url: `/api/jobs/${props.job.uid}/run_providers`,
+            method: 'post',
+            data: {
+                data_provider_slugs: [props.providerTask.provider.slug]
+            },
+            headers: { 'X-CSRFToken': getCookie('csrftoken') },
+        });
+    };
 
-    componentDidUpdate(prevProps: Props) {
-        if (this.props.providerTask.status !== prevProps.providerTask.status) {
-            this.setState({fileSize: this.getFileSize(this.props.providerTask.tasks)});
-        }
-        if (this.props.selectedProviders !== this.state.selectedRows) {
-            this.setState({selectedRows: this.props.selectedProviders});
-        }
-    }
+    useEffect(() => {
+        setFileSize(getFileSize(props.providerTask.tasks));
+    }, [props.providerTask.status]);
 
-    private getFileSize(tasks: Eventkit.Task[]): string {
+    function getFileSize(tasks: Eventkit.Task[]): string {
         let fileSize = 0.000;
         tasks.forEach((task) => {
             if (task.result != null) {
                 if (task.display !== false && task.result.size) {
-                    const textReplace = task.result.size.replace(' MB', '');
-                    const num = textReplace;
-                    fileSize = Number(fileSize) + Number(num);
+                    fileSize = fileSize + Number(task.result.size.replace(' MB', ''));
                 }
             }
         });
@@ -205,7 +184,7 @@ export class ProviderRow extends React.Component<Props, State> {
         return fileSize.toFixed(3);
     }
 
-    private getEstimatedFinish(task: Eventkit.Task) {
+    function getEstimatedFinish(task: Eventkit.Task) {
         if (!task || !task.estimated_finish && (!task.estimated_duration || !task.started_at)) {
             return '';
         } else {
@@ -236,11 +215,11 @@ export class ProviderRow extends React.Component<Props, State> {
         }
     }
 
-    private getLastEstimatedFinish(tasks: Eventkit.Task[]) {
+    function getLastEstimatedFinish(tasks: Eventkit.Task[]) {
         if (!tasks || tasks.length === 0) {
             return '';
         }
-        return this.getEstimatedFinish([...tasks].sort((a, b) => {
+        return getEstimatedFinish([...tasks].sort((a, b) => {
             if (a.estimated_finish && b.estimated_finish) {
                 return new Date(a.estimated_finish).getTime() - new Date(b.estimated_finish).getTime();
             } else {
@@ -249,8 +228,8 @@ export class ProviderRow extends React.Component<Props, State> {
         })[0]);
     }
 
-    private getTaskStatus(task: Eventkit.Task) {
-        const {colors} = this.props.theme.eventkit;
+    function getTaskStatus(task: Eventkit.Task) {
+        const {colors} = props.theme.eventkit;
         switch (task.status) {
             case 'SUCCESS':
                 return (
@@ -286,8 +265,8 @@ export class ProviderRow extends React.Component<Props, State> {
         }
     }
 
-    private getProviderStatus(provider: Eventkit.ProviderTask) {
-        const {colors} = this.props.theme.eventkit;
+    function getProviderStatus(provider: Eventkit.ProviderTask) {
+        const {colors} = props.theme.eventkit;
 
         switch (provider.status) {
             case 'COMPLETED':
@@ -331,8 +310,8 @@ export class ProviderRow extends React.Component<Props, State> {
         }
     }
 
-    private getTaskLink(task: Eventkit.Task) {
-        const {colors} = this.props.theme.eventkit;
+    function getTaskLink(task: Eventkit.Task) {
+        const {colors} = props.theme.eventkit;
 
         if (!Object.prototype.hasOwnProperty.call(task.result, 'url')) {
             return (
@@ -350,10 +329,10 @@ export class ProviderRow extends React.Component<Props, State> {
                 role="button"
                 tabIndex={0}
                 onClick={() => {
-                    this.handleSingleDownload(task.result.url);
+                    handleSingleDownload(task.result.url);
                 }}
                 onKeyPress={() => {
-                    this.handleSingleDownload(task.result.url);
+                    handleSingleDownload(task.result.url);
                 }}
                 style={{color: colors.primary, cursor: 'pointer'}}
             >
@@ -362,8 +341,8 @@ export class ProviderRow extends React.Component<Props, State> {
         );
     }
 
-    private getTaskDownloadIcon(task: Eventkit.Task) {
-        const {colors} = this.props.theme.eventkit;
+    function getTaskDownloadIcon(task: Eventkit.Task) {
+        const {colors} = props.theme.eventkit;
 
         if (!Object.prototype.hasOwnProperty.call(task.result, 'url')) {
             return (
@@ -382,7 +361,7 @@ export class ProviderRow extends React.Component<Props, State> {
             <CloudDownload
                 className="qa-ProviderRow-CloudDownload-taskLinkEnabled"
                 onClick={() => {
-                    this.handleSingleDownload(task.result.url);
+                    handleSingleDownload(task.result.url);
                 }}//
                 key={task.result.url}
                 style={{
@@ -395,241 +374,251 @@ export class ProviderRow extends React.Component<Props, State> {
         );
     }
 
-    private handleToggle() {
-        this.setState({openTable: !this.state.openTable});
+    function handleToggle() {
+        setOpenTable(value => !value);
     }
 
-    private handleSingleDownload(url: string) {
+    function handleSingleDownload(url: string) {
         window.open(url, '_blank');
     }
 
-    private handleProviderClose() {
-        this.setState({providerDialogOpen: false});
+    function handleProviderClose() {
+        setProviderDialogOpen(false);
     }
 
-    private handleProviderOpen() {
-        const {providerTask} = this.props;
-        const propsProvider = this.props.providers.find(x => x.slug === providerTask.provider.slug);
+    function handleProviderOpen() {
+        const {providerTask} = props;
+        const propsProvider = props.providers.find(x => x.slug === providerTask.provider.slug);
         const providerDesc = propsProvider.service_description;
-        this.setState({providerDesc, providerDialogOpen: true});
+        setProviderDesc(providerDesc)
+        setProviderDialogOpen(true);
     }
 
-    render() {
-        const {classes} = this.props;
-        const {providerTask} = this.props;
-        const {job} = this.props;
+    const {classes} = props;
+    const {providerTask} = props;
+    const {job} = props;
 
-        const dataProviderTask = job && job.provider_tasks.find(obj => obj.provider === providerTask.name);
-        const propsProvider = this.props.providers.find(obj => obj.slug === providerTask.provider.slug);
+    const dataProviderTask = job && job.provider_tasks.find(obj => obj.provider === providerTask.name);
+    const propsProvider = props.providers.find(obj => obj.slug === providerTask.provider.slug);
 
-        // If available, get custom zoom levels from DataProviderTask otherwise use Provider defaults.
-        let min_zoom = (dataProviderTask) ? dataProviderTask.min_zoom : undefined;
-        if (Number.isNaN(min_zoom)) {
-            min_zoom = (propsProvider) ? propsProvider.level_from : 0;
-        }
-        let max_zoom = (dataProviderTask) ? dataProviderTask.max_zoom : undefined;
-        if (Number.isNaN(max_zoom)) {
-            max_zoom = (propsProvider) ? propsProvider.level_to : 0;
-        }
+    // If available, get custom zoom levels from DataProviderTask otherwise use Provider defaults.
+    let min_zoom = (dataProviderTask) ? dataProviderTask.min_zoom : undefined;
+    if (Number.isNaN(min_zoom)) {
+        min_zoom = (propsProvider) ? propsProvider.level_from : 0;
+    }
+    let max_zoom = (dataProviderTask) ? dataProviderTask.max_zoom : undefined;
+    if (Number.isNaN(max_zoom)) {
+        max_zoom = (propsProvider) ? propsProvider.level_to : 0;
+    }
 
-        const licenseData = propsProvider && propsProvider.license ?
-            <LicenseRow name={propsProvider.license.name} text={propsProvider.license.text}/>
-            :
-            null;
+    const licenseData = propsProvider && propsProvider.license ?
+        <LicenseRow name={propsProvider.license.name} text={propsProvider.license.text}/>
+        :
+        null;
 
-        const menuItems = [];
+    const menuItems = [];
 
-        let cancelMenuDisabled;
-        if (providerTask.status === 'PENDING' || providerTask.status === 'RUNNING') {
-            cancelMenuDisabled = false;
-        } else {
-            cancelMenuDisabled = true;
-        }
+    let cancelMenuDisabled;
+    if (providerTask.status === 'PENDING' || providerTask.status === 'RUNNING') {
+        cancelMenuDisabled = false;
+    } else {
+        cancelMenuDisabled = true;
+    }
 
-        menuItems.push(
-            <MenuItem
-                className="qa-ProviderRow-MenuItem-cancel"
-                key="cancel"
-                disabled={cancelMenuDisabled}
-                style={{fontSize: '12px'}}
-                onClick={() => {
-                    this.props.onProviderCancel(providerTask.uid);
-                }}
-            >
-                Cancel
-            </MenuItem>,
-            <MenuItem
-                className="qa-ProviderRow-MenuItem-viewDataSources"
-                key="viewProviderData"
-                style={{fontSize: '12px'}}
-                onClick={this.handleProviderOpen}
-            >
-                View Data Source
-            </MenuItem>,
-            <MenuItem
-                className="qa-ProviderRow-MenuItem-preview"
-                key="viewPreviews"
-                disabled={!this.props.providerTask.preview_url}
-                style={{fontSize: '12px'}}
-                onClick={(event) => {
-                    // provider IS a ProviderTask
-                    this.props.selectProvider(this.props.providerTask)
-                }}
-            >
-                View Data Preview
-            </MenuItem>,
-        );
+    menuItems.push(
+        <MenuItem
+            className="qa-ProviderRow-MenuItem-rerun"
+            key="rerun"
+            disabled={cancelMenuDisabled}
+            style={{fontSize: '12px'}}
+            onClick={() => {
+                props.onProviderCancel(providerTask.uid);
+            }}
+        >
+            Rerun File(s)
+        </MenuItem>,
+        <MenuItem
+            className="qa-ProviderRow-MenuItem-cancel"
+            key="cancel"
+            disabled={cancelMenuDisabled}
+            style={{fontSize: '12px'}}
+            onClick={() => {
+                props.onProviderCancel(providerTask.uid);
+            }}
+        >
+            Cancel
+        </MenuItem>,
+        <MenuItem
+            className="qa-ProviderRow-MenuItem-viewDataSources"
+            key="viewProviderData"
+            style={{fontSize: '12px'}}
+            onClick={handleProviderOpen}
+        >
+            View Data Source
+        </MenuItem>,
+        <MenuItem
+            className="qa-ProviderRow-MenuItem-preview"
+            key="viewPreviews"
+            disabled={!props.providerTask.preview_url}
+            style={{fontSize: '12px'}}
+            onClick={(event) => {
+                // provider IS a ProviderTask
+                props.selectProvider(props.providerTask)
+            }}
+        >
+            View Data Preview
+        </MenuItem>,
+    );
 
-        const tasks = providerTask.tasks.filter(task => (task.display !== false));
+    const tasks = providerTask.tasks.filter(task => (task.display !== false));
 
-        let tableData;
-        if (this.state.openTable) {
-            tableData = (
-                <Table style={{tableLayout: 'fixed'}}>
-                    <TableBody
-                        className="qa-ProviderRow-TableBody"
+    let tableData;
+    if (openTable) {
+        tableData = (
+            <Table style={{tableLayout: 'fixed'}}>
+                <TableBody
+                    className="qa-ProviderRow-TableBody"
+                >
+                    {licenseData}
+                    <TableRow
+                        className="qa-ProviderRow-TableRow-task"
                     >
-                        {licenseData}
+                        <TableCell classes={{root: classes.insetColumn}}/>
+
+                        <TableCell
+                            className="qa-ProviderRow-TableCell-zoomLevels"
+                            classes={{root: classes.zoomLevelColumn}}
+                        >
+                            Zoom Levels {min_zoom} - {max_zoom}
+                        </TableCell>
+                        <TableCell classes={{root: classes.sizeColumnn}}/>
+                        <TableCell classes={{root: classes.estimatedFinishColumn}}/>
+                        <TableCell classes={{root: classes.taskStatusColumn}}/>
+                        <TableCell classes={{root: classes.menuColumn}}/>
+                        <TableCell classes={{root: classes.arrowColumn}}/>
+                    </TableRow>
+                    {tasks.map(task => (
                         <TableRow
                             className="qa-ProviderRow-TableRow-task"
+                            key={task.uid}
                         >
                             <TableCell classes={{root: classes.insetColumn}}/>
-
                             <TableCell
-                                className="qa-ProviderRow-TableCell-zoomLevels"
-                                classes={{root: classes.zoomLevelColumn}}
+                                className="qa-ProviderRow-TableCell-taskLinks"
+                                classes={{root: classes.taskLinkColumn}}
                             >
-                                Zoom Levels {min_zoom} - {max_zoom}
-                            </TableCell>
-                            <TableCell classes={{root: classes.sizeColumnn}}/>
-                            <TableCell classes={{root: classes.estimatedFinishColumn}}/>
-                            <TableCell classes={{root: classes.taskStatusColumn}}/>
-                            <TableCell classes={{root: classes.menuColumn}}/>
-                            <TableCell classes={{root: classes.arrowColumn}}/>
-                        </TableRow>
-                        {tasks.map(task => (
-                            <TableRow
-                                className="qa-ProviderRow-TableRow-task"
-                                key={task.uid}
-                            >
-                                <TableCell classes={{root: classes.insetColumn}}/>
-                                <TableCell
-                                    className="qa-ProviderRow-TableCell-taskLinks"
-                                    classes={{root: classes.taskLinkColumn}}
-                                >
-                                    {this.getTaskLink(task)}
-                                    {this.getTaskDownloadIcon(task)}
-                                </TableCell>
-                                <TableCell
-                                    className="qa-ProviderRow-TableCell-size"
-                                    classes={{root: classes.sizeColumnn}}
-                                >
-                                    {task.result == null ? '' : task.result.size}
-                                </TableCell>
-                                <TableCell
-                                    className="qa-ProviderRow-TableCell-estimatedFinish"
-                                    classes={{root: classes.estimatedFinishColumn}}
-                                    style={{fontSize: '.85em'}}
-                                >
-                                    {this.getEstimatedFinish(task)}
-                                </TableCell>
-                                <TableCell
-                                    className="qa-ProviderRow-TableCell-status"
-                                    classes={{root: classes.taskStatusColumn}}
-                                >
-                                    {this.getTaskStatus(task)}
-                                </TableCell>
-                                <TableCell classes={{root: classes.menuColumn}}/>
-                                <TableCell classes={{root: classes.arrowColumn}}/>
-                            </TableRow>
-                        ))}
-                    </TableBody>
-                </Table>
-            );
-        } else {
-            tableData = null;
-        }
-
-        return (
-            <div>
-                <Table
-                    key={providerTask.uid}
-                    className="qa-ProviderRow-Table"
-                    style={{width: '100%', backgroundColor: this.props.backgroundColor, tableLayout: 'fixed'}}
-                >
-                    <TableHead
-                        className="qa-ProviderRow-TableHead"
-                    >
-                        <TableRow className="qa-ProviderRow-TableRow-provider">
-                            <TableCell
-                                className="qa-ProviderRow-TableCell-providerName"
-                                classes={{root: classes.providerColumn}}
-                            >
-                                {providerTask.name}
+                                {getTaskLink(task)}
+                                {getTaskDownloadIcon(task)}
                             </TableCell>
                             <TableCell
-                                className="qa-ProviderRow-TableCell-fileSize"
-                                classes={{root: classes.fileSizeColumn}}
+                                className="qa-ProviderRow-TableCell-size"
+                                classes={{root: classes.sizeColumnn}}
                             >
-                                {this.state.fileSize == null ? '' : `${this.state.fileSize} MB`}
+                                {task.result == null ? '' : task.result.size}
                             </TableCell>
                             <TableCell
                                 className="qa-ProviderRow-TableCell-estimatedFinish"
                                 classes={{root: classes.estimatedFinishColumn}}
+                                style={{fontSize: '.85em'}}
                             >
-                                {this.getLastEstimatedFinish(tasks)}
+                                {getEstimatedFinish(task)}
                             </TableCell>
                             <TableCell
-                                className="qa-ProviderRow-TableCell-providerStatus"
-                                classes={{root: classes.providerStatusColumn}}
+                                className="qa-ProviderRow-TableCell-status"
+                                classes={{root: classes.taskStatusColumn}}
                             >
-                                {this.getProviderStatus(this.props.providerTask)}
+                                {getTaskStatus(task)}
                             </TableCell>
-                            <TableCell
-                                className="qa-ProviderRow-TableCell-menu"
-                                classes={{root: classes.menuColumn}}
-                            >
-                                {menuItems.length > 0 ?
-                                    <IconMenu
-                                        className="qa-ProviderRow-IconMenu"
-                                    >
-                                        {menuItems}
-                                    </IconMenu>
-                                    :
-                                    null
-                                }
-                                <BaseDialog
-                                    className="qa-ProviderRow-BaseDialog"
-                                    show={this.state.providerDialogOpen}
-                                    title={providerTask.name}
-                                    onClose={this.handleProviderClose}
-                                >
-                                    <div>Zoom Levels {min_zoom} - {max_zoom}</div>
-                                    {this.state.providerDesc}
-                                </BaseDialog>
-                            </TableCell>
-                            <TableCell
-                                className="qa-ProviderRow-TableCell-arrows"
-                                classes={{root: classes.arrowColumn}}
-                            >
-                                <IconButton
-                                    disableTouchRipple
-                                    onClick={this.handleToggle}
-                                >
-                                    {this.state.openTable ?
-                                        <ArrowUp className="qa-ProviderRow-ArrowUp" color="primary"/>
-                                        :
-                                        <ArrowDown className="qa-ProviderRow-ArrowDown" color="primary"/>
-                                    }
-                                </IconButton>
-                            </TableCell>
+                            <TableCell classes={{root: classes.menuColumn}}/>
+                            <TableCell classes={{root: classes.arrowColumn}}/>
                         </TableRow>
-                    </TableHead>
-                </Table>
-                {tableData}
-            </div>
+                    ))}
+                </TableBody>
+            </Table>
         );
+    } else {
+        tableData = null;
     }
+
+    return (
+        <div>
+            <Table
+                key={providerTask.uid}
+                className="qa-ProviderRow-Table"
+                style={{width: '100%', backgroundColor: props.backgroundColor, tableLayout: 'fixed'}}
+            >
+                <TableHead
+                    className="qa-ProviderRow-TableHead"
+                >
+                    <TableRow className="qa-ProviderRow-TableRow-provider">
+                        <TableCell
+                            className="qa-ProviderRow-TableCell-providerName"
+                            classes={{root: classes.providerColumn}}
+                        >
+                            {providerTask.name}
+                        </TableCell>
+                        <TableCell
+                            className="qa-ProviderRow-TableCell-fileSize"
+                            classes={{root: classes.fileSizeColumn}}
+                        >
+                            {fileSize == null ? '' : `${fileSize} MB`}
+                        </TableCell>
+                        <TableCell
+                            className="qa-ProviderRow-TableCell-estimatedFinish"
+                            classes={{root: classes.estimatedFinishColumn}}
+                        >
+                            {getLastEstimatedFinish(tasks)}
+                        </TableCell>
+                        <TableCell
+                            className="qa-ProviderRow-TableCell-providerStatus"
+                            classes={{root: classes.providerStatusColumn}}
+                        >
+                            {getProviderStatus(props.providerTask)}
+                        </TableCell>
+                        <TableCell
+                            className="qa-ProviderRow-TableCell-menu"
+                            classes={{root: classes.menuColumn}}
+                        >
+                            {menuItems.length > 0 ?
+                                <IconMenu
+                                    className="qa-ProviderRow-IconMenu"
+                                >
+                                    {menuItems}
+                                </IconMenu>
+                                :
+                                null
+                            }
+                            <BaseDialog
+                                className="qa-ProviderRow-BaseDialog"
+                                show={providerDialogOpen}
+                                title={providerTask.name}
+                                onClose={handleProviderClose}
+                            >
+                                <div>Zoom Levels {min_zoom} - {max_zoom}</div>
+                                {providerDesc}
+                            </BaseDialog>
+                        </TableCell>
+                        <TableCell
+                            className="qa-ProviderRow-TableCell-arrows"
+                            classes={{root: classes.arrowColumn}}
+                        >
+                            <IconButton
+                                disableTouchRipple
+                                onClick={handleToggle}
+                            >
+                                {openTable ?
+                                    <ArrowUp className="qa-ProviderRow-ArrowUp" color="primary"/>
+                                    :
+                                    <ArrowDown className="qa-ProviderRow-ArrowDown" color="primary"/>
+                                }
+                            </IconButton>
+                        </TableCell>
+                    </TableRow>
+                </TableHead>
+            </Table>
+            {tableData}
+        </div>
+    );
 }
 
 export default withWidth()(withTheme()(withStyles(jss)(ProviderRow)));
