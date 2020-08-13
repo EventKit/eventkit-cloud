@@ -50,7 +50,7 @@ class TestJob(TestCase):
         provider_task.min_zoom = 3
         provider_task.max_zoom = 6
         provider_task.save()
-        self.job.provider_tasks.add(provider_task)
+        self.job.data_provider_tasks.add(provider_task)
         self.job.save()
 
     def test_job_creation(self, ):
@@ -59,7 +59,7 @@ class TestJob(TestCase):
         self.assertEqual(self.uid, saved_job.uid)
         self.assertIsNotNone(saved_job.created_at)
         self.assertIsNotNone(saved_job.updated_at)
-        saved_provider_tasks = saved_job.provider_tasks.first()
+        saved_provider_tasks = saved_job.data_provider_tasks.first()
         self.assertIsNotNone(saved_provider_tasks.formats.all())
         self.assertCountEqual(saved_provider_tasks.formats.all(), self.formats)
         self.assertEqual(saved_provider_tasks.min_zoom, 3)
@@ -74,7 +74,7 @@ class TestJob(TestCase):
         self.assertEqual(self.uid, saved_job.uid)
         self.assertIsNotNone(saved_job.created_at)
         self.assertIsNotNone(saved_job.updated_at)
-        saved_provider_tasks = saved_job.provider_tasks.first()
+        saved_provider_tasks = saved_job.data_provider_tasks.first()
         self.assertIsNotNone(saved_provider_tasks.formats.all())
         self.assertCountEqual(saved_provider_tasks.formats.all(), self.formats)
         # attach a configuration to a job

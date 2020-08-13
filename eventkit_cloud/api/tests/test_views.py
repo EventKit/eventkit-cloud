@@ -70,10 +70,8 @@ class TestJobViewSet(APITestCase):
         self.provider = DataProvider.objects.first()
         self.provider.attribute_class = self.attribute_class
         self.provider.save()
-        provider_task = DataProviderTask.objects.create(provider=self.provider)
+        provider_task = DataProviderTask.objects.create(provider=self.provider, job=self.job)
         provider_task.formats.add(*formats)
-
-        self.job.provider_tasks.add(*[provider_task])
 
         token = Token.objects.create(user=self.user)
         self.client.credentials(HTTP_AUTHORIZATION='Token ' + token.key,
@@ -754,10 +752,8 @@ class TestExportRunViewSet(APITestCase):
         self.provider = DataProvider.objects.first()
         self.provider.attribute_class = self.attribute_class
         self.provider.save()
-        provider_task = DataProviderTask.objects.create(provider=self.provider)
+        provider_task = DataProviderTask.objects.create(job=self.job, provider=self.provider)
         provider_task.formats.add(*formats)
-
-        self.job.provider_tasks.add(provider_task)
         self.job.visibility = VisibilityState.PUBLIC.value
         self.job.save()
         self.job_uid = str(self.job.uid)
@@ -1045,10 +1041,8 @@ class TestDataProviderTaskRecordViewSet(APITestCase):
         self.provider = DataProvider.objects.first()
         self.provider.attribute_class = self.attribute_class
         self.provider.save()
-        provider_task = DataProviderTask.objects.create(provider=self.provider)
+        provider_task = DataProviderTask.objects.create(job=self.job, provider=self.provider)
         provider_task.formats.add(*formats)
-
-        self.job.provider_tasks.add(provider_task)
         self.job.save()
 
         # setup token authentication
@@ -1180,10 +1174,8 @@ class TestExportTaskViewSet(APITestCase):
 
         formats = ExportFormat.objects.all()
         self.provider = DataProvider.objects.first()
-        provider_task = DataProviderTask.objects.create(provider=self.provider)
+        provider_task = DataProviderTask.objects.create(job=self.job, provider=self.provider)
         provider_task.formats.add(*formats)
-
-        self.job.provider_tasks.add(provider_task)
         self.job.save()
 
         # setup token authentication
@@ -1636,9 +1628,8 @@ class TestUserJobActivityViewSet(APITestCase):
         job = Job.objects.create(name=name, description='Test description', user=self.user, the_geom=the_geom)
         formats = ExportFormat.objects.all()
         provider = DataProvider.objects.first()
-        provider_task = DataProviderTask.objects.create(provider=provider)
+        provider_task = DataProviderTask.objects.create(job=job, provider=provider)
         provider_task.formats.add(*formats)
-        job.provider_tasks.add(provider_task)
         run = ExportRun.objects.create(job=job, user=self.user, status='COMPLETED',
                                        expiration=(timezone.now() + timezone.timedelta(days=14)))
         job.last_export_run = run
