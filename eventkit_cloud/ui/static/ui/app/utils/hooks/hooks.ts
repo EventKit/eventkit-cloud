@@ -139,3 +139,13 @@ export function useAccessibleRef<T>(initialValue): [() => T, (value: T) => void]
         }
     ]
 }
+
+export function useEffectOnCondition(effect: () => void, conditional: boolean) {
+    const initializedRef = useRef(false);
+    useEffect(() => {
+        if (conditional && !initializedRef.current) {
+            initializedRef.current = true;
+            effect();
+        }
+    }, [effect, conditional])
+}

@@ -41,15 +41,10 @@
       try {
           CSS.supports('transform', 'translateY(-50%)');
           var bundle = document.createElement("script");
-          var metrics = document.createElement("script");
           bundle.type = "text/javascript";
-          metrics.type = "text/javascript";
           bundle.async = '';
-          metrics.async = '';
           bundle.src = "build/bundle.js";
-          metrics.src = "build/metrics.js"
           body.appendChild(bundle);
-          body.appendChild(metrics);
       } catch (error) {
           if (window.console) {
             console.error('Browser is not supported by EventKit');
