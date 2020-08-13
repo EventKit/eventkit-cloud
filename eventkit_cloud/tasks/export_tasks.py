@@ -35,6 +35,7 @@ from eventkit_cloud.core.helpers import (
 )
 
 from eventkit_cloud.feature_selection.feature_selection import FeatureSelection
+from eventkit_cloud.tasks import set_cache_value
 from eventkit_cloud.tasks.enumerations import TaskStates
 from eventkit_cloud.tasks.exceptions import CancelException, DeleteException
 from eventkit_cloud.tasks.helpers import (
@@ -372,13 +373,14 @@ class ZipFileTask(FormatTask):
         else:
             data_provider_task_record_uids = kwargs["data_provider_task_record_uids"]
 
-        data_provider_task_records = DataProviderTaskRecord.objects.filter(uid__in=data_provider_task_record_uids)
-        downloadable_file = FileProducingTaskResult.objects.get(id=retval["file_producing_task_result_id"])
-        run_zip_file.downloadable_file = downloadable_file
-        run_zip_file.data_provider_task_records.set(data_provider_task_records)
-        run_zip_file.finished_at = timezone.now()
-        run_zip_file.message = "Completed"
-        run_zip_file.save()
+        if retval.get("file_producing_task_result_id"):
+            data_provider_task_records = DataProviderTaskRecord.objects.filter(uid__in=data_provider_task_record_uids)
+            downloadable_file = FileProducingTaskResult.objects.get(id=retval["file_producing_task_result_id"])
+            run_zip_file.downloadable_file = downloadable_file
+            run_zip_file.data_provider_task_records.set(data_provider_task_records)
+            run_zip_file.finished_at = timezone.now()
+            run_zip_file.message = "Completed"
+            run_zip_file.save()
         return retval
 
 
@@ -1211,6 +1213,7 @@ def create_zip_task(
     :param data_provider_task_record_uids: A list of data provider task record UIDs to zip.
     :return: The run files, or a single zip file if data_provider_task_record_uid is passed.
     """
+
     if not result:
         result = {}
 
@@ -1664,6 +1667,11 @@ def cancel_export_provider_task(
                 priority=TaskPriority.CANCEL.value,
                 routing_key="{0}.priority".format(export_task.worker),
             )
+
+        # Add canceled to the cache so processes can check in to see if they should abort.
+        set_cache_value(
+            uid=export_task.uid, attribute="status", model_name="ExportTaskRecord", value=TaskStates.CANCELED.value,
+        )
 
     if TaskStates[data_provider_task_record.status] not in TaskStates.get_finished_states():
         if error:

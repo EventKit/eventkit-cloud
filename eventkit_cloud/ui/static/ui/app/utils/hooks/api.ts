@@ -10,16 +10,24 @@ export enum ACTIONS {
     NOT_FIRED='not_fired',
 }
 
-enum FileStatus {
-    PENDING='PENDING',
-    RUNNING='RUNNING',
-    SUCCESS='SUCCESS',
-    FAILED='FAILED',
+export enum FileStatus {
+    COMPLETED = "COMPLETED",  // Used for runs when all tasks were successful
+    INCOMPLETE = "INCOMPLETE",  // Used for runs when one or more tasks were unsuccessful
+    SUBMITTED = "SUBMITTED",  // Used for runs that have not been started
+
+    PENDING = "PENDING",  // Used for tasks that have not been started
+    RUNNING = "RUNNING", // Used for tasks that have been started
+    CANCELED = "CANCELED",  // Used for tasks that have been CANCELED by the user
+    SUCCESS = "SUCCESS",  // Used for tasks that have successfully completed
+    FAILED = "FAILED"
 }
 
 export class ApiStatuses {
     static readonly hookActions = ACTIONS;
     static readonly files = FileStatus;
+    static readonly finishedStates = [FileStatus.COMPLETED, FileStatus.INCOMPLETE, FileStatus.CANCELED,
+        FileStatus.SUCCESS, FileStatus.FAILED];
+    static readonly inProgressStates = [FileStatus.PENDING, FileStatus.RUNNING, FileStatus.SUBMITTED];
 
     public static readonly IsFetching = (status: any) => status === ACTIONS.FETCHING;
     public static readonly IsSuccess = (status: any) => status === ACTIONS.SUCCESS;
