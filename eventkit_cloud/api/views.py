@@ -565,6 +565,7 @@ class JobViewSet(viewsets.ModelViewSet):
         data_provider_slugs = request.data["data_provider_slugs"]
         download_dir = get_run_download_dir(run_uid)
         run = ExportRun.objects.get(uid=run_uid)
+        run_task_record_uid = run.provider_tasks.get(slug="run").uid
         run_dir = get_run_staging_dir(run_uid)
 
         # Download the data from previous exports so we can rezip.
@@ -595,7 +596,12 @@ class JobViewSet(viewsets.ModelViewSet):
             pick_up_run_task.apply_async(
                 queue="runs",
                 routing_key="runs",
-                kwargs={"run_uid": run_uid, "user_details": user_details, "data_provider_slugs": data_provider_slugs},
+                kwargs={
+                    "run_uid": run_uid,
+                    "user_details": user_details,
+                    "run_task_record_uid": run_task_record_uid,
+                    "data_provider_slugs": data_provider_slugs,
+                },
             )
             running = ExportRunSerializer(run, context={"request": request})
             return Response(running.data, status=status.HTTP_202_ACCEPTED)

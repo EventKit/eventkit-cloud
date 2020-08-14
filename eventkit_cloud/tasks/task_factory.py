@@ -61,7 +61,9 @@ class TaskFactory:
             "arcgis-feature": arcgis_feature_service_export_task,
         }
 
-    def parse_tasks(self, worker=None, run_uid=None, user_details=None, data_provider_slugs=None):
+    def parse_tasks(
+        self, worker=None, run_uid=None, user_details=None, run_task_record_uid=None, data_provider_slugs=None
+    ):
         """
         This handles all of the logic for taking the information about what individual celery tasks and groups
         them under specific providers.
@@ -125,10 +127,15 @@ class TaskFactory:
             }
 
             finalized_provider_task_chain_list = []
-            # Create a task record which can hold tasks for the run (datapack)
-            run_task_record = DataProviderTaskRecord.objects.create(
-                run=run, name="run", slug="run", status=TaskStates.PENDING.value, display=False,
-            )
+
+            if run_task_record_uid:
+                run_task_record = DataProviderTaskRecord.objects.get(uid=run_task_record_uid)
+            else:
+                # Create a task record which can hold tasks for the run (datapack)
+                run_task_record = DataProviderTaskRecord.objects.create(
+                    run=run, name="run", slug="run", status=TaskStates.PENDING.value, display=False,
+                )
+
             stage_dir = get_provider_staging_dir(run_dir, run_task_record.slug)
             if not os.path.exists(stage_dir):
                 os.makedirs(stage_dir, 6600)
