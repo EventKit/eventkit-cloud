@@ -4,7 +4,7 @@ import InfoDialog from "../Dialog/InfoDialog";
 import {Theme, withStyles, withTheme} from "@material-ui/core/styles";
 import CloudDownload from "@material-ui/icons/CloudDownload";
 import {useAsyncRequest, ApiStatuses, FileStatus} from "../../utils/hooks/api";
-import {getCookie} from "../../utils/generic";
+import {formatMegaBytes, getCookie} from "../../utils/generic";
 import {useRunContext} from "./RunFileContext";
 import {useEffect, useRef, useState} from "react";
 import {DepsHashers, usePrevious} from "../../utils/hooks/hooks";
@@ -79,6 +79,7 @@ const jss = (theme: Eventkit.Theme & Theme) => ({
 });
 
 interface Props {
+    zipSize: number;
     fontSize: string;  // Pass through font size to be consistent with parent.
     classes: { [className: string]: string; };
     providerTaskUids: string[];
@@ -205,17 +206,19 @@ function CreateDataPackButton(props: Props) {
             zipAvailableResponse.data[0].status === ApiStatuses.files.SUCCESS;
     }
 
-    const previousFrameText = useRef('');
+    const previousFrameText = useRef((<></>));
 
     function getButtonText() {
+        const sizeText = (props.zipSize) ? formatMegaBytes(props.zipSize, 1) + ' ' : '';
+        const zipText = (<span style={{whiteSpace: 'nowrap'}}>({sizeText}.ZIP)</span>)
         // We do this to prevent the text from rapidly flickering between different states when we fire
         // off a request.
         if (
             (zipAvailableStatus === ApiStatuses.hookActions.FETCHING) ||
             (requestZipFileStatus === ApiStatuses.hookActions.FETCHING)
         ) {
-            if (previousFrameText.current === '') {
-                previousFrameText.current = 'Processing Zip...';
+            if (previousFrameText.current === (<></>)) {
+                previousFrameText.current = (<>'Processing Zip...'</>);
             }
             return previousFrameText.current;
         }
@@ -226,18 +229,18 @@ function CreateDataPackButton(props: Props) {
             return 'Job Processing...';
         }
         if (isZipAvailable()) {
-            return 'DOWNLOAD DATAPACK (.ZIP)';
+            return (<>DOWNLOAD DATAPACK {zipText}</>);
         }
         if (badResponse) {
             return 'Zip Error';
         }
         if (requestZipFileStatus === ApiStatuses.hookActions.NOT_FIRED) {
-            return 'CREATE DATAPACK (.ZIP)';
+            return (<>CREATE DATAPACK {zipText}</>);
         }
         return 'Processing Zip...';
     }
 
-    const buttonText = getButtonText();
+    const buttonText = (<>{getButtonText()}</>);
     previousFrameText.current = buttonText;
 
     function getPopoverMessage() {
@@ -325,7 +328,7 @@ function CreateDataPackButton(props: Props) {
         } else if (!isRunCompleted() ||
             zipAvailableStatus === ApiStatuses.hookActions.FETCHING ||
             zipIsProcessing() ||
-            buttonText === 'Processing Zip...'
+            buttonText === (<>'Processing Zip...'</>)
         ) {
             IconComponent = CircularProgress;
             iconProps.size = 18;
@@ -345,7 +348,7 @@ function CreateDataPackButton(props: Props) {
                 className={`qa-CreateDataPackButton-Button-zipButton`}
                 classes={{root: (buttonEnabled) ? classes.button : classes.buttonDisabled}}
                 disabled={!buttonEnabled}
-                style={{fontSize, lineHeight: 'initial', width: '250px'}}
+                style={{fontSize, lineHeight: 'initial', width: 'max-content'}}
                 onClick={buttonAction}
                 {...(() => {
                     // If the zip file is available, set the href of the button to the URL.
