@@ -361,3 +361,11 @@ class RunZipFile(UIDMixin, TimeStampedModelMixin, TimeTrackingModelMixin):
     @message.setter
     def message(self, value, expiration=DEFAULT_CACHE_EXPIRATION):
         return set_cache_value(obj=self, attribute="message", value=value, expiration=expiration)
+
+    @property
+    def status(self):
+        return get_cache_value(obj=self, attribute="status", default="")
+
+    @status.setter
+    def status(self, value, expiration=DEFAULT_CACHE_EXPIRATION):
+        return set_cache_value(obj=self, attribute="status", value=value, expiration=expiration)

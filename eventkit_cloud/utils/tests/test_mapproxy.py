@@ -8,12 +8,12 @@ from django.test import TransactionTestCase
 from mapproxy.config.config import load_default_config
 from mock import Mock, patch, MagicMock, ANY
 
-from eventkit_cloud.core.helpers import get_cached_model
 from eventkit_cloud.jobs.models import DataProvider
+from eventkit_cloud.tasks.enumerations import TaskStates
 from eventkit_cloud.utils.mapproxy import (MapproxyGeopackage, get_conf_dict,
                                            get_cache_template, CustomLogger, check_zoom_levels,
                                            get_mapproxy_footprint_url, get_footprint_layer_name,
-                                           get_mapproxy_metadata_url)
+                                           get_mapproxy_metadata_url, get_custom_exp_backoff)
 
 logger = logging.getLogger(__name__)
 
@@ -167,11 +167,26 @@ class TestHelpers(TransactionTestCase):
             returned_value = get_mapproxy_footprint_url(example_slug)
             self.assertEqual(expected_value, returned_value)
 
+    @patch('eventkit_cloud.utils.mapproxy.get_cache_value')
+    @patch('eventkit_cloud.utils.mapproxy.exp_backoff')
+    def test_get_custom_exp_backoff(self, mock_exp_backoff, mock_get_cache_value):
+        example_repeat = 3
+        example_task_uid = '1234'
+        random_arg = 10
+        custom_backoff = get_custom_exp_backoff(max_repeat=example_repeat, task_uid=example_task_uid)
+        custom_backoff(random_arg=random_arg)
+        mock_exp_backoff.assert_called_once_with(random_arg=random_arg, max_repeat=example_repeat)
+
+        with self.assertRaises(Exception):
+            mock_get_cache_value.return_value = TaskStates.CANCELED.value
+            custom_backoff()
+
 
 class TestLogger(TransactionTestCase):
 
+    @patch('eventkit_cloud.utils.mapproxy.get_cache_value')
     @patch('eventkit_cloud.tasks.task_process.update_progress')
-    def test_log_step(self, mock_update_progress):
+    def test_log_step(self, mock_update_progress, mock_get_cache_value):
         test_task_uid = "1234"
         test_progress = 0.42
         custom_logger = CustomLogger(task_uid=test_task_uid)
@@ -181,3 +196,7 @@ class TestLogger(TransactionTestCase):
         mock_progress.progress = test_progress
         custom_logger.log_step(mock_progress)
         mock_update_progress.assert_called_with(test_task_uid, progress=test_progress*100, eta=custom_logger.eta)
+
+        with self.assertRaises(Exception):
+            mock_get_cache_value.return_value = TaskStates.CANCELED.value
+            custom_logger.log_step(mock_progress)
