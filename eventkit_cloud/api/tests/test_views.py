@@ -623,6 +623,38 @@ class TestJobViewSet(APITestCase):
         self.assertIsNotNone(response.data['visibility'])
         self.assertTrue(response.data['success'])
 
+    @patch('eventkit_cloud.api.views.shutil')
+    @patch('eventkit_cloud.api.views.pick_up_run_task')
+    def test_run_providers(self, pickup_mock, shutil_mock):
+        run = ExportRun.objects.create(job=self.job, user=self.user)
+        self.job.last_export_run = run
+        self.job.save()
+
+        data_provider_task_record = DataProviderTaskRecord.objects.create(run=run, slug="run")
+        run.provider_tasks.add(data_provider_task_record)
+
+        expected_user_details = {'username': 'demo', 'is_superuser': False, 'is_staff': False}
+        url = f'/api/jobs/{self.job.uid}/run_providers'
+        request_data = {
+            "data_provider_slugs": ["osm"]
+        }
+
+        response = self.client.post(url, request_data, format='json')
+        self.assertEqual(status.HTTP_202_ACCEPTED, response.status_code)
+        self.assertEqual("PENDING", response.data["zipfile"]["status"])
+
+        shutil_mock.copytree.assert_called_once()
+        pickup_mock.apply_async.assert_called_with(
+            kwargs={
+                "run_uid": run.uid,
+                "user_details": expected_user_details,
+                "run_task_record_uid": data_provider_task_record.uid,
+                "data_provider_slugs": ["osm"]
+            },
+            queue="runs",
+            routing_key="runs"
+            )
+
 
 class TestBBoxSearch(APITestCase):
     """
