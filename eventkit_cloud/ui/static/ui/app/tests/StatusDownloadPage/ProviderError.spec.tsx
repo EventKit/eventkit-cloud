@@ -80,40 +80,4 @@ describe('ProviderError component', () => {
         expect(wrapper.find('.qa-ProviderError-error-text').text()).toEqual('ERROR');
         expect(wrapper.find(Warning)).toHaveLength(3);
     });
-
-    it('handleProviderErrorOpen should set provider error dialog to open', () => {
-        const stateSpy = sinon.spy(instance, 'setState');
-        instance.handleProviderErrorOpen();
-        expect(stateSpy.calledOnce).toBe(true);
-        expect(stateSpy.calledWith({ providerErrorDialogOpen: true })).toBe(true);
-        expect(wrapper.find(Warning)).toHaveLength(3);
-        expect(wrapper.find(Divider)).toHaveLength(2);
-        expect(wrapper.find('.qa-ProviderError-errorData')).toHaveLength(2);
-        expect(wrapper.find('.qa-ProviderError-errorData').first().childAt(1).text()).toEqual('OSM should show');
-        stateSpy.restore();
-    });
-
-    it('handleProviderErrorClose should set provider error dialog to close', () => {
-        const stateSpy = sinon.spy(instance, 'setState');
-        instance.handleProviderErrorClose();
-        expect(stateSpy.calledOnce).toBe(true);
-        expect(stateSpy.calledWith({ providerErrorDialogOpen: false })).toBe(true);
-        stateSpy.restore();
-    });
-
-    it('should call handleProviderErrorOpen when the error link is clicked. ', () => {
-        const errorSpy = sinon.stub(ErrorDialog.prototype, 'handleProviderErrorOpen');
-        setup();
-        wrapper.find('.qa-ProviderError-error-text').simulate('click');
-        expect(errorSpy.calledOnce).toBe(true);
-        errorSpy.restore();
-    });
-
-    it('should call handleProviderErrorOpen when the error warning icon is clicked. ', () => {
-        const errorSpy = sinon.stub(ErrorDialog.prototype, 'handleProviderErrorOpen');
-        setup();
-        wrapper.find(Warning).first().simulate('click');
-        expect(errorSpy.calledOnce).toBe(true);
-        errorSpy.restore();
-    });
 });

@@ -9,7 +9,7 @@ import CreateDataPackButton from "../../components/StatusDownloadPage/CreateData
 import {Button, MuiThemeProvider} from "@material-ui/core";
 import {Theme} from "@material-ui/core/styles";
 
-jest.mock('../../components/StatusDownloadPage/RunFileContext', () => {
+jest.mock('../../components/StatusDownloadPage/context/RunFile', () => {
     return {
         useRunContext: () => {
             return {run: {status: 'COMPLETED'}}
