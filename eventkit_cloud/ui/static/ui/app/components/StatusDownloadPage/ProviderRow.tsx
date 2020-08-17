@@ -16,15 +16,18 @@ import Check from '@material-ui/icons/Check';
 import CloudDownload from '@material-ui/icons/CloudDownload';
 import IconMenu from '../common/IconMenu';
 import TaskError from './TaskError';
-import ProviderError from './ProviderError';
+import ErrorDialog from './ErrorDialog';
 import BaseDialog from '../Dialog/BaseDialog';
 import LicenseRow from './LicenseRow';
 import {Breakpoint} from '@material-ui/core/styles/createBreakpoints';
 import moment from 'moment';
 import {useEffect, useState} from "react";
-import {DepsHashers, useEffectOnMount} from "../../utils/hooks/hooks";
+import {rerunExportPartial} from '../../actions/datacartActions';
 import {useAsyncRequest} from "../../utils/hooks/api";
 import {getCookie} from "../../utils/generic";
+import {connect} from "react-redux";
+import history from "../../utils/history";
+import ProviderTaskErrorDialog from "./ProviderTaskErrorDialog";
 
 const jss = (theme: Eventkit.Theme & Theme) => createStyles({
     insetColumn: {
@@ -141,6 +144,7 @@ interface Props {
     backgroundColor: string;
     theme: Eventkit.Theme & Theme;
     width: Breakpoint;
+    rerunExportPartial: () => void;
     classes: { [className: string]: string };
 }
 
@@ -150,17 +154,16 @@ export function ProviderRow(props: Props) {
     const [providerDesc, setProviderDesc] = useState('');
     const [providerDialogOpen, setProviderDialogOpen] = useState(false);
 
-    const [{ status, response }, requestCall, clearRequest] = useAsyncRequest();
+    const [{status, response}, requestCall] = useAsyncRequest();
     const makeRequest = () => {
-        // Returned promise is ignored, we don't need it.
         requestCall({
             url: `/api/jobs/${props.job.uid}/run_providers`,
             method: 'post',
             data: {
                 data_provider_slugs: [props.providerTask.provider.slug]
             },
-            headers: { 'X-CSRFToken': getCookie('csrftoken') },
-        });
+            headers: {'X-CSRFToken': getCookie('csrftoken')},
+        }).then(() => props.rerunExportPartial());
     };
 
     useEffect(() => {
@@ -239,7 +242,7 @@ export function ProviderRow(props: Props) {
                     />
                 );
             case 'FAILED':
-                return <TaskError task={task}/>;
+                return <ErrorDialog errors={task.errors} onRetryClicked={makeRequest} name={task.name}/>;
             case 'PENDING':
                 return 'WAITING';
             case 'RUNNING':
@@ -277,7 +280,13 @@ export function ProviderRow(props: Props) {
                     />
                 );
             case 'INCOMPLETE':
-                return <ProviderError provider={provider} key={provider.uid}/>;
+                return (
+                    <ProviderTaskErrorDialog
+                        providerTask={provider}
+                        onRetryClicked={makeRequest}
+                        key={provider.uid}
+                    />
+                );
             case 'PENDING':
                 return 'WAITING';
             case 'RUNNING':
@@ -429,10 +438,10 @@ export function ProviderRow(props: Props) {
         <MenuItem
             className="qa-ProviderRow-MenuItem-rerun"
             key="rerun"
-            disabled={cancelMenuDisabled}
+            disabled={false}
             style={{fontSize: '12px'}}
             onClick={() => {
-                props.onProviderCancel(providerTask.uid);
+                makeRequest()
             }}
         >
             Rerun File(s)
@@ -621,4 +630,14 @@ export function ProviderRow(props: Props) {
     );
 }
 
-export default withWidth()(withTheme()(withStyles(jss)(ProviderRow)));
+
+function mapDispatchToProps(dispatch) {
+    return {
+        rerunExportPartial: () => (
+            dispatch(rerunExportPartial())
+        ),
+    };
+}
+
+
+export default withWidth()(withTheme()(withStyles(jss)(connect(null, mapDispatchToProps)(ProviderRow))));

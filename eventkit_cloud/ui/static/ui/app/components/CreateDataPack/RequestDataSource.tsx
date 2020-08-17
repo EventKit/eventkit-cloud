@@ -14,6 +14,7 @@ import {isWidthUp} from "@material-ui/core/withWidth";
 import withWidth from "@material-ui/core/withWidth/withWidth";
 import {Breakpoint} from "@material-ui/core/styles/createBreakpoints";
 import {useAsyncRequest} from "../../utils/hooks/api";
+import {renderIf} from "../../utils/renderIf";
 
 interface Props {
     open: boolean;
@@ -278,11 +279,7 @@ export function RequestDataSource(props: Props) {
         return dialogProps;
     }
 
-    if (!open) {
-        return null;
-    }
-
-    return (
+    return renderIf(() => (
         <BaseDialog
             show
             title="Request New Data Source"
@@ -298,7 +295,7 @@ export function RequestDataSource(props: Props) {
                 {status === 'error' && renderErrorMessage()}
             </div>
         </BaseDialog>
-    );
+    ), open);
 }
 
 const jss = (theme: Eventkit.Theme & Theme) => createStyles({

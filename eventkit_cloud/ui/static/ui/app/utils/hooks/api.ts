@@ -29,10 +29,10 @@ export class ApiStatuses {
         FileStatus.SUCCESS, FileStatus.FAILED];
     static readonly inProgressStates = [FileStatus.PENDING, FileStatus.RUNNING, FileStatus.SUBMITTED];
 
-    public static readonly IsFetching = (status: any) => status === ACTIONS.FETCHING;
-    public static readonly IsSuccess = (status: any) => status === ACTIONS.SUCCESS;
-    public static readonly IsNotFired = (status: any) => status === ACTIONS.NOT_FIRED;
-    public static readonly IsError = (status: any) => status === ACTIONS.ERROR;
+    static readonly IsFetching = (status: any) => status === ACTIONS.FETCHING;
+    static readonly IsSuccess = (status: any) => status === ACTIONS.SUCCESS;
+    static readonly IsNotFired = (status: any) => status === ACTIONS.NOT_FIRED;
+    static readonly IsError = (status: any) => status === ACTIONS.ERROR;
 }
 
 interface RequestState {

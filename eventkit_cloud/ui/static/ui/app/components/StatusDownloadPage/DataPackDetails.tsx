@@ -59,7 +59,6 @@ export class DataPackDetails extends React.Component<Props, State> {
         this.getPreviewDialogTitle = this.getPreviewDialogTitle.bind(this);
         this.state = {
             infoOpen: false,
-            selectedProviders: {},
             providerPreviewOpen: false,
         };
     }

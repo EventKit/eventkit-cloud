@@ -14,7 +14,7 @@ import Warning from '@material-ui/icons/Warning';
 import Check from '@material-ui/icons/Check';
 import CloudDownload from '@material-ui/icons/CloudDownload';
 import IconMenu from '../../components/common/IconMenu';
-import ProviderError from '../../components/StatusDownloadPage/ProviderError';
+import ErrorDialog from '../../components/StatusDownloadPage/ErrorDialog';
 import TaskError from '../../components/StatusDownloadPage/TaskError';
 import BaseDialog from '../../components/Dialog/BaseDialog';
 import LicenseRow from '../../components/StatusDownloadPage/LicenseRow';
@@ -214,7 +214,11 @@ describe('ProviderRow component', () => {
         ));
         props.providerTask.tasks[0].status = 'FAILED';
         expect(wrapper.instance().getTaskStatus(props.providerTask.tasks[0])).toEqual((
-            <TaskError task={props.providerTask.tasks[0]} />
+            <ErrorDialog
+                errors={props.providerTask.tasks[0].errors}
+                name={props.providerTask.tasks[0].name}
+                onRetryClicked={() => {}}
+            />
         ));
         props.providerTask.tasks[0].status = 'PENDING';
         expect(wrapper.instance().getTaskStatus(props.providerTask.tasks[0])).toEqual('WAITING');
@@ -250,7 +254,7 @@ describe('ProviderRow component', () => {
         ));
         props.providerTask.status = 'INCOMPLETE';
         expect(wrapper.instance().getProviderStatus(props.providerTask)).toEqual((
-            <ProviderError provider={props.providerTask} key={props.providerTask.uid} />
+            <ProviderError providerTask={props.providerTask} key={props.providerTask.uid} onRetryClicked={() => undefined}/>
         ));
         props.providerTask.status = 'PENDING';
         expect(wrapper.instance().getProviderStatus(props.providerTask)).toEqual('WAITING');

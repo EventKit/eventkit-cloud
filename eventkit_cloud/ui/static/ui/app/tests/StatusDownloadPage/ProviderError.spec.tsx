@@ -3,7 +3,7 @@ import * as sinon from 'sinon';
 import { createShallow } from '@material-ui/core/test-utils';
 import Divider from '@material-ui/core/Divider';
 import Warning from '@material-ui/icons/Warning';
-import { ProviderError } from '../../components/StatusDownloadPage/ProviderError';
+import { ErrorDialog } from '../../components/StatusDownloadPage/ErrorDialog';
 import BaseDialog from '../../components/Dialog/BaseDialog';
 
 describe('ProviderError component', () => {
@@ -69,7 +69,7 @@ describe('ProviderError component', () => {
     let instance;
     const setup = (overrides = {}) => {
         props = { ...getProps(), ...overrides };
-        wrapper = shallow(<ProviderError {...props} />);
+        wrapper = shallow(<ErrorDialog {...props} />);
         instance = wrapper.instance();
     };
 
@@ -102,7 +102,7 @@ describe('ProviderError component', () => {
     });
 
     it('should call handleProviderErrorOpen when the error link is clicked. ', () => {
-        const errorSpy = sinon.stub(ProviderError.prototype, 'handleProviderErrorOpen');
+        const errorSpy = sinon.stub(ErrorDialog.prototype, 'handleProviderErrorOpen');
         setup();
         wrapper.find('.qa-ProviderError-error-text').simulate('click');
         expect(errorSpy.calledOnce).toBe(true);
@@ -110,7 +110,7 @@ describe('ProviderError component', () => {
     });
 
     it('should call handleProviderErrorOpen when the error warning icon is clicked. ', () => {
-        const errorSpy = sinon.stub(ProviderError.prototype, 'handleProviderErrorOpen');
+        const errorSpy = sinon.stub(ErrorDialog.prototype, 'handleProviderErrorOpen');
         setup();
         wrapper.find(Warning).first().simulate('click');
         expect(errorSpy.calledOnce).toBe(true);

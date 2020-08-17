@@ -6,6 +6,7 @@ import BaseDialog from '../Dialog/BaseDialog';
 
 export interface Props {
     task: Eventkit.Task;
+    onRetryClicked: () => void;
     theme: Eventkit.Theme & Theme;
 }
 

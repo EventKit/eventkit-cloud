@@ -186,7 +186,7 @@ function CreateDataPackButton(props: Props) {
 
     function isRunCanceled() {
         // TODO: add enum for run statuses to ApiStatuses object
-        return run.status == ApiStatuses.files.CANCELED;
+        return run.status === ApiStatuses.files.CANCELED || run.status === 'INCOMPLETE';
     }
 
     function zipIsProcessing() {
@@ -250,9 +250,9 @@ function CreateDataPackButton(props: Props) {
         if (isRunCanceled()) {
             return (
                 <p>
-                    The datapack was canceled, so no zip is available. You can Rerun the datapack,
-                    to generate the files. If you don't have permission to rerun you can clone this
-                    datapack to generate the files.
+                    The DataPack was canceled or failed during processing, so no zip is available.
+                    You can Rerun the DataPack, to generate the files. If you don't have permission
+                    to rerun you can clone this DataPack to generate the files.
                 </p>
             );
         }
@@ -314,7 +314,7 @@ function CreateDataPackButton(props: Props) {
             },
         };
         let IconComponent: React.ComponentType<any> = CloudDownload;
-        if (badResponse) {
+        if (badResponse || isRunCanceled()) {
             // This case controls for when we get no response back at all, usually an empty array.
             // This probably means no file could be retrieved for the specified provider tasks uids combo.
             IconComponent = AlertError;

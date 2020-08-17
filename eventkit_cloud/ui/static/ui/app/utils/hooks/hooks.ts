@@ -1,5 +1,6 @@
 import {useCallback, useEffect, useReducer, useRef, useState} from "react";
 import axios from "axios";
+import set = Reflect.set;
 
 // Convenience function that acts like componentDidMount.
 // useEffect replaces componentDidMount AND componentDidUpdate
@@ -147,4 +148,10 @@ export function useEffectOnCondition(effect: () => void, conditional: boolean) {
             effect();
         }
     }, [effect, conditional])
+}
+
+export function useBoolean(initialValue: boolean):
+    [boolean, (...args: any) => void, (...args: any) => void, any] {
+    const [bool, setBool] = useState(initialValue);
+    return [bool, (...args: any) => setBool(true), (...args: any) => setBool(false), setBool]
 }
