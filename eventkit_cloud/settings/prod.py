@@ -277,6 +277,7 @@ if os.getenv("MEMCACHED"):
         "default": {
             "BACKEND": "django.core.cache.backends.memcached.MemcachedCache",
             "LOCATION": os.getenv("MEMCACHED"),
+            "OPTIONS": {"server_max_value_length": os.getenv("MEMCACHED_SERVER_MAX_VALUE_LENGTH", 1024 * 1024 * 10)},
         }
     }
 else:
@@ -294,8 +295,9 @@ STATIC_URL = "/static/"
 STATIC_ROOT = os.path.join(BASE_DIR, "staticfiles")
 STATICFILES_STORAGE = "django.contrib.staticfiles.storage.StaticFilesStorage"
 SERVE_ESTIMATES = is_true(os.getenv("SERVE_ESTIMATES", "true"))
+VERSION = os.getenv("VERSION", "")
 UI_CONFIG = {
-    "VERSION": os.getenv("VERSION", ""),
+    "VERSION": VERSION,
     "CONTACT_URL": os.getenv("CONTACT_URL", "mailto:eventkit.team@gmail.com"),
     "LOGIN_DISCLAIMER": os.getenv("LOGIN_DISCLAIMER", ""),
     "BANNER_BACKGROUND_COLOR": os.getenv("BANNER_BACKGROUND_COLOR", ""),
@@ -308,6 +310,15 @@ UI_CONFIG = {
     "DATAPACK_PAGE_SIZE": os.getenv("DATAPACK_PAGE_SIZE", "100"),
     "NOTIFICATIONS_PAGE_SIZE": os.getenv("NOTIFICATIONS_PAGE_SIZE", "10"),
     "SERVE_ESTIMATES": SERVE_ESTIMATES,
+    "MATOMO": {
+        "URL": os.getenv("MATOMO_URL", ""),
+        "CUSTOM_DIM_ID": os.getenv("MATOMO_CUSTOM_DIM_ID", ""),
+        "CUSTOM_VAR_NAME": os.getenv("MATOMO_CUSTOM_VAR_NAME", ""),
+        "CUSTOM_VAR_ID": os.getenv("MATOMO_CUSTOM_VAR_ID", ""),
+        "CUSTOM_VAR_SCOPE": os.getenv("MATOMO_CUSTOM_VAR_SCOPE", "page"),
+        "SITE_ID": os.getenv("MATOMO_SITE_ID", ""),
+        "APPNAME": os.getenv("MATOMO_APPNAME", "EventKit"),
+    },
 }
 
 

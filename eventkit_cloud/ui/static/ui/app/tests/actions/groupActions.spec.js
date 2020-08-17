@@ -16,12 +16,54 @@ describe('userGroups actions', () => {
         });
 
         it('onSuccess should return groups', () => {
-            const ret = { data: ['groupOne', 'groupTwo'], headers: { 'total-groups': '12' } };
+            const ret = {
+                data: ['groupOne', 'groupTwo'],
+                headers: {
+                    'total-groups': '12', 'admin-groups': '10', 'member-groups': '2', 'other-groups': '12',
+                },
+            };
             expect(actions.getGroups().onSuccess(ret)).toEqual({
                 groups: ret.data,
                 nextPage: false,
                 range: '',
                 total: 12,
+                totalAdmin: 10,
+                totalMember: 2,
+                totalOther: 12,
+            });
+        });
+
+        it('onSuccess should return group that has permission_level "admin"', () => {
+            const ret = {
+                data: [{
+                    id: 1213,
+                    name: 'GroupA',
+                    administrators: 'admin',
+                    members: 'admin',
+                    restricted: false,
+                }],
+                headers: {
+                    'total-groups': '12',
+                    'admin-groups': '11',
+                    'member-groups': '1',
+                    'other-groups': '10',
+                },
+            };
+            const params = {
+                page_size: 1,
+                page: 1,
+                permission_level: 'admin',
+                user: 'admin',
+            };
+            expect(actions.getGroups(params).params).toEqual(params);
+            expect(actions.getGroups().onSuccess(ret)).toEqual({
+                groups: ret.data,
+                nextPage: false,
+                range: '',
+                total: 12,
+                totalAdmin: 11,
+                totalMember: 1,
+                totalOther: 10,
             });
         });
     });

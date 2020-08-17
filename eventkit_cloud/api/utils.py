@@ -1,10 +1,14 @@
 import logging
 
-from django.conf import settings
+from django.db.models import Count
+
+from functools import reduce
 import rest_framework.status
 from rest_framework.exceptions import ValidationError
 from rest_framework.response import Response
 from rest_framework.views import exception_handler
+
+from eventkit_cloud.tasks.models import RunZipFile
 
 logger = logging.getLogger(__name__)
 
@@ -16,17 +20,15 @@ def eventkit_exception_handler(exc, context):
         "errors": [
             {
                 "status": "422",
-                "source": {"pointer": "/data/attributes/first-name"},
                 "title": "Invalid Attribute",
-                "detail": "First name must contain at least three characters."
+                "detail": "First name must contain at least three characters.",
+                "type": "ValidationError"
             }
         ]
     }
     """
     # Call REST framework's default exception handler first,
     # to get the standard error response. Parse the response accordingly.
-    if getattr(settings, "DEBUG"):
-        raise exc
     response = exception_handler(exc, context)
     if response:
 
@@ -34,8 +36,24 @@ def eventkit_exception_handler(exc, context):
         status = response.status_code
         error_class = exc.__class__.__name__
 
-        error_response = {"status": status, "title": error_class, "detail": error}
+        if hasattr(exc, "detail"):
+            detail = exc.detail
+        else:
+            detail = error
 
+        # If get_codes returns a dict, grab the values and turn them into a string for the title.
+        if hasattr(exc, "get_codes"):
+            code = exc.get_codes()
+            title = ""
+            if isinstance(code, dict):
+                for key, value in code.items():
+                    title += stringify(value)
+            else:
+                title = code
+        else:
+            title = error_class
+
+        error_response = {"status": status, "title": stringify(title), "detail": str(detail), "type": error_class}
         if isinstance(error, dict) and error.get("id") and error.get("message"):
             # if both id and message are present we can assume that this error was generated from validators.py
             # and use them as the title and detail
@@ -60,6 +78,7 @@ def eventkit_exception_handler(exc, context):
 
             error_response["detail"] = detail
 
+        error_response["title"] = error_response["title"].title().replace("_", " ")
         response.data = {"errors": [error_response]}
     # exception_handler doesn't handle generic exceptions, so we need to handle that here.
     else:
@@ -106,3 +125,21 @@ def stringify(item):
         return ""
     else:
         raise Exception("Stringify doesn't support items of type {0}".format(type(item)))
+
+
+def get_run_zip_file(field=None, values=[]):
+    """
+    :param field: The field you want to filter on.
+    :param values: The values you want to filter for.
+    :return: A queryset with the selected run_zip_file.
+    """
+    initial_qs = RunZipFile.objects.annotate(cnt=Count("data_provider_task_records")).filter(cnt=len(values))
+
+    if field:
+        field = f"__{field}"
+    else:
+        field = ""
+
+    queryset = reduce(lambda qs, value: qs.filter(**{f"data_provider_task_records{field}": value}), values, initial_qs)
+
+    return queryset.select_related("downloadable_file")

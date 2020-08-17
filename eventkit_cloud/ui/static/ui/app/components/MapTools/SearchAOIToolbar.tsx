@@ -256,13 +256,13 @@ function mapStateToProps(state) {
 function mapDispatchToProps(dispatch) {
     return {
         getGeocode: (query) => {
-            dispatch(getGeocode(query))
+            dispatch(getGeocode(query));
         },
         setFetchingGeocode: () => {
-            dispatch({type: types.FETCHING_GEOCODE})
+            dispatch({type: types.FETCHING_GEOCODE});
         },
         setGeocodeEmpty: () => {dispatch({type: types.FETCH_GEOCODE_EMPTY})},
-    }
+    };
 }
 
 export default withTheme()(withStyles<any, any>(jss)(connect(mapStateToProps, mapDispatchToProps)(SearchAOIToolbar)));

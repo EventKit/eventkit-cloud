@@ -3,6 +3,9 @@ import { types } from '../actions/groupActions';
 export const initialState = {
     groups: [],
     total: 0,
+    totalAdmin: 0,
+    totalMember: 0,
+    totalOther: 0,
     range: '',
     nextPage: false,
     cancelSource: null,
@@ -15,6 +18,7 @@ export const initialState = {
     updating: null,
     updated: null,
     error: null,
+    data: [],
 };
 
 export function userGroupsReducer(state = initialState, action) {
@@ -24,6 +28,7 @@ export function userGroupsReducer(state = initialState, action) {
                 ...state,
                 fetching: true,
                 fetched: false,
+                data: [],
                 error: null,
                 cancelSource: action.cancelSource,
             };
@@ -32,8 +37,12 @@ export function userGroupsReducer(state = initialState, action) {
                 ...state,
                 fetching: false,
                 fetched: true,
+                data: action.groups,
                 groups: action.append ? [...state.groups, ...action.groups] : action.groups,
                 total: action.total,
+                totalAdmin: action.totalAdmin,
+                totalMember: action.totalMember,
+                totalOther: action.totalOther,
                 range: action.range,
                 nextPage: action.nextPage,
                 error: null,
@@ -44,10 +53,14 @@ export function userGroupsReducer(state = initialState, action) {
                 ...state,
                 fetching: false,
                 fetched: false,
+                data: [],
                 groups: [],
                 error: action.error,
                 cancelSource: null,
                 total: 0,
+                totalAdmin: 0,
+                totaMember: 0,
+                totalOther: 0,
                 range: '',
                 nextPage: false,
             };
@@ -102,6 +115,8 @@ export function userGroupsReducer(state = initialState, action) {
                 updated: false,
                 error: action.error,
             };
+        case types.FETCH_GROUPS_EMPTY:
+            return initialState;
 
         default:
             return state;

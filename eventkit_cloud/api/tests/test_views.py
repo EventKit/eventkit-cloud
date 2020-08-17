@@ -22,7 +22,7 @@ from eventkit_cloud.core.models import GroupPermission, GroupPermissionLevel, At
 from eventkit_cloud.jobs.models import ExportFormat, Job, DataProvider, \
     DataProviderType, DataProviderTask, bbox_to_geojson, DatamodelPreset, License, VisibilityState, UserJobActivity
 from eventkit_cloud.tasks.enumerations import TaskStates
-from eventkit_cloud.tasks.models import ExportRun, ExportTaskRecord, DataProviderTaskRecord, FileProducingTaskResult
+from eventkit_cloud.tasks.models import DataProviderTaskRecord, ExportRun, ExportTaskRecord, FileProducingTaskResult, RunZipFile
 from eventkit_cloud.tasks.task_factory import InvalidLicense
 from eventkit_cloud.user_requests.models import DataProviderRequest, SizeIncreaseRequest
 
@@ -241,8 +241,8 @@ class TestJobViewSet(APITestCase):
         url = reverse('api:jobs-detail', args=[self.job.uid])
         response = self.client.delete(url)
         # test the response headers
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertEqual(response.data[0]['detail'], 'ADMIN permission is required to delete this job.')
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+        self.assertEqual(response.data['errors'][0]['detail'], 'ADMIN permission is required to delete this job.')
 
     @patch('eventkit_cloud.api.views.pick_up_run_task')
     @patch('eventkit_cloud.api.views.create_run')
@@ -454,7 +454,7 @@ class TestJobViewSet(APITestCase):
         self.assertEqual(status.HTTP_400_BAD_REQUEST, response.status_code)
         self.assertEqual(response['Content-Type'], 'application/json')
         self.assertEqual(response['Content-Language'], 'en')
-        self.assertEqual('no geometry', response.data['errors'][0]['title'])
+        self.assertEqual('No Geometry', response.data['errors'][0]['title'])
 
     def test_empty_string_param(self, ):
         url = reverse('api:jobs-list')
@@ -487,7 +487,7 @@ class TestJobViewSet(APITestCase):
         self.assertEqual(status.HTTP_400_BAD_REQUEST, response.status_code)
         self.assertEqual(response['Content-Type'], 'application/json')
         self.assertEqual(response['Content-Language'], 'en')
-        self.assertEqual('ValidationError', response.data['errors'][0]['title'])
+        self.assertEqual('Max Length', response.data['errors'][0]['title'])
         self.assertEqual('name: Ensure this field has no more than 100 characters.',
                          response.data['errors'][0]['detail'])
 
@@ -556,7 +556,7 @@ class TestJobViewSet(APITestCase):
         self.assertEqual(status.HTTP_400_BAD_REQUEST, response.status_code)
         self.assertEqual(response['Content-Type'], 'application/json')
         self.assertEqual(response['Content-Language'], 'en')
-        self.assertEqual('invalid_extents', response.data['errors'][0]['title'])
+        self.assertEqual('Invalid Extents', response.data['errors'][0]['title'])
 
     @patch('eventkit_cloud.api.views.get_estimate_cache_key')
     @patch('eventkit_cloud.api.views.cache')
@@ -701,7 +701,7 @@ class TestBBoxSearch(APITestCase):
         self.assertEqual(status.HTTP_400_BAD_REQUEST, response.status_code)
         self.assertEqual(response['Content-Type'], 'application/json')
         self.assertEqual(response['Content-Language'], 'en')
-        self.assertEqual('missing_bbox_parameter', response.data['errors']['id'])
+        self.assertEqual('Missing Bbox Parameter', response.data['errors'][0]['title'])
 
     def test_bbox_missing_coord(self, ):
         url = reverse('api:jobs-list')
@@ -711,7 +711,7 @@ class TestBBoxSearch(APITestCase):
         self.assertEqual(status.HTTP_400_BAD_REQUEST, response.status_code)
         self.assertEqual(response['Content-Type'], 'application/json')
         self.assertEqual(response['Content-Language'], 'en')
-        self.assertEqual('missing_bbox_parameter', response.data['errors']['id'])
+        self.assertEqual('Missing Bbox Parameter', response.data['errors'][0]['title'])
 
 
 class TestPagination(APITestCase):
@@ -803,34 +803,6 @@ class TestExportRunViewSet(APITestCase):
         self.assertEqual(response['Content-Length'], '0')
         self.assertEqual(response['Content-Language'], 'en')
 
-    def test_zipfile_url_s3(self):
-        example_url = "/downloads/{0}/file.zip".format(self.run_uid)
-        data_provider_task_record = DataProviderTaskRecord.objects.create(run=self.export_run, name="run", slug="run")
-        file_result = FileProducingTaskResult.objects.create(download_url=example_url, size=10)
-        ExportTaskRecord.objects.create(export_provider_task=data_provider_task_record,
-                                        result=file_result, name="Zip")
-        self.export_run.save()
-        download_url = 'http://testserver/download?uid={0}'.format(file_result.uid)
-
-        url = reverse('api:runs-detail', args=[self.run_uid])
-
-        with self.settings(USE_S3=False):
-            response = self.client.get(url)
-            result = response.data
-            self.assertEqual(
-                download_url,
-                result[0]['zipfile_url']
-            )
-
-        with self.settings(USE_S3=True):
-            response = self.client.get(url)
-            result = response.data
-
-            self.assertEqual(
-                download_url,
-                result[0]['zipfile_url']
-            )
-
     def test_retrieve_run(self, ):
         expected = '/api/runs/{0}'.format(self.run_uid)
 
@@ -866,7 +838,7 @@ class TestExportRunViewSet(APITestCase):
         response = self.client.get(url)
         self.assertIsNotNone(response)
         result = response.data
-        self.assertTrue("InvalidLicense" in result[0].get('detail'))
+        self.assertTrue("InvalidLicense" in result["errors"][0].get('detail'))
         self.assertEqual(response.status_code, 400)
 
     @patch('eventkit_cloud.api.views.get_invalid_licenses')
@@ -903,7 +875,7 @@ class TestExportRunViewSet(APITestCase):
         response = self.client.get(url)
         self.assertIsNotNone(response)
         result = response.data
-        self.assertTrue("InvalidLicense" in result[0].get('detail'))
+        self.assertTrue("InvalidLicense" in result["errors"][0].get('detail'))
         self.assertEqual(response.status_code, 400)
 
     def test_filter_runs(self, ):
@@ -968,6 +940,74 @@ class TestExportRunViewSet(APITestCase):
         result = response.data
         # make sure no runs are returned as they should have been filtered out
         self.assertEqual(0, len(result))
+
+
+class TestRunZipFileViewSet(APITestCase):
+    """
+    Test cases for RunZipFileViewSet
+    """
+
+    fixtures = ('osm_provider.json',)
+
+    list_url = reverse("api:zipfiles-list")
+
+    def setUp(self):
+        self.user = User.objects.create_user(username='demo', email='demo@demo.com',
+                                            password='demo')
+        self.token = Token.objects.create(user=self.user)
+
+        self.client.credentials(HTTP_AUTHORIZATION='Token ' + self.token.key,
+                HTTP_ACCEPT='application/json, text/plain; version=1.0',
+                HTTP_ACCEPT_LANGUAGE='en',
+                HTTP_HOST='testserver')
+
+        bbox = Polygon.from_bbox((-7.96, 22.6, -8.14, 27.12))
+        the_geom = GEOSGeometry(bbox, srid=4326)
+        self.job = Job.objects.create(name='TestJob', description='Test description', user=self.user,
+                                      the_geom=the_geom, visibility=VisibilityState.PUBLIC.value)
+        self.run = ExportRun.objects.create(job=self.job, user=self.user)
+
+        self.provider = DataProvider.objects.first()
+        self.celery_uid = str(uuid.uuid4())
+        self.data_provider_task_record = DataProviderTaskRecord.objects.create(run=self.run,
+                                                                               name='Shapefile Export',
+                                                                               provider=self.provider,
+                                                                               status=TaskStates.PENDING.value)
+
+        filename = "test.zip"
+        self.downloadable_file = FileProducingTaskResult.objects.create(filename=filename, size=10)
+        self.task = ExportTaskRecord.objects.create(export_provider_task=self.data_provider_task_record,
+                                            name='Shapefile Export',
+                                            celery_uid=self.celery_uid, status='SUCCESS',
+                                            result=self.downloadable_file)
+        self.run_zip_file = RunZipFile.objects.create(run=self.run, downloadable_file=self.downloadable_file)
+
+        self.data_provider_task_records = [self.data_provider_task_record]
+        self.run_zip_file.data_provider_task_records.set(self.data_provider_task_records)
+
+    def test_zipfiles_list_authenticated(self):
+        response = self.client.get(self.list_url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+    def test_zipfiles_list_unauthenticated(self):
+        self.client.force_authenticate(user=None)
+        response = self.client.get(self.list_url)
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+    def test_zipfiles_detail_retrieve(self):
+        url = reverse("api:zipfiles-detail", args=[self.run_zip_file.uid])
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(str(response.data.get("uid")), str(self.run_zip_file.uid))
+        self.assertEqual(str(response.data.get("run")), str(self.run_zip_file.run))
+
+        dptr_uids = [ dptr.uid for dptr in self.run_zip_file.data_provider_task_records.all() ]
+        self.assertEqual(str(response.data.get("data_provider_task_records")), str(dptr_uids))
+
+        self.assertEqual(response.data.get("downloadable_file"), self.run_zip_file.downloadable_file.id)
+
+        expected_url = f"http://testserver/download?uid={self.run_zip_file.downloadable_file.uid}"
+        self.assertEqual(response.data.get("url"), expected_url)
 
 
 class TestDataProviderTaskRecordViewSet(APITestCase):
@@ -1276,8 +1316,8 @@ class TestLicenseViewSet(APITestCase):
         self.assertEqual(expected_bad_url, bad_url)
         bad_response = self.client.get(bad_url);
         self.assertIsNotNone(bad_response)
-        self.assertEqual(400, bad_response.status_code)
-        self.assertEqual(str({'detail': _('Not found')}), bad_response.content.decode())
+        self.assertEqual(404, bad_response.status_code)
+        self.assertEqual('Not Found', bad_response.data['errors'][0]['title'])
 
 
 class TestUserDataViewSet(APITestCase):

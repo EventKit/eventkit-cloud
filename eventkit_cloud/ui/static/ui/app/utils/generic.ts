@@ -21,7 +21,7 @@ export function getHeaderPageInfo(response) {
         [, range] = response.headers['content-range'].split('-');
     }
 
-    return { nextPage, range };
+    return {nextPage, range};
 }
 
 export function isMgrsString(c) {
@@ -256,13 +256,13 @@ const defaultError = {
 // Expects the data portion of an error response
 export function ensureErrorShape(responseData: any) {
     // If responseData comes through falsey, we will assign it to the predefined default state.
-    let { errors } = (responseData || { errors: [{ ...defaultError }] });
+    let {errors} = (responseData || {errors: [{...defaultError}]});
     if (!!errors && !Array.isArray(errors)) {
         // If the errors property is not an array, convert it to one containing itself.
         errors = [errors];
     } else if (!errors) {
         // If errors does not exist at all on the response object, insert the default shape.
-        errors = [{ ...defaultError }];
+        errors = [{...defaultError}];
     }
     // For each error now present in errors, validate the existence of the properties we need
     for (let errorIndex = 0; errorIndex < errors.length; errorIndex += 1) {

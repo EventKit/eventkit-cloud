@@ -147,10 +147,11 @@ class TaskChainBuilder(object):
                         task_uid=task.get("task_uid"),
                         user_details=user_details,
                         locking_task_key=data_provider_task_record.uid,
+                        config=provider_task.provider.config,
                     )
                     .set(queue=queue_group, routing_key=queue_group)
                 )
-                projections = get_metadata(data_provider_task_record.uid)["projections"]
+                projections = get_metadata([data_provider_task_record.uid])["projections"]
 
                 for projection in projections:
                     # Source data is already in 4326, no need to reproject.
@@ -183,6 +184,7 @@ class TaskChainBuilder(object):
                             user_details=user_details,
                             locking_task_key=data_provider_task_record.uid,
                             projection=projection,
+                            config=provider_task.provider.config,
                         ).set(queue=queue_group, routing_key=queue_group)
                     )
 

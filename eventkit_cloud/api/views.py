@@ -1,29 +1,30 @@
+# -*- coding: utf-8 -*-
+
 """Provides classes for handling API requests."""
 import logging
+from audit_logging.models import AuditEvent
 
-# -*- coding: utf-8 -*-
-from collections import OrderedDict
 from datetime import datetime, timedelta
-from django.core.cache import cache
 from dateutil import parser
 from django.conf import settings
 from django.contrib.auth.models import User, Group
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.gis.geos import GEOSException, GEOSGeometry
+from django.core.cache import cache
 from django.db import transaction
 from django.db.models import Q
 from django.shortcuts import redirect, render
 from django.utils.translation import ugettext as _
 from django_filters.rest_framework import DjangoFilterBackend
 from notifications.models import Notification
-from rest_framework import exceptions
 from rest_framework import filters, permissions, status, views, viewsets, mixins
 from rest_framework.decorators import action
+from rest_framework.exceptions import APIException, NotFound, PermissionDenied
 from rest_framework.parsers import JSONParser
 from rest_framework.renderers import JSONRenderer
 from rest_framework.response import Response
 from rest_framework.serializers import ValidationError
-from audit_logging.models import AuditEvent
+
 from eventkit_cloud.api.filters import (
     ExportRunFilter,
     JobFilter,
@@ -39,30 +40,32 @@ from eventkit_cloud.api.renderers import (
     PlainTextRenderer,
 )
 from eventkit_cloud.api.serializers import (
-    ExportFormatSerializer,
-    ExportRunSerializer,
-    ProjectionSerializer,
-    ExportTaskRecordSerializer,
-    JobSerializer,
-    RegionMaskSerializer,
-    DataProviderTaskRecordSerializer,
-    RegionSerializer,
-    ListJobSerializer,
-    ProviderTaskSerializer,
-    DataProviderSerializer,
-    LicenseSerializer,
-    UserDataSerializer,
-    GroupSerializer,
-    UserJobActivitySerializer,
-    NotificationSerializer,
-    GroupUserSerializer,
     AuditEventSerializer,
     DataProviderRequestSerializer,
-    SizeIncreaseRequestSerializer,
+    DataProviderSerializer,
+    DataProviderTaskRecordSerializer,
+    ExportFormatSerializer,
+    ExportRunSerializer,
+    ExportTaskRecordSerializer,
     FilteredDataProviderSerializer,
     FilteredDataProviderTaskRecordSerializer,
+    GroupSerializer,
+    GroupUserSerializer,
+    JobSerializer,
+    LicenseSerializer,
+    ListJobSerializer,
+    NotificationSerializer,
+    ProjectionSerializer,
+    ProviderTaskSerializer,
+    RegionMaskSerializer,
+    RegionSerializer,
+    RunZipFileSerializer,
+    SizeIncreaseRequestSerializer,
+    UserDataSerializer,
+    UserJobActivitySerializer,
 )
 from eventkit_cloud.api.validators import validate_bbox_params, validate_search_bbox
+from eventkit_cloud.api.utils import get_run_zip_file
 from eventkit_cloud.core.helpers import (
     sendnotification,
     NotificationVerb,
@@ -74,6 +77,7 @@ from eventkit_cloud.core.models import (
     annotate_users_restricted,
     attribute_class_filter,
     annotate_groups_restricted,
+    get_group_counts,
 )
 from eventkit_cloud.jobs.models import (
     ExportFormat,
@@ -95,9 +99,10 @@ from eventkit_cloud.tasks.export_tasks import (
     cancel_export_provider_task,
 )
 from eventkit_cloud.tasks.models import (
+    DataProviderTaskRecord,
     ExportRun,
     ExportTaskRecord,
-    DataProviderTaskRecord,
+    RunZipFile,
     prefetch_export_runs,
 )
 from eventkit_cloud.tasks.task_factory import (
@@ -207,11 +212,7 @@ class JobViewSet(viewsets.ModelViewSet):
                 serializer = ListJobSerializer(queryset, many=True, context={"request": request})
                 return Response(serializer.data)
         if len(params.split(",")) < 4:
-            errors = OrderedDict()
-            errors["errors"] = {}
-            errors["errors"]["id"] = _("missing_bbox_parameter")
-            errors["errors"]["message"] = _("Missing bounding box parameter")
-            return Response(errors, status=status.HTTP_400_BAD_REQUEST)
+            raise ValidationError(code="missing_bbox_parameter", detail="Missing bounding box parameter")
         else:
             extents = params.split(",")
             data = {
@@ -233,7 +234,7 @@ class JobViewSet(viewsets.ModelViewSet):
                     return Response(serializer.data)
             except ValidationError as e:
                 logger.debug(e.detail)
-                return Response(e.detail, status=status.HTTP_400_BAD_REQUEST)
+                raise ValidationError(code="validation_error", detail=e.detail)
 
     def create(self, request, *args, **kwargs):
         """
@@ -386,18 +387,9 @@ class JobViewSet(viewsets.ModelViewSet):
                             job.provider_tasks.add(*provider_serializer.save())
                             job.save()
                         except ValidationError:
-                            status_code = status.HTTP_400_BAD_REQUEST
-                            error_data = {
-                                "errors": [
-                                    {
-                                        "status": status_code,
-                                        "title": _("Invalid provider task."),
-                                        "detail": _("A provider and an export format must be selected."),
-                                    }
-                                ]
-                            }
-                            return Response(error_data, status=status_code)
-
+                            raise ValidationError(
+                                code="invalid_provider_task", detail="A provider and an export format must be selected."
+                            )
                         # Check max area (skip for superusers)
                         if not self.request.user.is_superuser:
                             error_data = {"errors": []}
@@ -471,46 +463,23 @@ class JobViewSet(viewsets.ModelViewSet):
                             job.save()
                     except Exception as e:
                         logger.error(e)
-                        status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
-                        error_data = {
-                            "errors": [
-                                {
-                                    "status": status_code,
-                                    "title": _("Server Error"),
-                                    "detail": _("Error creating export job: {0}".format(e)),
-                                }
-                            ]
-                        }
-                        return Response(error_data, status=status_code)
+                        raise
                 else:
-                    status_code = status.HTTP_400_BAD_REQUEST
-                    error_data = {
-                        "errors": [
-                            {
-                                "status": status_code,
-                                "title": _("Invalid provider task"),
-                                "detail": _("One or more: {0} are invalid".format(provider_tasks)),
-                            }
-                        ]
-                    }
-                    return Response(error_data, status=status_code)
+                    # TODO: Specify which provider task is invalid.
+                    raise ValidationError(
+                        code="invalid_provider_task",
+                        detail=f"One or more provider tasks are invalid: {provider_tasks}.",
+                    )
 
                 try:
                     projection_db_objects = Projection.objects.filter(srid__in=projections)
                     job.projections.add(*projection_db_objects)
                     job.save()
                 except Exception:
-                    status_code = status.HTTP_400_BAD_REQUEST
-                    error_data = {
-                        "errors": [
-                            {
-                                "status": status_code,
-                                "title": _("Invalid projection specified."),
-                                "detail": _("One or more: {0} are invalid".format(projections)),
-                            }
-                        ]
-                    }
-                    return Response(error_data, status=status_code)
+                    # TODO: Specify which projection is invalid.
+                    raise ValidationError(
+                        code="invalid_projection", detail=f"One or more projections are invalid: {projections}."
+                    )
 
             # run the tasks
             job_uid = str(job.uid)
@@ -520,14 +489,9 @@ class JobViewSet(viewsets.ModelViewSet):
                 # run needs to be created so that the UI can be updated with the task list.
                 run_uid = create_run(job_uid=job_uid, user=request.user)
             except InvalidLicense as il:
-                status_code = status.HTTP_400_BAD_REQUEST
-                error_data = {"errors": [{"status": status_code, "title": _("Invalid License"), "detail": _(str(il))}]}
-                return Response(error_data, status=status_code)
-                # Run is passed to celery to start the tasks.
+                raise ValidationError(code="invalid_license", detail=str(il))
             except Unauthorized as ua:
-                status_code = status.HTTP_403_FORBIDDEN
-                error_data = {"errors": [{"status": status_code, "title": _("Invalid License"), "detail": _(str(ua))}]}
-                return Response(error_data, status=status_code)
+                raise PermissionDenied(code="permission_denied", detail=str(ua))
 
             running = JobSerializer(job, context={"request": request})
 
@@ -567,8 +531,8 @@ class JobViewSet(viewsets.ModelViewSet):
             return Response([{"detail": _(str(err))}], status.HTTP_400_BAD_REQUEST)
         # Run is passed to celery to start the tasks.
         except Unauthorized:
-            return Response(
-                [{"detail": "ADMIN permission is required to run this DataPack."}], status.HTTP_403_FORBIDDEN,
+            raise PermissionDenied(
+                code="permission_denied", detail="ADMIN permission is required to run this DataPack."
             )
         run = ExportRun.objects.get(uid=run_uid)
         if run:
@@ -637,7 +601,7 @@ class JobViewSet(viewsets.ModelViewSet):
                 msg = "unidentified job attribute - %s" % attribute
                 return Response([{"detail": msg}], status.HTTP_400_BAD_REQUEST)
 
-        # update permissions if present.  Insure we are not left with 0 admministrators
+        # update permissions if present.  Ensure we are not left with 0 admministrators
         # users and / or groups may be updated.  If no update info is provided, maintain
         # the current set of permissions.
 
@@ -733,7 +697,7 @@ class JobViewSet(viewsets.ModelViewSet):
         """
 
         if "permissions" not in request.data:
-            return Response([{"detail": "missing permissions attribute"}], status.HTTP_400_BAD_REQUEST,)
+            raise PermissionDenied(code="permission_denied", detail="Missing permissions attribute.")
 
         jobs = get_jobs_via_permissions(request.data["permissions"])
         serializer = ListJobSerializer(jobs, many=True, context={"request": request})
@@ -753,9 +717,7 @@ class JobViewSet(viewsets.ModelViewSet):
         jobs = JobPermission.userjobs(request.user, JobPermissionLevel.ADMIN.value)
 
         if not jobs.filter(id=job.id):
-            return Response(
-                [{"detail": "ADMIN permission is required to delete this job."}], status.HTTP_400_BAD_REQUEST,
-            )
+            raise PermissionDenied(code="permission_denied", detail="ADMIN permission is required to delete this job.")
 
         super(JobViewSet, self).destroy(request, *args, **kwargs)
         return Response(status=status.HTTP_204_NO_CONTENT)
@@ -843,7 +805,7 @@ class LicenseViewSet(viewsets.ReadOnlyModelViewSet):
             response["Content-Disposition"] = 'attachment; filename="{}.txt"'.format(slug)
             return response
         except Exception:
-            return Response([{"detail": _("Not found")}], status=status.HTTP_400_BAD_REQUEST)
+            raise NotFound(code="not_found", detail="Could not find requested license.")
 
     def list(self, request, slug=None, *args, **kwargs):
         """
@@ -894,11 +856,11 @@ class DataProviderViewSet(viewsets.ReadOnlyModelViewSet):
             return Response(perform_provider_check(provider, geojson), status=status.HTTP_200_OK)
 
         except DataProvider.DoesNotExist:
-            return Response([{"detail": _("Provider not found")}], status=status.HTTP_400_BAD_REQUEST,)
+            raise NotFound(code="not_found", detail="Could not find the requested provider.")
 
         except Exception as e:
             logger.error(e)
-            return Response([{"detail": _("Internal Server Error")}], status=status.HTTP_500_INTERNAL_SERVER_ERROR,)
+            raise APIException("server_error", detail="Internal server error.")
 
     def list(self, request, slug=None, *args, **kwargs):
         """
@@ -1074,7 +1036,7 @@ class ExportRunViewSet(viewsets.ModelViewSet):
         try:
             self.validate_licenses(queryset, user=request.user)
         except InvalidLicense as il:
-            return Response([{"detail": _(str(il))}], status.HTTP_400_BAD_REQUEST)
+            raise ValidationError(code="invalid_license", detail=str(il))
         serializer = self.get_serializer(queryset, many=True, context={"request": request})
         return Response(serializer.data, status=status.HTTP_200_OK)
 
@@ -1110,7 +1072,7 @@ class ExportRunViewSet(viewsets.ModelViewSet):
         try:
             self.validate_licenses(queryset, user=request.user)
         except InvalidLicense as il:
-            return Response([{"detail": _(str(il))}], status.HTTP_400_BAD_REQUEST)
+            raise ValidationError(code="invalid_license", detail=str(il))
         # This is to display deleted runs on the status and download
         if not request.query_params.get("job_uid"):
             queryset = queryset.filter(deleted=False)
@@ -1147,7 +1109,7 @@ class ExportRunViewSet(viewsets.ModelViewSet):
                 queryset = queryset.filter(job__the_geom__intersects=geom)
             except ValidationError as e:
                 logger.debug(e.detail)
-                return Response(e.detail, status=status.HTTP_400_BAD_REQUEST)
+                raise ValidationError(code="validation_error", detail=e.detail)
 
         search_bbox = self.request.query_params.get("bbox", None)
         if search_bbox is not None and len(search_bbox.split(",")) == 4:
@@ -1166,7 +1128,7 @@ class ExportRunViewSet(viewsets.ModelViewSet):
 
             except ValidationError as e:
                 logger.debug(e.detail)
-                return Response(e.detail, status=status.HTTP_400_BAD_REQUEST)
+                raise ValidationError(code="validation_error", detail=e.detail)
 
         search_term = self.request.query_params.get("search_term", None)
         if search_term is not None:
@@ -1269,6 +1231,54 @@ class ExportRunViewSet(viewsets.ModelViewSet):
         return super(ExportRunViewSet, self).update(self, request, uid, *args, **kwargs)
 
 
+class RunZipFileViewSet(viewsets.ModelViewSet):
+    serializer_class = RunZipFileSerializer
+    permission_classes = (permissions.IsAuthenticated,)
+    lookup_field = "uid"
+    http_method_names = ["get", "post", "head", "options"]
+
+    def get_queryset(self):
+        jobs = JobPermission.userjobs(self.request.user, "READ")
+        queryset = RunZipFile.objects.filter(
+            Q(run__job__in=jobs) | Q(run__job__visibility=VisibilityState.PUBLIC.value)
+        ).filter()
+
+        query_params = self.request.query_params
+
+        run_uid = query_params.get("run_uid")
+        if run_uid is not None:
+            queryset = queryset.filter(run__uid=run_uid)
+
+        data_provider_task_record_uids = query_params.get("data_provider_task_record_uids", [])
+        if data_provider_task_record_uids:
+            data_provider_task_record_uids = data_provider_task_record_uids.split(",")
+            queryset = get_run_zip_file(field="uid", values=data_provider_task_record_uids)
+
+        return queryset
+
+    def list(self, request, *args, **kwargs):
+        """
+        List all zipfiles.
+        * return: A list of zipfiles.
+        """
+        run_zip_files, filtered_run_zip_files = attribute_class_filter(self.get_queryset(), self.request.user)
+        serializer = self.get_serializer(run_zip_files, many=True, context={"request": request})
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+    def retrieve(self, request, uid=None, *args, **kwargs):
+        """
+        Look up a single zipfile by uid.
+        * uid: optional lookup field
+        * return: The data provider with the given uid.
+        """
+        run_zip_files, filtered_run_zip_files = attribute_class_filter(
+            self.get_queryset().filter(uid=uid), self.request.user
+        )
+        if run_zip_files:
+            serializer = self.get_serializer(run_zip_files.first(), context={"request": request})
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+
 class ExportTaskViewSet(viewsets.ReadOnlyModelViewSet):
     """
     Provides List and Retrieve endpoints for ExportTasks.
@@ -1363,6 +1373,7 @@ class DataProviderTaskRecordViewSet(viewsets.ModelViewSet):
         cancel_export_provider_task.run(
             data_provider_task_uid=data_provider_task_record.uid, canceling_username=request.user.username,
         )
+
         return Response({"success": True}, status=status.HTTP_200_OK)
 
     def list(self, request, *args, **kwargs):
@@ -1627,7 +1638,7 @@ class UserJobActivityViewSet(mixins.CreateModelMixin, mixins.ListModelMixin, vie
             job = Job.objects.get(uid=job_uid)
             UserJobActivity.objects.create(user=self.request.user, job=job, type=UserJobActivity.VIEWED)
         else:
-            raise exceptions.ValidationError("Activity type '%s' is invalid." % activity_type)
+            raise ValidationError(code="invalid_activity_type", detail=f"Activity type {activity_type} is invalid.")
 
         return Response({}, content_type="application/json", status=status.HTTP_200_OK)
 
@@ -1690,9 +1701,37 @@ class GroupViewSet(viewsets.ModelViewSet):
         if request.query_params.get("job_uid"):
             job = Job.objects.get(uid=request.query_params["job_uid"])
         queryset = JobPermission.get_orderable_queryset_for_job(job, Group)
-        total = queryset.count()
+
         filtered_queryset = self.filter_queryset(queryset)
         filtered_queryset = annotate_groups_restricted(filtered_queryset, job)
+
+        # Total number of inspected groups
+        total = queryset.count()
+        # Query for a dictionary containing the number of groups this user is a member of and groups
+        # this user is an admin in.
+        totals = get_group_counts(filtered_queryset, request.user)
+        admin_total = totals.get("admin")
+        member_total = totals.get("member")
+        # 'other' groups are any groups that the user does not have permissions in, i.e. they are not a member.
+        # Users cannot be admin in a group that they are not a member of, so this is a safe calculation.
+        other_total = total - member_total
+
+        permission_level = request.query_params.get("permission_level")
+        if permission_level == "admin":
+            filtered_queryset = filtered_queryset.filter(
+                group_permissions__user=request.user, group_permissions__permission=GroupPermissionLevel.ADMIN.value
+            )
+        elif permission_level == "member":
+            filtered_queryset = filtered_queryset.filter(
+                group_permissions__user=request.user, group_permissions__permission=GroupPermissionLevel.MEMBER.value
+            )
+        elif permission_level == "none":
+            filtered_queryset = filtered_queryset.exclude(
+                group_permissions__user=request.user, group_permissions__permission=GroupPermissionLevel.ADMIN.value
+            ).exclude(
+                group_permissions__user=request.user, group_permissions__permission=GroupPermissionLevel.MEMBER.value
+            )
+
         page = None
         if not request.query_params.get("disable_page"):
             page = self.paginate_queryset(filtered_queryset)
@@ -1703,7 +1742,10 @@ class GroupViewSet(viewsets.ModelViewSet):
             serializer = self.get_serializer(filtered_queryset, many=True, context={"request": request})
             response = Response(serializer.data, status=status.HTTP_200_OK)
 
-        response["Total-Groups"] = total
+        response["total-groups"] = total
+        response["admin-groups"] = admin_total
+        response["member-groups"] = member_total
+        response["other-groups"] = other_total
         return response
 
     @transaction.atomic
@@ -1925,7 +1967,7 @@ class GroupViewSet(viewsets.ModelViewSet):
         try:
             group = Group.objects.get(id=id)
         except Group.DoesNotExist:
-            return Response(status=status.HTTP_404_NOT_FOUND)
+            raise NotFound(code="not_found", detail="Could not find the requested group.")
 
         serializer = GroupUserSerializer(group, context={"request": request})
         return Response(data=serializer.data, status=status.HTTP_200_OK)
@@ -2121,7 +2163,6 @@ class EstimatorView(views.APIView):
         if request.query_params.get("slugs", None):
             estimator = AoiEstimator(bbox=bbox, bbox_srs=srs, min_zoom=min_zoom, max_zoom=max_zoom)
             for slug in request.query_params.get("slugs").split(","):
-
                 size = estimator.get_estimate_from_slug(AoiEstimator.Types.SIZE, slug)[0]
                 time = estimator.get_estimate_from_slug(AoiEstimator.Types.TIME, slug)[0]
                 payload += [
@@ -2144,8 +2185,9 @@ def get_models(model_list, model_object, model_index):
             model = model_object.objects.get(**{model_index: model_id})
             models.append(model)
         except model_object.DoesNotExist:
-            logger.warn(
-                "%s with %s: %s does not exist", str(model_object), model_index, model_id,
+            logger.warn(f"{str(model_object)} with {model_index}: {model_id} does not exist.")
+            raise NotFound(
+                code="not_found", detail=f"{str(model_object)} with {model_index}: {model_id} does not exist."
             )
     return models
 
@@ -2189,20 +2231,23 @@ def geojson_to_geos(geojson_geom, srid=None):
     :return: A GEOSGeometry object
     """
     if not geojson_geom:
-        raise exceptions.ValidationError("No geojson geometry string supplied")
+        raise ValidationError(code="missing_geojson", detail="No geojson geometry string supplied.")
     if not srid:
         srid = 4326
     try:
         geom = GEOSGeometry(geojson_geom, srid=srid)
     except GEOSException:
-        raise exceptions.ValidationError("Could not convert geojson geometry, check that your geometry is valid")
+        raise ValidationError(
+            code="invalid_geometry", detail="Could not convert geojson geometry, check that your geometry is valid."
+        )
     if not geom.valid:
-        raise exceptions.ValidationError("GEOSGeometry invalid, check that your geojson geometry is valid")
+        raise ValidationError(
+            code="invalid_geometry", detail="GEOSGeometry invalid, check that your geojson geometry is valid."
+        )
     return geom
 
 
 def get_jobs_via_permissions(permissions):
-
     groups = Group.objects.filter(name__in=permissions.get("groups", []))
     group_query = [
         Q(permissions__content_type=ContentType.objects.get_for_model(Group)),

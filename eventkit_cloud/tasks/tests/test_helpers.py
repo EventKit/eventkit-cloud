@@ -34,25 +34,25 @@ class TestHelpers(TestCase):
             self.assertEqual(parent_path, os.getcwd())
         self.assertEqual(current_path, os.getcwd())
 
-    @patch('eventkit_cloud.tasks.helpers.sleep')
+    @patch('eventkit_cloud.tasks.helpers.time.sleep')
     @patch('eventkit_cloud.tasks.helpers.os')
-    def test_progessive_kill(self, mock_os, mock_sleep):
+    def test_progressive_kill(self, mock_os, mock_sleep):
         pid = 1
         # Test no PID.
-        mock_os.kill.side_effect = [OSError()]
+        mock_os.killpg.side_effect = [OSError()]
         progressive_kill(pid)
         mock_os.reset_mock
 
         # Test kill with SIGTERM
-        mock_os.kill.side_effect = [None, OSError()]
+        mock_os.killpg.side_effect = [None, OSError()]
         progressive_kill(pid)
-        mock_os.kill.has_calls([call(pid, signal.SIGTERM)])
+        mock_os.killpg.has_calls([call(pid, signal.SIGTERM)])
         mock_os.reset_mock
 
         # Test kill with SIGKILL
-        mock_os.kill.side_effect = [None, None]
+        mock_os.killpg.side_effect = [None, None]
         progressive_kill(pid)
-        mock_os.kill.has_calls([call(pid, signal.SIGTERM), call(pid, signal.SIGTERM)])
+        mock_os.killpg.has_calls([call(pid, signal.SIGTERM), call(pid, signal.SIGTERM)])
         mock_os.reset_mock
 
     def test_get_style_files(self):
@@ -99,23 +99,20 @@ class TestHelpers(TestCase):
     @patch('eventkit_cloud.tasks.helpers.get_cached_model')
     def test_get_download_filename(self, mock_get_cached_model):
         name = "test_datapack"
-        date = timezone.now()
         ext = ".gpkg"
-        descriptors = ["osm"]
+        descriptors = ["test-descriptor"]
         data_provider_slug = "osm"
         label = "testlabel"
 
-        expected_date = date.strftime("%Y%m%d")
         expected_descriptors_string = "-".join(filter(None, descriptors))
 
         mocked_data_provider = MagicMock()
         mocked_data_provider.label = "testlabel"
         mock_get_cached_model.return_value = mocked_data_provider
 
-        expected_value = f"{name}-{expected_descriptors_string}-{label}-{expected_date}{ext}"
+        expected_value = f"{name}-{expected_descriptors_string}-{label}{ext}"
         returned_value = get_download_filename(
             name=name,
-            time=date,
             ext=ext,
             additional_descriptors=descriptors,
             data_provider_slug=data_provider_slug
@@ -157,7 +154,12 @@ class TestHelpers(TestCase):
         mocked_provider_task.provider.slug = expected_provider_slug = 'example_slug'
         mocked_provider_task.tasks.filter.return_value = mocked_provider_subtasks
         mocked_provider_task.uid = expected_provider_task_uid = '5678'
-        mock_DataProviderTaskRecord.objects.select_related().prefetch_related().get.return_value = mocked_provider_task
+
+        mocked_queryset = MagicMock()
+        mocked_queryset.return_value = [mocked_provider_task]
+        mocked_queryset.first.return_value = mocked_provider_task
+        mocked_queryset.__iter__.return_value = [mocked_provider_task]
+        mock_DataProviderTaskRecord.objects.select_related().prefetch_related().filter.return_value = mocked_queryset
 
         mocked_data_provider = MagicMock()
         mocked_data_provider.slug = expected_provider_slug
@@ -231,7 +233,7 @@ class TestHelpers(TestCase):
             "run_uid": run_uid,
             "url": "{}/status/{}".format(getattr(settings, 'SITE_URL'), expected_job_uid)
         }
-        returned_metadata = get_metadata(mocked_provider_task.uid)
+        returned_metadata = get_metadata([mocked_provider_task.uid])
         self.maxDiff = None
         self.assertEqual(expected_metadata, returned_metadata)
 

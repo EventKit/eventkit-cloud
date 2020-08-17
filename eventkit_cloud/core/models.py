@@ -8,7 +8,7 @@ from django.contrib.auth.models import User, Group
 from django.contrib.gis.db import models
 from django.core.cache import cache
 from django.db import transaction
-from django.db.models import QuerySet, Case, Value, When, Q
+from django.db.models import QuerySet, Case, Value, When, Q, Count
 from django.utils import timezone
 from enum import Enum
 from notifications.models import Notification
@@ -154,7 +154,11 @@ class GroupPermission(TimeStampedModelMixin):
 
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     group = models.ForeignKey(Group, on_delete=models.CASCADE, related_name="group_permissions")
-    permission = models.CharField(choices=[("NONE", "None"), ("MEMBER", "Member"), ("ADMIN", "Admin")], max_length=10,)
+    permission = models.CharField(choices=[("MEMBER", "Member"), ("ADMIN", "Admin")], max_length=10,)
+
+    # A user should only have one type of permission per group.
+    class Meta:
+        unique_together = ["user", "group", "permission"]
 
     def __str__(self):
         return "{0}: {1}: {2}".format(self.user, self.group.name, self.permission)
@@ -402,6 +406,16 @@ def annotate_groups_restricted(groups: QuerySet, job):
     return groups
 
 
+def get_group_counts(groups_queryset, user):
+    # Computes against all groups where the inspected group has permissions pertaining to this user
+    # counts the number of filtered groups where the permission is ADMIN
+    # counts the number of filtered groups where the permission is MEMBER
+    return groups_queryset.filter(group_permissions__user=user).aggregate(
+        admin=Count(Case(When(Q(group_permissions__permission=GroupPermissionLevel.ADMIN.value), then=1))),
+        member=Count(Case(When(Q(group_permissions__permission=GroupPermissionLevel.MEMBER.value), then=1))),
+    )
+
+
 def attribute_class_filter(queryset: QuerySet, user: User = None) -> Tuple[QuerySet, QuerySet]:
 
     if not user:
@@ -411,6 +425,7 @@ def attribute_class_filter(queryset: QuerySet, user: User = None) -> Tuple[Query
     restricted_attribute_classes = AttributeClass.objects.exclude(users=user)
     attribute_class_queries = {
         "ExportRun": {"job__provider_tasks__provider__attribute_class__in": restricted_attribute_classes},
+        "RunZipFile": {"data_provider_task_records__provider__attribute_class__in": restricted_attribute_classes},
         "Job": {"provider_tasks__provider__attribute_class__in": restricted_attribute_classes},
         "DataProvider": {"attribute_class__in": restricted_attribute_classes},
         "DataProviderTask": {"provider__attribute_class__in": restricted_attribute_classes},
