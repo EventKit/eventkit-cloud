@@ -351,7 +351,7 @@ function CreateDataPackButton(props: Props) {
                 {...(() => {
                     // If the zip file is available, set the href of the button to the URL.
                     const extraProps = {} as { href: string };
-                    if (isZipAvailable()) {
+                    if (buttonEnabled && isZipAvailable()) {
                         extraProps.href = zipAvailableResponse.data[0].url;
                     }
                     return extraProps;
