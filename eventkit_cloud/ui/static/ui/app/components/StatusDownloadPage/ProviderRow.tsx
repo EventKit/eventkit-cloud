@@ -159,12 +159,7 @@ export function ProviderRow(props: Props) {
     const [providerDesc, setProviderDesc] = useState('');
     const [providerDialogOpen, setProviderDialogOpen] = useState(false);
 
-    let cancelMenuDisabled;
-    if (providerTask.status === 'PENDING' || providerTask.status === 'RUNNING') {
-        cancelMenuDisabled = false;
-    } else {
-        cancelMenuDisabled = true;
-    }
+    const cancelMenuDisabled = !(providerTask.status === 'PENDING' || providerTask.status === 'RUNNING');
 
     const [, requestCall] = useAsyncRequest();
     const makeRequest = () => {
