@@ -13,8 +13,13 @@ export interface ErrorDialogProps {
     }>;
     name: string;
     onRetryClicked: () => void;
+    disabled?: boolean;
     theme: Eventkit.Theme & Theme;
 }
+
+ErrorDialog.defualtProps = {
+    disabled: false,
+} as ErrorDialogProps;
 
 export function ErrorDialog(props: ErrorDialogProps) {
 
@@ -100,35 +105,34 @@ export function ErrorDialog(props: ErrorDialogProps) {
                     title={renderTitle()}
                     onClose={setClosed}
                     actionsStyle={{
-                        paddingTop: '15px',
-                        margin: 'auto',
-                        flexDirection: 'initial',
-                        justifyContent: 'initial',
-                        paddingBottom: '20px',
+                        justifyContent: 'end',
                     }}
                     actions={
-                        [(
-                            <Button
-                                key="retry"
-                                variant="contained"
-                                color="primary"
-                                onClick={() => {
-                                    props.onRetryClicked()
-                                    setClosed();
-                                }}
-                            >
-                                Retry
-                            </Button>
-                        ), (
-                            <Button
-                                key="close"
-                                variant="contained"
-                                color="primary"
-                                onClick={setClosed}
-                            >
-                                Close
-                            </Button>
-                        )]
+                        [
+                            (
+                                <Button
+                                    key="close"
+                                    variant="contained"
+                                    color="primary"
+                                    onClick={setClosed}
+                                >
+                                    Close
+                                </Button>
+                            ),
+                            (
+                                <Button
+                                    key="retry"
+                                    variant="contained"
+                                    color="primary"
+                                    onClick={() => {
+                                        props.onRetryClicked()
+                                        setClosed();
+                                    }}
+                                >
+                                    Retry
+                                </Button>
+                            ),
+                        ]
                     }
                 >
                     {renderErrors()}

@@ -13,7 +13,7 @@ import {
 import {isWidthUp} from "@material-ui/core/withWidth";
 import withWidth from "@material-ui/core/withWidth/withWidth";
 import {Breakpoint} from "@material-ui/core/styles/createBreakpoints";
-import {useAsyncRequest} from "../../utils/hooks/api";
+import {ApiStatuses, useAsyncRequest} from "../../utils/hooks/api";
 import {renderIf} from "../../utils/renderIf";
 
 interface Props {
@@ -253,7 +253,7 @@ export function RequestDataSource(props: Props) {
                 margin: '10px',
             }
         }
-        if (!status) {
+        if (ApiStatuses.isNotFired(status)) {
             // Status is undefined, meaning we haven't submitted anything yet, so we need the submit button to display
             dialogProps['actions'] = [(
                 <Button
@@ -288,11 +288,11 @@ export function RequestDataSource(props: Props) {
             {...getDialogProps()}
         >
             <div className={`${!isSmallScreen() ? classes.outerContainer : classes.outerContainerSm}`}>
-                {(!status || status === 'success') && renderMainBody()}
-                {status === 'pending' && (
+                {renderIf(renderMainBody, ApiStatuses.isNotFired(status) || ApiStatuses.isSuccess(status))}
+                {renderIf(() => (
                     <CircularProgress size={50}/>
-                )}
-                {status === 'error' && renderErrorMessage()}
+                ), ApiStatuses.isFetching(status))}
+                {renderIf(renderErrorMessage, ApiStatuses.isError(status))}
             </div>
         </BaseDialog>
     ), open);

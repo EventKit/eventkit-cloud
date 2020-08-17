@@ -5,7 +5,7 @@ import {Theme, withStyles, withTheme} from "@material-ui/core/styles";
 import CloudDownload from "@material-ui/icons/CloudDownload";
 import {useAsyncRequest, ApiStatuses, FileStatus} from "../../utils/hooks/api";
 import {getCookie} from "../../utils/generic";
-import {useRunContext} from "./RunFileContext";
+import {useRunContext} from "./context/RunFile";
 import {useEffect, useRef, useState} from "react";
 import {DepsHashers, usePrevious} from "../../utils/hooks/hooks";
 import {CircularProgress, IconButton} from "@material-ui/core";
@@ -267,13 +267,14 @@ function CreateDataPackButton(props: Props) {
     // Whether the button is enabled in a manner that triggers an action (download/POST)
     // This will enable the MUI button, but we also allow clicks
     function shouldEnableButton() {
-        if (isZipAvailable()) {
-            return true;
-        }
         if (isRunCanceled()) {
             return false;
         }
-        return isRunCompleted() && requestZipFileStatus === ApiStatuses.hookActions.NOT_FIRED;
+        const completed = isRunCompleted();
+        if (completed && isZipAvailable()) {
+            return true;
+        }
+        return completed && requestZipFileStatus === ApiStatuses.hookActions.NOT_FIRED;
     }
 
     const buttonEnabled = shouldEnableButton();

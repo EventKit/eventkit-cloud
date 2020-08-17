@@ -19,6 +19,7 @@ import TaskError from '../../components/StatusDownloadPage/TaskError';
 import BaseDialog from '../../components/Dialog/BaseDialog';
 import LicenseRow from '../../components/StatusDownloadPage/LicenseRow';
 import { ProviderRow } from '../../components/StatusDownloadPage/ProviderRow';
+import ProviderTaskErrorDialog from "../../components/StatusDownloadPage/ProviderTaskErrorDialog";
 
 describe('ProviderRow component', () => {
     let shallow;
@@ -254,7 +255,11 @@ describe('ProviderRow component', () => {
         ));
         props.providerTask.status = 'INCOMPLETE';
         expect(wrapper.instance().getProviderStatus(props.providerTask)).toEqual((
-            <ProviderError providerTask={props.providerTask} key={props.providerTask.uid} onRetryClicked={() => undefined}/>
+            <ProviderTaskErrorDialog
+                providerTask={props.providerTask}
+                key={props.providerTask.uid}
+                onRetryClicked={() => undefined}
+            />
         ));
         props.providerTask.status = 'PENDING';
         expect(wrapper.instance().getProviderStatus(props.providerTask)).toEqual('WAITING');

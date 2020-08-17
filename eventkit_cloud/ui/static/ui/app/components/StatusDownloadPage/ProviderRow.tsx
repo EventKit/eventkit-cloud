@@ -28,6 +28,7 @@ import {getCookie} from "../../utils/generic";
 import {connect} from "react-redux";
 import history from "../../utils/history";
 import ProviderTaskErrorDialog from "./ProviderTaskErrorDialog";
+import {useDataCartContext} from "./context/DataCart";
 
 const jss = (theme: Eventkit.Theme & Theme) => createStyles({
     insetColumn: {
@@ -149,13 +150,27 @@ interface Props {
 }
 
 export function ProviderRow(props: Props) {
+
+    const {classes, providerTask, job} = props;
+    const {setFetching} = useDataCartContext();
+
     const [openTable, setOpenTable] = useState(false);
     const [fileSize, setFileSize] = useState(getFileSize(props.providerTask.tasks));
     const [providerDesc, setProviderDesc] = useState('');
     const [providerDialogOpen, setProviderDialogOpen] = useState(false);
 
-    const [{status, response}, requestCall] = useAsyncRequest();
+    let cancelMenuDisabled;
+    if (providerTask.status === 'PENDING' || providerTask.status === 'RUNNING') {
+        cancelMenuDisabled = false;
+    } else {
+        cancelMenuDisabled = true;
+    }
+
+    const [, requestCall] = useAsyncRequest();
     const makeRequest = () => {
+        if (!cancelMenuDisabled) {
+            return;
+        }
         requestCall({
             url: `/api/jobs/${props.job.uid}/run_providers`,
             method: 'post',
@@ -163,7 +178,7 @@ export function ProviderRow(props: Props) {
                 data_provider_slugs: [props.providerTask.provider.slug]
             },
             headers: {'X-CSRFToken': getCookie('csrftoken')},
-        }).then(() => props.rerunExportPartial());
+        }).then(() => setFetching());
     };
 
     useEffect(() => {
@@ -242,7 +257,12 @@ export function ProviderRow(props: Props) {
                     />
                 );
             case 'FAILED':
-                return <ErrorDialog errors={task.errors} onRetryClicked={makeRequest} name={task.name}/>;
+                return <ErrorDialog
+                    errors={task.errors}
+                    onRetryClicked={makeRequest}
+                    name={task.name}
+                    disabled={!cancelMenuDisabled}
+                />;
             case 'PENDING':
                 return 'WAITING';
             case 'RUNNING':
@@ -285,6 +305,7 @@ export function ProviderRow(props: Props) {
                         providerTask={provider}
                         onRetryClicked={makeRequest}
                         key={provider.uid}
+                        disabled={!cancelMenuDisabled}
                     />
                 );
             case 'PENDING':
@@ -403,10 +424,6 @@ export function ProviderRow(props: Props) {
         setProviderDialogOpen(true);
     }
 
-    const {classes} = props;
-    const {providerTask} = props;
-    const {job} = props;
-
     const dataProviderTask = job && job.provider_tasks.find(obj => obj.provider === providerTask.name);
     const propsProvider = props.providers.find(obj => obj.slug === providerTask.provider.slug);
 
@@ -427,18 +444,11 @@ export function ProviderRow(props: Props) {
 
     const menuItems = [];
 
-    let cancelMenuDisabled;
-    if (providerTask.status === 'PENDING' || providerTask.status === 'RUNNING') {
-        cancelMenuDisabled = false;
-    } else {
-        cancelMenuDisabled = true;
-    }
-
     menuItems.push(
         <MenuItem
             className="qa-ProviderRow-MenuItem-rerun"
             key="rerun"
-            disabled={false}
+            disabled={!cancelMenuDisabled}
             style={{fontSize: '12px'}}
             onClick={() => {
                 makeRequest()

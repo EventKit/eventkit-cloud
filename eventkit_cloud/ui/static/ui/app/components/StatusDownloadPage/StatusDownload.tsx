@@ -1,9 +1,9 @@
 import * as PropTypes from 'prop-types';
 import * as React from 'react';
-import { connect } from 'react-redux';
-import { withTheme, Theme } from '@material-ui/core/styles';
-import withWidth, { isWidthUp } from '@material-ui/core/withWidth';
-import Joyride, { Step } from 'react-joyride';
+import {connect} from 'react-redux';
+import {withTheme, Theme} from '@material-ui/core/styles';
+import withWidth, {isWidthUp} from '@material-ui/core/withWidth';
+import Joyride, {Step} from 'react-joyride';
 import Help from '@material-ui/icons/Help';
 import Paper from '@material-ui/core/Paper';
 import ButtonBase from '@material-ui/core/ButtonBase';
@@ -20,17 +20,18 @@ import {
     rerunExport,
     clearReRunInfo,
 } from '../../actions/datacartActions';
-import { updateExpiration, getDatacartDetails, clearDataCartDetails, deleteRun } from '../../actions/datapackActions';
-import { getProviders, cancelProviderTask } from '../../actions/providerActions';
-import { viewedJob } from '../../actions/userActivityActions';
+import {updateExpiration, getDatacartDetails, clearDataCartDetails, deleteRun} from '../../actions/datapackActions';
+import {getProviders, cancelProviderTask} from '../../actions/providerActions';
+import {viewedJob} from '../../actions/userActivityActions';
 import CustomScrollbar from '../common/CustomScrollbar';
 import BaseDialog from '../Dialog/BaseDialog';
-import { joyride } from '../../joyride.config';
-import { makeDatacartSelector } from '../../selectors/runSelector';
-import { Location } from 'history';
-import { Breakpoint } from '@material-ui/core/styles/createBreakpoints';
+import {joyride} from '../../joyride.config';
+import {makeDatacartSelector} from '../../selectors/runSelector';
+import {Location} from 'history';
+import {Breakpoint} from '@material-ui/core/styles/createBreakpoints';
 import history from "../../utils/history";
-import { getJobDetails } from "../../utils/generic"
+import {getJobDetails} from "../../utils/generic"
+import {DataCartProvider} from "./context/DataCart";
 
 export interface Props {
     runs: Eventkit.FullRun[];
@@ -75,6 +76,7 @@ export class StatusDownload extends React.Component<Props, State> {
     private timer: number;
     private joyride: Joyride;
     private scrollbar;
+
     constructor(props: Props) {
         super(props);
         this.callback = this.callback.bind(this);
@@ -120,7 +122,7 @@ export class StatusDownload extends React.Component<Props, State> {
             history.push('/exports');
         }
         if (this.props.exportReRun.error && !prevProps.exportReRun.error) {
-            this.setState({ error: this.props.exportReRun.error });
+            this.setState({error: this.props.exportReRun.error});
         }
         if (this.props.exportReRun.fetched && !prevProps.exportReRun.fetched) {
             this.props.getDatacartDetails(this.props.match.params.jobuid);
@@ -134,7 +136,7 @@ export class StatusDownload extends React.Component<Props, State> {
         }
         if (this.props.detailsFetched && !prevProps.detailsFetched) {
             if (this.state.isLoading) {
-                this.setState({ isLoading: false });
+                this.setState({isLoading: false});
             }
 
             // If no data returned from API we stop here
@@ -215,9 +217,13 @@ export class StatusDownload extends React.Component<Props, State> {
 
         const messages = this.state.error.map((error, ix) => (
             <div className="StatusDownload-error-container" key={error.detail}>
-                { ix > 0 ? <Divider style={{ marginBottom: '10px' }} /> : null }
+                {ix > 0 ? <Divider style={{marginBottom: '10px'}}/> : null}
                 <p className="StatusDownload-error-title">
-                    <Warning style={{ fill: this.props.theme.eventkit.colors.warning, verticalAlign: 'bottom', marginRight: '10px' }} />
+                    <Warning style={{
+                        fill: this.props.theme.eventkit.colors.warning,
+                        verticalAlign: 'bottom',
+                        marginRight: '10px'
+                    }}/>
                     <strong>
                         ERROR
                     </strong>
@@ -231,7 +237,7 @@ export class StatusDownload extends React.Component<Props, State> {
     }
 
     private handleWalkthroughClick() {
-        this.setState({ isRunning: true });
+        this.setState({isRunning: true});
     }
 
     private startTimer() {
@@ -242,7 +248,7 @@ export class StatusDownload extends React.Component<Props, State> {
     }
 
     private clearError() {
-        this.setState({ error: null });
+        this.setState({error: null});
     }
 
     private joyrideAddSteps(steps: Step[]) {
@@ -257,16 +263,16 @@ export class StatusDownload extends React.Component<Props, State> {
         }
 
         this.setState((currentState: State) => {
-            const nextState = { ...currentState };
+            const nextState = {...currentState};
             nextState.steps = nextState.steps.concat(newSteps);
             return nextState;
         });
     }
 
     private callback(data: any) {
-        const { action, type, step } = data;
+        const {action, type, step} = data;
         if (action === 'close' || action === 'skip' || type === 'finished') {
-            this.setState({ isRunning: false });
+            this.setState({isRunning: false});
             this.joyride.reset(true);
             window.location.hash = '';
         }
@@ -276,10 +282,10 @@ export class StatusDownload extends React.Component<Props, State> {
     }
 
     render() {
-        const { colors, images } = this.props.theme.eventkit;
+        const {colors, images} = this.props.theme.eventkit;
 
-        const { steps, isRunning } = this.state;
-        const pageTitle = <div style={{ display: 'inline-block', paddingRight: '10px' }}>Status & Download </div>;
+        const {steps, isRunning} = this.state;
+        const pageTitle = <div style={{display: 'inline-block', paddingRight: '10px'}}>Status & Download </div>;
 
         const marginPadding = this.getMarginPadding();
         const styles = {
@@ -351,7 +357,7 @@ export class StatusDownload extends React.Component<Props, State> {
                 onClick={this.handleWalkthroughClick}
                 style={styles.tourButton}
             >
-                <Help style={styles.tourIcon} />
+                <Help style={styles.tourIcon}/>
                 Page Tour
             </ButtonBase>
         );
@@ -363,10 +369,10 @@ export class StatusDownload extends React.Component<Props, State> {
                 return (
                     <div
                         key="no-datapack"
-                        style={{ textAlign: 'center', padding: '30px' }}
+                        style={{textAlign: 'center', padding: '30px'}}
                         className="qa-StatusDownload-DeletedDatapack"
                     >
-                        <ErrorOutline style={styles.notFoundIcon} />
+                        <ErrorOutline style={styles.notFoundIcon}/>
                         <span style={styles.notFoundText}>This DataPack has been deleted.</span>
                     </div>
                 );
@@ -395,72 +401,83 @@ export class StatusDownload extends React.Component<Props, State> {
             details.push((
                 <div
                     key="no-datapack"
-                    style={{ textAlign: 'center', padding: '30px' }}
+                    style={{textAlign: 'center', padding: '30px'}}
                     className="qa-StatusDownload-NoDatapack"
                 >
-                    <ErrorOutline style={styles.notFoundIcon} />
+                    <ErrorOutline style={styles.notFoundIcon}/>
                     <span style={styles.notFoundText}>No DataPack Found</span>
                 </div>
             ));
         }
 
         return (
-            <div className="qa-StatusDownload-div-root" style={styles.root}>
-                <PageHeader title={pageTitle} className="qa-StatusDownload-PageHeader">
-                    {iconElementRight}
-                </PageHeader>
-                {this.props.runDeletion.deleting ?
-                    <PageLoading background="transparent" partial style={{ position: 'absolute', zIndex: 10 }} />
-                    :
-                    null
-                }
-                <CustomScrollbar
-                    ref={(instance) => { this.scrollbar = instance; }}
-                    style={{ height: 'calc(100vh - 130px)', width: '100%' }}
-                >
-                    <div className="qa-StatusDownload-div-content" style={styles.content}>
-                        <Joyride
-                            callback={this.callback}
-                            ref={(instance) => { this.joyride = instance; }}
-                            steps={steps}
-                            scrollToSteps
-                            autoStart
-                            type="continuous"
-                            showSkipButton
-                            showStepsProgress
-                            locale={{
-                                back: (<span>Back</span>) as any,
-                                close: (<span>Close</span>) as any,
-                                last: (<span>Done</span>) as any,
-                                next: (<span>Next</span>) as any,
-                                skip: (<span>Skip</span>) as any,
-                            }}
-                            run={isRunning}
-                        />
-                        <form>
-                            <Paper className="qa-Paper" style={{ padding: '20px' }} elevation={2} >
-                                <div className="qa-StatusDownload-heading" style={styles.heading}>
-                                    DataPack Details
-                                </div>
-                                {this.state.isLoading ?
-                                    <PageLoading partial />
-                                    :
-                                    null
-                                }
-                                {details}
-                                <BaseDialog
-                                    className="qa-StatusDownload-BaseDialog-error"
-                                    show={!!this.state.error}
-                                    title="ERROR"
-                                    onClose={this.clearError}
-                                >
-                                    {errorMessage}
-                                </BaseDialog>
-                            </Paper>
-                        </form>
-                    </div>
-                </CustomScrollbar>
-            </div>
+            <DataCartProvider
+                value={{setFetching: () => {
+                    this.props.getDatacartDetails(this.props.match.params.jobuid);
+                    this.startTimer();
+                }}}
+            >
+                <div className="qa-StatusDownload-div-root" style={styles.root}>
+                    <PageHeader title={pageTitle} className="qa-StatusDownload-PageHeader">
+                        {iconElementRight}
+                    </PageHeader>
+                    {this.props.runDeletion.deleting ?
+                        <PageLoading background="transparent" partial style={{position: 'absolute', zIndex: 10}}/>
+                        :
+                        null
+                    }
+                    <CustomScrollbar
+                        ref={(instance) => {
+                            this.scrollbar = instance;
+                        }}
+                        style={{height: 'calc(100vh - 130px)', width: '100%'}}
+                    >
+                        <div className="qa-StatusDownload-div-content" style={styles.content}>
+                            <Joyride
+                                callback={this.callback}
+                                ref={(instance) => {
+                                    this.joyride = instance;
+                                }}
+                                steps={steps}
+                                scrollToSteps
+                                autoStart
+                                type="continuous"
+                                showSkipButton
+                                showStepsProgress
+                                locale={{
+                                    back: (<span>Back</span>) as any,
+                                    close: (<span>Close</span>) as any,
+                                    last: (<span>Done</span>) as any,
+                                    next: (<span>Next</span>) as any,
+                                    skip: (<span>Skip</span>) as any,
+                                }}
+                                run={isRunning}
+                            />
+                            <form>
+                                <Paper className="qa-Paper" style={{padding: '20px'}} elevation={2}>
+                                    <div className="qa-StatusDownload-heading" style={styles.heading}>
+                                        DataPack Details
+                                    </div>
+                                    {this.state.isLoading ?
+                                        <PageLoading partial/>
+                                        :
+                                        null
+                                    }
+                                    {details}
+                                    <BaseDialog
+                                        className="qa-StatusDownload-BaseDialog-error"
+                                        show={!!this.state.error}
+                                        title="ERROR"
+                                        onClose={this.clearError}
+                                    >
+                                        {errorMessage}
+                                    </BaseDialog>
+                                </Paper>
+                            </form>
+                        </div>
+                    </CustomScrollbar>
+                </div>
+            </DataCartProvider>
         );
     }
 }
@@ -510,7 +527,7 @@ function mapDispatchToProps(dispatch) {
         cloneExport: (cartDetails: Eventkit.FullRun, providerArray: Eventkit.Provider[],
                       exportOptions: Eventkit.Map<Eventkit.Store.ProviderExportOptions>,
                       providerInfo: Eventkit.Map<Eventkit.Store.ProviderInfo>
-                      ) => {
+        ) => {
             const featureCollection = {
                 type: 'FeatureCollection',
                 features: [cartDetails.job.extent],

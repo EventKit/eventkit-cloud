@@ -11,7 +11,7 @@ import {DataCartInfoTable} from './DataCartInfoTable';
 import {MapView} from "../common/MapView";
 import {getSqKmString} from "../../utils/generic"
 import {MapLayer} from "../CreateDataPack/CreateExport";
-import {RunProvider} from "./RunFileContext";
+import {RunProvider} from "./context/RunFile";
 
 export interface Props {
     cartDetails: Eventkit.FullRun;
