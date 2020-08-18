@@ -111,7 +111,7 @@ class FileProducingTaskResult(UIDMixin, NotificationModelMixin):
             """
 
         jobs = JobPermission.userjobs(user, JobPermissionLevel.READ.value)
-        job = jobs.filter(runs__provider_tasks__tasks__result=self).first()
+        job = jobs.filter(runs__data_provider_task_records__tasks__result=self).first()
 
         if not job:
             return False
@@ -225,7 +225,7 @@ class DataProviderTaskRecord(UIDMixin, TimeStampedModelMixin, TimeTrackingModelM
     provider = models.ForeignKey(
         DataProvider, on_delete=models.CASCADE, related_name="task_record_provider", null=True, blank=True
     )
-    run = models.ForeignKey(ExportRun, related_name="provider_tasks", on_delete=models.CASCADE)
+    run = models.ForeignKey(ExportRun, related_name="data_provider_task_records", on_delete=models.CASCADE)
     status = models.CharField(blank=True, max_length=20, db_index=True)
     display = models.BooleanField(default=False)
     estimated_size = models.FloatField(null=True, blank=True)
@@ -331,10 +331,10 @@ class ExportTaskException(TimeStampedModelMixin):
 
 def prefetch_export_runs(queryset_list_or_model):
     prefetch_args = [
-        "job__provider_tasks__provider",
-        "job__provider_tasks__formats",
-        "provider_tasks__tasks__result",
-        "provider_tasks__tasks__exceptions",
+        "job__data_provider_tasks__provider",
+        "job__data_provider_tasks__formats",
+        "data_provider_task_records__tasks__result",
+        "data_provider_task_records__tasks__exceptions",
     ]
     if isinstance(queryset_list_or_model, models.query.QuerySet):
         return queryset_list_or_model.select_related("user").prefetch_related(*prefetch_args)

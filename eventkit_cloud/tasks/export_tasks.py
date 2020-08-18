@@ -366,7 +366,7 @@ class ZipFileTask(FormatTask):
 
         if not kwargs["data_provider_task_record_uids"]:
             data_provider_task_record = DataProviderTaskRecord.objects.get(uid=kwargs["data_provider_task_record_uid"])
-            data_provider_task_records = data_provider_task_record.run.provider_tasks.exclude(slug="run")
+            data_provider_task_records = data_provider_task_record.run.data_provider_task_records.exclude(slug="run")
             data_provider_task_record_uids = [
                 data_provider_task_record.uid for data_provider_task_record in data_provider_task_records
             ]
@@ -1202,7 +1202,7 @@ def wait_for_providers_task(result=None, apply_args=None, run_uid=None, callback
 
     run = ExportRun.objects.filter(uid=run_uid).first()
     if run:
-        provider_tasks = run.provider_tasks.filter(~Q(slug="run"))
+        provider_tasks = run.data_provider_task_records.filter(~Q(slug="run"))
         if all(
             TaskStates[provider_task.status] in TaskStates.get_finished_states() for provider_task in provider_tasks
         ):
@@ -1234,7 +1234,7 @@ def create_zip_task(
 
     if not data_provider_task_record_uids:
         data_provider_task_record = DataProviderTaskRecord.objects.get(uid=data_provider_task_record_uid)
-        data_provider_task_records = data_provider_task_record.run.provider_tasks.exclude(slug="run")
+        data_provider_task_records = data_provider_task_record.run.data_provider_task_records.exclude(slug="run")
         data_provider_task_record_uids = [
             data_provider_task_record.uid for data_provider_task_record in data_provider_task_records
         ]
@@ -1408,7 +1408,7 @@ class FinalizeRunBase(EventKitBaseTask):
         run.status = TaskStates.COMPLETED.value
         notification_level = NotificationLevel.SUCCESS.value
         verb = NotificationVerb.RUN_COMPLETED.value
-        provider_tasks = run.provider_tasks.all()
+        provider_tasks = run.data_provider_task_records.all()
 
         # Complicated Celery chain from TaskFactory.parse_tasks() is incorrectly running pieces in parallel;
         #    this waits until all provider tasks have finished before continuing.
@@ -1485,7 +1485,7 @@ def finalize_run_task(result=None, run_uid=None, stage_dir=None, apply_args=None
     run.status = TaskStates.COMPLETED.value
     verb = NotificationVerb.RUN_COMPLETED.value
     notification_level = NotificationLevel.SUCCESS.value
-    provider_tasks = run.provider_tasks.exclude(slug="run")
+    provider_tasks = run.data_provider_task_records.exclude(slug="run")
 
     # mark run as incomplete if any tasks fail
     if any(getattr(TaskStates, task.status, None) in TaskStates.get_incomplete_states() for task in provider_tasks):
@@ -1706,7 +1706,7 @@ def cancel_run(
 
     export_run = ExportRun.objects.get(uid=export_run_uid)
 
-    for export_provider_task in export_run.provider_tasks.all():
+    for export_provider_task in export_run.data_provider_task_records.all():
         cancel_export_provider_task(
             data_provider_task_uid=export_provider_task.uid,
             canceling_username=canceling_username,

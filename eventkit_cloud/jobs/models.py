@@ -377,22 +377,6 @@ class Region(UIDMixin, TimeStampedModelMixin):
         super(Region, self).save(*args, **kwargs)
 
 
-class DataProviderTask(models.Model):
-    """
-    Model for a set of tasks assigned to a provider for a job.
-    """
-
-    id = models.AutoField(primary_key=True, editable=False)
-    uid = models.UUIDField(unique=True, default=uuid.uuid4, editable=False, db_index=True)
-    provider = models.ForeignKey(DataProvider, on_delete=models.CASCADE, related_name="provider")
-    formats = models.ManyToManyField(ExportFormat, related_name="formats")
-    min_zoom = models.IntegerField(blank=True, null=True)
-    max_zoom = models.IntegerField(blank=True, null=True)
-
-    def __str__(self):
-        return "{0} - {1}".format(str(self.uid), self.provider)
-
-
 class VisibilityState(Enum):
     PRIVATE = "PRIVATE"
     PUBLIC = "PUBLIC"
@@ -420,7 +404,6 @@ class Job(UIDMixin, TimeStampedModelMixin):
     description = models.CharField(max_length=1000, db_index=True)
     event = models.CharField(max_length=100, db_index=True, default="", blank=True)
     region = models.ForeignKey(Region, null=True, blank=True, on_delete=models.CASCADE)
-    provider_tasks = models.ManyToManyField(DataProviderTask, related_name="provider_tasks")
     preset = models.ForeignKey(DatamodelPreset, on_delete=models.CASCADE, null=True, blank=True)
     published = models.BooleanField(default=False, db_index=True)  # publish export
     visibility = models.CharField(max_length=10, choices=visibility_choices, default=VisibilityState.PRIVATE.value)
@@ -507,8 +490,25 @@ class Job(UIDMixin, TimeStampedModelMixin):
 
     @property
     def attribute_classes(self):
-        providers = [provider_task.provider for provider_task in self.provider_tasks.all()]
+        providers = [provider_task.provider for provider_task in self.data_provider_tasks.all()]
         return AttributeClass.objects.filter(data_providers__in=providers).distinct()
+
+
+class DataProviderTask(models.Model):
+    """
+    Model for a set of tasks assigned to a provider for a job.
+    """
+
+    id = models.AutoField(primary_key=True, editable=False)
+    uid = models.UUIDField(unique=True, default=uuid.uuid4, editable=False, db_index=True)
+    provider = models.ForeignKey(DataProvider, on_delete=models.CASCADE, related_name="data_provider")
+    job = models.ForeignKey(Job, on_delete=models.CASCADE, null=True, related_name="data_provider_tasks")
+    formats = models.ManyToManyField(ExportFormat, related_name="formats")
+    min_zoom = models.IntegerField(blank=True, null=True)
+    max_zoom = models.IntegerField(blank=True, null=True)
+
+    def __str__(self):
+        return "{0} - {1}".format(str(self.uid), self.provider)
 
 
 class RegionMask(models.Model):

@@ -182,7 +182,7 @@ class TestHelpers(TestCase):
         mocked_run.job.description = expected_job_desc = 'mocked_job_desc'
         mocked_run.job.projections.all.return_value = [Mock(srid=4326)]
 
-        mocked_run.provider_tasks.all.return_value = [mocked_provider_task]
+        mocked_run.data_provider_task_records.all.return_value = [mocked_provider_task]
         mocked_provider_task.run = mocked_run
 
         expected_date = timezone.now().strftime("%Y%m%d")

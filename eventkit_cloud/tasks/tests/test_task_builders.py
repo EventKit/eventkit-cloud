@@ -48,7 +48,7 @@ class TestTaskBuilder(TestCase):
         provider_task = DataProviderTask.objects.create(provider=provider)
         provider_task.formats.add(self.shp_task)
         provider_task.save()
-        self.job.provider_tasks.add(provider_task)
+        self.job.data_provider_tasks.add(provider_task)
         create_run(job_uid=self.job.uid)
 
         task_chain_builder = TaskChainBuilder()
@@ -62,16 +62,15 @@ class TestTaskBuilder(TestCase):
             pass
         run = self.job.runs.first()
         self.assertIsNotNone(run)
-        tasks = run.provider_tasks.first().tasks.filter(name='OSM(.gpkg)')
+        tasks = run.data_provider_task_records.first().tasks.filter(name='OSM(.gpkg)')
         self.assertIsNotNone(tasks)
 
     @patch('eventkit_cloud.tasks.task_builders.chain')
     def test_run_wms_task(self, mock_chain):
 
-        celery_uid = str(uuid.uuid4())
         provider = DataProvider.objects.get(slug='wms')
         provider_task_record = DataProviderTask.objects.create(provider=provider)
-        self.job.provider_tasks.add(provider_task_record)
+        self.job.data_provider_tasks.add(provider_task_record)
         # celery chain mock
         mock_chain.return_value.apply_async.return_value = Mock()
         create_run(job_uid=self.job.uid)
@@ -86,7 +85,7 @@ class TestTaskBuilder(TestCase):
             pass
         run = self.job.runs.first()
         self.assertIsNotNone(run)
-        tasks = run.provider_tasks.first().tasks.filter(name='Raster export (.gpkg)')
+        tasks = run.data_provider_task_records.first().tasks.filter(name='Raster export (.gpkg)')
         self.assertIsNotNone(tasks)
 
     @patch('eventkit_cloud.tasks.task_builders.chain')
@@ -95,7 +94,7 @@ class TestTaskBuilder(TestCase):
         celery_uid = str(uuid.uuid4())
         provider = DataProvider.objects.get(slug='wms')
         provider_task_record = DataProviderTask.objects.create(provider=provider)
-        self.job.provider_tasks.add(provider_task_record)
+        self.job.data_provider_tasks.add(provider_task_record)
         # celery chain mock
         mock_chain.return_value.apply_async.return_value = Mock()
         create_run(job_uid=self.job.uid)
@@ -110,7 +109,7 @@ class TestTaskBuilder(TestCase):
             pass
         run = self.job.runs.first()
         self.assertIsNotNone(run)
-        tasks = run.provider_tasks.first().tasks.filter(name='Geotiff Format (.tif)')
+        tasks = run.data_provider_task_records.first().tasks.filter(name='Geotiff Format (.tif)')
         self.assertIsNotNone(tasks)
 
     @patch('eventkit_cloud.tasks.task_builders.ExportTaskRecord')

@@ -392,8 +392,10 @@ class JobViewSet(viewsets.ModelViewSet):
                         )
                         try:
                             provider_serializer.is_valid(raise_exception=True)
-                            job.provider_tasks.add(*provider_serializer.save())
-                            job.save()
+                            data_provider_tasks = provider_serializer.save()
+                            for data_provider_task in data_provider_tasks:
+                                data_provider_task.job = job
+                                data_provider_task.save()
                         except ValidationError:
                             raise ValidationError(
                                 code="invalid_provider_task", detail="A provider and an export format must be selected."
@@ -401,7 +403,7 @@ class JobViewSet(viewsets.ModelViewSet):
                         # Check max area (skip for superusers)
                         if not self.request.user.is_superuser:
                             error_data = {"errors": []}
-                            for provider_task in job.provider_tasks.all():
+                            for provider_task in job.data_provider_tasks.all():
                                 provider = provider_task.provider
                                 bbox = job.extents
                                 srs = "4326"
@@ -1639,10 +1641,10 @@ class UserJobActivityViewSet(mixins.CreateModelMixin, mixins.ListModelMixin, vie
             activities = UserJobActivity.objects.select_related("job", "user")
         else:
             activities = UserJobActivity.objects.select_related("job", "user").prefetch_related(
-                "job__provider_tasks__provider",
-                "job__provider_tasks__formats",
-                "job__last_export_run__provider_tasks__tasks__result",
-                "job__last_export_run__provider_tasks__tasks__exceptions",
+                "job__data_provider_tasks__provider",
+                "job__data_provider_tasks__formats",
+                "job__last_export_run__data_provider_task_records__tasks__result",
+                "job__last_export_run__data_provider_task_records__tasks__exceptions",
             )
 
         if activity_type == "viewed":
