@@ -629,7 +629,7 @@ class TestJobViewSet(APITestCase):
         self.job.save()
 
         data_provider_task_record = DataProviderTaskRecord.objects.create(run=run, slug="run")
-        run.provider_tasks.add(data_provider_task_record)
+        run.data_provider_task_records.add(data_provider_task_record)
 
         expected_user_details = {'username': 'demo', 'is_superuser': False, 'is_staff': False}
         url = f'/api/jobs/{self.job.uid}/run_providers'

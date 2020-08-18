@@ -567,7 +567,7 @@ class JobViewSet(viewsets.ModelViewSet):
         data_provider_slugs = request.data["data_provider_slugs"]
         download_dir = get_run_download_dir(run_uid)
         run = ExportRun.objects.get(uid=run_uid)
-        run_task_record_uid = run.provider_tasks.get(slug="run").uid
+        run_task_record_uid = run.data_provider_task_records.get(slug="run").uid
         run_dir = get_run_staging_dir(run_uid)
 
         # Download the data from previous exports so we can rezip.
@@ -578,7 +578,7 @@ class JobViewSet(viewsets.ModelViewSet):
                 shutil.copytree(download_dir, run_dir, ignore=shutil.ignore_patterns("*.zip"))
 
         # Remove the old data provider task record for the providers we're recreating.
-        for data_provider_task_record in run.provider_tasks.all():
+        for data_provider_task_record in run.data_provider_task_records.all():
             if data_provider_task_record.provider is not None:
                 if data_provider_task_record.provider.slug in data_provider_slugs:
                     data_provider_task_record.delete()
