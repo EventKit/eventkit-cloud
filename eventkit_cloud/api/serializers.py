@@ -343,12 +343,12 @@ class SimpleJobSerializer(serializers.Serializer):
 
     def get_formats(self, obj):
         formats = []
-        provider_tasks, filtered_tasks = attribute_class_filter(
+        data_provider_tasks, filtered_data_provider_tasks = attribute_class_filter(
             obj.data_provider_tasks.all(), self.context["request"].user
         )
-        for provider_task in provider_tasks:
-            if hasattr(provider_task, "formats"):
-                for format in provider_task.formats.all():
+        for data_provider_task in data_provider_tasks:
+            if hasattr(data_provider_task, "formats"):
+                for format in data_provider_task.formats.all():
                     if format.slug not in formats:
                         formats.append(format.slug)
         return formats
@@ -435,16 +435,16 @@ class ExportRunSerializer(serializers.ModelSerializer):
 
     def get_zipfile(self, obj):
         request = self.context["request"]
-        provider_tasks, filtered_provider_tasks = attribute_class_filter(
+        data_provider_task_records, filtered_data_provider_task_records = attribute_class_filter(
             obj.data_provider_task_records.exclude(slug="run"), request.user
         )
 
-        if filtered_provider_tasks:
+        if filtered_data_provider_task_records:
             data = None
         else:
             data = {"status": TaskStates.PENDING.value}
 
-        run_zip_file = get_run_zip_file(values=provider_tasks).first()
+        run_zip_file = get_run_zip_file(values=data_provider_task_records).first()
         if run_zip_file:
             data = RunZipFileSerializer(run_zip_file, context=self.context).data
 
@@ -1040,16 +1040,16 @@ class JobSerializer(serializers.Serializer):
     def get_exports(self, obj):
         """Return the export formats selected for this export."""
         exports = []
-        provider_tasks, filtered_tasks = attribute_class_filter(
+        data_provider_tasks, filtered_tasks = attribute_class_filter(
             obj.data_provider_tasks.all(), self.context["request"].user
         )
-        for provider_task in provider_tasks:
+        for data_provider_task in data_provider_tasks:
             serializer = ExportFormatSerializer(
-                provider_task.formats, many=True, context={"request": self.context["request"]},
+                data_provider_task.formats, many=True, context={"request": self.context["request"]},
             )
-            exports.append({"provider": provider_task.provider.name, "formats": serializer.data})
-        for provider_task in filtered_tasks:
-            exports.append({"provider": provider_task.uid})
+            exports.append({"provider": data_provider_task.provider.name, "formats": serializer.data})
+        for data_provider_task in filtered_tasks:
+            exports.append({"provider": data_provider_task.uid})
         return exports
 
     def get_provider_task_list_status(self, obj):
@@ -1059,13 +1059,13 @@ class JobSerializer(serializers.Serializer):
     def get_provider_tasks(self, obj):
         """Return the export formats selected for this export."""
         exports = []
-        provider_tasks, filtered_tasks = attribute_class_filter(
+        data_provider_tasks, filtered_data_provider_tasks = attribute_class_filter(
             obj.data_provider_tasks.all(), self.context["request"].user
         )
-        for provider_task in provider_tasks:
-            if hasattr(provider_task, "formats"):
-                serializer = ProviderTaskSerializer(provider_task, context={"request": self.context["request"]})
-                if hasattr(provider_task, "provider"):
+        for data_provider_task in data_provider_tasks:
+            if hasattr(data_provider_task, "formats"):
+                serializer = ProviderTaskSerializer(data_provider_task, context={"request": self.context["request"]})
+                if hasattr(data_provider_task, "provider"):
                     exports.append(serializer.data)
         return exports
 
@@ -1336,11 +1336,11 @@ def get_selection_dict(obj):
     return feature_collection
 
 
-def get_provider_task_list_status(user, provider_tasks):
-    if provider_tasks and isinstance(provider_tasks.first(), DataProviderTaskRecord):
-        provider_tasks = provider_tasks.exclude(slug="run")
-    provider_tasks, filtered_provider_tasks = attribute_class_filter(provider_tasks, user)
-    if not provider_tasks:
+def get_provider_task_list_status(user, data_provider_task_records):
+    if data_provider_task_records and isinstance(data_provider_task_records.first(), DataProviderTaskRecord):
+        data_provider_task_records = data_provider_task_records.exclude(slug="run")
+    data_provider_task_records, filtered_provider_tasks = attribute_class_filter(data_provider_task_records, user)
+    if not data_provider_task_records:
         return "EMPTY"
     if not filtered_provider_tasks:
         return "COMPLETE"

@@ -20,26 +20,26 @@ def get_cache_key(obj=None, attribute=None, uid=None, model_name=None):
     Example
     :param obj: A string representing a model name (i.e. ExportTaskRecord)
     :param attribute: The models attribute.
-    :param uid: An optional uid if a specific object isn't passed.
+    :param obj_uid: An optional uid if a specific object isn't passed.
     :param model_name: An obtional model_name if an object isn't passed.
     :return:
     """
+    obj_uid = uid
     if obj:
-        uid = obj.uid
+        obj_uid = obj.uid
         model_name = type(obj).__name__
         model = type(obj)
     else:
-        uid = uid
         try:
             model = django_apps.get_model("tasks", model_name)
         except LookupError:
             logger.error("There is no such model {0}".format(model_name))
             raise
-    if not uid:
+    if not obj_uid:
         raise Exception("Cannot cache a state without a uid.")
     if not hasattr(model, attribute):
         raise Exception("{} does not have the attribute {}".format(model, attribute))
-    cache_key = "{}.{}.{}".format(model_name, str(uid), attribute)
+    cache_key = "{}.{}.{}".format(model_name, str(obj_uid), attribute)
     return cache_key
 
 
