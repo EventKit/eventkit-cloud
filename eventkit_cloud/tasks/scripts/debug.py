@@ -28,7 +28,6 @@ def example_task(result=None, job_num=None, task_num=None):
 def failure_task(result=None, job_num=None, task_num=None):
     print(("RUNNING TASK {0}.{1}".format(job_num, task_num)))
     raise Exception("TASK {0}.{1} HAS FAILED".format(job_num, task_num))
-    return {"result": result}
 
 
 @task(base=TestTask)

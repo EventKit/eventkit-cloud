@@ -136,7 +136,7 @@ class TaskFactory:
                 stage_dir=get_run_staging_dir(run_uid),
                 worker=worker,
             )
-            for provider_task in job.provider_tasks.all():
+            for provider_task in job.data_provider_tasks.all():
 
                 if self.type_task_map.get(provider_task.provider.export_provider_type.type_name):
                     # Each task builder has a primary task which pulls the source data, grab that task here...
@@ -233,7 +233,7 @@ def create_run(job_uid, user=None):
 
             # get the number of existing runs for this job
             job = Job.objects.select_related("user").get(uid=job_uid)
-            if not job.provider_tasks.all():
+            if not job.data_provider_tasks.all():
                 raise Error(
                     "This job does not have any data sources or formats associated with it, "
                     "try cloning the job or submitting a new request."
@@ -365,7 +365,7 @@ def get_invalid_licenses(job, user=None):
     user = user or job.user
     licenses = UserDataSerializer.get_user_accepted_licenses(user)
     invalid_licenses = []
-    for provider_tasks in job.provider_tasks.all():
+    for provider_tasks in job.data_provider_tasks.all():
         license = provider_tasks.provider.license
         if license and not licenses.get(license.slug):
             invalid_licenses += [license.name]

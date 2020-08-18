@@ -187,7 +187,7 @@ class MapproxyGeopackage(object):
 
         # # As of Mapproxy 1.9.x, datasource files covering a small area cause a bbox error.
         if self.bbox:
-            if isclose(self.bbox[0], self.bbox[2], rel_tol=0.001) or isclose(self.bbox[0], self.bbox[2], rel_tol=0.001):
+            if isclose(self.bbox[0], self.bbox[2], rel_tol=0.001) or isclose(self.bbox[1], self.bbox[3], rel_tol=0.001):
                 logger.warning("Using bbox instead of selection, because the area is too small")
                 self.selection = None
 
