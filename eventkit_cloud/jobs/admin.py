@@ -48,7 +48,7 @@ class JobAdmin(OSMGeoAdmin):
         "the_geom_webmercator",
         "original_selection",
         "the_geog",
-        "provider_tasks",
+        "data_provider_tasks",
         "json_tags",
         "preset",
     ]

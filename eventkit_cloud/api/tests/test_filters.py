@@ -35,7 +35,7 @@ class TestAttributeClassFilter(APITestCase):
             json_tags={}
         )
         self.data_provider_task = DataProviderTask.objects.create(provider=self.data_provider)
-        self.job.provider_tasks.add(self.data_provider_task)
+        self.job.data_provider_tasks.add(self.data_provider_task)
         run = ExportRun.objects.create(job=self.job, user=self.user, status="COMPLETED")
         self.data_provider_task_record = DataProviderTaskRecord.objects.create(name=self.data_provider.name,
                                                                                display=True,
@@ -112,8 +112,8 @@ class TestJobFilter(APITestCase):
         provider_task = DataProviderTask.objects.create(provider=export_provider)
         provider_task.formats.add(export_format)
 
-        self.job1.provider_tasks.add(provider_task)
-        self.job2.provider_tasks.add(provider_task)
+        self.job1.data_provider_tasks.add(provider_task)
+        self.job2.data_provider_tasks.add(provider_task)
 
         self.job1.projections.add(export_projection_4326)
         self.job2.projections.add(export_projection_4326)
