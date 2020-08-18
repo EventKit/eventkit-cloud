@@ -260,7 +260,7 @@ def create_run(job_uid, user=None):
             if run_count > 0:
                 while run_count > max_runs - 1:
                     # delete the earliest runs
-                    job.runs.filter(deleted=False).earliest(field_name="started_at").soft_delete(user=user)
+                    job.runs.filter(deleted=False).earliest("started_at").soft_delete(user=user)
                     run_count -= 1
 
             # add the export run to the database
