@@ -132,7 +132,7 @@ class TestCoreModels(TestCase):
         job = MagicMock()
         provider_task = MagicMock()
         provider_task.provider.attribute_class = self.attribute_class
-        job.provider_tasks.all.return_value = [provider_task]
+        job.data_provider_tasks.all.return_value = [provider_task]
         self.attribute_class.users.set([self.user1])
         users = User.objects.all()
         unrestricted_users = get_unrestricted_users(users, job)

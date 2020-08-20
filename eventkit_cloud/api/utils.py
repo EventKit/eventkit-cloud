@@ -1,9 +1,8 @@
 import logging
-
-from django.db.models import Count
-
-from functools import reduce
 import rest_framework.status
+from django.conf import settings
+from django.db.models import Count
+from functools import reduce
 from rest_framework.exceptions import ValidationError
 from rest_framework.response import Response
 from rest_framework.views import exception_handler
@@ -29,6 +28,8 @@ def eventkit_exception_handler(exc, context):
     """
     # Call REST framework's default exception handler first,
     # to get the standard error response. Parse the response accordingly.
+    if getattr(settings, "DEBUG"):
+        raise exc
     response = exception_handler(exc, context)
     if response:
 

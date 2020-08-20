@@ -81,8 +81,8 @@ class ExportRunFilter(django_filters.FilterSet):
     started_at = django_filters.IsoDateTimeFilter(field_name="started_at", lookup_expr="exact")
     visibility = django_filters.CharFilter(field_name="job__visibility", lookup_expr="exact")
     featured = django_filters.BooleanFilter(field_name="job__featured", widget=django_filters.widgets.BooleanWidget())
-    providers = ListFilter(field_name="job__provider_tasks__provider__slug")
-    formats = ListFilter(field_name="job__provider_tasks__formats__slug", lookup_expr="exact")
+    providers = ListFilter(field_name="job__data_provider_tasks__provider__slug")
+    formats = ListFilter(field_name="job__data_provider_tasks__formats__slug", lookup_expr="exact")
     projections = ListFilter(field_name="job__projections__srid", lookup_expr="exact")
 
     class Meta:

@@ -376,7 +376,7 @@ def get_unrestricted_users(users: QuerySet, job) -> QuerySet:
     if not job:
         return users
 
-    attribute_classes = [provider_task.provider.attribute_class for provider_task in job.provider_tasks.all()]
+    attribute_classes = [provider_task.provider.attribute_class for provider_task in job.data_provider_tasks.all()]
     unrestricted = users.all()
     for attribute_class in attribute_classes:
         if attribute_class:
@@ -424,9 +424,9 @@ def attribute_class_filter(queryset: QuerySet, user: User = None) -> Tuple[Query
     # Get all of the classes that we aren't in.
     restricted_attribute_classes = AttributeClass.objects.exclude(users=user)
     attribute_class_queries = {
-        "ExportRun": {"job__provider_tasks__provider__attribute_class__in": restricted_attribute_classes},
+        "ExportRun": {"data_provider_task_records__provider__attribute_class__in": restricted_attribute_classes},
         "RunZipFile": {"data_provider_task_records__provider__attribute_class__in": restricted_attribute_classes},
-        "Job": {"provider_tasks__provider__attribute_class__in": restricted_attribute_classes},
+        "Job": {"data_provider_tasks__provider__attribute_class__in": restricted_attribute_classes},
         "DataProvider": {"attribute_class__in": restricted_attribute_classes},
         "DataProviderTask": {"provider__attribute_class__in": restricted_attribute_classes},
         "DataProviderTaskRecord": {"provider__attribute_class__in": restricted_attribute_classes},

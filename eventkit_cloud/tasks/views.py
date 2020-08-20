@@ -80,7 +80,7 @@ def generate_zipfile(data_provider_task_record_uids, run_zip_file):
 
     # Kick off the zip process with get_zip_task_chain
     run_zip_task_chain = get_zip_task_chain(
-        data_provider_task_record_uid=run.provider_tasks.get(slug="run").uid,
+        data_provider_task_record_uid=run.data_provider_task_records.get(slug="run").uid,
         data_provider_task_record_uids=data_provider_task_record_uids,
         run_zip_file_uid=run_zip_file.uid,
         stage_dir=stage_dir,
