@@ -1,65 +1,74 @@
 import * as React from 'react';
-import {CreateDataPackButton} from "../../components/StatusDownloadPage/CreateDataPackButton";
-import {render, screen, getByText} from '@testing-library/react';
-import {useRunContext} from "../../components/StatusDownloadPage/RunFileContext";
-import '@testing-library/jest-dom/extend-expect'
+import * as sinon from 'sinon';
+import {mount} from 'enzyme';
+import AlertWarning from '@material-ui/icons/Warning';
+import AlertError from '@material-ui/icons/Error';
+import ActionDone from '@material-ui/icons/Done';
+import CircularProgress from '@material-ui/core/CircularProgress';
+import CreateDataPackButton from "../../components/StatusDownloadPage/CreateDataPackButton";
+import {Button, MuiThemeProvider} from "@material-ui/core";
+import {Theme} from "@material-ui/core/styles";
 
 jest.mock('../../components/StatusDownloadPage/RunFileContext', () => {
     return {
-        useRunContext: jest.fn(),
+        useRunContext: () => {
+            return {run: {status: 'COMPLETED'}}
+        }
     }
 });
 
 jest.mock('../../components/Dialog/BaseDialog', () => 'dialog');
 jest.mock('../../components/common/CenteredPopup', () => 'centeredPopup');
 
+jest.mock('@material-ui/core/styles', () => ({
+    withStyles: styles => component => component,
+    withTheme: theme => component => component,
+}));
 
 describe('CreateDataPackButton component', () => {
     const defaultProps = () => ({
         fontSize: '12px',
         providerTaskUids: ['thisistotallyauid'],
         classes: {},
-        theme: {eventkit: {
-                images: {},
-                colors: {}
-            }},
         ...(global as any).eventkit_test_props,
     });
 
+    let wrapper;
+    let instance;
     const setup = (propsOverride = {}) => {
-        (useRunContext as any).mockImplementation(() => {
-            return {run: {status: 'COMPLETED'}}
-        })
         const props = {
             ...defaultProps(),
             ...propsOverride,
         };
-        return render(<CreateDataPackButton {...props} />);
+        wrapper = mount(<CreateDataPackButton {...props} />);
+        instance = wrapper.instance();
     };
 
     beforeEach(setup);
 
-    it('should say job processing when job is not complete.', () => {
-        const {container, rerender} = setup();
-        (useRunContext as any).mockImplementation(() => {
-            return {run: {status: 'a not correct value'}}
-        })
-        rerender(<CreateDataPackButton {...defaultProps()}/>)
-        expect(getByText(container,/Job Processing.../)).toBeInTheDocument();
+    it('should job processing when job is not complete.', () => {
+        jest.mock('../../components/StatusDownloadPage/RunFileContext', () => {
+            return {
+                useRunContext: () => {
+                    return {run: {status: 'somethingotherthancompleted'}}
+                }
+            }
+        });
+        expect(wrapper.find(Button).html()).toContain('CREATE DATAPACK (.ZIP)');
     });
 
     it('should display create text by default when job is done.', () => {
-        expect(screen.getByText('CREATE DATAPACK (.ZIP)')).toBeInTheDocument();
+        expect(wrapper.find(Button).html()).toContain('CREATE DATAPACK (.ZIP)');
     });
-    //
-    // it('should disable button after click and render fake button.', async () => {
-    //     const {container} = setup();
-    //     expect(container.querySelector('#qa-CreateDataPackButton-fakeButton')).toBeNull();
-    //     screen.getByText('CREATE DATAPACK (.ZIP)').click()
-    //     await waitFor(() =>
-    //         expect(container.querySelector(
-    //             '#qa-CreateDataPackButton-fakeButton')
-    //         ).toHaveLength(1)
-    //     )
-    // });
+
+    it('should disable button after click and render fake button.', () => {
+        const getButton = wrapper.find('#CompleteDownload').hostNodes();
+        expect(wrapper.find('#qa-CreateDataPackButton-fakeButton')).toHaveLength(0);
+        expect(wrapper.find('#CompleteDownload').hostNodes().props().disabled).toBe(false);
+        getButton.simulate('click');
+        return new Promise(resolve => setImmediate(resolve)).then(() => {
+            expect(wrapper.find('#CompleteDownload').hostNodes().props().disabled).toBe(true);
+            expect(wrapper.find('#qa-CreateDataPackButton-fakeButton')).toHaveLength(1);
+        });
+    });
 });

@@ -61,6 +61,13 @@ services:
       - ROCKETCHAT_NOTIFICATIONS
       - LAND_DATA_URL
       - BASE_URL
+      - MATOMO_URL
+      - MATOMO_CUSTOM_DIM_ID
+      - MATOMO_CUSTOM_VAR_ID
+      - MATOMO_CUSTOM_VAR_NAME
+      - MATOMO_CUSTOM_VAR_SCOPE
+      - MATOMO_SITE_ID
+      - MATOMO_APPNAME
     extra_hosts:
       - "${SITE_NAME}:${SITE_IP}"
   map:
@@ -154,7 +161,7 @@ services:
     expose:
       - "11211"
     entrypoint: >
-      /bin/bash -c "source activate eventkit-cloud && memcached -m 2048"
+      /bin/bash -c "source activate eventkit-cloud && memcached -m 2048 -I 10m"
   celery-beat:
     image: eventkit/eventkit-base:1.7.0
     volumes:
@@ -269,7 +276,7 @@ services:
       dockerfile: config/Dockerfile_webpack
     volumes:
       - ./eventkit_cloud:/var/lib/eventkit/eventkit_cloud
-      - ./coverage/coveralls:/var/lib/eventkit/coverage/coveralls
+      - ./coverage:/var/lib/eventkit/coverage
       - ./package.json:/var/lib/eventkit/package.json
       - ./config/ui/.eslintrc.json:/var/lib/eventkit/.eslintrc.json
       - ./config/ui/.eslintignore:/var/lib/eventkit/.eslintignore

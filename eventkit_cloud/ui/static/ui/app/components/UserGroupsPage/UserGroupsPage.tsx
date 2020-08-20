@@ -28,7 +28,12 @@ import OtherInfoDialog from './Dialogs/OtherInfoDialog';
 import AddMembersDialog from './Dialogs/AddMembersDialog';
 import BaseDialog from '../Dialog/BaseDialog';
 import LoadButtons from '../common/LoadButtons';
-import {getGroups, deleteGroup, createGroup, updateGroup} from '../../actions/groupActions';
+import {
+    getGroups,
+    deleteGroup,
+    createGroup,
+    updateGroup,
+} from '../../actions/groupActions';
 import {getUsers} from '../../actions/usersActions';
 import {DrawerTimeout} from '../../actions/uiActions';
 import {joyride} from '../../joyride.config';
@@ -192,7 +197,7 @@ export interface Props {
     user: Eventkit.User['user'];
     groups: Eventkit.Store.Groups;
     users: Eventkit.Store.Users;
-    getGroups: (args: any) => void;
+    getGroups: (args: any, append: boolean) => void;
     deleteGroup: (id: string | number) => void;
     createGroup: (name: string, usernames: string[]) => void;
     updateGroup: (id: string | number, args: any) => void;
@@ -226,6 +231,7 @@ export interface State {
     steps: Step[];
     stepIndex: number;
     isRunning: boolean;
+    page: number;
 }
 
 export class UserGroupsPage extends React.Component<Props, State> {
@@ -242,6 +248,7 @@ export class UserGroupsPage extends React.Component<Props, State> {
 
     constructor(props: Props, context) {
         super(props);
+
         this.bindMethods();
         this.pageSize = Number(context.config.USER_GROUPS_PAGE_SIZE);
         this.state = {
@@ -265,20 +272,21 @@ export class UserGroupsPage extends React.Component<Props, State> {
             steps: [],
             stepIndex: 0,
             isRunning: false,
+            page: 1,
         };
     }
 
     componentWillMount() {
         // If there is no ordering specified default to username
         let {ordering, page_size} = queryString.parse(this.props.location.search);
-        let changedQuery = false
+        let changedQuery = false;
         if (!ordering) {
             ordering = 'username';
-            changedQuery = true
+            changedQuery = true;
         }
         if (!page_size) {
             page_size = this.pageSize.toString();
-            changedQuery = true
+            changedQuery = true;
         }
         if (changedQuery) {
             history.replace({...this.props.location, "search": queryString.stringify({ordering, page_size})});
@@ -287,7 +295,13 @@ export class UserGroupsPage extends React.Component<Props, State> {
 
     componentDidMount() {
         this.makeUserRequest();
-        this.props.getGroups({disable_page: true});
+        this.props.getGroups({
+            user: this.props.user.username,
+            page_size: this.pageSize,
+            page: this.state.page,
+            permission_level: 'admin',
+        }, true);
+
         const steps = joyride.UserGroupsPage as any[];
         this.joyrideAddSteps(steps);
     }
@@ -299,7 +313,8 @@ export class UserGroupsPage extends React.Component<Props, State> {
             changedQuery = true;
         } else {
             const keys = Object.keys(queryString.parse(this.props.location.search));
-            if (!keys.every(key => queryString.parse(this.props.location.search)[key] === queryString.parse(prevProps.location.search)[key])) {
+            if (!keys.every(key => queryString.parse(this.props.location.search)[key] === queryString.parse(
+                prevProps.location.search)[key])) {
                 changedQuery = true;
             }
         }
@@ -325,17 +340,26 @@ export class UserGroupsPage extends React.Component<Props, State> {
         }
         if (this.props.groups.updated && !prevProps.groups.updated) {
             this.makeUserRequest();
-            this.props.getGroups({disable_page: true});
+            this.props.getGroups({
+                page_size: this.pageSize,
+                page: this.state.page,
+            }, true);
         }
         if (this.props.groups.created && !prevProps.groups.created) {
-            this.props.getGroups({disable_page: true});
+            this.props.getGroups({
+                page_size: this.pageSize,
+                page: this.state.page,
+            }, true);
             if (this.state.createUsers.length) {
                 this.makeUserRequest();
                 this.setState({createUsers: []});
             }
         }
         if (this.props.groups.deleted && !prevProps.groups.deleted) {
-            this.props.getGroups({disable_page: true});
+            this.props.getGroups({
+                page_size: this.pageSize,
+                page: this.state.page,
+            }, true);
             const query = queryString.parse(this.props.location.search);
             if (query.groups) {
                 query.groups = null;
@@ -358,6 +382,10 @@ export class UserGroupsPage extends React.Component<Props, State> {
         if (this.props.users.error && !prevProps.users.error) {
             this.showErrorDialog(this.props.users.error);
         }
+    }
+
+    private handlePage = (page) => {
+        this.setState({page});
     }
 
     private getQueryGroup(targetGroups = null) {
@@ -858,7 +886,8 @@ export class UserGroupsPage extends React.Component<Props, State> {
         this.props.groups.groups.forEach((group) => {
             if (group.administrators.includes(this.props.user.username)) {
                 ownedGroups.push(group);
-            } else if (group.members.includes(this.props.user.username)) {
+            }
+            if (group.members.includes(this.props.user.username)) {
                 sharedGroups.push(group);
             } else {
                 otherGroups.push(group);
@@ -872,7 +901,7 @@ export class UserGroupsPage extends React.Component<Props, State> {
         if (this.state.selectedUsers.length) {
             ownedGroups.forEach((group) => {
                 const allSelectedIncluded = this.state.selectedUsers.every((user) => {
-                    if (user.groups.includes(group.id)) {
+                    if (user.groups.includes(Number(group.id))) {
                         return true;
                     }
                     return false;
@@ -1054,6 +1083,7 @@ export class UserGroupsPage extends React.Component<Props, State> {
                                 <LoadButtons
                                     style={{paddingTop: '10px'}}
                                     range={this.props.users.range}
+                                    groupsRange={this.props.groups.range}
                                     handleLoadMore={this.handleLoadMore}
                                     handleLoadLess={this.handleLoadLess}
                                     loadMoreDisabled={loadMoreDisabled}
@@ -1071,6 +1101,8 @@ export class UserGroupsPage extends React.Component<Props, State> {
                     sharedGroups={sharedGroups}
                     otherGroups={otherGroups}
                     usersCount={this.props.users.total}
+                    handlePage={this.handlePage}
+                    page={this.state.page}
                     onNewGroupClick={this.handleCreateOpen}
                     onAdministratorInfoClick={this.showAdministratorInfoDialog}
                     onMemberInfoClick={this.showMemberInfoDialog}
@@ -1122,7 +1154,7 @@ export class UserGroupsPage extends React.Component<Props, State> {
                     }
                     className="qa-UserGroupsPage-RenameGroupDialog"
                 />
-                {this.props.groups.fetching || this.props.users.fetching
+                {this.props.users.fetching
                 || this.props.groups.creating || this.props.groups.deleting
                 || this.props.groups.updating ?
                     <div className={classes.loadingContainer}>
@@ -1214,14 +1246,15 @@ export class UserGroupsPage extends React.Component<Props, State> {
         this.showOtherInfoDialog = this.showOtherInfoDialog.bind(this);
         this.hideOtherInfoDialog = this.hideOtherInfoDialog.bind(this);
         this.handleJoyride = this.handleJoyride.bind(this);
+        this.handlePage = this.handlePage.bind(this);
     }
 }
 
 function mapStateToProps(state) {
     return {
         user: state.user.data.user,
-        groups: state.groups,
         users: state.users,
+        groups: state.groups,
     };
 }
 

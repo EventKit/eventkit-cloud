@@ -1,4 +1,3 @@
-
 import { getHeaderPageInfo } from '../utils/generic';
 
 export const types = {
@@ -14,6 +13,7 @@ export const types = {
     UPDATING_GROUP: 'UPDATING_GROUP',
     UPDATED_GROUP: 'UPDATED_GROUP',
     UPDATING_GROUP_ERROR: 'UPDATING_GROUP_ERROR',
+    FETCH_GROUPS_EMPTY: 'FETCH_GROUPS_EMPTY',
 };
 
 export function getGroups(params, append = false) {
@@ -32,10 +32,16 @@ export function getGroups(params, append = false) {
         onSuccess: (response) => {
             // get the total count from the header
             const totalGroups = Number(response.headers['total-groups']);
+            const adminGroups = Number(response.headers['admin-groups']);
+            const memberGroups = Number(response.headers['member-groups']);
+            const otherGroups = Number(response.headers['other-groups']);
             const { nextPage, range } = getHeaderPageInfo(response);
             return {
                 groups: response.data,
                 total: totalGroups,
+                totalAdmin: adminGroups,
+                totalMember: memberGroups,
+                totalOther: otherGroups,
                 range,
                 nextPage,
             };

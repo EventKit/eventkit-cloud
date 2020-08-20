@@ -30,6 +30,7 @@ import '../styles/openlayers/ol.css';
 import '../styles/flexboxgrid.css';
 import '../styles/react-joyride-compliled.css';
 import {AppConfigProvider} from "./ApplicationContext";
+import MatomoHandler from "./MatomoHandler";
 // tslint:disable-next-line:no-var-requires
 require('../fonts/index.css');
 
@@ -151,7 +152,8 @@ interface State {
             DATAPACK_PAGE_SIZE?: string;
             NOTIFICATIONS_PAGE_SIZE?: string;
             CONTACT_URL?: string;
-            SERVE_ESTIMATES?: boolean
+            SERVE_ESTIMATES?: boolean;
+            MATOMO?: any;
         }
     };
     autoLogoutWarningText: string;
@@ -735,6 +737,7 @@ export class Application extends React.Component<Props, State> {
 
         return (
             <AppConfigProvider value={this.state.childContext.config}>
+                <MatomoHandler {...this.state.childContext.config.MATOMO}/>
                 <div style={{backgroundColor: colors.black}}>
                     <AppBar
                         className={`qa-Application-AppBar ${classes.appBar}`}

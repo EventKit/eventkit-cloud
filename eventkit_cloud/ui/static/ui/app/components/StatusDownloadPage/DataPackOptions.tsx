@@ -106,7 +106,7 @@ export class DataPackOptions extends React.Component<Props, State> {
                     supportedFormats = dataProviderTask.formats.filter(slug =>
                         arrayHasValue(provider.supported_formats.map((format: Eventkit.Format) => format.slug), slug)
                     );
-                    exportOptions[providerTask.slug] = {
+                    exportOptions[provider.slug] = {
                         minZoom: (dataProviderTask.min_zoom) ? dataProviderTask.min_zoom : provider.level_from,
                         maxZoom: (dataProviderTask.max_zoom <= provider.level_to) ? dataProviderTask.max_zoom : provider.level_to,
                         formats: supportedFormats

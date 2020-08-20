@@ -25,6 +25,13 @@ test-back:
 test-front:
 	docker-compose run --rm webpack npm test
 
+install-hooks:
+ifeq ($(detected_OS),Windows)
+	cp hooks/pre-commit .git/hooks/pre-commit
+else
+	ln -s -f ${CURDIR}/hooks/pre-commit ${CURDIR}/.git/hooks/pre-commit
+endif
+
 initial:
 ifeq ($(detected_OS),Linux)
 	sudo groupadd -g 880 eventkit || echo "Group eventkit already exists."
@@ -83,7 +90,7 @@ clean:
 	docker-compose down -v
 
 # This is the command that you'll want to use in order to setup from scratch.
-fresh: initial clean conda-install build setup up logs
+fresh: initial install-hooks clean conda-install build setup up logs
 
 # Run this command if you want to rebuild everything except for the conda dependencies.
-refresh: initial clean build setup up logs
+refresh: initial install-hooks clean build setup up logs

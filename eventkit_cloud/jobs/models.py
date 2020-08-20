@@ -600,7 +600,12 @@ class JobPermission(TimeStampedModelMixin):
     content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE)
     object_id = models.PositiveIntegerField(db_index=True)
     content_object = GenericForeignKey("content_type", "object_id")
-    permission = models.CharField(choices=[("NONE", "None"), ("READ", "Read"), ("ADMIN", "Admin")], max_length=10)
+    permission = models.CharField(choices=[("READ", "Read"), ("ADMIN", "Admin")], max_length=10)
+
+    # A user should only have one type of permission per job.
+    class Meta:
+        db_table = "jobpermission"
+        unique_together = ["job", "content_type", "object_id", "permission"]
 
     @staticmethod
     def get_orderable_queryset_for_job(job: Job, model: Union[User, Group]) -> QuerySet:
@@ -704,21 +709,21 @@ class JobPermission(TimeStampedModelMixin):
         return Job.objects.filter(Q(*query) | public_query)
 
     @staticmethod
-    def get_user_permissions(user, job_id):
+    def get_user_permissions(user, job_uid):
         """
         Check what level of permission a user has to a job.
         :param user: User obj in question
-        :param job_id: Id of the job for which we want the user's permission level
+        :param job_uid: Id of the job for which we want the user's permission level
         :return: None, READ, or ADMIN depending on what level of permission the user has to the job
         """
         permission = None
 
         # All of the permission objects for the job in question.
-        jps = JobPermission.objects.filter(job__uid=job_id)
+        jps = JobPermission.objects.filter(job__uid=job_uid)
 
         try:
             # Check if the user has explicit permissions to the job.
-            user_permission = jps.filter(content_type=ContentType.objects.get_for_model(User)).get(object_id=user.pk)
+            user_permission = jps.get(content_type=ContentType.objects.get_for_model(User), object_id=user.pk)
         except JobPermission.DoesNotExist:
             user_permission = None
 
