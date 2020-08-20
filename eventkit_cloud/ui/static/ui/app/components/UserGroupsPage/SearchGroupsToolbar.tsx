@@ -232,4 +232,4 @@ function mapDispatchToProps(dispatch) {
     };
 }
 
-export default withTheme()(withStyles<any, any>(jss)(connect(mapStateToProps, mapDispatchToProps)(SearchGroupsToolbar)));
+export default withTheme((withStyles<any, any>(jss)(connect(mapStateToProps, mapDispatchToProps)(SearchGroupsToolbar))));

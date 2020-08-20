@@ -93,4 +93,4 @@ export function GroupsHeaderTabs(props: Props) {
     );
 }
 
-export default withTheme()(withStyles(jss)(GroupsHeaderTabs));
+export default withTheme((withStyles(jss)(GroupsHeaderTabs)));

@@ -242,4 +242,4 @@ function mapStateToProps(state) {
     };
 }
 
-export default withTheme()(withStyles(jss)(connect(mapStateToProps)(GroupPanelBody)));
+export default withTheme((withStyles(jss)(connect(mapStateToProps)(GroupPanelBody))));

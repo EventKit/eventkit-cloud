@@ -200,8 +200,7 @@ export function GroupsDrawer(props: Props) {
         <Drawer
             variant="persistent"
             anchor="right"
-            open={
-                props.open}
+            open={props.open}
             className="qa-GroupsDrawer-Drawer"
             classes={{paper: classes.drawer}}
         >

@@ -85,7 +85,7 @@ interface Props {
     theme: Eventkit.Theme & Theme;
 }
 
-function CreateDataPackButton(props: Props) {
+export function CreateDataPackButton(props: Props) {
     const {fontSize, providerTaskUids, classes, theme} = props;
     const {run} = useRunContext();
 
@@ -451,4 +451,4 @@ function CreateDataPackButton(props: Props) {
     );
 }
 
-export default withTheme()(withStyles(jss)(CreateDataPackButton));
+export default withTheme((withStyles(jss)(CreateDataPackButton)));
