@@ -119,6 +119,7 @@ export function GroupPanelBody(props: Props) {
         if (val === 'none') {
             return props.onOtherInfoClick;
         }
+        return () => '';
     };
 
     const handleResultsText = (val) => {
@@ -131,20 +132,15 @@ export function GroupPanelBody(props: Props) {
         if (val === 'none') {
             return 'There may be results in the Admin and Member tabs.';
         }
+        return '';
     };
 
     return (
         <>
             <span className={`qa-GroupsDrawer-groupsHeading ${classes.subHeading}`}>
-                {props.selectedTab === 'admin'
-                && <strong>ADMINISTRATOR</strong>
-                }
-                {props.selectedTab === 'member'
-                && <strong>MEMBER ONLY</strong>
-                }
-                {props.selectedTab === 'none'
-                && <strong>ALL OTHERS</strong>
-                }
+                {props.selectedTab === 'admin' && <strong>ADMINISTRATOR</strong>}
+                {props.selectedTab === 'member' && <strong>MEMBER ONLY</strong>}
+                {props.selectedTab === 'none' && <strong>ALL OTHERS</strong>}
                 <span
                     className={classes.paginationRange}
                     id="range"
@@ -152,8 +148,7 @@ export function GroupPanelBody(props: Props) {
                     {props.getGroupsRange()}
                 </span>
                 <InfoIcon
-                    onClick={
-                        handleGroupClick(props.selectedTab)}
+                    onClick={handleGroupClick(props.selectedTab)}
                     className={`qa-GroupsDrawer-infoIcon ${classes.infoIcon}`}
                 />
             </span>
@@ -163,18 +158,18 @@ export function GroupPanelBody(props: Props) {
                         ? (
                             <PageLoading background="transparent" partial />
                         )
-                        : null
-                    }
+                        : null}
                 </span>
                 <MenuList className="qa-GroupsDrawer-MenuList">
                     {
-                        selectedGroup(props.selectedTab) ? selectedGroup(props.selectedTab).map(group => (
+                        selectedGroup(props.selectedTab) ? selectedGroup(props.selectedTab).map((group) => (
                             <MenuItem
                                 key={group.name}
                                 value={group.id}
                                 onClick={() => props.onSelectionChange(group.id)}
                                 selected={
-                                    props.selectedValue === group.id}
+                                    props.selectedValue === group.id
+                                }
                                 className={`.qa-GroupsDrawer-groupItem ${classes.item}`}
                             >
                                 <div style={{ display: 'flex', flex: '1 1 auto', maxWidth: 250 - 40 - 32 }}>
@@ -182,7 +177,7 @@ export function GroupPanelBody(props: Props) {
                                         {group.name}
                                     </div>
                                     <div style={{ flex: '0 0 auto' }}>
-                                            ({group.members.length})
+                                        ({group.members.length})
                                     </div>
                                 </div>
                                 <IconMenu
@@ -196,7 +191,7 @@ export function GroupPanelBody(props: Props) {
                                             props.onRenameGroupClick(group);
                                         }}
                                     >
-                                            Change Group Name
+                                        Change Group Name
                                     </MenuItem>
                                     <MenuItem
                                         key="leave"
@@ -205,7 +200,7 @@ export function GroupPanelBody(props: Props) {
                                             props.onLeaveGroupClick(group);
                                         }}
                                     >
-                                            Leave Group
+                                        Leave Group
                                     </MenuItem>
                                     <MenuItem
                                         key="delete"
@@ -214,7 +209,7 @@ export function GroupPanelBody(props: Props) {
                                             props.onDeleteGroupClick(group);
                                         }}
                                     >
-                                            Delete Group
+                                        Delete Group
                                     </MenuItem>
                                 </IconMenu>
                             </MenuItem>

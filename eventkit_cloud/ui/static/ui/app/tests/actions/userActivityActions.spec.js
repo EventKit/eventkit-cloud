@@ -3,7 +3,6 @@ import * as actions from '../../actions/userActivityActions';
 import Normalizer from '../../utils/normalizers';
 import * as utils from '../../utils/generic';
 
-
 const apiPermissions = {
     value: '',
     groups: [],
@@ -28,7 +27,6 @@ const mockApiJobs = [{
 const normalizer = new Normalizer();
 const run1 = normalizer.normalizeRun(mockApiJobs[0].last_export_run);
 const run2 = normalizer.normalizeRun(mockApiJobs[1].last_export_run);
-
 
 describe('userActivityActions', () => {
     describe('viewedJob action', () => {

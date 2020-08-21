@@ -14,7 +14,7 @@ export const types = {
 };
 
 export function logout() {
-    return dispatch => (
+    return (dispatch) => (
         axios('/logout', { method: 'GET' }).then((response) => {
             dispatch({
                 type: types.USER_LOGGED_OUT,
@@ -92,12 +92,12 @@ export function patchUser(acceptedLicenses, username) {
         url: `/api/users/${username}`,
         method: 'PATCH',
         data: { accepted_licenses: acceptedLicenses },
-        onSuccess: response => ({ payload: response.data || { ERROR: 'No user response data' } }),
+        onSuccess: (response) => ({ payload: response.data || { ERROR: 'No user response data' } }),
     };
 }
 
 export function userActive() {
-    return dispatch => (
+    return (dispatch) => (
         axios('/user_active', { method: 'GET' }).then((response) => {
             const autoLogoutAt = response.data.auto_logout_at;
             const autoLogoutWarningat = response.data.auto_logout_warning_at;

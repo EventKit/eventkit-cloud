@@ -43,7 +43,7 @@ describe('userActions actions', () => {
         const locationSpy = sinon.spy();
         Object.defineProperty(window, 'location', {
             writable: true,
-            value: { assign: locationSpy }
+            value: { assign: locationSpy },
         });
         return store.dispatch(actions.logout())
             .then(() => {

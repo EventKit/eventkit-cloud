@@ -1,5 +1,7 @@
 import * as React from 'react';
-import { withTheme, createStyles, withStyles, Theme } from '@material-ui/core/styles';
+import {
+    withTheme, createStyles, withStyles, Theme,
+} from '@material-ui/core/styles';
 import RadioGroup from '@material-ui/core/RadioGroup';
 import Radio from '@material-ui/core/Radio';
 import Button from '@material-ui/core/Button';
@@ -21,7 +23,7 @@ const jss = (theme: Theme & Eventkit.Theme) => createStyles({
     },
     delete: {
         color: theme.eventkit.colors.warning,
-    }
+    },
 });
 
 interface Props {
@@ -72,7 +74,7 @@ export class DeleteNotificationsDialog extends React.Component<Props, {}> {
                 onClose={this.props.onCancel}
             >
                 You have selected to delete all notifications on this page,
-                 would you like to delete ALL notifications in the system as well?
+                would you like to delete ALL notifications in the system as well?
                 <FormControl className={classes.form}>
                     <RadioGroup
                         value={this.props.deleteAll}

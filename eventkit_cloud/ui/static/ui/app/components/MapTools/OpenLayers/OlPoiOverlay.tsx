@@ -1,15 +1,14 @@
-import React, {useEffect, useRef, useState} from 'react';
-import ReactDOM from 'react-dom';
-import {useOlMapContainer} from "../context/OpenLayersContext";
+import React, { useEffect, useRef } from 'react';
 import Overlay from 'ol/overlay';
-import {useEffectOnMount} from "../../../utils/hooks/hooks";
-import {TileCoordinate} from "../../../utils/mapUtils";
 import {
     createStyles,
     Theme, withStyles,
-} from "@material-ui/core";
+} from '@material-ui/core';
 import CloseIcon from '@material-ui/icons/Close';
-import IconButton from "@material-ui/core/IconButton";
+import IconButton from '@material-ui/core/IconButton';
+import { TileCoordinate } from '../../../utils/mapUtils';
+import { useEffectOnMount } from '../../../utils/hooks/hooks';
+import { useOlMapContainer } from '../context/OpenLayersContext';
 
 interface Props {
     coordinate?: TileCoordinate;
@@ -19,7 +18,7 @@ interface Props {
 
 function OlPoiOverlay(props: React.PropsWithChildren<Props>) {
     const olMapContext = useOlMapContainer();
-    const mapContainer = olMapContext.mapContainer;
+    const { mapContainer } = olMapContext;
 
     const divRef = useRef(null);
     const closerRef = useRef(null);
@@ -27,17 +26,16 @@ function OlPoiOverlay(props: React.PropsWithChildren<Props>) {
 
     const { coordinate, classes } = props;
 
-    useEffectOnMount(() => {
-        return () => {
-            if (overlayRef.current) {
-                const olMap = mapContainer.getMap();
-                olMap.removeOverlay(overlayRef.current);
-            }
-            overlayRef.current = null;
+    useEffectOnMount(() => () => {
+        if (overlayRef.current) {
+            const olMap = mapContainer.getMap();
+            olMap.removeOverlay(overlayRef.current);
         }
+        overlayRef.current = null;
     });
 
-    let lat, long;
+    let lat; let
+        long;
     if (coordinate) {
         lat = coordinate.lat;
         long = coordinate.long;
@@ -95,27 +93,27 @@ function OlPoiOverlay(props: React.PropsWithChildren<Props>) {
     function convertToClick(e) {
         // This is needed to prevent openlayers from hiding all clicks on buttons in the overlay.
         // Converts mouse up events to click events on the target.
-        const evt = new MouseEvent('click', { bubbles: true })
+        const evt = new MouseEvent('click', { bubbles: true });
         evt.stopPropagation = () => {
         };
-        e.target.dispatchEvent(evt)
+        e.target.dispatchEvent(evt);
     }
 
     return (
-        <div ref={el => divRef.current = el} onMouseUp={convertToClick} className={classes.container}>
+        <div ref={(el) => divRef.current = el} onMouseUp={convertToClick} className={classes.container}>
             {props.children}
             <div>
-            <IconButton
-                className={classes.closeButton}
-                buttonRef={closerRef}
-                type='button'
-                onClick={(e) => {
-                    props.closePoi ? props.closePoi(e) : () => {};
-                    overlayRef.current.setPosition(undefined);
-                }}
-            >
-                <CloseIcon className={classes.closeIcon}/>
-            </IconButton>
+                <IconButton
+                    className={classes.closeButton}
+                    buttonRef={closerRef}
+                    type="button"
+                    onClick={(e) => {
+                        props.closePoi ? props.closePoi(e) : () => {};
+                        overlayRef.current.setPosition(undefined);
+                    }}
+                >
+                    <CloseIcon className={classes.closeIcon} />
+                </IconButton>
             </div>
         </div>
     );

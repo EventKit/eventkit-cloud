@@ -39,7 +39,7 @@ export function getDatacartDetails(jobuid) {
                 runs.push({ ...response.data[0] });
             }
             return {
-                ids: runs.map(run => run.uid),
+                ids: runs.map((run) => run.uid),
             };
         },
         batchSuccess: (response, state) => {
@@ -128,14 +128,14 @@ export function getRuns(args = {}) {
         ],
         auto: args.isAuto,
         cancellable: true,
-        getCancelSource: state => state.exports.allInfo.status.cancelSource,
+        getCancelSource: (state) => state.exports.allInfo.status.cancelSource,
         url: '/api/runs/filter',
         method: 'POST',
         data,
         params,
         onSuccess: (response) => {
             const { nextPage, range } = getHeaderPageInfo(response);
-            const orderedIds = response.data.map(run => run.uid);
+            const orderedIds = response.data.map((run) => run.uid);
             return {
                 payload: {
                     range,
@@ -172,7 +172,7 @@ export function getFeaturedRuns(args) {
             types.RECEIVED_FEATURED_RUNS,
             types.FETCH_FEATURED_RUNS_ERROR,
         ],
-        getCancelSource: state => state.exports.featuredInfo.status.cancelSource,
+        getCancelSource: (state) => state.exports.featuredInfo.status.cancelSource,
         auto: args.isAuto,
         cancellable: args.isAuto,
         url: '/api/runs/filter',
@@ -183,7 +183,7 @@ export function getFeaturedRuns(args) {
 
             return {
                 payload: {
-                    ids: response.data.map(run => run.uid),
+                    ids: response.data.map((run) => run.uid),
                     range,
                     nextPage,
                 },

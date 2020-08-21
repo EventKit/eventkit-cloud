@@ -9,7 +9,6 @@ export interface Props {
 
 export class AdministratorInfoDialog extends React.Component<Props, {}> {
     render() {
-
         return (
             <BaseDialog
                 show={this.props.show}

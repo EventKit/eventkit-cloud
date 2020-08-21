@@ -25,7 +25,7 @@ describe('NotificationIcon component', () => {
         shallow = createShallow();
     });
 
-    const getWrapper = props => (
+    const getWrapper = (props) => (
         shallow(<NotificationIcon {...props} {...global.eventkit_test_props} />)
     );
 

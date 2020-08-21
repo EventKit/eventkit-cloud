@@ -1,9 +1,8 @@
 import * as React from 'react';
 import { withTheme, withStyles, createStyles } from '@material-ui/core/styles';
-import { Breakpoint } from '@material-ui/core/styles/createBreakpoints';
 import MuiDrawer from '@material-ui/core/Drawer';
 import MenuItem from '@material-ui/core/MenuItem';
-import { Link, NavLink } from 'react-router-dom';
+import { NavLink } from 'react-router-dom';
 import AVLibraryBooks from '@material-ui/icons/LibraryBooks';
 import ContentAddBox from '@material-ui/icons/AddBox';
 import Dashboard from '@material-ui/icons/Dashboard';
@@ -12,8 +11,8 @@ import SocialPerson from '@material-ui/icons/Person';
 import SocialGroup from '@material-ui/icons/Group';
 import ActionExitToApp from '@material-ui/icons/ExitToApp';
 import Mail from '@material-ui/icons/MailOutlined';
+import { Theme } from '@material-ui/core';
 import ConfirmDialog from './Dialog/ConfirmDialog';
-import {Theme} from "@material-ui/core";
 
 const jss = (theme: Theme & Eventkit.Theme) => createStyles({
     link: {
@@ -124,7 +123,7 @@ export class Drawer extends React.Component<Props, State> {
         const { classes } = this.props;
 
         return (
-            <React.Fragment>
+            <>
                 <MuiDrawer
                     className="qa-Drawer-Drawer"
                     classes={{ paper: classes.drawer }}
@@ -222,19 +221,21 @@ export class Drawer extends React.Component<Props, State> {
                             <NavLink // eslint-disable-line jsx-a11y/anchor-is-valid
                                 className={`qa-Drawer-Link-logout ${classes.link}`}
                                 onClick={this.handleLogoutClick}
-                                to={"/"}
+                                to="/"
                             >
                                 <ActionExitToApp className={classes.icon} />
                                 Log Out
                             </NavLink>
                         </MenuItem>
                     </div>
-                    {this.props.contactUrl ? <a
-                        className={`qa-Drawer-contact ${classes.contact}`}
-                        href={this.props.contactUrl}
-                    >
-                        <Mail className={classes.icon} />Contact Us
-                    </a> : null}
+                    {this.props.contactUrl ? (
+                        <a
+                            className={`qa-Drawer-contact ${classes.contact}`}
+                            href={this.props.contactUrl}
+                        >
+                            <Mail className={classes.icon} />Contact Us
+                        </a>
+                    ) : null}
                 </MuiDrawer>
                 <ConfirmDialog
                     show={this.state.showLogoutDialog}
@@ -246,7 +247,7 @@ export class Drawer extends React.Component<Props, State> {
                 >
                     <strong>Are you sure?</strong>
                 </ConfirmDialog>
-            </React.Fragment>
+            </>
         );
     }
 }

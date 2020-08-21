@@ -1,5 +1,5 @@
-import React, {useEffect, useRef} from 'react';
-import { useOlZoom} from "../MapTools/context/OpenLayersContext";
+import React, { useEffect, useRef } from 'react';
+import { useOlZoom } from '../MapTools/context/OpenLayersContext';
 
 interface Props {
     setZoom: (minZoom: number, maxZoom: number) => void;

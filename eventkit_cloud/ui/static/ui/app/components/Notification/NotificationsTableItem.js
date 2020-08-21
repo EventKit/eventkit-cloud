@@ -170,11 +170,10 @@ export class NotificationsTableItem extends React.Component {
                                                     onClick={this.handleView}
                                                 >
                                                     <OpenInNewIcon style={styles.optionButtonLabel} color="primary" />
-                                            View
+                                                    View
                                                 </ButtonBase>
                                             )
-                                            : null
-                                        }
+                                            : null}
                                     </div>
                                     <div style={{
                                         flex: '0 1 180px', textAlign: 'center', margin: '0 6px', boxSizing: 'border-box',
@@ -188,7 +187,7 @@ export class NotificationsTableItem extends React.Component {
                                                     onClick={this.handleMarkAsRead}
                                                 >
                                                     <FlagIcon style={styles.optionButtonLabel} color="primary" />
-                                            Mark As Read
+                                                    Mark As Read
                                                 </ButtonBase>
                                             )
                                             : (
@@ -198,10 +197,9 @@ export class NotificationsTableItem extends React.Component {
                                                     onClick={this.handleMarkAsUnread}
                                                 >
                                                     <FlagIcon style={styles.optionButtonLabel} color="primary" />
-                                            Mark As Unread
+                                                    Mark As Unread
                                                 </ButtonBase>
-                                            )
-                                        }
+                                            )}
                                     </div>
                                     <div style={{
                                         flex: '1', textAlign: 'left', marginLeft: '6px', boxSizing: 'border-box',
@@ -213,7 +211,7 @@ export class NotificationsTableItem extends React.Component {
                                             onClick={this.handleRemove}
                                         >
                                             <CloseIcon style={styles.optionButtonLabel} color="primary" />
-                                        Remove
+                                            Remove
                                         </ButtonBase>
                                     </div>
                                 </div>
@@ -228,8 +226,7 @@ export class NotificationsTableItem extends React.Component {
                                     onRemove={this.props.onRemove}
                                     onView={this.props.onView}
                                 />
-                            )
-                        }
+                            )}
                     </div>
                 </TableCell>
             </TableRow>
@@ -262,11 +259,10 @@ NotificationsTableItem.defaultProps = {
 
 function mapDispatchToProps(dispatch) {
     return {
-        markNotificationsAsRead: notifications => dispatch(markNotificationsAsRead(notifications)),
-        markNotificationsAsUnread: notifications => dispatch(markNotificationsAsUnread(notifications)),
-        removeNotifications: notifications => dispatch(removeNotifications(notifications)),
+        markNotificationsAsRead: (notifications) => dispatch(markNotificationsAsRead(notifications)),
+        markNotificationsAsUnread: (notifications) => dispatch(markNotificationsAsUnread(notifications)),
+        removeNotifications: (notifications) => dispatch(removeNotifications(notifications)),
     };
 }
 
 export default withWidth()(withTheme(connect(null, mapDispatchToProps)(NotificationsTableItem)));
-

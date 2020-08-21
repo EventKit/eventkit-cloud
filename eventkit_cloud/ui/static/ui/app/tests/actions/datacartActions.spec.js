@@ -1,4 +1,3 @@
-
 import * as actions from '../../actions/datacartActions';
 
 describe('export actions', () => {

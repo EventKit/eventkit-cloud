@@ -10,7 +10,7 @@ import Clear from '@material-ui/icons/Clear';
 import Slider from '@material-ui/core/Slider';
 import { useState } from 'react';
 import AlertCallout from './AlertCallout';
-import { getSqKm, getSqKmString } from '../../utils/generic';
+import { getSqKmString } from '../../utils/generic';
 import { useJobValidationContext } from './context/JobValidation';
 
 const jss = (theme: Eventkit.Theme & Theme) => createStyles({
@@ -219,7 +219,7 @@ export function BufferDialog(props: Props) {
                             type="number"
                             name="buffer-value"
                             value={props.value}
-                            onChange={e => props.handleBufferChange(e.target.value)}
+                            onChange={(e) => props.handleBufferChange(e.target.value)}
                             style={{ color: props.valid ? colors.grey : colors.warning }}
                             InputProps={{ style: { fontSize: '14px', lineHeight: '24px' } }}
                             // MUI uses the case of the i to distinguish between Input component and input html element

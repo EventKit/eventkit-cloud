@@ -126,7 +126,7 @@ export class NotificationsTableMenu extends React.Component {
         });
 
         return (
-            <React.Fragment>
+            <>
                 <IconMenu
                     style={{ transform: 'rotate(90deg)' }}
                     anchorOrigin={{ horizontal: 'left', vertical: 'top' }}
@@ -141,11 +141,10 @@ export class NotificationsTableMenu extends React.Component {
                                 onClick={this.handleMarkAsRead}
                             >
                                 <FlagIcon style={styles.icon} />
-                            Mark As Read
+                                Mark As Read
                             </MenuItem>
                         )
-                        : null
-                    }
+                        : null}
                     {showMarkAsUnread
                         ? (
                             <MenuItem
@@ -155,11 +154,10 @@ export class NotificationsTableMenu extends React.Component {
                                 onClick={this.handleMarkAsUnread}
                             >
                                 <FlagIcon style={styles.icon} />
-                            Mark As Unread
+                                Mark As Unread
                             </MenuItem>
                         )
-                        : null
-                    }
+                        : null}
                     {(selectedNotificationsKeys.length > 0)
                         ? (
                             <MenuItem
@@ -169,15 +167,13 @@ export class NotificationsTableMenu extends React.Component {
                                 onClick={this.handleRemove}
                             >
                                 <CloseIcon style={styles.icon} />
-                            Remove
+                                Remove
                             </MenuItem>
                         )
-                        : null
-                    }
+                        : null}
                     {(selectedNotificationsKeys.length > 0)
                         ? <Divider key="divider" />
-                        : null
-                    }
+                        : null}
                     <MenuItem
                         key="markAll"
                         className="qa-NotificationsTableMenu-MarkAllAsRead"
@@ -194,7 +190,7 @@ export class NotificationsTableMenu extends React.Component {
                     deleteAll={this.state.deleteAll}
                     onSelectionChange={this.handleSelection}
                 />
-            </React.Fragment>
+            </>
         );
     }
 }
@@ -222,12 +218,11 @@ NotificationsTableMenu.defaultProps = {
 
 function mapDispatchToProps(dispatch) {
     return {
-        markNotificationsAsRead: notifications => dispatch(markNotificationsAsRead(notifications)),
-        markNotificationsAsUnread: notifications => dispatch(markNotificationsAsUnread(notifications)),
-        removeNotifications: notifications => dispatch(removeNotifications(notifications)),
+        markNotificationsAsRead: (notifications) => dispatch(markNotificationsAsRead(notifications)),
+        markNotificationsAsUnread: (notifications) => dispatch(markNotificationsAsUnread(notifications)),
+        removeNotifications: (notifications) => dispatch(removeNotifications(notifications)),
         markAllNotificationsAsRead: () => dispatch(markAllNotificationsAsRead()),
     };
 }
 
 export default withTheme(connect(null, mapDispatchToProps)(NotificationsTableMenu));
-

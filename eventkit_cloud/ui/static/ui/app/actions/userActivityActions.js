@@ -41,7 +41,7 @@ export function getViewedJobs(args = {}) {
         url: '/api/user/activity/jobs',
         method: 'GET',
         params,
-        getCancelSource: state => state.exports.viewedInfo.status.cancelSource,
+        getCancelSource: (state) => state.exports.viewedInfo.status.cancelSource,
         onSuccess: (response) => {
             const { nextPage, range } = getHeaderPageInfo(response);
             const runs = response.data.map((entry) => {
@@ -52,7 +52,7 @@ export function getViewedJobs(args = {}) {
                 payload: {
                     nextPage,
                     range,
-                    ids: runs.map(run => run.uid),
+                    ids: runs.map((run) => run.uid),
                 },
             };
         },

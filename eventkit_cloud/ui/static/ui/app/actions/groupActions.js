@@ -27,7 +27,7 @@ export function getGroups(params, append = false) {
         method: 'GET',
         params,
         payload: { append },
-        getCancelSource: state => state.groups.cancelSource,
+        getCancelSource: (state) => state.groups.cancelSource,
         cancellable: true,
         onSuccess: (response) => {
             // get the total count from the header
@@ -60,7 +60,7 @@ export function getPermissionGroups(jobUid, params, append = false) {
         method: 'GET',
         params,
         payload: { append },
-        getCancelSource: state => state.groups.cancelSource,
+        getCancelSource: (state) => state.groups.cancelSource,
         cancellable: true,
         onSuccess: (response) => {
             // get the total count from the header

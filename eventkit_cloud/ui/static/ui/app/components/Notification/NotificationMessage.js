@@ -53,7 +53,7 @@ export class NotificationMessage extends Component {
             || (requiresActionObjDetails.includes(verb) && (!notification.action_object || !notification.action_object.details))
         ) {
             return (
-                <React.Fragment>
+                <>
                     <span
                         key={`${notification.id}-error`}
                         style={{ ...styles.text, color: colors.warning, whiteSpace: 'normal' }}
@@ -61,7 +61,7 @@ export class NotificationMessage extends Component {
                     >
                         Uh oh! Sorry, this notification&apos;s details are no longer available.
                     </span>
-                </React.Fragment>
+                </>
             );
         }
 
@@ -156,11 +156,11 @@ export class NotificationMessage extends Component {
         );
 
         return (
-            <React.Fragment>
+            <>
                 {order === 1 ? linkEl : null }
                 {spanEl}
                 {order === -1 ? linkEl : null }
-            </React.Fragment>
+            </>
         );
     }
 }
@@ -185,7 +185,7 @@ NotificationMessage.propTypes = {
 NotificationMessage.defaultProps = {
     textStyle: {},
     linkStyle: {},
-    onLinkClick: () => (true),
+    onLinkClick: () => true,
 };
 
 export default withTheme(NotificationMessage);

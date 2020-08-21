@@ -1,12 +1,13 @@
 import { colors } from './styles/eventkit_theme';
 
 function fillDefaults(steps) {
-    return steps.map(step => {
+    return steps.map((step) => {
         if (step.disableBeacon === undefined) {
+            // eslint-disable-next-line no-param-reassign
             step.disableBeacon = true;
         }
         return step;
-    })
+    });
 }
 
 export const JoyRideStyles = {

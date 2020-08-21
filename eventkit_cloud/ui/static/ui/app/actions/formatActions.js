@@ -1,4 +1,3 @@
-
 export const types = {
     GETTING_FORMATS: 'GETTING_FORMATS',
     FORMATS_RECEIVED: 'FORMATS_RECEIVED',
@@ -14,6 +13,6 @@ export function getFormats() {
         ],
         url: '/api/formats',
         method: 'GET',
-        onSuccess: response => ({ formats: response.data }),
+        onSuccess: (response) => ({ formats: response.data }),
     };
 }

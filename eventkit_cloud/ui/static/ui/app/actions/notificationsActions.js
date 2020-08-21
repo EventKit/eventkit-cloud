@@ -1,4 +1,3 @@
-
 import { getHeaderPageInfo } from '../utils/generic';
 
 export const types = {
@@ -39,7 +38,7 @@ export function getNotifications(args = {}) {
             types.RECEIVED_NOTIFICATIONS,
             types.FETCH_NOTIFICATIONS_ERROR,
         ],
-        getCancelSource: state => state.notifications.status.cancelSource,
+        getCancelSource: (state) => state.notifications.status.cancelSource,
         auto: args.isAuto,
         cancellable: args.isAuto,
         url: '/api/notifications',
@@ -69,7 +68,7 @@ export function markNotificationsAsRead(notifications) {
             types.MARKED_NOTIFICATIONS_AS_READ,
             types.MARK_NOTIFICATIONS_AS_READ_ERROR,
         ],
-        getCancelSource: state => state.notifications.status.cancelSource,
+        getCancelSource: (state) => state.notifications.status.cancelSource,
         url: '/api/notifications/read',
         method: 'POST',
         payload: { notifications },
@@ -90,7 +89,7 @@ export function markNotificationsAsUnread(notifications) {
             types.MARKED_NOTIFICATIONS_AS_UNREAD,
             types.MARK_NOTIFICATIONS_AS_UNREAD_ERROR,
         ],
-        getCancelSource: state => state.notifications.status.cancelSource,
+        getCancelSource: (state) => state.notifications.status.cancelSource,
         payload: { notifications },
         url: '/api/notifications/unread',
         method: 'POST',
@@ -114,7 +113,7 @@ export function removeNotifications(notifications) {
             types.REMOVED_NOTIFICATIONS,
             types.REMOVE_NOTIFICATIONS_ERROR,
         ],
-        getCancelSource: state => state.notifications.status.cancelSource,
+        getCancelSource: (state) => state.notifications.status.cancelSource,
         payload: { notifications },
         url: '/api/notifications/delete',
         method: 'DELETE',
@@ -129,7 +128,7 @@ export function markAllNotificationsAsRead() {
             types.MARKED_ALL_NOTIFICATIONS_AS_READ,
             types.MARK_ALL_NOTIFICATIONS_AS_READ_ERROR,
         ],
-        getCancelSource: state => state.notifications.status.cancelSource,
+        getCancelSource: (state) => state.notifications.status.cancelSource,
         url: '/api/notifications/read',
         method: 'POST',
     };
@@ -142,11 +141,11 @@ export function getNotificationsUnreadCount(args = {}) {
             types.RECEIVED_NOTIFICATIONS_UNREAD_COUNT,
             types.FETCH_NOTIFICATIONS_UNREAD_COUNT_ERROR,
         ],
-        getCancelSource: state => state.notifications.unreadCount.status.cancelSource,
+        getCancelSource: (state) => state.notifications.unreadCount.status.cancelSource,
         auto: args.isAuto,
         cancellable: args.isAuto,
         url: '/api/notifications/counts',
         method: 'GET',
-        onSuccess: response => ({ unreadCount: response.data.unread }),
+        onSuccess: (response) => ({ unreadCount: response.data.unread }),
     };
 }

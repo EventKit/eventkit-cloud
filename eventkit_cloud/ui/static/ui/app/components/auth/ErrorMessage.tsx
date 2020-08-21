@@ -1,8 +1,10 @@
 import * as React from 'react';
-import {withTheme, Theme, createStyles, withStyles} from '@material-ui/core/styles';
+import {
+    withTheme, Theme,
+} from '@material-ui/core/styles';
 import { Breakpoint } from '@material-ui/core/styles/createBreakpoints';
-import {Button} from "@material-ui/core";
-import * as PropTypes from "prop-types";
+import { Button } from '@material-ui/core';
+import * as PropTypes from 'prop-types';
 
 export interface Props {
     theme: Eventkit.Theme & Theme;
@@ -11,7 +13,6 @@ export interface Props {
 }
 
 export class ErrorMessage extends React.Component<Props, {}> {
-
     static contextTypes = {
         config: PropTypes.object,
     };
@@ -30,13 +31,16 @@ export class ErrorMessage extends React.Component<Props, {}> {
 
     getErrorMessage() {
         let errorMessage;
-        if(this.context.config.CONTACT_URL) {
+        if (this.context.config.CONTACT_URL) {
             errorMessage = (
-                <a className={`qa-Error-contact`}
-                   href={this.context.config.CONTACT_URL}>contact us.</a>)
-        }
-        else {
-            errorMessage = "contact an administrator.";
+                <a
+                    className="qa-Error-contact"
+                    href={this.context.config.CONTACT_URL}
+                >contact us.
+                </a>
+            );
+        } else {
+            errorMessage = 'contact an administrator.';
         }
         return errorMessage;
     }
@@ -54,32 +58,32 @@ export class ErrorMessage extends React.Component<Props, {}> {
                 width: '100%',
                 fontSize: '18px',
                 color: colors.white,
-                marginTop: '30px'
+                marginTop: '30px',
             },
         };
 
-
         return (
             <div style={{ verticalAlign: 'middle', textAlign: 'center' }}>
-                    <div style={{
-                        ...styles.message,
-                        fontSize: '20px',
-                        marginTop: '0px',
-                        marginBottom: '90px'
-                    }}>
-                        <strong>SERVER ERROR</strong>
-                        <p style={styles.message}>
+                <div style={{
+                    ...styles.message,
+                    fontSize: '20px',
+                    marginTop: '0px',
+                    marginBottom: '90px',
+                }}
+                >
+                    <strong>SERVER ERROR</strong>
+                    <p style={styles.message}>
                         An error occurred during the authentication process. Please try again or {this.getErrorMessage()}
-                        </p>
-                    </div>
-                    <Button
-                        onClick={this.onClick}
-                        name="submit"
-                        color="primary"
-                        variant="contained"
-                    >
-                        Return to Login
-                    </Button>
+                    </p>
+                </div>
+                <Button
+                    onClick={this.onClick}
+                    name="submit"
+                    color="primary"
+                    variant="contained"
+                >
+                    Return to Login
+                </Button>
             </div>
         );
     }
