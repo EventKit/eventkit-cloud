@@ -18,8 +18,8 @@ from django.conf import settings
 
 logger = logging.getLogger(__name__)
 
-MAX_DB_CONNECTION_RETRIES = 5
-MAX_DB_CONNECTION_DELAY = 5
+MAX_DB_CONNECTION_RETRIES = 8
+TIME_DELAY_BASE = 2  # Used for exponential delays (i.e. 5^y) at 8 would be about 4 minutes 15 seconds max delay.
 
 
 # The retry here is an attempt to mitigate any possible dropped connections. We chose to do a limited number of
@@ -54,9 +54,10 @@ def retry(f):
                     # If task was canceled (as opposed to fail) don't retry.
                     attempts = 0
                 else:
-                    time.sleep(MAX_DB_CONNECTION_DELAY)
-                if attempts:
-                    logger.error("Retrying {0} times.".format(str(attempts)))
+                    if attempts:
+                        delay = TIME_DELAY_BASE ** (MAX_DB_CONNECTION_RETRIES - attempts + 1)
+                        logger.error(f"Retrying {str(attempts)} more times, sleeping for {delay}...")
+                        time.sleep(delay)
         raise exc
 
     return wrapper
@@ -640,11 +641,11 @@ def get_band_statistics(file_path, band=1):
     try:
         gdal.UseExceptions()
         image_file = gdal.Open(file_path)
-        band = image_file.GetRasterBand(1)
-        return band.GetStatistics(False, True)
+        raster_band = image_file.GetRasterBand(band)
+        return raster_band.GetStatistics(False, True)
     except Exception as e:
         logger.error(e)
-        logger.error("Could not get statistics for {0}:{1}".format(file_path, band))
+        logger.error("Could not get statistics for {0}:{1}".format(file_path, raster_band))
         return None
     finally:
         # Need to close the dataset.
