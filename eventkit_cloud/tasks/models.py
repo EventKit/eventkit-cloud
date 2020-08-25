@@ -148,7 +148,7 @@ class FileProducingTaskResult(UIDMixin, NotificationModelMixin):
         )
 
         old_run = self.export_task.export_provider_task.run
-        downloads = UserDownload.objects.filter(downloadable__uid=self.uid)
+        downloads = list(self.downloads.all())
         self.id = None
         self.uid = None
         self.save()
@@ -228,7 +228,7 @@ class ExportRun(UIDMixin, TimeStampedModelMixin, TimeTrackingModelMixin, Notific
         self.soft_delete_notifications(*args, **kwargs)
 
     def clone(self):
-        data_provider_task_records = DataProviderTaskRecord.objects.filter(run__uid=self.uid)
+        data_provider_task_records = list(self.data_provider_task_records.all())
         self.pk = None
         self.id = None
         self.uid = None
@@ -308,7 +308,7 @@ class DataProviderTaskRecord(UIDMixin, TimeStampedModelMixin, TimeTrackingModelM
         return "DataProviderTaskRecord uid: {0}".format(str(self.uid))
 
     def clone(self, new_run):
-        export_task_records = ExportTaskRecord.objects.filter(export_provider_task__uid=self.uid)
+        export_task_records = list(self.tasks.all())
         self.id = None
         self.uid = None
         self.save()
@@ -348,6 +348,8 @@ class UserDownload(UIDMixin):
         self.id = None
         self.uid = None
         self.save()
+
+        return self
 
 
 class ExportTaskRecord(UIDMixin, TimeStampedModelMixin, TimeTrackingModelMixin):
@@ -398,6 +400,7 @@ class ExportTaskRecord(UIDMixin, TimeStampedModelMixin, TimeTrackingModelMixin):
     def clone(self, new_run):
         # Get the exceptions from the old ExportTaskRecord
         exceptions = ExportTaskException.objects.filter(task__uid=self.uid)
+        exceptions = list(self.exceptions.all())
 
         # Create a new FPTR now because we can't clone the ETR with the old FPTR since it has a unique constraint.
         file_producing_task_result = self.result.clone(new_run=new_run)
@@ -435,6 +438,8 @@ class ExportTaskException(TimeStampedModelMixin):
         self.id = None
         self.uid = None
         self.save()
+
+        return self
 
 
 def prefetch_export_runs(queryset_list_or_model):
