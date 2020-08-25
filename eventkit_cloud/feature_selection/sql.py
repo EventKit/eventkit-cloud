@@ -63,7 +63,7 @@ class SQLValidator(object):
         except InvalidSQL as e:
             self._errors.append(str(e))
             return False
-        except ParseException as e:
+        except ParseException:
             self._errors.append("SQL could not be parsed.")
             return False
         return True

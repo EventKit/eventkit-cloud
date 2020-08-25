@@ -335,7 +335,7 @@ if os.getenv("VCAP_SERVICES"):
                 AWS_STORAGE_BUCKET_NAME = listings[0]["credentials"]["bucket"]
                 AWS_ACCESS_KEY_ID = listings[0]["credentials"]["access_key_id"]
                 AWS_SECRET_ACCESS_KEY = listings[0]["credentials"]["secret_access_key"]
-            except (KeyError, TypeError) as e:
+            except (KeyError, TypeError):
                 continue
 AWS_STORAGE_BUCKET_NAME = AWS_STORAGE_BUCKET_NAME or os.getenv("AWS_STORAGE_BUCKET_NAME")
 AWS_ACCESS_KEY_ID = AWS_ACCESS_KEY_ID or os.getenv("AWS_ACCESS_KEY_ID")

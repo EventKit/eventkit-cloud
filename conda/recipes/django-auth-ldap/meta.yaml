@@ -1,5 +1,5 @@
 {% set name = "django-auth-ldap" %}
-{% set version = "1.7.0" %}
+{% set version = "2.2.0" %}
 
 package:
   name: "{{ name|lower }}"
@@ -7,7 +7,7 @@ package:
 
 source:
   url: https://github.com/{{ name }}/{{ name }}/archive/{{ version }}.tar.gz
-  sha256: 9f117850248ed575231bc36bf740137f57a86b5f778d421f871e41d7c6a09b33
+  sha256: b8ca4fa54982f84522f4fe2505d2df23f9a410c70f44a7ffa6663ac66cf40ec0
 
 build:
   number: 0
@@ -28,11 +28,11 @@ about:
   home: https://github.com/django-auth-ldap/django-auth-ldap
   license: BSD
   license_family: BSD
-  license_file: 
+  license_file:
   summary: Django LDAP authentication backend
-  doc_url: 
-  dev_url: 
+  doc_url:
+  dev_url:
 
 extra:
   recipe-maintainers:
-    - your-github-id-here
+    - Coop56
