@@ -96,15 +96,12 @@ logger = get_task_logger(__name__)
 # https://github.com/celery/celery/issues/3270
 
 
-def make_file_downloadable(
-    filepath, run_uid, provider_slug=None, skip_copy=False, download_filename=None, size=None, direct=False,
-):
+def make_file_downloadable(filepath, run_uid, provider_slug=None, skip_copy=False, download_filename=None):
     """ Construct the filesystem location and url needed to download the file at filepath.
         Copy filepath to the filesystem location required for download.
         @provider_slug is specific to ExportTasks, not needed for FinalizeHookTasks
         @skip_copy: It looks like sometimes (At least for OverpassQuery) we don't want the file copied,
             generally can be ignored
-        @direct: If true, return the direct download URL and skip the Downloadable tracking step
         @return A url to reach filepath.
     """
 
@@ -1139,7 +1136,9 @@ def mapproxy_export_task(
 
 
 @app.task(name="Pickup Run", bind=True, base=UserDetailsBase)
-def pick_up_run_task(self, result=None, run_uid=None, user_details=None, *args, **kwargs):
+def pick_up_run_task(
+    self, result=None, run_uid=None, user_details=None, data_provider_slugs=None, *args, **kwargs,
+):
     """
     Generates a Celery task to assign a celery pipeline to a specific worker.
     """
@@ -1154,7 +1153,9 @@ def pick_up_run_task(self, result=None, run_uid=None, user_details=None, *args, 
         worker = socket.gethostname()
         run.worker = worker
         run.save()
-        TaskFactory().parse_tasks(worker=worker, run_uid=run_uid, user_details=user_details)
+        TaskFactory().parse_tasks(
+            worker=worker, run_uid=run_uid, user_details=user_details, data_provider_slugs=data_provider_slugs,
+        )
     except Exception as e:
         run.status = TaskStates.FAILED.value
         run.save()

@@ -61,7 +61,7 @@ class TaskFactory:
             "arcgis-feature": arcgis_feature_service_export_task,
         }
 
-    def parse_tasks(self, worker=None, run_uid=None, user_details=None):
+    def parse_tasks(self, worker=None, run_uid=None, user_details=None, data_provider_slugs=None):
         """
         This handles all of the logic for taking the information about what individual celery tasks and groups
         them under specific providers.
@@ -106,7 +106,9 @@ class TaskFactory:
             run = ExportRun.objects.get(uid=run_uid)
             job = run.job
             run_dir = get_run_staging_dir(run.uid)
-            os.makedirs(run_dir, 0o750)
+
+            if not os.path.exists(run_dir):
+                os.makedirs(run_dir, 0o750)
 
             queue_group = os.getenv("CELERY_GROUP_NAME", worker)
             wait_for_providers_settings = {
@@ -129,7 +131,8 @@ class TaskFactory:
                 run=run, name="run", slug="run", status=TaskStates.PENDING.value, display=False,
             )
             stage_dir = get_provider_staging_dir(run_dir, run_task_record.slug)
-            os.makedirs(stage_dir, 6600)
+            if not os.path.exists(stage_dir):
+                os.makedirs(stage_dir, 6600)
 
             run_zip_task_chain = get_zip_task_chain(
                 data_provider_task_record_uid=run_task_record.uid,
@@ -137,6 +140,9 @@ class TaskFactory:
                 worker=worker,
             )
             for provider_task in job.data_provider_tasks.all():
+                # Skip any providers that weren't selected to be re-run.
+                if data_provider_slugs and provider_task.provider.slug not in data_provider_slugs:
+                    continue
 
                 if self.type_task_map.get(provider_task.provider.export_provider_type.type_name):
                     # Each task builder has a primary task which pulls the source data, grab that task here...
@@ -145,7 +151,8 @@ class TaskFactory:
                     primary_export_task = self.type_task_map.get(type_name)
 
                     stage_dir = get_provider_staging_dir(run_dir, provider_task.provider.slug)
-                    os.makedirs(stage_dir, 6600)
+                    if not os.path.exists(stage_dir):
+                        os.makedirs(stage_dir, 6600)
 
                     args = {
                         "primary_export_task": primary_export_task,
@@ -217,7 +224,7 @@ class TaskFactory:
 
 
 @transaction.atomic
-def create_run(job_uid, user=None):
+def create_run(job_uid, user=None, clone=False):
     """
     This will create a new Run based on the provided job uid.
     :param job_uid: The UID to reference the Job model.
@@ -255,20 +262,25 @@ def create_run(job_uid, user=None):
                         job.user.username, job.name
                     )
                 )
-
             run_count = job.runs.filter(deleted=False).count()
+            if clone:
+                run = job.last_export_run.clone()
+                job.last_export_run = run
+                job.save()
+            else:
+                # add the export run to the database
+                run = ExportRun.objects.create(
+                    job=job, user=user, status="SUBMITTED", expiration=(timezone.now() + timezone.timedelta(days=14)),
+                )  # persist the run
+                job.last_export_run = run
+                job.save()
+
             if run_count > 0:
                 while run_count > max_runs - 1:
                     # delete the earliest runs
                     job.runs.filter(deleted=False).earliest("started_at").soft_delete(user=user)
                     run_count -= 1
 
-            # add the export run to the database
-            run = ExportRun.objects.create(
-                job=job, user=user, status="SUBMITTED", expiration=(timezone.now() + timezone.timedelta(days=14)),
-            )  # persist the run
-            job.last_export_run = run
-            job.save()
             sendnotification(
                 run, run.user, NotificationVerb.RUN_STARTED.value, None, None, NotificationLevel.INFO.value, "",
             )
