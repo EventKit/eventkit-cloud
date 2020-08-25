@@ -4,7 +4,7 @@ services:
     build:
       context: .
       dockerfile: config/Dockerfile
-    image: eventkit/eventkit-base:1.7.0
+    image: eventkit/eventkit-base:1.8.0
     volumes:
       - ./:/var/lib/eventkit/
     user: eventkit
@@ -71,7 +71,7 @@ services:
     extra_hosts:
       - "${SITE_NAME}:${SITE_IP}"
   map:
-    image: eventkit/eventkit-base:1.7.0
+    image: eventkit/eventkit-base:1.8.0
     volumes:
       # using the root directory here will break mapproxy tile locks.
       - ./scripts:/var/lib/eventkit/scripts
@@ -111,10 +111,10 @@ services:
     extra_hosts:
       - "${SITE_NAME}:${SITE_IP}"
   celery:
-    image: eventkit/eventkit-base:1.7.0
+    image: eventkit/eventkit-base:1.8.0
     volumes:
       - ./:/var/lib/eventkit/
-      - ./scripts/run-celery.sh:/home/eventkit/miniconda3/envs/eventkit-cloud/lib/python3.6/site-packages/scripts/run-celery.sh
+      - ./scripts/run-celery.sh:/home/eventkit/miniconda3/envs/eventkit-cloud/lib/python3.7/site-packages/scripts/run-celery.sh
     user: eventkit
     depends_on:
       - postgis
@@ -155,18 +155,18 @@ services:
       - AWS_SECRET_ACCESS_KEY
     extra_hosts:
       - "${SITE_NAME}:${SITE_IP}"
-    command: /home/eventkit/miniconda3/envs/eventkit-cloud/lib/python3.6/site-packages/scripts/run-celery.sh
+    command: /home/eventkit/miniconda3/envs/eventkit-cloud/lib/python3.7/site-packages/scripts/run-celery.sh
   memcached:
-    image: eventkit/eventkit-base:1.7.0
+    image: eventkit/eventkit-base:1.8.0
     expose:
       - "11211"
     entrypoint: >
       /bin/bash -c "source activate eventkit-cloud && memcached -m 2048 -I 10m"
   celery-beat:
-    image: eventkit/eventkit-base:1.7.0
+    image: eventkit/eventkit-base:1.8.0
     volumes:
       - ./:/var/lib/eventkit/
-      - ./scripts/run-celery-beat.sh:/home/eventkit/miniconda3/envs/eventkit-cloud/lib/python3.6/site-packages/scripts/run-celery-beat.sh
+      - ./scripts/run-celery-beat.sh:/home/eventkit/miniconda3/envs/eventkit-cloud/lib/python3.7/site-packages/scripts/run-celery-beat.sh
     user: eventkit
     depends_on:
       - postgis
@@ -196,7 +196,7 @@ services:
       - DEV_MACHINE_CODE_PATH
     extra_hosts:
       - "${SITE_NAME}:${SITE_IP}"
-    command: /home/eventkit/miniconda3/envs/eventkit-cloud/lib/python3.6/site-packages/scripts/run-celery-beat.sh
+    command: /home/eventkit/miniconda3/envs/eventkit-cloud/lib/python3.7/site-packages/scripts/run-celery-beat.sh
   postgis:
     image: kartoza/postgis:11.5-2.5
     environment:
@@ -242,7 +242,7 @@ services:
       - SITE_NAME=${SITE_NAME}
       - LOG_LEVEL=warn
   flower:
-    image: eventkit/eventkit-base:1.7.0
+    image: eventkit/eventkit-base:1.8.0
     volumes:
       - ./:/var/lib/eventkit/
     user: eventkit

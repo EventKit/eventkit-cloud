@@ -171,7 +171,7 @@ class ProviderCheck(object):
         self.verify = getattr(settings, "SSL_VERIFICATION", True)
         self.config = config or dict()
 
-        if aoi_geojson is not None and aoi_geojson is not "":
+        if aoi_geojson is not None and aoi_geojson != "":
             if isinstance(aoi_geojson, str):
                 aoi_geojson = json.loads(aoi_geojson)
 
@@ -239,7 +239,7 @@ class ProviderCheck(object):
                 return None
 
         except (requests.exceptions.ConnectTimeout, requests.exceptions.ReadTimeout,) as ex:
-            logger.error("Provider check timed out for URL {}".format(self.service_url))
+            logger.error("Provider check timed out for URL {}: {}".format(self.service_url, str(ex)))
             self.result = CheckResults.TIMEOUT
             return None
 
@@ -327,7 +327,7 @@ class OverpassProviderCheck(ProviderCheck):
                 return
 
         except (requests.exceptions.ConnectTimeout, requests.exceptions.ReadTimeout,) as ex:
-            logger.error("Provider check timed out for URL {}".format(self.service_url))
+            logger.error("Provider check timed out for URL {}: {}".format(self.service_url, str(ex)))
             self.result = CheckResults.TIMEOUT
             return
 
@@ -500,8 +500,8 @@ class WFSProviderCheck(OWSProviderCheck):
 
         # Get layer names
         feature_names = [(ft, ft.find("name")) for ft in feature_types]
-        logger.debug("WFS layers offered: {}".format([n.text for f, n in feature_names if n]))
-        features = [f for f, n in feature_names if n is not None and self.layer == n.text]
+        logger.debug("WFS layers offered: {}".format([name.text for feature, name in feature_names if name]))
+        features = [feature for feature, name in feature_names if name is not None and self.layer == name.text]
 
         if not features:
             self.result = CheckResults.LAYER_NOT_AVAILABLE
@@ -547,13 +547,13 @@ class WMSProviderCheck(OWSProviderCheck):
         layers = capability.findall("layer")
         sublayers = layers
         while len(sublayers) > 0:
-            sublayers = [l for layer in sublayers for l in layer.findall("layer")]
+            sublayers = [layer for layer in sublayers for layer in layer.findall("layer")]
             layers.extend(sublayers)
 
         # Get layer names
-        layer_names = [(l, l.find("name")) for l in layers]
-        logger.debug("WMS layers offered: {}".format([n.text for l, n in layer_names if n]))
-        layer = [l for l, n in layer_names if n is not None and self.layer == n.text]
+        layer_names = [(layer, layer.find("name")) for layer in layers]
+        logger.debug("WMS layers offered: {}".format([name.text for layer, name in layer_names if name]))
+        layer = [layer for layer, name in layer_names if name is not None and self.layer == name.text]
         if not layer:
             # Since layer name is not consistently available for WM(T)S, just skip layer-dependent checks
             self.result = CheckResults.SUCCESS
@@ -596,13 +596,13 @@ class WMTSProviderCheck(OWSProviderCheck):
         layers = contents.findall("layer")
         sublayers = layers
         while sublayers:
-            sublayers = [l for layer in sublayers for l in layer.findall("layer")]
+            sublayers = [layer for layer in sublayers for layer in layer.findall("layer")]
             layers.extend(sublayers)
 
         # Get layer names
-        layer_names = [(l, l.find("title")) for l in layers]
-        logger.debug("WMTS layers offered: {}".format([n.text for l, n in layer_names if n is not None]))
-        layer = [l for l, n in layer_names if n is not None and self.layer == n.text]
+        layer_names = [(layer, layer.find("title")) for layer in layers]
+        logger.debug("WMTS layers offered: {}".format([name.text for layer, name in layer_names if name is not None]))
+        layer = [layer for layer, name in layer_names if name is not None and self.layer == name.text]
         if not layer:
             # Since layer name is not consistently available for WM(T)S, just skip layer-dependent checks
             self.result = CheckResults.SUCCESS

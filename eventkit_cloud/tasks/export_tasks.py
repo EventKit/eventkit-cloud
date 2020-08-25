@@ -249,7 +249,7 @@ class ExportTask(EventKitBaseTask):
             retval["status"] = TaskStates.SUCCESS.value
             retval["file_producing_task_result_id"] = result.id
             return retval
-        except CancelException as e:
+        except CancelException:
             return {"status": TaskStates.CANCELED.value}
         except Exception as e:
             tb = traceback.format_exc()
@@ -273,30 +273,32 @@ class ExportTask(EventKitBaseTask):
                - this is only for initial tasks on which subsequent export tasks depend
         """
         # TODO: If there is a failure before the task was created this will fail to run.
+        status = TaskStates.FAILED.value
         try:
-            task = ExportTaskRecord.objects.get(uid=task_id)
-            task.finished_at = timezone.now()
-            task.save()
+            export_task_record = ExportTaskRecord.objects.select_related("export_provider_task__run").get(uid=task_id)
+            export_task_record.finished_at = timezone.now()
+            export_task_record.save()
         except Exception:
             logger.error(traceback.format_exc())
             logger.error(
                 "Cannot update the status of ExportTaskRecord object: no such object has been created for "
                 "this task yet."
             )
-        ete = ExportTaskException(task=task, exception=pickle_exception(einfo))
+            return {"status": status}
+        ete = ExportTaskException(task=export_task_record, exception=pickle_exception(einfo))
         ete.save()
-        if task.status != TaskStates.CANCELED.value:
-            task.status = TaskStates.FAILED.value
-            task.save()
-            logger.debug("Task name: {0} failed, {1}".format(self.name, einfo))
-            if self.abort_on_error:
-                export_provider_task = DataProviderTaskRecord.objects.get(tasks__uid=task_id)
-                fail_synchronous_task_chain(data_provider_task_uid=export_provider_task.uid)
-                run = export_provider_task.run
-                stage_dir = kwargs["stage_dir"]
-                export_task_error_handler(run_uid=str(run.uid), task_id=task_id, stage_dir=stage_dir)
-            return {"status": TaskStates.FAILED.value}
-        return {"status": TaskStates.CANCELED.value}
+        if export_task_record.status == TaskStates.CANCELED.value:
+            status = TaskStates.CANCELED.value
+        export_task_record.status = status
+        export_task_record.save()
+        logger.debug("Task name: {0} failed, {1}".format(self.name, einfo))
+        if self.abort_on_error:
+            data_provider_task_record = export_task_record.export_provider_task
+            fail_synchronous_task_chain(data_provider_task_record=data_provider_task_record)
+            run = data_provider_task_record.run
+            stage_dir = kwargs["stage_dir"]
+            export_task_error_handler(run_uid=str(run.uid), task_id=task_id, stage_dir=stage_dir)
+        return {"status": status}
 
     def update_task_state(self, result=None, task_status=TaskStates.RUNNING.value, task_uid=None):
         """
@@ -1280,12 +1282,23 @@ def finalize_export_provider_task(result=None, data_provider_task_uid=None, stat
 
     # if the status was a success, we can assume all the ExportTasks succeeded. if not, we need to parse ExportTasks to
     # mark tasks not run yet as canceled.
+
     result_status = parse_result(result, "status")
 
     with transaction.atomic():
-        export_provider_task = DataProviderTaskRecord.objects.get(uid=data_provider_task_uid)
+        export_provider_task = DataProviderTaskRecord.objects.prefetch_related("tasks").get(uid=data_provider_task_uid)
         if TaskStates[result_status] == TaskStates.CANCELED:
-            export_provider_task.status = TaskStates.CANCELED.value
+            # This makes the assumption that users can't cancel individual tasks.  Therefore if any of them failed then
+            # it is likely that the rest of the tasks were force canceled since they depend on the task that failed.
+            if any(
+                [
+                    export_task_record.status == TaskStates.FAILED.value
+                    for export_task_record in export_provider_task.tasks.all()
+                ]
+            ):
+                export_provider_task.status = TaskStates.INCOMPLETE.value
+            else:
+                export_provider_task.status = TaskStates.CANCELED.value
         elif TaskStates[result_status] != TaskStates.SUCCESS:
             export_provider_task.status = TaskStates.INCOMPLETE.value
         else:
@@ -1556,11 +1569,10 @@ def export_task_error_handler(self, result=None, run_uid=None, task_id=None, sta
     return result
 
 
-def fail_synchronous_task_chain(data_provider_task_uid=None):
-    data_provider_task_record = DataProviderTaskRecord.objects.get(uid=data_provider_task_uid)
+def fail_synchronous_task_chain(data_provider_task_record=None):
     for export_task in data_provider_task_record.tasks.all():
         if TaskStates[export_task.status] == TaskStates.PENDING:
-            export_task.status = TaskStates.FAILED.value
+            export_task.status = TaskStates.CANCELED.value
             export_task.save()
             kill_task.apply_async(
                 kwargs={"task_pid": export_task.pid, "celery_uid": export_task.celery_uid},

@@ -85,7 +85,7 @@ def read_json_file(fp):
         with open(fp) as file_geojson:
             geojson = json.load(file_geojson)
             return geojson
-    except:
+    except Exception:
         raise Exception("Unable to read the file")
 
 
@@ -166,13 +166,13 @@ def is_lat_lon(query):
         )
 
         # match common, space, or comma and space
-        (?:[\,\s]{1,2})             
+        (?:[\,\s]{1,2})
 
         # group to match longitude
         (?:
             (?P<lon_sign>[\+-]?)    # longitude may begin with + or -
             (?:
-                (?P<lon>180(?:(?:\.0{1,20})?)|(?:[0-9]|[1-9][0-9]|1[0-7][0-9])(?:(?:\.[0-9]{1,20})?)) # match valid longitude values 
+                (?P<lon>180(?:(?:\.0{1,20})?)|(?:[0-9]|[1-9][0-9]|1[0-7][0-9])(?:(?:\.[0-9]{1,20})?)) # match valid longitude values
                 [\s]?               # there may or may not be a space following the digits when E or W are included
                 (?P<lon_dir>[EW]?)  # E or W may be used instead of + or -
             )
@@ -191,7 +191,7 @@ def is_lat_lon(query):
     try:
         parsed_lat = float(r.group("lat"))
         parsed_lon = float(r.group("lon"))
-    except ValueError as e:
+    except ValueError:
         return False
 
     if math.isnan(parsed_lat) or math.isnan(parsed_lon):
