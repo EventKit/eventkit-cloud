@@ -128,40 +128,4 @@ describe('GroupsDrawer component', () => {
         expect(screen.getByText('GroupsHeaderTabs'))
         expect(screen.getByText('SearchGroupsToolbar'))
     });
-
-    // it('Change Group Name should call onRenameGroupClick', () => {
-    //     const {container} = setup();
-    //     // Find the menu expander
-    //     const menuIcon = container.querySelector('.qa-GroupsDrawer-groupOptions');
-    //     expect(menuIcon).toBeInTheDocument();
-    //     // Simulate the user clicking it
-    //     fireEvent.click(menuIcon)
-    //     expect(props.onRenameGroupClick.calledOnce).toBe(false);
-    //     fireEvent.click(screen.getByText('Change Group Name'))
-    //     expect(props.onRenameGroupClick.calledOnce).toBe(true);
-    // });
-    //
-    // it('Delete Group Name should call onDeleteGroupClick', () => {
-    //     const {container} = setup();
-    //     // Find the menu expander
-    //     const menuIcon = container.querySelector('.qa-GroupsDrawer-groupOptions');
-    //     expect(menuIcon).toBeInTheDocument();
-    //     // Simulate the user clicking it
-    //     fireEvent.click(menuIcon)
-    //     expect(props.onDeleteGroupClick.calledOnce).toBe(false);
-    //     fireEvent.click(screen.getByText('Delete Group'))
-    //     expect(props.onDeleteGroupClick.calledOnce).toBe(true);
-    // });
-    //
-    // it('clicking on indeterminate icon should call leave group', () => {
-    //     const {container} = setup();
-    //     // Find the menu expander
-    //     const menuIcon = container.querySelector('.qa-GroupsDrawer-groupOptions');
-    //     expect(menuIcon).toBeInTheDocument();
-    //     // Simulate the user clicking it
-    //     fireEvent.click(menuIcon)
-    //     expect(props.onLeaveGroupClick.calledOnce).toBe(false);
-    //     fireEvent.click(screen.getByText('Leave Group'))
-    //     expect(props.onLeaveGroupClick.calledOnce).toBe(true);
-    // });
 });
