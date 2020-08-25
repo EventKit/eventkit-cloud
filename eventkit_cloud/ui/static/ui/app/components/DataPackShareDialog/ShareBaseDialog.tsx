@@ -11,9 +11,9 @@ import CustomScrollbar from '../common/CustomScrollbar';
 import {Breakpoint} from '@material-ui/core/styles/createBreakpoints';
 import BaseDialog from "../Dialog/BaseDialog";
 import Divider from "@material-ui/core/Divider";
-import Warning from "@material-ui/core/SvgIcon/SvgIcon";
 import {connect} from "react-redux";
 import {clearDataCartPermissions} from "../../actions/datacartActions";
+import {Warning} from "@material-ui/icons";
 
 export interface Props {
     className?: string;
