@@ -1144,7 +1144,7 @@ def pick_up_run_task(
     run_uid=None,
     user_details=None,
     data_provider_slugs=None,
-    run_zip_file_sets=None,
+    run_zip_file_slug_sets=None,
     *args,
     **kwargs,
 ):
@@ -1167,7 +1167,7 @@ def pick_up_run_task(
             run_uid=run_uid,
             user_details=user_details,
             data_provider_slugs=data_provider_slugs,
-            run_zip_file_sets=run_zip_file_sets,
+            run_zip_file_slug_sets=run_zip_file_slug_sets,
         )
     except Exception as e:
         run.status = TaskStates.FAILED.value

@@ -567,7 +567,7 @@ class JobViewSet(viewsets.ModelViewSet):
         from eventkit_cloud.tasks.task_factory import InvalidLicense, Unauthorized
 
         try:
-            run_uid, run_zip_file_sets = create_run(job_uid=uid, user=request.user, clone=True)
+            run_uid, run_zip_file_slug_sets = create_run(job_uid=uid, user=request.user, clone=True)
         except (InvalidLicense, Error) as err:
             return Response([{"detail": _(str(err))}], status.HTTP_400_BAD_REQUEST)
         except Unauthorized:
@@ -598,7 +598,7 @@ class JobViewSet(viewsets.ModelViewSet):
                     "run_uid": run_uid,
                     "user_details": user_details,
                     "data_provider_slugs": data_provider_slugs,
-                    "run_zip_file_sets": run_zip_file_sets,
+                    "run_zip_file_slug_sets": run_zip_file_slug_sets,
                 },
             )
             running = ExportRunSerializer(run, context={"request": request})
