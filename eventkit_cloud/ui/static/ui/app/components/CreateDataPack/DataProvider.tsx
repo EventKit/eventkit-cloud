@@ -30,7 +30,7 @@ import PoiQueryDisplay from "../MapTools/PoiQueryDisplay";
 import OlMapClickEvent from "../MapTools/OpenLayers/OlMapClickEvent";
 import SwitchControl from "../common/SwitchControl";
 import Icon from "ol/style/icon";
-import {number, string} from "prop-types";
+import {func, number, string} from "prop-types";
 import {useEffect, useRef, useState} from "react";
 import {DepsHashers, useEffectOnMount} from "../../utils/hooks/hooks";
 import {useAppContext} from "../ApplicationContext";
@@ -59,14 +59,15 @@ const jss = (theme: Theme & Eventkit.Theme) => createStyles({
         borderTop: theme.eventkit.colors.secondary,
     },
     checkbox: {
-        width: '24px',
-        height: '24px',
         marginRight: '15px',
         flex: '0 0 auto',
         color: theme.eventkit.colors.primary,
         '&$checked': {
             color: theme.eventkit.colors.success,
         },
+        '& svg': {
+            fontSize: '24px',
+        }
     },
     checked: {},
     name: {
@@ -253,22 +254,13 @@ export function DataProvider(props: Props) {
         return `${get(sizeEstimate)} / ${get(durationEstimate)}`;
     }
 
-    function getCheckedIcon() {
+    function isIndeterminate() {
         // If every format is fully compatible with every projection, this value will be true.
         // This means we can display a normal checkbox, otherwise we indicate there is an issue
         // by using an indeterminate icon for the checkbox.
         const selectedFormats = props.providerOptions.formats;
-        if (!selectedFormats) {
-            // When no formats are selected, the provider isn't ready to be packed up
-            return (<IndeterminateCheckBoxIcon/>);
-        }
-        const fullCompatibility = selectedFormats.map(
+        return !selectedFormats || !selectedFormats.map(
             (formatSlug) => getFormatCompatibility(formatSlug) === Compatibility.Full).every(value => !!value);
-
-        if (fullCompatibility) {
-            return (<CheckBoxIcon/>);
-        }
-        return (<IndeterminateCheckBoxIcon/>);
     }
 
     // Take the current zoom from the current zoomLevels if they exist and the value is valid,
@@ -483,8 +475,11 @@ export function DataProvider(props: Props) {
                         className="qa-DataProvider-CheckBox-provider"
                         classes={{ root: classes.checkbox, checked: classes.checked }}
                         name={provider.name}
+                        size="medium"
                         checked={props.checked}
-                        checkedIcon={getCheckedIcon()}
+                        checkedIcon={(<CheckBoxIcon/>)}
+                        indeterminateIcon={(<IndeterminateCheckBoxIcon/>)}
+                        indeterminate={isIndeterminate()}
                         onChange={props.onChange}
                     />
                     <ListItemText
@@ -555,7 +550,7 @@ function mapDispatchToProps(dispatch) {
     };
 }
 
-export default withTheme()(withStyles(jss)(connect(
+export default withTheme(withStyles(jss)(connect(
     mapStateToProps,
     mapDispatchToProps,
 )(DataProvider)));

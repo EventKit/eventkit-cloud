@@ -59,7 +59,7 @@ const addJob = (state, job) => {
 };
 
 const addProviderTasks = (state, providerTasks) => {
-    const different = providerTasks.some(task => (
+    const different = providerTasks.some((task) => (
         state[task.uid] === undefined || !isEqual(task, state[task.uid])
     ));
 
@@ -75,7 +75,7 @@ const addProviderTasks = (state, providerTasks) => {
 };
 
 const addTasks = (state, tasks) => {
-    const different = tasks.some(task => (
+    const different = tasks.some((task) => (
         state[task.uid] === undefined || !isEqual(task, state[task.uid])
     ));
 
@@ -108,7 +108,7 @@ const addOwnId = (state, run, username) => {
 
 const removeRunId = (state, id) => {
     if (state.indexOf(id) >= 0) {
-        return state.filter(uid => uid !== id);
+        return state.filter((uid) => uid !== id);
     }
     return state;
 };

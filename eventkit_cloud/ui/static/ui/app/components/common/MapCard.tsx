@@ -104,4 +104,4 @@ export class MapCard extends React.Component<Props, State> {
     }
 }
 
-export default withTheme()(MapCard);
+export default withTheme(MapCard);

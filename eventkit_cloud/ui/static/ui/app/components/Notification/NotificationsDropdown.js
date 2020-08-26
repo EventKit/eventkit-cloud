@@ -211,8 +211,4 @@ function mapDispatchToProps(dispatch) {
     };
 }
 
-export default
-@withWidth()
-@withTheme()
-@connect(null, mapDispatchToProps)
-class Default extends NotificationsDropdown {}
+export default withWidth()(withTheme(connect(null, mapDispatchToProps)(NotificationsDropdown)));

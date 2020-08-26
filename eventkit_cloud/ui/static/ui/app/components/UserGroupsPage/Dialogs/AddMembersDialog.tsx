@@ -20,8 +20,6 @@ import CustomScrollbar from '../../common/CustomScrollbar';
 const jss = (theme: Eventkit.Theme & Theme) => createStyles({
     label: {
         fontSize: '14px',
-    },
-    labelContainer: {
         padding: '6px 0px',
     },
     selected: {
@@ -472,9 +470,7 @@ export class AddMembersDialog extends React.Component<Props, State> {
                             value={0}
                             className="qa-AddMembersDialog-Tab-unassigned"
                             classes={{
-                                root: classes.unassignedTab,
-                                label: classes.label,
-                                labelContainer: classes.labelContainer,
+                                root: `${classes.unassignedTab} ${classes.label}`,
                                 selected: classes.selected
                             }}
                         />
@@ -483,9 +479,7 @@ export class AddMembersDialog extends React.Component<Props, State> {
                             value={1}
                             className="qa-AddMembersDialog-Tab-assigned"
                             classes={{
-                                root: classes.assignedTab,
-                                label: classes.label,
-                                labelContainer: classes.labelContainer,
+                                root: `${classes.assignedTab} ${classes.label}`,
                                 selected: classes.selected
                             }}
                         />
@@ -548,4 +542,4 @@ export class AddMembersDialog extends React.Component<Props, State> {
     }
 }
 
-export default withTheme()(withStyles(jss)(AddMembersDialog));
+export default withTheme(withStyles(jss)(AddMembersDialog));

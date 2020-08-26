@@ -3,7 +3,7 @@ import * as React from 'react';
 import {connect} from 'react-redux';
 import {withTheme, Theme, withStyles, createStyles} from '@material-ui/core/styles';
 import withWidth, {isWidthDown} from '@material-ui/core/withWidth';
-import Joyride, {Step} from 'react-joyride';
+import Joyride, {Step, StoreHelpers} from 'react-joyride';
 import queryString from 'query-string';
 import Help from '@material-ui/icons/Help';
 import Button from '@material-ui/core/Button';
@@ -39,6 +39,7 @@ import {DrawerTimeout} from '../../actions/uiActions';
 import {joyride} from '../../joyride.config';
 import {Breakpoint} from '@material-ui/core/styles/createBreakpoints';
 import history from '../../utils/history';
+import EventkitJoyride from "../common/JoyrideWrapper";
 
 const jss = (theme: Eventkit.Theme & Theme) => createStyles({
     header: {
@@ -242,6 +243,7 @@ export class UserGroupsPage extends React.Component<Props, State> {
 
     private pageSize: number;
     private joyride: Joyride;
+    private helpers: StoreHelpers;
     private scrollbar;
 
     constructor(props: Props, context) {
@@ -406,7 +408,7 @@ export class UserGroupsPage extends React.Component<Props, State> {
         return `${group.name} Members`;
     }
 
-    private makeUserRequest(options = {groups: null, ordering: null, search: null}) {
+    private makeUserRequest(options = {groups: null, ordering: null, search: null} as any) {
         const params = queryString.parse(this.props.location.search);
 
         if (options.search === undefined && params.search) {
@@ -436,8 +438,11 @@ export class UserGroupsPage extends React.Component<Props, State> {
             params.groups = options.groups;
         }
 
-        params.prepend_self = true;
-        this.props.getUsers(params);
+        this.props.getUsers({
+            ...params,
+            // typescript complains if we try to assign preprend_self directly on params.
+            prepend_self: true
+        });
     }
 
     private toggleDrawer() {
@@ -760,10 +765,10 @@ export class UserGroupsPage extends React.Component<Props, State> {
 
         if (isWidthDown('xs', this.props.width)) {
             const ix = newSteps.findIndex(step => (
-                step.selector === '.qa-UserGroupsPage-Button-create'
+                step.target === '.qa-UserGroupsPage-Button-create'
             ));
             if (ix > -1) {
-                newSteps[ix + 1].text = newSteps[ix].text;
+                newSteps[ix + 1].content = newSteps[ix].content;
                 newSteps.splice(ix, 1);
             }
         }
@@ -793,7 +798,7 @@ export class UserGroupsPage extends React.Component<Props, State> {
                 this.props.users.users.splice(fakeIx, 1);
             }
             this.setState({isRunning: false, stepIndex: 0});
-            this.joyride.reset(true);
+            this?.helpers.reset(true);
         } else {
             if (step.selector === '.qa-GroupsDrawer-addGroup' && isWidthDown('sm', this.props.width) && !this.state.drawerOpen) {
                 // because the next step will render immediately after (before the drawer is fully open)
@@ -848,7 +853,7 @@ export class UserGroupsPage extends React.Component<Props, State> {
             this.toggleDrawer();
         }
         if (this.state.isRunning === true) {
-            this.joyride.reset(true);
+            this?.helpers.reset(true);
             this.setState({isRunning: true});
         } else {
             this.setState({isRunning: true});
@@ -960,17 +965,17 @@ export class UserGroupsPage extends React.Component<Props, State> {
 
         return (
             <div style={{backgroundColor: colors.white, position: 'relative'}}>
-                <Joyride
+                <EventkitJoyride
                     callback={this.callback}
                     ref={(instance) => {
                         this.joyride = instance;
                     }}
                     steps={steps}
                     stepIndex={this.state.stepIndex}
-                    autoStart
-                    type="continuous"
+                    continuous
+                    getHelpers={(helpers: any) => {this.helpers = helpers}}
                     showSkipButton
-                    showStepsProgress
+                    showProgress
                     locale={{
                         back: (<span>Back</span>) as any,
                         close: (<span>Close</span>) as any,
@@ -1027,7 +1032,7 @@ export class UserGroupsPage extends React.Component<Props, State> {
                             onSelect={this.handleSelectAll}
                             selectedUsers={this.state.selectedUsers}
                             selectedGroup={queryGroup}
-                            orderingValue={queryString.parse(this.props.location.search).ordering || 'username'}
+                            orderingValue={queryString.parse(this.props.location.search).ordering as string || 'username'}
                             handleOrderingChange={this.handleOrderingChange}
                             handleRemoveUsers={this.handleBatchRemoveUser}
                             handleNewGroup={this.handleNewGroup}
@@ -1277,4 +1282,4 @@ function mapDispatchToProps(dispatch) {
     };
 }
 
-export default withWidth()(withTheme()(withStyles(jss)(connect(mapStateToProps, mapDispatchToProps)(UserGroupsPage))));
+export default withWidth()(withTheme(withStyles(jss)(connect(mapStateToProps, mapDispatchToProps)(UserGroupsPage))));

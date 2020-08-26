@@ -4,7 +4,7 @@ import Popover from '@material-ui/core/Popover';
 import WarningIcon from '@material-ui/icons/Warning';
 import { useState } from 'react';
 import {
-    createStyles, IconButton, Link, Menu, Theme, withStyles,
+    createStyles, IconButton, Theme, withStyles,
 } from '@material-ui/core';
 import CloseIcon from '@material-ui/icons/Close';
 import theme from '../../styles/eventkit_theme';
@@ -107,16 +107,15 @@ export function NotificationIconPopover(props: Props) {
                     {props.view === 'groups'
                         ? (
                             <div style={{ display: 'inline-flex', paddingTop: '5px' }}>
-                            Some of the users in this group may not have access to some of the resources you are trying
-                            to share.
+                                Some of the users in this group may not have access to some of the resources you are trying
+                                to share.
                             </div>
                         )
                         : (
                             <div className={classes.popoverText}>
-                            This user may not have access to some of the resources you are trying to share.
+                                This user may not have access to some of the resources you are trying to share.
                             </div>
-                        )
-                    }
+                        )}
                 </div>
             </Popover>
         </div>

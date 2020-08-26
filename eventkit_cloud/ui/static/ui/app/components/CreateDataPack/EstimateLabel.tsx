@@ -1,12 +1,11 @@
-import {CircularProgress, Typography, withTheme} from '@material-ui/core';
+import { CircularProgress, Typography, withTheme } from '@material-ui/core';
 import * as React from 'react';
-import {useEffect, useState} from 'react';
-import {isWidthUp} from '@material-ui/core/withWidth';
+import { useEffect, useState } from 'react';
+import { isWidthUp } from '@material-ui/core/withWidth';
 import withWidth from '@material-ui/core/withWidth/withWidth';
-import {Breakpoint} from '@material-ui/core/styles/createBreakpoints';
-import {formatMegaBytes, getDuration} from '../../utils/generic';
+import { Breakpoint } from '@material-ui/core/styles/createBreakpoints';
+import { formatMegaBytes, getDuration } from '../../utils/generic';
 import InfoDialog from '../Dialog/InfoDialog';
-
 
 export interface Props {
     show: boolean;
@@ -32,7 +31,7 @@ function EstimateLabel(props: Props) {
     const isSmallScreen = () => !isWidthUp('sm', props.width);
 
     function haveUnknownEstimate() {
-        const providerSlugs = exportInfo.providers.map(provider => provider.slug);
+        const providerSlugs = exportInfo.providers.map((provider) => provider.slug);
         const infoEntries = Object.entries(exportInfo.providerInfo);
         return infoEntries.filter(([slug]) => providerSlugs.indexOf(slug) !== -1).some(
             ([, providerInfo]) => { // leading comma is not a mistake
@@ -192,4 +191,4 @@ function EstimateLabel(props: Props) {
     );
 }
 
-export default withWidth()(withTheme()(EstimateLabel));
+export default withWidth()(withTheme(EstimateLabel));

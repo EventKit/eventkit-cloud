@@ -170,7 +170,7 @@ export class NotificationsTable extends React.Component {
                                     <span>
                                         {selectedCount}
                                         {' '}
-Selected
+                                        Selected
                                     </span>
                                     <NotificationsTableMenu
                                         allSelected={selectedCount === this.props.notificationsArray.length}
@@ -197,7 +197,7 @@ Selected
                         </TableRow>
                     </TableBody>
                     <TableBody>
-                        {this.props.notificationsArray.map(notification => (
+                        {this.props.notificationsArray.map((notification) => (
                             <NotificationsTableItem
                                 key={`NotificationsTableItem-${notification.id}`}
                                 notification={notification}
@@ -239,7 +239,4 @@ NotificationsTable.defaultProps = {
     onView: undefined,
 };
 
-export default
-@withWidth()
-@withTheme()
-class Default extends NotificationsTable {}
+export default withWidth()(withTheme(NotificationsTable));

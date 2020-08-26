@@ -6,7 +6,7 @@ import ArrowRightIcon from '@material-ui/icons/ArrowRight';
 import {KeyboardArrowDown, KeyboardArrowUp} from "@material-ui/icons";
 
 export interface Props {
-    style: object;
+    style?: object;
     range: string;
     handleLoadLess: () => void;
     handleLoadMore: () => void;
@@ -25,6 +25,9 @@ export interface State {
 
 export class LoadButtons extends React.Component<Props, State> {
     private self = React.createRef<HTMLDivElement>();
+    static defaultProps: any = {
+        style: {},
+    }
 
     constructor(props) {
         super(props);
@@ -147,4 +150,4 @@ export class LoadButtons extends React.Component<Props, State> {
     }
 }
 
-export default withTheme()(LoadButtons);
+export default withTheme(LoadButtons);

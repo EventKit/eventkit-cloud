@@ -83,7 +83,7 @@ describe('Export Summary Component', () => {
         expect(wrapper.find('#aoi-map')).toHaveLength(1);
         expect(wrapper.find(MapCard)).toHaveLength(1);
         expect(wrapper.find('#summaryMap')).toHaveLength(0);
-        expect(wrapper.find(Joyride)).toHaveLength(1);
+
     });
 
     it('componentDidMount should setJoyRideSteps', () => {

@@ -58,7 +58,7 @@ function PermissionsBanner(props: Props) {
         <>
             <CssBaseline />
             <Paper elevation={0} className={classes.paper}>
-                <Grid container spacing={32} justify="space-between">
+                <Grid container spacing={8} justify="space-between">
                     <Grid item xs={10}>
                         <div className={(!isOpen) ? classes.nonExpandedText : classes.expandedText}>
                             Some sources may have been limited based on your permissions. If you believe this is an

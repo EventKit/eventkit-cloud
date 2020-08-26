@@ -33,8 +33,7 @@ describe('DateFilter component', () => {
         expect(wrapper.find(Input)).toHaveLength(2);
         expect(wrapper.find(Input).first().props().placeholder).toEqual('From');
         expect(wrapper.find(Input).last().props().placeholder).toEqual('To');
-        expect(wrapper.find(Modal).first().dive().find(DayPicker)).toHaveLength(1);
-        expect(wrapper.find(Modal).last().dive().find(DayPicker)).toHaveLength(1);
+        expect(wrapper.find(DayPicker)).toHaveLength(2);
     });
 
     it('handleMinOpen should set open to min', () => {

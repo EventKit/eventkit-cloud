@@ -91,7 +91,7 @@ describe('AoiInfobar component', () => {
         expect(wrapper.find(ActionZoomIn)).toHaveLength(1);
         expect(wrapper.find('.qa-AoiInfobar-infoTitle').text()).toEqual('fake title');
         expect(wrapper.find('.qa-AoiInfobar-infoDescription').text()).toEqual('fake description');
-        expect(wrapper.find('.qa-AoiInfobar-icon-polygon')).toHaveLength(5);
+        expect(wrapper.find('.qa-AoiInfobar-icon-polygon')).toHaveLength(4);
     });
 
     it('clicking on zoom button should call clickZoomToSelection', () => {

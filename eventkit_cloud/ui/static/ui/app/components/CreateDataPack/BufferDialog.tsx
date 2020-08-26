@@ -7,10 +7,10 @@ import Button from '@material-ui/core/Button';
 import TextField from '@material-ui/core/TextField';
 import AlertWarning from '@material-ui/icons/Warning';
 import Clear from '@material-ui/icons/Clear';
-import Slider from '@material-ui/lab/Slider';
+import Slider from '@material-ui/core/Slider';
 import { useState } from 'react';
 import AlertCallout from './AlertCallout';
-import { getSqKm, getSqKmString } from '../../utils/generic';
+import { getSqKmString } from '../../utils/generic';
 import { useJobValidationContext } from './context/JobValidation';
 
 const jss = (theme: Eventkit.Theme & Theme) => createStyles({
@@ -90,6 +90,7 @@ const jss = (theme: Eventkit.Theme & Theme) => createStyles({
         position: 'absolute',
         width: '100%',
         bottom: 0,
+        left: 0,
         padding: '21px 0px',
     },
 });
@@ -99,7 +100,7 @@ export interface Props {
     value: number;
     valid: boolean;
     handleBufferClick: () => void;
-    handleBufferChange: (value: number | string) => void;
+    handleBufferChange: (value: unknown) => void;
     closeBufferDialog: () => void;
     aoi: object;
     theme: Eventkit.Theme & Theme;
@@ -218,7 +219,7 @@ export function BufferDialog(props: Props) {
                             type="number"
                             name="buffer-value"
                             value={props.value}
-                            onChange={e => props.handleBufferChange(e.target.value)}
+                            onChange={(e) => props.handleBufferChange(e.target.value)}
                             style={{ color: props.valid ? colors.grey : colors.warning }}
                             InputProps={{ style: { fontSize: '14px', lineHeight: '24px' } }}
                             // MUI uses the case of the i to distinguish between Input component and input html element
@@ -276,4 +277,4 @@ export function BufferDialog(props: Props) {
     );
 }
 
-export default withTheme()(withStyles(jss)(BufferDialog));
+export default withTheme(withStyles(jss)(BufferDialog));

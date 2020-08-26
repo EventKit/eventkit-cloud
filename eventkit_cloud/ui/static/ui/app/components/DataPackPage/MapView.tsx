@@ -54,7 +54,7 @@ import globe from '../../../images/globe-americas.svg';
 import {makeAllRunsSelector} from '../../selectors/runSelector';
 import {updateAoiInfo, clearAoiInfo, clearExportInfo} from '../../actions/datacartActions';
 import {Breakpoint} from '@material-ui/core/styles/createBreakpoints';
-import withRef from '../../utils/withRef';
+import {useEffect, useState} from "react";
 
 
 export const RED_STYLE = new Style({
@@ -100,6 +100,7 @@ export interface Props {
     aoiInfo: Eventkit.Store.AoiInfo;
     updateAoiInfo: (args: any) => void;
     clearAoiInfo: () => void;
+    setScrollbar?: (ref: any) => void;
 }
 
 export interface State {
@@ -1009,9 +1010,7 @@ export class MapView extends React.Component<Props, State> {
             this.source.getFeatureById(this.state.selectedFeature) : null;
         return (
             <div style={{height: 'calc(100vh - 236px)'}}>
-                <CustomScrollbar style={styles.list} ref={(instance) => {
-                    this.scrollbar = instance;
-                }}>
+                <ScrollBarRefWrap style={styles.list} setScrollbar={this.props.setScrollbar}>
                     <div style={styles.root}>
                         <GridList
                             className="qa-MapView-GridList"
@@ -1035,7 +1034,7 @@ export class MapView extends React.Component<Props, State> {
                         </GridList>
                     </div>
                     {load}
-                </CustomScrollbar>
+                </ScrollBarRefWrap>
                 <div style={styles.map}>
                     <div className="qa-MapView-div-map" style={{width: '100%', height: '100%', position: 'relative'}}
                          id="map">
@@ -1159,4 +1158,21 @@ function mapDispatchToProps(dispatch) {
     };
 }
 
-export default withWidth()(withTheme()(connect(makeMapStateToProps, mapDispatchToProps, null, {forwardRef: true})(withRef()(MapView))));
+export function ScrollBarRefWrap(props: any) {
+    const [scrollbar, setScrollbar] = useState(undefined);
+    useEffect(() => {
+        if (!!scrollbar) {
+            props?.setScrollbar(scrollbar);
+        }
+    }, [scrollbar]);
+
+    return (
+        <CustomScrollbar style={props.style} ref={(instance) => {
+            setScrollbar(instance)
+        }}>
+            {props.children}
+        </CustomScrollbar>
+    )
+}
+
+export default withWidth()(withTheme(connect(makeMapStateToProps, mapDispatchToProps, null, {forwardRef: true})(MapView)));

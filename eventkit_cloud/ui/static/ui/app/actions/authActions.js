@@ -3,7 +3,7 @@ export const types = {
     CLEAR_TOKEN: 'CLEAR_TOKEN',
 };
 
-export const setToken = token => ({
+export const setToken = (token) => ({
     type: types.SET_TOKEN,
     payload: { token },
 });

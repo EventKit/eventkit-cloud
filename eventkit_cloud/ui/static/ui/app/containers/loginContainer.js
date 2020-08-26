@@ -77,7 +77,6 @@ export class Form extends React.Component {
         window.location.assign('/oauth');
     }
 
-
     render() {
         const { colors } = this.props.theme.eventkit;
 
@@ -182,14 +181,13 @@ export class Form extends React.Component {
                     <div style={{ color: colors.warning }}>
                         {this.getErrorMessage()}
                     </div>
-                )
-                }
+                )}
                 {loginForm}
                 {oauthButton}
                 {!loginForm && !oauthButton
                     ? (
                         <div style={{ color: colors.white, marginTop: '150px' }}>
-                        No login methods available, please contact an administrator
+                            No login methods available, please contact an administrator
                         </div>
                     )
                     : null}
@@ -221,4 +219,4 @@ function mapStateToProps(state) {
     };
 }
 
-export default withTheme()(connect(mapStateToProps, mapDispatchToProps)(Form));
+export default withTheme(connect(mapStateToProps, mapDispatchToProps)(Form));

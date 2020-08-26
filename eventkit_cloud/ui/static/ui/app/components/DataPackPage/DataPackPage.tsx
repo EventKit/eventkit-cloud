@@ -32,6 +32,8 @@ import {Breakpoint} from '@material-ui/core/styles/createBreakpoints';
 import isEqual from 'lodash/isEqual';
 import {getFormats} from "../../actions/formatActions";
 import {getProjections} from "../../actions/projectionActions";
+import {StoreHelpers} from "react-joyride";
+import EventkitJoyride from "../common/JoyrideWrapper";
 
 interface Props {
     runIds: string[];
@@ -60,8 +62,8 @@ interface Props {
     };
     processGeoJSONFile: (file: File) => void;
     resetGeoJSONFile: () => void;
-    setOrder: (order: string) => void;
-    setView: (view: string) => void;
+    setOrder: (order: string | string[]) => void;
+    setView: (view: string | string[]) => void;
     providers: Eventkit.Provider[];
     formats: Eventkit.Format[];
     projections: Eventkit.Projection[];
@@ -102,8 +104,9 @@ interface State {
 export class DataPackPage extends React.Component<Props, State> {
     private pageSize: number;
     private defaultQuery;
-    private view: any;
+    private scrollbarRef: any;
     private joyride: Joyride.default;
+    private helpers: StoreHelpers;
 
     static contextTypes = {
         config: PropTypes.shape({
@@ -149,7 +152,12 @@ export class DataPackPage extends React.Component<Props, State> {
             providers: {},
             formats: {},
             projections: {},
-            pageLoading: props.runsFetched === null,
+            // TODO: Investigate the logic of pageLoading.
+            // The previous logic caused the DataPack Library page to get stuck on the loading state when refreshing
+            // the page. The only time the page worked was when using the drawer coming from another page.
+            // Setting it to false by default seems to nullify the behavior.
+            //pageLoading: props.runsFetched === null,
+            pageLoading: false,
             loading: true,
             geojson_geometry: null,
             steps: [],
@@ -274,7 +282,7 @@ export class DataPackPage extends React.Component<Props, State> {
     }
 
     private getViewRef(instance: HTMLElement) {
-        this.view = instance;
+        this.scrollbarRef = instance;
     }
 
     private getJoyRideSteps(): any[] {
@@ -312,8 +320,8 @@ export class DataPackPage extends React.Component<Props, State> {
                     <DataPackList
                         {...commonProps}
                         onSort={this.handleSortChange}
-                        order={queryString.parse(this.props.location.search).order}
-                        customRef={this.getViewRef}
+                        order={queryString.parse(this.props.location.search).order as string}
+                        setScrollbar={ref => this.getViewRef(ref)}
                     />
                 );
             case 'grid':
@@ -321,7 +329,7 @@ export class DataPackPage extends React.Component<Props, State> {
                     <DataPackGrid
                         {...commonProps}
                         name="DataPackLibrary"
-                        customRef={this.getViewRef}
+                        setScrollbar={ref => this.getViewRef(ref)}
                     />
                 );
             case 'map':
@@ -332,7 +340,7 @@ export class DataPackPage extends React.Component<Props, State> {
                         processGeoJSONFile={this.props.processGeoJSONFile}
                         resetGeoJSONFile={this.props.resetGeoJSONFile}
                         onMapFilter={this.handleSpatialFilter}
-                        customRef={this.getViewRef}
+                        setScrollbar={ref => this.getViewRef(ref)}
                     />
                 );
             default:
@@ -446,7 +454,7 @@ export class DataPackPage extends React.Component<Props, State> {
 
     private changeView(view: string) {
         const sharedViewOrders = ['started_at', '-started_at', 'job__name', '-job__name', '-job__featured', 'job__featured'];
-        if (sharedViewOrders.indexOf(queryString.parse(this.props.location.search).order) < 0) {
+        if (sharedViewOrders.indexOf(queryString.parse(this.props.location.search).order as string) < 0) {
             this.updateLocationQuery({view, order: '-started_at'});
         } else {
             this.updateLocationQuery({view});
@@ -487,7 +495,7 @@ export class DataPackPage extends React.Component<Props, State> {
         if (data.action === 'close' || data.action === 'skip' || data.type === 'finished') {
             // This explicitly stops the tour (otherwise it displays a "beacon" to resume the tour)
             this.setState({isRunning: false, steps: []});
-            this.joyride.reset(true);
+            this?.helpers?.reset(true);
         }
         if (data.step) {
             if (data.step.title === 'Filters' && data.type === 'step:before') {
@@ -516,15 +524,12 @@ export class DataPackPage extends React.Component<Props, State> {
 
         if (this.state.isRunning === true) {
             this.setState({isRunning: false});
-            this.joyride.reset(true);
+            this?.helpers.reset(true);
         } else {
-            let {view} = this;
+            let {scrollbarRef} = this;
             // react-redux connect does not have good support for forwarded refs
             // so if its a connected component we need to access the wrappedInstance
-            if (view.wrappedInstance) {
-                view = view.wrappedInstance;
-            }
-            view.getScrollbar().scrollToTop();
+            scrollbarRef.scrollbar.scrollToTop();
 
             this.setState({isRunning: true, steps: []});
             const steps = this.getJoyRideSteps();
@@ -668,16 +673,16 @@ export class DataPackPage extends React.Component<Props, State> {
 
         return (
             <div style={styles.backgroundStyle}>
-                <Joyride.default
+                <EventkitJoyride
                     callback={this.callback}
                     ref={(instance) => {
                         this.joyride = instance;
                     }}
+                    getHelpers={(helpers: any) => {this.helpers = helpers}}
                     steps={steps as Joyride.Step[]}
-                    autoStart
-                    type="continuous"
+                    continuous
                     showSkipButton
-                    showStepsProgress
+                    showProgress
                     locale={{
                         // @ts-ignore
                         back: (<span>Back</span>),
@@ -691,6 +696,11 @@ export class DataPackPage extends React.Component<Props, State> {
                         skip: (<span>Skip</span>),
                     }}
                     run={isRunning}
+                    styles={{
+                        options: {
+                            zIndex: 5000,
+                        }
+                    }}
                 />
                 <PageHeader
                     className="qa-DataPackPage-PageHeader"
@@ -704,14 +714,14 @@ export class DataPackPage extends React.Component<Props, State> {
                     <DataPackSearchbar
                         onSearchChange={this.checkForEmptySearch}
                         onSearchSubmit={this.onSearch}
-                        defaultValue={queryString.parse(this.props.location.search).search}
+                        defaultValue={queryString.parse(this.props.location.search).search as string}
                     />
                 </Toolbar>
 
                 <Toolbar className="qa-DataPackPage-Toolbar-sort" style={styles.toolbarSort}>
                     <DataPackOwnerSort
                         handleChange={this.handleOwnerFilter}
-                        value={queryString.parse(this.props.location.search).collection || 'all'}
+                        value={queryString.parse(this.props.location.search).collection as string || 'all'}
                         owner={this.props.user.data.user.username}
                     />
                     <DataPackFilterButton
@@ -723,12 +733,12 @@ export class DataPackPage extends React.Component<Props, State> {
                         :
                         <DataPackSortDropDown
                             handleChange={this.handleSortChange}
-                            value={queryString.parse(this.props.location.search).order || '-job__featured'}
+                            value={queryString.parse(this.props.location.search).order as string || '-job__featured'}
                         />
                     }
                     <DataPackViewButtons
                         handleViewChange={this.changeView}
-                        view={queryString.parse(this.props.location.search).view || 'map'}
+                        view={queryString.parse(this.props.location.search).view as string || 'map'}
                     />
                 </Toolbar>
 
@@ -755,7 +765,7 @@ export class DataPackPage extends React.Component<Props, State> {
                                 </div>
                                 : null
                             }
-                            {this.getView(queryString.parse(this.props.location.search).view)}
+                            {this.getView(queryString.parse(this.props.location.search).view as string)}
                         </div>
                     }
                 </div>
@@ -817,4 +827,4 @@ function mapDispatchToProps(dispatch) {
     };
 }
 
-export default withWidth()(withTheme()(connect(mapStateToProps, mapDispatchToProps)(DataPackPage)));
+export default withWidth()(withTheme(connect(mapStateToProps, mapDispatchToProps)(DataPackPage)));

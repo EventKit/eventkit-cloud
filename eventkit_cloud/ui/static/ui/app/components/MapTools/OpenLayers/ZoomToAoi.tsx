@@ -1,7 +1,6 @@
-import React, {useEffect} from 'react';
-import {useOlMapContainer, useOlZoom} from "../context/OpenLayersContext";
-import {useEffectOnMount} from "../../../utils/hooks/hooks";
-import {ReceivesVectorLayer} from "./OlFeatureLayer";
+import React, { useEffect } from 'react';
+import { useOlMapContainer } from '../context/OpenLayersContext';
+import { ReceivesVectorLayer } from './OlFeatureLayer';
 
 interface Props extends ReceivesVectorLayer {
     zoomLevel?: number; // If specified, zoom to this level after fitting extent.
@@ -11,7 +10,7 @@ function ZoomToAoi(props: Props) {
     const { vectorLayer, zoomLevel } = props;
 
     const olMapContext = useOlMapContainer();
-    const mapContainer = olMapContext.mapContainer;
+    const { mapContainer } = olMapContext;
 
     useEffect(() => {
         const olMap = mapContainer.getMap();

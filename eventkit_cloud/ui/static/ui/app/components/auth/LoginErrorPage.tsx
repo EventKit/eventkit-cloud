@@ -80,4 +80,4 @@ export class LoginErrorPage extends React.Component<Props, {}> {
     }
 }
 
-export default withWidth()(withTheme()(LoginErrorPage));
+export default withWidth()(withTheme(LoginErrorPage));

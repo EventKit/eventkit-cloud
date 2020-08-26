@@ -17,7 +17,7 @@ describe('DeleteDataPackDialog component', () => {
         ...global.eventkit_test_props,
     });
 
-    const getWrapper = props => shallow(<DeleteDataPackDialog {...props} />);
+    const getWrapper = (props) => shallow(<DeleteDataPackDialog {...props} />);
 
     it('should render a Dialog inside a BaseDialog inside a ConfirmDialog', () => {
         const props = getProps();

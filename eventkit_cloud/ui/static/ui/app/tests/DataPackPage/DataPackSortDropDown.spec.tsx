@@ -24,7 +24,7 @@ describe('DataPackSortDropDown component', () => {
 
     it('should render a dropdown menu', () => {
         expect(wrapper.find(DropDownMenu)).toHaveLength(1);
-        expect(wrapper.find(DropDownMenu).props().children).toHaveLength(5);
+        expect(wrapper.find(DropDownMenu).children()).toHaveLength(5);
     });
 
     it('handleChange should call props.handleChange', () => {

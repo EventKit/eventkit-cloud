@@ -9,13 +9,9 @@ export interface Props {
 
 export class AdministratorInfoDialog extends React.Component<Props, {}> {
     render() {
-        if (!this.props.show) {
-            return null;
-        }
-
         return (
             <BaseDialog
-                show
+                show={this.props.show}
                 onClose={this.props.onClose}
                 title="ADMINISTRATOR GROUPS"
                 className="qa-AdministratorInfoDialog"
@@ -34,7 +30,7 @@ export class AdministratorInfoDialog extends React.Component<Props, {}> {
                         </ul>
                         <span>
                             You may leave any administrator group. By doing so, you opt out of notifications, data, and your admin rights.
-                            If there are no other administrators you must appoint one before leaving
+                            If there are no other administrators you must appoint one before leaving.
                         </span>
                     </div>
                 </div>

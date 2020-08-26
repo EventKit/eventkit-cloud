@@ -13,6 +13,7 @@ import { patchUser } from '../../actions/userActions';
 import CustomScrollbar from '../common/CustomScrollbar';
 import { DrawerTimeout } from '../../actions/uiActions';
 import { joyride } from '../../joyride.config';
+import EventkitJoyride from "../common/JoyrideWrapper";
 
 export interface Props {
     user: Eventkit.Store.User;
@@ -198,14 +199,13 @@ export class Account extends React.Component<Props, State> {
 
         return (
             <div style={{ backgroundColor: theme.eventkit.colors.white }}>
-                <Joyride
+                <EventkitJoyride
                     callback={this.callback}
                     ref={(instance) => { this.joyride = instance; }}
                     steps={steps}
-                    autoStart
-                    type="continuous"
+                    continuous
                     showSkipButton
-                    showStepsProgress
+                    showProgress
                     locale={{
                         // @ts-ignore
                         back: (<span>Back</span>),
@@ -285,7 +285,7 @@ function mapDispatchToProps(dispatch) {
     };
 }
 
-export default withTheme()(connect(
+export default withTheme(connect(
     mapStateToProps,
     mapDispatchToProps,
 )(Account));
