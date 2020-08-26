@@ -61,7 +61,9 @@ class TaskFactory:
             "arcgis-feature": arcgis_feature_service_export_task,
         }
 
-    def parse_tasks(self, worker=None, run_uid=None, user_details=None, data_provider_slugs=None):
+    def parse_tasks(
+        self, worker=None, run_uid=None, user_details=None, data_provider_slugs=None, run_zip_file_sets=None
+    ):
         """
         This handles all of the logic for taking the information about what individual celery tasks and groups
         them under specific providers.
@@ -132,7 +134,7 @@ class TaskFactory:
             )
             stage_dir = get_provider_staging_dir(run_dir, run_task_record.slug)
             if not os.path.exists(stage_dir):
-                os.makedirs(stage_dir, 6600)
+                os.makedirs(stage_dir, 0o750)
 
             run_zip_task_chain = get_zip_task_chain(
                 data_provider_task_record_uid=run_task_record.uid,
@@ -152,7 +154,7 @@ class TaskFactory:
 
                     stage_dir = get_provider_staging_dir(run_dir, provider_task.provider.slug)
                     if not os.path.exists(stage_dir):
-                        os.makedirs(stage_dir, 6600)
+                        os.makedirs(stage_dir, 0o750)
 
                     args = {
                         "primary_export_task": primary_export_task,
@@ -171,7 +173,11 @@ class TaskFactory:
                         run_uid=run_uid,
                         locking_task_key=run_uid,
                         callback_task=create_finalize_run_task_collection(
-                            run_uid, run_dir, run_zip_task_chain, apply_args=finalize_task_settings,
+                            run_uid,
+                            run_dir,
+                            run_zip_task_chain,
+                            run_zip_file_sets=run_zip_file_sets,
+                            apply_args=finalize_task_settings,
                         ),
                         apply_args=finalize_task_settings,
                     ).set(**wait_for_providers_settings)
@@ -263,8 +269,9 @@ def create_run(job_uid, user=None, clone=False):
                     )
                 )
             run_count = job.runs.filter(deleted=False).count()
+            run_zip_file_sets = None
             if clone:
-                run = job.last_export_run.clone()
+                run, run_zip_file_sets = job.last_export_run.clone()
                 job.last_export_run = run
                 job.save()
             else:
@@ -286,7 +293,10 @@ def create_run(job_uid, user=None, clone=False):
             )
             run_uid = run.uid
             logger.debug("Saved run with id: {0}".format(str(run_uid)))
-            return run_uid
+            if clone:
+                return run_uid, run_zip_file_sets
+            else:
+                return run_uid
     except DatabaseError as e:
         logger.error("Error saving export run: {0}".format(e))
         raise e
@@ -399,19 +409,28 @@ class InvalidLicense(Error):
         super(Error, self).__init__("InvalidLicense: {0}".format(message))
 
 
-def create_finalize_run_task_collection(run_uid=None, run_dir=None, run_zip_task_chain=None, apply_args=None):
+def create_finalize_run_task_collection(
+    run_uid=None, run_dir=None, run_zip_task_chain=None, run_zip_file_sets=None, apply_args=None
+):
     """ Returns a 2-tuple celery chain of tasks that need to be executed after all of the export providers in a run
         have finished, and a finalize_run_task signature for use as an errback.
         Add any additional tasks you want in hook_tasks.
         @see export_tasks.FinalizeRunHookTask for expected hook task signature.
     """
+    from eventkit_cloud.tasks.views import generate_zipfile_chain
+
     apply_args = apply_args or dict()
 
     # Use .si() to ignore the result of previous tasks, we just care that finalize_run_task runs last
     finalize_signature = finalize_run_task.si(run_uid=run_uid, stage_dir=run_dir).set(**apply_args)
+    all_task_sigs_list = [run_zip_task_chain]
 
-    all_task_sigs = itertools.chain([run_zip_task_chain, finalize_signature])
+    if run_zip_file_sets:
+        for run_zip_file_set in run_zip_file_sets:
+            all_task_sigs_list.append(generate_zipfile_chain(run_zip_file_set))
 
+    all_task_sigs_list.append(finalize_signature)
+    all_task_sigs = itertools.chain(all_task_sigs_list)
     finalize_chain = chain(*all_task_sigs)
 
     return finalize_chain

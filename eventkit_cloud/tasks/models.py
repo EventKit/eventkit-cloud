@@ -229,6 +229,8 @@ class ExportRun(UIDMixin, TimeStampedModelMixin, TimeTrackingModelMixin, Notific
 
     def clone(self):
         data_provider_task_records = list(self.data_provider_task_records.all())
+        old_run_zip_files = list(self.zip_files.all())
+
         self.pk = None
         self.id = None
         self.uid = None
@@ -243,7 +245,9 @@ class ExportRun(UIDMixin, TimeStampedModelMixin, TimeTrackingModelMixin, Notific
             if data_provider_task_record.provider:
                 self.data_provider_task_records.add(data_provider_task_record.clone(new_run=self))
 
-        return self
+        run_zip_file_sets = get_data_provider_task_record_sets(old_run_zip_files, self)
+
+        return self, run_zip_file_sets
 
 
 class ExportRunFile(UIDMixin, TimeStampedModelMixin):
@@ -482,3 +486,23 @@ class RunZipFile(UIDMixin, TimeStampedModelMixin, TimeTrackingModelMixin):
     @status.setter
     def status(self, value, expiration=DEFAULT_CACHE_EXPIRATION):
         return set_cache_value(obj=self, attribute="status", value=value, expiration=expiration)
+
+
+def get_data_provider_task_record_sets(old_run_zip_files, new_run):
+    data_provider_task_records = new_run.data_provider_task_records.exclude(provider__isnull=True)
+    data_provider_task_record_uids = [
+        data_provider_task_record.uid for data_provider_task_record in data_provider_task_records
+    ]
+    data_provider_task_record_sets = []
+
+    for old_run_zip_file in old_run_zip_files:
+        data_provider_task_record_set = []
+        for data_provider_task_record in old_run_zip_file.data_provider_task_records.all():
+            data_provider_task_record_set.append(
+                data_provider_task_records.get(provider__slug=data_provider_task_record.provider.slug).uid
+            )
+        # Don't rerun the overall project zip file.
+        if data_provider_task_record_uids != data_provider_task_record_set:
+            data_provider_task_record_sets.append(data_provider_task_record_set)
+
+    return data_provider_task_record_sets
