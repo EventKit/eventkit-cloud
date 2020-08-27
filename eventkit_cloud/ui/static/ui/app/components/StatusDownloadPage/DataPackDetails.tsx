@@ -158,7 +158,7 @@ export class DataPackDetails extends React.Component<Props, State> {
         let providerElement = (<span/>);
         if (!!selectedProvider) {
             providerElement = (
-                <span> > {selectedProvider.name}</span>
+                <span> {'>'} {selectedProvider.name}</span>
             );
         }
 
@@ -323,4 +323,4 @@ export class DataPackDetails extends React.Component<Props, State> {
     }
 }
 
-export default withWidth()(withTheme()(withStyles(jss)(DataPackDetails)));
+export default withWidth()(withTheme(withStyles(jss)(DataPackDetails)));

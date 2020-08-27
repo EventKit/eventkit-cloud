@@ -19,7 +19,7 @@ export function getProviders() {
         ],
         url: '/api/providers',
         method: 'GET',
-        onSuccess: response => ({ providers: response.data }),
+        onSuccess: (response) => ({ providers: response.data }),
     };
 }
 
@@ -34,8 +34,8 @@ export function getProviderTask(uid) {
         method: 'GET',
         payload: { uid },
         params: { slim: 'true' },
-        shouldCallApi: state => state.providerTasks.data[uid] === undefined,
-        onSuccess: response => ({ data: response.data }),
+        shouldCallApi: (state) => state.providerTasks.data[uid] === undefined,
+        onSuccess: (response) => ({ data: response.data }),
     };
 }
 

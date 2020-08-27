@@ -21,7 +21,7 @@ export function getHeaderPageInfo(response) {
         [, range] = response.headers['content-range'].split('-');
     }
 
-    return {nextPage, range};
+    return { nextPage, range };
 }
 
 export function isMgrsString(c) {
@@ -131,7 +131,7 @@ export function getDuration(seconds, capEstimate = true) {
     return `${days}${hours}${minutes}`;
 }
 
-export function formatMegaBytes(megabytes, digits=2) {
+export function formatMegaBytes(megabytes, digits = 2) {
     // format a size so that it is reasonably displayed.
     // megabytes = 40 => 40 MB
     // megabytes = 1337 => 1.34 GB
@@ -151,7 +151,7 @@ export function getCookie(name) {
 
 export function getJobDetails(jobuid) {
     return axios.get(`/api/jobs/${jobuid}`)
-        .then(result => result.data)
+        .then((result) => result.data)
         .catch(console.log);
 }
 
@@ -202,12 +202,12 @@ export function getDefaultFormat(provider: Partial<Eventkit.Provider>) {
         const defaultFormatsList = [];
         if (supportedFormats.length !== 0) {
             if (provider.type.toLowerCase() === 'wcs') {
-                if (supportedFormats.map(format => format.slug).indexOf('gpkg') >= 0) {
+                if (supportedFormats.map((format) => format.slug).indexOf('gpkg') >= 0) {
                     defaultFormatsList.push('gpkg');
-                } else if (supportedFormats.map(format => format.slug).indexOf('gtiff') >= 0) {
+                } else if (supportedFormats.map((format) => format.slug).indexOf('gtiff') >= 0) {
                     defaultFormatsList.push('gtiff');
                 }
-            } else if (supportedFormats.map(format => format.slug).indexOf('gpkg') >= 0) {
+            } else if (supportedFormats.map((format) => format.slug).indexOf('gpkg') >= 0) {
                 defaultFormatsList.push('gpkg');
             }
         }
@@ -230,11 +230,10 @@ export function arrayHasValue(array: any[], val: any): boolean {
     return array.indexOf(val) !== -1;
 }
 
-
 // Searches for the full provider object in a list of providers that matches the provider task.
 // The ProviderTask representation of provider lacks certain fields that the full provider has.
 export function getProviderFromProviderTask(providerTask: Eventkit.ProviderTask, providers: Eventkit.Provider[]): Eventkit.Provider {
-    return providers.find(provider => provider.slug === providerTask.provider.slug);
+    return providers.find((provider) => provider.slug === providerTask.provider.slug);
 }
 
 // A variety of objects, Provider/Provider Task, have the display and hidden fields
@@ -256,13 +255,13 @@ const defaultError = {
 // Expects the data portion of an error response
 export function ensureErrorShape(responseData: any) {
     // If responseData comes through falsey, we will assign it to the predefined default state.
-    let {errors} = (responseData || {errors: [{...defaultError}]});
+    let { errors } = (responseData || { errors: [{ ...defaultError }] });
     if (!!errors && !Array.isArray(errors)) {
         // If the errors property is not an array, convert it to one containing itself.
         errors = [errors];
     } else if (!errors) {
         // If errors does not exist at all on the response object, insert the default shape.
-        errors = [{...defaultError}];
+        errors = [{ ...defaultError }];
     }
     // For each error now present in errors, validate the existence of the properties we need
     for (let errorIndex = 0; errorIndex < errors.length; errorIndex += 1) {

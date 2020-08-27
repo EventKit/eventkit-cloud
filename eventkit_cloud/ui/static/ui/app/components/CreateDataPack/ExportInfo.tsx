@@ -4,7 +4,7 @@ import {createStyles, Theme, withStyles, withTheme} from '@material-ui/core/styl
 import {connect} from 'react-redux';
 import axios from 'axios';
 import {arrayHasValue, unsupportedFormats} from '../../utils/generic';
-import Joyride, {Step} from 'react-joyride';
+import Joyride, {Step, StoreHelpers} from 'react-joyride';
 import List from '@material-ui/core/List';
 import Paper from '@material-ui/core/Paper';
 import Popover from '@material-ui/core/Popover';
@@ -30,6 +30,7 @@ import {Link} from "@material-ui/core";
 import Drawer from "@material-ui/core/Drawer";
 import {useState} from "react";
 import PermissionsBanner from "../PermissionsBanner";
+import EventkitJoyride from "../common/JoyrideWrapper";
 
 const jss = (theme: Eventkit.Theme & Theme) => createStyles({
     underlineStyle: {
@@ -98,7 +99,7 @@ const jss = (theme: Eventkit.Theme & Theme) => createStyles({
         lineHeight: '24px',
     },
     selectAll: {
-        padding: '0px 10px 10px 10px',
+        padding: '0px 10px 10px 16px',
         display: 'flex',
         lineHeight: '24px',
     },
@@ -249,6 +250,7 @@ export class ExportInfo extends React.Component<Props, State> {
         config: PropTypes.object,
     };
 
+    private helpers: StoreHelpers;
     joyride;
     dataProvider;
     private bounceBack: boolean;
@@ -328,7 +330,7 @@ export class ExportInfo extends React.Component<Props, State> {
         let nextState = {};
 
         if (this.props.walkthroughClicked && !prevProps.walkthroughClicked && !this.state.isRunning) {
-            this.joyride.current.reset(true);
+            this.joyride?.current?.reset(true);
             this.setState({ isRunning: true });
         }
 
@@ -615,7 +617,7 @@ export class ExportInfo extends React.Component<Props, State> {
             this.resetDrawer();
             this.setState({ isRunning: false });
             this.props.onWalkthroughReset();
-            this.joyride.current.reset(true);
+            this?.helpers.reset(true);
             window.location.hash = '';
         } else {
             if (data.index === 9 && data.type === 'tooltip:before') {
@@ -690,14 +692,14 @@ export class ExportInfo extends React.Component<Props, State> {
             <div id="root" className={`qa-ExportInfo-root ${classes.root}`}>
                 {/*<PermissionsBanner isOpen={true} handleClosedPermissionsBanner={() => {}}/>*/}
                 <StepValidator {...this.props}/>
-                <Joyride
+                <EventkitJoyride
                     callback={this.callback}
                     ref={this.joyride}
                     steps={steps}
-                    autoStart
-                    type="continuous"
+                    getHelpers={(helpers: any) => {this.helpers = helpers}}
+                    continuous
                     showSkipButton
-                    showStepsProgress
+                    showProgress
                     locale={{
                         back: (<span>Back</span>) as any,
                         close: (<span>Close</span>) as any,
@@ -1035,7 +1037,7 @@ function DebouncedTextField(props: any) {
     )
 }
 
-export default withTheme()(withStyles(jss)(connect(
+export default withTheme(withStyles(jss)(connect(
     mapStateToProps,
     mapDispatchToProps,
 )(ExportInfo)));

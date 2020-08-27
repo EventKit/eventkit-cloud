@@ -18,7 +18,7 @@ describe('ConfirmDialog component', () => {
         ...global.eventkit_test_props,
     });
 
-    const getWrapper = props => shallow(<ConfirmDialog {...props} />);
+    const getWrapper = (props) => shallow(<ConfirmDialog {...props} />);
 
     it('should render a Dialog inside a BaseDialog inside a ConfirmDialog', () => {
         const props = getProps();

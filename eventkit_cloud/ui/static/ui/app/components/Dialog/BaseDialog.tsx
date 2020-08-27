@@ -138,4 +138,4 @@ export function BaseDialog(props: React.PropsWithChildren<Props>) {
     );
 }
 
-export default withStyles<any, any>(jss)(withTheme()(BaseDialog));
+export default withStyles<any, any>(jss)(withTheme(BaseDialog));

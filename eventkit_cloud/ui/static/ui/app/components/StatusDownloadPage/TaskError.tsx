@@ -101,4 +101,4 @@ export class TaskError extends React.Component<Props, State> {
     }
 }
 
-export default withTheme()(TaskError);
+export default withTheme(TaskError);

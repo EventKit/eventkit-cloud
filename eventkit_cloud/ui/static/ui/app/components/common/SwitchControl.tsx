@@ -1,5 +1,7 @@
-import * as React from "react";
-import {createStyles, Switch, Theme, withStyles, withTheme} from "@material-ui/core";
+import * as React from 'react';
+import {
+    createStyles, Switch, Theme, withStyles, withTheme,
+} from '@material-ui/core';
 
 interface Props {
     onSwitch: () => void;
@@ -29,7 +31,7 @@ const jss = (theme: Theme & Eventkit.Theme) => createStyles({
     switch: {
         float: 'right',
         marginTop: '-12px',
-        marginRight: '-14px'
+        marginRight: '-14px',
     },
     switchBase: {
         color: theme.eventkit.colors.white,
@@ -40,4 +42,4 @@ const jss = (theme: Theme & Eventkit.Theme) => createStyles({
     checked: {},
 });
 
-export default withTheme()(withStyles<any, any>(jss)(SwitchControl));
+export default withTheme(withStyles<any, any>(jss)(SwitchControl));

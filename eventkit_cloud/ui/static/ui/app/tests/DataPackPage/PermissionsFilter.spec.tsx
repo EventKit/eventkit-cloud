@@ -6,6 +6,11 @@ import FormControlLabel from '@material-ui/core/FormControlLabel';
 import { PermissionsFilter } from '../../components/DataPackPage/PermissionsFilter';
 import DataPackShareDialog from '../../components/DataPackShareDialog/DataPackShareDialog';
 
+jest.mock("../../components/DataPackShareDialog/DataPackShareDialog", () => {
+    const React = require('react');
+    return (props) => (<div className="sharedialog">{props.children}</div>);
+});
+
 describe('PermissionsFilter component', () => {
     const getProps = () => ({
         permissions: {
@@ -66,10 +71,8 @@ describe('PermissionsFilter component', () => {
 
     it('should render a Share Dialog', () => {
         setup({ permissions: { ...props.permissions, value: 'SHARED' } });
-        const stub = sinon.stub(DataPackShareDialog.prototype, 'render').returns(null);
         wrapper.setState({ open: true });
         expect(wrapper.find(DataPackShareDialog)).toHaveLength(1);
-        stub.restore();
     });
 
     it('should render the correct members and groups text', () => {

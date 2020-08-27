@@ -20,7 +20,7 @@ OlMapComponent.defaultProps = {
 } as MapComponentProps;
 
 function OlMapComponent(props: React.PropsWithChildren<MapComponentProps>) {
-    const [mapContainer, setMapContainer] = useState();
+    const [mapContainer, setMapContainer] :[MapContainer, (container: MapContainer) => void]= useState();
 
     const { minZoom, maxZoom, style, divId, visible } = props;
     const zoomLevelProp = props.zoomLevel;
@@ -45,7 +45,7 @@ function OlMapComponent(props: React.PropsWithChildren<MapComponentProps>) {
 
     useEffect(() => {
         if (!!mapContainer) {
-            const olMap = mapContainer.getMap();
+            const olMap = mapContainer?.getMap();
             olMap.updateSize();
         }
     }, [visible, divId]);

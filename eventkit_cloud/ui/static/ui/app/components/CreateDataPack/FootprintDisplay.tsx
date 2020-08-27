@@ -1,11 +1,13 @@
-import React from "react";
-import {createStyles, withStyles, FormControlLabel, Switch} from "@material-ui/core";
-import * as PropTypes from "prop-types";
-import Card from "@material-ui/core/Card";
-import ListItemText from "@material-ui/core/ListItemText";
-import Typography from "@material-ui/core/Typography";
-import theme from "../../styles/eventkit_theme";
-import {MapLayer} from "./CreateExport";
+import React from 'react';
+import {
+    createStyles, withStyles, FormControlLabel, Switch,
+} from '@material-ui/core';
+import * as PropTypes from 'prop-types';
+import Card from '@material-ui/core/Card';
+import ListItemText from '@material-ui/core/ListItemText';
+import Typography from '@material-ui/core/Typography';
+import theme from '../../styles/eventkit_theme';
+import { MapLayer } from './CreateExport';
 
 const jss = () => createStyles({
     footprintBox: {
@@ -77,7 +79,7 @@ export class FootprintDisplay extends React.Component<Props, State> {
     };
 
     render() {
-        const {classes} = this.props;
+        const { classes } = this.props;
 
         return (
             <Card
@@ -87,7 +89,7 @@ export class FootprintDisplay extends React.Component<Props, State> {
                 <ListItemText
                     className={classes.listItemText}
                     primary={(
-                        <Typography style={{fontSize: '12px'}}>
+                        <Typography style={{ fontSize: '12px' }}>
                             <strong>Layers:</strong>
                         </Typography>
                     )}
@@ -108,4 +110,4 @@ export class FootprintDisplay extends React.Component<Props, State> {
         );
     }
 }
-export default (withStyles<any, any>(jss)(FootprintDisplay))
+export default (withStyles<any, any>(jss)(FootprintDisplay));

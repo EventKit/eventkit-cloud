@@ -121,4 +121,4 @@ export class StatusFilter extends React.Component<Props, {}> {
     }
 }
 
-export default withTheme()(StatusFilter);
+export default withTheme(StatusFilter);

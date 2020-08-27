@@ -1,17 +1,27 @@
 import * as React from 'react';
 import * as sinon from 'sinon';
-import {GroupsDrawer} from "../../components/UserGroupsPage/GroupsDrawer";
-import {Button, Drawer} from "@material-ui/core";
-import {createShallow} from "@material-ui/core/test-utils";
-import GroupPanelBody from "../../components/UserGroupsPage/GroupPanelBody";
+import { GroupsDrawer } from '../../components/UserGroupsPage/GroupsDrawer';
+import {render, screen, fireEvent} from '@testing-library/react';
+import '@testing-library/jest-dom/extend-expect'
+
+
+jest.mock('../../components/UserGroupsPage/SearchGroupsToolbar', () => {
+    const React = require('react');
+    return (props) => (<div>SearchGroupsToolbar</div>);
+});
+
+jest.mock('../../components/UserGroupsPage/GroupPanelBody', () => {
+    const React = require('react');
+    return (props) => (<button onClick={props.onLeaveGroupClick}>GroupsPanelBody</button>);
+});
+
+jest.mock('../../components/UserGroupsPage/GroupsHeaderTabs', () => {
+    const React = require('react');
+    return (props) => (<div>GroupsHeaderTabs</div>);
+});
+
 
 describe('GroupsDrawer component', () => {
-    let shallow: any;
-
-    beforeAll(() => {
-        shallow = createShallow();
-    });
-
     const getProps = () => ({
         selectedValue: '',
         onSelectionChange: sinon.spy(),
@@ -80,17 +90,42 @@ describe('GroupsDrawer component', () => {
         onLeaveGroupClick: sinon.spy(),
         onDeleteGroupClick: sinon.spy(),
         onRenameGroupClick: sinon.spy(),
+        getGroups: sinon.spy(),
         classes: {},
+        theme: {eventkit:{colors:{}}},
         ...(global as any).eventkit_test_props,
     });
 
-    const getWrapper = props => shallow(<GroupsDrawer {...props}/>);
+    let props;
+    const setup = (propsOverride = {}) => {
+        props = {
+            ...getProps(),
+            ...propsOverride,
+        };
+        return render(<GroupsDrawer {...props} />);
+    };
 
     it('should render something', () => {
-        const props = getProps();
-        const wrapper = getWrapper(props);
-        expect(wrapper.find(Drawer)).toHaveLength(1);
-        expect(wrapper.find(Button)).toHaveLength(2);
-        expect(wrapper.find(GroupPanelBody)).toHaveLength(1);
+        setup();
+        expect(screen.getByText('MEMBERS')).toBeInTheDocument();
+    });
+
+    it('it should call onNewGroupClick', () => {
+        setup();
+        expect(props.onNewGroupClick.calledOnce).toBe(false);
+        fireEvent.click(screen.getByText(/NEW GROUP/));
+        expect(props.onNewGroupClick.calledOnce).toBe(true);
+    });
+
+    it('should display the correct userCount data', () => {
+        setup();
+        expect(screen.getByText('All (2)'))
+    });
+
+    it('should render the key components', () => {
+        setup();
+        expect(screen.getByText('GroupsPanelBody'))
+        expect(screen.getByText('GroupsHeaderTabs'))
+        expect(screen.getByText('SearchGroupsToolbar'))
     });
 });

@@ -1,5 +1,7 @@
 import * as React from 'react';
-import { withStyles, withTheme, createStyles, Theme } from '@material-ui/core/styles';
+import {
+    withStyles, withTheme, createStyles, Theme,
+} from '@material-ui/core/styles';
 import CircularProgress from '@material-ui/core/CircularProgress';
 
 const jss = () => createStyles({
@@ -35,7 +37,9 @@ interface Props {
 }
 
 export function PageLoading(props: Props) {
-    const { classes, background, partial, theme } = props;
+    const {
+        classes, background, partial, theme,
+    } = props;
 
     const style: any = { ...props.style };
 
@@ -61,4 +65,4 @@ export function PageLoading(props: Props) {
     );
 }
 
-export default withTheme()(withStyles<any, any>(jss)(PageLoading));
+export default withTheme(withStyles<any, any>(jss)(PageLoading));

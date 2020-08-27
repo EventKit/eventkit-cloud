@@ -189,7 +189,7 @@ const UserIsNotAuthenticated = connectedReduxRedirect({
     },
     redirectPath: (state, ownProps: RouteComponentProps<{}, {}>) => {
         const {redirect, next} = queryString.parse(ownProps.location.search);
-        return (redirect || next) || '/dashboard';
+        return (redirect as string || next as string) || '/dashboard';
     },
     allowRedirectBack: false,
 });
@@ -203,7 +203,7 @@ const UserCanViewErrorPage = connectedReduxRedirect({
     },
     redirectPath: (state, ownProps: RouteComponentProps<{}, {}>) => {
         const {redirect, next} = queryString.parse(ownProps.location.search);
-        return (redirect || next) || '/dashboard';
+        return (redirect as string || next as string) || '/dashboard';
     },
     allowRedirectBack: false,
 });
@@ -858,7 +858,7 @@ function mapDispatchToProps(dispatch) {
 }
 
 export default withWidth()(
-    withTheme()<any>(
+    withTheme<any>(
         withStyles<any, any>(jss)(
             connect(mapStateToProps, mapDispatchToProps)(
                 Application

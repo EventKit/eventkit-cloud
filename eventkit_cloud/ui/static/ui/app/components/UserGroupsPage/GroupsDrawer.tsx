@@ -200,8 +200,7 @@ export function GroupsDrawer(props: Props) {
         <Drawer
             variant="persistent"
             anchor="right"
-            open={
-                props.open}
+            open={props.open}
             className="qa-GroupsDrawer-Drawer"
             classes={{paper: classes.drawer}}
         >
@@ -329,4 +328,4 @@ function mapDispatchToProps(dispatch) {
     };
 }
 
-export default withTheme()(withStyles(jss)(connect(mapStateToProps, mapDispatchToProps)(GroupsDrawer)));
+export default withTheme(withStyles(jss)(connect(mapStateToProps, mapDispatchToProps)(GroupsDrawer)));

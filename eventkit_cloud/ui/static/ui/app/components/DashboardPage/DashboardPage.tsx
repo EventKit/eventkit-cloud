@@ -3,7 +3,7 @@ import {connect} from 'react-redux';
 import debounce from 'lodash/debounce';
 import {withTheme, Theme} from '@material-ui/core/styles';
 import {Link} from 'react-router-dom';
-import Joyride from 'react-joyride';
+import Joyride, {StoreHelpers} from 'react-joyride';
 import Help from '@material-ui/icons/Help';
 import Paper from '@material-ui/core/Paper';
 import ButtonBase from '@material-ui/core/ButtonBase';
@@ -21,6 +21,7 @@ import NotificationGridItem from '../Notification/NotificationGridItem';
 import {updateDataCartPermissions} from '../../actions/datacartActions';
 import {joyride} from '../../joyride.config';
 import history from '../../utils/history';
+import EventkitJoyride from "../common/JoyrideWrapper";
 
 export const CUSTOM_BREAKPOINTS = {
     xl: 1920,
@@ -65,6 +66,7 @@ export class DashboardPage extends React.Component<Props, State> {
     private autoRefreshInterval: number = 10000;
     private onResize: () => void;
     private joyride;
+    private helpers: StoreHelpers;
 
     constructor(props) {
         super(props);
@@ -302,7 +304,7 @@ export class DashboardPage extends React.Component<Props, State> {
         const {action, step, type} = data;
         if (action === 'close' || action === 'skip' || type === 'finished') {
             this.setState({isRunning: false});
-            this.joyride.reset(true);
+            this?.helpers?.reset(true);
             window.location.hash = '';
         }
 
@@ -314,7 +316,7 @@ export class DashboardPage extends React.Component<Props, State> {
     private handleWalkthroughClick() {
         if (this.state.isRunning) {
             this.setState({isRunning: false});
-            this.joyride.reset(true);
+            this?.helpers.reset(true);
         } else {
             const [...steps] = joyride.DashboardPage;
             this.setState({isRunning: true, steps: []});
@@ -427,17 +429,18 @@ export class DashboardPage extends React.Component<Props, State> {
                     <CustomScrollbar
                         style={styles.customScrollbar}
                     >
-                        <Joyride
+                        <EventkitJoyride
                             callback={this.callback}
                             ref={instance => {
                                 this.joyride = instance;
                             }}
                             // @ts-ignore
                             steps={this.state.steps}
+                            getHelpers={(helpers: any) => {this.helpers = helpers}}
                             autoStart
-                            type="continuous"
+                            continuous
                             showSkipButton
-                            showStepsProgress
+                            showProgress
                             locale={{
                                 // @ts-ignore
                                 back: (<span>Back</span>),
@@ -451,13 +454,13 @@ export class DashboardPage extends React.Component<Props, State> {
                                 skip: (<span>Skip</span>),
                             }}
                             run={this.state.isRunning}
-                            styles={{
-                                options: {
-                                    overlayColor: colors.primary,
-                                    backgroundColor: colors.primary,
-                                    primaryColor: colors.white,
-                                },
-                            }}
+                            // styles={{
+                            //     options: {
+                            //         overlayColor: colors.primary,
+                            //         backgroundColor: colors.primary,
+                            //         primaryColor: colors.white,
+                            //     },
+                            // }}
                         />
                         {this.state.loadingPage ?
                             null
@@ -635,4 +638,4 @@ function mapDispatchToProps(dispatch) {
     };
 }
 
-export default withTheme()<any>(connect(mapStateToProps, mapDispatchToProps)(DashboardPage));
+export default withTheme<any>(connect(mapStateToProps, mapDispatchToProps)(DashboardPage));

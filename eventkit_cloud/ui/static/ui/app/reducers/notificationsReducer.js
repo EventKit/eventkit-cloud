@@ -2,7 +2,6 @@ import values from 'lodash/values';
 import moment from 'moment';
 import { types } from '../actions/notificationsActions';
 
-
 export const initialState = {
     status: {
         fetching: null,

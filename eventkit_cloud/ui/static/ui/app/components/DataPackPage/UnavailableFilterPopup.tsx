@@ -3,7 +3,7 @@ import * as React from 'react';
 import Popover from '@material-ui/core/Popover';
 import WarningIcon from '@material-ui/icons/Warning';
 import Typography from '@material-ui/core/Typography';
-import {useState} from 'react';
+import { useState } from 'react';
 import {
     createStyles, IconButton, Link, Theme, withStyles,
 } from '@material-ui/core';
@@ -46,7 +46,7 @@ interface Props extends React.HTMLAttributes<HTMLElement> {
 
 export function UnavailableFilterPopup(props: Props) {
     const [anchorElement, setAnchor] = useState(null);
-    const {classes} = props;
+    const { classes } = props;
 
     const handlePopoverOpen = (e: React.MouseEvent<HTMLElement>) => {
         setAnchor(e.currentTarget);
@@ -63,7 +63,7 @@ export function UnavailableFilterPopup(props: Props) {
                 className={classes.warningIconBtn}
                 onClick={handlePopoverOpen}
             >
-                <WarningIcon/>
+                <WarningIcon />
             </IconButton>
             <span>
                 <Link
@@ -77,7 +77,7 @@ export function UnavailableFilterPopup(props: Props) {
             </span>
             <Popover
                 PaperProps={{
-                    style: {padding: '16px', width: '30%'},
+                    style: { padding: '16px', width: '30%' },
                 }}
                 open={openEl}
                 anchorEl={anchorElement}
@@ -97,7 +97,7 @@ export function UnavailableFilterPopup(props: Props) {
                         type="button"
                         onClick={handlePopoverClose}
                     >
-                        <CloseIcon/>
+                        <CloseIcon />
                     </IconButton>
                     <div>
                         Some filters are unavailable due to user permissions. If you believe this is an error,

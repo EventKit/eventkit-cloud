@@ -236,7 +236,7 @@ function mapDispatchToProps(dispatch) {
     };
 }
 
-export default withTheme()(withStyles<any, any>(jss)(connect(
+export default withTheme(withStyles<any, any>(jss)(connect(
     mapStateToProps,
     mapDispatchToProps,
 )(FormatSelector)));

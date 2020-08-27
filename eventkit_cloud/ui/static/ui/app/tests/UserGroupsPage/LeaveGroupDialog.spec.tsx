@@ -1,15 +1,14 @@
 import * as React from 'react';
 import * as sinon from 'sinon';
-import { createShallow } from '@material-ui/core/test-utils';
-import BaseDialog from '../../components/Dialog/BaseDialog';
-import { LeaveGroupDialog } from '../../components/UserGroupsPage/Dialogs/LeaveGroupDialog';
+import {LeaveGroupDialog} from '../../components/UserGroupsPage/Dialogs/LeaveGroupDialog';
+import {render, screen} from '@testing-library/react';
+
+jest.mock("../../components/Dialog/BaseDialog", () => {
+    const React = require('react');
+    return (props) => (<div id="basedialog">{props.children}</div>);
+});
 
 describe('LeaveGroupDialog component', () => {
-    let shallow;
-
-    beforeAll(() => {
-        shallow = createShallow();
-    });
 
     const props = {
         show: true,
@@ -19,10 +18,8 @@ describe('LeaveGroupDialog component', () => {
         ...(global as any).eventkit_test_props,
     };
 
-    it('should render a BaseDialog with message', () => {
-        const wrapper = shallow(<LeaveGroupDialog {...props} />);
-        expect(wrapper.find(BaseDialog)).toHaveLength(1);
-        expect(wrapper.find(BaseDialog).props().children)
-            .toEqual("I'd like to opt out of all shared rights for the 'Test Group' group.");
+    it('should render the appropriate message', () => {
+        render(<LeaveGroupDialog {...props}/>);
+        screen.getByText("I'd like to opt out of all shared rights for the 'Test Group' group.");
     });
 });

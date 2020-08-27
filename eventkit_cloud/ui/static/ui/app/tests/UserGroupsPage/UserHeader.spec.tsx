@@ -62,7 +62,7 @@ describe('UserHeader component', () => {
     it('should render the admin and remove buttons', () => {
         wrapper.setProps({ showRemoveButton: true, showAdminButton: true });
         const dropdown = wrapper.find(IconMenu).first();
-        expect(dropdown.props().children).toHaveLength(4);
+        expect(dropdown.children()).toHaveLength(4);
     });
 
     it('handleAddUsersClick should call handleAddUsers', () => {

@@ -66,4 +66,4 @@ export class CustomTableRow extends Component<Props> {
     }
 }
 
-export default withTheme()(withStyles(jss)(CustomTableRow));
+export default withTheme(withStyles(jss)(CustomTableRow));

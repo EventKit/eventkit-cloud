@@ -3,7 +3,7 @@ import * as React from 'react';
 import { connect } from 'react-redux';
 import { withTheme, Theme } from '@material-ui/core/styles';
 import withWidth, { isWidthUp } from '@material-ui/core/withWidth';
-import Joyride, { Step } from 'react-joyride';
+import Joyride, {Step, StoreHelpers} from 'react-joyride';
 import Help from '@material-ui/icons/Help';
 import Paper from '@material-ui/core/Paper';
 import ButtonBase from '@material-ui/core/ButtonBase';
@@ -31,6 +31,7 @@ import { Location } from 'history';
 import { Breakpoint } from '@material-ui/core/styles/createBreakpoints';
 import history from "../../utils/history";
 import { getJobDetails } from "../../utils/generic"
+import EventkitJoyride from "../common/JoyrideWrapper";
 
 export interface Props {
     runs: Eventkit.FullRun[];
@@ -74,6 +75,7 @@ export class StatusDownload extends React.Component<Props, State> {
     private timeout: number;
     private timer: number;
     private joyride: Joyride;
+    private helpers: StoreHelpers;
     private scrollbar;
     constructor(props: Props) {
         super(props);
@@ -267,7 +269,7 @@ export class StatusDownload extends React.Component<Props, State> {
         const { action, type, step } = data;
         if (action === 'close' || action === 'skip' || type === 'finished') {
             this.setState({ isRunning: false });
-            this.joyride.reset(true);
+            this?.helpers?.reset(true);
             window.location.hash = '';
         }
         if (step && step.scrollToId) {
@@ -419,15 +421,14 @@ export class StatusDownload extends React.Component<Props, State> {
                     style={{ height: 'calc(100vh - 130px)', width: '100%' }}
                 >
                     <div className="qa-StatusDownload-div-content" style={styles.content}>
-                        <Joyride
+                        <EventkitJoyride
                             callback={this.callback}
                             ref={(instance) => { this.joyride = instance; }}
                             steps={steps}
-                            scrollToSteps
-                            autoStart
-                            type="continuous"
+                            continuous
                             showSkipButton
-                            showStepsProgress
+                            showProgress
+                            getHelpers={(helpers: any) => {this.helpers = helpers}}
                             locale={{
                                 back: (<span>Back</span>) as any,
                                 close: (<span>Close</span>) as any,
@@ -549,4 +550,4 @@ function mapDispatchToProps(dispatch) {
     };
 }
 
-export default withWidth()(withTheme()(connect(makeMapStateToProps, mapDispatchToProps)(StatusDownload)));
+export default withWidth()(withTheme(connect(makeMapStateToProps, mapDispatchToProps)(StatusDownload)));

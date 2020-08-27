@@ -265,4 +265,4 @@ function mapDispatchToProps(dispatch) {
     };
 }
 
-export default withTheme()(withStyles<any, any>(jss)(connect(mapStateToProps, mapDispatchToProps)(SearchAOIToolbar)));
+export default withTheme(withStyles<any, any>(jss)(connect(mapStateToProps, mapDispatchToProps)(SearchAOIToolbar)));

@@ -4,6 +4,13 @@ import { createShallow } from '@material-ui/core/test-utils';
 import BaseDialog from '../../components/Dialog/BaseDialog';
 import { DropZoneError } from '../../components/MapTools/DropZoneError';
 
+jest.mock('../../components/Dialog/BaseDialog', () => {
+    // eslint-disable-next-line global-require,no-shadow
+    const React = require('react');
+    // eslint-disable-next-line react/prop-types
+    return (props) => (<div id="basedialog">{props.children}</div>);
+});
+
 describe('DropZoneError component', () => {
     let shallow;
 
@@ -23,7 +30,7 @@ describe('DropZoneError component', () => {
         ...global.eventkit_test_props,
     });
 
-    const getWrapper = props => shallow(<DropZoneError {...props} />);
+    const getWrapper = (props) => shallow(<DropZoneError {...props} />);
 
     it('should render error message when new props are received', () => {
         const props = getProps();
@@ -32,7 +39,7 @@ describe('DropZoneError component', () => {
         nextProps.importGeom.error = 'An error has occured';
         wrapper.setProps(nextProps);
         expect(wrapper.find(BaseDialog)).toHaveLength(1);
-        const children = shallow(wrapper.find(BaseDialog).props().children);
+        const children = wrapper.find(BaseDialog).children();
         expect(children.find('.qa-DropZoneError-error')).toHaveLength(1);
         expect(children.find('.qa-DropZoneError-error').text()).toEqual('An error has occured');
     });

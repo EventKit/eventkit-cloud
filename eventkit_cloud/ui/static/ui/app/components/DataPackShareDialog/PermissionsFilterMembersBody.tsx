@@ -473,4 +473,4 @@ const mapDispatchToProps = dispatch => (
     }
 );
 
-export default withTheme()(connect(mapStateToProps, mapDispatchToProps)(PermissionsFilterMembersBody));
+export default withTheme(connect(mapStateToProps, mapDispatchToProps)(PermissionsFilterMembersBody));

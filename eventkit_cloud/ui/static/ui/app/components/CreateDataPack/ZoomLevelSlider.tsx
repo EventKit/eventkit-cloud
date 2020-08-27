@@ -2,7 +2,7 @@ import * as React from 'react';
 import {
     createStyles, Theme, withStyles, withTheme,
 } from '@material-ui/core/styles';
-import Slider from '@material-ui/lab/Slider';
+import Slider from '@material-ui/core/Slider';
 import TextField from '@material-ui/core/TextField';
 import {useEffect, useState} from "react";
 
@@ -131,7 +131,7 @@ export function ZoomLevelSlider(props: Props) {
                         value={maxZoom}
                         aria-labelledby="label"
                         onChange={(e, v) => setMaxZoom(Number(v))}
-                        onDragEnd={() => updateMax(null, maxZoom)}
+                        onChangeCommitted={() => updateMax(null, maxZoom)}
                         min={props.minZoom}
                         max={props.maxZoom}
                         step={1}
@@ -150,4 +150,4 @@ export function ZoomLevelSlider(props: Props) {
     );
 }
 
-export default withTheme()(withStyles<any, any>(jss)(ZoomLevelSlider));
+export default withTheme(withStyles<any, any>(jss)(ZoomLevelSlider));

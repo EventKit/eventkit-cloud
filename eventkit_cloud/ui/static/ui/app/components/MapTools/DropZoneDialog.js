@@ -73,12 +73,12 @@ export class DropZoneDialog extends Component {
                                     <span style={styles.text}>
                                         <strong>GeoJSON, KML, GPKG, zipped SHP,</strong>
                                         <br />
-                            and other major geospatial data formats are supported.
+                                        and other major geospatial data formats are supported.
                                         <br />
                                         <strong> 5 MB </strong>
-max
+                                        max
                                         <br />
-                            Drag and drop or
+                                        Drag and drop or
                                         <br />
                                     </span>
                                     <Button
@@ -89,7 +89,7 @@ max
                                     >
                                         <input {...getInputProps()} />
                                         <FileFileUpload color="secondary" style={{ marginRight: '5px' }} />
-                                    Select A File
+                                        Select A File
                                     </Button>
                                 </div>
                             </RootRef>
@@ -109,4 +109,4 @@ DropZoneDialog.propTypes = {
     theme: PropTypes.object.isRequired,
 };
 
-export default withTheme()(DropZoneDialog);
+export default withTheme(DropZoneDialog);
