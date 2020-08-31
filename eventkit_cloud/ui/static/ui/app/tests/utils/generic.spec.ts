@@ -2,7 +2,7 @@ import * as sinon from 'sinon';
 import GeoJSON from 'ol/format/geojson';
 import Feature from 'ol/feature';
 import * as utils from '../../utils/generic';
-import { getDefaultFormat } from "../../utils/generic";
+import { getDefaultFormat } from '../../utils/generic';
 
 describe('test generic utils', () => {
     it('getHeaderPageInfo should return nextPage and range info', () => {
@@ -77,8 +77,12 @@ describe('test generic utils', () => {
     });
 
     it('getDefaultFormat should return a gpkg if not wcs', () => {
-        const format1: Eventkit.Format = { description: '', name: '', uid: '', slug: 'gpkg' };
-        const format2: Eventkit.Format = { description: '', name: '', uid: '', slug: 'gtiff' };
+        const format1: Eventkit.Format = {
+            description: '', name: '', uid: '', slug: 'gpkg',
+        };
+        const format2: Eventkit.Format = {
+            description: '', name: '', uid: '', slug: 'gtiff',
+        };
         const supportedFormats: Eventkit.Format[] = [format1, format2];
         const provider: Partial<Eventkit.Provider> = {
             supported_formats: supportedFormats,
@@ -89,8 +93,12 @@ describe('test generic utils', () => {
     });
 
     it('getDefaultFormat should return a gtiff if wcs', () => {
-        const format1: Eventkit.Format = { description: '', name: '', uid: '', slug: 'hdr' };
-        const format2: Eventkit.Format = { description: '', name: '', uid: '', slug: 'gtiff' };
+        const format1: Eventkit.Format = {
+            description: '', name: '', uid: '', slug: 'hdr',
+        };
+        const format2: Eventkit.Format = {
+            description: '', name: '', uid: '', slug: 'gtiff',
+        };
         const supportedFormats: Eventkit.Format[] = [format1, format2];
         const provider: Partial<Eventkit.Provider> = {
             supported_formats: supportedFormats,
@@ -101,7 +109,9 @@ describe('test generic utils', () => {
     });
 
     it('getDefaultFormat should return something if geotiff or gpkg are not available', () => {
-        const format1: Eventkit.Format = { description: '', name: '', uid: '', slug: 'hdr' };
+        const format1: Eventkit.Format = {
+            description: '', name: '', uid: '', slug: 'hdr',
+        };
         const supportedFormats: Eventkit.Format[] = [format1];
         const provider: Partial<Eventkit.Provider> = {
             supported_formats: supportedFormats,

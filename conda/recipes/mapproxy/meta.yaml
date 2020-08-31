@@ -21,15 +21,13 @@ requirements:
     - pillow
     - pip
     - python
-    - pyyaml
     - setuptools
-    - proj4<6.0.1.0a0
   run:
     - pillow
     - python
     - pyyaml
     - setuptools
-    - proj4<6.0.1.0a0
+    - proj4
 
 test:
   imports:
@@ -62,11 +60,11 @@ about:
   home: https://mapproxy.org
   license: Apache Software
   license_family: APACHE
-  license_file: 
+  license_file:
   summary: An accelerating proxy for tile and web map services
-  doc_url: 
-  dev_url: 
+  doc_url:
+  dev_url:
 
 extra:
   recipe-maintainers:
-    - your-github-id-here
+    - Coop56

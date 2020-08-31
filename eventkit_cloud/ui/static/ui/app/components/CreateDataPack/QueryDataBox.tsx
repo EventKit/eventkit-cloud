@@ -108,7 +108,7 @@ export class QueryDataBox extends React.Component<Props, {}> {
             return ( // Error message found and we're not waiting for data
                 <div style={{height: 'calc(100vh)'}}>
                     <strong className={classes.details}>{this.props.errorMessage}</strong>
-                    <Table padding="dense">
+                    <Table size="small">
                         <TableBody>
                             <TableRow className={classes.tableRow}>
                                 <TableCell align={this.keyAlign} className={classes.tableCell}>
@@ -129,7 +129,7 @@ export class QueryDataBox extends React.Component<Props, {}> {
         const { classes } = this.props;
 
         return (
-            <Table padding="dense">
+            <Table size="small">
                 <TableBody>
                     <TableRow className={classes.tableRow}>
                         <TableCell align={this.keyAlign} className={classes.tableCell}>

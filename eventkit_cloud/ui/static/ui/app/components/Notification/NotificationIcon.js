@@ -123,6 +123,4 @@ NotificationIcon.defaultProps = {
     iconStyle: {},
 };
 
-export default
-@withTheme()
-class Default extends NotificationIcon {}
+export default withTheme(NotificationIcon);

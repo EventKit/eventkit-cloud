@@ -131,8 +131,7 @@ export function createStore(preloadedState, enhancer) {
     };
 }
 
-
-const createTestStore = initialState => (
+const createTestStore = (initialState) => (
     createStore(
         initialState,
         compose(reduxBatch, applyMiddleware(thunk), reduxBatch),

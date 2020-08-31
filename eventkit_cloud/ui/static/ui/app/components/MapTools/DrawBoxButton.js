@@ -1,4 +1,3 @@
-
 import PropTypes from 'prop-types';
 import React, { Component } from 'react';
 import { withTheme } from '@material-ui/core/styles';
@@ -102,4 +101,4 @@ DrawBoxButton.propTypes = {
     theme: PropTypes.object.isRequired,
 };
 
-export default withTheme()(DrawBoxButton);
+export default withTheme(DrawBoxButton);

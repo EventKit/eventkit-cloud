@@ -11,7 +11,6 @@ import NotificationMessage from './NotificationMessage';
 import NotificationIcon from './NotificationIcon';
 import NotificationMenu from './NotificationMenu';
 
-
 export class NotificationGridItem extends Component {
     constructor(props) {
         super(props);
@@ -123,14 +122,10 @@ NotificationGridItem.defaultProps = {
 
 function mapDispatchToProps(dispatch) {
     return {
-        markNotificationsAsRead: notification => dispatch(markNotificationsAsRead(notification)),
-        markNotificationsAsUnread: notification => dispatch(markNotificationsAsUnread(notification)),
-        removeNotifications: notification => dispatch(removeNotifications(notification)),
+        markNotificationsAsRead: (notification) => dispatch(markNotificationsAsRead(notification)),
+        markNotificationsAsUnread: (notification) => dispatch(markNotificationsAsUnread(notification)),
+        removeNotifications: (notification) => dispatch(removeNotifications(notification)),
     };
 }
 
-export default
-@withWidth()
-@withTheme()
-@connect(null, mapDispatchToProps)
-class Default extends NotificationGridItem {}
+export default withWidth()(withTheme(connect(null, mapDispatchToProps)(NotificationGridItem)));

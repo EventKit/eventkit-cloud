@@ -402,4 +402,4 @@ const mapDispatchToProps = dispatch => (
     }
 );
 
-export default withTheme()(connect(mapStateToProps, mapDispatchToProps)(GroupsBody));
+export default withTheme(connect(mapStateToProps, mapDispatchToProps)(GroupsBody));

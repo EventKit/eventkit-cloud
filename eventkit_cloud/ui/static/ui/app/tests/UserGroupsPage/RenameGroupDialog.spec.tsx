@@ -39,8 +39,7 @@ describe('LeaveGroupDialog component', () => {
         const wrapper = mount(<RenameGroupDialog {...props} />);
 
         expect(wrapper.find(BaseDialog)).toHaveLength(1);
-        const child = mount(wrapper.find(BaseDialog).props().children[0]);
-        expect(child.text()).toEqual('Name unavailable');
+        expect(wrapper.find(BaseDialog).text()).toContain('Name unavailable');
     });
 
     it('should set the save button disabled if no value or its invalid', () => {

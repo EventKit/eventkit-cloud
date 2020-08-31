@@ -3,8 +3,7 @@ import { unmountComponentAtNode } from 'react-dom';
 import MockAdapter from 'axios-mock-adapter';
 import axios from 'axios';
 import { mount } from 'enzyme';
-import {useAsyncRequest, ApiStatuses} from "../../utils/hooks/api";
-
+import { useAsyncRequest, ApiStatuses } from '../../utils/hooks/api';
 
 let container = null;
 beforeEach(() => {
@@ -58,7 +57,7 @@ it('should render correctly based on status', async () => {
 
     const getButton = wrapper.find('button');
     getButton.simulate('click');
-    return new Promise(resolve => setImmediate(resolve)).then(() => {
+    return new Promise((resolve) => setImmediate(resolve)).then(() => {
         expect(wrapper.find('div').html()).toContain('fetching');
     });
 });

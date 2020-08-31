@@ -68,7 +68,7 @@ describe('UserRow component', () => {
             isAdmin: true,
         });
         const dropdown = wrapper.find(IconMenu);
-        expect(dropdown.props().children).toHaveLength(4);
+        expect(dropdown.children()).toHaveLength(4);
     });
 
     it('handleAddUserClick should call handleNewGroup', () => {

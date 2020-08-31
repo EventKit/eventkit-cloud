@@ -116,7 +116,7 @@ export function RequestDataSource(props: Props) {
         const infoMessage = "Please provide a link to the service and the specific layers that you need." +
             "  Additionally please provide a description of the service, if the link does not provide one.";
         const getDisplayProps = (field) => {
-            const submitted = status === 'success';
+            const submitted = status === ApiStatuses.hookActions.SUCCESS;
             const displayValue = field.value;
             return {
                 value: (submitted) ? displayValue || ' ' : undefined,
@@ -139,7 +139,7 @@ export function RequestDataSource(props: Props) {
                     id="mainHeading"
                     className={`qa-RequestDataSource-heading ${classes.heading} ${status ? classes.submittedHeading : ''}`}
                 >
-                    {status !== 'success' ? infoMessage : (
+                    {status !== ApiStatuses.hookActions.SUCCESS ? infoMessage : (
                         <>
                             <p>
                                 Request successfully submitted.
@@ -151,7 +151,7 @@ export function RequestDataSource(props: Props) {
                     )}
                 </div>
                 {/*The conditional can be removed here if we want to show a user what data they submitted.*/}
-                {status !== 'success' && (<>
+                {status !== ApiStatuses.hookActions.SUCCESS && (<>
                     <div className={classes.entryRow}>
                         <strong className={classes.left}>Source Name:</strong>
                         <div className={classes.right}>
@@ -351,4 +351,4 @@ const jss = (theme: Eventkit.Theme & Theme) => createStyles({
 });
 
 
-export default withWidth()(withTheme()(withStyles(jss)(RequestDataSource)));
+export default withWidth()(withTheme(withStyles(jss)(RequestDataSource)));

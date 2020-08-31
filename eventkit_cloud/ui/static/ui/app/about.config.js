@@ -104,14 +104,14 @@ export const about = [
             <div>
                 <p>
                     The EventKit roadmap outlines the development of new features,
-                     and our next few releases include improvements across a range of topics.
-                     In general these include more datasets, formats, and projections,
-                     the ability to preview data sources, ways to pre-build,
-                     recommend, and discover new datasets, ability to process larger areas, and continued integrations into QGIS and ESRI.
+                    and our next few releases include improvements across a range of topics.
+                    In general these include more datasets, formats, and projections,
+                    the ability to preview data sources, ways to pre-build,
+                    recommend, and discover new datasets, ability to process larger areas, and continued integrations into QGIS and ESRI.
                 </p>
                 <p>
                     If you have specific features or workflows that you&apos;d like to see in EventKit,
-                     please let us know.
+                    please let us know.
                 </p>
             </div>
         ),

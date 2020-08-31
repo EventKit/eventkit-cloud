@@ -148,5 +148,5 @@ export class ProviderPreview extends React.Component<Props, State> {
 };
 
 
-export default withTheme()(withStyles(jss)(ProviderPreview));
+export default withTheme(withStyles(jss)(ProviderPreview));
 

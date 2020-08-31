@@ -44,7 +44,7 @@ class RocketChat(object):
         response = requests.get(self.profile_url, headers=self.headers, verify=False)
         if not response.ok:
             logger.error(response.content)
-            raise Exception(f"Unable to get profile.")
+            raise Exception("Unable to get profile.")
 
     def post_message(self, channel: str, message: str):
         data = {"channel": channel, "text": message}

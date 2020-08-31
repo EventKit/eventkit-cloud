@@ -198,7 +198,7 @@ class Generator:
                 nsg_metadata_entry["metadata"] = pretty_xml
                 Metadata.insert_or_update_metadata_row(cursor=cursor, metadata=nsg_metadata_entry)
                 db.commit()
-            except sqlite3.IntegrityError as e:
+            except sqlite3.IntegrityError:
                 if self.log:
                     self.log.error("Failed to add NSG profile metadata to the metadata tables")
 

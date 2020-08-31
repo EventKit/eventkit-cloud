@@ -1,4 +1,3 @@
-
 export const types = {
     UPDATE_AOI_INFO: 'UPDATE_AOI_INFO',
     CLEAR_AOI_INFO: 'CLEAR_AOI_INFO',
@@ -63,7 +62,7 @@ export function submitJob(data) {
         url: '/api/jobs',
         method: 'POST',
         data,
-        onSuccess: response => ({ jobuid: response.data.uid }),
+        onSuccess: (response) => ({ jobuid: response.data.uid }),
     };
 }
 
@@ -112,7 +111,7 @@ export function rerunExport(jobuid) {
         ],
         url: `/api/jobs/${jobuid}/run`,
         method: 'POST',
-        onSuccess: response => ({ exportReRun: { data: response.data } }),
+        onSuccess: (response) => ({ exportReRun: { data: response.data } }),
     };
 }
 

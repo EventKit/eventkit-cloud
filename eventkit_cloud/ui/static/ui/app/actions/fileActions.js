@@ -8,14 +8,13 @@ export const types = {
     FILE_RESET: 'FILE_RESET',
 };
 
-
 export function resetGeoJSONFile() {
     return {
         type: types.FILE_RESET,
     };
 }
 
-export const processGeoJSONFile = file => (dispatch) => {
+export const processGeoJSONFile = (file) => (dispatch) => {
     dispatch({ type: types.FILE_PROCESSING, filename: file.name });
 
     const csrftoken = getCookie('csrftoken');

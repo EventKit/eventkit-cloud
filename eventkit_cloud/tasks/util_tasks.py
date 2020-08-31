@@ -59,7 +59,7 @@ def pcf_shutdown_celery_workers(self, queue_name, queue_type=None, hostname=None
         f"{queue_name} and {messages} on the queue, skipping shutdown."
     )
     logger.info(f"Waiting for tasks {export_tasks} to finish before shutting down, {workers}.")
-    self.retry(exc=Exception(f"Tasks still in queue."))
+    self.retry(exc=Exception("Tasks still in queue."))
 
 
 @app.task(name="Get Estimates", base=UserDetailsBase, default_retry_delay=60)

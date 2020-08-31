@@ -1,5 +1,3 @@
-
-
 export const Config = {
     BANNER_TEXT: '',
     REGIONS_URL: '/api/regions.json',

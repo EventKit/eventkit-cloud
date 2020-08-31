@@ -56,7 +56,7 @@ class Overpass(object):
         self.config = config
         if bbox:
             # Overpass expects a bounding box string of the form "<lat0>,<long0>,<lat1>,<long1>"
-            self.bbox = "{},{},{},{}".format(bbox[1], bbox[0], bbox[3], bbox[2])
+            self.bbox = f"{bbox[1]},{bbox[0]},{bbox[3]},{bbox[2]}"
         else:
             raise Exception("A bounding box is required: miny,minx,maxy,maxx")
 
@@ -105,7 +105,7 @@ class Overpass(object):
         req = None
         q = self.get_query()
         logger.debug(q)
-        logger.debug("Query started at: %s".format(datetime.now()))
+        logger.debug(f"Query started at: {datetime.now()}")
         try:
             update_progress(
                 self.task_uid,
@@ -185,8 +185,8 @@ class Overpass(object):
             if req:
                 req.close()
 
-        logger.debug("Query finished at %s".format(datetime.now()))
-        logger.debug("Wrote overpass query results to: %s".format(self.raw_osm))
+        logger.debug(f"Query finished at {datetime.now()}")
+        logger.debug(f"Wrote overpass query results to: {self.raw_osm}")
         return self.raw_osm
 
 

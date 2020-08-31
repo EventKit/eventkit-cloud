@@ -394,6 +394,10 @@ describe('DashboardPage component', () => {
             loadEmptyData();
         });
 
+        it('should not be loading', () => {
+            expect(instance.isLoading()).toBe(false);
+        });
+
         it('does not render loading spinner', () => {
             expect(wrapper.find(PageLoading)).toHaveLength(0);
         });

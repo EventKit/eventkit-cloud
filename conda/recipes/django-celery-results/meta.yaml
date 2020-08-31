@@ -1,13 +1,12 @@
 {% set name = "django-celery-results" %}
-{% set version = "1.0.4" %}
+{% set version = "1.2.1" %}
 
 package:
   name: "{{ name|lower }}"
   version: "{{ version }}"
 
 source:
-  url: https://github.com/celery/{{ name }}/archive/v{{ version }}.tar.gz
-  sha256: 4f3b1c08deb161a21fb82e7eeea44cef15d1d416c7cee92c7f8aeb97e520e326
+  url: https://github.com/celery/{{ name }}/archive/{{ version }}.tar.gz
 
 build:
   number: 0
@@ -15,13 +14,13 @@ build:
 
 requirements:
   host:
-    - celery >=4.0,<5.0
+    - celery
     - kombu
     - pip
     - python
     - setuptools
   run:
-    - celery >=4.0,<5.0
+    - celery
     - kombu
     - python
     - setuptools
@@ -30,10 +29,10 @@ about:
   home: https://github.com/celery/django-celery-results
   license: BSD
   license_family: BSD
-  license_file: 
+  license_file:
   summary: Celery result backends for Django.
-  doc_url: 
-  dev_url: 
+  doc_url:
+  dev_url:
 
 extra:
   recipe-maintainers:

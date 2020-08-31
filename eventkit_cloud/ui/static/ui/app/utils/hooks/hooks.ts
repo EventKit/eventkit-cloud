@@ -65,12 +65,13 @@ export class DepsHashers {
 
     private static readonly emptyEstimate = DepsHashers.stringHash('-1:-1');
 
-    static stringHash(value: string): number {
+    static stringHash(value: string | number): number {
         let h;
-        if (value) {
-            for (let i = 0; i < value.length; i += 1) {
+        if (!!value || value === 0) {
+            let valueToString = value.toString();
+            for (let i = 0; i < valueToString.length; i += 1) {
                 // eslint-disable-next-line no-bitwise
-                h = Math.imul(31, h) + value.charCodeAt(i) | 0;
+                h = Math.imul(31, h) + valueToString.charCodeAt(i) | 0;
             }
             return h;
         }

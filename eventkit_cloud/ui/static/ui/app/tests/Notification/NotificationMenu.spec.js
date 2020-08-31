@@ -76,7 +76,6 @@ describe('NotificationMenu component', () => {
         expect(removeMenuItem.find(CloseIcon)).toHaveLength(1);
     });
 
-
     describe('when notification is unread', () => {
         let markAsReadMenuItem;
 

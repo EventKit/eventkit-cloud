@@ -61,4 +61,4 @@ export class SaveButton extends React.Component<Props, {}> {
     }
 }
 
-export default withTheme()(SaveButton);
+export default withTheme(SaveButton);

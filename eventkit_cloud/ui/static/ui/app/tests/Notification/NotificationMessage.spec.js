@@ -21,7 +21,7 @@ describe('NotificationMessage component', () => {
         shallow = createShallow();
     });
 
-    const getWrapper = props => (
+    const getWrapper = (props) => (
         shallow(<NotificationMessage {...props} {...global.eventkit_test_props} />)
     );
 

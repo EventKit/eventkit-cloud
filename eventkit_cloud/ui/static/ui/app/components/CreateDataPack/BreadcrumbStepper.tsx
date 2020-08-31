@@ -23,7 +23,7 @@ import BaseDialog from '../Dialog/BaseDialog';
 import ConfirmDialog from '../Dialog/ConfirmDialog';
 import PageLoading from '../common/PageLoading';
 import {Location} from 'history';
-import {CircularProgress, Typography} from "@material-ui/core";
+import {CircularProgress, Fab, Typography} from "@material-ui/core";
 import * as PropTypes from "prop-types";
 import Info from '@material-ui/icons/Info';
 import {getProjections} from "../../actions/projectionActions";
@@ -304,7 +304,6 @@ export class BreadcrumbStepper extends React.Component<Props, State> {
 
         switch (stepIndex) {
             case 0:
-            case 1:
                 return (
                     <NavigationArrowBack
                         id="Previous"
@@ -313,12 +312,12 @@ export class BreadcrumbStepper extends React.Component<Props, State> {
                         onClick={this.handlePrev}
                     />
                 );
+            case 1:
             case 2:
                 return (
-                    <Button
-                        mini
+                    <Fab
+                        size="small"
                         id="Previous"
-                        variant="fab"
                         color="primary"
                         className="qa-BreadcrumbStepper-Button-previous"
                         onClick={this.handlePrev}
@@ -327,7 +326,7 @@ export class BreadcrumbStepper extends React.Component<Props, State> {
                         <NavigationArrowBack
                             className="qa-BreadcrumbStepper-NavigationArrowBack-previous-case2"
                         />
-                    </Button>
+                    </Fab>
                 );
             default:
                 return <div/>;
@@ -349,10 +348,9 @@ export class BreadcrumbStepper extends React.Component<Props, State> {
             case 0:
             case 1:
                 return (
-                    <Button
-                        mini
+                    <Fab
+                        size="small"
                         id="Next"
-                        variant="fab"
                         color="primary"
                         className="qa-BreadcrumbStepper-Button-next"
                         disabled={!this.props.stepperNextEnabled}
@@ -360,14 +358,13 @@ export class BreadcrumbStepper extends React.Component<Props, State> {
                         style={btnStyle}
                     >
                         <NavigationArrowForward/>
-                    </Button>
+                    </Fab>
                 );
             case 2:
                 return (
-                    <Button
-                        mini
+                    <Fab
+                        size="small"
                         id="Next"
-                        variant="fab"
                         color="primary"
                         className="qa-BreadcrumbStepper-Button-next"
                         disabled={!this.props.stepperNextEnabled}
@@ -375,7 +372,7 @@ export class BreadcrumbStepper extends React.Component<Props, State> {
                         style={btnStyle}
                     >
                         <NavigationCheck className="qa-BreadcrumbStepper-NavigationCheck"/>
-                    </Button>
+                    </Fab>
                 );
             default:
                 return <div/>;
@@ -608,7 +605,7 @@ function mapDispatchToProps(dispatch) {
     };
 }
 
-export default withTheme()(connect(
+export default withTheme(connect(
     mapStateToProps,
     mapDispatchToProps,
 )(BreadcrumbStepper));

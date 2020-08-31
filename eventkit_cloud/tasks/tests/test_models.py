@@ -38,7 +38,7 @@ class TestExportRun(TestCase):
         # add the formats to the provider task
         provider_task.formats.add(*formats)
         job = Job.objects.create(name='TestExportRun', description='Test description', user=user, the_geom=the_geom)
-        job.provider_tasks.add(provider_task)
+        job.data_provider_tasks.add(provider_task)
 
     def test_export_run(self,):
         job = Job.objects.first()
@@ -59,7 +59,7 @@ class TestExportRun(TestCase):
         ExportTaskRecord.objects.create(export_provider_task=export_provider_task, uid=task_uid)
         saved_task = ExportTaskRecord.objects.get(uid=task_uid)
         self.assertIsNotNone(saved_task)
-        tasks = run.provider_tasks.all()[0].tasks.all()
+        tasks = run.data_provider_task_records.all()[0].tasks.all()
         self.assertEqual(tasks[0], saved_task)
 
     def test_get_runs_for_job(self,):
@@ -70,7 +70,7 @@ class TestExportRun(TestCase):
             export_provider_task = DataProviderTaskRecord.objects.create(run=run)
             ExportTaskRecord.objects.create(export_provider_task=export_provider_task, uid=task_uid)
         runs = job.runs.all()
-        tasks = runs[0].provider_tasks.all()[0].tasks.all()
+        tasks = runs[0].data_provider_task_records.all()[0].tasks.all()
         self.assertEqual(5, len(runs))
         self.assertEqual(1, len(tasks))
 
@@ -122,7 +122,7 @@ class TestRunZipFile(TestCase):
         # add the formats to the provider task
         provider_task.formats.add(*formats)
         job = Job.objects.create(name='TestExportRun', description='Test description', user=user, the_geom=the_geom)
-        job.provider_tasks.add(provider_task)
+        job.data_provider_tasks.add(provider_task)
         run = ExportRun.objects.create(job=job, status='SUBMITTED', user=job.user)
 
     def test_run_zip_file(self):

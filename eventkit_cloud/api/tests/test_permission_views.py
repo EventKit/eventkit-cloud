@@ -48,7 +48,7 @@ class TestJobPermissions(APITestCase):
         provider_task = DataProviderTask.objects.create(provider=provider)
         provider_task.formats.add(*formats)
 
-        self.job.provider_tasks.add(provider_task)
+        self.job.data_provider_tasks.add(provider_task)
 
         token = Token.objects.create(user=self.user1)
         self.client.credentials(HTTP_AUTHORIZATION='Token ' + token.key,
@@ -314,7 +314,7 @@ class TestExportRunViewSet(APITestCase):
         provider_task = DataProviderTask.objects.create(provider=provider)
         provider_task.formats.add(*formats)
 
-        self.job.provider_tasks.add(provider_task)
+        self.job.data_provider_tasks.add(provider_task)
         self.job.save()
         self.job_uid = str(self.job.uid)
         self.export_run = ExportRun.objects.create(job=self.job, user=self.user1)

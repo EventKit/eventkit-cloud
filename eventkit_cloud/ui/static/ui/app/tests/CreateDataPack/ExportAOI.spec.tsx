@@ -114,7 +114,7 @@ describe('ExportAOI component', () => {
         expect(wrapper.find(ZoomLevelLabel)).toHaveLength(1);
         expect(wrapper.find(InvalidDrawWarning)).toHaveLength(1);
         expect(wrapper.find(DropZone)).toHaveLength(1);
-        expect(wrapper.find(Joyride)).toHaveLength(1);
+
     });
 
     it('the left position should be 200px if drawer is open, otherwise 0px', () => {

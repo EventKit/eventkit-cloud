@@ -10,6 +10,9 @@ import BaseDialog from '../Dialog/BaseDialog';
 import {Breakpoint} from '@material-ui/core/styles/createBreakpoints';
 import ProviderPreview from "./ProviderPreview";
 import CreateDataPackButton from "./CreateDataPackButton";
+import {useEffect} from "react";
+import {DepsHashers} from "../../utils/hooks/hooks";
+import {shouldDisplay} from "../../utils/generic";
 
 const jss = (theme: Eventkit.Theme & Theme) => ({
     btn: {
@@ -34,6 +37,24 @@ const jss = (theme: Eventkit.Theme & Theme) => ({
     }
 });
 
+const ZIP_TASK_NAME = 'Project File (.zip)';
+
+interface CalculatorProps {
+    fileSizes?: number[],
+    setFileSize: (value: number) => void
+}
+
+ZipSizeCalculator.defaultProps = {fileSizes: []}
+
+function ZipSizeCalculator(props: CalculatorProps) {
+    useEffect(() => {
+        props.setFileSize(props.fileSizes.reduce((total, val) => total + val))
+    }, [DepsHashers.arrayHash(props.fileSizes)])
+
+    return null;
+}
+
+
 export interface Props {
     providerTasks: Eventkit.ProviderTask[];
     onProviderCancel: (uid: string) => void;
@@ -48,6 +69,7 @@ export interface State {
     infoOpen: boolean;
     providerPreviewOpen: boolean;
     selectedProvider?: Eventkit.ProviderTask;
+    zipSize?: number;
 }
 
 export class DataPackDetails extends React.Component<Props, State> {
@@ -117,7 +139,7 @@ export class DataPackDetails extends React.Component<Props, State> {
         let providerElement = (<span/>);
         if (!!selectedProvider) {
             providerElement = (
-                <span> > {selectedProvider.name}</span>
+                <span> {'>'} {selectedProvider.name}</span>
             );
         }
 
@@ -173,6 +195,28 @@ export class DataPackDetails extends React.Component<Props, State> {
 
         return (
             <div>
+                <ZipSizeCalculator
+                    fileSizes={
+                        this.props.providerTasks.filter(
+                            providerTask => shouldDisplay(providerTask)
+                        ).map(providerTask => {
+                            // Use the zip task if it exists, otherwise calc based on all available.
+                            const zipTask = providerTask.tasks.find(task => task.name === ZIP_TASK_NAME);
+                            if (!!zipTask && !!zipTask.result.size) {
+                                return Number(zipTask.result.size.replace(' MB', ''));
+                            }
+                            let fileSize = 0;
+                            providerTask.tasks.forEach((task) => {
+                                if (task.result != null) {
+                                    if (task.display !== false && task.result.size) {
+                                        fileSize = fileSize + Number(task.result.size.replace(' MB', ''));
+                                    }
+                                }
+                            });
+                            return fileSize;
+                        })}
+                    setFileSize={(value: number) => this.setState({zipSize: value})}
+                />
                 <div className="qa-DataPackDetails-heading" style={styles.subHeading}>
                     Download Options
                 </div>
@@ -189,6 +233,7 @@ export class DataPackDetails extends React.Component<Props, State> {
                                 style={styles.download}
                             >
                                 <CreateDataPackButton
+                                    zipSize={this.state.zipSize}
                                     fontSize={textFontSize}
                                     // Pass through all non-hidden, displayed providerTasks (as UIDs)
                                     providerTaskUids={
@@ -258,4 +303,4 @@ export class DataPackDetails extends React.Component<Props, State> {
     }
 }
 
-export default withWidth()(withTheme()(withStyles(jss)(DataPackDetails)));
+export default withWidth()(withTheme(withStyles(jss)(DataPackDetails)));

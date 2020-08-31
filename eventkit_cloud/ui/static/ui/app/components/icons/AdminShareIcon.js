@@ -2,7 +2,7 @@ import React from 'react';
 import createSvgIcon from '@material-ui/icons/utils/createSvgIcon';
 
 export default createSvgIcon((
-    <React.Fragment>
+    <>
         <path
             d="m 4.2922912,7.053913 c 0.9357595,0 1.7237685,-0.7880072 1.7237685,-1.723767 0,-0.93576 -0.788009,
             -1.7237686 -1.7237685,-1.7237686 -0.9357601,0 -1.7237687,0.7880086 -1.7237687,
@@ -34,5 +34,5 @@ export default createSvgIcon((
         <path
             d="m 3.8971326,12.619225 v 7.881047 H 20.053617 v -7.881047 h -0.691624 v 7.189424 H 4.5887563 v -7.189424 z"
         />
-    </React.Fragment>
+    </>
 ));

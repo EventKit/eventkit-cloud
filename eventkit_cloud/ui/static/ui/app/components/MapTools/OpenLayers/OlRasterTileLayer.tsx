@@ -1,8 +1,6 @@
-import React, {useEffect, useRef, useState} from 'react';
+import React, {useEffect, useRef } from 'react';
 import {MapLayer} from "../../CreateDataPack/CreateExport";
 import {useOlMapContainer} from "../context/OpenLayersContext";
-import {useEffectOnMount} from "../../../utils/hooks/hooks";
-import set = Reflect.set;
 
 interface Props {
     mapLayer: MapLayer;
@@ -12,7 +10,7 @@ interface Props {
 
 function OlRasterTileLayer(props: Props) {
     const olMapContext = useOlMapContainer();
-    const mapContainer = olMapContext.mapContainer;
+    const {mapContainer} = olMapContext;
     const layerRef = useRef(null);
 
     const { mapLayer, zIndex, copyright } = props;

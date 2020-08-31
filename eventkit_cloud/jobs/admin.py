@@ -5,8 +5,7 @@ from django.conf.urls import url
 from django.contrib import admin
 from django.contrib import messages
 from django.contrib.gis.admin import OSMGeoAdmin
-from django.shortcuts import render_to_response
-from django.template import RequestContext
+from django.shortcuts import render
 from django.utils.html import format_html
 from django_celery_beat.models import IntervalSchedule, CrontabSchedule
 
@@ -48,7 +47,7 @@ class JobAdmin(OSMGeoAdmin):
         "the_geom_webmercator",
         "original_selection",
         "the_geog",
-        "provider_tasks",
+        "data_provider_tasks",
         "json_tags",
         "preset",
     ]
@@ -65,10 +64,8 @@ class JobAdmin(OSMGeoAdmin):
         regions = Region.objects.all()
 
         # noinspection PyProtectedMember
-        return render_to_response(
-            self.update_template,
-            {"regions": regions, "selected": selected, "opts": self.model._meta},
-            context_instance=RequestContext(request),
+        return render(
+            request, self.update_template, {"regions": regions, "selected": selected, "opts": self.model._meta},
         )
 
     select_exports.short_description = "Assign a region to the selected exports"
@@ -88,10 +85,10 @@ class JobAdmin(OSMGeoAdmin):
 
         messages.success(request, "{0} exports updated.".format(num_selected))
         # noinspection PyProtectedMember
-        return render_to_response(
+        return render(
+            request,
             self.update_complete_template,
             {"num_selected": len(selected.split(",")), "region": region.name, "opts": self.model._meta},
-            context_instance=RequestContext(request),
         )
 
     def get_urls(self):

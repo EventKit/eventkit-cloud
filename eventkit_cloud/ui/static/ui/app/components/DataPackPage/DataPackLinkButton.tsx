@@ -28,23 +28,23 @@ export class DataPackLinkButton extends React.Component<Props, {}> {
 
         return (
             <Link
-                className={`datapack-link-create`}
+                className="datapack-link-create"
                 style={
                     {
                         display: 'grid',
-                        textDecoration: 'none'
+                        textDecoration: 'none',
                     }
                 }
                 to="/create"
                 href="/create"
             >
                 <Button
-                    className={"qa-DataPackLinkButton-Button datapack-button-create"}
+                    className="qa-DataPackLinkButton-Button datapack-button-create"
                     style={styles.button}
                     variant="contained"
                     color="primary"
                 >
-                    {/*<ContentAddBox className={classes.icon} />*/}
+                    {/* <ContentAddBox className={classes.icon} /> */}
                     Create DataPack
                 </Button>
             </Link>
@@ -52,4 +52,4 @@ export class DataPackLinkButton extends React.Component<Props, {}> {
     }
 }
 
-export default withTheme()(DataPackLinkButton);
+export default withTheme(DataPackLinkButton);

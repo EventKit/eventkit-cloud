@@ -1,9 +1,10 @@
-
-import React  from 'react';
-import {createStyles, Theme, withTheme, withStyles} from '@material-ui/core/styles';
+import React from 'react';
+import {
+    createStyles, Theme, withTheme, withStyles,
+} from '@material-ui/core/styles';
 import { MenuItem } from 'react-bootstrap-typeahead';
 import ActionRoom from '@material-ui/icons/Room';
-import IrregularPolygon from '../icons/IrregularPolygon';;
+import IrregularPolygon from '../icons/IrregularPolygon';
 
 const jss = (theme: Theme & Eventkit.Theme) => createStyles({
     icon: {
@@ -28,7 +29,6 @@ const jss = (theme: Theme & Eventkit.Theme) => createStyles({
         borderRadius: '2px',
     },
 });
-
 
 interface Props {
     result: any;
@@ -82,4 +82,4 @@ export function TypeaheadMenuItem(props: Props) {
     );
 }
 
-export default withTheme()(withStyles<any, any>(jss)(TypeaheadMenuItem));
+export default withTheme(withStyles<any, any>(jss)(TypeaheadMenuItem));

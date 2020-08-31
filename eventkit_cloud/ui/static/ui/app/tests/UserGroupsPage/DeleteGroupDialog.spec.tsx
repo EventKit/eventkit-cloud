@@ -22,7 +22,7 @@ describe('LeaveGroupDialog component', () => {
     it('should render a BaseDialog with message', () => {
         const wrapper = shallow(<DeleteGroupDialog {...props} />);
         expect(wrapper.find(BaseDialog)).toHaveLength(1);
-        expect(wrapper.find(BaseDialog).props().children)
+        expect(wrapper.find(BaseDialog).text())
             .toEqual("Are you sure you'd like to delete 'Test Group'?");
     });
 });

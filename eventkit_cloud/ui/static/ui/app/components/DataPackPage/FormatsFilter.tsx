@@ -76,4 +76,4 @@ export class FormatsFilter extends React.Component<Props, {}> {
     }
 }
 
-export default withTheme()(FormatsFilter);
+export default withTheme(FormatsFilter);

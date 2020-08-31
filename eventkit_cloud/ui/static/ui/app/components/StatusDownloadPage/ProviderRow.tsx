@@ -645,4 +645,4 @@ function mapDispatchToProps(dispatch) {
 }
 
 
-export default withWidth()(withTheme()(withStyles(jss)(connect(null, mapDispatchToProps)(ProviderRow))));
+export default withWidth()(withTheme((withStyles(jss)(connect(null, mapDispatchToProps)(ProviderRow)))));

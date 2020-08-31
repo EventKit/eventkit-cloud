@@ -28,7 +28,6 @@ def example_task(result=None, job_num=None, task_num=None):
 def failure_task(result=None, job_num=None, task_num=None):
     print(("RUNNING TASK {0}.{1}".format(job_num, task_num)))
     raise Exception("TASK {0}.{1} HAS FAILED".format(job_num, task_num))
-    return {"result": result}
 
 
 @task(base=TestTask)
@@ -38,7 +37,7 @@ def final_provider_task(result=None, job_num=None, provider_name=None):
 
 @task(base=TestTask)
 def final_task(result=None, job_num=None, task_num=None):
-    print(("ALL PROVIDERS HAVE RAN AND CLEANUP HAS OCCURED.".format(task_num)))
+    print(("ALL PROVIDERS HAVE RAN AND CLEANUP HAS OCCURED."))
 
 
 @task(base=TestTask)

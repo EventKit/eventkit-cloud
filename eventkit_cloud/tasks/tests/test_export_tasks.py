@@ -640,7 +640,7 @@ class TestExportTasks(ExportTaskBase):
 
         mock_provider_task = Mock(status=TaskStates.SUCCESS.value)
         mock_export_run.objects.filter().first.return_value = Mock()
-        mock_export_run.objects.filter().first().provider_tasks.filter.return_value = [mock_provider_task]
+        mock_export_run.objects.filter().first().data_provider_task_records.filter.return_value = [mock_provider_task]
 
         callback_task = MagicMock()
         apply_args = {"arg1": "example_value"}
@@ -652,7 +652,7 @@ class TestExportTasks(ExportTaskBase):
 
         mock_provider_task = Mock(status=TaskStates.RUNNING.value)
         mock_export_run.objects.filter().first.return_value = Mock()
-        mock_export_run.objects.filter().first().provider_tasks.filter.return_value = [mock_provider_task]
+        mock_export_run.objects.filter().first().data_provider_task_records.filter.return_value = [mock_provider_task]
 
         wait_for_providers_task(run_uid=mock_run_uid, callback_task=callback_task, apply_args=apply_args)
         callback_task.apply_async.assert_not_called()

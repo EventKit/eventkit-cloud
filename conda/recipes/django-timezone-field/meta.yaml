@@ -1,13 +1,13 @@
 {% set name = "django-timezone-field" %}
-{% set version = "3.0" %}
+{% set version = "4.0" %}
 
 package:
   name: "{{ name|lower }}"
   version: "{{ version }}"
 
 source:
-  url: https://pypi.io/packages/source/{{ name[0] }}/{{ name }}/{{ name }}-{{ version }}.tar.gz
-  sha256: 7d7a37cfeacec5b1e81cd2f0aa334d46ebaa369cd516028579ed343cbc676c38
+  url: https://files.pythonhosted.org/packages/c9/33/dc63f43177d1489006a58d95ac46fdf2f15f63f5da2ff1f72917c9c3b090/{{ name }}-{{ version }}.tar.gz
+  sha256: 7e3620fe2211c2d372fad54db8f86ff884098d018d56fda4dca5e64929e05ffc
 
 build:
   number: 0
@@ -15,12 +15,12 @@ build:
 
 requirements:
   host:
-    - django >=1.8,<3.0
+    - django
     - pip
     - python
     - pytz
   run:
-    - django >=1.8,<3.0
+    - django
     - python
     - pytz
 
@@ -32,10 +32,10 @@ about:
   home: http://github.com/mfogel/django-timezone-field/
   license: BSD
   license_family: BSD
-  license_file: 
+  license_file:
   summary: A Django app providing database and form fields for pytz timezone objects.
-  doc_url: 
-  dev_url: 
+  doc_url:
+  dev_url:
 
 extra:
   recipe-maintainers:

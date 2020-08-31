@@ -1,10 +1,10 @@
 package:
   name: osmctools
-  version: 0.7.0
+  version: 0.9.0
 
 source:
-  fn: osmctools-master-be1eb365932d1664f45868a0c97b89d4e315877f.tar.gz
-  url: https://gitlab.com/osm-c-tools/osmctools/repository/archive.tar.gz?ref=master
+  fn: osmctools-0.9.tar.gz
+  url: https://gitlab.com/osm-c-tools/osmctools/-/archive/0.9/osmctools-0.9.tar.gz
 
 build:
   number: 0

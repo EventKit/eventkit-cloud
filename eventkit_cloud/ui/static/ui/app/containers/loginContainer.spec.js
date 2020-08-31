@@ -6,7 +6,6 @@ import MockAdapter from 'axios-mock-adapter';
 import Button from '@material-ui/core/Button';
 import { Form } from './loginContainer';
 
-
 describe('loginContainer', () => {
     let shallow;
 
@@ -124,7 +123,10 @@ describe('loginContainer', () => {
         const wrapper = shallow(<Form {...props} />);
         const event = { preventDefault: sinon.spy() };
         const locationSpy = sinon.spy();
-        window.location.assign = locationSpy;
+        Object.defineProperty(window, 'location', {
+            writable: true,
+            value: { assign: locationSpy },
+        });
         wrapper.instance().handleOAuth(event);
         expect(event.preventDefault.calledOnce).toBe(true);
         expect(locationSpy.calledOnce).toBe(true);
@@ -214,7 +216,6 @@ describe('loginContainer', () => {
 
         const wrapper = shallow(<Form {...props} />);
         expect(wrapper.state('oauthName')).toEqual('');
-
 
         await wrapper.instance().checkOAuthEndpoint();
         wrapper.update();

@@ -40,13 +40,16 @@ describe('userActions actions', () => {
             { type: actions.types.USER_LOGGED_OUT },
         ];
         const store = createTestStore({ user: { username: '' } });
-        const assignStub = sinon.stub(global.window.location, 'assign');
+        const locationSpy = sinon.spy();
+        Object.defineProperty(window, 'location', {
+            writable: true,
+            value: { assign: locationSpy },
+        });
         return store.dispatch(actions.logout())
             .then(() => {
                 expect(store.getActions()).toEqual(expectedActions);
-                expect(assignStub.calledOnce).toBe(true);
-                expect(assignStub.calledWith('www.oauth.com'));
-                assignStub.restore();
+                expect(locationSpy.calledOnce).toBe(true);
+                expect(locationSpy.calledWith('www.oauth.com'));
             });
     });
 

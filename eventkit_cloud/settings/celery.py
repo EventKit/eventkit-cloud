@@ -67,7 +67,7 @@ if os.getenv("VCAP_SERVICES"):
                 BROKER_URL = listings[0]["credentials"]["protocols"]["amqp"]["uri"]
             if "cloudamqp" in service:
                 BROKER_URL = listings[0]["credentials"]["uri"]
-        except KeyError as TypeError:
+        except KeyError:
             continue
         if BROKER_URL:
             break
@@ -82,7 +82,7 @@ if os.getenv("VCAP_SERVICES"):
                 BROKER_API_URL = listings[0]["credentials"]["http_api_uri"]
             if "cloudamqp" in service:
                 BROKER_API_URL = listings[0]["credentials"]["http_api_uri"]
-        except KeyError as TypeError:
+        except KeyError:
             continue
         if BROKER_API_URL:
             break

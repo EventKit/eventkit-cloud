@@ -1,13 +1,13 @@
 {% set name = "django-celery-beat" %}
-{% set version = "1.4.0" %}
+{% set version = "2.0.0" %}
 
 package:
   name: "{{ name|lower }}"
   version: "{{ version }}"
 
 source:
-  url: https://pypi.io/packages/source/{{ name[0] }}/{{ name }}/{{ name }}-{{ version }}.tar.gz
-  sha256: bfc22dad2884524697e1fcdfa63c0555a65151a97902c3045cd2cf7bf63970e4
+  url: https://files.pythonhosted.org/packages/6b/c5/96827d3fc2d73ff542515abd1b39cab06c156e09092466532c7bf68a07f8/{{name}}-{{version}}.tar.gz
+  sha256: fdf1255eecfbeb770c6521fe3e69989dfc6373cd5a7f0fe62038d37f80f47e48
 
 build:
   number: 0
@@ -15,17 +15,17 @@ build:
 
 requirements:
   host:
-    - celery >=4.0,<5.0
-    - django-timezone-field >=2.0
+    - celery
+    - django-timezone-field
     - pip
     - python
-    - python-crontab >=2.3.4
+    - python-crontab
     - setuptools
   run:
-    - celery >=4.0,<5.0
-    - django-timezone-field >=2.0
+    - celery
+    - django-timezone-field
     - python
-    - python-crontab >=2.3.4
+    - python-crontab
     - setuptools
 
 test:
@@ -33,20 +33,20 @@ test:
     - django_celery_beat
     - django_celery_beat.migrations
   requires:
-    - case >=1.3.1
+    - case
     - django
-    - pytest >=3.0
+    - pytest
     - pytest-django
-    - pytz >dev
+    - pytz
 
 about:
   home: https://github.com/celery/django-celery-beat
   license: BSD
   license_family: BSD
-  license_file: 
+  license_file:
   summary: Database-backed Periodic Tasks.
-  doc_url: 
-  dev_url: 
+  doc_url:
+  dev_url:
 
 extra:
   recipe-maintainers:

@@ -1,5 +1,3 @@
-import { createSelector } from 'reselect';
-import sinon from 'sinon';
 import * as selectors from '../../selectors/runSelector';
 
 describe('Run Selector', () => {
@@ -12,7 +10,9 @@ describe('Run Selector', () => {
                 },
                 jobs: { 111: { uid: 111 }, 222: { uid: 222 } },
                 provider_tasks: { 111: { tasks: ['111', '222'] }, 222: { tasks: ['333', '444'] } },
-                tasks: { 111: { uid: '111' }, 222: { uid: '222' }, 333: { uid: '333' }, 444: { uid: '444' } },
+                tasks: {
+                    111: { uid: '111' }, 222: { uid: '222' }, 333: { uid: '333' }, 444: { uid: '444' },
+                },
             },
         },
         datacartDetails: {
@@ -23,9 +23,9 @@ describe('Run Selector', () => {
     const getFullMockRun = (id) => {
         const s = getState();
         const run = s.exports.data.runs[id];
-        const providerTasks = run.provider_tasks.map(providerId => {
+        const providerTasks = run.provider_tasks.map((providerId) => {
             const provider = { ...s.exports.data.provider_tasks[providerId] };
-            provider.tasks = provider.tasks.map(taskId => ({ ...s.exports.data.tasks[taskId] }));
+            provider.tasks = provider.tasks.map((taskId) => ({ ...s.exports.data.tasks[taskId] }));
             return provider;
         });
         return {
@@ -76,9 +76,9 @@ describe('Run Selector', () => {
 
     it('getPropsProvderTasks should return all provider tasks of prop run', () => {
         const runId = '111';
-        const expected = state.exports.data.runs[runId].provider_tasks.map(providerId => {
+        const expected = state.exports.data.runs[runId].provider_tasks.map((providerId) => {
             const provider = { ...state.exports.data.provider_tasks[providerId] };
-            provider.tasks = provider.tasks.map(taskId => ({ ...state.exports.data.tasks[taskId] }));
+            provider.tasks = provider.tasks.map((taskId) => ({ ...state.exports.data.tasks[taskId] }));
             return provider;
         });
         const providerSelector = selectors.getPropsProviderTasks();
@@ -93,7 +93,7 @@ describe('Run Selector', () => {
 
     it('toFullProviderTask should add the full tasks to a provider task', () => {
         const expected = { ...state.exports.data.provider_tasks['222'] };
-        expected.tasks = expected.tasks.map(id => state.exports.data.tasks[id]);
+        expected.tasks = expected.tasks.map((id) => state.exports.data.tasks[id]);
         expect(selectors.toFullProviderTask(state.exports.data.provider_tasks['222'], state.exports.data.tasks)).toEqual(expected);
     });
 
@@ -120,7 +120,7 @@ describe('Run Selector', () => {
     it('toFullRun should return normally when run provider tasks are null', () => {
         const runId = '111';
         const expected = getMockEmptyRun(runId);
-        const run = {...state.exports.data.runs[runId], provider_tasks: null};
+        const run = { ...state.exports.data.runs[runId], provider_tasks: null };
         expect(selectors.toFullRun(
             run,
             state.exports.data.jobs,
@@ -132,7 +132,7 @@ describe('Run Selector', () => {
     it('toFullRun should return normally when run provider tasks are not present', () => {
         const runId = '111';
         const expected = getMockEmptyRun(runId);
-        const run = {...state.exports.data.runs[runId], provider_tasks: []};
+        const run = { ...state.exports.data.runs[runId], provider_tasks: [] };
         expect(selectors.toFullRun(
             run,
             state.exports.data.jobs,
@@ -144,7 +144,7 @@ describe('Run Selector', () => {
     it('toFullRun should return normally when run provider_tasks is undefined', () => {
         const runId = '111';
         const expected = getMockEmptyRun(runId);
-        const run = {...state.exports.data.runs[runId]};
+        const run = { ...state.exports.data.runs[runId] };
         run.provider_tasks = undefined;
         expect(selectors.toFullRun(
             run,
@@ -169,11 +169,11 @@ describe('Run Selector', () => {
     });
 
     it('getDatacarts should get all runs in datacart ids', () => {
-        expect(selectors.getDatacarts(state)).toEqual(state.datacartDetails.ids.map(id => state.exports.data.runs[id]));
+        expect(selectors.getDatacarts(state)).toEqual(state.datacartDetails.ids.map((id) => state.exports.data.runs[id]));
     });
 
     it('makeDatacartSelector should return full runs for each id in datacart ids', () => {
-        const expected = state.datacartDetails.ids.map(id => getFullMockRun(id));
+        const expected = state.datacartDetails.ids.map((id) => getFullMockRun(id));
         const datacartSelector = selectors.makeDatacartSelector();
         expect(datacartSelector(state)).toEqual(expected);
     });

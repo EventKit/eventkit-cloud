@@ -1,4 +1,3 @@
-
 export const types = {
     FETCHING_LICENSES: 'FETCHING_LICENSES',
     RECEIVED_LICENSES: 'RECEIVED_LICENSES',
@@ -14,7 +13,7 @@ export function getLicenses() {
         ],
         url: '/api/licenses',
         method: 'GET',
-        onSuccess: response => ({ licenses: response.data }),
+        onSuccess: (response) => ({ licenses: response.data }),
     };
 }
 

@@ -18,7 +18,7 @@ export function getUsers(params, append = false) {
             types.FETCHED_USERS,
             types.FETCH_USERS_ERROR,
         ],
-        getCancelSource: state => state.users.cancelSource,
+        getCancelSource: (state) => state.users.cancelSource,
         cancellable: true,
         url: '/api/users',
         method: 'GET',
@@ -50,7 +50,7 @@ export function getPermissionUsers(jobUid, params, append = false) {
         method: 'GET',
         params,
         payload: { append },
-        getCancelSource: state => state.groups.cancelSource,
+        getCancelSource: (state) => state.groups.cancelSource,
         cancellable: true,
         onSuccess: (response) => {
             // get the total count from the header

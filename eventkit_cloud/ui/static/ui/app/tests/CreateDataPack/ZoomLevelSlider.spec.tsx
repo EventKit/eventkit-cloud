@@ -3,7 +3,7 @@ import {mount, shallow} from 'enzyme';
 import * as sinon from 'sinon';
 import { ZoomLevelSlider } from '../../components/CreateDataPack/ZoomLevelSlider';
 import {Switch, TextField} from "@material-ui/core";
-import {Slider} from "@material-ui/lab";
+import {Slider} from "@material-ui/core";
 import {MapDrawer} from "../../components/CreateDataPack/MapDrawer";
 import Radio from "@material-ui/core/Radio";
 

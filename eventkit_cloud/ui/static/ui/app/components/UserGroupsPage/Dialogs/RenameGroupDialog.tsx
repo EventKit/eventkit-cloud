@@ -49,11 +49,9 @@ export class RenameGroupDialog extends React.Component<Props, {}> {
                 actions={createActions}
                 dialogStyle={{ maxWidth: '500px' }}
             >
-                {!this.props.valid ?
-                    <div style={{ color: colors.warning }}>Name unavailable</div>
-                    :
-                    null
-                }
+                {!this.props.valid
+                    ? <div style={{ color: colors.warning }}>Name unavailable</div>
+                    : null}
                 <CustomTextField
                     placeholder="Rename Group"
                     maxLength={50}
@@ -68,4 +66,4 @@ export class RenameGroupDialog extends React.Component<Props, {}> {
     }
 }
 
-export default withTheme()(RenameGroupDialog);
+export default withTheme(RenameGroupDialog);

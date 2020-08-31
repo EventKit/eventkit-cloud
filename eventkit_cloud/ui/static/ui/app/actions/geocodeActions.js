@@ -1,4 +1,3 @@
-
 export const types = {
     FETCHING_GEOCODE: 'FETCHING_GEOCODE',
     RECEIVED_GEOCODE: 'RECEIVED_GEOCODE',
@@ -13,7 +12,7 @@ export function getGeocode(query) {
             types.RECEIVED_GEOCODE,
             types.FETCH_GEOCODE_ERROR,
         ],
-        getCancelSource: state => state.geocode.cancelSource,
+        getCancelSource: (state) => state.geocode.cancelSource,
         cancellable: true,
         url: '/search',
         method: 'GET',

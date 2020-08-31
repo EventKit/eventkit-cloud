@@ -67,4 +67,4 @@ export class DropDownListItem extends React.Component<Props, State> {
     }
 }
 
-export default withTheme()(DropDownListItem);
+export default withTheme(DropDownListItem);

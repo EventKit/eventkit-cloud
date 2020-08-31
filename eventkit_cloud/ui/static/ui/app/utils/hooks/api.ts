@@ -1,4 +1,4 @@
-import {useCallback, useReducer} from "react";
+import {Reducer, useCallback, useReducer} from "react";
 import axios from "axios";
 
 
@@ -36,9 +36,9 @@ export class ApiStatuses {
 }
 
 interface RequestState {
-    status: any,
-    response: any
-    onCancel: () => void;
+    status?: any,
+    response?: any
+    onCancel?: () => void;
 }
 
 const initialState = {
@@ -68,9 +68,13 @@ interface Dispatcher {
     cancel: () => void;
 }
 
+interface ApiAction extends RequestState {
+    type: ACTIONS;
+}
+
 // Async request hook with more fine grained ability to control the request.
 export function useAsyncRequest_Control(): [RequestState, Dispatcher] {
-    const [state, dispatch] = useReducer(submitReducer, initialState);
+    const [state, dispatch] = useReducer<Reducer<RequestState, ApiAction>>(submitReducer, initialState);
     const dispatches = {
         fetching: (onCancel: () => void) => dispatch({onCancel, type: ACTIONS.FETCHING}),
         success: (response) => dispatch({type: ACTIONS.SUCCESS, response}),

@@ -70,7 +70,7 @@ export function GroupsHeaderTabs(props: Props) {
             value={(selectedTab) || false}
             onChange={props.handleChange}
         >
-            {tabs.map(tab => (
+            {tabs.map((tab) => (
                 <Tab
                     key={tab.id}
                     style={{ width: '32%', display: 'grid' }}
@@ -93,4 +93,4 @@ export function GroupsHeaderTabs(props: Props) {
     );
 }
 
-export default withTheme()(withStyles(jss)(GroupsHeaderTabs));
+export default withTheme((withStyles(jss)(GroupsHeaderTabs)));

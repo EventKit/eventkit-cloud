@@ -246,4 +246,4 @@ const mapStateToProps = state => (
         permissionState: state.updatePermission,
     }
 );
-export default withTheme()(connect(mapStateToProps)(PermissionsData));
+export default withTheme(connect(mapStateToProps)(PermissionsData));

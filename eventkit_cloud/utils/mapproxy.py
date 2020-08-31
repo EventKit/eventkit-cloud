@@ -1,10 +1,13 @@
 import logging
+import os
+import sqlite3
+import time
 
+import mapproxy
 import yaml
 from django.conf import settings
-from django.db import connections
 from django.core.cache import cache
-import mapproxy
+from django.db import connections
 from mapproxy.config.config import load_config, load_default_config
 from mapproxy.config.loader import (
     ProxyConfiguration,
@@ -16,15 +19,12 @@ from mapproxy.seed.config import SeedingConfiguration
 from mapproxy.seed.util import ProgressLog, exp_backoff, timestamp, ProgressStore
 from mapproxy.wsgiapp import MapProxyApp
 from webtest import TestApp
+
 from eventkit_cloud.core.helpers import get_cached_model
 from eventkit_cloud.tasks import get_cache_value
 from eventkit_cloud.tasks.enumerations import TaskStates
-
-import os
-import sqlite3
-import time
-
 from eventkit_cloud.utils import auth_requests
+from eventkit_cloud.utils.gdalutils import retry
 from eventkit_cloud.utils.geopackage import (
     get_tile_table_names,
     set_gpkg_contents_bounds,
@@ -32,7 +32,6 @@ from eventkit_cloud.utils.geopackage import (
     get_zoom_levels_table,
     remove_empty_zoom_levels,
 )
-from eventkit_cloud.utils.gdalutils import retry
 from eventkit_cloud.utils.stats.eta_estimator import ETA
 
 logger = logging.getLogger(__name__)
@@ -187,7 +186,7 @@ class MapproxyGeopackage(object):
 
         # # As of Mapproxy 1.9.x, datasource files covering a small area cause a bbox error.
         if self.bbox:
-            if isclose(self.bbox[0], self.bbox[2], rel_tol=0.001) or isclose(self.bbox[0], self.bbox[2], rel_tol=0.001):
+            if isclose(self.bbox[0], self.bbox[2], rel_tol=0.001) or isclose(self.bbox[1], self.bbox[3], rel_tol=0.001):
                 logger.warning("Using bbox instead of selection, because the area is too small")
                 self.selection = None
 

@@ -5,7 +5,7 @@ import withWidth, {isWidthUp} from '@material-ui/core/withWidth';
 import {connect} from 'react-redux';
 import axios from 'axios';
 import debounce from 'lodash/debounce';
-import Joyride, {Step} from 'react-joyride';
+import {Step, StoreHelpers} from 'react-joyride';
 
 import Map from 'ol/map';
 import View from 'ol/view';
@@ -60,6 +60,7 @@ import {useJobValidationContext} from "./context/JobValidation";
 import {useEffect} from "react";
 import {useEffectOnMount} from "../../utils/hooks/hooks";
 import MapDrawer from "./MapDrawer";
+import EventkitJoyride from "../common/JoyrideWrapper";
 
 export const WGS84 = 'EPSG:4326';
 export const WEB_MERCATOR = 'EPSG:3857';
@@ -109,16 +110,6 @@ export interface State {
     isOpen: boolean;
 }
 
-export interface MapLayer {
-    mapUrl: string;
-    metadata?: {
-        type: string;
-        url: string;
-    };
-    slug: string;
-    copyright?: string;
-}
-
 function StepValidator(props: Props) {
     const {setNextEnabled, setNextDisabled, nextEnabled} = props;
     const {aoiHasArea} = useJobValidationContext();
@@ -160,9 +151,9 @@ export class ExportAOI extends React.Component<Props, State> {
     private coordinate;
     private bufferFeatures;
     private bounceBack: boolean;
-    private joyride: Joyride;
+    private joyride: any;
     private displayBoxRef;
-    private infoBarRef;
+    private helpers: StoreHelpers;
 
     constructor(props: Props) {
         super(props);
@@ -256,7 +247,7 @@ export class ExportAOI extends React.Component<Props, State> {
         }
 
         if (this.props.walkthroughClicked && !prevProps.walkthroughClicked && this.state.isRunning === false) {
-            this.joyride.reset(true);
+            this?.helpers.reset(true);
             this.setState({isRunning: true});
         }
 
@@ -939,7 +930,7 @@ export class ExportAOI extends React.Component<Props, State> {
 
             this.setState({isRunning: false, stepIndex: 0});
             this.props.onWalkthroughReset();
-            this.joyride.reset(true);
+            this.helpers.reset(true);
         } else {
             if (index === 2 && type === 'step:before') {
                 //  if there is no aoi we load some fake data
@@ -1077,17 +1068,17 @@ export class ExportAOI extends React.Component<Props, State> {
         return (
             <div>
                 <StepValidator {...this.props}/>
-                <Joyride
+                <EventkitJoyride
                     callback={this.callback}
                     ref={(instance) => {
                         this.joyride = instance;
                     }}
+                    getHelpers={(helpers: any) => {this.helpers = helpers}}
                     steps={steps}
                     stepIndex={this.state.stepIndex}
-                    autoStart
-                    type="continuous"
+                    continuous
                     showSkipButton
-                    showStepsProgress
+                    showProgress
                     locale={{
                         back: (<span>Back</span>) as any,
                         close: (<span>Close</span>) as any,
@@ -1096,6 +1087,11 @@ export class ExportAOI extends React.Component<Props, State> {
                         skip: (<span>Skip</span>) as any,
                     }}
                     run={isRunning}
+                    styles={{
+                        options: {
+                            zIndex: 5000,
+                        }
+                    }}
                 />
                 <div id="map" className={css.map} style={mapStyle}>
                     <div className='basemap-tab'>
@@ -1215,4 +1211,4 @@ function mapDispatchToProps(dispatch) {
     };
 }
 
-export default withWidth()(withTheme()(connect(mapStateToProps, mapDispatchToProps)(ExportAOI)));
+export default withWidth()(withTheme(connect(mapStateToProps, mapDispatchToProps)(ExportAOI)));
