@@ -1,7 +1,7 @@
 import * as React from 'react';
 import {CreateDataPackButton} from "../../components/StatusDownloadPage/CreateDataPackButton";
 import {render, screen, getByText} from '@testing-library/react';
-import {useRunContext} from "../../components/StatusDownloadPage/RunFileContext";
+import {useRunContext} from "../../components/StatusDownloadPage/context/RunFile";
 import '@testing-library/jest-dom/extend-expect'
 
 jest.mock('../../components/StatusDownloadPage/context/RunFile', () => {

@@ -15,7 +15,6 @@ import Check from '@material-ui/icons/Check';
 import CloudDownload from '@material-ui/icons/CloudDownload';
 import IconMenu from '../../components/common/IconMenu';
 import ErrorDialog from '../../components/StatusDownloadPage/ErrorDialog';
-import TaskError from '../../components/StatusDownloadPage/TaskError';
 import BaseDialog from '../../components/Dialog/BaseDialog';
 import LicenseRow from '../../components/StatusDownloadPage/LicenseRow';
 import { ProviderRow } from '../../components/StatusDownloadPage/ProviderRow';

@@ -48,7 +48,7 @@ ZipSizeCalculator.defaultProps = {fileSizes: []}
 
 function ZipSizeCalculator(props: CalculatorProps) {
     useEffect(() => {
-        props.setFileSize(props.fileSizes.reduce((total, val) => total + val))
+        props.setFileSize(props.fileSizes.reduce((total, val) => total + val, 0))
     }, [DepsHashers.arrayHash(props.fileSizes)])
 
     return null;

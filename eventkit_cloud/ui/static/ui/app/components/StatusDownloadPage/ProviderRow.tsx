@@ -15,7 +15,6 @@ import Warning from '@material-ui/icons/Warning';
 import Check from '@material-ui/icons/Check';
 import CloudDownload from '@material-ui/icons/CloudDownload';
 import IconMenu from '../common/IconMenu';
-import TaskError from './TaskError';
 import ErrorDialog from './ErrorDialog';
 import BaseDialog from '../Dialog/BaseDialog';
 import LicenseRow from './LicenseRow';
@@ -26,7 +25,6 @@ import {rerunExportPartial} from '../../actions/datacartActions';
 import {useAsyncRequest} from "../../utils/hooks/api";
 import {getCookie} from "../../utils/generic";
 import {connect} from "react-redux";
-import history from "../../utils/history";
 import ProviderTaskErrorDialog from "./ProviderTaskErrorDialog";
 import {useDataCartContext} from "./context/DataCart";
 

@@ -3,7 +3,7 @@ import * as React from 'react';
 import { connect } from 'react-redux';
 import { withTheme, Theme } from '@material-ui/core/styles';
 import withWidth, { isWidthUp } from '@material-ui/core/withWidth';
-import {Step, StoreHelpers} from 'react-joyride';
+import Joyride, {Step, StoreHelpers} from 'react-joyride';
 import Help from '@material-ui/icons/Help';
 import Paper from '@material-ui/core/Paper';
 import ButtonBase from '@material-ui/core/ButtonBase';

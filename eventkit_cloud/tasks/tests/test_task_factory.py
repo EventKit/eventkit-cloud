@@ -66,7 +66,6 @@ class TestExportTaskFactory(TestCase):
     @patch('eventkit_cloud.tasks.task_factory.chain')
     def test_task_factory(self, task_factory_chain, finalize_task, mock_task_chain_builder, create_task, mock_invalid_licenses, mock_os):
         mock_invalid_licenses.return_value = []
-        mock_os.path.exists.return_value = False
         run_uid = create_run(job_uid=self.job.uid)
         self.assertIsNotNone(run_uid)
         self.assertIsNotNone(ExportRun.objects.get(uid=run_uid))

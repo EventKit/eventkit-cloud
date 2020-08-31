@@ -141,4 +141,4 @@ export function ErrorDialog(props: ErrorDialogProps) {
     ), true)
 }
 
-export default withTheme()(ErrorDialog);
+export default withTheme(ErrorDialog);
