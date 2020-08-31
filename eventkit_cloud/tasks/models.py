@@ -239,6 +239,7 @@ class ExportRun(UIDMixin, TimeStampedModelMixin, TimeTrackingModelMixin, Notific
         self.expiration = timezone.now() + timezone.timedelta(days=14)
         self.created_at = timezone.now()
         self.started_at = timezone.now()
+        self.finished_at = None
         self.save()
 
         for data_provider_task_record in data_provider_task_records:
@@ -463,6 +464,9 @@ def prefetch_export_runs(queryset_list_or_model):
 
 
 class RunZipFile(UIDMixin, TimeStampedModelMixin, TimeTrackingModelMixin):
+    """
+    Model to store zip files associated with ExportRun objects.
+    """
 
     run = models.ForeignKey(ExportRun, on_delete=models.CASCADE, related_name="zip_files", null=True, blank=True)
     data_provider_task_records = models.ManyToManyField(DataProviderTaskRecord)
@@ -489,6 +493,11 @@ class RunZipFile(UIDMixin, TimeStampedModelMixin, TimeTrackingModelMixin):
 
 
 def get_run_zip_file_slug_sets(old_run_zip_files):
+    """
+        :param old_run_zip_files: A list of run zip files.
+        :return: A set of provider slugs for each zip file.
+    """
+
     run_zip_file_slug_sets = []
 
     for old_run_zip_file in old_run_zip_files:

@@ -414,8 +414,6 @@ def create_finalize_run_task_collection(
 ):
     """ Returns a 2-tuple celery chain of tasks that need to be executed after all of the export providers in a run
         have finished, and a finalize_run_task signature for use as an errback.
-        Add any additional tasks you want in hook_tasks.
-        @see export_tasks.FinalizeRunHookTask for expected hook task signature.
     """
     from eventkit_cloud.tasks.views import generate_zipfile_chain
 
