@@ -97,6 +97,8 @@ export function CreateDataPackButton(props: Props) {
     };
 
     const handlePopoverClose = (e: React.MouseEvent<HTMLElement>) => {
+        setDisplayCreatingMessage(false);
+        clearRequestZipFile();
         e.stopPropagation();
         setAnchor(null);
     };
@@ -139,26 +141,34 @@ export function CreateDataPackButton(props: Props) {
         }
     }, [DepsHashers.arrayHash(providerTaskUids), run.status]);
 
-    // Keeps track of the cumulative number of bad responses (could be error codes OR empty responses)
-    // We do this to allow the backend some leeway in preparing the response and account for some intermittent
-    // network issues.
-    const [badResponse, setBadResponse] = useState(false);
+
+    // Updates the status of the button.
     useEffect(() => {
         let timeoutId;
         // Need an initial check.
-        if (zipAvailableStatus == ApiStatuses.hookActions.NOT_FIRED){
+        if (zipAvailableStatus == ApiStatuses.hookActions.NOT_FIRED) {
             checkZipAvailable();
-        };
+        }
+        ;
         timeoutId = setTimeout(() => {
             if (isZipProcessing()) {
                 checkZipAvailable();
-            }}, ZIP_POLLING_INTERVAL);
+            }
+        }, ZIP_POLLING_INTERVAL);
         return () => {
             if (timeoutId) {
                 clearTimeout(timeoutId);
             }
         };
-    }, [zipAvailableStatus]);
+    }, [zipAvailableResponse]);
+
+    useEffect(() => {
+        // Updates the status of the button.
+        if (isRequestZipFileStatusBad()) {
+            setDisplayCreatingMessage(true);
+        }
+        ;
+    }, [requestZipFileStatus]);
 
     function isRunCompleted() {
         // TODO: add enum for run statuses to ApiStatuses object
@@ -173,15 +183,28 @@ export function CreateDataPackButton(props: Props) {
     function isZipProcessing() {
         // Return true when the zip is available and in some kind of state that indicates it will be available
         // after a period of processing (pending or running)
-        return zipAvailableResponse.data && zipAvailableResponse.data.length &&
+        return (zipAvailableResponse.data && zipAvailableResponse.data.length &&
             zipAvailableResponse.data[0].status && (
                 ApiStatuses.inProgressStates.includes(zipAvailableResponse.data[0].status as FileStatus)
-            );
+            ));
     }
 
     function isZipAvailable() {
         return zipAvailableResponse.data && zipAvailableResponse.data.length &&
             zipAvailableResponse.data[0].status === ApiStatuses.files.SUCCESS;
+    }
+
+    function isZipAvailableResponseBad() {
+        return zipAvailableResponse.data && zipAvailableResponse.data.length &&
+            zipAvailableResponse.data[0].status === ApiStatuses.files.FAILED;
+    }
+
+    function isRequestZipFileStatusBad() {
+        return requestZipFileStatus == ApiStatuses.hookActions.ERROR;
+    }
+
+    function isRequestZipFileStatusSuccessful() {
+        return requestZipFileStatus == ApiStatuses.hookActions.SUCCESS;
     }
 
     const previousFrameText = useRef((<></>));
@@ -209,14 +232,16 @@ export function CreateDataPackButton(props: Props) {
         if (isZipAvailable()) {
             return (<>DOWNLOAD DATAPACK {zipText}</>);
         }
-        if (badResponse) {
+        if (isZipAvailableResponseBad()) {
             return 'Zip Error';
         }
-        if (!isZipProcessing()){
+        if (isZipProcessing() == false) {
             return (<>CREATE DATAPACK {zipText}</>);
         }
         return 'Processing Zip...';
     }
+
+    const badResponse = false;
 
     const buttonText = (<>{getButtonText()}</>);
     previousFrameText.current = buttonText;
@@ -225,7 +250,7 @@ export function CreateDataPackButton(props: Props) {
         if (!isRunCompleted()) {
             return 'The DataPack is being built. Downloads will be available for request upon completion.';
         }
-        if (badResponse) {
+        if (isZipAvailableResponseBad()) {
             return 'Could not retrieve zip information, please try again or contact an administrator.';
         }
         if (isRunCanceled()) {
@@ -260,14 +285,35 @@ export function CreateDataPackButton(props: Props) {
     const [displayCreatingMessage, setDisplayCreatingMessage] = useState(false);
 
     async function buttonAction(e: React.MouseEvent<HTMLElement>) {
-        if (!isZipAvailable() && buttonEnabled) {
-            postZipRequest();
-            // Clear the zipAvailableStatus
-            setTimeout(() => clearZipAvailable(), 150);
-            setDisplayCreatingMessage(true);
-        } else if (!isZipAvailable()) {
-            handlePopoverOpen(e);
+        // Only post a new zipfile request if there isn't a zip or a successful post yet.
+        if (!isZipAvailable()){
+            checkZipAvailable();
         }
+        if (isZipProcessing() == false && !isRequestZipFileStatusSuccessful() && !isZipAvailable()) {
+            postZipRequest();
+            setDisplayCreatingMessage(true);
+        } else {
+            handlePopoverOpen(e);
+            clearRequestZipFile();
+        }
+    }
+
+    const getCreatingMessage = () => {
+
+        if (isZipAvailable()) {
+            return (<p>
+                    DataPack (.ZIP) ready for download.
+                </p>
+            )
+        }
+        if (isRequestZipFileStatusBad()) {
+            return (<p>
+                Unable to create your zipfile at this time, please try again or contact an administrator
+            </p>)
+        }
+        return (<p>
+            We are creating your zip file. We will let you know in the notifications panel when it is ready.
+        </p>)
     }
 
     // Builds the icon that is displayed to the left of the button text.
@@ -359,18 +405,7 @@ export function CreateDataPackButton(props: Props) {
                                 <CloseIcon/>
                             </IconButton>
                             <div style={{marginTop: '5px', fontSize: '20px'}}>
-                                {!isZipAvailable() ? (
-                                    <p>
-                                        We are creating your zip file. We will let you know in the notifications
-                                        panel
-                                        when it
-                                        is ready.
-                                    </p>
-                                ) : (
-                                    <p>
-                                        DataPack (.ZIP) ready for download.
-                                    </p>
-                                )}
+                                {getCreatingMessage()}
                             </div>
                         </div>
                     </CenteredPopup>
