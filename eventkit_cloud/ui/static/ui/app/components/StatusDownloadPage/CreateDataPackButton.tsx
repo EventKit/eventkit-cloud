@@ -105,10 +105,10 @@ export function CreateDataPackButton(props: Props) {
         url: `/api/runs/zipfiles`,
         headers: {'X-CSRFToken': getCookie('csrftoken')},
     };
-    const [{status: zipAvailableStatus, response: zipAvailableResponse}, zipAvailAbleCall, clearZipAvailable] = useAsyncRequest();
+    const [{status: zipAvailableStatus, response: zipAvailableResponse}, zipAvailableCall, clearZipAvailable] = useAsyncRequest();
     const checkZipAvailable = () => {
         // Returned promise is ignored, we don't need it.
-        zipAvailAbleCall({
+        zipAvailableCall({
             ...requestOptions,
             method: 'GET',
             params: {
@@ -142,37 +142,17 @@ export function CreateDataPackButton(props: Props) {
     // Keeps track of the cumulative number of bad responses (could be error codes OR empty responses)
     // We do this to allow the backend some leeway in preparing the response and account for some intermittent
     // network issues.
-    const [badResponseCount, setBadResponseCount] = useState(0);
     const [badResponse, setBadResponse] = useState(false);
     useEffect(() => {
         let timeoutId;
-        if (zipAvailableStatus === ApiStatuses.hookActions.NOT_FIRED) {
-            // This case accounts for when the user first lands on the page.
-            // We will immediately fire a request looking for the specified zip.
+        // Need an initial check.
+        if (zipAvailableStatus == ApiStatuses.hookActions.NOT_FIRED){
             checkZipAvailable();
-        } else {
-            // Check to see if the zip GET request returned successfully, and the zip POST request has been fired,
-            // and then finally that the zip is not yet available.
-            if (
-                (zipAvailableStatus === ApiStatuses.hookActions.SUCCESS || zipAvailableStatus === ApiStatuses.hookActions.ERROR) &&
-                requestZipFileStatus !== ApiStatuses.hookActions.NOT_FIRED &&
-                !isZipAvailable()
-            ) {
-                // Request completed, check to see if we're already at the limit for bad responses
-                if (badResponseCount >= 3) {
-                    setBadResponse(true);
-                } else {
-                    // Deal with bad responses, increase the count.
-                    if (!zipAvailableResponse.data.length) {
-                        setBadResponseCount(count => count + 1);
-                    }
-                    // Set a time out to re-poll for the status of the zip after five seconds.
-                    timeoutId = setTimeout(() => {
-                        checkZipAvailable();
-                    }, ZIP_POLLING_INTERVAL);
-                }
-            }
-        }
+        };
+        timeoutId = setTimeout(() => {
+            if (isZipProcessing()) {
+                checkZipAvailable();
+            }}, ZIP_POLLING_INTERVAL);
         return () => {
             if (timeoutId) {
                 clearTimeout(timeoutId);
@@ -190,19 +170,17 @@ export function CreateDataPackButton(props: Props) {
         return run.status == ApiStatuses.files.CANCELED;
     }
 
-    function zipIsProcessing() {
+    function isZipProcessing() {
         // Return true when the zip is available and in some kind of state that indicates it will be available
         // after a period of processing (pending or running)
-        return zipAvailableStatus === ApiStatuses.hookActions.SUCCESS &&
-            zipAvailableResponse.data.length &&
+        return zipAvailableResponse.data && zipAvailableResponse.data.length &&
             zipAvailableResponse.data[0].status && (
                 ApiStatuses.inProgressStates.includes(zipAvailableResponse.data[0].status as FileStatus)
             );
     }
 
     function isZipAvailable() {
-        return zipAvailableStatus === ApiStatuses.hookActions.SUCCESS &&
-            zipAvailableResponse.data.length &&
+        return zipAvailableResponse.data && zipAvailableResponse.data.length &&
             zipAvailableResponse.data[0].status === ApiStatuses.files.SUCCESS;
     }
 
@@ -234,7 +212,7 @@ export function CreateDataPackButton(props: Props) {
         if (badResponse) {
             return 'Zip Error';
         }
-        if (requestZipFileStatus === ApiStatuses.hookActions.NOT_FIRED) {
+        if (!isZipProcessing()){
             return (<>CREATE DATAPACK {zipText}</>);
         }
         return 'Processing Zip...';
@@ -259,7 +237,7 @@ export function CreateDataPackButton(props: Props) {
                 </p>
             );
         }
-        if (zipIsProcessing()) {
+        if (isZipProcessing()) {
             return zipAvailableResponse.data[0].message || 'Processing zip file.';
         }
         return '';
@@ -270,13 +248,11 @@ export function CreateDataPackButton(props: Props) {
     // Whether the button is enabled in a manner that triggers an action (download/POST)
     // This will enable the MUI button, but we also allow clicks
     function shouldEnableButton() {
-        if (isZipAvailable()) {
-            return true;
-        }
         if (isRunCanceled()) {
             return false;
         }
-        return isRunCompleted() && requestZipFileStatus === ApiStatuses.hookActions.NOT_FIRED;
+        // Check isZipProcessing to be false, because undefined means the call hasn't happened yet.
+        return (isRunCompleted() && (isZipProcessing() == false)) || isZipAvailable();
     }
 
     const buttonEnabled = shouldEnableButton();
@@ -327,7 +303,7 @@ export function CreateDataPackButton(props: Props) {
             };
         } else if (!isRunCompleted() ||
             zipAvailableStatus === ApiStatuses.hookActions.FETCHING ||
-            zipIsProcessing() ||
+            isZipProcessing() ||
             buttonText === (<>'Processing Zip...'</>)
         ) {
             IconComponent = CircularProgress;

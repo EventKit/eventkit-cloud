@@ -57,7 +57,7 @@ def download(request):
 def generate_zipfile(data_provider_task_record_uids, run_zip_file):
 
     # Check to make sure the UIDs are all from the same ExportRun.
-    runs = ExportRun.objects.filter(provider_tasks__uid__in=data_provider_task_record_uids).distinct()
+    runs = ExportRun.objects.filter(data_provider_task_records__uid__in=data_provider_task_record_uids).distinct()
     if runs.count() != 1:
         return HttpResponse(
             json.dumps({"error": "Cannot zip files from different datapacks."}),
