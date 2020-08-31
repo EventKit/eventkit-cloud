@@ -61,7 +61,9 @@ class TaskFactory:
             "arcgis-feature": arcgis_feature_service_export_task,
         }
 
-    def parse_tasks(self, worker=None, run_uid=None, user_details=None):
+    def parse_tasks(
+        self, worker=None, run_uid=None, user_details=None, run_task_record_uid=None, data_provider_slugs=None
+    ):
         """
         This handles all of the logic for taking the information about what individual celery tasks and groups
         them under specific providers.
@@ -106,7 +108,8 @@ class TaskFactory:
             run = ExportRun.objects.get(uid=run_uid)
             job = run.job
             run_dir = get_run_staging_dir(run.uid)
-            os.makedirs(run_dir, 0o750)
+            if not os.path.exists(run_dir):
+                os.makedirs(run_dir, 0o750)
 
             queue_group = os.getenv("CELERY_GROUP_NAME", worker)
             wait_for_providers_settings = {
@@ -124,19 +127,29 @@ class TaskFactory:
             }
 
             finalized_provider_task_chain_list = []
-            # Create a task record which can hold tasks for the run (datapack)
-            run_task_record = DataProviderTaskRecord.objects.create(
-                run=run, name="run", slug="run", status=TaskStates.PENDING.value, display=False,
-            )
+
+            if run_task_record_uid:
+                run_task_record = DataProviderTaskRecord.objects.get(uid=run_task_record_uid)
+            else:
+                # Create a task record which can hold tasks for the run (datapack)
+                run_task_record = DataProviderTaskRecord.objects.create(
+                    run=run, name="run", slug="run", status=TaskStates.PENDING.value, display=False,
+                )
+
             stage_dir = get_provider_staging_dir(run_dir, run_task_record.slug)
-            os.makedirs(stage_dir, 6600)
+            if not os.path.exists(stage_dir):
+                os.makedirs(stage_dir, 6600)
 
             run_zip_task_chain = get_zip_task_chain(
                 data_provider_task_record_uid=run_task_record.uid,
                 stage_dir=get_run_staging_dir(run_uid),
                 worker=worker,
             )
+
             for provider_task in job.data_provider_tasks.all():
+                # Skip any providers that weren't selected to be re-run.
+                if data_provider_slugs and provider_task.provider.slug not in data_provider_slugs:
+                    continue
 
                 if self.type_task_map.get(provider_task.provider.export_provider_type.type_name):
                     # Each task builder has a primary task which pulls the source data, grab that task here...
@@ -145,7 +158,8 @@ class TaskFactory:
                     primary_export_task = self.type_task_map.get(type_name)
 
                     stage_dir = get_provider_staging_dir(run_dir, provider_task.provider.slug)
-                    os.makedirs(stage_dir, 6600)
+                    if not os.path.exists(stage_dir):
+                        os.makedirs(stage_dir, 6600)
 
                     args = {
                         "primary_export_task": primary_export_task,
@@ -260,7 +274,7 @@ def create_run(job_uid, user=None):
             if run_count > 0:
                 while run_count > max_runs - 1:
                     # delete the earliest runs
-                    job.runs.filter(deleted=False).earliest("started_at").soft_delete(user=user)
+                    job.runs.filter(deleted=False).earliest(field_name="started_at").soft_delete(user=user)
                     run_count -= 1
 
             # add the export run to the database
