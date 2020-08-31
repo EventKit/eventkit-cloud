@@ -90,10 +90,13 @@ def generate_zipfile(data_provider_task_record_uids, run_zip_file):
 def generate_zipfile_chain(run_uid, run_zip_file_slug_set):
     run = ExportRun.objects.get(uid=run_uid)
     run_zip_file = RunZipFile.objects.create()
-    all_data_provider_task_record_uids = [data_provider_task_record.uid for data_provider_task_record in run.data_provider_task_records.all()]
+    all_data_provider_task_record_uids = [
+        data_provider_task_record.uid for data_provider_task_record in run.data_provider_task_records.all()
+    ]
 
     data_provider_task_record_uids = [
-        run.data_provider_task_records.get(provider__slug=run_zip_file_slug).uid for run_zip_file_slug in run_zip_file_slug_set
+        run.data_provider_task_records.get(provider__slug=run_zip_file_slug).uid
+        for run_zip_file_slug in run_zip_file_slug_set
     ]
 
     # Don't regenerate the overall project zipfile.

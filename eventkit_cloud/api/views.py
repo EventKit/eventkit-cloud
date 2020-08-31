@@ -1248,7 +1248,10 @@ class ExportRunViewSet(viewsets.ModelViewSet):
         old_run = ExportRun.objects.get(uid=uid)
 
         # Check to make sure all of the data provider slugs are valid.
-        all_provider_slugs = [ data_provider_task_record.provider.slug for data_provider_task_record in old_run.data_provider_task_records.exclude(provider=None) ]
+        all_provider_slugs = [
+            data_provider_task_record.provider.slug
+            for data_provider_task_record in old_run.data_provider_task_records.exclude(provider=None)
+        ]
         for data_provider_slug in data_provider_slugs:
             if data_provider_slug not in all_provider_slugs:
                 return Response([{"detail": "Invalid provider slug(s) passed."}], status.HTTP_400_BAD_REQUEST)
