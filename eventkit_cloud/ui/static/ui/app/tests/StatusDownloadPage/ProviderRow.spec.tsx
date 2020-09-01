@@ -55,12 +55,6 @@ jest.mock('../../components/StatusDownloadPage/LicenseRow', () => {
 
 
 describe('ProviderRow component', () => {
-    let shallow;
-
-    beforeAll(() => {
-        shallow = createShallow();
-    });
-
     const selectedProviders = {
         123: true,
         456: false,
