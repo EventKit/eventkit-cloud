@@ -164,7 +164,7 @@ class FileProducingTaskResult(UIDMixin, NotificationModelMixin):
                 shutil.copytree(old_run_dir, new_run_dir)
             else:
                 if not os.path.exists(new_run_dir):
-                    shutil.copytree(download_dir, new_run_dir, ignore=shutil.ignore_patterns("*.zip"))
+                    shutil.copytree(download_dir, new_run_dir, ignore=shutil.ignore_patterns("run/*.zip"))
             cache.set(f"{new_run.uid}", True, DEFAULT_CACHE_EXPIRATION)
 
         for download in downloads:
@@ -246,7 +246,7 @@ class ExportRun(UIDMixin, TimeStampedModelMixin, TimeTrackingModelMixin, Notific
             if data_provider_task_record.provider:
                 self.data_provider_task_records.add(data_provider_task_record.clone(new_run=self))
 
-        data_provider_task_record_slug_sets = get_run_zip_file_slug_sets(old_run_zip_files)
+        data_provider_task_record_slug_sets = get_run_zip_file_slug_sets(self, old_run_zip_files)
 
         return self, data_provider_task_record_slug_sets
 
@@ -314,12 +314,16 @@ class DataProviderTaskRecord(UIDMixin, TimeStampedModelMixin, TimeTrackingModelM
 
     def clone(self, new_run):
         export_task_records = list(self.tasks.all())
+        preview = self.preview
         self.id = None
         self.uid = None
         self.save()
 
         for export_task_record in export_task_records:
             self.tasks.add(export_task_record.clone(new_run=new_run))
+
+        if preview:
+            self.preview = preview.clone(new_run, self)
 
         return self
 
@@ -492,18 +496,25 @@ class RunZipFile(UIDMixin, TimeStampedModelMixin, TimeTrackingModelMixin):
         return set_cache_value(obj=self, attribute="status", value=value, expiration=expiration)
 
 
-def get_run_zip_file_slug_sets(old_run_zip_files):
+def get_run_zip_file_slug_sets(new_run, old_run_zip_files):
     """
         :param old_run_zip_files: A list of run zip files.
         :return: A set of provider slugs for each zip file.
     """
 
+    data_provider_task_records = new_run.data_provider_task_records.exclude(provider__isnull=True)
+    all_run_zip_file_slugs = [
+        data_provider_task_record.provider.slug for data_provider_task_record in data_provider_task_records
+    ]
     run_zip_file_slug_sets = []
 
     for old_run_zip_file in old_run_zip_files:
         run_zip_file_slug_set = []
         for data_provider_task_record in old_run_zip_file.data_provider_task_records.all():
             run_zip_file_slug_set.append(data_provider_task_record.provider.slug)
-        run_zip_file_slug_sets.append(run_zip_file_slug_set)
+
+        # Don't rerun the overall project zip file.
+        if all_run_zip_file_slugs != run_zip_file_slug_set:
+            run_zip_file_slug_sets.append(run_zip_file_slug_set)
 
     return run_zip_file_slug_sets
