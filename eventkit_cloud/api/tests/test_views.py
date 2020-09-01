@@ -621,15 +621,16 @@ class TestJobViewSet(APITestCase):
         self.assertIsNotNone(response.data['visibility'])
         self.assertTrue(response.data['success'])
 
+    @patch('eventkit_cloud.api.views.create_run')
     @patch('eventkit_cloud.api.views.shutil')
+    @patch('eventkit_cloud.api.views.os')
     @patch('eventkit_cloud.api.views.pick_up_run_task')
-    def test_run_providers(self, pickup_mock, shutil_mock):
+    def test_run_providers(self, pickup_mock, os_mock, shutil_mock, create_run_mock):
         run = ExportRun.objects.create(job=self.job, user=self.user)
+        new_run_uid = create_run_mock.return_value = ExportRun.objects.create(job=self.job, user=self.user).uid
+        os_mock.path.exists.return_value = True
         self.job.last_export_run = run
         self.job.save()
-
-        data_provider_task_record = DataProviderTaskRecord.objects.create(run=run, slug="run")
-        run.data_provider_task_records.add(data_provider_task_record)
 
         expected_user_details = {'username': 'demo', 'is_superuser': False, 'is_staff': False}
         url = f'/api/jobs/{self.job.uid}/run_providers'
@@ -638,21 +639,21 @@ class TestJobViewSet(APITestCase):
         }
 
         response = self.client.post(url, request_data, format='json')
+        print(response.data)
         self.assertEqual(status.HTTP_202_ACCEPTED, response.status_code)
         self.assertEqual("PENDING", response.data["zipfile"]["status"])
 
-        shutil_mock.copytree.assert_called_once()
+        shutil_mock.rmtree.assert_called_once()
+        create_run_mock.assert_called_with(job_uid=str(self.job.uid), user=self.user, clone=True)
         pickup_mock.apply_async.assert_called_with(
             kwargs={
-                "run_uid": run.uid,
+                "run_uid": new_run_uid,
                 "user_details": expected_user_details,
-                "run_task_record_uid": data_provider_task_record.uid,
                 "data_provider_slugs": ["osm"]
             },
             queue="runs",
             routing_key="runs"
             )
-
 
 class TestBBoxSearch(APITestCase):
     """
