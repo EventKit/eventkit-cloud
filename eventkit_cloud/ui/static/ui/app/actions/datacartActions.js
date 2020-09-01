@@ -115,10 +115,6 @@ export function rerunExport(jobuid) {
     };
 }
 
-export function rerunExportPartial() {
-    return { type: types.RERUNNING_EXPORT };
-}
-
 export function clearReRunInfo() {
     return {
         type: types.CLEAR_RERUN_INFO,

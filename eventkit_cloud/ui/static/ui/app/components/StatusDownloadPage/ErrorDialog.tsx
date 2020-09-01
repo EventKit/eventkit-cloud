@@ -106,6 +106,7 @@ export function ErrorDialog(props: ErrorDialogProps) {
                         [
                             (
                                 <Button
+                                    style={{marginLeft: '15px'}}
                                     key="close"
                                     variant="contained"
                                     color="primary"
@@ -116,6 +117,7 @@ export function ErrorDialog(props: ErrorDialogProps) {
                             ),
                             (
                                 <Button
+                                    style={{marginLeft: '15px'}}
                                     key="retry"
                                     variant="contained"
                                     color="primary"

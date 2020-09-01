@@ -21,12 +21,11 @@ import LicenseRow from './LicenseRow';
 import {Breakpoint} from '@material-ui/core/styles/createBreakpoints';
 import moment from 'moment';
 import {useEffect, useState} from "react";
-import {rerunExportPartial} from '../../actions/datacartActions';
 import {useAsyncRequest} from "../../utils/hooks/api";
 import {getCookie} from "../../utils/generic";
-import {connect} from "react-redux";
 import ProviderTaskErrorDialog from "./ProviderTaskErrorDialog";
 import {useDataCartContext} from "./context/DataCart";
+import {useRunContext} from "./context/RunFile";
 
 const jss = (theme: Eventkit.Theme & Theme) => createStyles({
     insetColumn: {
@@ -143,7 +142,6 @@ interface Props {
     backgroundColor: string;
     theme: Eventkit.Theme & Theme;
     width: Breakpoint;
-    rerunExportPartial: () => void;
     classes: { [className: string]: string };
 }
 
@@ -151,6 +149,7 @@ export function ProviderRow(props: Props) {
 
     const {classes, providerTask, job} = props;
     const {setFetching} = useDataCartContext();
+    const {run} = useRunContext();
 
     const [openTable, setOpenTable] = useState(false);
     const [fileSize, setFileSize] = useState(getFileSize(props.providerTask.tasks));
@@ -161,11 +160,11 @@ export function ProviderRow(props: Props) {
 
     const [, requestCall] = useAsyncRequest();
     const makeRequest = () => {
-        if (!cancelMenuDisabled) {
+        if (!cancelMenuDisabled || !run) {
             return;
         }
         requestCall({
-            url: `/api/jobs/${props.job.uid}/run_providers`,
+            url: `/api/runs/${run.uid}/rerun_providers`,
             method: 'post',
             data: {
                 data_provider_slugs: [props.providerTask.provider.slug]
@@ -634,13 +633,4 @@ export function ProviderRow(props: Props) {
 }
 
 
-function mapDispatchToProps(dispatch) {
-    return {
-        rerunExportPartial: () => (
-            dispatch(rerunExportPartial())
-        ),
-    };
-}
-
-
-export default withWidth()(withTheme((withStyles(jss)(connect(null, mapDispatchToProps)(ProviderRow)))));
+export default withWidth()(withTheme((withStyles(jss)(ProviderRow))));
