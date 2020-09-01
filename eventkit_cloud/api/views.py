@@ -554,58 +554,6 @@ class JobViewSet(viewsets.ModelViewSet):
         else:
             return Response([{"detail": _("Failed to run Export")}], status.HTTP_400_BAD_REQUEST)
 
-    @action(methods=["post"], detail=True)
-    def run_providers(self, request, uid=None, *args, **kwargs):
-
-        data_provider_slugs = request.data["data_provider_slugs"]
-
-        # This is just to make it easier to trace when user_details haven't been sent
-        user_details = get_user_details(request)
-        if user_details is None:
-            user_details = {"username": "unknown-JobViewSet.run"}
-
-        from eventkit_cloud.tasks.task_factory import InvalidLicense, Unauthorized
-
-        try:
-            run_uid, run_zip_file_slug_sets = create_run(job_uid=uid, user=request.user, clone=True)
-        except (InvalidLicense, Error) as err:
-            return Response([{"detail": _(str(err))}], status.HTTP_400_BAD_REQUEST)
-        except Unauthorized:
-            raise PermissionDenied(
-                code="permission_denied", detail="ADMIN permission is required to run this DataPack."
-            )
-
-        run = ExportRun.objects.get(uid=run_uid)
-
-        # Remove the old data provider task record for the providers we're recreating.
-        for data_provider_task_record in run.data_provider_task_records.all():
-            if data_provider_task_record.provider is not None:
-                if data_provider_task_record.provider.slug in data_provider_slugs:
-                    data_provider_task_record.delete()
-
-        # Remove the files for the providers we want to recreate.
-        run_dir = get_run_staging_dir(run_uid)
-        for data_provider_slug in data_provider_slugs:
-            stage_dir = get_provider_staging_dir(run_dir, data_provider_slug)
-            if os.path.exists(stage_dir):
-                shutil.rmtree(stage_dir)
-
-        if run:
-            pick_up_run_task.apply_async(
-                queue="runs",
-                routing_key="runs",
-                kwargs={
-                    "run_uid": run_uid,
-                    "user_details": user_details,
-                    "data_provider_slugs": data_provider_slugs,
-                    "run_zip_file_slug_sets": run_zip_file_slug_sets,
-                },
-            )
-            running = ExportRunSerializer(run, context={"request": request})
-            return Response(running.data, status=status.HTTP_202_ACCEPTED)
-        else:
-            return Response([{"detail": _("Failed to run Export")}], status.HTTP_400_BAD_REQUEST)
-
     @transaction.atomic
     def partial_update(self, request, uid=None, *args, **kwargs):
         """
@@ -1286,6 +1234,74 @@ class ExportRunViewSet(viewsets.ModelViewSet):
         * return: The status of the update.
         """
         return super(ExportRunViewSet, self).update(self, request, uid, *args, **kwargs)
+
+    @action(methods=["post"], detail=True)
+    def rerun_providers(self, request, uid=None, *args, **kwargs):
+        """
+        Clones a new run and reruns the passed providers.
+        Gets the run_uid, list of provider slugs to rerun
+        and current user from the request.
+        * returns: the serialized run data.
+        """
+
+        data_provider_slugs = request.data["data_provider_slugs"]
+        old_run = ExportRun.objects.get(uid=uid)
+
+        # Check to make sure all of the data provider slugs are valid.
+        all_provider_slugs = [
+            data_provider_task_record.provider.slug
+            for data_provider_task_record in old_run.data_provider_task_records.exclude(provider=None)
+        ]
+        for data_provider_slug in data_provider_slugs:
+            if data_provider_slug not in all_provider_slugs:
+                return Response([{"detail": "Invalid provider slug(s) passed."}], status.HTTP_400_BAD_REQUEST)
+
+        # This is just to make it easier to trace when user_details haven't been sent
+        user_details = get_user_details(request)
+        if user_details is None:
+            user_details = {"username": "unknown-JobViewSet.run"}
+
+        from eventkit_cloud.tasks.task_factory import InvalidLicense, Unauthorized
+
+        try:
+            run_uid, run_zip_file_slug_sets = create_run(job_uid=old_run.job.uid, user=request.user, clone=True)
+        except (InvalidLicense, Error) as err:
+            return Response([{"detail": _(str(err))}], status.HTTP_400_BAD_REQUEST)
+        except Unauthorized:
+            raise PermissionDenied(
+                code="permission_denied", detail="ADMIN permission is required to run this DataPack."
+            )
+
+        run = ExportRun.objects.get(uid=run_uid)
+
+        # Remove the old data provider task record for the providers we're recreating.
+        for data_provider_task_record in run.data_provider_task_records.all():
+            if data_provider_task_record.provider is not None:
+                if data_provider_task_record.provider.slug in data_provider_slugs:
+                    data_provider_task_record.delete()
+
+        # Remove the files for the providers we want to recreate.
+        run_dir = get_run_staging_dir(run_uid)
+        for data_provider_slug in data_provider_slugs:
+            stage_dir = get_provider_staging_dir(run_dir, data_provider_slug)
+            if os.path.exists(stage_dir):
+                shutil.rmtree(stage_dir)
+
+        if run:
+            pick_up_run_task.apply_async(
+                queue="runs",
+                routing_key="runs",
+                kwargs={
+                    "run_uid": run_uid,
+                    "user_details": user_details,
+                    "data_provider_slugs": data_provider_slugs,
+                    "run_zip_file_slug_sets": run_zip_file_slug_sets,
+                },
+            )
+            running = ExportRunSerializer(run, context={"request": request})
+            return Response(running.data, status=status.HTTP_202_ACCEPTED)
+        else:
+            return Response([{"detail": _("Failed to run Export")}], status.HTTP_400_BAD_REQUEST)
 
 
 class RunZipFileViewSet(viewsets.ModelViewSet):

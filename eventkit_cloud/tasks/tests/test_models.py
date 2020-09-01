@@ -13,7 +13,7 @@ from mock import MagicMock, Mock, patch
 
 from eventkit_cloud.jobs.models import  DatamodelPreset, DataProviderTask, DataProvider, ExportFormat, Job
 from eventkit_cloud.tasks.enumerations import TaskStates
-from eventkit_cloud.tasks.models import DataProviderTaskRecord, ExportRun, ExportRunFile, ExportTaskRecord, ExportTaskException, FileProducingTaskResult, RunZipFile, UserDownload
+from eventkit_cloud.tasks.models import DataProviderTaskRecord, ExportRun, ExportRunFile, ExportTaskRecord, ExportTaskException, FileProducingTaskResult, RunZipFile, UserDownload, get_run_zip_file_slug_sets
 
 logger = logging.getLogger(__name__)
 
@@ -113,7 +113,7 @@ class TestExportRun(TestCase):
         data_provider_task_records_mock.all().__iter__.return_value = [data_provider_task_record_mock]
 
         old_run = ExportRun.objects.get(uid=run.uid)
-        new_run = run.clone()
+        new_run, run_zip_file_slug_sets = run.clone()
 
         self.assertNotEqual(old_run, new_run)
         self.assertNotEqual(old_run.id, new_run.id)
