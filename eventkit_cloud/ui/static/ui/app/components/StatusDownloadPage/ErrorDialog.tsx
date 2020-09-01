@@ -13,13 +13,8 @@ export interface ErrorDialogProps {
     }>;
     name: string;
     onRetryClicked: () => void;
-    disabled?: boolean;
     theme: Eventkit.Theme & Theme;
 }
-
-ErrorDialog.defualtProps = {
-    disabled: false,
-} as ErrorDialogProps;
 
 export function ErrorDialog(props: ErrorDialogProps) {
 

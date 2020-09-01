@@ -1,6 +1,6 @@
 import * as React from 'react';
 import * as sinon from 'sinon';
-import { createShallow } from '@material-ui/core/test-utils';
+import {createShallow} from '@material-ui/core/test-utils';
 import MenuItem from '@material-ui/core/MenuItem';
 import IconButton from '@material-ui/core/IconButton';
 import Table from '@material-ui/core/Table';
@@ -16,9 +16,43 @@ import CloudDownload from '@material-ui/icons/CloudDownload';
 import IconMenu from '../../components/common/IconMenu';
 import ErrorDialog from '../../components/StatusDownloadPage/ErrorDialog';
 import BaseDialog from '../../components/Dialog/BaseDialog';
-import LicenseRow from '../../components/StatusDownloadPage/LicenseRow';
-import { ProviderRow } from '../../components/StatusDownloadPage/ProviderRow';
+import {ProviderRow} from '../../components/StatusDownloadPage/ProviderRow';
 import ProviderTaskErrorDialog from "../../components/StatusDownloadPage/ProviderTaskErrorDialog";
+import {fireEvent, render, screen} from "@testing-library/react";
+import '@testing-library/jest-dom/extend-expect'
+
+jest.mock('../../components/Dialog/BaseDialog', () => {
+    // eslint-disable-next-line global-require,no-shadow
+    const React = require('react');
+    // eslint-disable-next-line react/prop-types
+    return (props) => (
+        <div className="basedialog">
+            <span>basedialog in test</span>
+            {props.children}
+        </div>);
+});
+
+jest.mock('@material-ui/icons/KeyboardArrowUp', () => {
+    // eslint-disable-next-line global-require,no-shadow
+    const React = require('react');
+    // eslint-disable-next-line react/prop-types
+    return (props) => (<div>arrow up</div>)
+});
+
+jest.mock('@material-ui/icons/KeyboardArrowDown', () => {
+    // eslint-disable-next-line global-require,no-shadow
+    const React = require('react');
+    // eslint-disable-next-line react/prop-types
+    return (props) => (<div>arrow down</div>)
+});
+
+jest.mock('../../components/StatusDownloadPage/LicenseRow', () => {
+    // eslint-disable-next-line global-require,no-shadow
+    const React = require('react');
+    // eslint-disable-next-line react/prop-types
+    return (props) => (<div>license row</div>)
+});
+
 
 describe('ProviderRow component', () => {
     let shallow;
@@ -89,6 +123,7 @@ describe('ProviderRow component', () => {
             display: true,
             slug: 'osm',
             provider: providers[0],
+            preview_url: 'non empty string',
         },
         selectedProviders,
         providers,
@@ -100,277 +135,121 @@ describe('ProviderRow component', () => {
         ...(global as any).eventkit_test_props,
     });
 
-    const getWrapper = props => (
-        shallow(<ProviderRow {...props} />)
-    );
+    const setup = (propsOverride = {}) => {
+        const props = {
+            ...getProps(),
+            ...propsOverride,
+        };
+        return render(<ProviderRow {...props} />);
+    };
 
-    it('should render elements', () => {
-        const props = getProps();
-        const wrapper = getWrapper(props);
-        expect(wrapper.find(Table)).toHaveLength(1);
-        expect(wrapper.find(TableHead)).toHaveLength(1);
-        expect(wrapper.find(TableRow)).toHaveLength(1);
-        expect(wrapper.find(TableCell)).toHaveLength(6);
-        expect(wrapper.find(ArrowDown)).toHaveLength(1);
-        expect(wrapper.find(IconMenu)).toHaveLength(1);
-        expect(wrapper.find(IconButton)).toHaveLength(1);
-        expect(wrapper.find(IconButton).find(ArrowDown)).toHaveLength(1);
-        expect(wrapper.find(MenuItem)).toHaveLength(3);
-        expect(wrapper.find(BaseDialog)).toHaveLength(1);
+    it('should render basic elements', () => {
+        setup();
+        expect(screen.getByText('OpenStreetMap Data (Themes)')).toBeInTheDocument();
+        expect(screen.getByText(/basedialog in test/)).toBeInTheDocument();
+        expect(screen.getByText('arrow down')).toBeInTheDocument();
+        expect(screen.getByText(/1.234 MB/)).toBeInTheDocument();
     });
 
-    it('should render the cancel menu item if the task is pending/running and the cancel menu item should call onProviderCancel', () => {
-        const props = { ...getProps() };
+    it('should render the cancel menu item if the task is pending', () => {
+        const props = {...getProps()};
+        props.providerTask.status = 'PENDING';
+        setup(props);
+        const menuButton = document.querySelector('.qa-ProviderRow-IconMenu');
+        expect(menuButton).toBeInTheDocument();
+        // open menu
+        fireEvent(
+            menuButton,
+            new MouseEvent('click', {
+                bubbles: true,
+                cancelable: true,
+            })
+        );
+        expect(screen.getByText('Rerun File(s)')).toBeInTheDocument();
+        expect(screen.getByText('Cancel')).toBeInTheDocument();
+        expect(screen.getByText('View Data Source')).toBeInTheDocument();
+        expect(screen.getByText('View Data Preview')).toBeInTheDocument();
+    });
+
+    it('menu items should call appropriate props', () => {
+        const props = {...getProps()};
         props.providerTask.status = 'PENDING';
         props.onProviderCancel = sinon.spy();
-        const wrapper = getWrapper(props);
-        expect(wrapper.find(IconMenu)).toHaveLength(1);
+        props.selectProvider = sinon.spy();
+        setup(props);
+        const menuButton = document.querySelector('.qa-ProviderRow-IconMenu');
+        expect(menuButton).toBeInTheDocument();
+        // open menu
+        fireEvent(
+            menuButton,
+            new MouseEvent('click', {
+                bubbles: true,
+                cancelable: true,
+            })
+        );
+        // cancel button
+        fireEvent(
+            screen.getByText('Cancel'),
+            new MouseEvent('click', {
+                bubbles: true,
+                cancelable: true,
+            })
+        );
+        expect(props.onProviderCancel.calledOnce).toBe(true);
+        expect(props.onProviderCancel.calledWith(props.providerTask.uid)).toBe(true);
+
+        fireEvent(
+            screen.getByText('View Data Preview'),
+            new MouseEvent('click', {
+                bubbles: true,
+                cancelable: true,
+            })
+        );
+        expect(props.selectProvider.callCount).toBe(1);
     });
 
     it('should render the task rows when the table is open', () => {
-        const props = getProps();
-        const wrapper = getWrapper(props);
-        wrapper.setState({ openTable: true });
-        expect(wrapper.find(Table)).toHaveLength(2);
-        expect(wrapper.find(TableHead)).toHaveLength(1);
-        expect(wrapper.find(TableRow)).toHaveLength(3);
-        expect(wrapper.find(TableCell)).toHaveLength(20);
-        expect(wrapper.find(TableBody)).toHaveLength(1);
-        expect(wrapper.find(LicenseRow)).toHaveLength(1);
+        setup();
+        expect(screen.queryByText(/OverpassQuery/)).toBe(null);
+        const arrowButton = document.querySelector('.qa-open-arrow');
+        expect(arrowButton).toBeInTheDocument();
+        // open menu
+        fireEvent(
+            arrowButton,
+            new MouseEvent('click', {
+                bubbles: true,
+                cancelable: true,
+            })
+        );
+        expect(screen.getByText(/OverpassQuery/)).toBeInTheDocument();
+        expect(screen.getByText(/license row/)).toBeInTheDocument();
     });
 
-    it('Cancel MenuItem should call onProviderCancel with uid', () => {
-        const props = getProps();
-        props.onProviderCancel = sinon.spy();
-        const wrapper = shallow(<ProviderRow {...props} />);
-        wrapper.find(IconMenu).childAt(0).simulate('click');
-        expect(props.onProviderCancel.calledOnce).toBe(true);
-        expect(props.onProviderCancel.calledWith(props.providerTask.uid)).toBe(true);
-    });
-
-    it('View source MenuItem should call handleProviderOpen', () => {
-        const props = getProps();
-        const handleStub = sinon.stub(ProviderRow.prototype, 'handleProviderOpen');
-        const wrapper = shallow(<ProviderRow {...props} />);
-        wrapper.find(IconMenu).childAt(1).simulate('click');
-        expect(handleStub.calledOnce).toBe(true);
-        handleStub.restore();
-    });
-
-    it('View preview MenuItem should call selectProvider', () => {
-        const props = getProps();
-        props.selectProvider = sinon.spy();
-        const wrapper = shallow(<ProviderRow {...props} />);
-        wrapper.find(IconMenu).childAt(2).simulate('click');
-        expect(props.selectProvider.calledOnce).toBe(true);
-    });
-
-    it('getTaskDownloadIcon should return an icon that calls handleSingleDownload', () => {
-        const props = getProps();
-        const downloadStub = sinon.stub(ProviderRow.prototype, 'handleSingleDownload');
-        const wrapper = getWrapper(props);
-        wrapper.setState({ openTable: true });
-        wrapper.find(CloudDownload).simulate('click');
-        expect(downloadStub.calledOnce).toBe(true);
-        downloadStub.restore();
-    });
-
-    it('componentWillMount should set selectedRows', () => {
-        const props = getProps();
-        const stateSpy = sinon.spy(ProviderRow.prototype, 'setState');
-        getWrapper(props);
-        expect(stateSpy.calledOnce).toBe(true);
-        expect(stateSpy.calledWith({ selectedRows: { 123: false } })).toBe(true);
-        stateSpy.restore();
-    });
-
-    it('componentDidUpdate should handle summing up the file sizes', () => {
-        const props = getProps();
-        const wrapper = getWrapper(props);
-        const nextProps = getProps();
-        nextProps.providerTask.status = 'some new status';
-        const fileSize = 1.234;
-        const stateSpy = sinon.spy(wrapper.instance(), 'setState');
-        wrapper.setProps(nextProps);
-        expect(stateSpy.calledWith({ fileSize: fileSize.toFixed(3) })).toBe(true);
-        stateSpy.restore();
-    });
-
-    it('getFileSize should return null if no file size', () => {
-        const wrapper = getWrapper(getProps());
-        const ts = [{ result: null }, { result: null }];
-        expect(wrapper.instance().getFileSize(ts)).toBe(null);
-    });
-
-    it('getTaskStatus should be called with the correct status from a given task', () => {
-        const props = getProps();
-        const wrapper = getWrapper(props);
-        props.providerTask.tasks[0].status = 'SUCCESS';
-        expect(wrapper.instance().getTaskStatus(props.providerTask.tasks[0])).toEqual((
-            <Check
-                className="qa-ProviderRow-Check-taskStatus"
-                style={{ fill: '#55ba63', verticalAlign: 'middle', marginBottom: '2px' }}
-            />
-        ));
-        props.providerTask.tasks[0].status = 'FAILED';
-        expect(wrapper.instance().getTaskStatus(props.providerTask.tasks[0])).toEqual((
-            <ErrorDialog
-                errors={props.providerTask.tasks[0].errors}
-                name={props.providerTask.tasks[0].name}
-                onRetryClicked={() => {}}
-            />
-        ));
-        props.providerTask.tasks[0].status = 'PENDING';
-        expect(wrapper.instance().getTaskStatus(props.providerTask.tasks[0])).toEqual('WAITING');
-        props.providerTask.tasks[0].status = 'RUNNING';
-        expect(wrapper.instance().getTaskStatus({ status: 'RUNNING', progress: 100 })).toEqual((
-            <span className="qa-ProviderRow-span-taskStatus">
-                <LinearProgress variant="determinate" value={100} />
-                {''}
-            </span>
-        ));
-        expect(wrapper.instance().getTaskStatus({ status: 'CANCELED' })).toEqual((
-            <Warning
-                className="qa-ProviderRow-Warning-taskStatus"
-                style={{
-                    marginLeft: '10px',
-                    fill: '#f4d225',
-                    verticalAlign: 'bottom',
-                }}
-            />
-        ));
-        expect(wrapper.instance().getTaskStatus({ status: '' })).toEqual('');
-    });
-
-    it('getProviderStatus should be called with the correct icon from a given provider status', () => {
-        const props = getProps();
-        const wrapper = getWrapper(props);
-        props.providerTask.status = 'COMPLETED';
-        expect(wrapper.instance().getProviderStatus(props.providerTask)).toEqual((
-            <Check
-                className="qa-ProviderRow-Check-providerStatus"
-                style={{ fill: '#55ba63', verticalAlign: 'middle', marginBottom: '2px' }}
-            />
-        ));
-        props.providerTask.status = 'INCOMPLETE';
-        expect(wrapper.instance().getProviderStatus(props.providerTask)).toEqual((
-            <ProviderTaskErrorDialog
-                providerTask={props.providerTask}
-                key={props.providerTask.uid}
-                onRetryClicked={() => undefined}
-            />
-        ));
+    it('menu items should call appropriate props', () => {
+        const props = {...getProps()};
         props.providerTask.status = 'PENDING';
-        expect(wrapper.instance().getProviderStatus(props.providerTask)).toEqual('WAITING');
-        props.providerTask.status = 'RUNNING';
-        expect(wrapper.instance().getProviderStatus(props.providerTask)).toEqual('IN PROGRESS');
-        props.providerTask.status = 'CANCELED';
-        expect(wrapper.instance().getProviderStatus(props.providerTask)).toEqual((
-            <span
-                className="qa-ProviderRow-span-providerStatus"
-                style={{
-                    fontWeight: 'bold',
-                    borderTopWidth: '10px',
-                    borderBottomWidth: '10px',
-                    borderLeftWidth: '10px',
-                    color: '#f4d225',
-                }}
-            >
-                CANCELED
-                <Warning
-                    className="qa-ProviderRow-Warning-providerStatus"
-                    style={{
-                        marginLeft: '10px',
-                        fill: '#f4d225',
-                        verticalAlign: 'bottom',
-                    }}
-                />
-            </span>
-        ));
-        expect(wrapper.instance().getProviderStatus('')).toEqual('');
-    });
-
-    it('getTaskLink should return a "span" element', () => {
-        const props = getProps();
-        const wrapper = getWrapper(props);
-        const task = { result: {}, name: 'test name' };
-        const link = wrapper.instance().getTaskLink(task);
-        const elem = shallow(link);
-        expect(elem.is('span')).toBe(true);
-        expect(elem.text()).toEqual('test name');
-    });
-
-    it('getTaskLink should return a "span" element with click handler', () => {
-        const props = getProps();
-        const wrapper = getWrapper(props);
-        const task = { result: { url: 'test-url.io' }, name: 'test name' };
-        const link = wrapper.instance().getTaskLink(task);
-        wrapper.instance().handleSingleDownload = sinon.spy();
-        const elem = shallow(link);
-        expect(elem.is('span')).toBe(true);
-        expect(elem.text()).toEqual('test name');
-        elem.simulate('click');
-        expect(wrapper.instance().handleSingleDownload.calledOnce).toBe(true);
-        expect(wrapper.instance().handleSingleDownload.calledWith('test-url.io')).toBe(true);
-    });
-
-    it('getTaskDownloadIcon should return a disabled icon', () => {
-        const props = getProps();
-        const wrapper = getWrapper(props);
-        const task = { result: {} };
-        const icon = wrapper.instance().getTaskDownloadIcon(task);
-        expect(icon.props.onClick).toBe(undefined);
-    });
-
-    it('getTaskDownloadIcon should return a icon with click handler', () => {
-        const props = getProps();
-        const wrapper = getWrapper(props);
-        const task = { result: { url: 'test-url.io' } };
-        const icon = wrapper.instance().getTaskDownloadIcon(task);
-        expect(icon.props.onClick).not.toBe(undefined);
-    });
-
-    it('handleProviderOpen should set provider dialog to open', () => {
-        const props = getProps();
-        const wrapper = shallow(<ProviderRow {...props} />);
-        const stateSpy = sinon.spy(wrapper.instance(), 'setState');
-        wrapper.instance().handleProviderOpen();
-        expect(stateSpy.called).toBe(true);
-        expect(stateSpy.calledWith({ providerDesc: 'provider description', providerDialogOpen: true })).toBe(true);
-        wrapper.update();
-        expect(wrapper.find(BaseDialog).childAt(1).text()).toContain('provider description');
-        stateSpy.restore();
-    });
-
-    it('handleProviderClose should set the provider dialog to closed', () => {
-        const props = getProps();
-        const wrapper = shallow(<ProviderRow {...props} />);
-        const stateSpy = sinon.spy(wrapper.instance(), 'setState');
-        wrapper.instance().handleProviderClose();
-        expect(stateSpy.called).toBe(true);
-        expect(stateSpy.calledWith({ providerDialogOpen: false })).toBe(true);
-        stateSpy.restore();
-    });
-
-    it('handleToggle should open/close Table', () => {
-        const props = getProps();
-        const stateSpy = sinon.spy(ProviderRow.prototype, 'setState');
-        const handleSpy = sinon.spy(ProviderRow.prototype, 'handleToggle');
-        const wrapper = getWrapper(props);
-        wrapper.setState({ openTable: false });
-        wrapper.instance().handleToggle();
-        expect(handleSpy.calledOnce).toBe(true);
-        expect(stateSpy.calledWith({ openTable: true })).toBe(true);
-        handleSpy.restore();
-        stateSpy.restore();
-    });
-
-    it('handleSingleDownload should open a url in a different window', () => {
-        const openSpy = sinon.spy();
-        window.open = openSpy;
-        const props = getProps();
-        const wrapper = getWrapper(props);
-        wrapper.instance().handleSingleDownload();
-        expect(openSpy.calledOnce).toBe(true);
+        props.onProviderCancel = sinon.spy();
+        props.selectProvider = sinon.spy();
+        setup(props);
+        const menuButton = document.querySelector('.qa-ProviderRow-IconMenu');
+        expect(menuButton).toBeInTheDocument();
+        // open menu
+        fireEvent(
+            menuButton,
+            new MouseEvent('click', {
+                bubbles: true,
+                cancelable: true,
+            })
+        );
+        expect(screen.queryByText('provider description')).toBe(null);
+        // Click data source button
+        fireEvent(
+            screen.getByText('View Data Source'),
+            new MouseEvent('click', {
+                bubbles: true,
+                cancelable: true,
+            })
+        );
+        expect(screen.getByText('provider description')).toBeInTheDocument();
     });
 });

@@ -254,7 +254,6 @@ export function ProviderRow(props: Props) {
                     errors={task.errors}
                     onRetryClicked={makeRequest}
                     name={task.name}
-                    disabled={!cancelMenuDisabled}
                 />;
             case 'PENDING':
                 return 'WAITING';
@@ -298,7 +297,7 @@ export function ProviderRow(props: Props) {
                         providerTask={provider}
                         onRetryClicked={makeRequest}
                         key={provider.uid}
-                        disabled={!cancelMenuDisabled}
+
                     />
                 );
             case 'PENDING':
@@ -364,6 +363,7 @@ export function ProviderRow(props: Props) {
         );
     }
 
+    // TODO: extract functions like this so they can be tested in isolation.
     function getTaskDownloadIcon(task: Eventkit.Task) {
         const {colors} = props.theme.eventkit;
 
@@ -474,7 +474,6 @@ export function ProviderRow(props: Props) {
             disabled={!props.providerTask.preview_url}
             style={{fontSize: '12px'}}
             onClick={(event) => {
-                // provider IS a ProviderTask
                 props.selectProvider(props.providerTask)
             }}
         >
@@ -615,6 +614,7 @@ export function ProviderRow(props: Props) {
                             classes={{root: classes.arrowColumn}}
                         >
                             <IconButton
+                                className="qa-open-arrow"
                                 disableTouchRipple
                                 onClick={handleToggle}
                             >
