@@ -282,7 +282,7 @@ def get_celery_health_check_command(node_type: str):
     :param node_type: A string with the name of the node type to add to hostnames.
     """
     hostnames = ["priority@$HOSTNAME"]
-    if node_type != "priority":
+    if node_type is not "priority":
         hostnames.append(f"{node_type}@$HOSTNAME")
 
     ping_command = " && ".join(

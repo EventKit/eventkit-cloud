@@ -105,7 +105,7 @@ def update_mxd_from_metadata(file_name, metadata, verify=False):
                     layer_from_file = arcpy.KMLToLayer_conversion(
                         in_kml_file=file_path, output_folder=template_dir, output_data=kml_layer
                     )
-                except Exception:
+                except Exception as e:
                     # This could fail for various reasons including that the file already exists.
                     # If KMLs are very important to your workflow please contact us and we can make this more robust.
                     logger.warning("Could not create a new KML layer file and gdb, it may already exist.")
@@ -190,7 +190,7 @@ def get_version():
         if version in VERSIONS:
             return version
         raise Exception("UNSUPPORTED VERSION")
-    except Exception:
+    except:
         logger.warning(
             (
                 "Unable to determine ArcGIS version.  This script only supports versions {0}".format(
