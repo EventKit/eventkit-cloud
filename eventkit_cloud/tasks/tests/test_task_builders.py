@@ -9,7 +9,7 @@ from django.db.utils import DatabaseError
 from django.test import TestCase
 from mock import Mock, PropertyMock, patch, MagicMock
 
-from eventkit_cloud.jobs.models import ExportFormat, Job, Region, DataProviderTask, DataProvider
+from eventkit_cloud.jobs.models import ExportFormat, Job, DataProviderTask, DataProvider
 from eventkit_cloud.tasks.task_factory import create_run
 from eventkit_cloud.tasks.task_builders import (
     TaskChainBuilder, create_export_task_record
@@ -38,9 +38,6 @@ class TestTaskBuilder(TestCase):
 
         self.job = Job.objects.create(name='TestJob', description='Test description', user=self.user,
                                       the_geom=the_geom)
-        self.region, created = Region.objects.get_or_create(name='Africa', the_geom=the_geom)
-        self.job.region = self.region
-        self.job.save()
 
     @patch('eventkit_cloud.tasks.task_builders.chain')
     def test_run_osm_task(self, mock_chain):

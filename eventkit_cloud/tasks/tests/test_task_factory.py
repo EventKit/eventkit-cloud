@@ -9,7 +9,7 @@ from django.db import DatabaseError
 from django.test import TestCase
 from mock import patch, Mock, MagicMock, ANY
 
-from eventkit_cloud.jobs.models import Job, Region, DataProviderTask, DataProvider, License, UserLicense
+from eventkit_cloud.jobs.models import Job, DataProviderTask, DataProvider, License, UserLicense
 from eventkit_cloud.tasks.models import ExportRun
 from eventkit_cloud.tasks.task_factory import (TaskFactory, create_run, create_finalize_run_task_collection,
                                                get_invalid_licenses)
@@ -41,10 +41,7 @@ class TestExportTaskFactory(TestCase):
         UserLicense.objects.create(license=self.license, user=self.user)
         provider_task = DataProviderTask.objects.create(provider=provider)
         self.job.data_provider_tasks.add(provider_task)
-        self.region, created = Region.objects.get_or_create(name='Africa', the_geom=the_geom)
-        self.job.region = self.region
         self.uid = str(provider_task.uid)
-        self.job.save()
 
     def test_create_run_success(self):
         run_uid = create_run(job_uid=self.job.uid)

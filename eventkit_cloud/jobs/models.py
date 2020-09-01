@@ -343,40 +343,6 @@ class DataProviderStatus(UIDMixin, TimeStampedModelMixin):
         ordering = ["-last_check_time"]
 
 
-class Region(UIDMixin, TimeStampedModelMixin):
-    """
-    Model for a HOT Export Region.
-    """
-
-    def __init__(self, *args, **kwargs):
-        kwargs["the_geom"] = convert_polygon(kwargs.get("the_geom")) or ""
-        kwargs["the_geom_webmercator"] = convert_polygon(kwargs.get("the_geom_webmercator")) or ""
-        kwargs["the_geog"] = convert_polygon(kwargs.get("the_geog")) or ""
-        super(Region, self).__init__(*args, **kwargs)
-
-    name = models.CharField(max_length=100, db_index=True)
-    description = models.CharField(max_length=1000, blank=True)
-
-    the_geom = models.MultiPolygonField(verbose_name="HOT Export Region", srid=4326, default="")
-    the_geom_webmercator = models.MultiPolygonField(
-        verbose_name="Mercator extent for export region", srid=3857, default=""
-    )
-    the_geog = models.MultiPolygonField(verbose_name="Geographic extent for export region", geography=True, default="")
-
-    class Meta:  # pragma: no cover
-        managed = True
-        db_table = "regions"
-
-    def __str__(self):
-        return "{0}".format(self.name)
-
-    def save(self, *args, **kwargs):
-        self.the_geom = convert_polygon(self.the_geom)
-        self.the_geog = GEOSGeometry(self.the_geom)
-        self.the_geom_webmercator = self.the_geom.transform(ct=3857, clone=True)
-        super(Region, self).save(*args, **kwargs)
-
-
 class VisibilityState(Enum):
     PRIVATE = "PRIVATE"
     PUBLIC = "PUBLIC"
@@ -403,7 +369,6 @@ class Job(UIDMixin, TimeStampedModelMixin):
     name = models.CharField(max_length=100, db_index=True)
     description = models.CharField(max_length=1000, db_index=True)
     event = models.CharField(max_length=100, db_index=True, default="", blank=True)
-    region = models.ForeignKey(Region, null=True, blank=True, on_delete=models.CASCADE)
     preset = models.ForeignKey(DatamodelPreset, on_delete=models.CASCADE, null=True, blank=True)
     published = models.BooleanField(default=False, db_index=True)  # publish export
     visibility = models.CharField(max_length=10, choices=visibility_choices, default=VisibilityState.PRIVATE.value)
@@ -509,27 +474,6 @@ class DataProviderTask(models.Model):
 
     def __str__(self):
         return "{0} - {1}".format(str(self.uid), self.provider)
-
-
-class RegionMask(models.Model):
-    """
-    Model to hold region mask.
-    """
-
-    def __init__(self, *args, **kwargs):
-        kwargs["the_geom"] = convert_polygon(kwargs.get("the_geom")) or ""
-        super(Region, self).__init__(*args, **kwargs)
-
-    id = models.IntegerField(primary_key=True)
-    the_geom = models.MultiPolygonField(verbose_name="Mask for export regions", srid=4326)
-
-    class Meta:  # pragma: no cover
-        managed = False
-        db_table = "region_mask"
-
-    def save(self, *args, **kwargs):
-        self.the_geom = convert_polygon(self.the_geom)
-        super(RegionMask, self).save(*args, **kwargs)
 
 
 class ExportProfile(models.Model):

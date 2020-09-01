@@ -18,7 +18,6 @@ from django.utils.translation import ugettext as _
 from audit_logging.models import AuditEvent
 from notifications.models import Notification
 from rest_framework import serializers
-from rest_framework_gis import serializers as geo_serializers
 
 from . import validators
 from eventkit_cloud.api.utils import get_run_zip_file
@@ -28,8 +27,6 @@ from eventkit_cloud.jobs.models import (
     Projection,
     DatamodelPreset,
     Job,
-    Region,
-    RegionMask,
     DataProvider,
     DataProviderTask,
     License,
@@ -761,41 +758,6 @@ class UserDataSerializer(serializers.Serializer):
         raise NotImplementedError("UserData can only be updated using this interface.")
 
 
-class RegionMaskSerializer(geo_serializers.GeoFeatureModelSerializer):
-    """Return a GeoJSON representation of the region mask."""
-
-    class Meta:
-        model = RegionMask
-        geo_field = "the_geom"
-        fields = ("the_geom",)
-
-
-class RegionSerializer(geo_serializers.GeoFeatureModelSerializer):
-    """Serializer returning GeoJSON representation of Regions."""
-
-    url = serializers.HyperlinkedIdentityField(view_name="api:regions-detail", lookup_field="uid")
-    id = serializers.SerializerMethodField()
-
-    class Meta:
-        model = Region
-        geo_field = "the_geom"
-        fields = ("id", "uid", "name", "description", "url", "the_geom")
-
-    @staticmethod
-    def get_id(obj):
-        return obj.uid
-
-
-class SimpleRegionSerializer(serializers.ModelSerializer):
-    """Serializer for returning Region model data without geometry."""
-
-    url = serializers.HyperlinkedIdentityField(view_name="api:regions-detail", lookup_field="uid")
-
-    class Meta:
-        model = Region
-        fields = ("uid", "name", "description", "url")
-
-
 class ExportFormatSerializer(serializers.ModelSerializer):
     """Return a representation of the ExportFormat model."""
 
@@ -934,7 +896,6 @@ class ListJobSerializer(serializers.Serializer):
     owner = serializers.SerializerMethodField(read_only=True)
     extent = serializers.SerializerMethodField()
     original_selection = serializers.SerializerMethodField(read_only=True)
-    region = SimpleRegionSerializer(read_only=True)
     published = serializers.BooleanField()
     visibility = serializers.CharField()
     featured = serializers.BooleanField()
@@ -993,7 +954,6 @@ class JobSerializer(serializers.Serializer):
     published = serializers.BooleanField(required=False)
     visibility = serializers.CharField(required=False)
     featured = serializers.BooleanField(required=False)
-    region = SimpleRegionSerializer(read_only=True)
     extent = serializers.SerializerMethodField(read_only=True)
     original_selection = serializers.SerializerMethodField(read_only=True)
     user = serializers.HiddenField(default=serializers.CurrentUserDefault())

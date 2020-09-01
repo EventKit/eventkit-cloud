@@ -57,8 +57,6 @@ from eventkit_cloud.api.serializers import (
     NotificationSerializer,
     ProjectionSerializer,
     ProviderTaskSerializer,
-    RegionMaskSerializer,
-    RegionSerializer,
     RunZipFileSerializer,
     SizeIncreaseRequestSerializer,
     UserDataSerializer,
@@ -83,8 +81,6 @@ from eventkit_cloud.jobs.models import (
     ExportFormat,
     Projection,
     Job,
-    Region,
-    RegionMask,
     DataProvider,
     DataProviderTask,
     DatamodelPreset,
@@ -169,7 +165,6 @@ class JobViewSet(viewsets.ModelViewSet):
         "visibility",
         "event",
         "user__username",
-        "region__name",
     )
 
     def dispatch(self, request, *args, **kwargs):
@@ -304,7 +299,6 @@ class JobViewSet(viewsets.ModelViewSet):
                   "visibility" : "PRIVATE",
                   "feature_save": false,
                   "feature_pub": false,
-                  "region": null,
                   "extent": {
                     "type": "Feature",
                     "properties": {
@@ -886,44 +880,6 @@ class DataProviderViewSet(viewsets.ReadOnlyModelViewSet):
             return Response(DataProviderSerializer(providers.get(slug=slug), context={"request": request}).data)
         elif filtered_providers:
             return Response(FilteredDataProviderSerializer(providers.get(slug=slug)).data)
-
-
-class RegionViewSet(viewsets.ReadOnlyModelViewSet):
-    """
-    Endpoint exposing the supported regions.
-    """
-
-    serializer_class = RegionSerializer
-    permission_classes = (permissions.IsAuthenticated,)
-    queryset = Region.objects.all()
-    lookup_field = "uid"
-
-    def list(self, request, uid=None, *args, **kwargs):
-        """
-        List all regions.
-        * uid: optional lookup field
-        * return: A list of regions.
-        """
-        return super(RegionViewSet, self).list(self, request, uid, *args, **kwargs)
-
-    def retrieve(self, request, uid=None, *args, **kwargs):
-        """
-        Look up a single region by slug value.
-        * uid: optional lookup field
-        * return: The region with the given slug.
-        """
-        return super(RegionViewSet, self).retrieve(self, request, uid, *args, **kwargs)
-
-
-class RegionMaskViewSet(viewsets.ReadOnlyModelViewSet):
-    """
-    Return a MULTIPOLYGON representing the mask of the
-    HOT Regions as a GeoJSON Feature Collection.
-    """
-
-    serializer_class = RegionMaskSerializer
-    permission_classes = (permissions.IsAuthenticated,)
-    queryset = RegionMask.objects.all()
 
 
 class ExportRunViewSet(viewsets.ModelViewSet):

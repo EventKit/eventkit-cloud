@@ -33,7 +33,6 @@ class JobFilter(django_filters.FilterSet):
     event = django_filters.CharFilter(field_name="event", lookup_expr="icontains")
     start = django_filters.IsoDateTimeFilter(field_name="created_at", lookup_expr="gte")
     end = django_filters.IsoDateTimeFilter(field_name="created_at", lookup_expr="lte")
-    region = django_filters.CharFilter(field_name="region__name")
     user = django_filters.CharFilter(field_name="user__username", lookup_expr="exact")
     feature = django_filters.CharFilter(field_name="tags__name", lookup_expr="icontains")
     visibility = django_filters.CharFilter(field_name="visibility", lookup_expr="exact")
@@ -48,7 +47,6 @@ class JobFilter(django_filters.FilterSet):
             "event",
             "start",
             "end",
-            "region",
             "user",
             "user_private",
             "feature",
