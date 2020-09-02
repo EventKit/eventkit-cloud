@@ -163,7 +163,7 @@ if (!PROD) {
     }));
     config.entry.bundle.push('webpack-dev-server/client?http://0.0.0.0:8080');
     config.plugins.push(new webpack.HotModuleReplacementPlugin());
-    config.devtool = 'cheap-source-map';
+    config.devtool = 'eval-cheap-module-source-map';
 }
 
 module.exports = config;
