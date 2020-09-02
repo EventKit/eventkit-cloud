@@ -412,15 +412,16 @@ class ExportTaskRecord(UIDMixin, TimeStampedModelMixin, TimeTrackingModelMixin):
         exceptions = list(self.exceptions.all())
 
         # Create a new FPTR now because we can't clone the ETR with the old FPTR since it has a unique constraint.
-        file_producing_task_result = self.result.clone(new_run=new_run)
-        file_producing_task_result.id = None
-        file_producing_task_result.uid = None
-        file_producing_task_result.save()
+        if self.result:
+            file_producing_task_result = self.result.clone(new_run=new_run)
+            file_producing_task_result.id = None
+            file_producing_task_result.uid = None
+            file_producing_task_result.save()
+            self.result = file_producing_task_result
 
         # Create the new ExportTaskRecord
         self.id = None
         self.uid = None
-        self.result = file_producing_task_result
         self.save()
 
         # Add the exceptions to the new ExportTaskRecord
