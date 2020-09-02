@@ -6,14 +6,13 @@ var BundleAnalyzerPlugin = require('webpack-bundle-analyzer').BundleAnalyzerPlug
 var CompressionPlugin = require('compression-webpack-plugin');
 var ExtractTextPlugin = require("extract-text-webpack-plugin");
 var { CleanWebpackPlugin } = require('clean-webpack-plugin');
-var UglifyJsPlugin = require('uglifyjs-webpack-plugin');
+const TerserPlugin = require('terser-webpack-plugin');
 
 var BASE_DIR = path.resolve('eventkit_cloud', 'ui', 'static', 'ui')
 var BUILD_DIR = path.resolve(BASE_DIR, 'build');
 var APP_DIR = path.resolve(BASE_DIR, 'app');
 
 var PROD = JSON.parse(process.env.PROD || false);
-var devtool = 'cheap-source-map';
 var plugins = [
     new CleanWebpackPlugin(),
     new BundleAnalyzerPlugin({
@@ -30,7 +29,6 @@ var plugins = [
 var app = [APP_DIR + '/index.tsx'];
 var config = {
     mode: PROD ? 'production' : 'development',
-    devtool: devtool,
     entry: {
         bundle: app,
     },
@@ -108,15 +106,7 @@ var config = {
         ],
     },
     optimization: {
-        minimizer: [
-            new UglifyJsPlugin({
-                uglifyOptions: {
-                    compress: {
-                        drop_console: true,
-                    }
-                }
-            })
-        ],
+        minimizer: [new TerserPlugin()],
         splitChunks: {
             cacheGroups: {
                 commons: {
@@ -173,7 +163,7 @@ if (!PROD) {
     }));
     config.entry.bundle.push('webpack-dev-server/client?http://0.0.0.0:8080');
     config.plugins.push(new webpack.HotModuleReplacementPlugin());
-    config.devtool = 'inline-source-map';
+    config.devtool = 'cheap-source-map';
 }
 
 module.exports = config;
