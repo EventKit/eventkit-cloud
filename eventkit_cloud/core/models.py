@@ -127,6 +127,11 @@ class UIDMixin(models.Model):
     class Meta:
         abstract = True
 
+    def save(self, *args, **kwargs):
+        if not self.uid:
+            self.uid = uuid.uuid4()
+        super(UIDMixin, self).save(*args, **kwargs)
+
 
 class DownloadableMixin(models.Model):
     """
