@@ -13,7 +13,7 @@ from eventkit_cloud.tasks.enumerations import TaskStates
 from eventkit_cloud.tasks.helpers import get_run_download_dir, get_run_staging_dir
 from eventkit_cloud.tasks.models import ExportRun
 from eventkit_cloud.tasks.task_factory import get_zip_task_chain
-from eventkit_cloud.tasks.models import FileProducingTaskResult, UserDownload
+from eventkit_cloud.tasks.models import FileProducingTaskResult, RunZipFile, UserDownload
 from eventkit_cloud.utils.s3 import download_folder_from_s3, get_presigned_url
 
 logger = getLogger(__name__)
@@ -57,7 +57,7 @@ def download(request):
 def generate_zipfile(data_provider_task_record_uids, run_zip_file):
 
     # Check to make sure the UIDs are all from the same ExportRun.
-    runs = ExportRun.objects.filter(provider_tasks__uid__in=data_provider_task_record_uids).distinct()
+    runs = ExportRun.objects.filter(data_provider_task_records__uid__in=data_provider_task_record_uids).distinct()
     if runs.count() != 1:
         return HttpResponse(
             json.dumps({"error": "Cannot zip files from different datapacks."}),
@@ -79,12 +79,30 @@ def generate_zipfile(data_provider_task_record_uids, run_zip_file):
             shutil.copytree(download_dir, stage_dir, ignore=shutil.ignore_patterns("*.zip"))
 
     # Kick off the zip process with get_zip_task_chain
-    run_zip_task_chain = get_zip_task_chain(
+    return get_zip_task_chain(
         data_provider_task_record_uid=run.data_provider_task_records.get(slug="run").uid,
         data_provider_task_record_uids=data_provider_task_record_uids,
         run_zip_file_uid=run_zip_file.uid,
         stage_dir=stage_dir,
     )
-    run_zip_task_chain.apply_async()
 
-    return HttpResponse(status=200)
+
+def generate_zipfile_chain(run_uid, run_zip_file_slug_set):
+    run = ExportRun.objects.get(uid=run_uid)
+    run_zip_file = RunZipFile.objects.create()
+    all_data_provider_task_record_uids = [
+        data_provider_task_record.uid for data_provider_task_record in run.data_provider_task_records.all()
+    ]
+
+    data_provider_task_record_uids = [
+        run.data_provider_task_records.get(provider__slug=run_zip_file_slug).uid
+        for run_zip_file_slug in run_zip_file_slug_set
+    ]
+
+    # Don't regenerate the overall project zipfile.
+    if data_provider_task_record_uids == all_data_provider_task_record_uids:
+        return None
+
+    zip_file_chain = generate_zipfile(data_provider_task_record_uids, run_zip_file)
+
+    return zip_file_chain
