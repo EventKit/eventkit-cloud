@@ -27,6 +27,7 @@ from eventkit_cloud.jobs.models import (
     Projection,
     DatamodelPreset,
     Job,
+    Region,
     DataProvider,
     DataProviderTask,
     License,
@@ -872,6 +873,40 @@ class DataProviderSerializer(serializers.ModelSerializer):
         if request and hasattr(request, "user"):
             user = request.user
         return obj.get_max_selection_size(user)
+
+
+class RegionSerializer(serializers.Serializer):
+    uid = serializers.SerializerMethodField()
+    name = serializers.CharField()
+    bounding_box = serializers.SerializerMethodField()
+    providers = serializers.SerializerMethodField()
+    policies = serializers.JSONField()
+    policy_title_text = serializers.CharField()
+    policy_header_text = serializers.CharField()
+    policy_footer_text = serializers.CharField()
+    policy_cancel_text = serializers.CharField()
+    policy_cancel_button_text = serializers.CharField()
+    justification_options = serializers.JSONField()
+    url = serializers.HyperlinkedIdentityField(view_name="api:regions-detail", lookup_field="uid")
+
+    class Meta:
+        model = Region
+        fields = "__all__"
+
+    @staticmethod
+    def get_uid(obj):
+        return obj.uid
+
+    @staticmethod
+    def get_providers(obj):
+        providers = []
+        for provider in obj.providers.all():
+            providers.append({"uid": provider.uid, "name": provider.name, "slug": provider.slug})
+        return providers
+
+    @staticmethod
+    def get_bounding_box(obj):
+        return json.loads(GEOSGeometry(obj.bounding_box).geojson)
 
 
 class ListJobSerializer(serializers.Serializer):

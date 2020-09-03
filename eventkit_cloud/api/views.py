@@ -57,6 +57,7 @@ from eventkit_cloud.api.serializers import (
     NotificationSerializer,
     ProjectionSerializer,
     ProviderTaskSerializer,
+    RegionSerializer,
     RunZipFileSerializer,
     SizeIncreaseRequestSerializer,
     UserDataSerializer,
@@ -81,6 +82,7 @@ from eventkit_cloud.jobs.models import (
     ExportFormat,
     Projection,
     Job,
+    Region,
     DataProvider,
     DataProviderTask,
     DatamodelPreset,
@@ -880,6 +882,17 @@ class DataProviderViewSet(viewsets.ReadOnlyModelViewSet):
             return Response(DataProviderSerializer(providers.get(slug=slug), context={"request": request}).data)
         elif filtered_providers:
             return Response(FilteredDataProviderSerializer(providers.get(slug=slug)).data)
+
+
+class RegionViewSet(viewsets.ReadOnlyModelViewSet):
+    """
+    Endpoint exposing the supported regions.
+    """
+
+    serializer_class = RegionSerializer
+    permission_classes = (permissions.IsAuthenticated,)
+    queryset = Region.objects.all()
+    lookup_field = "uid"
 
 
 class ExportRunViewSet(viewsets.ModelViewSet):

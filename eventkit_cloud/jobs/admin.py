@@ -6,12 +6,14 @@ from django.contrib.gis.admin import OSMGeoAdmin
 from django.utils.html import format_html
 from django_celery_beat.models import IntervalSchedule, CrontabSchedule
 
+from eventkit_cloud.jobs.forms import RegionForm
 from eventkit_cloud.jobs.models import (
     ExportFormat,
     Projection,
     Job,
     DataProvider,
     DataProviderType,
+    Region,
     DatamodelPreset,
     License,
     DataProviderStatus,
@@ -197,10 +199,17 @@ class DataProviderStatusAdmin(admin.ModelAdmin):
         return False
 
 
+class RegionAdmin(admin.ModelAdmin):
+    model = Region
+    form = RegionForm
+    list_display = ("uid", "name")
+
+
 # register the new admin models
 admin.site.register(IntervalSchedule, IntervalScheduleAdmin)
 admin.site.register(CrontabSchedule, CrontabScheduleAdmin)
 admin.site.register(Job, JobAdmin)
 admin.site.register(DataProvider, DataProviderAdmin)
 admin.site.register(DataProviderStatus, DataProviderStatusAdmin)
+admin.site.register(Region, RegionAdmin)
 admin.site.register(JobPermission)

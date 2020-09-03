@@ -343,6 +343,23 @@ class DataProviderStatus(UIDMixin, TimeStampedModelMixin):
         ordering = ["-last_check_time"]
 
 
+class Region(UIDMixin, TimeStampedModelMixin):
+    """
+    Model that stores region policy information on a DataProvider basis.
+    """
+
+    name = models.CharField(max_length=100)
+    bounding_box = models.MultiPolygonField()  # geojson based
+    providers = models.ManyToManyField(DataProvider, related_name="region_providers")
+    policies = JSONField()
+    policy_title_text = models.CharField(max_length=100)
+    policy_header_text = models.TextField(null=True, blank=True)
+    policy_footer_text = models.TextField(null=True, blank=True)
+    policy_cancel_text = models.CharField(max_length=100, null=True, blank=True)
+    policy_cancel_button_text = models.CharField(max_length=100)
+    justification_options = JSONField()
+
+
 class VisibilityState(Enum):
     PRIVATE = "PRIVATE"
     PUBLIC = "PUBLIC"
