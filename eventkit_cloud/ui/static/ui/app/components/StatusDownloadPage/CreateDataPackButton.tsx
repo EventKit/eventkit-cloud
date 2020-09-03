@@ -235,7 +235,7 @@ export function CreateDataPackButton(props: Props) {
         if (isZipAvailableResponseBad()) {
             return 'Zip Error';
         }
-        if (isZipProcessing() === false) {
+        if (isZipProcessing() == false) {
             return (<>CREATE DATAPACK {zipText}</>);
         }
         return 'Processing Zip...';
@@ -277,7 +277,7 @@ export function CreateDataPackButton(props: Props) {
             return false;
         }
         // Check isZipProcessing to be false, because undefined means the call hasn't happened yet.
-        return (isRunCompleted() && (isZipProcessing() === false)) || isZipAvailable();
+        return (isRunCompleted() && (isZipProcessing() == false)) || isZipAvailable();
     }
 
     const buttonEnabled = shouldEnableButton();
@@ -289,7 +289,7 @@ export function CreateDataPackButton(props: Props) {
         if (!isZipAvailable()){
             checkZipAvailable();
         }
-        if (isZipProcessing() === false && !isRequestZipFileStatusSuccessful() && !isZipAvailable()) {
+        if (isZipProcessing() == false && !isRequestZipFileStatusSuccessful() && !isZipAvailable()) {
             postZipRequest();
             setDisplayCreatingMessage(true);
         } else {
