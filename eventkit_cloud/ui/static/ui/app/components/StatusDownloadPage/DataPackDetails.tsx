@@ -5,9 +5,6 @@ import Table from '@material-ui/core/Table';
 import TableBody from '@material-ui/core/TableBody';
 import TableRow from '@material-ui/core/TableRow';
 import TableCell from '@material-ui/core/TableCell';
-import Button from '@material-ui/core/Button';
-import Info from '@material-ui/icons/Info';
-import CloudDownload from '@material-ui/icons/CloudDownload';
 import ProviderRow from './ProviderRow';
 import BaseDialog from '../Dialog/BaseDialog';
 import {Breakpoint} from '@material-ui/core/styles/createBreakpoints';
@@ -51,8 +48,7 @@ ZipSizeCalculator.defaultProps = {fileSizes: []}
 
 function ZipSizeCalculator(props: CalculatorProps) {
     useEffect(() => {
-        const fileSize = props.fileSizes.length ? props.fileSizes.reduce((total, val) => total + val) : null;
-        props.setFileSize(fileSize)
+        props.setFileSize(props.fileSizes.reduce((total, val) => total + val, 0))
     }, [DepsHashers.arrayHash(props.fileSizes)])
 
     return null;
@@ -71,7 +67,6 @@ export interface Props {
 
 export interface State {
     infoOpen: boolean;
-    selectedProviders: { [slug: string]: boolean };
     providerPreviewOpen: boolean;
     selectedProvider?: Eventkit.ProviderTask;
     zipSize?: number;
@@ -86,23 +81,8 @@ export class DataPackDetails extends React.Component<Props, State> {
         this.getPreviewDialogTitle = this.getPreviewDialogTitle.bind(this);
         this.state = {
             infoOpen: false,
-            selectedProviders: {},
             providerPreviewOpen: false,
         };
-    }
-
-    componentDidMount() {
-        this.onMount();
-    }
-
-    private onMount() {
-        const selectedProviders = {};
-        this.props.providerTasks.forEach((provider) => {
-            if (provider.display === true) {
-                selectedProviders[provider.uid] = false;
-            }
-        });
-        this.setState({selectedProviders});
     }
 
     private getTextFontSize() {
@@ -313,7 +293,6 @@ export class DataPackDetails extends React.Component<Props, State> {
                             onProviderCancel={this.props.onProviderCancel}
                             providerTask={provider}
                             job={this.props.job}
-                            selectedProviders={this.state.selectedProviders}
                             selectProvider={this.selectPreview}
                             providers={this.props.providers}
                         />

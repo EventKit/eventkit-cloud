@@ -439,7 +439,11 @@ class TestExportTasks(ExportTaskBase):
         task_factory.assert_called_once()
         expected_user_details = {'username': 'test_pickup_run_task'}
         task_factory.return_value.parse_tasks.assert_called_once_with(
-            run_uid=run_uid, user_details=expected_user_details, worker="test"
+            run_uid=run_uid,
+            user_details=expected_user_details,
+            worker="test",
+            data_provider_slugs=None,
+            run_zip_file_slug_sets=None
         )
 
     @patch('eventkit_cloud.tasks.export_tasks.logger')

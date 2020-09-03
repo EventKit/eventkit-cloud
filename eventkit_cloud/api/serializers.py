@@ -50,11 +50,7 @@ from eventkit_cloud.user_requests.models import DataProviderRequest, SizeIncreas
 from eventkit_cloud.utils.s3 import get_presigned_url
 from eventkit_cloud.tasks.enumerations import TaskStates
 
-try:
-    from collections import OrderedDict
-# python 2.6
-except ImportError:
-    from ordereddict import OrderedDict
+from collections import OrderedDict
 
 # Get an instance of a logger
 logger = logging.getLogger(__name__)
@@ -528,8 +524,8 @@ class RunZipFileSerializer(serializers.ModelSerializer):
             obj.status = TaskStates.PENDING.value
             data_provider_task_records = DataProviderTaskRecord.objects.filter(uid__in=data_provider_task_record_uids)
             obj.data_provider_task_records.set(data_provider_task_records)
-            obj.save()
-            generate_zipfile(data_provider_task_record_uids, obj)
+            run_zip_task_chain = generate_zipfile(data_provider_task_record_uids, obj)
+            run_zip_task_chain.apply_async()
             return obj
         else:
             raise serializers.ValidationError("Duplicate Zip File already exists.")

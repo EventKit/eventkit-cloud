@@ -5,7 +5,7 @@ import {Theme, withStyles, withTheme} from "@material-ui/core/styles";
 import CloudDownload from "@material-ui/icons/CloudDownload";
 import {useAsyncRequest, ApiStatuses, FileStatus} from "../../utils/hooks/api";
 import {formatMegaBytes, getCookie} from "../../utils/generic";
-import {useRunContext} from "./RunFileContext";
+import {useRunContext} from "./context/RunFile";
 import {useEffect, useRef, useState} from "react";
 import {DepsHashers, usePrevious} from "../../utils/hooks/hooks";
 import {CircularProgress, IconButton} from "@material-ui/core";
@@ -146,7 +146,7 @@ export function CreateDataPackButton(props: Props) {
     useEffect(() => {
         let timeoutId;
         // Need an initial check.
-        if (zipAvailableStatus == ApiStatuses.hookActions.NOT_FIRED) {
+        if (zipAvailableStatus === ApiStatuses.hookActions.NOT_FIRED) {
             checkZipAvailable();
         }
         ;
@@ -177,7 +177,7 @@ export function CreateDataPackButton(props: Props) {
 
     function isRunCanceled() {
         // TODO: add enum for run statuses to ApiStatuses object
-        return run.status == ApiStatuses.files.CANCELED;
+        return run.status === ApiStatuses.files.CANCELED || run.status === 'INCOMPLETE';
     }
 
     function isZipProcessing() {
@@ -200,11 +200,11 @@ export function CreateDataPackButton(props: Props) {
     }
 
     function isRequestZipFileStatusBad() {
-        return requestZipFileStatus == ApiStatuses.hookActions.ERROR;
+        return requestZipFileStatus === ApiStatuses.hookActions.ERROR;
     }
 
     function isRequestZipFileStatusSuccessful() {
-        return requestZipFileStatus == ApiStatuses.hookActions.SUCCESS;
+        return requestZipFileStatus === ApiStatuses.hookActions.SUCCESS;
     }
 
     const previousFrameText = useRef((<></>));
@@ -235,7 +235,7 @@ export function CreateDataPackButton(props: Props) {
         if (isZipAvailableResponseBad()) {
             return 'Zip Error';
         }
-        if (isZipProcessing() == false) {
+        if (isZipProcessing() === false) {
             return (<>CREATE DATAPACK {zipText}</>);
         }
         return 'Processing Zip...';
@@ -256,9 +256,9 @@ export function CreateDataPackButton(props: Props) {
         if (isRunCanceled()) {
             return (
                 <p>
-                    The datapack was canceled, so no zip is available. You can Rerun the datapack,
-                    to generate the files. If you don't have permission to rerun you can clone this
-                    datapack to generate the files.
+                    The DataPack was canceled or failed during processing, so no zip is available.
+                    You can Rerun the DataPack, to generate the files. If you don't have permission
+                    to rerun you can clone this DataPack to generate the files.
                 </p>
             );
         }
@@ -277,7 +277,7 @@ export function CreateDataPackButton(props: Props) {
             return false;
         }
         // Check isZipProcessing to be false, because undefined means the call hasn't happened yet.
-        return (isRunCompleted() && (isZipProcessing() == false)) || isZipAvailable();
+        return (isRunCompleted() && (isZipProcessing() === false)) || isZipAvailable();
     }
 
     const buttonEnabled = shouldEnableButton();
@@ -289,7 +289,7 @@ export function CreateDataPackButton(props: Props) {
         if (!isZipAvailable()){
             checkZipAvailable();
         }
-        if (isZipProcessing() == false && !isRequestZipFileStatusSuccessful() && !isZipAvailable()) {
+        if (isZipProcessing() === false && !isRequestZipFileStatusSuccessful() && !isZipAvailable()) {
             postZipRequest();
             setDisplayCreatingMessage(true);
         } else {
@@ -339,7 +339,7 @@ export function CreateDataPackButton(props: Props) {
             },
         };
         let IconComponent: React.ComponentType<any> = CloudDownload;
-        if (badResponse) {
+        if (badResponse || isRunCanceled()) {
             // This case controls for when we get no response back at all, usually an empty array.
             // This probably means no file could be retrieved for the specified provider tasks uids combo.
             IconComponent = AlertError;
@@ -375,7 +375,7 @@ export function CreateDataPackButton(props: Props) {
                 {...(() => {
                     // If the zip file is available, set the href of the button to the URL.
                     const extraProps = {} as { href: string };
-                    if (isZipAvailable()) {
+                    if (buttonEnabled && isZipAvailable()) {
                         extraProps.href = zipAvailableResponse.data[0].url;
                     }
                     return extraProps;

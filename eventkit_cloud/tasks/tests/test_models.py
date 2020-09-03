@@ -9,11 +9,11 @@ from django.contrib.auth.models import Group, User
 from django.contrib.gis.geos import GEOSGeometry, Polygon
 from django.core.files import File
 from django.test import TestCase
-from mock import MagicMock, patch
+from mock import MagicMock, Mock, patch
 
 from eventkit_cloud.jobs.models import  DatamodelPreset, DataProviderTask, DataProvider, ExportFormat, Job
 from eventkit_cloud.tasks.enumerations import TaskStates
-from eventkit_cloud.tasks.models import DataProviderTaskRecord, ExportRun, ExportRunFile, ExportTaskRecord, FileProducingTaskResult, RunZipFile
+from eventkit_cloud.tasks.models import DataProviderTaskRecord, ExportRun, ExportRunFile, ExportTaskRecord, ExportTaskException, FileProducingTaskResult, RunZipFile, UserDownload, get_run_zip_file_slug_sets
 
 logger = logging.getLogger(__name__)
 
@@ -103,6 +103,27 @@ class TestExportRun(TestCase):
         run.refresh_from_db()
         self.assertTrue(run.deleted)
         mock_run_delete_exports.assert_called_once()
+
+    @patch('eventkit_cloud.tasks.models.ExportRun.data_provider_task_records')
+    def test_clone(self, data_provider_task_records_mock):
+        job = Job.objects.first()
+        run = ExportRun.objects.create(job=job, user=job.user)
+        provider = DataProvider.objects.get(slug='osm-generic')
+        data_provider_task_record_mock = Mock(provider=provider)
+        data_provider_task_records_mock.all().__iter__.return_value = [data_provider_task_record_mock]
+
+        old_run = ExportRun.objects.get(uid=run.uid)
+        new_run, run_zip_file_slug_sets = run.clone()
+
+        self.assertNotEqual(old_run, new_run)
+        self.assertNotEqual(old_run.id, new_run.id)
+        self.assertNotEqual(old_run.uid, new_run.uid)
+        self.assertNotEqual(old_run.expiration, new_run.expiration)
+        self.assertNotEqual(old_run.created_at, new_run.created_at)
+        self.assertNotEqual(old_run.started_at, new_run.started_at)
+
+        self.assertEqual(old_run.job, new_run.job)
+        data_provider_task_record_mock.clone.assert_called_once()
 
 
 class TestRunZipFile(TestCase):
@@ -257,6 +278,47 @@ class TestExportTask(TestCase):
         delete_from_s3.assert_called_once_with(download_url=download_url)
         remove.assert_called_once_with(full_download_path)
 
+class TestExportTaskException(TestCase):
+    """
+    Test cases for ExportTaskException model
+    """
+
+    fixtures = ('osm_provider.json', 'datamodel_presets.json')
+
+    def setUp(self):
+        group, created = Group.objects.get_or_create(name='TestDefaultExportExtentGroup')
+        with patch('eventkit_cloud.jobs.signals.Group') as mock_group:
+            mock_group.objects.get.return_value = group
+            self.user = User.objects.create_user(username='demo', email='demo@demo.com', password='demo', is_active=True)
+        self.export_provider = DataProvider.objects.get(slug='osm-generic')
+        bbox = Polygon.from_bbox((-10.85, 6.25, -10.62, 6.40))
+        tags = DatamodelPreset.objects.get(name='hdm').json_tags
+        self.assertEqual(259, len(tags))
+        the_geom = GEOSGeometry(bbox, srid=4326)
+        self.job = Job.objects.create(
+            name='TestJob',
+            description='Test description',
+            user=self.user,
+            the_geom=the_geom,
+            json_tags=tags
+        )
+        self.run = ExportRun.objects.create(job=self.job, user=self.user)
+
+    def test_clone(self):
+        run = ExportRun.objects.first()
+        task_uid = str(uuid.uuid4())  # from celery
+        data_provider_task_record = DataProviderTaskRecord.objects.create(run=run)
+        export_task_record = ExportTaskRecord.objects.create(export_provider_task=data_provider_task_record, uid=task_uid)
+        export_task_exception = ExportTaskException.objects.create(task=export_task_record, exception="TestException")
+
+        old_export_task_exception = ExportTaskException.objects.get(id=export_task_exception.id)
+        new_export_task_exception = export_task_exception.clone()
+
+        self.assertNotEqual(old_export_task_exception, new_export_task_exception)
+        self.assertNotEqual(old_export_task_exception.id, new_export_task_exception.id)
+
+        self.assertEqual(old_export_task_exception.exception, new_export_task_exception.exception)
+
 
 class TestDataProviderTaskRecord(TestCase):
     """
@@ -319,3 +381,56 @@ class TestDataProviderTaskRecord(TestCase):
                                                                      run=self.run,
                                                                      status=TaskStates.PENDING.value)
         self.assertEqual("", export_provider_task.slug)
+
+    @patch('eventkit_cloud.tasks.models.DataProviderTaskRecord.tasks')
+    def test_clone(self, export_task_records_mock):
+        job = Job.objects.first()
+        run = ExportRun.objects.create(job=job, user=job.user)
+        data_provider_task_record = DataProviderTaskRecord.objects.create(run=run, status=TaskStates.PENDING.value, provider=DataProvider.objects.get(slug='osm-generic'))
+        run.data_provider_task_records.add(data_provider_task_record)
+
+        export_task_record_mock = Mock()
+        export_task_records_mock.all().__iter__.return_value = [export_task_record_mock]
+
+        old_dptr = DataProviderTaskRecord.objects.get(uid=data_provider_task_record.uid)
+        new_dptr = data_provider_task_record.clone(new_run=run)
+
+        self.assertNotEqual(old_dptr, new_dptr)
+        self.assertNotEqual(old_dptr.id, new_dptr.id)
+        self.assertNotEqual(old_dptr.uid, new_dptr.uid)
+
+        self.assertEqual(old_dptr.run, new_dptr.run)
+        self.assertEqual(old_dptr.provider, new_dptr.provider)
+
+        export_task_record_mock.clone.assert_called_once()
+
+
+class TestUserDownload(TestCase):
+    """
+    Test cases for UserDownload model
+    """
+
+    fixtures = ('osm_provider.json', 'datamodel_presets.json')
+
+    def setUp(self):
+        group, created = Group.objects.get_or_create(name='TestDefaultExportExtentGroup')
+        with patch('eventkit_cloud.jobs.signals.Group') as mock_group:
+            mock_group.objects.get.return_value = group
+            self.user = User.objects.create_user(username='demo', email='demo@demo.com', password='demo', is_active=True)
+
+    def test_clone(self):
+
+        downloadable = FileProducingTaskResult.objects.create(
+             download_url=f'http://testserver/media/self.run.uid/file.txt'
+        )
+        user_download = UserDownload.objects.create(user=self.user, downloadable=downloadable)
+
+        old_user_download = UserDownload.objects.get(uid=user_download.uid)
+        new_user_download = user_download.clone()
+
+        self.assertNotEqual(old_user_download, new_user_download)
+        self.assertNotEqual(old_user_download.id, new_user_download.id)
+        self.assertNotEqual(old_user_download.uid, new_user_download.uid)
+
+        self.assertEqual(old_user_download.user, new_user_download.user)
+        self.assertEqual(old_user_download.downloadable, new_user_download.downloadable)
