@@ -14,6 +14,7 @@ import {isWidthUp} from "@material-ui/core/withWidth";
 import withWidth from "@material-ui/core/withWidth/withWidth";
 import {Breakpoint} from "@material-ui/core/styles/createBreakpoints";
 import {ApiStatuses, useAsyncRequest} from "../../utils/hooks/api";
+import {renderIf} from "../../utils/renderIf";
 
 interface Props {
     open: boolean;
@@ -252,7 +253,7 @@ export function RequestDataSource(props: Props) {
                 margin: '10px',
             }
         }
-        if (status === ApiStatuses.hookActions.NOT_FIRED) {
+        if (ApiStatuses.isNotFired(status)) {
             // Status is undefined, meaning we haven't submitted anything yet, so we need the submit button to display
             dialogProps['actions'] = [(
                 <Button
@@ -278,11 +279,7 @@ export function RequestDataSource(props: Props) {
         return dialogProps;
     }
 
-    if (!open) {
-        return null;
-    }
-
-    return (
+    return renderIf(() => (
         <BaseDialog
             show
             title="Request New Data Source"
@@ -291,14 +288,14 @@ export function RequestDataSource(props: Props) {
             {...getDialogProps()}
         >
             <div className={`${!isSmallScreen() ? classes.outerContainer : classes.outerContainerSm}`}>
-                {(status === ApiStatuses.hookActions.NOT_FIRED || status === ApiStatuses.hookActions.SUCCESS) && renderMainBody()}
-                {status === ApiStatuses.hookActions.FETCHING && (
+                {renderIf(renderMainBody, ApiStatuses.isNotFired(status) || ApiStatuses.isSuccess(status))}
+                {renderIf(() => (
                     <CircularProgress size={50}/>
-                )}
-                {status === ApiStatuses.hookActions.ERROR && renderErrorMessage()}
+                ), ApiStatuses.isFetching(status))}
+                {renderIf(renderErrorMessage, ApiStatuses.isError(status))}
             </div>
         </BaseDialog>
-    );
+    ), open);
 }
 
 const jss = (theme: Eventkit.Theme & Theme) => createStyles({

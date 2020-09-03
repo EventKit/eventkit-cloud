@@ -272,12 +272,17 @@ def create_run(job_uid, user=None, clone=False):
             run_zip_file_slug_sets = None
             if clone:
                 run, run_zip_file_slug_sets = job.last_export_run.clone()
+                run.status = TaskStates.SUBMITTED.value
+                run.save()
                 job.last_export_run = run
                 job.save()
             else:
                 # add the export run to the database
                 run = ExportRun.objects.create(
-                    job=job, user=user, status="SUBMITTED", expiration=(timezone.now() + timezone.timedelta(days=14)),
+                    job=job,
+                    user=user,
+                    status=TaskStates.SUBMITTED.value,
+                    expiration=(timezone.now() + timezone.timedelta(days=14)),
                 )  # persist the run
                 job.last_export_run = run
                 job.save()

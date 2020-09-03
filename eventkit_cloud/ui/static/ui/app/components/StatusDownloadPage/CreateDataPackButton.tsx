@@ -5,7 +5,7 @@ import {Theme, withStyles, withTheme} from "@material-ui/core/styles";
 import CloudDownload from "@material-ui/icons/CloudDownload";
 import {useAsyncRequest, ApiStatuses, FileStatus} from "../../utils/hooks/api";
 import {formatMegaBytes, getCookie} from "../../utils/generic";
-import {useRunContext} from "./RunFileContext";
+import {useRunContext} from "./context/RunFile";
 import {useEffect, useRef, useState} from "react";
 import {DepsHashers, usePrevious} from "../../utils/hooks/hooks";
 import {CircularProgress, IconButton} from "@material-ui/core";
@@ -187,7 +187,7 @@ export function CreateDataPackButton(props: Props) {
 
     function isRunCanceled() {
         // TODO: add enum for run statuses to ApiStatuses object
-        return run.status == ApiStatuses.files.CANCELED;
+        return run.status === ApiStatuses.files.CANCELED || run.status === 'INCOMPLETE';
     }
 
     function zipIsProcessing() {
@@ -253,9 +253,9 @@ export function CreateDataPackButton(props: Props) {
         if (isRunCanceled()) {
             return (
                 <p>
-                    The datapack was canceled, so no zip is available. You can Rerun the datapack,
-                    to generate the files. If you don't have permission to rerun you can clone this
-                    datapack to generate the files.
+                    The DataPack was canceled or failed during processing, so no zip is available.
+                    You can Rerun the DataPack, to generate the files. If you don't have permission
+                    to rerun you can clone this DataPack to generate the files.
                 </p>
             );
         }
@@ -270,13 +270,14 @@ export function CreateDataPackButton(props: Props) {
     // Whether the button is enabled in a manner that triggers an action (download/POST)
     // This will enable the MUI button, but we also allow clicks
     function shouldEnableButton() {
-        if (isZipAvailable()) {
-            return true;
-        }
         if (isRunCanceled()) {
             return false;
         }
-        return isRunCompleted() && requestZipFileStatus === ApiStatuses.hookActions.NOT_FIRED;
+        const completed = isRunCompleted();
+        if (completed && isZipAvailable()) {
+            return true;
+        }
+        return completed && requestZipFileStatus === ApiStatuses.hookActions.NOT_FIRED;
     }
 
     const buttonEnabled = shouldEnableButton();
@@ -317,7 +318,7 @@ export function CreateDataPackButton(props: Props) {
             },
         };
         let IconComponent: React.ComponentType<any> = CloudDownload;
-        if (badResponse) {
+        if (badResponse || isRunCanceled()) {
             // This case controls for when we get no response back at all, usually an empty array.
             // This probably means no file could be retrieved for the specified provider tasks uids combo.
             IconComponent = AlertError;
@@ -353,7 +354,7 @@ export function CreateDataPackButton(props: Props) {
                 {...(() => {
                     // If the zip file is available, set the href of the button to the URL.
                     const extraProps = {} as { href: string };
-                    if (isZipAvailable()) {
+                    if (buttonEnabled && isZipAvailable()) {
                         extraProps.href = zipAvailableResponse.data[0].url;
                     }
                     return extraProps;
