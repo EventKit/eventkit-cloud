@@ -1,4 +1,6 @@
+import json
 import logging
+import os
 
 from django import forms
 from django.contrib import admin
@@ -203,6 +205,43 @@ class RegionAdmin(admin.ModelAdmin):
     model = Region
     form = RegionForm
     list_display = ("uid", "name")
+
+    with open(os.path.join(os.path.dirname(__file__), "examples/policies_example.json")) as json_file:
+        policies_example = json.dumps(json.load(json_file))
+
+    with open(os.path.join(os.path.dirname(__file__), "examples/justification_options_example.json")) as json_file:
+        justification_options_example = json.dumps(json.load(json_file))
+
+    fieldsets = (
+        (None, {"fields": ["name", "bounding_box", "providers"]}),
+        (
+            None,
+            {
+                "fields": [
+                    "policies",
+                    "policy_title_text",
+                    "policy_header_text",
+                    "policy_footer_text",
+                    "policy_cancel_text",
+                    "policy_cancel_button_text",
+                ],
+                "description": "The policy field expects a JSON structure with a list of policy objects. "
+                "Each policy object must contain a title and a description. See the example below."
+                f"<br /> <br /> {policies_example}",
+            },
+        ),
+        (
+            None,
+            {
+                "fields": ["justification_options"],
+                "description": "The justification options field expects a JSON structure with a "
+                "list of option objects. Each option object must have an integer id, string name "
+                "and boolean display. Options may also have suboptions. "
+                "Suboptions can be of type text or dropdown.  See the example below."
+                f"<br /> <br /> {justification_options_example}",
+            },
+        ),
+    )
 
 
 # register the new admin models

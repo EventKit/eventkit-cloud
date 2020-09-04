@@ -1,7 +1,11 @@
 import logging
 
 from django.contrib.gis import forms
+from django.contrib.gis.geos import GEOSGeometry
 from django.core.exceptions import ValidationError
+from django.forms.widgets import Textarea
+
+from eventkit_cloud.jobs.models import bbox_to_geojson
 
 logger = logging.getLogger(__name__)
 
@@ -9,6 +13,8 @@ logger = logging.getLogger(__name__)
 class RegionForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super(RegionForm, self).__init__(*args, **kwargs)
+        self.fields["bounding_box"].widget = Textarea()
+        self.initial["bounding_box"] = GEOSGeometry(self.instance.bounding_box).geojson
 
     def clean_policies(self):
         data = self.cleaned_data["policies"]
