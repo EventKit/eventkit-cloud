@@ -11,7 +11,6 @@ logger = logging.getLogger(__name__)
 
 
 class RegionForm(forms.ModelForm):
-
     class Meta:
         model = Region
         fields = "__all__"
