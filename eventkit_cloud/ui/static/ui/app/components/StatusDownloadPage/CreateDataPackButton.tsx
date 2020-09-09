@@ -171,13 +171,11 @@ export function CreateDataPackButton(props: Props) {
     }, [requestZipFileStatus]);
 
     function isRunCompleted() {
-        // TODO: add enum for run statuses to ApiStatuses object
         return ApiStatuses.finishedStates.includes(run.status as FileStatus);
     }
 
     function isRunCanceled() {
-        // TODO: add enum for run statuses to ApiStatuses object
-        return run.status === ApiStatuses.files.CANCELED || run.status === 'INCOMPLETE';
+        return run.status === ApiStatuses.files.CANCELED;
     }
 
     function isZipProcessing() {
