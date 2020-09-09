@@ -30,6 +30,7 @@ from eventkit_cloud.jobs.models import (
     Job,
     Region,
     RegionMask,
+    RegionalPolicy,
     DataProvider,
     DataProviderTask,
     License,
@@ -794,6 +795,38 @@ class SimpleRegionSerializer(serializers.ModelSerializer):
     class Meta:
         model = Region
         fields = ("uid", "name", "description", "url")
+
+
+class RegionalPolicySerializer(serializers.Serializer):
+    """Serializer for returning RegionalPolicy model data."""
+
+    uid = serializers.SerializerMethodField()
+    name = serializers.CharField()
+    region = RegionSerializer(read_only=True)
+    providers = serializers.SerializerMethodField()
+    policies = serializers.JSONField()
+    policy_title_text = serializers.CharField()
+    policy_header_text = serializers.CharField()
+    policy_footer_text = serializers.CharField()
+    policy_cancel_text = serializers.CharField()
+    policy_cancel_button_text = serializers.CharField()
+    justification_options = serializers.JSONField()
+    url = serializers.HyperlinkedIdentityField(view_name="api:regional_policies-detail", lookup_field="uid")
+
+    class Meta:
+        model = RegionalPolicy
+        fields = "__all__"
+
+    @staticmethod
+    def get_uid(obj):
+        return obj.uid
+
+    @staticmethod
+    def get_providers(obj):
+        providers = []
+        for provider in obj.providers.all():
+            providers.append({"uid": provider.uid, "name": provider.name, "slug": provider.slug})
+        return providers
 
 
 class ExportFormatSerializer(serializers.ModelSerializer):
