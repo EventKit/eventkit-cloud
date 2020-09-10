@@ -60,6 +60,7 @@ from eventkit_cloud.api.serializers import (
     RegionMaskSerializer,
     RegionSerializer,
     RegionalPolicySerializer,
+    RegionalJustificationSerializer,
     RunZipFileSerializer,
     SizeIncreaseRequestSerializer,
     UserDataSerializer,
@@ -87,6 +88,7 @@ from eventkit_cloud.jobs.models import (
     Region,
     RegionMask,
     RegionalPolicy,
+    RegionalJustification,
     DataProvider,
     DataProviderTask,
     DatamodelPreset,
@@ -936,6 +938,13 @@ class RegionalPolicyViewSet(viewsets.ReadOnlyModelViewSet):
     serializer_class = RegionalPolicySerializer
     permission_classes = (permissions.IsAuthenticated,)
     queryset = RegionalPolicy.objects.all()
+    lookup_field = "uid"
+
+
+class RegionalJustificationViewSet(viewsets.ModelViewSet):
+    serializer_class = RegionalJustificationSerializer
+    permission_classes = (permissions.IsAuthenticated,)
+    queryset = RegionalJustification.objects.all()
     lookup_field = "uid"
 
 

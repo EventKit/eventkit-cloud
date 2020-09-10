@@ -396,6 +396,20 @@ class RegionalPolicy(UIDMixin, TimeStampedModelMixin):
         return self.name
 
 
+class RegionalJustification(UIDMixin, TimeStampedModelMixin):
+    """
+    Model that stores regional justification selections made by users.
+    """
+
+    justification_reason_id = models.IntegerField()
+    justification_reason_description = models.CharField(max_length=100)
+    regional_policy = models.ForeignKey(RegionalPolicy, on_delete=models.CASCADE, related_name="justifications")
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="justification_user")
+
+    def __str__(self):
+        return f"{self.uid}"
+
+
 class VisibilityState(Enum):
     PRIVATE = "PRIVATE"
     PUBLIC = "PUBLIC"

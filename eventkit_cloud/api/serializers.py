@@ -31,6 +31,7 @@ from eventkit_cloud.jobs.models import (
     Region,
     RegionMask,
     RegionalPolicy,
+    RegionalJustification,
     DataProvider,
     DataProviderTask,
     License,
@@ -827,6 +828,58 @@ class RegionalPolicySerializer(serializers.Serializer):
         for provider in obj.providers.all():
             providers.append({"uid": provider.uid, "name": provider.name, "slug": provider.slug})
         return providers
+
+
+class RegionalJustificationSerializer(serializers.ModelSerializer):
+    """Serializer for creating and returning RegionalPolicyJustification model data."""
+
+    uid = serializers.SerializerMethodField()
+    justification_reason_id = serializers.IntegerField()
+    justification_reason_description = serializers.CharField()
+    regional_policy = serializers.SerializerMethodField()
+    user = serializers.SerializerMethodField()
+
+    class Meta:
+        model = RegionalJustification
+        fields = "__all__"
+
+    @staticmethod
+    def create(validated_data):
+        justification_reason_id = validated_data.get("justification_reason_id")
+        justification_reason_description = validated_data.get("justification_reason_description")
+        regional_policy_uid = validated_data.get("regional_policy_uid")
+        user = validated_data.get("user")
+
+        try:
+            regional_policy = RegionalPolicy.objects.get(uid=regional_policy_uid)
+        except Region.DoesNotExist:
+            raise Exception(f"The Regional Policy for UID {regional_policy_uid} does not exist.")
+
+        regional_justification = RegionalJustification.objects.create(
+            justification_reason_id=justification_reason_id,
+            justification_reason_description=justification_reason_description,
+            regional_policy=regional_policy,
+            user=user,
+        )
+
+        return regional_justification
+
+    def validate(self, data):
+        request = self.context["request"]
+        data["regional_policy_uid"] = request.data["regional_policy_uid"]
+        return data
+
+    @staticmethod
+    def get_uid(obj):
+        return obj.uid
+
+    @staticmethod
+    def get_regional_policy(obj):
+        return obj.regional_policy.uid
+
+    @staticmethod
+    def get_user(obj):
+        return obj.user.username
 
 
 class ExportFormatSerializer(serializers.ModelSerializer):

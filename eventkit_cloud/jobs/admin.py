@@ -18,6 +18,7 @@ from eventkit_cloud.jobs.models import (
     Job,
     Region,
     RegionalPolicy,
+    RegionalJustification,
     DataProvider,
     DataProviderType,
     DatamodelPreset,
@@ -294,6 +295,11 @@ class RegionalPolicyAdmin(admin.ModelAdmin):
     )
 
 
+class RegionalJustificationAdmin(admin.ModelAdmin):
+    model = RegionalJustification
+    list_display = ("uid", "justification_reason_id", "regional_policy", "user")
+
+
 # register the new admin models
 admin.site.register(IntervalSchedule, IntervalScheduleAdmin)
 admin.site.register(CrontabSchedule, CrontabScheduleAdmin)
@@ -301,4 +307,5 @@ admin.site.register(Job, JobAdmin)
 admin.site.register(DataProvider, DataProviderAdmin)
 admin.site.register(DataProviderStatus, DataProviderStatusAdmin)
 admin.site.register(RegionalPolicy, RegionalPolicyAdmin)
+admin.site.register(RegionalJustification, RegionalJustificationAdmin)
 admin.site.register(JobPermission)
