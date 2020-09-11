@@ -7,6 +7,7 @@ import yaml
 from datetime import datetime, timedelta
 from django.conf import settings
 from django.contrib.auth.models import Group, User
+from django.contrib.gis.gdal import DataSource
 from django.contrib.gis.geos import GEOSGeometry, GeometryCollection, Polygon, Point, LineString
 from django.core import serializers
 from django.utils import timezone
@@ -19,8 +20,9 @@ from rest_framework.test import APITestCase
 from eventkit_cloud.api.pagination import LinkHeaderPagination
 from eventkit_cloud.api.views import get_models, get_provider_task, ExportRunViewSet
 from eventkit_cloud.core.models import GroupPermission, GroupPermissionLevel, AttributeClass
+from eventkit_cloud.jobs.admin import get_example_from_file
 from eventkit_cloud.jobs.models import ExportFormat, Job, DataProvider, \
-    DataProviderType, DataProviderTask, bbox_to_geojson, DatamodelPreset, License, VisibilityState, UserJobActivity
+    DataProviderType, DataProviderTask, Region, RegionalJustification, RegionalPolicy, bbox_to_geojson, DatamodelPreset, License, VisibilityState, UserJobActivity
 from eventkit_cloud.tasks.enumerations import TaskStates
 from eventkit_cloud.tasks.models import DataProviderTaskRecord, ExportRun, ExportTaskRecord, FileProducingTaskResult, RunZipFile
 from eventkit_cloud.tasks.task_factory import InvalidLicense
@@ -1811,9 +1813,59 @@ class TestSizeIncreaseRequestViewSet(APITestCase):
         self.assertEqual(response['Content-Language'], 'en')
 
 
+class TestRegionalJustification(APITestCase):
+    fixtures = ('osm_provider.json',)
 
-def date_handler(obj):
-    if hasattr(obj, 'isoformat'):
-        return obj.isoformat()
-    else:
-        raise TypeError
+    def setUp(self):
+        self.user = User.objects.create_user(username='demo', email='demo@demo.com', password='demo')
+        token = Token.objects.create(user=self.user)
+        self.client.credentials(HTTP_AUTHORIZATION='Token ' + token.key,
+                        HTTP_ACCEPT='application/json; version=1.0',
+                        HTTP_ACCEPT_LANGUAGE='en',
+                        HTTP_HOST='testserver')
+
+        ds = DataSource(os.path.dirname(os.path.realpath(__file__)) + '/../../jobs/migrations/africa.geojson')
+        layer = ds[0]
+        geom = layer.get_geoms(geos=True)[0]
+        the_geom = GEOSGeometry(geom.wkt, srid=4326)
+        the_geog = GEOSGeometry(geom.wkt)
+        the_geom_webmercator = the_geom.transform(ct=3857, clone=True)
+        region = Region.objects.create(name="Africa", description="African export region", the_geom=the_geom,
+                                the_geog=the_geog, the_geom_webmercator=the_geom_webmercator)
+
+        self.provider = DataProvider.objects.first()
+
+        policies_example = get_example_from_file("examples/policies_example.json")
+        justification_options_example = get_example_from_file("examples/justification_options_example.json")
+
+        self.regional_policy = RegionalPolicy.objects.create(
+            name="Test Policy",
+            region=region,
+            policies = policies_example,
+            justification_options = justification_options_example,
+            policy_title_text = "Policy Title",
+            policy_cancel_button_text = "Cancel Button"
+        )
+        self.regional_policy.providers.set([self.provider])
+        self.regional_policy.save()
+
+    def test_create_regional_justification(self):
+
+        request_data = {
+            "justification_reason_id": 1,
+            "justification_reason_description": "Justification Reason",
+            "regional_policy_uid": str(self.regional_policy.uid)
+        }
+
+        url = reverse("api:regional_justifications-list")
+        response = self.client.post(url, data=json.dumps(request_data), content_type='application/json; version=1.0')
+
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(response['Content-Type'], 'application/json')
+        self.assertEqual(response['Content-Language'], 'en')
+
+        response = response.json()
+        regional_justification = RegionalJustification.objects.last()
+        self.assertEqual(regional_justification.justification_reason_id, request_data["justification_reason_id"])
+        self.assertEqual(regional_justification.justification_reason_description, request_data["justification_reason_description"])
+        self.assertEqual(regional_justification.regional_policy, self.regional_policy)
