@@ -11,7 +11,7 @@ from django.shortcuts import render
 from django.utils.html import format_html
 from django_celery_beat.models import IntervalSchedule, CrontabSchedule
 
-from eventkit_cloud.jobs.forms import RegionalPolicyForm
+from eventkit_cloud.jobs.forms import RegionForm, RegionalPolicyForm
 from eventkit_cloud.jobs.models import (
     ExportFormat,
     Projection,
@@ -258,6 +258,12 @@ def get_example_from_file(file_path: str):
         return json.dumps(json.load(json_file))
 
 
+class RegionAdmin(admin.ModelAdmin):
+    model = Region
+    list_display = ("uid", "name")
+    form = RegionForm
+
+
 class RegionalPolicyAdmin(admin.ModelAdmin):
     model = RegionalPolicy
     form = RegionalPolicyForm
@@ -306,6 +312,7 @@ admin.site.register(CrontabSchedule, CrontabScheduleAdmin)
 admin.site.register(Job, JobAdmin)
 admin.site.register(DataProvider, DataProviderAdmin)
 admin.site.register(DataProviderStatus, DataProviderStatusAdmin)
+admin.site.register(Region, RegionAdmin)
 admin.site.register(RegionalPolicy, RegionalPolicyAdmin)
 admin.site.register(RegionalJustification, RegionalJustificationAdmin)
 admin.site.register(JobPermission)
