@@ -867,6 +867,7 @@ class RegionalJustificationSerializer(serializers.ModelSerializer):
     def validate(self, data):
         request = self.context["request"]
         data["regional_policy_uid"] = request.data["regional_policy_uid"]
+        data["user"] = request.user
         return data
 
     @staticmethod
