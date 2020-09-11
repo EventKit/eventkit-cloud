@@ -1,11 +1,13 @@
 # -*- coding: utf-8 -*-
 
-
+import os
+import shutil
 import logging
 
 from django.conf import settings
 from django.contrib.auth.models import User
 from django.contrib.contenttypes.models import ContentType
+from django.core.cache import cache
 from django.core.files.storage import FileSystemStorage
 from django.db import models
 from django.utils import timezone
@@ -24,12 +26,13 @@ from eventkit_cloud.core.models import (
     LowerCaseCharField,
 )
 from eventkit_cloud.jobs.models import Job, DataProvider, JobPermissionLevel, JobPermission
-from eventkit_cloud.tasks.enumerations import TaskStates
 from eventkit_cloud.tasks import (
     DEFAULT_CACHE_EXPIRATION,
     get_cache_value,
     set_cache_value,
 )
+from eventkit_cloud.tasks.enumerations import TaskStates
+from eventkit_cloud.utils.s3 import download_folder_from_s3
 from notifications.models import Notification
 
 
@@ -136,6 +139,50 @@ class FileProducingTaskResult(UIDMixin, NotificationModelMixin):
     def __str__(self):
         return "FileProducingTaskResult ({}), {}".format(self.uid, self.filename)
 
+    def clone(self, new_run):
+        from eventkit_cloud.tasks.export_tasks import make_file_downloadable
+        from eventkit_cloud.tasks.helpers import (
+            get_download_filename,
+            get_run_download_dir,
+            get_run_staging_dir,
+        )
+
+        old_run = self.export_task.export_provider_task.run
+        downloads = list(self.downloads.all())
+        self.id = None
+        self.uid = None
+        self.save()
+
+        download_dir = get_run_download_dir(old_run.uid)
+        old_run_dir = get_run_staging_dir(old_run.uid)
+        new_run_dir = get_run_staging_dir(new_run.uid)
+
+        # Download the data from previous exports so we can rezip.
+        if not cache.get(f"{new_run.uid}"):
+            if getattr(settings, "USE_S3", False):
+                download_folder_from_s3(str(old_run.uid))
+                shutil.copytree(old_run_dir, new_run_dir)
+            else:
+                if not os.path.exists(new_run_dir):
+                    shutil.copytree(download_dir, new_run_dir, ignore=shutil.ignore_patterns("run/*.zip"))
+            cache.set(f"{new_run.uid}", True, DEFAULT_CACHE_EXPIRATION)
+
+        for download in downloads:
+            self.downloads.add(download.clone())
+
+        data_provider_slug = self.export_task.export_provider_task.provider.slug
+        file_ext = os.path.splitext(self.filename)[1]
+        download_filename = get_download_filename(
+            os.path.splitext(os.path.basename(self.filename))[0], file_ext, data_provider_slug=data_provider_slug,
+        )
+        filepath = os.path.join(new_run_dir, data_provider_slug, self.filename)
+        self.download_url = make_file_downloadable(
+            filepath, str(new_run.uid), data_provider_slug, download_filename=download_filename
+        )
+        self.save()
+
+        return self
+
 
 class ExportRun(UIDMixin, TimeStampedModelMixin, TimeTrackingModelMixin, NotificationModelMixin):
     """
@@ -179,6 +226,29 @@ class ExportRun(UIDMixin, TimeStampedModelMixin, TimeTrackingModelMixin, Notific
         cancel_run(export_run_uid=self.uid, canceling_username=username, delete=True)
         self.save()
         self.soft_delete_notifications(*args, **kwargs)
+
+    def clone(self):
+        data_provider_task_records = list(self.data_provider_task_records.all())
+        old_run_zip_files = list(self.zip_files.all())
+
+        self.pk = None
+        self.id = None
+        self.uid = None
+        self.save()
+
+        self.expiration = timezone.now() + timezone.timedelta(days=14)
+        self.created_at = timezone.now()
+        self.started_at = timezone.now()
+        self.finished_at = None
+        self.save()
+
+        for data_provider_task_record in data_provider_task_records:
+            if data_provider_task_record.provider:
+                self.data_provider_task_records.add(data_provider_task_record.clone(new_run=self))
+
+        data_provider_task_record_slug_sets = get_run_zip_file_slug_sets(self, old_run_zip_files)
+
+        return self, data_provider_task_record_slug_sets
 
 
 class ExportRunFile(UIDMixin, TimeStampedModelMixin):
@@ -242,6 +312,21 @@ class DataProviderTaskRecord(UIDMixin, TimeStampedModelMixin, TimeTrackingModelM
     def __str__(self):
         return "DataProviderTaskRecord uid: {0}".format(str(self.uid))
 
+    def clone(self, new_run):
+        export_task_records = list(self.tasks.all())
+        preview = self.preview
+        self.id = None
+        self.uid = None
+        self.save()
+
+        for export_task_record in export_task_records:
+            self.tasks.add(export_task_record.clone(new_run=new_run))
+
+        if preview:
+            self.preview = preview.clone(new_run, self)
+
+        return self
+
 
 class UserDownload(UIDMixin):
     """
@@ -267,6 +352,13 @@ class UserDownload(UIDMixin):
         # TODO: This is one of many reasons why DataProviderTaskRecord should maybe point to DataProvider
         if self.downloadable.export_task:
             return DataProvider.objects.filter(slug=self.downloadable.export_task.export_provider_task.slug).first()
+
+    def clone(self):
+        self.id = None
+        self.uid = None
+        self.save()
+
+        return self
 
 
 class ExportTaskRecord(UIDMixin, TimeStampedModelMixin, TimeTrackingModelMixin):
@@ -314,6 +406,30 @@ class ExportTaskRecord(UIDMixin, TimeStampedModelMixin, TimeTrackingModelMixin):
     def estimated_finish(self, value, expiration=DEFAULT_CACHE_EXPIRATION):
         return set_cache_value(obj=self, attribute="estimated_finish", value=value, expiration=expiration)
 
+    def clone(self, new_run):
+        # Get the exceptions from the old ExportTaskRecord
+        exceptions = ExportTaskException.objects.filter(task__uid=self.uid)
+        exceptions = list(self.exceptions.all())
+
+        # Create a new FPTR now because we can't clone the ETR with the old FPTR since it has a unique constraint.
+        if self.result:
+            file_producing_task_result = self.result.clone(new_run=new_run)
+            file_producing_task_result.id = None
+            file_producing_task_result.uid = None
+            file_producing_task_result.save()
+            self.result = file_producing_task_result
+
+        # Create the new ExportTaskRecord
+        self.id = None
+        self.uid = None
+        self.save()
+
+        # Add the exceptions to the new ExportTaskRecord
+        for exception in exceptions:
+            self.exceptions.add(exception.clone())
+
+        return self
+
 
 class ExportTaskException(TimeStampedModelMixin):
     """
@@ -327,6 +443,13 @@ class ExportTaskException(TimeStampedModelMixin):
     class Meta:
         managed = True
         db_table = "export_task_exceptions"
+
+    def clone(self):
+        self.id = None
+        self.uid = None
+        self.save()
+
+        return self
 
 
 def prefetch_export_runs(queryset_list_or_model):
@@ -346,6 +469,9 @@ def prefetch_export_runs(queryset_list_or_model):
 
 
 class RunZipFile(UIDMixin, TimeStampedModelMixin, TimeTrackingModelMixin):
+    """
+    Model to store zip files associated with ExportRun objects.
+    """
 
     run = models.ForeignKey(ExportRun, on_delete=models.CASCADE, related_name="zip_files", null=True, blank=True)
     data_provider_task_records = models.ManyToManyField(DataProviderTaskRecord)
@@ -369,3 +495,27 @@ class RunZipFile(UIDMixin, TimeStampedModelMixin, TimeTrackingModelMixin):
     @status.setter
     def status(self, value, expiration=DEFAULT_CACHE_EXPIRATION):
         return set_cache_value(obj=self, attribute="status", value=value, expiration=expiration)
+
+
+def get_run_zip_file_slug_sets(new_run, old_run_zip_files):
+    """
+        :param old_run_zip_files: A list of run zip files.
+        :return: A set of provider slugs for each zip file.
+    """
+
+    data_provider_task_records = new_run.data_provider_task_records.exclude(provider__isnull=True)
+    all_run_zip_file_slugs = [
+        data_provider_task_record.provider.slug for data_provider_task_record in data_provider_task_records
+    ]
+    run_zip_file_slug_sets = []
+
+    for old_run_zip_file in old_run_zip_files:
+        run_zip_file_slug_set = []
+        for data_provider_task_record in old_run_zip_file.data_provider_task_records.all():
+            run_zip_file_slug_set.append(data_provider_task_record.provider.slug)
+
+        # Don't rerun the overall project zip file.
+        if all_run_zip_file_slugs != run_zip_file_slug_set:
+            run_zip_file_slug_sets.append(run_zip_file_slug_set)
+
+    return run_zip_file_slug_sets
