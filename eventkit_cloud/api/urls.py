@@ -22,6 +22,7 @@ from eventkit_cloud.api.views import (
     NotificationViewSet,
     ProjectionViewSet,
     RegionViewSet,
+    RegionalPolicyViewSet,
     RunZipFileViewSet,
     SizeIncreaseRequestViewSet,
     UserDataViewSet,
@@ -45,6 +46,7 @@ router.register(r"runs/zipfiles", RunZipFileViewSet, basename="zipfiles")
 router.register(r"runs", ExportRunViewSet, basename="runs")
 router.register(r"provider_tasks", DataProviderTaskRecordViewSet, basename="provider_tasks")
 router.register(r"tasks", ExportTaskViewSet, basename="tasks")
+router.register(r"regions/policies", RegionalPolicyViewSet, basename="regional_policies")
 router.register(r"regions", RegionViewSet, basename="regions")
 router.register(r"users", UserDataViewSet, basename="users")
 router.register(r"user/activity/jobs", UserJobActivityViewSet, basename="user_job_activity")
