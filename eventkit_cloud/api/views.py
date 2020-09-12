@@ -944,10 +944,14 @@ class RegionalPolicyViewSet(viewsets.ReadOnlyModelViewSet):
 class RegionalJustificationViewSet(viewsets.ModelViewSet):
     serializer_class = RegionalJustificationSerializer
     permission_classes = (permissions.IsAuthenticated,)
-    queryset = RegionalJustification.objects.all()
     lookup_field = "uid"
     http_method_names = ["get", "post"]
 
+    def get_queryset(self):
+        if self.request.user.is_superuser:
+            return RegionalJustification.objects.all()
+        else:
+            return RegionalJustification.objects.filter(user=self.request.user)
 
 
 class ExportRunViewSet(viewsets.ModelViewSet):
