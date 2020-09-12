@@ -305,6 +305,17 @@ class RegionalJustificationAdmin(admin.ModelAdmin):
     model = RegionalJustification
     list_display = ("uid", "justification_reason_id", "regional_policy", "user")
 
+    def get_readonly_fields(self, request, obj=None):
+        if obj:
+            return [field.name for field in obj._meta.get_fields()]
+        return self.readonly_fields
+
+    def has_change_permission(self, request, obj=None):
+        return False
+
+    def has_delete_permission(self, request, obj=None):
+        return False
+
 
 # register the new admin models
 admin.site.register(IntervalSchedule, IntervalScheduleAdmin)

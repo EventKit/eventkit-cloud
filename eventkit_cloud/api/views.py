@@ -946,6 +946,8 @@ class RegionalJustificationViewSet(viewsets.ModelViewSet):
     permission_classes = (permissions.IsAuthenticated,)
     queryset = RegionalJustification.objects.all()
     lookup_field = "uid"
+    http_method_names = ["get", "post"]
+
 
 
 class ExportRunViewSet(viewsets.ModelViewSet):
