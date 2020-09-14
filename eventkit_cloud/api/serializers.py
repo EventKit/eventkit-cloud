@@ -19,6 +19,7 @@ from audit_logging.models import AuditEvent
 from notifications.models import Notification
 from rest_framework import serializers
 from rest_framework_gis import serializers as geo_serializers
+from rest_framework.serializers import ValidationError
 
 from . import validators
 from eventkit_cloud.api.utils import get_run_zip_file
@@ -850,7 +851,12 @@ class RegionalJustificationSerializer(serializers.ModelSerializer):
         justification_description = validated_data.get("justification_description")
         regional_policy_uid = validated_data.get("regional_policy_uid")
         user = validated_data.get("user")
-        regional_policy = RegionalPolicy.objects.get(uid=regional_policy_uid)
+
+        try:
+            regional_policy = RegionalPolicy.objects.get(uid=regional_policy_uid)
+        except RegionalPolicy.DoesNotExist:
+            raise Exception(f"The Regional Policy for UID {regional_policy_uid} does not exist.")
+
         regional_policy_options = regional_policy.justification_options.get("justification_options")
 
         # Now get the justification option based on the ID passed.
@@ -860,10 +866,14 @@ class RegionalJustificationSerializer(serializers.ModelSerializer):
             if regional_policy_option["id"] == justification_id
         ][0]
 
-        try:
-            regional_policy = RegionalPolicy.objects.get(uid=regional_policy_uid)
-        except Region.DoesNotExist:
-            raise Exception(f"The Regional Policy for UID {regional_policy_uid} does not exist.")
+        selected_suboption = selected_option.get("suboption")
+        if selected_suboption:
+            if selected_suboption.get("type") == "dropdown":
+                if justification_description not in selected_suboption["options"]:
+                    raise ValidationError(code="invalid_suboption", detail="Invalid suboption selected.")
+        else:
+            if justification_description:
+                raise ValidationError(code="invalid_description", detail="No suboption was available, so justification_description cannot be used.")
 
         regional_justification = RegionalJustification.objects.create(
             justification_id=justification_id,
