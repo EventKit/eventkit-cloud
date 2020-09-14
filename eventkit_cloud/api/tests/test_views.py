@@ -16,6 +16,7 @@ from mock import patch, Mock
 from rest_framework import status
 from rest_framework.authtoken.models import Token
 from rest_framework.reverse import reverse
+from rest_framework.serializers import ValidationError
 from rest_framework.test import APITestCase
 from eventkit_cloud.api.pagination import LinkHeaderPagination
 from eventkit_cloud.api.views import get_models, get_provider_task, ExportRunViewSet
@@ -1870,3 +1871,38 @@ class TestRegionalJustification(APITestCase):
         self.assertEqual(regional_justification.justification_name, "Justification Option with Dropdown Suboption")
         self.assertEqual(regional_justification.justification_description, "Option 1")
         self.assertEqual(regional_justification.regional_policy, self.regional_policy)
+
+    def test_invalid_regional_policy(self):
+
+        request_data = {
+            "justification_id": 1,
+            "justification_description": "Option 1",
+            "regional_policy_uid": "invalid_uid",
+        }
+
+        url = reverse("api:regional_justifications-list")
+        self.client.post(url, data=json.dumps(request_data), content_type='application/json; version=1.0')
+        self.assertRaisesMessage(Exception, "The Regional Policy for UID {request_data['regional_policy_uid']} does not exist.")
+
+    def test_invalid_dropdown_suboption(self):
+
+        request_data = {
+            "justification_id": 1,
+            "justification_description": "Invalid Option",
+            "regional_policy_uid": str(self.regional_policy.uid),
+        }
+
+        url = reverse("api:regional_justifications-list")
+        self.client.post(url, data=json.dumps(request_data), content_type='application/json; version=1.0')
+        self.assertRaisesMessage(ValidationError, "Invalid suboption selected.")
+
+    def test_no_suboption_invalid_description(self):
+        request_data = {
+            "justification_id": 3,
+            "justification_description": "Invalid Option",
+            "regional_policy_uid": str(self.regional_policy.uid),
+        }
+
+        url = reverse("api:regional_justifications-list")
+        self.client.post(url, data=json.dumps(request_data), content_type='application/json; version=1.0')
+        self.assertRaisesMessage(ValidationError, "No suboption was available, so justification_description cannot be used.")
