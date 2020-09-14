@@ -303,7 +303,7 @@ class RegionalPolicyAdmin(admin.ModelAdmin):
 
 class RegionalJustificationAdmin(admin.ModelAdmin):
     model = RegionalJustification
-    list_display = ("uid", "justification_reason_id", "regional_policy", "user")
+    list_display = ("uid", "justification_reason_id", "justification_reason_description", "regional_policy", "user")
 
     def get_readonly_fields(self, request, obj=None):
         if obj:

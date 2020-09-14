@@ -1835,8 +1835,8 @@ class TestRegionalJustification(APITestCase):
 
         self.provider = DataProvider.objects.first()
 
-        policies_example = get_example_from_file("examples/policies_example.json")
-        justification_options_example = get_example_from_file("examples/justification_options_example.json")
+        policies_example = json.loads(get_example_from_file("examples/policies_example.json"))
+        justification_options_example = json.loads(get_example_from_file("examples/justification_options_example.json"))
 
         self.regional_policy = RegionalPolicy.objects.create(
             name="Test Policy",
@@ -1853,8 +1853,7 @@ class TestRegionalJustification(APITestCase):
 
         request_data = {
             "justification_reason_id": 1,
-            "justification_reason_description": "Justification Reason",
-            "regional_policy_uid": str(self.regional_policy.uid)
+            "regional_policy_uid": str(self.regional_policy.uid),
         }
 
         url = reverse("api:regional_justifications-list")
@@ -1867,5 +1866,5 @@ class TestRegionalJustification(APITestCase):
         response = response.json()
         regional_justification = RegionalJustification.objects.last()
         self.assertEqual(regional_justification.justification_reason_id, request_data["justification_reason_id"])
-        self.assertEqual(regional_justification.justification_reason_description, request_data["justification_reason_description"])
+        self.assertEqual(regional_justification.justification_reason_description, "Justification Option with Dropdown Suboption")
         self.assertEqual(regional_justification.regional_policy, self.regional_policy)

@@ -835,7 +835,7 @@ class RegionalJustificationSerializer(serializers.ModelSerializer):
 
     uid = serializers.SerializerMethodField()
     justification_reason_id = serializers.IntegerField()
-    justification_reason_description = serializers.CharField()
+    justification_reason_description = serializers.CharField(required=False)
     regional_policy = serializers.SerializerMethodField()
     user = serializers.SerializerMethodField()
 
@@ -846,9 +846,17 @@ class RegionalJustificationSerializer(serializers.ModelSerializer):
     @staticmethod
     def create(validated_data):
         justification_reason_id = validated_data.get("justification_reason_id")
-        justification_reason_description = validated_data.get("justification_reason_description")
         regional_policy_uid = validated_data.get("regional_policy_uid")
         user = validated_data.get("user")
+        regional_policy = RegionalPolicy.objects.get(uid=regional_policy_uid)
+        regional_policy_options = regional_policy.justification_options.get("justification_options")
+
+        # Now get the justification option description based on the ID passed.
+        selected_option = [
+            regional_policy_option
+            for regional_policy_option in regional_policy_options
+            if regional_policy_option["id"] == justification_reason_id
+        ][0]
 
         try:
             regional_policy = RegionalPolicy.objects.get(uid=regional_policy_uid)
@@ -857,7 +865,7 @@ class RegionalJustificationSerializer(serializers.ModelSerializer):
 
         regional_justification = RegionalJustification.objects.create(
             justification_reason_id=justification_reason_id,
-            justification_reason_description=justification_reason_description,
+            justification_reason_description=selected_option["name"],
             regional_policy=regional_policy,
             user=user,
         )
