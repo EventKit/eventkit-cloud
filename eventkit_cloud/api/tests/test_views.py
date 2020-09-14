@@ -1852,7 +1852,8 @@ class TestRegionalJustification(APITestCase):
     def test_create_regional_justification(self):
 
         request_data = {
-            "justification_reason_id": 1,
+            "justification_id": 1,
+            "justification_description": "Justification Suboption Value",
             "regional_policy_uid": str(self.regional_policy.uid),
         }
 
@@ -1865,6 +1866,7 @@ class TestRegionalJustification(APITestCase):
 
         response = response.json()
         regional_justification = RegionalJustification.objects.last()
-        self.assertEqual(regional_justification.justification_reason_id, request_data["justification_reason_id"])
-        self.assertEqual(regional_justification.justification_reason_description, "Justification Option with Dropdown Suboption")
+        self.assertEqual(regional_justification.justification_id, request_data["justification_id"])
+        self.assertEqual(regional_justification.justification_name, "Justification Option with Dropdown Suboption")
+        self.assertEqual(regional_justification.justification_description, "Justification Suboption Value")
         self.assertEqual(regional_justification.regional_policy, self.regional_policy)

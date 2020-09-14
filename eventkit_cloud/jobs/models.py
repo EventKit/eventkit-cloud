@@ -401,13 +401,14 @@ class RegionalJustification(UIDMixin, TimeStampedModelMixin):
     Model that stores regional justification selections made by users.
     """
 
-    justification_reason_id = models.IntegerField()
-    justification_reason_description = models.CharField(max_length=100)
+    justification_id = models.IntegerField()
+    justification_name = models.CharField(max_length=100)
+    justification_description = models.CharField(max_length=1000, null=True, blank=True)
     regional_policy = models.ForeignKey(RegionalPolicy, on_delete=models.CASCADE, related_name="justifications")
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="justification_user")
 
     def __str__(self):
-        return f"{self.uid}"
+        return str(self.uid)
 
 
 class VisibilityState(Enum):
