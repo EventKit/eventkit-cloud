@@ -873,7 +873,10 @@ class RegionalJustificationSerializer(serializers.ModelSerializer):
                     raise ValidationError(code="invalid_suboption", detail="Invalid suboption selected.")
         else:
             if justification_description:
-                raise ValidationError(code="invalid_description", detail="No suboption was available, so justification_description cannot be used.")
+                raise ValidationError(
+                    code="invalid_description",
+                    detail="No suboption was available, so justification_description cannot be used.",
+                )
 
         regional_justification = RegionalJustification.objects.create(
             justification_id=justification_id,
