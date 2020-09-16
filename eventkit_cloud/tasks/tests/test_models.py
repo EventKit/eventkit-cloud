@@ -1,20 +1,38 @@
 # -*- coding: utf-8 -*-
-
-
+import datetime
+import json
 import logging
 import os
+import time
 import uuid
 
 from django.contrib.auth.models import Group, User
 from django.contrib.gis.geos import GEOSGeometry, Polygon
 from django.core.files import File
 from django.test import TestCase
+from django.utils import timezone
 from mock import MagicMock, patch
 
-from eventkit_cloud.jobs.models import  DatamodelPreset, DataProviderTask, DataProvider, ExportFormat, Job
+from eventkit_cloud.jobs.admin import get_example_from_file
+from eventkit_cloud.jobs.models import (
+    DatamodelPreset,
+    DataProviderTask,
+    DataProvider,
+    ExportFormat,
+    Job,
+    Region,
+    RegionalPolicy,
+    RegionalJustification
+)
 from eventkit_cloud.tasks.enumerations import TaskStates
-from eventkit_cloud.tasks.models import DataProviderTaskRecord, ExportRun, ExportRunFile, ExportTaskRecord, FileProducingTaskResult, RunZipFile
-
+from eventkit_cloud.tasks.models import (
+    DataProviderTaskRecord,
+    ExportRun,
+    ExportRunFile,
+    ExportTaskRecord,
+    FileProducingTaskResult,
+    RunZipFile
+)
 logger = logging.getLogger(__name__)
 
 
@@ -204,25 +222,6 @@ class TestExportTask(TestCase):
         saved_task = ExportTaskRecord.objects.get(uid=self.task_uid)
         self.assertEqual(saved_task, self.task)
 
-    @patch('eventkit_cloud.tasks.signals.exporttaskresult_delete_exports')
-    def test_export_task_result(self, mock_etr_delete_exports):
-        """
-        Test FileProducingTaskResult.
-        """
-        task = ExportTaskRecord.objects.get(uid=self.task_uid)
-        self.assertEqual(task, self.task)
-
-        self.assertIsNone(task.result)
-        result = FileProducingTaskResult.objects.create(
-             download_url='http://testserver/media/{0}/file.txt'.format(self.run.uid)
-        )
-        task.result = result
-        self.assertEqual('http://testserver/media/{0}/file.txt'.format(self.run.uid), task.result.download_url)
-        task.result.soft_delete()
-        task.result.refresh_from_db()
-        self.assertTrue(task.result.deleted)
-        mock_etr_delete_exports.assert_called_once()
-
     @patch('eventkit_cloud.tasks.signals.delete_from_s3')
     def test_exportrun_delete_exports(self, delete_from_s3):
         job = Job.objects.first()
@@ -319,3 +318,113 @@ class TestDataProviderTaskRecord(TestCase):
                                                                      run=self.run,
                                                                      status=TaskStates.PENDING.value)
         self.assertEqual("", export_provider_task.slug)
+
+
+class TestFileProducingTaskResult(TestCase):
+    """
+    Test cases for ExportTaskRecord model
+    """
+    fixtures = ('osm_provider.json',)
+    @classmethod
+    def setUpTestData(cls):
+        group, created = Group.objects.get_or_create(name='TestDefaultExportExtentGroup')
+        with patch('eventkit_cloud.jobs.signals.Group') as mock_group:
+            mock_group.objects.get.return_value = group
+            user = User.objects.create_user(username='demo', email='demo@demo.com', password='demo', is_active=True)
+        # bbox in Egypt
+        bbox = Polygon.from_bbox((28.916016, 26.544309, 30.017395, 27.315654))
+        the_geom = GEOSGeometry(bbox, srid=4326)
+        Job.objects.create(name='TestFileProducingTaskResult', description='Test description', user=user, the_geom=the_geom)
+
+    def setUp(self):
+        self.job = Job.objects.get(name='TestFileProducingTaskResult')
+        self.provider = DataProvider.objects.first()
+        self.run = ExportRun.objects.create(job=self.job, user=self.job.user)
+
+        self.data_provider_task_record = DataProviderTaskRecord.objects.create(run=self.run,
+                                                                               name='Shapefile Export',
+                                                                               provider=self.provider,
+                                                                               status=TaskStates.PENDING.value)
+
+        self.task_uid = uuid.uuid4()
+        self.task = ExportTaskRecord.objects.create(export_provider_task=self.data_provider_task_record, uid=self.task_uid)
+
+    @patch('eventkit_cloud.tasks.signals.exporttaskresult_delete_exports')
+    def test_export_task_result(self, mock_etr_delete_exports):
+        """
+        Test FileProducingTaskResult.
+        """
+        task = ExportTaskRecord.objects.get(uid=self.task_uid)
+        self.assertEqual(task, self.task)
+
+        self.assertIsNone(task.result)
+        result = FileProducingTaskResult.objects.create(
+             download_url='http://testserver/media/{0}/file.txt'.format(self.run.uid)
+        )
+        task.result = result
+        self.assertEqual('http://testserver/media/{0}/file.txt'.format(self.run.uid), task.result.download_url)
+        task.result.soft_delete()
+        task.result.refresh_from_db()
+        self.assertTrue(task.result.deleted)
+        mock_etr_delete_exports.assert_called_once()
+
+    def test_user_can_download(self):
+        """
+        Test user_can_download method of FileProducingTaskResult
+        """
+        self.downloadable = FileProducingTaskResult.objects.create(
+             download_url='http://testserver/media/{0}/file.txt'.format(self.run.uid)
+        )
+        self.task.result = self.downloadable
+        self.task.save()
+
+        self.run_zip_file = RunZipFile.objects.create(run=self.run, downloadable_file=self.downloadable)
+        self.data_provider_task_records = [self.data_provider_task_record]
+        self.run_zip_file.data_provider_task_records.set(self.data_provider_task_records)
+
+        self.region = Region.objects.get(name="Africa")
+        policies_example = json.loads(get_example_from_file("examples/policies_example.json"))
+        justification_options_example = json.loads(get_example_from_file("examples/justification_options_example.json"))
+        self.regional_policy = RegionalPolicy.objects.create(
+            name="Test Policy",
+            region=self.region,
+            policies=policies_example,
+            justification_options=justification_options_example,
+            policy_title_text="Policy Title",
+            policy_cancel_button_text="Cancel Button"
+        )
+        self.regional_policy.providers.set([self.provider])
+
+        self.job.user.last_login = timezone.now()
+        time.sleep(5)
+        # Test to make sure the user cannot download without a regional justification.
+        user_can_download = self.downloadable.user_can_download(self.job.user)
+        self.assertFalse(user_can_download)
+
+        # Create the regional justification for this user.
+        regional_justification = RegionalJustification.objects.create(
+            justification_id=1,
+            justification_name="Test Option",
+            regional_policy=self.regional_policy,
+            user=self.job.user
+        )
+
+        # Test to make sure the user can download after submitting regional justification
+        user_can_download = self.downloadable.user_can_download(self.job.user)
+        self.assertTrue(user_can_download)
+
+        # Update the users last login, they should no longer be able to download since they have not agreed again.
+        self.job.user.last_login = timezone.now()
+        user_can_download = self.downloadable.user_can_download(self.job.user)
+        self.assertFalse(user_can_download)
+
+        with self.settings(REGIONAL_JUSTIFICATION_TIMEOUT_DAYS=1):
+            # Justification was created within the last day.
+            user_can_download = self.downloadable.user_can_download(self.job.user)
+            self.assertTrue(user_can_download)
+
+            # Subtract a day from the created_at date.
+            regional_justification.created_at = regional_justification.created_at - datetime.timedelta(days=1)
+            regional_justification.save()
+            user_can_download = self.downloadable.user_can_download(self.job.user)
+            self.assertFalse(user_can_download)

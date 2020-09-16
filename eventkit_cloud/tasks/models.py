@@ -23,7 +23,14 @@ from eventkit_cloud.core.models import (
     TimeTrackingModelMixin,
     LowerCaseCharField,
 )
-from eventkit_cloud.jobs.models import Job, DataProvider, JobPermissionLevel, JobPermission
+from eventkit_cloud.jobs.models import (
+    Job,
+    DataProvider,
+    JobPermissionLevel,
+    JobPermission,
+    Region,
+    RegionalJustification,
+)
 from eventkit_cloud.tasks.enumerations import TaskStates
 from eventkit_cloud.tasks import (
     DEFAULT_CACHE_EXPIRATION,
@@ -112,6 +119,7 @@ class FileProducingTaskResult(UIDMixin, NotificationModelMixin):
 
         jobs = JobPermission.userjobs(user, JobPermissionLevel.READ.value)
         job = jobs.filter(runs__data_provider_task_records__tasks__result=self).first()
+        providers = []
 
         if not job:
             return False
@@ -120,12 +128,40 @@ class FileProducingTaskResult(UIDMixin, NotificationModelMixin):
         attribute_classes = []
         for run_zip_file in self.runzipfile_set.all():
             for data_provider_task_record in run_zip_file.data_provider_task_records.all():
+                providers.append(data_provider_task_record.provider)
                 if data_provider_task_record.provider.attribute_class:
                     attribute_classes.append(data_provider_task_record.provider.attribute_class)
 
         for attribute_class in attribute_classes:
             if attribute_class and not attribute_class.users.filter(id=user.id):
                 return False
+
+        # Get the providers associated with this download if it's not a zipfile.
+        if self.export_task.export_provider_task.provider:
+            providers.append(self.export_task.export_provider_task.provider)
+
+        # Check to make sure the user has agreed to the regional policy if one exists.
+        for region in Region.objects.filter(policies__isnull=False):
+            # Check if the_geom is in this region.
+            if region.the_geom.intersects(job.the_geom):
+                # Filter for policies relating to this region and these providers.
+                for policy in region.policies.filter(region=region, providers__in=providers):
+                    # If there's no regional justification at all, don't allow a download.
+                    regional_justifications = RegionalJustification.objects.filter(user=user, regional_policy=policy)
+                    if not regional_justifications:
+                        return False
+                    regional_justification = regional_justifications.latest("created_at")
+                    regional_justification_timeout = settings.REGIONAL_JUSTIFICATION_TIMEOUT_DAYS
+                    # If a timeout was set, use that timeout.
+                    if regional_justification_timeout:
+                        timeout_seconds = regional_justification_timeout * 3600 * 24
+                        seconds_since_created = (timezone.now() - regional_justification.created_at).total_seconds()
+                        if seconds_since_created > timeout_seconds:
+                            return False
+                    else:
+                        # If there's no timeout set, use the last login instead.
+                        if regional_justification.created_at < user.last_login:
+                            return False
 
         return True
 
