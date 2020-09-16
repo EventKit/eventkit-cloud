@@ -1,11 +1,26 @@
 import logging
 
 from django.contrib.gis import forms
+from django.contrib.gis.geos import GEOSGeometry
 from django.core.exceptions import ValidationError
+from django.forms.widgets import Textarea
 
-from eventkit_cloud.jobs.models import RegionalPolicy
+from eventkit_cloud.jobs.models import Region, RegionalPolicy
 
 logger = logging.getLogger(__name__)
+
+
+class RegionForm(forms.ModelForm):
+    class Meta:
+        model = Region
+        fields = ("name", "description", "the_geom")
+
+    def __init__(self, *args, **kwargs):
+        super(RegionForm, self).__init__(*args, **kwargs)
+        self.fields["the_geom"].widget = Textarea()
+
+        if "the_geom" in self.initial:
+            self.initial["the_geom"] = GEOSGeometry(self.instance.the_geom).geojson
 
 
 class RegionalPolicyForm(forms.ModelForm):
