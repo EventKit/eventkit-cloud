@@ -341,6 +341,7 @@ def convert_to_geojson(request):
         return HttpResponse(json.dumps(geojson), content_type="application/json", status=200)
     except Exception as e:
         logger.error(e)
+        raise e
         return HttpResponse(str(e), status=400)
 
 

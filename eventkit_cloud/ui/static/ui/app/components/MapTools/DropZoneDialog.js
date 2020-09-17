@@ -8,6 +8,11 @@ import RootRef from '@material-ui/core/RootRef/RootRef';
 import BaseDialog from '../Dialog/BaseDialog';
 
 export class DropZoneDialog extends Component {
+
+    static contextTypes = {
+        config: PropTypes.object,
+    };
+
     constructor(props) {
         super(props);
         this.onDrop = this.onDrop.bind(this);
@@ -62,7 +67,7 @@ export class DropZoneDialog extends Component {
                     onDrop={this.onDrop}
                     multiple={false}
                     style={{}}
-                    maxSize={5000000}
+                    maxSize={this.context.config.MAX_UPLOAD_SIZE * 1000000}
                     className="qa-DropZoneDialog-Dropzone"
                 >
                     {({ getRootProps, getInputProps }) => {
@@ -71,11 +76,11 @@ export class DropZoneDialog extends Component {
                             <RootRef rootRef={ref}>
                                 <div {...getRootProps()} style={styles.drop} className="qa-DropZoneDialog-text">
                                     <span style={styles.text}>
-                                        <strong>GeoJSON, KML, GPKG, zipped SHP,</strong>
+                                        <strong>GeoJSON, KML, GPKG, zipped SHP, GeoTIFF</strong>
                                         <br />
                                         and other major geospatial data formats are supported.
                                         <br />
-                                        <strong> 5 MB </strong>
+                                        <strong> {this.context.config.MAX_UPLOAD_SIZE} MB </strong>
                                         max
                                         <br />
                                         Drag and drop or

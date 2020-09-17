@@ -478,6 +478,9 @@ def convert_raster(
     gdal.Warp(output_file, input_files, **options, **warp_params)
 
     if fmt.lower() == "gtiff" or translate_params:
+        # No need to compress in memory objects as they will be removed later.
+        if 'vsimem' in output_file:
+            return output_file
         input_file, output_file = get_dataset_names(output_file, output_file)
         if translate_params:
             options.update(translate_params)
@@ -538,6 +541,51 @@ def convert_vector(
     )
     logger.info(f"calling gdal.VectorTranslate('{output_file}', '{input_file}', {stringify_params(options)})")
     gdal.VectorTranslate(output_file, input_file, **options)
+    return output_file
+
+
+def polygonize(input_file, output_file, output_type="GeoJSON", band=None):
+    src_ds = gdal.Open(input_file)
+
+    if src_ds is None:
+        logger.error("Unable to open source.")
+        raise Exception("Failed to open the file.")
+
+    try:
+        band_index = band
+        if not band_index:
+            if src_ds.RasterCount == 4:
+                band_index = 4
+            elif src_ds.RasterCount == 3:
+                # Likely RGB (jpg) add a transparency mask and use that.
+                tmp_file = '/vsimem/tmp.tif'
+                logger.error(f"converting: {input_file} -> {tmp_file}")
+                convert_raster(input_file, tmp_file, fmt='gtiff', warp_params={"dstAlpha": True, "srcNodata": "0 0 0"})
+                src_ds = gdal.Open(tmp_file)
+                # src_ds = None
+                # tmp_file = os.path.join(os.path.dirname(input_file), "temp.vrt")
+                # vrt_options = gdal.BuildVRTOptions(resampleAlg='cubic', addAlpha=True, srcNodata="0 0 0", VRTNodata='nan')
+                # src_ds = gdal.BuildVRT('', input_file, options=vrt_options)
+                # src_ds = gdal.Open(tmp_file)
+                logger.error(f"RASTER COUNT: {src_ds.RasterCount}")
+                band_index = 4
+            elif src_ds.RasterCount == 2:
+                band_index = 2
+            else:
+                band_index = 1
+        mask_band = src_ds.GetRasterBand(band_index)
+    except RuntimeError as e:
+        logger.error(e)
+        raise Exception("Unable to get raster band.")
+
+    drv = ogr.GetDriverByName(output_type)
+    dst_ds = drv.CreateDataSource(output_file)
+    dst_layer = dst_ds.CreateLayer(output_file)
+
+    gdal.Polygonize(mask_band, mask_band, dst_layer, -1, [])
+    # Close file to read later.
+    del dst_ds
+    del src_ds
     return output_file
 
 
