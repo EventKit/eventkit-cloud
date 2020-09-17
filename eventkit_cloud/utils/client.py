@@ -121,10 +121,20 @@ class EventKitClient(object):
             "tags": [],
             "provider_tasks": provider_tasks,
         }
-        import sys
-        print("Posting the test job...")
-        sys.stdout.flush()
         try:
+            import sys
+            print("Testing job get...")
+            sys.stdout.flush()
+            response = self.client.get(
+                self.jobs_url, headers={"X-CSRFToken": self.csrftoken, "Referer": self.create_export_url},
+                timeout=20
+            )
+            import sys
+            print(f"Done: {response.content}")
+            sys.stdout.flush()
+            import sys
+            print("Posting the test job...")
+            sys.stdout.flush()
             response = self.client.post(
                 self.jobs_url, json=data, headers={"X-CSRFToken": self.csrftoken, "Referer": self.create_export_url}, timeout=20
             )
