@@ -321,6 +321,9 @@ class TestJob(TestCase):
         print("Running the test job...")
         sys.stdout.flush()
         run = self.run_job(job_data, keep_job=True, run_timeout=1200)  # This needs more time to complete
+        import sys
+        print("run job returned.  Rerunning the job...")
+        sys.stdout.flush()
         # This is to test rerunning that job.
         self.run_job(job_uid=run['job']['uid'], run_timeout=1200)  # This needs more time to complete
 
@@ -329,7 +332,13 @@ class TestJob(TestCase):
         if job_uid:
             run = self.client.rerun_job(job_uid=job_uid)
         else:
+            import sys
+            print("Submitting the test job...")
+            sys.stdout.flush()
             job = self.client.create_job(**data)
+            import sys
+            print("Getting the runs...")
+            sys.stdout.flush()
             run = self.client.get_runs(params={'job_uid': job['uid']})[0]
             job_uid = job['uid']
 
