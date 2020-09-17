@@ -121,9 +121,19 @@ class EventKitClient(object):
             "tags": [],
             "provider_tasks": provider_tasks,
         }
-        response = self.client.post(
-            self.jobs_url, json=data, headers={"X-CSRFToken": self.csrftoken, "Referer": self.create_export_url},
-        )
+        import sys
+        print("Posting the test job...")
+        sys.stdout.flush()
+        try:
+            response = self.client.post(
+                self.jobs_url, json=data, headers={"X-CSRFToken": self.csrftoken, "Referer": self.create_export_url}, timeout=20
+            )
+        except Exception as e:
+            import sys
+            print(e)
+            print(data)
+            print(self.jobs_url)
+            sys.stdout.flush()
         if response.status_code != 202:
             logger.error("There was an error creating the job: {0}".format(kwargs.get("name")))
             logger.error(response.content.decode())
