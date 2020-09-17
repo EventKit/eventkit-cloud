@@ -544,7 +544,22 @@ def convert_vector(
     return output_file
 
 
-def polygonize(input_file, output_file, output_type="GeoJSON", band=None):
+def polygonize(input_file: str, output_file: str, output_type: str = "GeoJSON", band: int = None):
+    """
+    Polygonization groups similar pixel values into bins and draws a boundary around them.
+    This is often used as a way to display raster information in a vector format. That can still be done here,
+    but if a band isn't provided the function will try to guess at the mask band and will use that as both the
+    converted layer and the mask.  The result should be a polygon of anywhere there are not black or not transparent
+    pixels.
+
+    :param input_file: The raster file to use to polygonize.
+    :param output_file: The vector output file for the new data.
+    :param output_type: The file type for output data (should be a vector type).
+    :param band: The band to use for polygonization.
+    :return:
+    """
+
+
     src_ds = gdal.Open(input_file)
 
     if src_ds is None:
@@ -559,15 +574,8 @@ def polygonize(input_file, output_file, output_type="GeoJSON", band=None):
             elif src_ds.RasterCount == 3:
                 # Likely RGB (jpg) add a transparency mask and use that.
                 tmp_file = '/vsimem/tmp.tif'
-                logger.error(f"converting: {input_file} -> {tmp_file}")
                 convert_raster(input_file, tmp_file, fmt='gtiff', warp_params={"dstAlpha": True, "srcNodata": "0 0 0"})
                 src_ds = gdal.Open(tmp_file)
-                # src_ds = None
-                # tmp_file = os.path.join(os.path.dirname(input_file), "temp.vrt")
-                # vrt_options = gdal.BuildVRTOptions(resampleAlg='cubic', addAlpha=True, srcNodata="0 0 0", VRTNodata='nan')
-                # src_ds = gdal.BuildVRT('', input_file, options=vrt_options)
-                # src_ds = gdal.Open(tmp_file)
-                logger.error(f"RASTER COUNT: {src_ds.RasterCount}")
                 band_index = 4
             elif src_ds.RasterCount == 2:
                 band_index = 2
@@ -582,8 +590,9 @@ def polygonize(input_file, output_file, output_type="GeoJSON", band=None):
     dst_ds = drv.CreateDataSource(output_file)
     dst_layer = dst_ds.CreateLayer(output_file)
 
+    # Use the mask band for both the polygonization and as a mask.
     gdal.Polygonize(mask_band, mask_band, dst_layer, -1, [])
-    # Close file to read later.
+    # Close files to read later.
     del dst_ds
     del src_ds
     return output_file
