@@ -263,6 +263,9 @@ class EventKitClient(object):
                 raise Exception("Unable to get status of run {}".format(run_uid))
             response = response.json()
             status = response[0].get("status")
+            import sys
+            print(f"Run status is {status}")
+            sys.stdout.flush()
             if status in ["COMPLETED", "INCOMPLETE", "CANCELED"]:
                 finished = True
             last_check = datetime.now()
@@ -273,6 +276,7 @@ class EventKitClient(object):
                             for error in task.get("errors", []):
                                 for type, message in error.items():
                                     errors.append(f"{type}: {message}")
+            print(f"Running for {last_check - first_check} seconds")
             if last_check - first_check > timedelta(seconds=run_timeout):
                 raise Exception("Run timeout ({}s) exceeded".format(run_timeout))
         if errors:

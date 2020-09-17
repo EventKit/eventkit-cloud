@@ -102,7 +102,7 @@ class TestJob(TestCase):
         # export_provider.level_to = increased_zoom_level
         # export_provider.save()
 
-        job_data = {"name": "eventkit-integration-test-wmts",
+        job_data = {"name": "eventkit-integration-test-osm",
                     "description": "Test Description", "project": "TestProject", "selection": self.selection,
                     "tags": [], "provider_tasks": [{"provider": test_service_slug,
                                                     "formats": ["gpkg"], "max_zoom": increased_zoom_level}]}
@@ -317,6 +317,9 @@ class TestJob(TestCase):
                                                    #  "formats": ["shp", "gpkg", "kml", "sqlite"]}
                                                    ]}
         # This is to test creating an initial job.
+        import sys
+        print("Running the test job...")
+        sys.stdout.flush()
         run = self.run_job(job_data, keep_job=True, run_timeout=1200)  # This needs more time to complete
         # This is to test rerunning that job.
         self.run_job(job_uid=run['job']['uid'], run_timeout=1200)  # This needs more time to complete
@@ -333,6 +336,9 @@ class TestJob(TestCase):
         if not wait_for_run:
             return run
 
+        import sys
+        print("Waiting for the run to complete...")
+        sys.stdout.flush()
         run = self.client.wait_for_run(run['uid'], run_timeout=run_timeout)
         timezone.now().strftime('%Y%m%d')
 
