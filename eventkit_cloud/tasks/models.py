@@ -30,6 +30,7 @@ from eventkit_cloud.jobs.models import (
     JobPermission,
     Region,
     RegionalJustification,
+    RegionalPolicy,
 )
 from eventkit_cloud.tasks.enumerations import TaskStates
 from eventkit_cloud.tasks import (
@@ -141,27 +142,28 @@ class FileProducingTaskResult(UIDMixin, NotificationModelMixin):
             providers.append(self.export_task.export_provider_task.provider)
 
         # Check to make sure the user has agreed to the regional policy if one exists.
-        for region in Region.objects.filter(policies__isnull=False):
-            # Check if the_geom is in this region.
-            if region.the_geom.intersects(job.the_geom):
-                # Filter for policies relating to this region and these providers.
-                for policy in region.policies.filter(region=region, providers__in=providers):
-                    # If there's no regional justification at all, don't allow a download.
-                    regional_justifications = RegionalJustification.objects.filter(user=user, regional_policy=policy)
-                    if not regional_justifications:
-                        return False
-                    regional_justification = regional_justifications.latest("created_at")
-                    regional_justification_timeout = settings.REGIONAL_JUSTIFICATION_TIMEOUT_DAYS
-                    # If a timeout was set, use that timeout.
-                    if regional_justification_timeout:
-                        timeout_seconds = regional_justification_timeout * 3600 * 24
-                        seconds_since_created = (timezone.now() - regional_justification.created_at).total_seconds()
-                        if seconds_since_created > timeout_seconds:
-                            return False
-                    else:
-                        # If there's no timeout set, use the last login instead.
-                        if regional_justification.created_at < user.last_login:
-                            return False
+        for policy in RegionalPolicy.objects.filter(
+            region__the_geom__intersects=job.the_geom, providers__in=providers
+        ).prefetch_related("justifications"):
+            regional_justifications = policy.justifications.all()
+
+            # If there's no regional justification at all, don't allow a download.
+            if not regional_justifications:
+                return False
+
+            # Get the most recent regional justification to check against.
+            regional_justification = regional_justifications.latest("created_at")
+
+            # If a timeout was set, use that timeout.
+            if isinstance(settings.REGIONAL_JUSTIFICATION_TIMEOUT_DAYS, int):
+                timeout_seconds = settings.REGIONAL_JUSTIFICATION_TIMEOUT_DAYS * 3600 * 24
+                seconds_since_created = (timezone.now() - regional_justification.created_at).total_seconds()
+                if seconds_since_created > timeout_seconds:
+                    return False
+            else:
+                # If there's no timeout set, use the last login instead.
+                if regional_justification.created_at < user.last_login:
+                    return False
 
         return True
 
