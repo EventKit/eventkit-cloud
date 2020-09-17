@@ -359,7 +359,9 @@ class JobViewSet(viewsets.ModelViewSet):
         ** returns: Not 202
         """
         from eventkit_cloud.tasks.task_factory import InvalidLicense, Unauthorized
-
+        import sys
+        print("Received create post...")
+        sys.stdout.flush()
         serializer = self.get_serializer(data=request.data)
         if serializer.is_valid(raise_exception=True):
             """Get the required data from the validated request."""
@@ -369,10 +371,14 @@ class JobViewSet(viewsets.ModelViewSet):
             tags = request.data.get("tags")
             preset = request.data.get("preset")
 
+            print("Entering atomic block...")
+            sys.stdout.flush()
             with transaction.atomic():
                 if export_providers:
                     for ep in export_providers:
                         ep["user"] = request.user.id
+                    print("Setting up data providers...")
+                    sys.stdout.flush()
                     provider_serializer = DataProviderSerializer(
                         data=export_providers, many=True, context={"request": request}
                     )
@@ -381,6 +387,8 @@ class JobViewSet(viewsets.ModelViewSet):
                 if len(provider_tasks) > 0:
                     """Save the job and make sure it's committed before running tasks."""
                     try:
+                        print("Saving job to set up provider tasks...")
+                        sys.stdout.flush()
                         job = serializer.save()
                         provider_serializer = ProviderTaskSerializer(
                             data=provider_tasks, many=True, context={"request": request}
@@ -397,6 +405,8 @@ class JobViewSet(viewsets.ModelViewSet):
                             )
                         # Check max area (skip for superusers)
                         if not self.request.user.is_superuser:
+                            print("Checking max area...")
+                            sys.stdout.flush()
                             error_data = {"errors": []}
                             for provider_task in job.data_provider_tasks.all():
                                 provider = provider_task.provider
@@ -442,11 +452,15 @@ class JobViewSet(viewsets.ModelViewSet):
                                 return Response(error_data, status=status_code)
 
                         if preset:
+                            print("Adding presets...")
+                            sys.stdout.flush()
                             """Get the tags from the uploaded preset."""
                             logger.debug("Found preset with uid: {0}".format(preset))
                             job.json_tags = preset
                             job.save()
                         elif tags:
+                            print("Adding tags...")
+                            sys.stdout.flush()
                             """Get tags from request."""
                             simplified_tags = []
                             for entry in tags:
@@ -459,6 +473,8 @@ class JobViewSet(viewsets.ModelViewSet):
                             job.json_tags = simplified_tags
                             job.save()
                         else:
+                            print("Adding default tags...")
+                            sys.stdout.flush()
                             """
                             Use hdm preset as default tags if no preset or tags
                             are provided in the request.
@@ -477,6 +493,8 @@ class JobViewSet(viewsets.ModelViewSet):
                     )
 
                 try:
+                    print("Adding projections and saving job...")
+                    sys.stdout.flush()
                     projection_db_objects = Projection.objects.filter(srid__in=projections)
                     job.projections.add(*projection_db_objects)
                     job.save()
@@ -491,6 +509,8 @@ class JobViewSet(viewsets.ModelViewSet):
             # run needs to be created so that the UI can be updated with the task list.
             user_details = get_user_details(request)
             try:
+                print("Creating the run...")
+                sys.stdout.flush()
                 # run needs to be created so that the UI can be updated with the task list.
                 run_uid = create_run(job_uid=job_uid, user=request.user)
             except InvalidLicense as il:
@@ -498,12 +518,18 @@ class JobViewSet(viewsets.ModelViewSet):
             except Unauthorized as ua:
                 raise PermissionDenied(code="permission_denied", detail=str(ua))
 
+            print("serializing the job...")
+            sys.stdout.flush()
             running = JobSerializer(job, context={"request": request})
 
             # Run is passed to celery to start the tasks.
+            print("adding tasks to queue...")
+            sys.stdout.flush()
             pick_up_run_task.apply_async(
                 queue="runs", routing_key="runs", kwargs={"run_uid": run_uid, "user_details": user_details},
             )
+            print("returning response...")
+            sys.stdout.flush()
             return Response(running.data, status=status.HTTP_202_ACCEPTED)
         else:
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)

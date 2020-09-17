@@ -241,9 +241,14 @@ def create_run(job_uid, user=None, clone=False):
     try:
         # https://docs.djangoproject.com/en/1.10/topics/db/transactions/#django.db.transaction.atomic
         # enforce max runs
+        import sys
+        print("Entering run atomic...")
+        sys.stdout.flush()
         with transaction.atomic():
             max_runs = settings.EXPORT_MAX_RUNS
 
+            print("getting job...")
+            sys.stdout.flush()
             # get the number of existing runs for this job
             job = Job.objects.select_related("user").get(uid=job_uid)
             if not job.data_provider_tasks.all():
@@ -270,13 +275,19 @@ def create_run(job_uid, user=None, clone=False):
                 )
             run_count = job.runs.filter(deleted=False).count()
             run_zip_file_slug_sets = None
+            print("Creating run...")
+            sys.stdout.flush()
             if clone:
+                print("from clone...")
+                sys.stdout.flush()
                 run, run_zip_file_slug_sets = job.last_export_run.clone()
                 run.status = TaskStates.SUBMITTED.value
                 run.save()
                 job.last_export_run = run
                 job.save()
             else:
+                print("from new job...")
+                sys.stdout.flush()
                 # add the export run to the database
                 run = ExportRun.objects.create(
                     job=job,
@@ -296,6 +307,8 @@ def create_run(job_uid, user=None, clone=False):
             sendnotification(
                 run, run.user, NotificationVerb.RUN_STARTED.value, None, None, NotificationLevel.INFO.value, "",
             )
+            print("returning run...")
+            sys.stdout.flush()
             run_uid = run.uid
             logger.debug("Saved run with id: {0}".format(str(run_uid)))
             if clone:
