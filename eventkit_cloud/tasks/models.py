@@ -28,8 +28,6 @@ from eventkit_cloud.jobs.models import (
     DataProvider,
     JobPermissionLevel,
     JobPermission,
-    Region,
-    RegionalJustification,
     RegionalPolicy,
 )
 from eventkit_cloud.tasks.enumerations import TaskStates

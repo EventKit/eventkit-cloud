@@ -331,7 +331,7 @@ class TestFileProducingTaskResult(TestCase):
         with patch('eventkit_cloud.jobs.signals.Group') as mock_group:
             mock_group.objects.get.return_value = group
             user = User.objects.create_user(username='demo', email='demo@demo.com', password='demo', is_active=True)
-        # bbox that intersects with both Africa and Burma
+        # bbox that intersects with both Africa and Burma so that both regions are covered in tests.
         bbox = Polygon.from_bbox((23.378906, -3.074695, 110.830078, 44.087585))
         the_geom = GEOSGeometry(bbox, srid=4326)
         Job.objects.create(name='TestFileProducingTaskResult', description='Test description', user=user, the_geom=the_geom)
@@ -384,7 +384,7 @@ class TestFileProducingTaskResult(TestCase):
         self.run_zip_file.data_provider_task_records.set(self.data_provider_task_records)
 
         self.region = Region.objects.get(name="Africa")
-        self.second_region = Region.objects.get(name="Burma")
+        self.region_two = Region.objects.get(name="Burma")
         policies_example = json.loads(get_example_from_file("examples/policies_example.json"))
         justification_options_example = json.loads(get_example_from_file("examples/justification_options_example.json"))
 
@@ -399,8 +399,8 @@ class TestFileProducingTaskResult(TestCase):
 
         self.regional_policy.providers.set([self.provider])
 
-        self.second_regional_policy = RegionalPolicy.objects.create(
-            name="Second Test Policy",
+        self.regional_policy_two = RegionalPolicy.objects.create(
+            name="Test Policy Two",
             region=self.region,
             policies=policies_example,
             justification_options=justification_options_example,
@@ -408,13 +408,13 @@ class TestFileProducingTaskResult(TestCase):
             policy_cancel_button_text="Cancel Button"
         )
 
-        self.second_regional_policy.providers.set([self.provider])
+        self.regional_policy_two.providers.set([self.provider])
 
         # Test to make sure the user cannot download without a regional justification.
         user_can_download = self.downloadable.user_can_download(self.job.user)
         self.assertFalse(user_can_download)
 
-        # Create the regional justification for this user.
+        # Create a regional justification for the first policy.
         regional_justification = RegionalJustification.objects.create(
             justification_id=1,
             justification_name="Test Option",
@@ -426,40 +426,40 @@ class TestFileProducingTaskResult(TestCase):
         user_can_download = self.downloadable.user_can_download(self.job.user)
         self.assertFalse(user_can_download)
 
-        second_justification = RegionalJustification.objects.create(
+        RegionalJustification.objects.create(
             justification_id=1,
             justification_name="Test Option",
-            regional_policy=self.second_regional_policy,
+            regional_policy=self.regional_policy_two,
             user=self.job.user
         )
 
-        # Test to make sure the user can download after submitting regional justification
+        # Test to make sure the user can download after submitting both regional justifications.
         user_can_download = self.downloadable.user_can_download(self.job.user)
         self.assertTrue(user_can_download)
 
-        self.third_regional_policy = RegionalPolicy.objects.create(
-            name="Second Region Test Policy",
-            region=self.second_region,
+        self.regional_policy_three = RegionalPolicy.objects.create(
+            name="Region Two Test Policy",
+            region=self.region_two,
             policies=policies_example,
             justification_options=justification_options_example,
             policy_title_text="Policy Title",
             policy_cancel_button_text="Cancel Button"
         )
 
-        self.third_regional_policy.providers.set([self.provider])
+        self.regional_policy_three.providers.set([self.provider])
 
-        # User hasn't agreed to the new regional policy.
+        # Test to make sure the user can't download now that a new regional policy was added.
         user_can_download = self.downloadable.user_can_download(self.job.user)
         self.assertFalse(user_can_download)
 
-        third_justification = RegionalJustification.objects.create(
+        RegionalJustification.objects.create(
             justification_id=1,
             justification_name="Test Option",
-            regional_policy=self.third_regional_policy,
+            regional_policy=self.regional_policy_three,
             user=self.job.user
         )
 
-        # User has agreed to the new regional policy.
+        # User has agreed to the new regional policy and should be able to download.
         user_can_download = self.downloadable.user_can_download(self.job.user)
         self.assertTrue(user_can_download)
 
