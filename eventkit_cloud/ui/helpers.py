@@ -57,20 +57,12 @@ def file_to_geojson(in_memory_file):
         meta = get_meta(in_path, is_raster=False)
 
         if not meta["driver"] or meta["is_raster"]:
-            # Handle no data pixels.
-            import time
-            logger.error("Converting to geojson...")
-            start = time.time()
             out_path = polygonize(in_path, out_path)
-            logger.error(f"finished in {time.time() - start}")
         else:
             out_path = convert_vector(in_path, out_path, fmt="geojson")
 
         if os.path.exists(out_path):
-            logger.error("Reading geojson...")
-            start = time.time()
             geojson = read_json_file(out_path)
-            logger.error(f"finished in {time.time() - start}")
             return geojson
 
         raise Exception("An unknown error occurred while processing the file")
@@ -146,7 +138,7 @@ def is_mgrs(query):
     :return: True if the string matches MGSR, False if not
     """
     query = re.sub(r"\s+", "", query)
-    pattern = re.compile(r"^(\d{1,2})([C-HJ-NP-X])\s*([A-HJ-NP-Z])([A-HJ-NP-V])\s*(\d{1,5}\s*\d{1,5})$", re.I, )
+    pattern = re.compile(r"^(\d{1,2})([C-HJ-NP-X])\s*([A-HJ-NP-Z])([A-HJ-NP-V])\s*(\d{1,5}\s*\d{1,5})$", re.I,)
     if pattern.match(query):
         return True
     return False
@@ -213,3 +205,4 @@ def is_lat_lon(query):
     parsed_coord_array = [parsed_lat, parsed_lon]
 
     return parsed_coord_array
+                                                                                                                                                                                                                                                                                                                                                                

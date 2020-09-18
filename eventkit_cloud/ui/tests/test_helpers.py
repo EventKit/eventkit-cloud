@@ -26,86 +26,87 @@ class TestHelpers(TestCase):
     @patch('eventkit_cloud.ui.helpers.write_uploaded_file')
     @patch('eventkit_cloud.ui.helpers.os.mkdir')
     @patch('eventkit_cloud.ui.helpers.uuid4')
-    def test_file_to_geojson(self, uid, makedir, write, unzip, listdirs, meta, exists, reader, rm, split,
-                             convert_vector):
+    def test_file_to_geojson(self, mock_uid, mock_makedir, mock_write, mock_unzip, mock_listdirs, mock_meta,
+                             mock_exists, mock_reader, mock_rm, mock_split, mock_convert_vector):
         geojson = {'type': 'FeatureCollection', 'other_stuff': {}}
         file = Mock()
+        example_uid = 12345
         file.name = 'test_file.geojson'
-        split.return_value = 'test_file', '.geojson'
-        uid.return_value = 12345
-        makedir.return_value = True
-        write.return_value = True
-        unzip.return_value = False
-        listdirs.return_value = []
-        meta.return_value = {'driver': 'GeoJSON', 'is_raster': False}
-        convert_vector.return_value = file.name
-        exists.return_value = True
-        reader.return_value = geojson
+        mock_uid.return_value = example_uid
+        mock_split.return_value = 'test_file', '.geojson'
+        mock_makedir.return_value = True
+        mock_write.return_value = True
+        mock_unzip.return_value = False
+        mock_listdirs.return_value = []
+        mock_meta.return_value = {'driver': 'GeoJSON', 'is_raster': False}
+        mock_convert_vector.return_value = file.name
+        mock_exists.return_value = True
+        mock_reader.return_value = geojson
         with self.settings(
             EXPORT_STAGING_ROOT='/var/lib/stage'
         ):
             # It should run through the entire process for a geojson file and return it
-            dir = '/var/lib/stage/12345'
+            dir = f"/var/lib/stage/{example_uid}"
             expected_file_name, expected_file_ext = os.path.splitext(file.name)
-            expected_in_path = os.path.join(dir, 'in_{0}{1}'.format(expected_file_name, expected_file_ext))
-            expected_out_path = os.path.join(dir, 'out_{0}.geojson'.format(expected_file_name))
+            expected_in_path = os.path.join(dir, f"in_{expected_file_name}-{example_uid}{expected_file_ext}")
+            expected_out_path = os.path.join(dir, f"out_{expected_file_name}-{example_uid}.geojson")
             ret = file_to_geojson(file)
             self.assertEqual(ret, geojson)
-            makedir.assert_called_once_with(dir)
-            write.assert_called_once_with(file, expected_in_path)
-            meta.assert_called_once_with(expected_in_path, is_raster=False)
-            convert_vector.assert_called_once_with(expected_in_path, expected_out_path, fmt="geojson")
-            rm.assert_called_once_with(dir)
-            convert_vector.reset_mock()
-            meta.reset_mock()
+            mock_makedir.assert_called_once_with(dir)
+            mock_write.assert_called_once_with(file, expected_in_path)
+            mock_meta.assert_called_once_with(expected_in_path, is_raster=False)
+            mock_convert_vector.assert_called_once_with(expected_in_path, expected_out_path, fmt="geojson")
+            mock_rm.assert_called_once_with(dir)
+            mock_convert_vector.reset_mock()
+            mock_meta.reset_mock()
 
             # It should run through the entire process for a zip shp and return a geojson
             file.name = 'something.zip'
-            split.return_value = 'something', '.zip'
-            unzip.return_value = True
+            mock_split.return_value = 'something', '.zip'
+            mock_unzip.return_value = True
             expected_file_name, expected_file_ext = os.path.splitext(file.name)
-            expected_in_path = os.path.join(dir, 'in_{0}{1}'.format(expected_file_name, expected_file_ext))
-            expected_out_path = os.path.join(dir, 'out_{0}.geojson'.format(expected_file_name))
-            listdirs.return_value = ['something.shp']
+            expected_in_path = os.path.join(dir, f"in_{expected_file_name}-{example_uid}{expected_file_ext}")
+            expected_out_path = os.path.join(dir, f"out_{expected_file_name}-{example_uid}.geojson")
+            mock_listdirs.return_value = ['something.shp']
             updated_in_path = os.path.join(dir, 'something.shp')
             ret = file_to_geojson(file)
             self.assertEqual(ret, geojson)
-            unzip.assert_called_once_with(expected_in_path, dir)
-            listdirs.assert_called_with(dir)
-            meta.convert_vector(updated_in_path, is_raster=False)
-            convert_vector.assert_called_once_with(updated_in_path, expected_out_path, fmt="geojson")
+            mock_unzip.assert_called_once_with(expected_in_path, dir)
+            mock_listdirs.assert_called_with(dir)
+            mock_meta.convert_vector(updated_in_path, is_raster=False)
+            mock_convert_vector.assert_called_once_with(updated_in_path, expected_out_path, fmt="geojson")
 
             # It should raise an exception if there is no file extension
             file.name = 'something'
-            split.return_value = 'something', ''
+            mock_split.return_value = 'something', ''
             self.assertRaises(Exception, file_to_geojson, file)
 
             # It should raise an exception if zip does not contain shp
             file.name = 'thing.zip'
-            split.return_value = 'thing', '.zip'
-            unzip.return_value = True
-            listdirs.return_value = ['thing.dbf', 'thing.prj']
+            mock_split.return_value = 'thing', '.zip'
+            mock_unzip.return_value = True
+            mock_listdirs.return_value = ['thing.dbf', 'thing.prj']
             self.assertRaises(Exception, file_to_geojson, file)
 
             # It should raise an exception if no driver can be found
             file.name = 'test.geojson'
-            split.return_value = 'test', '.geojson'
-            meta.return_value = {'driver': None, 'is_raster': None}
+            mock_split.return_value = 'test', '.geojson'
+            mock_meta.return_value = {'driver': None, 'is_raster': None}
             self.assertRaises(Exception, file_to_geojson, file)
 
             # It should raise an exception if input file is not vector
-            meta.return_value = {'driver': 'GTiff', 'is_raster': True}
+            mock_meta.return_value = {'driver': 'GTiff', 'is_raster': True}
             self.assertRaises(Exception, file_to_geojson, file)
 
             # It should raise an exception if the convert throws one
             with self.assertRaises(Exception):
-                meta.return_value = {'driver': 'GeoJSON', 'is_raster': False}
-                convert_vector.side_effect = Exception('doh!')
+                mock_meta.return_value = {'driver': 'GeoJSON', 'is_raster': False}
+                mock_convert_vector.side_effect = Exception('doh!')
                 file_to_geojson(file)
 
             # It should raise and exception if output file does not exist
             with self.assertRaises(Exception):
-                exists.return_value = False
+                mock_exists.return_value = False
                 file_to_geojson(file)
 
     @patch('eventkit_cloud.ui.helpers.json')

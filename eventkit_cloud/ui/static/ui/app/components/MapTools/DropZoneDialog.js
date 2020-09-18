@@ -8,11 +8,6 @@ import RootRef from '@material-ui/core/RootRef/RootRef';
 import BaseDialog from '../Dialog/BaseDialog';
 
 export class DropZoneDialog extends Component {
-
-    static contextTypes = {
-        config: PropTypes.object,
-    };
-
     constructor(props) {
         super(props);
         this.onDrop = this.onDrop.bind(this);
@@ -112,6 +107,10 @@ DropZoneDialog.propTypes = {
     setImportModalState: PropTypes.func.isRequired,
     processGeoJSONFile: PropTypes.func.isRequired,
     theme: PropTypes.object.isRequired,
+};
+
+DropZoneDialog.contextTypes = {
+    config: PropTypes.object,
 };
 
 export default withTheme(DropZoneDialog);

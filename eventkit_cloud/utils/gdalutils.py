@@ -479,7 +479,7 @@ def convert_raster(
 
     if fmt.lower() == "gtiff" or translate_params:
         # No need to compress in memory objects as they will be removed later.
-        if 'vsimem' in output_file:
+        if "vsimem" in output_file:
             return output_file
         input_file, output_file = get_dataset_names(output_file, output_file)
         if translate_params:
@@ -559,7 +559,6 @@ def polygonize(input_file: str, output_file: str, output_type: str = "GeoJSON", 
     :return:
     """
 
-
     src_ds = gdal.Open(input_file)
 
     if src_ds is None:
@@ -573,8 +572,8 @@ def polygonize(input_file: str, output_file: str, output_type: str = "GeoJSON", 
                 band_index = 4
             elif src_ds.RasterCount == 3:
                 # Likely RGB (jpg) add a transparency mask and use that.
-                tmp_file = '/vsimem/tmp.tif'
-                convert_raster(input_file, tmp_file, fmt='gtiff', warp_params={"dstAlpha": True, "srcNodata": "0 0 0"})
+                tmp_file = "/vsimem/tmp.tif"
+                convert_raster(input_file, tmp_file, fmt="gtiff", warp_params={"dstAlpha": True, "srcNodata": "0 0 0"})
                 src_ds = gdal.Open(tmp_file)
                 band_index = 4
             elif src_ds.RasterCount == 2:
