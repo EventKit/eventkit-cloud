@@ -13,7 +13,7 @@ from eventkit_cloud.settings.celery import is_true
 
 BASE_DIR = os.path.abspath(os.path.dirname(__file__))
 
-INSTALLED_APPS += ("django_celery_results", "django_celery_beat", "django_filters")
+INSTALLED_APPS += ("django_celery_beat", "django_filters")
 
 # Project apps
 INSTALLED_APPS += (
