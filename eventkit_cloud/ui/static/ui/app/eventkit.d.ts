@@ -224,11 +224,50 @@ declare namespace Eventkit {
         description: string;
     }
 
+    interface JustificationOption {
+        id: string;
+        name: string;
+        display: boolean;
+        suboption?: {
+            type: string;
+            label?: string;
+            options?: string[];
+        }
+    }
+
+    interface JustificationOptions {
+        justification_options: JustificationOption[]
+    }
+
+    interface PolicyDetails {
+        policies: {
+            title: string;
+            description: string;
+        }[]
+    }
+
+    interface RegionPolicy {
+        providers: {
+            uid: string;
+            slug: string;
+            name: string;
+        }
+        policy_title_text: string;
+        policy_header_text: string;
+        policy_footer_text: string;
+        policy_cancel_text: string;
+        policy_cancel_button_text: string;
+        justification_options: JustificationOptions;
+        region: object;
+        policies: PolicyDetails;
+    }
+
     interface Theme {
         eventkit: {
             colors: {
                 primary: string;
                 primary_light: string;
+                primary_background: string;
                 primary_dark: string;
                 secondary: string;
                 secondary_light: string;
