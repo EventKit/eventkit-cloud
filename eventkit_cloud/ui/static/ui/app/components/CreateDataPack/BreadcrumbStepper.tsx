@@ -78,7 +78,6 @@ export interface Props {
     projections: Eventkit.Projection[];
     tasks: Eventkit.Task[];
     breadCrumbStepperProps: any;
-    selectedBaseMap: MapLayer;
     mapLayers: MapLayer[];
     getEstimate: any;
     checkProvider: (args: any) => void;
