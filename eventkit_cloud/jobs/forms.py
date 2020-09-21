@@ -1,11 +1,26 @@
 import logging
 
 from django.contrib.gis import forms
+from django.contrib.gis.geos import GEOSGeometry
 from django.core.exceptions import ValidationError
+from django.forms.widgets import Textarea
 
-from eventkit_cloud.jobs.models import RegionalPolicy
+from eventkit_cloud.jobs.models import Region, RegionalPolicy
 
 logger = logging.getLogger(__name__)
+
+
+class RegionForm(forms.ModelForm):
+    class Meta:
+        model = Region
+        fields = ("name", "description", "the_geom")
+
+    def __init__(self, *args, **kwargs):
+        super(RegionForm, self).__init__(*args, **kwargs)
+        self.fields["the_geom"].widget = Textarea()
+
+        if "the_geom" in self.initial:
+            self.initial["the_geom"] = GEOSGeometry(self.instance.the_geom).geojson
 
 
 class RegionalPolicyForm(forms.ModelForm):
@@ -18,17 +33,12 @@ class RegionalPolicyForm(forms.ModelForm):
 
         self.previous_justification_option_ids = []
         if self.instance.justification_options:
-            for previous_justification_option in self.instance.justification_options["justification_options"]:
+            for previous_justification_option in self.instance.justification_options:
                 previous_option_id = previous_justification_option.get("id")
                 self.previous_justification_option_ids.append(previous_option_id)
 
     def clean_policies(self):
-        # Both the field name and JSON object are named policies.
-        data = self.cleaned_data["policies"]
-        policies = data.get("policies")
-
-        if not policies:
-            raise ValidationError("Must include policies object, please see the example above.")
+        policies = self.cleaned_data["policies"]
 
         for policy in policies:
             title = policy.get("title")
@@ -39,16 +49,10 @@ class RegionalPolicyForm(forms.ModelForm):
             if not description:
                 raise ValidationError("Every policy must have a description.")
 
-        return data
+        return policies
 
     def clean_justification_options(self):
-        # Both the field name and JSON object are named justification_options.
-        data = self.cleaned_data["justification_options"]
-        justification_options = data.get("justification_options")
-
-        if not justification_options:
-            raise ValidationError("Must include justification_options object, please see the example above.")
-
+        justification_options = self.cleaned_data["justification_options"]
         justification_option_ids = []
 
         for justification_option in justification_options:
@@ -95,4 +99,4 @@ class RegionalPolicyForm(forms.ModelForm):
                     "Please do not remove options, set display to false instead."
                 )
 
-        return self.cleaned_data["justification_options"]
+        return justification_options
