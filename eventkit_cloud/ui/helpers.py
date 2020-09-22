@@ -205,4 +205,3 @@ def is_lat_lon(query):
     parsed_coord_array = [parsed_lat, parsed_lon]
 
     return parsed_coord_array
-                                                                                                                                                                                                                                                                                                                                                                

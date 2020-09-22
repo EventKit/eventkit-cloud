@@ -29,6 +29,10 @@ export class DropZoneDialog extends Component {
 
     render() {
         const { colors } = this.props.theme.eventkit;
+        let maxUploadSize = 5;
+        if (this.context.config) {
+            maxUploadSize = this.context.config.MAX_UPLOAD_SIZE;
+        }
 
         const styles = {
             drop: {
@@ -62,7 +66,7 @@ export class DropZoneDialog extends Component {
                     onDrop={this.onDrop}
                     multiple={false}
                     style={{}}
-                    maxSize={this.context.config.MAX_UPLOAD_SIZE * 1000000}
+                    maxSize={maxUploadSize * 1000000}
                     className="qa-DropZoneDialog-Dropzone"
                 >
                     {({ getRootProps, getInputProps }) => {
@@ -75,7 +79,7 @@ export class DropZoneDialog extends Component {
                                         <br />
                                         and other major geospatial data formats are supported.
                                         <br />
-                                        <strong> {this.context.config.MAX_UPLOAD_SIZE} MB </strong>
+                                        <strong> {maxUploadSize} MB </strong>
                                         max
                                         <br />
                                         Drag and drop or
@@ -110,7 +114,9 @@ DropZoneDialog.propTypes = {
 };
 
 DropZoneDialog.contextTypes = {
-    config: PropTypes.object,
+    config: PropTypes.shape({
+        MAX_UPLOAD_SIZE: PropTypes.number,
+    }),
 };
 
 export default withTheme(DropZoneDialog);
