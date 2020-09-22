@@ -75,9 +75,19 @@ const jss = (theme: Eventkit.Theme & Theme) => createStyles({
     checked: {},
     okayButtonContainer: {
         display: 'flex',
+        marginBottom: '10px',
     },
     okayButton: {
         margin: 'auto',
+    },
+    cancelAndExitButton: {
+        lineHeight: 'inherit',
+        fontSize: '1em',
+        height: 'auto',
+        [theme.breakpoints.down('sm')]: {
+            padding: '5px',
+            fontSize: '0.9em',
+        },
     },
 });
 
@@ -174,7 +184,7 @@ export function RegionalJustificationDialog(props: RegionalJustificationDialogPr
         function getOptionLabel(option: Eventkit.JustificationOption) {
             const {suboption} = option;
             const enabled = option.id === selectedOption?.id;
-            if (!!suboption) {
+            if (enabled && !!suboption) {
                 if (suboption.type === 'text') {
                     return (
                         <TextLabel
@@ -232,14 +242,16 @@ export function RegionalJustificationDialog(props: RegionalJustificationDialogPr
         if (policy) {
             actionProps.actions = [
                 (
-                    <Button
-                        key="cancelAndExit"
-                        variant="contained"
-                        color="primary"
-                        onClick={onClose}
-                        style={{whiteSpace: 'nowrap'}}
+                    <Button classes={{root: classes.cancelAndExitButton, label: classes.cancelAndExitButtonLabel}}
+                            key="cancelAndExit"
+                            variant="contained"
+                            size="large"
+                            color="primary"
+                            onClick={onClose}
                     >
-                        {policy.policy_cancel_button_text}
+                        <strong>
+                            {policy.policy_cancel_button_text}
+                        </strong>
                     </Button>
 
                 ),
