@@ -247,6 +247,7 @@ declare namespace Eventkit {
     }
 
     interface RegionPolicy {
+        uid: string;
         providers: {
             uid: string;
             slug: string;
@@ -258,7 +259,7 @@ declare namespace Eventkit {
         policy_cancel_text: string;
         policy_cancel_button_text: string;
         justification_options: JustificationOptions;
-        region: object;
+        region: any;
         policies: PolicyDetails;
     }
 
