@@ -310,6 +310,7 @@ UI_CONFIG = {
     "DATAPACK_PAGE_SIZE": os.getenv("DATAPACK_PAGE_SIZE", "100"),
     "NOTIFICATIONS_PAGE_SIZE": os.getenv("NOTIFICATIONS_PAGE_SIZE", "10"),
     "SERVE_ESTIMATES": SERVE_ESTIMATES,
+    "MAX_UPLOAD_SIZE": os.getenv("MAX_UPLOAD_SIZE", 5),  # In MB
     "MATOMO": {
         "URL": os.getenv("MATOMO_URL", ""),
         "CUSTOM_DIM_ID": os.getenv("MATOMO_CUSTOM_DIM_ID", ""),
