@@ -235,15 +235,9 @@ declare namespace Eventkit {
         }
     }
 
-    interface JustificationOptions {
-        justification_options: JustificationOption[]
-    }
-
     interface PolicyDetails {
-        policies: {
-            title: string;
-            description: string;
-        }[]
+        title: string;
+        description: string;
     }
 
     interface RegionPolicy {
@@ -258,9 +252,9 @@ declare namespace Eventkit {
         policy_footer_text: string;
         policy_cancel_text: string;
         policy_cancel_button_text: string;
-        justification_options: JustificationOptions;
+        justification_options: JustificationOption[];
         region: any;
-        policies: PolicyDetails;
+        policies: PolicyDetails[];
     }
 
     interface Theme {

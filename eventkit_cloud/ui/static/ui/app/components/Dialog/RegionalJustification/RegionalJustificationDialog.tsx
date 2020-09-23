@@ -39,7 +39,6 @@ const jss = (theme: Eventkit.Theme & Theme) => createStyles({
         borderWidth: '1px',
         borderRadius: '4px',
         padding: '12px',
-        margin: '5px',
     },
     outerContainerSm: {
         paddingRight: '15px',
@@ -123,7 +122,7 @@ export function RegionalJustificationDialog(props: RegionalJustificationDialogPr
     } = props;
 
     const [{status, response}, requestCall] = useAsyncRequest();
-    const makeRequest = (regionUid: string, id: string, justificationValue: string) => {
+    const makeRequest = (regionUid: string, id: string, justificationValue?: string) => {
         requestCall({
             url: '/api/regions/justifications',
             method: 'post',
@@ -168,7 +167,7 @@ export function RegionalJustificationDialog(props: RegionalJustificationDialogPr
     useEffect(() => {
         const newValues = {};
         if (!!policy) {
-            policy.justification_options.justification_options.map(option => {
+            policy.justification_options.map(option => {
                 if (!option.suboption) {
                     newValues[option.id] = option.name;
                 }
@@ -213,7 +212,7 @@ export function RegionalJustificationDialog(props: RegionalJustificationDialogPr
 
         return (
             <div>
-                {policy.justification_options.justification_options.filter(option => option.display).map(
+                {policy.justification_options.filter(option => option.display).map(
                     (option, ix) => (
                         <div className={classes.justificationOption} key={`${ix}-${option.id}`}>
                             <Radio
@@ -296,7 +295,7 @@ export function RegionalJustificationDialog(props: RegionalJustificationDialogPr
         makeRequest(
             policy.uid,
             selectedOption.id,
-            (selectedOption.suboption) ? optionValues[selectedOption.id] : selectedOption.name,
+            (selectedOption.suboption) ? optionValues[selectedOption.id] : undefined,
         );
         onSubmit();
         onClose();
@@ -325,9 +324,9 @@ export function RegionalJustificationDialog(props: RegionalJustificationDialogPr
                     <div className={`${classes.policyCollapse} ${(!isPolicyOpen) ? classes.collapsed : ''}`}>
                         <div
                             className={`${(isPolicyOpen) ? classes.policyCollapseHeader : ''}`}
-                            style={{display: 'flex'}}
+                            style={{display: isSmallScreen() ? 'flex' : 'block'}}
                         >
-                            <strong dangerouslySetInnerHTML={{__html: policy.policies.policies[0].title}}/>
+                            <strong dangerouslySetInnerHTML={{__html: policy.policies[0].title}}/>
                             {renderIf(() => (
                                 <ExpandLess
                                     id="ExpandButton"
@@ -346,7 +345,7 @@ export function RegionalJustificationDialog(props: RegionalJustificationDialogPr
                             ), !isPolicyOpen)}
                         </div>
                         <Collapse in={isPolicyOpen} className={`${(!isPolicyOpen) ? classes.hidden : ''}`}>
-                            <div dangerouslySetInnerHTML={{__html: policy.policies.policies[0].description}}/>
+                            <div dangerouslySetInnerHTML={{__html: policy.policies[0].description}}/>
                         </Collapse>
                     </div>
                     {renderOptions()}
