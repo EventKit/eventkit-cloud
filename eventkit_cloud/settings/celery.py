@@ -21,7 +21,7 @@ CELERY_TRACK_STARTED = True
 
 CELERYD_PREFETCH_MULTIPLIER = 1
 CELERYBEAT_SCHEDULER = "django_celery_beat.schedulers:DatabaseScheduler"
-CELERY_RESULT_BACKEND = os.environ.get("CELERY_RESULT_BACKEND", "django-db")
+CELERY_RESULT_BACKEND = os.getenv("CELERY_RESULT_BACKEND", "rpc://")
 
 # Pickle used to be the default, and accepting pickled content is a security concern.  Using the new default json,
 # causes a circular reference error, that will need to be resolved.
