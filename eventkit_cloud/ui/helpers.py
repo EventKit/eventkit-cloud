@@ -11,7 +11,7 @@ import pytz
 from celery.utils.log import get_task_logger
 from django.conf import settings
 
-from eventkit_cloud.utils.gdalutils import get_meta, convert_vector
+from eventkit_cloud.utils.gdalutils import get_meta, convert_vector, polygonize
 
 logger = get_task_logger(__name__)
 
@@ -23,10 +23,10 @@ def file_to_geojson(in_memory_file):
     """
     stage_dir = settings.EXPORT_STAGING_ROOT.rstrip("\/")
     uid = str(uuid4())
-    dir = os.path.join(stage_dir, uid)
+    dir_name = os.path.join(stage_dir, uid)
 
     try:
-        os.mkdir(dir)
+        os.mkdir(dir_name)
         file_name = in_memory_file.name
 
         file_name, file_extension = os.path.splitext(file_name)
@@ -37,17 +37,18 @@ def file_to_geojson(in_memory_file):
         file_name = re.sub(r"[^\w\s]", "", file_name)
         # Replace all whitespace with a single underscore
         file_name = re.sub(r"\s+", "_", file_name).lower()
+        file_name = f"{file_name}-{uid}"
 
-        in_path = os.path.join(dir, "in_{0}{1}".format(file_name, file_extension))
-        out_path = os.path.join(dir, "out_{0}.geojson".format(file_name))
+        in_path = os.path.join(dir_name, "in_{0}{1}".format(file_name, file_extension))
+        out_path = os.path.join(dir_name, "out_{0}.geojson".format(file_name))
         write_uploaded_file(in_memory_file, in_path)
 
         if file_extension == ".zip":
-            if unzip_file(in_path, dir):
+            if unzip_file(in_path, dir_name):
                 has_shp = False
-                for unzipped_file in os.listdir(dir):
+                for unzipped_file in os.listdir(dir_name):
                     if unzipped_file.endswith(".shp"):
-                        in_path = os.path.join(dir, unzipped_file)
+                        in_path = os.path.join(dir_name, unzipped_file)
                         has_shp = True
                         break
                 if not has_shp:
@@ -55,11 +56,10 @@ def file_to_geojson(in_memory_file):
 
         meta = get_meta(in_path, is_raster=False)
 
-        logger.error(meta)
         if not meta["driver"] or meta["is_raster"]:
-            raise Exception("Could not find the proper driver to handle this file")
-
-        out_path = convert_vector(in_path, out_path, fmt="geojson")
+            out_path = polygonize(in_path, out_path)
+        else:
+            out_path = convert_vector(in_path, out_path, fmt="geojson")
 
         if os.path.exists(out_path):
             geojson = read_json_file(out_path)
@@ -72,8 +72,8 @@ def file_to_geojson(in_memory_file):
         raise e
 
     finally:
-        if os.path.exists(dir):
-            shutil.rmtree(dir)
+        if os.path.exists(dir_name):
+            shutil.rmtree(dir_name)
 
 
 def read_json_file(fp):
