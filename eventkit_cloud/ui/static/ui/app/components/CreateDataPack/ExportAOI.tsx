@@ -79,7 +79,6 @@ export interface Props {
     walkthroughClicked: boolean;
     onWalkthroughReset: () => void;
     nextEnabled: boolean;
-    selectedBaseMap: MapLayer;
     mapLayers: MapLayer[];
     isPermissionsBannerOpen?: boolean;
     theme: Eventkit.Theme & Theme;
@@ -134,8 +133,6 @@ export class ExportAOI extends React.Component<Props, State> {
     static contextTypes = {
         config: PropTypes.object,
     };
-    static defaultProps = {selectedBaseMap: {mapUrl: '', slug: 'DEFAULT'}};
-
     private bufferFunction: (val: any) => void;
     private drawLayer;
     private map;
@@ -241,7 +238,7 @@ export class ExportAOI extends React.Component<Props, State> {
         this.joyrideAddSteps(steps);
     }
 
-    componentDidUpdate(prevProps: Props) {
+    componentDidUpdate(prevProps: Props, prevState: State) {
         if (this.props.importGeom.processed && !prevProps.importGeom.processed) {
             this.handleGeoJSONUpload(this.props.importGeom);
         }
@@ -252,14 +249,14 @@ export class ExportAOI extends React.Component<Props, State> {
         }
 
         this.map.updateSize();
-        const {mapUrl} = this.props.selectedBaseMap;
-        const prevBaseMapUrl = prevProps.selectedBaseMap.mapUrl;
+        const {mapUrl} = this.state.selectedBaseMap;
+        const prevBaseMapUrl = prevState.selectedBaseMap.mapUrl;
         if (mapUrl !== prevBaseMapUrl) {
             const newSource = new XYZ({
                 projection: 'EPSG:4326',
                 url: (!!mapUrl) ? mapUrl : this.context.config.BASEMAP_URL,
                 wrapX: true,
-                attributions: this.props.selectedBaseMap.copyright,
+                attributions: this.state.selectedBaseMap.copyright,
                 tileGrid: this.tileGrid,
             });
 
@@ -545,7 +542,7 @@ export class ExportAOI extends React.Component<Props, State> {
         // Order matters here
         // Above comment assumed to refer to the order of the parameters to XYZ()
         // Comment moved with code, originally offered no further explanation.
-        const {mapUrl} = this.props.selectedBaseMap;
+        const {mapUrl} = this.state.selectedBaseMap;
         this.baseLayer = this.createRasterTileLayer((!!mapUrl) ? mapUrl : this.context.config.BASEMAP_URL, 'baseLayer');
 
         this.map = new Map({
@@ -630,7 +627,7 @@ export class ExportAOI extends React.Component<Props, State> {
         // Order matters here
         // Above comment assumed to refer to the order of the parameters to XYZ() --
         // -- comment moved with code, originally offered no further explanation.
-        const {copyright} = this.props.selectedBaseMap;
+        const {copyright} = this.state.selectedBaseMap;
         const layer = new Tile({
             source: new XYZ({
                 projection: 'EPSG:4326',
@@ -1110,7 +1107,7 @@ export class ExportAOI extends React.Component<Props, State> {
                             handleBufferClick: this.openBufferDialog,
                         }}
                         setRef={this.setDisplayBofRef}
-                        selectedBaseMap={this.props.selectedBaseMap}
+                        selectedBaseMap={this.state.selectedBaseMap}
                     />
                     <SearchAOIToolbar
                         handleSearch={this.checkForSearchUpdate}
