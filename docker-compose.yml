@@ -182,6 +182,7 @@ services:
       - DATABASE_URL=postgres://eventkit:eventkit_exports@postgis:5432/eventkit_exports
       - BROKER_URL=amqp://guest:guest@rabbitmq:5672/
       - BROKER_API_URL=http://guest:guest@rabbitmq:15672/api/
+      - CELERY_RESULT_BACKEND=cache+memcached://memcached:11211
       - CELERY_GROUP_NAME=GROUP_A
       - CONCURRENCY=1
       - SITE_NAME
@@ -263,6 +264,9 @@ services:
       - "${SITE_NAME}:${SITE_IP}"
     environment:
       - DATABASE_URL=postgres://eventkit:eventkit_exports@postgis:5432/eventkit_exports
+      - BROKER_URL=amqp://guest:guest@rabbitmq:5672/
+      - BROKER_API_URL=http://guest:guest@rabbitmq:15672/api/
+      - CELERY_RESULT_BACKEND=cache+memcached://memcached:11211
       - SITE_NAME
       - SITE_IP
       - TERM
