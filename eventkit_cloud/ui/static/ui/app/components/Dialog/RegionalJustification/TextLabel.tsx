@@ -50,6 +50,9 @@ const labelJss = (theme: Eventkit.Theme & Theme) => createStyles({
     entryRow: {
         display: 'flex',
         flexWrap: 'wrap',
+        [theme.breakpoints.down('sm')]: {
+            display: 'block',
+        },
     },
     left: {
         margin: 'auto',
@@ -57,6 +60,9 @@ const labelJss = (theme: Eventkit.Theme & Theme) => createStyles({
     right: {
         flexGrow: 5,
         marginLeft: '25px',
+        [theme.breakpoints.down('sm')]: {
+            margin: '0px',
+        },
     },
     textField: {
         backgroundColor: theme.eventkit.colors.white,
