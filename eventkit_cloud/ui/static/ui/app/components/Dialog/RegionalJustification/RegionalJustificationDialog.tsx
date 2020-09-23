@@ -84,8 +84,12 @@ const jss = (theme: Eventkit.Theme & Theme) => createStyles({
         lineHeight: 'inherit',
         fontSize: '1em',
         height: 'auto',
-        [theme.breakpoints.down('sm')]: {
+        whiteSpace: 'nowrap',
+        [theme.breakpoints.down('md')]: {
+            whiteSpace: 'initial',
             padding: '5px',
+        },
+        [theme.breakpoints.down('sm')]: {
             fontSize: '0.9em',
         },
     },
@@ -318,7 +322,10 @@ export function RegionalJustificationDialog(props: RegionalJustificationDialogPr
                 <div className={`${!isSmallScreen() ? classes.outerContainer : classes.outerContainerSm}`}>
                     {renderHeader()}
                     <div className={`${classes.policyCollapse} ${(!isPolicyOpen) ? classes.collapsed : ''}`}>
-                        <div className={`${(isPolicyOpen) ? classes.policyCollapseHeader : ''}`}>
+                        <div
+                            className={`${(isPolicyOpen) ? classes.policyCollapseHeader : ''}`}
+                            style={{display: 'flex'}}
+                        >
                             <strong dangerouslySetInnerHTML={{__html: policy.policies.policies[0].title}}/>
                             {renderIf(() => (
                                 <ExpandLess
