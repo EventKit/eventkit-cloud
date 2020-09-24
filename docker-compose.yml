@@ -53,7 +53,7 @@ services:
       - GEOCODING_UPDATE_URL
       - CONVERT_API_URL
       - MAX_EXPORTRUN_EXPIRATION_DAYS=30
-      - BASEMAP_URL=https://osm-{1-4}.geointservices.io/tiles/default_pc/{z}/{x}/{y}.png
+      - BASEMAP_URL
       - GEOCODING_AUTH_CERT
       - GEOCODING_AUTH_URL
       - PROVIDER_CHECK_INTERVAL

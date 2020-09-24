@@ -26,7 +26,7 @@ const jss = (theme: Eventkit.Theme & Theme) => createStyles({
     dialog: {
         borderStyle: 'solid',
         borderWidth: '1px',
-        padding: '0 12px',
+        padding: '12px',
         borderRadius: '4px',
     },
     expand: {
