@@ -2,10 +2,12 @@ import logging
 import os
 import sqlite3
 import time
+from typing import Tuple
 
 import mapproxy
 import yaml
 from django.conf import settings
+from django.contrib.auth.models import User
 from django.contrib.gis.geos import GEOSGeometry
 from django.core.cache import cache
 from django.db import connections
@@ -22,6 +24,7 @@ from mapproxy.wsgiapp import MapProxyApp
 from webtest import TestApp
 
 from eventkit_cloud.core.helpers import get_cached_model
+from eventkit_cloud.jobs.helpers import get_valid_regional_justification
 from eventkit_cloud.tasks import get_cache_value
 from eventkit_cloud.tasks.enumerations import TaskStates
 from eventkit_cloud.utils import auth_requests
@@ -33,7 +36,6 @@ from eventkit_cloud.utils.geopackage import (
     get_zoom_levels_table,
     remove_empty_zoom_levels,
 )
-from eventkit_cloud.utils.helpers import get_active_regional_justification
 from eventkit_cloud.utils.stats.eta_estimator import ETA
 
 logger = logging.getLogger(__name__)
@@ -348,11 +350,9 @@ def get_concurrency(conf_dict):
     return int(concurrency)
 
 
-def create_mapproxy_app(user, slug: str):
+def create_mapproxy_app(user: User, slug: str) -> TestApp:
     conf_dict = cache.get_or_set(f"base-config-{slug}", lambda: get_conf_dict(slug), 360)
-    # We need to hide the tiles within the region they have not agreed to.
     # TODO: place this somewhere else consolidate settings.
-    logger.info(f"PRINT CONF DICT: {conf_dict}")
     base_config = {
         "services": {
             "demo": None,
@@ -383,8 +383,6 @@ def create_mapproxy_app(user, slug: str):
                 "sources": [get_footprint_layer_name(slug)],
             }
         ]
-    # TODO: Cache the config with the restricted regions already added.
-    # TODO: Invalidate that cache when a regional justification is created or expired.
     base_config, conf_dict = add_restricted_regions_to_config(base_config, conf_dict, user)
     try:
         mapproxy_config = load_default_config()
@@ -455,8 +453,7 @@ def get_mapproxy_footprint_url(slug):
     return footprint_url
 
 
-def add_restricted_regions_to_config(base_config, config, user):
-    # Based on the user, get a list of regional policies that they have not agreed to.
+def add_restricted_regions_to_config(base_config: dict, config: dict, user: User) -> Tuple[dict, dict]:
     from eventkit_cloud.jobs.models import RegionalPolicy
 
     config["sources"]["default"]["coverage"] = {
@@ -465,14 +462,11 @@ def add_restricted_regions_to_config(base_config, config, user):
     }
 
     for policy in RegionalPolicy.objects.all().prefetch_related("justifications"):
-        logger.info(f"ACTIVE REGIONAL JUSTIFICATION: {get_active_regional_justification(policy, user)}")
-        if not get_active_regional_justification(policy, user):
+        if not get_valid_regional_justification(policy, user):
             config["sources"]["default"]["coverage"]["difference"].append(
                 {"bbox": GEOSGeometry(policy.region.the_geom).extent, "srs": "EPSG:4326"}
             )
             for current_cache in base_config.get("caches", {}):
                 base_config["caches"][current_cache]["disable_storage"] = True
-                logger.info(f"BASE_CONFIG CACHE: {base_config['caches'][current_cache]}")
 
-    logger.info(f"CONFIG: {config}")
     return base_config, config

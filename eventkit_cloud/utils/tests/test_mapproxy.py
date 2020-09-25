@@ -136,7 +136,7 @@ class TestHelpers(TransactionTestCase):
         config_yaml: str = 'services: [stuff]'
         expected_config: dict = {'services': ['stuff'],
                                  'globals': {'cache': {'lock_dir': "./locks",
-                                                       'tile_lock_dir': "./locks"}}}
+                                                       'tile_lock_dir': "./locks"}, "tiles": {"expires_hours": 0}}}
         mock_data_provider = Mock(config=config_yaml)
         mock_data_provider.config = config_yaml
 

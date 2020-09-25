@@ -38,7 +38,7 @@ from eventkit_cloud.tasks import (
 )
 from notifications.models import Notification
 
-from eventkit_cloud.utils.helpers import get_active_regional_justification
+from eventkit_cloud.jobs.helpers import get_valid_regional_justification
 
 logger = logging.getLogger(__name__)
 
@@ -144,7 +144,7 @@ class FileProducingTaskResult(UIDMixin, NotificationModelMixin):
         for policy in RegionalPolicy.objects.filter(
             region__the_geom__intersects=job.the_geom, providers__in=providers
         ).prefetch_related("justifications"):
-            if not get_active_regional_justification(policy, user):
+            if not get_valid_regional_justification(policy, user):
                 return False
 
         return True
