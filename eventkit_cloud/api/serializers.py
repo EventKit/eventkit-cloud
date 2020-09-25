@@ -857,7 +857,7 @@ class RegionalJustificationSerializer(serializers.ModelSerializer):
         except RegionalPolicy.DoesNotExist:
             raise Exception(f"The Regional Policy for UID {regional_policy_uid} does not exist.")
 
-        regional_policy_options = regional_policy.justification_options.get("justification_options")
+        regional_policy_options = regional_policy.justification_options
 
         # Now get the justification option based on the ID passed.
         selected_option = [
