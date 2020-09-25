@@ -38,6 +38,7 @@ from eventkit_cloud.tasks import (
 )
 from notifications.models import Notification
 
+from eventkit_cloud.utils.helpers import get_active_regional_justification
 
 logger = logging.getLogger(__name__)
 
@@ -143,25 +144,8 @@ class FileProducingTaskResult(UIDMixin, NotificationModelMixin):
         for policy in RegionalPolicy.objects.filter(
             region__the_geom__intersects=job.the_geom, providers__in=providers
         ).prefetch_related("justifications"):
-            regional_justifications = policy.justifications.all()
-
-            # If there's no regional justification at all, don't allow a download.
-            if not regional_justifications:
+            if not get_active_regional_justification(policy, user):
                 return False
-
-            # Get the most recent regional justification to check against.
-            regional_justification = regional_justifications.latest("created_at")
-
-            # If a timeout was set, use that timeout.
-            if isinstance(settings.REGIONAL_JUSTIFICATION_TIMEOUT_DAYS, int):
-                timeout_seconds = settings.REGIONAL_JUSTIFICATION_TIMEOUT_DAYS * 3600 * 24
-                seconds_since_created = (timezone.now() - regional_justification.created_at).total_seconds()
-                if seconds_since_created > timeout_seconds:
-                    return False
-            else:
-                # If there's no timeout set, use the last login instead.
-                if regional_justification.created_at < user.last_login:
-                    return False
 
         return True
 
