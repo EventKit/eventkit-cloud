@@ -229,6 +229,7 @@ class TestGdalUtils(TestCase):
         mock_gdal.Open.return_value = mock_dataset
         polygonize(example_input, example_output)
         expected_band = 4
+        mock_gdal.Nearblack.assert_called_once_with(ANY, example_input)
         mock_dataset.GetRasterBand.assert_called_once_with(expected_band)
         mock_dataset.GetRasterBand.reset_mock()
 

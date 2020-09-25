@@ -572,8 +572,16 @@ def polygonize(input_file: str, output_file: str, output_type: str = "GeoJSON", 
                 band_index = 4
             elif src_ds.RasterCount == 3:
                 # Likely RGB (jpg) add a transparency mask and use that.
+
+                # Clean up pixel values of 1 0 0 or 0 0 1 caused by interleaving.
+                nb_file = "/vsimem/nb"
+                gdal.Nearblack(nb_file, input_file)
+
+                # Convert to geotiff so that we can remove black pixels and use alpha mask for the polygon.
                 tmp_file = "/vsimem/tmp.tif"
-                convert_raster(input_file, tmp_file, fmt="gtiff", warp_params={"dstAlpha": True, "srcNodata": "0 0 0"})
+                convert_raster(nb_file, tmp_file, fmt="gtiff", warp_params={"dstAlpha": True, "srcNodata": "0 0 0"})
+
+                del nb_file
                 src_ds = gdal.Open(tmp_file)
                 band_index = 4
             elif src_ds.RasterCount == 2:
@@ -594,6 +602,7 @@ def polygonize(input_file: str, output_file: str, output_type: str = "GeoJSON", 
     # Close files to read later.
     del dst_ds
     del src_ds
+
     return output_file
 
 
