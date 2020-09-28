@@ -383,7 +383,7 @@ def create_mapproxy_app(user: User, slug: str) -> TestApp:
                 "sources": [get_footprint_layer_name(slug)],
             }
         ]
-    base_config, conf_dict = add_restricted_regions_to_config(base_config, conf_dict, user)
+    base_config, conf_dict = add_restricted_regions_to_config(base_config, conf_dict, user, slug)
     try:
         mapproxy_config = load_default_config()
         load_config(mapproxy_config, config_dict=conf_dict)
@@ -453,15 +453,15 @@ def get_mapproxy_footprint_url(slug):
     return footprint_url
 
 
-def add_restricted_regions_to_config(base_config: dict, config: dict, user: User) -> Tuple[dict, dict]:
-    from eventkit_cloud.jobs.models import RegionalPolicy
+def add_restricted_regions_to_config(base_config: dict, config: dict, user: User, slug: str) -> Tuple[dict, dict]:
+    from eventkit_cloud.jobs.models import DataProvider, RegionalPolicy
 
     config["sources"]["default"]["coverage"] = {
         "clip": True,
         "difference": [{"bbox": [-180, -90, 180, 90], "srs": "EPSG:4326"}],
     }
-
-    for policy in RegionalPolicy.objects.all().prefetch_related("justifications"):
+    providers = [get_cached_model(model=DataProvider, prop="slug", value=slug)]
+    for policy in RegionalPolicy.objects.filter(providers__in=providers).prefetch_related("justifications"):
         if not get_valid_regional_justification(policy, user):
             config["sources"]["default"]["coverage"]["difference"].append(
                 {"bbox": GEOSGeometry(policy.region.the_geom).extent, "srs": "EPSG:4326"}
