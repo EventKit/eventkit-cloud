@@ -40,6 +40,9 @@ from eventkit_cloud.utils.stats.eta_estimator import ETA
 
 logger = logging.getLogger(__name__)
 
+mapproxy_config_template = "mapproxy-config-{user}-{slug}"
+mapproxy_config_keys_index = "mapproxy-config-cache-keys"
+
 
 class CustomLogger(ProgressLog):
     def __init__(self, task_uid=None, *args, **kwargs):
@@ -351,47 +354,66 @@ def get_concurrency(conf_dict):
 
 
 def create_mapproxy_app(user: User, slug: str) -> TestApp:
+    mapproxy_config_key = mapproxy_config_template.format(user=user, slug=slug)
+    mapproxy_config = cache.get(mapproxy_config_key)
     conf_dict = cache.get_or_set(f"base-config-{slug}", lambda: get_conf_dict(slug), 360)
-    # TODO: place this somewhere else consolidate settings.
-    base_config = {
-        "services": {
-            "demo": None,
-            "tms": None,
-            "wmts": {
-                "featureinfo_formats": [
-                    {"mimetype": "application/json", "suffix": "json"},
-                    {"mimetype": "application/gml+xml; version=3.1", "suffix": "gml"},
-                ]
+    if not mapproxy_config:
+        # TODO: place this somewhere else consolidate settings.
+        base_config = {
+            "services": {
+                "demo": None,
+                "tms": None,
+                "wmts": {
+                    "featureinfo_formats": [
+                        {"mimetype": "application/json", "suffix": "json"},
+                        {"mimetype": "application/gml+xml; version=3.1", "suffix": "gml"},
+                    ]
+                },
             },
-        },
-        "caches": {slug: {"cache": {"type": "file"}, "sources": ["default"], "grids": ["default"]}},
-        "layers": [{"name": slug, "title": slug, "sources": [slug]}],
-        "globals": {"cache": {"base_dir": getattr(settings, "TILE_CACHE_DIR")}},
-    }
-    if conf_dict["sources"].get("info"):
-        base_config["caches"][slug]["sources"] += ["info"]
-    if conf_dict["sources"].get("footprint"):
-        base_config["caches"][get_footprint_layer_name(slug)] = {
-            "cache": {"type": "file"},
-            "sources": ["footprint"],
-            "grids": ["default"],
+            "caches": {slug: {"cache": {"type": "file"}, "sources": ["default"], "grids": ["default"]}},
+            "layers": [{"name": slug, "title": slug, "sources": [slug]}],
+            "globals": {"cache": {"base_dir": getattr(settings, "TILE_CACHE_DIR")}},
         }
-        base_config["layers"] += [
-            {
-                "name": get_footprint_layer_name(slug),
-                "title": get_footprint_layer_name(slug),
-                "sources": [get_footprint_layer_name(slug)],
+        if conf_dict["sources"].get("info"):
+            base_config["caches"][slug]["sources"] += ["info"]
+        if conf_dict["sources"].get("footprint"):
+            base_config["caches"][get_footprint_layer_name(slug)] = {
+                "cache": {"type": "file"},
+                "sources": ["footprint"],
+                "grids": ["default"],
             }
-        ]
-    base_config, conf_dict = add_restricted_regions_to_config(base_config, conf_dict, user, slug)
-    try:
-        mapproxy_config = load_default_config()
-        load_config(mapproxy_config, config_dict=conf_dict)
-        load_config(mapproxy_config, config_dict=base_config)
-        mapproxy_configuration = ProxyConfiguration(mapproxy_config)
-    except ConfigurationError as e:
-        logger.error(e)
-        raise
+            base_config["layers"] += [
+                {
+                    "name": get_footprint_layer_name(slug),
+                    "title": get_footprint_layer_name(slug),
+                    "sources": [get_footprint_layer_name(slug)],
+                }
+            ]
+        base_config, conf_dict = add_restricted_regions_to_config(base_config, conf_dict, user, slug)
+        try:
+            mapproxy_config = load_default_config()
+            load_config(mapproxy_config, config_dict=conf_dict)
+            load_config(mapproxy_config, config_dict=base_config)
+            mapproxy_configuration = ProxyConfiguration(mapproxy_config)
+
+            if settings.REGIONAL_JUSTIFICATION_TIMEOUT_DAYS:
+                regional_justification_timeout = settings.REGIONAL_JUSTIFICATION_TIMEOUT_DAYS * 86400
+            else:
+                regional_justification_timeout = None
+            mapproxy_configs_set = cache.get_or_set(mapproxy_config_keys_index, set())
+            mapproxy_configs_set.add(mapproxy_config_key)
+            cache.set(mapproxy_config_keys_index, mapproxy_configs_set)
+            cache.set(mapproxy_config_key, mapproxy_config, regional_justification_timeout)
+
+        except ConfigurationError as e:
+            logger.error(e)
+            raise
+    else:
+        try:
+            mapproxy_configuration = ProxyConfiguration(mapproxy_config)
+        except ConfigurationError as e:
+            logger.error(e)
+            raise
 
     cert_var = conf_dict.get("cert_var")
     auth_requests.patch_https(slug=slug, cert_var=cert_var)
