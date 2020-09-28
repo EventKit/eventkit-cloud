@@ -27,7 +27,7 @@ requirements:
     - python
     - pyyaml
     - setuptools
-    - proj4
+    - proj
 
 test:
   imports:
