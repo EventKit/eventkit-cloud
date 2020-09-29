@@ -6,21 +6,34 @@ Eventkit-Cloud
 
 Eventkit-cloud is based on the [HOT OSM Export Tool](https://github.com/hotosm/osm-export-tool).  It allows the user to select data from different sources to export into a variety of formats.
 ## Getting Started
-Eventkit-cloud requires [Docker](https://docs.docker.com/engine/installation/).
+### Minimum System Requirements
+Eventkit-cloud requires [Docker](https://docs.docker.com/engine/installation/) and [docker-compose](https://docs.docker.com/compose/install/).
+
+It's also required that you change some of the default Docker settings.  You'll want to update your Docker resources settings to include at least 2 CPUs and a minimum of 8GB of RAM.
 
 ### Installation
-_Note: the RabbitMQ configuration provided here is the Official Docker version and is Copyright (c) 2014-2015 Docker, Inc._
 
-There are several options that may be set, however prior to using the EventKit docker setup, two variables must be set
-in the environment running docker, `SITE_NAME` and `SITE_IP`.
+Prior to using the EventKit docker setup, two variables must be set in the environment running docker, `SITE_NAME` and `SITE_IP`.
 
 Typically `SITE_NAME` is set to 'cloud.eventkit.test' and `SITE_IP` is '127.0.0.1'.  If needing to run the integration tests,
 then `SITE_IP` must be set to a different IP available on the system, typically the local ip `192.168.X.X` or `10.0.X.X`.
 This is usually done by using `export SITE_NAME=cloud.eventkit.test` on OSX/Linux or `setx SITE_NAME cloud.eventkit.test` on Windows.
 
+You'll also need to open an elevated shell/command prompt add cloud.eventkit.test to the hosts file:
+
+On Linux: <code>echo "127.0.0.1  cloud.eventkit.test" > /etc/hosts</code>
+
+On Windows: <code>echo "127.0.0.1  cloud.eventkit.test" > "C:\Windows\System32\drivers\etc\hosts"</code>
+
+If you changed the `SITE_IP` to a local available IP address instead of `127.0.0.1`, you'll want to use that same IP in the hosts file.
+
+After you have the above steps completed you can proceed on to either the Makefile based automated build or the manual build process outlined below.
+
 ## Quick Start
 
 A Makefile is included to make it easier to get started with a fresh installation.  In order to get started right away, simply run `make fresh` in the root project directory.  This will setup group permissions (for Linux hosts only), build your dependencies, setup the initial data, and bring your docker containers online.  There are additional Make commands inside the Makefile, and they're documented there as well.
+
+After running `make fresh` you can hit the site directly at the URL you chose for the `SITE_NAME` which is generally `cloud.eventkit.test`.
 
 ## Manual Setup
 
@@ -48,11 +61,6 @@ _Note: if running the docker setup with an IP set other than 127.0.0.1, then the
 cd eventkit-cloud
 docker-compose run --rm eventkit python manage.py runinitial setup
 docker-compose up</pre>
-In a different elevated shell/command prompt add the cloud.eventkit.test to the hosts file:
-On linux:
-<code> echo "127.0.0.1  cloud.eventkit.test" > /etc/hosts </code>
-On windows:
-<code> echo "127.0.0.1  cloud.eventkit.test" > "C:\Windows\System32\drivers\etc\hosts"</code>
 Then open a browser and navigate to http://cloud.eventkit.test
 
 Linux users have indicated issues with the docker setup.  That is because it mounts directories in the containers, and on linux the container user and host user permissions are mapped. To solve this problem run:
