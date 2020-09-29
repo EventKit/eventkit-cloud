@@ -14,6 +14,7 @@ from django.conf import settings
 from django.contrib.auth.models import User, Group
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.gis.geos import GEOSGeometry
+from django.core.cache import cache
 from django.utils.translation import ugettext as _
 from audit_logging.models import AuditEvent
 from notifications.models import Notification
@@ -885,6 +886,9 @@ class RegionalJustificationSerializer(serializers.ModelSerializer):
             regional_policy=regional_policy,
             user=user,
         )
+
+        for provider in regional_policy.providers.all():
+            cache.delete(f"mapproxy-config-{user}-{provider.slug}")
 
         return regional_justification
 

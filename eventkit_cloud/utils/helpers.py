@@ -2,6 +2,9 @@ import logging
 import os
 
 from django.conf import settings
+from django.core.cache import cache
+
+from eventkit_cloud.utils.mapproxy import mapproxy_config_keys_index
 
 logger = logging.getLogger()
 
@@ -26,3 +29,8 @@ def get_download_paths(relative_path):
     )
     download_url = os.path.join(settings.EXPORT_MEDIA_ROOT.rstrip(os.path.sep), relative_path.lstrip(os.path.sep),)
     return downloads_filepath, download_url
+
+
+def clear_mapproxy_config_cache():
+    mapproxy_config_keys = cache.get_or_set(mapproxy_config_keys_index, set())
+    cache.delete_many(list(mapproxy_config_keys))

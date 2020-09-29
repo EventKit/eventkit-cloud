@@ -2,14 +2,26 @@ import logging
 
 from django.conf import settings
 from django.contrib.auth.models import Group, User
+from django.contrib.auth.signals import user_logged_in
+from django.core.cache import cache
 from django.db.models.signals import post_save, pre_delete, pre_save
 from django.dispatch.dispatcher import receiver
 
-from eventkit_cloud.jobs.models import Job, DataProvider, MapImageSnapshot, JobPermission, JobPermissionLevel
+from eventkit_cloud.jobs.models import (
+    DataProvider,
+    Job,
+    JobPermission,
+    JobPermissionLevel,
+    MapImageSnapshot,
+    Region,
+    RegionalPolicy,
+)
 from eventkit_cloud.jobs.helpers import (
     get_provider_image_dir,
     get_provider_thumbnail_name,
 )
+from eventkit_cloud.utils.helpers import clear_mapproxy_config_cache
+from eventkit_cloud.utils.mapproxy import mapproxy_config_template
 from eventkit_cloud.utils.image_snapshot import (
     make_thumbnail_downloadable,
     save_thumbnail,
@@ -105,3 +117,20 @@ def provider_pre_save(sender, instance, **kwargs):
             # a thumbnail creation error occurs.
             logger.error(f"Could not save thumbnail for DataProvider: {instance.slug}")
             logger.exception(e)
+
+
+@receiver(post_save, sender=Region)
+def region_post_save(sender, instance, **kwargs):
+    clear_mapproxy_config_cache()
+
+
+@receiver(post_save, sender=RegionalPolicy)
+def regional_policy_post_save(sender, instance, **kwargs):
+    clear_mapproxy_config_cache()
+
+
+@receiver(user_logged_in)
+def clear_user_mapproxy_config(sender, user, request, **kwargs):
+    if not settings.REGIONAL_JUSTIFICATION_TIMEOUT_DAYS:
+        for provider in DataProvider.objects.all():
+            cache.delete(mapproxy_config_template.format(user=user, slug=provider.slug))
