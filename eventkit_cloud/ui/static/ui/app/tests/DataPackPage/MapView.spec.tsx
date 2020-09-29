@@ -5,18 +5,17 @@ import GridList from '@material-ui/core/GridList';
 import axios from 'axios';
 import MockAdapter from 'axios-mock-adapter';
 
-import Map from 'ol/map';
-import Feature from 'ol/feature';
-import View from 'ol/view';
+import Map from 'ol/Map';
+import Feature from 'ol/Feature';
+import View from 'ol/View';
 import extent from 'ol/extent';
-import Observable from 'ol/observable';
+import Observable from 'ol/Observable';
 import interaction from 'ol/interaction';
-import Point from 'ol/geom/point';
-import Polygon from 'ol/geom/polygon';
-import VectorSource from 'ol/source/vector';
-import Style from 'ol/style/style';
-import GeoJSON from 'ol/format/geojson';
-import GeoJSONFormat from 'ol/format/geojson';
+import Point from 'ol/geom/Point';
+import Polygon from 'ol/geom/Polygon';
+import VectorSource from 'ol/source/Vector';
+import Style from 'ol/style/Style';
+import GeoJSON from 'ol/format/GeoJSON';
 
 import DataPackListItem from '../../components/DataPackPage/DataPackListItem';
 import LoadButtons from '../../components/common/LoadButtons';

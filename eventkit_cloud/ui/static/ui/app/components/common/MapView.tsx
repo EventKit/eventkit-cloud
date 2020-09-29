@@ -1,9 +1,5 @@
 import * as React from 'react';
-import {getResolutions, getTileCoordinateFromClick} from "../../utils/mapUtils";
-import TileGrid from "ol/tilegrid/tilegrid";
-import MapQueryDisplay from "../CreateDataPack/MapQueryDisplay";
 import {MapLayer} from "../CreateDataPack/CreateExport";
-import {MapContainer} from "../../utils/mapBuilder";
 import OlMapComponent from "../MapTools/OpenLayers/OlMapComponent";
 import OlFeatureLayer from "../MapTools/OpenLayers/OlFeatureLayer";
 import ZoomToAoi from "../MapTools/OpenLayers/ZoomToAoi";

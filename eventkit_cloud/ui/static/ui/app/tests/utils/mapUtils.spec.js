@@ -1,14 +1,14 @@
 import sinon from 'sinon';
 import raf from 'raf';
-import proj from 'ol/proj';
-import View from 'ol/view';
-import extent from 'ol/extent';
-import Feature from 'ol/feature';
-import Point from 'ol/geom/point';
-import Polygon from 'ol/geom/polygon';
-import Draw from 'ol/interaction/draw';
-import VectorSource from 'ol/source/vector';
-import VectorLayer from 'ol/layer/vector';
+import { get } from 'ol/proj';
+import View from 'ol/View';
+import { getCenter } from 'ol/extent';
+import Feature from 'ol/Feature';
+import Point from 'ol/geom/Point';
+import Polygon from 'ol/geom/Polygon';
+import Draw from 'ol/interaction/Draw';
+import VectorSource from 'ol/source/Vector';
+import VectorLayer from 'ol/layer/Vector';
 import WKTReader from 'jsts/org/locationtech/jts/io/WKTReader';
 import * as utils from '../../utils/mapUtils';
 
@@ -493,8 +493,8 @@ describe('mapUtils', () => {
         const feature = new Feature({
             geometry: new Polygon(coords),
         });
-        const expectedCoords = extent.getCenter(bbox);
-        const centerSpy = sinon.spy(extent, 'getCenter');
+        const expectedCoords = getCenter(bbox);
+        const centerSpy = sinon.spy(getCenter);
         const geomSpy = sinon.spy(Feature.prototype, 'getGeometry');
         const extentSpy = sinon.spy(Polygon.prototype, 'getExtent');
         const point = utils.featureToPoint(feature);
@@ -509,28 +509,28 @@ describe('mapUtils', () => {
     });
 
     it('unwrapCoordinates should adjust x coords to be in valid extent', () => {
-        const coordProj = proj.get('EPSG:4326');
+        const coordProj = get('EPSG:4326');
         const coords = [[[-380, 20], [-160, 20], [-160, -20], [-380, -20]]];
         const expected = [[[-20, 20], [-160, 20], [-160, -20], [-20, -20]]];
         expect(utils.unwrapCoordinates(coords, coordProj)).toEqual(expected);
     });
 
     it('unwrapExtent should adjust min and max x coords to be in valid extent', () => {
-        const coordProj = proj.get('EPSG:4326');
+        const coordProj = get('EPSG:4326');
         const coordExtent = [700, -90, 740, 90];
         const expected = [-20, -90, 20, 90];
         expect(utils.unwrapExtent(coordExtent, coordProj)).toEqual(expected);
     });
 
     it('unwrapExtent should adjust min and max x coords to be in valid extent', () => {
-        const coordProj = proj.get('EPSG:4326');
+        const coordProj = get('EPSG:4326');
         const coordExtent = [-540, -90, -185, 90];
         const expected = [-180, -90, 175, 90];
         expect(utils.unwrapExtent(coordExtent, coordProj)).toEqual(expected);
     });
 
     it('unwrapExtent should return the extent unmodified', () => {
-        const coordProj = proj.get('EPSG:4326');
+        const coordProj = get('EPSG:4326');
         const coordExtent = [-120, -90, 180, 90];
         const expected = [-120, -90, 180, 90];
         expect(utils.unwrapExtent(coordExtent, coordProj)).toEqual(expected);
