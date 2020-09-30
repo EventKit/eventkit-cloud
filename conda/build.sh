@@ -38,17 +38,17 @@ function create_index {
 echo "Building recipes"
 cd /root/recipes
 if [ -z "$1" ]; then
-    echo "***Building all recipes in recipes.txt**"
-    while read recipe; do
-        echo "***Building  $recipe ...***"
-        NAME=$(echo "$recipe" | tr -d '\r')
-        for i in 1 2 3; do conda build $NAME && \
-        echo "y" | conda install $NAME && s=0 && break || s=$? && sleep 5; done; (exit $s)
-	create_index
-    done < /root/recipes.txt
+  echo "***Building all recipes in recipes.txt**"
+  while read recipe; do
+      echo "***Building  $recipe ...***"
+      NAME=$(echo "$recipe" | tr -d '\r')
+      for i in 1 2 3; do conda build $NAME && \
+      echo "y" | conda install $NAME && s=0 && break || s=$? && sleep 5; done; (exit $s)
+      create_index
+  done < /root/recipes.txt
 else
- echo "***Building $@...***"
-    for i in 1 2 3; do conda build $@ && echo "y" | conda install $@ && s=0 && break || s=$? && sleep 5; done; (exit $s)
+  echo "***Building $@...***"
+  for i in 1 2 3; do conda build $@ && echo "y" | conda install $@ && s=0 && break || s=$? && sleep 5; done; (exit $s)
 fi
 
 create_index

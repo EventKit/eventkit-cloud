@@ -20,13 +20,11 @@ requirements:
     - pip
     - python
     - python-crontab
-    - setuptools
   run:
     - celery
     - django-timezone-field
     - python
     - python-crontab
-    - setuptools
 
 test:
   imports:
