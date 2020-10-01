@@ -13,9 +13,9 @@ import Collapse from "@material-ui/core/Collapse";
 import CustomTextField from "../../common/CustomTextField";
 import Radio from "@material-ui/core/Radio";
 import {ApiStatuses, useAsyncRequest} from "../../../utils/hooks/api";
+import {getCookie} from "../../../utils/generic";
 import TextLabel from "./TextLabel";
 import JustificationDropdown from "./JustificationDropdown";
-import {getCookie} from "../../../utils/generic";
 
 
 const jss = (theme: Eventkit.Theme & Theme) => createStyles({
@@ -74,6 +74,7 @@ const jss = (theme: Eventkit.Theme & Theme) => createStyles({
     checked: {},
     okayButtonContainer: {
         display: 'flex',
+        marginTop: '10px',
         marginBottom: '10px',
     },
     okayButton: {
@@ -222,7 +223,7 @@ export function RegionalJustificationDialog(props: RegionalJustificationDialogPr
                                     root: classes.checkbox, checked: classes.checked,
                                 }}
                                 onClick={() => setSelectedOption(option)}
-                                name="source"
+                                name={`qa-radio-select-${option.id}`}
                             />
                             {getOptionLabel(option)}
                         </div>

@@ -232,7 +232,7 @@ declare namespace Eventkit {
             type: string;
             label?: string;
             options?: string[];
-        }
+        };
     }
 
     interface PolicyDetails {
@@ -246,7 +246,7 @@ declare namespace Eventkit {
             uid: string;
             slug: string;
             name: string;
-        }
+        }[];
         policy_title_text: string;
         policy_header_text: string;
         policy_footer_text: string;

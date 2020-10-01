@@ -1,8 +1,10 @@
 import * as React from 'react';
 import {CreateDataPackButton} from "../../components/StatusDownloadPage/CreateDataPackButton";
-import {render, screen, getByText} from '@testing-library/react';
+import {render, screen, getByText, waitFor, fireEvent} from '@testing-library/react';
 import {useRunContext} from "../../components/StatusDownloadPage/RunFileContext";
 import '@testing-library/jest-dom/extend-expect'
+import MockAdapter from "axios-mock-adapter";
+import axios from "axios";
 
 jest.mock('../../components/StatusDownloadPage/RunFileContext', () => {
     return {
@@ -37,8 +39,6 @@ describe('CreateDataPackButton component', () => {
         return render(<CreateDataPackButton {...props} />);
     };
 
-    beforeEach(setup);
-
     it('should say job processing when job is not complete.', () => {
         const {container, rerender} = setup();
         (useRunContext as any).mockImplementation(() => {
@@ -49,17 +49,24 @@ describe('CreateDataPackButton component', () => {
     });
 
     it('should display create text by default when job is done.', () => {
+        setup();
         expect(screen.getByText(/CREATE DATAPACK/)).toBeInTheDocument();
     });
-    //
-    // it('should disable button after click and render fake button.', async () => {
-    //     const {container} = setup();
-    //     expect(container.querySelector('#qa-CreateDataPackButton-fakeButton')).toBeNull();
-    //     screen.getByText('CREATE DATAPACK (.ZIP)').click()
-    //     await waitFor(() =>
-    //         expect(container.querySelector(
-    //             '#qa-CreateDataPackButton-fakeButton')
-    //         ).toHaveLength(1)
-    //     )
-    // });
+
+    it('should disable button after click and render fake button.', async () => {
+        const {container} = setup();
+        expect(container.querySelector('#qa-CreateDataPackButton-fakeButton')).not.toBeInTheDocument();
+        const mock = new MockAdapter(axios, {delayResponse: 10});
+        mock.onGet(`/api/runs/zipfiles`).reply(200, []);
+        fireEvent(
+            screen.getByText(/CREATE DATAPACK/),
+            new MouseEvent('click', {
+                bubbles: true,
+                cancelable: true,
+            })
+        );
+        expect(container.querySelector(
+            '#qa-CreateDataPackButton-fakeButton')
+        ).toBeInTheDocument()
+    });
 });

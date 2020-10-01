@@ -163,7 +163,7 @@ export function CreateDataPackButton(props: Props) {
                     setBadResponse(true);
                 } else {
                     // Deal with bad responses, increase the count.
-                    if (!zipAvailableResponse.data.length) {
+                    if (!zipAvailableResponse?.data?.length) {
                         setBadResponseCount(count => count + 1);
                     }
                     // Set a time out to re-poll for the status of the zip after five seconds.

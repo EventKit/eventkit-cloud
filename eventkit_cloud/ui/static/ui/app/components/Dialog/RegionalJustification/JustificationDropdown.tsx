@@ -21,7 +21,7 @@ function JustificationDropdown(props: DropdownProps) {
     } = props;
 
     return (
-        <div>
+        <div className="qa-Justification-Dropdown">
             <strong>
                 {/* eslint-disable-next-line react/no-danger */}
                 <div dangerouslySetInnerHTML={{ __html: option.name }} />

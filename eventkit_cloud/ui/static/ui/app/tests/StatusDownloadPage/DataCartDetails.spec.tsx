@@ -8,9 +8,6 @@ import DataPackOptions from '../../components/StatusDownloadPage/DataPackOptions
 import DataPackGeneralTable from '../../components/StatusDownloadPage/DataPackGeneralTable';
 import DataCartInfoTable from '../../components/StatusDownloadPage/DataCartInfoTable';
 import { DataCartDetails } from '../../components/StatusDownloadPage/DataCartDetails';
-import * as utils from "../../utils/generic";
-import {shallow} from "enzyme";
-import {ExportAOI} from "../../components/CreateDataPack/ExportAOI";
 
 describe('DataCartDetails component', () => {
     let shallow;
