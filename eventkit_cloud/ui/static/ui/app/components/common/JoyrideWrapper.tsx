@@ -1,13 +1,21 @@
 import Joyride, {Props} from 'react-joyride';
 import * as React from "react";
+import {withTheme} from "@material-ui/core";
+import {Theme} from "@material-ui/core/styles";
+import {JoyRideStyles} from "../../joyride.config";
 
-interface PropsWithRef extends Props { ref: any}
+interface PropsWithRef extends Props {
+    ref: any;
+    theme: Eventkit.Theme & Theme;
+}
 
 // Convenience component, specifying the high z-index on styles.options here lets us avoid specifying it every time
 // we add a Joyride. The high z-index is needed to keep the tooltips overtop of the UI since Joyride 2.0.0.
 // It seemed to work better previously? A more surgical, case-by-case route might be more prudent, but this
 // works just fine.
 export function EventkitJoyride(props: PropsWithRef) {
+    const { colors } = props.theme.eventkit;
+    const { styles, ...restOfProps} = props;
     return (
         <Joyride
             locale={{
@@ -25,11 +33,15 @@ export function EventkitJoyride(props: PropsWithRef) {
             styles={{
                 options: {
                     zIndex: 5000,
-                }
+                },
+                buttonNext: JoyRideStyles.tooltipStyle.button,
+                buttonBack: JoyRideStyles.tooltipStyle.back,
+                buttonSkip: JoyRideStyles.tooltipStyle.skip,
+                ...styles,
             }}
-            {...props}
+            {...restOfProps}
         />
     );
 }
 
-export default EventkitJoyride;
+export default withTheme(EventkitJoyride);

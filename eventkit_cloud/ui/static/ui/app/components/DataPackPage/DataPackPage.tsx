@@ -696,11 +696,6 @@ export class DataPackPage extends React.Component<Props, State> {
                         skip: (<span>Skip</span>),
                     }}
                     run={isRunning}
-                    styles={{
-                        options: {
-                            zIndex: 5000,
-                        }
-                    }}
                 />
                 <PageHeader
                     className="qa-DataPackPage-PageHeader"
