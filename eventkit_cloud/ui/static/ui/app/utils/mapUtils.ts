@@ -6,9 +6,9 @@ import Style from 'ol/style/Style';
 import Stroke from 'ol/style/Stroke';
 import Icon from 'ol/style/Icon';
 import RegularShape from 'ol/style/RegularShape';
-import Draw from 'ol/interaction/Draw';
+import Draw, { createBox } from 'ol/interaction/Draw';
 import Point from 'ol/geom/Point';
-import Polygon from 'ol/geom/Polygon';
+import Polygon, { fromExtent } from 'ol/geom/Polygon';
 
 import isEqual from 'lodash/isEqual';
 import Reader from 'jsts/org/locationtech/jts/io/GeoJSONReader';
@@ -219,7 +219,7 @@ export function generateDrawLayer() {
 }
 
 export function generateDrawBoxInteraction(drawLayer) {
-    const geomFunction = Draw.createBox();
+    const geomFunction = createBox();
     const draw = new Draw({
         source: drawLayer.getSource(),
         type: 'Circle',
@@ -449,7 +449,7 @@ export function isBox(feature) {
     }
     // if the extent geometry is the same as the feature geometry we know it is a box
     const featureExtent = feature.getGeometry().getExtent();
-    const extentGeom = Polygon.fromExtent(featureExtent);
+    const extentGeom = fromExtent(featureExtent);
     let extentCoords = extentGeom.getCoordinates();
 
     // since the 5th coord is the same as the first remove it,

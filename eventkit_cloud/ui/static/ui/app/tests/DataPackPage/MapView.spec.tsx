@@ -8,7 +8,7 @@ import MockAdapter from 'axios-mock-adapter';
 import Map from 'ol/Map';
 import Feature from 'ol/Feature';
 import View from 'ol/View';
-import extent from 'ol/extent';
+import * as extent from 'ol/extent';
 import Observable from 'ol/Observable';
 import interaction from 'ol/interaction';
 import Point from 'ol/geom/Point';

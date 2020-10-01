@@ -6,7 +6,7 @@ import MockAdapter from 'axios-mock-adapter';
 
 import Map from 'ol/Map';
 import View from 'ol/View';
-import {getWidth} from 'ol/extent';
+import { getWidth } from 'ol/extent';
 import GeoJSONFormat from 'ol/format/GeoJSON';
 import Feature from 'ol/Feature';
 import Point from 'ol/geom/Point';

@@ -600,7 +600,7 @@ export class MapView extends React.Component<Props, State> {
                             Observable.unByKey(this.listener);
                             this.listener = null;
                         }
-                        this.listener = this.map.on('postcompose', event => this.animate(event, geom, start));
+                        this.listener = this.map.on('postrender', event => this.animate(event, geom, start));
                         this.map.render();
                     }
                 }
@@ -633,7 +633,6 @@ export class MapView extends React.Component<Props, State> {
         const style = new Style({
             image: new Circle({
                 radius,
-                snapToPixel: false,
                 stroke: new Stroke({
                     color: `rgba(255, 0, 0, ${opacity})`,
                     width: 0.25 + opacity,
