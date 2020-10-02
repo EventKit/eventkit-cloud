@@ -2,7 +2,7 @@ import sinon from 'sinon';
 import raf from 'raf';
 import { get } from 'ol/proj';
 import View from 'ol/View';
-import { getCenter } from 'ol/extent';
+import * as extent from 'ol/extent';
 import Feature from 'ol/Feature';
 import Point from 'ol/geom/Point';
 import Polygon from 'ol/geom/Polygon';
@@ -493,8 +493,8 @@ describe('mapUtils', () => {
         const feature = new Feature({
             geometry: new Polygon(coords),
         });
-        const expectedCoords = getCenter(bbox);
-        const centerSpy = sinon.spy(getCenter);
+        const expectedCoords = extent.getCenter(bbox);
+        const centerSpy = sinon.spy(extent, 'getCenter');
         const geomSpy = sinon.spy(Feature.prototype, 'getGeometry');
         const extentSpy = sinon.spy(Polygon.prototype, 'getExtent');
         const point = utils.featureToPoint(feature);

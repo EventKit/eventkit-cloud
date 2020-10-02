@@ -13,7 +13,7 @@ import VectorLayer from "ol/layer/Vector";
 import Layer from "ol/layer/Layer";
 import Tile from "ol/layer/Tile";
 import XYZ from "ol/source/XYZ";
-import Observable from "ol/Observable";
+import { unByKey } from "ol/Observable";
 import Interaction from "ol/interaction/Interaction";
 
 const DEFAULT_EPSG_CODE = 4326;
@@ -140,6 +140,6 @@ export class MapContainer {
     }
 
     removeListener(listenerKey) : void {
-        Observable.unByKey(listenerKey);
+        unByKey(listenerKey);
     }
 }

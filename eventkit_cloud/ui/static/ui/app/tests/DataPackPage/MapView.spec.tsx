@@ -9,10 +9,11 @@ import Map from 'ol/Map';
 import Feature from 'ol/Feature';
 import View from 'ol/View';
 import * as extent from 'ol/extent';
-import Observable from 'ol/Observable';
-import interaction from 'ol/interaction';
+import * as observableModule from 'ol/Observable';
+import * as interaction from 'ol/interaction';
 import Point from 'ol/geom/Point';
 import Polygon from 'ol/geom/Polygon';
+import * as polygonModule from 'ol/geom/Polygon';
 import VectorSource from 'ol/source/Vector';
 import Style from 'ol/style/Style';
 import GeoJSON from 'ol/format/GeoJSON';
@@ -173,26 +174,6 @@ function getRuns() {
         expiration: '2017-03-24T15:52:18.796854Z',
     }];
 }
-
-const geojson = {
-    type: 'FeatureCollection',
-    features: [{
-        type: 'Feature',
-        geometry: {
-            type: 'Polygon',
-            coordinates: [
-                [
-                    [100.0, 0.0],
-                    [101.0, 0.0],
-                    [101.0, 1.0],
-                    [100.0, 1.0],
-                    [100.0, 0.0],
-                ],
-            ],
-        },
-        bbox: [100.0, 0.0, 101.0, 1.0],
-    }],
-};
 
 describe('MapView component', () => {
     const getProps = () => ({
@@ -800,7 +781,7 @@ describe('MapView component', () => {
         oldFeature.setId('56789');
         oldFeature.setStyle(RED_STYLE);
         instance.map.render = sinon.spy();
-        const unSpy = sinon.spy(Observable, 'unByKey');
+        const unSpy = sinon.spy(observableModule, 'unByKey');
         const constainsStub = sinon.stub(extent, 'containsExtent')
             .returns(true);
         const stub = sinon.stub(instance.source, 'getFeatureById');
@@ -820,7 +801,7 @@ describe('MapView component', () => {
 
     it('animate should render a geom for animation', () => {
         const maxSpy = sinon.spy(Math, 'max');
-        const unSpy = sinon.spy(Observable, 'unByKey');
+        const unSpy = sinon.spy(observableModule, 'unByKey');
         const renderSpy = sinon.spy(Map.prototype, 'render');
         const setStyleSpy = sinon.spy();
         const geomSpy = sinon.spy();
@@ -843,7 +824,7 @@ describe('MapView component', () => {
     });
 
     it('animate should unregister the listener and return 0', () => {
-        const unSpy = sinon.spy(Observable, 'unByKey');
+        const unSpy = sinon.spy(observableModule, 'unByKey');
         const renderSpy = sinon.spy(Map.prototype, 'render');
         const setStyleSpy = sinon.spy();
         const geomSpy = sinon.spy();
@@ -1395,7 +1376,7 @@ describe('MapView component', () => {
     it('setMapView should clear draw, create a feature from extent, and call onMapFilter', () => {
         const clearSpy = sinon.spy(utils, 'clearDraw');
         const calculateSpy = sinon.spy(View.prototype, 'calculateExtent');
-        const extentSpy = sinon.spy(Polygon, 'fromExtent');
+        const extentSpy = sinon.spy(polygonModule, 'fromExtent');
         const addSpy = sinon.spy(VectorSource.prototype, 'addFeature');
         const createSpy = sinon.spy(utils, 'createGeoJSONGeometry');
         instance.setMapView();

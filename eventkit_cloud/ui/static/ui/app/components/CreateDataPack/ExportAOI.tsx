@@ -14,7 +14,7 @@ import VectorSource from 'ol/source/Vector';
 import GeoJSONFormat from 'ol/format/GeoJSON';
 import Feature from 'ol/Feature';
 import Point from 'ol/geom/Point';
-import Polygon from 'ol/geom/Polygon';
+import Polygon, { fromExtent } from 'ol/geom/Polygon';
 import Style from 'ol/style/Style';
 import Icon from 'ol/style/Icon';
 import Fill from 'ol/style/Fill';
@@ -306,7 +306,7 @@ export class ExportAOI extends React.Component<Props, State> {
     private setMapView() {
         clearDraw(this.drawLayer);
         const ext = this.map.getView().calculateExtent(this.map.getSize());
-        const geom = Polygon.fromExtent(ext);
+        const geom = fromExtent(ext);
         const coords = geom.getCoordinates();
         const unwrappedCoords = unwrapCoordinates(coords, this.map.getView().getProjection());
         geom.setCoordinates(unwrappedCoords);

@@ -11,6 +11,7 @@ import GeoJSONFormat from 'ol/format/GeoJSON';
 import Feature from 'ol/Feature';
 import Point from 'ol/geom/Point';
 import Polygon from 'ol/geom/Polygon';
+import * as polygonModule from 'ol/geom/Polygon'
 import VectorSource from 'ol/source/Vector';
 import Draw from 'ol/interaction/Draw';
 
@@ -429,7 +430,7 @@ describe('ExportAOI component', () => {
         const unwrapSpy = sinon.spy(utils, 'unwrapCoordinates');
         const createSpy = sinon.spy(utils, 'createGeoJSON');
         const calcSpy = sinon.spy(View.prototype, 'calculateExtent');
-        const fromExtentSpy = sinon.spy(Polygon, 'fromExtent');
+        const fromExtentSpy = sinon.spy(polygonModule, 'fromExtent');
         const getCoordSpy = sinon.spy(Polygon.prototype, 'getCoordinates');
         const addSpy = sinon.spy(VectorSource.prototype, 'addFeature');
         instance.setMapView();

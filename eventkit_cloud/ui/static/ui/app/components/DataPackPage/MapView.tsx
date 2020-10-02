@@ -12,12 +12,12 @@ import View from 'ol/View';
 import {easeOut} from 'ol/easing';
 import {boundingExtent, containsExtent, getBottomLeft, getBottomRight, getCenter, getTopLeft, getTopRight} from 'ol/extent';
 import Overlay from 'ol/Overlay';
-import Observable from 'ol/Observable';
+import { unByKey } from 'ol/Observable';
 import {defaults} from 'ol/interaction';
 import Pointer from 'ol/interaction/Pointer';
 import MouseWheelZoom from 'ol/interaction/MouseWheelZoom';
 import Point from 'ol/geom/Point';
-import Polygon from 'ol/geom/Polygon';
+import Polygon, { fromExtent } from 'ol/geom/Polygon';
 import VectorSource from 'ol/source/Vector';
 import XYZ from 'ol/source/XYZ';
 import Circle from 'ol/style/Circle';
@@ -407,7 +407,7 @@ export class MapView extends React.Component<Props, State> {
     setMapView() {
         clearDraw(this.drawLayer);
         const mapExtent = this.map.getView().calculateExtent(this.map.getSize());
-        const geom = Polygon.fromExtent(mapExtent);
+        const geom = fromExtent(mapExtent);
         const coords = geom.getCoordinates();
         const unwrappedCoords = unwrapCoordinates(coords, this.map.getView().getProjection());
         geom.setCoordinates(unwrappedCoords);
@@ -597,7 +597,7 @@ export class MapView extends React.Component<Props, State> {
                         const start = new Date().getTime();
                         const geom = mapFeature.getGeometry();
                         if (this.listener) {
-                            Observable.unByKey(this.listener);
+                            unByKey(this.listener);
                             this.listener = null;
                         }
                         this.listener = this.map.on('postrender', event => this.animate(event, geom, start));
@@ -642,7 +642,7 @@ export class MapView extends React.Component<Props, State> {
         vectorContext.setStyle(style);
         vectorContext.drawGeometry(point);
         if (elapsed > 3000) {
-            Observable.unByKey(this.listener);
+            unByKey(this.listener);
             return 0;
         }
         this.map.render();
