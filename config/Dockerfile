@@ -25,8 +25,8 @@ RUN curl -L https://repo.continuum.io/miniconda/Miniconda3-py37_4.8.3-Linux-x86_
     conda config --set channel_priority flexible && \
     conda env create --file environment-dev.yml python=3.7 && \
     conda clean --yes --all && \
-#    /home/eventkit/miniconda3/envs/eventkit-cloud/bin/python \
-#    /home/eventkit/miniconda3/envs/eventkit-cloud/bin/manage.py collectstatic && \
+    /home/eventkit/miniconda3/envs/eventkit-cloud/bin/python \
+    /home/eventkit/miniconda3/envs/eventkit-cloud/bin/manage.py collectstatic && \
     rm -rf /var/lib/eventkit/conda && \
     # Remove the directory because of stale files
     rm -rf /home/eventkit/miniconda3/envs/eventkit-cloud/lib/python3.7/site-packages/eventkit_cloud
