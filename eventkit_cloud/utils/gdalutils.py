@@ -666,11 +666,14 @@ def get_transform(from_srs, to_srs):
     :param to_srs: A spatial reference (EPSG) represented as an int (i.e. EPSG:4326 = 4326)
     :return: An osr coordinate transformation object.
     """
+    osr_axis_mapping_strategy = osr.OAMS_TRADITIONAL_GIS_ORDER
     source = osr.SpatialReference()
     source.ImportFromEPSG(from_srs)
+    source.SetAxisMappingStrategy(osr_axis_mapping_strategy)
 
     target = osr.SpatialReference()
     target.ImportFromEPSG(to_srs)
+    target.SetAxisMappingStrategy(osr_axis_mapping_strategy) 
 
     return osr.CoordinateTransformation(source, target)
 

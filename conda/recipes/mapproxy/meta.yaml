@@ -27,6 +27,9 @@ requirements:
     - python
     - pyyaml
     - proj
+    - gdal
+    - geos
+    - shapely
 
 test:
   imports:
