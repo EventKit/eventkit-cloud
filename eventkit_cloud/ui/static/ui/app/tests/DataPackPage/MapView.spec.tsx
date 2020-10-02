@@ -379,7 +379,7 @@ describe('MapView component', () => {
         expect(clearSpy.calledOnce).toBe(true);
         expect(addRunSpy.calledOnce).toBe(true);
         expect(addRunSpy.calledWith(nextProps.runIds, instance.source)).toBe(true);
-        expect(getViewSpy.calledOnce).toBe(true);
+        expect(getViewSpy.calledTwice).toBe(true);
         expect(fitSpy.calledOnce).toBe(true);
         expect(fitSpy.calledWith(instance.source.getExtent())).toBe(true);
         receiveSpy.restore();
@@ -419,7 +419,7 @@ describe('MapView component', () => {
         expect(clearSpy.calledOnce).toBe(true);
         expect(addRunSpy.calledOnce).toBe(true);
         expect(addRunSpy.calledWith(nextProps.runIds, instance.source)).toBe(true);
-        expect(getViewSpy.calledOnce).toBe(true);
+        expect(getViewSpy.calledTwice).toBe(true);
         expect(fitSpy.calledOnce).toBe(true);
         expect(fitSpy.calledWith(instance.drawLayer.getSource().getExtent())).toBe(true);
         receiveSpy.restore();
@@ -456,7 +456,7 @@ describe('MapView component', () => {
         expect(clearSpy.calledOnce).toBe(true);
         expect(addRunSpy.calledOnce).toBe(true);
         expect(addRunSpy.calledWith(nextProps.runIds, instance.source)).toBe(true);
-        expect(getViewSpy.calledOnce).toBe(true);
+        expect(getViewSpy.calledTwice).toBe(true);
         expect(fitSpy.calledOnce).toBe(true);
         expect(fitSpy.calledWith(instance.source.getExtent())).toBe(true);
         newSpy.restore();

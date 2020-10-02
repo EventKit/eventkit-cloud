@@ -24,7 +24,7 @@ import ScaleLine from 'ol/control/ScaleLine';
 import Attribution from 'ol/control/Attribution';
 import Zoom from 'ol/control/Zoom';
 import ZoomToExtent from 'ol/control/ZoomToExtent';
-import interaction, {defaults} from 'ol/interaction';
+import { defaults } from 'ol/interaction';
 import Pointer from 'ol/interaction/Pointer';
 import Tile from 'ol/layer/Tile';
 import TileGrid from "ol/tilegrid/TileGrid";

@@ -537,14 +537,14 @@ describe('mapUtils', () => {
     });
 
     it('isViewOutsideValidExtent should return true or false', () => {
-        const view = new View({ center: [-190, 40], projection: 'EPSG:4326' });
+        const view = new View({ center: [-190, 40], projection: 'EPSG:4326', zoom: 1 });
         expect(utils.isViewOutsideValidExtent(view)).toBe(true);
-        const view2 = new View({ center: [-20, 20], projection: 'EPSG:4326' });
+        const view2 = new View({ center: [-20, 20], projection: 'EPSG:4326', zoom: 1 });
         expect(utils.isViewOutsideValidExtent(view2)).toBe(false);
     });
 
     it('goToValidExtent should set the center of view to be inside the valid map extent', () => {
-        const view = new View({ center: [-190, 20], projection: 'EPSG:4326' });
+        const view = new View({ center: [-190, 20], projection: 'EPSG:4326', zoom: 1 });
         expect(utils.goToValidExtent(view)).toEqual([170, 20]);
         expect(view.getCenter()).toEqual([170, 20]);
     });
