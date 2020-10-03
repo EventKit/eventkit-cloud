@@ -19,11 +19,11 @@ from enum import Enum
 from functools import reduce
 from numpy import linspace
 from operator import itemgetter
-from typing import List
+from typing import List, Optional
 import urllib.parse
 
 from eventkit_cloud.core.helpers import get_cached_model
-from eventkit_cloud.jobs.models import DataProvider
+from eventkit_cloud.jobs.models import DataProvider, ExportFormat
 from eventkit_cloud.tasks.exceptions import FailedException
 from eventkit_cloud.tasks.models import DataProviderTaskRecord, ExportRunFile, ExportTaskRecord
 from eventkit_cloud.utils import auth_requests
@@ -175,6 +175,27 @@ def get_provider_slug(export_task_record_uid):
     :return provider_slug: The associated provider_slug value.
     """
     return ExportTaskRecord.objects.get(uid=export_task_record_uid).export_provider_task.provider.slug
+
+
+def get_supported_projections(format_slug: str) -> List[int]:
+    supported_projections = (
+        ExportFormat.objects.get(slug=format_slug)
+            .supported_projections.all()
+            .values_list("srid", flat=True)
+    )
+    return supported_projections
+
+
+def get_default_projection(supported_projections: List[int], selected_projections: List[int]) -> Optional[int]:
+    """
+    Gets a default projection of either 4326 or the first supported projection.
+    """
+    if 4326 in supported_projections and 4326 in selected_projections:
+        return 4326
+    for supported_projection in supported_projections:
+        if supported_projection in selected_projections:
+            return supported_projection
+    return None
 
 
 def get_export_filename(stage_dir, job_name, projection, provider_slug, extension):

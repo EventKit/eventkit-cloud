@@ -275,17 +275,24 @@ def convert(
     boundary=None,
     input_file=None,
     output_file=None,
+    src_srs=4326,
     fmt=None,
     layers=None,
     task_uid=None,
-    projection: int = None,
+    projection: int = 4326,
     creation_options: list = None,
+    dataset_creation_options: list = None,
+    vector_creation_options: list = None,
     is_raster: bool = True,
     warp_params: dict = None,
     translate_params: dict = None,
+    use_translate: bool = False
 ):
     """
     Uses gdal to convert and clip a supported dataset file to a mask if boundary is passed in.
+    :param use_translate: A flag to force the use of translate instead of warp.
+    :param vector_creation_options: Data options specific to vector conversion.
+    :param dataset_creation_options: Data options specific to vector conversion.
     :param translate_params: A dict of params to pass into gdal translate.
     :param warp_params: A dict of params to pass into gdal warp.
     :param is_raster: A explicit declaration that dataset is raster (for disambiguating mixed mode files...gpkg)
@@ -303,9 +310,7 @@ def convert(
     input_file, output_file = get_dataset_names(input_file, output_file)
     meta = get_meta(input_file, is_raster)
 
-    if projection is None:
-        projection = 4326
-    src_src = "EPSG:4326"
+    src_src = f"EPSG:{src_srs}"
     dst_src = f"EPSG:{projection}"
 
     if not fmt:
@@ -354,6 +359,7 @@ def convert(
             task_uid=task_uid,
             warp_params=warp_params,
             translate_params=translate_params,
+            use_translate=use_translate,
         )
     else:
         cmd = get_task_command(
@@ -361,7 +367,8 @@ def convert(
             input_file,
             output_file,
             fmt=fmt,
-            creation_options=creation_options,
+            dataset_creation_options=dataset_creation_options,
+            vector_creation_options=vector_creation_options,
             src_srs=src_src,
             dst_srs=dst_src,
             layers=layers,
@@ -431,6 +438,7 @@ def convert_raster(
     task_uid=None,
     warp_params: dict = None,
     translate_params: dict = None,
+    use_translate: bool = False
 ):
     """
     :param warp_params: A dict of options to pass to gdal warp (done first in conversion), overrides other settings.
@@ -447,10 +455,13 @@ def convert_raster(
     :param src_srs: The srs of the source (e.g. "EPSG:4326")
     :param dst_srs: The srs of the destination (e.g. "EPSG:3857")
     :param task_uid: The eventkit task uid used for tracking the work.
+    :param use_translate: Make true if needing to use translate for conversion instead of warp.
     :return: The output file.
     """
-    if isinstance(input_files, str):
+    if isinstance(input_files, str) and not use_translate:
         input_files = [input_files]
+    elif isinstance(input_files, list) and use_translate:
+        raise Exception("Cannot use_translate with a list of files.")
     gdal.UseExceptions()
     subtask_percentage = 50 if fmt.lower() == "gtiff" else 100
     options = clean_options(
@@ -465,17 +476,28 @@ def convert_raster(
         warp_params = clean_options(
             {"outputType": band_type, "dstAlpha": dst_alpha, "srcSRS": src_srs, "dstSRS": dst_srs}
         )
+    if not translate_params:
+        translate_params = dict()
     if boundary:
         warp_params.update({"cutlineDSName": boundary, "cropToCutline": True})
     # Keep the name imagery which is used when seeding the geopackages.
     # Needed because arcpy can't change table names.
     if fmt.lower() == "gpkg":
         options["creationOptions"] = options.get("creationOptions", []) + ["RASTER_TABLE=imagery"]
-    logger.info(
-        f"calling gdal.Warp('{output_file}', [{', '.join(input_files)}],"
-        f"{stringify_params(options)}, {stringify_params(warp_params)},)"
-    )
-    gdal.Warp(output_file, input_files, **options, **warp_params)
+
+    if use_translate:
+        logger.info(
+            f"calling gdal.Translate('{output_file}', [{', '.join(input_files)}],"
+            f"{stringify_params(options)}, {stringify_params(warp_params)},)"
+        )
+        options.update(translate_params)
+        gdal.Translate(output_file, input_files, **options)
+    else:
+        logger.info(
+            f"calling gdal.Warp('{output_file}', [{', '.join(input_files)}],"
+            f"{stringify_params(options)}, {stringify_params(warp_params)},)"
+        )
+        gdal.Warp(output_file, input_files, **options, **warp_params)
 
     if fmt.lower() == "gtiff" or translate_params:
         # No need to compress in memory objects as they will be removed later.
@@ -496,7 +518,6 @@ def convert_vector(
     input_file,
     output_file,
     fmt=None,
-    creation_options=None,
     access_mode="overwrite",
     src_srs=None,
     dst_srs=None,
@@ -504,6 +525,8 @@ def convert_vector(
     layers=None,
     boundary=None,
     bbox=None,
+    dataset_creation_options=None,
+    vector_creation_options=None,
 ):
     """
     :param input_files: A file or list of files to convert.
@@ -526,7 +549,8 @@ def convert_vector(
         {
             "callback": progress_callback,
             "callback_data": {"task_uid": task_uid},
-            "creationOptions": creation_options,
+            "datasetCreationOptions": dataset_creation_options,
+            "vectorCreationOptions": vector_creation_options,
             "format": fmt,
             "geometryType": "PROMOTE_TO_MULTI",
             "layers": layers,
@@ -661,14 +685,12 @@ def reproject_geometry(geometry, from_srs, to_srs):
 
 def get_transform(from_srs, to_srs):
     """
-
     :param from_srs: A spatial reference (EPSG) represented as an int (i.e. EPSG:4326 = 4326)
     :param to_srs: A spatial reference (EPSG) represented as an int (i.e. EPSG:4326 = 4326)
     :return: An osr coordinate transformation object.
     """
     source = osr.SpatialReference()
     source.ImportFromEPSG(from_srs)
-
     target = osr.SpatialReference()
     target.ImportFromEPSG(to_srs)
 
@@ -677,9 +699,8 @@ def get_transform(from_srs, to_srs):
 
 def merge_geotiffs(in_files, out_file, task_uid=None):
     """
-
     :param in_files: A list of geotiffs.
-    :param out_file:  A location for the result of the merge.
+    :param out_file: A location for the result of the merge.
     :param task_uid: A task uid to track the conversion.
     :return: The out_file path.
     """
