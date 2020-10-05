@@ -673,7 +673,7 @@ def get_transform(from_srs, to_srs):
 
     target = osr.SpatialReference()
     target.ImportFromEPSG(to_srs)
-    target.SetAxisMappingStrategy(osr_axis_mapping_strategy) 
+    target.SetAxisMappingStrategy(osr_axis_mapping_strategy)
 
     return osr.CoordinateTransformation(source, target)
 

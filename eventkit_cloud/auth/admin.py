@@ -48,7 +48,7 @@ class CustomUserAdmin(UserAdmin):
 
     fieldsets = UserAdmin.fieldsets + (("Attribute_Classes", {"fields": ("attribute_class_list",)}),)
 
+
 admin.site.unregister(User)
 admin.site.register(User, CustomUserAdmin)
 admin.site.register(OAuth, OAuthAdmin)
-
