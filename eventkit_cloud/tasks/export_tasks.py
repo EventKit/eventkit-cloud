@@ -818,6 +818,9 @@ def mbtiles_export_task(
     """
     Function defining mbtiles export function.
     """
+
+    if projection != 3857:
+        raise Exception("MBTiles only supports 3857.")
     result = result or {}
     provider_slug = get_provider_slug(task_uid)
 
@@ -829,7 +832,7 @@ def mbtiles_export_task(
 
     mbtiles = gdalutils.convert(
         fmt="MBTiles",
-        src_srs=3857,
+        src_srs=4326,
         input_file=source_dataset,
         output_file=mbtiles_out_dataset,
         task_uid=task_uid,

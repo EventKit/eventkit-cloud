@@ -24,7 +24,8 @@ from eventkit_cloud.tasks.export_tasks import (ExportTask, export_task_error_han
                                                cancel_export_provider_task, kill_task, geotiff_export_task,
                                                nitf_export_task, bounds_export_task, parse_result,
                                                finalize_export_provider_task, FormatTask, wait_for_providers_task,
-                                               create_zip_task,
+                                               create_zip_task, sqlite_export_task, pbf_export_task,
+                                               mbtiles_export_task,
                                                )
 from eventkit_cloud.tasks.helpers import default_format_time
 from eventkit_cloud.tasks.task_base import LockingTask
@@ -196,6 +197,45 @@ class TestExportTasks(ExportTaskBase):
         self.assertEqual(expected_output_path, result['result'])
         self.assertEqual(expected_output_path, result['source'])
 
+    @patch('eventkit_cloud.utils.gdalutils.convert')
+    @patch('celery.app.task.Task.request')
+    def test_mbtiles_export_task(self, mock_request, mock_convert):
+        celery_uid = str(uuid.uuid4())
+        type(mock_request).id = PropertyMock(return_value=celery_uid)
+        job_name = self.job.name.lower()
+        input_projection = 4326
+        output_projection = 3857
+        fmt = "MBTiles"
+        ext = "mbtiles"
+        expected_provider_slug = "osm-generic"
+        date = default_format_time(timezone.now())
+        expected_outfile = f"{job_name}-{output_projection}-{expected_provider_slug}-{date}.{ext}"
+        expected_output_path = os.path.join(os.path.join(settings.EXPORT_STAGING_ROOT.rstrip('\/'), str(self.run.uid)),
+                                            expected_outfile)
+
+        mock_convert.return_value = expected_output_path
+        sample_input = "example.gpkg"
+        previous_task_result = {'source': sample_input}
+        stage_dir = settings.EXPORT_STAGING_ROOT + str(self.run.uid) + '/'
+        export_provider_task = DataProviderTaskRecord.objects.create(run=self.run,
+                                                                     status=TaskStates.PENDING.value,
+                                                                     provider=self.provider)
+        saved_export_task = ExportTaskRecord.objects.create(export_provider_task=export_provider_task,
+                                                            status=TaskStates.PENDING.value,
+                                                            name=mbtiles_export_task.name)
+        mbtiles_export_task.update_task_state(task_status=TaskStates.RUNNING.value,
+                                                 task_uid=str(saved_export_task.uid))
+        result = mbtiles_export_task.run(run_uid=self.run.uid, result=previous_task_result,
+                                            task_uid=str(saved_export_task.uid),
+                                            stage_dir=stage_dir, job_name=job_name, projection=output_projection)
+        mock_convert.assert_called_once_with(fmt=fmt, input_file=sample_input,
+                                             output_file=expected_output_path, src_srs=input_projection,
+                                             task_uid=str(saved_export_task.uid),
+                                             projection=output_projection, boundary=None, use_translate=True)
+
+        self.assertEqual(expected_output_path, result['result'])
+        self.assertEqual(expected_output_path, result['source'])
+
     @patch('eventkit_cloud.tasks.export_tasks.get_creation_options')
     @patch('eventkit_cloud.tasks.export_tasks.get_provider_slug')
     @patch('eventkit_cloud.tasks.export_tasks.gdalutils')
@@ -253,6 +293,35 @@ class TestExportTasks(ExportTaskBase):
         mock_gdalutils.convert.assert_called_once_with(creation_options=['ICORDS=G'], fmt='nitf',
                                                        input_file=example_nitf, output_file=expected_outfile,
                                                        task_uid=task_uid)
+
+    def test_pbf_export_task(self):
+        # TODO: This can be setup as a way to test the other ExportTasks without all the boilerplate.
+        ExportTask.__call__ = lambda *args, **kwargs: celery.Task.__call__(*args, **kwargs)
+        example_pbf = "example.pbf"
+        example_result = {"pbf": example_pbf}
+        expected_result = {"file_extension": "pbf",
+                           "file_format": "PBF",
+                           "pbf": example_pbf,
+                           "result": example_pbf}
+        returned_result = pbf_export_task(example_result)
+        self.assertEquals(expected_result, returned_result)
+
+    @patch('eventkit_cloud.tasks.export_tasks.get_provider_slug')
+    @patch('eventkit_cloud.tasks.export_tasks.OGR')
+    def test_sqlite_export_task(self, mock_ogr, mock_get_provider_slug):
+        # TODO: This can be setup as a way to test the other ExportTasks without all the boilerplate.
+        ExportTask.__call__ = lambda *args, **kwargs: celery.Task.__call__(*args, **kwargs)
+        provider_slug = mock_get_provider_slug.return_value = "osm"
+        example_source = "example.gpkg"
+        task_uid = "1234"
+        example_result = {"source": example_source}
+        date = default_format_time(timezone.now())
+        stage_dir = "stage"
+        expected_outfile = f"{stage_dir}/job-4326-{provider_slug}-{date}.sqlite"
+        sqlite_export_task(result=example_result, task_uid=task_uid, stage_dir=stage_dir, job_name='job')
+        mock_ogr.assert_called_once_with(task_uid=task_uid)
+        mock_ogr.convert.return_value = expected_outfile
+        mock_ogr().convert.assert_called_once_with(file_format="SQLite", in_file=example_source, out_file=expected_outfile)
 
     @patch('celery.app.task.Task.request')
     @patch('eventkit_cloud.tasks.export_tasks.OGR')

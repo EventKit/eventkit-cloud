@@ -487,7 +487,7 @@ def convert_raster(
 
     if use_translate:
         logger.info(
-            f"calling gdal.Translate('{output_file}', [{', '.join(input_files)}],"
+            f"calling gdal.Translate('{output_file}', {input_files}'),"
             f"{stringify_params(options)}, {stringify_params(warp_params)},)"
         )
         options.update(translate_params)
