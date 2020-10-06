@@ -478,6 +478,9 @@ def convert_raster(
     gdal.Warp(output_file, input_files, **options, **warp_params)
 
     if fmt.lower() == "gtiff" or translate_params:
+        # No need to compress in memory objects as they will be removed later.
+        if "vsimem" in output_file:
+            return output_file
         input_file, output_file = get_dataset_names(output_file, output_file)
         if translate_params:
             options.update(translate_params)
@@ -541,6 +544,68 @@ def convert_vector(
     return output_file
 
 
+def polygonize(input_file: str, output_file: str, output_type: str = "GeoJSON", band: int = None):
+    """
+    Polygonization groups similar pixel values into bins and draws a boundary around them.
+    This is often used as a way to display raster information in a vector format. That can still be done here,
+    but if a band isn't provided the function will try to guess at the mask band and will use that as both the
+    converted layer and the mask.  The result should be a polygon of anywhere there are not black or not transparent
+    pixels.
+
+    :param input_file: The raster file to use to polygonize.
+    :param output_file: The vector output file for the new data.
+    :param output_type: The file type for output data (should be a vector type).
+    :param band: The band to use for polygonization.
+    :return:
+    """
+
+    src_ds = gdal.Open(input_file)
+
+    if src_ds is None:
+        logger.error("Unable to open source.")
+        raise Exception("Failed to open the file.")
+
+    try:
+        band_index = band
+        if not band_index:
+            if src_ds.RasterCount == 4:
+                band_index = 4
+            elif src_ds.RasterCount == 3:
+                # Likely RGB (jpg) add a transparency mask and use that.
+
+                # Clean up pixel values of 1 0 0 or 0 0 1 caused by interleaving.
+                nb_file = "/vsimem/nb"
+                gdal.Nearblack(nb_file, input_file)
+
+                # Convert to geotiff so that we can remove black pixels and use alpha mask for the polygon.
+                tmp_file = "/vsimem/tmp.tif"
+                convert_raster(nb_file, tmp_file, fmt="gtiff", warp_params={"dstAlpha": True, "srcNodata": "0 0 0"})
+
+                del nb_file
+                src_ds = gdal.Open(tmp_file)
+                band_index = 4
+            elif src_ds.RasterCount == 2:
+                band_index = 2
+            else:
+                band_index = 1
+        mask_band = src_ds.GetRasterBand(band_index)
+    except RuntimeError as e:
+        logger.error(e)
+        raise Exception("Unable to get raster band.")
+
+    drv = ogr.GetDriverByName(output_type)
+    dst_ds = drv.CreateDataSource(output_file)
+    dst_layer = dst_ds.CreateLayer(output_file)
+
+    # Use the mask band for both the polygonization and as a mask.
+    gdal.Polygonize(mask_band, mask_band, dst_layer, -1, [])
+    # Close files to read later.
+    del dst_ds
+    del src_ds
+
+    return output_file
+
+
 def stringify_params(params):
     return ", ".join([f"{k}='{v}'" for k, v in params.items()])
 
@@ -601,11 +666,14 @@ def get_transform(from_srs, to_srs):
     :param to_srs: A spatial reference (EPSG) represented as an int (i.e. EPSG:4326 = 4326)
     :return: An osr coordinate transformation object.
     """
+    osr_axis_mapping_strategy = osr.OAMS_TRADITIONAL_GIS_ORDER
     source = osr.SpatialReference()
     source.ImportFromEPSG(from_srs)
+    source.SetAxisMappingStrategy(osr_axis_mapping_strategy)
 
     target = osr.SpatialReference()
     target.ImportFromEPSG(to_srs)
+    target.SetAxisMappingStrategy(osr_axis_mapping_strategy)
 
     return osr.CoordinateTransformation(source, target)
 

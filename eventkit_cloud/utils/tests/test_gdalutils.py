@@ -8,7 +8,8 @@ from mock import Mock, patch, call, MagicMock, ANY
 from osgeo import gdal, ogr
 
 from eventkit_cloud.utils.gdalutils import convert, is_envelope, get_distance, \
-    get_dimensions, merge_geotiffs, get_meta, get_band_statistics, convert_raster, convert_vector, progress_callback
+    get_dimensions, merge_geotiffs, get_meta, get_band_statistics, convert_raster, convert_vector, progress_callback, \
+    polygonize
 
 logger = logging.getLogger(__name__)
 
@@ -202,6 +203,49 @@ class TestGdalUtils(TestCase):
         self.task_process().start_process.assert_called_once_with(lambda_mock)
         self.task_process.reset_mock()
 
+    @patch('eventkit_cloud.utils.gdalutils.ogr')
+    @patch('eventkit_cloud.utils.gdalutils.gdal')
+    def test_polygonize(self, mock_gdal, mock_ogr):
+        example_input = "input.tif"
+        example_output = "output.geojson"
+        dst_layer = Mock()
+        mask_band = Mock()
+        mock_ogr.GetDriverByName().CreateDataSource().CreateLayer.return_value = dst_layer
+        mock_dataset = MagicMock()
+        mock_dataset.RasterCount = 4
+        mock_gdal.Open.return_value = mock_dataset
+        mock_dataset.GetRasterBand.return_value = mask_band
+        polygonize(example_input, example_output)
+        expected_band = 4
+        mock_dataset.GetRasterBand.assert_called_once_with(expected_band)
+        mock_gdal.Polygonize.assert_called_once_with(mask_band, mask_band, dst_layer, -1, [])
+        mock_gdal.Open.assert_called_once_with(example_input)
+        mock_ogr.GetDriverByName.assert_called_with("GeoJSON")
+        mock_ogr.GetDriverByName().CreateDataSource.assert_called_with(example_output)
+        mock_ogr.GetDriverByName().CreateDataSource().CreateLayer.assert_called_with(example_output)
+        mock_dataset.GetRasterBand.reset_mock()
+
+        mock_dataset.RasterCount = 3
+        mock_gdal.Open.return_value = mock_dataset
+        polygonize(example_input, example_output)
+        expected_band = 4
+        mock_gdal.Nearblack.assert_called_once_with(ANY, example_input)
+        mock_dataset.GetRasterBand.assert_called_once_with(expected_band)
+        mock_dataset.GetRasterBand.reset_mock()
+
+        mock_dataset.RasterCount = 2
+        mock_gdal.Open.return_value = mock_dataset
+        polygonize(example_input, example_output)
+        expected_band = 2
+        mock_dataset.GetRasterBand.assert_called_once_with(expected_band)
+        mock_dataset.GetRasterBand.reset_mock()
+
+        mock_dataset.RasterCount = 1
+        mock_gdal.Open.return_value = mock_dataset
+        polygonize(example_input, example_output)
+        expected_band = 1
+        mock_dataset.GetRasterBand.assert_called_once_with(expected_band)
+        mock_dataset.GetRasterBand.reset_mock()
 
     def test_get_distance(self,):
         expected_distance = 972.38

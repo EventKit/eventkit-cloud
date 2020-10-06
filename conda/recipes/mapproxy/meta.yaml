@@ -14,20 +14,22 @@ build:
   entry_points:
     - mapproxy-seed = mapproxy.seed.script:main
     - mapproxy-util = mapproxy.script.util:main
-  script: "python setup.py install --single-version-externally-managed --record=record.txt"
+  noarch: python
+  script: {{ PYTHON }} -m pip install . -vv
 
 requirements:
   host:
     - pillow
     - pip
     - python
-    - setuptools
   run:
     - pillow
     - python
     - pyyaml
-    - setuptools
-    - proj4
+    - proj
+    - gdal
+    - geos
+    - shapely
 
 test:
   imports:
