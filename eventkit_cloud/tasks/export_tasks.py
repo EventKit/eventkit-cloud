@@ -554,6 +554,7 @@ def add_metadata(job, provider, retval):
     if task is not None:
         task(filepath=result_file, job=job, provider=provider)
 
+
 @app.task(name="ESRI Shapefile (.shp)", bind=True, base=FormatTask, acks_late=True)
 def shp_export_task(
     self,
@@ -590,6 +591,7 @@ def shp_export_task(
     result["result"] = shp
     result["source"] = shp
     return result
+
 
 @app.task(name="Keyhole Markup Language (.kml)", bind=True, base=FormatTask, acks_late=True)
 def kml_export_task(
@@ -1012,6 +1014,7 @@ def reprojection_task(
 
     return result
 
+
 @app.task(name="WFSExport", bind=True, base=ExportTask, abort_on_error=True)
 def wfs_export_task(
     self,
@@ -1043,8 +1046,7 @@ def wfs_export_task(
     service_url = re.sub(
         r"(?i)(?<=[?&])(version|service|request|typename|srsname)=.*?(&|$)", "", service_url or "",
     )  # TODO: would this normally be null?
-    # TODO: should EPSG == projection?
-    query_str = f"SERVICE=WFS&VERSION=1.0.0&REQUEST=GetFeature&TYPENAME={layer}&SRSNAME=EPSG:4326"
+    query_str = f"SERVICE=WFS&VERSION=1.0.0&REQUEST=GetFeature&TYPENAME={layer}&SRSNAME=EPSG:{projection}"
     if "?" in service_url:
         if "&" != service_url[-1]:
             service_url += "&"
@@ -1059,16 +1061,8 @@ def wfs_export_task(
         if not re.search(r"(?<=://)[a-zA-Z0-9\-._~]+:[a-zA-Z0-9\-._~]+(?=@)", url):
             url = re.sub(r"(?<=://)", "%s:%s@" % (user, pw), url)
 
-    params = "-skipfailures"
-
     out = gdalutils.convert(
-        fmt="gpkg",
-        input_file=f"WFS:{url}",
-        output_file=gpkg,
-        task_uid=task_uid,
-        projection=projection,
-        creation_options=params,
-        boundary=bbox,
+        fmt="gpkg", input_file=f"WFS:{url}", output_file=gpkg, task_uid=task_uid, projection=projection, boundary=bbox,
     )
 
     result["file_format"] = "gpkg"
@@ -1077,8 +1071,8 @@ def wfs_export_task(
 
     # TODO: figure out why this fails
     # Check for geopackage contents; gdal wfs driver fails silently
-    # if not geopackage.check_content_exists(out):
-    #     logger.warning("Empty response: Unknown layer name '{}' or invalid AOI bounds".format(layer))
+    if not geopackage.check_content_exists(out):
+        logger.warning("Empty response: Unknown layer name '{}' or invalid AOI bounds".format(layer))
 
     return result
 
@@ -1139,6 +1133,7 @@ def wcs_export_task(
         logger.error("Raised exception in WCS service export: %s", str(e))
         raise Exception(e)
 
+
 @app.task(name="ArcFeatureServiceExport", bind=True, base=FormatTask)
 def arcgis_feature_service_export_task(
     self,
@@ -1175,16 +1170,8 @@ def arcgis_feature_service_export_task(
     finally:
         service_url = f"{service_url}/query?where=objectid%3Dobjectid&outfields=*&f=json"
 
-    params = "-skipfailures -t_srs EPSG:3857"
-
     out = gdalutils.convert(
-        fmt="gpkg",
-        input_file=service_url,
-        output_file=gpkg,
-        task_uid=task_uid,
-        boundary=bbox,
-        projection=projection,
-        creation_options=params,
+        fmt="gpkg", input_file=service_url, output_file=gpkg, task_uid=task_uid, boundary=bbox, projection=projection,
     )
 
     result["file_format"] = "gpkg"
