@@ -61,7 +61,9 @@ class TaskFactory:
             "arcgis-feature": arcgis_feature_service_export_task,
         }
 
-    def parse_tasks(self, worker=None, run_uid=None, user_details=None):
+    def parse_tasks(
+        self, worker=None, run_uid=None, user_details=None, data_provider_slugs=None, run_zip_file_slug_sets=None
+    ):
         """
         This handles all of the logic for taking the information about what individual celery tasks and groups
         them under specific providers.
@@ -106,7 +108,9 @@ class TaskFactory:
             run = ExportRun.objects.get(uid=run_uid)
             job = run.job
             run_dir = get_run_staging_dir(run.uid)
-            os.makedirs(run_dir, 0o750)
+
+            if not os.path.exists(run_dir):
+                os.makedirs(run_dir, 0o750)
 
             queue_group = os.getenv("CELERY_GROUP_NAME", worker)
             wait_for_providers_settings = {
@@ -129,7 +133,8 @@ class TaskFactory:
                 run=run, name="run", slug="run", status=TaskStates.PENDING.value, display=False,
             )
             stage_dir = get_provider_staging_dir(run_dir, run_task_record.slug)
-            os.makedirs(stage_dir, 6600)
+            if not os.path.exists(stage_dir):
+                os.makedirs(stage_dir, 0o750)
 
             run_zip_task_chain = get_zip_task_chain(
                 data_provider_task_record_uid=run_task_record.uid,
@@ -137,6 +142,9 @@ class TaskFactory:
                 worker=worker,
             )
             for provider_task in job.data_provider_tasks.all():
+                # Skip any providers that weren't selected to be re-run.
+                if data_provider_slugs and provider_task.provider.slug not in data_provider_slugs:
+                    continue
 
                 if self.type_task_map.get(provider_task.provider.export_provider_type.type_name):
                     # Each task builder has a primary task which pulls the source data, grab that task here...
@@ -145,7 +153,8 @@ class TaskFactory:
                     primary_export_task = self.type_task_map.get(type_name)
 
                     stage_dir = get_provider_staging_dir(run_dir, provider_task.provider.slug)
-                    os.makedirs(stage_dir, 6600)
+                    if not os.path.exists(stage_dir):
+                        os.makedirs(stage_dir, 0o750)
 
                     args = {
                         "primary_export_task": primary_export_task,
@@ -164,7 +173,11 @@ class TaskFactory:
                         run_uid=run_uid,
                         locking_task_key=run_uid,
                         callback_task=create_finalize_run_task_collection(
-                            run_uid, run_dir, run_zip_task_chain, apply_args=finalize_task_settings,
+                            run_uid,
+                            run_dir,
+                            run_zip_task_chain,
+                            run_zip_file_slug_sets=run_zip_file_slug_sets,
+                            apply_args=finalize_task_settings,
                         ),
                         apply_args=finalize_task_settings,
                     ).set(**wait_for_providers_settings)
@@ -217,7 +230,7 @@ class TaskFactory:
 
 
 @transaction.atomic
-def create_run(job_uid, user=None):
+def create_run(job_uid, user=None, clone=False):
     """
     This will create a new Run based on the provided job uid.
     :param job_uid: The UID to reference the Job model.
@@ -255,26 +268,40 @@ def create_run(job_uid, user=None):
                         job.user.username, job.name
                     )
                 )
-
             run_count = job.runs.filter(deleted=False).count()
+            run_zip_file_slug_sets = None
+            if clone:
+                run, run_zip_file_slug_sets = job.last_export_run.clone()
+                run.status = TaskStates.SUBMITTED.value
+                run.save()
+                job.last_export_run = run
+                job.save()
+            else:
+                # add the export run to the database
+                run = ExportRun.objects.create(
+                    job=job,
+                    user=user,
+                    status=TaskStates.SUBMITTED.value,
+                    expiration=(timezone.now() + timezone.timedelta(days=14)),
+                )  # persist the run
+                job.last_export_run = run
+                job.save()
+
             if run_count > 0:
                 while run_count > max_runs - 1:
                     # delete the earliest runs
                     job.runs.filter(deleted=False).earliest("started_at").soft_delete(user=user)
                     run_count -= 1
 
-            # add the export run to the database
-            run = ExportRun.objects.create(
-                job=job, user=user, status="SUBMITTED", expiration=(timezone.now() + timezone.timedelta(days=14)),
-            )  # persist the run
-            job.last_export_run = run
-            job.save()
             sendnotification(
                 run, run.user, NotificationVerb.RUN_STARTED.value, None, None, NotificationLevel.INFO.value, "",
             )
             run_uid = run.uid
             logger.debug("Saved run with id: {0}".format(str(run_uid)))
-            return run_uid
+            if clone:
+                return run_uid, run_zip_file_slug_sets
+            else:
+                return run_uid
     except DatabaseError as e:
         logger.error("Error saving export run: {0}".format(e))
         raise e
@@ -387,19 +414,28 @@ class InvalidLicense(Error):
         super(Error, self).__init__("InvalidLicense: {0}".format(message))
 
 
-def create_finalize_run_task_collection(run_uid=None, run_dir=None, run_zip_task_chain=None, apply_args=None):
+def create_finalize_run_task_collection(
+    run_uid=None, run_dir=None, run_zip_task_chain=None, run_zip_file_slug_sets=None, apply_args=None
+):
     """ Returns a 2-tuple celery chain of tasks that need to be executed after all of the export providers in a run
         have finished, and a finalize_run_task signature for use as an errback.
-        Add any additional tasks you want in hook_tasks.
-        @see export_tasks.FinalizeRunHookTask for expected hook task signature.
     """
+    from eventkit_cloud.tasks.views import generate_zipfile_chain
+
     apply_args = apply_args or dict()
 
     # Use .si() to ignore the result of previous tasks, we just care that finalize_run_task runs last
     finalize_signature = finalize_run_task.si(run_uid=run_uid, stage_dir=run_dir).set(**apply_args)
+    all_task_sigs_list = [run_zip_task_chain]
 
-    all_task_sigs = itertools.chain([run_zip_task_chain, finalize_signature])
+    if run_zip_file_slug_sets:
+        for run_zip_file_slug_set in run_zip_file_slug_sets:
+            zipfile_chain = generate_zipfile_chain(run_uid, run_zip_file_slug_set)
+            if zipfile_chain:
+                all_task_sigs_list.append(zipfile_chain)
 
+    all_task_sigs_list.append(finalize_signature)
+    all_task_sigs = itertools.chain(all_task_sigs_list)
     finalize_chain = chain(*all_task_sigs)
 
     return finalize_chain

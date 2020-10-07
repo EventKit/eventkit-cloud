@@ -21,6 +21,13 @@ jest.mock('../../components/UserGroupsPage/GroupsHeaderTabs', () => {
 });
 
 
+jest.mock('../../components/Dialog/ProviderDialog', () => {
+    const React = require('react');
+    return (props) => (<div>ProviderDialog</div>);
+});
+
+
+
 describe('GroupsDrawer component', () => {
     const getProps = () => ({
         selectedValue: '',

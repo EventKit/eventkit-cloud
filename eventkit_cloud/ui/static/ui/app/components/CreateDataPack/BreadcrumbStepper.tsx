@@ -78,7 +78,6 @@ export interface Props {
     projections: Eventkit.Projection[];
     tasks: Eventkit.Task[];
     breadCrumbStepperProps: any;
-    selectedBaseMap: MapLayer;
     mapLayers: MapLayer[];
     getEstimate: any;
     checkProvider: (args: any) => void;
@@ -262,7 +261,6 @@ export class BreadcrumbStepper extends React.Component<Props, State> {
                     <ExportAOI
                         walkthroughClicked={this.props.walkthroughClicked}
                         onWalkthroughReset={this.props.onWalkthroughReset}
-                        selectedBaseMap={this.props.selectedBaseMap}
                         mapLayers={this.props.mapLayers}
                         isPermissionsBannerOpen={this.state.isBannerOpen}
 
