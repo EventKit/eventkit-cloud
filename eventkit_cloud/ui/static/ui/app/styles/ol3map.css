@@ -1,7 +1,7 @@
 div.map {
     position: absolute;
-    margin-top: 0px;
-    margin-left: 0px;
+    margin-top: 0;
+    margin-left: 0;
     height: calc(100vh - 180px);
 }
 
@@ -14,7 +14,7 @@ div.map {
     padding: 2px;
     background: rgba(0,0,0,0);
     border-radius: 4px;
-    bottom: 10px;
+    bottom: 25px;
     right: 10px;
 }
 
@@ -79,6 +79,7 @@ div.map {
     outline: none;
     height: 22px;
     width: 22px;
+    box-shadow: 0 3px 15px rgba(0, 0, 0, 0.2);
 }
 
 .olZoom button {
@@ -87,6 +88,7 @@ div.map {
     outline: none;
     height: 22px;
     width: 22px;
+    box-shadow: 0 3px 15px rgba(0, 0, 0, 0.2);
 }
 
 .olZoom button i {
@@ -112,7 +114,7 @@ div.map {
 .olZoomLevel {
     z-index: 3;
     position: absolute;
-    bottom: 38px;
+    bottom: 50px;
     right: 12px;
     color: #707274;
     font-size: 10px;
@@ -172,7 +174,6 @@ div.map {
 
 .ol-custom-overviewmap:not(.ol-collapsed) {
     left: 50px;
-    right: auto;
     right: initial;
     bottom: 15px;
 }
@@ -184,7 +185,10 @@ div.map {
 }
 
 .ol-custom-overviewmap:not(.ol-collapsed) button {
+    outline: none;
     left: 2px;
+    color: #4598bf;
+    background-color: white;
 }
 
 .ol-attribution > ul > li {

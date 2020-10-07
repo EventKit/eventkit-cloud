@@ -504,6 +504,16 @@ export class MapView extends React.Component<Props, State> {
                     collapsible: true,
                     collapsed: !isWidthUp('md', this.props.width),
                     tipLabel: '',
+                    layers: [
+                        new Tile({
+                            source: new XYZ({
+                                projection: MapView.PROJECTION,
+                                tileGrid: tileGrid,
+                                url: this.context.config.BASEMAP_URL,
+                                wrapX: true,
+                            }),
+                        })
+                    ],
                     view: new View({
                         projection: MapView.PROJECTION,
                     }),
