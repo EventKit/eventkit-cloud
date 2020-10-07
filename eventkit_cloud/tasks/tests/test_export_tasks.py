@@ -6,7 +6,7 @@ import os
 import pickle
 import sys
 import uuid
- 
+
 import celery
 from billiard.einfo import ExceptionInfo
 from django.conf import settings
@@ -124,8 +124,7 @@ class ExportTaskBase(TestCase):
 
 
 class TestExportTasks(ExportTaskBase):
-
-    @patch('eventkit_cloud.utils.gdalutils.convert')
+    @patch('eventkit_cloud.tasks.export_tasks.gdalutils.convert')
     @patch('celery.app.task.Task.request')
     def test_run_shp_export_task(self, mock_request, mock_convert):
         celery_uid = str(uuid.uuid4())
@@ -161,7 +160,7 @@ class TestExportTasks(ExportTaskBase):
         self.assertEqual(expected_output_path, result['result'])
         self.assertEqual(expected_output_path, result['source'])
 
-    @patch('eventkit_cloud.utils.gdalutils.convert')
+    @patch('eventkit_cloud.tasks.export_tasks.gdalutils.convert')
     @patch('celery.app.task.Task.request')
     def test_run_kml_export_task(self, mock_request, mock_convert):
         celery_uid = str(uuid.uuid4())
@@ -197,7 +196,7 @@ class TestExportTasks(ExportTaskBase):
         self.assertEqual(expected_output_path, result['result'])
         self.assertEqual(expected_output_path, result['source'])
 
-    @patch('eventkit_cloud.utils.gdalutils.convert')
+    @patch('eventkit_cloud.tasks.export_tasks.gdalutils.convert')
     @patch('celery.app.task.Task.request')
     def test_run_sqlite_export_task(self, mock_request, mock_convert):
         celery_uid = str(uuid.uuid4())
@@ -233,9 +232,10 @@ class TestExportTasks(ExportTaskBase):
         self.assertEqual(expected_output_path, result['result'])
         self.assertEqual(expected_output_path, result['source'])
 
-    @patch('eventkit_cloud.utils.gdalutils.convert')
+    @patch('eventkit_cloud.tasks.export_tasks.gdalutils.convert')
+    @patch('eventkit_cloud.tasks.export_tasks.geopackage')
     @patch('celery.app.task.Task.request')
-    def test_run_wfs_export_task(self, mock_request, mock_convert):
+    def test_run_wfs_export_task(self, mock_request, mock_gpkg, mock_convert):
         celery_uid = str(uuid.uuid4())
         type(mock_request).id = PropertyMock(return_value=celery_uid)
         job_name = self.job.name.lower()
@@ -245,7 +245,7 @@ class TestExportTasks(ExportTaskBase):
         expected_outfile = f'{job_name}-{projection}-{expected_provider_slug}-{date}.gpkg'
         expected_output_path = os.path.join(os.path.join(settings.EXPORT_STAGING_ROOT.rstrip('\/'), str(self.run.uid)),
                                             expected_outfile)
-        # TODO: what does a service url look like?
+        # TODO: expected_input_path looks like this if service_url isn't passed in. Might need to be updated?
         expected_input_path = f'WFS:?SERVICE=WFS&VERSION=1.0.0&REQUEST=GetFeature&TYPENAME=None&SRSNAME=EPSG:4326'
 
         mock_convert.return_value = expected_output_path
@@ -260,16 +260,18 @@ class TestExportTasks(ExportTaskBase):
                                                             name=wfs_export_task.name)
         wfs_export_task.update_task_state(task_status=TaskStates.RUNNING.value,
                                                  task_uid=str(saved_export_task.uid))
+        mock_gpkg.check_content_exists.return_value = True
         result = wfs_export_task.run(run_uid=self.run.uid, result=previous_task_result,
                                             task_uid=str(saved_export_task.uid),
                                             stage_dir=stage_dir, job_name=job_name, projection=projection)
         mock_convert.assert_called_once_with(fmt='gpkg', input_file=expected_input_path,
                                              output_file=expected_output_path,
                                              task_uid=str(saved_export_task.uid),
-                                             projection=4326, boundary=None, creation_options='-skipfailures')
+                                             projection=4326, boundary=None)
 
         self.assertEqual(expected_output_path, result['result'])
         self.assertEqual(expected_output_path, result['source'])
+        mock_gpkg.check_content_exists.assert_called_once_with(expected_output_path)
 
     @patch("eventkit_cloud.utils.gdalutils.convert")
     @patch("celery.app.task.Task.request")
@@ -507,7 +509,7 @@ class TestExportTasks(ExportTaskBase):
         )
         self.assertEqual(returned_result, expected_result)
 
-    @patch('eventkit_cloud.utils.gdalutils.convert')
+    @patch('eventkit_cloud.tasks.export_tasks.gdalutils.convert')
     @patch('celery.app.task.Task.request')
     def test_run_arcgis_feature_service_export_task(self, mock_request, mock_convert):
         celery_uid = str(uuid.uuid4())
@@ -520,7 +522,7 @@ class TestExportTasks(ExportTaskBase):
         expected_output_path = os.path.join(os.path.join(settings.EXPORT_STAGING_ROOT.rstrip('\/'), str(self.run.uid)),
                                             expected_outfile)
 
-        # TODO: what does a service url look like?
+        # TODO: expected_input_path looks like this if service_url isn't passed in. Might need to be updated?
         expected_input_path = f'/query?where=objectid%3Dobjectid&outfields=*&f=json'
 
         mock_convert.return_value = expected_output_path
@@ -545,8 +547,7 @@ class TestExportTasks(ExportTaskBase):
         mock_convert.assert_called_once_with(fmt='gpkg', input_file=expected_input_path,
                                              output_file=expected_output_path,
                                              task_uid=str(saved_export_task.uid),
-                                             projection=4326, boundary=None,
-                                             creation_options='-skipfailures -t_srs EPSG:3857')
+                                             projection=4326, boundary=None)
 
         self.assertEqual(expected_output_path, result['result'])
         self.assertEqual(expected_output_path, result['source'])
