@@ -16,6 +16,7 @@ export interface Props {
     maxZoom?: number;
     id?: string;
     moveable?: boolean;
+    style?: any;
 }
 
 export interface State {
@@ -27,6 +28,7 @@ export class MapView extends React.Component<Props, State> {
     private mapDiv: string;
     private minZoom: number;
     private maxZoom: number;
+    private style: any;
 
     constructor(props: Props) {
         let selectedBaseMap = props.selectedBaseMap;
@@ -40,12 +42,13 @@ export class MapView extends React.Component<Props, State> {
         this.minZoom = this.props.minZoom || 0;
         this.maxZoom = this.props.maxZoom || 20;
         this.mapDiv = this.props.id || "ProviderMap";
+        this.style = this.props.style
     }
 
     render() {
         return (
             <OlMapComponent
-                style={{ height: '100%', width: '100%' }}
+                style={{ ...this.style, height: '100%', width: '100%' }}
                 divId={this.mapDiv}
                 minZoom={this.props.minZoom}
                 maxZoom={this.props.maxZoom}
