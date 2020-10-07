@@ -14,7 +14,6 @@ interface PropsWithRef extends Props {
 // It seemed to work better previously? A more surgical, case-by-case route might be more prudent, but this
 // works just fine.
 export function EventkitJoyride(props: PropsWithRef) {
-    const { colors } = props.theme.eventkit;
     const { styles, ...restOfProps} = props;
     return (
         <Joyride
