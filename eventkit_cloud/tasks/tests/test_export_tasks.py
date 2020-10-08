@@ -25,7 +25,7 @@ from eventkit_cloud.tasks.export_tasks import (ExportTask, export_task_error_han
                                                nitf_export_task, bounds_export_task, parse_result,
                                                finalize_export_provider_task, FormatTask, wait_for_providers_task,
                                                create_zip_task, sqlite_export_task, pbf_export_task,
-                                               mbtiles_export_task,
+                                               mbtiles_export_task, gpx_export_task,
                                                )
 from eventkit_cloud.tasks.helpers import default_format_time
 from eventkit_cloud.tasks.task_base import LockingTask
@@ -322,6 +322,29 @@ class TestExportTasks(ExportTaskBase):
         mock_ogr.assert_called_once_with(task_uid=task_uid)
         mock_ogr.convert.return_value = expected_outfile
         mock_ogr().convert.assert_called_once_with(file_format="SQLite", in_file=example_source, out_file=expected_outfile)
+
+    @patch('eventkit_cloud.tasks.export_tasks.get_provider_slug')
+    @patch('eventkit_cloud.tasks.export_tasks.gdalutils')
+    def test_gpx_export_task(self, mock_gdalutils, mock_get_provider_slug):
+        # TODO: This can be setup as a way to test the other ExportTasks without all the boilerplate.
+        ExportTask.__call__ = lambda *args, **kwargs: celery.Task.__call__(*args, **kwargs)
+        provider_slug = mock_get_provider_slug.return_value = "osm"
+        example_source = "example.gpkg"
+        task_uid = "1234"
+        example_result = {"gpkg": example_source}
+        date = default_format_time(timezone.now())
+        stage_dir = "stage"
+        expected_outfile = f"{stage_dir}/job-4326-{provider_slug}-{date}.gpx"
+        mock_gdalutils.convert.return_value = expected_outfile
+        expected_result = {"gpkg": example_source,
+                           "file_extension": "gpx",
+                           "file_format": "GPX",
+                           "result": expected_outfile,
+                           "gpx": expected_outfile}
+        returned_result = gpx_export_task(result=example_result, task_uid=task_uid, stage_dir=stage_dir, job_name='job')
+        mock_gdalutils.convert.assert_called_once_with(input_file=example_source, output_file=expected_outfile, fmt="GPX",
+                                               dataset_creation_options=["GPX_USE_EXTENSIONS=YES"])
+        self.assertEqual(returned_result, expected_result)
 
     @patch('celery.app.task.Task.request')
     @patch('eventkit_cloud.tasks.export_tasks.OGR')

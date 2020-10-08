@@ -78,10 +78,10 @@ describe('test generic utils', () => {
 
     it('getDefaultFormat should return a gpkg if not wcs', () => {
         const format1: Eventkit.Format = {
-            description: '', name: '', uid: '', slug: 'gpkg',
+            description: '', name: '', uid: '', slug: 'gpkg', supported_projections: []
         };
         const format2: Eventkit.Format = {
-            description: '', name: '', uid: '', slug: 'gtiff',
+            description: '', name: '', uid: '', slug: 'gtiff', supported_projections: []
         };
         const supportedFormats: Eventkit.Format[] = [format1, format2];
         const provider: Partial<Eventkit.Provider> = {
@@ -94,10 +94,10 @@ describe('test generic utils', () => {
 
     it('getDefaultFormat should return a gtiff if wcs', () => {
         const format1: Eventkit.Format = {
-            description: '', name: '', uid: '', slug: 'hdr',
+            description: '', name: '', uid: '', slug: 'hdr', supported_projections: []
         };
         const format2: Eventkit.Format = {
-            description: '', name: '', uid: '', slug: 'gtiff',
+            description: '', name: '', uid: '', slug: 'gtiff', supported_projections: []
         };
         const supportedFormats: Eventkit.Format[] = [format1, format2];
         const provider: Partial<Eventkit.Provider> = {
@@ -110,7 +110,7 @@ describe('test generic utils', () => {
 
     it('getDefaultFormat should return something if geotiff or gpkg are not available', () => {
         const format1: Eventkit.Format = {
-            description: '', name: '', uid: '', slug: 'hdr',
+            description: '', name: '', uid: '', slug: 'hdr', supported_projections: []
         };
         const supportedFormats: Eventkit.Format[] = [format1];
         const provider: Partial<Eventkit.Provider> = {

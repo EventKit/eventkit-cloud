@@ -159,6 +159,9 @@ class TaskChainBuilder(object):
                     )
                     .set(queue=queue_group, routing_key=queue_group)
                 )
+                logger.error(f"Projections: {projections}")
+                logger.error(f"supported_projections: {supported_projections}")
+                logger.error(f"list(set(supported_projections) & set(projections)): {list(set(supported_projections) & set(projections))}")
 
                 for projection in list(set(supported_projections) & set(projections)):
 
@@ -171,7 +174,7 @@ class TaskChainBuilder(object):
                         task_name=task_name,
                         export_provider_task=data_provider_task_record,
                         worker=worker,
-                        display=getattr(task.get("obj"), "display", False),
+                        display=getattr(task.get("obj"), "display", True),
                     )
                     subtasks.append(
                         reprojection_task.s(
@@ -239,6 +242,7 @@ class TaskChainBuilder(object):
 
         tasks = chain(tasks,)
 
+        logger.error(f"TASKS:{tasks}")
         return data_provider_task_record.uid, tasks
 
 

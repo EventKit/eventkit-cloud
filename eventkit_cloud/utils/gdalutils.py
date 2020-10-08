@@ -282,7 +282,7 @@ def convert(
     projection: int = 4326,
     creation_options: list = None,
     dataset_creation_options: list = None,
-    vector_creation_options: list = None,
+    layer_creation_options: list = None,
     is_raster: bool = True,
     warp_params: dict = None,
     translate_params: dict = None,
@@ -291,7 +291,7 @@ def convert(
     """
     Uses gdal to convert and clip a supported dataset file to a mask if boundary is passed in.
     :param use_translate: A flag to force the use of translate instead of warp.
-    :param vector_creation_options: Data options specific to vector conversion.
+    :param layer_creation_options: Data options specific to vector conversion.
     :param dataset_creation_options: Data options specific to vector conversion.
     :param translate_params: A dict of params to pass into gdal translate.
     :param warp_params: A dict of params to pass into gdal warp.
@@ -368,7 +368,7 @@ def convert(
             output_file,
             fmt=fmt,
             dataset_creation_options=dataset_creation_options,
-            vector_creation_options=vector_creation_options,
+            layer_creation_options=layer_creation_options,
             src_srs=src_src,
             dst_srs=dst_src,
             layers=layers,
@@ -526,7 +526,7 @@ def convert_vector(
     boundary=None,
     bbox=None,
     dataset_creation_options=None,
-    vector_creation_options=None,
+    layer_creation_options=None,
 ):
     """
     :param input_files: A file or list of files to convert.
@@ -550,7 +550,7 @@ def convert_vector(
             "callback": progress_callback,
             "callback_data": {"task_uid": task_uid},
             "datasetCreationOptions": dataset_creation_options,
-            "vectorCreationOptions": vector_creation_options,
+            "layerCreationOptions": layer_creation_options,
             "format": fmt,
             "geometryType": "PROMOTE_TO_MULTI",
             "layers": layers,

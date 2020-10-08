@@ -797,7 +797,6 @@ def geopackage_export_task(
 
     result["file_format"] = "gpkg"
     result["result"] = gpkg
-    result["source"] = gpkg
     result["gpkg"] = gpkg
     return result
 
@@ -843,7 +842,6 @@ def mbtiles_export_task(
 
     result["file_format"] = "MBTiles"
     result["result"] = mbtiles
-    result["source"] = mbtiles
     return result
 
 
