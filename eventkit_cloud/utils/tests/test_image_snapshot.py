@@ -1,4 +1,3 @@
-import json
 import logging
 
 from mock import patch, Mock, MagicMock
@@ -12,8 +11,6 @@ from eventkit_cloud.utils.image_snapshot import (
     get_height,
     get_resolution_for_extent,
 )
-
-from eventkit_cloud.utils.geocoding.geocode import Geocode, GeocodeAdapter, expand_bbox, is_valid_bbox
 
 logger = logging.getLogger(__name__)
 

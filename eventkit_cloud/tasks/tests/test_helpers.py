@@ -8,9 +8,8 @@ import signal
 from django.test import TestCase
 from django.conf import settings
 from django.utils import timezone
-from mock import patch, call, Mock, MagicMock, ANY
+from mock import patch, call, Mock, MagicMock
 import os
-import signal
 from eventkit_cloud.tasks.helpers import (
     get_style_files,
     get_file_paths,
@@ -28,7 +27,6 @@ from eventkit_cloud.tasks.helpers import (
 from eventkit_cloud.tasks.enumerations import TaskStates
 
 from eventkit_cloud.tasks.helpers import progressive_kill
-from unittest import skip
 
 logger = logging.getLogger(__name__)
 
@@ -262,7 +260,7 @@ class TestHelpers(TestCase):
             "include_files": "files",
             "data_sources": {"osm": {"files": [{"data": "here", "full_file_path": "here"}]}},
         }
-        expected_metadata = {"stuff": "test", "data_sources": {"osm": {"files": [{"data": "here",}]}}}
+        expected_metadata = {"stuff": "test", "data_sources": {"osm": {"files": [{"data": "here"}]}}}
         self.assertEqual(expected_metadata, get_arcgis_metadata(example_metadata))
 
     @requests_mock.Mocker()

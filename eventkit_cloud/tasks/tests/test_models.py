@@ -22,7 +22,6 @@ from eventkit_cloud.tasks.models import (
     FileProducingTaskResult,
     RunZipFile,
     UserDownload,
-    get_run_zip_file_slug_sets,
 )
 
 logger = logging.getLogger(__name__)
@@ -156,7 +155,7 @@ class TestRunZipFile(TestCase):
         provider_task.formats.add(*formats)
         job = Job.objects.create(name="TestExportRun", description="Test description", user=user, the_geom=the_geom)
         job.data_provider_tasks.add(provider_task)
-        run = ExportRun.objects.create(job=job, status="SUBMITTED", user=job.user)
+        ExportRun.objects.create(job=job, status="SUBMITTED", user=job.user)
 
     def test_run_zip_file(self):
         run = ExportRun.objects.first()
@@ -440,7 +439,7 @@ class TestUserDownload(TestCase):
     def test_clone(self):
 
         downloadable = FileProducingTaskResult.objects.create(
-            download_url=f"http://testserver/media/self.run.uid/file.txt"
+            download_url="http://testserver/media/self.run.uid/file.txt"
         )
         user_download = UserDownload.objects.create(user=self.user, downloadable=downloadable)
 

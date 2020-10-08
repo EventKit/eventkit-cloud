@@ -32,7 +32,6 @@ class TestExceptions(TestCase):
 
     def test_failed_exception(self):
         task_name = "Test Task"
-        user_name = "Test User"
         message = "The task has failed"
 
         output = FailedException(task_name=task_name)

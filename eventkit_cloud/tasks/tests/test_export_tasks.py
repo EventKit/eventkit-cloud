@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# test cases for Export Tasks
+
 import json
 import pickle
 import logging
@@ -12,9 +12,9 @@ from billiard.einfo import ExceptionInfo
 from django.conf import settings
 from django.contrib.auth.models import Group, User
 from django.contrib.gis.geos import GEOSGeometry, Polygon
-from django.test import TestCase, TransactionTestCase
+from django.test import TestCase
 from django.utils import timezone
-from mock import Mock, PropertyMock, patch, MagicMock, call, ANY
+from mock import Mock, PropertyMock, patch, MagicMock
 
 from eventkit_cloud.celery import TaskPriority, app
 from eventkit_cloud.jobs.models import DatamodelPreset, DataProvider, Job
@@ -394,7 +394,7 @@ class TestExportTasks(ExportTaskBase):
         self.assertIsNotNone(task)
         exception = task.exceptions.all()[0]
         exc_info = pickle.loads(exception.exception.encode()).exc_info
-        error_type, msg, tb = exc_info[0], exc_info[1], exc_info[2]
+        error_type, msg = exc_info[0], exc_info[1]
         self.assertEqual(error_type, ValueError)
         self.assertEqual("some unexpected error", str(msg))
 
@@ -663,7 +663,7 @@ class TestExportTasks(ExportTaskBase):
             run=self.run, name="test_provider_task", status=TaskStates.COMPLETED.value, provider=self.provider
         )
         result = FileProducingTaskResult.objects.create(filename=filename, size=10)
-        task = ExportTaskRecord.objects.create(
+        ExportTaskRecord.objects.create(
             export_provider_task=export_provider_task,
             status=TaskStates.COMPLETED.value,
             name="test_task",
@@ -770,10 +770,12 @@ class TestExportTasks(ExportTaskBase):
             "data_sources": {
                 "osm": {
                     "copyright": None,
-                    "description": "OpenStreetMap vector data provided in a custom thematic schema. \r\n\t\r\n\tData is grouped into separate tables (e.g. water, roads...).",
+                    "description": "OpenStreetMap vector data provided in a custom thematic schema. \r\n\t\r\n\t"
+                    "Data is grouped into separate tables (e.g. water, roads...).",
                     "file_path": "data/osm/test-osm-20181101.gpkg",
                     "file_type": ".gpkg",
-                    "full_file_path": "/var/lib/eventkit/exports_stage/7fadf34e-58f9-4bb8-ab57-adc1015c4269/osm/test.gpkg",
+                    "full_file_path": "/var/lib/eventkit/exports_stage/7fadf34e-58f9-4bb8-ab57-adc1015c4269/osm/"
+                    "test.gpkg",
                     "last_update": "2018-10-29T04:35:02Z\n",
                     "metadata": "https://overpass-server.com/overpass/interpreter",
                     "name": "OpenStreetMap Data (Themes)",

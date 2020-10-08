@@ -56,7 +56,6 @@ class TestTasks(TestCase):
         model_name = "ExportTaskRecord"
         uid = "test_uid"
         etr = ExportTaskRecord(uid=uid)
-        expiration = 1
         cache_key = "{}.{}.{}".format("ExportTaskRecord", uid, attribute)
         mock_get_cache_key.return_value = cache_key
 

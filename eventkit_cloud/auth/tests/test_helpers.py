@@ -1,15 +1,9 @@
 # -*- coding: utf-8 -*-
 
-
 import json
 import logging
 
-import requests
-import requests_mock
-from django.conf import settings
-from django.contrib.auth.models import User
-from django.test import TestCase, override_settings
-from mock import patch
+from django.test import TestCase
 
 from eventkit_cloud.core.models import validate_object
 

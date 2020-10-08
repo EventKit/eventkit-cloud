@@ -399,7 +399,7 @@ class TestExportRunViewSet(APITestCase):
         self.assert_user_access(self.user2)
 
     def test_user_sharing(self,):
-        request_data = {"permissions": {"members": {self.user1.username: "ADMIN", self.user2.username: "ADMIN"},}}
+        request_data = {"permissions": {"members": {self.user1.username: "ADMIN", self.user2.username: "ADMIN"}}}
 
         response = self.client.patch(
             self.job_url, data=json.dumps(request_data), content_type="application/json; version=1.0"

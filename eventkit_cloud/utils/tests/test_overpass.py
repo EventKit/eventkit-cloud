@@ -48,7 +48,10 @@ class TestOverpass(TestCase):
         self.job.formats = self.formats
         self.job.save()
         self.osm = self.path + "/files/query.osm"
-        self.query = "[maxsize:2147483648][timeout:1600];relation(6.25,-10.85,6.4,-10.62);way(6.25,-10.85,6.4,-10.62);node(6.25,-10.85,6.4,-10.62);<;(._;>;);out body;"
+        self.query = (
+            "[maxsize:2147483648][timeout:1600];relation(6.25,-10.85,6.4,-10.62);way(6.25,-10.85,6.4,-10.62);"
+            "node(6.25,-10.85,6.4,-10.62);<;(._;>;);out body;"
+        )
 
     def test_get_query(self,):
         overpass = Overpass(stage_dir=self.path + "/files/", bbox=self.bbox, job_name="testjob",)

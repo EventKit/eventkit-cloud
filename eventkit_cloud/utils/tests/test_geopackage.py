@@ -89,9 +89,8 @@ class TestGeopackage(TransactionTestCase):
         sqlite3.connect().__enter__().execute.return_value = Mock(rowcount=1)
         set_gpkg_contents_bounds(gpkg, table_name, bbox)
         sqlite3.connect().__enter__().execute.assert_called_once_with(
-            "UPDATE gpkg_contents SET min_x = {0}, min_y = {1}, max_x = {2}, max_y = {3} WHERE table_name = '{4}';".format(
-                bbox[0], bbox[1], bbox[2], bbox[3], table_name
-            )
+            "UPDATE gpkg_contents SET min_x = {0}, min_y = {1}, max_x = {2}, max_y = {3} "
+            "WHERE table_name = '{4}';".format(bbox[0], bbox[1], bbox[2], bbox[3], table_name)
         )
 
         with self.assertRaises(Exception):
@@ -284,9 +283,8 @@ class TestGeopackage(TransactionTestCase):
         mock_sqlite3.connect().__enter__().execute().fetchone.return_value = query_response
         response = get_table_gpkg_contents_information(gpkg, table)
         mock_sqlite3.connect().__enter__().execute.assert_called_with(
-            "SELECT table_name, data_type, identifier, description, last_change, min_x, min_y, max_x, max_y, srs_id FROM gpkg_contents WHERE table_name = '{0}';".format(
-                table
-            )
+            "SELECT table_name, data_type, identifier, description, last_change, min_x, min_y, max_x, max_y, srs_id "
+            "FROM gpkg_contents WHERE table_name = '{0}';".format(table)
         )
         self.assertEqual(expected_response, response)
 
@@ -298,7 +296,7 @@ class TestGeopackage(TransactionTestCase):
 
     @patch("eventkit_cloud.utils.geopackage.create_extension_table")
     @patch("eventkit_cloud.utils.geopackage.sqlite3")
-    def test_create_extension_table(self, mock_sqlite3, mock_create_extension_table):
+    def test_create_metadata_tables(self, mock_sqlite3, mock_create_extension_table):
         gpkg = "test.gpkg"
         create_metadata_tables(gpkg)
         mock_sqlite3.connect().__enter__().execute.assert_called()

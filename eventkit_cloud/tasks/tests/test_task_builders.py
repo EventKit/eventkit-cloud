@@ -1,13 +1,12 @@
 # -*- coding: utf-8 -*-
 import logging
 import os
-import uuid
+from mock import Mock, patch, MagicMock
 
 from django.contrib.auth.models import Group, User
 from django.contrib.gis.geos import GEOSGeometry, Polygon
 from django.db.utils import DatabaseError
 from django.test import TestCase
-from mock import Mock, PropertyMock, patch, MagicMock
 
 from eventkit_cloud.jobs.models import ExportFormat, Job, Region, DataProviderTask, DataProvider
 from eventkit_cloud.tasks.task_factory import create_run
@@ -66,7 +65,6 @@ class TestTaskBuilder(TestCase):
 
     @patch("eventkit_cloud.tasks.task_builders.chain")
     def test_run_wms_task(self, mock_chain):
-
         provider = DataProvider.objects.get(slug="wms")
         provider_task_record = DataProviderTask.objects.create(provider=provider)
         self.job.data_provider_tasks.add(provider_task_record)
@@ -92,8 +90,6 @@ class TestTaskBuilder(TestCase):
 
     @patch("eventkit_cloud.tasks.task_builders.chain")
     def test_run_wcs_task(self, mock_chain):
-
-        celery_uid = str(uuid.uuid4())
         provider = DataProvider.objects.get(slug="wms")
         provider_task_record = DataProviderTask.objects.create(provider=provider)
         self.job.data_provider_tasks.add(provider_task_record)

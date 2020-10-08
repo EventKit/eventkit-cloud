@@ -10,7 +10,6 @@ from django.contrib.auth.models import Group, User
 from django.contrib.gis.geos import GEOSGeometry, GeometryCollection, Polygon, Point, LineString
 from django.core import serializers
 from django.utils import timezone
-from django.utils.translation import ugettext as _
 from mock import patch, Mock
 from rest_framework import status
 from rest_framework.authtoken.models import Token
@@ -116,8 +115,8 @@ class TestJobViewSet(APITestCase):
                 "value": "telecommunication",
                 "geom": ["point", "polygon"],
             },
-            {"name": "Radio or TV Studio", "key": "amenity", "value": "studio", "geom": ["point", "polygon"],},
-            {"name": "Telecommunication antenna", "key": "man_made", "value": "tower", "geom": ["point", "polygon"],},
+            {"name": "Radio or TV Studio", "key": "amenity", "value": "studio", "geom": ["point", "polygon"]},
+            {"name": "Telecommunication antenna", "key": "man_made", "value": "tower", "geom": ["point", "polygon"]},
             {
                 "name": "Telecommunication company retail office",
                 "key": "office",
@@ -1336,7 +1335,7 @@ class TestExportTaskViewSet(APITestCase):
         response = self.client.get(url)
 
     def test_list(self,):
-        expected = "/api/tasks".format(self.task_uid)
+        expected = "/api/tasks"
         url = reverse("api:tasks-list")
         self.assertEqual(expected, url)
         response = self.client.get(url)
@@ -1532,7 +1531,7 @@ class TestGroupDataViewSet(APITestCase):
         self.testName = "Omaha 319"
         group, created = Group.objects.get_or_create(name=self.testName)
         self.groupid = group.id
-        gp = GroupPermission.objects.create(group=group, user=self.user1, permission=GroupPermissionLevel.ADMIN.value)
+        GroupPermission.objects.create(group=group, user=self.user1, permission=GroupPermissionLevel.ADMIN.value)
 
     def test_insert_group(self):
         expected = "/api/groups"

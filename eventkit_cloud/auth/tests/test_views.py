@@ -1,9 +1,6 @@
 # -*- coding: utf-8 -*-
-
-
-import json
 import logging
-import urllib.request, urllib.parse, urllib.error
+import urllib
 
 from django.conf import settings
 from django.contrib.auth.models import User, Group

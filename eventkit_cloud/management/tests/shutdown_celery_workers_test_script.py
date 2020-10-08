@@ -1,19 +1,16 @@
 import os
-
-# from django.test import TestCase
 import sys
 
+from celery.result import AsyncResult
+
 import django
-
-os.environ.setdefault("DJANGO_SETTINGS_MODULE", "eventkit_cloud.settings.prod")
-django.setup()
-
 from django.core.management import call_command
+
 from eventkit_cloud.tasks import test_chain
 from eventkit_cloud.celery import app
 
-
-from celery.result import AsyncResult
+os.environ.setdefault("DJANGO_SETTINGS_MODULE", "eventkit_cloud.settings.prod")
+django.setup()
 
 # CELERY_ALWAYS_EAGER = False
 

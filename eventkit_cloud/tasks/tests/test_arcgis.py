@@ -48,7 +48,7 @@ class TestSupport(TestCase):
     def test_create_mxd_process(self):
         from eventkit_cloud.tasks.arcgis.create_mxd import create_mxd_process
 
-        with patch("eventkit_cloud.tasks.arcgis.create_mxd.create_mxd") as mock_create_mxd, patch(
+        with patch("eventkit_cloud.tasks.arcgis.create_mxd.create_mxd"), patch(
             "eventkit_cloud.tasks.arcgis.create_mxd.Pool"
         ) as mock_pool:
             example_mxd = "value"

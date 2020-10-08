@@ -1,12 +1,11 @@
 # -*- coding: utf-8 -*-
-# test cases for Task Process
-from django.test import TestCase, TransactionTestCase
+from django.test import TestCase
 from django.utils import timezone
-from mock import Mock, PropertyMock, patch, MagicMock, call, ANY
+from mock import patch, call
 from eventkit_cloud.tasks.task_process import update_progress
 
 
-class TestTaskPorcess(TestCase):
+class TestTaskProcess(TestCase):
     @patch("eventkit_cloud.tasks.task_process.set_cache_value")
     @patch("django.db.connection.close")
     def test_update_progress(self, mock_close, mock_set_cache_value):

@@ -10,7 +10,7 @@ from django.test import TestCase
 from django.utils import timezone
 from typing import Union
 
-from eventkit_cloud.jobs.models import DataProvider, DataProviderType, Job
+from eventkit_cloud.jobs.models import DataProvider, DataProviderType
 from eventkit_cloud.tasks.enumerations import TaskStates
 from eventkit_cloud.utils.client import EventKitClient
 from eventkit_cloud.utils.geopackage import check_content_exists, check_zoom_levels
@@ -459,7 +459,8 @@ def get_providers_list():
             "updated_at": "2016-10-06T17:45:46.213Z",
             "name": "eventkit-integration-test-wmts",
             "slug": "eventkit-integration-test-wmts",
-            "url": "https://basemap.nationalmap.gov/arcgis/rest/services/USGSImageryOnly/MapServer/WMTS/tile/1.0.0/USGSImageryOnly/default/default028mm/%(z)s/%(y)s/%(x)s",
+            "url": "https://basemap.nationalmap.gov/arcgis/rest/services/USGSImageryOnly/MapServer/WMTS/tile/1.0.0/"
+            "USGSImageryOnly/default/default028mm/%(z)s/%(y)s/%(x)s",
             "layer": "default",
             "export_provider_type": DataProviderType.objects.using("default").get(type_name="wmts"),
             "level_from": 10,
@@ -468,7 +469,8 @@ def get_providers_list():
             "sources:\r\n"
             "  default:\r\n"
             "    type: tile\r\n"
-            "    url: https://basemap.nationalmap.gov/arcgis/rest/services/USGSImageryOnly/MapServer/WMTS/tile/1.0.0/USGSImageryOnly/default/default028mm/%(z)s/%(y)s/%(x)s\r\n"
+            "    url: https://basemap.nationalmap.gov/arcgis/rest/services/USGSImageryOnly/MapServer/WMTS/tile/1.0.0/"
+            "USGSImageryOnly/default/default028mm/%(z)s/%(y)s/%(x)s\r\n"
             "    grid: default\r\n\r\n"
             "grids:\r\n  default:\r\n    srs: EPSG:4326\r\n    tile_size: [256, 256]\r\n    origin: nw\r\n"
             "    res: [0.7031249999999999, 0.35156249999999994, 0.17578124999999997, 0.08789062499999999,\r\n"
@@ -503,14 +505,16 @@ def get_providers_list():
             "      0.0027465820312499996, 0.0013732910156249998, 0.0006866455078124999, 0.00034332275390624995,\r\n"
             "      0.00017166137695312497, 8.583068847656249e-05, 4.291534423828124e-05, 2.145767211914062e-05,\r\n"
             "      1.072883605957031e-05, 5.364418029785155e-06, 2.6822090148925777e-06, 1.3411045074462889e-06,\r\n"
-            "      6.705522537231444e-07]\r\n  webmercator:\r\n    srs: EPSG:3857\r\n    tile_size: [256, 256]\r\n    origin: nw",
+            "      6.705522537231444e-07]\r\n  webmercator:\r\n    srs: EPSG:3857\r\n    tile_size: [256, 256]\r\n    "
+            "      origin: nw",
         },
         {
             "created_at": "2016-10-13T17:23:26.890Z",
             "updated_at": "2016-10-13T17:23:26.890Z",
             "name": "eventkit-integration-test-wfs",
             "slug": "eventkit-integration-test-wfs",
-            "url": "https://cartowfs.nationalmap.gov/arcgis/services/structures/MapServer/WFSServer?SERVICE=WFS&VERSION=1.0.0&REQUEST=GetFeature&TYPENAME=structures:USGS_TNM_Structures&SRSNAME=EPSG:4326",
+            "url": "https://cartowfs.nationalmap.gov/arcgis/services/structures/MapServer/WFSServer?SERVICE=WFS&"
+            "VERSION=1.0.0&REQUEST=GetFeature&TYPENAME=structures:USGS_TNM_Structures&SRSNAME=EPSG:4326",
             "layer": "structures:USGS_TNM_Structures",
             "export_provider_type": DataProviderType.objects.using("default").get(type_name="wfs"),
             "level_from": 0,
@@ -527,7 +531,9 @@ def get_providers_list():
             "export_provider_type": DataProviderType.objects.using("default").get(type_name="wcs"),
             "level_from": 10,
             "level_to": 10,
-            "config": "service:\r\n  scale: \"15\"\r\n  coverages: \"DEP3Elevation\"\r\nparams:\r\n  TRANSPARENT: true\r\n  FORMAT: geotiff\r\n  VERSION: '1.0.0'\r\n  CRS: 'EPSG:4326'\r\n  REQUEST: 'GetCoverage'",
+            "config": 'service:\r\n  scale: "15"\r\n  coverages: "DEP3Elevation"\r\nparams:\r\n  TRANSPARENT: '
+            "true\r\n  FORMAT: geotiff\r\n  VERSION: '1.0.0'\r\n  CRS: 'EPSG:4326'\r\n  "
+            "REQUEST: 'GetCoverage'",
         }
         #     , {
         #     "created_at": "2016-10-21T14:30:27.066Z",

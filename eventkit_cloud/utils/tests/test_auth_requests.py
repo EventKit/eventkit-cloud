@@ -1,12 +1,13 @@
 # -*- coding: utf-8 -*-
 import http.client
 import logging
-import urllib.request, urllib.error, urllib.parse
+import urllib
+from mock import patch, MagicMock, ANY
 
 import requests
+from mapproxy.client.http import _URLOpenerCache, VerifiedHTTPSConnection
+
 from django.test import TransactionTestCase
-from mapproxy.client.http import VerifiedHTTPSConnection, _URLOpenerCache
-from mock import patch, MagicMock, ANY
 
 from eventkit_cloud.utils import auth_requests
 
@@ -95,14 +96,14 @@ class TestAuthResult(TransactionTestCase):
                 "eventkit_cloud.utils.auth_requests.NamedTemporaryFile", return_value=named_tempfile, create=True
             ):
                 # Confirm that a base HTTPSConnection picks up key and cert files
-                conn = http.client.HTTPSConnection()
+                http.client.HTTPSConnection()
                 getenv.assert_called_with("test_provider_slug_CERT")
                 new_orig_init.assert_called_with(ANY, key_file="temp filename", cert_file="temp filename")
                 cert_tempfile.write.assert_called_once_with("key and cert contents".encode())
 
                 # Confirm that a MapProxy VerifiedHTTPSConnection picks up key and cert files
                 cert_tempfile.write.reset_mock()
-                conn = VerifiedHTTPSConnection()
+                VerifiedHTTPSConnection()
                 new_orig_init.assert_called_with(ANY, key_file="temp filename", cert_file="temp filename")
                 cert_tempfile.write.assert_called_once_with("key and cert contents".encode())
 

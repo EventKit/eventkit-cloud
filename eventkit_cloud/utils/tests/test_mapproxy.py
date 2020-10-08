@@ -6,7 +6,7 @@ import yaml as real_yaml
 from django.conf import settings
 from django.test import TransactionTestCase
 from mapproxy.config.config import load_default_config
-from mock import Mock, patch, MagicMock, ANY
+from mock import Mock, patch, MagicMock
 
 from eventkit_cloud.jobs.models import DataProvider
 from eventkit_cloud.tasks.enumerations import TaskStates
@@ -57,7 +57,12 @@ class TestGeopackage(TransactionTestCase):
         patch_https,
     ):
         gpkgfile = "/var/lib/eventkit/test.gpkg"
-        config = "layers:\r\n - name: default\r\n   title: imagery\r\n   sources: [default]\r\n\r\nsources:\r\n  default:\r\n    type: tile\r\n    grid: default\r\n    url: http://a.tile.openstreetmap.fr/hot/%(z)s/%(x)s/%(y)s.png\r\n\r\ngrids:\r\n  default:\r\n    srs: WGS84:3857\r\n    tile_size: [256, 256]\r\n    origin: nw"
+        config = (
+            "layers:\r\n - name: default\r\n   title: imagery\r\n   sources: [default]\r\n\r\nsources:\r\n  "
+            "default:\r\n    type: tile\r\n    grid: default\r\n    "
+            "url: http://a.tile.openstreetmap.fr/hot/%(z)s/%(x)s/%(y)s.png\r\n\r\ngrids:\r\n  default:\r\n    "
+            "srs: WGS84:3857\r\n    tile_size: [256, 256]\r\n    origin: nw"
+        )
         json_config = real_yaml.safe_load(config)
         mapproxy_config = load_default_config()
         bbox = [-2, -2, 2, 2]
@@ -82,7 +87,8 @@ class TestGeopackage(TransactionTestCase):
             config=config,
             gpkgfile=gpkgfile,
             bbox=bbox,
-            service_url="http://generic.server/WMTS?SERVICE=WMTS&REQUEST=GetTile&TILEMATRIXSET=default028mm&TILEMATRIX=%(z)s&TILEROW=%(y)s&TILECOL=%(x)s&FORMAT=image%%2Fpng",
+            service_url="http://generic.server/WMTS?SERVICE=WMTS&REQUEST=GetTile&TILEMATRIXSET=default028mm&"
+            "TILEMATRIX=%(z)s&TILEROW=%(y)s&TILECOL=%(x)s&FORMAT=image%%2Fpng",
             layer="imagery",
             debug=True,
             name="imagery",
@@ -130,7 +136,7 @@ class TestHelpers(TransactionTestCase):
             "cache": {
                 "sources": example_sources,
                 "meta_size": [1, 1],
-                "cache": {"type": "geopackage", "filename": str(example_geopackage),},
+                "cache": {"type": "geopackage", "filename": str(example_geopackage)},
                 "grids": example_grids,
                 "format": "mixed",
                 "request_format": "image/png",
@@ -169,7 +175,8 @@ class TestHelpers(TransactionTestCase):
         mock_get_zoom_levels.assert_called_once_with(example_geopackage, table_name)
         mock_tile_matrix.assert_called_once_with(example_geopackage, table_name)
         mock_sql.connect().__enter__().execute.assert_called_once_with(
-            "\nINSERT OR REPLACE INTO gpkg_tile_matrix (table_name, zoom_level, matrix_width, matrix_height, tile_width, tile_height,\npixel_x_size, pixel_y_size)\nVALUES(?, ?, ?, ?, ?, ?, ?, ?)",
+            "\nINSERT OR REPLACE INTO gpkg_tile_matrix (table_name, zoom_level, matrix_width, matrix_height, "
+            "tile_width, tile_height,\npixel_x_size, pixel_y_size)\nVALUES(?, ?, ?, ?, ?, ?, ?, ?)",
             ("tiles", 2, 4, 2, 256, 256, 0.3515625, 0.3515625),
         )
 
@@ -207,7 +214,10 @@ class TestHelpers(TransactionTestCase):
         example_slug = "test"
         url = "http://test.test"
         with self.settings(SITE_URL=url):
-            expected_value = f"{url}/map/{example_slug}/wmts/{get_footprint_layer_name(example_slug)}/default/{{z}}/{{x}}/{{y}}.png"  # NOQA
+            expected_value = (
+                f"{url}/map/{example_slug}/wmts/{get_footprint_layer_name(example_slug)}/default/"
+                f"{{z}}/{{x}}/{{y}}.png"
+            )
             returned_value = get_mapproxy_footprint_url(example_slug)
             self.assertEqual(expected_value, returned_value)
 

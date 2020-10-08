@@ -238,14 +238,14 @@ class TestReverseGeoCode(TestCase):
         expected_result = [-1, -1, 2, 2]
 
         result = expand_bbox(original_bbox, new_bbox)
-        assert (expected_result, result)
+        self.assertEqual(expected_result, result)
 
         original_bbox = None
         new_bbox = [0, 0, 2, 2]
         expected_result = new_bbox
 
         result = expand_bbox(original_bbox, new_bbox)
-        assert (expected_result, result)
+        self.assertEqual(expected_result, result)
 
     def test_is_valid_bbox(self):
         # test valid

@@ -1,11 +1,14 @@
 # -*- coding: utf-8 -*-
-import logging
-import os
-from django.test import TestCase
-from eventkit_cloud.utils.pcf import PcfClient, PcfTaskStates
 import json
-import requests_mock
+import logging
 from mock import patch
+import os
+
+import requests_mock
+
+from django.test import TestCase
+
+from eventkit_cloud.utils.pcf import PcfClient
 
 logger = logging.getLogger(__name__)
 

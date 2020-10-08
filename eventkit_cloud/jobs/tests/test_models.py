@@ -283,7 +283,7 @@ class TestTag(TestCase):
 
     def test_create_tags(self,):
         tags = [
-            {"key": "aeroway", "value": "aerodrome", "geom": ["node", "area"],},
+            {"key": "aeroway", "value": "aerodrome", "geom": ["node", "area"]},
         ]
         self.job.json_tags = tags
         self.job.save()

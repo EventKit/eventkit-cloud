@@ -1,7 +1,8 @@
 import logging
+from mock import patch, Mock, MagicMock
 
 from django.test import TestCase
-from mock import patch, Mock, call, MagicMock
+
 from eventkit_cloud.utils.geocoding.geocode_auth_response import (
     GeocodeAuthResponse,
     check_data,

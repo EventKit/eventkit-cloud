@@ -28,9 +28,7 @@ class TestS3Util(TestCase):
         mock_get_s3_client.return_value = mock_client
         example_filename = os.path.join(settings.EXPORT_STAGING_ROOT, self._uuid, self._filename)
         expected_download_path = f"{self._uuid}/{self._filename}"
-        with patch(
-            "audit_logging.file_logging.logging_open", mock_open(read_data="test"), create=True
-        ) as mock_open_obj:
+        with patch("audit_logging.file_logging.logging_open", mock_open(read_data="test"), create=True):
             upload_to_s3(example_filename, expected_download_path)
 
         mock_client.upload_fileobj.assert_called_once()
