@@ -7,27 +7,28 @@ import axios from 'axios';
 import debounce from 'lodash/debounce';
 import {Step, StoreHelpers} from 'react-joyride';
 
-import Map from 'ol/map';
-import View from 'ol/view';
-import extent from 'ol/extent';
-import VectorSource from 'ol/source/vector';
-import GeoJSONFormat from 'ol/format/geojson';
-import Feature from 'ol/feature';
-import Point from 'ol/geom/point';
-import Polygon from 'ol/geom/polygon';
-import Style from 'ol/style/style';
-import Icon from 'ol/style/icon';
-import Fill from 'ol/style/fill';
-import Stroke from 'ol/style/stroke';
-import Circle from 'ol/style/circle';
-import ScaleLine from 'ol/control/scaleline';
-import Attribution from 'ol/control/attribution';
-import Zoom from 'ol/control/zoom';
-import ZoomToExtent from 'ol/control/zoomtoextent';
-import interaction from 'ol/interaction';
-import Pointer from 'ol/interaction/pointer';
-import Tile from 'ol/layer/tile';
-import XYZ from 'ol/source/xyz';
+import Map from 'ol/Map';
+import View from 'ol/View';
+import {boundingExtent} from 'ol/extent';
+import VectorSource from 'ol/source/Vector';
+import GeoJSONFormat from 'ol/format/GeoJSON';
+import Feature from 'ol/Feature';
+import Point from 'ol/geom/Point';
+import Polygon, { fromExtent } from 'ol/geom/Polygon';
+import Style from 'ol/style/Style';
+import Icon from 'ol/style/Icon';
+import Fill from 'ol/style/Fill';
+import Stroke from 'ol/style/Stroke';
+import Circle from 'ol/style/Circle';
+import ScaleLine from 'ol/control/ScaleLine';
+import Attribution from 'ol/control/Attribution';
+import Zoom from 'ol/control/Zoom';
+import ZoomToExtent from 'ol/control/ZoomToExtent';
+import { defaults } from 'ol/interaction';
+import Pointer from 'ol/interaction/Pointer';
+import Tile from 'ol/layer/Tile';
+import TileGrid from "ol/tilegrid/TileGrid";
+import XYZ from 'ol/source/XYZ';
 
 import css from '../../styles/ol3map.css';
 import SearchAOIToolbar from '../MapTools/SearchAOIToolbar';
@@ -47,12 +48,10 @@ import {
     getDominantGeometry, getResolutions, wrapX, getTileCoordinateFromClick, TileCoordinate
 } from '../../utils/mapUtils';
 
-import {getCookie, getSqKm} from '../../utils/generic';
 import ZoomLevelLabel from '../MapTools/ZoomLevelLabel';
 import globe from '../../../images/globe-americas.svg';
 import {joyride} from '../../joyride.config';
 import {Breakpoint} from '@material-ui/core/styles/createBreakpoints';
-import TileGrid from "ol/tilegrid/tilegrid";
 
 import {MapLayer} from "./CreateExport";
 import MapDisplayBar from "./MapDisplayBar";
@@ -63,7 +62,6 @@ import MapDrawer from "./MapDrawer";
 import EventkitJoyride from "../common/JoyrideWrapper";
 
 export const WGS84 = 'EPSG:4326';
-export const WEB_MERCATOR = 'EPSG:3857';
 
 export interface Props {
     aoiInfo: Eventkit.Store.AoiInfo;
@@ -308,7 +306,7 @@ export class ExportAOI extends React.Component<Props, State> {
     private setMapView() {
         clearDraw(this.drawLayer);
         const ext = this.map.getView().calculateExtent(this.map.getSize());
-        const geom = Polygon.fromExtent(ext);
+        const geom = fromExtent(ext);
         const coords = geom.getCoordinates();
         const unwrappedCoords = unwrapCoordinates(coords, this.map.getView().getProjection());
         geom.setCoordinates(unwrappedCoords);
@@ -566,7 +564,7 @@ export class ExportAOI extends React.Component<Props, State> {
                     ],
                 }),
             ],
-            interactions: interaction.defaults({
+            interactions: defaults({
                 keyboard: false,
                 altShiftDragRotate: false,
                 pinchRotate: false,
@@ -701,7 +699,7 @@ export class ExportAOI extends React.Component<Props, State> {
                 return newCoord;
             });
         }
-        const bounds = extent.boundingExtent(coords);
+        const bounds = boundingExtent(coords);
         // do not update the feature if it would have no area
         if (bounds[0] === bounds[2] || bounds[1] === bounds[3]) {
             return false;

@@ -2,9 +2,8 @@ import * as React from 'react';
 import sinon from 'sinon';
 import { shallow } from 'enzyme';
 
-import Feature from 'ol/feature';
-import Point from 'ol/geom/point';
-import Polygon from 'ol/geom/polygon';
+import Feature from 'ol/Feature';
+import Polygon from 'ol/geom/Polygon';
 
 import { MapDisplayBar } from "../../components/CreateDataPack/MapDisplayBar";
 import AoiInfobar from '../../components/CreateDataPack/AoiInfobar';

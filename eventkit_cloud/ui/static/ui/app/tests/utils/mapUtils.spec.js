@@ -1,14 +1,14 @@
 import sinon from 'sinon';
 import raf from 'raf';
-import proj from 'ol/proj';
-import View from 'ol/view';
-import extent from 'ol/extent';
-import Feature from 'ol/feature';
-import Point from 'ol/geom/point';
-import Polygon from 'ol/geom/polygon';
-import Draw from 'ol/interaction/draw';
-import VectorSource from 'ol/source/vector';
-import VectorLayer from 'ol/layer/vector';
+import { get } from 'ol/proj';
+import View from 'ol/View';
+import * as extent from 'ol/extent';
+import Feature from 'ol/Feature';
+import Point from 'ol/geom/Point';
+import Polygon from 'ol/geom/Polygon';
+import Draw from 'ol/interaction/Draw';
+import VectorSource from 'ol/source/Vector';
+import VectorLayer from 'ol/layer/Vector';
 import WKTReader from 'jsts/org/locationtech/jts/io/WKTReader';
 import * as utils from '../../utils/mapUtils';
 
@@ -509,42 +509,42 @@ describe('mapUtils', () => {
     });
 
     it('unwrapCoordinates should adjust x coords to be in valid extent', () => {
-        const coordProj = proj.get('EPSG:4326');
+        const coordProj = get('EPSG:4326');
         const coords = [[[-380, 20], [-160, 20], [-160, -20], [-380, -20]]];
         const expected = [[[-20, 20], [-160, 20], [-160, -20], [-20, -20]]];
         expect(utils.unwrapCoordinates(coords, coordProj)).toEqual(expected);
     });
 
     it('unwrapExtent should adjust min and max x coords to be in valid extent', () => {
-        const coordProj = proj.get('EPSG:4326');
+        const coordProj = get('EPSG:4326');
         const coordExtent = [700, -90, 740, 90];
         const expected = [-20, -90, 20, 90];
         expect(utils.unwrapExtent(coordExtent, coordProj)).toEqual(expected);
     });
 
     it('unwrapExtent should adjust min and max x coords to be in valid extent', () => {
-        const coordProj = proj.get('EPSG:4326');
+        const coordProj = get('EPSG:4326');
         const coordExtent = [-540, -90, -185, 90];
         const expected = [-180, -90, 175, 90];
         expect(utils.unwrapExtent(coordExtent, coordProj)).toEqual(expected);
     });
 
     it('unwrapExtent should return the extent unmodified', () => {
-        const coordProj = proj.get('EPSG:4326');
+        const coordProj = get('EPSG:4326');
         const coordExtent = [-120, -90, 180, 90];
         const expected = [-120, -90, 180, 90];
         expect(utils.unwrapExtent(coordExtent, coordProj)).toEqual(expected);
     });
 
     it('isViewOutsideValidExtent should return true or false', () => {
-        const view = new View({ center: [-190, 40], projection: 'EPSG:4326' });
+        const view = new View({ center: [-190, 40], projection: 'EPSG:4326', zoom: 1 });
         expect(utils.isViewOutsideValidExtent(view)).toBe(true);
-        const view2 = new View({ center: [-20, 20], projection: 'EPSG:4326' });
+        const view2 = new View({ center: [-20, 20], projection: 'EPSG:4326', zoom: 1 });
         expect(utils.isViewOutsideValidExtent(view2)).toBe(false);
     });
 
     it('goToValidExtent should set the center of view to be inside the valid map extent', () => {
-        const view = new View({ center: [-190, 20], projection: 'EPSG:4326' });
+        const view = new View({ center: [-190, 20], projection: 'EPSG:4326', zoom: 1 });
         expect(utils.goToValidExtent(view)).toEqual([170, 20]);
         expect(view.getCenter()).toEqual([170, 20]);
     });

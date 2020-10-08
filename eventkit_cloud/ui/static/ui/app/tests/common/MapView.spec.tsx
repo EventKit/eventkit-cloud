@@ -1,11 +1,5 @@
 import * as React from 'react';
-import * as sinon from 'sinon';
-import {mount, shallow} from 'enzyme';
-import Map from 'ol/map';
-import View from 'ol/view';
-import interaction from 'ol/interaction';
-import VectorSource from 'ol/source/vector';
-import GeoJSON from 'ol/format/geojson';
+import { mount } from 'enzyme';
 import { MapView } from '../../components/common/MapView';
 import OlMapComponent from "../../components/MapTools/OpenLayers/OlMapComponent";
 

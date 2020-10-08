@@ -3,25 +3,24 @@ import sinon from 'sinon';
 import { shallow } from 'enzyme';
 import axios from 'axios';
 import MockAdapter from 'axios-mock-adapter';
-import Joyride from 'react-joyride';
 
-import Map from 'ol/map';
-import View from 'ol/view';
-import extent from 'ol/extent';
-import GeoJSONFormat from 'ol/format/geojson';
-import Feature from 'ol/feature';
-import Point from 'ol/geom/point';
-import Polygon from 'ol/geom/polygon';
-import VectorSource from 'ol/source/vector';
-import Draw from 'ol/interaction/draw';
+import Map from 'ol/Map';
+import View from 'ol/View';
+import { getWidth } from 'ol/extent';
+import GeoJSONFormat from 'ol/format/GeoJSON';
+import Feature from 'ol/Feature';
+import Point from 'ol/geom/Point';
+import Polygon from 'ol/geom/Polygon';
+import * as polygonModule from 'ol/geom/Polygon'
+import VectorSource from 'ol/source/Vector';
+import Draw from 'ol/interaction/Draw';
 
-import { ExportAOI, WGS84, WEB_MERCATOR } from '../../components/CreateDataPack/ExportAOI';
+import { ExportAOI, WGS84 } from '../../components/CreateDataPack/ExportAOI';
 import SearchAOIToolbar from '../../components/MapTools/SearchAOIToolbar';
 import DrawAOIToolbar from '../../components/MapTools/DrawAOIToolbar';
 import InvalidDrawWarning from '../../components/MapTools/InvalidDrawWarning';
 import DropZone from '../../components/MapTools/DropZone';
 import * as utils from '../../utils/mapUtils';
-import * as generic from '../../utils/generic';
 import ZoomLevelLabel from '../../components/MapTools/ZoomLevelLabel';
 import MapDisplayBar from "../../components/CreateDataPack/MapDisplayBar";
 
@@ -431,7 +430,7 @@ describe('ExportAOI component', () => {
         const unwrapSpy = sinon.spy(utils, 'unwrapCoordinates');
         const createSpy = sinon.spy(utils, 'createGeoJSON');
         const calcSpy = sinon.spy(View.prototype, 'calculateExtent');
-        const fromExtentSpy = sinon.spy(Polygon, 'fromExtent');
+        const fromExtentSpy = sinon.spy(polygonModule, 'fromExtent');
         const getCoordSpy = sinon.spy(Polygon.prototype, 'getCoordinates');
         const addSpy = sinon.spy(VectorSource.prototype, 'addFeature');
         instance.setMapView();
@@ -510,7 +509,7 @@ describe('ExportAOI component', () => {
         const goToSpy = sinon.spy(utils, 'goToValidExtent');
         const viewSpy = sinon.spy(utils, 'isViewOutsideValidExtent');
         const view = instance.map.getView();
-        const worldWidth = extent.getWidth(view.getProjection().getExtent());
+        const worldWidth = getWidth(view.getProjection().getExtent());
         const center = view.getCenter();
         // set the center to be somewhere that require the map to wrap
         view.setCenter([center[0] + (3 * worldWidth), center[1]]);
