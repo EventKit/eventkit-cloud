@@ -1082,11 +1082,6 @@ export class ExportAOI extends React.Component<Props, State> {
                         skip: (<span>Skip</span>) as any,
                     }}
                     run={isRunning}
-                    styles={{
-                        options: {
-                            zIndex: 5000,
-                        }
-                    }}
                 />
                 <div id="map" className={css.map} style={mapStyle}>
                     <div className='basemap-tab'>
