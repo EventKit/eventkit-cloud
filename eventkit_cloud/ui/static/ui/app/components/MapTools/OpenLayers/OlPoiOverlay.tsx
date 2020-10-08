@@ -1,5 +1,5 @@
 import React, { useEffect, useRef } from 'react';
-import Overlay from 'ol/overlay';
+import Overlay from 'ol/Overlay';
 import {
     createStyles,
     Theme, withStyles,

@@ -1,19 +1,20 @@
-import Map from "ol/map";
-import TileGrid from "ol/tilegrid/tilegrid";
-import View from "ol/view";
-import interaction from "ol/interaction";
-import ScaleLine from "ol/control/scaleline";
+import Map from "ol/Map";
+import TileGrid from "ol/tilegrid/TileGrid";
+import View from "ol/View";
+import {defaults} from "ol/interaction";
+import ScaleLine from "ol/control/ScaleLine";
 import ol3mapCss from "../styles/ol3map.css";
-import Attribution from "ol/control/attribution";
-import Zoom from "ol/control/zoom";
+import Attribution from "ol/control/Attribution";
+import Zoom from "ol/control/Zoom";
 import {getResolutions} from "./mapUtils";
-import VectorSource from "ol/source/vector";
-import GeoJSON from "ol/format/geojson";
-import VectorLayer from "ol/layer/vector";
-import Layer from "ol/layer/layer";
-import Tile from "ol/layer/tile";
-import XYZ from "ol/source/xyz";
-import Observable from "ol/observable";
+import VectorSource from "ol/source/Vector";
+import GeoJSON from "ol/format/GeoJSON";
+import VectorLayer from "ol/layer/Vector";
+import Layer from "ol/layer/Layer";
+import Tile from "ol/layer/Tile";
+import XYZ from "ol/source/XYZ";
+import { unByKey } from "ol/Observable";
+import Interaction from "ol/interaction/Interaction";
 
 const DEFAULT_EPSG_CODE = 4326;
 
@@ -52,7 +53,7 @@ export class MapContainer {
                 minZoom: minZoom || 0,
                 maxZoom: maxZoom || 20,
             }),
-            interactions: interaction.defaults({
+            interactions: defaults({
                 keyboard: false,
                 altShiftDragRotate: false,
                 pinchRotate: false,
@@ -128,7 +129,7 @@ export class MapContainer {
         this.olMap.removeLayer(layer);
     }
 
-    getInteraction(interactionType: interaction.Interaction) : interaction.Interaction {
+    getInteraction(interactionType: Interaction) : Interaction {
         // Returns a specific Interaction from the map by type, may return undefined if not added to the collection.
         return this.olMap.getInteractions().getArray().find(i => i instanceof interactionType);
     }
@@ -139,6 +140,6 @@ export class MapContainer {
     }
 
     removeListener(listenerKey) : void {
-        Observable.unByKey(listenerKey);
+        unByKey(listenerKey);
     }
 }

@@ -1,8 +1,8 @@
 import * as React from 'react';
-import { withTheme, Theme, withStyles, createStyles } from '@material-ui/core/styles';
+import { Theme, withStyles, createStyles } from '@material-ui/core/styles';
 import withWidth, { isWidthUp } from '@material-ui/core/withWidth';
 import { Breakpoint } from '@material-ui/core/styles/createBreakpoints';
-import {Tab, Tabs, Typography} from "@material-ui/core";
+import {Tab, Tabs } from "@material-ui/core";
 import AoiInfobar from "./AoiInfobar";
 import {MapQueryDisplay} from "./MapQueryDisplay";
 import {MapLayer} from "./CreateExport";

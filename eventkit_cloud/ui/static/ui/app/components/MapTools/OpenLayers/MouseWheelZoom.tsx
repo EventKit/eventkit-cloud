@@ -1,7 +1,6 @@
 import React, {useEffect} from 'react';
-import {useOlMapContainer, useOlZoom} from "../context/OpenLayersContext";
-import {useEffectOnMount} from "../../../utils/hooks/hooks";
-import MouseWheelZoom from "ol/interaction/mousewheelzoom";
+import {useOlMapContainer} from "../context/OpenLayersContext";
+import MouseWheelZoom from "ol/interaction/MouseWheelZoom";
 
 
 interface Props {
