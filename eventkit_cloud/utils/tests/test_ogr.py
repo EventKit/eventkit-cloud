@@ -14,33 +14,33 @@ logger = logging.getLogger(__name__)
 
 
 class TestOGR(TestCase):
-
-    def setUp(self, ):
+    def setUp(self,):
         self.path = os.path.dirname(os.path.realpath(__file__))
-        self.task_process_patcher = patch('eventkit_cloud.utils.ogr.TaskProcess')
+        self.task_process_patcher = patch("eventkit_cloud.utils.ogr.TaskProcess")
         self.task_process = self.task_process_patcher.start()
         self.addCleanup(self.task_process_patcher.stop)
         self.task_uid = uuid4()
 
-    @patch('eventkit_cloud.utils.ogr.create_zip_file')
+    @patch("eventkit_cloud.utils.ogr.create_zip_file")
     def test_convert(self, mock_create_zip_file):
-        gpkg = '/path/to/query.gpkg'
-        kmlfile = '/path/to/query.kml'
-        expected_file = '/path/to/query.kmz'
+        gpkg = "/path/to/query.gpkg"
+        kmlfile = "/path/to/query.kml"
+        expected_file = "/path/to/query.kmz"
         mock_create_zip_file.return_value = expected_file
         expected_cmd = "ogr2ogr -f 'KML'  {0} {1}".format(kmlfile, gpkg)
         self.task_process.return_value = Mock(exitcode=0)
         # set zipped to False for testing
         ogr = OGR(task_uid=self.task_uid)
-        out = ogr.convert(file_format='KML', in_file=gpkg, out_file=kmlfile)
+        out = ogr.convert(file_format="KML", in_file=gpkg, out_file=kmlfile)
         self.task_process.assert_called_once_with(task_uid=self.task_uid)
-        self.task_process().start_process.assert_called_once_with(expected_cmd, executable='/bin/bash', shell=True, stderr=-1,
-                                                                  stdout=-1)
+        self.task_process().start_process.assert_called_once_with(
+            expected_cmd, executable="/bin/bash", shell=True, stderr=-1, stdout=-1
+        )
         self.assertEqual(out, expected_file)
 
         self.task_process.return_value = Mock(exitcode=1)
         with self.assertRaises(Exception):
-            ogr.convert(file_format='KML', in_file=gpkg, out_file=kmlfile)
+            ogr.convert(file_format="KML", in_file=gpkg, out_file=kmlfile)
 
     def test_get_zip_name(self):
         example_value = "/path/name.txt"

@@ -14,7 +14,6 @@ logger = logging.getLogger(__name__)
 
 
 class TestAuthResult(TransactionTestCase):
-
     def setUp(self):
         self.url = "http://example.test/"
 
@@ -48,7 +47,7 @@ class TestAuthResult(TransactionTestCase):
         cert_tempfile.write = MagicMock()
         cert_tempfile.flush = MagicMock()
 
-        with patch('eventkit_cloud.utils.auth_requests.NamedTemporaryFile', return_value=named_tempfile, create=True):
+        with patch("eventkit_cloud.utils.auth_requests.NamedTemporaryFile", return_value=named_tempfile, create=True):
             result = req(self.url, cert_var="TEST_SLUG_CERT", data=42)
 
         getenv.assert_any_call("TEST_SLUG_CERT")
@@ -57,17 +56,17 @@ class TestAuthResult(TransactionTestCase):
         req_patch.assert_called_with(self.url, data=42, cert="temp filename")
         self.assertEqual("test", result.content)
 
-    @patch('eventkit_cloud.utils.auth_requests.os.getenv')
-    @patch('eventkit_cloud.utils.auth_requests.requests.get')
+    @patch("eventkit_cloud.utils.auth_requests.os.getenv")
+    @patch("eventkit_cloud.utils.auth_requests.requests.get")
     def test_get(self, get_patch, getenv):
         self.do_tests(auth_requests.get, get_patch, getenv)
 
-    @patch('eventkit_cloud.utils.auth_requests.os.getenv')
-    @patch('eventkit_cloud.utils.auth_requests.requests.post')
+    @patch("eventkit_cloud.utils.auth_requests.os.getenv")
+    @patch("eventkit_cloud.utils.auth_requests.requests.post")
     def test_post(self, post_patch, getenv):
         self.do_tests(auth_requests.post, post_patch, getenv)
 
-    @patch('eventkit_cloud.utils.auth_requests.os.getenv')
+    @patch("eventkit_cloud.utils.auth_requests.os.getenv")
     def test_patch_https(self, getenv):
         # NB: HTTPSConnection is never mocked here; the monkey-patch applies to the actual httplib library.
         # If other tests in the future have any issues with httplib (they shouldn't, the patch is transparent,
@@ -81,8 +80,9 @@ class TestAuthResult(TransactionTestCase):
             getenv.return_value = "key and cert contents"
             auth_requests.patch_https("test-provider-slug")
             self.assertNotEqual(auth_requests._ORIG_HTTPSCONNECTION_INIT, http.client.HTTPSConnection.__init__)
-            self.assertEqual("_new_init", http.client.HTTPSConnection.__init__
-                             .__closure__[1].cell_contents.__name__)  # complicated because decorator
+            self.assertEqual(
+                "_new_init", http.client.HTTPSConnection.__init__.__closure__[1].cell_contents.__name__
+            )  # complicated because decorator
 
             named_tempfile = MagicMock()
             cert_tempfile = MagicMock()
@@ -91,8 +91,9 @@ class TestAuthResult(TransactionTestCase):
             cert_tempfile.write = MagicMock()
             cert_tempfile.flush = MagicMock()
 
-            with patch('eventkit_cloud.utils.auth_requests.NamedTemporaryFile', return_value=named_tempfile,
-                       create=True):
+            with patch(
+                "eventkit_cloud.utils.auth_requests.NamedTemporaryFile", return_value=named_tempfile, create=True
+            ):
                 # Confirm that a base HTTPSConnection picks up key and cert files
                 conn = http.client.HTTPSConnection()
                 getenv.assert_called_with("test_provider_slug_CERT")

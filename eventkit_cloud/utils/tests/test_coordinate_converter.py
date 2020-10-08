@@ -10,9 +10,9 @@ from eventkit_cloud.utils.geocoding.coordinate_converter import CoordinateConver
 logger = logging.getLogger(__name__)
 mockURL = "http://test.test"
 
+
 @override_settings(GEOCODING_AUTH_URL=None)
 class TestConvert(TestCase):
-
     def setUp(self):
         self.mock_requests = requests_mock.Mocker()
         self.mock_requests.start()
@@ -23,18 +23,8 @@ class TestConvert(TestCase):
     def test_convert_success(self):
         convert_response_success = {
             "type": "Feature",
-            "geometry": {
-                "type": "Point",
-                "coordinates": [
-                    -112.61869345019069,
-                    50.00105275281522
-                ]
-            },
-            "properties": {
-                "name": "12UUA8440",
-                "from": "mgrs",
-                "to": "decdeg"
-            }
+            "geometry": {"type": "Point", "coordinates": [-112.61869345019069, 50.00105275281522]},
+            "properties": {"name": "12UUA8440", "from": "mgrs", "to": "decdeg"},
         }
 
         self.mock_requests.get(mockURL, text=json.dumps(convert_response_success), status_code=200)
@@ -50,13 +40,7 @@ class TestConvert(TestCase):
         self.assertIsInstance(geometry.get("coordinates"), list)
 
     def test_convert_fail(self):
-        convert_response_fail = {
-            "properties": {
-                "name": "12UUA844",
-                "from": "mgrs",
-                "to": "decdeg"
-            }
-        }
+        convert_response_fail = {"properties": {"name": "12UUA844", "from": "mgrs", "to": "decdeg"}}
 
         with self.assertRaises(Exception):
             self.mock_requests.get(mockURL, text=json.dumps(convert_response_fail), status_code=500)

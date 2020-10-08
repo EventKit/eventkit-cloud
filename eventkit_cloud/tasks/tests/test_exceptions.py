@@ -8,7 +8,6 @@ logger = logging.getLogger(__name__)
 
 
 class TestExceptions(TestCase):
-
     def test_cancel_exception(self):
         task_name = "Test Task"
         user_name = "Test User"

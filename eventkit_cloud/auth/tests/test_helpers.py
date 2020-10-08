@@ -15,8 +15,8 @@ from eventkit_cloud.core.models import validate_object
 
 logger = logging.getLogger(__name__)
 
-class TestHelpers(TestCase):
 
+class TestHelpers(TestCase):
     def test_validate_object(self):
         filter = '[["MyGroup", "in", "groups"], "or", ["student", "==", "employmentStatus"]]'
         user = {"employmentStatus": "student"}
@@ -93,4 +93,3 @@ class TestHelpers(TestCase):
         self.assertTrue(validate_object(json.loads(filter), user))
         user = {"name": "Jan"}
         self.assertTrue(validate_object(json.loads(filter), user))
-
