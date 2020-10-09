@@ -49,6 +49,21 @@ export class MapCard extends React.Component<Props, State> {
         const { colors } = this.props.theme.eventkit;
         const selectedBasemap = { mapUrl: this.context.config.BASEMAP_URL } as MapLayer;
 
+        const styles = {
+            mapContainer: {
+                position: 'relative' as 'relative',
+                padding: '50% 0 0',
+                marginTop: '10px',
+                backgroundColor: colors.secondary
+            },
+            mapView: {
+                position: 'absolute' as 'absolute',
+                height: '100%',
+                left: '0',
+                top: '0',
+            }
+        }
+
         return (
             <Card
                 id="Map"
@@ -75,11 +90,12 @@ export class MapCard extends React.Component<Props, State> {
                 <Collapse in={this.state.open}>
                     <CardContent
                         className="qa-MapCard-CardText-map"
-                        style={{padding: '5px', backgroundColor: colors.secondary}}
+                        style={styles.mapContainer}
                     >
                         { this.props.provider ?
                             <MapView
                                 id={this.props.provider.id + "-map"}
+                                style={styles.mapView}
                                 selectedBaseMap={selectedBasemap}
                                 copyright={this.props.provider.service_copyright ? this.props.provider.service_copyright : this.context.config.BASEMAP_COPYRIGHT}
                                 geojson={this.props.geojson}
@@ -91,6 +107,7 @@ export class MapCard extends React.Component<Props, State> {
                             :
                             <MapView
                                 selectedBaseMap={selectedBasemap}
+                                style={styles.mapView}
                                 copyright={this.context.config.BASEMAP_COPYRIGHT}
                                 geojson={this.props.geojson}
                                 setZoom={this.props.setZoom}

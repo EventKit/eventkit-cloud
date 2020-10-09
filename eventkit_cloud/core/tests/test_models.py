@@ -5,9 +5,18 @@ from unittest.mock import patch, MagicMock
 from django.db.models import Count, Case, When, Q
 
 from eventkit_cloud.auth.models import OAuth
-from eventkit_cloud.core.models import AttributeClass, update_all_attribute_classes_with_user, \
-    update_all_users_with_attribute_class, get_users_from_attribute_class, validate_user_attribute_class, \
-    annotate_users_restricted, get_unrestricted_users, GroupPermission, GroupPermissionLevel, get_group_counts
+from eventkit_cloud.core.models import (
+    AttributeClass,
+    update_all_attribute_classes_with_user,
+    update_all_users_with_attribute_class,
+    get_users_from_attribute_class,
+    validate_user_attribute_class,
+    annotate_users_restricted,
+    get_unrestricted_users,
+    GroupPermission,
+    GroupPermissionLevel,
+    get_group_counts,
+)
 
 import json
 import logging
@@ -19,22 +28,17 @@ logger = logging.getLogger(__name__)
 
 
 class TestCoreModels(TestCase):
-
-    def setUp(self, ):
-        self.user1 = User.objects.create_user(
-            username='demo1', email='demo@demo.com', password='demo1'
-        )
-        self.user2 = User.objects.create_user(
-            username='demo2', email='demo@demo.com', password='demo2'
-        )
+    def setUp(self,):
+        self.user1 = User.objects.create_user(username="demo1", email="demo@demo.com", password="demo1")
+        self.user2 = User.objects.create_user(username="demo2", email="demo@demo.com", password="demo2")
 
         self.attribute_class = AttributeClass.objects.create(name="test", slug="test")
 
         self.testName = "Omaha 319"
         # 4 groups will exist, the newly created and DefaultExportExtentGroup
-        group1, created = Group.objects.get_or_create(name=self.testName + '1')
-        group2, created = Group.objects.get_or_create(name=self.testName + '2')
-        group3, created = Group.objects.get_or_create(name=self.testName + '3')
+        group1, created = Group.objects.get_or_create(name=self.testName + "1")
+        group2, created = Group.objects.get_or_create(name=self.testName + "2")
+        group3, created = Group.objects.get_or_create(name=self.testName + "3")
         self.groupid1 = group1.id
         self.groupid2 = group2.id
         self.groupid3 = group3.id
@@ -49,7 +53,6 @@ class TestCoreModels(TestCase):
         GroupPermission.objects.create(group=group1, user=self.user2, permission=GroupPermissionLevel.ADMIN.value)
         GroupPermission.objects.create(group=group1, user=self.user2, permission=GroupPermissionLevel.MEMBER.value)
         GroupPermission.objects.create(group=group2, user=self.user2, permission=GroupPermissionLevel.MEMBER.value)
-
 
     @patch("eventkit_cloud.core.models.update_all_users_with_attribute_class")
     def test_save(self, mock_update_all_users_with_attribute_class):
@@ -86,8 +89,9 @@ class TestCoreModels(TestCase):
 
         expected_response = list(User.objects.filter(id=self.user2.id))
         mock_validate_object.return_value = expected_response
-        OAuth.objects.create(user=self.user2, identification="test_ident",
-                             commonname="test_common", user_info={"color": "blue"})
+        OAuth.objects.create(
+            user=self.user2, identification="test_ident", commonname="test_common", user_info={"color": "blue"}
+        )
         self.attribute_class.filter = None
         self.attribute_class.complex = ["blue", "==", "color"]
         users = get_users_from_attribute_class(self.attribute_class)
@@ -106,8 +110,9 @@ class TestCoreModels(TestCase):
         self.assertTrue(validate_user_attribute_class(self.user1, self.attribute_class))
 
         mock_validate_object.return_value = True
-        OAuth.objects.create(user=self.user2, identification="test_ident",
-                             commonname="test_common", user_info={"color": "blue"})
+        OAuth.objects.create(
+            user=self.user2, identification="test_ident", commonname="test_common", user_info={"color": "blue"}
+        )
         self.attribute_class.filter = None
         self.attribute_class.complex = ["blue", "==", "color"]
         self.attribute_class.save()
@@ -144,16 +149,13 @@ class TestCoreModels(TestCase):
         # 1 for each of the 3 created in setup, plus the DefaultExportExtentGroup.
         self.assertEqual(groups.count(), 4)
         # There should be a total of 7 permission relationships.
-        self.assertEqual(
-            groups.aggregate(total=Count('group_permissions__permission'))['total'],
-            7
-        )
+        self.assertEqual(groups.aggregate(total=Count("group_permissions__permission"))["total"], 7)
 
         # There are 4 member relationships, both users are member is 2 groups.
         self.assertEqual(
             groups.aggregate(
                 member=Count(Case(When(Q(group_permissions__permission=GroupPermissionLevel.MEMBER.value), then=1)))
-            )['member'],
+            )["member"],
             4,
         )
 
@@ -161,30 +163,28 @@ class TestCoreModels(TestCase):
         self.assertEqual(
             groups.aggregate(
                 admin=Count(Case(When(Q(group_permissions__permission=GroupPermissionLevel.ADMIN.value), then=1)))
-            )['admin'],
+            )["admin"],
             3,
         )
 
         # 4 relationships between this user and a group
         self.assertEqual(
-            groups.filter(group_permissions__user=self.user1).count(),
-            4,
+            groups.filter(group_permissions__user=self.user1).count(), 4,
         )
 
         # 3 relationships between this user and a group
         self.assertEqual(
-            groups.filter(group_permissions__user=self.user2).count(),
-            3,
+            groups.filter(group_permissions__user=self.user2).count(), 3,
         )
 
         counts = get_group_counts(groups_queryset=groups, user=self.user1)
-        self.assertEqual(counts['admin'], 2)
-        self.assertEqual(counts['member'], 2)
+        self.assertEqual(counts["admin"], 2)
+        self.assertEqual(counts["member"], 2)
         # 2 groups that the user doesn't have permissions in
-        self.assertEqual(groups.count() - counts['member'], 2)
+        self.assertEqual(groups.count() - counts["member"], 2)
 
         counts = get_group_counts(groups_queryset=groups, user=self.user2)
-        self.assertEqual(counts['admin'], 1)
-        self.assertEqual(counts['member'], 2)
+        self.assertEqual(counts["admin"], 1)
+        self.assertEqual(counts["member"], 2)
         # 2 groups that the user doesn't have permissions in
-        self.assertEqual(groups.count() - counts['member'], 2)
+        self.assertEqual(groups.count() - counts["member"], 2)

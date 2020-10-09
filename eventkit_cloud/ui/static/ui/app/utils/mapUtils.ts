@@ -1,14 +1,14 @@
-import extent from 'ol/extent';
-import GeoJSON from 'ol/format/geojson';
-import VectorLayer from 'ol/layer/vector';
-import VectorSource from 'ol/source/vector';
-import Style from 'ol/style/style';
-import Stroke from 'ol/style/stroke';
-import Icon from 'ol/style/icon';
-import RegularShape from 'ol/style/regularshape';
-import Draw from 'ol/interaction/draw';
-import Point from 'ol/geom/point';
-import Polygon from 'ol/geom/polygon';
+import {containsCoordinate, getCenter, getTopLeft, getTopRight, getWidth} from 'ol/extent';
+import GeoJSON from 'ol/format/GeoJSON';
+import VectorLayer from 'ol/layer/Vector';
+import VectorSource from 'ol/source/Vector';
+import Style from 'ol/style/Style';
+import Stroke from 'ol/style/Stroke';
+import Icon from 'ol/style/Icon';
+import RegularShape from 'ol/style/RegularShape';
+import Draw, { createBox } from 'ol/interaction/Draw';
+import Point from 'ol/geom/Point';
+import Polygon, { fromExtent } from 'ol/geom/Polygon';
 
 import isEqual from 'lodash/isEqual';
 import Reader from 'jsts/org/locationtech/jts/io/GeoJSONReader';
@@ -17,7 +17,7 @@ import BufferOp from 'jsts/org/locationtech/jts/operation/buffer/BufferOp';
 import UnionOp from 'jsts/org/locationtech/jts/operation/union/UnionOp';
 import isValidOp from 'jsts/org/locationtech/jts/operation/valid/IsValidOp';
 import BufferParameters from 'jsts/org/locationtech/jts/operation/buffer/BufferParameters';
-import ZoomSlider from 'ol/control/zoomslider';
+import ZoomSlider from 'ol/control/ZoomSlider';
 import { colors } from '../styles/eventkit_theme';
 const icon = require('../../images/ic_room_black_24px.svg');
 
@@ -26,7 +26,6 @@ export const MODE_NORMAL = 'MODE_NORMAL';
 export const MODE_DRAW_FREE = 'MODE_DRAW_FREE';
 
 export const WGS84 = 'EPSG:4326';
-export const WEB_MERCATOR = 'EPSG:3857';
 
 export interface TileCoordinate {
     z: number;  // Tile Zoom level
@@ -220,7 +219,7 @@ export function generateDrawLayer() {
 }
 
 export function generateDrawBoxInteraction(drawLayer) {
-    const geomFunction = Draw.createBox();
+    const geomFunction = createBox();
     const draw = new Draw({
         source: drawLayer.getSource(),
         type: 'Circle',
@@ -373,7 +372,7 @@ export function zoomToFeature(feature, map) {
 
 export function featureToPoint(feature) {
     if (!feature) { return null; }
-    const center = extent.getCenter(feature.getGeometry().getExtent());
+    const center = getCenter(feature.getGeometry().getExtent());
     return new Point(center);
 }
 
@@ -381,8 +380,8 @@ export function wrapX(tileGrid, tileCoord) {
     const z = tileCoord[0];
     const center = tileGrid.getTileCoordCenter(tileCoord);
     const projectionExtent = tileGrid.getExtent();
-    if (!extent.containsCoordinate(projectionExtent, center)) {
-        const worldWidth = extent.getWidth(projectionExtent);
+    if (!containsCoordinate(projectionExtent, center)) {
+        const worldWidth = getWidth(projectionExtent);
         const worldsAway = Math.ceil((projectionExtent[0] - center[0]) / worldWidth);
         center[0] += worldWidth * worldsAway;
         return tileGrid.getTileCoordForCoordAndZ(center, z);
@@ -395,7 +394,7 @@ export function unwrapCoordinates(coords, projection) {
     // based on:
     // https://github.com/openlayers/openlayers/blob/2bff72122757b8eeb3f3dda6191d1301ff296948/src/ol/renderer/maprenderer.js#L155
     const projectionExtent = projection.getExtent();
-    const worldWidth = extent.getWidth(projectionExtent);
+    const worldWidth = getWidth(projectionExtent);
     return coords.map(coord => (
         coord.map((xy) => {
             const x = xy[0];
@@ -410,7 +409,7 @@ export function unwrapCoordinates(coords, projection) {
 
 export function unwrapExtent(inExtent, projection) {
     const projectionExtent = projection.getExtent();
-    const worldWidth = extent.getWidth(projectionExtent);
+    const worldWidth = getWidth(projectionExtent);
     let minX = inExtent[0];
     if (minX < projectionExtent[0] || minX > projectionExtent[2]) {
         const worldsAway = Math.ceil((projectionExtent[0] - minX) / worldWidth);
@@ -434,7 +433,7 @@ export function isViewOutsideValidExtent(view) {
 // calculate what the 'valid' view center should be and set it
 export function goToValidExtent(view) {
     const projectionExtent = view.getProjection().getExtent();
-    const worldWidth = extent.getWidth(projectionExtent);
+    const worldWidth = getWidth(projectionExtent);
     const center = view.getCenter();
     const worldsAway = Math.ceil((projectionExtent[0] - center[0]) / worldWidth);
     view.setCenter([center[0] + (worldWidth * worldsAway), center[1]]);
@@ -450,7 +449,7 @@ export function isBox(feature) {
     }
     // if the extent geometry is the same as the feature geometry we know it is a box
     const featureExtent = feature.getGeometry().getExtent();
-    const extentGeom = Polygon.fromExtent(featureExtent);
+    const extentGeom = fromExtent(featureExtent);
     let extentCoords = extentGeom.getCoordinates();
 
     // since the 5th coord is the same as the first remove it,
@@ -619,8 +618,8 @@ export function getTileCoordinateFromClick(event, layer, map) {
     const tileExtent = grid.getTileCoordExtent(tileCoord);
     tileCoord[2] = tileCoord[2] * -1 - 1;
 
-    const upperLeftPixel = map.getPixelFromCoordinate(extent.getTopLeft(tileExtent));
-    const upperRightPixel = map.getPixelFromCoordinate(extent.getTopRight(tileExtent));
+    const upperLeftPixel = map.getPixelFromCoordinate(getTopLeft(tileExtent));
+    const upperRightPixel = map.getPixelFromCoordinate(getTopRight(tileExtent));
 
     // Calculate the actual number of pixels each tile is taking up.
     const pixelWidth = upperRightPixel[0] - upperLeftPixel[0];

@@ -111,7 +111,7 @@ export class Account extends React.Component<Props, State> {
     private callback(data) {
         if (data.action === 'close' || data.action === 'skip' || data.type === 'finished') {
             this.setState({ isRunning: false });
-            this.joyride.reset(true);
+            this?.joyride?.reset(true);
             if (this.state.acceptedLicenses['fake-license-for-tour'] !== undefined) {
                 this.setState({ acceptedLicenses: {} });
                 this.props.licenses.licenses = [];

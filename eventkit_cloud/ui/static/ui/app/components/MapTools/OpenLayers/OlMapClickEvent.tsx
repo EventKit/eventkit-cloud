@@ -1,12 +1,11 @@
 import React, {useEffect, useRef, useState} from 'react';
-import VectorLayer from "ol/layer/vector";
 import {useOlMapContainer} from "../context/OpenLayersContext";
 import {generateDrawLayer, TileCoordinate, wrapX} from "../../../utils/mapUtils";
-import extent from "ol/extent";
+import {getTopLeft, getTopRight} from "ol/extent";
 import {useEffectOnMount} from "../../../utils/hooks/hooks";
-import Style from 'ol/style/style';
-import Feature from "ol/feature";
-import Point from "ol/geom/point";
+import Style from 'ol/style/Style';
+import Feature from "ol/Feature";
+import Point from "ol/geom/Point";
 
 interface Props {
     onClick?: (coordinate: TileCoordinate) => any;
@@ -33,8 +32,8 @@ function OlMapClickEvent(props: React.PropsWithChildren<Props>) {
         const tileExtent = grid.getTileCoordExtent(tileCoord);
         tileCoord[2] = tileCoord[2] * -1 - 1;
 
-        const upperLeftPixel = olMap.getPixelFromCoordinate(extent.getTopLeft(tileExtent));
-        const upperRightPixel = olMap.getPixelFromCoordinate(extent.getTopRight(tileExtent));
+        const upperLeftPixel = olMap.getPixelFromCoordinate(getTopLeft(tileExtent));
+        const upperRightPixel = olMap.getPixelFromCoordinate(getTopRight(tileExtent));
 
         // Calculate the actual number of pixels each tile is taking up.
         const pixelWidth = upperRightPixel[0] - upperLeftPixel[0];

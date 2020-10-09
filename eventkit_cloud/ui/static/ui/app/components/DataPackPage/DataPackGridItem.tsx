@@ -278,6 +278,17 @@ export class DataPackGridItem extends React.Component<Props, State> {
                 position: 'absolute',
                 right: '0px',
             },
+            mapContainer: {
+                position: 'relative' as 'relative',
+                padding: '50% 0 0',
+                marginTop: '10px',
+            },
+            mapView: {
+                position: 'absolute' as 'absolute',
+                height: '100%',
+                left: '0',
+                top: '0',
+            }
         };
 
         return (
@@ -397,9 +408,10 @@ export class DataPackGridItem extends React.Component<Props, State> {
                         </span>
                     </CardContent>
                     <Collapse in={this.state.expanded}>
-                        <CardContent className="qa-DataPackGridItem-CardMedia" style={{padding: '0px'}}>
+                        <CardContent className="qa-DataPackGridItem-CardMedia" style={styles.mapContainer}>
                             <MapView
                                 id={this.getMapId()}
+                                style={styles.mapView}
                                 selectedBaseMap={this.context.config.BASEMAP_URL}
                                 copyright={this.context.config.BASEMAP_COPYRIGHT}
                                 geojson={this.props.run.job.extent}
