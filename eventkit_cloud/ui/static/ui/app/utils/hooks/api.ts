@@ -28,6 +28,18 @@ export class ApiStatuses {
     static readonly finishedStates = [FileStatus.COMPLETED, FileStatus.INCOMPLETE, FileStatus.CANCELED,
         FileStatus.SUCCESS, FileStatus.FAILED];
     static readonly inProgressStates = [FileStatus.PENDING, FileStatus.RUNNING, FileStatus.SUBMITTED];
+
+    static isFetching(status: string) : boolean {
+        return status === ApiStatuses.hookActions.FETCHING;
+    }
+
+    static isSuccessful(status: string) : boolean {
+        return status === ApiStatuses.hookActions.SUCCESS;
+    }
+
+    static isError(status: string) : boolean {
+        return status === ApiStatuses.hookActions.ERROR;
+    }
 }
 
 interface RequestState {

@@ -31,6 +31,7 @@ import '../styles/flexboxgrid.css';
 import '../styles/react-joyride-compliled.css';
 import {AppConfigProvider} from "./ApplicationContext";
 import MatomoHandler from "./MatomoHandler";
+import {RegionsProvider} from "./common/context/RegionContext";
 // tslint:disable-next-line:no-var-requires
 require('../fonts/index.css');
 
@@ -737,6 +738,7 @@ export class Application extends React.Component<Props, State> {
 
         return (
             <AppConfigProvider value={this.state.childContext.config}>
+                <RegionsProvider>
                 <MatomoHandler {...this.state.childContext.config.MATOMO}/>
                 <div style={{backgroundColor: colors.black}}>
                     <AppBar
@@ -815,6 +817,7 @@ export class Application extends React.Component<Props, State> {
                         <strong>You have been automatically logged out due to inactivity.</strong>
                     </BaseDialog>
                 </div>
+                </RegionsProvider>
             </AppConfigProvider>
         );
     }

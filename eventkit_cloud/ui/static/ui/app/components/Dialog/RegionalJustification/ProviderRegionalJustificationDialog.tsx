@@ -5,13 +5,12 @@ import RegionalJustificationDialog, { RegionalJustificationDialogPropsBase, rend
 import {DepsHashers} from "../../../utils/hooks/hooks";
 
 interface ProviderDialogProps extends RegionalJustificationDialogPropsBase {
-    isOpen: boolean;
     provider?: Eventkit.Provider;
 }
 
 export function ProviderRegionJustificationDialog(props: ProviderDialogProps) {
     const {
-        isOpen, onClose, onSubmit,
+        onClose, onSubmit,
     } = props;
     const [ policy, setPolicy ] = useState();
     const [{ status, response }, requestCall] = useAsyncRequest();
@@ -35,7 +34,7 @@ export function ProviderRegionJustificationDialog(props: ProviderDialogProps) {
 
     return renderIf(() => (
         <RegionalJustificationDialog
-            isOpen={isOpen}
+            isOpen
             policy={policy}
             onClose={onClose}
             onSubmit={onSubmit}

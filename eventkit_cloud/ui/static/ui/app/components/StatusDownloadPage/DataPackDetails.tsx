@@ -16,6 +16,7 @@ import CreateDataPackButton from "./CreateDataPackButton";
 import {useEffect} from "react";
 import {DepsHashers} from "../../utils/hooks/hooks";
 import {shouldDisplay} from "../../utils/generic";
+import {RegionJustification} from "./RegionJustification";
 
 const jss = (theme: Eventkit.Theme & Theme) => ({
     btn: {
@@ -214,6 +215,7 @@ export class DataPackDetails extends React.Component<Props, State> {
 
         return (
             <div>
+                <RegionJustification providers={[]}>
                 <ZipSizeCalculator
                     fileSizes={
                         this.props.providerTasks.filter(
@@ -318,6 +320,7 @@ export class DataPackDetails extends React.Component<Props, State> {
                         />
                     ))}
                 </div>
+                </RegionJustification>
             </div>
         );
     }

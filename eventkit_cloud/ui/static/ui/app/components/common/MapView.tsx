@@ -9,6 +9,7 @@ import OlFeatureLayer from "../MapTools/OpenLayers/OlFeatureLayer";
 import ZoomToAoi from "../MapTools/OpenLayers/ZoomToAoi";
 import OlRasterTileLayer from "../MapTools/OpenLayers/OlRasterTileLayer";
 import OlMouseWheelZoom from "../MapTools/OpenLayers/MouseWheelZoom";
+import {RegionJustification} from "../StatusDownloadPage/RegionJustification";
 
 export interface Props {
     geojson: object;
@@ -48,21 +49,21 @@ export class MapView extends React.Component<Props, State> {
 
     render() {
         return (
-            <OlMapComponent
-                style={{ height: '100%', width: '100%' }}
-                divId={this.mapDiv}
-                minZoom={this.props.minZoom}
-                maxZoom={this.props.maxZoom}
-                zoomLevel={this.props.zoom}
-            >
-                {Object.keys(this.props.geojson).length !== 0 && (
-                    <OlFeatureLayer geojson={this.props.geojson} zIndex={99}>
-                        <ZoomToAoi zoomLevel={this.props.zoom}/>
-                    </OlFeatureLayer>
-                )}
-                <OlMouseWheelZoom enabled={false}/>
-                <OlRasterTileLayer mapLayer={this.state.selectedBaseMap} copyright={this.props.copyright} zIndex={0}/>
-            </OlMapComponent>
+                <OlMapComponent
+                    style={{ height: '100%', width: '100%' }}
+                    divId={this.mapDiv}
+                    minZoom={this.props.minZoom}
+                    maxZoom={this.props.maxZoom}
+                    zoomLevel={this.props.zoom}
+                >
+                    {Object.keys(this.props.geojson).length !== 0 && (
+                        <OlFeatureLayer geojson={this.props.geojson} zIndex={99}>
+                            <ZoomToAoi zoomLevel={this.props.zoom}/>
+                        </OlFeatureLayer>
+                    )}
+                    <OlMouseWheelZoom enabled={false}/>
+                    <OlRasterTileLayer mapLayer={this.state.selectedBaseMap} copyright={this.props.copyright} zIndex={0}/>
+                </OlMapComponent>
         );
     }
 }
