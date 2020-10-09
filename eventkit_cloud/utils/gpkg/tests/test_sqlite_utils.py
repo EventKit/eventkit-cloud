@@ -1,12 +1,11 @@
 # -*- coding: utf-8 -*-
 import logging
 import os
-from uuid import uuid4
+from mock import Mock, patch
 
 from django.test import TransactionTestCase
-from mock import Mock, patch, call
 
-from eventkit_cloud.utils.gpkg.sqlite_utils import get_database_connection, Table, _TableQuery
+from eventkit_cloud.utils.gpkg.sqlite_utils import get_database_connection, Table
 
 logger = logging.getLogger(__name__)
 
@@ -58,10 +57,6 @@ class TestTableQuery(TransactionTestCase):
         except ValueError:
             passed = False
         self.assertTrue(passed)
-
-        def test_get_table_query_build_where(self):
-            cursor_mock = Mock()
-            query = _TableQuery(cursor_mock, "gpkg_contents")
 
 
 class TestTable(TransactionTestCase):
