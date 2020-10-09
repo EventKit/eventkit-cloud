@@ -958,7 +958,6 @@ class TestExportRunViewSet(APITestCase):
         }
 
         response = self.client.post(url, request_data, format='json')
-        print(response.data)
         self.assertEqual(status.HTTP_202_ACCEPTED, response.status_code)
         self.assertEqual("PENDING", response.data["zipfile"]["status"])
 

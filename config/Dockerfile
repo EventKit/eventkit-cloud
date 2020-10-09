@@ -17,11 +17,10 @@ COPY --chown=eventkit ./config/pyproject.toml /var/lib/eventkit/config/pyproject
 
 ENV PATH="/home/eventkit/miniconda3/bin:$PATH"
 
-RUN curl -L https://repo.continuum.io/miniconda/Miniconda3-py38_4.8.3-Linux-x86_64.sh -o miniconda.sh && \
+RUN curl -L https://repo.continuum.io/miniconda/Miniconda3-py37_4.8.3-Linux-x86_64.sh -o miniconda.sh && \
     /bin/bash miniconda.sh -b -p "/home/eventkit/miniconda3" && \
     rm miniconda.sh && \
-    echo "y" | conda update -n root --all && \
-    conda config --add channels local && \
+    conda config --add channels conda-forge && \
     conda config --add channels file://var/lib/eventkit/conda/repo && \
     conda config --set channel_priority flexible && \
     conda env create --file environment-dev.yml python=3.7 && \

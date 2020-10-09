@@ -6,33 +6,33 @@ import withWidth, {isWidthUp} from '@material-ui/core/withWidth';
 import GridList from '@material-ui/core/GridList';
 import Dot from '@material-ui/icons/FiberManualRecord';
 import axios from 'axios';
-import Map from 'ol/map';
-import Feature from 'ol/feature';
-import View from 'ol/view';
-import easing from 'ol/easing';
-import extent from 'ol/extent';
-import Overlay from 'ol/overlay';
-import Observable from 'ol/observable';
-import interaction from 'ol/interaction';
-import Pointer from 'ol/interaction/pointer';
-import MouseWheelZoom from 'ol/interaction/mousewheelzoom';
-import Point from 'ol/geom/point';
-import Polygon from 'ol/geom/polygon';
-import VectorSource from 'ol/source/vector';
-import XYZ from 'ol/source/xyz';
-import Circle from 'ol/style/circle';
-import Fill from 'ol/style/fill';
-import Style from 'ol/style/style';
-import Stroke from 'ol/style/stroke';
-import GeoJSONFormat from 'ol/format/geojson';
-import VectorLayer from 'ol/layer/vector';
-import Tile from 'ol/layer/tile';
-import TileGrid from 'ol/tilegrid/tilegrid';
-import Attribution from 'ol/control/attribution';
-import ScaleLine from 'ol/control/scaleline';
-import Zoom from 'ol/control/zoom';
-import ZoomToExtent from 'ol/control/zoomtoextent';
-import OverviewMap from 'ol/control/overviewmap';
+import Map from 'ol/Map';
+import Feature from 'ol/Feature';
+import View from 'ol/View';
+import {easeOut} from 'ol/easing';
+import {boundingExtent, containsExtent, getBottomLeft, getBottomRight, getCenter, getTopLeft, getTopRight} from 'ol/extent';
+import Overlay from 'ol/Overlay';
+import { unByKey } from 'ol/Observable';
+import {defaults} from 'ol/interaction';
+import Pointer from 'ol/interaction/Pointer';
+import MouseWheelZoom from 'ol/interaction/MouseWheelZoom';
+import Point from 'ol/geom/Point';
+import Polygon, { fromExtent } from 'ol/geom/Polygon';
+import VectorSource from 'ol/source/Vector';
+import XYZ from 'ol/source/XYZ';
+import Circle from 'ol/style/Circle';
+import Fill from 'ol/style/Fill';
+import Style from 'ol/style/Style';
+import Stroke from 'ol/style/Stroke';
+import GeoJSONFormat from 'ol/format/GeoJSON';
+import VectorLayer from 'ol/layer/Vector';
+import Tile from 'ol/layer/Tile';
+import TileGrid from 'ol/tilegrid/TileGrid';
+import Attribution from 'ol/control/Attribution';
+import ScaleLine from 'ol/control/ScaleLine';
+import Zoom from 'ol/control/Zoom';
+import ZoomToExtent from 'ol/control/ZoomToExtent';
+import OverviewMap from 'ol/control/OverviewMap';
 import css from '../../styles/ol3map.css';
 import DataPackListItem from './DataPackListItem';
 import LoadButtons from '../common/LoadButtons';
@@ -52,7 +52,7 @@ import {
 import ZoomLevelLabel from '../MapTools/ZoomLevelLabel';
 import globe from '../../../images/globe-americas.svg';
 import {makeAllRunsSelector} from '../../selectors/runSelector';
-import {updateAoiInfo, clearAoiInfo, clearExportInfo} from '../../actions/datacartActions';
+import {updateAoiInfo, clearAoiInfo} from '../../actions/datacartActions';
 import {Breakpoint} from '@material-ui/core/styles/createBreakpoints';
 import {useEffect, useState} from "react";
 
@@ -258,7 +258,7 @@ export class MapView extends React.Component<Props, State> {
             // if any features were added to the source
             if (added) {
                 // if there is a draw feature and it contains all the runs: fit to draw feature
-                if (this.drawLayer.getSource().getFeatures().length && extent.containsExtent(drawExtent, runsExtent)) {
+                if (this.drawLayer.getSource().getFeatures().length && containsExtent(drawExtent, runsExtent)) {
                     this.map.getView().fit(drawExtent);
                 } else {
                     // if no draw feature or it does not contain all runs: just fit the runs
@@ -407,7 +407,7 @@ export class MapView extends React.Component<Props, State> {
     setMapView() {
         clearDraw(this.drawLayer);
         const mapExtent = this.map.getView().calculateExtent(this.map.getSize());
-        const geom = Polygon.fromExtent(mapExtent);
+        const geom = fromExtent(mapExtent);
         const coords = geom.getCoordinates();
         const unwrappedCoords = unwrapCoordinates(coords, this.map.getView().getProjection());
         geom.setCoordinates(unwrappedCoords);
@@ -504,12 +504,22 @@ export class MapView extends React.Component<Props, State> {
                     collapsible: true,
                     collapsed: !isWidthUp('md', this.props.width),
                     tipLabel: '',
+                    layers: [
+                        new Tile({
+                            source: new XYZ({
+                                projection: MapView.PROJECTION,
+                                tileGrid: tileGrid,
+                                url: this.context.config.BASEMAP_URL,
+                                wrapX: true,
+                            }),
+                        })
+                    ],
                     view: new View({
                         projection: MapView.PROJECTION,
                     }),
                 }),
             ],
-            interactions: interaction.defaults({
+            interactions: defaults({
                 keyboard: false,
                 altShiftDragRotate: false,
                 pinchRotate: false,
@@ -586,8 +596,8 @@ export class MapView extends React.Component<Props, State> {
                     // make sure we are comparing only unwrapped extents to avoid uneeded centering when map is wrapped
                     const mapExtent = unwrapExtent(this.map.getView().calculateExtent(), this.map.getView().getProjection());
                     const featureExtent = unwrapExtent(mapFeature.getGeometry().getExtent(), this.map.getView().getProjection());
-                    if (!extent.containsExtent(mapExtent, featureExtent)) {
-                        this.map.getView().setCenter(extent.getCenter(featureExtent));
+                    if (!containsExtent(mapExtent, featureExtent)) {
+                        this.map.getView().setCenter(getCenter(featureExtent));
                     } else {
                         // if it is in view and not a polygon, trigger an animation
                         if (!this.displayAsPoint(mapFeature)) {
@@ -597,10 +607,10 @@ export class MapView extends React.Component<Props, State> {
                         const start = new Date().getTime();
                         const geom = mapFeature.getGeometry();
                         if (this.listener) {
-                            Observable.unByKey(this.listener);
+                            unByKey(this.listener);
                             this.listener = null;
                         }
-                        this.listener = this.map.on('postcompose', event => this.animate(event, geom, start));
+                        this.listener = this.map.on('postrender', event => this.animate(event, geom, start));
                         this.map.render();
                     }
                 }
@@ -614,12 +624,12 @@ export class MapView extends React.Component<Props, State> {
     animate(event, geom, start) {
         const {vectorContext} = event;
         const {frameState} = event;
-        const point = new Point(extent.getCenter(geom.getExtent()));
+        const point = new Point(getCenter(geom.getExtent()));
 
         const ext = geom.getExtent();
-        const tl = this.map.getPixelFromCoordinate(extent.getTopLeft(ext));
-        const tr = this.map.getPixelFromCoordinate(extent.getTopRight(ext));
-        const bl = this.map.getPixelFromCoordinate(extent.getBottomLeft(ext));
+        const tl = this.map.getPixelFromCoordinate(getTopLeft(ext));
+        const tr = this.map.getPixelFromCoordinate(getTopRight(ext));
+        const bl = this.map.getPixelFromCoordinate(getBottomLeft(ext));
         const width = tr[0] - tl[0];
         const height = bl[1] - tl[1];
         const featureRad = Math.max(width, height);
@@ -627,13 +637,12 @@ export class MapView extends React.Component<Props, State> {
         const elapsed = frameState.time - start;
         const elapsedRatio = elapsed / 3000;
 
-        const radius = (easing.easeOut(elapsedRatio) * 25) + 5 + featureRad;
-        const opacity = easing.easeOut(1 - elapsedRatio);
+        const radius = (easeOut(elapsedRatio) * 25) + 5 + featureRad;
+        const opacity = easeOut(1 - elapsedRatio);
 
         const style = new Style({
             image: new Circle({
                 radius,
-                snapToPixel: false,
                 stroke: new Stroke({
                     color: `rgba(255, 0, 0, ${opacity})`,
                     width: 0.25 + opacity,
@@ -643,7 +652,7 @@ export class MapView extends React.Component<Props, State> {
         vectorContext.setStyle(style);
         vectorContext.drawGeometry(point);
         if (elapsed > 3000) {
-            Observable.unByKey(this.listener);
+            unByKey(this.listener);
             return 0;
         }
         this.map.render();
@@ -668,8 +677,8 @@ export class MapView extends React.Component<Props, State> {
             return false;
         }
         const featureExtent = inFeature.getGeometry().getExtent();
-        const topLeft = this.map.getPixelFromCoordinate(extent.getTopLeft(featureExtent));
-        const bottomRight = this.map.getPixelFromCoordinate(extent.getBottomRight(featureExtent));
+        const topLeft = this.map.getPixelFromCoordinate(getTopLeft(featureExtent));
+        const bottomRight = this.map.getPixelFromCoordinate(getBottomRight(featureExtent));
         if (topLeft && bottomRight) {
             const height = bottomRight[1] - topLeft[1];
             const width = bottomRight[0] - topLeft[0];
@@ -866,7 +875,7 @@ export class MapView extends React.Component<Props, State> {
                 return newCoord;
             });
         }
-        const bounds = extent.boundingExtent(coords);
+        const bounds = boundingExtent(coords);
         // do not update the feature if it would have no area
         if (bounds[0] === bounds[2] || bounds[1] === bounds[3]) {
             return false;

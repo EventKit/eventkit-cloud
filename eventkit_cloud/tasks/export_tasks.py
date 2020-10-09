@@ -689,7 +689,7 @@ def pbf_export_task(
     logger.error(pbf_file)
     try:
         result["file_extension"] = "pbf"
-        result["file_format"] = "PBF"
+        result["file_format"] = "OSM"
         result["result"] = pbf_file
         logger.error(f"Returning PBF RESULT: {result}")
         return result

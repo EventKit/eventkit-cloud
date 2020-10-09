@@ -1,6 +1,6 @@
 import * as sinon from 'sinon';
-import GeoJSON from 'ol/format/geojson';
-import Feature from 'ol/feature';
+import GeoJSON from 'ol/format/GeoJSON';
+import Feature from 'ol/Feature';
 import * as utils from '../../utils/generic';
 import { getDefaultFormat } from '../../utils/generic';
 

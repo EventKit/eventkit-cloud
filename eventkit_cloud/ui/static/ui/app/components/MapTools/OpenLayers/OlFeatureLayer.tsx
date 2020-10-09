@@ -1,5 +1,5 @@
 import React, { useEffect, useRef } from 'react';
-import VectorLayer from 'ol/layer/vector';
+import VectorLayer from 'ol/layer/Vector';
 import { useOlMapContainer } from '../context/OpenLayersContext';
 
 interface Props {

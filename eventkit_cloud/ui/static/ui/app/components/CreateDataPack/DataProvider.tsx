@@ -11,12 +11,11 @@ import ExpandMore from '@material-ui/icons/ExpandMore';
 import ProviderStatusCheck from './ProviderStatusCheck';
 import BaseDialog from '../Dialog/BaseDialog';
 import {arrayHasValue, formatMegaBytes, getDuration, isZoomLevelInRange, supportsZoomLevels} from '../../utils/generic';
-import {Switch, Typography} from "@material-ui/core";
+import {Typography} from "@material-ui/core";
 import ZoomLevelSlider from "./ZoomLevelSlider";
 import {connect} from "react-redux";
 import {updateExportInfo} from '../../actions/datacartActions';
 import debounce from 'lodash/debounce';
-import * as PropTypes from "prop-types";
 import FormatSelector from "./FormatSelector";
 import {Compatibility} from '../../utils/enums';
 import IndeterminateCheckBoxIcon from '@material-ui/icons/IndeterminateCheckBox';
@@ -29,8 +28,7 @@ import ProviderPreviewMap from "../MapTools/ProviderPreviewMap";
 import PoiQueryDisplay from "../MapTools/PoiQueryDisplay";
 import OlMapClickEvent from "../MapTools/OpenLayers/OlMapClickEvent";
 import SwitchControl from "../common/SwitchControl";
-import Icon from "ol/style/icon";
-import {func, number, string} from "prop-types";
+import Icon from "ol/style/Icon";
 import {useEffect, useRef, useState} from "react";
 import {DepsHashers, useEffectOnMount} from "../../utils/hooks/hooks";
 import {useAppContext} from "../ApplicationContext";
@@ -151,7 +149,8 @@ export function DataProvider(props: Props) {
         }, 1000);
     });
 
-    const [providerHasEstimates, setHasEstimates ] = useState(() => arrayHasValue(haveAvailableEstimates, provider.slug) && !arrayHasValue(noMaxDataSize, provider.slug));
+    const [providerHasEstimates, setHasEstimates] = useState(() =>
+        arrayHasValue(haveAvailableEstimates, provider.slug) && !arrayHasValue(noMaxDataSize, provider.slug));
     useEffect(() => {
         setHasEstimates(arrayHasValue(haveAvailableEstimates, provider.slug) && !arrayHasValue(noMaxDataSize, provider.slug));
     }, [DepsHashers.arrayHash(haveAvailableEstimates), DepsHashers.arrayHash(noMaxDataSize)]);

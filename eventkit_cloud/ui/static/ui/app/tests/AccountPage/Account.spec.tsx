@@ -1,7 +1,6 @@
 import * as React from 'react';
 import * as enzyme from 'enzyme';
 import * as sinon from 'sinon';
-import Joyride from 'react-joyride';
 import Help from '@material-ui/icons/Help';
 import PageHeader from '../../components/common/PageHeader';
 import UserInfo from '../../components/AccountPage/UserInfo';

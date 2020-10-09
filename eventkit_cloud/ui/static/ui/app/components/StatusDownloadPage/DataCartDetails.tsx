@@ -94,6 +94,17 @@ export class DataCartDetails extends React.Component<Props, State> {
                 fontWeight: 'bold' as 'bold',
                 marginBottom: '5px',
             },
+            mapContainer: {
+                position: 'relative' as 'relative',
+                padding: '50% 0 0',
+                marginTop: '10px',
+            },
+            mapView: {
+                position: 'absolute' as 'absolute',
+                height: '100%',
+                left: '0',
+                top: '0',
+            }
         };
 
         let statusBackgroundColor = colors.secondary;
@@ -188,9 +199,10 @@ export class DataCartDetails extends React.Component<Props, State> {
                             >
                                 {getSqKmString(this.props.cartDetails.job.extent)}
                             </CustomTableRow>
-                            <div className="qa-DataPackAoiInfo-div-map" style={{marginTop: '10px'}}>
+                            <div className="qa-DataPackAoiInfo-div-map" style={styles.mapContainer}>
                                 <MapView
                                     id={"summaryMap"}
+                                    style={styles.mapView}
                                     selectedBaseMap={selectedBasemap}
                                     copyright={this.context.config.BASEMAP_COPYRIGHT}
                                     geojson={this.props.cartDetails.job.extent}
