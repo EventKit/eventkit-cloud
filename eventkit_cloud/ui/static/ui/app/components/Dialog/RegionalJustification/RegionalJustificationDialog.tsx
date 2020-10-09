@@ -7,12 +7,13 @@ import {Breakpoint} from '@material-ui/core/styles/createBreakpoints';
 import {Button, CircularProgress, TextField} from '@material-ui/core';
 import ExpandLess from '@material-ui/icons/ExpandLess';
 import ExpandMore from '@material-ui/icons/ExpandMore';
-import {useState} from 'react';
+import {useEffect, useState} from 'react';
 import BaseDialog from '../BaseDialog';
 import Collapse from "@material-ui/core/Collapse";
 import CustomTextField from "../../common/CustomTextField";
 import Radio from "@material-ui/core/Radio";
-import {ApiStatuses} from "../../../utils/hooks/api";
+import {ApiStatuses, useAsyncRequest} from "../../../utils/hooks/api";
+import {getCookie} from "../../../utils/generic";
 import TextLabel from "./TextLabel";
 import JustificationDropdown from "./JustificationDropdown";
 
@@ -25,7 +26,7 @@ const jss = (theme: Eventkit.Theme & Theme) => createStyles({
     dialog: {
         borderStyle: 'solid',
         borderWidth: '1px',
-        padding: '0 12px',
+        padding: '12px',
         borderRadius: '4px',
     },
     expand: {
@@ -38,7 +39,6 @@ const jss = (theme: Eventkit.Theme & Theme) => createStyles({
         borderWidth: '1px',
         borderRadius: '4px',
         padding: '12px',
-        margin: '5px',
     },
     outerContainerSm: {
         paddingRight: '15px',
@@ -71,7 +71,28 @@ const jss = (theme: Eventkit.Theme & Theme) => createStyles({
             color: theme.eventkit.colors.success,
         },
     },
-    checked: {}
+    checked: {},
+    okayButtonContainer: {
+        display: 'flex',
+        marginTop: '10px',
+        marginBottom: '10px',
+    },
+    okayButton: {
+        margin: 'auto',
+    },
+    cancelAndExitButton: {
+        lineHeight: 'inherit',
+        fontSize: '1em',
+        height: 'auto',
+        whiteSpace: 'nowrap',
+        [theme.breakpoints.down('md')]: {
+            whiteSpace: 'initial',
+            padding: '5px',
+        },
+        [theme.breakpoints.down('sm')]: {
+            fontSize: '0.9em',
+        },
+    },
 });
 
 // Remove this once the real renderIf gets added -- currently only in master, not feature branch
@@ -81,9 +102,13 @@ export function renderIf(callback, bool) {
 
 export interface RegionalJustificationDialogPropsBase {
     isOpen: boolean;
-    onSubmit: () => void;
+    onSubmit?: () => void;
     onClose: () => void;
 }
+
+RegionalJustificationDialog.defaultProps = {
+    onSubmit: () => undefined,
+} as RegionalJustificationDialogProps
 
 export interface RegionalJustificationDialogProps extends RegionalJustificationDialogPropsBase {
     policy: Eventkit.RegionPolicy;
@@ -96,6 +121,20 @@ export function RegionalJustificationDialog(props: RegionalJustificationDialogPr
     const {
         isOpen, policy, onClose, onSubmit, classes, width,
     } = props;
+
+    const [{status, response}, requestCall] = useAsyncRequest();
+    const makeRequest = (regionUid: string, id: string, justificationValue?: string) => {
+        requestCall({
+            url: '/api/regions/justifications',
+            method: 'post',
+            data: {
+                justification_id: id,
+                justification_description: justificationValue,
+                regional_policy_uid: regionUid,
+            },
+            headers: {'X-CSRFToken': getCookie('csrftoken')},
+        }).then(() => undefined);
+    };
 
     function renderTitle() {
         if (!policy) {
@@ -124,8 +163,19 @@ export function RegionalJustificationDialog(props: RegionalJustificationDialogPr
         );
     }
 
-    const [selectedOptionId, setSelectedOptionId] = useState('');
+    const [selectedOption, setSelectedOption] = useState(undefined);
     const [optionValues, setOptionValues] = useState({});
+    useEffect(() => {
+        const newValues = {};
+        if (!!policy) {
+            policy.justification_options.map(option => {
+                if (!option.suboption) {
+                    newValues[option.id] = option.name;
+                }
+            })
+        }
+        setOptionValues(newValues);
+    }, [!!policy]);
 
     function renderOptions() {
         function setLabelValue(option: Eventkit.JustificationOption, value: string) {
@@ -137,17 +187,20 @@ export function RegionalJustificationDialog(props: RegionalJustificationDialogPr
 
         function getOptionLabel(option: Eventkit.JustificationOption) {
             const {suboption} = option;
-            if (!!suboption) {
+            const enabled = option.id === selectedOption?.id;
+            if (enabled && !!suboption) {
                 if (suboption.type === 'text') {
                     return (
                         <TextLabel
+                            enabled={enabled}
                             option={option}
-                            onChange={(e: any) => setLabelValue(option, e.value)}
+                            onChange={(e: any) => setLabelValue(option, e.target.value)}
                         />
                     )
                 } else if (suboption.type === 'dropdown') {
                     return (
                         <JustificationDropdown
+                            enabled={enabled}
                             selected={optionValues[option.id]}
                             option={option}
                             onChange={(e: any) => setLabelValue(option, e.target.value)}
@@ -160,17 +213,17 @@ export function RegionalJustificationDialog(props: RegionalJustificationDialogPr
 
         return (
             <div>
-                {policy.justification_options.justification_options.filter(option => option.display).map(
+                {policy.justification_options.filter(option => option.display).map(
                     (option, ix) => (
                         <div className={classes.justificationOption} key={`${ix}-${option.id}`}>
                             <Radio
-                                checked={selectedOptionId === option.id}
-                                value={selectedOptionId}
+                                checked={selectedOption?.id === option.id}
+                                value={selectedOption?.id}
                                 classes={{
                                     root: classes.checkbox, checked: classes.checked,
                                 }}
-                                onClick={() => setSelectedOptionId(option.id)}
-                                name="source"
+                                onClick={() => setSelectedOption(option)}
+                                name={`qa-radio-select-${option.id}`}
                             />
                             {getOptionLabel(option)}
                         </div>
@@ -193,14 +246,16 @@ export function RegionalJustificationDialog(props: RegionalJustificationDialogPr
         if (policy) {
             actionProps.actions = [
                 (
-                    <Button
-                        key="cancelAndExit"
-                        variant="contained"
-                        color="primary"
-                        onClick={onClose}
-                        style={{whiteSpace: 'nowrap'}}
+                    <Button classes={{root: classes.cancelAndExitButton, label: classes.cancelAndExitButtonLabel}}
+                            key="cancelAndExit"
+                            variant="contained"
+                            size="large"
+                            color="primary"
+                            onClick={onClose}
                     >
-                        {policy.policy_cancel_button_text}
+                        <strong>
+                            {policy.policy_cancel_button_text}
+                        </strong>
                     </Button>
 
                 ),
@@ -224,6 +279,29 @@ export function RegionalJustificationDialog(props: RegionalJustificationDialogPr
         return dialogProps;
     }
 
+    function canSubmit() {
+        if (!policy || !selectedOption) {
+            return false;
+        }
+        if (!!selectedOption.suboption) {
+            return !!optionValues[selectedOption.id];
+        }
+        return true;
+    }
+
+    function submitAcknowledgement() {
+        if (!canSubmit()) {
+            return;
+        }
+        makeRequest(
+            policy.uid,
+            selectedOption.id,
+            (selectedOption.suboption) ? optionValues[selectedOption.id] : undefined,
+        );
+        onSubmit();
+        onClose();
+    }
+
     const [isPolicyOpen, setIsPolicyOpen] = useState(false);
     const isSmallScreen = () => !isWidthUp('sm', width);
 
@@ -237,14 +315,19 @@ export function RegionalJustificationDialog(props: RegionalJustificationDialogPr
             {...getDialogProps()}
         >
             {renderIf(() => (
-                <CircularProgress/>
+                <div style={{display: 'flex'}}>
+                    <CircularProgress style={{margin: 'auto'}}/>
+                </div>
             ), !policy)}
             {renderIf(() => (
                 <div className={`${!isSmallScreen() ? classes.outerContainer : classes.outerContainerSm}`}>
                     {renderHeader()}
                     <div className={`${classes.policyCollapse} ${(!isPolicyOpen) ? classes.collapsed : ''}`}>
-                        <div className={`${(isPolicyOpen) ? classes.policyCollapseHeader : ''}`}>
-                            <strong dangerouslySetInnerHTML={{__html: policy.policies.policies[0].title}}/>
+                        <div
+                            className={`${(isPolicyOpen) ? classes.policyCollapseHeader : ''}`}
+                            style={{display: isSmallScreen() ? 'flex' : 'block'}}
+                        >
+                            <strong dangerouslySetInnerHTML={{__html: policy.policies[0].title}}/>
                             {renderIf(() => (
                                 <ExpandLess
                                     id="ExpandButton"
@@ -263,11 +346,24 @@ export function RegionalJustificationDialog(props: RegionalJustificationDialogPr
                             ), !isPolicyOpen)}
                         </div>
                         <Collapse in={isPolicyOpen} className={`${(!isPolicyOpen) ? classes.hidden : ''}`}>
-                            <div dangerouslySetInnerHTML={{__html: policy.policies.policies[0].description}}/>
+                            <div dangerouslySetInnerHTML={{__html: policy.policies[0].description}}/>
                         </Collapse>
                     </div>
                     {renderOptions()}
                     {renderFooter()}
+                    <div className={classes.okayButtonContainer}>
+                        <Button
+                            className={classes.okayButton}
+                            key="submit"
+                            variant="contained"
+                            color="primary"
+                            onClick={submitAcknowledgement}
+                            style={{whiteSpace: 'nowrap'}}
+                            disabled={!canSubmit()}
+                        >
+                            okay
+                        </Button>
+                    </div>
                 </div>
             ), !!policy)}
         </BaseDialog>

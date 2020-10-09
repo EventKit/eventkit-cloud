@@ -232,34 +232,29 @@ declare namespace Eventkit {
             type: string;
             label?: string;
             options?: string[];
-        }
-    }
-
-    interface JustificationOptions {
-        justification_options: JustificationOption[]
+        };
     }
 
     interface PolicyDetails {
-        policies: {
-            title: string;
-            description: string;
-        }[]
+        title: string;
+        description: string;
     }
 
     interface RegionPolicy {
+        uid: string;
         providers: {
             uid: string;
             slug: string;
             name: string;
-        }
+        }[];
         policy_title_text: string;
         policy_header_text: string;
         policy_footer_text: string;
         policy_cancel_text: string;
         policy_cancel_button_text: string;
-        justification_options: JustificationOptions;
-        region: object;
-        policies: PolicyDetails;
+        justification_options: JustificationOption[];
+        region: any;
+        policies: PolicyDetails[];
     }
 
     interface Theme {

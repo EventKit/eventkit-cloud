@@ -4,6 +4,7 @@ import * as React from 'react';
 import { MenuItem } from '@material-ui/core';
 
 interface DropdownProps {
+    enabled: boolean;
     onChange: (...args: any) => void;
     option: Eventkit.JustificationOption;
     selected: string;
@@ -16,11 +17,11 @@ JustificationDropdown.defaultProps = {
 
 function JustificationDropdown(props: DropdownProps) {
     const {
-        onChange, option, selected, classes,
+        enabled, onChange, option, selected, classes,
     } = props;
 
     return (
-        <div>
+        <div className="qa-Justification-Dropdown">
             <strong>
                 {/* eslint-disable-next-line react/no-danger */}
                 <div dangerouslySetInnerHTML={{ __html: option.name }} />
@@ -33,6 +34,7 @@ function JustificationDropdown(props: DropdownProps) {
                         value={selected}
                         onChange={onChange}
                         placeholder="Select One"
+                        disabled={!enabled}
                     >
                         <MenuItem value="none">
                             <em>Select One</em>

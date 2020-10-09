@@ -59,7 +59,7 @@ const jss = (theme: any) => createStyles({
         height: '95px',
         backgroundColor: 'black',
         boxShadow: 'none',
-        zIndex: 1301,
+        zIndex: 1299,
     },
     img: {
         width: '256px',

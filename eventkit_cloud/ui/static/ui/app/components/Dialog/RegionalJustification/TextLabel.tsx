@@ -5,13 +5,14 @@ import {TextField} from "@material-ui/core";
 
 
 interface TextLabelProps {
+    enabled: boolean;
     onChange: (...args: any) => void;
     option: Eventkit.JustificationOption;
     classes: { [className: string]: string };
 }
 
 function TextLabel(props: TextLabelProps) {
-    const {option, classes} = props;
+    const {enabled, option, onChange, classes} = props;
     return (
         <div>
             <strong>
@@ -28,6 +29,8 @@ function TextLabel(props: TextLabelProps) {
                         InputProps={{className: classes.input}}
                         inputProps={{className: classes.innerInput}}
                         variant={"outlined" as "outlined"}
+                        onChange={onChange}
+                        disabled={!enabled}
                     />
                 </div>
             </div>
@@ -47,6 +50,9 @@ const labelJss = (theme: Eventkit.Theme & Theme) => createStyles({
     entryRow: {
         display: 'flex',
         flexWrap: 'wrap',
+        [theme.breakpoints.down('sm')]: {
+            display: 'block',
+        },
     },
     left: {
         margin: 'auto',
@@ -54,6 +60,9 @@ const labelJss = (theme: Eventkit.Theme & Theme) => createStyles({
     right: {
         flexGrow: 5,
         marginLeft: '25px',
+        [theme.breakpoints.down('sm')]: {
+            margin: '0px',
+        },
     },
     textField: {
         backgroundColor: theme.eventkit.colors.white,
