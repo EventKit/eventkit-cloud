@@ -24,7 +24,7 @@ class Migration(migrations.Migration):
                 ('uid', models.UUIDField(db_index=True, default=uuid.uuid4, editable=False, unique=True)),
                 ('justification_id', models.IntegerField()),
                 ('justification_name', models.CharField(max_length=100)),
-                ('justification_description', models.CharField(blank=True, max_length=1000, null=True)),
+                ('justification_suboption_value', models.CharField(blank=True, max_length=1000, null=True)),
                 ('regional_policy', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='justifications', to='jobs.RegionalPolicy')),
                 ('user', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='justification_user', to=settings.AUTH_USER_MODEL)),
             ],
