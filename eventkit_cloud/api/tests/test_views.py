@@ -1969,25 +1969,33 @@ class TestSizeIncreaseRequestViewSet(APITestCase):
         self.assertEqual(response["Content-Length"], "0")
         self.assertEqual(response["Content-Language"], "en")
 
+
 class TestRegionalJustification(APITestCase):
-    fixtures = ('osm_provider.json',)
+    fixtures = ("osm_provider.json",)
 
     def setUp(self):
-        self.user = User.objects.create_user(username='demo', email='demo@demo.com', password='demo')
+        self.user = User.objects.create_user(username="demo", email="demo@demo.com", password="demo")
         token = Token.objects.create(user=self.user)
-        self.client.credentials(HTTP_AUTHORIZATION='Token ' + token.key,
-                        HTTP_ACCEPT='application/json; version=1.0',
-                        HTTP_ACCEPT_LANGUAGE='en',
-                        HTTP_HOST='testserver')
+        self.client.credentials(
+            HTTP_AUTHORIZATION="Token " + token.key,
+            HTTP_ACCEPT="application/json; version=1.0",
+            HTTP_ACCEPT_LANGUAGE="en",
+            HTTP_HOST="testserver",
+        )
 
-        ds = DataSource(os.path.dirname(os.path.realpath(__file__)) + '/../../jobs/migrations/africa.geojson')
+        ds = DataSource(os.path.dirname(os.path.realpath(__file__)) + "/../../jobs/migrations/africa.geojson")
         layer = ds[0]
         geom = layer.get_geoms(geos=True)[0]
         the_geom = GEOSGeometry(geom.wkt, srid=4326)
         the_geog = GEOSGeometry(geom.wkt)
         the_geom_webmercator = the_geom.transform(ct=3857, clone=True)
-        region = Region.objects.create(name="Africa", description="African export region", the_geom=the_geom,
-                                the_geog=the_geog, the_geom_webmercator=the_geom_webmercator)
+        region = Region.objects.create(
+            name="Africa",
+            description="African export region",
+            the_geom=the_geom,
+            the_geog=the_geog,
+            the_geom_webmercator=the_geom_webmercator,
+        )
 
         self.provider = DataProvider.objects.first()
 
@@ -1997,10 +2005,10 @@ class TestRegionalJustification(APITestCase):
         self.regional_policy = RegionalPolicy.objects.create(
             name="Test Policy",
             region=region,
-            policies = policies_example,
-            justification_options = justification_options_example,
-            policy_title_text = "Policy Title",
-            policy_cancel_button_text = "Cancel Button"
+            policies=policies_example,
+            justification_options=justification_options_example,
+            policy_title_text="Policy Title",
+            policy_cancel_button_text="Cancel Button",
         )
         self.regional_policy.providers.set([self.provider])
         self.regional_policy.save()
@@ -2014,10 +2022,10 @@ class TestRegionalJustification(APITestCase):
         }
 
         url = reverse("api:regional_justifications-list")
-        response = self.client.post(url, data=json.dumps(request_data), content_type='application/json; version=1.0')
+        response = self.client.post(url, data=json.dumps(request_data), content_type="application/json; version=1.0")
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-        self.assertEqual(response['Content-Type'], 'application/json')
-        self.assertEqual(response['Content-Language'], 'en')
+        self.assertEqual(response["Content-Type"], "application/json")
+        self.assertEqual(response["Content-Language"], "en")
 
         response = response.json()
         regional_justification = RegionalJustification.objects.last()
@@ -2035,8 +2043,10 @@ class TestRegionalJustification(APITestCase):
         }
 
         url = reverse("api:regional_justifications-list")
-        self.client.post(url, data=json.dumps(request_data), content_type='application/json; version=1.0')
-        self.assertRaisesMessage(Exception, "The Regional Policy for UID {request_data['regional_policy_uid']} does not exist.")
+        self.client.post(url, data=json.dumps(request_data), content_type="application/json; version=1.0")
+        self.assertRaisesMessage(
+            Exception, "The Regional Policy for UID {request_data['regional_policy_uid']} does not exist."
+        )
 
     def test_invalid_dropdown_suboption(self):
 
@@ -2047,7 +2057,7 @@ class TestRegionalJustification(APITestCase):
         }
 
         url = reverse("api:regional_justifications-list")
-        self.client.post(url, data=json.dumps(request_data), content_type='application/json; version=1.0')
+        self.client.post(url, data=json.dumps(request_data), content_type="application/json; version=1.0")
         self.assertRaisesMessage(ValidationError, "Invalid suboption selected.")
 
     def test_no_suboption_invalid_description(self):
@@ -2058,5 +2068,7 @@ class TestRegionalJustification(APITestCase):
         }
 
         url = reverse("api:regional_justifications-list")
-        self.client.post(url, data=json.dumps(request_data), content_type='application/json; version=1.0')
-        self.assertRaisesMessage(ValidationError, "No suboption was available, so justification_description cannot be used.")
+        self.client.post(url, data=json.dumps(request_data), content_type="application/json; version=1.0")
+        self.assertRaisesMessage(
+            ValidationError, "No suboption was available, so justification_description cannot be used."
+        )

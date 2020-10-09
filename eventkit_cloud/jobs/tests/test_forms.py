@@ -15,7 +15,7 @@ class TestRegionalPolicyForm(TestCase):
         self.assertEqual(form.errors["policies"], ["Every policy must have a description."])
 
     def test_justification_options_missing_id(self):
-        form = RegionalPolicyForm(data={"justification_options": [{"name": "name", "display": True,}]})
+        form = RegionalPolicyForm(data={"justification_options": [{"name": "name", "display": True}]})
 
         self.assertEqual(form.errors["justification_options"], ["Every option must have an id."])
 
@@ -35,12 +35,12 @@ class TestRegionalPolicyForm(TestCase):
         self.assertEqual(form.errors["justification_options"], ["name value must be a string."])
 
     def test_justification_options_missing_display(self):
-        form = RegionalPolicyForm(data={"justification_options": [{"id": 1, "name": "name",}]})
+        form = RegionalPolicyForm(data={"justification_options": [{"id": 1, "name": "name"}]})
 
         self.assertEqual(form.errors["justification_options"], ["Every option must have a display boolean."])
 
     def test_justification_options_invalid_display(self):
-        form = RegionalPolicyForm(data={"justification_options": [{"id": 1, "name": "name", "display": "display",}]})
+        form = RegionalPolicyForm(data={"justification_options": [{"id": 1, "name": "name", "display": "display"}]})
 
         self.assertEqual(form.errors["justification_options"], ["Display value must be a boolean."])
 
