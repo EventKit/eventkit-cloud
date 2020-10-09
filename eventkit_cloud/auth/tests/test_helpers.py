@@ -1,22 +1,16 @@
 # -*- coding: utf-8 -*-
 
-
 import json
 import logging
 
-import requests
-import requests_mock
-from django.conf import settings
-from django.contrib.auth.models import User
-from django.test import TestCase, override_settings
-from mock import patch
+from django.test import TestCase
 
 from eventkit_cloud.core.models import validate_object
 
 logger = logging.getLogger(__name__)
 
-class TestHelpers(TestCase):
 
+class TestHelpers(TestCase):
     def test_validate_object(self):
         filter = '[["MyGroup", "in", "groups"], "or", ["student", "==", "employmentStatus"]]'
         user = {"employmentStatus": "student"}
@@ -93,4 +87,3 @@ class TestHelpers(TestCase):
         self.assertTrue(validate_object(json.loads(filter), user))
         user = {"name": "Jan"}
         self.assertTrue(validate_object(json.loads(filter), user))
-
