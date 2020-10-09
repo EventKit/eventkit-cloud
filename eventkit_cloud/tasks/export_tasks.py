@@ -467,9 +467,7 @@ def osm_data_collection_pipeline(
     update_progress(
         export_task_record_uid, progress=100, eta=eta, msg="Completed OSM data collection pipeline",
     )
-    result = {'osm': osm_filename,
-              'pbf': pbf_filepath,
-              'gpkg': gpkg_filepath}
+    result = {"osm": osm_filename, "pbf": pbf_filepath, "gpkg": gpkg_filepath}
 
     return result
 
@@ -522,12 +520,14 @@ def osm_data_collection_task(
 
         selection = parse_result(result, "selection")
         if selection:
-            logger.debug("Calling gdalutils.convert with boundary={}, in_dataset={}".format(selection, osm_results['gpkg']))
-            osm_results['gpkg'] = gdalutils.convert(boundary=selection, input_file=osm_results['gpkg'])
+            logger.debug(
+                "Calling gdalutils.convert with boundary={}, in_dataset={}".format(selection, osm_results["gpkg"])
+            )
+            osm_results["gpkg"] = gdalutils.convert(boundary=selection, input_file=osm_results["gpkg"])
 
         result.update(osm_results)
-        result["result"] = osm_results.get('gpkg')
-        result["source"] = osm_results.get('gpkg')
+        result["result"] = osm_results.get("gpkg")
+        result["source"] = osm_results.get("gpkg")
 
         logger.debug("exit run for {0}".format(self.name))
     finally:
@@ -652,8 +652,9 @@ def gpx_export_task(
     provider_slug = get_provider_slug(task_uid)
     gpx_file = get_export_filename(stage_dir, job_name, projection, provider_slug, "gpx")
     try:
-        out = gdalutils.convert(input_file=gpkg, output_file=gpx_file, fmt="GPX",
-                                dataset_creation_options=["GPX_USE_EXTENSIONS=YES"])
+        out = gdalutils.convert(
+            input_file=gpkg, output_file=gpx_file, fmt="GPX", dataset_creation_options=["GPX_USE_EXTENSIONS=YES"]
+        )
         result["file_extension"] = "gpx"
         result["file_format"] = "GPX"
         result["result"] = out

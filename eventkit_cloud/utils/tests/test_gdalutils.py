@@ -105,7 +105,6 @@ class TestGdalUtils(TestCase):
             convert(boundary=None, input_file=None)
 
         # Raster geopackage
-        extra_parameters = ""
         in_projection = "EPSG:4326"
         out_projection = "EPSG:3857"
         geojson_file = "/path/to/geojson"
@@ -122,7 +121,7 @@ class TestGdalUtils(TestCase):
         get_task_command_mock.assert_called_once_with(convert_raster, in_dataset, out_dataset, fmt=fmt, creation_options=None,
                                      band_type=band_type, dst_alpha=dstalpha, boundary=geojson_file,
                                      src_srs=in_projection, dst_srs=out_projection, task_uid=self.task_uid,
-                                     translate_params=None, warp_params=None)
+                                     translate_params=None, warp_params=None, use_translate=False)
         get_task_command_mock.reset_mock()
         self.task_process().start_process.assert_called_once_with(lambda_mock)
         self.task_process.reset_mock()
@@ -138,7 +137,7 @@ class TestGdalUtils(TestCase):
                                                       creation_options=None, band_type=band_type, dst_alpha=dstalpha,
                                                       boundary=geojson_file, src_srs=in_projection,
                                                       dst_srs=in_projection, task_uid=self.task_uid,
-                                                      translate_params=None, warp_params=None)
+                                                      translate_params=None, warp_params=None, use_translate=False)
         get_task_command_mock.reset_mock()
         self.task_process().start_process.assert_called_once_with(lambda_mock)
         self.task_process.reset_mock()
@@ -151,7 +150,7 @@ class TestGdalUtils(TestCase):
                                                       creation_options=None, band_type=band_type, dst_alpha=dstalpha,
                                                       boundary=geojson_file, src_srs=in_projection,
                                                       dst_srs=in_projection, task_uid=self.task_uid,
-                                                      translate_params=None, warp_params=None)
+                                                      translate_params=None, warp_params=None, use_translate=False)
         get_task_command_mock.reset_mock()
         self.task_process().start_process.assert_called_once_with(lambda_mock)
         self.task_process.reset_mock()
@@ -161,9 +160,9 @@ class TestGdalUtils(TestCase):
         get_meta_mock.return_value = {'driver': 'gpkg', 'is_raster': False}
         convert(boundary=geojson_file, input_file=in_dataset, output_file=out_dataset, fmt=fmt, task_uid=self.task_uid)
         get_task_command_mock.assert_called_once_with(convert_vector, in_dataset, out_dataset, fmt=fmt,
-                                                      creation_options=None, src_srs=in_projection,
-                                                      dst_srs=in_projection, layers=None, boundary=geojson_file, bbox=None,
-                                                      task_uid=self.task_uid)
+                                                      dataset_creation_options=None, layer_creation_options=None,
+                                                      src_srs=in_projection, dst_srs=in_projection, layers=None,
+                                                      boundary=geojson_file, bbox=None, task_uid=self.task_uid)
         get_task_command_mock.reset_mock()
         self.task_process().start_process.assert_called_once_with(lambda_mock)
         self.task_process.reset_mock()
@@ -181,7 +180,7 @@ class TestGdalUtils(TestCase):
                                                       creation_options=extra_parameters,
                                                       band_type=band_type, dst_alpha=dstalpha, boundary=None,
                                                       src_srs=in_projection, dst_srs=out_projection,
-                                                      task_uid=self.task_uid, translate_params=None, warp_params=None)
+                                                      task_uid=self.task_uid, translate_params=None, warp_params=None, use_translate=False)
         get_task_command_mock.reset_mock()
         self.task_process().start_process.assert_called_once_with(lambda_mock)
         self.task_process.reset_mock()
@@ -198,7 +197,8 @@ class TestGdalUtils(TestCase):
                                                       creation_options=None,
                                                       band_type=band_type, dst_alpha=dstalpha, boundary=None,
                                                       src_srs=in_projection, dst_srs=out_projection,
-                                                      task_uid=self.task_uid, translate_params=None, warp_params=None)
+                                                      task_uid=self.task_uid, translate_params=None, warp_params=None,
+                                                      use_translate=False)
         get_task_command_mock.reset_mock()
         self.task_process().start_process.assert_called_once_with(lambda_mock)
         self.task_process.reset_mock()

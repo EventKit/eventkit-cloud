@@ -286,7 +286,7 @@ def convert(
     is_raster: bool = True,
     warp_params: dict = None,
     translate_params: dict = None,
-    use_translate: bool = False
+    use_translate: bool = False,
 ):
     """
     Uses gdal to convert and clip a supported dataset file to a mask if boundary is passed in.
@@ -438,7 +438,7 @@ def convert_raster(
     task_uid=None,
     warp_params: dict = None,
     translate_params: dict = None,
-    use_translate: bool = False
+    use_translate: bool = False,
 ):
     """
     :param warp_params: A dict of options to pass to gdal warp (done first in conversion), overrides other settings.

@@ -169,32 +169,6 @@ export function supportsZoomLevels(provider: Eventkit.Provider) {
     return typesSupportingZoomLevels.indexOf(provider.type.toLowerCase()) >= 0;
 }
 
-// This maps special case formats that only support certain projections
-const formatCompatibilityMap = {
-    nitf: [4326],
-};
-// This maps special case formats that do not support certain projections
-// Use this when a format can support any projection except a specific set.
-const formatIncompatibilityMap = {};
-
-// Takes a list of formats, and returns any formats that are incompotible with the specified projection (passed by srid)
-export function unsupportedFormats(projection: number, formats: Eventkit.Format[]) {
-    const incompatibleFormats = [];
-    formats.forEach((format) => {
-        // A format should not be listed in BOTH the compatabilty and incompatibility map.
-        const supportedProjections = formatCompatibilityMap[format.slug.toLowerCase()];
-        const unsupportedProjections = formatIncompatibilityMap[format.slug.toLowerCase()];
-        if (supportedProjections && supportedProjections.indexOf(projection) === -1) {
-            // If the format ONLY supports certain projections, and this projection is not in that list
-            incompatibleFormats.push(format);
-        } else if (unsupportedProjections && unsupportedProjections.indexOf(projection) >= 0) {
-            // If the format DOES NOT support a specific set of projections, and this projection is in that list
-            incompatibleFormats.push(format);
-        }
-    });
-    return incompatibleFormats;
-}
-
 export function getDefaultFormat(provider: Partial<Eventkit.Provider>) {
     if (provider.hidden === false) {
         const supportedFormats = provider.supported_formats;

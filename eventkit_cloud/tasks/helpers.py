@@ -179,9 +179,7 @@ def get_provider_slug(export_task_record_uid):
 
 def get_supported_projections(format_slug: str) -> List[int]:
     supported_projections = (
-        ExportFormat.objects.get(slug=format_slug)
-            .supported_projections.all()
-            .values_list("srid", flat=True)
+        ExportFormat.objects.get(slug=format_slug).supported_projections.all().values_list("srid", flat=True)
     )
     return supported_projections
 

@@ -234,7 +234,7 @@ class TestExportTasks(ExportTaskBase):
                                              projection=output_projection, boundary=None, use_translate=True)
 
         self.assertEqual(expected_output_path, result['result'])
-        self.assertEqual(expected_output_path, result['source'])
+        self.assertEqual(sample_input, result['source'])
 
     @patch('eventkit_cloud.tasks.export_tasks.get_creation_options')
     @patch('eventkit_cloud.tasks.export_tasks.get_provider_slug')

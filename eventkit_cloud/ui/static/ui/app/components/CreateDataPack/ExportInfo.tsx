@@ -3,8 +3,8 @@ import * as React from 'react';
 import {createStyles, Theme, withStyles, withTheme} from '@material-ui/core/styles';
 import {connect} from 'react-redux';
 import axios from 'axios';
-import {arrayHasValue, unsupportedFormats} from '../../utils/generic';
-import Joyride, {Step, StoreHelpers} from 'react-joyride';
+import {arrayHasValue} from '../../utils/generic';
+import {Step, StoreHelpers} from 'react-joyride';
 import List from '@material-ui/core/List';
 import Paper from '@material-ui/core/Paper';
 import Popover from '@material-ui/core/Popover';
@@ -27,9 +27,7 @@ import {useEffect} from "react";
 import {useJobValidationContext} from "./context/JobValidation";
 import RequestDataSource from "./RequestDataSource";
 import {Link} from "@material-ui/core";
-import Drawer from "@material-ui/core/Drawer";
 import {useState} from "react";
-import PermissionsBanner from "../PermissionsBanner";
 import EventkitJoyride from "../common/JoyrideWrapper";
 
 const jss = (theme: Eventkit.Theme & Theme) => createStyles({

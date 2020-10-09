@@ -6,7 +6,7 @@ import os
 from celery import chain  # required for tests
 from django.db import DatabaseError
 
-from eventkit_cloud.jobs.models import DataProvider, DataProviderTask, ExportFormat
+from eventkit_cloud.jobs.models import DataProvider, DataProviderTask
 from eventkit_cloud.tasks.enumerations import TaskStates
 from eventkit_cloud.tasks.export_tasks import reprojection_task, create_datapack_preview
 from eventkit_cloud.tasks.helpers import normalize_name, get_metadata, get_supported_projections, get_default_projection
@@ -115,7 +115,7 @@ class TaskChainBuilder(object):
         )
 
         for file_format, task in export_tasks.items():
-            task_name = task.get('obj').name
+            task_name = task.get("obj").name
             default_projection = get_default_projection(get_supported_projections(file_format), projections)
             if default_projection:
                 task_name = f"{task.get('obj').name} - EPSG:{default_projection}"
@@ -145,7 +145,8 @@ class TaskChainBuilder(object):
 
             for current_format, task in export_tasks.items():
                 supported_projections = get_supported_projections(current_format)
-                logger.error(f"subtasks.append: {current_format} {task}")
+                default_projection = get_default_projection(supported_projections, selected_projections=projections)
+
                 subtasks.append(
                     task.get("obj")
                     .s(
@@ -159,9 +160,6 @@ class TaskChainBuilder(object):
                     )
                     .set(queue=queue_group, routing_key=queue_group)
                 )
-                logger.error(f"Projections: {projections}")
-                logger.error(f"supported_projections: {supported_projections}")
-                logger.error(f"list(set(supported_projections) & set(projections)): {list(set(supported_projections) & set(projections))}")
 
                 for projection in list(set(supported_projections) & set(projections)):
 
@@ -242,7 +240,6 @@ class TaskChainBuilder(object):
 
         tasks = chain(tasks,)
 
-        logger.error(f"TASKS:{tasks}")
         return data_provider_task_record.uid, tasks
 
 
