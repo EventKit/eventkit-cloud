@@ -245,8 +245,9 @@ class TestExportTasks(ExportTaskBase):
         expected_outfile = f'{job_name}-{projection}-{expected_provider_slug}-{date}.gpkg'
         expected_output_path = os.path.join(os.path.join(settings.EXPORT_STAGING_ROOT.rstrip('\/'), str(self.run.uid)),
                                             expected_outfile)
-        # TODO: expected_input_path looks like this if service_url isn't passed in. Might need to be updated?
-        expected_input_path = f'WFS:?SERVICE=WFS&VERSION=1.0.0&REQUEST=GetFeature&TYPENAME=None&SRSNAME=EPSG:4326'
+        layer = 'foo'
+        service_url = 'https://abc.gov/arcgis/WFSServer/'
+        expected_input_path = f'WFS:{service_url}?SERVICE=WFS&VERSION=1.0.0&REQUEST=GetFeature&TYPENAME={layer}&SRSNAME=EPSG:{projection}'
 
         mock_convert.return_value = expected_output_path
 
@@ -263,15 +264,24 @@ class TestExportTasks(ExportTaskBase):
         mock_gpkg.check_content_exists.return_value = True
         result = wfs_export_task.run(run_uid=self.run.uid, result=previous_task_result,
                                             task_uid=str(saved_export_task.uid),
-                                            stage_dir=stage_dir, job_name=job_name, projection=projection)
+                                            stage_dir=stage_dir, job_name=job_name, projection=projection,
+                                            service_url=service_url, layer=layer)
         mock_convert.assert_called_once_with(fmt='gpkg', input_file=expected_input_path,
                                              output_file=expected_output_path,
                                              task_uid=str(saved_export_task.uid),
-                                             projection=4326, boundary=None)
+                                             projection=projection, boundary=None)
 
         self.assertEqual(expected_output_path, result['result'])
         self.assertEqual(expected_output_path, result['source'])
         mock_gpkg.check_content_exists.assert_called_once_with(expected_output_path)
+        
+        result_b = wfs_export_task.run(run_uid=self.run.uid, result=previous_task_result,
+                                            task_uid=str(saved_export_task.uid),
+                                            stage_dir=stage_dir, job_name=job_name, projection=projection,
+                                            service_url=f'{service_url}/')
+
+        self.assertEqual(expected_output_path, result_b['result'])
+        self.assertEqual(expected_output_path, result_b['source'])
 
     @patch("eventkit_cloud.utils.gdalutils.convert")
     @patch("celery.app.task.Task.request")
@@ -521,9 +531,8 @@ class TestExportTasks(ExportTaskBase):
         expected_outfile = f'{job_name}-{projection}-{expected_provider_slug}-{date}.gpkg'
         expected_output_path = os.path.join(os.path.join(settings.EXPORT_STAGING_ROOT.rstrip('\/'), str(self.run.uid)),
                                             expected_outfile)
-
-        # TODO: expected_input_path looks like this if service_url isn't passed in. Might need to be updated?
-        expected_input_path = f'/query?where=objectid%3Dobjectid&outfields=*&f=json'
+        service_url = 'https://abc.gov/arcgis/services/xyz'
+        expected_input_path = 'https://abc.gov/arcgis/services/xyz/query?where=objectid%3Dobjectid&outfields=*&f=json'
 
         mock_convert.return_value = expected_output_path
 
@@ -539,18 +548,27 @@ class TestExportTasks(ExportTaskBase):
 
         arcgis_feature_service_export_task.update_task_state(task_status=TaskStates.RUNNING.value,
                                                  task_uid=str(saved_export_task.uid))
-
-        result = arcgis_feature_service_export_task.run(run_uid=self.run.uid, result=previous_task_result,
+        # test without trailing slash
+        result_a = arcgis_feature_service_export_task.run(run_uid=self.run.uid, result=previous_task_result,
                                             task_uid=str(saved_export_task.uid),
-                                            stage_dir=stage_dir, job_name=job_name, projection=projection)
-
+                                            stage_dir=stage_dir, job_name=job_name, projection=projection,
+                                            service_url=service_url)
+        
         mock_convert.assert_called_once_with(fmt='gpkg', input_file=expected_input_path,
                                              output_file=expected_output_path,
                                              task_uid=str(saved_export_task.uid),
                                              projection=4326, boundary=None)
 
-        self.assertEqual(expected_output_path, result['result'])
-        self.assertEqual(expected_output_path, result['source'])
+        self.assertEqual(expected_output_path, result_a['result'])
+        self.assertEqual(expected_output_path, result_a['source'])
+        # test with trailing slash
+        result_b = arcgis_feature_service_export_task.run(run_uid=self.run.uid, result=previous_task_result,
+                                            task_uid=str(saved_export_task.uid),
+                                            stage_dir=stage_dir, job_name=job_name, projection=projection,
+                                            service_url=f'{service_url}/')
+
+        self.assertEqual(expected_output_path, result_b['result'])
+        self.assertEqual(expected_output_path, result_b['source'])
         
     @patch('celery.app.task.Task.request')
     @patch('eventkit_cloud.utils.mapproxy.MapproxyGeopackage')
