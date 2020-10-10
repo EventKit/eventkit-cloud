@@ -5,9 +5,10 @@ import os
 from django.conf import settings
 
 from django.test import TestCase
-from mock import patch
+from mock import patch, MagicMock
 
-from eventkit_cloud.tasks.helpers import generate_qgs_style
+from eventkit_cloud.tasks.enumerations import TaskStates
+from eventkit_cloud.tasks.helpers import generate_qgs_style, get_metadata
 
 
 class TestStyles(TestCase):
@@ -21,12 +22,10 @@ class TestStyles(TestCase):
             "data_sources": {
                 "osm": {
                     "copyright": None,
-                    "description": "OpenStreetMap vector data provided in a custom thematic schema. \r\n\t\r\n\tData "
-                    "is grouped into separate tables (e.g. water, roads...).",
+                    "description": "OpenStreetMap vector data provided in a custom thematic schema. \r\n\t\r\n\tData is grouped into separate tables (e.g. water, roads...).",
                     "file_path": "data/osm/test-osm-20181101.gpkg",
                     "file_type": ".gpkg",
-                    "full_file_path": "/var/lib/eventkit/exports_stage/7fadf34e-58f9-4bb8-ab57-adc1015c4269/osm/"
-                    "test.gpkg",
+                    "full_file_path": "/var/lib/eventkit/exports_stage/7fadf34e-58f9-4bb8-ab57-adc1015c4269/osm/test.gpkg",
                     "last_update": "2018-10-29T04:35:02Z\n",
                     "metadata": "https://overpass-server.com/overpass/interpreter",
                     "name": "OpenStreetMap Data (Themes)",

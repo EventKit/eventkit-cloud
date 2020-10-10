@@ -42,6 +42,8 @@ class Directory(Enum):
 
 PREVIEW_TAIL = "preview.jpg"
 
+UNSUPPORTED_CARTOGRAPHY_FORMATS = [".pbf", ".gpx"]
+
 
 def get_run_staging_dir(run_uid):
     """
@@ -249,7 +251,7 @@ def create_license_file(provider_task):
     return license_file_path
 
 
-def generate_qgs_style(metadata):
+def generate_qgs_style(metadata, skip_formats=UNSUPPORTED_CARTOGRAPHY_FORMATS):
     """
     Task to create QGIS project file with styles for osm.
 
@@ -261,11 +263,13 @@ def generate_qgs_style(metadata):
 
     from eventkit_cloud.tasks.helpers import normalize_name
 
-    stage_dir = os.path.join(settings.EXPORT_STAGING_ROOT, str(metadata["run_uid"]))
+    cleaned_metadata = remove_formats(metadata, formats=UNSUPPORTED_CARTOGRAPHY_FORMATS)
 
-    job_name = normalize_name(metadata["name"].lower())
+    stage_dir = os.path.join(settings.EXPORT_STAGING_ROOT, str(cleaned_metadata["run_uid"]))
 
-    provider_details = [provider_detail for provider_slug, provider_detail in metadata["data_sources"].items()]
+    job_name = normalize_name(cleaned_metadata["name"].lower())
+
+    provider_details = [provider_detail for provider_slug, provider_detail in cleaned_metadata["data_sources"].items()]
 
     if len(provider_details) == 1:
         style_file_name = "{0}-{1}-{2}.qgs".format(
@@ -288,6 +292,26 @@ def generate_qgs_style(metadata):
     with open(style_file, "wb") as open_file:
         open_file.write(render_to_string("styles/Style.qgs", context=context,).encode())
     return style_file
+
+
+def remove_formats(metadata: dict, formats: List[str] = UNSUPPORTED_CARTOGRAPHY_FORMATS):
+    """
+        Used to remove formats from the metadata especially so that they don't show up in the cartography.
+        :param data_sources: A dict of metadata provided by get_metadata.
+        :param formats: A list of unsupported file extensions (i.e. .gpx)
+        :return: The path to the generated qgs file.
+    """
+    # Create a new dict to not alter the input data.
+    cleaned_metadata = copy.deepcopy(metadata)
+    for slug, data_source in metadata.get("data_sources", {}).items():
+        cleaned_metadata["data_sources"][slug] = data_source
+        cleaned_files = []
+        for file_info in cleaned_metadata["data_sources"][slug]["files"]:
+            # Add all files that aren't in the remove list.
+            if file_info["file_ext"] not in formats:
+                cleaned_files.append(file_info)
+        cleaned_metadata["data_sources"][slug]["files"] = cleaned_files
+    return cleaned_metadata
 
 
 def get_human_readable_metadata_document(metadata):
@@ -564,7 +588,7 @@ def get_arcgis_metadata(metadata):
     :param metadata: A metadata dict returned from get_metadata
     :return: A metadata dict to be provided within the datapack.
     """
-    arcgis_metadata = copy.deepcopy(metadata)
+    arcgis_metadata = remove_formats(metadata, formats=UNSUPPORTED_CARTOGRAPHY_FORMATS)
 
     # remove files which reference the server directories.
     arcgis_metadata.pop("include_files")

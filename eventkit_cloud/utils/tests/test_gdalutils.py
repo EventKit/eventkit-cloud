@@ -149,7 +149,7 @@ class TestGdalUtils(TestCase):
             task_uid=self.task_uid,
             translate_params=None,
             warp_params=None,
-            use_translate=False
+            use_translate=False,
         )
         get_task_command_mock.reset_mock()
         self.task_process().start_process.assert_called_once_with(lambda_mock)
@@ -176,7 +176,7 @@ class TestGdalUtils(TestCase):
             task_uid=self.task_uid,
             translate_params=None,
             warp_params=None,
-            use_translate=False
+            use_translate=False,
         )
         get_task_command_mock.reset_mock()
         self.task_process().start_process.assert_called_once_with(lambda_mock)
@@ -200,7 +200,7 @@ class TestGdalUtils(TestCase):
             task_uid=self.task_uid,
             translate_params=None,
             warp_params=None,
-            use_translate=False
+            use_translate=False,
         )
         get_task_command_mock.reset_mock()
         self.task_process().start_process.assert_called_once_with(lambda_mock)
@@ -258,7 +258,7 @@ class TestGdalUtils(TestCase):
             task_uid=self.task_uid,
             translate_params=None,
             warp_params=None,
-            use_translate=False
+            use_translate=False,
         )
         get_task_command_mock.reset_mock()
         self.task_process().start_process.assert_called_once_with(lambda_mock)
@@ -286,7 +286,7 @@ class TestGdalUtils(TestCase):
             task_uid=self.task_uid,
             translate_params=None,
             warp_params=None,
-            use_translate=False
+            use_translate=False,
         )
         get_task_command_mock.reset_mock()
         self.task_process().start_process.assert_called_once_with(lambda_mock)
