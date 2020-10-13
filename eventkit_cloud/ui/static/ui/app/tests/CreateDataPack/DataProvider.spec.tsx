@@ -52,7 +52,7 @@ describe('DataProvider component', () => {
         },
         providerOptions: {minZoom: 0, maxZoom: 1, formats: ['gpkg']},
         selectedProjections: [4326],
-        compatibilityInfo: {
+        incompatibilityInfo: {
             formats: {
                 gpkg: {
                     projections: [],
