@@ -3,8 +3,8 @@ import * as React from 'react';
 import {createStyles, Theme, withStyles, withTheme} from '@material-ui/core/styles';
 import {connect} from 'react-redux';
 import axios from 'axios';
-import {arrayHasValue, unsupportedFormats} from '../../utils/generic';
-import Joyride, {Step, StoreHelpers} from 'react-joyride';
+import {arrayHasValue} from '../../utils/generic';
+import {Step, StoreHelpers} from 'react-joyride';
 import List from '@material-ui/core/List';
 import Paper from '@material-ui/core/Paper';
 import Popover from '@material-ui/core/Popover';
@@ -27,9 +27,7 @@ import {useEffect} from "react";
 import {useJobValidationContext} from "./context/JobValidation";
 import RequestDataSource from "./RequestDataSource";
 import {Link} from "@material-ui/core";
-import Drawer from "@material-ui/core/Drawer";
 import {useState} from "react";
-import PermissionsBanner from "../PermissionsBanner";
 import EventkitJoyride from "../common/JoyrideWrapper";
 
 const jss = (theme: Eventkit.Theme & Theme) => createStyles({
@@ -136,7 +134,7 @@ const jss = (theme: Eventkit.Theme & Theme) => createStyles({
 });
 
 // Use this to keep track of incompatibilities in the user selected DataPack options
-export interface CompatibilityInfo {
+export interface IncompatibilityInfo {
     formats: {
         [slug: string]: {
             projections: number[]; // Map format slugs to the projection SRID's that it is NOT compatible with.
@@ -176,7 +174,7 @@ export interface State {
     projectionCompatibilityOpen: boolean;
     displaySrid: number;  // Which projection is shown in the compatibility warning box
     selectedFormats: string[];
-    compatibilityInfo: CompatibilityInfo;
+    incompatibilityInfo: IncompatibilityInfo;
     providerDrawerIsOpen: boolean;
     stepIndex: number;
 }
@@ -270,10 +268,10 @@ export class ExportInfo extends React.Component<Props, State> {
             projectionCompatibilityOpen: false,
             displaySrid: null,
             selectedFormats: [],
-            compatibilityInfo: {
+            incompatibilityInfo: {
                 formats: {},
                 projections: {},
-            } as CompatibilityInfo,
+            } as IncompatibilityInfo,
             providerDrawerIsOpen: false,
             stepIndex: 0,
         };
@@ -290,7 +288,7 @@ export class ExportInfo extends React.Component<Props, State> {
         this.handlePopoverClose = this.handlePopoverClose.bind(this);
         this.handleProjectionCompatibilityOpen = this.handleProjectionCompatibilityOpen.bind(this);
         this.handleProjectionCompatibilityClose = this.handleProjectionCompatibilityClose.bind(this);
-        this.calculateCompatibility = this.calculateCompatibility.bind(this);
+        this.checkCompatibility = this.checkCompatibility.bind(this);
         this.checkSelectedFormats = this.checkSelectedFormats.bind(this);
         this.projectionHasErrors = this.projectionHasErrors.bind(this);
         this.getProjectionDialog = this.getProjectionDialog.bind(this);
@@ -349,7 +347,7 @@ export class ExportInfo extends React.Component<Props, State> {
         if (!ExportInfo.elementsEqual(selectedProjections, prevSelectedProjections)) {
             nextState = {
                 ...nextState,
-                ...this.calculateCompatibility()
+                ...this.checkCompatibility()
             };
         }
         nextState = {
@@ -380,25 +378,31 @@ export class ExportInfo extends React.Component<Props, State> {
         return valuesEqual;
     }
 
-    private calculateCompatibility() {
+    private checkCompatibility() {
         const { formats } = this.props;
         const selectedProjections = this.props.exportInfo.projections;
 
         const formatMap = {};
         const projectionMap = {};
         formats.forEach(format => {
-            formatMap[format.slug] = { projections: [] };
-        });
-        selectedProjections.map((projectionSrid) => {
-            const unsupported = unsupportedFormats(projectionSrid, formats);
-            projectionMap[projectionSrid] = { formats: unsupported };
-            unsupported.forEach((format) => {
-                formatMap[format.slug].projections.push(projectionSrid);
+            const formatSupportedProjections = format.supported_projections.map(projection => projection.srid);
+            selectedProjections.forEach(selectedProjection => {
+                if (!formatMap[format.slug]){
+                    formatMap[format.slug] = {projections: []};
+                }
+                if (!projectionMap[selectedProjection]){
+                    projectionMap[selectedProjection] = {formats:[]};
+                }
+                if (!formatSupportedProjections.includes(selectedProjection)) {
+                    projectionMap[selectedProjection].formats.push(format);
+                    formatMap[format.slug].projections.push(selectedProjection);
+                }
             });
         });
+
         return {
-            compatibilityInfo: {
-                ...this.state.compatibilityInfo,
+            incompatibilityInfo: {
+                ...this.state.incompatibilityInfo,
                 formats: formatMap,
                 projections: projectionMap,
             }
@@ -643,7 +647,7 @@ export class ExportInfo extends React.Component<Props, State> {
     }
 
     private projectionHasErrors(srid: number) {
-        const projectionInfo = this.state.compatibilityInfo.projections[srid];
+        const projectionInfo = this.state.incompatibilityInfo.projections[srid];
         if (!!projectionInfo) {
             return projectionInfo.formats.some(format => this.state.selectedFormats.indexOf(format.slug) >= 0);
         }
@@ -651,8 +655,8 @@ export class ExportInfo extends React.Component<Props, State> {
     }
 
     private getProjectionDialog() {
-        const compatibilityInfo = this.state.compatibilityInfo.projections[this.state.displaySrid];
-        const formats = compatibilityInfo.formats.filter(format => {
+        const incompatibilityInfo = this.state.incompatibilityInfo.projections[this.state.displaySrid];
+        const formats = incompatibilityInfo.formats.filter(format => {
             return this.state.selectedFormats.indexOf(format.slug) >= 0;
         });
         return (<BaseDialog
@@ -884,7 +888,7 @@ export class ExportInfo extends React.Component<Props, State> {
                                                     this.props.onUpdateEstimate();
                                                 });
                                             }}
-                                            compatibilityInfo={this.state.compatibilityInfo}
+                                            incompatibilityInfo={this.state.incompatibilityInfo}
                                             clearEstimate={this.clearEstimate}
                                             // Get reference to handle logic for joyride.
                                             innerRef={ix === 0 ? this.dataProvider : null}
