@@ -647,13 +647,19 @@ def gpx_export_task(
     Function defining GPX export function.
     """
     result = result or {}
-
-    gpkg = parse_result(result, "gpkg")
+    # Need to use PBF instead of GPKG because gpkg uses multi-geometry types whereas gpx doesn't support multipoint
+    pbf = parse_result(result, "pbf")
+    # Need to crop to selection since the PBF hasn't been clipped.
+    selection = parse_result(result, "selection")
     provider_slug = get_provider_slug(task_uid)
     gpx_file = get_export_filename(stage_dir, job_name, projection, provider_slug, "gpx")
     try:
         out = gdalutils.convert(
-            input_file=gpkg, output_file=gpx_file, fmt="GPX", dataset_creation_options=["GPX_USE_EXTENSIONS=YES"]
+            input_file=pbf,
+            output_file=gpx_file,
+            fmt="GPX",
+            dataset_creation_options=["GPX_USE_EXTENSIONS=YES"],
+            boundary=selection,
         )
         result["file_extension"] = "gpx"
         result["file_format"] = "GPX"

@@ -552,7 +552,6 @@ def convert_vector(
             "datasetCreationOptions": dataset_creation_options,
             "layerCreationOptions": layer_creation_options,
             "format": fmt,
-            "geometryType": "PROMOTE_TO_MULTI",
             "layers": layers,
             "srcSRS": src_srs,
             "dstSRS": dst_srs,
@@ -563,6 +562,8 @@ def convert_vector(
             "options": ["-clipSrc", boundary] if boundary and not bbox else None,
         }
     )
+    if "gpkg" in fmt.lower():
+        options["geometryType"] = ["PROMOTE_TO_MULTI"]
     logger.info(f"calling gdal.VectorTranslate('{output_file}', '{input_file}', {stringify_params(options)})")
     gdal.VectorTranslate(output_file, input_file, **options)
     return output_file

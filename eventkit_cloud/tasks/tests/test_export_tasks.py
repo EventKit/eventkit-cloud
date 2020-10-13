@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
 
 import json
-import pickle
 import logging
 import os
+import pickle
 import sys
 import uuid
 
@@ -18,7 +18,7 @@ from mock import Mock, PropertyMock, patch, MagicMock
 
 from eventkit_cloud.celery import TaskPriority, app
 from eventkit_cloud.jobs.models import DatamodelPreset, DataProvider, Job
-
+from eventkit_cloud.tasks.enumerations import TaskStates
 from eventkit_cloud.tasks.export_tasks import (
     ExportTask,
     export_task_error_handler,
@@ -39,12 +39,13 @@ from eventkit_cloud.tasks.export_tasks import (
     FormatTask,
     wait_for_providers_task,
     create_zip_task,
+    pbf_export_task,
+    sqlite_export_task,
+    gpx_export_task,
+    mbtiles_export_task,
 )
-
-from eventkit_cloud.tasks.helpers import default_format_time
-from eventkit_cloud.tasks.task_base import LockingTask
-from eventkit_cloud.tasks.enumerations import TaskStates
 from eventkit_cloud.tasks.export_tasks import zip_files
+from eventkit_cloud.tasks.helpers import default_format_time
 from eventkit_cloud.tasks.models import (
     DataProviderTaskRecord,
     ExportRun,
@@ -52,6 +53,7 @@ from eventkit_cloud.tasks.models import (
     FileProducingTaskResult,
     RunZipFile,
 )
+from eventkit_cloud.tasks.task_base import LockingTask
 
 logger = logging.getLogger(__name__)
 
@@ -264,7 +266,6 @@ class TestExportTasks(ExportTaskBase):
             task_uid=str(saved_export_task.uid),
             projection=4326,
             boundary=None,
-            use_translate=True,
         )
 
         self.assertEqual(expected_output_path, result["result"])
@@ -355,7 +356,7 @@ class TestExportTasks(ExportTaskBase):
         ExportTask.__call__ = lambda *args, **kwargs: celery.Task.__call__(*args, **kwargs)
         example_pbf = "example.pbf"
         example_result = {"pbf": example_pbf}
-        expected_result = {"file_extension": "pbf", "file_format": "PBF", "pbf": example_pbf, "result": example_pbf}
+        expected_result = {"file_extension": "pbf", "file_format": "OSM", "pbf": example_pbf, "result": example_pbf}
         returned_result = pbf_export_task(example_result)
         self.assertEquals(expected_result, returned_result)
 
@@ -384,19 +385,21 @@ class TestExportTasks(ExportTaskBase):
         # TODO: This can be setup as a way to test the other ExportTasks without all the boilerplate.
         ExportTask.__call__ = lambda *args, **kwargs: celery.Task.__call__(*args, **kwargs)
         provider_slug = mock_get_provider_slug.return_value = "osm"
-        example_source = "example.gpkg"
+        example_source = "example.pbf"
+        example_geojson = "example.geojson"
         task_uid = "1234"
-        example_result = {"gpkg": example_source}
+        example_result = {"pbf": example_source, "selection": example_geojson}
         date = default_format_time(timezone.now())
         stage_dir = "stage"
         expected_outfile = f"{stage_dir}/job-4326-{provider_slug}-{date}.gpx"
         mock_gdalutils.convert.return_value = expected_outfile
         expected_result = {
-            "gpkg": example_source,
+            "pbf": example_source,
             "file_extension": "gpx",
             "file_format": "GPX",
             "result": expected_outfile,
             "gpx": expected_outfile,
+            "selection": example_geojson,
         }
         returned_result = gpx_export_task(result=example_result, task_uid=task_uid, stage_dir=stage_dir, job_name="job")
         mock_gdalutils.convert.assert_called_once_with(
@@ -404,6 +407,7 @@ class TestExportTasks(ExportTaskBase):
             output_file=expected_outfile,
             fmt="GPX",
             dataset_creation_options=["GPX_USE_EXTENSIONS=YES"],
+            boundary=example_geojson,
         )
         self.assertEqual(returned_result, expected_result)
 

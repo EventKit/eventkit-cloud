@@ -476,7 +476,6 @@ class TestGdalUtils(TestCase):
             callback_data={"task_uid": task_uid},
             dstSRS=dst_srs,
             format=fmt,
-            geometryType="PROMOTE_TO_MULTI",
             options=["-clipSrc", boundary],
             reproject=True,
             skipFailures=True,

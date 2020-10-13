@@ -306,9 +306,9 @@ def remove_formats(metadata: dict, formats: List[str] = UNSUPPORTED_CARTOGRAPHY_
     for slug, data_source in metadata.get("data_sources", {}).items():
         cleaned_metadata["data_sources"][slug] = data_source
         cleaned_files = []
-        for file_info in cleaned_metadata["data_sources"][slug]["files"]:
+        for file_info in cleaned_metadata["data_sources"][slug].get("files"):
             # Add all files that aren't in the remove list.
-            if file_info["file_ext"] not in formats:
+            if file_info.get("file_ext") not in formats:
                 cleaned_files.append(file_info)
         cleaned_metadata["data_sources"][slug]["files"] = cleaned_files
     return cleaned_metadata
