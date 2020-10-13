@@ -6,7 +6,7 @@ import {updateExportOptions} from '../../actions/datacartActions';
 import CheckBoxIcon from '@material-ui/icons/CheckBox';
 import IndeterminateCheckBoxIcon from '@material-ui/icons/IndeterminateCheckBox';
 import {Compatibility} from '../../utils/enums';
-import {CompatibilityInfo} from "./ExportInfo";
+import {IncompatibilityInfo} from "./ExportInfo";
 import {getDefaultFormat} from "../../utils/generic";
 import InfoDialog from "../Dialog/InfoDialog";
 
@@ -86,7 +86,7 @@ interface Props {
     providerOptions: Eventkit.Store.ProviderExportOptions;
     updateExportOptions: (providerSlug: string, providerOptions: any) => void;
     getFormatCompatibility: (format: string) => Compatibility;
-    compatibilityInfo: CompatibilityInfo;
+    incompatibilityInfo: IncompatibilityInfo;
     theme: Eventkit.Theme & Theme;
     classes: { [className: string]: string };
 }
