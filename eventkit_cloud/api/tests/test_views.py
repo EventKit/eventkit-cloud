@@ -2017,7 +2017,7 @@ class TestRegionalJustification(APITestCase):
 
         request_data = {
             "justification_id": 1,
-            "justification_description": "Option 1",
+            "justification_suboption_value": "Option 1",
             "regional_policy_uid": str(self.regional_policy.uid),
         }
 
@@ -2031,14 +2031,14 @@ class TestRegionalJustification(APITestCase):
         regional_justification = RegionalJustification.objects.last()
         self.assertEqual(regional_justification.justification_id, request_data["justification_id"])
         self.assertEqual(regional_justification.justification_name, "Justification Option with Dropdown Suboption")
-        self.assertEqual(regional_justification.justification_description, "Option 1")
+        self.assertEqual(regional_justification.justification_suboption_value, "Option 1")
         self.assertEqual(regional_justification.regional_policy, self.regional_policy)
 
     def test_invalid_regional_policy(self):
 
         request_data = {
             "justification_id": 1,
-            "justification_description": "Option 1",
+            "justification_suboption_value": "Option 1",
             "regional_policy_uid": "invalid_uid",
         }
 
@@ -2052,7 +2052,7 @@ class TestRegionalJustification(APITestCase):
 
         request_data = {
             "justification_id": 1,
-            "justification_description": "Invalid Option",
+            "justification_suboption_value": "Invalid Option",
             "regional_policy_uid": str(self.regional_policy.uid),
         }
 
@@ -2063,12 +2063,12 @@ class TestRegionalJustification(APITestCase):
     def test_no_suboption_invalid_description(self):
         request_data = {
             "justification_id": 3,
-            "justification_description": "Invalid Option",
+            "justification_suboption_value": "Invalid Option",
             "regional_policy_uid": str(self.regional_policy.uid),
         }
 
         url = reverse("api:regional_justifications-list")
         self.client.post(url, data=json.dumps(request_data), content_type="application/json; version=1.0")
         self.assertRaisesMessage(
-            ValidationError, "No suboption was available, so justification_description cannot be used."
+            ValidationError, "No suboption was available, so justification_suboption_value cannot be used."
         )
