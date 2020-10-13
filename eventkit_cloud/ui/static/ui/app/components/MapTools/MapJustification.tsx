@@ -1,9 +1,11 @@
-import React, {useEffect, useState} from 'react';
+import React, { useEffect, useState } from 'react';
 import RegionalJustificationDialog from '../Dialog/RegionalJustification/RegionalJustificationDialog';
-import {useRegionContext} from '../common/context/RegionContext';
-import {DepsHashers, useEffectOnMount, useProviderIdentity} from '../../utils/hooks/hooks';
+import { useRegionContext } from '../common/context/RegionContext';
+import { DepsHashers, useEffectOnMount, useProviderIdentity } from '../../utils/hooks/hooks';
 import history from '../../utils/history';
-import {convertGeoJSONtoJSTS, covers} from '../../utils/mapUtils';
+import { convertGeoJSONtoJSTS, covers } from '../../utils/mapUtils';
+import ZoomOutAtZoomLevel from './OpenLayers/ZoomOutAtZoomLevel';
+import { renderIf } from '../../utils/renderIf';
 import {arrayHasValue} from "../../utils/generic";
 
 interface Props {
@@ -11,7 +13,7 @@ interface Props {
     extent?: GeoJSON.Feature;
 }
 
-export function RegionJustification(props: React.PropsWithChildren<Props>) {
+export function MapJustification(props: React.PropsWithChildren<Props>) {
     const {providers, extent} = props;
     const {policies, getPolicies, submittedPolicies, submitPolicy} = useRegionContext();
     const [justificationSubmitted, setJustificationSubmitted] = useState<{ [uid: string]: boolean }>(undefined);
@@ -57,7 +59,9 @@ export function RegionJustification(props: React.PropsWithChildren<Props>) {
 
     }, providers);
 
-    if (justificationSubmitted && policyIntersected) {
+    const [forceZoomOut, setForceZoomOut] = useState(false);
+
+    if (!forceZoomOut && justificationSubmitted && policyIntersected) {
         const entries = Object.entries(justificationSubmitted);
         const intersectionEntries = Object.entries(policyIntersected);
         const policiesNotSubmitted = !Object.values(entries).every(([, isSubmitted]) => isSubmitted);
@@ -71,16 +75,14 @@ export function RegionJustification(props: React.PropsWithChildren<Props>) {
             return (
                 <RegionalJustificationDialog
                     isOpen
-                    onClose={() => history.goBack()}
+                    onClose={() => setForceZoomOut(true)}
                     onSubmit={() => submitJustification(policyUid)}
                     policy={policy}
                 />
             );
         }
+    } else if (forceZoomOut) {
+        return (<ZoomOutAtZoomLevel zoomLevel={14} />);
     }
-    return (
-        <>
-            {props.children}
-        </>
-    );
+    return null;
 }

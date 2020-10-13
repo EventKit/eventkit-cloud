@@ -28,10 +28,10 @@ function OlMapComponent(props: React.PropsWithChildren<MapComponentProps>) {
     const [olZoomLevel, setOlZoom] = useState(zoomLevelProp || minZoom);
 
     useEffectOnMount(() => {
-        const mapContainer = new MapContainer(zoomLevel, minZoom, maxZoom);
-        setMapContainer(mapContainer);
+        const _mapContainer = new MapContainer(zoomLevel, minZoom, maxZoom);
+        setMapContainer(_mapContainer);
 
-        const olMap = mapContainer.getMap();
+        const olMap = _mapContainer.getMap();
         olMap.setTarget(divId);
 
         olMap.getView().on('change:resolution', () =>
@@ -79,14 +79,16 @@ function OlMapComponent(props: React.PropsWithChildren<MapComponentProps>) {
 
     const displayStyle = (style.visibility) ? style.visibility : 'visible';
     return (
-        <OlMapProvider value={{ mapContainer: mapContainer }}>
+        <OlMapProvider value={{ mapContainer }}>
             <OlZoomProvider value={{
-                zoomLevel: zoomLevel,
+                zoomLevel,
                 olZoomLevel,
                 setZoom,
             }}>
-                <div style={{ ...style, visibility: (visible) ? displayStyle : 'hidden' }} id={divId} ref={divRef}>
-                    {!!mapContainer && props.children}
+                <div style={{
+                    ...style, visibility: (visible) ? displayStyle : 'hidden',
+                }} id={divId} ref={divRef}>
+                    {!!mapContainer && visible && props.children}
                 </div>
             </OlZoomProvider>
         </OlMapProvider>

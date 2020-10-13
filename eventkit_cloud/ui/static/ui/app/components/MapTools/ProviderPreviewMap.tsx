@@ -5,9 +5,10 @@ import ZoomToAoi from "./OpenLayers/ZoomToAoi";
 import {MapLayer} from "../CreateDataPack/CreateExport";
 import OlMapComponent from "./OpenLayers/OlMapComponent";
 import {useAppContext} from "../ApplicationContext";
-import { MapComponentProps } from "./OpenLayers/OlMapComponent";
+import {MapComponentProps} from "./OpenLayers/OlMapComponent";
 import {useEffectOnMount} from "../../utils/hooks/hooks";
-import {useOlMapContainer} from "./context/OpenLayersContext";
+import {useOlMapContainer, useOlZoom} from "./context/OpenLayersContext";
+import {MapJustification} from "./MapJustification";
 
 interface Props extends MapComponentProps {
     provider: Eventkit.Provider;
@@ -21,7 +22,7 @@ ProviderPreviewMap.defaultProps = {
 } as Props;
 
 function ProviderPreviewMap(props: React.PropsWithChildren<Props>) {
-    const { provider, zoomLevel, geojson } = props;
+    const {provider, zoomLevel, geojson} = props;
     const appContext = useAppContext();
 
     const selectedBasemap = {
@@ -46,13 +47,25 @@ function ProviderPreviewMap(props: React.PropsWithChildren<Props>) {
                     <ZoomToAoi zoomLevel={zoomLevel}/>
                 </OlFeatureLayer>
             )}
-            { !!footprintMapLayer &&
-                <OlRasterTileLayer mapLayer={footprintMapLayer} copyright={provider.service_copyright} zIndex={1}/>
+            {!!footprintMapLayer &&
+            <OlRasterTileLayer mapLayer={footprintMapLayer} copyright={provider.service_copyright} zIndex={1}/>
             }
             <OlRasterTileLayer mapLayer={selectedBasemap} copyright={provider.service_copyright} zIndex={0}/>
             {props.children}
+            <JustificationWrap>
+                <MapJustification providers={[provider]} extent={props.geojson}/>
+            </JustificationWrap>
         </OlMapComponent>
     );
+}
+
+function JustificationWrap(props: React.PropsWithChildren<any>) {
+    const zoomContext = useOlZoom();
+
+    if (zoomContext.zoomLevel > 14) {
+        return props.children;
+    }
+    return null;
 }
 
 export default ProviderPreviewMap;

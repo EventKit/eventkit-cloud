@@ -29,6 +29,10 @@ export class DropZoneDialog extends Component {
 
     render() {
         const { colors } = this.props.theme.eventkit;
+        let maxUploadSize = 5;
+        if (this.context.config) {
+            maxUploadSize = this.context.config.MAX_UPLOAD_SIZE;
+        }
 
         const styles = {
             drop: {
@@ -62,7 +66,7 @@ export class DropZoneDialog extends Component {
                     onDrop={this.onDrop}
                     multiple={false}
                     style={{}}
-                    maxSize={5000000}
+                    maxSize={maxUploadSize * 1000000}
                     className="qa-DropZoneDialog-Dropzone"
                 >
                     {({ getRootProps, getInputProps }) => {
@@ -71,11 +75,11 @@ export class DropZoneDialog extends Component {
                             <RootRef rootRef={ref}>
                                 <div {...getRootProps()} style={styles.drop} className="qa-DropZoneDialog-text">
                                     <span style={styles.text}>
-                                        <strong>GeoJSON, KML, GPKG, zipped SHP,</strong>
+                                        <strong>GeoJSON, KML, GPKG, zipped SHP, GeoTIFF</strong>
                                         <br />
                                         and other major geospatial data formats are supported.
                                         <br />
-                                        <strong> 5 MB </strong>
+                                        <strong> {maxUploadSize} MB </strong>
                                         max
                                         <br />
                                         Drag and drop or
@@ -107,6 +111,12 @@ DropZoneDialog.propTypes = {
     setImportModalState: PropTypes.func.isRequired,
     processGeoJSONFile: PropTypes.func.isRequired,
     theme: PropTypes.object.isRequired,
+};
+
+DropZoneDialog.contextTypes = {
+    config: PropTypes.shape({
+        MAX_UPLOAD_SIZE: PropTypes.number,
+    }),
 };
 
 export default withTheme(DropZoneDialog);

@@ -29,17 +29,10 @@ export class ApiStatuses {
         FileStatus.SUCCESS, FileStatus.FAILED];
     static readonly inProgressStates = [FileStatus.PENDING, FileStatus.RUNNING, FileStatus.SUBMITTED];
 
-    static isFetching(status: string) : boolean {
-        return status === ApiStatuses.hookActions.FETCHING;
-    }
-
-    static isSuccessful(status: string) : boolean {
-        return status === ApiStatuses.hookActions.SUCCESS;
-    }
-
-    static isError(status: string) : boolean {
-        return status === ApiStatuses.hookActions.ERROR;
-    }
+    static readonly isFetching = (status: any) => status === ACTIONS.FETCHING;
+    static readonly isSuccess = (status: any) => status === ACTIONS.SUCCESS;
+    static readonly isNotFired = (status: any) => status === ACTIONS.NOT_FIRED;
+    static readonly isError = (status: any) => status === ACTIONS.ERROR;
 }
 
 interface RequestState {

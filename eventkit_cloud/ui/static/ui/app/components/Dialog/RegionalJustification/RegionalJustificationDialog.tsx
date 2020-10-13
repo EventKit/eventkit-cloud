@@ -299,7 +299,6 @@ export function RegionalJustificationDialog(props: RegionalJustificationDialogPr
             (selectedOption.suboption) ? optionValues[selectedOption.id] : undefined,
         );
         onSubmit();
-        onClose();
     }
 
     const [isPolicyOpen, setIsPolicyOpen] = useState(false);

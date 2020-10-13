@@ -17,6 +17,7 @@ import BufferOp from 'jsts/org/locationtech/jts/operation/buffer/BufferOp';
 import UnionOp from 'jsts/org/locationtech/jts/operation/union/UnionOp';
 import isValidOp from 'jsts/org/locationtech/jts/operation/valid/IsValidOp';
 import BufferParameters from 'jsts/org/locationtech/jts/operation/buffer/BufferParameters';
+import OverlayOp from 'jsts/org/locationtech/jts/operation/overlay/OverlayOp';
 import ZoomSlider from 'ol/control/zoomslider';
 import { colors } from '../styles/eventkit_theme';
 const icon = require('../../images/ic_room_black_24px.svg');
@@ -200,6 +201,11 @@ export function flattenFeatureCollection(featureCollection) {
     const jsts = convertGeoJSONtoJSTS(featureCollection, 1, false);
     const newFeatureCollection = jstsToFeatureCollection(jsts);
     return newFeatureCollection;
+}
+
+export function covers(a, b) {
+    const c =OverlayOp.intersection(a, b);
+    return !OverlayOp.intersection(a, b).isEmpty();
 }
 
 export function generateDrawLayer() {

@@ -153,7 +153,6 @@ export class MapDisplayBar extends React.Component<Props, State> {
 
         return (
             <div className="qa-MapDisplayBar">
-                <TempComponent />
                 <div className={classes.wrapper} style={{ bottom: (aoiTabVisible && poiTabVisible) ? '70px' : '40px' }}>
                     {isWidthUp('sm', this.props.width)
                     && (

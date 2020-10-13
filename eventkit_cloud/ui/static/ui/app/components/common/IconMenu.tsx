@@ -66,6 +66,7 @@ export class IconMenu extends React.Component<Props, State> {
         return ([
             <IconButton
                 key="button"
+                name="iconButton"
                 className={this.props.className || 'qa-IconMenu-IconButton'}
                 style={{
                     width: '36px',
