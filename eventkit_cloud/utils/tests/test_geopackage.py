@@ -218,8 +218,8 @@ class TestGeopackage(TransactionTestCase):
 
         self.assertEqual([call(gpkg), call(gpkg)], get_table_names.mock_calls)
 
-    @patch('eventkit_cloud.utils.gdalutils.convert')
-    @patch('builtins.open')
+    @patch("eventkit_cloud.utils.gdalutils.convert")
+    @patch("builtins.open")
     def test_add_geojson_to_geopackage(self, open, mock_convert):
 
         geojson = "{}"
@@ -231,12 +231,13 @@ class TestGeopackage(TransactionTestCase):
         gpkg = "test.gpkg"
         layer_name = "test_layer"
         add_geojson_to_geopackage(geojson=geojson, gpkg=gpkg, layer_name=layer_name, task_uid=self.task_uid)
-        open.assert_called_once_with(os.path.join(os.path.dirname(gpkg),
-                                "{0}.geojson".format(os.path.splitext(os.path.basename(gpkg))[0])), 'w')
+        open.assert_called_once_with(
+            os.path.join(os.path.dirname(gpkg), "{0}.geojson".format(os.path.splitext(os.path.basename(gpkg))[0])), "w"
+        )
         gdal_mock = mock_convert.return_value
-        gdal_mock.convert.called_once_with(fmt='gpkg', input_file=geojson, output_file=gpkg,
-                                          creation_options="-nln {0}".format(layer_name))
-
+        gdal_mock.convert.called_once_with(
+            fmt="gpkg", input_file=geojson, output_file=gpkg, creation_options="-nln {0}".format(layer_name)
+        )
 
     @patch("eventkit_cloud.utils.geopackage.sqlite3")
     @patch("eventkit_cloud.utils.geopackage.get_table_info")

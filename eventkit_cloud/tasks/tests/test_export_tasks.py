@@ -43,7 +43,7 @@ from eventkit_cloud.tasks.export_tasks import (
     sqlite_export_task,
     gpx_export_task,
     mbtiles_export_task,
-    wfs_export_task
+    wfs_export_task,
 )
 from eventkit_cloud.tasks.export_tasks import zip_files
 from eventkit_cloud.tasks.helpers import default_format_time
@@ -125,164 +125,208 @@ class ExportTaskBase(TestCase):
 
 
 class TestExportTasks(ExportTaskBase):
-    @patch('eventkit_cloud.tasks.export_tasks.gdalutils.convert')
-    @patch('celery.app.task.Task.request')
+    @patch("eventkit_cloud.tasks.export_tasks.gdalutils.convert")
+    @patch("celery.app.task.Task.request")
     def test_run_shp_export_task(self, mock_request, mock_convert):
         celery_uid = str(uuid.uuid4())
         type(mock_request).id = PropertyMock(return_value=celery_uid)
         job_name = self.job.name.lower()
         projection = 4326
-        expected_provider_slug = 'osm-generic'
+        expected_provider_slug = "osm-generic"
         date = default_format_time(timezone.now())
-        expected_outfile = f'{job_name}-{projection}-{expected_provider_slug}-{date}_shp'
-        expected_output_path = os.path.join(os.path.join(settings.EXPORT_STAGING_ROOT.rstrip('\/'), str(self.run.uid)),
-                                            expected_outfile)
+        expected_outfile = f"{job_name}-{projection}-{expected_provider_slug}-{date}_shp"
+        expected_output_path = os.path.join(
+            os.path.join(settings.EXPORT_STAGING_ROOT.rstrip("\/"), str(self.run.uid)), expected_outfile
+        )
 
         mock_convert.return_value = expected_output_path
 
-        previous_task_result = {'source': expected_output_path}
-        stage_dir = settings.EXPORT_STAGING_ROOT + str(self.run.uid) + '/'
-        export_provider_task = DataProviderTaskRecord.objects.create(run=self.run,
-                                                                     status=TaskStates.PENDING.value,
-                                                                     provider=self.provider)
-        saved_export_task = ExportTaskRecord.objects.create(export_provider_task=export_provider_task,
-                                                            status=TaskStates.PENDING.value,
-                                                            name=shp_export_task.name)
-        shp_export_task.update_task_state(task_status=TaskStates.RUNNING.value,
-                                                 task_uid=str(saved_export_task.uid))
-        result = shp_export_task.run(run_uid=self.run.uid, result=previous_task_result,
-                                            task_uid=str(saved_export_task.uid),
-                                            stage_dir=stage_dir, job_name=job_name, projection=projection)
-        mock_convert.assert_called_once_with(fmt='shp', input_file=expected_output_path,
-                                             output_file=expected_output_path,
-                                             task_uid=str(saved_export_task.uid),
-                                             boundary=None, projection=4326)
+        previous_task_result = {"source": expected_output_path}
+        stage_dir = settings.EXPORT_STAGING_ROOT + str(self.run.uid) + "/"
+        export_provider_task = DataProviderTaskRecord.objects.create(
+            run=self.run, status=TaskStates.PENDING.value, provider=self.provider
+        )
+        saved_export_task = ExportTaskRecord.objects.create(
+            export_provider_task=export_provider_task, status=TaskStates.PENDING.value, name=shp_export_task.name
+        )
+        shp_export_task.update_task_state(task_status=TaskStates.RUNNING.value, task_uid=str(saved_export_task.uid))
+        result = shp_export_task.run(
+            run_uid=self.run.uid,
+            result=previous_task_result,
+            task_uid=str(saved_export_task.uid),
+            stage_dir=stage_dir,
+            job_name=job_name,
+            projection=projection,
+        )
+        mock_convert.assert_called_once_with(
+            fmt="shp",
+            input_file=expected_output_path,
+            output_file=expected_output_path,
+            task_uid=str(saved_export_task.uid),
+            boundary=None,
+            projection=4326,
+        )
 
-        self.assertEqual(expected_output_path, result['result'])
-        self.assertEqual(expected_output_path, result['source'])
+        self.assertEqual(expected_output_path, result["result"])
+        self.assertEqual(expected_output_path, result["source"])
 
-    @patch('eventkit_cloud.tasks.export_tasks.gdalutils.convert')
-    @patch('celery.app.task.Task.request')
+    @patch("eventkit_cloud.tasks.export_tasks.gdalutils.convert")
+    @patch("celery.app.task.Task.request")
     def test_run_kml_export_task(self, mock_request, mock_convert):
         celery_uid = str(uuid.uuid4())
         type(mock_request).id = PropertyMock(return_value=celery_uid)
         job_name = self.job.name.lower()
         projection = 4326
-        expected_provider_slug = 'osm-generic'
+        expected_provider_slug = "osm-generic"
         date = default_format_time(timezone.now())
-        expected_outfile = f'{job_name}-{projection}-{expected_provider_slug}-{date}.kml'
-        expected_output_path = os.path.join(os.path.join(settings.EXPORT_STAGING_ROOT.rstrip('\/'), str(self.run.uid)),
-                                            expected_outfile)
+        expected_outfile = f"{job_name}-{projection}-{expected_provider_slug}-{date}.kml"
+        expected_output_path = os.path.join(
+            os.path.join(settings.EXPORT_STAGING_ROOT.rstrip("\/"), str(self.run.uid)), expected_outfile
+        )
 
         mock_convert.return_value = expected_output_path
 
-        previous_task_result = {'source': expected_output_path}
-        stage_dir = settings.EXPORT_STAGING_ROOT + str(self.run.uid) + '/'
-        export_provider_task = DataProviderTaskRecord.objects.create(run=self.run,
-                                                                     status=TaskStates.PENDING.value,
-                                                                     provider=self.provider)
-        saved_export_task = ExportTaskRecord.objects.create(export_provider_task=export_provider_task,
-                                                            status=TaskStates.PENDING.value,
-                                                            name=kml_export_task.name)
-        kml_export_task.update_task_state(task_status=TaskStates.RUNNING.value,
-                                                 task_uid=str(saved_export_task.uid))
-        result = kml_export_task.run(run_uid=self.run.uid, result=previous_task_result,
-                                            task_uid=str(saved_export_task.uid),
-                                            stage_dir=stage_dir, job_name=job_name, projection=projection)
-        mock_convert.assert_called_once_with(fmt='kml', input_file=expected_output_path,
-                                             output_file=expected_output_path,
-                                             task_uid=str(saved_export_task.uid),
-                                             projection=4326, boundary=None)
+        previous_task_result = {"source": expected_output_path}
+        stage_dir = settings.EXPORT_STAGING_ROOT + str(self.run.uid) + "/"
+        export_provider_task = DataProviderTaskRecord.objects.create(
+            run=self.run, status=TaskStates.PENDING.value, provider=self.provider
+        )
+        saved_export_task = ExportTaskRecord.objects.create(
+            export_provider_task=export_provider_task, status=TaskStates.PENDING.value, name=kml_export_task.name
+        )
+        kml_export_task.update_task_state(task_status=TaskStates.RUNNING.value, task_uid=str(saved_export_task.uid))
+        result = kml_export_task.run(
+            run_uid=self.run.uid,
+            result=previous_task_result,
+            task_uid=str(saved_export_task.uid),
+            stage_dir=stage_dir,
+            job_name=job_name,
+            projection=projection,
+        )
+        mock_convert.assert_called_once_with(
+            fmt="kml",
+            input_file=expected_output_path,
+            output_file=expected_output_path,
+            task_uid=str(saved_export_task.uid),
+            projection=4326,
+            boundary=None,
+        )
 
-        self.assertEqual(expected_output_path, result['result'])
-        self.assertEqual(expected_output_path, result['source'])
+        self.assertEqual(expected_output_path, result["result"])
+        self.assertEqual(expected_output_path, result["source"])
 
-    @patch('eventkit_cloud.tasks.export_tasks.gdalutils.convert')
-    @patch('celery.app.task.Task.request')
+    @patch("eventkit_cloud.tasks.export_tasks.gdalutils.convert")
+    @patch("celery.app.task.Task.request")
     def test_run_sqlite_export_task(self, mock_request, mock_convert):
         celery_uid = str(uuid.uuid4())
         type(mock_request).id = PropertyMock(return_value=celery_uid)
         job_name = self.job.name.lower()
         projection = 4326
-        expected_provider_slug = 'osm-generic'
+        expected_provider_slug = "osm-generic"
         date = default_format_time(timezone.now())
-        expected_outfile = f'{job_name}-{projection}-{expected_provider_slug}-{date}.sqlite'
-        expected_output_path = os.path.join(os.path.join(settings.EXPORT_STAGING_ROOT.rstrip('\/'), str(self.run.uid)),
-                                            expected_outfile)
+        expected_outfile = f"{job_name}-{projection}-{expected_provider_slug}-{date}.sqlite"
+        expected_output_path = os.path.join(
+            os.path.join(settings.EXPORT_STAGING_ROOT.rstrip("\/"), str(self.run.uid)), expected_outfile
+        )
 
         mock_convert.return_value = expected_output_path
 
-        previous_task_result = {'source': expected_output_path}
-        stage_dir = settings.EXPORT_STAGING_ROOT + str(self.run.uid) + '/'
-        export_provider_task = DataProviderTaskRecord.objects.create(run=self.run,
-                                                                     status=TaskStates.PENDING.value,
-                                                                     provider=self.provider)
-        saved_export_task = ExportTaskRecord.objects.create(export_provider_task=export_provider_task,
-                                                            status=TaskStates.PENDING.value,
-                                                            name=sqlite_export_task.name)
-        sqlite_export_task.update_task_state(task_status=TaskStates.RUNNING.value,
-                                                 task_uid=str(saved_export_task.uid))
-        result = sqlite_export_task.run(run_uid=self.run.uid, result=previous_task_result,
-                                            task_uid=str(saved_export_task.uid),
-                                            stage_dir=stage_dir, job_name=job_name, projection=projection)
-        mock_convert.assert_called_once_with(fmt='sqlite', input_file=expected_output_path,
-                                             output_file=expected_output_path,
-                                             task_uid=str(saved_export_task.uid),
-                                             projection=4326, boundary=None)
+        previous_task_result = {"source": expected_output_path}
+        stage_dir = settings.EXPORT_STAGING_ROOT + str(self.run.uid) + "/"
+        export_provider_task = DataProviderTaskRecord.objects.create(
+            run=self.run, status=TaskStates.PENDING.value, provider=self.provider
+        )
+        saved_export_task = ExportTaskRecord.objects.create(
+            export_provider_task=export_provider_task, status=TaskStates.PENDING.value, name=sqlite_export_task.name
+        )
+        sqlite_export_task.update_task_state(task_status=TaskStates.RUNNING.value, task_uid=str(saved_export_task.uid))
+        result = sqlite_export_task.run(
+            run_uid=self.run.uid,
+            result=previous_task_result,
+            task_uid=str(saved_export_task.uid),
+            stage_dir=stage_dir,
+            job_name=job_name,
+            projection=projection,
+        )
+        mock_convert.assert_called_once_with(
+            fmt="sqlite",
+            input_file=expected_output_path,
+            output_file=expected_output_path,
+            task_uid=str(saved_export_task.uid),
+            projection=4326,
+            boundary=None,
+        )
 
-        self.assertEqual(expected_output_path, result['result'])
-        self.assertEqual(expected_output_path, result['source'])
+        self.assertEqual(expected_output_path, result["result"])
+        self.assertEqual(expected_output_path, result["source"])
 
-    @patch('eventkit_cloud.tasks.export_tasks.gdalutils.convert')
-    @patch('eventkit_cloud.tasks.export_tasks.geopackage')
-    @patch('celery.app.task.Task.request')
+    @patch("eventkit_cloud.tasks.export_tasks.gdalutils.convert")
+    @patch("eventkit_cloud.tasks.export_tasks.geopackage")
+    @patch("celery.app.task.Task.request")
     def test_run_wfs_export_task(self, mock_request, mock_gpkg, mock_convert):
         celery_uid = str(uuid.uuid4())
         type(mock_request).id = PropertyMock(return_value=celery_uid)
         job_name = self.job.name.lower()
         projection = 4326
-        expected_provider_slug = 'osm-generic'
+        expected_provider_slug = "osm-generic"
         date = default_format_time(timezone.now())
-        expected_outfile = f'{job_name}-{projection}-{expected_provider_slug}-{date}.gpkg'
-        expected_output_path = os.path.join(os.path.join(settings.EXPORT_STAGING_ROOT.rstrip('\/'), str(self.run.uid)),
-                                            expected_outfile)
-        layer = 'foo'
-        service_url = 'https://abc.gov/arcgis/WFSServer/'
-        expected_input_path = f'WFS:{service_url}?SERVICE=WFS&VERSION=1.0.0&REQUEST=GetFeature&TYPENAME={layer}&SRSNAME=EPSG:{projection}'
+        expected_outfile = f"{job_name}-{projection}-{expected_provider_slug}-{date}.gpkg"
+        expected_output_path = os.path.join(
+            os.path.join(settings.EXPORT_STAGING_ROOT.rstrip("\/"), str(self.run.uid)), expected_outfile
+        )
+        layer = "foo"
+        service_url = "https://abc.gov/arcgis/WFSServer/"
+        expected_input_path = (
+            f"WFS:{service_url}?SERVICE=WFS&VERSION=1.0.0&REQUEST=GetFeature&TYPENAME={layer}&SRSNAME=EPSG:{projection}"
+        )
 
         mock_convert.return_value = expected_output_path
 
-        previous_task_result = {'source': expected_output_path}
-        stage_dir = settings.EXPORT_STAGING_ROOT + str(self.run.uid) + '/'
-        export_provider_task = DataProviderTaskRecord.objects.create(run=self.run,
-                                                                     status=TaskStates.PENDING.value,
-                                                                     provider=self.provider)
-        saved_export_task = ExportTaskRecord.objects.create(export_provider_task=export_provider_task,
-                                                            status=TaskStates.PENDING.value,
-                                                            name=wfs_export_task.name)
-        wfs_export_task.update_task_state(task_status=TaskStates.RUNNING.value,
-                                                 task_uid=str(saved_export_task.uid))
+        previous_task_result = {"source": expected_output_path}
+        stage_dir = settings.EXPORT_STAGING_ROOT + str(self.run.uid) + "/"
+        export_provider_task = DataProviderTaskRecord.objects.create(
+            run=self.run, status=TaskStates.PENDING.value, provider=self.provider
+        )
+        saved_export_task = ExportTaskRecord.objects.create(
+            export_provider_task=export_provider_task, status=TaskStates.PENDING.value, name=wfs_export_task.name
+        )
+        wfs_export_task.update_task_state(task_status=TaskStates.RUNNING.value, task_uid=str(saved_export_task.uid))
         mock_gpkg.check_content_exists.return_value = True
-        result = wfs_export_task.run(run_uid=self.run.uid, result=previous_task_result,
-                                            task_uid=str(saved_export_task.uid),
-                                            stage_dir=stage_dir, job_name=job_name, projection=projection,
-                                            service_url=service_url, layer=layer)
-        mock_convert.assert_called_once_with(fmt='gpkg', input_file=expected_input_path,
-                                             output_file=expected_output_path,
-                                             task_uid=str(saved_export_task.uid),
-                                             projection=projection, boundary=None)
+        result = wfs_export_task.run(
+            run_uid=self.run.uid,
+            result=previous_task_result,
+            task_uid=str(saved_export_task.uid),
+            stage_dir=stage_dir,
+            job_name=job_name,
+            projection=projection,
+            service_url=service_url,
+            layer=layer,
+        )
+        mock_convert.assert_called_once_with(
+            fmt="gpkg",
+            input_file=expected_input_path,
+            output_file=expected_output_path,
+            task_uid=str(saved_export_task.uid),
+            projection=projection,
+            boundary=None,
+        )
 
-        self.assertEqual(expected_output_path, result['result'])
-        self.assertEqual(expected_output_path, result['source'])
+        self.assertEqual(expected_output_path, result["result"])
+        self.assertEqual(expected_output_path, result["source"])
         mock_gpkg.check_content_exists.assert_called_once_with(expected_output_path)
 
-        result_b = wfs_export_task.run(run_uid=self.run.uid, result=previous_task_result,
-                                            task_uid=str(saved_export_task.uid),
-                                            stage_dir=stage_dir, job_name=job_name, projection=projection,
-                                            service_url=f'{service_url}/')
+        result_b = wfs_export_task.run(
+            run_uid=self.run.uid,
+            result=previous_task_result,
+            task_uid=str(saved_export_task.uid),
+            stage_dir=stage_dir,
+            job_name=job_name,
+            projection=projection,
+            service_url=f"{service_url}/",
+        )
 
-        self.assertEqual(expected_output_path, result_b['result'])
-        self.assertEqual(expected_output_path, result_b['source'])
+        self.assertEqual(expected_output_path, result_b["result"])
+        self.assertEqual(expected_output_path, result_b["source"])
 
     @patch("eventkit_cloud.utils.gdalutils.convert")
     @patch("celery.app.task.Task.request")
@@ -470,8 +514,8 @@ class TestExportTasks(ExportTaskBase):
         self.assertEquals(expected_result, returned_result)
 
     @patch("eventkit_cloud.tasks.export_tasks.get_provider_slug")
-    @patch('eventkit_cloud.tasks.export_tasks.gdalutils.convert')
-    @patch('celery.app.task.Task.request')
+    @patch("eventkit_cloud.tasks.export_tasks.gdalutils.convert")
+    @patch("celery.app.task.Task.request")
     def test_sqlite_export_task(self, mock_request, mock_convert, mock_get_provider_slug):
         ExportTask.__call__ = lambda *args, **kwargs: celery.Task.__call__(*args, **kwargs)
         expected_provider_slug = mock_get_provider_slug.return_value = "osm"
@@ -480,32 +524,41 @@ class TestExportTasks(ExportTaskBase):
         job_name = self.job.name.lower()
         projection = 4326
         date = default_format_time(timezone.now())
-        expected_outfile = f'{job_name}-{projection}-{expected_provider_slug}-{date}.sqlite'
-        expected_output_path = os.path.join(os.path.join(settings.EXPORT_STAGING_ROOT.rstrip('\/'), str(self.run.uid)),
-                                            expected_outfile)
+        expected_outfile = f"{job_name}-{projection}-{expected_provider_slug}-{date}.sqlite"
+        expected_output_path = os.path.join(
+            os.path.join(settings.EXPORT_STAGING_ROOT.rstrip("\/"), str(self.run.uid)), expected_outfile
+        )
 
         mock_convert.return_value = expected_output_path
 
-        previous_task_result = {'source': expected_output_path}
-        stage_dir = settings.EXPORT_STAGING_ROOT + str(self.run.uid) + '/'
-        export_provider_task = DataProviderTaskRecord.objects.create(run=self.run,
-                                                                     status=TaskStates.PENDING.value,
-                                                                     provider=self.provider)
-        saved_export_task = ExportTaskRecord.objects.create(export_provider_task=export_provider_task,
-                                                            status=TaskStates.PENDING.value,
-                                                            name=sqlite_export_task.name)
-        sqlite_export_task.update_task_state(task_status=TaskStates.RUNNING.value,
-                                                 task_uid=str(saved_export_task.uid))
-        result = sqlite_export_task.run(run_uid=self.run.uid, result=previous_task_result,
-                                            task_uid=str(saved_export_task.uid),
-                                            stage_dir=stage_dir, job_name=job_name, projection=projection)
-        mock_convert.assert_called_once_with(fmt='sqlite', input_file=expected_output_path,
-                                             output_file=expected_output_path,
-                                             task_uid=str(saved_export_task.uid),
-                                             projection=4326, boundary=None)
+        previous_task_result = {"source": expected_output_path}
+        stage_dir = settings.EXPORT_STAGING_ROOT + str(self.run.uid) + "/"
+        export_provider_task = DataProviderTaskRecord.objects.create(
+            run=self.run, status=TaskStates.PENDING.value, provider=self.provider
+        )
+        saved_export_task = ExportTaskRecord.objects.create(
+            export_provider_task=export_provider_task, status=TaskStates.PENDING.value, name=sqlite_export_task.name
+        )
+        sqlite_export_task.update_task_state(task_status=TaskStates.RUNNING.value, task_uid=str(saved_export_task.uid))
+        result = sqlite_export_task.run(
+            run_uid=self.run.uid,
+            result=previous_task_result,
+            task_uid=str(saved_export_task.uid),
+            stage_dir=stage_dir,
+            job_name=job_name,
+            projection=projection,
+        )
+        mock_convert.assert_called_once_with(
+            fmt="sqlite",
+            input_file=expected_output_path,
+            output_file=expected_output_path,
+            task_uid=str(saved_export_task.uid),
+            projection=4326,
+            boundary=None,
+        )
 
-        self.assertEqual(expected_output_path, result['result'])
-        self.assertEqual(expected_output_path, result['source'])
+        self.assertEqual(expected_output_path, result["result"])
+        self.assertEqual(expected_output_path, result["source"])
 
     @patch("eventkit_cloud.tasks.export_tasks.get_provider_slug")
     @patch("eventkit_cloud.tasks.export_tasks.gdalutils")
@@ -539,59 +592,77 @@ class TestExportTasks(ExportTaskBase):
         )
         self.assertEqual(returned_result, expected_result)
 
-    @patch('eventkit_cloud.tasks.export_tasks.gdalutils.convert')
-    @patch('celery.app.task.Task.request')
+    @patch("eventkit_cloud.tasks.export_tasks.gdalutils.convert")
+    @patch("celery.app.task.Task.request")
     def test_run_arcgis_feature_service_export_task(self, mock_request, mock_convert):
         celery_uid = str(uuid.uuid4())
         type(mock_request).id = PropertyMock(return_value=celery_uid)
         job_name = self.job.name.lower()
         projection = 4326
-        expected_provider_slug = 'osm-generic'
+        expected_provider_slug = "osm-generic"
         date = default_format_time(timezone.now())
-        expected_outfile = f'{job_name}-{projection}-{expected_provider_slug}-{date}.gpkg'
-        expected_output_path = os.path.join(os.path.join(settings.EXPORT_STAGING_ROOT.rstrip('\/'), str(self.run.uid)),
-                                            expected_outfile)
-        service_url = 'https://abc.gov/arcgis/services/xyz'
-        expected_input_path = 'https://abc.gov/arcgis/services/xyz/query?where=objectid%3Dobjectid&outfields=*&f=json'
+        expected_outfile = f"{job_name}-{projection}-{expected_provider_slug}-{date}.gpkg"
+        expected_output_path = os.path.join(
+            os.path.join(settings.EXPORT_STAGING_ROOT.rstrip("\/"), str(self.run.uid)), expected_outfile
+        )
+        service_url = "https://abc.gov/arcgis/services/xyz"
+        expected_input_path = "https://abc.gov/arcgis/services/xyz/query?where=objectid%3Dobjectid&outfields=*&f=json"
 
         mock_convert.return_value = expected_output_path
 
-        previous_task_result = {'source': expected_output_path}
-        stage_dir = settings.EXPORT_STAGING_ROOT + str(self.run.uid) + '/'
-        export_provider_task = DataProviderTaskRecord.objects.create(run=self.run,
-                                                                     status=TaskStates.PENDING.value,
-                                                                     provider=self.provider)
+        previous_task_result = {"source": expected_output_path}
+        stage_dir = settings.EXPORT_STAGING_ROOT + str(self.run.uid) + "/"
+        export_provider_task = DataProviderTaskRecord.objects.create(
+            run=self.run, status=TaskStates.PENDING.value, provider=self.provider
+        )
 
-        saved_export_task = ExportTaskRecord.objects.create(export_provider_task=export_provider_task,
-                                                            status=TaskStates.PENDING.value,
-                                                            name=arcgis_feature_service_export_task.name)
+        saved_export_task = ExportTaskRecord.objects.create(
+            export_provider_task=export_provider_task,
+            status=TaskStates.PENDING.value,
+            name=arcgis_feature_service_export_task.name,
+        )
 
-        arcgis_feature_service_export_task.update_task_state(task_status=TaskStates.RUNNING.value,
-                                                 task_uid=str(saved_export_task.uid))
+        arcgis_feature_service_export_task.update_task_state(
+            task_status=TaskStates.RUNNING.value, task_uid=str(saved_export_task.uid)
+        )
         # test without trailing slash
-        result_a = arcgis_feature_service_export_task.run(run_uid=self.run.uid, result=previous_task_result,
-                                            task_uid=str(saved_export_task.uid),
-                                            stage_dir=stage_dir, job_name=job_name, projection=projection,
-                                            service_url=service_url)
-        
-        mock_convert.assert_called_once_with(fmt='gpkg', input_file=expected_input_path,
-                                             output_file=expected_output_path,
-                                             task_uid=str(saved_export_task.uid),
-                                             projection=4326, boundary=None)
+        result_a = arcgis_feature_service_export_task.run(
+            run_uid=self.run.uid,
+            result=previous_task_result,
+            task_uid=str(saved_export_task.uid),
+            stage_dir=stage_dir,
+            job_name=job_name,
+            projection=projection,
+            service_url=service_url,
+        )
 
-        self.assertEqual(expected_output_path, result_a['result'])
-        self.assertEqual(expected_output_path, result_a['source'])
+        mock_convert.assert_called_once_with(
+            fmt="gpkg",
+            input_file=expected_input_path,
+            output_file=expected_output_path,
+            task_uid=str(saved_export_task.uid),
+            projection=4326,
+            boundary=None,
+        )
+
+        self.assertEqual(expected_output_path, result_a["result"])
+        self.assertEqual(expected_output_path, result_a["source"])
         # test with trailing slash
-        result_b = arcgis_feature_service_export_task.run(run_uid=self.run.uid, result=previous_task_result,
-                                            task_uid=str(saved_export_task.uid),
-                                            stage_dir=stage_dir, job_name=job_name, projection=projection,
-                                            service_url=f'{service_url}/')
+        result_b = arcgis_feature_service_export_task.run(
+            run_uid=self.run.uid,
+            result=previous_task_result,
+            task_uid=str(saved_export_task.uid),
+            stage_dir=stage_dir,
+            job_name=job_name,
+            projection=projection,
+            service_url=f"{service_url}/",
+        )
 
-        self.assertEqual(expected_output_path, result_b['result'])
-        self.assertEqual(expected_output_path, result_b['source'])
-        
-    @patch('celery.app.task.Task.request')
-    @patch('eventkit_cloud.utils.mapproxy.MapproxyGeopackage')
+        self.assertEqual(expected_output_path, result_b["result"])
+        self.assertEqual(expected_output_path, result_b["source"])
+
+    @patch("celery.app.task.Task.request")
+    @patch("eventkit_cloud.utils.mapproxy.MapproxyGeopackage")
     def test_run_external_raster_service_export_task(self, mock_service, mock_request):
         celery_uid = str(uuid.uuid4())
         type(mock_request).id = PropertyMock(return_value=celery_uid)

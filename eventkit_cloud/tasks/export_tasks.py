@@ -632,6 +632,7 @@ def kml_export_task(
     result["source"] = kml
     return result
 
+
 @app.task(name="GPS Exchange (.gpx)", bind=True, base=FormatTask, acks_late=True)
 def gpx_export_task(
     self,
@@ -1027,7 +1028,7 @@ def wfs_export_task(
     stage_dir=None,
     job_name=None,
     bbox=None,
-    service_url=None, # TODO: Should this ever be None?
+    service_url=None,  # TODO: Should this ever be None?
     name=None,
     service_type=None,
     user_details=None,
@@ -1044,20 +1045,24 @@ def wfs_export_task(
     gpkg = get_export_filename(stage_dir, job_name, projection, provider_slug, "gpkg")
 
     # Strip out query string parameters that might conflict
-    service_url = re.sub(
-        r"(?i)(?<=[?&])(version|service|request|typename|srsname)=.*?(&|$)", "", service_url,)
+    service_url = re.sub(r"(?i)(?<=[?&])(version|service|request|typename|srsname)=.*?(&|$)", "", service_url,)
 
     # TODO: should SERVICE == service_type?
-    query_params = {"SERVICE":"WFS", "VERSION":"1.0.0","REQUEST":"GetFeature",
-                    "TYPENAME":layer, "SRSNAME":f"EPSG:{projection}",}
-    query_str = urlencode(query_params, safe=':')
+    query_params = {
+        "SERVICE": "WFS",
+        "VERSION": "1.0.0",
+        "REQUEST": "GetFeature",
+        "TYPENAME": layer,
+        "SRSNAME": f"EPSG:{projection}",
+    }
+    query_str = urlencode(query_params, safe=":")
 
     if "?" in service_url:
         if "&" != service_url[-1]:
             service_url += "&"
         service_url = urljoin(service_url, query_str)
     else:
-        service_url = urljoin(service_url, f'?{query_str}')
+        service_url = urljoin(service_url, f"?{query_str}")
 
     url = service_url
     cred = get_cred(cred_var=name, url=url)
@@ -1147,7 +1152,7 @@ def arcgis_feature_service_export_task(
     stage_dir=None,
     job_name=None,
     bbox=None,
-    service_url=None, # TODO: Should this ever be None?
+    service_url=None,  # TODO: Should this ever be None?
     projection=4326,
     *args,
     **kwargs,
@@ -1170,10 +1175,10 @@ def arcgis_feature_service_export_task(
         # if no url query we can just check for trailing slash and move on
         service_url = service_url.rstrip("/\\")
     finally:
-        query_params = {"where":"objectid%3Dobjectid", "outfields":"*", "f":"json"}
-        query_str = urlencode(query_params, safe='%*')
+        query_params = {"where": "objectid%3Dobjectid", "outfields": "*", "f": "json"}
+        query_str = urlencode(query_params, safe="%*")
         service_url = urljoin(f"{service_url}/", f"query?{query_str}")
-        
+
     out = gdalutils.convert(
         fmt="gpkg", input_file=service_url, output_file=gpkg, task_uid=task_uid, boundary=bbox, projection=projection,
     )
