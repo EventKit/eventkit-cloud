@@ -6,10 +6,10 @@ import os
 from celery import chain  # required for tests
 from django.db import DatabaseError
 
-from eventkit_cloud.jobs.models import DataProvider, DataProviderTask, ExportFormat
+from eventkit_cloud.jobs.models import DataProvider, DataProviderTask
 from eventkit_cloud.tasks.enumerations import TaskStates
 from eventkit_cloud.tasks.export_tasks import reprojection_task, create_datapack_preview
-from eventkit_cloud.tasks.helpers import normalize_name, get_metadata
+from eventkit_cloud.tasks.helpers import normalize_name, get_metadata, get_supported_projections, get_default_projection
 from eventkit_cloud.tasks.models import ExportTaskRecord, DataProviderTaskRecord
 from eventkit_cloud.tasks.util_tasks import get_estimates_task
 
@@ -24,6 +24,9 @@ export_task_registry = {
     "gtiff": "eventkit_cloud.tasks.export_tasks.geotiff_export_task",
     "nitf": "eventkit_cloud.tasks.export_tasks.nitf_export_task",
     "hfa": "eventkit_cloud.tasks.export_tasks.hfa_export_task",
+    "mbtiles": "eventkit_cloud.tasks.export_tasks.mbtiles_export_task",
+    "gpx": "eventkit_cloud.tasks.export_tasks.gpx_export_task",
+    "pbf": "eventkit_cloud.tasks.export_tasks.pbf_export_task",
 }
 
 
@@ -93,6 +96,7 @@ class TaskChainBuilder(object):
         data_provider_task_record = DataProviderTaskRecord.objects.create(
             run=run, name=provider_task.provider.name, provider=provider, status=TaskStates.PENDING.value, display=True,
         )
+        projections = get_metadata([data_provider_task_record.uid])["projections"]
 
         """
         Create a celery chain which gets the data & runs export formats
@@ -111,8 +115,10 @@ class TaskChainBuilder(object):
         )
 
         for file_format, task in export_tasks.items():
-            # Exports are in 4326 by default, include that in the name.
-            task_name = f"{task.get('obj').name} - EPSG:4326"
+            task_name = task.get("obj").name
+            default_projection = get_default_projection(get_supported_projections(file_format), projections)
+            if default_projection:
+                task_name = f"{task.get('obj').name} - EPSG:{default_projection}"
             export_task = create_export_task_record(
                 task_name=task_name,
                 export_provider_task=data_provider_task_record,
@@ -138,6 +144,9 @@ class TaskChainBuilder(object):
                 )
 
             for current_format, task in export_tasks.items():
+                supported_projections = get_supported_projections(current_format)
+                default_projection = get_default_projection(supported_projections, selected_projections=projections)
+
                 subtasks.append(
                     task.get("obj")
                     .s(
@@ -151,21 +160,11 @@ class TaskChainBuilder(object):
                     )
                     .set(queue=queue_group, routing_key=queue_group)
                 )
-                projections = get_metadata([data_provider_task_record.uid])["projections"]
 
-                for projection in projections:
-                    # Source data is already in 4326, no need to reproject.
-                    if projection == 4326:
-                        continue
+                for projection in list(set(supported_projections) & set(projections)):
 
-                    # If the format does not support this projection, skip.
-                    supported_projections = (
-                        ExportFormat.objects.get(slug=current_format)
-                        .supported_projections.all()
-                        .values_list("srid", flat=True)
-                    )
-                    if projection not in supported_projections:
-                        logger.debug(f"Skipping task, {current_format} does not support {projection}.")
+                    # This task was already added as the initial format conversion.
+                    if projection == default_projection:
                         continue
 
                     task_name = f"{task.get('obj').name} - EPSG:{projection}"
@@ -173,7 +172,7 @@ class TaskChainBuilder(object):
                         task_name=task_name,
                         export_provider_task=data_provider_task_record,
                         worker=worker,
-                        display=getattr(task.get("obj"), "display", False),
+                        display=getattr(task.get("obj"), "display", True),
                     )
                     subtasks.append(
                         reprojection_task.s(
