@@ -382,8 +382,8 @@ def create_mapproxy_app(slug: str):
         ]
     try:
         mapproxy_config = load_default_config()
-        load_config(mapproxy_config, config_dict=conf_dict)
         load_config(mapproxy_config, config_dict=base_config)
+        load_config(mapproxy_config, config_dict=conf_dict)
         mapproxy_configuration = ProxyConfiguration(mapproxy_config)
     except ConfigurationError as e:
         logger.error(e)
@@ -416,7 +416,6 @@ def get_conf_dict(slug: str) -> dict:
         # Load and "clean" mapproxy config for displaying a map.
     try:
         conf_dict = yaml.safe_load(provider.config)
-        conf_dict.pop("caches", "")
         conf_dict.pop("layers", "")
         ssl_verify = getattr(settings, "SSL_VERIFICATION", True)
         if isinstance(ssl_verify, bool):
