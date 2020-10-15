@@ -361,6 +361,7 @@ def create_mapproxy_app(slug: str):
                 ]
             },
         },
+        # Cache based on slug so that the caches don't overwrite each other.
         "caches": {slug: {"cache": {"type": "file"}, "sources": ["default"], "grids": ["default"]}},
         "layers": [{"name": slug, "title": slug, "sources": [slug]}],
         "globals": {"cache": {"base_dir": getattr(settings, "TILE_CACHE_DIR")}},
@@ -416,6 +417,8 @@ def get_conf_dict(slug: str) -> dict:
         # Load and "clean" mapproxy config for displaying a map.
     try:
         conf_dict = yaml.safe_load(provider.config)
+
+        # Pop layers out so that the default layer configuration above is used.
         conf_dict.pop("layers", "")
         ssl_verify = getattr(settings, "SSL_VERIFICATION", True)
         if isinstance(ssl_verify, bool):
