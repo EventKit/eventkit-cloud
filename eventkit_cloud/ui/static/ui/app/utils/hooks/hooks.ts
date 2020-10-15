@@ -99,8 +99,11 @@ export class DepsHashers {
     }
 }
 
-export function useProviderIdentity(effect: () => void, providers: Eventkit.Provider[]) {
-    useEffect(effect, [DepsHashers.arrayHash(providers.map(provider => DepsHashers.providerIdentityHash(provider)))]);
+export function useProviderIdentity(effect: () => void, providers: Eventkit.Provider[], extraDeps=[]) {
+    useEffect(effect, [
+        DepsHashers.arrayHash(providers.map(provider => DepsHashers.providerIdentityHash(provider))),
+        ...extraDeps,
+    ]);
 }
 
 export function useProvidersLoading(providers: Eventkit.Provider[]): [boolean, ((provider: Eventkit.Provider, isLoading: boolean) => void)] {

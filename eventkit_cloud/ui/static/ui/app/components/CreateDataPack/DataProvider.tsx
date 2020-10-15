@@ -30,11 +30,13 @@ import PoiQueryDisplay from "../MapTools/PoiQueryDisplay";
 import OlMapClickEvent from "../MapTools/OpenLayers/OlMapClickEvent";
 import SwitchControl from "../common/SwitchControl";
 import Icon from "ol/style/icon";
-import {func, number, string} from "prop-types";
 import {useEffect, useRef, useState} from "react";
 import {DepsHashers, useEffectOnMount} from "../../utils/hooks/hooks";
 import {useAppContext} from "../ApplicationContext";
 import {useJobValidationContext} from "./context/JobValidation";
+import {RegionJustification} from "../StatusDownloadPage/RegionJustification";
+import {renderIf} from "../../utils/renderIf";
+import ZoomOutAtZoomLevel from "../MapTools/OpenLayers/ZoomOutAtZoomLevel";
 
 const jss = (theme: Theme & Eventkit.Theme) => createStyles({
     container: {
@@ -106,6 +108,7 @@ interface Props {
     clearEstimate: (provider: Eventkit.Provider) => void;
     checked: boolean;
     onChange: (event: React.ChangeEvent<HTMLInputElement>) => void;
+    deselect: any;
     alt: boolean;
     theme: Eventkit.Theme & Theme;
     renderEstimate: boolean;
@@ -282,6 +285,7 @@ export function DataProvider(props: Props) {
         metadata: provider.metadata,
         slug: (!!props.provider.preview_url) ? provider.slug : undefined,
     } as MapLayer;
+    const [ renderZoomOut, setRenderZoomOut ] = useState(false);
 
     // Show license if one exists.
     const nestedItems = [];
@@ -354,6 +358,7 @@ export function DataProvider(props: Props) {
                         visible={isOpen}
                         displayFootprints={displayFootprints}
                     >
+                        {renderIf(() => (<ZoomOutAtZoomLevel zoomLevel={14}/>), renderZoomOut)}
                         <ZoomUpdater setZoom={setZoom}/>
                         <OlMouseWheelZoom enabled={false}/>
                         <PoiQueryDisplay
@@ -459,6 +464,12 @@ export function DataProvider(props: Props) {
         }
     }
 
+    const [ displayJustification, setDisplayJustification ] = useState(false);
+    function selectCheckbox(e: any) {
+        props.onChange(e);
+        setDisplayJustification(true);
+    }
+
     const backgroundColor = (props.alt) ? colors.secondary : colors.white;
 
     return (
@@ -480,8 +491,21 @@ export function DataProvider(props: Props) {
                         checkedIcon={(<CheckBoxIcon/>)}
                         indeterminateIcon={(<IndeterminateCheckBoxIcon/>)}
                         indeterminate={isIndeterminate()}
-                        onChange={props.onChange}
+                        onChange={selectCheckbox}
                     />
+                    {renderIf(() => (
+                        <RegionJustification
+                            providers={[provider]}
+                            extent={props.geojson as any}
+                            onClose={() => {
+                                setZoom(null, 2);
+                                props.deselect(provider);
+                                setDisplayJustification(false);
+                            }}
+                            onBlockSignal={() => setRenderZoomOut(true)}
+                            onUnblockSignal={() => setRenderZoomOut(false)}
+                        />
+                    ), displayJustification)}
                     <ListItemText
                         disableTypography
                         classes={{ root: classes.listItemText }}

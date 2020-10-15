@@ -6,9 +6,6 @@ import {MapLayer} from "../CreateDataPack/CreateExport";
 import OlMapComponent from "./OpenLayers/OlMapComponent";
 import {useAppContext} from "../ApplicationContext";
 import {MapComponentProps} from "./OpenLayers/OlMapComponent";
-import {useEffectOnMount} from "../../utils/hooks/hooks";
-import {useOlMapContainer, useOlZoom} from "./context/OpenLayersContext";
-import {MapJustification} from "./MapJustification";
 
 interface Props extends MapComponentProps {
     provider: Eventkit.Provider;
@@ -52,20 +49,8 @@ function ProviderPreviewMap(props: React.PropsWithChildren<Props>) {
             }
             <OlRasterTileLayer mapLayer={selectedBasemap} copyright={provider.service_copyright} zIndex={0}/>
             {props.children}
-            <JustificationWrap>
-                <MapJustification providers={[provider]} extent={props.geojson}/>
-            </JustificationWrap>
         </OlMapComponent>
     );
-}
-
-function JustificationWrap(props: React.PropsWithChildren<any>) {
-    const zoomContext = useOlZoom();
-
-    if (zoomContext.zoomLevel > 14) {
-        return props.children;
-    }
-    return null;
 }
 
 export default ProviderPreviewMap;

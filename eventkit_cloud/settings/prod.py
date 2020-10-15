@@ -13,7 +13,7 @@ from eventkit_cloud.settings.celery import is_true
 
 BASE_DIR = os.path.abspath(os.path.dirname(__file__))
 
-INSTALLED_APPS += ("django_celery_results", "django_celery_beat", "django_filters")
+INSTALLED_APPS += ("django_celery_beat", "django_filters")
 
 # Project apps
 INSTALLED_APPS += (
@@ -310,6 +310,7 @@ UI_CONFIG = {
     "DATAPACK_PAGE_SIZE": os.getenv("DATAPACK_PAGE_SIZE", "100"),
     "NOTIFICATIONS_PAGE_SIZE": os.getenv("NOTIFICATIONS_PAGE_SIZE", "10"),
     "SERVE_ESTIMATES": SERVE_ESTIMATES,
+    "MAX_UPLOAD_SIZE": os.getenv("MAX_UPLOAD_SIZE", 5),  # In MB
     "MATOMO": {
         "URL": os.getenv("MATOMO_URL", ""),
         "CUSTOM_DIM_ID": os.getenv("MATOMO_CUSTOM_DIM_ID", ""),
@@ -340,6 +341,9 @@ if os.getenv("VCAP_SERVICES"):
 AWS_STORAGE_BUCKET_NAME = AWS_STORAGE_BUCKET_NAME or os.getenv("AWS_STORAGE_BUCKET_NAME")
 AWS_ACCESS_KEY_ID = AWS_ACCESS_KEY_ID or os.getenv("AWS_ACCESS_KEY_ID")
 AWS_SECRET_ACCESS_KEY = AWS_SECRET_ACCESS_KEY or os.getenv("AWS_SECRET_ACCESS_KEY")
+
+# https://django-storages.readthedocs.io/en/latest/backends/amazon-S3.html#settings
+AWS_DEFAULT_ACL = None
 
 
 MAPPROXY_CONCURRENCY = os.getenv("MAPPROXY_CONCURRENCY", 1)

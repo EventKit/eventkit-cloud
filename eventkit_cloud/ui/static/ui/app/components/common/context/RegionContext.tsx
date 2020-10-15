@@ -4,7 +4,6 @@ import React, {
 } from 'react'
 import {ApiStatuses, useAsyncRequest} from "../../../utils/hooks/api";
 import {arrayHasValue, getCookie} from "../../../utils/generic";
-import set = Reflect.set;
 
 export interface RegionContext {
     getPolicies: () => void;
