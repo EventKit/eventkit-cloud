@@ -424,7 +424,7 @@ class RegionalJustification(UIDMixin, TimeStampedModelMixin):
 
     justification_id = models.IntegerField()
     justification_name = models.CharField(max_length=100)
-    justification_description = models.CharField(max_length=1000, null=True, blank=True)
+    justification_suboption_value = models.CharField(max_length=1000, null=True, blank=True)
     regional_policy = models.ForeignKey(RegionalPolicy, on_delete=models.CASCADE, related_name="justifications")
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="justification_user")
 

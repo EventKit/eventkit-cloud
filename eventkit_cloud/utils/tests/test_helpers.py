@@ -7,7 +7,6 @@ from eventkit_cloud.utils.mapproxy import mapproxy_config_keys_index
 
 
 class TestHelpers(TestCase):
-
     @patch("eventkit_cloud.utils.helpers.cache")
     def test_clear_mapproxy_config_cache(self, cache_mock):
         mapproxy_config_keys = cache_mock.get_or_set.return_value = {"key-a", "key-b"}

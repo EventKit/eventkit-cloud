@@ -1,33 +1,35 @@
 # -*- coding: utf-8 -*-
-import logging
-import os
-from django.test import TestCase
-from eventkit_cloud.utils.pcf import PcfClient, PcfTaskStates
 import json
-import requests_mock
+import logging
 from mock import patch
+import os
+
+import requests_mock
+
+from django.test import TestCase
+
+from eventkit_cloud.utils.pcf import PcfClient
 
 logger = logging.getLogger(__name__)
 
 
 class TestPcfClient(TestCase):
-
     def setUp(self):
         self.mock_requests = requests_mock.Mocker()
         self.mock_requests.start()
         self.addCleanup(self.mock_requests.stop)
 
-        self.api_url = 'http://api.example.dev'
-        self.auth_url = 'http://auth.example.dev'
-        self.token_url = 'http://token.example.dev'
+        self.api_url = "http://api.example.dev"
+        self.auth_url = "http://auth.example.dev"
+        self.token_url = "http://token.example.dev"
         self.routing_url = f"{self.api_url}/routing"
-        self.org = 'org'
-        self.space = 'space'
-        self.app = 'app'
-        self.org_guid = 'org_guid'
-        self.space_guid = 'space_guid'
-        self.app_guid = 'app_guid'
-        self.task_guid = 'task_guid'
+        self.org = "org"
+        self.space = "space"
+        self.app = "app"
+        self.org_guid = "org_guid"
+        self.space_guid = "space_guid"
+        self.app_guid = "app_guid"
+        self.task_guid = "task_guid"
         self.info = {
             "name": "Application Service",
             "support": self.api_url,
@@ -35,7 +37,7 @@ class TestPcfClient(TestCase):
             "description": "https://docs.pivotal.io/pivotalcf/2-3/pcf-release-notes/runtime-rn.html",
             "authorization_endpoint": self.auth_url,
             "token_endpoint": self.token_url,
-            "routing_endpoint": self.routing_url
+            "routing_endpoint": self.routing_url,
         }
         self.client = PcfClient(api_url=self.api_url, org_name=self.org, space_name=self.space)
 
@@ -57,7 +59,9 @@ class TestPcfClient(TestCase):
             self.client.login()
 
     def test_get_info(self):
-        self.mock_requests.get("{0}/v2/info".format(self.api_url.rstrip('/')), text=json.dumps(self.info), status_code=200)
+        self.mock_requests.get(
+            "{0}/v2/info".format(self.api_url.rstrip("/")), text=json.dumps(self.info), status_code=200
+        )
         response = self.client.get_info()
         self.assertEqual(self.info, response)
 
@@ -65,10 +69,10 @@ class TestPcfClient(TestCase):
         self.client.info = self.info
         example_token = "token"
         example_response = {"access_token": example_token}
-        login_url = "{0}/login".format(self.info.get('authorization_endpoint').rstrip('/'))
+        login_url = "{0}/login".format(self.info.get("authorization_endpoint").rstrip("/"))
         self.mock_requests.get(login_url, status_code=200)
 
-        token_url = "{0}/oauth/token".format(self.info.get('authorization_endpoint').rstrip('/'))
+        token_url = "{0}/oauth/token".format(self.info.get("authorization_endpoint").rstrip("/"))
         self.mock_requests.post(token_url, text=json.dumps(example_response), status_code=200)
         token = self.client.get_token()
         self.assertEqual(token, example_token)
@@ -86,7 +90,7 @@ class TestPcfClient(TestCase):
     def test_get_org_guid(self):
         example_org = ("example_guid", self.org)
         example_response = {"resources": [{"metadata": {"guid": "example_guid"}, "entity": {"name": self.org}}]}
-        organizations_url = "{0}/v2/organizations".format(self.api_url.rstrip('/'))
+        organizations_url = "{0}/v2/organizations".format(self.api_url.rstrip("/"))
         self.mock_requests.get(organizations_url, text=json.dumps(example_response))
         org_guid = self.client.get_org_guid(self.org)
         self.assertEqual(org_guid, example_org)
@@ -100,7 +104,7 @@ class TestPcfClient(TestCase):
     def test_get_space_guid(self):
         example_space = ("example_guid", self.space)
         example_response = {"resources": [{"metadata": {"guid": "example_guid"}, "entity": {"name": self.space}}]}
-        spaces_url = "{0}/v2/organizations/{1}/spaces".format(self.api_url.rstrip('/'), self.org_guid)
+        spaces_url = "{0}/v2/organizations/{1}/spaces".format(self.api_url.rstrip("/"), self.org_guid)
         self.mock_requests.get(spaces_url, text=json.dumps(example_response))
         self.client.org_guid = self.org_guid
         space_guid = self.client.get_space_guid(self.space)
@@ -108,14 +112,16 @@ class TestPcfClient(TestCase):
 
         # Test if the space does not exist
         with self.assertRaises(Exception):
-            space_not_found = {"resources": [{"metadata": {"guid": "example_guid"}, "entity": {"name": "incorrect_space"}}]}
+            space_not_found = {
+                "resources": [{"metadata": {"guid": "example_guid"}, "entity": {"name": "incorrect_space"}}]
+            }
             self.mock_requests.get(spaces_url, text=json.dumps(space_not_found))
             self.client.get_space_guid(self.space)
 
     def test_get_app_guid(self):
         example_app = "example_guid"
         example_response = {"resources": [{"metadata": {"guid": "example_guid"}, "entity": {"name": self.app}}]}
-        app_url = "{0}/v2/spaces/{1}/apps".format(self.api_url.rstrip('/'), self.space_guid)
+        app_url = "{0}/v2/spaces/{1}/apps".format(self.api_url.rstrip("/"), self.space_guid)
         self.mock_requests.get(app_url, text=json.dumps(example_response))
         self.client.space_guid = self.space_guid
         app_guid = self.client.get_app_guid(self.app)
@@ -139,7 +145,7 @@ class TestPcfClient(TestCase):
             "memory_in_mb": os.getenv("CELERY_TASK_MEMORY", "2048"),
         }
 
-        task_url = "{0}/v3/apps/{1}/tasks".format(self.api_url.rstrip('/'), self.app_guid)
+        task_url = "{0}/v3/apps/{1}/tasks".format(self.api_url.rstrip("/"), self.app_guid)
         self.mock_requests.post(task_url, text=json.dumps(example_payload))
         task = self.client.run_task(example_task_name, example_command, app_name=self.app)
         self.assertEqual(task, example_payload)
@@ -155,9 +161,9 @@ class TestPcfClient(TestCase):
     def test_get_running_tasks(self, mock_get_app_guid):
         mock_get_app_guid.return_value = self.app_guid
 
-        example_response = {"resources": [{ "guid": "task_one_guid" }, {"guid": "task_two_guid"}]}
+        example_response = {"resources": [{"guid": "task_one_guid"}, {"guid": "task_two_guid"}]}
 
-        get_tasks_url = "{0}/v3/apps/{1}/tasks".format(self.api_url.rstrip('/'), self.app_guid)
+        get_tasks_url = "{0}/v3/apps/{1}/tasks".format(self.api_url.rstrip("/"), self.app_guid)
         self.mock_requests.get(get_tasks_url, text=json.dumps(example_response))
         running_tasks = self.client.get_running_tasks(self.app)
         self.assertEqual(running_tasks, example_response)

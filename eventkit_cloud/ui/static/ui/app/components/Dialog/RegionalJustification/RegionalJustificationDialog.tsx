@@ -129,7 +129,7 @@ export function RegionalJustificationDialog(props: RegionalJustificationDialogPr
             method: 'post',
             data: {
                 justification_id: id,
-                justification_description: justificationValue,
+                justification_suboption_value: justificationValue,
                 regional_policy_uid: regionUid,
             },
             headers: {'X-CSRFToken': getCookie('csrftoken')},

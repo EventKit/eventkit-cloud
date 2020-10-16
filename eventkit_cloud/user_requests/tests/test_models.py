@@ -7,7 +7,6 @@ from eventkit_cloud.user_requests.models import DataProviderRequest, SizeIncreas
 
 
 class TestDataProviderRequest(TestCase):
-
     def setUp(self):
         self.user = User.objects.create(username="demo", email="demo@demo.com", password="demo")
         self.provider_request = DataProviderRequest(
@@ -16,7 +15,7 @@ class TestDataProviderRequest(TestCase):
             service_description="Test Service Description",
             layer_names="[Test1, Test2, Test3]",
             comment="Test Comment",
-            user=self.user
+            user=self.user,
         )
         self.provider_request.save()
         self.uid = self.provider_request.uid
@@ -35,12 +34,12 @@ class TestDataProviderRequest(TestCase):
         self.assertEqual(provider_request.service_description, "Test Service Description")
         self.assertEqual(provider_request.layer_names, "[Test1, Test2, Test3]")
         self.assertEqual(provider_request.comment, "Test Comment")
-        self.assertEqual(provider_request.status,"pending")
+        self.assertEqual(provider_request.status, "pending")
         self.assertEqual(provider_request.user, self.user)
 
 
 class TestSizeIncreaseRequest(TestCase):
-    fixtures = ('osm_provider.json',)
+    fixtures = ("osm_provider.json",)
 
     def setUp(self):
         bbox = Polygon.from_bbox((-7.96, 22.6, -8.14, 27.12))
@@ -48,11 +47,7 @@ class TestSizeIncreaseRequest(TestCase):
         provider = DataProvider.objects.get(slug="osm-generic")
         self.user = User.objects.create(username="demo", email="demo@demo.com", password="demo")
         self.size_request = SizeIncreaseRequest(
-            provider=provider,
-            the_geom=the_geom,
-            requested_aoi_size=5000,
-            requested_data_size=1000,
-            user=self.user
+            provider=provider, the_geom=the_geom, requested_aoi_size=5000, requested_data_size=1000, user=self.user
         )
         self.size_request.save()
         self.uid = self.size_request.uid

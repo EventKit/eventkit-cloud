@@ -7,16 +7,12 @@ from unittest.mock import patch, MagicMock
 from django.test import TestCase
 from mock import Mock
 
-from eventkit_cloud.core.helpers import (
-    get_id,
-    get_cached_model,
-    get_model_by_params)
+from eventkit_cloud.core.helpers import get_id, get_cached_model, get_model_by_params
 
 logger = logging.getLogger(__name__)
 
 
 class TestCoreHelpers(TestCase):
-
     def test_get_id(self):
         username = "test"
 
@@ -31,12 +27,12 @@ class TestCoreHelpers(TestCase):
         user_identification = str(get_id(mock_user_oauth))
         self.assertEqual(user_identification, username)
 
-    @patch('eventkit_cloud.core.helpers.cache')
+    @patch("eventkit_cloud.core.helpers.cache")
     def test_get_cached_model(self, mocked_cache: MagicMock):
         export_provider = MagicMock()
         expected_name = "SomeProvider"
-        expected_prop = 'slug'
-        expected_val = 'osm'
+        expected_prop = "slug"
+        expected_val = "osm"
         export_provider.__name__ = expected_name
 
         mocked_cache.get_or_set.return_value = export_provider

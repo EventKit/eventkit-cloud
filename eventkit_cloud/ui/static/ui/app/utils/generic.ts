@@ -1,6 +1,6 @@
 import axios from 'axios';
 import numeral from 'numeral';
-import GeoJSON from 'ol/format/geojson';
+import GeoJSON from 'ol/format/GeoJSON';
 
 export function getHeaderPageInfo(response) {
     let nextPage = false;

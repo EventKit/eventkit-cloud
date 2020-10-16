@@ -835,7 +835,7 @@ class RegionalJustificationSerializer(serializers.ModelSerializer):
     uid = serializers.SerializerMethodField()
     justification_id = serializers.IntegerField()
     justification_name = serializers.CharField(required=False)
-    justification_description = serializers.CharField(required=False)
+    justification_suboption_value = serializers.CharField(required=False)
     regional_policy = serializers.SerializerMethodField()
     user = serializers.SerializerMethodField()
 
@@ -846,7 +846,7 @@ class RegionalJustificationSerializer(serializers.ModelSerializer):
     @staticmethod
     def create(validated_data):
         justification_id = validated_data.get("justification_id")
-        justification_description = validated_data.get("justification_description")
+        justification_suboption_value = validated_data.get("justification_suboption_value")
         regional_policy_uid = validated_data.get("regional_policy_uid")
         user = validated_data.get("user")
 
@@ -867,19 +867,19 @@ class RegionalJustificationSerializer(serializers.ModelSerializer):
         selected_suboption = selected_option.get("suboption")
         if selected_suboption:
             if selected_suboption.get("type") == "dropdown":
-                if justification_description not in selected_suboption["options"]:
+                if justification_suboption_value not in selected_suboption["options"]:
                     raise ValidationError(code="invalid_suboption", detail="Invalid suboption selected.")
         else:
-            if justification_description:
+            if justification_suboption_value:
                 raise ValidationError(
                     code="invalid_description",
-                    detail="No suboption was available, so justification_description cannot be used.",
+                    detail="No suboption was available, so justification_suboption_value cannot be used.",
                 )
 
         regional_justification = RegionalJustification.objects.create(
             justification_id=justification_id,
             justification_name=selected_option["name"],
-            justification_description=justification_description,
+            justification_suboption_value=justification_suboption_value,
             regional_policy=regional_policy,
             user=user,
         )

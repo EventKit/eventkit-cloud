@@ -3,7 +3,6 @@ import datetime
 import json
 import logging
 import os
-import time
 import uuid
 
 from django.contrib.auth.models import Group, User
@@ -22,7 +21,7 @@ from eventkit_cloud.jobs.models import (
     Job,
     Region,
     RegionalPolicy,
-    RegionalJustification
+    RegionalJustification,
 )
 from eventkit_cloud.tasks.enumerations import TaskStates
 from eventkit_cloud.tasks.models import (
@@ -33,7 +32,7 @@ from eventkit_cloud.tasks.models import (
     ExportTaskException,
     FileProducingTaskResult,
     RunZipFile,
-    UserDownload
+    UserDownload,
 )
 
 logger = logging.getLogger(__name__)
@@ -44,26 +43,26 @@ class TestExportRun(TestCase):
     Test cases for ExportRun model
     """
 
-    fixtures = ('osm_provider.json',)
+    fixtures = ("osm_provider.json",)
 
     @classmethod
     def setUpTestData(cls):
         formats = ExportFormat.objects.all()
-        group, created = Group.objects.get_or_create(name='TestDefaultExportExtentGroup')
-        with patch('eventkit_cloud.jobs.signals.Group') as mock_group:
+        group, created = Group.objects.get_or_create(name="TestDefaultExportExtentGroup")
+        with patch("eventkit_cloud.jobs.signals.Group") as mock_group:
             mock_group.objects.get.return_value = group
-            user = User.objects.create_user(username='demo', email='demo@demo.com', password='demo', is_active=True)
+            user = User.objects.create_user(username="demo", email="demo@demo.com", password="demo", is_active=True)
         bbox = Polygon.from_bbox((-7.96, 22.6, -8.14, 27.12))
         the_geom = GEOSGeometry(bbox, srid=4326)
-        provider_task = DataProviderTask.objects.create(provider=DataProvider.objects.get(slug='osm-generic'))
+        provider_task = DataProviderTask.objects.create(provider=DataProvider.objects.get(slug="osm-generic"))
         # add the formats to the provider task
         provider_task.formats.add(*formats)
-        job = Job.objects.create(name='TestExportRun', description='Test description', user=user, the_geom=the_geom)
+        job = Job.objects.create(name="TestExportRun", description="Test description", user=user, the_geom=the_geom)
         job.data_provider_tasks.add(provider_task)
 
     def test_export_run(self,):
         job = Job.objects.first()
-        run = ExportRun.objects.create(job=job, status='SUBMITTED', user=job.user)
+        run = ExportRun.objects.create(job=job, status="SUBMITTED", user=job.user)
         saved_run = ExportRun.objects.get(uid=str(run.uid))
         self.assertIsNotNone(saved_run)
         self.assertEqual(run, saved_run)
@@ -108,13 +107,15 @@ class TestExportRun(TestCase):
         runs = job.runs.all()
         self.assertEqual(0, runs.count())
 
-    @patch('eventkit_cloud.tasks.signals.exportrun_delete_exports')
+    @patch("eventkit_cloud.tasks.signals.exportrun_delete_exports")
     def test_soft_delete_export_run(self, mock_run_delete_exports):
         job = Job.objects.first()
         run = ExportRun.objects.create(job=job, user=job.user)
         task_uid = str(uuid.uuid4())  # from celery
         export_provider_task = DataProviderTaskRecord.objects.create(run=run, status=TaskStates.PENDING.value)
-        ExportTaskRecord.objects.create(export_provider_task=export_provider_task, uid=task_uid, status=TaskStates.PENDING.value)
+        ExportTaskRecord.objects.create(
+            export_provider_task=export_provider_task, uid=task_uid, status=TaskStates.PENDING.value
+        )
         runs = job.runs.all()
         self.assertEqual(1, runs.count())
         run.soft_delete()
@@ -125,11 +126,11 @@ class TestExportRun(TestCase):
         self.assertTrue(run.deleted)
         mock_run_delete_exports.assert_called_once()
 
-    @patch('eventkit_cloud.tasks.models.ExportRun.data_provider_task_records')
+    @patch("eventkit_cloud.tasks.models.ExportRun.data_provider_task_records")
     def test_clone(self, data_provider_task_records_mock):
         job = Job.objects.first()
         run = ExportRun.objects.create(job=job, user=job.user)
-        provider = DataProvider.objects.get(slug='osm-generic')
+        provider = DataProvider.objects.get(slug="osm-generic")
         data_provider_task_record_mock = Mock(provider=provider)
         data_provider_task_records_mock.all().__iter__.return_value = [data_provider_task_record_mock]
 
@@ -149,23 +150,23 @@ class TestExportRun(TestCase):
 
 class TestRunZipFile(TestCase):
 
-    fixtures = ('osm_provider.json',)
+    fixtures = ("osm_provider.json",)
 
     @classmethod
     def setUpTestData(cls):
         formats = ExportFormat.objects.all()
-        group, created = Group.objects.get_or_create(name='TestDefaultExportExtentGroup')
-        with patch('eventkit_cloud.jobs.signals.Group') as mock_group:
+        group, created = Group.objects.get_or_create(name="TestDefaultExportExtentGroup")
+        with patch("eventkit_cloud.jobs.signals.Group") as mock_group:
             mock_group.objects.get.return_value = group
-            user = User.objects.create_user(username='demo', email='demo@demo.com', password='demo', is_active=True)
+            user = User.objects.create_user(username="demo", email="demo@demo.com", password="demo", is_active=True)
         bbox = Polygon.from_bbox((-7.96, 22.6, -8.14, 27.12))
         the_geom = GEOSGeometry(bbox, srid=4326)
-        provider_task = DataProviderTask.objects.create(provider=DataProvider.objects.get(slug='osm-generic'))
+        provider_task = DataProviderTask.objects.create(provider=DataProvider.objects.get(slug="osm-generic"))
         # add the formats to the provider task
         provider_task.formats.add(*formats)
-        job = Job.objects.create(name='TestExportRun', description='Test description', user=user, the_geom=the_geom)
+        job = Job.objects.create(name="TestExportRun", description="Test description", user=user, the_geom=the_geom)
         job.data_provider_tasks.add(provider_task)
-        run = ExportRun.objects.create(job=job, status='SUBMITTED', user=job.user)
+        ExportRun.objects.create(job=job, status="SUBMITTED", user=job.user)
 
     def test_run_zip_file(self):
         run = ExportRun.objects.first()
@@ -190,7 +191,7 @@ class TestExportRunFile(TestCase):
     Test cases for ExportRunFile model
     """
 
-    fixtures = ('osm_provider.json',)
+    fixtures = ("osm_provider.json",)
 
     def test_create_export_run_file(self):
         file_mock = MagicMock(spec=File)
@@ -224,20 +225,20 @@ class TestExportTask(TestCase):
     @classmethod
     def setUpTestData(cls):
         formats = ExportFormat.objects.all()
-        group, created = Group.objects.get_or_create(name='TestDefaultExportExtentGroup')
-        with patch('eventkit_cloud.jobs.signals.Group') as mock_group:
+        group, created = Group.objects.get_or_create(name="TestDefaultExportExtentGroup")
+        with patch("eventkit_cloud.jobs.signals.Group") as mock_group:
             mock_group.objects.get.return_value = group
-            user = User.objects.create_user(username='demo', email='demo@demo.com', password='demo', is_active=True)
+            user = User.objects.create_user(username="demo", email="demo@demo.com", password="demo", is_active=True)
         bbox = Polygon.from_bbox((-7.96, 22.6, -8.14, 27.12))
         the_geom = GEOSGeometry(bbox, srid=4326)
-        Job.objects.create(name='TestExportTask', description='Test description', user=user, the_geom=the_geom)
+        Job.objects.create(name="TestExportTask", description="Test description", user=user, the_geom=the_geom)
         job = Job.objects.first()
         # add the formats to the job
         job.formats = formats
         job.save()
 
     def setUp(self):
-        job = Job.objects.get(name='TestExportTask')
+        job = Job.objects.get(name="TestExportTask")
         self.run = ExportRun.objects.create(job=job, user=job.user)
         self.task_uid = uuid.uuid4()
         export_provider_task = DataProviderTaskRecord.objects.create(run=self.run)
@@ -246,7 +247,7 @@ class TestExportTask(TestCase):
         saved_task = ExportTaskRecord.objects.get(uid=self.task_uid)
         self.assertEqual(saved_task, self.task)
 
-    @patch('eventkit_cloud.tasks.signals.delete_from_s3')
+    @patch("eventkit_cloud.tasks.signals.delete_from_s3")
     def test_exportrun_delete_exports(self, delete_from_s3):
         job = Job.objects.first()
         run = ExportRun.objects.create(job=job, user=job.user)
@@ -258,15 +259,15 @@ class TestExportTask(TestCase):
             run.delete()
             delete_from_s3.assert_called_once_with(run_uid=str(run_uid))
 
-    @patch('os.remove')
-    @patch('eventkit_cloud.tasks.signals.delete_from_s3')
+    @patch("os.remove")
+    @patch("eventkit_cloud.tasks.signals.delete_from_s3")
     def test_exporttaskresult_delete_exports(self, delete_from_s3, remove):
 
         # setup
         download_dir = "/test_download_dir"
         file_name = "file.txt"
         full_download_path = os.path.join(download_dir, str(self.run.uid), file_name)
-        download_url = 'http://testserver/media/{0}/{1}'.format(str(self.run.uid), file_name)
+        download_url = "http://testserver/media/{0}/{1}".format(str(self.run.uid), file_name)
         task = ExportTaskRecord.objects.get(uid=self.task_uid)
         self.assertEqual(task, self.task)
         self.assertIsNone(task.result)
@@ -280,29 +281,28 @@ class TestExportTask(TestCase):
         delete_from_s3.assert_called_once_with(download_url=download_url)
         remove.assert_called_once_with(full_download_path)
 
+
 class TestExportTaskException(TestCase):
     """
     Test cases for ExportTaskException model
     """
 
-    fixtures = ('osm_provider.json', 'datamodel_presets.json')
+    fixtures = ("osm_provider.json", "datamodel_presets.json")
 
     def setUp(self):
-        group, created = Group.objects.get_or_create(name='TestDefaultExportExtentGroup')
-        with patch('eventkit_cloud.jobs.signals.Group') as mock_group:
+        group, created = Group.objects.get_or_create(name="TestDefaultExportExtentGroup")
+        with patch("eventkit_cloud.jobs.signals.Group") as mock_group:
             mock_group.objects.get.return_value = group
-            self.user = User.objects.create_user(username='demo', email='demo@demo.com', password='demo', is_active=True)
-        self.export_provider = DataProvider.objects.get(slug='osm-generic')
+            self.user = User.objects.create_user(
+                username="demo", email="demo@demo.com", password="demo", is_active=True
+            )
+        self.export_provider = DataProvider.objects.get(slug="osm-generic")
         bbox = Polygon.from_bbox((-10.85, 6.25, -10.62, 6.40))
-        tags = DatamodelPreset.objects.get(name='hdm').json_tags
+        tags = DatamodelPreset.objects.get(name="hdm").json_tags
         self.assertEqual(259, len(tags))
         the_geom = GEOSGeometry(bbox, srid=4326)
         self.job = Job.objects.create(
-            name='TestJob',
-            description='Test description',
-            user=self.user,
-            the_geom=the_geom,
-            json_tags=tags
+            name="TestJob", description="Test description", user=self.user, the_geom=the_geom, json_tags=tags
         )
         self.run = ExportRun.objects.create(job=self.job, user=self.user)
 
@@ -310,7 +310,9 @@ class TestExportTaskException(TestCase):
         run = ExportRun.objects.first()
         task_uid = str(uuid.uuid4())  # from celery
         data_provider_task_record = DataProviderTaskRecord.objects.create(run=run)
-        export_task_record = ExportTaskRecord.objects.create(export_provider_task=data_provider_task_record, uid=task_uid)
+        export_task_record = ExportTaskRecord.objects.create(
+            export_provider_task=data_provider_task_record, uid=task_uid
+        )
         export_task_exception = ExportTaskException.objects.create(task=export_task_record, exception="TestException")
 
         old_export_task_exception = ExportTaskException.objects.get(id=export_task_exception.id)
@@ -326,24 +328,23 @@ class TestDataProviderTaskRecord(TestCase):
     """
     Test cases for DataProviderTaskRecord model
     """
-    fixtures = ('osm_provider.json', 'datamodel_presets.json')
+
+    fixtures = ("osm_provider.json", "datamodel_presets.json")
 
     def setUp(self):
-        group, created = Group.objects.get_or_create(name='TestDefaultExportExtentGroup')
-        with patch('eventkit_cloud.jobs.signals.Group') as mock_group:
+        group, created = Group.objects.get_or_create(name="TestDefaultExportExtentGroup")
+        with patch("eventkit_cloud.jobs.signals.Group") as mock_group:
             mock_group.objects.get.return_value = group
-            self.user = User.objects.create_user(username='demo', email='demo@demo.com', password='demo', is_active=True)
-        self.export_provider = DataProvider.objects.get(slug='osm-generic')
+            self.user = User.objects.create_user(
+                username="demo", email="demo@demo.com", password="demo", is_active=True
+            )
+        self.export_provider = DataProvider.objects.get(slug="osm-generic")
         bbox = Polygon.from_bbox((-10.85, 6.25, -10.62, 6.40))
-        tags = DatamodelPreset.objects.get(name='hdm').json_tags
+        tags = DatamodelPreset.objects.get(name="hdm").json_tags
         self.assertEqual(259, len(tags))
         the_geom = GEOSGeometry(bbox, srid=4326)
         self.job = Job.objects.create(
-            name='TestJob',
-            description='Test description',
-            user=self.user,
-            the_geom=the_geom,
-            json_tags=tags
+            name="TestJob", description="Test description", user=self.user, the_geom=the_geom, json_tags=tags
         )
         self.job.feature_save = True
         self.job.feature_pub = True
@@ -351,14 +352,16 @@ class TestDataProviderTaskRecord(TestCase):
         self.run = ExportRun.objects.create(job=self.job, user=self.user)
 
     def test_data_provider_task_record(self):
-        export_provider_task = DataProviderTaskRecord.objects.create(name=self.export_provider.name,
-                                                                     slug=self.export_provider.slug,
-                                                                     provider=self.export_provider,
-                                                                     run=self.run,
-                                                                     status=TaskStates.PENDING.value,
-                                                                     display=False,
-                                                                     estimated_size=100.95,
-                                                                     estimated_duration=5.5)
+        export_provider_task = DataProviderTaskRecord.objects.create(
+            name=self.export_provider.name,
+            slug=self.export_provider.slug,
+            provider=self.export_provider,
+            run=self.run,
+            status=TaskStates.PENDING.value,
+            display=False,
+            estimated_size=100.95,
+            estimated_duration=5.5,
+        )
 
         self.assertEqual(self.export_provider.name, export_provider_task.name)
         self.assertEqual(self.export_provider.slug, export_provider_task.slug)
@@ -370,18 +373,19 @@ class TestDataProviderTaskRecord(TestCase):
         self.assertEqual(5.5, export_provider_task.estimated_duration)
 
     def test_data_provider_task_record_run_slug(self):
-        export_provider_task = DataProviderTaskRecord.objects.create(name=self.export_provider.name,
-                                                                     slug="run",
-                                                                     provider=self.export_provider,
-                                                                     run=self.run,
-                                                                     status=TaskStates.PENDING.value)
+        export_provider_task = DataProviderTaskRecord.objects.create(
+            name=self.export_provider.name,
+            slug="run",
+            provider=self.export_provider,
+            run=self.run,
+            status=TaskStates.PENDING.value,
+        )
         self.assertEqual("run", export_provider_task.slug)
 
     def test_data_provider_task_record_no_slug(self):
-        export_provider_task = DataProviderTaskRecord.objects.create(name=self.export_provider.name,
-                                                                     provider=self.export_provider,
-                                                                     run=self.run,
-                                                                     status=TaskStates.PENDING.value)
+        export_provider_task = DataProviderTaskRecord.objects.create(
+            name=self.export_provider.name, provider=self.export_provider, run=self.run, status=TaskStates.PENDING.value
+        )
         self.assertEqual("", export_provider_task.slug)
 
 
@@ -389,32 +393,37 @@ class TestFileProducingTaskResult(TestCase):
     """
     Test cases for ExportTaskRecord model
     """
-    fixtures = ('osm_provider.json',)
+
+    fixtures = ("osm_provider.json",)
+
     @classmethod
     def setUpTestData(cls):
-        group, created = Group.objects.get_or_create(name='TestDefaultExportExtentGroup')
-        with patch('eventkit_cloud.jobs.signals.Group') as mock_group:
+        group, created = Group.objects.get_or_create(name="TestDefaultExportExtentGroup")
+        with patch("eventkit_cloud.jobs.signals.Group") as mock_group:
             mock_group.objects.get.return_value = group
-            user = User.objects.create_user(username='demo', email='demo@demo.com', password='demo', is_active=True)
+            user = User.objects.create_user(username="demo", email="demo@demo.com", password="demo", is_active=True)
         # bbox that intersects with both Africa and Burma so that both regions are covered in tests.
         bbox = Polygon.from_bbox((23.378906, -3.074695, 110.830078, 44.087585))
         the_geom = GEOSGeometry(bbox, srid=4326)
-        Job.objects.create(name='TestFileProducingTaskResult', description='Test description', user=user, the_geom=the_geom)
+        Job.objects.create(
+            name="TestFileProducingTaskResult", description="Test description", user=user, the_geom=the_geom
+        )
 
     def setUp(self):
-        self.job = Job.objects.get(name='TestFileProducingTaskResult')
+        self.job = Job.objects.get(name="TestFileProducingTaskResult")
         self.provider = DataProvider.objects.first()
         self.run = ExportRun.objects.create(job=self.job, user=self.job.user)
 
-        self.data_provider_task_record = DataProviderTaskRecord.objects.create(run=self.run,
-                                                                               name='Shapefile Export',
-                                                                               provider=self.provider,
-                                                                               status=TaskStates.PENDING.value)
+        self.data_provider_task_record = DataProviderTaskRecord.objects.create(
+            run=self.run, name="Shapefile Export", provider=self.provider, status=TaskStates.PENDING.value
+        )
 
         self.task_uid = uuid.uuid4()
-        self.task = ExportTaskRecord.objects.create(export_provider_task=self.data_provider_task_record, uid=self.task_uid)
+        self.task = ExportTaskRecord.objects.create(
+            export_provider_task=self.data_provider_task_record, uid=self.task_uid
+        )
 
-    @patch('eventkit_cloud.tasks.signals.exporttaskresult_delete_exports')
+    @patch("eventkit_cloud.tasks.signals.exporttaskresult_delete_exports")
     def test_export_task_result(self, mock_etr_delete_exports):
         """
         Test FileProducingTaskResult.
@@ -424,10 +433,10 @@ class TestFileProducingTaskResult(TestCase):
 
         self.assertIsNone(task.result)
         result = FileProducingTaskResult.objects.create(
-             download_url='http://testserver/media/{0}/file.txt'.format(self.run.uid)
+            download_url="http://testserver/media/{0}/file.txt".format(self.run.uid)
         )
         task.result = result
-        self.assertEqual('http://testserver/media/{0}/file.txt'.format(self.run.uid), task.result.download_url)
+        self.assertEqual("http://testserver/media/{0}/file.txt".format(self.run.uid), task.result.download_url)
         task.result.soft_delete()
         task.result.refresh_from_db()
         self.assertTrue(task.result.deleted)
@@ -439,7 +448,7 @@ class TestFileProducingTaskResult(TestCase):
         """
         self.job.user.last_login = timezone.now()
         self.downloadable = FileProducingTaskResult.objects.create(
-             download_url='http://testserver/media/{0}/file.txt'.format(self.run.uid)
+            download_url="http://testserver/media/{0}/file.txt".format(self.run.uid)
         )
         self.task.result = self.downloadable
         self.task.save()
@@ -459,7 +468,7 @@ class TestFileProducingTaskResult(TestCase):
             policies=policies_example,
             justification_options=justification_options_example,
             policy_title_text="Policy Title",
-            policy_cancel_button_text="Cancel Button"
+            policy_cancel_button_text="Cancel Button",
         )
 
         self.regional_policy.providers.set([self.provider])
@@ -470,7 +479,7 @@ class TestFileProducingTaskResult(TestCase):
             policies=policies_example,
             justification_options=justification_options_example,
             policy_title_text="Policy Title",
-            policy_cancel_button_text="Cancel Button"
+            policy_cancel_button_text="Cancel Button",
         )
 
         self.regional_policy_two.providers.set([self.provider])
@@ -484,7 +493,7 @@ class TestFileProducingTaskResult(TestCase):
             justification_id=1,
             justification_name="Test Option",
             regional_policy=self.regional_policy,
-            user=self.job.user
+            user=self.job.user,
         )
 
         # Test to make sure the user can't download by only agreeing to one policy.
@@ -495,7 +504,7 @@ class TestFileProducingTaskResult(TestCase):
             justification_id=1,
             justification_name="Test Option",
             regional_policy=self.regional_policy_two,
-            user=self.job.user
+            user=self.job.user,
         )
 
         # Test to make sure the user can download after submitting both regional justifications.
@@ -508,7 +517,7 @@ class TestFileProducingTaskResult(TestCase):
             policies=policies_example,
             justification_options=justification_options_example,
             policy_title_text="Policy Title",
-            policy_cancel_button_text="Cancel Button"
+            policy_cancel_button_text="Cancel Button",
         )
 
         self.regional_policy_three.providers.set([self.provider])
@@ -521,7 +530,7 @@ class TestFileProducingTaskResult(TestCase):
             justification_id=1,
             justification_name="Test Option",
             regional_policy=self.regional_policy_three,
-            user=self.job.user
+            user=self.job.user,
         )
 
         # User has agreed to the new regional policy and should be able to download.
@@ -544,11 +553,13 @@ class TestFileProducingTaskResult(TestCase):
             user_can_download = self.downloadable.user_can_download(self.job.user)
             self.assertFalse(user_can_download)
 
-    @patch('eventkit_cloud.tasks.models.DataProviderTaskRecord.tasks')
+    @patch("eventkit_cloud.tasks.models.DataProviderTaskRecord.tasks")
     def test_clone(self, export_task_records_mock):
         job = Job.objects.first()
         run = ExportRun.objects.create(job=job, user=job.user)
-        data_provider_task_record = DataProviderTaskRecord.objects.create(run=run, status=TaskStates.PENDING.value, provider=DataProvider.objects.get(slug='osm-generic'))
+        data_provider_task_record = DataProviderTaskRecord.objects.create(
+            run=run, status=TaskStates.PENDING.value, provider=DataProvider.objects.get(slug="osm-generic")
+        )
         run.data_provider_task_records.add(data_provider_task_record)
 
         export_task_record_mock = Mock()
@@ -572,18 +583,20 @@ class TestUserDownload(TestCase):
     Test cases for UserDownload model
     """
 
-    fixtures = ('osm_provider.json', 'datamodel_presets.json')
+    fixtures = ("osm_provider.json", "datamodel_presets.json")
 
     def setUp(self):
-        group, created = Group.objects.get_or_create(name='TestDefaultExportExtentGroup')
-        with patch('eventkit_cloud.jobs.signals.Group') as mock_group:
+        group, created = Group.objects.get_or_create(name="TestDefaultExportExtentGroup")
+        with patch("eventkit_cloud.jobs.signals.Group") as mock_group:
             mock_group.objects.get.return_value = group
-            self.user = User.objects.create_user(username='demo', email='demo@demo.com', password='demo', is_active=True)
+            self.user = User.objects.create_user(
+                username="demo", email="demo@demo.com", password="demo", is_active=True
+            )
 
     def test_clone(self):
 
         downloadable = FileProducingTaskResult.objects.create(
-             download_url=f'http://testserver/media/self.run.uid/file.txt'
+            download_url="http://testserver/media/self.run.uid/file.txt"
         )
         user_download = UserDownload.objects.create(user=self.user, downloadable=downloadable)
 
