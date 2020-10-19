@@ -67,7 +67,7 @@ def progress_callback(pct, msg, user_data):
     update_progress(
         user_data.get("task_uid"),
         progress=round(pct * 100),
-        subtask_percentage=user_data.get("subtask_percentage"),
+        subtask_percentage=user_data.get("subtask_percentage", 100.0),
         msg=msg,
     )
 
@@ -81,26 +81,36 @@ def open_dataset(file_path, is_raster):
     """
 
     # Attempt to open as gdal dataset (raster)
-    gdal.DontUseExceptions()
+    # Using gdal exception to minimize output to stdout
+    gdal.UseExceptions()
 
     logger.info("Opening the dataset: {}".format(file_path))
     gdal_dataset = None
     ogr_dataset = None
     try:
-        gdal_dataset = gdal.Open(file_path)
-        if gdal_dataset and is_raster:
-            logger.info(f"The dataset: {file_path} opened with gdal.")
-            return gdal_dataset
+        try:
+            gdal_dataset = gdal.Open(file_path)
+        except Exception as e:
+            logger.debug("Could not open dataset using gdal as raster.")
+            logger.debug(e)
+        finally:
+            if gdal_dataset and is_raster:
+                logger.info(f"The dataset: {file_path} opened with gdal.")
+                return gdal_dataset
 
         # Attempt to open as ogr dataset (vector)
         # ogr.UseExceptions doesn't seem to work reliably, so just check for Open returning None
-        ogr_dataset = ogr.Open(file_path)
-
-        if not ogr_dataset:
-            logger.debug("Unknown file format: {0}".format(file_path))
-        else:
-            logger.info(f"The dataset: {file_path} opened with ogr.")
-        return ogr_dataset or gdal_dataset
+        try:
+            ogr_dataset = ogr.Open(file_path)
+        except Exception as e:
+            logger.debug("Could not open dataset using ogr.")
+            logger.debug(e)
+        finally:
+            if not ogr_dataset:
+                logger.debug("Unknown file format: {0}".format(file_path))
+            else:
+                logger.info(f"The dataset: {file_path} opened with ogr.")
+            return ogr_dataset or gdal_dataset
     except RuntimeError as ex:
         if ("not recognized as a supported file format" not in str(ex)) or (
             "Error browsing database for PostGIS Raster tables" in str(ex)
@@ -109,7 +119,6 @@ def open_dataset(file_path, is_raster):
     finally:
         cleanup_dataset(gdal_dataset)
         cleanup_dataset(ogr_dataset)
-        gdal.UseExceptions()
 
 
 def cleanup_dataset(dataset):
@@ -557,7 +566,7 @@ def convert_vector(
             "dstSRS": dst_srs,
             "accessMode": access_mode,
             "reproject": src_srs != dst_srs,
-            "skipFailures": True,
+            "skipFailures": False,
             "spatFilter": bbox,
             "options": ["-clipSrc", boundary] if boundary and not bbox else None,
         }
