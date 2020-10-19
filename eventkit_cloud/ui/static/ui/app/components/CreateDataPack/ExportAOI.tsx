@@ -60,6 +60,8 @@ import {useEffect} from "react";
 import {useEffectOnMount} from "../../utils/hooks/hooks";
 import MapDrawer from "./MapDrawer";
 import EventkitJoyride from "../common/JoyrideWrapper";
+import {RegionJustification} from "../StatusDownloadPage/RegionJustification";
+import {MapZoomLimiter} from "./MapZoomLimiter";
 
 export const WGS84 = 'EPSG:4326';
 
@@ -1060,8 +1062,18 @@ export class ExportAOI extends React.Component<Props, State> {
             aoi = this.bufferFeatures;
         }
 
+
         return (
             <div>
+                <MapZoomLimiter
+                    provider={{slug: this.state.selectedBaseMap.slug} as Eventkit.Provider}
+                    extent={Object.keys(this.props.aoiInfo.geojson).length ?
+                        this.props.aoiInfo.geojson as any :
+                        undefined
+                    }
+                    map={this.map}
+                    zoomLevel={14}
+                />
                 <StepValidator {...this.props}/>
                 <EventkitJoyride
                     callback={this.callback}

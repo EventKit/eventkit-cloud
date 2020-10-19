@@ -16,6 +16,7 @@ import {ApiStatuses, useAsyncRequest} from "../../../utils/hooks/api";
 import {getCookie} from "../../../utils/generic";
 import TextLabel from "./TextLabel";
 import JustificationDropdown from "./JustificationDropdown";
+import {renderIf} from "../../../utils/renderIf";
 
 
 const jss = (theme: Eventkit.Theme & Theme) => createStyles({
@@ -94,11 +95,6 @@ const jss = (theme: Eventkit.Theme & Theme) => createStyles({
         },
     },
 });
-
-// Remove this once the real renderIf gets added -- currently only in master, not feature branch
-export function renderIf(callback, bool) {
-    return (bool) ? callback() : null;
-}
 
 export interface RegionalJustificationDialogPropsBase {
     isOpen: boolean;
@@ -298,7 +294,20 @@ export function RegionalJustificationDialog(props: RegionalJustificationDialogPr
             selectedOption.id,
             (selectedOption.suboption) ? optionValues[selectedOption.id] : undefined,
         );
-        onSubmit();
+    }
+
+    useEffect(() => {
+        if (ApiStatuses.isSuccess(status)) {
+            onSubmit();
+        }
+    }, [status]);
+
+    function onCloseAction() {
+        if (ApiStatuses.isError(status)) {
+            history.back();
+            return;
+        }
+        onClose();
     }
 
     const [isPolicyOpen, setIsPolicyOpen] = useState(false);
@@ -309,7 +318,7 @@ export function RegionalJustificationDialog(props: RegionalJustificationDialogPr
             className="qa-ProviderError-BaseDialog"
             show={isOpen}
             title={renderTitle()}
-            onClose={onClose}
+            onClose={onCloseAction}
             {...getActionProps()}
             {...getDialogProps()}
         >
@@ -364,7 +373,12 @@ export function RegionalJustificationDialog(props: RegionalJustificationDialogPr
                         </Button>
                     </div>
                 </div>
-            ), !!policy)}
+            ), !!policy && !ApiStatuses.isError(status))}
+            {renderIf(() => (
+                <div>
+                    Server error.
+                </div>
+            ), ApiStatuses.isError(status))}
         </BaseDialog>
     );
 }

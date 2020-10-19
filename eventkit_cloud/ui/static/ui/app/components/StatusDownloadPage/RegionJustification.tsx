@@ -1,5 +1,4 @@
 import React, {useEffect, useState} from 'react';
-import {hasOwnProperty} from 'tslint/lib/utils';
 import RegionalJustificationDialog from '../Dialog/RegionalJustification/RegionalJustificationDialog';
 import {useRegionContext} from '../common/context/RegionContext';
 import {DepsHashers, useEffectOnMount, useProviderIdentity} from '../../utils/hooks/hooks';
@@ -40,7 +39,7 @@ export function RegionJustification(props: React.PropsWithChildren<Props>) {
             });
             setPolicyIntersected(policyIntersectedMap);
         }
-    }, [extent?.id, policies]);
+    }, [extent, policies]);
 
     function submitJustification(policyUid: string) {
         setJustificationSubmitted((prevState) => ({
@@ -67,30 +66,27 @@ export function RegionJustification(props: React.PropsWithChildren<Props>) {
     const [providerPolicyMap, setProviderPolicyMap] = useState(undefined);
     useProviderIdentity(() => {
         const policyMap = {};
-        const providerSlugs = providers.map((_provider) => _provider.slug);
-        policies.forEach((_policy) => {
-            _policy.providers.forEach((_provider) => {
-                if (arrayHasValue(providerSlugs, _provider.slug)) {
-                    if (!hasOwnProperty(policyMap, _policy.uid)) {
-                        policyMap[_policy.uid] = [];
+        if (!!policies && policies.length) {
+            const providerSlugs = providers.map((_provider) => _provider.slug);
+            policies.forEach((_policy) => {
+                _policy.providers.forEach((_provider) => {
+                    if (arrayHasValue(providerSlugs, _provider.slug)) {
+                        if (!policyMap.hasOwnProperty(_policy.uid)) {
+                            policyMap[_policy.uid] = [];
+                        }
+                        policyMap[_policy.uid].push(_provider.slug);
                     }
-                    policyMap[_policy.uid].append(_provider.slug);
-                }
+                });
             });
-        });
-
+        }
         setProviderPolicyMap((Object.keys(policyMap).length) ? policyMap : undefined);
     }, providers, [policies]);
 
-    const [isBlocked, setIsBlocked] = useState(false);
-
     function blockSignal() {
-        setIsBlocked(true);
         props.onBlockSignal();
     }
 
     function unblockSignal() {
-        setIsBlocked(false);
         props.onUnblockSignal();
     }
 
@@ -107,9 +103,8 @@ export function RegionJustification(props: React.PropsWithChildren<Props>) {
             // Grab the first policy that hasn't been submitted.
             const [policyUid] = entries.find(([, value]) => !value);
             const policy = policies.find((_policy) => _policy.uid === policyUid);
-            if (!isBlocked) {
-                blockSignal();
-            }
+
+            blockSignal();
             return (
                 <>
                     <RegionalJustificationDialog
@@ -123,8 +118,8 @@ export function RegionJustification(props: React.PropsWithChildren<Props>) {
             );
         }
     }
-    if (isBlocked) {
-        unblockSignal();
-    }
+
+    unblockSignal();
+
     return null;
 }

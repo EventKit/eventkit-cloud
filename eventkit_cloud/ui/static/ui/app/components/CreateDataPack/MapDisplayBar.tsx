@@ -3,11 +3,9 @@ import { Theme, withStyles, createStyles } from '@material-ui/core/styles';
 import withWidth, { isWidthUp } from '@material-ui/core/withWidth';
 import { Breakpoint } from '@material-ui/core/styles/createBreakpoints';
 import { Tab, Tabs } from '@material-ui/core';
-import { useState } from 'react';
 import AoiInfobar from './AoiInfobar';
 import { MapQueryDisplay } from './MapQueryDisplay';
 import { MapLayer } from './CreateExport';
-import ProviderRegionJustificationDialog from '../Dialog/RegionalJustification/ProviderRegionalJustificationDialog';
 
 const jss = (theme: Eventkit.Theme & Theme) => createStyles({
     wrapper: {
@@ -87,17 +85,6 @@ export interface State {
 enum TabNum {
     AoiInfo= 1,
     PoiInfo= 2,
-}
-
-function TempComponent() {
-    const [isOpen, setIsOpen] = useState(true);
-    return (
-        <ProviderRegionJustificationDialog
-            onClose={() => setIsOpen(false)}
-            onSubmit={() => undefined}
-            isOpen={isOpen}
-        />
-    );
 }
 
 export class MapDisplayBar extends React.Component<Props, State> {
