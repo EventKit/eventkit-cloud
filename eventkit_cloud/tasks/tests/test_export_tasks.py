@@ -277,7 +277,7 @@ class TestExportTasks(ExportTaskBase):
         layer = "foo"
         service_url = "https://abc.gov/arcgis/WFSServer/"
         expected_input_path = (
-            f"WFS:{service_url}?SERVICE=WFS&VERSION=1.0.0&REQUEST=GetFeature&TYPENAME={layer}&SRSNAME=EPSG:{projection}"
+            f"{service_url}?SERVICE=WFS&VERSION=1.0.0&REQUEST=GetFeature&TYPENAME={layer}&SRSNAME=EPSG:{projection}"
         )
 
         mock_convert.return_value = expected_output_path

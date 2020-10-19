@@ -1047,7 +1047,6 @@ def wfs_export_task(
     # Strip out query string parameters that might conflict
     service_url = re.sub(r"(?i)(?<=[?&])(version|service|request|typename|srsname)=.*?(&|$)", "", service_url,)
 
-    # TODO: should SERVICE == service_type?
     query_params = {
         "SERVICE": "WFS",
         "VERSION": "1.0.0",
@@ -1060,9 +1059,9 @@ def wfs_export_task(
     if "?" in service_url:
         if "&" != service_url[-1]:
             service_url += "&"
-        service_url = urljoin(service_url, query_str)
+        service_url += query_str
     else:
-        service_url = urljoin(service_url, f"?{query_str}")
+        service_url += "?" + query_str
 
     url = service_url
     cred = get_cred(cred_var=name, url=url)
@@ -1072,14 +1071,13 @@ def wfs_export_task(
             url = re.sub(r"(?<=://)", "%s:%s@" % (user, pw), url)
 
     out = gdalutils.convert(
-        fmt="gpkg", input_file=f"WFS:{url}", output_file=gpkg, task_uid=task_uid, projection=projection, boundary=bbox,
+        fmt="gpkg", input_file=url, output_file=gpkg, task_uid=task_uid, projection=projection, boundary=bbox,
     )
 
     result["file_format"] = "gpkg"
     result["result"] = out
     result["source"] = out
 
-    # TODO: figure out why this fails
     # Check for geopackage contents; gdal wfs driver fails silently
     if not geopackage.check_content_exists(out):
         logger.warning("Empty response: Unknown layer name '{}' or invalid AOI bounds".format(layer))

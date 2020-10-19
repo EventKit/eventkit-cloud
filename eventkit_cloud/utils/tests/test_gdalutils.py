@@ -478,6 +478,6 @@ class TestGdalUtils(TestCase):
             format=fmt,
             options=["-clipSrc", boundary],
             reproject=True,
-            skipFailures=True,
+            skipFailures=False,
             srcSRS=src_srs,
         )
