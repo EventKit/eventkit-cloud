@@ -1,13 +1,13 @@
 import os
-import sys
-import glob
-from qgis.core import QgsApplication, QgsProject, QgsVectorLayer
 import osgeo
 import gdal
 
 # Need to resolve dependencies to include this as a part of our pipeline.
 
+
 def convert_qgis_gpkg_to_kml(qgs_file: str, output_kml_path: str) -> str:
+    from qgis.core import QgsApplication, QgsProject, QgsVectorLayer
+
     app = None
     driverName = 'libkml'
 
@@ -40,15 +40,15 @@ def convert_qgis_gpkg_to_kml(qgs_file: str, output_kml_path: str) -> str:
                                                     symbologyScale=symbology_scale)
 
         out_driver = osgeo.ogr.GetDriverByName(driverName)
-        if os.path.exists(output_kml):
-            out_driver.DeleteDataSource(output_kml)
+        if os.path.exists(output_kml_path):
+            out_driver.DeleteDataSource(output_kml_path)
 
         out_driver.CreateDataSource(output_kml_path)
 
         kml_files = os.listdir(output_dir)
         for kml_file in kml_files:
             kml_path = os.path.join(output_dir, kml_file)
-            gdal.VectorTranslate(output_kml, kml_path, accessMode="append")
+            gdal.VectorTranslate(output_kml_path, kml_path, accessMode="append")
 
         return output_kml_path
     finally:

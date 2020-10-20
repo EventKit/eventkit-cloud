@@ -68,6 +68,7 @@ from eventkit_cloud.tasks.task_process import update_progress
 from eventkit_cloud.utils.auth_requests import get_cred
 from eventkit_cloud.utils import overpass, pbf, s3, mapproxy, wcs, geopackage, gdalutils
 from eventkit_cloud.utils.ogr import OGR
+from eventkit_cloud.utils.qgis import convert_qgis_gpkg_to_kml
 from eventkit_cloud.utils.rocket_chat import RocketChat
 from eventkit_cloud.utils.stats.eta_estimator import ETA
 from eventkit_cloud.tasks.task_base import EventKitBaseTask
@@ -612,9 +613,16 @@ def kml_export_task(
     gpkg = parse_result(result, "source")
     provider_slug = get_provider_slug(task_uid)
     kmlfile = get_export_filename(stage_dir, job_name, projection, provider_slug, "kml")
+
+    dptr = DataProviderTaskRecord.objects.get(tasks__uid__exact=task_uid)
+    metadata = get_metadata(data_provider_task_record_uids=[dptr])
+    metadata['projections'] = [4326]
+    # Grab the only entry in the sources dict.
+    sources = next(iter(metadata('sources')))
+    sources['files'] = [sources['files'][0]]
+    qgs_file = generate_qgs_style(metadata)
     try:
-        ogr = OGR(task_uid=task_uid)
-        out = ogr.convert(file_format="KML", in_file=gpkg, out_file=kmlfile)
+        out = convert_qgis_gpkg_to_kml(qgs_file=qgs_file, output_kml_path=kmlfile)
         result["file_extension"] = "kmz"
         result["file_format"] = "libkml"
         result["result"] = out
