@@ -26,6 +26,7 @@ const jss = (theme: Theme & Eventkit.Theme) => createStyles({
         minWidth: '16px',
         minHeight: '16px',
         opacity: 1,
+        padding: 0,
     },
     tabSelected: {
         border: `8px solid ${theme.eventkit.colors.primary}`,
