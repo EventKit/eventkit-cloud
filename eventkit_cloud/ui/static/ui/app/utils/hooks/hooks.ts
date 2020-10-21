@@ -68,13 +68,14 @@ export class DepsHashers {
     static stringHash(value: string | number): number {
         let h;
         if (!!value || value === 0) {
-            let valueToString = value.toString();
+            const valueToString = value.toString();
             for (let i = 0; i < valueToString.length; i += 1) {
                 // eslint-disable-next-line no-bitwise
                 h = Math.imul(31, h) + valueToString.charCodeAt(i) | 0;
             }
             return h;
         }
+        return undefined; // Explicit returns are preferred when a function is not void
     }
 
     static arrayHash(arrayIn: any[], hasher?: (val: any) => number | string): number {
@@ -97,9 +98,13 @@ export class DepsHashers {
         }
         return DepsHashers.stringHash(`${size.value}:${time.value}`);
     }
+
+    static uidHash(objectsWithUid: Partial<{ uid: string }>[]) {
+        return objectsWithUid ? DepsHashers.arrayHash(objectsWithUid.map(_object => _object?.uid)) : undefined;
+    }
 }
 
-export function useProviderIdentity(effect: () => void, providers: Eventkit.Provider[], extraDeps=[]) {
+export function useProviderIdentity(effect: () => void, providers: Eventkit.Provider[], extraDeps = []) {
     useEffect(effect, [
         DepsHashers.arrayHash(providers.map(provider => DepsHashers.providerIdentityHash(provider))),
         ...extraDeps,

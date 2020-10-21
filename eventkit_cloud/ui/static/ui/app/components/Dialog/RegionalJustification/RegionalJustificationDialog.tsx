@@ -118,7 +118,7 @@ export function RegionalJustificationDialog(props: RegionalJustificationDialogPr
         isOpen, policy, onClose, onSubmit, classes, width,
     } = props;
 
-    const [{status, response}, requestCall] = useAsyncRequest();
+    const [{status, }, requestCall] = useAsyncRequest();
     const makeRequest = (regionUid: string, id: string, justificationValue?: string) => {
         requestCall({
             url: '/api/regions/justifications',
@@ -303,6 +303,7 @@ export function RegionalJustificationDialog(props: RegionalJustificationDialogPr
     }, [status]);
 
     function onCloseAction() {
+        // If the submit resulted in an error, we force the user to go back
         if (ApiStatuses.isError(status)) {
             history.back();
             return;
@@ -326,7 +327,7 @@ export function RegionalJustificationDialog(props: RegionalJustificationDialogPr
                 <div style={{display: 'flex'}}>
                     <CircularProgress style={{margin: 'auto'}}/>
                 </div>
-            ), !policy)}
+            ), !policy || ApiStatuses.isFetching(status))}
             {renderIf(() => (
                 <div className={`${!isSmallScreen() ? classes.outerContainer : classes.outerContainerSm}`}>
                     {renderHeader()}
@@ -373,7 +374,7 @@ export function RegionalJustificationDialog(props: RegionalJustificationDialogPr
                         </Button>
                     </div>
                 </div>
-            ), !!policy && !ApiStatuses.isError(status))}
+            ), !!policy && !ApiStatuses.isError(status) && !ApiStatuses.isFetching(status))}
             {renderIf(() => (
                 <div>
                     Server error.

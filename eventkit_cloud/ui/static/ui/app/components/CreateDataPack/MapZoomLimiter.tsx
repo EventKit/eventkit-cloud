@@ -1,7 +1,6 @@
 import * as React from 'react';
 import { useEffect, useState } from 'react';
 import { RegionJustification } from '../StatusDownloadPage/RegionJustification';
-import { useEffectOnMount, useProviderIdentity } from '../../utils/hooks/hooks';
 
 interface Props {
     map: any;
@@ -25,8 +24,9 @@ export function MapZoomLimiter(props: Props) {
 
     const [forceZoomOut, setForceZoomOut] = useState(false);
     const [updateZoom, setUpdateZoom] = useState(false);
+    const [displayDialog, setDisplayDialog] = useState(true);
     useEffect(() => {
-        if (forceZoomOut) {
+        if (forceZoomOut && !displayDialog) {
             if ((!!zoomLevel || zoomLevel === 0) && olZoom > zoomLevel) {
                 setUpdateZoom(true);
             }
@@ -40,18 +40,16 @@ export function MapZoomLimiter(props: Props) {
         }
     }, [updateZoom]);
 
-    const [displayDialog, setDisplayDialog] = useState(true);
-
     useEffect(() => {
         setDisplayDialog(true);
         setForceZoomOut(true);
     }, [provider?.slug]);
 
-    if (displayDialog) {
+    if (displayDialog && (!!zoomLevel || zoomLevel === 0) && olZoom > zoomLevel) {
         return (
             <RegionJustification
                 providers={[provider]}
-                extent={extent}
+                extents={extent}
                 onClose={() => { setForceZoomOut(true); setDisplayDialog(false); }}
                 onBlockSignal={() => setForceZoomOut(true)}
                 onUnblockSignal={() => setForceZoomOut(false)}

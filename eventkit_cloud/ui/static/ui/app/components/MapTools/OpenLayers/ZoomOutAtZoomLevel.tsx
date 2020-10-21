@@ -16,7 +16,6 @@ function ZoomOutAtZoomLevel(props: Props) {
     // We update the zoom level through open layers on the next render to avoid issues where the previous
     // zoom update doesn't finish until after we try to update the zoom in this component.
     const [updateZoom, setUpdateZoom] = useState(false);
-
     useEffect(() => {
         if ((!!zoomLevel || zoomLevel === 0) && zoomContext.zoomLevel > zoomLevel) {
             setUpdateZoom(true);
@@ -24,8 +23,10 @@ function ZoomOutAtZoomLevel(props: Props) {
     }, [zoomContext.zoomLevel]);
 
     useEffect(() => {
-        setUpdateZoom(false);
-        mapContainer.getMap().getView().setZoom(2);
+        if (updateZoom) {
+            setUpdateZoom(false);
+            mapContainer.getMap().getView().setZoom(2);
+        }
     }, [updateZoom]);
 
     return null;

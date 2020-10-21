@@ -4,10 +4,11 @@ import {useRegionContext} from '../common/context/RegionContext';
 import {DepsHashers, useEffectOnMount, useProviderIdentity} from '../../utils/hooks/hooks';
 import {convertGeoJSONtoJSTS, covers} from '../../utils/mapUtils';
 import {arrayHasValue} from '../../utils/generic';
+import {object} from "prop-types";
 
 interface Props {
     providers: Eventkit.Provider[];
-    extent?: GeoJSON.Feature;
+    extents?: GeoJSON.Feature[];
     onClose?: (...args: any) => void;
     onBlockSignal?: () => void;
     onUnblockSignal?: () => void;
@@ -20,26 +21,91 @@ RegionJustification.defaultProps = {
 } as Props;
 
 export function RegionJustification(props: React.PropsWithChildren<Props>) {
-    const {providers, extent} = props;
+    const {providers, extents} = props;
     const {
-        policies, getPolicies, submittedPolicies, submitPolicy,
+        policies = [], getPolicies, submittedPolicies, submitPolicy,
     } = useRegionContext();
-    const [justificationSubmitted, setJustificationSubmitted] = useState<{ [uid: string]: boolean }>(undefined);
-    const [policyIntersected, setPolicyIntersected] = useState<{ [uid: string]: boolean }>(undefined);
 
+    useEffectOnMount(() => {
+        getPolicies();
+    });
+
+    const [justificationSubmitted, setJustificationSubmitted] = useState<{ [uid: string]: boolean }>();
+    const [policyExtents, setPolicyExtents] = useState<[string, boolean][]>();
+    const [policyIntersections, setPolicyHasIntersection] = useState<[string, boolean][]>();
+    const [policyProviders, setPolicyProviders] = useState<[string, boolean][]>();
+
+    // This effect grabs policies once they're loaded and converts their region extent to JSTS
     useEffect(() => {
-        if (extent && policies) {
-            const extentAsJsts = convertGeoJSONtoJSTS(extent, 1, false);
-            const policyIntersectedMap = {};
+        if (policies && policies.length) {
+            const policySubmittedMap = {};
             policies.forEach((_policy) => {
-                const policyRegion = convertGeoJSONtoJSTS(_policy.region, 1, false);
-                if (covers(extentAsJsts, policyRegion)) {
-                    policyIntersectedMap[_policy.uid] = true;
-                }
+                policySubmittedMap[_policy.uid] = arrayHasValue(submittedPolicies, _policy.uid);
             });
-            setPolicyIntersected(policyIntersectedMap);
+            setJustificationSubmitted(policySubmittedMap);
+
+            setPolicyExtents(policies.map(_policy => (
+                [_policy.uid, convertGeoJSONtoJSTS(_policy.region, 1, false)]
+            )));
+        } else {
+            setPolicyExtents(undefined);
         }
-    }, [extent, policies]);
+    }, [DepsHashers.uidHash(policies)])
+
+    useProviderIdentity(() => {
+        const policyProviderSet = [];
+        const providerSlugs = providers.map(_provider => _provider.slug);
+        policies.forEach((_policy) => {
+            const affectedProviders = [];
+            _policy.providers.forEach(_provider => {
+                if (arrayHasValue(providerSlugs, _provider.slug)) {
+                    affectedProviders.push(_provider);
+                }
+            })
+            if (affectedProviders.length) {
+                policyProviderSet.push([_policy.uid, affectedProviders]);
+            }
+        })
+        setPolicyProviders(policyProviderSet.length ? policyProviderSet : undefined);
+    }, providers, [policies])
+
+    // This effect checks for changes in policy extents and the extents we are checking against
+    // It builds an array indicating which policies do intersect with the checked extents
+    useEffect(() => {
+        if (extents && extents.length && policyExtents) {
+            setPolicyHasIntersection(
+                policyExtents.map(([_policyUid, _policyExtent]) => (
+                        [_policyUid, extents.some(_extent => {
+                            return covers(convertGeoJSONtoJSTS(_extent, 1, false), _policyExtent)
+                        })]
+                    )
+                )
+            )
+        } else {
+            setPolicyHasIntersection(undefined);
+        }
+    }, [policyExtents, extents])
+
+    const [policyToRender, setPolicyToRender] = useState(undefined);
+    useEffect(() => {
+        if (policyProviders && policyIntersections) {
+            // Finds any policy where the region intersects with one of the specified extents
+            // AND it has an affected provider AND no justification is submitted for that policy
+            const foundPolicyPair = policyProviders.find(([_policyA,]) =>
+                arrayHasValue(policyIntersections.map(([_policyB,]) => _policyB), _policyA) &&
+                !justificationSubmitted[_policyA]
+            );
+            if (foundPolicyPair) {
+                // Policy not being found at this point should be considered a serious error
+                const policy = policies.find(_policy => _policy.uid === foundPolicyPair[0]);
+                setPolicyToRender(policy);
+                props.onBlockSignal();
+            } else {
+                props.onUnblockSignal();
+                setPolicyToRender(undefined)
+            }
+        }
+    }, [policyIntersections, policyProviders, justificationSubmitted]);
 
     function submitJustification(policyUid: string) {
         setJustificationSubmitted((prevState) => ({
@@ -49,77 +115,18 @@ export function RegionJustification(props: React.PropsWithChildren<Props>) {
         submitPolicy(policyUid);
     }
 
-    useEffectOnMount(() => {
-        getPolicies();
-    });
-
-    useEffect(() => {
-        if (!!policies && policies.length) {
-            const policySubmittedMap = {};
-            policies.forEach((_policy) => {
-                policySubmittedMap[_policy.uid] = arrayHasValue(submittedPolicies, _policy.uid);
-            });
-            setJustificationSubmitted(policySubmittedMap);
-        }
-    }, [policies]);
-
-    const [providerPolicyMap, setProviderPolicyMap] = useState(undefined);
-    useProviderIdentity(() => {
-        const policyMap = {};
-        if (!!policies && policies.length) {
-            const providerSlugs = providers.map((_provider) => _provider.slug);
-            policies.forEach((_policy) => {
-                _policy.providers.forEach((_provider) => {
-                    if (arrayHasValue(providerSlugs, _provider.slug)) {
-                        if (!policyMap.hasOwnProperty(_policy.uid)) {
-                            policyMap[_policy.uid] = [];
-                        }
-                        policyMap[_policy.uid].push(_provider.slug);
-                    }
-                });
-            });
-        }
-        setProviderPolicyMap((Object.keys(policyMap).length) ? policyMap : undefined);
-    }, providers, [policies]);
-
-    function blockSignal() {
-        props.onBlockSignal();
-    }
-
-    function unblockSignal() {
-        props.onUnblockSignal();
-    }
-
-    if (justificationSubmitted && policyIntersected && providerPolicyMap) {
-        const entries = Object.entries(justificationSubmitted);
-        const intersectionEntries = Object.entries(policyIntersected);
-
-        const policiesNotSubmitted = !Object.values(entries).every(([, isSubmitted]) => isSubmitted);
-        const restrictedRegionsPresent = intersectionEntries.length && Object.values(intersectionEntries).every(
-            ([, hasIntersection]) => hasIntersection,
+    if (policyToRender) {
+        return (
+            <>
+                <RegionalJustificationDialog
+                    isOpen
+                    onClose={props.onClose}
+                    onSubmit={() => submitJustification(policyToRender.uid)}
+                    policy={policyToRender}
+                />
+                {props.children}
+            </>
         );
-
-        if (policiesNotSubmitted && restrictedRegionsPresent) {
-            // Grab the first policy that hasn't been submitted.
-            const [policyUid] = entries.find(([, value]) => !value);
-            const policy = policies.find((_policy) => _policy.uid === policyUid);
-
-            blockSignal();
-            return (
-                <>
-                    <RegionalJustificationDialog
-                        isOpen
-                        onClose={props.onClose}
-                        onSubmit={() => submitJustification(policyUid)}
-                        policy={policy}
-                    />
-                    {props.children}
-                </>
-            );
-        }
     }
-
-    unblockSignal();
-
     return null;
 }

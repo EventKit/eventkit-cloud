@@ -495,7 +495,7 @@ export function DataProvider(props: Props) {
                     {renderIf(() => (
                         <RegionJustification
                             providers={[provider]}
-                            extent={props.geojson as any}
+                            extents={[props.geojson as any]}
                             onClose={() => {
                                 setZoom(null, 2);
                                 props.deselect(provider);

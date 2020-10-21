@@ -110,14 +110,14 @@ function PoiQueryDisplay(props: React.PropsWithChildren<Props>) {
     return (
         <>
             {childrenWithProps}
-            {/*<OlPoiOverlay coordinate={lastCoordinate} closePoi={handleClose}>*/}
-            {/*    <QueryDataBox*/}
-            {/*        {...(responseData) ? responseData : {}}*/}
-            {/*        maxHeight={props.maxHeight}*/}
-            {/*        style={props.style}*/}
-            {/*        closeCard={closeCard}*/}
-            {/*    />*/}
-            {/*</OlPoiOverlay>*/}
+            <OlPoiOverlay coordinate={lastCoordinate} closePoi={handleClose}>
+                <QueryDataBox
+                    {...(responseData) ? responseData : {}}
+                    maxHeight={props.maxHeight}
+                    style={props.style}
+                    closeCard={closeCard}
+                />
+            </OlPoiOverlay>
         </>
     );
 }

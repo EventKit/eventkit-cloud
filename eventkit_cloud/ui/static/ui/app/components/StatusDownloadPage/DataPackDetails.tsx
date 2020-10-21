@@ -16,6 +16,7 @@ import {shouldDisplay} from "../../utils/generic";
 import {RegionJustification} from "./RegionJustification";
 import history from "../../utils/history";
 import {renderIf} from "../../utils/renderIf";
+import {MapZoomLimiter} from "../CreateDataPack/MapZoomLimiter";
 
 const jss = (theme: Eventkit.Theme & Theme) => ({
     btn: {
@@ -208,7 +209,13 @@ export class DataPackDetails extends React.Component<Props, State> {
                                 && shouldDisplay(providerTask.provider)
                         ).map(providerTask => providerTask.provider)
                     }
-                    extent={this.props?.job?.extent}
+                    extents={(() => {
+                        const extentArray = [];
+                        if (this.props?.job?.extent) {
+                            extentArray.push(this.props?.job?.extent);
+                        }
+                        return extentArray;
+                    })()}
                     onClose={() => history.goBack()}
                 />
                 {renderIf(() => (<>
