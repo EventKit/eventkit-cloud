@@ -35,7 +35,7 @@ export function MapZoomLimiter(props: Props) {
                 providers={[provider]}
                 extents={extent}
                 onClose={() => {
-                    map.getV
+                    map.getView().setZoom(2);
                     setDisplayDialog(false);
                 }}
             />
