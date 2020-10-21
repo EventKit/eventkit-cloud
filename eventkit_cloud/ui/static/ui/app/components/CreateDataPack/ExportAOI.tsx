@@ -1087,7 +1087,7 @@ export class ExportAOI extends React.Component<Props, State> {
                         return extentArray;
                     })()}
                     map={this.map}
-                    zoomLevel={14}
+                    zoomLevel={4}
                 />
                 <StepValidator {...this.props}/>
                 <EventkitJoyride

@@ -1,6 +1,6 @@
 import * as React from 'react';
-import { useEffect, useState } from 'react';
-import { RegionJustification } from '../StatusDownloadPage/RegionJustification';
+import {useEffect, useState} from 'react';
+import {RegionJustification} from '../StatusDownloadPage/RegionJustification';
 
 interface Props {
     map: any;
@@ -22,37 +22,22 @@ export function MapZoomLimiter(props: Props) {
         // Realistically with the current design, map should never change
     }, [map]);
 
-    const [forceZoomOut, setForceZoomOut] = useState(false);
-    const [updateZoom, setUpdateZoom] = useState(false);
-    const [displayDialog, setDisplayDialog] = useState(true);
+    const [displayDialog, setDisplayDialog] = useState(false);
     useEffect(() => {
-        if (forceZoomOut && !displayDialog) {
-            if ((!!zoomLevel || zoomLevel === 0) && olZoom > zoomLevel) {
-                setUpdateZoom(true);
-            }
+        if ((!!zoomLevel || zoomLevel === 0) && olZoom > zoomLevel) {
+            setDisplayDialog(true);
         }
-    }, [olZoom, forceZoomOut]);
+    }, [olZoom]);
 
-    useEffect(() => {
-        if (map) {
-            setUpdateZoom(false);
-            map.getView().setZoom(zoomLevel - 1);
-        }
-    }, [updateZoom]);
-
-    useEffect(() => {
-        setDisplayDialog(true);
-        setForceZoomOut(true);
-    }, [provider?.slug]);
-
-    if (displayDialog && (!!zoomLevel || zoomLevel === 0) && olZoom > zoomLevel) {
+    if (displayDialog) {
         return (
             <RegionJustification
                 providers={[provider]}
                 extents={extent}
-                onClose={() => { setForceZoomOut(true); setDisplayDialog(false); }}
-                onBlockSignal={() => setForceZoomOut(true)}
-                onUnblockSignal={() => setForceZoomOut(false)}
+                onClose={() => {
+                    map.getV
+                    setDisplayDialog(false);
+                }}
             />
         );
     }

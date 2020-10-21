@@ -357,7 +357,7 @@ export function DataProvider(props: Props) {
                         visible={isOpen}
                         displayFootprints={displayFootprints}
                     >
-                        {/*{renderIf(() => (<ZoomOutAtZoomLevel zoomLevel={14}/>), renderZoomOut)}*/}
+                        {renderIf(() => (<ZoomOutAtZoomLevel zoomLevel={4}/>), renderZoomOut)}
                         <ZoomUpdater setZoom={setZoom}/>
                         <OlMouseWheelZoom enabled={false}/>
                         <PoiQueryDisplay
