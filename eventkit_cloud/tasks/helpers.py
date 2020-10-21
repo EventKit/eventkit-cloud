@@ -403,14 +403,16 @@ def pickle_exception(exception):
     return pickle.dumps(exception, 0).decode()
 
 
-def get_metadata(data_provider_task_record_uids: List[str]):
+def get_metadata(data_provider_task_record_uids: List[str], source_only=False):
     """
     A object to hold metadata about the run for the sake of being passed to various scripts for the creation of
     style files or metadata documents for within the datapack.
 
     This also creates a license file which is considered a part of the metadata and adds it to the "include_files"
-    :param data_provider_task_uid: A Provider task uid string for either the run task which will add all of the provider
-    tasks for the run or for a single data provider task.
+    :param source_only: If enabled only the first task for the data_provider_task_record will be included in the
+    metadata.  This is useful for generating style files for a single layer instead of redundant layers for each file.
+    :param data_provider_task_record_uids: A list of Provider task uid string for either the run task which will add
+    all of the provider tasks for the run or for a single data provider task.
     :return: A dict containing the run metadata.
 
     Example:
@@ -517,7 +519,10 @@ def get_metadata(data_provider_task_record_uids: List[str]):
         # Only include tasks with a specific projection in the metadata.
         # TODO: Refactor to make explicit which files are included in map documents.
         query = reduce(lambda q, value: q | Q(name__icontains=value), projections, Q())
-        for export_task in data_provider_task_record.tasks.filter(query):
+        export_tasks = data_provider_task_record.tasks.filter(query)
+        if source_only:
+            export_tasks = [export_tasks.first()]
+        for export_task in export_tasks:
 
             if TaskStates[export_task.status] in TaskStates.get_incomplete_states():
                 continue

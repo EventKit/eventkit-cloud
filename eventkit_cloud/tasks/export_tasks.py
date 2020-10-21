@@ -619,11 +619,8 @@ def kml_export_task(
     kmlfile = get_export_filename(stage_dir, job_name, projection, provider_slug, "kml")
 
     dptr = DataProviderTaskRecord.objects.get(tasks__uid__exact=task_uid)
-    metadata = get_metadata(data_provider_task_record_uids=[dptr])
+    metadata = get_metadata(data_provider_task_record_uids=[dptr.uid], source_only=True)
     metadata['projections'] = [4326]
-    # Grab the only entry in the sources dict.
-    sources = next(iter(metadata('sources')))
-    sources['files'] = [sources['files'][0]]
     qgs_file = generate_qgs_style(metadata)
     try:
         out = convert_qgis_gpkg_to_kml(qgs_file=qgs_file, output_kml_path=kmlfile)
@@ -1429,25 +1426,26 @@ def finalize_export_provider_task(result=None, data_provider_task_uid=None, stat
     result_status = parse_result(result, "status")
 
     with transaction.atomic():
-        export_provider_task = DataProviderTaskRecord.objects.prefetch_related("tasks").get(uid=data_provider_task_uid)
+        data_provider_task_record = DataProviderTaskRecord.objects.prefetch_related("tasks").get(uid=data_provider_task_uid)
+        has_failures = any(
+            [
+                export_task_record.status == TaskStates.FAILED.value
+                for export_task_record in data_provider_task_record.tasks.all()
+            ])
         if TaskStates[result_status] == TaskStates.CANCELED:
             # This makes the assumption that users can't cancel individual tasks.  Therefore if any of them failed then
             # it is likely that the rest of the tasks were force canceled since they depend on the task that failed.
-            if any(
-                [
-                    export_task_record.status == TaskStates.FAILED.value
-                    for export_task_record in export_provider_task.tasks.all()
-                ]
-            ):
-                export_provider_task.status = TaskStates.INCOMPLETE.value
+            if has_failures:
+                data_provider_task_record.status = TaskStates.INCOMPLETE.value
             else:
-                export_provider_task.status = TaskStates.CANCELED.value
-        elif TaskStates[result_status] != TaskStates.SUCCESS:
-            export_provider_task.status = TaskStates.INCOMPLETE.value
+                data_provider_task_record.status = TaskStates.CANCELED.value
         else:
-            export_provider_task.status = TaskStates.COMPLETED.value
-        export_provider_task.finished_at = timezone.now()
-        export_provider_task.save()
+            if has_failures:
+                data_provider_task_record.status = TaskStates.INCOMPLETE.value
+            else:
+                data_provider_task_record.status = TaskStates.COMPLETED.value
+        data_provider_task_record.finished_at = timezone.now()
+        data_provider_task_record.save()
 
     return result
 

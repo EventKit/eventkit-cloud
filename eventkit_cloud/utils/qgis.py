@@ -3,7 +3,8 @@ import osgeo
 import gdal
 
 # Need to resolve dependencies to include this as a part of our pipeline.
-
+# Because QGIS uses Qt and the drivers are OS level this may not be installed in all environments via conda.
+# Similar issue with discussion: https://github.com/conda-forge/pygridgen-feedstock/issues/10
 
 def convert_qgis_gpkg_to_kml(qgs_file: str, output_kml_path: str) -> str:
     from qgis.core import QgsApplication, QgsProject, QgsVectorLayer
