@@ -88,7 +88,7 @@ function OlMapComponent(props: React.PropsWithChildren<MapComponentProps>) {
                 <div style={{
                     ...style, visibility: (visible) ? displayStyle : 'hidden',
                 }} id={divId} ref={divRef}>
-                    {!!mapContainer && visible && props.children}
+                    {!!mapContainer && props.children}
                 </div>
             </OlZoomProvider>
         </OlMapProvider>
