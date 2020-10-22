@@ -223,16 +223,17 @@ function StepValidator(props: Props) {
 
     useEffect(() => {
         const validState = hasRequiredFields(exportInfo) && !hasDisallowedSelection(exportInfo);
-        const sizesValid = exportInfo.providers.every(provider => {
-            // No provider should ever be in exceedingSize AND noMaxDataSize
-            // This returns true if the provider doesn't have a max data size, so it is validated via AOI size
-            // Or if failing that, it is NOT present in the exceedingSize array.
-            // Meaning, the provider's estimate is below its max data size and that max data size is a real value (not null).
-            const goodSize = !arrayHasValue(exceedingSize, provider.slug);
-            const noSizeAndGoodAoi = arrayHasValue(noMaxDataSize, provider.slug) && parseFloat(provider.max_selection) > aoiArea;
-            return goodSize || noSizeAndGoodAoi;
+        const providersValid = exportInfo.providers.every(provider => {
+            // If the AOI is exceeded, check to see if the data size is exceeded.
+            if (aoiArea > parseFloat(provider.max_selection)) {
+                if (arrayHasValue(noMaxDataSize, provider.slug)) {
+                    return false;
+                }
+                return !arrayHasValue(exceedingSize, provider.slug);
+            }
+            return true;
         });
-        const setEnabled = !walkthroughClicked && !areEstimatesLoading && aoiHasArea && validState && sizesValid;
+        const setEnabled = !walkthroughClicked && aoiHasArea && validState && providersValid;
         if (setEnabled && !nextEnabled) {
             setNextEnabled();
         } else if (!setEnabled && nextEnabled) {
