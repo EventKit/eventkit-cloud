@@ -605,9 +605,11 @@ class TestExportTasks(ExportTaskBase):
         expected_output_path = os.path.join(
             os.path.join(settings.EXPORT_STAGING_ROOT.rstrip("\/"), str(self.run.uid)), expected_outfile
         )
-        service_url = "https://abc.gov/arcgis/services/xyz"
-        expected_input_path = "https://abc.gov/arcgis/services/xyz/query?where=objectid%3Dobjectid&outfields=*&f=json"
-
+        service_url = "https://abc.gov/arcgis/services/x"
+        bbox = [1, 2, -3, 4]
+        expected_input_path = (
+            f"{service_url}/query?where=objectid=objectid&outfields=*&geometry=1%2C+2%2C+-3%2C+4&f=json"
+        )
         mock_convert.return_value = expected_output_path
 
         previous_task_result = {"source": expected_output_path}
@@ -634,6 +636,7 @@ class TestExportTasks(ExportTaskBase):
             job_name=job_name,
             projection=projection,
             service_url=service_url,
+            bbox=bbox,
         )
 
         mock_convert.assert_called_once_with(
@@ -642,7 +645,7 @@ class TestExportTasks(ExportTaskBase):
             output_file=expected_output_path,
             task_uid=str(saved_export_task.uid),
             projection=4326,
-            boundary=None,
+            boundary=bbox,
         )
 
         self.assertEqual(expected_output_path, result_a["result"])
@@ -656,6 +659,7 @@ class TestExportTasks(ExportTaskBase):
             job_name=job_name,
             projection=projection,
             service_url=f"{service_url}/",
+            bbox=bbox,
         )
 
         self.assertEqual(expected_output_path, result_b["result"])
