@@ -1150,7 +1150,7 @@ def arcgis_feature_service_export_task(
     stage_dir=None,
     job_name=None,
     bbox=None,
-    service_url=None,  # TODO: Should this ever be None?
+    service_url=None,
     projection=4326,
     *args,
     **kwargs,
@@ -1173,8 +1173,13 @@ def arcgis_feature_service_export_task(
         # if no url query we can just check for trailing slash and move on
         service_url = service_url.rstrip("/\\")
     finally:
-        query_params = {"where": "objectid%3Dobjectid", "outfields": "*", "f": "json"}
-        query_str = urlencode(query_params, safe="%*")
+        query_params = {
+            "where": "objectid=objectid",
+            "outfields": "*",
+            "geometry": str(bbox).strip("[]"),
+            "f": "json",
+        }
+        query_str = urlencode(query_params, safe="=*")
         service_url = urljoin(f"{service_url}/", f"query?{query_str}")
 
     out = gdalutils.convert(

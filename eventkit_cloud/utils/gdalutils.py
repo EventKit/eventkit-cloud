@@ -415,7 +415,7 @@ def get_dataset_names(input_file, output_file):
     :return: An output dataset name.
     """
     if not input_file:
-        raise Exception("No provided 'in' dataset")
+        raise Exception("Not provided: 'in' dataset")
 
     # Strip optional file prefixes
     file_prefix, in_dataset_file = strip_prefixes(input_file)
