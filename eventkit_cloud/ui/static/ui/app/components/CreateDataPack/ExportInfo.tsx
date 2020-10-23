@@ -229,7 +229,9 @@ function StepValidator(props: Props) {
                 if (arrayHasValue(noMaxDataSize, provider.slug)) {
                     return false;
                 }
-                return !arrayHasValue(exceedingSize, provider.slug);
+                // The AOI is exceeded, and data size can be used.
+                // Estimates can't be currently loading, and the provider must not be exceeding its data size
+                return !areEstimatesLoading && !arrayHasValue(exceedingSize, provider.slug);
             }
             return true;
         });
