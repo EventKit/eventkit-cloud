@@ -566,7 +566,7 @@ def convert_vector(
             "dstSRS": dst_srs,
             "accessMode": access_mode,
             "reproject": src_srs != dst_srs,
-            "skipFailures": False,
+            "skipFailures": True,
             "spatFilter": bbox,
             "options": ["-clipSrc", boundary] if boundary and not bbox else None,
         }

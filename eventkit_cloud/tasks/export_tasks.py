@@ -726,16 +726,16 @@ def sqlite_export_task(
     Function defining SQLITE export function.
     """
     result = result or {}
-    kml_in_dataset = parse_result(result, "source")
+    sqlite_in_dataset = parse_result(result, "source")
 
     provider_slug = get_provider_slug(task_uid)
-    kml_out_dataset = get_export_filename(stage_dir, job_name, projection, provider_slug, "sqlite")
+    sqlite_out_dataset = get_export_filename(stage_dir, job_name, projection, provider_slug, "sqlite")
     selection = parse_result(result, "selection")
 
     sqlite = gdalutils.convert(
         fmt="sqlite",
-        input_file=kml_in_dataset,
-        output_file=kml_out_dataset,
+        input_file=sqlite_in_dataset,
+        output_file=sqlite_out_dataset,
         task_uid=task_uid,
         boundary=selection,
         projection=projection,
