@@ -41,8 +41,21 @@ has no support for inline styles :(
     padding: 0px;
 }
 
-.menuItem {
+.menuItem > .row {
+    padding: 7px 10px;
     border-top: 1px solid rgba(112, 114, 116, .4);
+}
+
+.menuItem > .row:hover {
+    background-color: #f5f5f5;
+}
+
+.dropdown-item.menuItem:hover {
+    text-decoration: none;
+}
+
+.dropdown-menu {
+    overflow-x: hidden;
 }
 
 .menuItem > a {
