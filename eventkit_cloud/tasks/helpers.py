@@ -30,6 +30,8 @@ from eventkit_cloud.utils import auth_requests
 from eventkit_cloud.utils.gdalutils import get_band_statistics
 from eventkit_cloud.utils.generic import cd, get_file_paths  # NOQA
 
+import xml.etree.ElementTree as ET
+import xml.dom.minidom
 
 logger = logging.getLogger()
 
@@ -290,7 +292,7 @@ def generate_qgs_style(metadata, skip_formats=UNSUPPORTED_CARTOGRAPHY_FORMATS):
     }
 
     with open(style_file, "wb") as open_file:
-        open_file.write(render_to_string("styles/Style.qgs", context=context,).encode())
+        open_file.write(render_to_string("styles/Style.qgs", context=context, ).encode())
     return style_file
 
 
@@ -302,7 +304,7 @@ def remove_formats(metadata: dict, formats: List[str] = UNSUPPORTED_CARTOGRAPHY_
         :return: The path to the generated qgs file.
     """
     # Create a new dict to not alter the input data.
-    cleaned_metadata = copy.deepcopy(metadata)
+    cleaned_metadata = copy.deepcopy(metadata or {})
     for slug, data_source in metadata.get("data_sources", {}).items():
         cleaned_metadata["data_sources"][slug] = data_source
         cleaned_files = []
@@ -329,9 +331,9 @@ def get_human_readable_metadata_document(metadata):
     with open(metadata_file, "wb") as open_file:
         open_file.write(
             render_to_string("styles/metadata.txt", context={"metadata": metadata})
-            .replace("\r\n", "\n")
-            .replace("\n", "\r\n")
-            .encode()
+                .replace("\r\n", "\n")
+                .replace("\n", "\r\n")
+                .encode()
         )
     return metadata_file
 
@@ -459,8 +461,8 @@ def get_metadata(data_provider_task_record_uids: List[str]):
 
     data_provider_task_records = (
         DataProviderTaskRecord.objects.select_related("run__job")
-        .prefetch_related("run__job__projections")
-        .filter(uid__in=data_provider_task_record_uids)
+            .prefetch_related("run__job__projections")
+            .filter(uid__in=data_provider_task_record_uids)
     )
     run = data_provider_task_records.first().run
 
@@ -650,7 +652,6 @@ def get_all_rabbitmq_objects(api_url: str, rabbit_class: str) -> list:
 
 
 def delete_rabbit_objects(api_url: str, rabbit_classes: list = ["queues"], force: bool = False) -> None:
-
     api_url = api_url.rstrip("/")
     for rabbit_class in rabbit_classes:
         for rabbit_object in get_all_rabbitmq_objects(api_url, rabbit_class):
@@ -747,3 +748,63 @@ def add_export_run_files_to_zip(zipfile, run_zip_file):
         else:
             arcname = os.path.join(extra_directory, export_run_file.file.name)
             zipfile.write(export_run_file_path, arcname)
+
+
+def get_data_package_manifest(metadata: dict, ignore_files: list) -> str:
+    """
+    Uses a metadata to generate a manifest file.
+
+    <MissionPackageManifest version="2">
+       <Configuration>
+          <Parameter name="uid" value="<UID>"/>
+          <Parameter name="name" value="<Name>"/>
+       </Configuration>
+       <Contents>
+          <Content ignore="false" zipEntry="<file_path>">
+             <Parameter name="name" value="<file_name>"/>
+          </Content>
+       </Contents>
+    </MissionPackageManifest>
+
+    :param metadata: A dict of run contents.
+    :param ignore_files: A list of files to ignore.
+    :return: File path to manifest file.
+    """
+    from eventkit_cloud.tasks.helpers import normalize_name
+
+    cleaned_metadata = remove_formats(metadata, formats=UNSUPPORTED_CARTOGRAPHY_FORMATS)
+    stage_dir = os.path.join(settings.EXPORT_STAGING_ROOT, str(cleaned_metadata["run_uid"]))
+    job_name = normalize_name(cleaned_metadata["name"].lower())
+
+    root = ET.Element("MissionPackageManifest", attrib={"version": "2"})
+
+    # Set up configuration
+    configuration = ET.SubElement(root, "Configuration")
+    ET.SubElement(configuration, "Parameter", attrib={"name": "uid",
+                                                "value": metadata['run_uid']})
+    ET.SubElement(configuration, "Parameter", attrib={"name": "name",
+                                                "value": job_name})
+
+    # Add contents
+    contents = ET.SubElement(root, "Contents")
+    for data_source_slug, data_source_info in metadata['data_sources'].items():
+        for data_file in data_source_info['files']:
+            file_path = data_file['file_path']
+            content = ET.SubElement(contents, "Content", attrib={"ignore": "false",
+                                                                    "zipEntry": file_path})
+            ET.SubElement(content, "Parameter", attrib={"name": "name",
+                                                           "value": os.path.basename(file_path)})
+    # Ignore contents
+    for data_file in ignore_files:
+        file_path = data_file
+        content = ET.SubElement(contents, "Content", attrib={"ignore": "true",
+                                                                "zipEntry": file_path})
+        ET.SubElement(content, "Parameter", attrib={"name": "name",
+                                                       "value": os.path.basename(file_path)})
+
+    manifest = ET.ElementTree(root)
+
+    manifest_file = os.path.join(stage_dir, "manifest.xml")
+    with open(manifest_file, "wb") as open_file:
+        manifest.write(open_file)
+    return manifest_file
