@@ -10,7 +10,7 @@ import sqlite3
 
 from .artifact import Artifact
 from eventkit_cloud.feature_selection.feature_selection import slugify
-from eventkit_cloud.utils.ogr import OGR
+from eventkit_cloud.utils import gdalutils
 
 LOG = logging.getLogger(__name__)
 
@@ -449,7 +449,7 @@ def add_geojson_to_geopackage(geojson=None, gpkg=None, layer_name=None, task_uid
             task_uid: A task uid to update.
         Returns:
             True if the file is successfully uploaded.
-        """
+    """
     # This is just to make it easier to trace when user_details haven't been sent
     if user_details is None:
         user_details = {"username": "unknown-add_geojson_to_geopackage"}
@@ -468,8 +468,9 @@ def add_geojson_to_geopackage(geojson=None, gpkg=None, layer_name=None, task_uid
     with logging_open(geojson_file, "w", user_details=user_details) as open_file:
         open_file.write(geojson)
 
-    ogr = OGR(task_uid=task_uid)
-    gpkg = ogr.convert(file_format="GPKG", in_file=gpkg, out_file=geojson_file, params="-nln {0}".format(layer_name),)
+    gpkg = gdalutils.convert(
+        fmt="gpkg", input_file=gpkg, output_file=geojson_file, task_uid=task_uid, creation_options=f"-nln {layer_name}",
+    )
 
     return gpkg
 

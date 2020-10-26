@@ -85,6 +85,9 @@ def update_progress(
     if not progress and not estimated_finish:
         return
 
+    subtask_percentage = subtask_percentage or 100.0
+    subtask_start = subtask_start or 0
+
     if progress is not None:
         subtask_progress = min(progress, 100.0)
         absolute_progress = min(subtask_start + subtask_progress * (subtask_percentage / 100.0), 100.0)

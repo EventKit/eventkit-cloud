@@ -9,6 +9,7 @@ import socket
 import time
 import traceback
 from typing import List
+from urllib.parse import urlencode, urljoin
 
 from zipfile import ZipFile, ZIP_DEFLATED
 
@@ -67,7 +68,6 @@ from eventkit_cloud.tasks.metadata import metadata_tasks
 from eventkit_cloud.tasks.task_process import update_progress
 from eventkit_cloud.utils.auth_requests import get_cred
 from eventkit_cloud.utils import overpass, pbf, s3, mapproxy, wcs, geopackage, gdalutils
-from eventkit_cloud.utils.ogr import OGR
 from eventkit_cloud.utils.rocket_chat import RocketChat
 from eventkit_cloud.utils.stats.eta_estimator import ETA
 from eventkit_cloud.tasks.task_base import EventKitBaseTask
@@ -573,25 +573,25 @@ def shp_export_task(
     Function defining SHP export function.
     """
     result = result or {}
-    gpkg = parse_result(result, "source")
-    provider_slug = get_provider_slug(task_uid)
-    shapefile = get_export_filename(stage_dir, job_name, projection, provider_slug, "shp")
+    shp_in_dataset = parse_result(result, "source")
 
-    try:
-        ogr = OGR(task_uid=task_uid)
-        out = ogr.convert(
-            file_format="ESRI Shapefile",
-            in_file=gpkg,
-            out_file=shapefile,
-            params="-lco 'ENCODING=UTF-8' -overwrite -skipfailures",
-        )
-        result["file_format"] = "ESRI Shapefile"
-        result["result"] = out
-        result["shp"] = out
-        return result
-    except Exception as e:
-        logger.error("Exception while converting {} -> {}: {}".format(gpkg, shapefile, str(e)))
-        raise
+    provider_slug = get_provider_slug(task_uid)
+    shp_out_dataset = get_export_filename(stage_dir, job_name, projection, provider_slug, "shp")
+    selection = parse_result(result, "selection")
+
+    shp = gdalutils.convert(
+        fmt="shp",
+        input_file=shp_in_dataset,
+        output_file=shp_out_dataset,
+        task_uid=task_uid,
+        boundary=selection,
+        projection=projection,
+    )
+
+    result["file_format"] = "shp"
+    result["result"] = shp
+    result["source"] = shp
+    return result
 
 
 @app.task(name="Keyhole Markup Language (.kml)", bind=True, base=FormatTask, acks_late=True)
@@ -612,21 +612,25 @@ def kml_export_task(
     Function defining KML export function.
     """
     result = result or {}
+    kml_in_dataset = parse_result(result, "source")
 
-    gpkg = parse_result(result, "source")
     provider_slug = get_provider_slug(task_uid)
-    kmlfile = get_export_filename(stage_dir, job_name, projection, provider_slug, "kml")
-    try:
-        ogr = OGR(task_uid=task_uid)
-        out = ogr.convert(file_format="KML", in_file=gpkg, out_file=kmlfile)
-        result["file_extension"] = "kmz"
-        result["file_format"] = "libkml"
-        result["result"] = out
-        result["kmz"] = out
-        return result
-    except Exception as e:
-        logger.error("Raised exception in kml export, %s", str(e))
-        raise Exception(e)
+    kml_out_dataset = get_export_filename(stage_dir, job_name, projection, provider_slug, "kml")
+    selection = parse_result(result, "selection")
+
+    kml = gdalutils.convert(
+        fmt="kml",
+        input_file=kml_in_dataset,
+        output_file=kml_out_dataset,
+        task_uid=task_uid,
+        boundary=selection,
+        projection=projection,
+    )
+
+    result["file_format"] = "kml"
+    result["result"] = kml
+    result["source"] = kml
+    return result
 
 
 @app.task(name="GPS Exchange (.gpx)", bind=True, base=FormatTask, acks_late=True)
@@ -712,6 +716,7 @@ def sqlite_export_task(
     task_uid=None,
     stage_dir=None,
     job_name=None,
+    config=None,
     user_details=None,
     projection=4326,
     *args,
@@ -721,20 +726,25 @@ def sqlite_export_task(
     Function defining SQLITE export function.
     """
     result = result or {}
+    sqlite_in_dataset = parse_result(result, "source")
 
-    gpkg = parse_result(result, "source")
     provider_slug = get_provider_slug(task_uid)
-    sqlitefile = get_export_filename(stage_dir, job_name, projection, provider_slug, "sqlite")
-    try:
-        ogr = OGR(task_uid=task_uid)
-        out = ogr.convert(file_format="SQLite", in_file=gpkg, out_file=sqlitefile)
-        result["file_format"] = "sqlite"
-        result["result"] = out
-        result["sqlite"] = out
-        return result
-    except Exception as e:
-        logger.error("Raised exception in sqlite export, %s", str(e))
-        raise Exception(e)
+    sqlite_out_dataset = get_export_filename(stage_dir, job_name, projection, provider_slug, "sqlite")
+    selection = parse_result(result, "selection")
+
+    sqlite = gdalutils.convert(
+        fmt="sqlite",
+        input_file=sqlite_in_dataset,
+        output_file=sqlite_out_dataset,
+        task_uid=task_uid,
+        boundary=selection,
+        projection=projection,
+    )
+
+    result["file_format"] = "SQLite"
+    result["result"] = sqlite
+    result["source"] = sqlite
+    return result
 
 
 @app.task(name="Area of Interest (.geojson)", bind=True, base=ExportTask, acks_late=True)
@@ -1018,7 +1028,7 @@ def wfs_export_task(
     stage_dir=None,
     job_name=None,
     bbox=None,
-    service_url=None,
+    service_url=None,  # TODO: Should this ever be None?
     name=None,
     service_type=None,
     user_details=None,
@@ -1036,7 +1046,16 @@ def wfs_export_task(
 
     # Strip out query string parameters that might conflict
     service_url = re.sub(r"(?i)(?<=[?&])(version|service|request|typename|srsname)=.*?(&|$)", "", service_url,)
-    query_str = "SERVICE=WFS&VERSION=1.0.0&REQUEST=GetFeature&TYPENAME={}&SRSNAME=EPSG:4326".format(layer)
+
+    query_params = {
+        "SERVICE": "WFS",
+        "VERSION": "1.0.0",
+        "REQUEST": "GetFeature",
+        "TYPENAME": layer,
+        "SRSNAME": f"EPSG:{projection}",
+    }
+    query_str = urlencode(query_params, safe=":")
+
     if "?" in service_url:
         if "&" != service_url[-1]:
             service_url += "&"
@@ -1051,23 +1070,19 @@ def wfs_export_task(
         if not re.search(r"(?<=://)[a-zA-Z0-9\-._~]+:[a-zA-Z0-9\-._~]+(?=@)", url):
             url = re.sub(r"(?<=://)", "%s:%s@" % (user, pw), url)
 
-    if bbox:
-        params = "-skipfailures -spat {w} {s} {e} {n}".format(w=bbox[0], s=bbox[1], e=bbox[2], n=bbox[3])
-    else:
-        params = "-skipfailures"
+    out = gdalutils.convert(
+        fmt="gpkg", input_file=url, output_file=gpkg, task_uid=task_uid, projection=projection, boundary=bbox,
+    )
 
-    try:
-        ogr = OGR(task_uid=task_uid)
-        out = ogr.convert(file_format="GPKG", in_file=f"WFS:{url}", out_file=gpkg, params=params,)
-        result["result"] = out
-        result["source"] = out
-        # Check for geopackage contents; gdal wfs driver fails silently
-        if not geopackage.check_content_exists(out):
-            logger.warning("Empty response: Unknown layer name '{}' or invalid AOI bounds".format(layer))
-        return result
-    except Exception as e:
-        logger.error("Raised exception in wfs export: {}".format(str(e)))
-        raise Exception(e)
+    result["file_format"] = "gpkg"
+    result["result"] = out
+    result["source"] = out
+
+    # Check for geopackage contents; gdal wfs driver fails silently
+    if not geopackage.check_content_exists(out):
+        logger.warning("Empty response: Unknown layer name '{}' or invalid AOI bounds".format(layer))
+
+    return result
 
 
 @app.task(name="WCS Export", bind=True, base=ExportTask, abort_on_error=True, acks_late=True)
@@ -1143,38 +1158,38 @@ def arcgis_feature_service_export_task(
     """
     Function defining sqlite export for ArcFeatureService service.
     """
-    result = result or {}
 
+    result = result or {}
     provider_slug = get_provider_slug(task_uid)
     gpkg = get_export_filename(stage_dir, job_name, projection, provider_slug, "gpkg")
+
+    if not os.path.exists(os.path.dirname(gpkg)):
+        os.makedirs(os.path.dirname(gpkg), 6600)
+
     try:
-        if not os.path.exists(os.path.dirname(gpkg)):
-            os.makedirs(os.path.dirname(gpkg), 6600)
+        # remove any url query so we can add our own
+        service_url = service_url.split("/query?")[0]
+    except ValueError:
+        # if no url query we can just check for trailing slash and move on
+        service_url = service_url.rstrip("/\\")
+    finally:
+        query_params = {
+            "where": "objectid=objectid",
+            "outfields": "*",
+            "geometry": str(bbox).strip("[]"),
+            "f": "json",
+        }
+        query_str = urlencode(query_params, safe="=*")
+        service_url = urljoin(f"{service_url}/", f"query?{query_str}")
 
-        try:
-            # remove any url query so we can add our own
-            service_url = service_url.split("/query?")[0]
-        except ValueError:
-            # if no url query we can just check for trailing slash and move on
-            service_url = service_url.rstrip("/\\")
-        finally:
-            service_url = "{}{}".format(service_url, "/query?where=objectid%3Dobjectid&outfields=*&f=json")
+    out = gdalutils.convert(
+        fmt="gpkg", input_file=service_url, output_file=gpkg, task_uid=task_uid, boundary=bbox, projection=projection,
+    )
 
-        if bbox:
-            params = "-skipfailures -t_srs EPSG:3857 -spat_srs EPSG:4326 -spat {w} {s} {e} {n}".format(
-                w=bbox[0], s=bbox[1], e=bbox[2], n=bbox[3]
-            )
-        else:
-            params = "-skipfailures -t_srs EPSG:3857"
-
-        ogr = OGR(task_uid=task_uid)
-        out = ogr.convert(file_format="GPKG", in_file=service_url, out_file=gpkg, params=params)
-        result["result"] = out
-        result["source"] = out
-        return result
-    except Exception as e:
-        logger.error("Raised exception in arcgis feature service export, %s", str(e))
-        raise Exception(e)
+    result["file_format"] = "gpkg"
+    result["result"] = out
+    result["source"] = out
+    return result
 
 
 @app.task(name="Area of Interest (.gpkg)", bind=True, base=ExportTask)
