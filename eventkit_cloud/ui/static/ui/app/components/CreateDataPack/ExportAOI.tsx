@@ -14,7 +14,7 @@ import VectorSource from 'ol/source/Vector';
 import GeoJSONFormat from 'ol/format/GeoJSON';
 import Feature from 'ol/Feature';
 import Point from 'ol/geom/Point';
-import Polygon, { fromExtent } from 'ol/geom/Polygon';
+import Polygon, {fromExtent} from 'ol/geom/Polygon';
 import Style from 'ol/style/Style';
 import Icon from 'ol/style/Icon';
 import Fill from 'ol/style/Fill';
@@ -24,7 +24,7 @@ import ScaleLine from 'ol/control/ScaleLine';
 import Attribution from 'ol/control/Attribution';
 import Zoom from 'ol/control/Zoom';
 import ZoomToExtent from 'ol/control/ZoomToExtent';
-import { defaults } from 'ol/interaction';
+import {defaults} from 'ol/interaction';
 import Pointer from 'ol/interaction/Pointer';
 import Tile from 'ol/layer/Tile';
 import TileGrid from "ol/tilegrid/TileGrid";
@@ -60,6 +60,8 @@ import {useEffect} from "react";
 import {useEffectOnMount} from "../../utils/hooks/hooks";
 import MapDrawer from "./MapDrawer";
 import EventkitJoyride from "../common/JoyrideWrapper";
+import {RegionJustification} from "../StatusDownloadPage/RegionJustification";
+import {MapZoomLimiter} from "./MapZoomLimiter";
 
 export const WGS84 = 'EPSG:4326';
 
@@ -125,6 +127,15 @@ function StepValidator(props: Props) {
     });
 
     return null;
+}
+
+function getViewBbox(map: any) : GeoJSON.FeatureCollection {
+    const ext = map.getView().calculateExtent(map.getSize());
+    const geom = fromExtent(ext);
+    const coords = geom.getCoordinates();
+    const unwrappedCoords = unwrapCoordinates(coords, map.getView().getProjection());
+    geom.setCoordinates(unwrappedCoords);
+    return createGeoJSON(geom) as GeoJSON.FeatureCollection;
 }
 
 export class ExportAOI extends React.Component<Props, State> {
@@ -1060,15 +1071,33 @@ export class ExportAOI extends React.Component<Props, State> {
             aoi = this.bufferFeatures;
         }
 
+
         return (
             <div>
+                <MapZoomLimiter
+                    provider={{slug: this.state.selectedBaseMap.slug} as Eventkit.Provider}
+                    extent={(() => {
+                        const extentArray = [];
+                        if (Object.keys(this.props.aoiInfo.geojson).length) {
+                            extentArray.push(this.props.aoiInfo.geojson);
+                        }
+                        if (this.map) {
+                            extentArray.push(getViewBbox(this.map));
+                        }
+                        return extentArray;
+                    })()}
+                    map={this.map}
+                    zoomLevel={4}
+                />
                 <StepValidator {...this.props}/>
                 <EventkitJoyride
                     callback={this.callback}
                     ref={(instance) => {
                         this.joyride = instance;
                     }}
-                    getHelpers={(helpers: any) => {this.helpers = helpers}}
+                    getHelpers={(helpers: any) => {
+                        this.helpers = helpers
+                    }}
                     steps={steps}
                     stepIndex={this.state.stepIndex}
                     continuous

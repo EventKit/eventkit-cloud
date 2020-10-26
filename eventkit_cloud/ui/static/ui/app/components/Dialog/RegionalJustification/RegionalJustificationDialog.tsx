@@ -16,6 +16,7 @@ import {ApiStatuses, useAsyncRequest} from "../../../utils/hooks/api";
 import {getCookie} from "../../../utils/generic";
 import TextLabel from "./TextLabel";
 import JustificationDropdown from "./JustificationDropdown";
+import {renderIf} from "../../../utils/renderIf";
 
 
 const jss = (theme: Eventkit.Theme & Theme) => createStyles({
@@ -95,20 +96,11 @@ const jss = (theme: Eventkit.Theme & Theme) => createStyles({
     },
 });
 
-// Remove this once the real renderIf gets added -- currently only in master, not feature branch
-export function renderIf(callback, bool) {
-    return (bool) ? callback() : null;
-}
-
 export interface RegionalJustificationDialogPropsBase {
     isOpen: boolean;
     onSubmit?: () => void;
     onClose: () => void;
 }
-
-RegionalJustificationDialog.defaultProps = {
-    onSubmit: () => undefined,
-} as RegionalJustificationDialogProps
 
 export interface RegionalJustificationDialogProps extends RegionalJustificationDialogPropsBase {
     policy: Eventkit.RegionPolicy;
@@ -122,7 +114,7 @@ export function RegionalJustificationDialog(props: RegionalJustificationDialogPr
         isOpen, policy, onClose, onSubmit, classes, width,
     } = props;
 
-    const [{status, response}, requestCall] = useAsyncRequest();
+    const [{status, }, requestCall] = useAsyncRequest();
     const makeRequest = (regionUid: string, id: string, justificationValue?: string) => {
         requestCall({
             url: '/api/regions/justifications',
@@ -298,7 +290,20 @@ export function RegionalJustificationDialog(props: RegionalJustificationDialogPr
             selectedOption.id,
             (selectedOption.suboption) ? optionValues[selectedOption.id] : undefined,
         );
-        onSubmit();
+    }
+
+    useEffect(() => {
+        if (ApiStatuses.isSuccess(status)) {
+            onSubmit();
+        }
+    }, [status]);
+
+    function onCloseAction() {
+        // If the submit resulted in an error, we force the user to go back
+        if (ApiStatuses.isError(status)) {
+            history.back();
+            return;
+        }
         onClose();
     }
 
@@ -310,7 +315,7 @@ export function RegionalJustificationDialog(props: RegionalJustificationDialogPr
             className="qa-ProviderError-BaseDialog"
             show={isOpen}
             title={renderTitle()}
-            onClose={onClose}
+            onClose={onCloseAction}
             {...getActionProps()}
             {...getDialogProps()}
         >
@@ -318,7 +323,7 @@ export function RegionalJustificationDialog(props: RegionalJustificationDialogPr
                 <div style={{display: 'flex'}}>
                     <CircularProgress style={{margin: 'auto'}}/>
                 </div>
-            ), !policy)}
+            ), !policy || ApiStatuses.isFetching(status))}
             {renderIf(() => (
                 <div className={`${!isSmallScreen() ? classes.outerContainer : classes.outerContainerSm}`}>
                     {renderHeader()}
@@ -365,7 +370,12 @@ export function RegionalJustificationDialog(props: RegionalJustificationDialogPr
                         </Button>
                     </div>
                 </div>
-            ), !!policy)}
+            ), !!policy && !ApiStatuses.isError(status) && !ApiStatuses.isFetching(status))}
+            {renderIf(() => (
+                <div>
+                    Server error.
+                </div>
+            ), ApiStatuses.isError(status))}
         </BaseDialog>
     );
 }
