@@ -1,6 +1,6 @@
 import sinon from 'sinon';
 import raf from 'raf';
-import { get } from 'ol/proj';
+import {get} from 'ol/proj';
 import View from 'ol/View';
 import * as extent from 'ol/extent';
 import Feature from 'ol/Feature';
@@ -11,6 +11,7 @@ import VectorSource from 'ol/source/Vector';
 import VectorLayer from 'ol/layer/Vector';
 import WKTReader from 'jsts/org/locationtech/jts/io/WKTReader';
 import * as utils from '../../utils/mapUtils';
+import {convertGeoJSONtoJSTS, covers} from "../../utils/mapUtils";
 
 // this polyfills requestAnimationFrame in the test browser, required for ol3
 raf.polyfill();
@@ -19,7 +20,7 @@ describe('mapUtils', () => {
     it('jstsGeomToOlGeom should convert JSTS to Ol', () => {
         const Reader = new WKTReader();
         const jstsGeom = Reader.read('POINT (-20 0)');
-        expect(jstsGeom.getCoordinate()).toEqual({ x: -20, y: 0, z: undefined });
+        expect(jstsGeom.getCoordinate()).toEqual({x: -20, y: 0, z: undefined});
         const olGeom = utils.jstsGeomToOlGeom(jstsGeom);
         expect(olGeom instanceof Point).toBe(true);
         const expected = [-20, 0];
@@ -29,7 +30,7 @@ describe('mapUtils', () => {
     it('convertJSTSGeometry should covert a JSTS from one SRS to another', () => {
         const Reader = new WKTReader();
         const jstsGeom = Reader.read('POINT (-20 0)');
-        expect(jstsGeom.getCoordinate()).toEqual({ x: -20, y: 0, z: undefined });
+        expect(jstsGeom.getCoordinate()).toEqual({x: -20, y: 0, z: undefined});
         const newGeom = utils.transformJSTSGeometry(jstsGeom, 'EPSG:4326', 'EPSG:3857');
         expect(newGeom.getCoordinate()).toEqual({
             x: -2226389.8158654715,
@@ -37,7 +38,7 @@ describe('mapUtils', () => {
             z: undefined,
         });
         const newerGeom = utils.transformJSTSGeometry(newGeom, 'EPSG:3857', 'EPSG:4326');
-        expect(newerGeom.getCoordinate()).toEqual({ x: -20, y: 0, z: undefined });
+        expect(newerGeom.getCoordinate()).toEqual({x: -20, y: 0, z: undefined});
         expect(newerGeom).toEqual(jstsGeom);
     });
 
@@ -68,7 +69,7 @@ describe('mapUtils', () => {
     });
 
     it('convertGeoJSONtoJSTS should convert GeoJSON Point to JSTS Geometry', () => {
-        const point = { type: 'Point', coordinates: [100.0, 0.0] };
+        const point = {type: 'Point', coordinates: [100.0, 0.0]};
         const returnedGeom = utils.convertGeoJSONtoJSTS(point);
         expect(returnedGeom.getGeometryType()).toEqual('Polygon');
     });
@@ -216,18 +217,18 @@ describe('mapUtils', () => {
             features: [
                 {
                     type: 'Feature',
-                    properties: { name: 'feature1' },
-                    geometry: { type: 'Point', coordinates: [1, 1] },
+                    properties: {name: 'feature1'},
+                    geometry: {type: 'Point', coordinates: [1, 1]},
                 },
                 {
                     type: 'Feature',
-                    properties: { name: 'feature2' },
-                    geometry: { type: 'Point', coordinates: [2, 2] },
+                    properties: {name: 'feature2'},
+                    geometry: {type: 'Point', coordinates: [2, 2]},
                 },
                 {
                     type: 'Feature',
-                    properties: { name: 'feature3' },
-                    geometry: { type: 'Point', coordinates: [3, 3] },
+                    properties: {name: 'feature3'},
+                    geometry: {type: 'Point', coordinates: [3, 3]},
                 },
             ],
         };
@@ -246,18 +247,18 @@ describe('mapUtils', () => {
             features: [
                 {
                     type: 'Feature',
-                    properties: { name: 'feature1' },
-                    geometry: { type: 'Point', coordinates: [1, 1] },
+                    properties: {name: 'feature1'},
+                    geometry: {type: 'Point', coordinates: [1, 1]},
                 },
                 {
                     type: 'Feature',
-                    properties: { name: 'feature2' },
-                    geometry: { type: 'Point', coordinates: [2, 2] },
+                    properties: {name: 'feature2'},
+                    geometry: {type: 'Point', coordinates: [2, 2]},
                 },
                 {
                     type: 'Feature',
-                    properties: { name: 'feature3' },
-                    geometry: { type: 'Point', coordinates: [3, 3] },
+                    properties: {name: 'feature3'},
+                    geometry: {type: 'Point', coordinates: [3, 3]},
                 },
             ],
         };
@@ -418,7 +419,7 @@ describe('mapUtils', () => {
     it('createGeoJSONGeometry should take a ol3 geom and return the geom in geojson format', () => {
         const coords = [-1, 1];
         const geom = new Point(coords);
-        const expected = { type: 'Point', coordinates: [-1, 1] };
+        const expected = {type: 'Point', coordinates: [-1, 1]};
         const cloneSpy = sinon.spy(Point.prototype, 'clone');
         const coordsSpy = sinon.spy(Point.prototype, 'getCoordinates');
         expect(utils.createGeoJSONGeometry(geom)).toEqual(expected);
@@ -431,7 +432,7 @@ describe('mapUtils', () => {
     it('clearDraw should get the layer source then clear it', () => {
         const clear = sinon.spy();
         const layer = {
-            getSource: sinon.spy(() => ({ clear })),
+            getSource: sinon.spy(() => ({clear})),
         };
         utils.clearDraw(layer);
         expect(layer.getSource.calledOnce).toBe(true);
@@ -450,8 +451,9 @@ describe('mapUtils', () => {
         });
         const featureSpy = sinon.spy(Feature.prototype, 'getGeometry');
         const geomSpy = sinon.spy(Polygon.prototype, 'getType');
-        const fit = sinon.spy(() => {});
-        const map = { getView: sinon.spy(() => ({ fit })) };
+        const fit = sinon.spy(() => {
+        });
+        const map = {getView: sinon.spy(() => ({fit}))};
         utils.zoomToFeature(feature, map);
         expect(featureSpy.calledOnce).toBe(true);
         expect(geomSpy.calledOnce).toBe(true);
@@ -462,21 +464,21 @@ describe('mapUtils', () => {
     });
 
     it('zoomToFeature should fit bbox if point feature has one', () => {
-        const feature = new Feature({ geometry: new Point([1, 1]) });
-        feature.setProperties({ bbox: [1, 1, 1, 1] });
+        const feature = new Feature({geometry: new Point([1, 1])});
+        feature.setProperties({bbox: [1, 1, 1, 1]});
         const fitSpy = sinon.spy();
-        const map = { getView: sinon.spy(() => ({ fit: fitSpy })) };
+        const map = {getView: sinon.spy(() => ({fit: fitSpy}))};
         utils.zoomToFeature(feature, map);
         expect(fitSpy.calledOnce).toBe(true);
         expect(fitSpy.calledWith([1, 1, 1, 1])).toBe(true);
     });
 
     it('zoomToFeature should center on geom if it is a point type', () => {
-        const feature = new Feature({ geometry: new Point([1, 1]) });
+        const feature = new Feature({geometry: new Point([1, 1])});
         const getTypeSpy = sinon.spy(Point.prototype, 'getType');
         const getCoordsSpy = sinon.spy(Point.prototype, 'getCoordinates');
         const center = sinon.spy();
-        const map = { getView: sinon.spy(() => ({ setCenter: center })) };
+        const map = {getView: sinon.spy(() => ({setCenter: center}))};
         utils.zoomToFeature(feature, map);
         expect(getTypeSpy.calledOnce).toBe(true);
         expect(map.getView.calledOnce).toBe(true);
@@ -537,14 +539,14 @@ describe('mapUtils', () => {
     });
 
     it('isViewOutsideValidExtent should return true or false', () => {
-        const view = new View({ center: [-190, 40], projection: 'EPSG:4326', zoom: 1 });
+        const view = new View({center: [-190, 40], projection: 'EPSG:4326', zoom: 1});
         expect(utils.isViewOutsideValidExtent(view)).toBe(true);
-        const view2 = new View({ center: [-20, 20], projection: 'EPSG:4326', zoom: 1 });
+        const view2 = new View({center: [-20, 20], projection: 'EPSG:4326', zoom: 1});
         expect(utils.isViewOutsideValidExtent(view2)).toBe(false);
     });
 
     it('goToValidExtent should set the center of view to be inside the valid map extent', () => {
-        const view = new View({ center: [-190, 20], projection: 'EPSG:4326', zoom: 1 });
+        const view = new View({center: [-190, 20], projection: 'EPSG:4326', zoom: 1});
         expect(utils.goToValidExtent(view)).toEqual([170, 20]);
         expect(view.getCenter()).toEqual([170, 20]);
     });
@@ -601,18 +603,18 @@ describe('mapUtils', () => {
     it('isVertx should check to see if a feature coordinate lies on the pixel and return the vertex if its with the tolerance', () => {
         const pixel = [10, 10];
         const tolerance = 2;
-        const feature = new Feature({ geometry: new Point([1, 1]) });
+        const feature = new Feature({geometry: new Point([1, 1])});
         const getPixelStub = sinon.stub().returns([8, 8]);
-        const map = { getPixelFromCoordinate: getPixelStub };
+        const map = {getPixelFromCoordinate: getPixelStub};
         expect(utils.isVertex(pixel, feature, tolerance, map)).toEqual([1, 1]);
     });
 
     it('isVertex should return false if feature coords are not within the tolerance', () => {
         const pixel = [10, 10];
         const tolerance = 2;
-        const feature = new Feature({ geometry: new Point([1, 1]) });
+        const feature = new Feature({geometry: new Point([1, 1])});
         const getPixelStub = sinon.stub().returns([7, 7]);
-        const map = { getPixelFromCoordinate: getPixelStub };
+        const map = {getPixelFromCoordinate: getPixelStub};
         expect(utils.isVertex(pixel, feature, tolerance, map)).toBe(false);
     });
 
@@ -795,5 +797,87 @@ describe('mapUtils', () => {
             features: [],
         };
         expect(utils.getDominantGeometry(collection2)).toEqual(null);
+    });
+
+    it('should confirm two overlapping extents are covered', () => {
+        const featureCollectionExtent = convertGeoJSONtoJSTS({
+            type: 'FeatureCollection',
+            features: [{
+                type: 'Feature',
+                geometry: {
+                    type: 'Polygon',
+                    coordinates: [
+                        [
+                            [100.0, 0.0],
+                            [101.0, 0.0],
+                            [101.0, 1.0],
+                            [100.0, 1.0],
+                            [100.0, 0.0],
+                        ],
+                    ],
+                },
+            }],
+        }, 1, false);
+
+        const featureCollectionPolicy = convertGeoJSONtoJSTS({
+            type: 'FeatureCollection',
+            features: [{
+                type: 'Feature',
+                geometry: {
+                    type: 'Polygon',
+                    coordinates: [
+                        [
+                            [100.0, 0.0],
+                            [102.0, 0.0],
+                            [102.0, 1.0],
+                            [100.0, 1.0],
+                            [100.0, 0.0],
+                        ],
+                    ],
+                },
+            }],
+        }, 1, false);
+        expect(covers(featureCollectionExtent, featureCollectionPolicy)).toBe(true);
+    });
+
+    it('should confirm two non-overlapping extents are not covered', () => {
+        const featureCollectionExtent = convertGeoJSONtoJSTS({
+            type: 'FeatureCollection',
+            features: [{
+                type: 'Feature',
+                geometry: {
+                    type: 'Polygon',
+                    coordinates: [
+                        [
+                            [100.0, 0.0],
+                            [101.0, 0.0],
+                            [101.0, 1.0],
+                            [100.0, 1.0],
+                            [100.0, 0.0],
+                        ],
+                    ],
+                },
+            }],
+        }, 1, false);
+
+        const featureCollectionPolicy = convertGeoJSONtoJSTS({
+            type: 'FeatureCollection',
+            features: [{
+                type: 'Feature',
+                geometry: {
+                    type: 'Polygon',
+                    coordinates: [
+                        [
+                            [98.0, 0.0],
+                            [99.0, 0.0],
+                            [99.0, 0.5],
+                            [98.0, 0.5],
+                            [98.0, 0.0],
+                        ],
+                    ],
+                },
+            }],
+        }, 1, false);
+        expect(covers(featureCollectionExtent, featureCollectionPolicy)).toBe(false);
     });
 });

@@ -102,10 +102,6 @@ export interface RegionalJustificationDialogPropsBase {
     onClose: () => void;
 }
 
-RegionalJustificationDialog.defaultProps = {
-    onSubmit: () => undefined,
-} as RegionalJustificationDialogProps
-
 export interface RegionalJustificationDialogProps extends RegionalJustificationDialogPropsBase {
     policy: Eventkit.RegionPolicy;
     theme: Eventkit.Theme & Theme;
