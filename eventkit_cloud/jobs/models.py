@@ -399,15 +399,15 @@ class Region(UIDMixin, TimeStampedModelMixin):
 
 
 class RegionalPolicy(UIDMixin, TimeStampedModelMixin):
-    name = models.CharField(max_length=100)
+    name = models.CharField(max_length=255)
     region = models.ForeignKey(Region, on_delete=models.CASCADE, related_name="policies")
     providers = models.ManyToManyField(DataProvider, related_name="regional_policies")
     policies = JSONField()
-    policy_title_text = models.CharField(max_length=100)
+    policy_title_text = models.CharField(max_length=255)
     policy_header_text = models.TextField(null=True, blank=True)
     policy_footer_text = models.TextField(null=True, blank=True)
-    policy_cancel_text = models.CharField(max_length=100, null=True, blank=True)
-    policy_cancel_button_text = models.CharField(max_length=100)
+    policy_cancel_text = models.CharField(max_length=255, null=True, blank=True)
+    policy_cancel_button_text = models.CharField(max_length=255)
     justification_options = JSONField()
 
     class Meta:
@@ -423,8 +423,8 @@ class RegionalJustification(UIDMixin, TimeStampedModelMixin):
     """
 
     justification_id = models.IntegerField()
-    justification_name = models.CharField(max_length=100)
-    justification_suboption_value = models.CharField(max_length=1000, null=True, blank=True)
+    justification_name = models.CharField(max_length=255)
+    justification_suboption_value = models.TextField(null=True, blank=True)
     regional_policy = models.ForeignKey(RegionalPolicy, on_delete=models.CASCADE, related_name="justifications")
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="justification_user")
 
