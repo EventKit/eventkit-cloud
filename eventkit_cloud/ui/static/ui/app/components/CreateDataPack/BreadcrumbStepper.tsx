@@ -208,7 +208,6 @@ export class BreadcrumbStepper extends React.Component<Props, State> {
         const labelStyle = {
             color: this.props.theme.eventkit.colors.white,
             height: '50px',
-            minWidth: '200px',
             width: '60%',
             display: 'inline-flex',
             marginLeft: '24px',
