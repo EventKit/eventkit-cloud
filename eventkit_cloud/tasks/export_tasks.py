@@ -1401,6 +1401,7 @@ def create_zip_task(
                 get_provider_staging_dir(metadata["run_uid"], data_provider_task_record_slug), zip_file_name,
             ),
             static_files=get_style_files(),
+            metadata=metadata,
         )
     else:
         raise Exception("Could not create a zip file because there were not files to include.")
@@ -1451,8 +1452,9 @@ def zip_files(include_files, run_zip_file_uid, file_path=None, static_files=None
     Contains the organization for the files within the archive.
     :param include_files: A list of files to be included.
     :param run_zip_file_uid: The UUID of the zip file.
-    :param file_path: An optional name for the archive.
+    :param file_path: The name for the archive.
     :param static_files: Files that are in the same location for every datapack (i.e. templates and metadata files).
+    :param metadata: A dict of user requested file information.
     :return: The zipfile path.
     """
 
@@ -1466,12 +1468,9 @@ def zip_files(include_files, run_zip_file_uid, file_path=None, static_files=None
 
     run_zip_file = RunZipFile.objects.get(uid=run_zip_file_uid)
 
-    include_files += [get_data_package_manifest(metadata,
-                                                ignore_files=[relative_path for relative_path in static_files.values()]
-                                                             + include_files)]
-
     files = [filename for filename in include_files if os.path.splitext(filename)[-1] not in BLACKLISTED_ZIP_EXTS]
 
+    manifest_ignore_files = []
     logger.debug("Opening the zipfile.")
     with ZipFile(file_path, "a", compression=ZIP_DEFLATED, allowZip64=True) as zipfile:
         if static_files:
@@ -1493,6 +1492,7 @@ def zip_files(include_files, run_zip_file_uid, file_path=None, static_files=None
                         filename = os.path.join(
                             Directory.ARCGIS.value, Directory.TEMPLATES.value, "{0}".format(basename),
                         )
+                manifest_ignore_files.append(filename)
                 zipfile.write(absolute_file_path, arcname=filename)
         for filepath in files:
             # This takes files from the absolute stage paths and puts them in the provider directories in the data dir.
@@ -1504,12 +1504,15 @@ def zip_files(include_files, run_zip_file_uid, file_path=None, static_files=None
             if filepath.endswith((".qgs", "ReadMe.txt")):
                 # put the style file in the root of the zip
                 filename = "{0}{1}".format(name, ext)
+                manifest_ignore_files.append(filename)
             elif filepath.endswith("metadata.json"):
                 # put the metadata file in arcgis folder unless it becomes more useful.
                 filename = os.path.join(Directory.ARCGIS.value, "{0}{1}".format(name, ext))
+                manifest_ignore_files.append(filename)
             elif filepath.endswith(PREVIEW_TAIL):
-                download_filename = get_download_filename("preview", ext, data_provider_slug=provider_slug, )
+                download_filename = get_download_filename("preview", ext, data_provider_slug=provider_slug,)
                 filename = get_archive_data_path(provider_slug, download_filename)
+                manifest_ignore_files.append(filename)
             elif os.path.basename(filepath) == "manifest.xml":
                 filename = os.path.join("manifest", "{0}{1}".format(name, ext))
             else:
@@ -1520,6 +1523,10 @@ def zip_files(include_files, run_zip_file_uid, file_path=None, static_files=None
             run_zip_file.message = f"Adding {filename} to zip archive."
             zipfile.write(filepath, arcname=filename)
 
+        manifest_file = get_data_package_manifest(name=os.path.basename(file_path),
+                                                  metadata=metadata,
+                                                  ignore_files=manifest_ignore_files)
+        zipfile.write(manifest_file, arcname=os.path.join('manifest', os.path.basename(manifest_file)))
         add_export_run_files_to_zip(zipfile, run_zip_file)
 
         if zipfile.testzip():
@@ -1538,8 +1545,6 @@ class FinalizeRunBase(EventKitBaseTask):
         Cleans up staging directory.
         Updates run with finish time.
         Emails user notification.
-        """
-        """
         """
         result = result or {}
 

@@ -6,21 +6,23 @@ import re
 import requests
 import signal
 import time
+import urllib.parse
+import uuid
+import xml.dom.minidom
+import xml.etree.ElementTree as ET
 import yaml
-
 from django.conf import settings
 from django.core.cache import cache
 from django.db.models import Q
 from django.template.loader import render_to_string
 from django.utils import timezone
 from django.utils.text import slugify
-
 from enum import Enum
 from functools import reduce
 from numpy import linspace
 from operator import itemgetter
 from typing import List, Optional
-import urllib.parse
+from xml.dom import minidom
 
 from eventkit_cloud.core.helpers import get_cached_model
 from eventkit_cloud.jobs.models import DataProvider, ExportFormat
@@ -29,9 +31,6 @@ from eventkit_cloud.tasks.models import DataProviderTaskRecord, ExportRunFile, E
 from eventkit_cloud.utils import auth_requests
 from eventkit_cloud.utils.gdalutils import get_band_statistics
 from eventkit_cloud.utils.generic import cd, get_file_paths  # NOQA
-
-import xml.etree.ElementTree as ET
-import xml.dom.minidom
 
 logger = logging.getLogger()
 
@@ -304,8 +303,10 @@ def remove_formats(metadata: dict, formats: List[str] = UNSUPPORTED_CARTOGRAPHY_
         :return: The path to the generated qgs file.
     """
     # Create a new dict to not alter the input data.
-    cleaned_metadata = copy.deepcopy(metadata or {})
-    for slug, data_source in metadata.get("data_sources", {}).items():
+    if metadata is None:
+        metadata = {}
+    cleaned_metadata = copy.deepcopy(metadata)
+    for slug, data_source in cleaned_metadata.get("data_sources", {}).items():
         cleaned_metadata["data_sources"][slug] = data_source
         cleaned_files = []
         for file_info in cleaned_metadata["data_sources"][slug].get("files"):
@@ -750,7 +751,7 @@ def add_export_run_files_to_zip(zipfile, run_zip_file):
             zipfile.write(export_run_file_path, arcname)
 
 
-def get_data_package_manifest(metadata: dict, ignore_files: list) -> str:
+def get_data_package_manifest(name: str, metadata: dict, ignore_files: list) -> str:
     """
     Uses a metadata to generate a manifest file.
 
@@ -773,38 +774,59 @@ def get_data_package_manifest(metadata: dict, ignore_files: list) -> str:
     from eventkit_cloud.tasks.helpers import normalize_name
 
     cleaned_metadata = remove_formats(metadata, formats=UNSUPPORTED_CARTOGRAPHY_FORMATS)
-    stage_dir = os.path.join(settings.EXPORT_STAGING_ROOT, str(cleaned_metadata["run_uid"]))
-    job_name = normalize_name(cleaned_metadata["name"].lower())
+
+    if cleaned_metadata:
+        run_uid = cleaned_metadata.get("run_uid")
+        job_name = normalize_name(cleaned_metadata["name"].lower())
+    else:
+        run_uid = uuid.uuid4()
+        job_name = "DataPack"
+
+    stage_dir = os.path.join(settings.EXPORT_STAGING_ROOT, str(run_uid))
 
     root = ET.Element("MissionPackageManifest", attrib={"version": "2"})
 
     # Set up configuration
     configuration = ET.SubElement(root, "Configuration")
     ET.SubElement(configuration, "Parameter", attrib={"name": "uid",
-                                                "value": metadata['run_uid']})
+                                                      "value": run_uid})
+    # use the first 30 characters from the name
     ET.SubElement(configuration, "Parameter", attrib={"name": "name",
-                                                "value": job_name})
+                                                      "value": name[:30]})
 
     # Add contents
     contents = ET.SubElement(root, "Contents")
-    for data_source_slug, data_source_info in metadata['data_sources'].items():
+    for data_source_slug, data_source_info in cleaned_metadata.get('data_sources', {}).items():
         for data_file in data_source_info['files']:
-            file_path = data_file['file_path']
+            file_path = os.path.relpath(data_file['file_path'])
             content = ET.SubElement(contents, "Content", attrib={"ignore": "false",
-                                                                    "zipEntry": file_path})
-            ET.SubElement(content, "Parameter", attrib={"name": "name",
-                                                           "value": os.path.basename(file_path)})
+                                                                 "zipEntry": file_path})
+            # ET.SubElement(content, "Parameter", attrib={"name": "name",
+            #                                             "value": os.path.basename(file_path)})
     # Ignore contents
     for data_file in ignore_files:
-        file_path = data_file
+        file_path = os.path.relpath(data_file)
+        # Switch to false for debugging
         content = ET.SubElement(contents, "Content", attrib={"ignore": "true",
-                                                                "zipEntry": file_path})
-        ET.SubElement(content, "Parameter", attrib={"name": "name",
-                                                       "value": os.path.basename(file_path)})
+                                                             "zipEntry": file_path})
+        # ET.SubElement(content, "Parameter", attrib={"name": "name",
+        #                                             "value": os.path.basename(file_path)})
 
-    manifest = ET.ElementTree(root)
+    ET.SubElement(contents, "Content", attrib={"ignore": "false",
+                                               "zipEntry": os.path.join('manifest', 'manifest.xml')})
 
+    # manifest = ET.ElementTree(root)
+
+    # Pretty print using xml dom
     manifest_file = os.path.join(stage_dir, "manifest.xml")
-    with open(manifest_file, "wb") as open_file:
-        manifest.write(open_file)
+    manifest = minidom.parseString(ET.tostring(root)).toprettyxml(indent="   ")
+
+    # Strip the header (and newline) that minidom forces.  Consider lxml in future.
+    manifest = "\n".join(manifest.split("\n")[1:-1])
+
+    if not os.path.isdir(os.path.dirname(manifest_file)):
+        os.makedirs(os.path.dirname(manifest_file))
+
+    with open(manifest_file, "w") as open_file:
+        open_file.write(manifest)
     return manifest_file
