@@ -10,7 +10,7 @@ import ExpandLess from '@material-ui/icons/ExpandLess';
 import ExpandMore from '@material-ui/icons/ExpandMore';
 import ProviderStatusCheck from './ProviderStatusCheck';
 import BaseDialog from '../Dialog/BaseDialog';
-import {arrayHasValue, formatMegaBytes, getDuration, isZoomLevelInRange, supportsZoomLevels} from '../../utils/generic';
+import {formatMegaBytes, getDuration, isZoomLevelInRange, supportsZoomLevels} from '../../utils/generic';
 import {Typography} from "@material-ui/core";
 import ZoomLevelSlider from "./ZoomLevelSlider";
 import {connect} from "react-redux";
@@ -33,6 +33,7 @@ import {useEffect, useRef, useState} from "react";
 import {DepsHashers, useEffectOnMount} from "../../utils/hooks/hooks";
 import {useAppContext} from "../ApplicationContext";
 import {useJobValidationContext} from "./context/JobValidation";
+import {hasValue} from "../../utils/arrays";
 
 const jss = (theme: Theme & Eventkit.Theme) => createStyles({
     container: {
@@ -150,9 +151,9 @@ export function DataProvider(props: Props) {
     });
 
     const [providerHasEstimates, setHasEstimates] = useState(() =>
-        arrayHasValue(haveAvailableEstimates, provider.slug) && !arrayHasValue(noMaxDataSize, provider.slug));
+        hasValue(haveAvailableEstimates, provider.slug) && !hasValue(noMaxDataSize, provider.slug));
     useEffect(() => {
-        setHasEstimates(arrayHasValue(haveAvailableEstimates, provider.slug) && !arrayHasValue(noMaxDataSize, provider.slug));
+        setHasEstimates(hasValue(haveAvailableEstimates, provider.slug) && !hasValue(noMaxDataSize, provider.slug));
     }, [DepsHashers.arrayHash(haveAvailableEstimates), DepsHashers.arrayHash(noMaxDataSize)]);
 
     const areEstimatesLoading = !providerInfo.estimates;

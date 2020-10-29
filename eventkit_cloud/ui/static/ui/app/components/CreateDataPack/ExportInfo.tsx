@@ -3,7 +3,6 @@ import * as React from 'react';
 import {createStyles, Theme, withStyles, withTheme} from '@material-ui/core/styles';
 import {connect} from 'react-redux';
 import axios from 'axios';
-import {arrayHasValue} from '../../utils/generic';
 import {Step, StoreHelpers} from 'react-joyride';
 import List from '@material-ui/core/List';
 import Paper from '@material-ui/core/Paper';
@@ -29,6 +28,7 @@ import RequestDataSource from "./RequestDataSource";
 import {Link} from "@material-ui/core";
 import {useState} from "react";
 import EventkitJoyride from "../common/JoyrideWrapper";
+import {elementsEqual, hasValue} from "../../utils/arrays";
 
 const jss = (theme: Eventkit.Theme & Theme) => createStyles({
     underlineStyle: {
@@ -212,6 +212,10 @@ export function hasDisallowedSelection(exportInfo: Eventkit.Store.ExportInfo) {
     });
 }
 
+function FormatCompatibility(props: any) {
+
+}
+
 function StepValidator(props: Props) {
     const { setNextEnabled, setNextDisabled, walkthroughClicked, exportInfo, nextEnabled } = props;
     const { aoiHasArea, areEstimatesLoading, dataSizeInfo, aoiArea } = useJobValidationContext();
@@ -226,12 +230,12 @@ function StepValidator(props: Props) {
         const providersValid = exportInfo.providers.every(provider => {
             // If the AOI is exceeded, check to see if the data size is exceeded.
             if (aoiArea > parseFloat(provider.max_selection)) {
-                if (arrayHasValue(noMaxDataSize, provider.slug)) {
+                if (hasValue(noMaxDataSize, provider.slug)) {
                     return false;
                 }
                 // The AOI is exceeded, and data size can be used.
                 // Estimates can't be currently loading, and the provider must not be exceeding its data size
-                return !areEstimatesLoading && !arrayHasValue(exceedingSize, provider.slug);
+                return !areEstimatesLoading && !hasValue(exceedingSize, provider.slug);
             }
             return true;
         });
@@ -340,14 +344,14 @@ export class ExportInfo extends React.Component<Props, State> {
         } else {
             const providerSlugs = this.props.providers.map(provider => provider.slug);
             const prevProviderSlugs = prevProps.providers.map(provider => provider.slug);
-            if (providerSlugs.some(slug => !arrayHasValue(prevProviderSlugs, slug))) {
+            if (providerSlugs.some(slug => !hasValue(prevProviderSlugs, slug))) {
                 this.setState({ providers: this.props.providers });
             }
         }
 
         const selectedProjections = [...exportInfo.projections];
         const prevSelectedProjections = [...prevProps.exportInfo.projections];
-        if (!ExportInfo.elementsEqual(selectedProjections, prevSelectedProjections)) {
+        if (!elementsEqual(selectedProjections, prevSelectedProjections)) {
             nextState = {
                 ...nextState,
                 ...this.checkCompatibility()
@@ -360,25 +364,6 @@ export class ExportInfo extends React.Component<Props, State> {
         if (Object.keys(nextState).length > 0) {
             this.setState({ ...nextState });
         }
-    }
-
-    static elementsEqual(array1, array2) {
-        // To compare two arrays for equality, we check length for an early exit,
-        // otherwise we sort them then compare element by element.
-        if (array1.length !== array2.length) {
-            return false;
-        }
-        // This code will only run if the arrays are the same length
-        array1.sort();
-        array2.sort();
-        let valuesEqual = true;
-        array1.forEach((item, index) => {
-            if (item !== array2[index]) {
-                valuesEqual = false;
-                return;
-            }
-        });
-        return valuesEqual;
     }
 
     private checkCompatibility() {
@@ -431,7 +416,7 @@ export class ExportInfo extends React.Component<Props, State> {
         };
         const selectedFormats = [] as string[];
         getFormats(selectedFormats);
-        if (!ExportInfo.elementsEqual(selectedFormats, prevState.selectedFormats)) {
+        if (!elementsEqual(selectedFormats, prevState.selectedFormats)) {
             return { selectedFormats };
         }
     }

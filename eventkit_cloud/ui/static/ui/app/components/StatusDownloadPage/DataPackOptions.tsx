@@ -2,7 +2,7 @@ import * as React from 'react';
 import Button from '@material-ui/core/Button';
 import BaseDialog from '../Dialog/BaseDialog';
 import DeleteDataPackDialog from '../Dialog/DeleteDataPackDialog';
-import {arrayHasValue} from "../../utils/generic";
+import {hasValue} from "../../utils/arrays";
 
 export interface Props {
     adminPermissions: boolean;
@@ -104,7 +104,7 @@ export class DataPackOptions extends React.Component<Props, State> {
                 );
                 if (!!dataProviderTask) {
                     supportedFormats = dataProviderTask.formats.filter(slug =>
-                        arrayHasValue(provider.supported_formats.map((format: Eventkit.Format) => format.slug), slug)
+                        hasValue(provider.supported_formats.map((format: Eventkit.Format) => format.slug), slug)
                     );
                     exportOptions[provider.slug] = {
                         minZoom: (dataProviderTask.min_zoom) ? dataProviderTask.min_zoom : provider.level_from,

@@ -19,8 +19,9 @@ import MoreVertIcon from '@material-ui/icons/MoreVert';
 import {useState} from 'react';
 import AlertCallout from './AlertCallout';
 import IrregularPolygon from '../icons/IrregularPolygon';
-import {arrayHasValue, getSqKm, getSqKmString} from '../../utils/generic';
+import {getSqKm, getSqKmString} from '../../utils/generic';
 import {useJobValidationContext} from './context/JobValidation';
+import {hasValue} from "../../utils/arrays";
 
 const jss = (theme: Eventkit.Theme & Theme) => createStyles({
     body: {
@@ -216,7 +217,7 @@ export function AoiInfobar(props: Props) {
 
     if (aoiHasArea) {
         // If estimates have been fetched successfully and every proivder with estimates has a max data size.
-        if (haveAvailableEstimates.length > 0 && haveAvailableEstimates.every(slug => !arrayHasValue(noMaxDataSize, slug))) {
+        if (haveAvailableEstimates.length > 0 && haveAvailableEstimates.every(slug => !hasValue(noMaxDataSize, slug))) {
             // If any providers exceed their max data size, and those all providers with estimates exceed their max
             // I.e. if every provider we can check is over their specified max data size.
             if (exceedingSize.length > 0 && haveAvailableEstimates.every(slug => exceedingSize.indexOf(slug) !== -1)) {

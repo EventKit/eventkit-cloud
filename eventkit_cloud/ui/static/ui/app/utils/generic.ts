@@ -200,10 +200,6 @@ export function getFeatureUrl(mapLayer, z, y, x, i, j): string {
         + `TILECOL=${x}&TILEMATRIX=${tileMatrixId}&TILEMATRIXSET=default&TILEROW=${y}&VERSION=1.0.0&i=${i}&j=${j}`;
 }
 
-export function arrayHasValue(array: any[], val: any): boolean {
-    return array.indexOf(val) !== -1;
-}
-
 // Searches for the full provider object in a list of providers that matches the provider task.
 // The ProviderTask representation of provider lacks certain fields that the full provider has.
 export function getProviderFromProviderTask(providerTask: Eventkit.ProviderTask, providers: Eventkit.Provider[]): Eventkit.Provider {

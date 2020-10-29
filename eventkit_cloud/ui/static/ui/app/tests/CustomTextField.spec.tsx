@@ -3,7 +3,7 @@ import sinon from 'sinon';
 import {mount} from 'enzyme';
 import {CustomTextField} from '../components/common/CustomTextField';
 import {act} from "react-dom/test-utils";
-import {arrayHasValue} from "../utils/generic";
+import {hasValue} from "../utils/arrays";
 
 describe('CustomTextField component', () => {
     const defaultProps = { classes: {}, ...(global as any).eventkit_test_props, };
@@ -20,7 +20,7 @@ describe('CustomTextField component', () => {
         });
         expect(wrapper.find('div.qa-CustomTextField-TextField')).toHaveLength(1);
         const passedProps = Object.keys(wrapper.find('.qa-CustomTextField-TextField').first().props());
-        expect(['onFocus', 'onChange', 'onBlur'].every(key => arrayHasValue(passedProps, key))).toBe(true);
+        expect(['onFocus', 'onChange', 'onBlur'].every(key => hasValue(passedProps, key))).toBe(true);
     });
 
     it('should show remaining characters when maxLength is present and input is focused', () => {
