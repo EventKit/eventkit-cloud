@@ -30,8 +30,7 @@ interface Props {
     classes: { [className: string]: string; }
 }
 
-
-function CenteredPopup(props: React.PropsWithChildren<Props>) {
+export function CenteredPopup(props: React.PropsWithChildren<Props>) {
     const {open, onClose, classes} = props;
 
     const fullScreenDivRef = useRef(null);
@@ -67,6 +66,7 @@ function CenteredPopup(props: React.PropsWithChildren<Props>) {
                             </div>
                             <Button
                                 key="close"
+                                name="qa-popoverButton"
                                 className={`qa-BaseDialog-Button ${classes.button}`}
                                 variant="contained"
                                 color="primary"

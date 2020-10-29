@@ -60,6 +60,8 @@ import {useEffect} from "react";
 import {useEffectOnMount} from "../../utils/hooks/hooks";
 import MapDrawer from "./MapDrawer";
 import EventkitJoyride from "../common/JoyrideWrapper";
+import {RegionJustification} from "../StatusDownloadPage/RegionJustification";
+import {MapZoomLimiter} from "./MapZoomLimiter";
 
 export const WGS84 = 'EPSG:4326';
 
@@ -125,6 +127,15 @@ function StepValidator(props: Props) {
     });
 
     return null;
+}
+
+function getViewBbox(map: any) : GeoJSON.FeatureCollection {
+    const ext = map.getView().calculateExtent(map.getSize());
+    const geom = fromExtent(ext);
+    const coords = geom.getCoordinates();
+    const unwrappedCoords = unwrapCoordinates(coords, map.getView().getProjection());
+    geom.setCoordinates(unwrappedCoords);
+    return createGeoJSON(geom) as GeoJSON.FeatureCollection;
 }
 
 export class ExportAOI extends React.Component<Props, State> {
@@ -1063,8 +1074,24 @@ export class ExportAOI extends React.Component<Props, State> {
             aoi = this.bufferFeatures;
         }
 
+
         return (
-            <>
+            <div>
+                <MapZoomLimiter
+                    provider={{slug: this.state.selectedBaseMap.slug} as Eventkit.Provider}
+                    extent={(() => {
+                        const extentArray = [];
+                        if (Object.keys(this.props.aoiInfo.geojson).length) {
+                            extentArray.push(this.props.aoiInfo.geojson);
+                        }
+                        if (this.map) {
+                            extentArray.push(getViewBbox(this.map));
+                        }
+                        return extentArray;
+                    })()}
+                    map={this.map}
+                    zoomLevel={4}
+                />
                 <StepValidator {...this.props}/>
                 <EventkitJoyride
                     callback={this.callback}

@@ -7,11 +7,19 @@
 // this becomes
 // {renderIf(() => (<div></div>), A && BB && C || D &&)}
 // The latter clearly separates the conditional and the rendering function.
-export function renderIf(renderer: (() => any ) | any, conditional: boolean) {
+export type RenderCallback = (() => any) | any;
+export function renderIf(renderer: RenderCallback, conditional: boolean) {
     if (!conditional) {
         return null;
     }
     // Renderer can be a function returning JSX, or simply a literal JSX object.
     // It may be more performant to pass it as a callback function. Worth testing if this is a meaningful difference.
+    return (renderer instanceof Function) ? renderer() : renderer;
+}
+
+export function renderIfElse(conditional: boolean, renderer: RenderCallback, elseRenderer: RenderCallback = null) {
+    if (!conditional) {
+        return (elseRenderer instanceof Function) ? elseRenderer() : elseRenderer;
+    }
     return (renderer instanceof Function) ? renderer() : renderer;
 }
