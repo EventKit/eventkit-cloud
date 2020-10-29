@@ -55,7 +55,7 @@ export class ProviderPreview extends React.Component<Props, State> {
         this.setProvider = this.setProvider.bind(this);
         this.state = {
             step: (!!props.selectedProvider) ? props.providerTasks.map(
-                provider => provider.slug).indexOf(props.selectedProvider) : 0,
+                providerTask => providerTask.slug).indexOf(props.selectedProvider) : 0,
             arrowsVisible: false
         }
     };
@@ -119,7 +119,7 @@ export class ProviderPreview extends React.Component<Props, State> {
                 }}>
                     {providerPreviews.map((providerTask, ix) =>
                         (
-                            <div className={classes.container} key={ix}>
+                            <div className={classes.container} key={ix} id={`preview${ix}`}>
                                 <img
                                     className={classes.img}
                                     src={providerTask.preview_url}

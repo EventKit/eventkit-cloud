@@ -1170,8 +1170,8 @@ function mapDispatchToProps(dispatch) {
 export function ScrollBarRefWrap(props: any) {
     const [scrollbar, setScrollbar] = useState(undefined);
     useEffect(() => {
-        if (!!scrollbar) {
-            props?.setScrollbar(scrollbar);
+        if (!!scrollbar && props.setScrollbar) {
+            props.setScrollbar(scrollbar);
         }
     }, [scrollbar]);
 

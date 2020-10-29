@@ -133,6 +133,7 @@ export function BaseDialog(props: React.PropsWithChildren<Props>) {
                     {props.children}
                 </CustomScrollbar>
             </DialogContent>
+
             <DialogActions className={classes.actions} style={props.actionsStyle}>{actions}</DialogActions>
         </Dialog>
     );
