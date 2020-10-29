@@ -1059,12 +1059,6 @@ export class ExportAOI extends React.Component<Props, State> {
             position: 'relative' as 'relative',
         };
 
-        if (this.props.drawer === 'open' && isWidthUp('xl', this.props.width)) {
-            mapStyle.left = '200px';
-        } else {
-            mapStyle.left = '0px';
-        }
-
         if (this.props.isPermissionsBannerOpen) {
             mapStyle.height = 'calc(100vh - 226px)';
         }
@@ -1076,7 +1070,7 @@ export class ExportAOI extends React.Component<Props, State> {
 
 
         return (
-            <div>
+            <>
                 <MapZoomLimiter
                     provider={{slug: this.state.selectedBaseMap.slug} as Eventkit.Provider}
                     extent={(() => {
