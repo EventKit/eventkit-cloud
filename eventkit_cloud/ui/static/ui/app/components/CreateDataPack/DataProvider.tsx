@@ -20,7 +20,7 @@ import FormatSelector from "./FormatSelector";
 import {Compatibility} from '../../utils/enums';
 import IndeterminateCheckBoxIcon from '@material-ui/icons/IndeterminateCheckBox';
 import CheckBoxIcon from "@material-ui/icons/CheckBox";
-import {CompatibilityInfo} from "./ExportInfo";
+import {IncompatibilityInfo} from "./ExportInfo";
 import {MapLayer} from "./CreateExport";
 import OlMouseWheelZoom from "../MapTools/OpenLayers/MouseWheelZoom";
 import ZoomUpdater from "./ZoomUpdater";
@@ -112,7 +112,7 @@ interface Props {
     theme: Eventkit.Theme & Theme;
     renderEstimate: boolean;
     selectedProjections: number[];
-    compatibilityInfo: CompatibilityInfo;
+    incompatibilityInfo: IncompatibilityInfo;
     open: boolean;
     classes: {
         container: string;
@@ -153,7 +153,8 @@ export function DataProvider(props: Props) {
         }, 1000);
     });
 
-    const [providerHasEstimates, setHasEstimates ] = useState(() => arrayHasValue(haveAvailableEstimates, provider.slug) && !arrayHasValue(noMaxDataSize, provider.slug));
+    const [providerHasEstimates, setHasEstimates] = useState(() =>
+        arrayHasValue(haveAvailableEstimates, provider.slug) && !arrayHasValue(noMaxDataSize, provider.slug));
     useEffect(() => {
         setHasEstimates(arrayHasValue(haveAvailableEstimates, provider.slug) && !arrayHasValue(noMaxDataSize, provider.slug));
     }, [DepsHashers.arrayHash(haveAvailableEstimates), DepsHashers.arrayHash(noMaxDataSize)]);
@@ -168,11 +169,11 @@ export function DataProvider(props: Props) {
     }, [areEstimatesLoading, aoiArea]);
 
     function getFormatCompatibility(formatSlug: string) {
-        const formatInfo = props.compatibilityInfo.formats[formatSlug.toLowerCase()];
+        const formatInfo = props.incompatibilityInfo.formats[formatSlug.toLowerCase()];
         if (!formatInfo) {
             return Compatibility.Full;
         }
-        const incompatibleProjections = props.compatibilityInfo.formats[formatSlug.toLowerCase()].projections.length;
+        const incompatibleProjections = props.incompatibilityInfo.formats[formatSlug.toLowerCase()].projections.length;
         if (incompatibleProjections >= props.selectedProjections.length) {
             return Compatibility.None;
         } else if (incompatibleProjections > 0) {
@@ -444,7 +445,7 @@ export function DataProvider(props: Props) {
                         formats={provider.supported_formats}
                         getFormatCompatibility={getFormatCompatibility}
                         provider={provider}
-                        compatibilityInfo={props.compatibilityInfo}
+                        incompatibilityInfo={props.incompatibilityInfo}
                     />
                 </div>
             </div>

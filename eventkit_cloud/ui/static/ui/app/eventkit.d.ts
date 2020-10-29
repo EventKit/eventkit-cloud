@@ -28,6 +28,10 @@ declare namespace Eventkit {
         groups: Permissions.Groups;
     }
 
+     interface Exception {
+        exception: string;
+    }
+
     interface Task {
         uid: string;
         url: string;
@@ -46,11 +50,10 @@ declare namespace Eventkit {
             url: string;
             deleted: boolean;
         };
-        errors: Array<{
-            exception: string;
-        }>;
+        errors: Exception[];
         display: boolean;
     }
+
 
     interface ProviderTask {
         uid: string;
@@ -170,6 +173,7 @@ declare namespace Eventkit {
         name: string;
         slug: string;
         description: string;
+        supported_projections: Projection[];
     }
 
     interface UserData {

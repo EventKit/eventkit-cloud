@@ -10,7 +10,7 @@ import uuid
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('jobs', '0006_remove_job_provider_tasks'),
+        ('jobs', '0007_auto_20200929_1217'),
     ]
 
     operations = [

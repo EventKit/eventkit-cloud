@@ -12,8 +12,19 @@ build:
 about:
   home: https://gitlab.com/osm-c-tools/osmctools
 
+test:
+  commands:
+    - osmupdate --help
+    - osmconvert --help
+    - osmfilter --help
+
 requirements:
   build: 
     - {{ compiler('c') }}
     - automake
-
+    - autoconf
+  host:
+    - zlib
+  run:
+    - wget
+    - zlib

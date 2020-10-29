@@ -9,6 +9,7 @@ import socket
 import time
 import traceback
 from typing import List
+from urllib.parse import urlencode, urljoin
 
 from zipfile import ZipFile, ZIP_DEFLATED
 
@@ -67,7 +68,6 @@ from eventkit_cloud.tasks.metadata import metadata_tasks
 from eventkit_cloud.tasks.task_process import update_progress
 from eventkit_cloud.utils.auth_requests import get_cred
 from eventkit_cloud.utils import overpass, pbf, s3, mapproxy, wcs, geopackage, gdalutils
-from eventkit_cloud.utils.ogr import OGR
 from eventkit_cloud.utils.rocket_chat import RocketChat
 from eventkit_cloud.utils.stats.eta_estimator import ETA
 from eventkit_cloud.tasks.task_base import EventKitBaseTask
@@ -145,7 +145,7 @@ class ExportTask(EventKitBaseTask):
     abort_on_error = False
     name = "ExportTask"
 
-    def __call__(self, *args, **kwargs):
+    def __call__(self, *args, **kwargs) -> dict:
         task_uid = kwargs.get("task_uid")
 
         try:
@@ -395,7 +395,7 @@ def osm_data_collection_pipeline(
     config=None,
     eta=None,
     projection=4326,
-):
+) -> dict:
     """
     Collects data from OSM & produces a thematic gpkg as a subtask of the task referenced by export_provider_task_id.
     bbox expected format is an iterable of the form [ long0, lat0, long1, lat1 ]
@@ -467,8 +467,9 @@ def osm_data_collection_pipeline(
     update_progress(
         export_task_record_uid, progress=100, eta=eta, msg="Completed OSM data collection pipeline",
     )
+    result = {"osm": osm_filename, "pbf": pbf_filepath, "gpkg": gpkg_filepath}
 
-    return gpkg_filepath
+    return result
 
 
 @app.task(name="OSM (.gpkg)", bind=True, base=FormatTask, abort_on_error=True, acks_late=True)
@@ -505,7 +506,7 @@ def osm_data_collection_task(
         if user_details is None:
             user_details = {"username": "username not set in osm_data_collection_task"}
 
-        gpkg_filepath = osm_data_collection_pipeline(
+        osm_results = osm_data_collection_pipeline(
             task_uid,
             stage_dir,
             slug=provider_slug,
@@ -519,11 +520,14 @@ def osm_data_collection_task(
 
         selection = parse_result(result, "selection")
         if selection:
-            logger.debug("Calling gdalutils.convert with boundary={}, in_dataset={}".format(selection, gpkg_filepath))
-            gpkg_filepath = gdalutils.convert(boundary=selection, input_file=gpkg_filepath)
+            logger.debug(
+                "Calling gdalutils.convert with boundary={}, in_dataset={}".format(selection, osm_results["gpkg"])
+            )
+            osm_results["gpkg"] = gdalutils.convert(boundary=selection, input_file=osm_results["gpkg"])
 
-        result["result"] = gpkg_filepath
-        result["source"] = gpkg_filepath
+        result.update(osm_results)
+        result["result"] = osm_results.get("gpkg")
+        result["source"] = osm_results.get("gpkg")
 
         logger.debug("exit run for {0}".format(self.name))
     finally:
@@ -566,28 +570,28 @@ def shp_export_task(
     **kwargs,
 ):
     """
-    Class defining SHP export function.
+    Function defining SHP export function.
     """
     result = result or {}
-    gpkg = parse_result(result, "source")
-    provider_slug = get_provider_slug(task_uid)
-    shapefile = get_export_filename(stage_dir, job_name, projection, provider_slug, "shp")
+    shp_in_dataset = parse_result(result, "source")
 
-    try:
-        ogr = OGR(task_uid=task_uid)
-        out = ogr.convert(
-            file_format="ESRI Shapefile",
-            in_file=gpkg,
-            out_file=shapefile,
-            params="-lco 'ENCODING=UTF-8' -overwrite -skipfailures",
-        )
-        result["file_format"] = "ESRI Shapefile"
-        result["result"] = out
-        result["shp"] = out
-        return result
-    except Exception as e:
-        logger.error("Exception while converting {} -> {}: {}".format(gpkg, shapefile, str(e)))
-        raise
+    provider_slug = get_provider_slug(task_uid)
+    shp_out_dataset = get_export_filename(stage_dir, job_name, projection, provider_slug, "shp")
+    selection = parse_result(result, "selection")
+
+    shp = gdalutils.convert(
+        fmt="shp",
+        input_file=shp_in_dataset,
+        output_file=shp_out_dataset,
+        task_uid=task_uid,
+        boundary=selection,
+        projection=projection,
+    )
+
+    result["file_format"] = "shp"
+    result["result"] = shp
+    result["source"] = shp
+    return result
 
 
 @app.task(name="Keyhole Markup Language (.kml)", bind=True, base=FormatTask, acks_late=True)
@@ -605,23 +609,102 @@ def kml_export_task(
     **kwargs,
 ):
     """
-    Class defining KML export function.
+    Function defining KML export function.
     """
     result = result or {}
+    kml_in_dataset = parse_result(result, "source")
 
-    gpkg = parse_result(result, "source")
     provider_slug = get_provider_slug(task_uid)
-    kmlfile = get_export_filename(stage_dir, job_name, projection, provider_slug, "kml")
+    kml_out_dataset = get_export_filename(stage_dir, job_name, projection, provider_slug, "kml")
+    selection = parse_result(result, "selection")
+
+    kml = gdalutils.convert(
+        fmt="kml",
+        input_file=kml_in_dataset,
+        output_file=kml_out_dataset,
+        task_uid=task_uid,
+        boundary=selection,
+        projection=projection,
+    )
+
+    result["file_format"] = "kml"
+    result["result"] = kml
+    result["source"] = kml
+    return result
+
+
+@app.task(name="GPS Exchange (.gpx)", bind=True, base=FormatTask, acks_late=True)
+def gpx_export_task(
+    self,
+    result=None,
+    run_uid=None,
+    task_uid=None,
+    stage_dir=None,
+    job_name=None,
+    config=None,
+    user_details=None,
+    projection=4326,
+    *args,
+    **kwargs,
+):
+    """
+    Function defining GPX export function.
+    """
+    result = result or {}
+    # Need to use PBF instead of GPKG because gpkg uses multi-geometry types whereas gpx doesn't support multipoint
+    pbf = parse_result(result, "pbf")
+    # Need to crop to selection since the PBF hasn't been clipped.
+    selection = parse_result(result, "selection")
+    provider_slug = get_provider_slug(task_uid)
+    gpx_file = get_export_filename(stage_dir, job_name, projection, provider_slug, "gpx")
     try:
-        ogr = OGR(task_uid=task_uid)
-        out = ogr.convert(file_format="KML", in_file=gpkg, out_file=kmlfile)
-        result["file_extension"] = "kmz"
-        result["file_format"] = "libkml"
+        out = gdalutils.convert(
+            input_file=pbf,
+            output_file=gpx_file,
+            fmt="GPX",
+            dataset_creation_options=["GPX_USE_EXTENSIONS=YES"],
+            boundary=selection,
+        )
+        result["file_extension"] = "gpx"
+        result["file_format"] = "GPX"
         result["result"] = out
-        result["kmz"] = out
+        result["gpx"] = out
         return result
     except Exception as e:
-        logger.error("Raised exception in kml export, %s", str(e))
+        logger.error("Raised exception in gpx export, %s", str(e))
+        raise Exception(e)
+
+
+@app.task(name="OSM PBF (.pbf)", bind=True, base=FormatTask, acks_late=True)
+def pbf_export_task(
+    self,
+    result=None,
+    run_uid=None,
+    task_uid=None,
+    stage_dir=None,
+    job_name=None,
+    config=None,
+    user_details=None,
+    projection=4326,
+    *args,
+    **kwargs,
+):
+    """
+    Function defining PBF export function, this format is already generated in the OSM step.  It just needs to be
+    exposed and passed through.
+    """
+    result = result or {}
+    logger.error("GETTING PBF FILE...")
+    pbf_file = parse_result(result, "pbf")
+    logger.error(pbf_file)
+    try:
+        result["file_extension"] = "pbf"
+        result["file_format"] = "OSM"
+        result["result"] = pbf_file
+        logger.error(f"Returning PBF RESULT: {result}")
+        return result
+    except Exception as e:
+        logger.error("Raised exception in pbf export, %s", str(e))
         raise Exception(e)
 
 
@@ -633,29 +716,35 @@ def sqlite_export_task(
     task_uid=None,
     stage_dir=None,
     job_name=None,
+    config=None,
     user_details=None,
     projection=4326,
     *args,
     **kwargs,
 ):
     """
-    Class defining SQLITE export function.
+    Function defining SQLITE export function.
     """
     result = result or {}
+    sqlite_in_dataset = parse_result(result, "source")
 
-    gpkg = parse_result(result, "source")
     provider_slug = get_provider_slug(task_uid)
-    sqlitefile = get_export_filename(stage_dir, job_name, projection, provider_slug, "sqlite")
-    try:
-        ogr = OGR(task_uid=task_uid)
-        out = ogr.convert(file_format="SQLite", in_file=gpkg, out_file=sqlitefile)
-        result["file_format"] = "sqlite"
-        result["result"] = out
-        result["sqlite"] = out
-        return result
-    except Exception as e:
-        logger.error("Raised exception in sqlite export, %s", str(e))
-        raise Exception(e)
+    sqlite_out_dataset = get_export_filename(stage_dir, job_name, projection, provider_slug, "sqlite")
+    selection = parse_result(result, "selection")
+
+    sqlite = gdalutils.convert(
+        fmt="sqlite",
+        input_file=sqlite_in_dataset,
+        output_file=sqlite_out_dataset,
+        task_uid=task_uid,
+        boundary=selection,
+        projection=projection,
+    )
+
+    result["file_format"] = "SQLite"
+    result["result"] = sqlite
+    result["source"] = sqlite
+    return result
 
 
 @app.task(name="Area of Interest (.geojson)", bind=True, base=ExportTask, acks_late=True)
@@ -671,7 +760,7 @@ def output_selection_geojson_task(
     **kwargs,
 ):
     """
-    Class defining geopackage export function.
+    Function defining geopackage export function.
     """
     result = result or {}
 
@@ -705,7 +794,7 @@ def geopackage_export_task(
     **kwargs,
 ):
     """
-    Class defining geopackage export function.
+    Function defining geopackage export function.
     """
     result = result or {}
     gpkg_in_dataset = parse_result(result, "source")
@@ -725,7 +814,51 @@ def geopackage_export_task(
 
     result["file_format"] = "gpkg"
     result["result"] = gpkg
-    result["source"] = gpkg
+    result["gpkg"] = gpkg
+    return result
+
+
+@app.task(name="MBtiles (.mbtiles)", bind=True, base=FormatTask, acks_late=True)
+def mbtiles_export_task(
+    self,
+    result=None,
+    run_uid=None,
+    task_uid=None,
+    stage_dir=None,
+    job_name=None,
+    user_details=None,
+    projection=3857,  # MBTiles only support 3857
+    *args,
+    **kwargs,
+):
+    """
+    Function defining mbtiles export function.
+    """
+
+    if projection != 3857:
+        raise Exception("MBTiles only supports 3857.")
+    result = result or {}
+    provider_slug = get_provider_slug(task_uid)
+
+    source_dataset = parse_result(result, "source")
+
+    mbtiles_out_dataset = get_export_filename(stage_dir, job_name, projection, provider_slug, "mbtiles")
+    selection = parse_result(result, "selection")
+    logger.error(f"Converting {source_dataset} to {mbtiles_out_dataset}")
+
+    mbtiles = gdalutils.convert(
+        fmt="MBTiles",
+        src_srs=4326,
+        input_file=source_dataset,
+        output_file=mbtiles_out_dataset,
+        task_uid=task_uid,
+        boundary=selection,
+        projection=projection,
+        use_translate=True,
+    )
+
+    result["file_format"] = "MBTiles"
+    result["result"] = mbtiles
     return result
 
 
@@ -734,7 +867,7 @@ def geotiff_export_task(
     self, result=None, task_uid=None, stage_dir=None, job_name=None, projection=4326, config=None, *args, **kwargs,
 ):
     """
-    Class defining geopackage export function.
+    Function defining geopackage export function.
     """
     result = result or {}
 
@@ -780,7 +913,7 @@ def nitf_export_task(
     **kwargs,
 ):
     """
-    Class defining nitf export function.
+    Function defining nitf export function.
     """
     result = result or {}
 
@@ -818,7 +951,7 @@ def hfa_export_task(
     **kwargs,
 ):
     """
-    Class defining Erdas Imagine HFA (.img) export function.
+    Function defining Erdas Imagine HFA (.img) export function.
     """
     result = result or {}
     hfa_in_dataset = parse_result(result, "source")
@@ -848,7 +981,7 @@ def reprojection_task(
     **kwargs,
 ):
     """
-    Class defining a task that will reproject all file formats to the chosen projections.
+    Function defining a task that will reproject all file formats to the chosen projections.
     """
     result = result or {}
     file_format = parse_result(result, "file_format")
@@ -895,7 +1028,7 @@ def wfs_export_task(
     stage_dir=None,
     job_name=None,
     bbox=None,
-    service_url=None,
+    service_url=None,  # TODO: Should this ever be None?
     name=None,
     service_type=None,
     user_details=None,
@@ -904,7 +1037,7 @@ def wfs_export_task(
     **kwargs,
 ):
     """
-    Class defining geopackage export for WFS service.
+    Function defining geopackage export for WFS service.
     """
     result = result or {}
 
@@ -913,7 +1046,16 @@ def wfs_export_task(
 
     # Strip out query string parameters that might conflict
     service_url = re.sub(r"(?i)(?<=[?&])(version|service|request|typename|srsname)=.*?(&|$)", "", service_url,)
-    query_str = "SERVICE=WFS&VERSION=1.0.0&REQUEST=GetFeature&TYPENAME={}&SRSNAME=EPSG:4326".format(layer)
+
+    query_params = {
+        "SERVICE": "WFS",
+        "VERSION": "1.0.0",
+        "REQUEST": "GetFeature",
+        "TYPENAME": layer,
+        "SRSNAME": f"EPSG:{projection}",
+    }
+    query_str = urlencode(query_params, safe=":")
+
     if "?" in service_url:
         if "&" != service_url[-1]:
             service_url += "&"
@@ -928,23 +1070,19 @@ def wfs_export_task(
         if not re.search(r"(?<=://)[a-zA-Z0-9\-._~]+:[a-zA-Z0-9\-._~]+(?=@)", url):
             url = re.sub(r"(?<=://)", "%s:%s@" % (user, pw), url)
 
-    if bbox:
-        params = "-skipfailures -spat {w} {s} {e} {n}".format(w=bbox[0], s=bbox[1], e=bbox[2], n=bbox[3])
-    else:
-        params = "-skipfailures"
+    out = gdalutils.convert(
+        fmt="gpkg", input_file=url, output_file=gpkg, task_uid=task_uid, projection=projection, boundary=bbox,
+    )
 
-    try:
-        ogr = OGR(task_uid=task_uid)
-        out = ogr.convert(file_format="GPKG", in_file=f"WFS:{url}", out_file=gpkg, params=params,)
-        result["result"] = out
-        result["source"] = out
-        # Check for geopackage contents; gdal wfs driver fails silently
-        if not geopackage.check_content_exists(out):
-            logger.warning("Empty response: Unknown layer name '{}' or invalid AOI bounds".format(layer))
-        return result
-    except Exception as e:
-        logger.error("Raised exception in wfs export: {}".format(str(e)))
-        raise Exception(e)
+    result["file_format"] = "gpkg"
+    result["result"] = out
+    result["source"] = out
+
+    # Check for geopackage contents; gdal wfs driver fails silently
+    if not geopackage.check_content_exists(out):
+        logger.warning("Empty response: Unknown layer name '{}' or invalid AOI bounds".format(layer))
+
+    return result
 
 
 @app.task(name="WCS Export", bind=True, base=ExportTask, abort_on_error=True, acks_late=True)
@@ -968,7 +1106,7 @@ def wcs_export_task(
     **kwargs,
 ):
     """
-    Class defining export for WCS services
+    Function defining export for WCS services
     """
     result = result or {}
 
@@ -1018,40 +1156,40 @@ def arcgis_feature_service_export_task(
     **kwargs,
 ):
     """
-    Class defining sqlite export for ArcFeatureService service.
+    Function defining sqlite export for ArcFeatureService service.
     """
-    result = result or {}
 
+    result = result or {}
     provider_slug = get_provider_slug(task_uid)
     gpkg = get_export_filename(stage_dir, job_name, projection, provider_slug, "gpkg")
+
+    if not os.path.exists(os.path.dirname(gpkg)):
+        os.makedirs(os.path.dirname(gpkg), 6600)
+
     try:
-        if not os.path.exists(os.path.dirname(gpkg)):
-            os.makedirs(os.path.dirname(gpkg), 6600)
+        # remove any url query so we can add our own
+        service_url = service_url.split("/query?")[0]
+    except ValueError:
+        # if no url query we can just check for trailing slash and move on
+        service_url = service_url.rstrip("/\\")
+    finally:
+        query_params = {
+            "where": "objectid=objectid",
+            "outfields": "*",
+            "geometry": str(bbox).strip("[]"),
+            "f": "json",
+        }
+        query_str = urlencode(query_params, safe="=*")
+        service_url = urljoin(f"{service_url}/", f"query?{query_str}")
 
-        try:
-            # remove any url query so we can add our own
-            service_url = service_url.split("/query?")[0]
-        except ValueError:
-            # if no url query we can just check for trailing slash and move on
-            service_url = service_url.rstrip("/\\")
-        finally:
-            service_url = "{}{}".format(service_url, "/query?where=objectid%3Dobjectid&outfields=*&f=json")
+    out = gdalutils.convert(
+        fmt="gpkg", input_file=service_url, output_file=gpkg, task_uid=task_uid, boundary=bbox, projection=projection,
+    )
 
-        if bbox:
-            params = "-skipfailures -t_srs EPSG:3857 -spat_srs EPSG:4326 -spat {w} {s} {e} {n}".format(
-                w=bbox[0], s=bbox[1], e=bbox[2], n=bbox[3]
-            )
-        else:
-            params = "-skipfailures -t_srs EPSG:3857"
-
-        ogr = OGR(task_uid=task_uid)
-        out = ogr.convert(file_format="GPKG", in_file=service_url, out_file=gpkg, params=params)
-        result["result"] = out
-        result["source"] = out
-        return result
-    except Exception as e:
-        logger.error("Raised exception in arcgis feature service export, %s", str(e))
-        raise Exception(e)
+    result["file_format"] = "gpkg"
+    result["result"] = out
+    result["source"] = out
+    return result
 
 
 @app.task(name="Area of Interest (.gpkg)", bind=True, base=ExportTask)
@@ -1059,7 +1197,7 @@ def bounds_export_task(
     self, result={}, run_uid=None, task_uid=None, stage_dir=None, provider_slug=None, projection=4326, *args, **kwargs,
 ):
     """
-    Class defining geopackage export function.
+    Function defining geopackage export function.
     """
     user_details = kwargs.get("user_details")
     # This is just to make it easier to trace when user_details haven't been sent
@@ -1104,7 +1242,7 @@ def mapproxy_export_task(
     **kwargs,
 ):
     """
-    Class defining geopackage export for external raster service.
+    Function defining geopackage export for external raster service.
     """
     result = result or {}
     selection = parse_result(result, "selection")
