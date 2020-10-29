@@ -496,7 +496,13 @@ export class BreadcrumbStepper extends React.Component<Props, State> {
         }
 
         return (
-            <div className="qa-BreadcrumbStepper-div-content" style={{backgroundColor: colors.background}}>
+            <div className="qa-BreadcrumbStepper-top-level" style={{
+                backgroundColor: colors.background,
+                display: 'flex',
+                flexDirection: 'column',
+                flex: 1,
+                width: '100%',
+            }}>
                 <div className="qa-BreadcrumbStepper-div-stepLabel"
                      style={{width: '100%', height: '50px', display: 'inline-block'}}
                 >
@@ -528,7 +534,12 @@ export class BreadcrumbStepper extends React.Component<Props, State> {
                         step={this.state.stepIndex}
                     />
                 )}
-                <div className="qa-BreadcrumbStepper-div-stepContent">{this.getStepContent(this.state.stepIndex)}</div>
+                <div
+                    className="qa-BreadcrumbStepper-div-stepContent"
+                    style={{flex: 1}}
+                >
+                    {this.getStepContent(this.state.stepIndex)}
+                </div>
                 <BaseDialog
                     show={this.state.showError}
                     title="ERROR"

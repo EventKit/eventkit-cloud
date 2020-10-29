@@ -273,30 +273,28 @@ const NotificationsPage = Loadable({
 const history = createBrowserHistory;
 const routes = (
     <Router history={history}>
-        <div>
-            <Route exact path="/login/error" component={UserCanViewErrorPage(LoginErrorPage)}/>
-            <Route exact path="/login" component={UserIsNotAuthenticated(LoginPage)}/>
+        <Route exact path="/login/error" component={UserCanViewErrorPage(LoginErrorPage)}/>
+        <Route exact path="/login" component={UserIsNotAuthenticated(LoginPage)}/>
 
-            <Route path="/logout" component={Logout}/>
-            <Route path="/dashboard" component={UserIsAuthenticated(UserHasAgreed(DashboardPage))}/>
-            <Route path="/exports" component={UserIsAuthenticated(UserHasAgreed(DataPackPage))}/>
-            <Route path="/create" component={UserIsAuthenticated(UserHasAgreed(CreateExport))}/>
-            <Route
-                path="/status/:jobuid"
-                component={UserIsAuthenticated(UserHasAgreed(StatusDownload))}
-            />
-            <Route path="/about" component={UserIsAuthenticated(About)}/>
-            <Route path="/account" component={UserIsAuthenticated(Account)}/>
-            <Route path="/groups" component={UserIsAuthenticated(UserGroupsPage)}/>
-            <Route path="/notifications" component={UserIsAuthenticated(NotificationsPage)}/>
-            <Route
-                exact
-                path="/"
-                render={() => (
-                    <Redirect to="/dashboard"/>
-                )}
-            />
-        </div>
+        <Route path="/logout" component={Logout}/>
+        <Route path="/dashboard" component={UserIsAuthenticated(UserHasAgreed(DashboardPage))}/>
+        <Route path="/exports" component={UserIsAuthenticated(UserHasAgreed(DataPackPage))}/>
+        <Route path="/create" component={UserIsAuthenticated(UserHasAgreed(CreateExport))}/>
+        <Route
+            path="/status/:jobuid"
+            component={UserIsAuthenticated(UserHasAgreed(StatusDownload))}
+        />
+        <Route path="/about" component={UserIsAuthenticated(About)}/>
+        <Route path="/account" component={UserIsAuthenticated(Account)}/>
+        <Route path="/groups" component={UserIsAuthenticated(UserGroupsPage)}/>
+        <Route path="/notifications" component={UserIsAuthenticated(NotificationsPage)}/>
+        <Route
+            exact
+            path="/"
+            render={() => (
+                <Redirect to="/dashboard"/>
+            )}
+        />
     </Router>
 );
 
@@ -796,7 +794,7 @@ export class Application extends React.Component<Props, State> {
                         contactUrl={this.state.childContext.config.CONTACT_URL}
                     />
                     <div className="qa-Application-content" style={styles.content}>
-                        <div>{childrenWithContext}</div>
+                        {childrenWithContext}
                         {routes}
                     </div>
                     <BaseDialog

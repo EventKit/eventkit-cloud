@@ -14,7 +14,7 @@ import VectorSource from 'ol/source/Vector';
 import GeoJSONFormat from 'ol/format/GeoJSON';
 import Feature from 'ol/Feature';
 import Point from 'ol/geom/Point';
-import Polygon, { fromExtent } from 'ol/geom/Polygon';
+import Polygon, {fromExtent} from 'ol/geom/Polygon';
 import Style from 'ol/style/Style';
 import Icon from 'ol/style/Icon';
 import Fill from 'ol/style/Fill';
@@ -24,7 +24,7 @@ import ScaleLine from 'ol/control/ScaleLine';
 import Attribution from 'ol/control/Attribution';
 import Zoom from 'ol/control/Zoom';
 import ZoomToExtent from 'ol/control/ZoomToExtent';
-import { defaults } from 'ol/interaction';
+import {defaults} from 'ol/interaction';
 import Pointer from 'ol/interaction/Pointer';
 import Tile from 'ol/layer/Tile';
 import TileGrid from "ol/tilegrid/TileGrid";
@@ -1041,8 +1041,11 @@ export class ExportAOI extends React.Component<Props, State> {
             left: undefined,
             right: '0px',
             backgroundImage: `url(${theme.eventkit.images.topo_light})`,
-            height: 'calc(100vh - 180px)',
+            height: '100%',
             bottom: '0px',
+            marginTop: '0',
+            marginLeft: '0',
+            position: 'relative' as 'relative',
         };
 
         if (this.props.drawer === 'open' && isWidthUp('xl', this.props.width)) {
@@ -1061,14 +1064,16 @@ export class ExportAOI extends React.Component<Props, State> {
         }
 
         return (
-            <div>
+            <>
                 <StepValidator {...this.props}/>
                 <EventkitJoyride
                     callback={this.callback}
                     ref={(instance) => {
                         this.joyride = instance;
                     }}
-                    getHelpers={(helpers: any) => {this.helpers = helpers}}
+                    getHelpers={(helpers: any) => {
+                        this.helpers = helpers
+                    }}
                     steps={steps}
                     stepIndex={this.state.stepIndex}
                     continuous
@@ -1161,7 +1166,7 @@ export class ExportAOI extends React.Component<Props, State> {
                         resetGeoJSONFile={this.props.resetGeoJSONFile}
                     />
                 </div>
-            </div>
+            </>
         );
     }
 }
