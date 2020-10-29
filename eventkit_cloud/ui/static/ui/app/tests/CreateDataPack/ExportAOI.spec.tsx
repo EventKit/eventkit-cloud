@@ -122,15 +122,6 @@ describe('ExportAOI component', () => {
 
     });
 
-    it('the left position should be 200px if drawer is open, otherwise 0px', () => {
-        wrapper.setProps({ drawer: 'open' });
-        expect(wrapper.find('#map').props().style.left).toEqual('200px');
-        const nextProps = getProps();
-        nextProps.drawer = 'closed';
-        wrapper.setProps(nextProps);
-        expect(wrapper.find('#map').props().style.left).toEqual('0px');
-    });
-
     it('funcs passed to DrawAOIToolbar and SearchAOIToolbar should call setButtonSelected with correct values', () => {
         const drawToolbar = wrapper.find(DrawAOIToolbar);
         const setSpy = sinon.spy(instance, 'setButtonSelected');
