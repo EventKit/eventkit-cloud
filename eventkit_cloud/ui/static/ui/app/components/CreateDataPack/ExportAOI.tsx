@@ -1052,15 +1052,12 @@ export class ExportAOI extends React.Component<Props, State> {
             left: undefined,
             right: '0px',
             backgroundImage: `url(${theme.eventkit.images.topo_light})`,
-            height: 'calc(100vh - 180px)',
+            height: '100%',
             bottom: '0px',
+            marginTop: '0',
+            marginLeft: '0',
+            position: 'relative' as 'relative',
         };
-
-        if (this.props.drawer === 'open' && isWidthUp('xl', this.props.width)) {
-            mapStyle.left = '200px';
-        } else {
-            mapStyle.left = '0px';
-        }
 
         if (this.props.isPermissionsBannerOpen) {
             mapStyle.height = 'calc(100vh - 226px)';
@@ -1073,7 +1070,7 @@ export class ExportAOI extends React.Component<Props, State> {
 
 
         return (
-            <div>
+            <>
                 <MapZoomLimiter
                     provider={{slug: this.state.selectedBaseMap.slug} as Eventkit.Provider}
                     extent={(() => {
@@ -1190,7 +1187,7 @@ export class ExportAOI extends React.Component<Props, State> {
                         resetGeoJSONFile={this.props.resetGeoJSONFile}
                     />
                 </div>
-            </div>
+            </>
         );
     }
 }
