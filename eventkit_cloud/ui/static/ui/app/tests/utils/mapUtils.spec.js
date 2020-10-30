@@ -11,6 +11,7 @@ import VectorSource from 'ol/source/Vector';
 import VectorLayer from 'ol/layer/Vector';
 import WKTReader from 'jsts/org/locationtech/jts/io/WKTReader';
 import * as utils from '../../utils/mapUtils';
+import { convertGeoJSONtoJSTS, covers } from '../../utils/mapUtils';
 
 // this polyfills requestAnimationFrame in the test browser, required for ol3
 raf.polyfill();
@@ -450,7 +451,8 @@ describe('mapUtils', () => {
         });
         const featureSpy = sinon.spy(Feature.prototype, 'getGeometry');
         const geomSpy = sinon.spy(Polygon.prototype, 'getType');
-        const fit = sinon.spy(() => {});
+        const fit = sinon.spy(() => {
+        });
         const map = { getView: sinon.spy(() => ({ fit })) };
         utils.zoomToFeature(feature, map);
         expect(featureSpy.calledOnce).toBe(true);
@@ -795,5 +797,87 @@ describe('mapUtils', () => {
             features: [],
         };
         expect(utils.getDominantGeometry(collection2)).toEqual(null);
+    });
+
+    it('should confirm two overlapping extents are covered', () => {
+        const featureCollectionExtent = convertGeoJSONtoJSTS({
+            type: 'FeatureCollection',
+            features: [{
+                type: 'Feature',
+                geometry: {
+                    type: 'Polygon',
+                    coordinates: [
+                        [
+                            [100.0, 0.0],
+                            [101.0, 0.0],
+                            [101.0, 1.0],
+                            [100.0, 1.0],
+                            [100.0, 0.0],
+                        ],
+                    ],
+                },
+            }],
+        }, 1, false);
+
+        const featureCollectionPolicy = convertGeoJSONtoJSTS({
+            type: 'FeatureCollection',
+            features: [{
+                type: 'Feature',
+                geometry: {
+                    type: 'Polygon',
+                    coordinates: [
+                        [
+                            [100.0, 0.0],
+                            [102.0, 0.0],
+                            [102.0, 1.0],
+                            [100.0, 1.0],
+                            [100.0, 0.0],
+                        ],
+                    ],
+                },
+            }],
+        }, 1, false);
+        expect(covers(featureCollectionExtent, featureCollectionPolicy)).toBe(true);
+    });
+
+    it('should confirm two non-overlapping extents are not covered', () => {
+        const featureCollectionExtent = convertGeoJSONtoJSTS({
+            type: 'FeatureCollection',
+            features: [{
+                type: 'Feature',
+                geometry: {
+                    type: 'Polygon',
+                    coordinates: [
+                        [
+                            [100.0, 0.0],
+                            [101.0, 0.0],
+                            [101.0, 1.0],
+                            [100.0, 1.0],
+                            [100.0, 0.0],
+                        ],
+                    ],
+                },
+            }],
+        }, 1, false);
+
+        const featureCollectionPolicy = convertGeoJSONtoJSTS({
+            type: 'FeatureCollection',
+            features: [{
+                type: 'Feature',
+                geometry: {
+                    type: 'Polygon',
+                    coordinates: [
+                        [
+                            [98.0, 0.0],
+                            [99.0, 0.0],
+                            [99.0, 0.5],
+                            [98.0, 0.5],
+                            [98.0, 0.0],
+                        ],
+                    ],
+                },
+            }],
+        }, 1, false);
+        expect(covers(featureCollectionExtent, featureCollectionPolicy)).toBe(false);
     });
 });

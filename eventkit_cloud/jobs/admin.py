@@ -1,4 +1,6 @@
+import json
 import logging
+import os
 
 from django import forms
 from django.conf.urls import url
@@ -9,11 +11,14 @@ from django.shortcuts import render
 from django.utils.html import format_html
 from django_celery_beat.models import IntervalSchedule, CrontabSchedule
 
+from eventkit_cloud.jobs.forms import RegionForm, RegionalPolicyForm
 from eventkit_cloud.jobs.models import (
     ExportFormat,
     Projection,
     Job,
     Region,
+    RegionalPolicy,
+    RegionalJustification,
     DataProvider,
     DataProviderType,
     DatamodelPreset,
@@ -248,10 +253,77 @@ class DataProviderStatusAdmin(admin.ModelAdmin):
         return False
 
 
+def get_example_from_file(file_path: str):
+    with open(os.path.join(os.path.dirname(__file__), file_path)) as json_file:
+        return json.dumps(json.load(json_file))
+
+
+class RegionAdmin(admin.ModelAdmin):
+    model = Region
+    list_display = ("uid", "name")
+    form = RegionForm
+
+
+class RegionalPolicyAdmin(admin.ModelAdmin):
+    model = RegionalPolicy
+    form = RegionalPolicyForm
+    list_display = ("uid", "name", "region")
+
+    fieldsets = (
+        (None, {"fields": ["name", "region", "providers"]}),
+        (
+            None,
+            {
+                "fields": [
+                    "policies",
+                    "policy_title_text",
+                    "policy_header_text",
+                    "policy_footer_text",
+                    "policy_cancel_text",
+                    "policy_cancel_button_text",
+                ],
+                "description": "The policy field expects a JSON structure with a list of policy objects. "
+                "Each policy object must contain a title and a description. See the example below."
+                f"<br /> <br /> {get_example_from_file('examples/policies_example.json')}",
+            },
+        ),
+        (
+            None,
+            {
+                "fields": ["justification_options"],
+                "description": "The justification options field expects a JSON structure with a "
+                "list of option objects. Each option object must have an integer id, string name "
+                "and boolean display. Options may also have suboptions. "
+                "Suboptions can be of type text or dropdown.  See the example below."
+                f"<br /> <br /> {get_example_from_file('examples/justification_options_example.json')}",
+            },
+        ),
+    )
+
+
+class RegionalJustificationAdmin(admin.ModelAdmin):
+    model = RegionalJustification
+    list_display = ("uid", "justification_id", "justification_name", "regional_policy", "user")
+
+    def get_readonly_fields(self, request, obj=None):
+        if obj:
+            return [field.name for field in obj._meta.get_fields()]
+        return self.readonly_fields
+
+    def has_change_permission(self, request, obj=None):
+        return False
+
+    def has_delete_permission(self, request, obj=None):
+        return False
+
+
 # register the new admin models
 admin.site.register(IntervalSchedule, IntervalScheduleAdmin)
 admin.site.register(CrontabSchedule, CrontabScheduleAdmin)
 admin.site.register(Job, JobAdmin)
 admin.site.register(DataProvider, DataProviderAdmin)
 admin.site.register(DataProviderStatus, DataProviderStatusAdmin)
+admin.site.register(Region, RegionAdmin)
+admin.site.register(RegionalPolicy, RegionalPolicyAdmin)
+admin.site.register(RegionalJustification, RegionalJustificationAdmin)
 admin.site.register(JobPermission)

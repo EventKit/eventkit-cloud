@@ -80,7 +80,7 @@ export class CreateExport extends React.Component<Props, State> {
         );
 
         return (
-            <div>
+            <div style={{height: '100%', display: 'flex', flexDirection: 'column'}}>
                 <PageHeader
                     title="Create DataPack"
                 >

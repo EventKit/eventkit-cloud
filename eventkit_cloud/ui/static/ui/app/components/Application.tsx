@@ -31,6 +31,7 @@ import '../styles/flexboxgrid.css';
 import '../styles/react-joyride-compliled.css';
 import {AppConfigProvider} from "./ApplicationContext";
 import MatomoHandler from "./MatomoHandler";
+import {RegionsProvider} from "./common/context/RegionContext";
 // tslint:disable-next-line:no-var-requires
 require('../fonts/index.css');
 
@@ -59,7 +60,7 @@ const jss = (theme: any) => createStyles({
         height: '95px',
         backgroundColor: 'black',
         boxShadow: 'none',
-        zIndex: 1301,
+        zIndex: 1299,
     },
     img: {
         width: '256px',
@@ -273,30 +274,28 @@ const NotificationsPage = Loadable({
 const history = createBrowserHistory;
 const routes = (
     <Router history={history}>
-        <div>
-            <Route exact path="/login/error" component={UserCanViewErrorPage(LoginErrorPage)}/>
-            <Route exact path="/login" component={UserIsNotAuthenticated(LoginPage)}/>
+        <Route exact path="/login/error" component={UserCanViewErrorPage(LoginErrorPage)}/>
+        <Route exact path="/login" component={UserIsNotAuthenticated(LoginPage)}/>
 
-            <Route path="/logout" component={Logout}/>
-            <Route path="/dashboard" component={UserIsAuthenticated(UserHasAgreed(DashboardPage))}/>
-            <Route path="/exports" component={UserIsAuthenticated(UserHasAgreed(DataPackPage))}/>
-            <Route path="/create" component={UserIsAuthenticated(UserHasAgreed(CreateExport))}/>
-            <Route
-                path="/status/:jobuid"
-                component={UserIsAuthenticated(UserHasAgreed(StatusDownload))}
-            />
-            <Route path="/about" component={UserIsAuthenticated(About)}/>
-            <Route path="/account" component={UserIsAuthenticated(Account)}/>
-            <Route path="/groups" component={UserIsAuthenticated(UserGroupsPage)}/>
-            <Route path="/notifications" component={UserIsAuthenticated(NotificationsPage)}/>
-            <Route
-                exact
-                path="/"
-                render={() => (
-                    <Redirect to="/dashboard"/>
-                )}
-            />
-        </div>
+        <Route path="/logout" component={Logout}/>
+        <Route path="/dashboard" component={UserIsAuthenticated(UserHasAgreed(DashboardPage))}/>
+        <Route path="/exports" component={UserIsAuthenticated(UserHasAgreed(DataPackPage))}/>
+        <Route path="/create" component={UserIsAuthenticated(UserHasAgreed(CreateExport))}/>
+        <Route
+            path="/status/:jobuid"
+            component={UserIsAuthenticated(UserHasAgreed(StatusDownload))}
+        />
+        <Route path="/about" component={UserIsAuthenticated(About)}/>
+        <Route path="/account" component={UserIsAuthenticated(Account)}/>
+        <Route path="/groups" component={UserIsAuthenticated(UserGroupsPage)}/>
+        <Route path="/notifications" component={UserIsAuthenticated(NotificationsPage)}/>
+        <Route
+            exact
+            path="/"
+            render={() => (
+                <Redirect to="/dashboard"/>
+            )}
+        />
     </Router>
 );
 
@@ -737,6 +736,7 @@ export class Application extends React.Component<Props, State> {
 
         return (
             <AppConfigProvider value={this.state.childContext.config}>
+                <RegionsProvider>
                 <MatomoHandler {...this.state.childContext.config.MATOMO}/>
                 <div style={{backgroundColor: colors.black}}>
                     <AppBar
@@ -796,7 +796,7 @@ export class Application extends React.Component<Props, State> {
                         contactUrl={this.state.childContext.config.CONTACT_URL}
                     />
                     <div className="qa-Application-content" style={styles.content}>
-                        <div>{childrenWithContext}</div>
+                        {childrenWithContext}
                         {routes}
                     </div>
                     <BaseDialog
@@ -815,6 +815,7 @@ export class Application extends React.Component<Props, State> {
                         <strong>You have been automatically logged out due to inactivity.</strong>
                     </BaseDialog>
                 </div>
+                </RegionsProvider>
             </AppConfigProvider>
         );
     }
