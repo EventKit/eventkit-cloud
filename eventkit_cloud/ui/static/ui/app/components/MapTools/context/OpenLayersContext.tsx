@@ -9,7 +9,6 @@ export interface OlContext {
 }
 
 const openLayersContext = createContext<OlContext>({} as OlContext);
-
 export const useOlMapContainer = (): OlContext => useContext(openLayersContext);
 export const OlMapProvider = openLayersContext.Provider;
 
@@ -21,5 +20,5 @@ interface ZoomContext {
 }
 
 const zoomContext = createContext<ZoomContext>(null);
-export const useOlZoom =(): ZoomContext => useContext(zoomContext);
+export const useOlZoom = (): ZoomContext => useContext(zoomContext);
 export const OlZoomProvider = zoomContext.Provider;

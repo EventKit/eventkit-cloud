@@ -13,6 +13,10 @@ import CreateDataPackButton from "./CreateDataPackButton";
 import {useEffect} from "react";
 import {DepsHashers} from "../../utils/hooks/hooks";
 import {shouldDisplay} from "../../utils/generic";
+import {RegionJustification} from "./RegionJustification";
+import history from "../../utils/history";
+import {renderIf} from "../../utils/renderIf";
+import {MapZoomLimiter} from "../CreateDataPack/MapZoomLimiter";
 
 const jss = (theme: Eventkit.Theme & Theme) => ({
     btn: {
@@ -70,6 +74,7 @@ export interface State {
     providerPreviewOpen: boolean;
     selectedProvider?: Eventkit.ProviderTask;
     zipSize?: number;
+    hasBlockedRegion: boolean;
 }
 
 export class DataPackDetails extends React.Component<Props, State> {
@@ -82,6 +87,7 @@ export class DataPackDetails extends React.Component<Props, State> {
         this.state = {
             infoOpen: false,
             providerPreviewOpen: false,
+            hasBlockedRegion: false,
         };
     }
 
@@ -195,109 +201,128 @@ export class DataPackDetails extends React.Component<Props, State> {
 
         return (
             <div>
-                <ZipSizeCalculator
-                    fileSizes={
+                <RegionJustification
+                    providers={
                         this.props.providerTasks.filter(
                             providerTask => shouldDisplay(providerTask)
-                        ).map(providerTask => {
-                            // Use the zip task if it exists, otherwise calc based on all available.
-                            const zipTask = providerTask.tasks.find(task => task.name === ZIP_TASK_NAME);
-                            if (!!zipTask && !!zipTask.result.size) {
-                                return Number(zipTask.result.size.replace(' MB', ''));
-                            }
-                            let fileSize = 0;
-                            providerTask.tasks.forEach((task) => {
-                                if (task.result != null) {
-                                    if (task.display !== false && task.result.size) {
-                                        fileSize = fileSize + Number(task.result.size.replace(' MB', ''));
-                                    }
-                                }
-                            });
-                            return fileSize;
-                        })}
-                    setFileSize={(value: number) => this.setState({zipSize: value})}
+                                && providerTask.provider
+                                && shouldDisplay(providerTask.provider)
+                        ).map(providerTask => providerTask.provider)
+                    }
+                    extents={(() => {
+                        const extentArray = [];
+                        if (this.props?.job?.extent) {
+                            extentArray.push(this.props?.job?.extent);
+                        }
+                        return extentArray;
+                    })()}
+                    onClose={() => history.goBack()}
                 />
-                <div className="qa-DataPackDetails-heading" style={styles.subHeading}>
-                    Download Options
-                </div>
-                <Table
-                    className="qa-DataPackDetails-Table"
-                    style={{width: '100%', tableLayout: 'fixed'}}
-                >
-                    <TableBody
-                        className="qa-DataPackDetails-TableHeader"
+                {renderIf(() => (<>
+                    <ZipSizeCalculator
+                        fileSizes={
+                            this.props.providerTasks.filter(
+                                providerTask => shouldDisplay(providerTask)
+                            ).map(providerTask => {
+                                // Use the zip task if it exists, otherwise calc based on all available.
+                                const zipTask = providerTask.tasks.find(task => task.name === ZIP_TASK_NAME);
+                                if (!!zipTask && !!zipTask.result.size) {
+                                    return Number(zipTask.result.size.replace(' MB', ''));
+                                }
+                                let fileSize = 0;
+                                providerTask.tasks.forEach((task) => {
+                                    if (task.result != null) {
+                                        if (task.display !== false && task.result.size) {
+                                            fileSize = fileSize + Number(task.result.size.replace(' MB', ''));
+                                        }
+                                    }
+                                });
+                                return fileSize;
+                            })}
+                        setFileSize={(value: number) => this.setState({zipSize: value})}
+                    />
+                    <div className="qa-DataPackDetails-heading" style={styles.subHeading}>
+                        Download Options
+                    </div>
+                    <Table
+                        className="qa-DataPackDetails-Table"
+                        style={{width: '100%', tableLayout: 'fixed'}}
                     >
-                        <TableRow className="qa-DataPackDetails-TableRow">
-                            <TableCell
-                                className="qa-DataPackDetails-TableCell-zipButton"
-                                style={styles.download}
-                            >
-                                <CreateDataPackButton
-                                    zipSize={this.state.zipSize}
-                                    fontSize={textFontSize}
-                                    // Pass through all non-hidden, displayed providerTasks (as UIDs)
-                                    providerTaskUids={
-                                        this.props.providerTasks.filter(
-                                            providerTask => !providerTask.hidden && providerTask.display
-                                        ).map(
-                                            providerTask => providerTask.uid
-                                        )}
+                        <TableBody
+                            className="qa-DataPackDetails-TableHeader"
+                        >
+                            <TableRow className="qa-DataPackDetails-TableRow">
+                                <TableCell
+                                    className="qa-DataPackDetails-TableCell-zipButton"
+                                    style={styles.download}
+                                >
+                                    <CreateDataPackButton
+                                        zipSize={this.state.zipSize}
+                                        fontSize={textFontSize}
+                                        // Pass through all non-hidden, displayed providerTasks (as UIDs)
+                                        providerTaskUids={
+                                            this.props.providerTasks.filter(
+                                                providerTask => !providerTask.hidden && providerTask.display
+                                            ).map(
+                                                providerTask => providerTask.uid
+                                            )}
+                                    />
+                                </TableCell>
+                                <TableCell
+                                    className="qa-DataPackDetails-TableCell-fileSize"
+                                    style={styles.genericColumn}
+                                >
+                                    FILE SIZE
+                                </TableCell>
+                                <TableCell
+                                    className="qa-DataPackDetails-TableCell-estimatedFinish"
+                                    style={styles.genericColumn}
+                                >
+                                    ESTIMATED FINISH
+                                </TableCell>
+                                <TableCell
+                                    className="qa-DataPackDetails-TableCell-progress"
+                                    style={styles.genericColumn}
+                                >
+                                    PROGRESS
+                                </TableCell>
+                                <TableCell
+                                    className="qa-DataPackDetails-TableCell-empty"
+                                    style={{...styles.genericColumn, width: toggleCellWidth}}
                                 />
-                            </TableCell>
-                            <TableCell
-                                className="qa-DataPackDetails-TableCell-fileSize"
-                                style={styles.genericColumn}
-                            >
-                                FILE SIZE
-                            </TableCell>
-                            <TableCell
-                                className="qa-DataPackDetails-TableCell-estimatedFinish"
-                                style={styles.genericColumn}
-                            >
-                                ESTIMATED FINISH
-                            </TableCell>
-                            <TableCell
-                                className="qa-DataPackDetails-TableCell-progress"
-                                style={styles.genericColumn}
-                            >
-                                PROGRESS
-                            </TableCell>
-                            <TableCell
-                                className="qa-DataPackDetails-TableCell-empty"
-                                style={{...styles.genericColumn, width: toggleCellWidth}}
+                            </TableRow>
+                        </TableBody>
+                    </Table>
+                    <div className="qa-DataPackDetails-providers" id="Providers">
+                        <BaseDialog
+                            title={this.getPreviewDialogTitle()}
+                            bodyStyle={{height: 'auto', width: '100%', maxHeight: 'calc(80vh - 200px)'}}
+                            dialogStyle={{margin: '10px', width: '100%'}}
+                            innerMaxHeight={1000}
+                            show={this.state.providerPreviewOpen}
+                            onClose={() => {
+                                this.setState({providerPreviewOpen: false})
+                            }}
+                        >
+                            <ProviderPreview
+                                providerTasks={this.props.providerTasks}
+                                selectedProvider={(!!selectedProvider) ? selectedProvider.slug : ''}
+                                selectProvider={this.selectPreview}
                             />
-                        </TableRow>
-                    </TableBody>
-                </Table>
-                <div className="qa-DataPackDetails-providers" id="Providers">
-                    <BaseDialog
-                        title={this.getPreviewDialogTitle()}
-                        bodyStyle={{height: 'auto', width: '100%', maxHeight: 'calc(80vh - 200px)'}}
-                        dialogStyle={{margin: '10px', width: '100%'}}
-                        innerMaxHeight={1000}
-                        show={this.state.providerPreviewOpen}
-                        onClose={() => {
-                            this.setState({providerPreviewOpen: false})
-                        }}
-                    >
-                        <ProviderPreview
-                            providerTasks={this.props.providerTasks}
-                            selectedProvider={(!!selectedProvider) ? selectedProvider.slug : ''}
-                            selectProvider={this.selectPreview}
-                        />
-                    </BaseDialog>
-                    {providers.map((provider, ix) => (
-                        <ProviderRow
-                            backgroundColor={ix % 2 === 0 ? colors.secondary : colors.white}
-                            key={provider.uid}
-                            onProviderCancel={this.props.onProviderCancel}
-                            providerTask={provider}
-                            job={this.props.job}
-                            selectProvider={this.selectPreview}
-                            providers={this.props.providers}
-                        />
-                    ))}
-                </div>
+                        </BaseDialog>
+                        {providers.map((provider, ix) => (
+                            <ProviderRow
+                                backgroundColor={ix % 2 === 0 ? colors.secondary : colors.white}
+                                key={provider.uid}
+                                onProviderCancel={this.props.onProviderCancel}
+                                providerTask={provider}
+                                job={this.props.job}
+                                selectProvider={this.selectPreview}
+                                providers={this.props.providers}
+                            />
+                        ))}
+                    </div>
+                </>), !this.state.hasBlockedRegion)}
             </div>
         );
     }

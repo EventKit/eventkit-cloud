@@ -3,7 +3,7 @@ import OlMapComponent from "../../components/MapTools/OpenLayers/OlMapComponent"
 import {mount} from "enzyme";
 
 
-describe('SearchAOIToolbar button', () => {
+describe('OlMapComponent', () => {
 
     let props;
     let wrapper;
@@ -38,6 +38,4 @@ describe('SearchAOIToolbar button', () => {
         setup({visible: false});
         expect(wrapper.find(`#${props.divId}`).get(0).props.style).toEqual({...props.style, visibility: 'hidden'});
     });
-
-
 });

@@ -1,0 +1,28 @@
+[
+    {
+        "id": 1,
+        "name": "Justification Option with Dropdown Suboption",
+        "display": true,
+        "suboption": {
+            "type": "dropdown",
+            "options": [
+                "Option 1",
+                "Option 2"
+            ]
+        }
+    },
+    {
+        "id": 2,
+        "name": "Justification Option with Text Suboption",
+        "display": true,
+        "suboption": {
+            "type": "text",
+            "label": "Label"
+        }
+    },
+    {
+        "id": 3,
+        "name": "Justification Option without Suboption",
+        "display": true
+    }
+]

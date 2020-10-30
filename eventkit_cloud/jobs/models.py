@@ -398,6 +398,40 @@ class Region(UIDMixin, TimeStampedModelMixin):
         super(Region, self).save(*args, **kwargs)
 
 
+class RegionalPolicy(UIDMixin, TimeStampedModelMixin):
+    name = models.CharField(max_length=255)
+    region = models.ForeignKey(Region, on_delete=models.CASCADE, related_name="policies")
+    providers = models.ManyToManyField(DataProvider, related_name="regional_policies")
+    policies = JSONField()
+    policy_title_text = models.CharField(max_length=255)
+    policy_header_text = models.TextField(null=True, blank=True)
+    policy_footer_text = models.TextField(null=True, blank=True)
+    policy_cancel_text = models.CharField(max_length=255, null=True, blank=True)
+    policy_cancel_button_text = models.CharField(max_length=255)
+    justification_options = JSONField()
+
+    class Meta:
+        verbose_name_plural = "Regional Policies"
+
+    def __str__(self):
+        return self.name
+
+
+class RegionalJustification(UIDMixin, TimeStampedModelMixin):
+    """
+    Model that stores regional justification selections made by users.
+    """
+
+    justification_id = models.IntegerField()
+    justification_name = models.CharField(max_length=255)
+    justification_suboption_value = models.TextField(null=True, blank=True)
+    regional_policy = models.ForeignKey(RegionalPolicy, on_delete=models.CASCADE, related_name="justifications")
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="justification_user")
+
+    def __str__(self):
+        return str(self.uid)
+
+
 class VisibilityState(Enum):
     PRIVATE = "PRIVATE"
     PUBLIC = "PUBLIC"
