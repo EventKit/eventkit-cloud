@@ -69,6 +69,11 @@ const jss = (theme: Theme & Eventkit.Theme) => createStyles({
         }
     },
     checked: {},
+    indeterminate: {
+        '& svg': {
+            color: 'rgba(255, 162, 0, 0.87)',
+        }
+    },
     name: {
         marginRight: '10px',
         display: 'flex',
@@ -123,6 +128,7 @@ interface Props {
         license: string;
         prewrap: string;
         listItemPadding: string;
+        indeterminate: string;
     };
 }
 
@@ -460,6 +466,7 @@ export function DataProvider(props: Props) {
     }
 
     const backgroundColor = (props.alt) ? colors.secondary : colors.white;
+    const isIndeterminateThisFrame = isIndeterminate();
 
     return (
         <React.Fragment>
@@ -472,14 +479,14 @@ export function DataProvider(props: Props) {
             >
                 <div className={classes.container}>
                     <Checkbox
-                        className="qa-DataProvider-CheckBox-provider"
+                        className={`qa-DataProvider-CheckBox-provider ${(isIndeterminateThisFrame ? classes.indeterminate : '')}`}
                         classes={{ root: classes.checkbox, checked: classes.checked }}
                         name={provider.name}
                         size="medium"
                         checked={props.checked}
                         checkedIcon={(<CheckBoxIcon/>)}
                         indeterminateIcon={(<IndeterminateCheckBoxIcon/>)}
-                        indeterminate={isIndeterminate()}
+                        indeterminate={isIndeterminateThisFrame}
                         onChange={props.onChange}
                     />
                     <ListItemText
