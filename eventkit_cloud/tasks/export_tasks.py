@@ -982,25 +982,25 @@ def reprojection_task(
     Function defining a task that will reproject all file formats to the chosen projections.
     """
     result = result or {}
-    file_format = parse_result(result, "driver")
+    driver = parse_result(result, "driver")
     selection = parse_result(result, "selection")
 
     if parse_result(result, "file_extension"):
         file_extension = parse_result(result, "file_extension")
     else:
-        file_extension = file_format
+        file_extension = driver
 
     in_dataset = parse_result(result, "source")
     provider_slug = get_provider_slug(task_uid)
     out_dataset = get_export_filename(stage_dir, job_name, projection, provider_slug, file_extension)
 
-    warp_params, translate_params = get_creation_options(config, file_format)
+    warp_params, translate_params = get_creation_options(config, driver)
 
     if "tif" in os.path.splitext(in_dataset)[1]:
         in_dataset = f"GTIFF_RAW:{in_dataset}"
 
     reprojection = gdalutils.convert(
-        driver=file_format,
+        driver=driver,
         input_file=in_dataset,
         output_file=out_dataset,
         task_uid=task_uid,
@@ -1924,16 +1924,16 @@ def get_function(function):
     return function_object
 
 
-def get_creation_options(config: str, file_format: str) -> Union[list, None]:
+def get_creation_options(config: str, driver: str) -> Union[list, None]:
     """
     Gets a list of options for a specific format or returns None.
     :param config: The configuration for a datasource.
-    :param file_format: The file format to look for specific creation options.
+    :param driver: The file format to look for specific creation options.
     :return: A list of creation options of None
     """
     if config:
         conf = yaml.safe_load(config) or dict()
-        params = conf.get("formats", {}).get(file_format, {})
+        params = conf.get("formats", {}).get(driver, {})
         return params.get("warp_params"), params.get("translate_params")
     return None, None
 
