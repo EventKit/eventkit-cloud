@@ -69,11 +69,6 @@ const jss = (theme: Theme & Eventkit.Theme) => createStyles({
         }
     },
     checked: {},
-    indeterminate: {
-        '& svg': {
-            color: 'rgba(255, 162, 0, 0.87)',
-        }
-    },
     name: {
         marginRight: '10px',
         display: 'flex',
