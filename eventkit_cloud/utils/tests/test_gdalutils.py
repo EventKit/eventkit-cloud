@@ -474,7 +474,13 @@ class TestGdalUtils(TestCase):
         dst_srs = "EPSG:3857"
 
         convert_vector(
-            input_file, output_file, driver=driver, boundary=boundary, src_srs=src_srs, dst_srs=dst_srs, task_uid=task_uid
+            input_file,
+            output_file,
+            driver=driver,
+            boundary=boundary,
+            src_srs=src_srs,
+            dst_srs=dst_srs,
+            task_uid=task_uid,
         )
         mock_gdal.VectorTranslate.assert_called_once_with(
             output_file,
