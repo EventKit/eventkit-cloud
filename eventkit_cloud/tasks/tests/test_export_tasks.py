@@ -159,7 +159,7 @@ class TestExportTasks(ExportTaskBase):
             projection=projection,
         )
         mock_convert.assert_called_once_with(
-            fmt="shp",
+            driver="ESRI Shapefile",
             input_file=expected_output_path,
             output_file=expected_output_path,
             task_uid=str(saved_export_task.uid),
@@ -204,7 +204,7 @@ class TestExportTasks(ExportTaskBase):
             projection=projection,
         )
         mock_convert.assert_called_once_with(
-            fmt="kml",
+            driver="libkml",
             input_file=expected_output_path,
             output_file=expected_output_path,
             task_uid=str(saved_export_task.uid),
@@ -249,7 +249,7 @@ class TestExportTasks(ExportTaskBase):
             projection=projection,
         )
         mock_convert.assert_called_once_with(
-            fmt="sqlite",
+            driver="SQLite",
             input_file=expected_output_path,
             output_file=expected_output_path,
             task_uid=str(saved_export_task.uid),
@@ -303,7 +303,7 @@ class TestExportTasks(ExportTaskBase):
             layer=layer,
         )
         mock_convert.assert_called_once_with(
-            fmt="gpkg",
+            driver="gpkg",
             input_file=expected_input_path,
             output_file=expected_output_path,
             task_uid=str(saved_export_task.uid),
@@ -336,7 +336,7 @@ class TestExportTasks(ExportTaskBase):
         job_name = self.job.name.lower()
         input_projection = 4326
         output_projection = 3857
-        fmt = "MBTiles"
+        driver = "MBTiles"
         ext = "mbtiles"
         expected_provider_slug = "osm-generic"
         date = default_format_time(timezone.now())
@@ -365,7 +365,7 @@ class TestExportTasks(ExportTaskBase):
             projection=output_projection,
         )
         mock_convert.assert_called_once_with(
-            fmt=fmt,
+            driver=driver,
             input_file=sample_input,
             output_file=expected_output_path,
             src_srs=input_projection,
@@ -413,7 +413,7 @@ class TestExportTasks(ExportTaskBase):
             projection=projection,
         )
         mock_convert.assert_called_once_with(
-            fmt="gpkg",
+            driver="gpkg",
             input_file=expected_output_path,
             output_file=expected_output_path,
             task_uid=str(saved_export_task.uid),
@@ -443,7 +443,7 @@ class TestExportTasks(ExportTaskBase):
         mock_gdalutils.convert.return_value = expected_outfile
         mock_gdalutils.convert.assert_called_once_with(
             boundary=None,
-            fmt="gtiff",
+            driver="gtiff",
             input_file=f"GTIFF_RAW:{example_geotiff}",
             output_file=expected_outfile,
             task_uid=task_uid,
@@ -454,7 +454,7 @@ class TestExportTasks(ExportTaskBase):
         geotiff_export_task(result=example_result, task_uid=task_uid, stage_dir="stage", job_name="job")
         mock_gdalutils.convert.assert_called_once_with(
             boundary=None,
-            fmt="gtiff",
+            driver="gtiff",
             input_file=f"GTIFF_RAW:{example_geotiff}",
             output_file=expected_outfile,
             task_uid=task_uid,
@@ -467,7 +467,7 @@ class TestExportTasks(ExportTaskBase):
         geotiff_export_task(result=example_result, task_uid=task_uid, stage_dir="stage", job_name="job")
         mock_gdalutils.convert.assert_called_once_with(
             boundary="selection",
-            fmt="gtiff",
+            driver="gtiff",
             input_file=f"GTIFF_RAW:{example_geotiff}",
             output_file=expected_outfile,
             task_uid=task_uid,
@@ -489,7 +489,7 @@ class TestExportTasks(ExportTaskBase):
         mock_gdalutils.convert.return_value = expected_outfile
         mock_gdalutils.convert.assert_called_once_with(
             creation_options=["ICORDS=G"],
-            fmt="nitf",
+            driver="nitf",
             input_file=example_nitf,
             output_file=expected_outfile,
             task_uid=task_uid,
@@ -498,7 +498,7 @@ class TestExportTasks(ExportTaskBase):
         nitf_export_task(result=example_result, task_uid=task_uid, stage_dir="stage", job_name="job")
         mock_gdalutils.convert.assert_called_once_with(
             creation_options=["ICORDS=G"],
-            fmt="nitf",
+            driver="nitf",
             input_file=example_nitf,
             output_file=expected_outfile,
             task_uid=task_uid,
@@ -509,7 +509,7 @@ class TestExportTasks(ExportTaskBase):
         ExportTask.__call__ = lambda *args, **kwargs: celery.Task.__call__(*args, **kwargs)
         example_pbf = "example.pbf"
         example_result = {"pbf": example_pbf}
-        expected_result = {"file_extension": "pbf", "file_format": "OSM", "pbf": example_pbf, "result": example_pbf}
+        expected_result = {"file_extension": "pbf", "driver": "OSM", "pbf": example_pbf, "result": example_pbf}
         returned_result = pbf_export_task(example_result)
         self.assertEquals(expected_result, returned_result)
 
@@ -549,7 +549,7 @@ class TestExportTasks(ExportTaskBase):
             projection=projection,
         )
         mock_convert.assert_called_once_with(
-            fmt="sqlite",
+            driver="SQLite",
             input_file=expected_output_path,
             output_file=expected_output_path,
             task_uid=str(saved_export_task.uid),
@@ -577,7 +577,7 @@ class TestExportTasks(ExportTaskBase):
         expected_result = {
             "pbf": example_source,
             "file_extension": "gpx",
-            "file_format": "GPX",
+            "driver": "GPX",
             "result": expected_outfile,
             "gpx": expected_outfile,
             "selection": example_geojson,
@@ -586,7 +586,7 @@ class TestExportTasks(ExportTaskBase):
         mock_gdalutils.convert.assert_called_once_with(
             input_file=example_source,
             output_file=expected_outfile,
-            fmt="GPX",
+            driver="GPX",
             dataset_creation_options=["GPX_USE_EXTENSIONS=YES"],
             boundary=example_geojson,
         )
@@ -640,7 +640,7 @@ class TestExportTasks(ExportTaskBase):
         )
 
         mock_convert.assert_called_once_with(
-            fmt="gpkg",
+            driver="gpkg",
             input_file=expected_input_path,
             output_file=expected_output_path,
             task_uid=str(saved_export_task.uid),
