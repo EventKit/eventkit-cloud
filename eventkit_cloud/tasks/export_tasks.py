@@ -494,8 +494,7 @@ def osm_data_collection_task(
     """
     logger.debug("enter run for {0}".format(self.name))
     debug_os = None
-    print(f"_________ osm config: {config}")
-    print(f"_________ osm config type: {type(config)}")
+
     try:
         # Uncomment debug_os to generate a simple CSV of the progress log that can be used to evaluate the accuracy
         # of ETA estimates
@@ -1021,7 +1020,7 @@ def wfs_export_task(
     self,
     result=None,
     layer=None,
-    config=None,
+    config=str(),
     run_uid=None,
     task_uid=None,
     stage_dir=None,
@@ -1042,26 +1041,21 @@ def wfs_export_task(
     provider_slug = get_provider_slug(task_uid)
     gpkg = get_export_filename(stage_dir, job_name, projection, provider_slug, "gpkg")
 
-    if config:
-        try:
-            configuration = yaml.safe_load(config)
-        except yaml.YAMLError as e:
-            logger.error(f"Raised exception in WFS service export: {e}")
-            raise Exception(e)
+    configuration = load_provider_config(config)
 
-        if "layers" in configuration:
-            for layer_properties in configuration["layers"]:
-                url = get_wfs_query_url(name, layer_properties.get("url"), layer_properties.get("name"), projection)
-                out = gdalutils.convert(
-                    fmt="gpkg",
-                    input_file=url,
-                    output_file=gpkg,
-                    task_uid=task_uid,
-                    projection=projection,
-                    boundary=bbox,
-                    layer_name=layer_properties.get("name"),
-                    access_mode="append",
-                )
+    if "layers" in configuration:
+        for layer_properties in configuration["layers"]:
+            url = get_wfs_query_url(name, layer_properties.get("url"), layer_properties.get("name"), projection)
+            out = gdalutils.convert(
+                driver="gpkg",
+                input_file=url,
+                output_file=gpkg,
+                task_uid=task_uid,
+                projection=projection,
+                boundary=bbox,
+                layer_name=layer_properties.get("name"),
+                access_mode="append",
+            )
     else:
         url = get_wfs_query_url(name, service_url, layer, projection)
         out = gdalutils.convert(
@@ -1079,7 +1073,23 @@ def wfs_export_task(
     return result
 
 
+def load_provider_config(config: str) -> dict:
+    """
+    Function deserializes a yaml object from a given string.
+    """
+
+    try:
+        configuration = yaml.safe_load(config) or dict()
+    except yaml.YAMLError as e:
+        logger.error(f"Unable to load provider configuration: {e}")
+        raise Exception(e)
+    return configuration
+
+
 def get_wfs_query_url(name: str, service_url: str = None, layer: str = None, projection: int = None) -> str:
+    """
+    Function generates WFS query URL
+    """
 
     # Strip out query string parameters that might conflict
     service_url = re.sub(r"(?i)(?<=[?&])(version|service|request|typename|srsname)=.*?(&|$)", "", service_url,)
@@ -1179,7 +1189,7 @@ def arcgis_feature_service_export_task(
     bbox=None,
     service_url=None,
     projection=4326,
-    config=None,
+    config=str(),
     *args,
     **kwargs,
 ):
@@ -1194,13 +1204,9 @@ def arcgis_feature_service_export_task(
     if not os.path.exists(os.path.dirname(gpkg)):
         os.makedirs(os.path.dirname(gpkg), 6600)
 
-    if config:
-        try:
-            configuration = yaml.safe_load(config)
-        except yaml.YAMLError as e:
-            logger.error(f"Raised exception in WFS service export: {e}")
-            raise Exception(e)
+    configuration = load_provider_config(config)
 
+    if "layers" in configuration:
         for layer_properties in configuration.get("layers"):
             url = get_arcgis_query_url(layer_properties.get("url"), bbox)
             out = gdalutils.convert(
@@ -1216,12 +1222,7 @@ def arcgis_feature_service_export_task(
     else:
         url = get_arcgis_query_url(service_url, bbox)
         out = gdalutils.convert(
-            driver="gpkg",
-            input_file=service_url,
-            output_file=gpkg,
-            task_uid=task_uid,
-            boundary=bbox,
-            projection=projection,
+            driver="gpkg", input_file=url, output_file=gpkg, task_uid=task_uid, boundary=bbox, projection=projection,
         )
 
     result["driver"] = "gpkg"
@@ -1230,7 +1231,10 @@ def arcgis_feature_service_export_task(
     return result
 
 
-def get_arcgis_query_url(service_url: str = None, bbox: object = None,) -> str:
+def get_arcgis_query_url(service_url: str, bbox: list) -> str:
+    """
+    Function generates ArcGIS query URL
+    """
 
     try:
         # remove any url query so we can add our own
