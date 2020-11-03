@@ -60,7 +60,6 @@ import {useEffect} from "react";
 import {useEffectOnMount} from "../../utils/hooks/hooks";
 import MapDrawer from "./MapDrawer";
 import EventkitJoyride from "../common/JoyrideWrapper";
-import {RegionJustification} from "../StatusDownloadPage/RegionJustification";
 import {MapZoomLimiter} from "./MapZoomLimiter";
 
 export const WGS84 = 'EPSG:4326';

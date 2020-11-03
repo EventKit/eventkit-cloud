@@ -70,7 +70,7 @@ class TestHelpers(TestCase):
             mock_makedir.assert_called_once_with(dir)
             mock_write.assert_called_once_with(file, expected_in_path)
             mock_meta.assert_called_once_with(expected_in_path, is_raster=False)
-            mock_convert_vector.assert_called_once_with(expected_in_path, expected_out_path, fmt="geojson")
+            mock_convert_vector.assert_called_once_with(expected_in_path, expected_out_path, driver="geojson")
             mock_rm.assert_called_once_with(dir)
             mock_convert_vector.reset_mock()
             mock_meta.reset_mock()
@@ -89,7 +89,7 @@ class TestHelpers(TestCase):
             mock_unzip.assert_called_once_with(expected_in_path, dir)
             mock_listdirs.assert_called_with(dir)
             mock_meta.convert_vector(updated_in_path, is_raster=False)
-            mock_convert_vector.assert_called_once_with(updated_in_path, expected_out_path, fmt="geojson")
+            mock_convert_vector.assert_called_once_with(updated_in_path, expected_out_path, driver="geojson")
 
             # It should raise an exception if there is no file extension
             file.name = "something"

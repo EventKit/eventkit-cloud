@@ -236,7 +236,7 @@ class TestGeopackage(TransactionTestCase):
         )
         gdal_mock = mock_convert.return_value
         gdal_mock.convert.called_once_with(
-            fmt="gpkg", input_file=geojson, output_file=gpkg, creation_options="-nln {0}".format(layer_name)
+            driver="gpkg", input_file=geojson, output_file=gpkg, creation_options="-nln {0}".format(layer_name)
         )
 
     @patch("eventkit_cloud.utils.geopackage.sqlite3")

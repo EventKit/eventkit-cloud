@@ -285,7 +285,7 @@ def convert(
     input_file=None,
     output_file=None,
     src_srs=4326,
-    fmt=None,
+    driver=None,
     layers=None,
     task_uid=None,
     projection: int = 4326,
@@ -308,7 +308,7 @@ def convert(
     :param boundary: A geojson file or bbox (xmin, ymin, xmax, ymax) to serve as a cutline
     :param input_file: A raster or vector file to be clipped
     :param output_file: The dataset to put the clipped output in (if not specified will use in_dataset)
-    :param fmt: Short name of output driver to use (defaults to input format)
+    :param driver: Short name of output driver to use (defaults to input format)
     :param layers: Table name in database for in_dataset
     :param task_uid: A task uid to update
     :param projection: A projection as an int referencing an EPSG code (e.g. 4326 = EPSG:4326)
@@ -322,13 +322,13 @@ def convert(
     src_src = f"EPSG:{src_srs}"
     dst_src = f"EPSG:{projection}"
 
-    if not fmt:
-        fmt = meta["driver"] or "gpkg"
+    if not driver:
+        driver = meta["driver"] or "gpkg"
 
     # Geopackage raster only supports byte band type, so check for that
     band_type = None
     dstalpha = None
-    if fmt.lower() == "gpkg":
+    if driver.lower() == "gpkg":
         band_type = gdal.GDT_Byte
     if meta.get("nodata") is None and not is_envelope(input_file):
         dstalpha = True
@@ -358,7 +358,7 @@ def convert(
             convert_raster,
             input_file,
             output_file,
-            fmt=fmt,
+            driver=driver,
             creation_options=creation_options,
             band_type=band_type,
             dst_alpha=dstalpha,
@@ -375,7 +375,7 @@ def convert(
             convert_vector,
             input_file,
             output_file,
-            fmt=fmt,
+            driver=driver,
             dataset_creation_options=dataset_creation_options,
             layer_creation_options=layer_creation_options,
             src_srs=src_src,
@@ -396,7 +396,7 @@ def convert(
         if temp_boundfile:
             temp_boundfile.close()
 
-    if requires_zip(fmt):
+    if requires_zip(driver):
         logger.debug(f"Requires zip: {output_file}")
         output_file = create_zip_file(output_file, get_zip_name(output_file))
 
@@ -437,7 +437,7 @@ def clean_options(options):
 def convert_raster(
     input_files,
     output_file,
-    fmt=None,
+    driver=None,
     creation_options=None,
     band_type=None,
     dst_alpha=None,
@@ -455,7 +455,7 @@ def convert_raster(
         overrides other settings.
     :param input_files: A file or list of files to convert.
     :param output_file: The file to convert.
-    :param fmt: The file format to convert.
+    :param driver: The file format to convert.
     :param creation_options: Special GDAL options for conversion.
         Search for "gdal driver <format> creation options" creation options for driver specific implementation.
     :param band_type: The GDAL data type (e.g. gdal.GDT_BYTE).
@@ -472,13 +472,13 @@ def convert_raster(
     elif isinstance(input_files, list) and use_translate:
         raise Exception("Cannot use_translate with a list of files.")
     gdal.UseExceptions()
-    subtask_percentage = 50 if fmt.lower() == "gtiff" else 100
+    subtask_percentage = 50 if driver.lower() == "gtiff" else 100
     options = clean_options(
         {
             "callback": progress_callback,
             "callback_data": {"task_uid": task_uid, "subtask_percentage": subtask_percentage},
             "creationOptions": creation_options,
-            "format": fmt,
+            "format": driver,
         }
     )
     if not warp_params:
@@ -491,7 +491,7 @@ def convert_raster(
         warp_params.update({"cutlineDSName": boundary, "cropToCutline": True})
     # Keep the name imagery which is used when seeding the geopackages.
     # Needed because arcpy can't change table names.
-    if fmt.lower() == "gpkg":
+    if driver.lower() == "gpkg":
         options["creationOptions"] = options.get("creationOptions", []) + ["RASTER_TABLE=imagery"]
 
     if use_translate:
@@ -508,7 +508,7 @@ def convert_raster(
         )
         gdal.Warp(output_file, input_files, **options, **warp_params)
 
-    if fmt.lower() == "gtiff" or translate_params:
+    if driver.lower() == "gtiff" or translate_params:
         # No need to compress in memory objects as they will be removed later.
         if "vsimem" in output_file:
             return output_file
@@ -526,7 +526,7 @@ def convert_raster(
 def convert_vector(
     input_file,
     output_file,
-    fmt=None,
+    driver=None,
     access_mode="overwrite",
     src_srs=None,
     dst_srs=None,
@@ -540,7 +540,7 @@ def convert_vector(
     """
     :param input_files: A file or list of files to convert.
     :param output_file: The file to convert.
-    :param fmt: The file format to convert.
+    :param driver: The file format to convert.
     :param creation_options: Special GDAL options for conversion.
         Search for "gdal driver <format> creation options" creation options for driver specific implementation.
     :param access_mode: The access mode for the file (e.g. "append" or "overwrite")
@@ -560,7 +560,7 @@ def convert_vector(
             "callback_data": {"task_uid": task_uid},
             "datasetCreationOptions": dataset_creation_options,
             "layerCreationOptions": layer_creation_options,
-            "format": fmt,
+            "format": driver,
             "layers": layers,
             "srcSRS": src_srs,
             "dstSRS": dst_srs,
@@ -571,7 +571,7 @@ def convert_vector(
             "options": ["-clipSrc", boundary] if boundary and not bbox else None,
         }
     )
-    if "gpkg" in fmt.lower():
+    if "gpkg" in driver.lower():
         options["geometryType"] = ["PROMOTE_TO_MULTI"]
     logger.info(f"calling gdal.VectorTranslate('{output_file}', '{input_file}', {stringify_params(options)})")
     gdal.VectorTranslate(output_file, input_file, **options)
@@ -613,7 +613,7 @@ def polygonize(input_file: str, output_file: str, output_type: str = "GeoJSON", 
 
                 # Convert to geotiff so that we can remove black pixels and use alpha mask for the polygon.
                 tmp_file = "/vsimem/tmp.tif"
-                convert_raster(nb_file, tmp_file, fmt="gtiff", warp_params={"dstAlpha": True, "srcNodata": "0 0 0"})
+                convert_raster(nb_file, tmp_file, driver="gtiff", warp_params={"dstAlpha": True, "srcNodata": "0 0 0"})
 
                 del nb_file
                 src_ds = gdal.Open(tmp_file)

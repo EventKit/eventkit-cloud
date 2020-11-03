@@ -458,7 +458,7 @@ def osm_data_collection_pipeline(
         input_file=in_dataset,
         output_file=gpkg_filepath,
         layers=["land_polygons"],
-        fmt="gpkg",
+        driver="gpkg",
         is_raster=False,
     )
 
@@ -580,7 +580,7 @@ def shp_export_task(
     selection = parse_result(result, "selection")
 
     shp = gdalutils.convert(
-        fmt="shp",
+        driver="ESRI Shapefile",
         input_file=shp_in_dataset,
         output_file=shp_out_dataset,
         task_uid=task_uid,
@@ -588,9 +588,8 @@ def shp_export_task(
         projection=projection,
     )
 
-    result["file_format"] = "shp"
+    result["driver"] = "ESRI Shapefile"
     result["result"] = shp
-    result["source"] = shp
     return result
 
 
@@ -619,7 +618,7 @@ def kml_export_task(
     selection = parse_result(result, "selection")
 
     kml = gdalutils.convert(
-        fmt="kml",
+        driver="libkml",
         input_file=kml_in_dataset,
         output_file=kml_out_dataset,
         task_uid=task_uid,
@@ -627,9 +626,9 @@ def kml_export_task(
         projection=projection,
     )
 
-    result["file_format"] = "kml"
+    result["driver"] = "libkml"
+    result["file_extension"] = "kml"
     result["result"] = kml
-    result["source"] = kml
     return result
 
 
@@ -661,12 +660,12 @@ def gpx_export_task(
         out = gdalutils.convert(
             input_file=pbf,
             output_file=gpx_file,
-            fmt="GPX",
+            driver="GPX",
             dataset_creation_options=["GPX_USE_EXTENSIONS=YES"],
             boundary=selection,
         )
         result["file_extension"] = "gpx"
-        result["file_format"] = "GPX"
+        result["driver"] = "GPX"
         result["result"] = out
         result["gpx"] = out
         return result
@@ -699,7 +698,7 @@ def pbf_export_task(
     logger.error(pbf_file)
     try:
         result["file_extension"] = "pbf"
-        result["file_format"] = "OSM"
+        result["driver"] = "OSM"
         result["result"] = pbf_file
         logger.error(f"Returning PBF RESULT: {result}")
         return result
@@ -733,7 +732,7 @@ def sqlite_export_task(
     selection = parse_result(result, "selection")
 
     sqlite = gdalutils.convert(
-        fmt="sqlite",
+        driver="SQLite",
         input_file=sqlite_in_dataset,
         output_file=sqlite_out_dataset,
         task_uid=task_uid,
@@ -741,9 +740,8 @@ def sqlite_export_task(
         projection=projection,
     )
 
-    result["file_format"] = "SQLite"
+    result["driver"] = "SQLite"
     result["result"] = sqlite
-    result["source"] = sqlite
     return result
 
 
@@ -804,7 +802,7 @@ def geopackage_export_task(
     selection = parse_result(result, "selection")
 
     gpkg = gdalutils.convert(
-        fmt="gpkg",
+        driver="gpkg",
         input_file=gpkg_in_dataset,
         output_file=gpkg_out_dataset,
         task_uid=task_uid,
@@ -812,7 +810,7 @@ def geopackage_export_task(
         projection=projection,
     )
 
-    result["file_format"] = "gpkg"
+    result["driver"] = "gpkg"
     result["result"] = gpkg
     result["gpkg"] = gpkg
     return result
@@ -847,7 +845,7 @@ def mbtiles_export_task(
     logger.error(f"Converting {source_dataset} to {mbtiles_out_dataset}")
 
     mbtiles = gdalutils.convert(
-        fmt="MBTiles",
+        driver="MBTiles",
         src_srs=4326,
         input_file=source_dataset,
         output_file=mbtiles_out_dataset,
@@ -857,7 +855,7 @@ def mbtiles_export_task(
         use_translate=True,
     )
 
-    result["file_format"] = "MBTiles"
+    result["driver"] = "MBTiles"
     result["result"] = mbtiles
     return result
 
@@ -882,7 +880,7 @@ def geotiff_export_task(
         gtiff_in_dataset = f"GTIFF_RAW:{gtiff_in_dataset}"
 
     gtiff_out_dataset = gdalutils.convert(
-        fmt="gtiff",
+        driver="gtiff",
         input_file=gtiff_in_dataset,
         output_file=gtiff_out_dataset,
         task_uid=task_uid,
@@ -892,7 +890,7 @@ def geotiff_export_task(
     )
 
     result["file_extension"] = "tif"
-    result["file_format"] = "gtiff"
+    result["driver"] = "gtiff"
     result["result"] = gtiff_out_dataset
     result["gtiff"] = gtiff_out_dataset
 
@@ -923,14 +921,14 @@ def nitf_export_task(
 
     creation_options = ["ICORDS=G"]
     nitf = gdalutils.convert(
-        fmt="nitf",
+        driver="nitf",
         input_file=nitf_in_dataset,
         output_file=nitf_out_dataset,
         task_uid=task_uid,
         creation_options=creation_options,
     )
 
-    result["file_format"] = "nitf"
+    result["driver"] = "nitf"
     result["result"] = nitf
     result["nitf"] = nitf
     return result
@@ -957,10 +955,10 @@ def hfa_export_task(
     hfa_in_dataset = parse_result(result, "source")
     provider_slug = get_provider_slug(task_uid)
     hfa_out_dataset = get_export_filename(stage_dir, job_name, projection, provider_slug, "img")
-    hfa = gdalutils.convert(fmt="hfa", input_file=hfa_in_dataset, output_file=hfa_out_dataset, task_uid=task_uid,)
+    hfa = gdalutils.convert(driver="hfa", input_file=hfa_in_dataset, output_file=hfa_out_dataset, task_uid=task_uid,)
 
     result["file_extension"] = "img"
-    result["file_format"] = "hfa"
+    result["driver"] = "hfa"
     result["result"] = hfa
     result["hfa"] = hfa
     return result
@@ -984,7 +982,7 @@ def reprojection_task(
     Function defining a task that will reproject all file formats to the chosen projections.
     """
     result = result or {}
-    file_format = parse_result(result, "file_format")
+    file_format = parse_result(result, "driver")
     selection = parse_result(result, "selection")
 
     if parse_result(result, "file_extension"):
@@ -1002,7 +1000,7 @@ def reprojection_task(
         in_dataset = f"GTIFF_RAW:{in_dataset}"
 
     reprojection = gdalutils.convert(
-        fmt=file_format,
+        driver=file_format,
         input_file=in_dataset,
         output_file=out_dataset,
         task_uid=task_uid,
@@ -1071,10 +1069,10 @@ def wfs_export_task(
             url = re.sub(r"(?<=://)", "%s:%s@" % (user, pw), url)
 
     out = gdalutils.convert(
-        fmt="gpkg", input_file=url, output_file=gpkg, task_uid=task_uid, projection=projection, boundary=bbox,
+        driver="gpkg", input_file=url, output_file=gpkg, task_uid=task_uid, projection=projection, boundary=bbox,
     )
 
-    result["file_format"] = "gpkg"
+    result["driver"] = "gpkg"
     result["result"] = out
     result["source"] = out
 
@@ -1183,10 +1181,15 @@ def arcgis_feature_service_export_task(
         service_url = urljoin(f"{service_url}/", f"query?{query_str}")
 
     out = gdalutils.convert(
-        fmt="gpkg", input_file=service_url, output_file=gpkg, task_uid=task_uid, boundary=bbox, projection=projection,
+        driver="gpkg",
+        input_file=service_url,
+        output_file=gpkg,
+        task_uid=task_uid,
+        boundary=bbox,
+        projection=projection,
     )
 
-    result["file_format"] = "gpkg"
+    result["driver"] = "gpkg"
     result["result"] = out
     result["source"] = out
     return result
@@ -1265,7 +1268,7 @@ def mapproxy_export_task(
             selection=selection,
         )
         gpkg = w2g.convert()
-        result["file_format"] = "gpkg"
+        result["driver"] = "gpkg"
         result["result"] = gpkg
         result["source"] = gpkg
 

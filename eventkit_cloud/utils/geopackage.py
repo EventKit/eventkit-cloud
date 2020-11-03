@@ -469,7 +469,11 @@ def add_geojson_to_geopackage(geojson=None, gpkg=None, layer_name=None, task_uid
         open_file.write(geojson)
 
     gpkg = gdalutils.convert(
-        fmt="gpkg", input_file=gpkg, output_file=geojson_file, task_uid=task_uid, creation_options=f"-nln {layer_name}",
+        driver="gpkg",
+        input_file=gpkg,
+        output_file=geojson_file,
+        task_uid=task_uid,
+        creation_options=f"-nln {layer_name}",
     )
 
     return gpkg
