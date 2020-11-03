@@ -494,7 +494,8 @@ def osm_data_collection_task(
     """
     logger.debug("enter run for {0}".format(self.name))
     debug_os = None
-
+    print(f"_________ osm config: {config}")
+    print(f"_________ osm config type: {type(config)}")
     try:
         # Uncomment debug_os to generate a simple CSV of the progress log that can be used to evaluate the accuracy
         # of ETA estimates
@@ -1038,9 +1039,47 @@ def wfs_export_task(
     Function defining geopackage export for WFS service.
     """
     result = result or {}
-
     provider_slug = get_provider_slug(task_uid)
     gpkg = get_export_filename(stage_dir, job_name, projection, provider_slug, "gpkg")
+
+    if config:
+        try:
+            configuration = yaml.safe_load(config)
+        except yaml.YAMLError as e:
+            logger.error(f"Raised exception in WFS service export: {e}")
+            raise Exception(e)
+
+        if "layers" in configuration:
+            for layer_properties in configuration["layers"]:
+                url = get_wfs_query_url(name, layer_properties.get("url"), layer_properties.get("name"), projection)
+                out = gdalutils.convert(
+                    fmt="gpkg",
+                    input_file=url,
+                    output_file=gpkg,
+                    task_uid=task_uid,
+                    projection=projection,
+                    boundary=bbox,
+                    layer_name=layer_properties.get("name"),
+                    access_mode="append",
+                )
+    else:
+        url = get_wfs_query_url(name, service_url, layer, projection)
+        out = gdalutils.convert(
+            driver="gpkg", input_file=url, output_file=gpkg, task_uid=task_uid, projection=projection, boundary=bbox,
+        )
+
+    result["driver"] = "gpkg"
+    result["result"] = out
+    result["source"] = out
+
+    # Check for geopackage contents; gdal wfs driver fails silently
+    if not geopackage.check_content_exists(out):
+        logger.warning("Empty response: Unknown layer name '{}' or invalid AOI bounds".format(layer))
+
+    return result
+
+
+def get_wfs_query_url(name: str, service_url: str = None, layer: str = None, projection: int = None) -> str:
 
     # Strip out query string parameters that might conflict
     service_url = re.sub(r"(?i)(?<=[?&])(version|service|request|typename|srsname)=.*?(&|$)", "", service_url,)
@@ -1052,6 +1091,7 @@ def wfs_export_task(
         "TYPENAME": layer,
         "SRSNAME": f"EPSG:{projection}",
     }
+
     query_str = urlencode(query_params, safe=":")
 
     if "?" in service_url:
@@ -1063,24 +1103,13 @@ def wfs_export_task(
 
     url = service_url
     cred = get_cred(cred_var=name, url=url)
+
     if cred:
         user, pw = cred
         if not re.search(r"(?<=://)[a-zA-Z0-9\-._~]+:[a-zA-Z0-9\-._~]+(?=@)", url):
             url = re.sub(r"(?<=://)", "%s:%s@" % (user, pw), url)
 
-    out = gdalutils.convert(
-        driver="gpkg", input_file=url, output_file=gpkg, task_uid=task_uid, projection=projection, boundary=bbox,
-    )
-
-    result["driver"] = "gpkg"
-    result["result"] = out
-    result["source"] = out
-
-    # Check for geopackage contents; gdal wfs driver fails silently
-    if not geopackage.check_content_exists(out):
-        logger.warning("Empty response: Unknown layer name '{}' or invalid AOI bounds".format(layer))
-
-    return result
+    return url
 
 
 @app.task(name="WCS Export", bind=True, base=ExportTask, abort_on_error=True, acks_late=True)
@@ -1150,6 +1179,7 @@ def arcgis_feature_service_export_task(
     bbox=None,
     service_url=None,
     projection=4326,
+    config=None,
     *args,
     **kwargs,
 ):
@@ -1163,6 +1193,44 @@ def arcgis_feature_service_export_task(
 
     if not os.path.exists(os.path.dirname(gpkg)):
         os.makedirs(os.path.dirname(gpkg), 6600)
+
+    if config:
+        try:
+            configuration = yaml.safe_load(config)
+        except yaml.YAMLError as e:
+            logger.error(f"Raised exception in WFS service export: {e}")
+            raise Exception(e)
+
+        for layer_properties in configuration.get("layers"):
+            url = get_arcgis_query_url(layer_properties.get("url"), bbox)
+            out = gdalutils.convert(
+                driver="gpkg",
+                input_file=url,
+                output_file=gpkg,
+                task_uid=task_uid,
+                boundary=bbox,
+                projection=projection,
+                layer_name=layer_properties.get("name"),
+                access_mode="append",
+            )
+    else:
+        url = get_arcgis_query_url(service_url, bbox)
+        out = gdalutils.convert(
+            driver="gpkg",
+            input_file=service_url,
+            output_file=gpkg,
+            task_uid=task_uid,
+            boundary=bbox,
+            projection=projection,
+        )
+
+    result["driver"] = "gpkg"
+    result["result"] = out
+    result["source"] = out
+    return result
+
+
+def get_arcgis_query_url(service_url: str = None, bbox: object = None,) -> str:
 
     try:
         # remove any url query so we can add our own
@@ -1178,21 +1246,9 @@ def arcgis_feature_service_export_task(
             "f": "json",
         }
         query_str = urlencode(query_params, safe="=*")
-        service_url = urljoin(f"{service_url}/", f"query?{query_str}")
+        query_url = urljoin(f"{service_url}/", f"query?{query_str}")
 
-    out = gdalutils.convert(
-        driver="gpkg",
-        input_file=service_url,
-        output_file=gpkg,
-        task_uid=task_uid,
-        boundary=bbox,
-        projection=projection,
-    )
-
-    result["driver"] = "gpkg"
-    result["result"] = out
-    result["source"] = out
-    return result
+    return query_url
 
 
 @app.task(name="Area of Interest (.gpkg)", bind=True, base=ExportTask)
