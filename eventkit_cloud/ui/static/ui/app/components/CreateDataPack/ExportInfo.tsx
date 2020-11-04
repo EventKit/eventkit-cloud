@@ -192,7 +192,7 @@ export function hasRequiredFields(exportInfo: Eventkit.Store.ExportInfo) {
         && exportInfo.projectName
         && exportInfo.providers.length > 0
         && exportInfo.projections.length > 0
-        && formatsAreSelected.every(selected => selected === true);
+        && formatsAreSelected.every(selected => selected);
 }
 
 export function hasDisallowedSelection(exportInfo: Eventkit.Store.ExportInfo) {
