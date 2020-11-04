@@ -17,7 +17,7 @@ conda config --add channels local
 cd /root/repo
 mkdir -p /root/repo/linux-64 /root/repo/noarch
 conda index . || echo "JSON Parse Error"
-conda config --add channels file://root/repo/
+conda config --add channels file:///root/repo/
 
 function create_index {
   echo "Move files and create index"
@@ -25,7 +25,7 @@ function create_index {
   cp -f /root/miniconda3/**/*.tar.bz2 /root/repo/linux-64/ || echo "No .tar.bz2 files to move"
   cp -f /root/miniconda3/**/*.conda /root/repo/linux-64/ || echo "No .conda files to move"
   echo "Ensuring repo channel is priority"
-  conda config --add channels file://root/repo/
+  conda config --add channels file:///root/repo/
   pushd /root/repo
 
   echo "Creating the repo index..."
@@ -37,17 +37,20 @@ function create_index {
 echo "Building recipes"
 cd /root/recipes
 if [ -z "$1" ]; then
+  export COMMAND="conda"
   export RECIPES=$(tr '\r\n' ' ' < /root/recipes.txt)
   echo "***Building all recipes in recipes.txt***"
 else
-  export RECIPES=$@
+  export COMMAND=$1 # When running individual recipes, choose conda or mamba e.g. ./build.sh mamba eventkit-cloud
+  shift
+  export RECIPES=$@ # Pass one or many recipes e.g. ./build.sh mamba mapproxy eventkit-cloud
 fi
-echo "***Building $RECIPES...***"
+echo "***Building $RECIPES with $COMMAND...***"
 
 for RECIPE in $RECIPES; do
   for i in 1 2 3; do
-    conda build $RECIPE --skip-existing --strict-verify --merge-build-host \
-    && echo "y" | conda install --no-update-deps $RECIPE && s=0 && \
+    $COMMAND build $RECIPE --skip-existing --strict-verify --merge-build-host \
+    && echo "y" | $COMMAND install --no-update-deps $RECIPE && s=0 && \
     break || s=$? && sleep 5;
   done; (exit $s)
 done

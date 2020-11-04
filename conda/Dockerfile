@@ -14,7 +14,7 @@ RUN curl -L https://repo.continuum.io/miniconda/Miniconda3-py37_4.8.3-Linux-x86_
     conda config --add channels conda-forge && \
     conda config --add channels local && \
     echo "y" | conda update -n root --all && \
-    echo "y" | conda install "conda-build"
+    echo "y" | conda install "conda-build" "mamba"
 
 COPY ./ /root/
 
