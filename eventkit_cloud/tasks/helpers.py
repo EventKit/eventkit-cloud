@@ -115,7 +115,9 @@ def get_provider_staging_preview(run_uid, provider_slug):
     return os.path.join(run_staging_dir, provider_slug, PREVIEW_TAIL)
 
 
-def get_download_filename(name: str, ext: str, additional_descriptors: List[str] = None, data_provider_slug: str = None):
+def get_download_filename(
+    name: str, ext: str, additional_descriptors: List[str] = None, data_provider_slug: str = None
+):
     """
     This provides specific formatting for the names of the downloadable files.
     :param name: A name for the file, typically the job name.
