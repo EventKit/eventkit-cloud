@@ -91,9 +91,21 @@ export function RegionJustification(props: React.PropsWithChildren<Props>) {
         if (policyProviders && policyIntersections) {
             // Finds any policy where the region intersects with one of the specified extents
             // AND it has an affected provider AND no justification is submitted for that policy
-            const foundPolicyPair = policyProviders.find(([_policyA,]) =>
-                arrayHasValue(policyIntersections.map(([_policyB,]) => _policyB), _policyA) &&
-                !justificationSubmitted[_policyA]
+            const foundPolicyPair = policyProviders.find(([_policyA,]) => {
+                    if (justificationSubmitted[_policyA]) {
+                        return false;
+                    }
+                    let policyFound = false;
+                    let policyB, hasIntersection;
+                    for (let _index = 0; _index < policyIntersections.length; _index = _index + 1) {
+                        [policyB, hasIntersection] = policyIntersections[_index];
+                        if (policyB === _policyA && hasIntersection) {
+                            policyFound = true;
+                            break;
+                        }
+                    }
+                    return policyFound;
+                }
             );
             if (foundPolicyPair) {
                 // Policy not being found at this point should be considered a serious error
