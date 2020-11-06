@@ -226,6 +226,8 @@ class TestGdalUtils(TestCase):
             src_srs=in_projection,
             dst_srs=in_projection,
             layers=None,
+            layer_name=None,
+            access_mode="overwrite",
             boundary=geojson_file,
             bbox=None,
             task_uid=self.task_uid,
