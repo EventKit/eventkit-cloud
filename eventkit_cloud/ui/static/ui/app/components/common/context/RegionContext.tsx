@@ -81,17 +81,8 @@ function _RegionsProvider(props: React.PropsWithChildren<any>) {
 function mapStateToProps(state) {
     return {
         user: state?.user?.data,
-        users: state?.users,
     };
 }
 
-function mapDispatchToProps(dispatch) {
-    return {
-        getUsers: params => (
-            dispatch(getUsers(params))
-        ),
-    };
-}
-
-export const RegionsProvider = connect(mapStateToProps, mapDispatchToProps)(_RegionsProvider);
+export const RegionsProvider = connect(mapStateToProps, null)(_RegionsProvider);
 

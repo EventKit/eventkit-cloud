@@ -57,7 +57,7 @@ from eventkit_cloud.tasks.enumerations import TaskStates
 from collections import OrderedDict
 
 # Get an instance of a logger
-from ..jobs.helpers import get_valid_regional_justification
+from eventkit_cloud.jobs.helpers import get_valid_regional_justification
 
 logger = logging.getLogger(__name__)
 
@@ -715,10 +715,7 @@ class UserDataSerializer(serializers.Serializer):
             return licenses
         user_licenses = UserLicense.objects.filter(user=instance)
         for license in License.objects.all():
-            if user_licenses.filter(license=license):
-                licenses[license.slug] = True
-            else:
-                licenses[license.slug] = False
+            licenses[license.slug] = user_licenses.filter(license=license).exists()
         return licenses
 
     def get_accepted_policies(self, instance):
@@ -726,12 +723,8 @@ class UserDataSerializer(serializers.Serializer):
         request = self.context["request"]
         if request.user != instance:
             return policies
-
         for policy in RegionalPolicy.objects.all().prefetch_related("justifications"):
-            if get_valid_regional_justification(policy, instance):
-                policies[str(policy.uid)] = True
-            else:
-                policies[str(policy.uid)] = False
+            policies[str(policy.uid)] = get_valid_regional_justification(policy, instance) is not None
         return policies
 
     @staticmethod
