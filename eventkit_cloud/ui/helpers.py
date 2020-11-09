@@ -59,7 +59,7 @@ def file_to_geojson(in_memory_file):
         if not meta["driver"] or meta["is_raster"]:
             out_path = polygonize(in_path, out_path)
         else:
-            out_path = convert_vector(in_path, out_path, fmt="geojson")
+            out_path = convert_vector(in_path, out_path, driver="geojson")
 
         if os.path.exists(out_path):
             geojson = read_json_file(out_path)
