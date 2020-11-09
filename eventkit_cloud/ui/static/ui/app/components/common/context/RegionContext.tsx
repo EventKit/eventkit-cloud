@@ -46,7 +46,7 @@ export function RegionsProvider(props: React.PropsWithChildren<any>) {
 
     function submitPolicy(uid: string) {
         if (!arrayHasValue(submittedSet, uid)) {
-            submittedSet.push(uid);
+            setSubmittedSet(previousSet => [...previousSet, uid]);
         }
     }
 

@@ -12,16 +12,18 @@ interface Props {
     onClose?: (...args: any) => void;
     onBlockSignal?: () => void;
     onUnblockSignal?: () => void;
+    display: boolean;
 }
 
 RegionJustification.defaultProps = {
+    display: true,
     onBlockSignal: () => undefined,
     onUnblockSignal: () => undefined,
     onClose: () => undefined,
 } as Props;
 
 export function RegionJustification(props: React.PropsWithChildren<Props>) {
-    const {providers, extents} = props;
+    const {providers, extents, display} = props;
     const {
         policies = [], getPolicies, submittedPolicies, submitPolicy,
     } = useRegionContext();
@@ -50,7 +52,7 @@ export function RegionJustification(props: React.PropsWithChildren<Props>) {
         } else {
             setPolicyExtents(undefined);
         }
-    }, [DepsHashers.uidHash(policies)])
+    }, [DepsHashers.uidHash(policies), DepsHashers.arrayHash(submittedPolicies)])
 
     useProviderIdentity(() => {
         const policyProviderSet = [];
@@ -127,7 +129,7 @@ export function RegionJustification(props: React.PropsWithChildren<Props>) {
         submitPolicy(policyUid);
     }
 
-    if (policyToRender) {
+    if (policyToRender && display) {
         return (
             <>
                 <RegionalJustificationDialog

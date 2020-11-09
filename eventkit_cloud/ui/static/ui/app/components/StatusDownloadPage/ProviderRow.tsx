@@ -26,6 +26,11 @@ import {getCookie} from "../../utils/generic";
 import ProviderTaskErrorDialog from "./ProviderTaskErrorDialog";
 import {useDataCartContext} from "./context/DataCart";
 import {useRunContext} from "./context/RunFile";
+import Popover from "@material-ui/core/Popover";
+import CloseIcon from "@material-ui/icons/Close";
+import Button from "@material-ui/core/Button";
+import {Link} from "@material-ui/core";
+import Typography from "@material-ui/core/Typography";
 
 const jss = (theme: Eventkit.Theme & Theme) => createStyles({
     insetColumn: {
@@ -94,6 +99,9 @@ const jss = (theme: Eventkit.Theme & Theme) => createStyles({
             width: '120px',
         },
     },
+    restrictedText: {
+        color: theme.eventkit.colors.grey,
+    },
     estimatedFinishColumn: {
         whiteSpace: 'pre',
         width: '80px',
@@ -131,21 +139,27 @@ const jss = (theme: Eventkit.Theme & Theme) => createStyles({
         paddingLeft: '0px',
         textAlign: 'left',
     },
+    title: {
+        fontWeight: 600,
+        cursor: 'pointer',
+    },
 });
 
-interface Props {
+export interface ProviderRowProps {
     providerTask: Eventkit.ProviderTask;
     job: Eventkit.Job;
     selectProvider: (providerTask: Eventkit.ProviderTask) => void;
     onProviderCancel: (uid: string) => void;
     providers: Eventkit.Provider[];
     backgroundColor: string;
+    restricted: boolean;
+    openDialog: () => void;
     theme: Eventkit.Theme & Theme;
     width: Breakpoint;
     classes: { [className: string]: string };
 }
 
-export function ProviderRow(props: Props) {
+export function ProviderRow(props: ProviderRowProps) {
 
     const {classes, providerTask, job} = props;
     const {setFetching} = useDataCartContext();
@@ -334,7 +348,7 @@ export function ProviderRow(props: Props) {
     function getTaskLink(task: Eventkit.Task) {
         const {colors} = props.theme.eventkit;
 
-        if (!Object.prototype.hasOwnProperty.call(task.result, 'url')) {
+        if (!Object.prototype.hasOwnProperty.call(task.result, 'url') || props.restricted) {
             return (
                 <span
                     className="qa-ProviderRow-span-taskLinkDisabled"
@@ -362,11 +376,68 @@ export function ProviderRow(props: Props) {
         );
     }
 
+    const [anchor, setAnchor] = useState<any>();
+    const handlePopoverOpen = (e: React.MouseEvent<HTMLElement>) => {
+        e.stopPropagation();
+        setAnchor(e.currentTarget);
+    };
+
     // TODO: extract functions like this so they can be tested in isolation.
     function getTaskDownloadIcon(task: Eventkit.Task) {
         const {colors} = props.theme.eventkit;
 
-        if (!Object.prototype.hasOwnProperty.call(task.result, 'url')) {
+        if (!Object.prototype.hasOwnProperty.call(task.result, 'url') || props.restricted) {
+            if (props.restricted) {
+                return (
+                    <>
+                        <Popover
+                            {...{
+                                PaperProps: {
+                                    style: {padding: '16px', width: '30%'}
+                                },
+                                open: !!anchor,
+                                anchorEl: anchor,
+                                onClose: () => setAnchor(null),
+                                anchorOrigin: {
+                                    vertical: 'top',
+                                    horizontal: 'center',
+                                },
+                                transformOrigin: {
+                                    vertical: 'bottom',
+                                    horizontal: 'center',
+                                },
+                            }}
+                        >
+                            <div style={{display: 'contents' as 'contents'}}>
+                                You must agree to the domestic imagery policy to download this file.
+                                <div style={{textAlign: 'center', marginTop: '8px'}}>
+                                    <Link
+                                        onClick={() => {
+                                            props.openDialog();
+                                            setAnchor(null);
+                                        }}
+                                    >
+                                        <Typography variant="h6" gutterBottom className={classes.title}>
+                                            See domestic imagery policy
+                                        </Typography>
+                                    </Link>
+                                </div>
+                            </div>
+                        </Popover>
+                        <IconButton onClick={e => handlePopoverOpen(e)}>
+                            <Warning
+                                className="qa-ProviderRow-Warning-taskStatus"
+                                style={{
+                                    marginLeft: '10px',
+                                    fill: colors.running,
+                                    verticalAlign: 'middle',
+                                }}
+
+                            />
+                        </IconButton>
+                    </>
+                );
+            }
             return (
                 <CloudDownload
                     className="qa-ProviderRow-CloudDownload-taskLinkDisabled"

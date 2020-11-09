@@ -4,7 +4,7 @@ import InfoDialog from "../Dialog/InfoDialog";
 import {Theme, withStyles, withTheme} from "@material-ui/core/styles";
 import CloudDownload from "@material-ui/icons/CloudDownload";
 import {useAsyncRequest, ApiStatuses, FileStatus} from "../../utils/hooks/api";
-import {formatMegaBytes, getCookie} from "../../utils/generic";
+import {formatMegaBytes, getCookie, shouldDisplay} from "../../utils/generic";
 import {useRunContext} from "./context/RunFile";
 import {useEffect, useRef, useState} from "react";
 import {DepsHashers, usePrevious} from "../../utils/hooks/hooks";
@@ -13,6 +13,7 @@ import CloseIcon from "@material-ui/icons/Close";
 import Popover from "@material-ui/core/Popover";
 import AlertError from "@material-ui/icons/Error";
 import CenteredPopup from "../common/CenteredPopup";
+import {RegionJustification} from "./RegionJustification";
 
 // Interval in ms
 const ZIP_POLLING_INTERVAL = 5000;
@@ -82,13 +83,18 @@ interface Props {
     zipSize: number;
     fontSize: string;  // Pass through font size to be consistent with parent.
     classes: { [className: string]: string; };
-    providerTaskUids: string[];
+    providerTasks: Eventkit.ProviderTask[];
+    job: Eventkit.Job;
     theme: Eventkit.Theme & Theme;
 }
 
 export function CreateDataPackButton(props: Props) {
-    const {fontSize, providerTaskUids, classes, theme} = props;
+    const {fontSize, providerTasks, classes, theme} = props;
     const {run} = useRunContext();
+
+
+    const [ open, setOpen ] = useState(false);
+    const [ dataPackRestricted, setDataPackRestricted ] = useState(false);
 
     const [anchor, setAnchor] = useState(null);
     const handlePopoverOpen = (e: React.MouseEvent<HTMLElement>) => {
@@ -114,7 +120,7 @@ export function CreateDataPackButton(props: Props) {
             ...requestOptions,
             method: 'GET',
             params: {
-                data_provider_task_record_uids: providerTaskUids.join(','),
+                data_provider_task_record_uids: providerTasks.map(_providerTask => _providerTask.uid).join(','),
             }
         });
     };
@@ -126,7 +132,7 @@ export function CreateDataPackButton(props: Props) {
             ...requestOptions,
             method: 'POST',
             data: {
-                data_provider_task_record_uids: providerTaskUids,
+                data_provider_task_record_uids: providerTasks.map(_providerTask => _providerTask.uid).join(','),
             },
         });
     };
@@ -139,7 +145,7 @@ export function CreateDataPackButton(props: Props) {
         if (zipAvailableStatus !== ApiStatuses.hookActions.NOT_FIRED) {
             clearZipAvailable();
         }
-    }, [DepsHashers.arrayHash(providerTaskUids), run.status]);
+    }, [DepsHashers.uidHash(providerTasks), run.status]);
 
 
     // Updates the status of the button.
@@ -166,7 +172,6 @@ export function CreateDataPackButton(props: Props) {
         if (isRequestZipFileStatusBad()) {
             setDisplayCreatingMessage(true);
         }
-        ;
     }, [requestZipFileStatus]);
 
     function isRunCompleted() {
@@ -207,6 +212,9 @@ export function CreateDataPackButton(props: Props) {
     const previousFrameText = useRef((<></>));
 
     function getButtonText() {
+        if (dataPackRestricted) {
+            return 'Restricted by Policy';
+        }
         const sizeText = (props.zipSize) ? formatMegaBytes(props.zipSize, 1) + ' ' : '';
         const zipText = (<span style={{whiteSpace: 'nowrap'}}>({sizeText}.ZIP)</span>)
         // We do this to prevent the text from rapidly flickering between different states when we fire
@@ -270,7 +278,7 @@ export function CreateDataPackButton(props: Props) {
     // Whether the button is enabled in a manner that triggers an action (download/POST)
     // This will enable the MUI button, but we also allow clicks
     function shouldEnableButton() {
-        if (isRunCanceled()) {
+        if (dataPackRestricted || isRunCanceled()) {
             return false;
         }
         // Check isZipProcessing to be false, because undefined means the call hasn't happened yet.
@@ -280,20 +288,6 @@ export function CreateDataPackButton(props: Props) {
     const buttonEnabled = shouldEnableButton();
 
     const [displayCreatingMessage, setDisplayCreatingMessage] = useState(false);
-
-    async function buttonAction(e: React.MouseEvent<HTMLElement>) {
-        // Only post a new zipfile request if there isn't a zip or a successful post yet.
-        if (!isZipAvailable()){
-            checkZipAvailable();
-        }
-        if (!isZipProcessing() && !isRequestZipFileStatusSuccessful() && !isZipAvailable()) {
-            postZipRequest();
-            setDisplayCreatingMessage(true);
-        } else {
-            handlePopoverOpen(e);
-            clearRequestZipFile();
-        }
-    }
 
     const getCreatingMessage = () => {
 
@@ -336,7 +330,7 @@ export function CreateDataPackButton(props: Props) {
             },
         };
         let IconComponent: React.ComponentType<any> = CloudDownload;
-        if (badResponse || isRunCanceled()) {
+        if (dataPackRestricted || badResponse || isRunCanceled()) {
             // This case controls for when we get no response back at all, usually an empty array.
             // This probably means no file could be retrieved for the specified provider tasks uids combo.
             IconComponent = AlertError;
@@ -359,8 +353,46 @@ export function CreateDataPackButton(props: Props) {
         );
     }
 
+    async function buttonAction(e: React.MouseEvent<HTMLElement>) {
+        // Only post a new zipfile request if there isn't a zip or a successful post yet.
+        if (!isZipAvailable()){
+            checkZipAvailable();
+        }
+        if (dataPackRestricted) {
+            setOpen(true);
+            return;
+        }
+        if (!isZipProcessing() && !isRequestZipFileStatusSuccessful() && !isZipAvailable()) {
+            postZipRequest();
+            setDisplayCreatingMessage(true);
+        } else {
+            handlePopoverOpen(e);
+            clearRequestZipFile();
+        }
+    }
     return (
         <div style={{display: 'flex'}}>
+            <RegionJustification
+                providers={props.providerTasks.filter(
+                    providerTask => shouldDisplay(providerTask)
+                        && providerTask.provider
+                        && shouldDisplay(providerTask.provider)
+                ).map(providerTask => providerTask.provider)}
+                extents={(() => {
+                    const extentArray = [];
+                    if (props?.job?.extent) {
+                        extentArray.push(props?.job?.extent);
+                    }
+                    return extentArray;
+                })()}
+                onClose={() => {
+                    setDataPackRestricted(true);
+                    setOpen(false);
+                }}
+                onBlockSignal={() => setDataPackRestricted(true)}
+                onUnblockSignal={() => setDataPackRestricted(false)}
+                display={open}
+            />
             <Button
                 id="CompleteDownload"
                 variant="contained"
@@ -372,7 +404,7 @@ export function CreateDataPackButton(props: Props) {
                 {...(() => {
                     // If the zip file is available, set the href of the button to the URL.
                     const extraProps = {} as { href: string };
-                    if (buttonEnabled && isZipAvailable()) {
+                    if (buttonEnabled && isZipAvailable() && !dataPackRestricted) {
                         extraProps.href = zipAvailableResponse.data[0].url;
                     }
                     return extraProps;
