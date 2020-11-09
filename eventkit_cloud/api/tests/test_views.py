@@ -1447,6 +1447,7 @@ class TestLicenseViewSet(APITestCase):
 
 class TestUserDataViewSet(APITestCase):
     fixtures = ("osm_provider.json",)
+
     def setUp(self,):
         self.path = os.path.dirname(os.path.realpath(__file__))
         self.group, created = Group.objects.get_or_create(name="TestDefaultExportExtentGroup")
@@ -1574,7 +1575,6 @@ class TestUserDataViewSet(APITestCase):
         response = self.client.get(url)
         data = response.json()
         self.assertEqual(data.get("accepted_policies"), {str(RegionalPolicy.objects.first().uid): True})
-
 
 
 class TestGroupDataViewSet(APITestCase):
