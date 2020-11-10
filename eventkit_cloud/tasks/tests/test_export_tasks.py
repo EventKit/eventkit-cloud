@@ -328,6 +328,67 @@ class TestExportTasks(ExportTaskBase):
         self.assertEqual(expected_output_path, result_b["result"])
         self.assertEqual(expected_output_path, result_b["source"])
 
+        url_1 = "https://abc.gov/wfs/services/x"
+        url_2 = "https://abc.gov/wfs/services/y"
+        layer_1 = "spam"
+        layer_2 = "ham"
+        expected_in_1 = (
+            f"{url_1}?SERVICE=WFS&VERSION=1.0.0&REQUEST=GetFeature&TYPENAME={layer_1}&SRSNAME=EPSG:{projection}"
+        )
+        expected_in_2 = (
+            f"{url_2}?SERVICE=WFS&VERSION=1.0.0&REQUEST=GetFeature&TYPENAME={layer_2}&SRSNAME=EPSG:{projection}"
+        )
+
+        config = f"""
+        layers:
+            - name: '{layer_1}'
+              url: '{url_1}'
+            - name: '{layer_2}'
+              url: '{url_2}'
+        """
+
+        mock_convert.reset_mock()
+
+        # test with layer in config
+        result_c = wfs_export_task.run(
+            run_uid=self.run.uid,
+            result=previous_task_result,
+            task_uid=str(saved_export_task.uid),
+            stage_dir=stage_dir,
+            job_name=job_name,
+            projection=projection,
+            service_url=service_url,
+            layer=layer,
+            config=config,
+        )
+
+        self.assertEqual(mock_convert.call_count, 2)
+
+        mock_convert.assert_any_call(
+            driver="gpkg",
+            input_file=expected_in_1,
+            output_file=expected_output_path,
+            task_uid=str(saved_export_task.uid),
+            projection=4326,
+            boundary=None,
+            access_mode="append",
+            layer_name=layer_1,
+        )
+
+        mock_convert.assert_any_call(
+            driver="gpkg",
+            input_file=expected_in_2,
+            output_file=expected_output_path,
+            task_uid=str(saved_export_task.uid),
+            projection=4326,
+            boundary=None,
+            access_mode="append",
+            layer_name=layer_2,
+        )
+
+        self.assertEqual(expected_output_path, result_c["result"])
+        self.assertEqual(expected_output_path, result_c["source"])
+
     @patch("eventkit_cloud.utils.gdalutils.convert")
     @patch("celery.app.task.Task.request")
     def test_mbtiles_export_task(self, mock_request, mock_convert):
@@ -607,9 +668,8 @@ class TestExportTasks(ExportTaskBase):
         )
         service_url = "https://abc.gov/arcgis/services/x"
         bbox = [1, 2, -3, 4]
-        expected_input_path = (
-            f"{service_url}/query?where=objectid=objectid&outfields=*&geometry=1%2C+2%2C+-3%2C+4&f=json"
-        )
+        query_string = "query?where=objectid=objectid&outfields=*&geometry=1%2C+2%2C+-3%2C+4&f=json"
+        expected_input_path = f"{service_url}/{query_string}"
         mock_convert.return_value = expected_output_path
 
         previous_task_result = {"source": expected_output_path}
@@ -650,6 +710,7 @@ class TestExportTasks(ExportTaskBase):
 
         self.assertEqual(expected_output_path, result_a["result"])
         self.assertEqual(expected_output_path, result_a["source"])
+
         # test with trailing slash
         result_b = arcgis_feature_service_export_task.run(
             run_uid=self.run.uid,
@@ -664,6 +725,64 @@ class TestExportTasks(ExportTaskBase):
 
         self.assertEqual(expected_output_path, result_b["result"])
         self.assertEqual(expected_output_path, result_b["source"])
+
+        url_1 = "https://abc.gov/arcgis/services/x"
+        url_2 = "https://abc.gov/arcgis/services/y"
+        expected_in_1 = f"{url_1}/{query_string}"
+        expected_in_2 = f"{url_2}/{query_string}"
+
+        layer_name_1 = "foo"
+        layer_name_2 = "bar"
+
+        config = f"""
+        layers:
+            - name: '{layer_name_1}'
+              url: '{url_1}'
+            - name: '{layer_name_2}'
+              url: '{url_2}'
+        """
+
+        mock_convert.reset_mock()
+
+        # test with layer in config
+        result_c = arcgis_feature_service_export_task.run(
+            run_uid=self.run.uid,
+            result=previous_task_result,
+            task_uid=str(saved_export_task.uid),
+            stage_dir=stage_dir,
+            job_name=job_name,
+            projection=projection,
+            service_url=f"{service_url}/",
+            bbox=bbox,
+            config=config,
+        )
+
+        self.assertEqual(mock_convert.call_count, 2)
+
+        mock_convert.assert_any_call(
+            driver="gpkg",
+            input_file=expected_in_1,
+            output_file=expected_output_path,
+            task_uid=str(saved_export_task.uid),
+            projection=4326,
+            boundary=bbox,
+            access_mode="append",
+            layer_name=layer_name_1,
+        )
+
+        mock_convert.assert_any_call(
+            driver="gpkg",
+            input_file=expected_in_2,
+            output_file=expected_output_path,
+            task_uid=str(saved_export_task.uid),
+            projection=4326,
+            boundary=bbox,
+            access_mode="append",
+            layer_name=layer_name_2,
+        )
+
+        self.assertEqual(expected_output_path, result_c["result"])
+        self.assertEqual(expected_output_path, result_c["source"])
 
     @patch("celery.app.task.Task.request")
     @patch("eventkit_cloud.utils.mapproxy.MapproxyGeopackage")

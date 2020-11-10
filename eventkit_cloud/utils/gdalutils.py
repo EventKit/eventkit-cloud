@@ -287,6 +287,7 @@ def convert(
     src_srs=4326,
     driver=None,
     layers=None,
+    layer_name=None,
     task_uid=None,
     projection: int = 4326,
     creation_options: list = None,
@@ -296,6 +297,7 @@ def convert(
     warp_params: dict = None,
     translate_params: dict = None,
     use_translate: bool = False,
+    access_mode: str = "overwrite",
 ):
     """
     Uses gdal to convert and clip a supported dataset file to a mask if boundary is passed in.
@@ -309,7 +311,8 @@ def convert(
     :param input_file: A raster or vector file to be clipped
     :param output_file: The dataset to put the clipped output in (if not specified will use in_dataset)
     :param driver: Short name of output driver to use (defaults to input format)
-    :param layers: Table name in database for in_dataset
+    :param layer_name: Table name in database for in_dataset
+    :param layers: A list of layers to include for translation.
     :param task_uid: A task uid to update
     :param projection: A projection as an int referencing an EPSG code (e.g. 4326 = EPSG:4326)
     :param creation_options: Additional options to pass to the convert method (e.g. "-co SOMETHING")
@@ -381,9 +384,11 @@ def convert(
             src_srs=src_src,
             dst_srs=dst_src,
             layers=layers,
+            layer_name=layer_name,
             task_uid=task_uid,
             boundary=boundary,
             bbox=bbox,
+            access_mode=access_mode,
         )
     try:
         task_process = TaskProcess(task_uid=task_uid)
@@ -532,6 +537,7 @@ def convert_vector(
     dst_srs=None,
     task_uid=None,
     layers=None,
+    layer_name=None,
     boundary=None,
     bbox=None,
     dataset_creation_options=None,
@@ -551,6 +557,7 @@ def convert_vector(
     :param dst_srs: The srs of the destination (e.g. "EPSG:3857")
     :param task_uid: The eventkit task uid used for tracking the work.
     :param layers: A list of layers to include for translation.
+    :param layer_name: Table name in database for in_dataset
     :return: The output file.
     """
     gdal.UseExceptions()
@@ -562,6 +569,7 @@ def convert_vector(
             "layerCreationOptions": layer_creation_options,
             "format": driver,
             "layers": layers,
+            "layerName": layer_name,
             "srcSRS": src_srs,
             "dstSRS": dst_srs,
             "accessMode": access_mode,
