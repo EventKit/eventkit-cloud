@@ -25,7 +25,13 @@ from eventkit_cloud.core.models import (
     TimeTrackingModelMixin,
     LowerCaseCharField,
 )
-from eventkit_cloud.jobs.models import Job, DataProvider, JobPermissionLevel, JobPermission
+from eventkit_cloud.jobs.models import (
+    Job,
+    DataProvider,
+    JobPermissionLevel,
+    JobPermission,
+    RegionalPolicy,
+)
 from eventkit_cloud.tasks import (
     DEFAULT_CACHE_EXPIRATION,
     get_cache_value,
@@ -35,6 +41,7 @@ from eventkit_cloud.tasks.enumerations import TaskStates
 from eventkit_cloud.utils.s3 import download_folder_from_s3
 from notifications.models import Notification
 
+from eventkit_cloud.jobs.helpers import get_valid_regional_justification
 
 logger = logging.getLogger(__name__)
 
@@ -115,6 +122,7 @@ class FileProducingTaskResult(UIDMixin, NotificationModelMixin):
 
         jobs = JobPermission.userjobs(user, JobPermissionLevel.READ.value)
         job = jobs.filter(runs__data_provider_task_records__tasks__result=self).first()
+        providers = []
 
         if not job:
             return False
@@ -123,11 +131,23 @@ class FileProducingTaskResult(UIDMixin, NotificationModelMixin):
         attribute_classes = []
         for run_zip_file in self.runzipfile_set.all():
             for data_provider_task_record in run_zip_file.data_provider_task_records.all():
+                providers.append(data_provider_task_record.provider)
                 if data_provider_task_record.provider.attribute_class:
                     attribute_classes.append(data_provider_task_record.provider.attribute_class)
 
         for attribute_class in attribute_classes:
             if attribute_class and not attribute_class.users.filter(id=user.id):
+                return False
+
+        # Get the providers associated with this download if it's not a zipfile.
+        if self.export_task.export_provider_task.provider:
+            providers.append(self.export_task.export_provider_task.provider)
+
+        # Check to make sure the user has agreed to the regional policy if one exists.
+        for policy in RegionalPolicy.objects.filter(
+            region__the_geom__intersects=job.the_geom, providers__in=providers
+        ).prefetch_related("justifications"):
+            if not get_valid_regional_justification(policy, user):
                 return False
 
         return True

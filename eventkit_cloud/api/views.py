@@ -61,6 +61,8 @@ from eventkit_cloud.api.serializers import (
     ProviderTaskSerializer,
     RegionMaskSerializer,
     RegionSerializer,
+    RegionalPolicySerializer,
+    RegionalJustificationSerializer,
     RunZipFileSerializer,
     SizeIncreaseRequestSerializer,
     UserDataSerializer,
@@ -87,6 +89,8 @@ from eventkit_cloud.jobs.models import (
     Job,
     Region,
     RegionMask,
+    RegionalPolicy,
+    RegionalJustification,
     DataProvider,
     DataProviderTask,
     DatamodelPreset,
@@ -927,6 +931,30 @@ class RegionMaskViewSet(viewsets.ReadOnlyModelViewSet):
     serializer_class = RegionMaskSerializer
     permission_classes = (permissions.IsAuthenticated,)
     queryset = RegionMask.objects.all()
+
+
+class RegionalPolicyViewSet(viewsets.ReadOnlyModelViewSet):
+    """
+    Endpoint exposing the available regional policies.
+    """
+
+    serializer_class = RegionalPolicySerializer
+    permission_classes = (permissions.IsAuthenticated,)
+    queryset = RegionalPolicy.objects.all()
+    lookup_field = "uid"
+
+
+class RegionalJustificationViewSet(viewsets.ModelViewSet):
+    serializer_class = RegionalJustificationSerializer
+    permission_classes = (permissions.IsAuthenticated,)
+    lookup_field = "uid"
+    http_method_names = ["get", "post"]
+
+    def get_queryset(self):
+        if self.request.user.is_superuser:
+            return RegionalJustification.objects.all()
+        else:
+            return RegionalJustification.objects.filter(user=self.request.user)
 
 
 class ExportRunViewSet(viewsets.ModelViewSet):

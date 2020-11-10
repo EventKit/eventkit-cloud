@@ -120,7 +120,7 @@ class TestGdalUtils(TestCase):
         geojson_file = "/path/to/geojson"
         out_dataset = "/path/to/dataset"
         in_dataset = "/path/to/old_dataset"
-        fmt = "gpkg"
+        driver = "gpkg"
         band_type = gdal.GDT_Byte
         dstalpha = True
         lambda_mock = Mock()
@@ -131,7 +131,7 @@ class TestGdalUtils(TestCase):
             boundary=geojson_file,
             input_file=in_dataset,
             output_file=out_dataset,
-            fmt=fmt,
+            driver=driver,
             task_uid=self.task_uid,
             projection=3857,
         )
@@ -139,7 +139,7 @@ class TestGdalUtils(TestCase):
             convert_raster,
             in_dataset,
             out_dataset,
-            fmt=fmt,
+            driver=driver,
             creation_options=None,
             band_type=band_type,
             dst_alpha=dstalpha,
@@ -156,17 +156,19 @@ class TestGdalUtils(TestCase):
         self.task_process.reset_mock()
 
         # Geotiff
-        fmt = "gtiff"
+        driver = "gtiff"
         band_type = None
         dstalpha = None
         get_meta_mock.return_value = {"driver": "gtiff", "is_raster": True, "nodata": None}
         is_envelope_mock.return_value = True  # So, no need for -dstalpha
-        convert(boundary=geojson_file, input_file=in_dataset, output_file=out_dataset, fmt=fmt, task_uid=self.task_uid)
+        convert(
+            boundary=geojson_file, input_file=in_dataset, output_file=out_dataset, driver=driver, task_uid=self.task_uid
+        )
         get_task_command_mock.assert_called_once_with(
             convert_raster,
             in_dataset,
             out_dataset,
-            fmt=fmt,
+            driver=driver,
             creation_options=None,
             band_type=band_type,
             dst_alpha=dstalpha,
@@ -185,12 +187,14 @@ class TestGdalUtils(TestCase):
         # Geotiff with non-envelope polygon cutline
         is_envelope_mock.return_value = False
         dstalpha = True
-        convert(boundary=geojson_file, input_file=in_dataset, output_file=out_dataset, fmt=fmt, task_uid=self.task_uid)
+        convert(
+            boundary=geojson_file, input_file=in_dataset, output_file=out_dataset, driver=driver, task_uid=self.task_uid
+        )
         get_task_command_mock.assert_called_once_with(
             convert_raster,
             in_dataset,
             out_dataset,
-            fmt=fmt,
+            driver=driver,
             creation_options=None,
             band_type=band_type,
             dst_alpha=dstalpha,
@@ -207,19 +211,23 @@ class TestGdalUtils(TestCase):
         self.task_process.reset_mock()
 
         # Vector
-        fmt = "gpkg"
+        driver = "gpkg"
         get_meta_mock.return_value = {"driver": "gpkg", "is_raster": False}
-        convert(boundary=geojson_file, input_file=in_dataset, output_file=out_dataset, fmt=fmt, task_uid=self.task_uid)
+        convert(
+            boundary=geojson_file, input_file=in_dataset, output_file=out_dataset, driver=driver, task_uid=self.task_uid
+        )
         get_task_command_mock.assert_called_once_with(
             convert_vector,
             in_dataset,
             out_dataset,
-            fmt=fmt,
+            driver=driver,
             dataset_creation_options=None,
             layer_creation_options=None,
             src_srs=in_projection,
             dst_srs=in_projection,
             layers=None,
+            layer_name=None,
+            access_mode="overwrite",
             boundary=geojson_file,
             bbox=None,
             task_uid=self.task_uid,
@@ -229,7 +237,7 @@ class TestGdalUtils(TestCase):
         self.task_process.reset_mock()
 
         # Test that extra_parameters are added when converting to NITF.
-        fmt = "nitf"
+        driver = "nitf"
         extra_parameters = "-co ICORDS=G"
         in_projection = "EPSG:4326"
         out_projection = "EPSG:3857"
@@ -237,7 +245,7 @@ class TestGdalUtils(TestCase):
         dstalpha = True
         get_meta_mock.return_value = {"driver": "gpkg", "is_raster": True}
         convert(
-            fmt=fmt,
+            driver=driver,
             input_file=in_dataset,
             creation_options=extra_parameters,
             output_file=out_dataset,
@@ -248,7 +256,7 @@ class TestGdalUtils(TestCase):
             convert_raster,
             in_dataset,
             out_dataset,
-            fmt=fmt,
+            driver=driver,
             creation_options=extra_parameters,
             band_type=band_type,
             dst_alpha=dstalpha,
@@ -265,18 +273,18 @@ class TestGdalUtils(TestCase):
         self.task_process.reset_mock()
 
         # Test converting to a new projection
-        fmt = "gpkg"
+        driver = "gpkg"
         in_projection = "EPSG:4326"
         out_projection = "EPSG:3857"
         band_type = gdal.GDT_Byte
         dstalpha = True
         get_meta_mock.return_value = {"driver": "gpkg", "is_raster": True}
-        convert(fmt=fmt, input_file=in_dataset, output_file=out_dataset, task_uid=self.task_uid, projection=3857)
+        convert(driver=driver, input_file=in_dataset, output_file=out_dataset, task_uid=self.task_uid, projection=3857)
         get_task_command_mock.assert_called_once_with(
             convert_raster,
             in_dataset,
             out_dataset,
-            fmt=fmt,
+            driver=driver,
             creation_options=None,
             band_type=band_type,
             dst_alpha=dstalpha,
@@ -398,11 +406,13 @@ class TestGdalUtils(TestCase):
         input_file = "/test/test.gpkg"
         output_file = "/test/test.tif"
         boundary = "/test/test.json"
-        fmt = "gtiff"
+        driver = "gtiff"
         srs = "EPSG:4326"
 
         mock_get_dataset_names.return_value = (input_file, output_file)
-        convert_raster(input_file, output_file, fmt=fmt, boundary=boundary, src_srs=srs, dst_srs=srs, task_uid=task_uid)
+        convert_raster(
+            input_file, output_file, driver=driver, boundary=boundary, src_srs=srs, dst_srs=srs, task_uid=task_uid
+        )
         mock_gdal.Warp.assert_called_once_with(
             output_file,
             [input_file],
@@ -411,14 +421,14 @@ class TestGdalUtils(TestCase):
             cropToCutline=True,
             cutlineDSName=boundary,
             dstSRS=srs,
-            format=fmt,
+            format=driver,
             srcSRS=srs,
         )
         mock_gdal.Translate.assert_called_once_with(
             output_file,
             input_file,
             callback=progress_callback,
-            format=fmt,
+            format=driver,
             callback_data={"task_uid": task_uid, "subtask_percentage": 50},
             creationOptions=["COMPRESS=LZW", "TILED=YES", "BIGTIFF=YES"],
         )
@@ -428,7 +438,7 @@ class TestGdalUtils(TestCase):
         convert_raster(
             input_file,
             output_file,
-            fmt=fmt,
+            driver=driver,
             boundary=boundary,
             src_srs=srs,
             dst_srs=srs,
@@ -443,14 +453,14 @@ class TestGdalUtils(TestCase):
             callback_data={"task_uid": task_uid, "subtask_percentage": 50},
             cropToCutline=True,
             cutlineDSName=boundary,
-            format=fmt,
+            format=driver,
             warp="params",
         )
         mock_gdal.Translate.assert_called_once_with(
             output_file,
             input_file,
             callback=progress_callback,
-            format=fmt,
+            format=driver,
             callback_data={"task_uid": task_uid, "subtask_percentage": 50},
             translate="params",
         )
@@ -461,12 +471,18 @@ class TestGdalUtils(TestCase):
         input_file = "/test/test.gpkg"
         output_file = "/test/test.kml"
         boundary = "/test/test.json"
-        fmt = "kml"
+        driver = "kml"
         src_srs = "EPSG:4326"
         dst_srs = "EPSG:3857"
 
         convert_vector(
-            input_file, output_file, fmt=fmt, boundary=boundary, src_srs=src_srs, dst_srs=dst_srs, task_uid=task_uid
+            input_file,
+            output_file,
+            driver=driver,
+            boundary=boundary,
+            src_srs=src_srs,
+            dst_srs=dst_srs,
+            task_uid=task_uid,
         )
         mock_gdal.VectorTranslate.assert_called_once_with(
             output_file,
@@ -475,7 +491,7 @@ class TestGdalUtils(TestCase):
             callback=progress_callback,
             callback_data={"task_uid": task_uid},
             dstSRS=dst_srs,
-            format=fmt,
+            format=driver,
             options=["-clipSrc", boundary],
             reproject=True,
             skipFailures=True,

@@ -137,7 +137,7 @@ export const joyride = {
             title: 'Welcome to the Create DataPack Page',
             content: `Creating DataPacks is the core function of EventKit.
                 The process begins with defining an Area of Interest (AOI), then selecting Data Sources and output formats.`,
-            target: '.qa-BreadcrumbStepper-div-content',
+            target: '.qa-BreadcrumbStepper-div-stepLabel',
             placement: 'bottom',
             style: JoyRideStyles.welcomeTooltipStyle,
         },

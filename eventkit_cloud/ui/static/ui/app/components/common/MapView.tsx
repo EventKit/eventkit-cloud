@@ -5,6 +5,7 @@ import OlFeatureLayer from "../MapTools/OpenLayers/OlFeatureLayer";
 import ZoomToAoi from "../MapTools/OpenLayers/ZoomToAoi";
 import OlRasterTileLayer from "../MapTools/OpenLayers/OlRasterTileLayer";
 import OlMouseWheelZoom from "../MapTools/OpenLayers/MouseWheelZoom";
+import {RegionJustification} from "../StatusDownloadPage/RegionJustification";
 
 export interface Props {
     geojson: object;
