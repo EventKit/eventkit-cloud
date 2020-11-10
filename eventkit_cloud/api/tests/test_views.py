@@ -1446,6 +1446,8 @@ class TestLicenseViewSet(APITestCase):
 
 
 class TestUserDataViewSet(APITestCase):
+    fixtures = ("osm_provider.json",)
+
     def setUp(self,):
         self.path = os.path.dirname(os.path.realpath(__file__))
         self.group, created = Group.objects.get_or_create(name="TestDefaultExportExtentGroup")
@@ -1459,6 +1461,36 @@ class TestUserDataViewSet(APITestCase):
             HTTP_ACCEPT_LANGUAGE="en",
             HTTP_HOST="testserver",
         )
+
+        ds = DataSource(os.path.dirname(os.path.realpath(__file__)) + "/../../jobs/migrations/africa.geojson")
+        layer = ds[0]
+        geom = layer.get_geoms(geos=True)[0]
+        the_geom = GEOSGeometry(geom.wkt, srid=4326)
+        the_geog = GEOSGeometry(geom.wkt)
+        the_geom_webmercator = the_geom.transform(ct=3857, clone=True)
+        region = Region.objects.create(
+            name="Africa",
+            description="African export region",
+            the_geom=the_geom,
+            the_geog=the_geog,
+            the_geom_webmercator=the_geom_webmercator,
+        )
+
+        self.provider = DataProvider.objects.first()
+
+        policies_example = json.loads(get_example_from_file("examples/policies_example.json"))
+        justification_options_example = json.loads(get_example_from_file("examples/justification_options_example.json"))
+
+        self.regional_policy = RegionalPolicy.objects.create(
+            name="Test Policy",
+            region=region,
+            policies=policies_example,
+            justification_options=justification_options_example,
+            policy_title_text="Policy Title",
+            policy_cancel_button_text="Cancel Button",
+        )
+        self.regional_policy.providers.set([self.provider])
+        self.regional_policy.save()
 
     def test_get_userdata_list(self):
         expected = "/api/users"
@@ -1518,6 +1550,31 @@ class TestUserDataViewSet(APITestCase):
         data = patch_response.json()
         self.assertEqual(data.get("accepted_licenses").get(self.licenses[0].slug), False)
         self.assertEqual(data.get("accepted_licenses").get(self.licenses[1].slug), True)
+
+    def test_get_policies(self):
+        self.user.last_login = timezone.now()
+        self.user.save()
+        url = reverse("api:users-detail", args=[self.user])
+        response = self.client.get(url)
+        data = response.json()
+        # check both licenses are NOT accepted.
+        self.assertEqual(data.get("accepted_policies"), {str(RegionalPolicy.objects.first().uid): False})
+
+        request_data = {
+            "justification_id": 1,
+            "justification_suboption_value": "Option 1",
+            "regional_policy_uid": str(self.regional_policy.uid),
+        }
+        url = reverse("api:regional_justifications-list")
+        response = self.client.post(url, data=json.dumps(request_data), content_type="application/json; version=1.0")
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(response["Content-Type"], "application/json")
+        self.assertEqual(response["Content-Language"], "en")
+
+        url = reverse("api:users-detail", args=[self.user])
+        response = self.client.get(url)
+        data = response.json()
+        self.assertEqual(data.get("accepted_policies"), {str(RegionalPolicy.objects.first().uid): True})
 
 
 class TestGroupDataViewSet(APITestCase):
