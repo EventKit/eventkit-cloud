@@ -21,8 +21,9 @@ RUN curl -L https://repo.continuum.io/miniconda/Miniconda3-py37_4.8.3-Linux-x86_
     /bin/bash miniconda.sh -b -p "/home/eventkit/miniconda3" && \
     rm miniconda.sh && \
     conda config --add channels conda-forge && \
-    conda config --add channels file://var/lib/eventkit/conda/repo && \
-    conda config --set channel_priority flexible && \
+    conda config --add channels file:///var/lib/eventkit/conda/repo && \
+    conda config --set channel_priority strict && \
+    conda install mamba && \
     conda env create --file environment-dev.yml python=3.7 && \
     conda clean --yes --all && \
     /home/eventkit/miniconda3/envs/eventkit-cloud/bin/python \

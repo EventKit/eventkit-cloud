@@ -9,6 +9,7 @@ services:
       - ./repo:/root/repo
       - ./recipes:/root/recipes
       - ./build.sh:/root/build.sh
+      - ./download_packages.py:/root/download_packages.py
       - ./recipes.txt:/root/recipes.txt
       - ../:/eventkit-cloud
     environment:
