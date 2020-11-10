@@ -93,7 +93,7 @@ export function CreateDataPackButton(props: Props) {
     const {run} = useRunContext();
 
 
-    const [ open, setOpen ] = useState(false);
+    const [ open, setOpen ] = useState(true);
     const [ dataPackRestricted, setDataPackRestricted ] = useState(false);
 
     const [anchor, setAnchor] = useState(null);
