@@ -538,9 +538,10 @@ class TestFileProducingTaskResult(TestCase):
         self.assertTrue(user_can_download)
 
         # Update the users last login, they should no longer be able to download since they have not agreed again.
-        self.job.user.last_login = timezone.now()
-        user_can_download = self.downloadable.user_can_download(self.job.user)
-        self.assertFalse(user_can_download)
+        with self.settings(REGIONAL_JUSTIFICATION_TIMEOUT_DAYS=None):
+            self.job.user.last_login = timezone.now()
+            user_can_download = self.downloadable.user_can_download(self.job.user)
+            self.assertFalse(user_can_download)
 
         with self.settings(REGIONAL_JUSTIFICATION_TIMEOUT_DAYS=1):
             # Justification was created within the last day.
