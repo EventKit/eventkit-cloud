@@ -4,10 +4,9 @@ import {useRegionContext} from '../common/context/RegionContext';
 import {DepsHashers, useEffectOnMount, useProviderIdentity} from '../../utils/hooks/hooks';
 import {convertGeoJSONtoJSTS, covers} from '../../utils/mapUtils';
 import {arrayHasValue} from '../../utils/generic';
-import {object} from "prop-types";
 
 interface Props {
-    providers: Eventkit.Provider[];
+    providers?: Eventkit.Provider[];
     extents?: GeoJSON.Feature[];
     onClose?: (...args: any) => void;
     onBlockSignal?: () => void;
@@ -144,3 +143,5 @@ export function RegionJustification(props: React.PropsWithChildren<Props>) {
     }
     return null;
 }
+
+export default RegionJustification;

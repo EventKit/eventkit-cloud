@@ -15,15 +15,12 @@ jest.mock('../../components/StatusDownloadPage/context/RunFile', () => {
 jest.mock('../../components/Dialog/BaseDialog', () => 'dialog');
 jest.mock('../../components/common/CenteredPopup', () => 'centeredPopup');
 
+jest.mock('../../components/StatusDownloadPage/RegionJustification', () => 'regionjustification');
+
 jest.mock('../../components/Dialog/ProviderDialog', () => {
     const React = require('react');
     return (props) => (<div>ProviderDialog</div>);
 });
-
-// jest.mock('../../components/StatusDownloadPage/RegionJustification', () => {
-//     const React = require('react');
-//     return (props) => (<div>RegionJustification</div>);
-// });
 
 const providers = [
     {
@@ -120,7 +117,7 @@ describe('CreateDataPackButton component', () => {
                 }]))
             })
         )
-        render(<CreateDataPackButton {...defaultProps()} />);
+        setup();
         await waitFor(() => screen.getByText('Zip Error'))
         expect(screen.getByText(/Zip Error/)).toBeInTheDocument();
     });

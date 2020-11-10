@@ -13,7 +13,7 @@ import CloseIcon from "@material-ui/icons/Close";
 import Popover from "@material-ui/core/Popover";
 import AlertError from "@material-ui/icons/Error";
 import CenteredPopup from "../common/CenteredPopup";
-import {RegionJustification} from "./RegionJustification";
+import RegionJustification from "./RegionJustification";
 
 // Interval in ms
 const ZIP_POLLING_INTERVAL = 5000;
