@@ -11,6 +11,7 @@ from django.conf import settings
 from django.core.mail import EmailMultiAlternatives
 from django.template.loader import get_template
 from django.utils import timezone
+from django.core.management import call_command
 
 from eventkit_cloud.celery import app
 from eventkit_cloud.core.helpers import (
@@ -274,6 +275,16 @@ def clean_up_queues_task():
     """Deletes all of the queues that don't have any consumers or messages"""
     api_url = getattr(settings, "BROKER_API_URL")
     delete_rabbit_objects(api_url)
+
+
+@app.task(name="Clear Tile Cache", base=EventKitBaseTask)
+def clear_tile_cache_task():
+    call_command("clear_tile_cache")
+
+
+@app.task(name="Clear User Sessions", base=EventKitBaseTask)
+def clear_user_sessions_task():
+    call_command("clearsessions")
 
 
 def get_celery_health_check_command(node_type: str):
