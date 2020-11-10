@@ -57,6 +57,8 @@ from eventkit_cloud.tasks.enumerations import TaskStates
 from collections import OrderedDict
 
 # Get an instance of a logger
+from eventkit_cloud.jobs.helpers import get_valid_regional_justification
+
 logger = logging.getLogger(__name__)
 
 
@@ -698,6 +700,7 @@ class UserDataSerializer(serializers.Serializer):
 
     user = serializers.SerializerMethodField()
     accepted_licenses = serializers.SerializerMethodField()
+    accepted_policies = serializers.SerializerMethodField()
     groups = serializers.SerializerMethodField()
     restricted = serializers.SerializerMethodField()
 
@@ -712,11 +715,17 @@ class UserDataSerializer(serializers.Serializer):
             return licenses
         user_licenses = UserLicense.objects.filter(user=instance)
         for license in License.objects.all():
-            if user_licenses.filter(license=license):
-                licenses[license.slug] = True
-            else:
-                licenses[license.slug] = False
+            licenses[license.slug] = user_licenses.filter(license=license).exists()
         return licenses
+
+    def get_accepted_policies(self, instance):
+        policies = dict()
+        request = self.context["request"]
+        if request.user != instance:
+            return policies
+        for policy in RegionalPolicy.objects.all().prefetch_related("justifications"):
+            policies[str(policy.uid)] = get_valid_regional_justification(policy, instance) is not None
+        return policies
 
     @staticmethod
     def get_restricted(instance):
