@@ -1,8 +1,7 @@
-import {RegionJustification} from "./RegionJustification";
+import RegionJustification from "./RegionJustification";
 import * as React from "react";
 import ProviderRow, {ProviderRowProps} from "./ProviderRow";
 import {useState} from "react";
-import {renderIf} from "../../utils/renderIf";
 
 // Copy the interface but ignore properties that come from HOC like MUI withWidth ('width')
 // Also ignore 'restricted' and 'openDialog' as we supply that here
