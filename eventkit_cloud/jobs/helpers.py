@@ -57,7 +57,7 @@ def get_valid_regional_justification(regional_policy, user: User):
     regional_justification = regional_justifications.latest("created_at")
 
     # If a timeout was set in the environment, use that timeout.
-    if isinstance(settings.REGIONAL_JUSTIFICATION_TIMEOUT_DAYS, int):
+    if settings.REGIONAL_JUSTIFICATION_TIMEOUT_DAYS:
         timeout_seconds = settings.REGIONAL_JUSTIFICATION_TIMEOUT_DAYS * 3600 * 24
         seconds_since_created = (timezone.now() - regional_justification.created_at).total_seconds()
         if seconds_since_created > timeout_seconds:

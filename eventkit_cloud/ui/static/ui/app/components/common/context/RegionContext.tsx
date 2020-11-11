@@ -4,6 +4,8 @@ import React, {
 } from 'react'
 import {ApiStatuses, useAsyncRequest} from "../../../utils/hooks/api";
 import {arrayHasValue, getCookie} from "../../../utils/generic";
+import {getUsers} from '../../../actions/usersActions';
+import {connect} from "react-redux";
 
 export interface RegionContext {
     getPolicies: () => void;
@@ -21,7 +23,7 @@ export const RegionConsumer = regionContext.Consumer;
 export const _RegionProvider = regionContext.Provider;
 
 
-export function RegionsProvider(props: React.PropsWithChildren<any>) {
+function _RegionsProvider(props: React.PropsWithChildren<any>) {
     const [{status, response}, requestCall] = useAsyncRequest();
     const makeRequest = () => {
         requestCall({
@@ -30,6 +32,18 @@ export function RegionsProvider(props: React.PropsWithChildren<any>) {
             headers: {'X-CSRFToken': getCookie('csrftoken')},
         }).then(() => undefined);
     };
+
+    useEffect(() => {
+        if (props.user) {
+            const submittedSet = [];
+            Object.entries(props.user.accepted_policies).forEach(([_policyUid, _submitted]) => {
+                if (_submitted) {
+                    submittedSet.push(_policyUid);
+                }
+            })
+            setSubmittedSet(submittedSet);
+        }
+    }, [props.user])
 
     const [submittedSet, setSubmittedSet] = useState([]);
     const [isFetching, setIsFetching] = useState(false);
@@ -63,3 +77,12 @@ export function RegionsProvider(props: React.PropsWithChildren<any>) {
         </_RegionProvider>
     );
 }
+
+function mapStateToProps(state) {
+    return {
+        user: state?.user?.data,
+    };
+}
+
+export const RegionsProvider = connect(mapStateToProps, null)(_RegionsProvider);
+
