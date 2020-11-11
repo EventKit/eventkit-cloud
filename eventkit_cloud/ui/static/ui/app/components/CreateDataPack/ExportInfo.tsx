@@ -613,7 +613,7 @@ export class ExportInfo extends React.Component<Props, State> {
     }
 
     private openDrawer() {
-        const isOpen: boolean = this.dataProvider.current.state.open;
+        const isOpen: boolean = this.dataProvider.current.open;
         if (this.state.providerDrawerIsOpen == null) {
             this.setState({providerDrawerIsOpen: isOpen});
         }
@@ -623,7 +623,7 @@ export class ExportInfo extends React.Component<Props, State> {
     }
 
     private resetDrawer() {
-        if (this.dataProvider.current.state.open !== this.state.providerDrawerIsOpen) {
+        if (this.dataProvider.current.open !== this.state.providerDrawerIsOpen) {
             this.handleDataProviderExpand();
         }
         this.setState({providerDrawerIsOpen: null});
@@ -638,7 +638,7 @@ export class ExportInfo extends React.Component<Props, State> {
 
         this.props.setNextDisabled();
 
-        if (action === 'close' || action === 'skip' || type === 'finished') {
+        if (action === 'close' || action === 'skip' || type === 'tour:end') {
             this.resetDrawer();
             this.setState({isRunning: false});
             this.props.onWalkthroughReset();
@@ -915,7 +915,13 @@ export class ExportInfo extends React.Component<Props, State> {
                                             incompatibilityInfo={this.state.incompatibilityInfo}
                                             clearEstimate={this.clearEstimate}
                                             // Get reference to handle logic for joyride.
-                                            innerRef={ix === 0 ? this.dataProvider : null}
+                                            {...(() => {
+                                                const refProps = {} as any;
+                                                if (ix === 0) {
+                                                    refProps.getRef =(ref: any) => this.dataProvider.current = ref;
+                                                }
+                                                return refProps;
+                                            })()}
                                         />
                                     ))}
                                 </List>

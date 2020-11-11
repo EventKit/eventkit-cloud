@@ -792,7 +792,7 @@ export class UserGroupsPage extends React.Component<Props, State> {
             return;
         }
 
-        if (action === 'close' || action === 'skip' || type === 'finished') {
+        if (action === 'close' || action === 'skip' || type === 'tour:end') {
             const fakeIx = this.props.users.users.findIndex(u => u.user.fake);
             if (fakeIx > -1) {
                 this.props.users.users.splice(fakeIx, 1);

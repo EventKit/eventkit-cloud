@@ -920,7 +920,7 @@ export class ExportAOI extends React.Component<Props, State> {
             return;
         }
 
-        if (action === 'close' || action === 'skip' || type === 'finished') {
+        if (action === 'close' || action === 'skip' || type === 'tour:end') {
             if (this.state.fakeData === true) {
                 // if we loaded fake data we need to clean it all up
                 this.handleCancel();

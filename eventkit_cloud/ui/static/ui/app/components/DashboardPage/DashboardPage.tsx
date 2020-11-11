@@ -302,7 +302,7 @@ export class DashboardPage extends React.Component<Props, State> {
 
     private callback(data) {
         const {action, step, type} = data;
-        if (action === 'close' || action === 'skip' || type === 'finished') {
+        if (action === 'close' || action === 'skip' || type === 'tour:end') {
             this.setState({isRunning: false});
             this?.helpers?.reset(true);
             window.location.hash = '';

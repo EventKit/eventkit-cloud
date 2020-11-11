@@ -114,6 +114,7 @@ interface Props {
     selectedProjections: number[];
     incompatibilityInfo: IncompatibilityInfo;
     open: boolean;
+    getRef: (ref: any) => void;
     classes: {
         container: string;
         listItem: string;
@@ -471,6 +472,16 @@ export function DataProvider(props: Props) {
     }
 
     const backgroundColor = (props.alt) ? colors.secondary : colors.white;
+
+    function getRef() {
+        return {
+            handleExpand: handleExpand,
+            open: isOpen,
+        }
+    }
+    if (props.getRef) {
+        props.getRef(getRef());
+    }
 
     return (
         <React.Fragment>
