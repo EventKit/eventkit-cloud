@@ -68,7 +68,6 @@ from eventkit_cloud.tasks.metadata import metadata_tasks
 from eventkit_cloud.tasks.task_process import update_progress
 from eventkit_cloud.utils.auth_requests import get_cred
 from eventkit_cloud.utils import overpass, pbf, s3, mapproxy, wcs, geopackage, gdalutils
-from eventkit_cloud.utils.ogr import OGR
 from eventkit_cloud.utils.qgis import convert_qgis_gpkg_to_kml
 from eventkit_cloud.utils.rocket_chat import RocketChat
 from eventkit_cloud.utils.stats.eta_estimator import ETA
@@ -613,24 +612,15 @@ def kml_export_task(
     Function defining KML export function.
     """
     result = result or {}
-    kml_in_dataset = parse_result(result, "source")
 
     provider_slug = get_provider_slug(task_uid)
     kml_out_dataset = get_export_filename(stage_dir, job_name, projection, provider_slug, "kml")
-    selection = parse_result(result, "selection")
 
     dptr = DataProviderTaskRecord.objects.get(tasks__uid__exact=task_uid)
     metadata = get_metadata(data_provider_task_record_uids=[dptr.uid], source_only=True)
-    metadata['projections'] = [4326]
+    metadata["projections"] = [4326]
     qgs_file = generate_qgs_style(metadata)
-    kml = gdalutils.convert(
-        driver="libkml",
-        input_file=kml_in_dataset,
-        output_file=kml_out_dataset,
-        task_uid=task_uid,
-        boundary=selection,
-        projection=projection,
-    )
+    kml = convert_qgis_gpkg_to_kml(qgs_file, kml_out_dataset)
 
     result["driver"] = "libkml"
     result["file_extension"] = "kml"
@@ -1505,12 +1495,15 @@ def finalize_export_provider_task(result=None, data_provider_task_uid=None, stat
     result_status = parse_result(result, "status")
 
     with transaction.atomic():
-        data_provider_task_record = DataProviderTaskRecord.objects.prefetch_related("tasks").get(uid=data_provider_task_uid)
+        data_provider_task_record = DataProviderTaskRecord.objects.prefetch_related("tasks").get(
+            uid=data_provider_task_uid
+        )
         has_failures = any(
             [
                 export_task_record.status == TaskStates.FAILED.value
                 for export_task_record in data_provider_task_record.tasks.all()
-            ])
+            ]
+        )
         if TaskStates[result_status] == TaskStates.CANCELED:
             # This makes the assumption that users can't cancel individual tasks.  Therefore if any of them failed then
             # it is likely that the rest of the tasks were force canceled since they depend on the task that failed.

@@ -2,15 +2,12 @@ import os
 import osgeo
 import gdal
 
-# Need to resolve dependencies to include this as a part of our pipeline.
-# Because QGIS uses Qt and the drivers are OS level this may not be installed in all environments via conda.
-# Similar issue with discussion: https://github.com/conda-forge/pygridgen-feedstock/issues/10
 
-def convert_qgis_gpkg_to_kml(qgs_file: str, output_kml_path: str) -> str:
-    from qgis.core import QgsApplication, QgsProject, QgsVectorLayer
+def convert_qgis_gpkg_to_kml(qgs_file: str, output_kml_path: str, stage_dir: str = None) -> str:
+    from qgis.core import QgsApplication, QgsProject
 
     app = None
-    driverName = 'libkml'
+    driver_name = "libkml"
 
     try:
         # Load application to load QApplication dependencies.
@@ -20,6 +17,7 @@ def convert_qgis_gpkg_to_kml(qgs_file: str, output_kml_path: str) -> str:
 
         # Application needs to be initialized before importing.
         from qgis.core import QgsVectorFileWriter
+
         # Load project from template output.
         project = QgsProject.instance()
         if not project.read(qgs_file):
@@ -27,20 +25,25 @@ def convert_qgis_gpkg_to_kml(qgs_file: str, output_kml_path: str) -> str:
 
         layers = project.mapLayers()
         symbology_scale = 20000
-        output_dir = os.path.join('.', 'kml')
+        if stage_dir:
+            output_dir = os.path.join(stage_dir, "kml")
+        else:
+            output_dir = os.path.join(".", "kml")
 
         for layer_name, layer in layers.items():
             output_file = os.path.join(output_dir, f"{layer.name()}.kml")
             if not os.path.exists(output_dir):
                 os.mkdir(output_dir)
-            QgsVectorFileWriter.writeAsVectorFormat(layer=layer,
-                                                    fileName=output_file,
-                                                    fileEncoding="utf-8",
-                                                    driverName=driverName,
-                                                    symbologyExport=QgsVectorFileWriter.SymbolLayerSymbology,
-                                                    symbologyScale=symbology_scale)
+            QgsVectorFileWriter.writeAsVectorFormat(
+                layer=layer,
+                fileName=output_file,
+                fileEncoding="utf-8",
+                driverName=driver_name,
+                symbologyExport=QgsVectorFileWriter.SymbolLayerSymbology,
+                symbologyScale=symbology_scale,
+            )
 
-        out_driver = osgeo.ogr.GetDriverByName(driverName)
+        out_driver = osgeo.ogr.GetDriverByName(driver_name)
         if os.path.exists(output_kml_path):
             out_driver.DeleteDataSource(output_kml_path)
 

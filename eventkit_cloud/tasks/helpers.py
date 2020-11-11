@@ -145,14 +145,18 @@ def get_download_filename(
     return download_filename
 
 
-def get_archive_data_path(provider_slug=None, file_name=None):
+def get_archive_data_path(provider_slug=None, file_name=None, archive=True):
     """
     Gets a datapath for the files to be placed in the zip file.
     :param provider_slug: An optional unique value to store files.
     :param file_name: The name of a file.
     :return:
     """
-    file_path = Directory.DATA.value
+    if archive:
+        file_path = Directory.DATA.value
+    else:
+        file_path = ""
+
     if provider_slug:
         file_path = os.path.join(file_path, provider_slug)
     if file_name:
@@ -546,7 +550,9 @@ def get_metadata(data_provider_task_record_uids: List[str], source_only=False):
                         data_provider_slug=data_provider_task_record.provider.slug,
                     )
 
-                    filepath = get_archive_data_path(data_provider_task_record.provider.slug, download_filename)
+                    filepath = get_archive_data_path(
+                        data_provider_task_record.provider.slug, download_filename, archive=(not source_only)
+                    )
                     pattern = re.compile(".*EPSG:(?P<projection>3857|4326).*$")
                     matches = pattern.match(export_task.name)
                     projection = "4326"
