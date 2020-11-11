@@ -110,6 +110,7 @@ if SITE_NAME == "":
     SITE_NAME = "localhost"
 if os.getenv("VCAP_APPLICATION"):
     SITE_URL = os.getenv("SITE_URL", "https://{0}".format(SITE_NAME))
+    SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
 else:
     SITE_URL = os.getenv("SITE_URL", "http://{0}".format(SITE_NAME))
 SITE_ID = 1
@@ -381,3 +382,5 @@ if AUTO_LOGOUT_SECONDS:
 DJANGO_NOTIFICATIONS_CONFIG = {"SOFT_DELETE": True}
 
 ROCKETCHAT_NOTIFICATIONS = json.loads(os.getenv("ROCKETCHAT_NOTIFICATIONS", "{}"))
+
+REGIONAL_JUSTIFICATION_TIMEOUT_DAYS = int(os.getenv("REGIONAL_JUSTIFICATION_TIMEOUT_DAYS", 0))

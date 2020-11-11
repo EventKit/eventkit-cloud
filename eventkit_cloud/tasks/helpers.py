@@ -116,7 +116,9 @@ def get_provider_staging_preview(run_uid, provider_slug):
     return os.path.join(run_staging_dir, provider_slug, PREVIEW_TAIL)
 
 
-def get_download_filename(name: str, ext: str, additional_descriptors: List[str] = [], data_provider_slug: str = None):
+def get_download_filename(
+    name: str, ext: str, additional_descriptors: List[str] = None, data_provider_slug: str = None
+):
     """
     This provides specific formatting for the names of the downloadable files.
     :param name: A name for the file, typically the job name.
@@ -126,7 +128,7 @@ def get_download_filename(name: str, ext: str, additional_descriptors: List[str]
         of that data provider to add on to the filename
     :return: The formatted file name (e.g. Boston-example-20180711.gpkg)
     """
-
+    additional_descriptors = additional_descriptors or []
     if data_provider_slug:
         try:
             provider = get_cached_model(model=DataProvider, prop="slug", value=data_provider_slug)

@@ -7,7 +7,9 @@ import '@testing-library/jest-dom/extend-expect'
 
 jest.mock('../../components/UserGroupsPage/SearchGroupsToolbar', () => {
     const React = require('react');
-    return (props) => (<div>SearchGroupsToolbar</div>);
+    return (props) => (
+        <button onClick={() => props.setQuery('query')}>SearchGroupsToolbar</button>
+    );
 });
 
 jest.mock('../../components/UserGroupsPage/GroupPanelBody', () => {
@@ -19,6 +21,13 @@ jest.mock('../../components/UserGroupsPage/GroupsHeaderTabs', () => {
     const React = require('react');
     return (props) => (<div>GroupsHeaderTabs</div>);
 });
+
+
+jest.mock('../../components/Dialog/ProviderDialog', () => {
+    const React = require('react');
+    return (props) => (<div>ProviderDialog</div>);
+});
+
 
 
 describe('GroupsDrawer component', () => {
@@ -127,5 +136,14 @@ describe('GroupsDrawer component', () => {
         expect(screen.getByText('GroupsPanelBody'))
         expect(screen.getByText('GroupsHeaderTabs'))
         expect(screen.getByText('SearchGroupsToolbar'))
+    });
+
+
+    it('it should call onNewGroupClick', () => {
+        setup();
+        expect(props.getGroups.calledOnce).toBe(true);
+        fireEvent.click(screen.getByText(/SearchGroupsToolbar/));
+        fireEvent.click(screen.getByText('PREVIOUS'));
+        expect(props.getGroups.calledOnce).toBe(false);
     });
 });

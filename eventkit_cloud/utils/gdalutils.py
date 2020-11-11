@@ -67,7 +67,7 @@ def progress_callback(pct, msg, user_data):
     update_progress(
         user_data.get("task_uid"),
         progress=round(pct * 100),
-        subtask_percentage=user_data.get("subtask_percentage"),
+        subtask_percentage=user_data.get("subtask_percentage", 100.0),
         msg=msg,
     )
 
@@ -81,26 +81,36 @@ def open_dataset(file_path, is_raster):
     """
 
     # Attempt to open as gdal dataset (raster)
-    gdal.DontUseExceptions()
+    # Using gdal exception to minimize output to stdout
+    gdal.UseExceptions()
 
     logger.info("Opening the dataset: {}".format(file_path))
     gdal_dataset = None
     ogr_dataset = None
     try:
-        gdal_dataset = gdal.Open(file_path)
-        if gdal_dataset and is_raster:
-            logger.info(f"The dataset: {file_path} opened with gdal.")
-            return gdal_dataset
+        try:
+            gdal_dataset = gdal.Open(file_path)
+        except Exception as e:
+            logger.debug("Could not open dataset using gdal as raster.")
+            logger.debug(e)
+        finally:
+            if gdal_dataset and is_raster:
+                logger.info(f"The dataset: {file_path} opened with gdal.")
+                return gdal_dataset
 
         # Attempt to open as ogr dataset (vector)
         # ogr.UseExceptions doesn't seem to work reliably, so just check for Open returning None
-        ogr_dataset = ogr.Open(file_path)
-
-        if not ogr_dataset:
-            logger.debug("Unknown file format: {0}".format(file_path))
-        else:
-            logger.info(f"The dataset: {file_path} opened with ogr.")
-        return ogr_dataset or gdal_dataset
+        try:
+            ogr_dataset = ogr.Open(file_path)
+        except Exception as e:
+            logger.debug("Could not open dataset using ogr.")
+            logger.debug(e)
+        finally:
+            if not ogr_dataset:
+                logger.debug("Unknown file format: {0}".format(file_path))
+            else:
+                logger.info(f"The dataset: {file_path} opened with ogr.")
+            return ogr_dataset or gdal_dataset
     except RuntimeError as ex:
         if ("not recognized as a supported file format" not in str(ex)) or (
             "Error browsing database for PostGIS Raster tables" in str(ex)
@@ -109,7 +119,6 @@ def open_dataset(file_path, is_raster):
     finally:
         cleanup_dataset(gdal_dataset)
         cleanup_dataset(ogr_dataset)
-        gdal.UseExceptions()
 
 
 def cleanup_dataset(dataset):
@@ -276,8 +285,9 @@ def convert(
     input_file=None,
     output_file=None,
     src_srs=4326,
-    fmt=None,
+    driver=None,
     layers=None,
+    layer_name=None,
     task_uid=None,
     projection: int = 4326,
     creation_options: list = None,
@@ -287,6 +297,7 @@ def convert(
     warp_params: dict = None,
     translate_params: dict = None,
     use_translate: bool = False,
+    access_mode: str = "overwrite",
 ):
     """
     Uses gdal to convert and clip a supported dataset file to a mask if boundary is passed in.
@@ -299,8 +310,9 @@ def convert(
     :param boundary: A geojson file or bbox (xmin, ymin, xmax, ymax) to serve as a cutline
     :param input_file: A raster or vector file to be clipped
     :param output_file: The dataset to put the clipped output in (if not specified will use in_dataset)
-    :param fmt: Short name of output driver to use (defaults to input format)
-    :param layers: Table name in database for in_dataset
+    :param driver: Short name of output driver to use (defaults to input format)
+    :param layer_name: Table name in database for in_dataset
+    :param layers: A list of layers to include for translation.
     :param task_uid: A task uid to update
     :param projection: A projection as an int referencing an EPSG code (e.g. 4326 = EPSG:4326)
     :param creation_options: Additional options to pass to the convert method (e.g. "-co SOMETHING")
@@ -313,13 +325,13 @@ def convert(
     src_src = f"EPSG:{src_srs}"
     dst_src = f"EPSG:{projection}"
 
-    if not fmt:
-        fmt = meta["driver"] or "gpkg"
+    if not driver:
+        driver = meta["driver"] or "gpkg"
 
     # Geopackage raster only supports byte band type, so check for that
     band_type = None
     dstalpha = None
-    if fmt.lower() == "gpkg":
+    if driver.lower() == "gpkg":
         band_type = gdal.GDT_Byte
     if meta.get("nodata") is None and not is_envelope(input_file):
         dstalpha = True
@@ -349,7 +361,7 @@ def convert(
             convert_raster,
             input_file,
             output_file,
-            fmt=fmt,
+            driver=driver,
             creation_options=creation_options,
             band_type=band_type,
             dst_alpha=dstalpha,
@@ -366,15 +378,17 @@ def convert(
             convert_vector,
             input_file,
             output_file,
-            fmt=fmt,
+            driver=driver,
             dataset_creation_options=dataset_creation_options,
             layer_creation_options=layer_creation_options,
             src_srs=src_src,
             dst_srs=dst_src,
             layers=layers,
+            layer_name=layer_name,
             task_uid=task_uid,
             boundary=boundary,
             bbox=bbox,
+            access_mode=access_mode,
         )
     try:
         task_process = TaskProcess(task_uid=task_uid)
@@ -387,7 +401,7 @@ def convert(
         if temp_boundfile:
             temp_boundfile.close()
 
-    if requires_zip(fmt):
+    if requires_zip(driver):
         logger.debug(f"Requires zip: {output_file}")
         output_file = create_zip_file(output_file, get_zip_name(output_file))
 
@@ -406,7 +420,7 @@ def get_dataset_names(input_file, output_file):
     :return: An output dataset name.
     """
     if not input_file:
-        raise Exception("No provided 'in' dataset")
+        raise Exception("Not provided: 'in' dataset")
 
     # Strip optional file prefixes
     file_prefix, in_dataset_file = strip_prefixes(input_file)
@@ -428,7 +442,7 @@ def clean_options(options):
 def convert_raster(
     input_files,
     output_file,
-    fmt=None,
+    driver=None,
     creation_options=None,
     band_type=None,
     dst_alpha=None,
@@ -446,7 +460,7 @@ def convert_raster(
         overrides other settings.
     :param input_files: A file or list of files to convert.
     :param output_file: The file to convert.
-    :param fmt: The file format to convert.
+    :param driver: The file format to convert.
     :param creation_options: Special GDAL options for conversion.
         Search for "gdal driver <format> creation options" creation options for driver specific implementation.
     :param band_type: The GDAL data type (e.g. gdal.GDT_BYTE).
@@ -463,13 +477,13 @@ def convert_raster(
     elif isinstance(input_files, list) and use_translate:
         raise Exception("Cannot use_translate with a list of files.")
     gdal.UseExceptions()
-    subtask_percentage = 50 if fmt.lower() == "gtiff" else 100
+    subtask_percentage = 50 if driver.lower() == "gtiff" else 100
     options = clean_options(
         {
             "callback": progress_callback,
             "callback_data": {"task_uid": task_uid, "subtask_percentage": subtask_percentage},
             "creationOptions": creation_options,
-            "format": fmt,
+            "format": driver,
         }
     )
     if not warp_params:
@@ -482,7 +496,7 @@ def convert_raster(
         warp_params.update({"cutlineDSName": boundary, "cropToCutline": True})
     # Keep the name imagery which is used when seeding the geopackages.
     # Needed because arcpy can't change table names.
-    if fmt.lower() == "gpkg":
+    if driver.lower() == "gpkg":
         options["creationOptions"] = options.get("creationOptions", []) + ["RASTER_TABLE=imagery"]
 
     if use_translate:
@@ -499,7 +513,7 @@ def convert_raster(
         )
         gdal.Warp(output_file, input_files, **options, **warp_params)
 
-    if fmt.lower() == "gtiff" or translate_params:
+    if driver.lower() == "gtiff" or translate_params:
         # No need to compress in memory objects as they will be removed later.
         if "vsimem" in output_file:
             return output_file
@@ -517,12 +531,13 @@ def convert_raster(
 def convert_vector(
     input_file,
     output_file,
-    fmt=None,
+    driver=None,
     access_mode="overwrite",
     src_srs=None,
     dst_srs=None,
     task_uid=None,
     layers=None,
+    layer_name=None,
     boundary=None,
     bbox=None,
     dataset_creation_options=None,
@@ -531,7 +546,7 @@ def convert_vector(
     """
     :param input_files: A file or list of files to convert.
     :param output_file: The file to convert.
-    :param fmt: The file format to convert.
+    :param driver: The file format to convert.
     :param creation_options: Special GDAL options for conversion.
         Search for "gdal driver <format> creation options" creation options for driver specific implementation.
     :param access_mode: The access mode for the file (e.g. "append" or "overwrite")
@@ -542,6 +557,7 @@ def convert_vector(
     :param dst_srs: The srs of the destination (e.g. "EPSG:3857")
     :param task_uid: The eventkit task uid used for tracking the work.
     :param layers: A list of layers to include for translation.
+    :param layer_name: Table name in database for in_dataset
     :return: The output file.
     """
     gdal.UseExceptions()
@@ -551,8 +567,9 @@ def convert_vector(
             "callback_data": {"task_uid": task_uid},
             "datasetCreationOptions": dataset_creation_options,
             "layerCreationOptions": layer_creation_options,
-            "format": fmt,
+            "format": driver,
             "layers": layers,
+            "layerName": layer_name,
             "srcSRS": src_srs,
             "dstSRS": dst_srs,
             "accessMode": access_mode,
@@ -562,7 +579,7 @@ def convert_vector(
             "options": ["-clipSrc", boundary] if boundary and not bbox else None,
         }
     )
-    if "gpkg" in fmt.lower():
+    if "gpkg" in driver.lower():
         options["geometryType"] = ["PROMOTE_TO_MULTI"]
     logger.info(f"calling gdal.VectorTranslate('{output_file}', '{input_file}', {stringify_params(options)})")
     gdal.VectorTranslate(output_file, input_file, **options)
@@ -604,7 +621,7 @@ def polygonize(input_file: str, output_file: str, output_type: str = "GeoJSON", 
 
                 # Convert to geotiff so that we can remove black pixels and use alpha mask for the polygon.
                 tmp_file = "/vsimem/tmp.tif"
-                convert_raster(nb_file, tmp_file, fmt="gtiff", warp_params={"dstAlpha": True, "srcNodata": "0 0 0"})
+                convert_raster(nb_file, tmp_file, driver="gtiff", warp_params={"dstAlpha": True, "srcNodata": "0 0 0"})
 
                 del nb_file
                 src_ds = gdal.Open(tmp_file)

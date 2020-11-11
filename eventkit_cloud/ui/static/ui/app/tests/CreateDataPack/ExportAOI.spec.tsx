@@ -24,6 +24,12 @@ import * as utils from '../../utils/mapUtils';
 import ZoomLevelLabel from '../../components/MapTools/ZoomLevelLabel';
 import MapDisplayBar from "../../components/CreateDataPack/MapDisplayBar";
 
+jest.mock('../../components/CreateDataPack/MapZoomLimiter', () => {
+    const React = require('react');
+    return (props) => (<div>zoomlimiter</div>);
+});
+
+
 describe('ExportAOI component', () => {
     const geojson = {
         type: 'FeatureCollection',
@@ -114,15 +120,6 @@ describe('ExportAOI component', () => {
         expect(wrapper.find(InvalidDrawWarning)).toHaveLength(1);
         expect(wrapper.find(DropZone)).toHaveLength(1);
 
-    });
-
-    it('the left position should be 200px if drawer is open, otherwise 0px', () => {
-        wrapper.setProps({ drawer: 'open' });
-        expect(wrapper.find('#map').props().style.left).toEqual('200px');
-        const nextProps = getProps();
-        nextProps.drawer = 'closed';
-        wrapper.setProps(nextProps);
-        expect(wrapper.find('#map').props().style.left).toEqual('0px');
     });
 
     it('funcs passed to DrawAOIToolbar and SearchAOIToolbar should call setButtonSelected with correct values', () => {
@@ -549,9 +546,9 @@ describe('ExportAOI component', () => {
         instance.handleDrawEnd(event);
         expect(getGeomSpy.calledOnce).toBe(true);
         expect(getCoordSpy.called).toBe(true);
-        expect(unwrapSpy.calledOnce).toBe(true);
+        expect(unwrapSpy.calledTwice).toBe(true);
         expect(setCoordSpy.calledOnce).toBe(true);
-        expect(createSpy.calledOnce).toBe(true);
+        expect(createSpy.calledTwice).toBe(true);
         expect(isValidSpy.calledOnce).toBe(true);
         expect(props.updateAoiInfo.calledOnce).toBe(true);
         expect(updateSpy.calledOnce).toBe(true);
@@ -612,9 +609,9 @@ describe('ExportAOI component', () => {
         instance.handleDrawEnd(event);
         expect(getGeomSpy.calledOnce).toBe(true);
         expect(getCoordSpy.called).toBe(true);
-        expect(unwrapSpy.calledOnce).toBe(true);
+        expect(unwrapSpy.calledTwice).toBe(true);
         expect(setCoordSpy.calledOnce).toBe(true);
-        expect(createSpy.calledOnce).toBe(true);
+        expect(createSpy.calledTwice).toBe(true);
         expect(props.updateAoiInfo.calledOnce).toBe(true);
         expect(updateSpy.calledOnce).toBe(true);
         getGeomSpy.restore();

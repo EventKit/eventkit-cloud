@@ -3,7 +3,7 @@ channels:
   - local
 dependencies:
   - eventkit-cloud=1.8.0
-  - memcached=1.6.6=0
-  - postgresql=12.3=h8573dbc_0
+  - memcached=1.6.6
+  - postgresql=12.3
   - pip:
     - -r requirements-dev.txt
