@@ -443,6 +443,7 @@ def convert_raster(
     input_files,
     output_file,
     driver=None,
+    access_mode="overwrite",
     creation_options=None,
     band_type=None,
     dst_alpha=None,
@@ -472,6 +473,9 @@ def convert_raster(
     :param use_translate: Make true if needing to use translate for conversion instead of warp.
     :return: The output file.
     """
+    if not driver:
+        raise Exception("Cannot use convert_raster without specififying a gdal driver.")
+
     if isinstance(input_files, str) and not use_translate:
         input_files = [input_files]
     elif isinstance(input_files, list) and use_translate:
@@ -725,7 +729,7 @@ def merge_geotiffs(in_files, out_file, task_uid=None):
     :param task_uid: A task uid to track the conversion.
     :return: The out_file path.
     """
-    cmd = get_task_command(convert_raster, in_files, out_file, task_uid=task_uid)
+    cmd = get_task_command(convert_raster, in_files, out_file, task_uid=task_uid, driver="gtiff")
 
     try:
         task_process = TaskProcess(task_uid=task_uid)
