@@ -30,10 +30,6 @@ import {getProjections} from "../../actions/projectionActions";
 import {MapLayer} from "./CreateExport";
 import InfoDialog from "../Dialog/InfoDialog";
 import EstimateLabel from "./EstimateLabel";
-import PermissionsBanner from "../PermissionsBanner";
-import {userStatusReducer} from "../../reducers/userReducer";
-import {useState} from "react";
-import {useEffectOnMount} from "../../utils/hooks/hooks";
 import {CreatePagePermissionsBanner} from "./CreatePagePermissionsBanner";
 
 export interface JobData {

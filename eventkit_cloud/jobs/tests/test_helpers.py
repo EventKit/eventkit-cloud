@@ -54,50 +54,52 @@ class TestRegionalJustificationHelpers(TestCase):
         )
 
     def test_get_valid_regional_justification(self):
+        with self.settings(REGIONAL_JUSTIFICATION_TIMEOUT_DAYS=None):
+            self.job.user.last_login = timezone.now()
+            self.downloadable = FileProducingTaskResult.objects.create(
+                download_url="http://testserver/media/{0}/file.txt".format(self.run.uid)
+            )
+            self.task.result = self.downloadable
+            self.task.save()
 
-        self.job.user.last_login = timezone.now()
-        self.downloadable = FileProducingTaskResult.objects.create(
-            download_url="http://testserver/media/{0}/file.txt".format(self.run.uid)
-        )
-        self.task.result = self.downloadable
-        self.task.save()
+            self.run_zip_file = RunZipFile.objects.create(run=self.run, downloadable_file=self.downloadable)
+            self.data_provider_task_records = [self.data_provider_task_record]
+            self.run_zip_file.data_provider_task_records.set(self.data_provider_task_records)
 
-        self.run_zip_file = RunZipFile.objects.create(run=self.run, downloadable_file=self.downloadable)
-        self.data_provider_task_records = [self.data_provider_task_record]
-        self.run_zip_file.data_provider_task_records.set(self.data_provider_task_records)
+            self.region = Region.objects.get(name="Africa")
+            policies_example = json.loads(get_example_from_file("examples/policies_example.json"))
+            justification_options_example = json.loads(
+                get_example_from_file("examples/justification_options_example.json")
+            )
 
-        self.region = Region.objects.get(name="Africa")
-        policies_example = json.loads(get_example_from_file("examples/policies_example.json"))
-        justification_options_example = json.loads(get_example_from_file("examples/justification_options_example.json"))
+            self.regional_policy = RegionalPolicy.objects.create(
+                name="Test Policy",
+                region=self.region,
+                policies=policies_example,
+                justification_options=justification_options_example,
+                policy_title_text="Policy Title",
+                policy_cancel_button_text="Cancel Button",
+            )
 
-        self.regional_policy = RegionalPolicy.objects.create(
-            name="Test Policy",
-            region=self.region,
-            policies=policies_example,
-            justification_options=justification_options_example,
-            policy_title_text="Policy Title",
-            policy_cancel_button_text="Cancel Button",
-        )
+            self.regional_policy.providers.set([self.provider])
 
-        self.regional_policy.providers.set([self.provider])
+            active_regional_justification = get_valid_regional_justification(self.regional_policy, self.job.user)
+            self.assertEqual(active_regional_justification, None)
 
-        active_regional_justification = get_valid_regional_justification(self.regional_policy, self.job.user)
-        self.assertEqual(active_regional_justification, None)
+            regional_justification = RegionalJustification.objects.create(
+                justification_id=1,
+                justification_name="Test Option",
+                regional_policy=self.regional_policy,
+                user=self.job.user,
+            )
 
-        regional_justification = RegionalJustification.objects.create(
-            justification_id=1,
-            justification_name="Test Option",
-            regional_policy=self.regional_policy,
-            user=self.job.user,
-        )
+            active_regional_justification = get_valid_regional_justification(self.regional_policy, self.job.user)
+            self.assertEqual(active_regional_justification, regional_justification)
 
-        active_regional_justification = get_valid_regional_justification(self.regional_policy, self.job.user)
-        self.assertEqual(active_regional_justification, regional_justification)
-
-        # Update the users last login, the previous regional justification should no longer be active.
-        self.job.user.last_login = timezone.now()
-        active_regional_justification = get_valid_regional_justification(self.regional_policy, self.job.user)
-        self.assertEqual(active_regional_justification, None)
+            # Update the users last login, the previous regional justification should no longer be active.
+            self.job.user.last_login = timezone.now()
+            active_regional_justification = get_valid_regional_justification(self.regional_policy, self.job.user)
+            self.assertEqual(active_regional_justification, None)
 
         with self.settings(REGIONAL_JUSTIFICATION_TIMEOUT_DAYS=1):
             # Justification was created within the last day.
