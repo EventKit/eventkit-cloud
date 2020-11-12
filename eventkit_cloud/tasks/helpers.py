@@ -8,7 +8,6 @@ import signal
 import time
 import urllib.parse
 import uuid
-import xml.dom.minidom
 import xml.etree.ElementTree as ET
 import yaml
 from django.conf import settings
@@ -293,7 +292,7 @@ def generate_qgs_style(metadata, skip_formats=UNSUPPORTED_CARTOGRAPHY_FORMATS):
     }
 
     with open(style_file, "wb") as open_file:
-        open_file.write(render_to_string("styles/Style.qgs", context=context, ).encode())
+        open_file.write(render_to_string("styles/Style.qgs", context=context,).encode())
     return style_file
 
 
@@ -334,9 +333,9 @@ def get_human_readable_metadata_document(metadata):
     with open(metadata_file, "wb") as open_file:
         open_file.write(
             render_to_string("styles/metadata.txt", context={"metadata": metadata})
-                .replace("\r\n", "\n")
-                .replace("\n", "\r\n")
-                .encode()
+            .replace("\r\n", "\n")
+            .replace("\n", "\r\n")
+            .encode()
         )
     return metadata_file
 
@@ -464,8 +463,8 @@ def get_metadata(data_provider_task_record_uids: List[str]):
 
     data_provider_task_records = (
         DataProviderTaskRecord.objects.select_related("run__job")
-            .prefetch_related("run__job__projections")
-            .filter(uid__in=data_provider_task_record_uids)
+        .prefetch_related("run__job__projections")
+        .filter(uid__in=data_provider_task_record_uids)
     )
     run = data_provider_task_records.first().run
 
@@ -753,7 +752,7 @@ def add_export_run_files_to_zip(zipfile, run_zip_file):
             zipfile.write(export_run_file_path, arcname)
 
 
-def get_data_package_manifest(name: str, metadata: dict, ignore_files: list) -> str:
+def get_data_package_manifest(metadata: dict, ignore_files: list) -> str:
     """
     Uses a metadata to generate a manifest file.
 
@@ -764,7 +763,7 @@ def get_data_package_manifest(name: str, metadata: dict, ignore_files: list) -> 
        </Configuration>
        <Contents>
           <Content ignore="false" zipEntry="<file_path>">
-             <Parameter name="name" value="<file_name>"/>
+             <Parameter name="contentType" value="External Native Data"/>
           </Content>
        </Contents>
     </MissionPackageManifest>
@@ -775,7 +774,8 @@ def get_data_package_manifest(name: str, metadata: dict, ignore_files: list) -> 
     """
     from eventkit_cloud.tasks.helpers import normalize_name
 
-    cleaned_metadata = remove_formats(metadata, formats=UNSUPPORTED_CARTOGRAPHY_FORMATS)
+    # Placeholder to add unsupported formats.
+    cleaned_metadata = remove_formats(metadata, formats=[])
 
     if cleaned_metadata:
         run_uid = cleaned_metadata.get("run_uid")
@@ -790,34 +790,26 @@ def get_data_package_manifest(name: str, metadata: dict, ignore_files: list) -> 
 
     # Set up configuration
     configuration = ET.SubElement(root, "Configuration")
-    ET.SubElement(configuration, "Parameter", attrib={"name": "uid",
-                                                      "value": run_uid})
+    ET.SubElement(configuration, "Parameter", attrib={"name": "uid", "value": run_uid})
     # use the first 30 characters from the name
-    ET.SubElement(configuration, "Parameter", attrib={"name": "name",
-                                                      "value": name[:30]})
+    ET.SubElement(configuration, "Parameter", attrib={"name": "name", "value": job_name[:30]})
 
     # Add contents
     contents = ET.SubElement(root, "Contents")
-    for data_source_slug, data_source_info in cleaned_metadata.get('data_sources', {}).items():
-        for data_file in data_source_info['files']:
-            file_path = os.path.relpath(data_file['file_path'])
-            content = ET.SubElement(contents, "Content", attrib={"ignore": "false",
-                                                                 "zipEntry": file_path})
-            # ET.SubElement(content, "Parameter", attrib={"name": "name",
-            #                                             "value": os.path.basename(file_path)})
+    for data_source_slug, data_source_info in cleaned_metadata.get("data_sources", {}).items():
+        data_source_type = data_source_info["type"]
+        for data_file in data_source_info["files"]:
+            file_path = os.path.relpath(data_file["file_path"])
+            content = ET.SubElement(contents, "Content", attrib={"ignore": "false", "zipEntry": file_path})
+            if data_source_type == "raster":
+                # Let application know that this is raster data.
+                ET.SubElement(content, "Parameter", attrib={"name": "contentType", "value": "External Native Data"})
     # Ignore contents
     for data_file in ignore_files:
         file_path = os.path.relpath(data_file)
-        # Switch to false for debugging
-        content = ET.SubElement(contents, "Content", attrib={"ignore": "true",
-                                                             "zipEntry": file_path})
-        # ET.SubElement(content, "Parameter", attrib={"name": "name",
-        #                                             "value": os.path.basename(file_path)})
+        ET.SubElement(contents, "Content", attrib={"ignore": "true", "zipEntry": file_path})
 
-    ET.SubElement(contents, "Content", attrib={"ignore": "false",
-                                               "zipEntry": os.path.join('manifest', 'manifest.xml')})
-
-    # manifest = ET.ElementTree(root)
+    ET.SubElement(contents, "Content", attrib={"ignore": "false", "zipEntry": os.path.join("manifest", "manifest.xml")})
 
     # Pretty print using xml dom
     manifest_file = os.path.join(stage_dir, "manifest.xml")
