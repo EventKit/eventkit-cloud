@@ -68,7 +68,7 @@ from eventkit_cloud.tasks.metadata import metadata_tasks
 from eventkit_cloud.tasks.task_process import update_progress
 from eventkit_cloud.utils.auth_requests import get_cred
 from eventkit_cloud.utils import overpass, pbf, s3, mapproxy, wcs, geopackage, gdalutils
-from eventkit_cloud.utils.qgis import convert_qgis_gpkg_to_kml
+from eventkit_cloud.utils.qgis_utils import convert_qgis_gpkg_to_kml
 from eventkit_cloud.utils.rocket_chat import RocketChat
 from eventkit_cloud.utils.stats.eta_estimator import ETA
 from eventkit_cloud.tasks.task_base import EventKitBaseTask
@@ -620,7 +620,7 @@ def kml_export_task(
     metadata = get_metadata(data_provider_task_record_uids=[dptr.uid], source_only=True)
     metadata["projections"] = [4326]
     qgs_file = generate_qgs_style(metadata)
-    kml = convert_qgis_gpkg_to_kml(qgs_file, kml_out_dataset)
+    kml = convert_qgis_gpkg_to_kml(qgs_file, kml_out_dataset, stage_dir=stage_dir)
 
     result["driver"] = "libkml"
     result["file_extension"] = "kml"
