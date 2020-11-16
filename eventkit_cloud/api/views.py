@@ -847,7 +847,7 @@ class DataProviderViewSet(viewsets.ReadOnlyModelViewSet):
         This view should return a list of all the purchases
         for the currently authenticated user.
         """
-        return DataProvider.objects.filter(Q(user=self.request.user) | Q(user=None))
+        return DataProvider.objects.filter(Q(user=self.request.user) | Q(user=None)).order_by(*self.ordering)
 
     @action(methods=["get", "post"], detail=True)
     def status(self, request, slug=None, *args, **kwargs):
@@ -1036,13 +1036,15 @@ class ExportRunViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         jobs = JobPermission.userjobs(self.request.user, "READ")
         if self.request.query_params.get("slim"):
-            return ExportRun.objects.filter(
-                Q(job__in=jobs) | Q(job__visibility=VisibilityState.PUBLIC.value)
-            ).select_related("job")
+            return (
+                ExportRun.objects.filter(Q(job__in=jobs) | Q(job__visibility=VisibilityState.PUBLIC.value))
+                .select_related("job")
+                .order_by(*self.ordering)
+            )
         else:
             return prefetch_export_runs(
                 (ExportRun.objects.filter(Q(job__in=jobs) | Q(job__visibility=VisibilityState.PUBLIC.value)).filter())
-            )
+            ).order_by(*self.ordering)
 
     def retrieve(self, request, uid=None, *args, **kwargs):
         """

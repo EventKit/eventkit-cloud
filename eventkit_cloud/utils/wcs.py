@@ -160,6 +160,7 @@ class WCSConverter(object):
             raise Exception("Data source incorrectly configured.")
         logger.info("Getting Dimensions...")
         width, height = get_dimensions(self.bbox, float(service.get("scale")))
+
         logger.info("{}, {}".format(width, height))
         params["width"] = str(width)
         params["height"] = str(height)
