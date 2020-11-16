@@ -21,7 +21,7 @@ from eventkit_cloud.jobs.helpers import (
     get_provider_thumbnail_name,
 )
 from eventkit_cloud.utils.helpers import clear_mapproxy_config_cache
-from eventkit_cloud.utils.mapproxy import mapproxy_config_template
+from eventkit_cloud.utils.mapproxy import get_mapproxy_config_template
 from eventkit_cloud.utils.image_snapshot import (
     make_thumbnail_downloadable,
     save_thumbnail,
@@ -133,4 +133,4 @@ def regional_policy_post_save(sender, instance, **kwargs):
 def clear_user_mapproxy_config(sender, user, request, **kwargs):
     if not settings.REGIONAL_JUSTIFICATION_TIMEOUT_DAYS:
         for provider in DataProvider.objects.all():
-            cache.delete(mapproxy_config_template.format(user=user, slug=provider.slug))
+            cache.delete(get_mapproxy_config_template(provider.slug, user=user))
