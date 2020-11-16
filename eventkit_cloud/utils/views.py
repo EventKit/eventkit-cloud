@@ -20,7 +20,7 @@ def map(request: HttpRequest, slug: str, path: str) -> HttpResponse:
     :param path: The rest of the url context (i.e. path to the tile some_service/0/0/0.png).
     :return: The HttpResponse.
     """
-    mapproxy_app = create_mapproxy_app(request.user, slug)
+    mapproxy_app = create_mapproxy_app(slug, request.user)
     params = parse_qs(request.META["QUERY_STRING"])
     script_name = f"/map/{slug}"
     mp_response = mapproxy_app.get(
