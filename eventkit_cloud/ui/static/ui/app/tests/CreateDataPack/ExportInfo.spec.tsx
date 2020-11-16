@@ -4,9 +4,10 @@ import {mount} from 'enzyme';
 import List from '@material-ui/core/List';
 import Paper from '@material-ui/core/Paper';
 import Checkbox from '@material-ui/core/Checkbox';
-import Joyride from 'react-joyride';
 import MapCard from '../../components/common/MapCard';
-import {ExportInfo, hasDisallowedSelection, hasRequiredFields} from '../../components/CreateDataPack/ExportInfo';
+import {
+    ExportInfo,
+} from '../../components/CreateDataPack/ExportInfo';
 import CustomScrollbar from '../../components/common/CustomScrollbar';
 import * as utils from '../../utils/generic';
 
@@ -26,6 +27,9 @@ jest.mock("../../components/common/CustomTextField", () => {
 });
 
 import DataProvider from '../../components/CreateDataPack/DataProvider';
+import {render} from "@testing-library/react";
+import {hasDisallowedSelection, hasRequiredFields} from "../../components/CreateDataPack/ExportValidation";
+
 jest.mock("../../components/CreateDataPack/DataProvider", () => {
     const React = require('react');
     return (props) => (<div className="provider">{props.children}</div>);
@@ -116,7 +120,7 @@ describe('ExportInfo component', () => {
                         availability: {
                             status: 'STAT'
                         },
-                }
+                    }
                 },
                 exportOptions: {
                     '123': {
@@ -345,7 +349,7 @@ describe('ExportInfo component', () => {
                 availability: {
                     status: 'FATAL',
                 },
-             }
+            }
         };
         const exportInfo = {
             ...defaultProps.exportInfo,
@@ -362,7 +366,7 @@ describe('ExportInfo component', () => {
                 availability: {
                     status: undefined,
                 },
-             }
+            }
         };
         const exportInfo = {
             ...defaultProps.exportInfo,
@@ -459,3 +463,4 @@ describe('ExportInfo component', () => {
         expect(props.setNextEnabled.calledOnce).toBe(true);
     });
 });
+
