@@ -14,7 +14,7 @@ from django.contrib.auth.models import Group, User
 from django.contrib.gis.geos import GEOSGeometry, Polygon
 from django.test import TestCase
 from django.utils import timezone
-from unittest.mock import Mock, PropertyMock, patch, MagicMock
+from unittest.mock import Mock, PropertyMock, patch, MagicMock, ANY
 
 from eventkit_cloud.celery import TaskPriority, app
 from eventkit_cloud.jobs.models import DatamodelPreset, DataProvider, Job
@@ -268,10 +268,11 @@ class TestExportTasks(ExportTaskBase):
         self.assertEqual(expected_output_path, result["result"])
         self.assertEqual(expected_output_path, result["source"])
 
+    @patch("eventkit_cloud.tasks.export_tasks.download_with_cert")
     @patch("eventkit_cloud.tasks.export_tasks.gdalutils.convert")
     @patch("eventkit_cloud.tasks.export_tasks.geopackage")
     @patch("celery.app.task.Task.request")
-    def test_run_wfs_export_task(self, mock_request, mock_gpkg, mock_convert):
+    def test_run_wfs_export_task(self, mock_request, mock_gpkg, mock_convert, mock_download_with_cert):
         celery_uid = str(uuid.uuid4())
         type(mock_request).id = PropertyMock(return_value=celery_uid)
         job_name = self.job.name.lower()
@@ -396,6 +397,41 @@ class TestExportTasks(ExportTaskBase):
 
         self.assertEqual(expected_output_path, result_c["result"])
         self.assertEqual(expected_output_path, result_c["source"])
+
+        # test downloads with certs
+
+        config = f"""
+        layers:
+            - name: '{layer_1}'
+              url: '{url_1}'
+        cert_var: "test1"
+        """
+
+        wfs_export_task.run(
+            run_uid=self.run.uid,
+            result=previous_task_result,
+            task_uid=str(saved_export_task.uid),
+            stage_dir=stage_dir,
+            job_name=job_name,
+            projection=projection,
+            service_url="service_url",
+            bbox=None,
+            config=config,
+        )
+        mock_download_with_cert.assert_called_once_with("test1", expected_in_1, ANY)
+
+        wfs_export_task.run(
+            run_uid=self.run.uid,
+            result=previous_task_result,
+            task_uid=str(saved_export_task.uid),
+            stage_dir=stage_dir,
+            job_name=job_name,
+            projection=projection,
+            service_url=service_url,
+            layer=layer,
+            config='cert_var: "test2"',
+        )
+        mock_download_with_cert.assert_any_call("test2", expected_input_path, ANY)
 
     @patch("eventkit_cloud.utils.gdalutils.convert")
     @patch("celery.app.task.Task.request")
@@ -661,9 +697,10 @@ class TestExportTasks(ExportTaskBase):
         )
         self.assertEqual(returned_result, expected_result)
 
+    @patch("eventkit_cloud.tasks.export_tasks.download_with_cert")
     @patch("eventkit_cloud.tasks.export_tasks.gdalutils.convert")
     @patch("celery.app.task.Task.request")
-    def test_run_arcgis_feature_service_export_task(self, mock_request, mock_convert):
+    def test_run_arcgis_feature_service_export_task(self, mock_request, mock_convert, mock_download_with_cert):
         celery_uid = str(uuid.uuid4())
         type(mock_request).id = PropertyMock(return_value=celery_uid)
         job_name = self.job.name.lower()
@@ -791,6 +828,41 @@ class TestExportTasks(ExportTaskBase):
 
         self.assertEqual(expected_output_path, result_c["result"])
         self.assertEqual(expected_output_path, result_c["source"])
+
+        # test downloads with certs
+
+        config = f"""
+        layers:
+            - name: '{layer_name_1}'
+              url: '{url_1}'
+        cert_var: "test1"
+        """
+
+        arcgis_feature_service_export_task.run(
+            run_uid=123,
+            result=previous_task_result,
+            task_uid=str(saved_export_task.uid),
+            stage_dir="dir",
+            job_name="job",
+            projection=projection,
+            service_url="service_url",
+            bbox=bbox,
+            config=config,
+        )
+        mock_download_with_cert.assert_called_once_with("test1", expected_in_1, ANY)
+
+        arcgis_feature_service_export_task.run(
+            run_uid=123,
+            result=previous_task_result,
+            task_uid=str(saved_export_task.uid),
+            stage_dir="dir",
+            job_name="job",
+            projection=projection,
+            service_url=service_url,
+            bbox=bbox,
+            config='cert_var: "test2"',
+        )
+        mock_download_with_cert.assert_any_call("test2", expected_input_path, ANY)
 
     @patch("celery.app.task.Task.request")
     @patch("eventkit_cloud.utils.mapproxy.MapproxyGeopackage")
