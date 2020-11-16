@@ -46,8 +46,9 @@ def get_wmts_snapshot_image(base_url: str, zoom_level: int = None, bbox: list = 
     """
     if bbox is None:
         bbox = copy.copy(WGS84_FULL_WORLD)
-    # Creates and returns a TileGrid object, let's us specify min_res instead of supplying the resolution list.
-    mapproxy_grid = tile_grid(srs=4326, min_res=0.703125, bbox_srs=4326, bbox=copy.copy(WGS84_FULL_WORLD), origin="ul",)
+    # Creates and returns a TileGrid object, allows us specify min_res instead of supplying the resolution list.
+    min_res = 0.703125  # EPSG:4326 with two tiles at level 0
+    mapproxy_grid = tile_grid(srs=4326, min_res=min_res, bbox_srs=4326, bbox=copy.copy(WGS84_FULL_WORLD), origin="ul",)
 
     if zoom_level is None:
         resolution = get_resolution_for_extent(bbox)
