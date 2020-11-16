@@ -66,8 +66,7 @@ from eventkit_cloud.tasks.helpers import (
 )
 from eventkit_cloud.tasks.metadata import metadata_tasks
 from eventkit_cloud.tasks.task_process import update_progress
-from eventkit_cloud.utils.auth_requests import get_cred
-from eventkit_cloud.utils import overpass, pbf, s3, mapproxy, wcs, geopackage, gdalutils
+from eventkit_cloud.utils import overpass, pbf, s3, mapproxy, wcs, geopackage, gdalutils, auth_requests
 from eventkit_cloud.utils.rocket_chat import RocketChat
 from eventkit_cloud.utils.stats.eta_estimator import ETA
 from eventkit_cloud.tasks.task_base import EventKitBaseTask
@@ -84,6 +83,7 @@ from eventkit_cloud.tasks.models import (
 from eventkit_cloud.jobs.models import DataProviderTask
 from typing import Union
 import yaml
+import requests
 
 
 BLACKLISTED_ZIP_EXTS = [".ini", ".om5", ".osm", ".lck", ".pyc"]
@@ -1026,7 +1026,7 @@ def wfs_export_task(
     stage_dir=None,
     job_name=None,
     bbox=None,
-    service_url=None,  # TODO: Should this ever be None?
+    service_url=None,
     name=None,
     service_type=None,
     user_details=None,
@@ -1045,10 +1045,17 @@ def wfs_export_task(
 
     if "layers" in configuration:
         for layer_properties in configuration["layers"]:
-            url = get_wfs_query_url(name, layer_properties.get("url"), layer_properties.get("name"), projection)
+            url = input_file = get_wfs_query_url(
+                name, layer_properties.get("url"), layer_properties.get("name"), projection
+            )
+            if "cert_var" in configuration:
+                input_file = download_with_cert(configuration.get("cert_var"), url, gpkg)
+            else:
+                input_file = url
+
             out = gdalutils.convert(
                 driver="gpkg",
-                input_file=url,
+                input_file=input_file,
                 output_file=gpkg,
                 task_uid=task_uid,
                 projection=projection,
@@ -1058,8 +1065,18 @@ def wfs_export_task(
             )
     else:
         url = get_wfs_query_url(name, service_url, layer, projection)
+        if "cert_var" in configuration:
+            input_file = download_with_cert(configuration.get("cert_var"), url, gpkg)
+        else:
+            input_file = url
+
         out = gdalutils.convert(
-            driver="gpkg", input_file=url, output_file=gpkg, task_uid=task_uid, projection=projection, boundary=bbox,
+            driver="gpkg",
+            input_file=input_file,
+            output_file=gpkg,
+            task_uid=task_uid,
+            projection=projection,
+            boundary=bbox,
         )
 
     result["driver"] = "gpkg"
@@ -1112,7 +1129,7 @@ def get_wfs_query_url(name: str, service_url: str = None, layer: str = None, pro
         service_url += "?" + query_str
 
     url = service_url
-    cred = get_cred(cred_var=name, url=url)
+    cred = auth_requests.get_cred(cred_var=name, url=url)
 
     if cred:
         user, pw = cred
@@ -1209,9 +1226,14 @@ def arcgis_feature_service_export_task(
     if "layers" in configuration:
         for layer_properties in configuration.get("layers"):
             url = get_arcgis_query_url(layer_properties.get("url"), bbox)
+            if "cert_var" in configuration:
+                input_file = download_with_cert(configuration.get("cert_var"), url, gpkg)
+            else:
+                input_file = url
+
             out = gdalutils.convert(
                 driver="gpkg",
-                input_file=url,
+                input_file=input_file,
                 output_file=gpkg,
                 task_uid=task_uid,
                 boundary=bbox,
@@ -1221,14 +1243,54 @@ def arcgis_feature_service_export_task(
             )
     else:
         url = get_arcgis_query_url(service_url, bbox)
+        if "cert_var" in configuration:
+            input_file = download_with_cert(configuration.get("cert_var"), url, gpkg)
+        else:
+            input_file = url
+
         out = gdalutils.convert(
-            driver="gpkg", input_file=url, output_file=gpkg, task_uid=task_uid, boundary=bbox, projection=projection,
+            driver="gpkg",
+            input_file=input_file,
+            output_file=gpkg,
+            task_uid=task_uid,
+            boundary=bbox,
+            projection=projection,
         )
 
     result["driver"] = "gpkg"
     result["result"] = out
     result["source"] = out
     return result
+
+
+def download_with_cert(cert_var, input_url, out_file):
+    """
+    Function for downloading data using a certificate.
+    """
+
+    try:
+        response = auth_requests.get(
+            input_url, cert_var=cert_var, stream=True, verify=getattr(settings, "SSL_VERIFICATION", True),
+        )
+        response.raise_for_status()
+    except requests.exceptions.RequestException as e:
+        raise Exception(f"Unsuccessful request:{e}")
+
+    if not response:
+        logger.error(response.content)
+        raise Exception(f"Request to {input_url} failed.")
+
+    CHUNK = 1024 * 1024 * 2  # 2MB chunks
+    from audit_logging.file_logging import logging_open
+
+    with logging_open(out_file, "wb") as file_:
+        for chunk in response.iter_content(CHUNK):
+            file_.write(chunk)
+
+    if not os.path.isfile(out_file):
+        raise Exception("Nothing was returned from the vector feature service.")
+
+    return out_file
 
 
 def get_arcgis_query_url(service_url: str, bbox: list) -> str:
