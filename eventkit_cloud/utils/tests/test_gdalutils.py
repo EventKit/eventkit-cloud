@@ -158,7 +158,7 @@ class TestGdalUtils(TestCase):
         # Geotiff
         driver = "gtiff"
         band_type = None
-        dstalpha = None
+        dstalpha = True
         get_meta_mock.return_value = {"driver": "gtiff", "is_raster": True, "nodata": None}
         is_envelope_mock.return_value = True  # So, no need for -dstalpha
         convert(

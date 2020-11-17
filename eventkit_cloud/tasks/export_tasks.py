@@ -1048,10 +1048,7 @@ def wfs_export_task(
             url = input_file = get_wfs_query_url(
                 name, layer_properties.get("url"), layer_properties.get("name"), projection
             )
-            if "cert_var" in configuration:
-                input_file = download_with_cert(configuration.get("cert_var"), url, gpkg)
-            else:
-                input_file = url
+            input_file = download_data(url, gpkg, configuration.get("cert_var"))
 
             out = gdalutils.convert(
                 driver="gpkg",
@@ -1065,10 +1062,7 @@ def wfs_export_task(
             )
     else:
         url = get_wfs_query_url(name, service_url, layer, projection)
-        if "cert_var" in configuration:
-            input_file = download_with_cert(configuration.get("cert_var"), url, gpkg)
-        else:
-            input_file = url
+        input_file = download_data(url, gpkg, configuration.get("cert_var"))
 
         out = gdalutils.convert(
             driver="gpkg",
@@ -1217,6 +1211,7 @@ def arcgis_feature_service_export_task(
     result = result or {}
     provider_slug = get_provider_slug(task_uid)
     gpkg = get_export_filename(stage_dir, job_name, projection, provider_slug, "gpkg")
+    esrijson = get_export_filename(stage_dir, job_name, projection, provider_slug, "json")
 
     if not os.path.exists(os.path.dirname(gpkg)):
         os.makedirs(os.path.dirname(gpkg), 6600)
@@ -1226,10 +1221,7 @@ def arcgis_feature_service_export_task(
     if "layers" in configuration:
         for layer_properties in configuration.get("layers"):
             url = get_arcgis_query_url(layer_properties.get("url"), bbox)
-            if "cert_var" in configuration:
-                input_file = download_with_cert(configuration.get("cert_var"), url, gpkg)
-            else:
-                input_file = url
+            input_file = download_data(url, esrijson, configuration.get("cert_var"))
 
             out = gdalutils.convert(
                 driver="gpkg",
@@ -1243,10 +1235,7 @@ def arcgis_feature_service_export_task(
             )
     else:
         url = get_arcgis_query_url(service_url, bbox)
-        if "cert_var" in configuration:
-            input_file = download_with_cert(configuration.get("cert_var"), url, gpkg)
-        else:
-            input_file = url
+        input_file = download_data(url, esrijson, configuration.get("cert_var"))
 
         out = gdalutils.convert(
             driver="gpkg",
@@ -1263,9 +1252,9 @@ def arcgis_feature_service_export_task(
     return result
 
 
-def download_with_cert(cert_var, input_url, out_file):
+def download_data(input_url, out_file, cert_var=None):
     """
-    Function for downloading data using a certificate.
+    Function for downloading data, optionally using a certificate.
     """
 
     try:
@@ -1275,10 +1264,6 @@ def download_with_cert(cert_var, input_url, out_file):
         response.raise_for_status()
     except requests.exceptions.RequestException as e:
         raise Exception(f"Unsuccessful request:{e}")
-
-    if not response:
-        logger.error(response.content)
-        raise Exception(f"Request to {input_url} failed.")
 
     CHUNK = 1024 * 1024 * 2  # 2MB chunks
     from audit_logging.file_logging import logging_open
