@@ -6,21 +6,22 @@ import re
 import requests
 import signal
 import time
+import urllib.parse
+import uuid
+import xml.etree.ElementTree as ET
 import yaml
-
 from django.conf import settings
 from django.core.cache import cache
 from django.db.models import Q
 from django.template.loader import render_to_string
 from django.utils import timezone
 from django.utils.text import slugify
-
 from enum import Enum
 from functools import reduce
 from numpy import linspace
 from operator import itemgetter
 from typing import List, Optional
-import urllib.parse
+from xml.dom import minidom
 
 from eventkit_cloud.core.helpers import get_cached_model
 from eventkit_cloud.jobs.models import DataProvider, ExportFormat
@@ -29,7 +30,6 @@ from eventkit_cloud.tasks.models import DataProviderTaskRecord, ExportRunFile, E
 from eventkit_cloud.utils import auth_requests
 from eventkit_cloud.utils.gdalutils import get_band_statistics
 from eventkit_cloud.utils.generic import cd, get_file_paths  # NOQA
-
 
 logger = logging.getLogger()
 
@@ -304,8 +304,10 @@ def remove_formats(metadata: dict, formats: List[str] = UNSUPPORTED_CARTOGRAPHY_
         :return: The path to the generated qgs file.
     """
     # Create a new dict to not alter the input data.
+    if metadata is None:
+        metadata = {}
     cleaned_metadata = copy.deepcopy(metadata)
-    for slug, data_source in metadata.get("data_sources", {}).items():
+    for slug, data_source in cleaned_metadata.get("data_sources", {}).items():
         cleaned_metadata["data_sources"][slug] = data_source
         cleaned_files = []
         for file_info in cleaned_metadata["data_sources"][slug].get("files"):
@@ -652,7 +654,6 @@ def get_all_rabbitmq_objects(api_url: str, rabbit_class: str) -> list:
 
 
 def delete_rabbit_objects(api_url: str, rabbit_classes: list = ["queues"], force: bool = False) -> None:
-
     api_url = api_url.rstrip("/")
     for rabbit_class in rabbit_classes:
         for rabbit_object in get_all_rabbitmq_objects(api_url, rabbit_class):
@@ -749,3 +750,77 @@ def add_export_run_files_to_zip(zipfile, run_zip_file):
         else:
             arcname = os.path.join(extra_directory, export_run_file.file.name)
             zipfile.write(export_run_file_path, arcname)
+
+
+def get_data_package_manifest(metadata: dict, ignore_files: list) -> str:
+    """
+    Uses a metadata to generate a manifest file.
+
+    <MissionPackageManifest version="2">
+       <Configuration>
+          <Parameter name="uid" value="<UID>"/>
+          <Parameter name="name" value="<Name>"/>
+       </Configuration>
+       <Contents>
+          <Content ignore="false" zipEntry="<file_path>">
+             <Parameter name="contentType" value="External Native Data"/>
+          </Content>
+       </Contents>
+    </MissionPackageManifest>
+
+    :param metadata: A dict of run contents.
+    :param ignore_files: A list of files to ignore.
+    :return: File path to manifest file.
+    """
+    from eventkit_cloud.tasks.helpers import normalize_name
+
+    # Placeholder to add unsupported formats.
+    cleaned_metadata = remove_formats(metadata, formats=[])
+
+    if cleaned_metadata:
+        run_uid = cleaned_metadata.get("run_uid")
+        job_name = normalize_name(cleaned_metadata["name"].lower())
+    else:
+        run_uid = uuid.uuid4()
+        job_name = "DataPack"
+
+    stage_dir = os.path.join(settings.EXPORT_STAGING_ROOT, str(run_uid))
+
+    root = ET.Element("MissionPackageManifest", attrib={"version": "2"})
+
+    # Set up configuration
+    configuration = ET.SubElement(root, "Configuration")
+    ET.SubElement(configuration, "Parameter", attrib={"name": "uid", "value": run_uid})
+    # use the first 30 characters from the name
+    ET.SubElement(configuration, "Parameter", attrib={"name": "name", "value": job_name[:30]})
+
+    # Add contents
+    contents = ET.SubElement(root, "Contents")
+    for data_source_slug, data_source_info in cleaned_metadata.get("data_sources", {}).items():
+        data_source_type = data_source_info["type"]
+        for data_file in data_source_info["files"]:
+            file_path = os.path.relpath(data_file["file_path"])
+            content = ET.SubElement(contents, "Content", attrib={"ignore": "false", "zipEntry": file_path})
+            if data_source_type == "raster":
+                # Let application know that this is raster data.
+                ET.SubElement(content, "Parameter", attrib={"name": "contentType", "value": "External Native Data"})
+    # Ignore contents
+    for data_file in ignore_files:
+        file_path = os.path.relpath(data_file)
+        ET.SubElement(contents, "Content", attrib={"ignore": "true", "zipEntry": file_path})
+
+    ET.SubElement(contents, "Content", attrib={"ignore": "false", "zipEntry": os.path.join("manifest", "manifest.xml")})
+
+    # Pretty print using xml dom
+    manifest_file = os.path.join(stage_dir, "manifest.xml")
+    manifest = minidom.parseString(ET.tostring(root)).toprettyxml(indent="   ")
+
+    # Strip the header (and newline) that minidom forces.  Consider lxml in future.
+    manifest = "\n".join(manifest.split("\n")[1:-1])
+
+    if not os.path.isdir(os.path.dirname(manifest_file)):
+        os.makedirs(os.path.dirname(manifest_file))
+
+    with open(manifest_file, "w") as open_file:
+        open_file.write(manifest)
+    return manifest_file
