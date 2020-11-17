@@ -23,7 +23,9 @@ from eventkit_cloud.tasks.helpers import (
     get_all_rabbitmq_objects,
     delete_rabbit_objects,
     get_download_filename,
+    get_data_package_manifest,
 )
+
 from eventkit_cloud.tasks.enumerations import TaskStates
 
 from eventkit_cloud.tasks.helpers import progressive_kill
@@ -326,3 +328,63 @@ class TestHelpers(TestCase):
         mock_get_all_rabbitmq_objects.return_value = expected_queues
         messages = get_message_count(queue)
         self.assertEqual(messages, expected_messages)
+
+    @patch("builtins.open")
+    def get_data_package_manifest(self, mock_open):
+        example_name = "example_name"
+        example_uid = "97f0d96a-ee1f-482e-9fe8-e6f716ed3144"
+        example_file_path = "data/osm_tiles/test-4326-osm_tiles-20201112-u.gpkg"
+        example_ignored_file = "ignore/me.txt"
+        # TODO: Use lxml tools if installing in the future to make this diff be based on structure not text value.
+        expected_xml = f"""<MissionPackageManifest version="2">
+   <Configuration>
+      <Parameter name="uid" value="{example_uid}"/>
+      <Parameter name="name" value="{example_name}"/>
+   </Configuration>
+   <Contents>
+      <Content ignore="false" zipEntry="{example_file_path}">
+         <Parameter name="contentType" value="External Native Data"/>
+      </Content>
+      <Content ignore="true" zipEntry="{example_ignored_file}"/>
+      <Content ignore="false" zipEntry="manifest/manifest.xml"/>
+   </Contents>
+</MissionPackageManifest>"""
+        example_metadata = {
+            "name": example_name,
+            "url": "http://cloud.eventkit.test/status/b4e7e799-8eb6-4d52-98b4-3fcaed619cc9",
+            "description": "test",
+            "project": "test",
+            "projections": [4326],
+            "date": "20201112",
+            "run_uid": example_uid,
+            "data_sources": {
+                "osm_tiles": {
+                    "uid": "cce7742e-8916-4b69-b5fe-d30baec09199",
+                    "slug": "osm_tiles",
+                    "name": "OpenStreetMap Tiles",
+                    "files": [
+                        {
+                            "file_path": example_file_path,
+                            "full_file_path": f"/{example_file_path}",
+                            "file_ext": ".gpkg",
+                            "projection": "4326",
+                        }
+                    ],
+                    "type": "raster",
+                    "description": "OSM Description",
+                    "last_update": None,
+                    "metadata": "https://osm.url/tiles/default_pc/{z}/{x}/{y}.png",
+                    "copyright": "OpenStreetMap Contributors",
+                }
+            },
+            "bbox": (1, 1, 1.5, 1.5),
+            "aoi": '{"type": "FeatureCollection", "crs": {"type": "name", "properties": {"name": "EPSG:4326"}}, '
+            '"features": []}',
+            "has_raster": True,
+            "has_elevation": False,
+            "include_files": [example_ignored_file],
+        }
+        get_data_package_manifest(example_metadata, ignore_files=[example_ignored_file])
+        expected_output_file = os.path.join(settings.EXPORT_STAGING_ROOT, str(example_uid), "manifest.xml")
+        mock_open.assert_called_once_with(expected_output_file, "w")
+        mock_open().__enter__().write.assert_called_once_with(expected_xml)

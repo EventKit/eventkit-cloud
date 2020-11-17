@@ -845,6 +845,7 @@ class TestExportTasks(ExportTaskBase):
         self.assertEqual(error_type, ValueError)
         self.assertEqual("some unexpected error", str(msg))
 
+    @patch("eventkit_cloud.tasks.export_tasks.get_data_package_manifest")
     @patch("eventkit_cloud.tasks.export_tasks.gdalutils.retry")
     @patch("shutil.copy")
     @patch("os.remove")
@@ -852,7 +853,9 @@ class TestExportTasks(ExportTaskBase):
     @patch("os.walk")
     @patch("os.path.getsize")
     @patch("eventkit_cloud.tasks.export_tasks.s3.upload_to_s3")
-    def test_zipfile_task(self, s3, os_path_getsize, mock_os_walk, mock_zipfile, remove, copy, mock_retry):
+    def test_zipfile_task(
+        self, s3, os_path_getsize, mock_os_walk, mock_zipfile, remove, copy, mock_retry, mock_get_data_package_manifest
+    ):
         os_path_getsize.return_value = 20
 
         class MockZipFile:
@@ -875,7 +878,11 @@ class TestExportTasks(ExportTaskBase):
             def testzip(self):
                 return None
 
-        expected_archived_files = {"data/osm/file1.txt": "osm/file1.txt", "data/osm/file2.txt": "osm/file2.txt"}
+        expected_archived_files = {
+            "MANIFEST/manifest.xml": "MANIFEST/manifest.xml",
+            "data/osm/file1.txt": "osm/file1.txt",
+            "data/osm/file2.txt": "osm/file2.txt",
+        }
         run_uid = str(self.run.uid)
         self.run.job.include_zipfile = True
         self.run.job.event = "test"
@@ -886,6 +893,8 @@ class TestExportTasks(ExportTaskBase):
         stage_dir = settings.EXPORT_STAGING_ROOT
         provider_slug = "osm"
         zipfile_path = os.path.join(stage_dir, "{0}".format(run_uid), provider_slug, "test.gpkg")
+        expected_manifest_file = os.path.join("MANIFEST", "manifest.xml")
+        mock_get_data_package_manifest.return_value = expected_manifest_file
         include_files = ["{0}/file1.txt".format(provider_slug), "{0}/file2.txt".format(provider_slug)]
         mock_os_walk.return_value = [
             (
@@ -900,6 +909,7 @@ class TestExportTasks(ExportTaskBase):
         result = zip_files(include_files=include_files, run_zip_file_uid=run_zip_file.uid, file_path=zipfile_path)
         self.assertEqual(zipfile.files, expected_archived_files)
         self.assertEqual(result, zipfile_path)
+        mock_get_data_package_manifest.assert_called_once()
 
         zipfile.testzip = Exception("Bad Zip")
         with self.assertRaises(Exception):
@@ -1258,10 +1268,11 @@ class TestExportTasks(ExportTaskBase):
         mock_generate_qgs_style.assert_called_once_with(metadata)
         mock_open.assert_called_once()
         mock_zip_files.assert_called_once_with(
-            file_path=expected_zip,
+            include_files=list(set(metadata["include_files"])),
             run_zip_file_uid=run_zip_file.uid,
-            include_files=set(metadata["include_files"]),
+            file_path=expected_zip,
             static_files=style_files,
+            metadata=metadata,
         )
         mock_json.dump.assert_called_once()
         mock_get_arcgis_metadata.assert_called_once_with(metadata)
