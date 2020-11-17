@@ -4,7 +4,7 @@ import os
 from uuid import uuid4
 
 from django.test import TransactionTestCase
-from mock import Mock, patch, call
+from unittest.mock import Mock, patch, call
 
 from eventkit_cloud.utils.geopackage import (
     add_geojson_to_geopackage,

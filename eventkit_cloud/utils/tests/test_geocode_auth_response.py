@@ -1,5 +1,5 @@
 import logging
-from mock import patch, Mock, MagicMock
+from unittest.mock import patch, Mock, MagicMock
 
 from django.test import TestCase
 

@@ -7,7 +7,7 @@ from django.contrib.gis.geos import GEOSGeometry, Polygon
 from django.test import TestCase
 from django.utils import timezone
 
-from mock import patch
+from unittest.mock import patch
 
 from eventkit_cloud.jobs.admin import get_example_from_file
 from eventkit_cloud.jobs.helpers import get_valid_regional_justification
