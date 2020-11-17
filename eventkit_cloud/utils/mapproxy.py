@@ -40,8 +40,14 @@ from eventkit_cloud.utils.stats.eta_estimator import ETA
 
 logger = logging.getLogger(__name__)
 
-mapproxy_config_template = "mapproxy-config-{user}-{slug}"
 mapproxy_config_keys_index = "mapproxy-config-cache-keys"
+
+
+def get_mapproxy_config_template(slug, user=None):
+    if user:
+        return f"mapproxy-config-{user}-{slug}"
+    else:
+        return f"mapproxy-config-{slug}"
 
 
 class CustomLogger(ProgressLog):
@@ -353,8 +359,8 @@ def get_concurrency(conf_dict):
     return int(concurrency)
 
 
-def create_mapproxy_app(user: User, slug: str) -> TestApp:
-    mapproxy_config_key = mapproxy_config_template.format(user=user, slug=slug)
+def create_mapproxy_app(slug: str, user: User = None) -> TestApp:
+    mapproxy_config_key = get_mapproxy_config_template(slug, user=user)
     mapproxy_config = cache.get(mapproxy_config_key)
     conf_dict = cache.get_or_set(f"base-config-{slug}", lambda: get_conf_dict(slug), 360)
     if not mapproxy_config:
@@ -390,7 +396,7 @@ def create_mapproxy_app(user: User, slug: str) -> TestApp:
                     "sources": [get_footprint_layer_name(slug)],
                 }
             ]
-        base_config, conf_dict = add_restricted_regions_to_config(base_config, conf_dict, user, slug)
+        base_config, conf_dict = add_restricted_regions_to_config(base_config, conf_dict, slug, None)
         try:
             mapproxy_config = load_default_config()
             load_config(mapproxy_config, config_dict=base_config)
@@ -477,7 +483,9 @@ def get_mapproxy_footprint_url(slug):
     return footprint_url
 
 
-def add_restricted_regions_to_config(base_config: dict, config: dict, user: User, slug: str) -> Tuple[dict, dict]:
+def add_restricted_regions_to_config(
+    base_config: dict, config: dict, slug: str, user: User = None
+) -> Tuple[dict, dict]:
     from eventkit_cloud.jobs.models import DataProvider, RegionalPolicy
 
     config["sources"]["default"]["coverage"] = {
@@ -486,7 +494,8 @@ def add_restricted_regions_to_config(base_config: dict, config: dict, user: User
     }
     providers = [get_cached_model(model=DataProvider, prop="slug", value=slug)]
     for policy in RegionalPolicy.objects.filter(providers__in=providers).prefetch_related("justifications"):
-        if not get_valid_regional_justification(policy, user):
+        # If no user no need to set up regional policy.
+        if user and not get_valid_regional_justification(policy, user):
             config["sources"]["default"]["coverage"]["difference"].append(
                 {"bbox": GEOSGeometry(policy.region.the_geom).extent, "srs": "EPSG:4326"}
             )
