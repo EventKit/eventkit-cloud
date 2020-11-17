@@ -1,7 +1,7 @@
 import * as PropTypes from 'prop-types';
 import * as React from 'react';
 import {withTheme, Theme} from '@material-ui/core/styles';
-import withWidth, {isWidthUp} from '@material-ui/core/withWidth';
+import withWidth from '@material-ui/core/withWidth';
 import {connect} from 'react-redux';
 import axios from 'axios';
 import debounce from 'lodash/debounce';
@@ -947,16 +947,16 @@ export class ExportAOI extends React.Component<Props, State> {
                 }
             }
             // if the buffer dialog is open we need to close it so its not hiding the AOI info
-            if (step.selector === '.qa-AoiInfobar-body' && type === 'tooltip:before' && this.state.showBuffer) {
+            if (step.target === '.qa-AoiInfoBar-container' && type === 'tooltip:before' && this.state.showBuffer) {
                 this.closeBufferDialog();
             }
             // if we are done highlighting the buffer dialog we need to close it again
-            if (step.selector === '.qa-BufferDialog-main' && type === 'step:after') {
+            if (step.target === '.qa-BufferDialog-main' && type === 'step:after') {
                 this.closeBufferDialog();
             }
             // if step:after or error we will want to advance to the next step
             if (type === 'step:after' || type === 'error:target_not_found') {
-                if (type === 'error:target_not_found' && step.selector === '.qa-BufferDialog-main') {
+                if (type === 'error:target_not_found' && step.target === '.qa-BufferDialog-main') {
                     // Okay, we can probably all agree that this is a very janky solution, but it
                     // was the best fix I could come up with of given the serious limitations of react-joyride at this time (v1.11.4).
                     // We cannot open the buffer dialog prior to the buffer step because it will be too soon
@@ -977,7 +977,7 @@ export class ExportAOI extends React.Component<Props, State> {
                     this.setState({stepIndex: index - 1});
                 } else {
                     // If we are not accounting for the stupid buffer issue, just go the the proper step index
-                    this.setState({stepIndex: index + (action === 'back' ? -1 : 1)});
+                    this.setState({stepIndex: index + (action === 'prev' ? -1 : 1)});
                 }
             }
         }

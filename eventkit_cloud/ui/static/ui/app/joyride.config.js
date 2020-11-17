@@ -169,7 +169,7 @@ export const joyride = {
                 including the size (in square kilometers), and the maximum allowable AOI size.
                 Note, there may be multiple maximum AOI sizes, as they can vary between individual data sources.
                 Finally, this dialog contains the Buffer button, which is described in the next step.`,
-            target: '.qa-AoiInfobar-body',
+            target: '.qa-AoiInfoBar-container ',
             placement: 'top',
             style: JoyRideStyles.tooltipStyle,
         },

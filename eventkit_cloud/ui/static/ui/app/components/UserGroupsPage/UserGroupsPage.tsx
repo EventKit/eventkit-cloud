@@ -800,13 +800,13 @@ export class UserGroupsPage extends React.Component<Props, State> {
             this.setState({isRunning: false, stepIndex: 0});
             this?.helpers.reset(true);
         } else {
-            if (step.selector === '.qa-GroupsDrawer-addGroup' && isWidthDown('sm', this.props.width) && !this.state.drawerOpen) {
+            if (step.target === '.qa-GroupsDrawer-addGroup' && isWidthDown('sm', this.props.width) && !this.state.drawerOpen) {
                 // because the next step will render immediately after (before the drawer is fully open)
                 // we need to wait till the drawer is open and then update the placement of the step items
                 await this.toggleDrawer();
                 // @ts-ignore
                 this.joyride.calcPlacement();
-            } else if (step.selector === '.qa-GroupsDrawer-groupsHeading') {
+            } else if (step.target === '.qa-GroupsDrawer-groupsHeading') {
                 if (type === 'step:before') {
                     this.scrollbar.scrollToTop();
                     const users = this.props.users.users.filter(u => u.user.username !== this.props.user.username);
@@ -832,9 +832,9 @@ export class UserGroupsPage extends React.Component<Props, State> {
                 } else if (type === 'step:after' && isWidthDown('sm', this.props.width)) {
                     this.toggleDrawer();
                 }
-            } else if (step.selector === '.qa-UserHeader-checkbox' && type === 'tooltip:before') {
+            } else if (step.target === '.qa-UserHeader-checkbox' && type === 'tooltip:before') {
                 this.handleSelectAll(true);
-            } else if (step.selector === '.qa-UserHeader-options' && type === 'step:after') {
+            } else if (step.target === '.qa-UserHeader-options' && type === 'step:after') {
                 // because the next step will render immidiately after (before the drawer is fully open)
                 // we need to wait till the drawer is open and then update the placement of the step items
                 await this.toggleDrawer();
@@ -843,7 +843,7 @@ export class UserGroupsPage extends React.Component<Props, State> {
             }
 
             if (type === 'step:after' || type === 'error:target_not_found') {
-                this.setState({stepIndex: index + (action === 'back' ? -1 : 1)});
+                this.setState({stepIndex: index + (action === 'prev' ? -1 : 1)});
             }
         }
     }

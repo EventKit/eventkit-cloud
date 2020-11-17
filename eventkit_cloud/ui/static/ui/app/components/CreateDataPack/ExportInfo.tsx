@@ -583,8 +583,8 @@ export class ExportInfo extends React.Component<Props, State> {
                 this.props.setNextEnabled();
             }
 
-            if ((step.selector === '.qa-DataProvider-ListItem-zoomSelection' && type === 'step:before') ||
-                (step.selector === '.qa-DataProvider-ListItem-provFormats' && type === 'step:before')) {
+            if ((step.target === '.qa-DataProvider-ListItem-zoomSelection' && type === 'step:before') ||
+                (step.target === '.qa-DataProvider-ListItem-provFormats' && type === 'step:before')) {
                 this.openDrawer();
             }
         }
