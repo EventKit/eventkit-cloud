@@ -170,9 +170,10 @@ class TestExportTasks(ExportTaskBase):
         self.assertEqual(expected_output_path, result["result"])
         self.assertEqual(expected_output_path, result["source"])
 
-    @patch("eventkit_cloud.tasks.export_tasks.gdalutils.convert")
+    @patch("eventkit_cloud.tasks.export_tasks.generate_qgs_style")
+    @patch("eventkit_cloud.tasks.export_tasks.convert_qgis_gpkg_to_kml")
     @patch("celery.app.task.Task.request")
-    def test_run_kml_export_task(self, mock_request, mock_convert):
+    def test_run_kml_export_task(self, mock_request, mock_convert, mock_generate_qgs_style):
         celery_uid = str(uuid.uuid4())
         type(mock_request).id = PropertyMock(return_value=celery_uid)
         job_name = self.job.name.lower()
@@ -184,6 +185,7 @@ class TestExportTasks(ExportTaskBase):
             os.path.join(settings.EXPORT_STAGING_ROOT.rstrip("\/"), str(self.run.uid)), expected_outfile
         )
 
+        mock_generate_qgs_style.return_value = qgs_file = "/style.qgs"
         mock_convert.return_value = expected_output_path
 
         previous_task_result = {"source": expected_output_path}
@@ -203,14 +205,7 @@ class TestExportTasks(ExportTaskBase):
             job_name=job_name,
             projection=projection,
         )
-        mock_convert.assert_called_once_with(
-            driver="libkml",
-            input_file=expected_output_path,
-            output_file=expected_output_path,
-            task_uid=str(saved_export_task.uid),
-            projection=4326,
-            boundary=None,
-        )
+        mock_convert.assert_called_once_with(qgs_file, expected_output_path, stage_dir=stage_dir)
 
         self.assertEqual(expected_output_path, result["result"])
         self.assertEqual(expected_output_path, result["source"])
