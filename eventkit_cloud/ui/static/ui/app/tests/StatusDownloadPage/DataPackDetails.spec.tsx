@@ -8,6 +8,7 @@ import Button from '@material-ui/core/Button';
 import CloudDownload from '@material-ui/icons/CloudDownload';
 import { DataPackDetails } from '../../components/StatusDownloadPage/DataPackDetails';
 import ProviderRow from '../../components/StatusDownloadPage/ProviderRow';
+import {ProviderRowRegionWrap} from "../../components/StatusDownloadPage/ProviderRowRegionWrap";
 
 describe('DataPackDetails component', () => {
     let shallow;
@@ -100,7 +101,7 @@ describe('DataPackDetails component', () => {
         expect(table.find(TableCell).at(1).dive().html()).toContain('FILE SIZE');
         expect(table.find(TableCell).at(2).dive().html()).toContain('ESTIMATED FINISH');
         expect(table.find(TableCell).at(3).dive().html()).toContain('PROGRESS');
-        expect(wrapper.find(ProviderRow)).toHaveLength(1);
+        expect(wrapper.find(ProviderRowRegionWrap)).toHaveLength(1);
     });
 
     it('getTextFontSize should return the font string for table text based on window width', () => {
