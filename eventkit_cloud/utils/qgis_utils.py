@@ -1,8 +1,11 @@
+import logging
 import os
 
 import osgeo
 import gdal
 from qgis.core import QgsApplication, QgsProject
+
+logger = logging.getLogger(__name__)
 
 
 def convert_qgis_gpkg_to_kml(qgs_file: str, output_kml_path: str, stage_dir: str = None) -> str:
@@ -54,8 +57,11 @@ def convert_qgis_gpkg_to_kml(qgs_file: str, output_kml_path: str, stage_dir: str
         out_driver.CreateDataSource(output_kml_path)
 
         # Ensure the land_polygons and boundary layers are at the bottom when the files get merged.
-        kml_files.append(kml_files.pop(kml_files.index("land_polygons.kml")))
-        kml_files.append(kml_files.pop(kml_files.index("boundary.kml")))
+        try:
+            kml_files.append(kml_files.pop(kml_files.index("land_polygons.kml")))
+            kml_files.append(kml_files.pop(kml_files.index("boundary.kml")))
+        except ValueError as ve:
+            logger.warning(ve)
 
         # Merge all of the KML files into a single file.
         for kml_file in kml_files:
