@@ -11,7 +11,7 @@ from django.contrib.gis.gdal import DataSource
 from django.contrib.gis.geos import GEOSGeometry, GeometryCollection, Polygon, Point, LineString
 from django.core import serializers
 from django.utils import timezone
-from mock import patch, Mock
+from unittest.mock import patch, Mock
 from rest_framework import status
 from rest_framework.authtoken.models import Token
 from rest_framework.reverse import reverse
