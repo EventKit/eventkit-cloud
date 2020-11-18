@@ -2,7 +2,7 @@
 import http.client
 import logging
 import urllib
-from mock import patch, MagicMock, ANY
+from unittest.mock import patch, MagicMock, ANY
 
 import requests
 from mapproxy.client.http import _URLOpenerCache, VerifiedHTTPSConnection

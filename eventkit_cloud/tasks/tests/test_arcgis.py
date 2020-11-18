@@ -2,7 +2,7 @@
 import logging
 
 from django.test import TestCase
-from mock import MagicMock, Mock, patch, ANY
+from unittest.mock import MagicMock, Mock, patch, ANY
 
 logger = logging.getLogger(__name__)
 

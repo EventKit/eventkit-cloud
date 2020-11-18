@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 import json
 import logging
-from mock import patch
+from unittest.mock import patch
 import os
 
 import requests_mock

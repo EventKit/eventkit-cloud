@@ -2,7 +2,7 @@ import logging
 import requests
 from django.conf import settings
 from django.test import TestCase, override_settings
-from mock import patch
+from unittest.mock import patch
 from eventkit_cloud.utils.geocoding.geocode_auth import (
     get_auth_headers,
     CACHE_COOKIE_KEY,

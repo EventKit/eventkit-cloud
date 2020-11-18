@@ -4,7 +4,7 @@ import os
 from uuid import uuid4
 
 from django.test import TestCase
-from mock import Mock, patch, call, MagicMock, ANY
+from unittest.mock import Mock, patch, call, MagicMock, ANY
 from osgeo import gdal, ogr
 
 from eventkit_cloud.utils.gdalutils import (

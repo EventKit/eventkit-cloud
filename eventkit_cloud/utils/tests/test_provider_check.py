@@ -5,7 +5,7 @@ import logging
 import requests
 from django.conf import settings
 from django.test import TransactionTestCase
-from mock import patch, MagicMock
+from unittest.mock import patch, MagicMock
 
 from eventkit_cloud.utils.provider_check import (
     WCSProviderCheck,
