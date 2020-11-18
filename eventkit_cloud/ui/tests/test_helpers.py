@@ -5,7 +5,7 @@ from django.test import TestCase
 
 import os
 
-from mock import Mock, patch, mock_open
+from unittest.mock import Mock, patch, mock_open
 from eventkit_cloud.ui.helpers import (
     file_to_geojson,
     read_json_file,

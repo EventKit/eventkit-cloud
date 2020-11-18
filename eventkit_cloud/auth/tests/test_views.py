@@ -7,7 +7,7 @@ from django.contrib.auth.models import User, Group
 from django.urls import reverse
 from django.test import Client, override_settings
 from django.test import TestCase
-from mock import patch, Mock, MagicMock
+from unittest.mock import patch, Mock, MagicMock
 
 from eventkit_cloud.auth.models import OAuth
 from eventkit_cloud.auth.views import callback, oauth

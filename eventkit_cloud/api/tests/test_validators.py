@@ -4,7 +4,7 @@ import logging
 from django.contrib.auth.models import User, Group
 from django.contrib.gis.geos import GEOSGeometry, GeometryCollection, Point, LineString, Polygon
 from django.test import TestCase
-from mock import patch, Mock
+from unittest.mock import patch, Mock
 from rest_framework.serializers import ValidationError
 
 from eventkit_cloud.api.validators import (
