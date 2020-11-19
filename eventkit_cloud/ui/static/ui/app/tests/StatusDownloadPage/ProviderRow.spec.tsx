@@ -1,25 +1,13 @@
 import * as React from 'react';
 import * as sinon from 'sinon';
-import {createShallow} from '@material-ui/core/test-utils';
-import MenuItem from '@material-ui/core/MenuItem';
-import IconButton from '@material-ui/core/IconButton';
-import Table from '@material-ui/core/Table';
-import TableBody from '@material-ui/core/TableBody';
-import TableHead from '@material-ui/core/TableHead';
-import TableRow from '@material-ui/core/TableRow';
-import TableCell from '@material-ui/core/TableCell';
-import LinearProgress from '@material-ui/core/LinearProgress';
-import ArrowDown from '@material-ui/icons/KeyboardArrowDown';
-import Warning from '@material-ui/icons/Warning';
-import Check from '@material-ui/icons/Check';
-import CloudDownload from '@material-ui/icons/CloudDownload';
-import IconMenu from '../../components/common/IconMenu';
-import ErrorDialog from '../../components/StatusDownloadPage/ErrorDialog';
-import BaseDialog from '../../components/Dialog/BaseDialog';
 import {ProviderRow} from '../../components/StatusDownloadPage/ProviderRow';
-import ProviderTaskErrorDialog from "../../components/StatusDownloadPage/ProviderTaskErrorDialog";
 import {fireEvent, render, screen} from "@testing-library/react";
 import '@testing-library/jest-dom/extend-expect'
+import ProviderTaskErrorDialog from "../../components/StatusDownloadPage/ProviderTaskErrorDialog";
+import {useRunContext} from "../../components/StatusDownloadPage/context/RunFile";
+import {useAsyncRequest} from "../../utils/hooks/api";
+import {useDataCartContext} from "../../components/StatusDownloadPage/context/DataCart";
+
 
 jest.mock('../../components/Dialog/BaseDialog', () => {
     // eslint-disable-next-line global-require,no-shadow
@@ -53,6 +41,26 @@ jest.mock('../../components/StatusDownloadPage/LicenseRow', () => {
     return (props) => (<div>license row</div>)
 });
 
+jest.mock('../../components/StatusDownloadPage/ProviderTaskErrorDialog', () => jest.fn())
+
+jest.mock('../../utils/hooks/api', () => {
+    return {
+        useAsyncRequest: jest.fn(),
+    }
+})
+
+
+jest.mock('../../components/StatusDownloadPage/context/RunFile', () => {
+    return {
+        useRunContext: jest.fn(),
+    }
+});
+
+jest.mock('../../components/StatusDownloadPage/context/DataCart', () => {
+    return {
+        useDataCartContext: jest.fn(),
+    }
+});
 
 describe('ProviderRow component', () => {
     const selectedProviders = {
@@ -128,12 +136,29 @@ describe('ProviderRow component', () => {
         selectProvider: sinon.spy(),
         ...(global as any).eventkit_test_props,
     });
+    let providerTaskErrorDialogPropsContainer = {} as any;
 
     const setup = (propsOverride = {}) => {
+        (ProviderTaskErrorDialog as any).mockImplementation((props) => {
+            providerTaskErrorDialogPropsContainer.props = props;
+            return (<div className="providerTaskErrorDialog"/>);
+        });
+        (useRunContext as any).mockImplementation(() => {
+            return {run: {status: 'COMPLETED'}};
+        });
+        const requestCall = jest.fn();
+        requestCall.mockImplementation(async () => Promise.resolve({}));
+        (useAsyncRequest as any).mockImplementation(() => {
+           return [{}, requestCall];
+        });
+        (useDataCartContext as any).mockImplementation(() => {
+            return {setFetching: jest.fn()};
+        });
         const props = {
             ...getProps(),
             ...propsOverride,
         };
+
         return render(<ProviderRow {...props} />);
     };
 
@@ -245,5 +270,14 @@ describe('ProviderRow component', () => {
             })
         );
         expect(screen.getByText('provider description')).toBeInTheDocument();
+    });
+
+    it('should be able to call make request without failing', () => {
+        const props = {...getProps()};
+        props.providerTask.status = 'INCOMPLETE';
+        props.onProviderCancel = sinon.spy();
+        props.selectProvider = sinon.spy();
+        setup(props);
+        providerTaskErrorDialogPropsContainer.props.onRetryClicked();
     });
 });
