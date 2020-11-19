@@ -4,6 +4,7 @@ from unittest.mock import call, Mock, patch
 
 from django.conf import settings
 from django.test import TestCase
+
 try:
     import qgis  # noqa
 except ImportError:
