@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 import logging
 import os
-from mock import Mock, patch
+from unittest.mock import Mock, patch
 
 from django.test import TransactionTestCase
 

@@ -2,10 +2,9 @@
 
 
 import logging
-from unittest.mock import patch, MagicMock
+from unittest.mock import patch, MagicMock, Mock
 
 from django.test import TestCase
-from mock import Mock
 
 from eventkit_cloud.core.helpers import get_id, get_cached_model, get_model_by_params
 

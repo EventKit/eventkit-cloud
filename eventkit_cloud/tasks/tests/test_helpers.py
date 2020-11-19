@@ -8,7 +8,7 @@ import signal
 from django.test import TestCase
 from django.conf import settings
 from django.utils import timezone
-from mock import patch, call, Mock, MagicMock
+from unittest.mock import patch, call, Mock, MagicMock
 import os
 from eventkit_cloud.tasks.helpers import (
     get_style_files,

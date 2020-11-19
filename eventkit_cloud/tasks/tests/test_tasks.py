@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 from django.test import TestCase
-from mock import patch
+from unittest.mock import patch
 
 from eventkit_cloud.tasks.models import ExportTaskRecord
 from eventkit_cloud.tasks import get_cache_value, get_cache_key, set_cache_value

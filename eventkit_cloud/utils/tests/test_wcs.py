@@ -6,7 +6,7 @@ from uuid import uuid4
 
 from django.conf import settings
 from django.test import TransactionTestCase
-from mock import Mock, patch, ANY
+from unittest.mock import Mock, patch, ANY
 
 from eventkit_cloud.utils.wcs import WCSConverter
 

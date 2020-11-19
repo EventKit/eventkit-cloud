@@ -2,12 +2,11 @@
 import logging
 import os
 
-import mock
 from django.conf import settings
 from django.contrib.auth.models import Group, User
 from django.contrib.gis.geos import GEOSGeometry, Polygon
 from django.test import TestCase
-from mock import patch, Mock
+from unittest.mock import patch, Mock
 import yaml
 
 from eventkit_cloud.jobs.models import ExportFormat, Job, DatamodelPreset
@@ -89,7 +88,7 @@ class TestOverpass(TestCase):
         )
         overpass_query = op.get_query()
         out = self.path + "/files/query.osm"
-        mock_response = mock.Mock()
+        mock_response = Mock()
         sample_data = ["<osm>some data</osm>".encode()]
         expected = sample_data[0].decode()
         mock_response.headers = {"content-length": 20}

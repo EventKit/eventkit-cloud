@@ -9,7 +9,7 @@ import requests_mock
 from django.conf import settings
 from django.contrib.auth.models import User
 from django.test import TestCase, override_settings
-from mock import patch
+from unittest.mock import patch
 
 from eventkit_cloud.auth.auth import (
     get_user,
