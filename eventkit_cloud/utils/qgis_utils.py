@@ -3,9 +3,13 @@ import os
 
 import osgeo
 import gdal
-from qgis.core import QgsApplication, QgsProject
 
 logger = logging.getLogger(__name__)
+
+try:
+    from qgis.core import QgsApplication, QgsProject
+except ImportError:
+    logger.warning("QGIS is not installed.")
 
 
 def convert_qgis_gpkg_to_kml(qgs_file: str, output_kml_path: str, stage_dir: str = None) -> str:

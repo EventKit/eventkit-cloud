@@ -619,8 +619,24 @@ def kml_export_task(
     dptr = DataProviderTaskRecord.objects.get(tasks__uid__exact=task_uid)
     metadata = get_metadata(data_provider_task_record_uids=[dptr.uid], source_only=True)
     metadata["projections"] = [4326]
-    qgs_file = generate_qgs_style(metadata)
-    kml = convert_qgis_gpkg_to_kml(qgs_file, kml_out_dataset, stage_dir=stage_dir)
+
+    try:
+        import qgis  # noqa
+
+        qgs_file = generate_qgs_style(metadata)
+        kml = convert_qgis_gpkg_to_kml(qgs_file, kml_out_dataset, stage_dir=stage_dir)
+    except ImportError:
+        logger.warning("QGIS is not installed, using gdalutils.convert.")
+        kml_in_dataset = parse_result(result, "source")
+        selection = parse_result(result, "selection")
+        kml = gdalutils.convert(
+            driver="libkml",
+            input_file=kml_in_dataset,
+            output_file=kml_out_dataset,
+            task_uid=task_uid,
+            boundary=selection,
+            projection=projection,
+        )
 
     result["driver"] = "libkml"
     result["file_extension"] = "kml"

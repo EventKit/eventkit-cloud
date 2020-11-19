@@ -1,8 +1,13 @@
 import os
+from unittest import SkipTest
 from unittest.mock import call, Mock, patch
 
 from django.conf import settings
 from django.test import TestCase
+try:
+    import qgis  # noqa
+except ImportError:
+    raise SkipTest("Skipping all QGIS tests because it's not installed.")
 
 from eventkit_cloud.utils.qgis_utils import convert_qgis_gpkg_to_kml
 
