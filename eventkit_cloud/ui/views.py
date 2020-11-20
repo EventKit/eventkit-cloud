@@ -148,7 +148,8 @@ def search(request):
         convert = CoordinateConverter()
         try:
             mgrs_data = convert.get(q)
-        except Exception:
+        except Exception as e:
+            logger.error(e)
             return HttpResponse(content=error_string, status=500)
 
         # if no feature geom return nothing
@@ -177,7 +178,8 @@ def search(request):
                     "lon": mgrs_data.get("geometry").get("coordinates")[0],
                 }
             )
-        except Exception:
+        except Exception as e:
+            logger.error(e)
             return HttpResponse(content=error_string, status=500)
 
         if result.get("features"):

@@ -50,7 +50,7 @@ from eventkit_cloud.tasks.helpers import (
     get_archive_data_path,
     get_data_package_manifest,
     get_download_filename,
-    get_export_filename,
+    get_export_filepath,
     get_human_readable_metadata_document,
     get_metadata,
     get_provider_download_dir,
@@ -69,6 +69,7 @@ from eventkit_cloud.tasks.metadata import metadata_tasks
 from eventkit_cloud.tasks.task_process import update_progress
 from eventkit_cloud.utils.auth_requests import get_cred
 from eventkit_cloud.utils import overpass, pbf, s3, mapproxy, wcs, geopackage, gdalutils
+from eventkit_cloud.utils.qgis_utils import convert_qgis_gpkg_to_kml
 from eventkit_cloud.utils.rocket_chat import RocketChat
 from eventkit_cloud.utils.stats.eta_estimator import ETA
 from eventkit_cloud.tasks.task_base import EventKitBaseTask
@@ -225,7 +226,7 @@ class ExportTask(EventKitBaseTask):
                 event = normalize_name(task.export_provider_task.run.job.event)
                 download_filename = get_download_filename(name, ext, additional_descriptors=[event, "eventkit"])
             else:
-                download_filename = get_download_filename(name, ext, data_provider_slug=provider_slug)
+                download_filename = get_download_filename(name, ext)
 
             # construct the download url
             skip_copy = task.name == "OverpassQuery"
@@ -424,7 +425,7 @@ def osm_data_collection_pipeline(
 
     # --- Generate thematic gpkg from PBF
     provider_slug = get_provider_slug(export_task_record_uid)
-    gpkg_filepath = get_export_filename(stage_dir, job_name, projection, provider_slug, "gpkg")
+    gpkg_filepath = get_export_filepath(stage_dir, job_name, projection, provider_slug, "gpkg")
 
     if config is None:
         logger.error("No configuration was provided for OSM export")
@@ -576,7 +577,7 @@ def shp_export_task(
     shp_in_dataset = parse_result(result, "source")
 
     provider_slug = get_provider_slug(task_uid)
-    shp_out_dataset = get_export_filename(stage_dir, job_name, projection, provider_slug, "shp")
+    shp_out_dataset = get_export_filepath(stage_dir, job_name, projection, provider_slug, "shp")
     selection = parse_result(result, "selection")
 
     shp = gdalutils.convert(
@@ -611,20 +612,31 @@ def kml_export_task(
     Function defining KML export function.
     """
     result = result or {}
-    kml_in_dataset = parse_result(result, "source")
 
     provider_slug = get_provider_slug(task_uid)
-    kml_out_dataset = get_export_filename(stage_dir, job_name, projection, provider_slug, "kml")
-    selection = parse_result(result, "selection")
+    kml_out_dataset = get_export_filepath(stage_dir, job_name, projection, provider_slug, "kml")
 
-    kml = gdalutils.convert(
-        driver="libkml",
-        input_file=kml_in_dataset,
-        output_file=kml_out_dataset,
-        task_uid=task_uid,
-        boundary=selection,
-        projection=projection,
-    )
+    dptr = DataProviderTaskRecord.objects.get(tasks__uid__exact=task_uid)
+    metadata = get_metadata(data_provider_task_record_uids=[dptr.uid], source_only=True)
+    metadata["projections"] = [4326]
+
+    try:
+        import qgis  # noqa
+
+        qgs_file = generate_qgs_style(metadata)
+        kml = convert_qgis_gpkg_to_kml(qgs_file, kml_out_dataset, stage_dir=stage_dir)
+    except ImportError:
+        logger.warning("QGIS is not installed, using gdalutils.convert.")
+        kml_in_dataset = parse_result(result, "source")
+        selection = parse_result(result, "selection")
+        kml = gdalutils.convert(
+            driver="libkml",
+            input_file=kml_in_dataset,
+            output_file=kml_out_dataset,
+            task_uid=task_uid,
+            boundary=selection,
+            projection=projection,
+        )
 
     result["driver"] = "libkml"
     result["file_extension"] = "kml"
@@ -655,7 +667,7 @@ def gpx_export_task(
     # Need to crop to selection since the PBF hasn't been clipped.
     selection = parse_result(result, "selection")
     provider_slug = get_provider_slug(task_uid)
-    gpx_file = get_export_filename(stage_dir, job_name, projection, provider_slug, "gpx")
+    gpx_file = get_export_filepath(stage_dir, job_name, projection, provider_slug, "gpx")
     try:
         out = gdalutils.convert(
             input_file=pbf,
@@ -728,7 +740,7 @@ def sqlite_export_task(
     sqlite_in_dataset = parse_result(result, "source")
 
     provider_slug = get_provider_slug(task_uid)
-    sqlite_out_dataset = get_export_filename(stage_dir, job_name, projection, provider_slug, "sqlite")
+    sqlite_out_dataset = get_export_filepath(stage_dir, job_name, projection, provider_slug, "sqlite")
     selection = parse_result(result, "selection")
 
     sqlite = gdalutils.convert(
@@ -798,7 +810,7 @@ def geopackage_export_task(
     gpkg_in_dataset = parse_result(result, "source")
 
     provider_slug = get_provider_slug(task_uid)
-    gpkg_out_dataset = get_export_filename(stage_dir, job_name, projection, provider_slug, "gpkg")
+    gpkg_out_dataset = get_export_filepath(stage_dir, job_name, projection, provider_slug, "gpkg")
     selection = parse_result(result, "selection")
 
     gpkg = gdalutils.convert(
@@ -840,7 +852,7 @@ def mbtiles_export_task(
 
     source_dataset = parse_result(result, "source")
 
-    mbtiles_out_dataset = get_export_filename(stage_dir, job_name, projection, provider_slug, "mbtiles")
+    mbtiles_out_dataset = get_export_filepath(stage_dir, job_name, projection, provider_slug, "mbtiles")
     selection = parse_result(result, "selection")
     logger.error(f"Converting {source_dataset} to {mbtiles_out_dataset}")
 
@@ -871,7 +883,7 @@ def geotiff_export_task(
 
     gtiff_in_dataset = parse_result(result, "source")
     provider_slug = get_provider_slug(task_uid)
-    gtiff_out_dataset = get_export_filename(stage_dir, job_name, projection, provider_slug, "tif")
+    gtiff_out_dataset = get_export_filepath(stage_dir, job_name, projection, provider_slug, "tif")
     selection = parse_result(result, "selection")
 
     warp_params, translate_params = get_creation_options(config, "gtiff")
@@ -917,7 +929,7 @@ def nitf_export_task(
 
     nitf_in_dataset = parse_result(result, "source")
     provider_slug = get_provider_slug(task_uid)
-    nitf_out_dataset = get_export_filename(stage_dir, job_name, projection, provider_slug, "nitf")
+    nitf_out_dataset = get_export_filepath(stage_dir, job_name, projection, provider_slug, "nitf")
 
     creation_options = ["ICORDS=G"]
     nitf = gdalutils.convert(
@@ -954,7 +966,7 @@ def hfa_export_task(
     result = result or {}
     hfa_in_dataset = parse_result(result, "source")
     provider_slug = get_provider_slug(task_uid)
-    hfa_out_dataset = get_export_filename(stage_dir, job_name, projection, provider_slug, "img")
+    hfa_out_dataset = get_export_filepath(stage_dir, job_name, projection, provider_slug, "img")
     hfa = gdalutils.convert(driver="hfa", input_file=hfa_in_dataset, output_file=hfa_out_dataset, task_uid=task_uid,)
 
     result["file_extension"] = "img"
@@ -992,7 +1004,7 @@ def reprojection_task(
 
     in_dataset = parse_result(result, "source")
     provider_slug = get_provider_slug(task_uid)
-    out_dataset = get_export_filename(stage_dir, job_name, projection, provider_slug, file_extension)
+    out_dataset = get_export_filepath(stage_dir, job_name, projection, provider_slug, file_extension)
 
     warp_params, translate_params = get_creation_options(config, driver)
 
@@ -1039,7 +1051,7 @@ def wfs_export_task(
     """
     result = result or {}
     provider_slug = get_provider_slug(task_uid)
-    gpkg = get_export_filename(stage_dir, job_name, projection, provider_slug, "gpkg")
+    gpkg = get_export_filepath(stage_dir, job_name, projection, provider_slug, "gpkg")
 
     configuration = load_provider_config(config)
 
@@ -1148,7 +1160,7 @@ def wcs_export_task(
     result = result or {}
 
     provider_slug = get_provider_slug(task_uid)
-    out = get_export_filename(stage_dir, job_name, projection, provider_slug, "tif")
+    out = get_export_filepath(stage_dir, job_name, projection, provider_slug, "tif")
 
     eta = ETA(task_uid=task_uid)
     task = ExportTaskRecord.objects.get(uid=task_uid)
@@ -1199,7 +1211,7 @@ def arcgis_feature_service_export_task(
 
     result = result or {}
     provider_slug = get_provider_slug(task_uid)
-    gpkg = get_export_filename(stage_dir, job_name, projection, provider_slug, "gpkg")
+    gpkg = get_export_filepath(stage_dir, job_name, projection, provider_slug, "gpkg")
 
     if not os.path.exists(os.path.dirname(gpkg)):
         os.makedirs(os.path.dirname(gpkg), 6600)
@@ -1311,7 +1323,7 @@ def mapproxy_export_task(
     selection = parse_result(result, "selection")
 
     provider_slug = get_provider_slug(task_uid)
-    gpkgfile = get_export_filename(stage_dir, job_name, projection, provider_slug, "gpkg")
+    gpkgfile = get_export_filepath(stage_dir, job_name, projection, provider_slug, "gpkg")
 
     try:
         w2g = mapproxy.MapproxyGeopackage(
@@ -1500,25 +1512,29 @@ def finalize_export_provider_task(result=None, data_provider_task_uid=None, stat
     result_status = parse_result(result, "status")
 
     with transaction.atomic():
-        export_provider_task = DataProviderTaskRecord.objects.prefetch_related("tasks").get(uid=data_provider_task_uid)
+        data_provider_task_record = DataProviderTaskRecord.objects.prefetch_related("tasks").get(
+            uid=data_provider_task_uid
+        )
+        has_failures = any(
+            [
+                export_task_record.status == TaskStates.FAILED.value
+                for export_task_record in data_provider_task_record.tasks.all()
+            ]
+        )
         if TaskStates[result_status] == TaskStates.CANCELED:
             # This makes the assumption that users can't cancel individual tasks.  Therefore if any of them failed then
             # it is likely that the rest of the tasks were force canceled since they depend on the task that failed.
-            if any(
-                [
-                    export_task_record.status == TaskStates.FAILED.value
-                    for export_task_record in export_provider_task.tasks.all()
-                ]
-            ):
-                export_provider_task.status = TaskStates.INCOMPLETE.value
+            if has_failures:
+                data_provider_task_record.status = TaskStates.INCOMPLETE.value
             else:
-                export_provider_task.status = TaskStates.CANCELED.value
-        elif TaskStates[result_status] != TaskStates.SUCCESS:
-            export_provider_task.status = TaskStates.INCOMPLETE.value
+                data_provider_task_record.status = TaskStates.CANCELED.value
         else:
-            export_provider_task.status = TaskStates.COMPLETED.value
-        export_provider_task.finished_at = timezone.now()
-        export_provider_task.save()
+            if has_failures:
+                data_provider_task_record.status = TaskStates.INCOMPLETE.value
+            else:
+                data_provider_task_record.status = TaskStates.COMPLETED.value
+        data_provider_task_record.finished_at = timezone.now()
+        data_provider_task_record.save()
 
     return result
 
@@ -1587,13 +1603,14 @@ def zip_files(include_files, run_zip_file_uid, file_path=None, static_files=None
                 filename = os.path.join(Directory.ARCGIS.value, "{0}{1}".format(name, ext))
                 manifest_ignore_files.append(filename)
             elif filepath.endswith(PREVIEW_TAIL):
-                download_filename = get_download_filename("preview", ext, data_provider_slug=provider_slug,)
+                download_filename = get_download_filename("preview", ext)
                 filename = get_archive_data_path(provider_slug, download_filename)
                 manifest_ignore_files.append(filename)
             else:
                 # Put the files into directories based on their provider_slug
                 # prepend with `data`
-                download_filename = get_download_filename(name, ext, data_provider_slug=provider_slug)
+
+                download_filename = get_download_filename(name, ext)
                 filename = get_archive_data_path(provider_slug, download_filename)
             run_zip_file.message = f"Adding {filename} to zip archive."
             zipfile.write(filepath, arcname=filename)
