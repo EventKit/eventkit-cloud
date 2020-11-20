@@ -457,7 +457,7 @@ describe('ExportInfo component', () => {
             action: 'something',
             index: 9,
             step: {},
-            type: 'tooltip:before',
+            type: 'tooltip',
         };
         instance.callback(data);
         expect(props.setNextEnabled.calledOnce).toBe(true);

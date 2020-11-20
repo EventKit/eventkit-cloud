@@ -171,6 +171,7 @@ export interface State {
     steps: Step[];
     isRunning: boolean;
     providers: Eventkit.Provider[];
+    displayDummy: boolean;
     refreshPopover: null | HTMLElement;
     projectionCompatibilityOpen: boolean;
     displaySrid: number;  // Which projection is shown in the compatibility warning box
@@ -179,6 +180,29 @@ export interface State {
     providerDrawerIsOpen: boolean;
     stepIndex: number;
 }
+
+const dummyProvider = {
+    uid: 'notreal',
+    slug: 'slug',
+    name: 'Example Map Service',
+    max_selection: '10000',
+    type: 'wmts',
+    service_description: 'This is an example service used for demonstration purposes',
+    license: {
+        text: 'test license text',
+        name: 'test license',
+    },
+    level_from: 0,
+    level_to: 13,
+    supported_formats: [{
+        uid: 'fakeduid',
+        url: 'http://cloud.eventkit.test/api/formats/gpkg',
+        slug: 'gpkg',
+        name: 'Geopackage',
+        description: 'GeoPackage',
+        supported_projections: [{srid: 4326, name: '', description: ''}],
+    } as Eventkit.Format],
+} as Eventkit.Provider;
 
 export class ExportInfo extends React.Component<Props, State> {
     static contextTypes = {
@@ -211,6 +235,7 @@ export class ExportInfo extends React.Component<Props, State> {
             } as IncompatibilityInfo,
             providerDrawerIsOpen: false,
             stepIndex: 0,
+            displayDummy: false,
         };
 
         this.onNameChange = this.onNameChange.bind(this);
@@ -317,7 +342,7 @@ export class ExportInfo extends React.Component<Props, State> {
     }
 
     private checkCompatibility() {
-        const { formats } = this.props;
+        const {formats} = this.props;
         const selectedProjections = this.props.exportInfo.projections;
 
         const formatMap = {};
@@ -325,11 +350,11 @@ export class ExportInfo extends React.Component<Props, State> {
         formats.forEach(format => {
             const formatSupportedProjections = format.supported_projections.map(projection => projection.srid);
             selectedProjections.forEach(selectedProjection => {
-                if (!formatMap[format.slug]){
+                if (!formatMap[format.slug]) {
                     formatMap[format.slug] = {projections: []};
                 }
-                if (!projectionMap[selectedProjection]){
-                    projectionMap[selectedProjection] = {formats:[]};
+                if (!projectionMap[selectedProjection]) {
+                    projectionMap[selectedProjection] = {formats: []};
                 }
                 if (!formatSupportedProjections.includes(selectedProjection)) {
                     projectionMap[selectedProjection].formats.push(format);
@@ -572,18 +597,22 @@ export class ExportInfo extends React.Component<Props, State> {
 
         this.props.setNextDisabled();
 
+        if (action === 'start') {
+            this.setState({displayDummy: true});
+        }
+
         if (action === 'close' || action === 'skip' || type === 'tour:end') {
             this.resetDrawer();
-            this.setState({isRunning: false});
+            this.setState({isRunning: false, displayDummy: false});
             this.props.onWalkthroughReset();
             this?.helpers.reset(true);
             window.location.hash = '';
         } else {
-            if (data.index === 9 && data.type === 'tooltip:before') {
+            if (data.index === 9 && data.type === 'tooltip') {
                 this.props.setNextEnabled();
             }
 
-            if ((step.target === '.qa-DataProvider-ListItem-zoomSelection' && type === 'step:before') ||
+            if ((step.target === '.qa-DataProvider-ListItem-Expand' && type === 'step:before') ||
                 (step.target === '.qa-DataProvider-ListItem-provFormats' && type === 'step:before')) {
                 this.openDrawer();
             }
@@ -598,6 +627,9 @@ export class ExportInfo extends React.Component<Props, State> {
         // They need to be deduplicated, so that they don't render duplicate elements or cause havoc on the DOM.
         let providers = this.state.providers.filter(provider => (!provider.hidden && provider.display));
         providers = [...new Map(providers.map(x => [x.slug, x])).values()];
+        if (this.state.displayDummy) {
+            providers.unshift(dummyProvider as Eventkit.Provider);
+        }
         return providers;
     }
 
@@ -650,10 +682,13 @@ export class ExportInfo extends React.Component<Props, State> {
         return (
             <div id="root" className={`qa-ExportInfo-root ${classes.root}`}>
                 {/*<PermissionsBanner isOpen={true} handleClosedPermissionsBanner={() => {}}/>*/}
-                <StepValidator {...this.props}/>
+                <StepValidator
+                    tourRunning={this.state.isRunning}
+                    {...this.props}
+                />
                 <EventkitJoyride
                     callback={this.callback}
-                    ref={this.joyride}
+                    getRef={(_ref) => this.joyride = _ref}
                     steps={steps}
                     getHelpers={(helpers: any) => {
                         this.helpers = helpers
@@ -852,7 +887,7 @@ export class ExportInfo extends React.Component<Props, State> {
                                             {...(() => {
                                                 const refProps = {} as any;
                                                 if (ix === 0) {
-                                                    refProps.getRef =(ref: any) => this.dataProvider.current = ref;
+                                                    refProps.getRef = (ref: any) => this.dataProvider.current = ref;
                                                 }
                                                 return refProps;
                                             })()}
@@ -873,7 +908,8 @@ export class ExportInfo extends React.Component<Props, State> {
                                 Select Projection
                             </div>
                             <div className={classes.sectionBottom}>
-                                <div id="Projections" className={`qa-ExportInfo-projections ${classes.projections}`}>
+                                <div id="Projections"
+                                     className={`qa-ExportInfo-projections ${classes.projections}`}>
                                     {projections.map((projection, ix) => (
                                         <div
                                             key={projection.srid}

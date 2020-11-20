@@ -211,6 +211,7 @@ export interface Props {
 }
 
 export interface State {
+    selectedTab?: string;
     drawerOpen: boolean;
     selectedUsers: Eventkit.User[];
     search: string;
@@ -805,7 +806,6 @@ export class UserGroupsPage extends React.Component<Props, State> {
                 // we need to wait till the drawer is open and then update the placement of the step items
                 await this.toggleDrawer();
                 // @ts-ignore
-                this.joyride.calcPlacement();
             } else if (step.target === '.qa-GroupsDrawer-groupsHeading') {
                 if (type === 'step:before') {
                     this.scrollbar.scrollToTop();
@@ -832,14 +832,14 @@ export class UserGroupsPage extends React.Component<Props, State> {
                 } else if (type === 'step:after' && isWidthDown('sm', this.props.width)) {
                     this.toggleDrawer();
                 }
-            } else if (step.target === '.qa-UserHeader-checkbox' && type === 'tooltip:before') {
+            } else if (step.target === '.qa-UserHeader-checkbox' && type === 'tooltip') {
                 this.handleSelectAll(true);
             } else if (step.target === '.qa-UserHeader-options' && type === 'step:after') {
                 // because the next step will render immidiately after (before the drawer is fully open)
                 // we need to wait till the drawer is open and then update the placement of the step items
+                this.setState({selectedTab: 'members'})
                 await this.toggleDrawer();
                 // @ts-ignore
-                this.joyride.calcPlacement();
             }
 
             if (type === 'step:after' || type === 'error:target_not_found') {
@@ -967,7 +967,7 @@ export class UserGroupsPage extends React.Component<Props, State> {
             <div style={{backgroundColor: colors.white, position: 'relative'}}>
                 <EventkitJoyride
                     callback={this.callback}
-                    ref={(instance) => {
+                    getRef={(instance) => {
                         this.joyride = instance;
                     }}
                     steps={steps}

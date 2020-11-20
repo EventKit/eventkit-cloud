@@ -913,11 +913,11 @@ describe('UserGroupsPage component', () => {
             step: {
                 target: '.qa-UserHeader-checkbox',
             },
-            type: 'tooltip:before',
+            type: 'tooltip',
         };
         const selectStub = sinon.stub(instance, 'handleSelectAll');
         instance.callback(data);
-        expect(selectStub.calledOnce).toBe(true);
+        expect(selectStub.called).toBe(true);
         expect(selectStub.calledWith(true)).toBe(true);
     });
 

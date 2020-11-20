@@ -42,8 +42,10 @@ export function hasDisallowedSelection(exportInfo: Eventkit.Store.ExportInfo) {
     });
 }
 
-export function StepValidator(props: Props) {
-    const {setNextEnabled, setNextDisabled, walkthroughClicked, exportInfo, nextEnabled} = props;
+interface ValidationProps extends Props {tourRunning: boolean}
+
+export function StepValidator(props: ValidationProps) {
+    const {tourRunning, setNextEnabled, setNextDisabled, walkthroughClicked, exportInfo, nextEnabled} = props;
     const {aoiHasArea, areEstimatesLoading, dataSizeInfo, aoiArea} = useJobValidationContext();
     const {exceedingSize = [], noMaxDataSize = []} = dataSizeInfo || {};
 
@@ -65,11 +67,14 @@ export function StepValidator(props: Props) {
             }
             return true;
         });
-        const setEnabled = !walkthroughClicked && aoiHasArea && validState && providersValid;
-        if (validState && !nextEnabled) {
-            setNextEnabled();
-        } else if (!setEnabled && nextEnabled) {
-            setNextDisabled();
+        // We don't want to control this while the page tour is running
+        if (!tourRunning) {
+            const setEnabled = !walkthroughClicked && aoiHasArea && validState && providersValid;
+            if (validState && !nextEnabled) {
+                setNextEnabled();
+            } else if (!setEnabled && nextEnabled) {
+                setNextDisabled();
+            }
         }
     });
 
