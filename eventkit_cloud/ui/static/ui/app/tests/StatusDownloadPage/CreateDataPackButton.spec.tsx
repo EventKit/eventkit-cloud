@@ -3,8 +3,6 @@ import {CreateDataPackButton} from "../../components/StatusDownloadPage/CreateDa
 import {render, screen, getByText, waitFor, fireEvent} from '@testing-library/react';
 import {useRunContext} from "../../components/StatusDownloadPage/context/RunFile";
 import '@testing-library/jest-dom/extend-expect'
-import MockAdapter from "axios-mock-adapter";
-import axios from "axios";
 import {rest} from 'msw'
 import {setupServer} from 'msw/node'
 
@@ -17,17 +15,46 @@ jest.mock('../../components/StatusDownloadPage/context/RunFile', () => {
 jest.mock('../../components/Dialog/BaseDialog', () => 'dialog');
 jest.mock('../../components/common/CenteredPopup', () => 'centeredPopup');
 
+jest.mock('../../components/StatusDownloadPage/RegionJustification', () => 'regionjustification');
+
 jest.mock('../../components/Dialog/ProviderDialog', () => {
     const React = require('react');
     return (props) => (<div>ProviderDialog</div>);
 });
 
-
+const providers = [
+    {
+        slug: 'one-slug',
+        name: 'one',
+        service_description: 'one info',
+        hidden: false,
+        display: true,
+    },
+    {
+        slug: 'three-slug',
+        name: 'three',
+        service_description: 'three info',
+        hidden: false,
+        display: true,
+    }
+];
 
 describe('CreateDataPackButton component', () => {
     const defaultProps = () => ({
         fontSize: '12px',
-        providerTaskUids: ['thisistotallyauid'],
+        providerTasks: [{
+            uid: '1',
+            slug: 'one-slug',
+            provider: providers[0],
+            hidden: false,
+            display: true,
+        }, {
+            uid: '3',
+            slug: 'three-slug',
+            provider: providers[1],
+            hidden: false,
+            display: true,
+        },],
         classes: {},
         theme: {
             eventkit: {
@@ -90,7 +117,7 @@ describe('CreateDataPackButton component', () => {
                 }]))
             })
         )
-        render(<CreateDataPackButton {...defaultProps()} />);
+        setup();
         await waitFor(() => screen.getByText('Zip Error'))
         expect(screen.getByText(/Zip Error/)).toBeInTheDocument();
     });

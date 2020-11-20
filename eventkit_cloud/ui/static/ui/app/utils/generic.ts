@@ -113,7 +113,7 @@ export function getSqKmString(geojson) {
 export function getDuration(seconds, capEstimate = true) {
     // returns a string duration formatted like  1d 5h 30m (1 day 5 hours 30 minutes)
     // this is calculated based on the number of seconds supplied
-    let remainingSeconds = seconds;
+    let remainingSeconds = Math.abs(seconds);
     const secondsInDay = 60 * 60 * 24;
     const secondsInHour = 60 * 60;
 
@@ -213,7 +213,7 @@ export function getProviderFromProviderTask(providerTask: Eventkit.ProviderTask,
 // A variety of objects, Provider/Provider Task, have the display and hidden fields
 // This is a utility that examines both fields to determine if the UI should allow the given object to be displayed
 export function shouldDisplay(hideableObject: { hidden: boolean, display: boolean }) {
-    return hideableObject.display && !hideableObject.hidden;
+    return !!(hideableObject.display && !hideableObject.hidden);
 }
 
 // We sometimes expect error messages to be a certain shape, if something goes wrong with the error itself, we will

@@ -17,6 +17,7 @@ import {RegionJustification} from "./RegionJustification";
 import history from "../../utils/history";
 import {renderIf} from "../../utils/renderIf";
 import {MapZoomLimiter} from "../CreateDataPack/MapZoomLimiter";
+import {ProviderRowRegionWrap} from "./ProviderRowRegionWrap";
 
 const jss = (theme: Eventkit.Theme & Theme) => ({
     btn: {
@@ -201,23 +202,6 @@ export class DataPackDetails extends React.Component<Props, State> {
 
         return (
             <div>
-                <RegionJustification
-                    providers={
-                        this.props.providerTasks.filter(
-                            providerTask => shouldDisplay(providerTask)
-                                && providerTask.provider
-                                && shouldDisplay(providerTask.provider)
-                        ).map(providerTask => providerTask.provider)
-                    }
-                    extents={(() => {
-                        const extentArray = [];
-                        if (this.props?.job?.extent) {
-                            extentArray.push(this.props?.job?.extent);
-                        }
-                        return extentArray;
-                    })()}
-                    onClose={() => history.goBack()}
-                />
                 {renderIf(() => (<>
                     <ZipSizeCalculator
                         fileSizes={
@@ -259,13 +243,8 @@ export class DataPackDetails extends React.Component<Props, State> {
                                     <CreateDataPackButton
                                         zipSize={this.state.zipSize}
                                         fontSize={textFontSize}
-                                        // Pass through all non-hidden, displayed providerTasks (as UIDs)
-                                        providerTaskUids={
-                                            this.props.providerTasks.filter(
-                                                providerTask => !providerTask.hidden && providerTask.display
-                                            ).map(
-                                                providerTask => providerTask.uid
-                                            )}
+                                        providerTasks={this.props.providerTasks}
+                                        job={this.props.job}
                                     />
                                 </TableCell>
                                 <TableCell
@@ -311,7 +290,14 @@ export class DataPackDetails extends React.Component<Props, State> {
                             />
                         </BaseDialog>
                         {providers.map((provider, ix) => (
-                            <ProviderRow
+                            <ProviderRowRegionWrap
+                                extents={(() => {
+                                    const extentArray = [];
+                                    if (this.props?.job?.extent) {
+                                        extentArray.push(this.props?.job?.extent);
+                                    }
+                                    return extentArray;
+                                })()}
                                 backgroundColor={ix % 2 === 0 ? colors.secondary : colors.white}
                                 key={provider.uid}
                                 onProviderCancel={this.props.onProviderCancel}

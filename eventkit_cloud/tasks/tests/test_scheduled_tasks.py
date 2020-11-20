@@ -25,7 +25,7 @@ from eventkit_cloud.utils.provider_check import CheckResults
 
 import json
 import logging
-from mock import patch, call
+from unittest.mock import patch, call
 
 from notifications.models import Notification
 
