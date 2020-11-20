@@ -537,6 +537,7 @@ export function DataProvider(props: Props) {
                         providerInfo={providerInfo}
                         geojson={props.geojson}
                     />
+                    <span className="qa-expandTarget">
                     {isOpen ?
                         <ExpandLess
                             id="ExpandButton"
@@ -552,6 +553,7 @@ export function DataProvider(props: Props) {
                             color="primary"
                         />
                     }
+                    </span>
                 </div>
             </ListItem>
             <Collapse in={isOpen} key={`${provider.uid}-expanded`}>

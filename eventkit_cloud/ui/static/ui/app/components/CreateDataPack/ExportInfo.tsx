@@ -612,7 +612,7 @@ export class ExportInfo extends React.Component<Props, State> {
                 this.props.setNextEnabled();
             }
 
-            if ((step.target === '.qa-DataProvider-ListItem-Expand' && type === 'step:before') ||
+            if ((step.target === '.qa-DataProvider-qa-expandTarget' && type === 'step:before') ||
                 (step.target === '.qa-DataProvider-ListItem-provFormats' && type === 'step:before')) {
                 this.openDrawer();
             }

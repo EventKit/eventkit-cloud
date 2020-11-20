@@ -252,7 +252,7 @@ export const joyride = {
         {
             title: 'Additional Options',
             content: 'Click here for additional information and options for the Data Source.',
-            target: '.qa-DataProvider-ListItem-Expand',
+            target: '.qa-expandTarget',
             placement: 'left',
             scrollToId: 'ExpandButton',
             style: JoyRideStyles.tooltipStyle,
