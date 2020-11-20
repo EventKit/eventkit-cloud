@@ -1258,9 +1258,12 @@ def download_data(input_url, out_file, cert_var=None):
     """
 
     try:
+        logger.info(f"Downloading from {input_url} using cert_var {cert_var}")
         response = auth_requests.get(
             input_url, cert_var=cert_var, stream=True, verify=getattr(settings, "SSL_VERIFICATION", True),
         )
+        # DELETE ME
+        logger.info(response.content)
         response.raise_for_status()
     except requests.exceptions.RequestException as e:
         raise Exception(f"Unsuccessful request:{e}")
