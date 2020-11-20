@@ -14,7 +14,7 @@ from django.contrib.auth.models import Group, User
 from django.contrib.gis.geos import GEOSGeometry, Polygon
 from django.test import TestCase
 from django.utils import timezone
-from unittest.mock import Mock, PropertyMock, patch, MagicMock
+from unittest.mock import Mock, PropertyMock, patch, MagicMock, ANY
 
 from eventkit_cloud.celery import TaskPriority, app
 from eventkit_cloud.jobs.models import DatamodelPreset, DataProvider, Job
