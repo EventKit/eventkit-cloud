@@ -2,7 +2,7 @@
 import logging
 
 from eventkit_cloud.utils.map_query import ArcGISQuery
-from mock import Mock
+from unittest.mock import Mock
 from django.test import TestCase
 import json
 

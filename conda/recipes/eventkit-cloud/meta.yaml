@@ -17,6 +17,7 @@ requirements:
     - ruby
   run_constrained:
     - memcached=1.6.6
+    - qgis=3.14.16
   run:
     - python >=3.7,<3.8
     - billiard=3.6.3.0
@@ -53,7 +54,6 @@ requirements:
     - python-memcached=1.59
     - pytz=2020.1
     - pyyaml=5.3.1
-    - qgis=3.14.16
     - requests=2.24.0
     - shapely=1.7.1
     - sqlparse=0.3.1

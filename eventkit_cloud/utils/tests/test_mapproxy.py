@@ -6,7 +6,7 @@ import yaml as real_yaml
 from django.conf import settings
 from django.test import TransactionTestCase
 from mapproxy.config.config import load_default_config
-from mock import Mock, patch, MagicMock
+from unittest.mock import Mock, patch, MagicMock
 
 from eventkit_cloud.jobs.models import DataProvider
 from eventkit_cloud.tasks.enumerations import TaskStates

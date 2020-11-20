@@ -3,7 +3,7 @@ import logging
 from uuid import uuid4
 
 from django.test import TransactionTestCase
-from mock import Mock, patch
+from unittest.mock import Mock, patch
 
 from eventkit_cloud.utils.pbf import OSMToPBF
 

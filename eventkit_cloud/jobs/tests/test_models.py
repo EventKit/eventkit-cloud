@@ -9,7 +9,7 @@ from django.contrib.gis.db.models.functions import Intersection
 from django.contrib.gis.gdal import DataSource
 from django.contrib.gis.geos import GEOSGeometry, Polygon, MultiPolygon
 from django.test import TestCase
-from mock import call, patch
+from unittest.mock import call, patch
 
 from eventkit_cloud.jobs.models import (
     ExportFormat,

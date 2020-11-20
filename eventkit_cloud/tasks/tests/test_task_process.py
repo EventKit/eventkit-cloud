@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 from django.test import TestCase
 from django.utils import timezone
-from mock import patch, call
+from unittest.mock import patch, call
 from eventkit_cloud.tasks.task_process import update_progress
 
 
