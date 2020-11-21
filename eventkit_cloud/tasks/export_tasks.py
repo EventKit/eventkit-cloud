@@ -1045,7 +1045,7 @@ def wfs_export_task(
 
     if "layers" in configuration:
         for layer_properties in configuration["layers"]:
-            url = input_file = get_wfs_query_url(
+            url = get_wfs_query_url(
                 name, layer_properties.get("url"), layer_properties.get("name"), projection
             )
             input_file = download_data(url, gpkg, configuration.get("cert_var"))
@@ -1256,14 +1256,16 @@ def download_data(input_url, out_file, cert_var=None):
     """
     Function for downloading data, optionally using a certificate.
     """
+    import sys
 
     try:
-        logger.info(f"Downloading from {input_url} using cert_var {cert_var}")
+        print(f"Downloading from {input_url} using cert_var {cert_var}")
+        sys.stdout.flush()
         response = auth_requests.get(
             input_url, cert_var=cert_var, stream=True, verify=getattr(settings, "SSL_VERIFICATION", True),
         )
         # DELETE ME
-        logger.info(response.content)
+        print(response.content)
         response.raise_for_status()
     except requests.exceptions.RequestException as e:
         raise Exception(f"Unsuccessful request:{e}")
