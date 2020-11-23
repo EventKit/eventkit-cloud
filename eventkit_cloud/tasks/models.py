@@ -192,9 +192,7 @@ class FileProducingTaskResult(UIDMixin, NotificationModelMixin):
 
         data_provider_slug = self.export_task.export_provider_task.provider.slug
         file_ext = os.path.splitext(self.filename)[1]
-        download_filename = get_download_filename(
-            os.path.splitext(os.path.basename(self.filename))[0], file_ext, data_provider_slug=data_provider_slug,
-        )
+        download_filename = get_download_filename(os.path.splitext(os.path.basename(self.filename))[0], file_ext)
         filepath = os.path.join(new_run_dir, data_provider_slug, self.filename)
         self.download_url = make_file_downloadable(
             filepath, str(new_run.uid), data_provider_slug, download_filename=download_filename

@@ -115,44 +115,30 @@ def get_provider_staging_preview(run_uid, provider_slug):
     return os.path.join(run_staging_dir, provider_slug, PREVIEW_TAIL)
 
 
-def get_download_filename(
-    name: str, ext: str, additional_descriptors: List[str] = None, data_provider_slug: str = None
-):
+def get_download_filename(name: str, ext: str, additional_descriptors: List[str] = None):
     """
     This provides specific formatting for the names of the downloadable files.
     :param name: A name for the file, typically the job name.
     :param ext: The file extension (e.g. .gpkg)
     :param additional_descriptors: Additional descriptors, any list of items.
-    :param data_provider_slug: Slug of the data provider for this filename, used to get the label
-        of that data provider to add on to the filename
     :return: The formatted file name (e.g. Boston-example-20180711.gpkg)
     """
-    additional_descriptors = additional_descriptors or []
-    if data_provider_slug:
-        try:
-            provider = get_cached_model(model=DataProvider, prop="slug", value=data_provider_slug)
-            if provider.label:
-                provider_label = slugify(provider.label)
-                additional_descriptors.append(provider_label)
-        except DataProvider.DoesNotExist:
-            logger.info(f"{data_provider_slug} does not map to any known DataProvider.")
-
-    if additional_descriptors:
-        download_filename = f"{name}-{'-'.join(additional_descriptors)}{ext}"
-    else:
-        download_filename = f"{name}{ext}"
-
+    download_filename = f"{'-'.join(filter(None, [name] + (additional_descriptors or [])))}{ext}"
     return download_filename
 
 
-def get_archive_data_path(provider_slug=None, file_name=None):
+def get_archive_data_path(provider_slug=None, file_name=None, archive=True):
     """
     Gets a datapath for the files to be placed in the zip file.
     :param provider_slug: An optional unique value to store files.
     :param file_name: The name of a file.
     :return:
     """
-    file_path = Directory.DATA.value
+    if archive:
+        file_path = Directory.DATA.value
+    else:
+        file_path = ""
+
     if provider_slug:
         file_path = os.path.join(file_path, provider_slug)
     if file_name:
@@ -200,24 +186,42 @@ def get_default_projection(supported_projections: List[int], selected_projection
     return None
 
 
-def get_export_filename(stage_dir, job_name, projection, provider_slug, extension):
+def get_data_provider_label(data_provider_slug):
+    try:
+        data_provider = get_cached_model(model=DataProvider, prop="slug", value=data_provider_slug)
+        return slugify(data_provider.label or "")  # Slugify converts None to 'none' so return empty string instead.
+    except DataProvider.DoesNotExist:
+        logger.info(f"{data_provider_slug} does not map to any known DataProvider.")
+        raise
+
+
+def get_export_filepath(stage_dir: str, job_name: str, projection: int, data_provider_slug: str, extension: str):
     """
-    Gets a filename for an export.
+    Gets a filepath for an export.
     :param stage_dir: The staging directory to place files in while they process.
     :param job_name: The name of the job being processed.
     :param projection: A projection as an int referencing an EPSG code (e.g. 4326 = EPSG:4326)
-    :pram provider_slug
+    :param data_provider_slug: The provider slug (e.g. osm) for the filename.
+    :param extension: The file extension for the filename.
     """
+    descriptors = "-".join(
+        filter(
+            None,
+            [
+                job_name,
+                str(projection),
+                data_provider_slug,
+                get_data_provider_label(data_provider_slug),
+                default_format_time(time),
+            ],
+        )
+    )
     if extension == "shp":
-        filename = os.path.join(
-            stage_dir, f"{job_name}-{projection}-{provider_slug}-{default_format_time(time)}_{extension}"
-        )
+        filepath = os.path.join(stage_dir, f"{descriptors}_{extension}")
     else:
-        filename = os.path.join(
-            stage_dir, f"{job_name}-{projection}-{provider_slug}-{default_format_time(time)}.{extension}"
-        )
+        filepath = os.path.join(stage_dir, f"{descriptors}.{extension}")
 
-    return filename
+    return filepath
 
 
 def get_style_files():
@@ -407,14 +411,16 @@ def pickle_exception(exception):
     return pickle.dumps(exception, 0).decode()
 
 
-def get_metadata(data_provider_task_record_uids: List[str]):
+def get_metadata(data_provider_task_record_uids: List[str], source_only=False):
     """
     A object to hold metadata about the run for the sake of being passed to various scripts for the creation of
     style files or metadata documents for within the datapack.
 
     This also creates a license file which is considered a part of the metadata and adds it to the "include_files"
-    :param data_provider_task_uid: A Provider task uid string for either the run task which will add all of the provider
-    tasks for the run or for a single data provider task.
+    :param source_only: If enabled only the first task for the data_provider_task_record will be included in the
+    metadata.  This is useful for generating style files for a single layer instead of redundant layers for each file.
+    :param data_provider_task_record_uids: A list of Provider task uid string for either the run task which will add
+    all of the provider tasks for the run or for a single data provider task.
     :return: A dict containing the run metadata.
 
     Example:
@@ -521,7 +527,10 @@ def get_metadata(data_provider_task_record_uids: List[str]):
         # Only include tasks with a specific projection in the metadata.
         # TODO: Refactor to make explicit which files are included in map documents.
         query = reduce(lambda q, value: q | Q(name__icontains=value), projections, Q())
-        for export_task in data_provider_task_record.tasks.filter(query):
+        export_tasks = data_provider_task_record.tasks.filter(query)
+        if source_only:
+            export_tasks = [export_tasks.first()]
+        for export_task in export_tasks:
 
             if TaskStates[export_task.status] in TaskStates.get_incomplete_states():
                 continue
@@ -537,13 +546,11 @@ def get_metadata(data_provider_task_record_uids: List[str]):
                 file_ext = os.path.splitext(filename)[1]
                 # Only include files relavant to the user that we can actually add to the carto.
                 if export_task.display and ("project file" not in export_task.name.lower()):
-                    download_filename = get_download_filename(
-                        os.path.splitext(os.path.basename(filename))[0],
-                        file_ext,
-                        data_provider_slug=data_provider_task_record.provider.slug,
-                    )
+                    download_filename = get_download_filename(os.path.splitext(os.path.basename(filename))[0], file_ext)
 
-                    filepath = get_archive_data_path(data_provider_task_record.provider.slug, download_filename)
+                    filepath = get_archive_data_path(
+                        data_provider_task_record.provider.slug, download_filename, archive=(not source_only)
+                    )
                     pattern = re.compile(".*EPSG:(?P<projection>3857|4326).*$")
                     matches = pattern.match(export_task.name)
                     projection = "4326"
