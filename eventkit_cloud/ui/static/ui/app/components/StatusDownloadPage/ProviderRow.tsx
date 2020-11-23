@@ -523,7 +523,7 @@ export function ProviderRow(props: ProviderRowProps) {
     menuItems.push((
             <MatomoClickTracker
                 eventAction="Rerun Export"
-                eventName={`Rerun ${props.job.name}`}
+                eventName={`Rerun ${props?.job?.name}`}
                 eventCategory="Status and Download"
                 eventValue={1}
             >
@@ -542,7 +542,7 @@ export function ProviderRow(props: ProviderRowProps) {
         ), (
             <MatomoClickTracker
                 eventAction="Cancel Export"
-                eventName={`Cancel ${props.job.name}`}
+                eventName={`Cancel ${props?.job?.name}`}
                 eventCategory="Status and Download"
                 eventValue={1}
             >

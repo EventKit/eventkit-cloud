@@ -8,6 +8,15 @@ import {useRunContext} from "../../components/StatusDownloadPage/context/RunFile
 import {useAsyncRequest} from "../../utils/hooks/api";
 import {useDataCartContext} from "../../components/StatusDownloadPage/context/DataCart";
 
+jest.mock('../../components/MatomoHandler', () => {
+    // eslint-disable-next-line global-require,no-shadow
+    const React = require('react');
+    // eslint-disable-next-line react/prop-types
+    return {
+        MatomoClickTracker: (props) => (<>{props.children}</>)
+    }
+});
+
 
 jest.mock('../../components/Dialog/BaseDialog', () => {
     // eslint-disable-next-line global-require,no-shadow

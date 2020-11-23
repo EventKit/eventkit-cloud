@@ -119,6 +119,9 @@ interface MatomoEvent {
 
 export function MatomoClickTracker(props: React.PropsWithChildren<MatomoEvent>) {
     const {pushClick} = useMatomoContext();
+    if (!pushClick) {
+        return (<>{props.children}</>);
+    }
     return (
         <span className={`qa-MatomoClick-${props.eventName}`}>
             {
