@@ -1,7 +1,8 @@
 import * as React from 'react';
-import { withTheme, Theme } from '@material-ui/core/styles';
-import { Link } from 'react-router-dom';
-import { Button } from '@material-ui/core';
+import {withTheme, Theme} from '@material-ui/core/styles';
+import {Link} from 'react-router-dom';
+import {Button} from '@material-ui/core';
+import {MatomoClickTracker} from "../MatomoHandler";
 
 export interface Props {
     theme: Eventkit.Theme & Theme;
@@ -9,7 +10,7 @@ export interface Props {
 
 export class DataPackLinkButton extends React.Component<Props, {}> {
     render() {
-        const { colors } = this.props.theme.eventkit;
+        const {colors} = this.props.theme.eventkit;
 
         const styles = {
             button: {
@@ -38,15 +39,21 @@ export class DataPackLinkButton extends React.Component<Props, {}> {
                 to="/create"
                 href="/create"
             >
-                <Button
-                    className="qa-DataPackLinkButton-Button datapack-button-create"
-                    style={styles.button}
-                    variant="contained"
-                    color="primary"
+                <MatomoClickTracker
+                    eventAction="Click Link"
+                    eventName="Click Create DataPack button"
+                    eventCategory="DataPack Library"
                 >
-                    {/* <ContentAddBox className={classes.icon} /> */}
-                    Create DataPack
-                </Button>
+                    <Button
+                        className="qa-DataPackLinkButton-Button datapack-button-create"
+                        style={styles.button}
+                        variant="contained"
+                        color="primary"
+                    >
+                        {/* <ContentAddBox className={classes.icon} /> */}
+                        Create DataPack
+                    </Button>
+                </MatomoClickTracker>
             </Link>
         );
     }

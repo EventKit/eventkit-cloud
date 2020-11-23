@@ -966,6 +966,7 @@ export class UserGroupsPage extends React.Component<Props, State> {
         return (
             <div style={{backgroundColor: colors.white, position: 'relative'}}>
                 <EventkitJoyride
+                    name="Members and Groups"
                     callback={this.callback}
                     ref={(instance) => {
                         this.joyride = instance;

@@ -434,6 +434,7 @@ export class StatusDownload extends React.Component<Props, State> {
                 >
                     <div className="qa-StatusDownload-div-content" style={styles.content}>
                         <EventkitJoyride
+                            name="Status and Download"
                             callback={this.callback}
                             ref={(instance) => { this.joyride = instance; }}
                             steps={steps}

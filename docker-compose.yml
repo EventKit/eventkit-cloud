@@ -63,13 +63,13 @@ services:
       - ROCKETCHAT_NOTIFICATIONS
       - LAND_DATA_URL
       - BASE_URL
-      - MATOMO_URL
-      - MATOMO_CUSTOM_DIM_ID
-      - MATOMO_CUSTOM_VAR_ID
-      - MATOMO_CUSTOM_VAR_NAME
-      - MATOMO_CUSTOM_VAR_SCOPE
-      - MATOMO_SITE_ID
-      - MATOMO_APPNAME
+      - MATOMO_URL=http://cloud.eventkit.test:8008/
+      - MATOMO_CUSTOM_DIM_ID=2
+      - MATOMO_CUSTOM_VAR_ID=gxUid
+      - MATOMO_CUSTOM_VAR_NAME=2
+      - MATOMO_CUSTOM_VAR_SCOPE=page
+      - MATOMO_SITE_ID=1
+      - MATOMO_APPNAME=eventkit
     extra_hosts:
       - "${SITE_NAME}:${SITE_IP}"
   map:

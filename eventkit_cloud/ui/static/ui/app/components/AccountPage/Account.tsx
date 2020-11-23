@@ -200,6 +200,7 @@ export class Account extends React.Component<Props, State> {
         return (
             <div style={{ backgroundColor: theme.eventkit.colors.white }}>
                 <EventkitJoyride
+                    name="Account Page"
                     callback={this.callback}
                     ref={(instance) => { this.joyride = instance; }}
                     steps={steps}

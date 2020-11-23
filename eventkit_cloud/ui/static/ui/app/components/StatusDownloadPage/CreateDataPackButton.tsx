@@ -14,6 +14,7 @@ import Popover from "@material-ui/core/Popover";
 import AlertError from "@material-ui/icons/Error";
 import CenteredPopup from "../common/CenteredPopup";
 import RegionJustification from "./RegionJustification";
+import {MatomoClickTracker} from "../MatomoHandler";
 
 // Interval in ms
 const ZIP_POLLING_INTERVAL = 5000;
@@ -93,8 +94,8 @@ export function CreateDataPackButton(props: Props) {
     const {run} = useRunContext();
 
 
-    const [ open, setOpen ] = useState(true);
-    const [ dataPackRestricted, setDataPackRestricted ] = useState(false);
+    const [open, setOpen] = useState(true);
+    const [dataPackRestricted, setDataPackRestricted] = useState(false);
 
     const [anchor, setAnchor] = useState(null);
     const handlePopoverOpen = (e: React.MouseEvent<HTMLElement>) => {
@@ -355,7 +356,7 @@ export function CreateDataPackButton(props: Props) {
 
     async function buttonAction(e: React.MouseEvent<HTMLElement>) {
         // Only post a new zipfile request if there isn't a zip or a successful post yet.
-        if (!isZipAvailable()){
+        if (!isZipAvailable()) {
             checkZipAvailable();
         }
         if (dataPackRestricted) {
@@ -370,6 +371,7 @@ export function CreateDataPackButton(props: Props) {
             clearRequestZipFile();
         }
     }
+
     return (
         <div style={{display: 'flex'}}>
             <RegionJustification
@@ -393,86 +395,92 @@ export function CreateDataPackButton(props: Props) {
                 onUnblockSignal={() => setDataPackRestricted(false)}
                 display={open}
             />
-            <Button
-                id="CompleteDownload"
-                variant="contained"
-                className={`qa-CreateDataPackButton-Button-zipButton`}
-                classes={{root: (buttonEnabled) ? classes.button : classes.buttonDisabled}}
-                disabled={!buttonEnabled}
-                style={{fontSize, lineHeight: 'initial', width: 'max-content'}}
-                onClick={buttonAction}
-                {...(() => {
-                    // If the zip file is available, set the href of the button to the URL.
-                    const extraProps = {} as { href: string };
-                    if (buttonEnabled && isZipAvailable() && !dataPackRestricted) {
-                        extraProps.href = zipAvailableResponse.data[0].url;
-                    }
-                    return extraProps;
-                })()}
+            <MatomoClickTracker
+                eventAction={(isZipAvailable() ? 'Download DataPack' : 'Create DataPack')}
+                eventName="DataPack Button"
+                eventCategory="Status and Download"
             >
-                {!buttonEnabled && (
-                    // This div is placed over top of the main button when it is disabled.
-                    // It then acts as a button that allows users to open popovers.
-                    // This allows us to leverage the built in disabled functionality on the MUI component
-                    // while still being able to click the button. MUI stops all onClick events when disabled.
-                    <div onClick={buttonAction} className={classes.fakeButton}
-                         id="qa-CreateDataPackButton-fakeButton"/>
-                )}
-                {getButtonIcon()}
-                <span className={`qa-textSpan ${!buttonEnabled ? classes.disabledText : ''}`}>{buttonText}</span>
-                {displayCreatingMessage && (
-                    <CenteredPopup
-                        onClose={() => setDisplayCreatingMessage(false)}
-                        open={true}
-                    >
-                        <div style={{display: 'contents' as 'contents'}}>
-                            <IconButton
-                                className={classes.iconButton}
-                                type="button"
-                                onClick={handlePopoverClose}
-                            >
-                                <CloseIcon/>
-                            </IconButton>
-                            <div style={{marginTop: '5px', fontSize: '20px'}}>
-                                {getCreatingMessage()}
-                            </div>
+                <Button
+                    id="CompleteDownload"
+                    variant="contained"
+                    className={`qa-CreateDataPackButton-Button-zipButton`}
+                    classes={{root: (buttonEnabled) ? classes.button : classes.buttonDisabled}}
+                    disabled={!buttonEnabled}
+                    style={{fontSize, lineHeight: 'initial', width: 'max-content'}}
+                    onClick={buttonAction}
+                    {...(() => {
+                        // If the zip file is available, set the href of the button to the URL.
+                        const extraProps = {} as { href: string };
+                        if (buttonEnabled && isZipAvailable() && !dataPackRestricted) {
+                            extraProps.href = zipAvailableResponse.data[0].url;
+                        }
+                        return extraProps;
+                    })()}
+                >
+                    {!buttonEnabled && (
+                        // This div is placed over top of the main button when it is disabled.
+                        // It then acts as a button that allows users to open popovers.
+                        // This allows us to leverage the built in disabled functionality on the MUI component
+                        // while still being able to click the button. MUI stops all onClick events when disabled.
+                        <div onClick={buttonAction} className={classes.fakeButton}
+                             id="qa-CreateDataPackButton-fakeButton"/>
+                    )}
+                    {getButtonIcon()}
+                    <span className={`qa-textSpan ${!buttonEnabled ? classes.disabledText : ''}`}>{buttonText}</span>
+                </Button>
+            </MatomoClickTracker>
+            {displayCreatingMessage && (
+                <CenteredPopup
+                    onClose={() => setDisplayCreatingMessage(false)}
+                    open={true}
+                >
+                    <div style={{display: 'contents' as 'contents'}}>
+                        <IconButton
+                            className={classes.iconButton}
+                            type="button"
+                            onClick={handlePopoverClose}
+                        >
+                            <CloseIcon/>
+                        </IconButton>
+                        <div style={{marginTop: '5px', fontSize: '20px'}}>
+                            {getCreatingMessage()}
                         </div>
-                    </CenteredPopup>
-                )}
-                <div className={classes.popoverBlock}>
-                    <Popover
-                        {...{
-                            PaperProps: {
-                                style: {padding: '16px', width: '30%'}
-                            },
-                            open: !!anchor && !!popoverText,
-                            anchorEl: anchor,
-                            onClose: handlePopoverClose,
-                            anchorOrigin: {
-                                vertical: 'top',
-                                horizontal: 'center',
-                            },
-                            transformOrigin: {
-                                vertical: 'bottom',
-                                horizontal: 'center',
-                            },
-                        }}
-                    >
-                        <div style={{display: 'contents' as 'contents'}}>
-                            <IconButton
-                                className={classes.iconButton}
-                                type="button"
-                                onClick={handlePopoverClose}
-                            >
-                                <CloseIcon/>
-                            </IconButton>
-                            <div style={{marginTop: '5px'}}>
-                                {popoverText}
-                            </div>
+                    </div>
+                </CenteredPopup>
+            )}
+            <div className={classes.popoverBlock}>
+                <Popover
+                    {...{
+                        PaperProps: {
+                            style: {padding: '16px', width: '30%'}
+                        },
+                        open: !!anchor && !!popoverText,
+                        anchorEl: anchor,
+                        onClose: handlePopoverClose,
+                        anchorOrigin: {
+                            vertical: 'top',
+                            horizontal: 'center',
+                        },
+                        transformOrigin: {
+                            vertical: 'bottom',
+                            horizontal: 'center',
+                        },
+                    }}
+                >
+                    <div style={{display: 'contents' as 'contents'}}>
+                        <IconButton
+                            className={classes.iconButton}
+                            type="button"
+                            onClick={handlePopoverClose}
+                        >
+                            <CloseIcon/>
+                        </IconButton>
+                        <div style={{marginTop: '5px'}}>
+                            {popoverText}
                         </div>
-                    </Popover>
-                </div>
-            </Button>
+                    </div>
+                </Popover>
+            </div>
             <InfoDialog
                 iconProps={{style: {margin: 'auto 8px'}}}
                 className="qa-CreateDataPackButton-info-dialog"

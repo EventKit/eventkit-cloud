@@ -266,6 +266,7 @@ export class ExportSummary extends React.Component<Props, State> {
         return (
             <div id="root" className={classes.root}>
                 <EventkitJoyride
+                    name="Create Page Step 3"
                     callback={this.callback}
                     ref={(instance) => { this.joyride = instance; }}
                     steps={steps}

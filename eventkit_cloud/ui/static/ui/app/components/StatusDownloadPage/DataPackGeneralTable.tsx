@@ -1,8 +1,9 @@
 import * as React from 'react';
-import { withTheme, Theme } from '@material-ui/core/styles';
+import {withTheme, Theme} from '@material-ui/core/styles';
 import Info from '@material-ui/icons/Info';
 import CustomTableRow from '../common/CustomTableRow';
 import BaseDialog from '../Dialog/BaseDialog';
+import {MatomoClickTracker} from "../MatomoHandler";
 
 export interface Props {
     dataPack: Eventkit.FullRun;
@@ -29,18 +30,18 @@ export class DataPackGeneralTable extends React.Component<Props, State> {
     }
 
     private handleProviderClose() {
-        this.setState({ providerDialogOpen: false });
+        this.setState({providerDialogOpen: false});
     }
 
     private handleProviderOpen(providerTask: Eventkit.ProviderTask) {
         const propsProvider = this.props.providers.find(x => x.slug === providerTask.provider.slug);
         const providerDescription = propsProvider.service_description.toString();
         const providerName = propsProvider.name.toString();
-        this.setState({ providerDescription, providerName, providerDialogOpen: true });
+        this.setState({providerDescription, providerName, providerDialogOpen: true});
     }
 
     render() {
-        const { colors } = this.props.theme.eventkit;
+        const {colors} = this.props.theme.eventkit;
 
         const providerTasks = this.props.dataPack.provider_tasks.filter(task => (
             task.display && !task.hidden
@@ -81,29 +82,35 @@ export class DataPackGeneralTable extends React.Component<Props, State> {
                 <CustomTableRow
                     className="qa-DataPackGeneralTable-sources"
                     title="Data Sources"
-                    dataStyle={{ flexWrap: 'wrap', padding: '5px 10px 5px', display: 'grid' }}
+                    dataStyle={{flexWrap: 'wrap', padding: '5px 10px 5px', display: 'grid'}}
                 >
-                        {providerTasks.map(providerTask => (
-                            <div key={providerTask.name} style={{ margin: '5px 0px' }}>
-                                {providerTask.name}
+                    {providerTasks.map(providerTask => (
+                        <div key={providerTask.name} style={{margin: '5px 0px'}}>
+                            {providerTask.name}
+                            <MatomoClickTracker
+                                eventAction="Open Dialog"
+                                eventName={`Open ${providerTask.name} Dialog`}
+                                eventCategory="Status and Download"
+                            >
                                 <Info
                                     className="qa-DataPackGeneralTable-Info-source"
                                     onClick={() => this.handleProviderOpen(providerTask)}
                                     key={providerTask.description}
                                     style={styles.tableRowInfoIcon}
                                 />
-                            </div>
-                        ))}
-                        <BaseDialog
-                            className="qa-DataPackGeneralTable-BaseDialog-source"
-                            show={this.state.providerDialogOpen}
-                            title={this.state.providerName}
-                            onClose={this.handleProviderClose}
-                        >
-                            <div style={{ paddingTop: '20px', wordWrap: 'break-word' }}>
-                                {this.state.providerDescription}
-                            </div>
-                        </BaseDialog>
+                            </MatomoClickTracker>
+                        </div>
+                    ))}
+                    <BaseDialog
+                        className="qa-DataPackGeneralTable-BaseDialog-source"
+                        show={this.state.providerDialogOpen}
+                        title={this.state.providerName}
+                        onClose={this.handleProviderClose}
+                    >
+                        <div style={{paddingTop: '20px', wordWrap: 'break-word'}}>
+                            {this.state.providerDescription}
+                        </div>
+                    </BaseDialog>
                 </CustomTableRow>
                 <CustomTableRow
                     className="qa-DataPackGeneralTable-projection"

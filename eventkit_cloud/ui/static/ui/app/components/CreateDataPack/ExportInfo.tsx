@@ -718,6 +718,7 @@ export class ExportInfo extends React.Component<Props, State> {
                 {/*<PermissionsBanner isOpen={true} handleClosedPermissionsBanner={() => {}}/>*/}
                 <StepValidator {...this.props}/>
                 <EventkitJoyride
+                    name="Create Page Step 2"
                     callback={this.callback}
                     ref={this.joyride}
                     steps={steps}
