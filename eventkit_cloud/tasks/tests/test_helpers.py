@@ -112,19 +112,11 @@ class TestHelpers(TestCase):
         name = "test_datapack"
         ext = ".gpkg"
         descriptors = ["test-descriptor"]
-        data_provider_slug = "osm"
-        label = "testlabel"
 
         expected_descriptors_string = "-".join(filter(None, descriptors))
 
-        mocked_data_provider = MagicMock()
-        mocked_data_provider.label = "testlabel"
-        mock_get_cached_model.return_value = mocked_data_provider
-
-        expected_value = f"{name}-{expected_descriptors_string}-{label}{ext}"
-        returned_value = get_download_filename(
-            name=name, ext=ext, additional_descriptors=descriptors, data_provider_slug=data_provider_slug
-        )
+        expected_value = f"{name}-{expected_descriptors_string}{ext}"
+        returned_value = get_download_filename(name=name, ext=ext, additional_descriptors=descriptors)
 
         self.assertEqual(expected_value, returned_value)
 
