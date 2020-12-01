@@ -228,7 +228,7 @@ function EstimateContainer(props: Props) {
         if (SERVE_ESTIMATES) {
             updateEstimate();
         }
-    }, props.exportInfo.providers);
+    }, props.exportInfo.providers, [props.exportInfo.providerInfo]);
 
     const [ aoiArea, setArea ] = useState(0);
     useEffect(() => {
