@@ -94,13 +94,24 @@ export interface Props {
     user: Eventkit.User['user'];
     handlePage: (args: any) => void;
     page: number;
+    selectedTab?: string;
 }
 
 export function GroupsDrawer(props: Props) {
     const pageSize = 20;
     const {classes, page} = props;
     const [selectedTab, setSelectedTab] = useState('admin');
+    const [ previousSelected, setPreviousSelected ] = useState('');
     const [query, setQuery] = useState('');
+
+    useEffect(() => {
+       if (props.selectedTab) {
+           handleChange(null, props.selectedTab);
+           setPreviousSelected(selectedTab);
+       } else {
+           handleChange(null, previousSelected);
+       }
+    }, [props.selectedTab]);
 
     useEffect(() => {
         if (query !== '') {

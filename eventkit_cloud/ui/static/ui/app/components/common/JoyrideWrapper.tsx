@@ -5,7 +5,8 @@ import {Theme} from "@material-ui/core/styles";
 import {JoyRideStyles} from "../../joyride.config";
 
 interface PropsWithRef extends Props {
-    ref: any;
+    getRef?: any;
+    ref?: any;
     theme: Eventkit.Theme & Theme;
 }
 
@@ -14,9 +15,10 @@ interface PropsWithRef extends Props {
 // It seemed to work better previously? A more surgical, case-by-case route might be more prudent, but this
 // works just fine.
 export function EventkitJoyride(props: PropsWithRef) {
-    const { styles, ...restOfProps} = props;
+    const { styles, getRef, ...restOfProps} = props;
     return (
         <Joyride
+            ref={getRef}
             locale={{
                 // @ts-ignore
                 back: (<span>Back</span>),
