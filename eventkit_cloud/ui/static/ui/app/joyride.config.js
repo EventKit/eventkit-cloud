@@ -160,7 +160,7 @@ export const joyride = {
                 The Import function supports a range of file uploads, including GeoJSON, KML, GeoPackage, and zipped shapefile.
                 After drawing or importing an AOI, it can be edited by moving any individual node.`,
             target: '.qa-DrawAOIToolbar-div',
-            placement: 'left',
+            placement: 'right',
             style: JoyRideStyles.tooltipStyle,
         },
         {
@@ -169,7 +169,7 @@ export const joyride = {
                 including the size (in square kilometers), and the maximum allowable AOI size.
                 Note, there may be multiple maximum AOI sizes, as they can vary between individual data sources.
                 Finally, this dialog contains the Buffer button, which is described in the next step.`,
-            target: '.qa-AoiInfobar-body',
+            target: '.qa-AoiInfoBar-container ',
             placement: 'top',
             style: JoyRideStyles.tooltipStyle,
         },
@@ -229,7 +229,7 @@ export const joyride = {
             content: `Select the individual data sources to be included in the DataPack.
                 For each data source, additional information can be found by clicking the dropdown arrow on the right.`,
             target: '.qa-ExportInfo-List',
-            placement: 'left',
+            placement: 'top',
             scrollToId: 'ProviderList',
             style: JoyRideStyles.tooltipStyle,
         },
@@ -252,8 +252,8 @@ export const joyride = {
         {
             title: 'Additional Options',
             content: 'Click here for additional information and options for the Data Source.',
-            target: '.qa-DataProvider-ListItem-Expand',
-            placement: 'bottom',
+            target: '.qa-expandTarget',
+            placement: 'left',
             scrollToId: 'ExpandButton',
             style: JoyRideStyles.tooltipStyle,
         },
@@ -737,7 +737,7 @@ export const joyride = {
             title: 'Groups: Member Only',
             content: `Any group that has been shared with you, and that you do not have administrator rights, will appear in this section.
                 For a further explanation of Member rights, click on the info button next to the “MEMBER ONLY” label.`,
-            target: '.qa-GroupsDrawer-sharedGroupsHeading',
+            target: '.qa-GroupsDrawer-groupsHeading',
             placement: 'bottom',
             style: JoyRideStyles.tooltipStyle,
         },

@@ -141,7 +141,7 @@ describe('GroupsDrawer component', () => {
 
     it('it should call onNewGroupClick', () => {
         setup();
-        expect(props.getGroups.calledOnce).toBe(true);
+        expect(props.getGroups.called).toBe(true);
         fireEvent.click(screen.getByText(/SearchGroupsToolbar/));
         fireEvent.click(screen.getByText('PREVIOUS'));
         expect(props.getGroups.calledOnce).toBe(false);
