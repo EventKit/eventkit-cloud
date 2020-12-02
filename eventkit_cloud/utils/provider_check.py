@@ -449,32 +449,60 @@ class WCSProviderCheck(OWSProviderCheck):
             self.result = CheckResults.LAYER_NOT_AVAILABLE
             return None
 
-        covers = [c for c, n in cover_names if n is not None and self.layer == n.text]
+        try:
+            coverages = self.config.get("service", dict()).get("coverages")
+            coverages = coverages.split(",") if coverages else None
+            coverages = list(map(str.lower, coverages)) if coverages else None
+        except AttributeError:
+            logger.warning("Unable to get coverages from WCS provider configuration.")
+
+        if coverages:
+            covers = [c for c, n in cover_names if n is not None and n.text in coverages]
+        else:
+            covers = [c for c, n in cover_names if n is not None and self.layer == n.text]
+
         if not covers:  # Requested coverage is not offered
             self.result = CheckResults.LAYER_NOT_AVAILABLE
             return None
 
-        return covers[0]
+        return covers
 
-    def get_bbox(self, element):
+    def get_bbox(self, elements):
+        bboxes = []
+        for element in elements:
+            envelope = element.find("lonlatenvelope")
+            if envelope is None:
+                continue
 
-        envelope = element.find("lonlatenvelope")
-        if envelope is None:
-            return None
+            pos = envelope.getchildren()
+            # Make sure there aren't any surprises
+            coord_pattern = re.compile(r"^-?\d+(\.\d+)? -?\d+(\.\d+)?$")
+            if not pos or not all("pos" in p.tag and re.match(coord_pattern, p.text) for p in pos):
+                continue
 
-        pos = envelope.getchildren()
-        # Make sure there aren't any surprises
-        coord_pattern = re.compile(r"^-?\d+(\.\d+)? -?\d+(\.\d+)?$")
-        if not pos or not all("pos" in p.tag and re.match(coord_pattern, p.text) for p in pos):
-            return None
+            x1, y1 = list(map(float, pos[0].text.split(" ")))
+            x2, y2 = list(map(float, pos[1].text.split(" ")))
 
-        x1, y1 = list(map(float, pos[0].text.split(" ")))
-        x2, y2 = list(map(float, pos[1].text.split(" ")))
+            minx, maxx = sorted([x1, x2])
+            miny, maxy = sorted([y1, y2])
 
-        minx, maxx = sorted([x1, x2])
-        miny, maxy = sorted([y1, y2])
+            bboxes.append([minx, miny, maxx, maxy])
+        return bboxes if bboxes else None
 
-        return [minx, miny, maxx, maxy]
+    def check_intersection(self, bboxes):
+        """
+        Given a list bounding boxes, set result to NO_INTERSECT if it doesn't intersect the DataPack's AOI.
+        :param bboxes: list of bounding box arrays: [[minx, miny, maxx, maxy],..] in EPSG:4326
+        """
+        for box in bboxes:
+            logger.debug("Data provider bbox: [minx, miny, maxx, maxy] = {}".format(str(box)))
+            minx, miny, maxx, maxy = box
+            bbox = Polygon.from_bbox((minx, miny, maxx, maxy))
+
+            if not (self.aoi is not None and not self.aoi.intersects(bbox)):
+                return
+
+        self.result = CheckResults.NO_INTERSECT
 
 
 class WFSProviderCheck(OWSProviderCheck):
