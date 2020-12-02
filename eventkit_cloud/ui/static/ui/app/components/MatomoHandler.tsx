@@ -13,35 +13,51 @@ export const useMatomoContext = (): MatomoContext => useContext(matomoContext);
 export const MatomoConsumer = matomoContext.Consumer;
 export const MatomoProvider = matomoContext.Provider;
 
-function pushData(referrerUrl: string, setUrl: (url: string) => void,
-                  userInfo: any, matomoUrl: string, siteId: string, appName: string,
+function pushData(userInfo: any, matomoUrl: string, siteId: string, appName: string,
                   customDimensionId: number, customVarInfo: any) {
-    if (!matomoUrl) {
+    // If Matomo isn't setup, exit early.
+    if (!matomoUrl || !siteId) {
         return;
     }
-    const _paq = (window as any)._paq = (window as any)._paq || [];
-    _paq.push(['setReferrerUrl', referrerUrl]);
-    const currentUrl = window.location.href;
-    setUrl(currentUrl)
-    _paq.push(['setCustomUrl', currentUrl]);
-    _paq.push(['setDocumentTitle', appName]);
-    /* tracker methods like "setCustomDimension" should be called before "trackPageView" */
-    const userOauthId = userInfo.identification || 'undefined';
-    _paq.push(['setCustomDimension', customDimensionId, userOauthId]);
-    _paq.push(['setCustomVariable', customVarInfo.id, customVarInfo.name, userOauthId, customVarInfo.scope]);
-    _paq.push(['setUserId', userInfo.username])
-    _paq.push(['trackPageView']);
-    _paq.push(['enableLinkTracking']);
-
-    _paq.push(['setTrackerUrl', matomoUrl + 'matomo.php']);
-    _paq.push(['setSiteId', siteId]);
-
+    // Add a trailing slash if not present
+    const matomoJsUrl = !matomoUrl.endsWith('/') ? matomoUrl + '/' : matomoUrl + 'matomo.js';
+    try {
+        // Validate the URL.
+        new URL(matomoJsUrl);
+    } catch (_) {
+        console.error('Invalid Matomo URL specified -- aborting push.');
+        return;
+    }
     const g = document.createElement('script');
-    const s = document.getElementsByTagName('script')[0];
-    g.type = 'text/javascript';
-    g.async = true;
-    g.src = matomoUrl + 'matomo.js';
-    s.parentNode.insertBefore(g, s);
+    const s = document.getElementById('matomo');
+    const _paq = (window as any)._paq = (window as any)._paq || [];
+    if (!s) {
+        g.type = 'text/javascript';
+        g.async = true;
+        g.src = matomoJsUrl;
+        g.id = 'matomo';
+        document.getElementsByTagName('script')[0].parentNode.insertBefore(g, s);
+
+        if (appName) {
+            _paq.push(['setDocumentTitle', appName]);
+        }
+        /* tracker methods like "setCustomDimension" should be called before "trackPageView" */
+        const userOauthId = userInfo.identification || 'undefined';
+        if (customDimensionId && customVarInfo.id && customVarInfo.name) {
+            _paq.push(['setCustomDimension', customDimensionId, userOauthId]);
+            _paq.push(['setCustomVariable', customVarInfo.id, customVarInfo.name, userOauthId, customVarInfo.scope]);
+        }
+        _paq.push(['setUserId', userInfo.username])
+        _paq.push(['enableLinkTracking']);
+
+        _paq.push(['setTrackerUrl', matomoUrl + 'matomo.php']);
+        _paq.push(['setSiteId', siteId]);
+    }
+    if ((window as any)._url !== window.location.href) {
+        _paq.push(['setCustomUrl', window.location.href]);
+        _paq.push(['trackPageView']);
+        (window as any)._url = window.location.href;
+    }
 }
 
 interface MatomoProps {
@@ -58,19 +74,6 @@ interface MatomoProps {
 export function MatomoHandler(props: React.PropsWithChildren<MatomoProps>) {
     const {SITE_ID, APPNAME, URL, CUSTOM_DIM_ID, CUSTOM_VAR_ID, CUSTOM_VAR_NAME, CUSTOM_VAR_SCOPE} = props;
     const {user = undefined} = props.userData || {};
-    const [trackedUrl, setTrackedUrl] = useState<string>(window.location.href);
-
-    const matomoCallback = useCallback((event: any) => {
-        if (!!user) {
-            pushData(
-                trackedUrl, setTrackedUrl,
-                {username: user.username, identification: user.identification},
-                URL, SITE_ID, APPNAME, CUSTOM_DIM_ID,
-                {id: CUSTOM_VAR_ID, name: CUSTOM_VAR_NAME, scope: CUSTOM_VAR_SCOPE}
-            );
-        }
-    }, [user?.username, user?.identification]);
-
 
     const pushClick = useCallback((event: MatomoEvent) => {
         // _paq must access the instance attached to window, otherwise a local capture will be used and matomo
@@ -78,9 +81,39 @@ export function MatomoHandler(props: React.PropsWithChildren<MatomoProps>) {
         // Don't call this if _paq doesn't exist (if window doesn't exist, nothing exists so don't bother checking).
         // This shouldn't run when Matomo isn't setup
         if (!!((window as any)._paq)) {
-            (window as any)._paq.push(['trackEvent', event.eventCategory, event.eventAction, event.eventName, event.eventValue]);
+            (window as any)._paq.push([
+                'trackEvent',
+                event.eventCategory || window.location.pathname,
+                event.eventAction,
+                event.eventName,
+                event.eventValue
+            ]);
         }
-    }, [user?.username, user?.identification])
+    }, []);
+
+    const matomoCallback = useCallback((event: any) => {
+        function getDivToString(targetDiv: any) {
+            // classList is not an array, but can be spread into one.
+            const {id, localName, classList} = targetDiv;
+            return `${[localName, id, [...classList].join(' ')].filter(_string => _string).join(':')}`
+        }
+        if (!!user) {
+            pushData(
+                {username: user.username, identification: user.identification},
+                URL, SITE_ID, APPNAME, CUSTOM_DIM_ID,
+                {id: CUSTOM_VAR_ID, name: CUSTOM_VAR_NAME, scope: CUSTOM_VAR_SCOPE}
+            );
+            pushClick({
+                eventCategory: `${window.location.pathname}`,
+                eventAction: `click:${window.location.pathname}`,
+                eventName: `target:${getDivToString(event.target)}`
+            })
+        }
+    }, [
+        user?.username, user?.identification,
+        SITE_ID, APPNAME, URL, CUSTOM_DIM_ID, CUSTOM_VAR_ID, CUSTOM_VAR_NAME, CUSTOM_VAR_SCOPE,
+        pushClick,
+    ]);
 
     useEffect(() => {
         let _tag;
@@ -111,7 +144,7 @@ function mapStateToProps(state) {
 }
 
 interface MatomoEvent {
-    eventCategory: string;
+    eventCategory?: string;
     eventAction: string;
     eventName: string;
     eventValue?: number | string;
