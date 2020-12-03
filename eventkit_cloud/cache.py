@@ -1,60 +1,74 @@
-import logging
 from django.core.cache import caches
 from django.core.cache.backends.base import BaseCache
 
-logging.basicConfig()
-logger = logging.getLogger(__name__)
-
-# TODO: Should this be an environment variable?
-DEFAULT_CACHE_EXPIRATION = 86400  # expire in a day
-
 
 class FallbackCache(BaseCache):
-    primary_cache = None
-    fallback_cache = None
+    def __init__(self, config, params):  # NOQA BaseCache uses params but others use both.
+        super().__init__(params)
 
-    def __init__(self, params=None, *args, **kwargs):
-        BaseCache.__init__(self, *args, **kwargs)
-        self.primary_cache = caches["primary_cache"]
-        self.fallback_cache = caches["fallback_cache"]
-
-    def call_with_fallback(self, method, *args, **kwargs):
-        self.primary_cache.set("primary_cache", True)
-        value = self.primary_cache.get("primary_cache")
-
-        if value:
-            logger.info(f"Using primary cache with method {method}, args {args} and kwargs {kwargs}.")
-            return self.call_primary_cache(args, kwargs, method)
-        else:
-            logger.info(f"Switching to fallback cache because value is {value} method {method}, args {args} and kwargs {kwargs}.")
-            return self.call_fallback_cache(args, kwargs, method)
-
-    def call_primary_cache(self, args, kwargs, method):
-        return getattr(self.primary_cache, method)(*args, **kwargs)
-
-    def call_fallback_cache(self, args, kwargs, method):
-        return getattr(self.fallback_cache, method)(*args, **kwargs)
-
-    def add(self, key, value, timeout=None, version=None):
-        return self.call_with_fallback("add", key, value, timeout=timeout, version=version)
-
-    def get(self, key, default=None, version=None):
-        return self.call_with_fallback("get", key, default=default, version=version)
-
-    def touch(self, key, timeout=None, version=None):
-        return self.call_with_fallback("touch", key, timeout=timeout, version=version)
-
-    def set(self, key, value, timeout=None, version=None, client=None):
-        return self.call_with_fallback("set", key, value, timeout=timeout, version=version)
-
-    def delete(self, key, version=None):
-        return self.call_with_fallback("delete", key, version=version)
-
-    def get_many(self, key, version=None):
-        return self.call_with_fallback("get_many", key, version=version)
-
-    def get_or_set(self, key, default, timeout=None, version=None):
-        return self.call_with_fallback("get_or_set", key, default, timeout=timeout, version=version)
+    def add(self, *args, **kwargs):
+        return get_cache().add(*args, **kwargs)
 
     def clear(self):
-        return self.call_with_fallback("clear")
+        return get_cache().clear()
+
+    def close(self, *args, **kwargs):
+        return get_cache().close(*args, **kwargs)
+
+    def decr(self, *args, **kwargs):
+        return get_cache().decr(*args, **kwargs)
+
+    def decr_version(self, *args, **kwargs):
+        return get_cache().decr_version(*args, **kwargs)
+
+    def delete(self, *args, **kwargs):
+        return get_cache().delete(*args, **kwargs)
+
+    def delete_many(self, *args, **kwargs):
+        return get_cache().delete_many(*args, **kwargs)
+
+    def get(self, *args, **kwargs):
+        return get_cache().get(*args, **kwargs)
+
+    def get_backend_timeout(self, *args, **kwargs):
+        return get_cache().get_backend_timeout(*args, **kwargs)
+
+    def get_many(self, *args, **kwargs):
+        return get_cache().get_many(*args, **kwargs)
+
+    def get_or_set(self, *args, **kwargs):
+        return get_cache().get_or_set(*args, **kwargs)
+
+    def has_key(self, *args, **kwargs):
+        return get_cache().has_key(*args, **kwargs)  # NOQA has_key deprecation warning doesn't apply here.
+
+    def incr(self, *args, **kwargs):
+        return get_cache().incr(*args, **kwargs)
+
+    def incr_version(self, *args, **kwargs):
+        return get_cache().incr_version(*args, **kwargs)
+
+    def make_key(self, *args, **kwargs):
+        return get_cache().make_key(*args, **kwargs)
+
+    def set(self, *args, **kwargs):
+        return get_cache().set(*args, **kwargs)
+
+    def set_many(self, *args, **kwargs):
+        return get_cache().set_many(*args, **kwargs)
+
+    def touch(self, *args, **kwargs):
+        return get_cache().touch(*args, **kwargs)
+
+    def validate_key(self, *args, **kwargs):
+        return get_cache().validate_key(*args, **kwargs)
+
+
+def get_cache():
+    if caches["primary_cache"].get("primary_cache"):
+        return caches["primary_cache"]
+    caches["primary_cache"].set("primary_cache", True)
+    if caches["primary_cache"].get("primary_cache"):
+        return caches["primary_cache"]
+
+    return caches["fallback_cache"]
