@@ -275,7 +275,7 @@ TEMPLATES = [
 
 if os.getenv("MEMCACHED"):
     CACHES = {
-        "default": {"BACKEND": "eventkit_cloud.cache.FallbackCache"},
+        "default": {"BACKEND": "eventkit_cloud.utils.fallback_cache.FallbackCache"},
         "primary_cache": {
             "BACKEND": "django.core.cache.backends.memcached.MemcachedCache",
             "LOCATION": os.getenv("MEMCACHED"),
