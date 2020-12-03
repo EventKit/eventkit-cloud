@@ -861,7 +861,7 @@ describe('UserGroupsPage component', () => {
             action: 'next',
             index: 2,
             step: {
-                selector: '.qa-GroupsDrawer-addGroup',
+                target: '.qa-GroupsDrawer-addGroup',
             },
             type: 'step:fake',
         };
@@ -878,7 +878,7 @@ describe('UserGroupsPage component', () => {
             action: 'next',
             index: 2,
             step: {
-                selector: '.qa-GroupsDrawer-groupsHeading',
+                target: '.qa-GroupsDrawer-groupsHeading',
             },
             type: 'step:before',
         };
@@ -893,7 +893,7 @@ describe('UserGroupsPage component', () => {
             action: 'next',
             index: 2,
             step: {
-                selector: '.qa-GroupsDrawer-groupsHeading',
+                target: '.qa-GroupsDrawer-groupsHeading',
             },
             type: 'step:after',
         };
@@ -911,13 +911,13 @@ describe('UserGroupsPage component', () => {
             action: 'next',
             index: 2,
             step: {
-                selector: '.qa-UserHeader-checkbox',
+                target: '.qa-UserHeader-checkbox',
             },
-            type: 'tooltip:before',
+            type: 'tooltip',
         };
         const selectStub = sinon.stub(instance, 'handleSelectAll');
         instance.callback(data);
-        expect(selectStub.calledOnce).toBe(true);
+        expect(selectStub.called).toBe(true);
         expect(selectStub.calledWith(true)).toBe(true);
     });
 
@@ -926,7 +926,7 @@ describe('UserGroupsPage component', () => {
             action: 'next',
             index: 2,
             step: {
-                selector: '.qa-UserHeader-options',
+                target: '.qa-UserHeader-options',
             },
             type: 'step:after',
         };
