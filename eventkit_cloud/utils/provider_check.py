@@ -593,12 +593,18 @@ class WMSProviderCheck(OWSProviderCheck):
     def get_bbox(self, element):
 
         bbox_element = element.find("latlonboundingbox")
+        if bbox_element is not None:
+            bbox = [float(bbox_element.attrib[point]) for point in ["minx", "miny", "maxx", "maxy"]]
+            return
+
+        if bbox_element is None:
+            bbox_element = element.find("ex_geographicboundingbox")
+            points = ["westboundlongitude", "southboundlatitude", "eastboundlongitude", "northboundlatitude"]
+            bbox = [float(bbox_element.findtext(point)) for point in points]
+            return bbox
 
         if bbox_element is None:
             return None
-
-        bbox = [float(bbox_element.attrib[point]) for point in ["minx", "miny", "maxx", "maxy"]]
-        return bbox
 
 
 class WMTSProviderCheck(OWSProviderCheck):

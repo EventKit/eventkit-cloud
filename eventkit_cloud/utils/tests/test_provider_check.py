@@ -203,6 +203,23 @@ class TestProviderCheck(TransactionTestCase):
 
         self.check_ows(get, "wms", pc, invalid_content, empty_content, no_intersect_content, valid_content)
 
+        pc = WMSProviderCheck(url, layer, self.aoi_geojson)
+        valid_content = """<WMT_MS_Capabilities version="1.3.0">
+                        <Capability>
+                            <Layer>
+                                <Name>exampleLayer</Name>
+                                <EX_GeographicBoundingBox>
+                                    <westBoundLongitude>-1</westBoundLongitude>
+                                    <eastBoundLongitude>1</eastBoundLongitude>
+                                    <southBoundLatitude>-1</southBoundLatitude>
+                                    <northBoundLatitude>1</northBoundLatitude>
+                                </EX_GeographicBoundingBox>
+                            </Layer>
+                        </Capability>
+                    </WMT_MS_Capabilities>""".encode()
+
+        self.check_ows(get, "wms", pc, invalid_content, empty_content, no_intersect_content, valid_content)
+
     @patch("eventkit_cloud.utils.provider_check.auth_requests.get")
     def test_check_wmts(self, get):
         url = "http://example.com/wmts?"
