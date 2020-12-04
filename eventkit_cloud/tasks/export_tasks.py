@@ -67,7 +67,6 @@ from eventkit_cloud.tasks.helpers import (
 )
 from eventkit_cloud.tasks.metadata import metadata_tasks
 from eventkit_cloud.tasks.task_process import update_progress
-from eventkit_cloud.utils.auth_requests import get_cred
 from eventkit_cloud.utils import overpass, pbf, s3, mapproxy, wcs, geopackage, gdalutils, auth_requests
 from eventkit_cloud.utils.qgis_utils import convert_qgis_gpkg_to_kml
 from eventkit_cloud.utils.rocket_chat import RocketChat
