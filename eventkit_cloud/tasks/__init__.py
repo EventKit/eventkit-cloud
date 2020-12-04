@@ -20,8 +20,8 @@ def get_cache_key(obj=None, attribute=None, uid=None, model_name=None):
     Example
     :param obj: A string representing a model name (i.e. ExportTaskRecord)
     :param attribute: The models attribute.
-    :param obj_uid: An optional uid if a specific object isn't passed.
-    :param model_name: An obtional model_name if an object isn't passed.
+    :param uid: An optional uid if a specific object isn't passed.
+    :param model_name: An optional model_name if an object isn't passed.
     :return:
     """
     obj_uid = uid
