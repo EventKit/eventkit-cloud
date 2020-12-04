@@ -6,6 +6,7 @@ import logging
 import re
 import xml.etree.ElementTree as ET
 from io import StringIO
+from typing import Type
 
 import requests
 from django.conf import settings
@@ -254,7 +255,7 @@ class ProviderCheck(object):
             return None
 
         except Exception as ex:
-            logger.error("An unknown error has occured for URL {}: {}".format(self.service_url, str(ex)))
+            logger.error("An unknown error has occurred for URL {}: {}".format(self.service_url, str(ex)))
             self.result = CheckResults.UNKNOWN_ERROR
             return None
 
@@ -342,7 +343,7 @@ class OverpassProviderCheck(ProviderCheck):
             return
 
         except Exception as ex:
-            logger.error("An unknown error has occured for URL {}: {}".format(self.service_url, str(ex)))
+            logger.error("An unknown error has occurred for URL {}: {}".format(self.service_url, str(ex)))
             self.result = CheckResults.UNKNOWN_ERROR
             return None
 
@@ -723,7 +724,7 @@ PROVIDER_CHECK_MAP = {
 }
 
 
-def get_provider_checker(type_slug) -> ProviderCheck:
+def get_provider_checker(type_slug) -> Type[ProviderCheck]:
     """
     Given a string describing a provider type, return a reference to the class appropriate for checking the status
     of a provider of that type.
@@ -736,25 +737,30 @@ def get_provider_checker(type_slug) -> ProviderCheck:
         return ProviderCheck
 
 
-def perform_provider_check(provider: DataProvider, geojson):
-    provider_type = str(provider.export_provider_type)
+def perform_provider_check(provider: DataProvider, geojson) -> str:
+    try:
+        provider_type = str(provider.export_provider_type)
 
-    url = str(provider.url)
-    if url == "" and "osm" in provider_type:
-        url = settings.OVERPASS_API_URL
+        url = str(provider.url)
+        if url == "" and "osm" in provider_type:
+            url = settings.OVERPASS_API_URL
 
-    provider_checker = get_provider_checker(provider_type)
-    conf = yaml.safe_load(provider.config) or dict()
-    checker = provider_checker(
-        service_url=url,
-        layer=provider.layer,
-        aoi_geojson=geojson,
-        slug=provider.slug,
-        max_area=provider.max_selection,
-        config=conf,
-    )
-    response = checker.check()
+        provider_checker = get_provider_checker(provider_type)
+        conf = yaml.safe_load(provider.config) or dict()
+        checker = provider_checker(
+            service_url=url,
+            layer=provider.layer,
+            aoi_geojson=geojson,
+            slug=provider.slug,
+            max_area=provider.max_selection,
+            config=conf,
+        )
+        response = checker.check()
 
-    logger.info("Status of provider '{}': {}".format(str(provider.name), response))
+    except Exception as e:
+        response = json.dumps(CheckResults.UNKNOWN_ERROR.value[0])
+        logger.info(f"An exception occurred while checking the {provider.name} provider: {e}")
+
+    logger.info(f"Status of provider '{provider.name}': {response}")
 
     return response
