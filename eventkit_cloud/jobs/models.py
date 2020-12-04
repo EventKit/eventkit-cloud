@@ -253,6 +253,23 @@ class DataProvider(UIDMixin, TimeStampedModelMixin, CachedModelMixin):
                               requires a layers section, but this isn't used.
                               OSM Services also require a YAML configuration.""",
     )
+    VECTOR = "vector"
+    RASTER = "raster"
+    ELEVATION = "elevation"
+    DATA_TYPES = [
+        (VECTOR, ("Vector")),
+        (RASTER, ("Raster")),
+        (ELEVATION, ("Elevation")),
+    ]
+    data_type = models.CharField(
+        choices=DATA_TYPES,
+        max_length=10,
+        verbose_name="Data Type",
+        null=True,
+        default="",
+        blank=True,
+        help_text="The type of data provided (e.g. elevation, raster, vector)",
+    )
     user = models.ForeignKey(User, related_name="+", null=True, default=None, blank=True, on_delete=models.CASCADE)
     license = models.ForeignKey(
         License, related_name="+", null=True, blank=True, default=None, on_delete=models.CASCADE

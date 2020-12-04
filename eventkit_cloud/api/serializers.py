@@ -959,6 +959,7 @@ class DataProviderSerializer(serializers.ModelSerializer):
     max_data_size = serializers.SerializerMethodField(read_only=True)
     max_selection = serializers.SerializerMethodField(read_only=True)
     hidden = serializers.ReadOnlyField(default=False)
+    data_type = serializers.ReadOnlyField(default=False)
 
     class Meta:
         model = DataProvider
