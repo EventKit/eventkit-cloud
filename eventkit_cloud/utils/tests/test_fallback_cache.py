@@ -7,7 +7,6 @@ from eventkit_cloud.utils.fallback_cache import get_cache
 
 
 class TestFallbackCache(TestCase):
-
     def test_get_cache(self):
         with patch.object(caches.__getitem__("primary_cache"), "get") as mock_get_cache:
             # Test that we use the primary cache.
