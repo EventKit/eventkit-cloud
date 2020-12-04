@@ -627,7 +627,7 @@ def kml_export_task(
         qgs_file = generate_qgs_style(metadata)
         kml = convert_qgis_gpkg_to_kml(qgs_file, kml_out_dataset, stage_dir=stage_dir)
     except ImportError:
-        logger.warning("QGIS is not installed, using gdalutils.convert.")
+        logger.info("QGIS is not installed, using gdalutils.convert.")
         kml_in_dataset = parse_result(result, "source")
         selection = parse_result(result, "selection")
         kml = gdalutils.convert(

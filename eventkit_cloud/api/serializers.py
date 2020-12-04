@@ -528,7 +528,9 @@ class RunZipFileSerializer(serializers.ModelSerializer):
         if not queryset.exists():
             obj = RunZipFile.objects.create()
             obj.status = TaskStates.PENDING.value
-            data_provider_task_records = DataProviderTaskRecord.objects.filter(uid__in=data_provider_task_record_uids)
+            data_provider_task_records = DataProviderTaskRecord.objects.filter(
+                uid__in=data_provider_task_record_uids
+            ).exclude(slug="run")
             obj.data_provider_task_records.set(data_provider_task_records)
             run_zip_task_chain = generate_zipfile(data_provider_task_record_uids, obj)
             run_zip_task_chain.apply_async()
