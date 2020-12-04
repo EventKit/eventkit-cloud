@@ -7,7 +7,7 @@ from rest_framework.exceptions import ValidationError
 from rest_framework.response import Response
 from rest_framework.views import exception_handler
 
-from eventkit_cloud.tasks.models import RunZipFile, DataProviderTaskRecord
+from eventkit_cloud.tasks.models import RunZipFile
 
 logger = logging.getLogger(__name__)
 
