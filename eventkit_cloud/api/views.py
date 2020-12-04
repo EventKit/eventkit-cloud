@@ -1355,6 +1355,12 @@ class RunZipFileViewSet(viewsets.ModelViewSet):
         data_provider_task_record_uids = query_params.get("data_provider_task_record_uids", [])
         if data_provider_task_record_uids:
             data_provider_task_record_uids = data_provider_task_record_uids.split(",")
+            data_provider_task_records = DataProviderTaskRecord.objects.filter(
+                uid__in=data_provider_task_record_uids
+            ).exclude(slug="run")
+            data_provider_task_record_uids = [
+                data_provider_task_record.uid for data_provider_task_record in data_provider_task_records.all()
+            ]
             queryset = get_run_zip_file(field="uid", values=data_provider_task_record_uids)
 
         return queryset
