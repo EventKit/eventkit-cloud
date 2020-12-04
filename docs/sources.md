@@ -196,3 +196,29 @@ overpass_query: <Some overpass query>
 
 #### Data Authentication
 If the data source is secure then some additional information will need to be provided, please see the Data Authentication section in the [settings readme](./settings.md)
+
+#### Specifying Layers
+The desired layers for **WFS** and **ArcGIS Feature** service providers can be specified through the configuration. All specified layers will be present and individually addressable in the exported datapack.
+
+In order to specify the desired layers, a YAML configuration must be supplied. The configuration must include a `layers` key, whose value is a list of objects, with each object containing the properties `name` and `url`.
+
+##### Example ArcGIS Configuration
+```yaml
+layers:
+  - name: 'WBDLine'
+    url: 'https://hydrowfs.nationalmap.gov/arcgis/rest/services/wbd/MapServer/0'
+  - name: 'Basin'
+    url: 'https://hydrowfs.nationalmap.gov/arcgis/rest/services/wbd/MapServer/3' 
+  - name: 'Subbasin'
+    url: 'https://hydrowfs.nationalmap.gov/arcgis/rest/services/wbd/MapServer/4'
+```
+For ArcGIS providers, the specific URL for each layer must be provided.
+
+##### Example WFS Configuration
+```yaml
+layers:
+  - name: 'foo'
+    url: 'https://abc.gov/wfs/services/x'
+  - name: 'bar'
+    url: 'https://abc.gov/wfs/services/x' 
+```
