@@ -375,6 +375,9 @@ class OWSProviderCheck(ProviderCheck):
     def get_bbox(self, element):
         raise NotImplementedError("Method is specific to provider type")
 
+    def get_layer_name(self):
+        raise NotImplementedError("Method is specific to provider type")
+
     def check_intersection(self, bbox):
         """
         Given a bounding box, set result to NO_INTERSECT if it doesn't intersect the DataPack's AOI.
@@ -454,7 +457,7 @@ class WCSProviderCheck(OWSProviderCheck):
             coverages = coverages.split(",") if coverages else None
             coverages = list(map(str.lower, coverages)) if coverages else None
         except AttributeError:
-            logger.warning("Unable to get coverages from WCS provider configuration.")
+            logger.error("Unable to get coverages from WCS provider configuration.")
 
         if coverages:
             covers = [c for c, n in cover_names if n is not None and n.text in coverages]
@@ -581,10 +584,11 @@ class WMSProviderCheck(OWSProviderCheck):
         # Get layer names
         layer_names = [(layer, layer.find("name")) for layer in layers]
         logger.debug("WMS layers offered: {}".format([name.text for layer, name in layer_names if name]))
-        layer = [layer for layer, name in layer_names if name is not None and self.layer == name.text]
+
+        requested_layer = self.get_layer_name()
+        layer = [layer for layer, name in layer_names if name is not None and requested_layer == name.text]
         if not layer:
-            # Since layer name is not consistently available for WM(T)S, just skip layer-dependent checks
-            self.result = CheckResults.SUCCESS
+            self.result = CheckResults.LAYER_NOT_AVAILABLE
             return None
 
         layer = layer[0]
@@ -595,16 +599,36 @@ class WMSProviderCheck(OWSProviderCheck):
         bbox_element = element.find("latlonboundingbox")
         if bbox_element is not None:
             bbox = [float(bbox_element.attrib[point]) for point in ["minx", "miny", "maxx", "maxy"]]
-            return
+            return bbox
 
-        if bbox_element is None:
-            bbox_element = element.find("ex_geographicboundingbox")
+        bbox_element = element.find("ex_geographicboundingbox")
+        if bbox_element is not None:
             points = ["westboundlongitude", "southboundlatitude", "eastboundlongitude", "northboundlatitude"]
             bbox = [float(bbox_element.findtext(point)) for point in points]
             return bbox
 
-        if bbox_element is None:
+        return None
+
+    def get_layer_name(self):
+
+        try:
+            layer_name = (
+                self.config.get("sources", {})
+                .get("default", {})
+                .get("req", {})
+                .get("layers")  # TODO: Can there be more than one layer name in the WMS/WMTS config?
+            )
+        except AttributeError:
+            logger.error("Unable to get layer name from provider configuration.")
+            self.result = CheckResults.UNKNOWN_ERROR
             return None
+
+        if layer_name is None:
+            self.result = CheckResults.LAYER_NOT_AVAILABLE
+            return None
+
+        layer_name = layer_name.lower()
+        return layer_name
 
 
 class WMTSProviderCheck(OWSProviderCheck):
@@ -634,12 +658,12 @@ class WMTSProviderCheck(OWSProviderCheck):
             layers.extend(sublayers)
 
         # Get layer names
-        layer_names = [(layer, layer.find("title")) for layer in layers]
+        layer_names = [(layer, layer.find("identifier")) for layer in layers]
         logger.debug("WMTS layers offered: {}".format([name.text for layer, name in layer_names if name is not None]))
-        layer = [layer for layer, name in layer_names if name is not None and self.layer == name.text]
+        requested_layer = self.get_layer_name()
+        layer = [layer for layer, name in layer_names if name is not None and requested_layer == name.text]
         if not layer:
-            # Since layer name is not consistently available for WM(T)S, just skip layer-dependent checks
-            self.result = CheckResults.SUCCESS
+            self.result = CheckResults.LAYER_NOT_AVAILABLE
             return None
 
         layer = layer[0]
@@ -657,6 +681,27 @@ class WMTSProviderCheck(OWSProviderCheck):
 
         bbox = list(map(float, southwest + northeast))
         return bbox
+
+    def get_layer_name(self):
+
+        try:
+            layer_name = (
+                self.config.get("sources", {})
+                .get("imagery", {})
+                .get("req", {})
+                .get("layers")  # TODO: Can there be more than one layer name in the WMS/WMTS config?
+            )
+        except AttributeError:
+            logger.error("Unable to get layer name from provider configuration.")
+            self.result = CheckResults.UNKNOWN_ERROR
+            return None
+
+        if layer_name is None:
+            self.result = CheckResults.LAYER_NOT_AVAILABLE
+            return None
+
+        layer_name = layer_name.lower()
+        return layer_name
 
 
 class TMSProviderCheck(ProviderCheck):

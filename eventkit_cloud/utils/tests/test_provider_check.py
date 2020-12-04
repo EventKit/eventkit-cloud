@@ -173,8 +173,8 @@ class TestProviderCheck(TransactionTestCase):
     def test_check_wms(self, get):
         url = "http://example.com/wms?"
         layer = "exampleLayer"
-        pc = WMSProviderCheck(url, layer, self.aoi_geojson)
-
+        config = {"sources": {"default": {"req": {"layers": layer}}}}
+        pc = WMSProviderCheck(url, layer, self.aoi_geojson, config=config)
         invalid_content = "".encode()
         empty_content = """<WMT_MS_Capabilities version="1.1.1">
                                <Capability>
@@ -203,7 +203,7 @@ class TestProviderCheck(TransactionTestCase):
 
         self.check_ows(get, "wms", pc, invalid_content, empty_content, no_intersect_content, valid_content)
 
-        pc = WMSProviderCheck(url, layer, self.aoi_geojson)
+        pc = WMSProviderCheck(url, layer, self.aoi_geojson, config=config)
         valid_content = """<WMT_MS_Capabilities version="1.3.0">
                         <Capability>
                             <Layer>
@@ -224,7 +224,8 @@ class TestProviderCheck(TransactionTestCase):
     def test_check_wmts(self, get):
         url = "http://example.com/wmts?"
         layer = "exampleLayer"
-        pc = WMTSProviderCheck(url, layer, self.aoi_geojson)
+        config = {"sources": {"imagery": {"req": {"layers": layer}}}}
+        pc = WMTSProviderCheck(url, layer, self.aoi_geojson, config=config)
 
         invalid_content = "".encode()
         empty_content = """<Capabilities version="1.0.0">
@@ -249,7 +250,7 @@ class TestProviderCheck(TransactionTestCase):
         valid_content = """<Capabilities version="1.0.0">
                                <Contents>
                                    <Layer>
-                                       <Title>exampleLayer</Title>
+                                       <Identifier>exampleLayer</Identifier>
                                        <WGS84BoundingBox>
                                             <LowerCorner>-1 -1</LowerCorner>
                                             <UpperCorner>1 1</UpperCorner>
