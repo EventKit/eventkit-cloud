@@ -27,10 +27,9 @@ import ProviderTaskErrorDialog from "./ProviderTaskErrorDialog";
 import {useDataCartContext} from "./context/DataCart";
 import {useRunContext} from "./context/RunFile";
 import Popover from "@material-ui/core/Popover";
-import CloseIcon from "@material-ui/icons/Close";
-import Button from "@material-ui/core/Button";
 import {Link} from "@material-ui/core";
 import Typography from "@material-ui/core/Typography";
+import {MatomoClickTracker} from "../MatomoHandler";
 
 const jss = (theme: Eventkit.Theme & Theme) => createStyles({
     insetColumn: {
@@ -359,20 +358,27 @@ export function ProviderRow(props: ProviderRowProps) {
             );
         }
         return (
-            <span
-                className="qa-ProviderRow-a-taskLinkenabled"
-                role="button"
-                tabIndex={0}
-                onClick={() => {
-                    handleSingleDownload(task.result.url);
-                }}
-                onKeyPress={() => {
-                    handleSingleDownload(task.result.url);
-                }}
-                style={{color: colors.primary, cursor: 'pointer'}}
+            <MatomoClickTracker
+                eventAction="Download Task File"
+                eventName={task.result.url}
+                eventCategory="Status and Download"
+                eventValue={2}
             >
-                {task.name}
-            </span>
+                <span
+                    className="qa-ProviderRow-a-taskLinkenabled"
+                    role="button"
+                    tabIndex={0}
+                    onClick={() => {
+                        handleSingleDownload(task.result.url);
+                    }}
+                    onKeyPress={() => {
+                        handleSingleDownload(task.result.url);
+                    }}
+                    style={{color: colors.primary, cursor: 'pointer'}}
+                >
+                    {task.name}
+                </span>
+            </MatomoClickTracker>
         );
     }
 
@@ -451,19 +457,26 @@ export function ProviderRow(props: ProviderRowProps) {
             );
         }
         return (
-            <CloudDownload
-                className="qa-ProviderRow-CloudDownload-taskLinkEnabled"
-                onClick={() => {
-                    handleSingleDownload(task.result.url);
-                }}//
-                key={task.result.url}
-                style={{
-                    marginLeft: '10px',
-                    cursor: 'pointer',
-                    fill: colors.primary,
-                    verticalAlign: 'middle',
-                }}
-            />
+            <MatomoClickTracker
+                eventAction="Download Task File"
+                eventName={task.result.url}
+                eventCategory="Status and Download"
+                eventValue={1}
+            >
+                <CloudDownload
+                    className="qa-ProviderRow-CloudDownload-taskLinkEnabled"
+                    onClick={() => {
+                        handleSingleDownload(task.result.url);
+                    }}//
+                    key={task.result.url}
+                    style={{
+                        marginLeft: '10px',
+                        cursor: 'pointer',
+                        fill: colors.primary,
+                        verticalAlign: 'middle',
+                    }}
+                />
+            </MatomoClickTracker>
         );
     }
 
@@ -507,48 +520,78 @@ export function ProviderRow(props: ProviderRowProps) {
 
     const menuItems = [];
 
-    menuItems.push(
-        <MenuItem
-            className="qa-ProviderRow-MenuItem-rerun"
-            key="rerun"
-            disabled={!cancelMenuDisabled}
-            style={{fontSize: '12px'}}
-            onClick={() => {
-                makeRequest()
-            }}
-        >
-            Rerun File(s)
-        </MenuItem>,
-        <MenuItem
-            className="qa-ProviderRow-MenuItem-cancel"
-            key="cancel"
-            disabled={cancelMenuDisabled}
-            style={{fontSize: '12px'}}
-            onClick={() => {
-                props.onProviderCancel(providerTask.uid);
-            }}
-        >
-            Cancel
-        </MenuItem>,
-        <MenuItem
-            className="qa-ProviderRow-MenuItem-viewDataSources"
-            key="viewProviderData"
-            style={{fontSize: '12px'}}
-            onClick={handleProviderOpen}
-        >
-            View Data Source
-        </MenuItem>,
-        <MenuItem
-            className="qa-ProviderRow-MenuItem-preview"
-            key="viewPreviews"
-            disabled={!props.providerTask.preview_url}
-            style={{fontSize: '12px'}}
-            onClick={(event) => {
-                props.selectProvider(props.providerTask)
-            }}
-        >
-            View Data Preview
-        </MenuItem>,
+    menuItems.push((
+            <MatomoClickTracker
+                eventAction="Rerun Export"
+                eventName={`Rerun ${props?.job?.name}`}
+                eventCategory="Status and Download"
+                eventValue={1}
+            >
+                <MenuItem
+                    className="qa-ProviderRow-MenuItem-rerun"
+                    key="rerun"
+                    disabled={!cancelMenuDisabled}
+                    style={{fontSize: '12px'}}
+                    onClick={() => {
+                        makeRequest()
+                    }}
+                >
+                    Rerun File(s)
+                </MenuItem>
+            </MatomoClickTracker>
+        ), (
+            <MatomoClickTracker
+                eventAction="Cancel Export"
+                eventName={`Cancel ${props?.job?.name}`}
+                eventCategory="Status and Download"
+                eventValue={1}
+            >
+                <MenuItem
+                    className="qa-ProviderRow-MenuItem-cancel"
+                    key="cancel"
+                    disabled={cancelMenuDisabled}
+                    style={{fontSize: '12px'}}
+                    onClick={() => {
+                        props.onProviderCancel(providerTask.uid);
+                    }}
+                >
+                    Cancel
+                </MenuItem>
+            </MatomoClickTracker>
+        ), (
+            <MatomoClickTracker
+                eventAction="Open Dialog"
+                eventName={`Open Provider Dialog`}
+                eventCategory="Status and Download"
+            >
+                <MenuItem
+                    className="qa-ProviderRow-MenuItem-viewDataSources"
+                    key="viewProviderData"
+                    style={{fontSize: '12px'}}
+                    onClick={handleProviderOpen}
+                >
+                    View Data Source
+                </MenuItem>
+            </MatomoClickTracker>
+        ), (
+            <MatomoClickTracker
+                eventAction="Open Dialog"
+                eventName={`Open Provider Preview Dialog`}
+                eventCategory="Status and Download"
+            >
+                <MenuItem
+                    className="qa-ProviderRow-MenuItem-preview"
+                    key="viewPreviews"
+                    disabled={!props.providerTask.preview_url}
+                    style={{fontSize: '12px'}}
+                    onClick={(event) => {
+                        props.selectProvider(props.providerTask)
+                    }}
+                >
+                    View Data Preview
+                </MenuItem>
+            </MatomoClickTracker>
+        ),
     );
 
     const tasks = providerTask.tasks.filter(task => (task.display !== false));
@@ -621,6 +664,7 @@ export function ProviderRow(props: ProviderRowProps) {
         tableData = null;
     }
 
+    // @ts-ignore
     return (
         <div>
             <Table

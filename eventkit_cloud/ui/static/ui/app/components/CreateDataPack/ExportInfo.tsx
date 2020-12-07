@@ -687,6 +687,7 @@ export class ExportInfo extends React.Component<Props, State> {
                     {...this.props}
                 />
                 <EventkitJoyride
+                    name="Create Page Step 2"
                     callback={this.callback}
                     getRef={(_ref) => this.joyride = _ref}
                     steps={steps}

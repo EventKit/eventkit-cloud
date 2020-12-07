@@ -31,6 +31,7 @@ import {MapLayer} from "./CreateExport";
 import InfoDialog from "../Dialog/InfoDialog";
 import EstimateLabel from "./EstimateLabel";
 import {CreatePagePermissionsBanner} from "./CreatePagePermissionsBanner";
+import {MatomoClickTracker} from "../MatomoHandler";
 
 export interface JobData {
     name: string;
@@ -298,28 +299,38 @@ export class BreadcrumbStepper extends React.Component<Props, State> {
         switch (stepIndex) {
             case 0:
                 return (
-                    <NavigationArrowBack
-                        id="Previous"
-                        className="qa-BreadcrumbStepper-NavigationArrowBack-previous"
-                        style={styles.arrowBack}
-                        onClick={this.handlePrev}
-                    />
+                    <MatomoClickTracker
+                        eventAction="Navigation"
+                        eventName="Back Button - Step 1"
+                    >
+                        <NavigationArrowBack
+                            id="Previous"
+                            className="qa-BreadcrumbStepper-NavigationArrowBack-previous"
+                            style={styles.arrowBack}
+                            onClick={this.handlePrev}
+                        />
+                    </MatomoClickTracker>
                 );
             case 1:
             case 2:
                 return (
-                    <Fab
-                        size="small"
-                        id="Previous"
-                        color="primary"
-                        className="qa-BreadcrumbStepper-Button-previous"
-                        onClick={this.handlePrev}
-                        style={styles.arrowBack}
+                    <MatomoClickTracker
+                        eventAction="Navigation"
+                        eventName={`Back Button - Step ${stepIndex + 1}`}
                     >
-                        <NavigationArrowBack
-                            className="qa-BreadcrumbStepper-NavigationArrowBack-previous-case2"
-                        />
-                    </Fab>
+                        <Fab
+                            size="small"
+                            id="Previous"
+                            color="primary"
+                            className="qa-BreadcrumbStepper-Button-previous"
+                            onClick={this.handlePrev}
+                            style={styles.arrowBack}
+                        >
+                            <NavigationArrowBack
+                                className="qa-BreadcrumbStepper-NavigationArrowBack-previous-case2"
+                            />
+                        </Fab>
+                    </MatomoClickTracker>
                 );
             default:
                 return <div/>;
@@ -341,31 +352,41 @@ export class BreadcrumbStepper extends React.Component<Props, State> {
             case 0:
             case 1:
                 return (
-                    <Fab
-                        size="small"
-                        id="Next"
-                        color="primary"
-                        className="qa-BreadcrumbStepper-Button-next"
-                        disabled={!this.props.stepperNextEnabled}
-                        onClick={this.handleNext}
-                        style={btnStyle}
+                    <MatomoClickTracker
+                        eventAction="Navigation"
+                        eventName={`Next Button - Step ${stepIndex + 1}`}
                     >
-                        <NavigationArrowForward/>
-                    </Fab>
+                        <Fab
+                            size="small"
+                            id="Next"
+                            color="primary"
+                            className="qa-BreadcrumbStepper-Button-next"
+                            disabled={!this.props.stepperNextEnabled}
+                            onClick={this.handleNext}
+                            style={btnStyle}
+                        >
+                            <NavigationArrowForward/>
+                        </Fab>
+                    </MatomoClickTracker>
                 );
             case 2:
                 return (
-                    <Fab
-                        size="small"
-                        id="Next"
-                        color="primary"
-                        className="qa-BreadcrumbStepper-Button-next"
-                        disabled={!this.props.stepperNextEnabled}
-                        onClick={this.submitDatapack}
-                        style={btnStyle}
+                    <MatomoClickTracker
+                        eventAction="Submit Button"
+                        eventName={`Submit DataPack`}
                     >
-                        <NavigationCheck className="qa-BreadcrumbStepper-NavigationCheck"/>
-                    </Fab>
+                        <Fab
+                            size="small"
+                            id="Next"
+                            color="primary"
+                            className="qa-BreadcrumbStepper-Button-next"
+                            disabled={!this.props.stepperNextEnabled}
+                            onClick={this.submitDatapack}
+                            style={btnStyle}
+                        >
+                            <NavigationCheck className="qa-BreadcrumbStepper-NavigationCheck"/>
+                        </Fab>
+                    </MatomoClickTracker>
                 );
             default:
                 return <div/>;

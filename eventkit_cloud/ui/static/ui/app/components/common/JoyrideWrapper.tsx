@@ -3,11 +3,13 @@ import * as React from "react";
 import {withTheme} from "@material-ui/core";
 import {Theme} from "@material-ui/core/styles";
 import {JoyRideStyles} from "../../joyride.config";
+import {useMatomoContext} from "../MatomoHandler";
 
 interface PropsWithRef extends Props {
     getRef?: any;
     ref?: any;
     theme: Eventkit.Theme & Theme;
+    name: string;
 }
 
 // Convenience component, specifying the high z-index on styles.options here lets us avoid specifying it every time
@@ -15,7 +17,18 @@ interface PropsWithRef extends Props {
 // It seemed to work better previously? A more surgical, case-by-case route might be more prudent, but this
 // works just fine.
 export function EventkitJoyride(props: PropsWithRef) {
-    const { styles, getRef, ...restOfProps} = props;
+    const { styles, getRef, name, callback, ...restOfProps} = props;
+    const {pushClick} = useMatomoContext();
+    function _callback(data: any) {
+        if (data.action === ' start') {
+            pushClick({
+                eventName: `${name} Page Tour`,
+                eventCategory: 'Page Tour',
+                eventAction: 'Start Tour'
+            });
+        }
+        callback(data);
+    }
     return (
         <Joyride
             ref={getRef}
@@ -40,6 +53,7 @@ export function EventkitJoyride(props: PropsWithRef) {
                 buttonSkip: JoyRideStyles.tooltipStyle.skip,
                 ...styles,
             }}
+            callback={_callback}
             {...restOfProps}
         />
     );
