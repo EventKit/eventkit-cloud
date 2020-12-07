@@ -29,6 +29,7 @@ import RequestDataSource from "./RequestDataSource";
 import {Link} from "@material-ui/core";
 import {useState} from "react";
 import EventkitJoyride from "../common/JoyrideWrapper";
+import {StepValidator} from "./ExportValidation";
 
 const jss = (theme: Eventkit.Theme & Theme) => createStyles({
     underlineStyle: {
@@ -170,6 +171,7 @@ export interface State {
     steps: Step[];
     isRunning: boolean;
     providers: Eventkit.Provider[];
+    displayDummy: boolean;
     refreshPopover: null | HTMLElement;
     projectionCompatibilityOpen: boolean;
     displaySrid: number;  // Which projection is shown in the compatibility warning box
@@ -179,72 +181,28 @@ export interface State {
     stepIndex: number;
 }
 
-export function hasRequiredFields(exportInfo: Eventkit.Store.ExportInfo) {
-    // if the required fields are populated return true, else return false
-    const {exportOptions} = exportInfo;
-    const formatsAreSelected = exportInfo.providers.map((provider) => {
-        return !!exportOptions[provider.slug]
-            && exportOptions[provider.slug].formats
-            && exportOptions[provider.slug].formats.length > 0;
-    });
-    return exportInfo.exportName
-        && exportInfo.datapackDescription
-        && exportInfo.projectName
-        && exportInfo.providers.length > 0
-        && exportInfo.projections.length > 0
-        && formatsAreSelected.every(selected => selected);
-}
-
-export function hasDisallowedSelection(exportInfo: Eventkit.Store.ExportInfo) {
-    // if any unacceptable providers are selected return true, else return false
-    return exportInfo.providers.some((provider) => {
-        // short-circuiting means that this shouldn't be called until provider.availability
-        // is populated, but if it's not, return false
-        const providerInfo = exportInfo.providerInfo[provider.slug];
-        if (!providerInfo) {
-            return false;
-        }
-        const {availability} = providerInfo;
-        if (availability && availability.status) {
-            return availability.status.toUpperCase() === 'FATAL';
-        }
-        return false;
-    });
-}
-
-function StepValidator(props: Props) {
-    const {setNextEnabled, setNextDisabled, walkthroughClicked, exportInfo, nextEnabled} = props;
-    const {aoiHasArea, areEstimatesLoading, dataSizeInfo, aoiArea} = useJobValidationContext();
-    const {exceedingSize = [], noMaxDataSize = []} = dataSizeInfo || {};
-
-    useEffectOnMount(() => {
-        setNextDisabled();
-    });
-
-    useEffect(() => {
-        const validState = hasRequiredFields(exportInfo) && !hasDisallowedSelection(exportInfo);
-        const providersValid = exportInfo.providers.every(provider => {
-            // If the AOI is exceeded, check to see if the data size is exceeded.
-            if (aoiArea > parseFloat(provider.max_selection)) {
-                if (arrayHasValue(noMaxDataSize, provider.slug)) {
-                    return false;
-                }
-                // The AOI is exceeded, and data size can be used.
-                // Estimates can't be currently loading, and the provider must not be exceeding its data size
-                return !areEstimatesLoading && !arrayHasValue(exceedingSize, provider.slug);
-            }
-            return true;
-        });
-        const setEnabled = !walkthroughClicked && aoiHasArea && validState && providersValid;
-        if (setEnabled && !nextEnabled) {
-            setNextEnabled();
-        } else if (!setEnabled && nextEnabled) {
-            setNextDisabled();
-        }
-    });
-
-    return null;
-}
+const dummyProvider = {
+    uid: 'notreal',
+    slug: 'slug',
+    name: 'Example Map Service',
+    max_selection: '10000',
+    type: 'wmts',
+    service_description: 'This is an example service used for demonstration purposes',
+    license: {
+        text: 'test license text',
+        name: 'test license',
+    },
+    level_from: 0,
+    level_to: 13,
+    supported_formats: [{
+        uid: 'fakeduid',
+        url: 'http://cloud.eventkit.test/api/formats/gpkg',
+        slug: 'gpkg',
+        name: 'Geopackage',
+        description: 'GeoPackage',
+        supported_projections: [{srid: 4326, name: '', description: ''}],
+    } as Eventkit.Format],
+} as Eventkit.Provider;
 
 export class ExportInfo extends React.Component<Props, State> {
     static contextTypes = {
@@ -277,6 +235,7 @@ export class ExportInfo extends React.Component<Props, State> {
             } as IncompatibilityInfo,
             providerDrawerIsOpen: false,
             stepIndex: 0,
+            displayDummy: false,
         };
 
         this.onNameChange = this.onNameChange.bind(this);
@@ -383,7 +342,7 @@ export class ExportInfo extends React.Component<Props, State> {
     }
 
     private checkCompatibility() {
-        const { formats } = this.props;
+        const {formats} = this.props;
         const selectedProjections = this.props.exportInfo.projections;
 
         const formatMap = {};
@@ -391,11 +350,11 @@ export class ExportInfo extends React.Component<Props, State> {
         formats.forEach(format => {
             const formatSupportedProjections = format.supported_projections.map(projection => projection.srid);
             selectedProjections.forEach(selectedProjection => {
-                if (!formatMap[format.slug]){
+                if (!formatMap[format.slug]) {
                     formatMap[format.slug] = {projections: []};
                 }
-                if (!projectionMap[selectedProjection]){
-                    projectionMap[selectedProjection] = {formats:[]};
+                if (!projectionMap[selectedProjection]) {
+                    projectionMap[selectedProjection] = {formats: []};
                 }
                 if (!formatSupportedProjections.includes(selectedProjection)) {
                     projectionMap[selectedProjection].formats.push(format);
@@ -613,7 +572,7 @@ export class ExportInfo extends React.Component<Props, State> {
     }
 
     private openDrawer() {
-        const isOpen: boolean = this.dataProvider.current.state.open;
+        const isOpen: boolean = this.dataProvider.current.open;
         if (this.state.providerDrawerIsOpen == null) {
             this.setState({providerDrawerIsOpen: isOpen});
         }
@@ -623,7 +582,7 @@ export class ExportInfo extends React.Component<Props, State> {
     }
 
     private resetDrawer() {
-        if (this.dataProvider.current.state.open !== this.state.providerDrawerIsOpen) {
+        if (this.dataProvider.current.open !== this.state.providerDrawerIsOpen) {
             this.handleDataProviderExpand();
         }
         this.setState({providerDrawerIsOpen: null});
@@ -638,19 +597,23 @@ export class ExportInfo extends React.Component<Props, State> {
 
         this.props.setNextDisabled();
 
-        if (action === 'close' || action === 'skip' || type === 'finished') {
+        if (action === 'start') {
+            this.setState({displayDummy: true});
+        }
+
+        if (action === 'close' || action === 'skip' || type === 'tour:end') {
             this.resetDrawer();
-            this.setState({isRunning: false});
+            this.setState({isRunning: false, displayDummy: false});
             this.props.onWalkthroughReset();
             this?.helpers.reset(true);
             window.location.hash = '';
         } else {
-            if (data.index === 9 && data.type === 'tooltip:before') {
+            if (data.index === 9 && data.type === 'tooltip') {
                 this.props.setNextEnabled();
             }
 
-            if ((step.selector === '.qa-DataProvider-ListItem-zoomSelection' && type === 'step:before') ||
-                (step.selector === '.qa-DataProvider-ListItem-provFormats' && type === 'step:before')) {
+            if ((step.target === '.qa-DataProvider-qa-expandTarget' && type === 'step:before') ||
+                (step.target === '.qa-DataProvider-ListItem-provFormats' && type === 'step:before')) {
                 this.openDrawer();
             }
         }
@@ -664,6 +627,9 @@ export class ExportInfo extends React.Component<Props, State> {
         // They need to be deduplicated, so that they don't render duplicate elements or cause havoc on the DOM.
         let providers = this.state.providers.filter(provider => (!provider.hidden && provider.display));
         providers = [...new Map(providers.map(x => [x.slug, x])).values()];
+        if (this.state.displayDummy) {
+            providers.unshift(dummyProvider as Eventkit.Provider);
+        }
         return providers;
     }
 
@@ -716,11 +682,14 @@ export class ExportInfo extends React.Component<Props, State> {
         return (
             <div id="root" className={`qa-ExportInfo-root ${classes.root}`}>
                 {/*<PermissionsBanner isOpen={true} handleClosedPermissionsBanner={() => {}}/>*/}
-                <StepValidator {...this.props}/>
+                <StepValidator
+                    tourRunning={this.state.isRunning}
+                    {...this.props}
+                />
                 <EventkitJoyride
                     name="Create Page Step 2"
                     callback={this.callback}
-                    ref={this.joyride}
+                    getRef={(_ref) => this.joyride = _ref}
                     steps={steps}
                     getHelpers={(helpers: any) => {
                         this.helpers = helpers
@@ -916,7 +885,13 @@ export class ExportInfo extends React.Component<Props, State> {
                                             incompatibilityInfo={this.state.incompatibilityInfo}
                                             clearEstimate={this.clearEstimate}
                                             // Get reference to handle logic for joyride.
-                                            innerRef={ix === 0 ? this.dataProvider : null}
+                                            {...(() => {
+                                                const refProps = {} as any;
+                                                if (ix === 0) {
+                                                    refProps.getRef = (ref: any) => this.dataProvider.current = ref;
+                                                }
+                                                return refProps;
+                                            })()}
                                         />
                                     ))}
                                 </List>
@@ -934,7 +909,8 @@ export class ExportInfo extends React.Component<Props, State> {
                                 Select Projection
                             </div>
                             <div className={classes.sectionBottom}>
-                                <div id="Projections" className={`qa-ExportInfo-projections ${classes.projections}`}>
+                                <div id="Projections"
+                                     className={`qa-ExportInfo-projections ${classes.projections}`}>
                                     {projections.map((projection, ix) => (
                                         <div
                                             key={projection.srid}

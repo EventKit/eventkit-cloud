@@ -492,7 +492,7 @@ export class DataPackPage extends React.Component<Props, State> {
     }
 
     private callback(data: any) {
-        if (data.action === 'close' || data.action === 'skip' || data.type === 'finished') {
+        if (data.action === 'close' || data.action === 'skip' || data.type === 'tour:end') {
             // This explicitly stops the tour (otherwise it displays a "beacon" to resume the tour)
             this.setState({isRunning: false, steps: []});
             this?.helpers?.reset(true);

@@ -180,7 +180,7 @@ export class ExportSummary extends React.Component<Props, State> {
 
     private callback(data: any) {
         const { action, step, type } = data;
-        if (action === 'close' || action === 'skip' || type === 'finished') {
+        if (action === 'close' || action === 'skip' || type === 'tour:end') {
             this.setState({ isRunning: false });
             this.props.onWalkthroughReset();
             this?.helpers?.reset(true);

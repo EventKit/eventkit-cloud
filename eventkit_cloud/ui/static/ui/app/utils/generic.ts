@@ -162,7 +162,7 @@ export function isZoomLevelInRange(zoomLevel, provider: Eventkit.Provider) {
 // Not an exhaustive list, just what I'm aware of right now.
 const typesSupportingZoomLevels = ['tms', 'wmts', 'wms', 'arcgis-raster'];
 
-export function supportsZoomLevels(provider: Eventkit.Provider) {
+export function supportsZoomLevels(provider: Eventkit.Provider) : boolean {
     if (provider.type === null || provider.type === undefined) {
         return false;
     }

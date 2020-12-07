@@ -6,7 +6,8 @@ import {JoyRideStyles} from "../../joyride.config";
 import {useMatomoContext} from "../MatomoHandler";
 
 interface PropsWithRef extends Props {
-    ref: any;
+    getRef?: any;
+    ref?: any;
     theme: Eventkit.Theme & Theme;
     name: string;
 }
@@ -16,7 +17,7 @@ interface PropsWithRef extends Props {
 // It seemed to work better previously? A more surgical, case-by-case route might be more prudent, but this
 // works just fine.
 export function EventkitJoyride(props: PropsWithRef) {
-    const { styles, name, callback, ...restOfProps} = props;
+    const { styles, getRef, name, callback, ...restOfProps} = props;
     const {pushClick} = useMatomoContext();
     function _callback(data: any) {
         if (data.action === ' start') {
@@ -30,6 +31,7 @@ export function EventkitJoyride(props: PropsWithRef) {
     }
     return (
         <Joyride
+            ref={getRef}
             locale={{
                 // @ts-ignore
                 back: (<span>Back</span>),

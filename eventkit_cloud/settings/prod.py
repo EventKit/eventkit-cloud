@@ -275,11 +275,13 @@ TEMPLATES = [
 
 if os.getenv("MEMCACHED"):
     CACHES = {
-        "default": {
+        "default": {"BACKEND": "eventkit_cloud.utils.fallback_cache.FallbackCache"},
+        "primary_cache": {
             "BACKEND": "django.core.cache.backends.memcached.MemcachedCache",
             "LOCATION": os.getenv("MEMCACHED"),
             "OPTIONS": {"server_max_value_length": os.getenv("MEMCACHED_SERVER_MAX_VALUE_LENGTH", 1024 * 1024 * 10)},
-        }
+        },
+        "fallback_cache": {"BACKEND": "django.core.cache.backends.db.DatabaseCache", "LOCATION": "eventkit_cache"},
     }
 else:
     CACHES = {"default": {"BACKEND": "django.core.cache.backends.db.DatabaseCache", "LOCATION": "eventkit_cache"}}

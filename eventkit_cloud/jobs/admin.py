@@ -129,6 +129,7 @@ class DataProviderForm(forms.ModelForm):
             "preview_url",
             "service_copyright",
             "service_description",
+            "data_type",
             "layer",
             "export_provider_type",
             "max_selection",

@@ -69,6 +69,7 @@ describe('DataProvider component', () => {
         onChange: sinon.spy(),
         alt: false,
         classes: {},
+        setRef: sinon.spy(),
         ...(global as any).eventkit_test_props,
     });
 
