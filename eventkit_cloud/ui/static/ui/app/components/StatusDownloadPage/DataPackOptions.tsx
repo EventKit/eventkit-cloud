@@ -169,7 +169,7 @@ export class DataPackOptions extends React.Component<Props, State> {
             <div>
                 <MatomoClickTracker
                     eventAction="Rerun Export"
-                    eventName={`Rerun ${this.props.job.name}`}
+                    eventName={`Rerun ${this?.props?.job?.name}`}
                     eventCategory="Status and Download"
                     eventValue={2}
                 >
