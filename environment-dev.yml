@@ -3,7 +3,7 @@ channels:
   - file:///var/lib/eventkit/conda/repo
   - nodefaults
 dependencies:
-  - eventkit-cloud=1.9.0
+  - eventkit-cloud=1.8.1
   - memcached=1.6.6
   - postgresql=12.3
   - pip:

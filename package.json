@@ -1,6 +1,6 @@
 {
   "name": "eventkit_cloud",
-  "version": "1.9.0",
+  "version": "1.8.1",
   "description": "Eventkit-cloud is based on the HOT OSM Export Tool 2. It allows the user to select data from different sources to export into a variety of formats.",
   "main": "webpack.config.js",
   "dependencies": {
