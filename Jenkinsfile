@@ -37,6 +37,7 @@ END
             sh "ls -al ."
             sh "ls -al conda/*"
             // sh "cd conda && docker-compose up --build && cd .."
+            prepareComposeFile()
             sh "docker-compose build --no-cache"
             sh "chmod g+w -R ."
             sh "docker-compose up -d"
@@ -142,7 +143,8 @@ def handleErrors(message){
     error(message)
 }
 
-def removeVolumes() {
+def prepareComposeFile() {
+    // Remove ports to not run into conflicts, tests run in 'expose'd ports.
     sh """
     python - << END
 import yaml
@@ -150,7 +152,7 @@ data = {}
 with open('docker-compose.yml', 'r') as yaml_file:
     data = yaml.safe_load(yaml_file)
 for service in data.get('services'):
-    data['services'][service].pop('volumes', "")
+    data['services'][service].pop('ports', '')
 with open('docker-compose.yml', 'w') as outfile:
     yaml.dump(data, outfile, default_flow_style=False)
 END
