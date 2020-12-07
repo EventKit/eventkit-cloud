@@ -6,6 +6,7 @@ import logging
 import re
 import xml.etree.ElementTree as ET
 from io import StringIO
+from typing import Type
 
 import requests
 from django.conf import settings
@@ -254,7 +255,7 @@ class ProviderCheck(object):
             return None
 
         except Exception as ex:
-            logger.error("An unknown error has occured for URL {}: {}".format(self.service_url, str(ex)))
+            logger.error("An unknown error has occurred for URL {}: {}".format(self.service_url, str(ex)))
             self.result = CheckResults.UNKNOWN_ERROR
             return None
 
@@ -342,7 +343,7 @@ class OverpassProviderCheck(ProviderCheck):
             return
 
         except Exception as ex:
-            logger.error("An unknown error has occured for URL {}: {}".format(self.service_url, str(ex)))
+            logger.error("An unknown error has occurred for URL {}: {}".format(self.service_url, str(ex)))
             self.result = CheckResults.UNKNOWN_ERROR
             return None
 
@@ -373,6 +374,9 @@ class OWSProviderCheck(ProviderCheck):
         raise NotImplementedError("Method is specific to provider type")
 
     def get_bbox(self, element):
+        raise NotImplementedError("Method is specific to provider type")
+
+    def get_layer_name(self):
         raise NotImplementedError("Method is specific to provider type")
 
     def check_intersection(self, bbox):
@@ -449,32 +453,60 @@ class WCSProviderCheck(OWSProviderCheck):
             self.result = CheckResults.LAYER_NOT_AVAILABLE
             return None
 
-        covers = [c for c, n in cover_names if n is not None and self.layer == n.text]
+        try:
+            coverages = self.config.get("service", dict()).get("coverages")
+            coverages = coverages.split(",") if coverages else None
+            coverages = list(map(str.lower, coverages)) if coverages else None
+        except AttributeError:
+            logger.error("Unable to get coverages from WCS provider configuration.")
+
+        if coverages:
+            covers = [c for c, n in cover_names if n is not None and n.text in coverages]
+        else:
+            covers = [c for c, n in cover_names if n is not None and self.layer == n.text]
+
         if not covers:  # Requested coverage is not offered
             self.result = CheckResults.LAYER_NOT_AVAILABLE
             return None
 
-        return covers[0]
+        return covers
 
-    def get_bbox(self, element):
+    def get_bbox(self, elements):
+        bboxes = []
+        for element in elements:
+            envelope = element.find("lonlatenvelope")
+            if envelope is None:
+                continue
 
-        envelope = element.find("lonlatenvelope")
-        if envelope is None:
-            return None
+            pos = envelope.getchildren()
+            # Make sure there aren't any surprises
+            coord_pattern = re.compile(r"^-?\d+(\.\d+)? -?\d+(\.\d+)?$")
+            if not pos or not all("pos" in p.tag and re.match(coord_pattern, p.text) for p in pos):
+                continue
 
-        pos = envelope.getchildren()
-        # Make sure there aren't any surprises
-        coord_pattern = re.compile(r"^-?\d+(\.\d+)? -?\d+(\.\d+)?$")
-        if not pos or not all("pos" in p.tag and re.match(coord_pattern, p.text) for p in pos):
-            return None
+            x1, y1 = list(map(float, pos[0].text.split(" ")))
+            x2, y2 = list(map(float, pos[1].text.split(" ")))
 
-        x1, y1 = list(map(float, pos[0].text.split(" ")))
-        x2, y2 = list(map(float, pos[1].text.split(" ")))
+            minx, maxx = sorted([x1, x2])
+            miny, maxy = sorted([y1, y2])
 
-        minx, maxx = sorted([x1, x2])
-        miny, maxy = sorted([y1, y2])
+            bboxes.append([minx, miny, maxx, maxy])
+        return bboxes if bboxes else None
 
-        return [minx, miny, maxx, maxy]
+    def check_intersection(self, bboxes):
+        """
+        Given a list bounding boxes, set result to NO_INTERSECT if it doesn't intersect the DataPack's AOI.
+        :param bboxes: list of bounding box arrays: [[minx, miny, maxx, maxy],..] in EPSG:4326
+        """
+        for box in bboxes:
+            logger.debug("Data provider bbox: [minx, miny, maxx, maxy] = {}".format(str(box)))
+            minx, miny, maxx, maxy = box
+            bbox = Polygon.from_bbox((minx, miny, maxx, maxy))
+
+            if not (self.aoi is not None and not self.aoi.intersects(bbox)):
+                return
+
+        self.result = CheckResults.NO_INTERSECT
 
 
 class WFSProviderCheck(OWSProviderCheck):
@@ -553,10 +585,11 @@ class WMSProviderCheck(OWSProviderCheck):
         # Get layer names
         layer_names = [(layer, layer.find("name")) for layer in layers]
         logger.debug("WMS layers offered: {}".format([name.text for layer, name in layer_names if name]))
-        layer = [layer for layer, name in layer_names if name is not None and self.layer == name.text]
+
+        requested_layer = self.get_layer_name()
+        layer = [layer for layer, name in layer_names if name is not None and requested_layer == name.text]
         if not layer:
-            # Since layer name is not consistently available for WM(T)S, just skip layer-dependent checks
-            self.result = CheckResults.SUCCESS
+            self.result = CheckResults.LAYER_NOT_AVAILABLE
             return None
 
         layer = layer[0]
@@ -565,12 +598,38 @@ class WMSProviderCheck(OWSProviderCheck):
     def get_bbox(self, element):
 
         bbox_element = element.find("latlonboundingbox")
+        if bbox_element is not None:
+            bbox = [float(bbox_element.attrib[point]) for point in ["minx", "miny", "maxx", "maxy"]]
+            return bbox
 
-        if bbox_element is None:
+        bbox_element = element.find("ex_geographicboundingbox")
+        if bbox_element is not None:
+            points = ["westboundlongitude", "southboundlatitude", "eastboundlongitude", "northboundlatitude"]
+            bbox = [float(bbox_element.findtext(point)) for point in points]
+            return bbox
+
+        return None
+
+    def get_layer_name(self):
+
+        try:
+            layer_name = (
+                self.config.get("sources", {})
+                .get("default", {})
+                .get("req", {})
+                .get("layers")  # TODO: Can there be more than one layer name in the WMS/WMTS config?
+            )
+        except AttributeError:
+            logger.error("Unable to get layer name from provider configuration.")
+            self.result = CheckResults.UNKNOWN_ERROR
             return None
 
-        bbox = [float(bbox_element.attrib[point]) for point in ["minx", "miny", "maxx", "maxy"]]
-        return bbox
+        if layer_name is None:
+            self.result = CheckResults.LAYER_NOT_AVAILABLE
+            return None
+
+        layer_name = layer_name.lower()
+        return layer_name
 
 
 class WMTSProviderCheck(OWSProviderCheck):
@@ -600,12 +659,12 @@ class WMTSProviderCheck(OWSProviderCheck):
             layers.extend(sublayers)
 
         # Get layer names
-        layer_names = [(layer, layer.find("title")) for layer in layers]
+        layer_names = [(layer, layer.find("identifier")) for layer in layers]
         logger.debug("WMTS layers offered: {}".format([name.text for layer, name in layer_names if name is not None]))
-        layer = [layer for layer, name in layer_names if name is not None and self.layer == name.text]
+        requested_layer = self.get_layer_name()
+        layer = [layer for layer, name in layer_names if name is not None and requested_layer == name.text]
         if not layer:
-            # Since layer name is not consistently available for WM(T)S, just skip layer-dependent checks
-            self.result = CheckResults.SUCCESS
+            self.result = CheckResults.LAYER_NOT_AVAILABLE
             return None
 
         layer = layer[0]
@@ -623,6 +682,27 @@ class WMTSProviderCheck(OWSProviderCheck):
 
         bbox = list(map(float, southwest + northeast))
         return bbox
+
+    def get_layer_name(self):
+
+        try:
+            layer_name = (
+                self.config.get("sources", {})
+                .get("imagery", {})
+                .get("req", {})
+                .get("layers")  # TODO: Can there be more than one layer name in the WMS/WMTS config?
+            )
+        except AttributeError:
+            logger.error("Unable to get layer name from provider configuration.")
+            self.result = CheckResults.UNKNOWN_ERROR
+            return None
+
+        if layer_name is None:
+            self.result = CheckResults.LAYER_NOT_AVAILABLE
+            return None
+
+        layer_name = layer_name.lower()
+        return layer_name
 
 
 class TMSProviderCheck(ProviderCheck):
@@ -644,7 +724,7 @@ PROVIDER_CHECK_MAP = {
 }
 
 
-def get_provider_checker(type_slug) -> ProviderCheck:
+def get_provider_checker(type_slug) -> Type[ProviderCheck]:
     """
     Given a string describing a provider type, return a reference to the class appropriate for checking the status
     of a provider of that type.
@@ -657,25 +737,30 @@ def get_provider_checker(type_slug) -> ProviderCheck:
         return ProviderCheck
 
 
-def perform_provider_check(provider: DataProvider, geojson):
-    provider_type = str(provider.export_provider_type)
+def perform_provider_check(provider: DataProvider, geojson) -> str:
+    try:
+        provider_type = str(provider.export_provider_type)
 
-    url = str(provider.url)
-    if url == "" and "osm" in provider_type:
-        url = settings.OVERPASS_API_URL
+        url = str(provider.url)
+        if url == "" and "osm" in provider_type:
+            url = settings.OVERPASS_API_URL
 
-    provider_checker = get_provider_checker(provider_type)
-    conf = yaml.safe_load(provider.config) or dict()
-    checker = provider_checker(
-        service_url=url,
-        layer=provider.layer,
-        aoi_geojson=geojson,
-        slug=provider.slug,
-        max_area=provider.max_selection,
-        config=conf,
-    )
-    response = checker.check()
+        provider_checker = get_provider_checker(provider_type)
+        conf = yaml.safe_load(provider.config) or dict()
+        checker = provider_checker(
+            service_url=url,
+            layer=provider.layer,
+            aoi_geojson=geojson,
+            slug=provider.slug,
+            max_area=provider.max_selection,
+            config=conf,
+        )
+        response = checker.check()
 
-    logger.info("Status of provider '{}': {}".format(str(provider.name), response))
+    except Exception as e:
+        response = json.dumps(CheckResults.UNKNOWN_ERROR.value[0])
+        logger.info(f"An exception occurred while checking the {provider.name} provider: {e}")
+
+    logger.info(f"Status of provider '{provider.name}': {response}")
 
     return response

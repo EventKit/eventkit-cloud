@@ -333,7 +333,7 @@ def convert(
     dstalpha = None
     if driver.lower() == "gpkg":
         band_type = gdal.GDT_Byte
-    if meta.get("nodata") is None and not is_envelope(input_file):
+    if meta.get("nodata") is None and meta.get("is_raster"):
         dstalpha = True
 
     # Clip the dataset if a boundary is passed in.
