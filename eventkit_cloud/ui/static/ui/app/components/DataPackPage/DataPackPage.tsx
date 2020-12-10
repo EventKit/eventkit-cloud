@@ -674,6 +674,7 @@ export class DataPackPage extends React.Component<Props, State> {
         return (
             <div style={styles.backgroundStyle}>
                 <EventkitJoyride
+                    name="DataPack Library"
                     callback={this.callback}
                     ref={(instance) => {
                         this.joyride = instance;

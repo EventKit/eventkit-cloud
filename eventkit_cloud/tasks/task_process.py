@@ -27,6 +27,10 @@ class TaskProcess(object):
     def start_process(self, command=None, billiard=False, *args, **kwargs):
         from eventkit_cloud.tasks.enumerations import TaskStates
 
+        # We need to close the existing connection because the logger could be using a forked process which,
+        # will be invalid and throw an error.
+        connection.close()
+
         if isinstance(command, collections.Callable):
             command()
         elif billiard:
@@ -40,10 +44,6 @@ class TaskProcess(object):
             (self.stdout, self.stderr) = proc.communicate()
             self.store_pid(pid=proc.pid)
             self.exitcode = proc.wait()
-
-        # We need to close the existing connection because the logger could be using a forked process which,
-        # will be invalid and throw an error.
-        connection.close()
 
         if self.export_task and self.export_task.status == TaskStates.CANCELED.value:
             from eventkit_cloud.tasks.exceptions import CancelException

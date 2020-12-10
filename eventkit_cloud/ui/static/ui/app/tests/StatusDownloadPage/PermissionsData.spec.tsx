@@ -38,6 +38,7 @@ describe('PermissionsData component', () => {
         ],
         adminPermissions: true,
         user: { user: { username: 'admin' } },
+        job: {name: ''},
         ...(global as any).eventkit_test_props,
     });
 

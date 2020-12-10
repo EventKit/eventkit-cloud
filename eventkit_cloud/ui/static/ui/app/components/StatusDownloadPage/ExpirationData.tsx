@@ -1,10 +1,11 @@
 import * as React from 'react';
-import { withTheme, Theme } from '@material-ui/core/styles';
+import {withTheme, Theme} from '@material-ui/core/styles';
 import Popover from '@material-ui/core/Popover';
 import Edit from '@material-ui/icons/Edit';
 import moment from 'moment';
 import DayPicker from 'react-day-picker';
 import 'react-day-picker/lib/style.css';
+import {MatomoClickTracker} from "../MatomoHandler";
 
 interface Props {
     expiration: string;
@@ -37,15 +38,15 @@ export class ExpirationData extends React.Component<Props, State> {
     }
 
     private handleClick(e: React.MouseEvent<any>) {
-        this.setState({ anchor: e.currentTarget });
+        this.setState({anchor: e.currentTarget});
     }
 
     private handleClose() {
-        this.setState({ anchor: null });
+        this.setState({anchor: null});
     }
 
     render() {
-        const { colors } = this.props.theme.eventkit;
+        const {colors} = this.props.theme.eventkit;
 
         const styles = {
             tableRowInfoIcon: {
@@ -68,10 +69,16 @@ export class ExpirationData extends React.Component<Props, State> {
             return (
                 <React.Fragment>
                     {expiration}
-                    <Edit
-                        onClick={this.handleClick}
-                        style={styles.tableRowInfoIcon}
-                    />
+                    <MatomoClickTracker
+                        eventAction="Edit Expiry"
+                        eventName="DataPack Expiration Tool"
+                        eventCategory="Status and Download"
+                    >
+                        <Edit
+                            onClick={this.handleClick}
+                            style={styles.tableRowInfoIcon}
+                        />
+                    </MatomoClickTracker>
                     <Popover
                         className="qa-ExpirationData-Popover"
                         open={Boolean(this.state.anchor)}
@@ -91,8 +98,8 @@ export class ExpirationData extends React.Component<Props, State> {
                             onDayClick={this.handleDayClick}
                             selectedDays={new Date(this.props.expiration)}
                             month={new Date(this.props.expiration)}
-                            modifiers={{ disabled: { before: this.props.minDate, after: this.props.maxDate } }}
-                            modifiersStyles={{ selected: { backgroundColor: colors.primary } }}
+                            modifiers={{disabled: {before: this.props.minDate, after: this.props.maxDate}}}
+                            modifiersStyles={{selected: {backgroundColor: colors.primary}}}
                             className="qa-ExpirationData-DayPicker"
                         />
                     </Popover>

@@ -10,6 +10,7 @@ import DropDownMenu from '../common/DropDownMenu';
 import DataPackShareDialog from '../DataPackShareDialog/DataPackShareDialog';
 import {connect} from "react-redux";
 import {Permissions} from "../../utils/permissions";
+import {MatomoClickTracker} from "../MatomoHandler";
 
 interface Props {
     permissions: Eventkit.Permissions;
@@ -168,15 +169,21 @@ export class PermissionsData extends React.Component<Props, State> {
                 const memberText = this.getMembersText(memberCount);
 
                 membersAndGroups = (
-                    <ButtonBase
-                        className="qa-PermissionsData-MembersAndGroups-button"
-                        key="membersAndGroupsButton"
-                        onClick={this.handleShareDialogOpen}
-                        style={{color: colors.primary, textDecoration: 'underline', padding: '0px 5px'}}
-                        disabled={!this.props.adminPermissions}
+                    <MatomoClickTracker
+                        eventAction="Open Dialog"
+                        eventName={`Open Share Dialog ${this.props.job.name}`}
+                        eventCategory="Status and Download"
                     >
-                        {memberText} / {groupText}
-                    </ButtonBase>
+                        <ButtonBase
+                            className="qa-PermissionsData-MembersAndGroups-button"
+                            key="membersAndGroupsButton"
+                            onClick={this.handleShareDialogOpen}
+                            style={{color: colors.primary, textDecoration: 'underline', padding: '0px 5px'}}
+                            disabled={!this.props.adminPermissions}
+                        >
+                            {memberText} / {groupText}
+                        </ButtonBase>
+                    </MatomoClickTracker>
                 );
             }
 
@@ -220,20 +227,20 @@ export class PermissionsData extends React.Component<Props, State> {
                     </DropDownMenu>
                     {membersAndGroups}
                     {this.state.shareDialogOpen &&
-                        <DataPackShareDialog
-                            show={this.state.shareDialogOpen}
-                            user={this.props.user}
-                            onClose={this.handleShareDialogClose}
-                            onSave={this.handleShareDialogSave}
-                            permissions={this.props.permissions}
-                            groupsText="You may share view and edit rights with groups exclusively.
+                    <DataPackShareDialog
+                        show={this.state.shareDialogOpen}
+                        user={this.props.user}
+                        onClose={this.handleShareDialogClose}
+                        onSave={this.handleShareDialogSave}
+                        permissions={this.props.permissions}
+                        groupsText="You may share view and edit rights with groups exclusively.
                             Group sharing is managed separately from member sharing"
-                            membersText="You may share view and edit rights with members exclusively.
+                        membersText="You may share view and edit rights with members exclusively.
                             Member sharing is managed separately from group sharing"
-                            canUpdateAdmin
-                            warnPublic
-                            job={this.props.job}
-                        />
+                        canUpdateAdmin
+                        warnPublic
+                        job={this.props.job}
+                    />
                     }
                 </React.Fragment>
             );

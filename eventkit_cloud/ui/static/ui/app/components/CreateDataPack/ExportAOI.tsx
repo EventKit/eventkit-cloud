@@ -1087,6 +1087,7 @@ export class ExportAOI extends React.Component<Props, State> {
                 />
                 <StepValidator {...this.props}/>
                 <EventkitJoyride
+                    name="Create Page Step 1"
                     callback={this.callback}
                     ref={(instance) => {
                         this.joyride = instance;
