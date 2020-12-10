@@ -22,7 +22,7 @@ const jss = (theme: Theme & Eventkit.Theme) => createStyles({
     },
     paper: {
         padding: theme.spacing(1),
-        width: '220px',
+        width: '235px',
         borderTop: '1px solid rgba(0, 0, 0, 0.5)',
         borderBottom: '1px solid rgba(0, 0, 0, 0.5)',
         borderRight: '1px solid rgba(0, 0, 0, 0.5)',
@@ -63,11 +63,16 @@ const jss = (theme: Theme & Eventkit.Theme) => createStyles({
         position: 'absolute',
     },
     filterChip: {
-        fontSize: '12px',
+        height: '26px',
+        fontSize: '14px',
         border: '1px solid rgba(0, 0, 0, 0.5)',
         backgroundColor: theme.eventkit.colors.white,
+        marginRight: '3px',
     },
     filterOptionBlock: {marginRight: '8px', fontSize: '11px', display: 'inline-block'},
+    textField: {
+        backgroundColor: 'aliceblue',
+    },
 });
 
 // We build our filters here ahead of time
@@ -91,8 +96,8 @@ function buildFilters() {
             expression: filterType('other type'),
         },
         {
-            name: 'Random',
-            expression: filterType('random'),
+            name: 'Open Street Maps',
+            expression: filterType('osm'),
         },
     ] as Partial<Filter>[];
 
@@ -196,6 +201,9 @@ export function MapDrawerOptions(props: Props) {
         });
         sources = [...sources]; // Convert to array
         if (filterNameValue !== '') {
+            if (!sources.length) {
+                sources = props.sources.map(_source => _source.name);
+            }
             sources = sources.filter(_sourceName => _sourceName.toLowerCase().includes(filterNameValue));
         }
         props.setSources(sources.map(
@@ -258,20 +266,23 @@ export function MapDrawerOptions(props: Props) {
     }
 
     function getAppliedFilterChips() {
-        const nameChip = (
-            <Chip
-                className={classes.filterChip}
-                label={filterNameValue}
-                onDelete={() => setTextFieldControlledValue('')}
-            />
-        );
-        return [nameChip, ...filters.filter(_filter => _filter.enabled).map(_filter => (
+        const chips = filters.filter(_filter => _filter.enabled).map(_filter => (
             <Chip
                 className={classes.filterChip}
                 label={_filter.name}
                 onDelete={() => removeFilter(_filter.name)}
             />
-        ))];
+        ));
+        if (!!filterNameValue.length) {
+            chips.push((
+                <Chip
+                    className={classes.filterChip}
+                    label={filterNameValue}
+                    onDelete={() => setTextFieldControlledValue('')}
+                />
+            ));
+        }
+        return chips;
     }
 
     function renderFilterOptions() {
@@ -279,10 +290,11 @@ export function MapDrawerOptions(props: Props) {
             <div>
                 <div className={`qa-MapDrawer-nameFilter-container ${classes.filterContainer}`}>
                     Filter by Name:
-                    <CustomTextField
+                    <TextField
                         id="layerNames"
                         name="layerNames"
                         autoComplete="off"
+                        fullWidth
                         className={classes.textField}
                         value={textFieldControlledValue}
                         onChange={(e) => setTextFieldControlledValue(e.target.value)}
