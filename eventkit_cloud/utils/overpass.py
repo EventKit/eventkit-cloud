@@ -118,7 +118,7 @@ class Overpass(object):
             conf: dict = yaml.safe_load(self.config) or dict()
             cert_var = conf.get("cert_var") or self.slug
             req = auth_requests.post(self.url, cert_var=cert_var, data=q, stream=True, verify=self.verify_ssl)
-
+            req.raise_for_status()
             try:
                 total_size = int(req.headers.get("content-length"))
             except (ValueError, TypeError):
