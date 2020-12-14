@@ -56,8 +56,8 @@ export function useDebouncedSetter(setter: (value: any) => void, timeout = 1000)
     }, [setter, timeout]);
 }
 
-export function useDebouncedState(initialValue: any, timeout = 1000) {
-    const [valueState, setValueState] = useState(initialValue);
+export function useDebouncedState<T=any>(initialValue: T, timeout = 1000) : [T, ((args: T) => void)] {
+    const [valueState, setValueState] = useState<T>(initialValue);
     return [valueState, useDebouncedSetter(setValueState, timeout)];
 }
 

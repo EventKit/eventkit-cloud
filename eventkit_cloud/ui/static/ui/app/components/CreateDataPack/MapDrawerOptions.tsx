@@ -5,11 +5,9 @@ import ExpandMore from "@material-ui/icons/ExpandMore";
 import {Chip, Grow, Link, Paper, TextField, withStyles} from "@material-ui/core";
 import {renderIf} from "../../utils/renderIf";
 import Radio from "@material-ui/core/Radio";
-import {BaseMapSource} from "./MapDrawer";
 import {useDebouncedState} from "../../utils/hooks/hooks";
-import {arrayHasValue} from "../../utils/generic";
-import CustomTextField from "../common/CustomTextField";
-import {use} from "msw/lib/types/utils/handlers/requestHandlerUtils";
+import {arrayHasValue, shouldDisplay as providerShouldDisplay} from "../../utils/generic";
+
 
 const jss = (theme: Theme & Eventkit.Theme) => createStyles({
     button: {
@@ -77,7 +75,7 @@ const jss = (theme: Theme & Eventkit.Theme) => createStyles({
 
 // We build our filters here ahead of time
 function buildFilters() {
-    const filterType = (dataType: string) => (source: BaseMapSource) => source.type === dataType;
+    const filterType = (dataType: string) => (provider: Eventkit.Provider) => provider.data_type.toLowerCase() === dataType.toLowerCase();
     const filtersList = [
         {
             name: 'Elevation',
@@ -93,11 +91,7 @@ function buildFilters() {
         },
         {
             name: 'Other Type',
-            expression: filterType('other type'),
-        },
-        {
-            name: 'Open Street Maps',
-            expression: filterType('osm'),
+            expression: (provider: Eventkit.Provider) => !arrayHasValue(['elevation', 'raster', 'vector'], provider.data_type),
         },
     ] as Partial<Filter>[];
 
@@ -108,7 +102,7 @@ function buildFilters() {
 
 export interface Filter {
     name: string;
-    expression: (source: BaseMapSource, ...args: any) => boolean;
+    expression: (provider: Eventkit.Provider, ...args: any) => boolean;
     enabled: boolean;
     sources: string[];
     exclusiveFilter: boolean; // Can't be enabled with any other exclusive filter
@@ -116,15 +110,15 @@ export interface Filter {
 
 interface Props {
     // filter name, number of sources relevant, whether it's enabled
-    sources: BaseMapSource[];
-    setSources: (sources: BaseMapSource[]) => void;
-    onEnabled: () => void;
+    providers: Eventkit.Provider[];
+    setProviders: (providers: Eventkit.Provider[]) => void;
+    onEnabled: (offset: number) => void;
     onDisabled: () => void;
     classes: { [className: string]: string };
 }
 
 export function MapDrawerOptions(props: Props) {
-    const {sources, classes} = props;
+    const {providers, classes} = props;
     const [open, setOpen] = useState(false);
 
     const [_filters, _setFilters] = useState<{
@@ -169,45 +163,50 @@ export function MapDrawerOptions(props: Props) {
         // When sources is updated, we re-scan them to see which applies to which filter
         // We display the number of sources affected by each filter so we have to calculate them all ahead of time
         // If this ever becomes a bottle neck it should be transitioned to run async
-        if (sources) {
+        if (providers) {
+            const visibleProviders = providers.filter(_provider => providerShouldDisplay(_provider));
             const updatedFilters = []
             Object.entries(_filters).map(([, _filter]) => {
                 updatedFilters.push({
                     ..._filter,
-                    sources: sources.filter(_filter.expression).map(_sources => _sources.name),
+                    sources: visibleProviders.filter(_filter.expression).map(_provider => _provider.name),
                 });
 
             });
             setFilter(...updatedFilters);
         }
-    }, [sources]);
+    }, [providers]);
 
-    const [filterNameValue, setFilterNameValue] = useDebouncedState('', 200);
-    const [textFieldControlledValue, setTextFieldControlledValue] = useState('');
+    const [filterNameValue, setFilterNameValue] = useDebouncedState<string>('', 200);
+    const [textFieldControlledValue, setTextFieldControlledValue] = useState<string>('');
 
     useEffect(() => {
         setFilterNameValue(textFieldControlledValue);
     }, [textFieldControlledValue]);
 
     useEffect(() => {
+        // Find all enabled filters
         const enabled = filters.filter(_filter => _filter.enabled) || [] as Filter[];
+        // If none are enabled, return early with ALL providers
         if (!enabled.length && !filterNameValue.length) {
-            props.setSources(props.sources);
+            props.setProviders(props.providers);
             return;
         }
-        let sources: any = new Set(); // Use a set to compile all source names and get rid of duplicates.
+        let providerNames: any = new Set(); // Use a set to compile all source names and get rid of duplicates.
         enabled.forEach((_filter) => {
-            _filter.sources.forEach(_source => sources.add(_source))
+            _filter.sources.forEach(_provider => providerNames.add(_provider))
         });
-        sources = [...sources]; // Convert to array
+        providerNames = [...providerNames]; // Convert set to array
         if (filterNameValue !== '') {
-            if (!sources.length) {
-                sources = props.sources.map(_source => _source.name);
+            if (!providerNames.length) {
+                providerNames = props.providers.map(_provider => _provider.name);
             }
-            sources = sources.filter(_sourceName => _sourceName.toLowerCase().includes(filterNameValue));
+            providerNames = providerNames.filter(
+                _sourceName => _sourceName.toLowerCase().includes(filterNameValue)
+            );
         }
-        props.setSources(sources.map(
-            _sourceName => props.sources.find(_source => _sourceName === _source.name)
+        props.setProviders(providerNames.map(
+            _sourceName => props.providers.find(_source => _sourceName === _source.name) || []
         ));
     }, [filterNameValue, _filters]);
 
@@ -219,14 +218,16 @@ export function MapDrawerOptions(props: Props) {
         setOpen(_previouslyOpen => !_previouslyOpen);
     };
 
+    const offsetBox = useRef(null);
     useEffect(() => {
         if (!shouldDisplay) {
             props.onDisabled();
         }
-        if (shouldDisplay) {
-            props.onEnabled();
+        if (shouldDisplay && offsetBox.current) {
+            // Delay to ensure box is fully sized
+            setTimeout(() => props.onEnabled(offsetBox.current.getBoundingClientRect().height * 1.1), 100);
         }
-    }, [shouldDisplay]);
+    }, [shouldDisplay, open]);
 
     const id = !!anchorEl ? 'simple-popover' : undefined;
 
@@ -277,7 +278,7 @@ export function MapDrawerOptions(props: Props) {
             chips.push((
                 <Chip
                     className={classes.filterChip}
-                    label={filterNameValue}
+                    label={`"${filterNameValue}"`}
                     onDelete={() => setTextFieldControlledValue('')}
                 />
             ));
@@ -327,8 +328,7 @@ export function MapDrawerOptions(props: Props) {
                     </div>
                 ), !!filters.length)}
                 <div style={{display: 'flex'}}>
-
-                        <Link onClick={clear} style={{marginLeft: 'auto', width: 'auto', cursor: 'pointer'}}>Clear</Link>
+                    <Link onClick={clear} style={{marginLeft: 'auto', width: 'auto', cursor: 'pointer'}}>Clear</Link>
                 </div>
             </div>
         );
@@ -375,7 +375,7 @@ export function MapDrawerOptions(props: Props) {
                 {renderIf(() => (
                     <div className={`qa-MapDrawerOptions-FilterPanel`} style={{position: 'relative'}}>
                         <Grow in={shouldDisplay} style={{transformOrigin: 'top right', zIndex: 1}}>
-                            <Paper className={classes.paper} square elevation={0}>
+                            <Paper className={classes.paper} square elevation={0} ref={offsetBox}>
                                 {renderIf(getAppliedFilterChips, !open)}
                                 {renderIf(renderFilterOptions, open)}
                             </Paper>
@@ -387,4 +387,4 @@ export function MapDrawerOptions(props: Props) {
     );
 }
 
-export default withStyles<any, any>(jss)(MapDrawerOptions)
+export default withStyles<any, any>(jss)(MapDrawerOptions);

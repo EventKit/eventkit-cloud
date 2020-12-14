@@ -259,34 +259,6 @@ export function MapDrawer(props: Props) {
         }
     }
 
-    const [sources, setSources] = useState([]);
-    useEffect(() => {
-        setSources([
-            ...providers.filter(provider =>
-                !provider.hidden && !!provider.preview_url && !!provider.display).map(provider => {
-                let footprintsLayer;
-                if (!!provider.footprint_url) {
-                    footprintsLayer = {
-                        mapUrl: provider.footprint_url,
-                        slug: `${provider.slug}-footprints`,
-                    } as MapLayer;
-                }
-                return {
-                    footprintsLayer,
-                    mapLayer: {
-                        mapUrl: provider.preview_url,
-                        metadata: provider.metadata,
-                        slug: provider.slug,
-                        copyright: provider.service_copyright,
-                    } as MapLayer,
-                    name: provider.name,
-                    type: provider.type,
-                    data_type: provider.data_type,
-                    thumbnail_url: provider.thumbnail_url,
-                } as BaseMapSource;
-            })
-        ]);
-    }, [providers]);
 
     const drawerOpen = !!selectedTab;
     const areProvidersHidden = providers.find(provider => provider.hidden === true);
@@ -294,12 +266,41 @@ export function MapDrawer(props: Props) {
 
     const [ offSet, setOffSet ] = useState(0);
 
-    const [ filteredSources, setFilteredSources ] = useState(() => sources || null);
+    const [ filteredProviders, setFilteredProviders ] = useState(() => providers || null);
     useEffect(() => {
-        if (filteredSources === null) {
-            setFilteredSources(sources || null);
+        if (filteredProviders === null) {
+            setFilteredProviders(providers || null);
         }
-    }, [sources]);
+    }, [providers]);
+
+    const [sources, setSources] = useState([]);
+    useEffect(() => {
+        setSources([
+            ...filteredProviders.filter(_provider =>
+                !_provider.hidden && !!_provider.preview_url && !!_provider.display).map(_provider => {
+                let footprintsLayer;
+                if (!!_provider.footprint_url) {
+                    footprintsLayer = {
+                        mapUrl: _provider.footprint_url,
+                        slug: `${_provider.slug}-footprints`,
+                    } as MapLayer;
+                }
+                return {
+                    footprintsLayer,
+                    mapLayer: {
+                        mapUrl: _provider.preview_url,
+                        metadata: _provider.metadata,
+                        slug: _provider.slug,
+                        copyright: _provider.service_copyright,
+                    } as MapLayer,
+                    name: _provider.name,
+                    type: _provider.type,
+                    data_type: _provider.data_type,
+                    thumbnail_url: _provider.thumbnail_url,
+                } as BaseMapSource;
+            })
+        ]);
+    }, [filteredProviders]);
 
     return (
         <div
@@ -360,9 +361,9 @@ export function MapDrawer(props: Props) {
                             </strong>
                             <span style={{marginLeft: 'auto', marginRight: '3px'}}>
                             <MapDrawerOptions
-                                sources={sources}
-                                setSources={(_sources: BaseMapSource[]) => setFilteredSources(_sources)}
-                                onEnabled={() => setOffSet(100)}
+                                providers={providers}
+                                setProviders={setFilteredProviders}
+                                onEnabled={(offset: number) => setOffSet(offset)}
                                 onDisabled={() => setOffSet(0)}
                             />
                             </span>
@@ -372,7 +373,7 @@ export function MapDrawer(props: Props) {
                         <CustomScrollbar>
                             <div style={{height: `${offSet}px`}} />
                             <List style={{padding: '10px'}}>
-                                {(filteredSources || []).map((source, ix) => (
+                                {(sources || []).map((source, ix) => (
                                         <div key={ix}>
                                             <ListItem className={`${classes.listItem} ${classes.noPadding}`}>
                                             <span style={{marginRight: '2px'}}>
