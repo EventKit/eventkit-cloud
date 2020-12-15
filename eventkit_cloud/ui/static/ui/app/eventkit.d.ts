@@ -166,6 +166,7 @@ declare namespace Eventkit {
         supported_formats: Format[];
         thumbnail_url: string;
         hidden: boolean;
+        data_type: string;
     }
 
     interface Format {
