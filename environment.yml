@@ -1,7 +1,4 @@
 name: eventkit-cloud
-channels:
-  - file:///var/lib/eventkit/conda/repo
-  - nodefaults
 dependencies:
   - eventkit-cloud=1.8.1
   - memcached=1.6.6
