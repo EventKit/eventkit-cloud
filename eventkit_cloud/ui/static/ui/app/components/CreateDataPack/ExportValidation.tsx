@@ -70,7 +70,7 @@ export function StepValidator(props: ValidationProps) {
         // We don't want to control this while the page tour is running
         if (!tourRunning) {
             const setEnabled = !walkthroughClicked && aoiHasArea && validState && providersValid;
-            if (validState && !nextEnabled) {
+            if (setEnabled && !nextEnabled) {
                 setNextEnabled();
             } else if (!setEnabled && nextEnabled) {
                 setNextDisabled();

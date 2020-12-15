@@ -12,6 +12,10 @@ import {isZoomLevelInRange, supportsZoomLevels} from "../../utils/generic";
 import InfoDialog from "../Dialog/InfoDialog";
 import {Link} from "@material-ui/core";
 import EventkitJoyride from "../common/JoyrideWrapper";
+import Checkbox from "@material-ui/core/Checkbox";
+import {updateExportInfo} from "../../actions/datacartActions";
+import {stepperNextDisabled, stepperNextEnabled} from "../../actions/uiActions";
+import Visibility = Eventkit.Permissions.Visibility;
 
 const jss = (theme: Eventkit.Theme & Theme) => createStyles({
     root: {
@@ -103,7 +107,23 @@ const jss = (theme: Eventkit.Theme & Theme) => createStyles({
                 whiteSpace: 'unset',
             },
         }
-    }
+    },
+    checkbox: {
+        width: '24px',
+        height: '24px',
+        marginRight: '15px',
+        flex: '0 0 auto',
+        color: theme.eventkit.colors.primary,
+        '&$checked': {
+            color: theme.eventkit.colors.success,
+        },
+    },
+    checked: {},
+    selectAll: {
+        padding: '0px 10px 10px 16px',
+        display: 'flex',
+        lineHeight: '24px',
+    },
 });
 
 export interface Props {
@@ -121,6 +141,8 @@ export interface Props {
     selectedProjections: number[];
     projections: Eventkit.Projection[];
     formats: Eventkit.Format[];
+    visibility: Visibility;
+    updateExportInfo: (args: any) => void;
 }
 
 export interface State {
@@ -293,11 +315,41 @@ export class ExportSummary extends React.Component<Props, State> {
                                 Please make sure all the information below is correct.
                             </div>
                             <div className="qa-ExportSummary-div" id="Summary">
+                                {/*<div*/}
+                                {/*    id="export-information-heading"*/}
+                                {/*    className={`qa-ExportSummary-exportHeading ${classes.exportHeading}`}*/}
+                                {/*>*/}
+                                {/*    Export Information*/}
+                                {/*</div>*/}
                                 <div
-                                    id="export-information-heading"
-                                    className={`qa-ExportSummary-exportHeading ${classes.exportHeading}`}
+                                    id="select" className={`qa-ExportInfo-selectAll ${classes.selectAll}`}
+                                    style={{padding: '0px 10px 10px 8px'}}
                                 >
-                                    Export Information
+                                    <Checkbox
+                                        classes={{root: classes.checkbox, checked: classes.checked}}
+                                        name="ShareAll"
+                                        checked={this.props.visibility === 'PUBLIC'}
+                                        onChange={() => {
+                                            if (this.props.visibility === 'PRIVATE') {
+                                                this.props.updateExportInfo({
+                                                    visibility: 'PUBLIC'
+                                                });
+                                                return;
+                                            }
+                                            this.props.updateExportInfo({
+                                                visibility: 'PRIVATE'
+                                            });
+                                        }}
+                                        style={{width: '24px', height: '24px'}}
+                                    />
+                                    <span
+                                        style={{
+                                            padding: '0px 15px', display: 'flex',
+                                            flexWrap: 'wrap', fontSize: '16px',
+                                        }}
+                                    >
+                                    Share with all EventKit users
+                                </span>
                                 </div>
                                 <CustomTableRow
                                     className="qa-ExportSummary-name"
@@ -410,7 +462,16 @@ function mapStateToProps(state) {
         exportOptions: state.exportInfo.exportOptions,
         selectedProjections: state.exportInfo.projections,
         projections: state.projections,
+        visibility: state.exportInfo.visibility,
     };
 }
 
-export default withTheme(withStyles(jss)(connect(mapStateToProps)(ExportSummary)));
+function mapDispatchToProps(dispatch) {
+    return {
+        updateExportInfo: (exportInfo) => {
+            dispatch(updateExportInfo(exportInfo));
+        },
+    };
+}
+
+export default withTheme(withStyles(jss)(connect(mapStateToProps, mapDispatchToProps)(ExportSummary)));

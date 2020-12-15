@@ -36,6 +36,7 @@ describe('Step Validator', () => {
                 }
             },
             projections: [],
+            visibility: 'PRIVATE',
         };
     }
 

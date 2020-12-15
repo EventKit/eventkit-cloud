@@ -84,6 +84,7 @@ describe('exportInfo reducer', () => {
             providerInfo: {},
             exportOptions: {},
             projections: [],
+            visibility: 'PRIVATE',
         });
     });
 
@@ -143,6 +144,7 @@ describe('exportInfo reducer', () => {
             formats: ['gpkg'],
             providerInfo: {},
             exportOptions: {},
+            visibility: 'PRIVATE',
         });
     });
 });

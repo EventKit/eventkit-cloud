@@ -29,6 +29,7 @@ jest.mock("../../components/common/CustomTextField", () => {
 import DataProvider from '../../components/CreateDataPack/DataProvider';
 import {render} from "@testing-library/react";
 import {hasDisallowedSelection, hasRequiredFields} from "../../components/CreateDataPack/ExportValidation";
+import {updateExportInfo} from "../../actions/datacartActions";
 
 jest.mock("../../components/CreateDataPack/DataProvider", () => {
     const React = require('react');
@@ -180,6 +181,7 @@ describe('ExportInfo component', () => {
         expect(wrapper.find('.qa-ExportInfo-projectionHeader')).toHaveLength(1);
         expect(wrapper.find('.qa-ExportInfo-projectionHeader').text()).toEqual('Select Projection');
         expect(wrapper.find('.qa-ExportInfo-projections').find(Checkbox)).toHaveLength(2);
+        expect(wrapper.find('.qa-ExportInfo-ShareHeader').text()).toEqual('Share this DataPack');
         expect(wrapper.find(MapCard)).toHaveLength(1);
 
     });
@@ -197,6 +199,18 @@ describe('ExportInfo component', () => {
         expect(props.updateExportInfo.called).toBe(true);
         areaSpy.restore();
         joyrideSpy.restore();
+    });
+
+    it('componentDidMount should setNextDisabled, setArea, and add joyride steps', () => {
+        setup();
+        instance.checkShareAll();
+        expect(props.updateExportInfo.calledWith({
+            visibility: 'PRIVATE',
+        })).toBe(true);
+        instance.checkShareAll();
+        expect(props.updateExportInfo.calledWith({
+            visibility: 'public',
+        })).toBe(true);
     });
 
     it('componentDidMount should not update projections when already in state', () => {
