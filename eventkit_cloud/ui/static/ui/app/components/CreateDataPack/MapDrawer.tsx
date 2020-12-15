@@ -182,6 +182,7 @@ export interface BaseMapSource {
     name: string;
     type: string;
     thumbnail_url: string;
+    data_type: string;
 }
 
 export interface Props {
@@ -277,6 +278,7 @@ export function MapDrawer(props: Props) {
                     } as MapLayer,
                     name: provider.name,
                     type: provider.type,
+                    data_type: provider.data_type,
                     thumbnail_url: provider.thumbnail_url,
                 } as BaseMapSource;
             })
@@ -373,7 +375,7 @@ export function MapDrawer(props: Props) {
                                                         />
                                                     </div>
                                                     <div className={classes.buttonLabelSecondary}>
-                                                        {source.type.toUpperCase()}
+                                                        {source.data_type && source.data_type[0].toUpperCase() + source.data_type.substring(1)}
                                                     </div>
                                                 </div>
                                             </ListItem>

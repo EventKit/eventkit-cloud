@@ -195,7 +195,7 @@ export class DataPackOptions extends React.Component<Props, State> {
                 </BaseDialog>
                 <MatomoClickTracker
                     eventAction="Clone Export"
-                    eventName={`Clone ${this.props.job.name}`}
+                    eventName={`Clone ${this.props?.job?.name}`}
                     eventCategory="Status and Download"
                 >
                     <Button
@@ -219,7 +219,7 @@ export class DataPackOptions extends React.Component<Props, State> {
                 </BaseDialog>
                 <MatomoClickTracker
                     eventAction="Delete Export"
-                    eventName={`Delete ${this.props.job.name}`}
+                    eventName={`Delete ${this.props?.job?.name}`}
                     eventCategory="Status and Download"
                 >
                     <Button
