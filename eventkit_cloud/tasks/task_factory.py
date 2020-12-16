@@ -29,7 +29,7 @@ from eventkit_cloud.tasks.export_tasks import (
     wcs_export_task,
     arcgis_feature_service_export_task,
 )
-from eventkit_cloud.tasks.enumerations import TaskStates
+from eventkit_cloud.tasks.enumerations import TaskState
 from eventkit_cloud.tasks.helpers import (
     get_run_staging_dir,
     get_provider_staging_dir,
@@ -130,7 +130,7 @@ class TaskFactory:
             finalized_provider_task_chain_list = []
             # Create a task record which can hold tasks for the run (datapack)
             run_task_record = DataProviderTaskRecord.objects.create(
-                run=run, name="run", slug="run", status=TaskStates.PENDING.value, display=False,
+                run=run, name="run", slug="run", status=TaskState.PENDING.value, display=False,
             )
             stage_dir = get_provider_staging_dir(run_dir, run_task_record.slug)
             if not os.path.exists(stage_dir):
@@ -198,7 +198,7 @@ class TaskFactory:
                         # create signature to close out the provider tasks
                         finalize_export_provider_signature = finalize_export_provider_task.s(
                             data_provider_task_uid=provider_task_record_uid,
-                            status=TaskStates.COMPLETED.value,
+                            status=TaskState.COMPLETED.value,
                             locking_task_key=run_uid,
                         )
 
@@ -272,7 +272,7 @@ def create_run(job_uid, user=None, clone=False):
             run_zip_file_slug_sets = None
             if clone:
                 run, run_zip_file_slug_sets = job.last_export_run.clone()
-                run.status = TaskStates.SUBMITTED.value
+                run.status = TaskState.SUBMITTED.value
                 run.save()
                 job.last_export_run = run
                 job.save()
@@ -281,7 +281,7 @@ def create_run(job_uid, user=None, clone=False):
                 run = ExportRun.objects.create(
                     job=job,
                     user=user,
-                    status=TaskStates.SUBMITTED.value,
+                    status=TaskState.SUBMITTED.value,
                     expiration=(timezone.now() + timezone.timedelta(days=14)),
                 )  # persist the run
                 job.last_export_run = run

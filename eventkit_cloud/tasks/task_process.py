@@ -25,7 +25,7 @@ class TaskProcess(object):
         self.export_task = ExportTaskRecord.objects.filter(uid=self.task_uid).first()
 
     def start_process(self, command=None, billiard=False, *args, **kwargs):
-        from eventkit_cloud.tasks.enumerations import TaskStates
+        from eventkit_cloud.tasks.enumerations import TaskState
 
         # We need to close the existing connection because the logger could be using a forked process which,
         # will be invalid and throw an error.
@@ -45,7 +45,7 @@ class TaskProcess(object):
             self.store_pid(pid=proc.pid)
             self.exitcode = proc.wait()
 
-        if self.export_task and self.export_task.status == TaskStates.CANCELED.value:
+        if self.export_task and self.export_task.status == TaskState.CANCELED.value:
             from eventkit_cloud.tasks.exceptions import CancelException
 
             raise CancelException(

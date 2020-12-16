@@ -37,7 +37,7 @@ from eventkit_cloud.tasks import (
     get_cache_value,
     set_cache_value,
 )
-from eventkit_cloud.tasks.enumerations import TaskStates
+from eventkit_cloud.tasks.enumerations import TaskState
 from eventkit_cloud.utils.s3 import download_folder_from_s3
 from notifications.models import Notification
 
@@ -406,7 +406,7 @@ class ExportTaskRecord(UIDMixin, TimeStampedModelMixin, TimeTrackingModelMixin):
 
     @property
     def progress(self):
-        if TaskStates[self.status] in TaskStates.get_finished_states():
+        if TaskState[self.status] in TaskState.get_finished_states():
             return 100
         return get_cache_value(obj=self, attribute="progress", default=0)
 
@@ -416,7 +416,7 @@ class ExportTaskRecord(UIDMixin, TimeStampedModelMixin, TimeTrackingModelMixin):
 
     @property
     def estimated_finish(self):
-        if TaskStates[self.status] in TaskStates.get_finished_states():
+        if TaskState[self.status] in TaskState.get_finished_states():
             return
         return get_cache_value(obj=self, attribute="estimated_finish", default=0)
 
