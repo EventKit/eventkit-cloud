@@ -437,7 +437,7 @@ class TestDataProvider(TestCase):
             self.data_provider.config = yaml.dump(config)
             self.assertEqual(expected_url, self.data_provider.footprint_url)
 
-    def test_layers(self, ):
+    def test_layers(self,):
 
         # Test single layer vector source
         expected_layer = "test"
@@ -448,21 +448,21 @@ class TestDataProvider(TestCase):
 
         # Test that layer names are better than integers
         expected_layer = "slug"
-        self.data_provider.layer = '1'
+        self.data_provider.layer = "1"
         self.data_provider.slug = expected_layer
         self.data_provider.type = GeospatialDataType.VECTOR.value
         self.data_provider.config = None
         self.assertEqual(self.data_provider.layers, [expected_layer])
 
         # Test OSM configuration
-        expected_layers = ["layer1", 'layer2']
+        expected_layers = ["layer1", "layer2"]
         self.data_provider.type = GeospatialDataType.VECTOR.value
         self.data_provider.config = yaml.dump({layer: "data" for layer in expected_layers})
         self.assertEqual(self.data_provider.layers, expected_layers)
 
         # Test multilayer feature service
-        expected_layers = ["layer1", 'layer2']
-        self.data_provider.export_provider_type.type_name = 'wfs'
+        expected_layers = ["layer1", "layer2"]
+        self.data_provider.export_provider_type.type_name = "wfs"
         self.data_provider.type = GeospatialDataType.VECTOR.value
         self.data_provider.config = yaml.dump({"layers": [{"name": layer} for layer in expected_layers]})
         self.assertEqual(self.data_provider.layers, expected_layers)
