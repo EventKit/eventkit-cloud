@@ -497,8 +497,9 @@ def get_metadata(data_provider_task_record_uids: List[str], source_only=False):
         "data_sources": {},
         "bbox": run.job.extents,
         "aoi": run.job.bounds_geojson,
-        "has_raster": False,
+        "has_raster": False,  # TODO: These are used for style groupings and seem frivolous.
         "has_elevation": False,
+        "has_vector": False,
     }
     for data_provider_task_record in data_provider_task_records:
         data_provider = data_provider_task_record.provider
@@ -507,7 +508,6 @@ def get_metadata(data_provider_task_record_uids: List[str], source_only=False):
         provider_staging_dir = get_provider_staging_dir(run.uid, data_provider_task_record.provider.slug)
         conf = yaml.safe_load(data_provider.config) or dict()
         cert_var = conf.get("cert_var", data_provider.slug)
-        logger.error(f"Provider Layers: {data_provider.layers}")
         metadata["data_sources"][data_provider_task_record.provider.slug] = {
             "uid": str(data_provider_task_record.uid),
             "slug": data_provider_task_record.provider.slug,

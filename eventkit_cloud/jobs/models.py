@@ -350,7 +350,7 @@ class DataProvider(UIDMixin, TimeStampedModelMixin, CachedModelMixin):
                 return [self.layer]  # If we got here, layer is not None or an integer so use that.
         config = clean_config(self.config, return_dict=True)
         # As of EK 1.9.0 only vectors support multiple layers in a single provider
-        if self.export_provider_type.type_name == ["osm", "osm-generic"]:
+        if self.export_provider_type.type_name in ["osm", "osm-generic"]:
             return list(config.keys())
         else:
             return [layer.get("name") for layer in config.get("layers", [])]
