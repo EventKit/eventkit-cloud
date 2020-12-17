@@ -271,7 +271,7 @@ export class ExportInfo extends React.Component<Props, State> {
 
         const updatedInfo = {
             areaStr,
-            visibility: this.context.config.DATAPACKS_DEFAULT_SHARED ? 'PUBLIC' : 'PRIVATE',
+            visibility: this?.context?.config?.DATAPACKS_DEFAULT_SHARED ? 'PUBLIC' : 'PRIVATE',
         } as Eventkit.Store.ExportInfo;
 
         const steps = joyride.ExportInfo as any[];
