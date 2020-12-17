@@ -3,7 +3,30 @@ import {useJobValidationContext} from "./context/JobValidation";
 import {useEffectOnMount} from "../../utils/hooks/hooks";
 import {useEffect} from "react";
 import {arrayHasValue} from "../../utils/generic";
-import {Props} from "./ExportInfo";
+import {Props as Step2Props} from "./ExportInfo";
+import {Props as Step1Props} from "./ExportAOI";
+
+
+export function Step1Validator(props: Step1Props) {
+    const {setNextEnabled, setNextDisabled, nextEnabled} = props;
+    const {aoiHasArea} = useJobValidationContext();
+
+    useEffectOnMount(() => {
+        setNextDisabled();
+    });
+
+    // Simply needs the AOI to be set.
+    useEffect(() => {
+        const setEnabled = aoiHasArea;
+        if (setEnabled && !nextEnabled) {
+            setNextEnabled();
+        } else if (!setEnabled && nextEnabled) {
+            setNextDisabled();
+        }
+    });
+
+    return null;
+}
 
 
 export function hasRequiredFields(exportInfo: Eventkit.Store.ExportInfo) {
@@ -42,9 +65,9 @@ export function hasDisallowedSelection(exportInfo: Eventkit.Store.ExportInfo) {
     });
 }
 
-interface ValidationProps extends Props {tourRunning: boolean}
+interface ValidationProps extends Step2Props {tourRunning: boolean}
 
-export function StepValidator(props: ValidationProps) {
+export function Step2Validator(props: ValidationProps) {
     const {tourRunning, setNextEnabled, setNextDisabled, walkthroughClicked, exportInfo, nextEnabled} = props;
     const {aoiHasArea, areEstimatesLoading, dataSizeInfo, aoiArea} = useJobValidationContext();
     const {exceedingSize = [], noMaxDataSize = []} = dataSizeInfo || {};

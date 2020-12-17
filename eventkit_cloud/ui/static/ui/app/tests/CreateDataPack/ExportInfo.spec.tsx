@@ -207,9 +207,15 @@ describe('ExportInfo component', () => {
         expect(props.updateExportInfo.calledWith({
             visibility: 'PRIVATE',
         })).toBe(true);
+        setup({
+            exportInfo: {
+            ...getProps().exportInfo,
+            visibility: 'PRIVATE',
+            }
+        });
         instance.checkShareAll();
         expect(props.updateExportInfo.calledWith({
-            visibility: 'public',
+            visibility: 'PUBLIC',
         })).toBe(true);
     });
 

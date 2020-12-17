@@ -29,7 +29,9 @@ import RequestDataSource from "./RequestDataSource";
 import {Link} from "@material-ui/core";
 import {useState} from "react";
 import EventkitJoyride from "../common/JoyrideWrapper";
-import {StepValidator} from "./ExportValidation";
+import {Step2Validator} from "./ExportValidation";
+import {renderIf} from "../../utils/renderIf";
+import {useAppContext} from "../ApplicationContext";
 
 const jss = (theme: Eventkit.Theme & Theme) => createStyles({
     underlineStyle: {
@@ -269,6 +271,7 @@ export class ExportInfo extends React.Component<Props, State> {
 
         const updatedInfo = {
             areaStr,
+            visibility: this.context.config.DATAPACKS_DEFAULT_SHARED ? 'PUBLIC' : 'PRIVATE',
         } as Eventkit.Store.ExportInfo;
 
         const steps = joyride.ExportInfo as any[];
@@ -695,7 +698,7 @@ export class ExportInfo extends React.Component<Props, State> {
         return (
             <div id="root" className={`qa-ExportInfo-root ${classes.root}`}>
                 {/*<PermissionsBanner isOpen={true} handleClosedPermissionsBanner={() => {}}/>*/}
-                <StepValidator
+                <Step2Validator
                     tourRunning={this.state.isRunning}
                     {...this.props}
                 />
@@ -964,6 +967,7 @@ export class ExportInfo extends React.Component<Props, State> {
                                     }
                                 </div>
                             </div>
+
                             <div id="ShareAll" className={`qa-ExportInfo-ShareHeader ${classes.heading}`}>
                                 Share this DataPack
                             </div>
