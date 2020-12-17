@@ -103,8 +103,8 @@ class Overpass(object):
             user_details = {"username": "unknown-run_query"}
 
         req = None
-        q = self.get_query()
-        logger.debug(q)
+        query = self.get_query()
+        logger.debug(query)
         logger.debug(f"Query started at: {datetime.now()}")
         try:
             update_progress(
@@ -117,8 +117,13 @@ class Overpass(object):
             )
             conf: dict = yaml.safe_load(self.config) or dict()
             cert_var = conf.get("cert_var") or self.slug
-            req = auth_requests.post(self.url, cert_var=cert_var, data=q, stream=True, verify=self.verify_ssl)
 
+            req = auth_requests.post(self.url, cert_var=cert_var, data=query, stream=True, verify=self.verify_ssl)
+            if not req.ok:
+                # Workaround for https://bugs.python.org/issue27777
+                query = {"data": query}
+                req = auth_requests.post(self.url, cert_var=cert_var, data=query, stream=True, verify=self.verify_ssl)
+            req.raise_for_status()
             try:
                 total_size = int(req.headers.get("content-length"))
             except (ValueError, TypeError):
