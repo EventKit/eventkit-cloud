@@ -26,7 +26,7 @@ services:
       - MEMCACHED=memcached:11211
       - CELERY_RESULT_BACKEND=cache+memcached://memcached:11211
       - QT_QPA_PLATFORM=offscreen
-      - DATAPACKS_DEFAULT_SHARED=true
+      - DATAPACKS_DEFAULT_SHARED
       - SERVE_ESTIMATES
       - SITE_NAME
       - SITE_IP
