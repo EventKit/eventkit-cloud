@@ -2,6 +2,7 @@ import * as React from 'react';
 import {render, screen, getByText, fireEvent} from '@testing-library/react';
 import '@testing-library/jest-dom/extend-expect'
 import {MapDrawerOptions} from "../../components/CreateDataPack/MapDrawerOptions";
+import {StepValidator} from "../../components/CreateDataPack/ExportValidation";
 
 jest.mock("@material-ui/core/Grow", () => {
     const React = require('react');
@@ -10,7 +11,12 @@ jest.mock("@material-ui/core/Grow", () => {
 
 jest.mock("@material-ui/core/Radio", () => {
     const React = require('react');
-    return (props) => (<div {...props} className="qa-Radio">radiobutton</div>)
+    return (props) => (<div {...props} className="qa-Radio">{props.name}</div>)
+});
+
+jest.mock("@material-ui/core/Chip", () => {
+    const React = require('react');
+    return (props) => (<div {...props} className="qa-Chip">CHIPLABEL-{props.label}</div>)
 });
 
 describe('FilterDrawer component', () => {
@@ -110,7 +116,16 @@ describe('FilterDrawer component', () => {
             ...getProps(),
             ...overrides,
         };
-        return render(<MapDrawerOptions {...props} />);
+        const Component = MapDrawerOptions;
+        const rendered = render(<Component {...props} />);
+        function _rerender(newProps={} as any) {
+            return rendered.rerender(<Component {...props} {...newProps}/>);
+        }
+
+        return {
+            ...rendered,
+            rerender: _rerender,
+        }
     };
 
 
@@ -136,7 +151,6 @@ describe('FilterDrawer component', () => {
         expect(screen.queryByText('Filter by Name:')).not.toBeInTheDocument();
     });
 
-
     it('should render the correct number of providers for each filter option', () => {
         setup();
         const filterLink = screen.getByText('Filter');
@@ -145,6 +159,24 @@ describe('FilterDrawer component', () => {
         expect(screen.queryByText('Raster (2)')).toBeInTheDocument();
         expect(screen.queryByText('Vector (1)')).toBeInTheDocument();
         expect(screen.getByText('Other (1)')).toBeInTheDocument();
+    });
+
+    it('should render appropriate chips when filter option is clicked', () => {
+        const {rerender } = setup();
+        const filterLink = screen.getByText('Filter');
+        fireEvent.click(filterLink);
+        expect(screen.queryByText('Raster (2)')).toBeInTheDocument();
+        fireEvent.click(screen.getByText('radio-Raster'));
+        fireEvent.click(filterLink);
+        expect(screen.getByText('CHIPLABEL-Raster')).toBeInTheDocument();
+
+        // Repoen the drawer, and click the "elevation" radio
+        fireEvent.click(filterLink);
+        fireEvent.click(screen.getByText('radio-Elevation'));
+
+
+        fireEvent.click(filterLink);
+        expect(screen.getByText('CHIPLABEL-Elevation')).toBeInTheDocument();
     });
 
 });

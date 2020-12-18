@@ -299,7 +299,7 @@ export function MapDrawerOptions(props: Props) {
                 />
             ));
         }
-        return chips;
+        return (<span className="qa-applied-filter-chips">{chips}</span>);
     }
 
     function renderFilterOptions() {
@@ -308,8 +308,8 @@ export function MapDrawerOptions(props: Props) {
                 <div className={`qa-MapDrawer-nameFilter-container ${classes.filterContainer}`}>
                     Filter by Name:
                     <TextField
-                        id="layerNames"
-                        name="layerNames"
+                        id="searchByName"
+                        name="searchByName"
                         autoComplete="off"
                         fullWidth
                         className={classes.textField}
@@ -335,7 +335,7 @@ export function MapDrawerOptions(props: Props) {
                                         root: classes.checkbox, checked: classes.checked,
                                     }}
                                     onClick={() => setFilterEnabled(_filter.name, true)}
-                                    name="source"
+                                    name={`radio-${_filter.name}`}
                                 />
                                     {`${_filter.name} (${_filter?.sources?.length})`}
                             </span>
@@ -384,6 +384,7 @@ export function MapDrawerOptions(props: Props) {
     return (
         <>
             <div>
+                {filterNameValue}
                 <div
                     aria-describedby={id}
                     className={`qa-MapDrawerOptions-Button`}
