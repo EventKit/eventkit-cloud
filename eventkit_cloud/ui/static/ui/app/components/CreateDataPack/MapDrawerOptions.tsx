@@ -75,7 +75,9 @@ const jss = (theme: Theme & Eventkit.Theme) => createStyles({
 
 // We build our filters here ahead of time
 function buildFilters() {
-    const filterType = (dataType: string) => (provider: Eventkit.Provider) => provider.data_type.toLowerCase() === dataType.toLowerCase();
+    const filterType = (dataType: string) => (
+        (provider: Eventkit.Provider) => (provider.data_type || 'Unknown').toLowerCase() === dataType.toLowerCase()
+    );
     const filtersList = [
         {
             name: 'Elevation',
@@ -220,13 +222,20 @@ export function MapDrawerOptions(props: Props) {
 
     const offsetBox = useRef(null);
     useEffect(() => {
+        let timeout;
         if (!shouldDisplay) {
             props.onDisabled();
         }
         if (shouldDisplay && offsetBox.current) {
             // Delay to ensure box is fully sized
-            setTimeout(() => props.onEnabled(offsetBox.current.getBoundingClientRect().height * 1.1), 100);
+            timeout = setTimeout(
+                () => props.onEnabled(
+                    offsetBox.current.getBoundingClientRect().height * 1.1
+                ),
+                100
+            );
         }
+        return () => window.clearTimeout(timeout);
     }, [shouldDisplay, open]);
 
     const id = !!anchorEl ? 'simple-popover' : undefined;
@@ -321,7 +330,7 @@ export function MapDrawerOptions(props: Props) {
                                     onClick={() => setFilterEnabled(_filter.name, true)}
                                     name="source"
                                 />
-                                    {_filter.name} ({_filter?.sources?.length})
+                                    {`${_filter.name} (${_filter?.sources?.length})`}
                             </span>
                             ))}
                         </div>
@@ -331,6 +340,37 @@ export function MapDrawerOptions(props: Props) {
                     <Link onClick={clear} style={{marginLeft: 'auto', width: 'auto', cursor: 'pointer'}}>Clear</Link>
                 </div>
             </div>
+        );
+    }
+
+    // Renders the top box around the "Filter" and arrow icon.
+    // Renders left, top, right borders with the first Paper, and uses the second paper to "erase" the bottom
+    // border and the top piece of the lower box so they appear connected. This creates a tabbed appearance.
+    function renderBorderBox() {
+        return (
+            <>
+                <Grow in={shouldDisplay} style={{transformOrigin: 'top right', zIndex: 1}}>
+                    <Paper
+                        className={`
+                        ${classes.button} ${shouldDisplay ? classes.buttonExpanded : ''} 
+                        qa-MapDrawerOptions-Button ${classes.buttonBackdrop}
+                        `}
+                        square
+                        elevation={0}
+                        style={{zIndex: -1}}
+                    />
+                </Grow>
+                <Grow in={shouldDisplay} style={{transformOrigin: 'top right', zIndex: 1}}>
+                    <Paper
+                        className={classes.buttonBackdrop}
+                        square
+                        elevation={0}
+                        // This makes the second paper fit onto the front of the one below, obscuring the bottom
+                        // border outline of it and the filter container, making them appear contiguous.
+                        style={{top: '5px', zIndex: -1, width: 'calc(100% - 2px)', left: '1px'}}
+                    />
+                </Grow>
+            </>
         );
     }
 
@@ -346,27 +386,7 @@ export function MapDrawerOptions(props: Props) {
                         zIndex: 10, width: 'fit-content', marginLeft: 'auto'
                     }}
                 >
-                    <Grow in={shouldDisplay} style={{transformOrigin: 'top right', zIndex: 1}}>
-                        <Paper
-                            className={`
-                        ${classes.button} ${shouldDisplay ? classes.buttonExpanded : ''} 
-                        qa-MapDrawerOptions-Button ${classes.buttonBackdrop}
-                        `}
-                            square
-                            elevation={0}
-                            style={{zIndex: -1}}
-                        />
-                    </Grow>
-                    <Grow in={shouldDisplay} style={{transformOrigin: 'top right', zIndex: 1}}>
-                        <Paper
-                            className={classes.buttonBackdrop}
-                            square
-                            elevation={0}
-                            // This makes this second paper fit onto the front of the one below, obscuring the bottom
-                            // border outline of it and the filter container, making them appear contiguous.
-                            style={{top: '5px', zIndex: -1, width: 'calc(100% - 2px)', left: '1px'}}
-                        />
-                    </Grow>
+                    {renderBorderBox()}
                     <div style={{padding: '3px 5px', display: 'inline-flex'}}>
                         <Link onClick={handleClick} style={{margin: 'auto', cursor: 'pointer'}}>Filter</Link>
                         {getExpandIcon()}
