@@ -171,7 +171,7 @@ export class PermissionsData extends React.Component<Props, State> {
                 membersAndGroups = (
                     <MatomoClickTracker
                         eventAction="Open Dialog"
-                        eventName={`Open Share Dialog ${this.props.job.name}`}
+                        eventName={`Open Share Dialog ${this.props?.job?.name}`}
                         eventCategory="Status and Download"
                     >
                         <ButtonBase
