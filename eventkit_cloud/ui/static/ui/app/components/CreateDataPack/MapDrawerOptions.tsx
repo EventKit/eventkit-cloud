@@ -5,7 +5,7 @@ import ExpandMore from "@material-ui/icons/ExpandMore";
 import {Chip, Grow, Link, Paper, TextField, withStyles} from "@material-ui/core";
 import {renderIf} from "../../utils/renderIf";
 import Radio from "@material-ui/core/Radio";
-import {useDebouncedState} from "../../utils/hooks/hooks";
+import {useDebouncedState, useProviderIdentity} from "../../utils/hooks/hooks";
 import {arrayHasValue, shouldDisplay as providerShouldDisplay} from "../../utils/generic";
 
 
@@ -92,8 +92,10 @@ function buildFilters() {
             expression: filterType('vector'),
         },
         {
-            name: 'Other Type',
-            expression: (provider: Eventkit.Provider) => !arrayHasValue(['elevation', 'raster', 'vector'], provider.data_type),
+            name: 'Other',
+            expression: (provider: Eventkit.Provider) => !arrayHasValue(
+                ['elevation', 'raster', 'vector'], provider.data_type.toLowerCase()
+            ),
         },
     ] as Partial<Filter>[];
 
@@ -120,8 +122,13 @@ interface Props {
 }
 
 export function MapDrawerOptions(props: Props) {
-    const {providers, classes} = props;
+    const {classes} = props;
     const [open, setOpen] = useState(false);
+
+    const [ visibleProviders, setVisibleProviders ] = useState([]);
+    useProviderIdentity(() => {
+        setVisibleProviders(props.providers.filter(_provider => providerShouldDisplay(_provider)))
+    }, props.providers);
 
     const [_filters, _setFilters] = useState<{
         [filterName: string]: Filter;
@@ -165,8 +172,7 @@ export function MapDrawerOptions(props: Props) {
         // When sources is updated, we re-scan them to see which applies to which filter
         // We display the number of sources affected by each filter so we have to calculate them all ahead of time
         // If this ever becomes a bottle neck it should be transitioned to run async
-        if (providers) {
-            const visibleProviders = providers.filter(_provider => providerShouldDisplay(_provider));
+        if (visibleProviders) {
             const updatedFilters = []
             Object.entries(_filters).map(([, _filter]) => {
                 updatedFilters.push({
@@ -177,7 +183,7 @@ export function MapDrawerOptions(props: Props) {
             });
             setFilter(...updatedFilters);
         }
-    }, [providers]);
+    }, [visibleProviders]);
 
     const [filterNameValue, setFilterNameValue] = useDebouncedState<string>('', 200);
     const [textFieldControlledValue, setTextFieldControlledValue] = useState<string>('');
@@ -204,7 +210,7 @@ export function MapDrawerOptions(props: Props) {
                 providerNames = props.providers.map(_provider => _provider.name);
             }
             providerNames = providerNames.filter(
-                _sourceName => _sourceName.toLowerCase().includes(filterNameValue)
+                _sourceName => _sourceName.toLowerCase().includes(filterNameValue.toLowerCase())
             );
         }
         props.setProviders(providerNames.map(
@@ -268,6 +274,7 @@ export function MapDrawerOptions(props: Props) {
             ..._filter,
             enabled: false,
         })));
+        setTextFieldControlledValue('');
         setFilterNameValue('');
     }
 

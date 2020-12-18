@@ -57,6 +57,22 @@ describe('FilterDrawer component', () => {
             name: 'OpenStreetMap Data (Themes)3',
             slug: 'osm4',
             service_description: 'OpenStreetMap vector data.',
+            display: true,
+            export_provider_type: 2,
+            supported_formats: ['fmt1'],
+            preview_url: 'url/path/2',
+            data_type: 'Vector'
+        },
+        {
+            id: 3,
+            type: 'osm',
+            license: null,
+            created_at: '2017-08-15T19:25:10.844911Z',
+            updated_at: '2017-08-15T19:25:10.844919Z',
+            uid: 'bc9a834a-727a-6666-8679-2500880a8526',
+            name: 'OpenStreetMap Data (Themes)3',
+            slug: 'osm4',
+            service_description: 'OpenStreetMap vector data.',
             display: false,
             export_provider_type: 2,
             supported_formats: ['fmt1'],
@@ -127,8 +143,8 @@ describe('FilterDrawer component', () => {
         fireEvent.click(filterLink);
         expect(screen.queryByText('Filter by Name:')).toBeInTheDocument();
         expect(screen.queryByText('Raster (2)')).toBeInTheDocument();
-        expect(screen.getByText('Vector (1)')).toBeInTheDocument();
-        expect(screen.queryByText('Other (1)')).toBeInTheDocument();
+        expect(screen.queryByText('Vector (1)')).toBeInTheDocument();
+        expect(screen.getByText('Other (1)')).toBeInTheDocument();
     });
 
 });
