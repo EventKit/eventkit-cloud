@@ -32,6 +32,7 @@ import InfoDialog from "../Dialog/InfoDialog";
 import EstimateLabel from "./EstimateLabel";
 import {CreatePagePermissionsBanner} from "./CreatePagePermissionsBanner";
 import {MatomoClickTracker} from "../MatomoHandler";
+import Visibility = Eventkit.Permissions.Visibility;
 
 export interface JobData {
     name: string;
@@ -43,6 +44,7 @@ export interface JobData {
     original_selection: GeoJSON.FeatureCollection;
     tags: [];
     projections: number[];
+    visibility: Visibility;
 }
 
 export interface Props {
@@ -456,6 +458,7 @@ export class BreadcrumbStepper extends React.Component<Props, State> {
             provider_tasks: providerTasks,
             original_selection: this.props.aoiInfo.originalGeojson,
             tags: [],
+            visibility: this.props.exportInfo.visibility,
         };
         this.props.submitJob(data);
     }

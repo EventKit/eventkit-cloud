@@ -61,6 +61,7 @@ import {useEffectOnMount} from "../../utils/hooks/hooks";
 import MapDrawer from "./MapDrawer";
 import EventkitJoyride from "../common/JoyrideWrapper";
 import {MapZoomLimiter} from "./MapZoomLimiter";
+import {Step1Validator} from "./ExportValidation";
 
 export const WGS84 = 'EPSG:4326';
 
@@ -106,26 +107,6 @@ export interface State {
     selectedBaseMap: MapLayer;
     mapLayers: MapLayer[];
     isOpen: boolean;
-}
-
-function StepValidator(props: Props) {
-    const {setNextEnabled, setNextDisabled, nextEnabled} = props;
-    const {aoiHasArea} = useJobValidationContext();
-
-    useEffectOnMount(() => {
-        setNextDisabled();
-    });
-
-    useEffect(() => {
-        const setEnabled = aoiHasArea;
-        if (setEnabled && !nextEnabled) {
-            setNextEnabled();
-        } else if (!setEnabled && nextEnabled) {
-            setNextDisabled();
-        }
-    });
-
-    return null;
 }
 
 function getViewBbox(map: any) : GeoJSON.FeatureCollection {
@@ -1085,7 +1066,7 @@ export class ExportAOI extends React.Component<Props, State> {
                     map={this.map}
                     zoomLevel={4}
                 />
-                <StepValidator {...this.props}/>
+                <Step1Validator {...this.props}/>
                 <EventkitJoyride
                     name="Create Page Step 1"
                     callback={this.callback}

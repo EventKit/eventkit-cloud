@@ -29,7 +29,9 @@ import RequestDataSource from "./RequestDataSource";
 import {Link} from "@material-ui/core";
 import {useState} from "react";
 import EventkitJoyride from "../common/JoyrideWrapper";
-import {StepValidator} from "./ExportValidation";
+import {Step2Validator} from "./ExportValidation";
+import {renderIf} from "../../utils/renderIf";
+import {useAppContext} from "../ApplicationContext";
 
 const jss = (theme: Eventkit.Theme & Theme) => createStyles({
     underlineStyle: {
@@ -256,6 +258,7 @@ export class ExportInfo extends React.Component<Props, State> {
         this.getProjectionDialog = this.getProjectionDialog.bind(this);
         this.clearEstimate = this.clearEstimate.bind(this);
         this.deselect = this.deselect.bind(this);
+        this.checkShareAll = this.checkShareAll.bind(this);
         this.dataProvider = React.createRef();
         this.joyride = React.createRef();
         // this.dataProvider = React.createRef<typeof DataProvider>();
@@ -268,6 +271,7 @@ export class ExportInfo extends React.Component<Props, State> {
 
         const updatedInfo = {
             areaStr,
+            visibility: this?.context?.config?.DATAPACKS_DEFAULT_SHARED ? 'PUBLIC' : 'PRIVATE',
         } as Eventkit.Store.ExportInfo;
 
         const steps = joyride.ExportInfo as any[];
@@ -370,6 +374,18 @@ export class ExportInfo extends React.Component<Props, State> {
                 projections: projectionMap,
             }
         };
+    }
+
+    private checkShareAll() {
+        if (this.props.exportInfo.visibility === 'PRIVATE') {
+            this.props.updateExportInfo({
+                visibility: 'PUBLIC'
+            });
+            return;
+        }
+        this.props.updateExportInfo({
+            visibility: 'PRIVATE'
+        });
     }
 
     private checkSelectedFormats(prevState: State) {
@@ -682,7 +698,7 @@ export class ExportInfo extends React.Component<Props, State> {
         return (
             <div id="root" className={`qa-ExportInfo-root ${classes.root}`}>
                 {/*<PermissionsBanner isOpen={true} handleClosedPermissionsBanner={() => {}}/>*/}
-                <StepValidator
+                <Step2Validator
                     tourRunning={this.state.isRunning}
                     {...this.props}
                 />
@@ -950,6 +966,30 @@ export class ExportInfo extends React.Component<Props, State> {
                                     this.getProjectionDialog()
                                     }
                                 </div>
+                            </div>
+
+                            <div id="ShareAll" className={`qa-ExportInfo-ShareHeader ${classes.heading}`}>
+                                Share this DataPack
+                            </div>
+                            <div
+                                id="select" className={`qa-ExportInfo-selectAll ${classes.selectAll}`}
+                                style={{padding: '0px 10px 10px 8px'}}
+                            >
+                                <Checkbox
+                                    classes={{root: classes.checkbox, checked: classes.checked}}
+                                    name="ShareAll"
+                                    checked={this.props.exportInfo.visibility === 'PUBLIC'}
+                                    onChange={this.checkShareAll}
+                                    style={{width: '24px', height: '24px'}}
+                                />
+                                <span
+                                    style={{
+                                        padding: '0px 15px', display: 'flex',
+                                        flexWrap: 'wrap', fontSize: '16px',
+                                    }}
+                                >
+                                    Share with all EventKit users
+                                </span>
                             </div>
                             <div id="aoiHeader" className={`qa-ExportInfo-AoiHeader ${classes.heading}`}>
                                 Area of Interest (AOI)
