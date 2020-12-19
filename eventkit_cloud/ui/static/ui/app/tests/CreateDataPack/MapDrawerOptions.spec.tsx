@@ -2,7 +2,6 @@ import * as React from 'react';
 import {render, screen, getByText, fireEvent} from '@testing-library/react';
 import '@testing-library/jest-dom/extend-expect'
 import {MapDrawerOptions} from "../../components/CreateDataPack/MapDrawerOptions";
-import {StepValidator} from "../../components/CreateDataPack/ExportValidation";
 
 jest.mock("@material-ui/core/Grow", () => {
     const React = require('react');
