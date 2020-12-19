@@ -384,7 +384,6 @@ export function MapDrawerOptions(props: Props) {
     return (
         <>
             <div>
-                {filterNameValue}
                 <div
                     aria-describedby={id}
                     className={`qa-MapDrawerOptions-Button`}
