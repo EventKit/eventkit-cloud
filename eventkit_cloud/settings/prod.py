@@ -298,6 +298,7 @@ STATIC_URL = "/static/"
 STATIC_ROOT = os.path.join(BASE_DIR, "staticfiles")
 STATICFILES_STORAGE = "django.contrib.staticfiles.storage.StaticFilesStorage"
 SERVE_ESTIMATES = is_true(os.getenv("SERVE_ESTIMATES", "true"))
+DATAPACKS_DEFAULT_SHARED = is_true(os.getenv("DATAPACKS_DEFAULT_SHARED", "false"))
 VERSION = os.getenv("VERSION", "")
 UI_CONFIG = {
     "VERSION": VERSION,
@@ -313,6 +314,7 @@ UI_CONFIG = {
     "DATAPACK_PAGE_SIZE": os.getenv("DATAPACK_PAGE_SIZE", "100"),
     "NOTIFICATIONS_PAGE_SIZE": os.getenv("NOTIFICATIONS_PAGE_SIZE", "10"),
     "SERVE_ESTIMATES": SERVE_ESTIMATES,
+    "DATAPACKS_DEFAULT_SHARED": DATAPACKS_DEFAULT_SHARED,
     "MAX_UPLOAD_SIZE": os.getenv("MAX_UPLOAD_SIZE", 5),  # In MB
     "MATOMO": {
         "URL": os.getenv("MATOMO_URL", ""),

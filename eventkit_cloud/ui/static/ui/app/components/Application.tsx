@@ -45,7 +45,7 @@ const Loading = (args) => {
     return null;
 };
 
-function allTrue(acceptedLicenses) {
+export function allTrue(acceptedLicenses) {
     return Object.keys(acceptedLicenses).every(license => acceptedLicenses[license]);
 }
 
@@ -154,6 +154,7 @@ interface State {
             NOTIFICATIONS_PAGE_SIZE?: string;
             CONTACT_URL?: string;
             SERVE_ESTIMATES?: boolean;
+            DATAPACKS_DEFAULT_SHARED?: boolean;
             MATOMO?: any;
         }
     };

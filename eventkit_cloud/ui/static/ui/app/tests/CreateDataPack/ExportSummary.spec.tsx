@@ -78,7 +78,7 @@ describe('Export Summary Component', () => {
         expect(wrapper.find('#form')).toHaveLength(1);
         expect(wrapper.find('#mainHeading').text()).toEqual('Preview and Run Export');
         expect(wrapper.find('#subHeading').text()).toEqual('Please make sure all the information below is correct.');
-        expect(wrapper.find('#export-information-heading').text()).toEqual('Export Information');
+        // expect(wrapper.find('#export-information-heading').text()).toEqual('Export Information');
         expect(wrapper.find('#aoi-heading').text()).toEqual('Area of Interest (AOI)');
         expect(wrapper.find('#aoi-map')).toHaveLength(1);
         expect(wrapper.find(MapCard)).toHaveLength(1);

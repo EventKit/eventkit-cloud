@@ -106,7 +106,8 @@ describe('BreadcrumbStepper component', () => {
                 1: {
                     minZoom: 0, maxZoom: 10
                 }
-            }
+            },
+            visibility: 'PRIVATE',
         },
         history: {
             push: sinon.spy(),
@@ -343,6 +344,7 @@ describe('BreadcrumbStepper component', () => {
             selection: {},
             original_selection: {},
             tags: [],
+            visibility: 'PRIVATE',
         };
         const handleSpy = sinon.spy(BreadcrumbStepper.prototype, 'handleSubmit');
         const flattenStub = sinon.stub(utils, 'flattenFeatureCollection')

@@ -2,15 +2,34 @@ import * as React from 'react';
 import axios from 'axios';
 import * as sinon from 'sinon';
 import MockAdapter from 'axios-mock-adapter';
-import { createShallow } from '@material-ui/core/test-utils';
+import {createShallow} from '@material-ui/core/test-utils';
 import AppBar from '@material-ui/core/AppBar';
 import createTestStore from '../store/configureTestStore';
 import BaseDialog from '../components/Dialog/BaseDialog';
 import Banner from '../components/Banner';
 import Drawer from '../components/Drawer';
-import { Application } from '../components/Application';
+import {allTrue, Application} from '../components/Application';
 import NotificationsDropdown from '../components/Notification/NotificationsDropdown';
 import theme from "../styles/eventkit_theme";
+import {render, screen, getByText, waitFor, fireEvent} from '@testing-library/react';
+import '@testing-library/jest-dom/extend-expect'
+import {Provider} from "react-redux";
+
+jest.mock('../components/Dialog/BaseDialog', () => 'basedialog');
+jest.mock('../components/auth/LoginErrorPage', () => 'loginerrorpage');
+jest.mock('../components/auth/LoginPage', () => 'loginpage');
+jest.mock('../components/About/About', () => 'aboutpage');
+jest.mock('../components/AccountPage/Account', () => 'accountpage');
+jest.mock('../components/DashboardPage/DashboardPage', () => 'dashboardpage');
+jest.mock('../components/Drawer', () => 'drawer');
+jest.mock('../components/MatomoHandler', () => (props: any) => props.children);
+jest.mock('redux-auth-wrapper/history4/redirect', () => ({
+    connectedReduxRedirect: () => (args: any) => args,
+}));
+jest.mock('../components/common/context/RegionContext', () => ({
+    RegionsProvider: (props: any) => props.children,
+}));
+
 
 const store = createTestStore({});
 
@@ -20,7 +39,7 @@ describe('Application component', () => {
 
     beforeAll(() => {
         shallow = createShallow();
-        mock = new MockAdapter(axios, { delayResponse: 100 });
+        mock = new MockAdapter(axios, {delayResponse: 100});
     });
 
     const getProps = () => ({
@@ -59,7 +78,7 @@ describe('Application component', () => {
     };
 
     const getWrapper = props => shallow(<Application {...props} />, {
-        context: { config },
+        context: {config},
     });
 
     it('should render the basic elements', () => {
@@ -80,8 +99,8 @@ describe('Application component', () => {
             return <div>Im a child</div>;
         };
         const props = getProps();
-        const wrapper = shallow(<Application {...props}><Child /></Application>, {
-            context: { config },
+        const wrapper = shallow(<Application {...props}><Child/></Application>, {
+            context: {config},
         });
         expect(wrapper.find(Child)).toHaveLength(1);
     });
@@ -102,7 +121,7 @@ describe('Application component', () => {
         const wrapper = getWrapper(props);
         wrapper.instance().handleToggle();
         expect(props.closeDrawer.callCount).toBe(1);
-        wrapper.setProps({ ...props, drawer: 'closed' });
+        wrapper.setProps({...props, drawer: 'closed'});
         wrapper.instance().handleToggle();
         expect(props.openDrawer.callCount).toBe(1);
     });
@@ -114,7 +133,7 @@ describe('Application component', () => {
         const wrapper = getWrapper(props);
         wrapper.instance().onMenuItemClick();
         expect(toggleSpy.notCalled).toBe(true);
-        wrapper.setProps({ width: 'md' });
+        wrapper.setProps({width: 'md'});
         wrapper.instance().onMenuItemClick();
         expect(toggleSpy.calledOnce).toBe(true);
         toggleSpy.restore();
@@ -123,10 +142,10 @@ describe('Application component', () => {
     it('getChildContext should return config', () => {
         const props = getProps();
         const wrapper = getWrapper(props);
-        wrapper.setState({ childContext: { config: { key: 'value' } } });
+        wrapper.setState({childContext: {config: {key: 'value'}}});
         wrapper.instance().forceUpdate();
         const context = wrapper.instance().getChildContext();
-        expect(context).toEqual({ config: { key: 'value' } });
+        expect(context).toEqual({config: {key: 'value'}});
     });
 
     it('getConfig should update the state when config is received', async () => {
@@ -139,8 +158,14 @@ describe('Application component', () => {
         const wrapper = getWrapper(props);
         await wrapper.instance().getConfig();
         expect(stateSpy.called).toBe(true);
-        expect(stateSpy.calledWith({ childContext: { config: { LOGIN_DISCLAIMER: 'Test string',
-                SERVE_ESTIMATES: false} } })).toBe(true);
+        expect(stateSpy.calledWith({
+            childContext: {
+                config: {
+                    LOGIN_DISCLAIMER: 'Test string',
+                    SERVE_ESTIMATES: false
+                }
+            }
+        })).toBe(true);
         stateSpy.restore();
     });
 
@@ -159,7 +184,7 @@ describe('Application component', () => {
         const stateStub = sinon.stub(wrapper.instance(), 'setState');
         wrapper.instance().handleCloseAutoLoggedOutDialog();
         expect(stateStub.calledOnce).toBe(true);
-        expect(stateStub.calledWith({ showAutoLoggedOutDialog: false })).toBe(true);
+        expect(stateStub.calledWith({showAutoLoggedOutDialog: false})).toBe(true);
     });
 
     it('stopListeningForNotifications should return with no side effects', () => {
@@ -241,7 +266,7 @@ describe('Application component', () => {
         wrapper.setProps({
             userData: {},
         });
-        wrapper.setState({ childContext: { config } });
+        wrapper.setState({childContext: {config}});
         expect(startListeningForNotificationsSpy.callCount).toBe(1);
         expect(instance.notificationsRefreshIntervalId).not.toBe(null);
         expect(instance.notificationsUnreadCountIntervalId).not.toBe(null);
@@ -290,7 +315,7 @@ describe('Application component', () => {
         const props = getProps();
         const favicon = "favicon.png";
         const reddotfavicon = "favicon.png";
-        props.theme.eventkit.images = { favicon, reddotfavicon }
+        props.theme.eventkit.images = {favicon, reddotfavicon}
         const stub = sinon.stub(document, 'getElementById');
         const setAttribute = sinon.fake();
         const domFavicon = {setAttribute};
@@ -356,7 +381,7 @@ describe('Application component', () => {
 
     it('showAutoLogoutWarning should update state, stop pings, and setInterval', () => {
         const props = getProps();
-        props.autoLogoutAt = { getTime: sinon.stub().returns(Date.now() + (10 * 60 * 1000)) };
+        props.autoLogoutAt = {getTime: sinon.stub().returns(Date.now() + (10 * 60 * 1000))};
         const wrapper = getWrapper(props);
         wrapper.instance().autoLogoutWarningIntervalId = undefined;
         const stateStub = sinon.stub(wrapper.instance(), 'setState');
@@ -384,7 +409,7 @@ describe('Application component', () => {
         const clearStub = sinon.stub(window, 'clearInterval');
         wrapper.instance().hideAutoLogoutWarning();
         expect(stateStub.calledOnce).toBe(true);
-        expect(stateStub.calledWith({ showAutoLogoutWarningDialog: false }));
+        expect(stateStub.calledWith({showAutoLogoutWarningDialog: false}));
         expect(clearStub.calledOnce).toBe(true);
         expect(clearStub.calledWith(123)).toBe(true);
         clearStub.restore();
@@ -392,26 +417,26 @@ describe('Application component', () => {
 
     it('handleClick should set showNotificationsDropdown false', () => {
         const wrapper = getWrapper(getProps());
-        wrapper.setState({ showNotificationsDropdown: true });
+        wrapper.setState({showNotificationsDropdown: true});
         const stateStub = sinon.stub(wrapper.instance(), 'setState');
-        const e = { srcElement: { className: ''} };
+        const e = {srcElement: {className: ''}};
         wrapper.instance().handleClick(e);
         expect(stateStub.calledOnce).toBe(true);
-        expect(stateStub.calledWith({ showNotificationsDropdown: false }));
+        expect(stateStub.calledWith({showNotificationsDropdown: false}));
     });
 
     it('handleClick should NOT set showNotificationsDropdown false', () => {
         const wrapper = getWrapper(getProps());
-        wrapper.setState({ showNotificationsDropdown: true });
+        wrapper.setState({showNotificationsDropdown: true});
         const stateStub = sinon.stub(wrapper.instance(), 'setState');
-        const e = { srcElement: { className: 'qa-NotificationMenu-MenuItem'} };
+        const e = {srcElement: {className: 'qa-NotificationMenu-MenuItem'}};
         wrapper.instance().handleClick(e);
         expect(stateStub.called).toBe(false);
     });
 
     it('should open/close notifications dropdown when notifications button is clicked', () => {
         const wrapper = getWrapper(getProps());
-        const e = { preventDefault: sinon.spy(), stopPropagation: sinon.spy() };
+        const e = {preventDefault: sinon.spy(), stopPropagation: sinon.spy()};
         let dropdown = wrapper.find(NotificationsDropdown);
         expect(dropdown).toHaveLength(0);
         wrapper.find('.qa-Application-AppBar-NotificationsButton').simulate('click', e);
@@ -427,7 +452,75 @@ describe('Application component', () => {
         const stateStub = sinon.stub(wrapper.instance(), 'setState');
         const ret = wrapper.instance().handleNotificationsDropdownNavigate();
         expect(stateStub.calledOnce).toBe(true);
-        expect(stateStub.calledWith({ showNotificationsDropdown: false }));
+        expect(stateStub.calledWith({showNotificationsDropdown: false}));
         expect(ret).toBe(true);
     });
+})
+
+describe('Application component react testing library', () => {
+    const getProps = () => ({
+        userData: {},
+        drawer: 'open',
+        history: {
+            push: () => sinon.stub(),
+            location: {
+                pathname: '/exports',
+            },
+        },
+        notificationsStatus: {
+            fetching: false,
+            fetched: false,
+        },
+        notificationsData: {
+            notifications: {},
+            notificationsSorted: [],
+        },
+        notificationsCount: 0,
+        store,
+        openDrawer: sinon.stub(),
+        closeDrawer: sinon.stub(),
+        userActive: sinon.stub(),
+        login: sinon.stub(),
+        getNotifications: sinon.spy(),
+        getNotificationsUnreadCount: sinon.stub(),
+        classes: {},
+        ...(global as any).eventkit_test_props,
+        images: theme.eventkit.images
+    });
+
+    const setup = (propsOverride = {}) => {
+        // (useRunContext as any).mockImplementation(() => {
+        //     return {run: {status: 'COMPLETED'}}
+        // })
+        const props = {
+            ...getProps(),
+            ...propsOverride,
+        };
+        return render(
+            <Provider store={store}>
+                <Application {...props} />
+            </Provider>
+        );
+    };
+
+    it('getChildContext should return config', () => {
+        setup();
+        expect(screen.queryByText('loginpage'));
+        expect(screen.queryByText('dashboardpage'));
+    });
+
+    it('should be able to tell when all licences are accepted', () => {
+        const license1 = true;
+        const license2 = true;
+        const license3 = false;
+        expect(allTrue({
+            license1,
+            license2,
+            license3,
+        })).toBeFalsy();
+        expect(allTrue({
+            license1,
+            license2,
+        })).toBeTruthy();
+    })
 })

@@ -18,6 +18,7 @@ export interface ApplicationContext {
     VERSION?: string;
     CONTACT_URL?: string;
     SERVE_ESTIMATES?: boolean
+    DATAPACKS_DEFAULT_SHARED?: boolean;
 }
 
 const appContext = createContext<ApplicationContext>({} as ApplicationContext);
