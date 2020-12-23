@@ -30,8 +30,9 @@ try:
 except Exception:
     BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
-SUPPORTED_VERSIONS = ["10.5.1"]
+SUPPORTED_VERSIONS = ["10.6.1"]
 VERSIONS = ["10.6.1", "10.6", "10.5.1", "10.5", "10.4.1", "10.4"]
+UNSUPPORTED_FILES = [".sqlite", ".zip"]
 
 try:
     import arcpy
@@ -45,7 +46,6 @@ except Exception as e:
     )
     raise
 
-version = arcpy.GetInstallInfo().get("Version")
 if arcpy.GetInstallInfo().get("Version") not in SUPPORTED_VERSIONS:
     logger.warning(
         (
@@ -64,16 +64,53 @@ def update_mxd_from_metadata(file_name, metadata, verify=False):
     :return: The original file.
     """
     mxd = arcpy.mapping.MapDocument(os.path.abspath(file_name))
-    df = mxd.activeDataFrame
     version = get_version()
-    for layer_name, layer_info in metadata["data_sources"].items():
+    # Order here matters in which shows up on top, alphabetically makes sense, but it likely is more useful to layer
+    # vectors over raster and raster over elevation.
+    data_types = ["Elevation", "Raster", "Vector"]
+
+    for data_type in data_types:
+        if metadata.get("has_{}".format(data_type.lower())):
+            group_layer = add_layer_to_mxd(data_type, get_layer_file("group", version), mxd)
+            data_sources = get_data_source_by_type(data_type.lower(), metadata['data_sources'])
+            add_layers_to_group(data_sources, group_layer, mxd, verify=verify)
+
+    logger.debug("Getting dataframes...")
+    data_frame = mxd.activeDataFrame
+
+    data_frame.extent = arcpy.Extent(*metadata["bbox"])
+
+    mxd.activeView = data_frame.name
+    arcpy.RefreshActiveView()
+    mxd.save()
+    del mxd  # remove handle on file
+    return file_name
+
+
+def get_data_source_by_type(data_type, data_sources):
+    sources = {}
+    for layer_name, layer_info in data_sources.items():
+        # A shim while we merge osm and nome into generic data types and come up with a better way to handle styles.
+        layer_type = layer_info['type']
+        if layer_info['type'] in ['osm', 'nome']:
+            layer_type = 'vector'
+        if data_type == layer_type:
+            sources[layer_name] = layer_info
+    return sources
+
+
+def add_layers_to_group(data_sources, group_layer, mxd, verify=False):
+    version = get_version()
+    data_frame = mxd.activeDataFrame
+
+    for vector_layer_name, layer_info in data_sources.items():
         for file_info in layer_info["files"]:
             # As of arcgis 10.5.1 shapefiles can't be imported as zips.
-            if file_info["file_ext"] in [".zip"]:
+            if file_info["file_ext"] in UNSUPPORTED_FILES:
                 logger.warning(
-                    "This script can't automatically add zipped shapefiles.  "
-                    "You can try to use the osm layer in the template folder then update "
-                    "the source data after extracting the shapefiles."
+                    "This script can't automatically add {} files.  "
+                    "You can try to use a template in the folder or manually importing "
+                    "the files.".format(file_info["file_ext"])
                 )
                 continue
             file_path = os.path.abspath(os.path.join(BASE_DIR, file_info["file_path"]))
@@ -84,11 +121,11 @@ def update_mxd_from_metadata(file_name, metadata, verify=False):
             except Exception as e:
                 logger.warning(e)
             layer_file = get_layer_file(layer_info["type"], version)
-            if not layer_file:
+            if not (layer_file or layer_info["type"].lower() == "vector"):
                 logger.warning(
                     (
                         "Skipping layer {0} because the file type is not supported for ArcMap {1}".format(
-                            layer_name, version
+                            vector_layer_name, version
                         )
                     )
                 )
@@ -97,51 +134,87 @@ def update_mxd_from_metadata(file_name, metadata, verify=False):
                         "However with your version of ArcMap you can still drag and drop this layer onto the Map."
                     )
                 continue
+            vector_layer_name = "{}_{}{}".format(layer_info["name"], file_info["projection"],
+                                                 file_info["file_ext"].replace(".", "_"))
             if file_info["file_ext"] in [".kml", ".kmz"]:
-                kml_layer = os.path.splitext(os.path.basename(file_path))[0]
-                template_dir = os.path.join(BASE_DIR, "arcgis", "templates")
-                layer_file = os.path.join(template_dir, "{}.lyr".format(kml_layer))
+                # Since this will generate data by converting the KML files, we should store it with the original data.
+                output_folder = os.path.join(os.path.dirname(file_path), 'arcgis')
+                kml_layer = os.path.join(output_folder, "{}.lyr".format(vector_layer_name))
+                logger.error("KML LAYER: {}".format(kml_layer))
                 try:
-                    layer_from_file = arcpy.KMLToLayer_conversion(
-                        in_kml_file=file_path, output_folder=template_dir, output_data=kml_layer
+                    logger.error("Converting {} to ArcGIS Layer".format(file_path))
+                    arcpy.KMLToLayer_conversion(
+                        in_kml_file=file_path,
+                        output_folder=os.path.join(os.path.dirname(file_path), 'arcgis'),
+                        output_data=vector_layer_name
                     )
-                except Exception:
+                    logger.error("Successfully converted: " + file_path)
+                except Exception as e:
                     # This could fail for various reasons including that the file already exists.
                     # If KMLs are very important to your workflow please contact us and we can make this more robust.
                     logger.warning("Could not create a new KML layer file and gdb, it may already exist.")
-                    layer_from_file = arcpy.mapping.Layer(layer_file)
-                layer_from_file.name = layer_info["name"] + file_info["file_ext"].replace(".", "_")
-                logger.warning(("Adding layer: {0}...".format(layer_from_file.name)))
-                arcpy.mapping.AddLayer(df, layer_from_file, "TOP")
-                del layer_from_file
-            else:
-                layer_from_file = arcpy.mapping.Layer(layer_file)
-                layer_from_file.name = layer_info["name"] + file_info["file_ext"].replace(".", "_")
-                logger.warning(("Adding layer: {0}...".format(layer_from_file.name)))
+                    logger.info(e)
+                    # We couldn't create the file, try to grab the layer if it exists.
                 try:
-                    arcpy.mapping.AddLayer(df, layer_from_file, "TOP")
-                    # Get instance of layer from MXD, not the template file.
-                    try:
-                        logger.warning(("Updating layer: {0}...".format(layer_from_file.name)))
-                        layer = arcpy.mapping.ListLayers(mxd)[0]
-                        update_layer(layer, file_path, layer_info["type"], verify=verify)
-                    except Exception:
-                        logger.error("Could not update layer {0}".format(layer_from_file.name))
-                except Exception:
-                    logger.error("Could not add layer {0}".format(layer_from_file.name))
+                    arc_layer = arcpy.mapping.Layer(kml_layer)
+                    if arc_layer:
+                        arc_layer.name = vector_layer_name
+                        logger.warning(("Adding {0} layer: {1}...".format(layer_info["type"], vector_layer_name)))
+                        arcpy.mapping.AddLayerToGroup(data_frame, group_layer, arc_layer, "TOP")
                 finally:
-                    del layer_from_file
+                    del arc_layer
+            else:
+                try:
+                    arc_layer = add_layer_to_mxd(vector_layer_name, layer_file or "group", mxd, group_layer=group_layer)
+                    if layer_file:
+                        # Get instance of layer from MXD, not the template file.
+                        try:
+                            logger.warning(("Updating layer: {0}...".format(arc_layer.name)))
+                            update_layer(arc_layer, file_path, layer_info["type"], verify=verify)
+                        except Exception as e:
+                            logger.error("Could not update layer {0}".format(arc_layer.name))
+                            logger.error(e)
+                    else:
+                        # Add arbitrary vector layers.
+                        logger.warning("Adding {0} layer(s):...".format(layer_info["type"]))
+                        vector_layer_group = arc_layer
+                        for sublayer in layer_info["layers"]:
+                            sublayer_name = "{}_{}{}".format(sublayer, file_info["projection"],
+                                                                  file_info["file_ext"].replace(".", "_"))
+                            logger.warning("Creating new layer for {0}...".format(sublayer_name))
+                            arcpy.MakeFeatureLayer_management("{0}/{1}".format(file_path.rstrip('/'), sublayer),
+                                                              sublayer_name)
+                            arc_layer = arcpy.mapping.Layer(sublayer_name)
+                            logger.warning("adding {} to {}".format(arc_layer.name, vector_layer_group.name))
+                            # Note ordering is important here since layers are [1,2,3,4] we want to add at bottom.
+                            arcpy.mapping.AddLayerToGroup(data_frame, vector_layer_group, arc_layer, "BOTTOM")
+                        del vector_layer_group
+                except Exception as e:
+                    logger.error("Could not add layer {0}".format(arc_layer.name))
+                    logger.error(e)
+                finally:
+                    del arc_layer
 
-    logger.debug("Getting dataframes...")
-    df = mxd.activeDataFrame
 
-    df.extent = arcpy.Extent(*metadata["bbox"])
-
-    mxd.activeView = df.name
-    arcpy.RefreshActiveView()
-    mxd.save()
-    del mxd  # remove handle on file
-    return file_name
+def add_layer_to_mxd(layer_name, layer_file, mxd, group_layer=None):
+    """
+    :param layer_name: The name of the layer as it will appear in arcmap.
+    :param layer_file: The .lyr which will be used for the layer template. .
+    :param data_frame:  The dataframe from the map document where the layer should be loaded.
+    :return: Layer, raises exception.
+    """
+    data_frame = mxd.activeDataFrame
+    layer_from_file = arcpy.mapping.Layer(layer_file)
+    layer_from_file.name = layer_name
+    logger.warning(("Creating a group layer for {0}...".format(layer_from_file.name)))
+    if group_layer:
+        arcpy.mapping.AddLayerToGroup(data_frame, group_layer, layer_from_file, "TOP")
+        # The group layer is the first layer listed so get the second layer.
+        layer = arcpy.mapping.ListLayers(group_layer)[1]
+    else:
+        arcpy.mapping.AddLayer(data_frame, layer_from_file, "TOP")
+        layer = arcpy.mapping.ListLayers(mxd)[0]
+    return layer
 
 
 def get_mxd_template(version):
@@ -174,8 +247,8 @@ def get_layer_file(type, version):
         version = "10.6"
     layer_basename = "{0}-{1}.lyr".format(type, version.replace(".", "-"))
     layer_file = os.path.abspath(os.path.join(BASE_DIR, "arcgis", "templates", layer_basename))
-    logger.warning(("Fetching layer template: {0}".format(layer_file)))
     if os.path.isfile(layer_file):
+        logger.warning(("Fetching layer template: {0}".format(layer_file)))
         return layer_file
     return None
 
