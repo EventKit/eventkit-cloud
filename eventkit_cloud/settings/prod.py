@@ -277,9 +277,9 @@ if os.getenv("MEMCACHED"):
     CACHES = {
         "default": {"BACKEND": "eventkit_cloud.utils.fallback_cache.FallbackCache"},
         "primary_cache": {
-            "BACKEND": "django.core.cache.backends.memcached.MemcachedCache",
+            "BACKEND": "djpymemcache.backend.PyMemcacheCache",
             "LOCATION": os.getenv("MEMCACHED"),
-            "OPTIONS": {"server_max_value_length": os.getenv("MEMCACHED_SERVER_MAX_VALUE_LENGTH", 1024 * 1024 * 10)},
+            "OPTIONS": {"no_delay": True, "ignore_exc": True, "max_pool_size": 4, "use_pooling": True},
         },
         "fallback_cache": {"BACKEND": "django.core.cache.backends.db.DatabaseCache", "LOCATION": "eventkit_cache"},
     }

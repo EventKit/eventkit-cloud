@@ -1,0 +1,39 @@
+{% set name = "django-pymemcache" %}
+{% set version = "1.0.0" %}
+
+package:
+  name: "{{ name|lower }}"
+  version: "{{ version }}"
+
+source:
+  url: "https://pypi.io/packages/source/{{ name[0] }}/{{ name }}/{{ name }}-{{ version }}.tar.gz"
+  sha256: e2a9185dff1fc77c11c462f21cc4d8353683e354b85409639eaf77c9b373ffd8
+
+build:
+  number: 0s
+  script: "{{ PYTHON }} -m pip install . -vv"
+
+requirements:
+  host:
+    - django
+    - pip
+    - pymemcache
+    - python
+  run:
+    - django
+    - pymemcache
+    - python
+
+test:
+  imports:
+    - djpymemcache
+
+about:
+  home: "https://github.com/django-pymemcache/django-pymemcache"
+  license: Apache Software
+  license_family: APACHE
+  summary: "Django cache backend based on Pinterest's pymemcache client."
+
+extra:
+  recipe-maintainers:
+    - Coop56
