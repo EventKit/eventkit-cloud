@@ -5,6 +5,7 @@ django-auth-ldap
 django-celery-beat
 swapper
 django-notifications-hq
+django-pymemcache
 django-storages
 django-timezone-field
 mapproxy
