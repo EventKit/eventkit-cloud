@@ -127,7 +127,9 @@ export function MapDrawerOptions(props: Props) {
 
     const [ visibleProviders, setVisibleProviders ] = useState([]);
     useProviderIdentity(() => {
-        setVisibleProviders(props.providers.filter(_provider => providerShouldDisplay(_provider)))
+        setVisibleProviders(props.providers.filter(
+            _provider => providerShouldDisplay(_provider) && _provider.preview_url)
+        );
     }, props.providers);
 
     const [_filters, _setFilters] = useState<{
