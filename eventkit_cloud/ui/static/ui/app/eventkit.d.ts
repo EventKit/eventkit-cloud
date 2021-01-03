@@ -300,6 +300,8 @@ declare namespace Eventkit {
     }
 
     namespace Store {
+        import Visibility = Eventkit.Permissions.Visibility;
+
         interface User {
             data: Eventkit.User;
             meta: {
@@ -484,6 +486,7 @@ declare namespace Eventkit {
             providerInfo: Map<ProviderInfo>;  // Polled info collected when setting up jobs, e.g. status or estimates
             exportOptions: Map<ProviderExportOptions>;
             projections: number[];  // Expecting projection srid
+            visibility: Visibility;
         }
 
         interface AoiInfo {
