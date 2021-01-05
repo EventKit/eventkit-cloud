@@ -11,7 +11,7 @@ from django.utils import timezone
 from typing import Union
 
 from eventkit_cloud.jobs.models import DataProvider, DataProviderType
-from eventkit_cloud.tasks.enumerations import TaskStates
+from eventkit_cloud.tasks.enumerations import TaskState
 from eventkit_cloud.utils.client import EventKitClient
 from eventkit_cloud.utils.geopackage import check_content_exists, check_zoom_levels
 
@@ -131,10 +131,10 @@ class TestJob(TestCase):
         self.client.cancel_provider(export_provider_task["uid"])
 
         export_provider_task = self.client.get_provider_task(uid=export_provider_task["uid"])
-        self.assertEqual(export_provider_task["status"], TaskStates.CANCELED.value)
+        self.assertEqual(export_provider_task["status"], TaskState.CANCELED.value)
 
         run = self.client.wait_for_run(run["uid"])
-        self.assertIn(run["status"], [TaskStates.CANCELED.value, TaskStates.INCOMPLETE.value])
+        self.assertIn(run["status"], [TaskState.CANCELED.value, TaskState.INCOMPLETE.value])
 
         # The code here is to temporarily increase the zoom level it is commented out to be implemented in
         # test_cancel_mapproxy_job when that is added.

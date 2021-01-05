@@ -27,7 +27,7 @@ from eventkit_cloud.jobs.models import (
     DataProviderTask,
     JobPermission,
 )
-from eventkit_cloud.tasks.helpers import clean_config
+from eventkit_cloud.jobs.helpers import clean_config
 
 logger = logging.getLogger(__name__)
 

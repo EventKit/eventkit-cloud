@@ -7,6 +7,9 @@
     <customproperties/>
     <layer-tree-group expanded="1" checked="Qt::Checked" name="EventKit - {{ job_name }}">
       <customproperties/>
+      {% if has_vector %}
+      <layer-tree-group expanded="1" checked="Qt::Checked" name="Vectors">
+      <customproperties/>
       {% for provider in provider_details %}
       {% if provider.type == "nome" %}
       {% for file_details in provider.files %}
@@ -68,8 +71,7 @@
         </layer-tree-group>
       </layer-tree-group>
       {%  endfor %}
-      {%  endif %}
-      {% if provider.type == "osm" %}
+      {% elif provider.type == "osm" %}
       {% for file_details in provider.files %}
       <layer-tree-group expanded="0" checked="Qt::Checked" name="{{ provider.name }}-{{ file_details.projection }}-{{ job_date_time|slice:":8" }}-{{ file_details.file_ext|slugify }}">
         <customproperties/>
@@ -137,8 +139,22 @@
         </layer-tree-group>
       </layer-tree-group>
       {%  endfor %}
-      {%  endif %}
+      {% elif provider.type == "vector" %}
+      {% for file_details in provider.files %}
+          <layer-tree-group expanded="0" checked="Qt::Checked" name="{{ provider.name }}-{{ file_details.projection }}-{{ job_date_time|slice:":8" }}-{{ file_details.file_ext|slugify }}">
+        <customproperties/>
+          {% for layer_name in provider.layers %}
+          {{ job_name.split|join:"_" }}_{{ layer_name }}_{{ provider.slug }}_{{ file_details.projection }}_{{ job_date_time }}_{{ file_details.file_ext|slugify }}
+      <layer-tree-layer expanded="1" providerKey="ogr" checked="Qt::Checked" id="{{ job_name.split|join:"_" }}_{{ layer_name }}_{{ provider.slug }}_{{ job_date_time }}_{{ file_details.projection }}_{{ file_details.file_ext|slugify}}" source="{% if file_details.file_ext == '.zip'%}/vsizip/{% endif %}./{{ file_details.file_path }}|layername={{ layer_name }}" name="{{ layer_name }}">
+        <customproperties/>
+      </layer-tree-layer>
+      {% endfor %}
+      </layer-tree-group>
+      {% endfor %}
+      {% endif %}
       {%  endfor %}
+      </layer-tree-group>
+      {% endif %}
       {% if has_raster %}
       <layer-tree-group expanded="1" checked="Qt::Checked" name="Rasters">
       <customproperties/>
@@ -241,13 +257,17 @@
       <item>osm_bounds_{{ provider.slug}}_{{ job_date_time }}</item>
       {% endfor %}
       {% endif %}
-      {% if provider.slug != "osm" and provider.slug != "nome" %}
-      <item>{{ job_name }}_{{ provider.slug }}_{{ job_date_time }}{{ file_details.file_ext }}</item>
+      {%  if provider.type == "vector" %}
+      {%  for layer_name in provider.layers %}
+          {{ job_name.split|join:"_" }}_{{ layer_name }}_{{ provider.slug }}_{{ file_details.projection }}_{{ job_date_time }}_{{ file_details.projection }}_{{ file_details.file_ext|slugify}}
+      <item>{{ job_name.split|join:"_" }}_{{ layer_name }}_{{ provider.slug}}_{{ file_details.projection }}_{{ job_date_time }}_{{ file_details.file_ext|slugify }}</item>
+      {% endfor %}
+      {% endif %}
+      {% if provider.type == "raster" or provider.type == "elevation" %}
+      <item>{{ job_name }}_{{ provider.slug }}_{{ file_details.projection }}_{{ job_date_time }}{{ file_details.file_ext }}</item>
       {% endif %}
     {% endfor %}
-
     </custom-order>
-
   </layer-tree-canvas>
   <legend updateDrawingOrder="true">
     <legendgroup open="true" checked="Qt::Checked" name="EventKit - {{ job_name }}">
@@ -450,6 +470,19 @@
           <legendlayer drawingOrder="-1" open="true" checked="Qt::Checked" name="{{ job_name.split|join:"_" }}-{{ provider.name }}-{{ job_date_time|slice:":8" }}}-{{ file_details.file_ext|slugify }}" showFeatureCount="0">
             <filegroup open="true" hidden="false">
               <legendlayerfile isInOverview="0" layerid="{{ job_name.split|join:"_" }}-{{ provider.name }}-{{ file_details.projection }}-{{ job_date_time|slice:":8" }}-{{ file_details.file_ext|slugify }}" visible="1"/>
+            </filegroup>
+          </legendlayer>
+      {% endfor %}
+      {% endif %}
+      {% endfor %}
+      </legendgroup>
+    <legendgroup open="true" checked="Qt::Checked" name="Vectors">
+      {% for provider in provider_details %}
+      {% if provider.type == "vector" %}
+      {% for file_details in provider.files %}
+          <legendlayer drawingOrder="-1" open="true" checked="Qt::Checked" name="{{ job_name.split|join:"_" }}-{{ provider.name }}-{{ job_date_time|slice:":8" }}}-{{ file_details.file_ext|slugify }}" showFeatureCount="0">
+            <filegroup open="true" hidden="false">
+              <legendlayerfile isInOverview="0" layerid="{{ job_name.split|join:"_" }}_{{ layer_name }}_{{ provider.slug }}_{{ job_date_time }}_{{ file_details.projection }}_{{ file_details.file_ext|slugify}}" visible="1"/>
             </filegroup>
           </legendlayer>
       {% endfor %}
@@ -9167,8 +9200,7 @@ def my_form_open(dialog, layer, feature):
       <previewExpression>COALESCE( "name", '&lt;NULL>' )</previewExpression>
     </maplayer>
     {% endfor %}
-    {% endif %}
-    {% if provider.slug == "osm" %}
+    {% elif provider.slug == "osm" %}
     {% for file_details in provider.files %}
     <maplayer simplifyAlgorithm="0" minimumScale="-4.65661e-10" maximumScale="1e+08" simplifyDrawingHints="1" minLabelScale="0" maxLabelScale="1e+08" simplifyDrawingTol="1" readOnly="0" geometry="Polygon" simplifyMaxScale="1" type="vector" hasScaleBasedVisibilityFlag="0" simplifyLocal="1" scaleBasedLabelVisibilityFlag="0">
       <extent>
@@ -23016,6 +23048,62 @@ def my_form_open(dialog, layer, feature):
       <previewExpression></previewExpression>
     </maplayer>
     {% endfor %}
+    {% elif provider.type == "vector" %}
+    {% for file_details in provider.files %}
+    {% for layer_name in provider.layers %}
+     <maplayer simplifyAlgorithm="0" minimumScale="-4.65661e-10" maximumScale="1e+08" simplifyDrawingHints="1" minLabelScale="0" maxLabelScale="1e+08" simplifyDrawingTol="1" readOnly="0" geometry="Polygon" simplifyMaxScale="1" type="vector" hasScaleBasedVisibilityFlag="0" simplifyLocal="1" scaleBasedLabelVisibilityFlag="0">
+      <extent>
+      <xmin>{{ bbox.0 }}</xmin>
+      <ymin>{{ bbox.1 }}</ymin>
+      <xmax>{{ bbox.2 }}</xmax>
+      <ymax>{{ bbox.3 }}</ymax>
+      </extent>
+      <id>{{ job_name.split|join:"_" }}_{{ layer_name }}_{{ provider.slug }}_{{ job_date_time }}_{{ file_details.projection }}_{{ file_details.file_ext|slugify}}</id>
+      <datasource>{% if file_details.file_ext == '.zip'%}/vsizip/{% endif %}./{{ file_details.file_path }}|layername={{ layer_name }}</datasource>
+      <keywordList>
+        <value></value>
+      </keywordList>
+      <layername>{{ layer_name }}</layername>
+      {% if file_details.projection == "4326" %}
+      <srs>
+        <spatialrefsys>
+          <proj4>+proj=longlat +datum=WGS84 +no_defs</proj4>
+          <srsid>3452</srsid>
+          <srid>4326</srid>
+          <authid>EPSG:4326</authid>
+          <description>WGS 84</description>
+          <projectionacronym>longlat</projectionacronym>
+          <ellipsoidacronym>WGS84</ellipsoidacronym>
+          <geographicflag>true</geographicflag>
+        </spatialrefsys>
+      </srs>
+      {% endif %}
+      {% if file_details.projection == "3857" %}
+      <srs>
+        <spatialrefsys>
+          <wkt>PROJCRS["WGS 84 / Pseudo-Mercator",BASEGEOGCRS["WGS 84",DATUM["World Geodetic System 1984",ELLIPSOID["WGS 84",6378137,298.257223563,LENGTHUNIT["metre",1]]],PRIMEM["Greenwich",0,ANGLEUNIT["degree",0.0174532925199433]],ID["EPSG",4326]],CONVERSION["Popular Visualisation Pseudo-Mercator",METHOD["Popular Visualisation Pseudo Mercator",ID["EPSG",1024]],PARAMETER["Latitude of natural origin",0,ANGLEUNIT["degree",0.0174532925199433],ID["EPSG",8801]],PARAMETER["Longitude of natural origin",0,ANGLEUNIT["degree",0.0174532925199433],ID["EPSG",8802]],PARAMETER["False easting",0,LENGTHUNIT["metre",1],ID["EPSG",8806]],PARAMETER["False northing",0,LENGTHUNIT["metre",1],ID["EPSG",8807]]],CS[Cartesian,2],AXIS["easting (X)",east,ORDER[1],LENGTHUNIT["metre",1]],AXIS["northing (Y)",north,ORDER[2],LENGTHUNIT["metre",1]],USAGE[SCOPE["unknown"],AREA["World - 85°S to 85°N"],BBOX[-85.06,-180,85.06,180]],ID["EPSG",3857]]</wkt>
+          <proj4>+proj=merc +a=6378137 +b=6378137 +lat_ts=0 +lon_0=0 +x_0=0 +y_0=0 +k=1 +units=m +nadgrids=@null +wktext +no_defs</proj4>
+          <srsid>3857</srsid>
+          <srid>3857</srid>
+          <authid>EPSG:3857</authid>
+          <description>WGS 84 / Pseudo-Mercator</description>
+          <projectionacronym>merc</projectionacronym>
+          <ellipsoidacronym>EPSG:7030</ellipsoidacronym>
+          <geographicflag>false</geographicflag>
+        </spatialrefsys>
+      </srs>
+      {% endif %}
+      <provider encoding="UTF-8">ogr</provider>
+      <vectorjoins/>
+      <layerDependencies/>
+      <expressionfields/>
+      <map-layer-style-manager current="">
+        <map-layer-style name=""/>
+      </map-layer-style-manager>
+      <previewExpression></previewExpression>
+    </maplayer>
+    {% endfor %}
+    {% endfor %}
     {% endif %}
     {% if provider.type == "elevation" %}
     {% for file_details in provider.files %}
@@ -23031,7 +23119,7 @@ def my_form_open(dialog, layer, feature):
       <keywordList>
         <value></value>
       </keywordList>
-      <layername>{{ job_name.split|join:"_" }}-{{ provider.name }}-{{ file_details.projection }}-{{ job_date_time|slice:":8" }}-{{ file_details.file_ext|slugify }}</layername>
+      <layername>{{ job_name }}_{{ provider.slug }}_{{ file_details.projection }}_{{ job_date_time }}_{{ file_details.file_ext|slugify }}</layername>
       {% if file_details.projection == "4326" %}
       <srs>
         <spatialrefsys>

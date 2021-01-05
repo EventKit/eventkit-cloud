@@ -36,7 +36,7 @@ from eventkit_cloud.jobs.models import (
     VisibilityState,
     UserJobActivity,
 )
-from eventkit_cloud.tasks.enumerations import TaskStates
+from eventkit_cloud.tasks.enumerations import TaskState
 from eventkit_cloud.tasks.models import (
     DataProviderTaskRecord,
     ExportRun,
@@ -1005,7 +1005,7 @@ class TestExportRunViewSet(APITestCase):
     def test_rerun_providers(self, pickup_mock, os_mock, shutil_mock, create_run_mock):
         run = ExportRun.objects.create(job=self.job, user=self.user)
         data_provider_task_record = DataProviderTaskRecord.objects.create(
-            run=run, name="Shapefile Export", provider=self.provider, status=TaskStates.PENDING.value
+            run=run, name="Shapefile Export", provider=self.provider, status=TaskState.PENDING.value
         )
         run.data_provider_task_records.add(data_provider_task_record)
         new_run_uid, run_zip_file_slug_sets = create_run_mock.return_value = (
@@ -1070,7 +1070,7 @@ class TestRunZipFileViewSet(APITestCase):
         self.provider = DataProvider.objects.first()
         self.celery_uid = str(uuid.uuid4())
         self.data_provider_task_record = DataProviderTaskRecord.objects.create(
-            run=self.run, name="Shapefile Export", provider=self.provider, status=TaskStates.PENDING.value
+            run=self.run, name="Shapefile Export", provider=self.provider, status=TaskState.PENDING.value
         )
 
         filename = "test.zip"
@@ -1170,7 +1170,7 @@ class TestDataProviderTaskRecordViewSet(APITestCase):
         self.export_run = ExportRun.objects.create(job=self.job, user=self.user)
         self.celery_uid = str(uuid.uuid4())
         self.data_provider_task_record = DataProviderTaskRecord.objects.create(
-            run=self.export_run, name="Shapefile Export", provider=self.provider, status=TaskStates.PENDING.value
+            run=self.export_run, name="Shapefile Export", provider=self.provider, status=TaskState.PENDING.value
         )
         self.task = ExportTaskRecord.objects.create(
             export_provider_task=self.data_provider_task_record,
@@ -1227,8 +1227,8 @@ class TestDataProviderTaskRecordViewSet(APITestCase):
         pt = DataProviderTaskRecord.objects.get(uid=self.data_provider_task_record.uid)
         et = pt.tasks.last()
 
-        self.assertEqual(pt.status, TaskStates.CANCELED.value)
-        self.assertEqual(et.status, TaskStates.SUCCESS.value)
+        self.assertEqual(pt.status, TaskState.CANCELED.value)
+        self.assertEqual(et.status, TaskState.SUCCESS.value)
 
     def test_patch_cancel_task_no_permissions(self,):
         user = User.objects.create_user(username="demo2", email="demo2@demo.com", password="demo")
@@ -1317,7 +1317,7 @@ class TestExportTaskViewSet(APITestCase):
         self.export_run = ExportRun.objects.create(job=self.job, user=self.user)
         self.celery_uid = str(uuid.uuid4())
         self.export_provider_task = DataProviderTaskRecord.objects.create(
-            run=self.export_run, name="Shapefile Export", provider=self.provider, status=TaskStates.PENDING.value
+            run=self.export_run, name="Shapefile Export", provider=self.provider, status=TaskState.PENDING.value
         )
         self.task = ExportTaskRecord.objects.create(
             export_provider_task=self.export_provider_task,
