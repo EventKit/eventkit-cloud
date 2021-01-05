@@ -94,7 +94,7 @@ function buildFilters() {
         {
             name: 'Other',
             expression: (provider: Eventkit.Provider) => !arrayHasValue(
-                ['elevation', 'raster', 'vector'], (provider.data_type || 'Unknown').toLowerCase()
+                ['elevation', 'raster', 'vector'], (provider?.data_type || 'Unknown').toLowerCase(),
             ),
         },
     ] as Partial<Filter>[];
