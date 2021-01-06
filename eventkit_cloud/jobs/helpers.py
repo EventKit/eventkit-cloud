@@ -1,6 +1,8 @@
 import logging
 import os
+from typing import Union
 
+import yaml
 from django.conf import settings
 from django.contrib.auth.models import User
 from django.utils import timezone
@@ -68,3 +70,21 @@ def get_valid_regional_justification(regional_policy, user: User):
             return None
 
     return regional_justification
+
+
+def clean_config(config: str, return_dict: bool = False) -> Union[str, dict]:
+    """
+    Used to remove adhoc service related values from the configuration.
+    :param config: A yaml structured string.
+    :param return_dict: True if wishing to return config as dictionary.
+    :return: A yaml as a str.
+    """
+    service_keys = ["cert_var", "cert_cred", "concurrency", "max_repeat", "overpass_query", "max_data_size"]
+
+    conf = yaml.safe_load(config) or dict()
+
+    for service_key in service_keys:
+        conf.pop(service_key, None)
+    if return_dict:
+        return conf
+    return yaml.dump(conf)

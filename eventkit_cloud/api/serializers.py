@@ -52,7 +52,7 @@ from eventkit_cloud.tasks.models import (
 from eventkit_cloud.tasks.views import generate_zipfile
 from eventkit_cloud.user_requests.models import DataProviderRequest, SizeIncreaseRequest
 from eventkit_cloud.utils.s3 import get_presigned_url
-from eventkit_cloud.tasks.enumerations import TaskStates
+from eventkit_cloud.tasks.enumerations import TaskState
 
 from collections import OrderedDict
 
@@ -444,7 +444,7 @@ class ExportRunSerializer(serializers.ModelSerializer):
         if filtered_data_provider_task_records:
             data = None
         else:
-            data = {"status": TaskStates.PENDING.value}
+            data = {"status": TaskState.PENDING.value}
 
         run_zip_file = get_run_zip_file(values=data_provider_task_records).first()
         if run_zip_file:
@@ -527,7 +527,7 @@ class RunZipFileSerializer(serializers.ModelSerializer):
         # If there are no results, that means there's no zip file and we need to create one.
         if not queryset.exists():
             obj = RunZipFile.objects.create()
-            obj.status = TaskStates.PENDING.value
+            obj.status = TaskState.PENDING.value
             data_provider_task_records = DataProviderTaskRecord.objects.filter(
                 uid__in=data_provider_task_record_uids
             ).exclude(slug="run")

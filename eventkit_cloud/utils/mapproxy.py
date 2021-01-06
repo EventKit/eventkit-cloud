@@ -26,7 +26,7 @@ from webtest import TestApp
 from eventkit_cloud.core.helpers import get_cached_model
 from eventkit_cloud.jobs.helpers import get_valid_regional_justification
 from eventkit_cloud.tasks import get_cache_value
-from eventkit_cloud.tasks.enumerations import TaskStates
+from eventkit_cloud.tasks.enumerations import TaskState
 from eventkit_cloud.utils import auth_requests
 from eventkit_cloud.utils.gdalutils import retry
 from eventkit_cloud.utils.geopackage import (
@@ -71,7 +71,7 @@ class CustomLogger(ProgressLog):
             if self.log_step_counter == 0:
                 if (
                     get_cache_value(uid=self.task_uid, attribute="status", model_name="ExportTaskRecord")
-                    == TaskStates.CANCELED.value
+                    == TaskState.CANCELED.value
                 ):
                     logger.error(f"The task uid: {self.task_uid} was canceled. Exiting...")
                     raise Exception("The task was canceled.")
@@ -97,10 +97,7 @@ def get_custom_exp_backoff(max_repeat=None, task_uid=None):
     def custom_exp_backoff(*args, **kwargs):
         if max_repeat:
             kwargs["max_repeat"] = max_repeat
-        if (
-            get_cache_value(uid=task_uid, attribute="status", model_name="ExportTaskRecord")
-            == TaskStates.CANCELED.value
-        ):
+        if get_cache_value(uid=task_uid, attribute="status", model_name="ExportTaskRecord") == TaskState.CANCELED.value:
             logger.error(f"The task uid: {task_uid} was canceled. Exiting...")
             raise Exception("The task was canceled.")
         exp_backoff(*args, **kwargs)

@@ -115,7 +115,7 @@ class TestTaskBuilder(TestCase):
 
     @patch("eventkit_cloud.tasks.task_builders.ExportTaskRecord")
     def test_create_export_task_record(self, mock_export_task):
-        from eventkit_cloud.tasks.enumerations import TaskStates
+        from eventkit_cloud.tasks.enumerations import TaskState
 
         task_name = "TaskName"
         export_provider_task_name = "ExportProviderTaskName"
@@ -130,7 +130,7 @@ class TestTaskBuilder(TestCase):
         self.assertEqual(task_result, expected_result)
         mock_export_task.objects.create.assert_called_with(
             export_provider_task=export_provider_task_name,
-            status=TaskStates.PENDING.value,
+            status=TaskState.PENDING.value,
             name=task_name,
             worker=worker,
             display=False,
@@ -145,7 +145,7 @@ class TestTaskBuilder(TestCase):
         self.assertEqual(task_result, expected_result)
         mock_export_task.objects.create.assert_called_with(
             export_provider_task=export_provider_task_name,
-            status=TaskStates.PENDING.value,
+            status=TaskState.PENDING.value,
             name=task_name,
             worker=worker,
             display=True,

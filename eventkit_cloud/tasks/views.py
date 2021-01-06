@@ -9,7 +9,7 @@ from django.conf import settings
 from django.http import HttpResponse
 from django.shortcuts import redirect
 
-from eventkit_cloud.tasks.enumerations import TaskStates
+from eventkit_cloud.tasks.enumerations import TaskState
 from eventkit_cloud.tasks.helpers import get_run_download_dir, get_run_staging_dir
 from eventkit_cloud.tasks.models import ExportRun
 from eventkit_cloud.tasks.task_factory import get_zip_task_chain
@@ -68,7 +68,7 @@ def generate_zipfile(data_provider_task_record_uids, run_zip_file):
     run = runs.first()
 
     run_zip_file.message = "Downloading files to be zipped..."
-    run_zip_file.status = TaskStates.RUNNING.value
+    run_zip_file.status = TaskState.RUNNING.value
     stage_dir = get_run_staging_dir(run.uid)
     download_dir = get_run_download_dir(run.uid)
 
