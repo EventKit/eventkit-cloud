@@ -24,7 +24,9 @@ from django.utils import timezone
 from enum import Enum
 from django.db.models import Q, QuerySet, Case, Value, When
 
-from typing import Union
+from typing import Union, List
+
+from eventkit_cloud.jobs.helpers import clean_config
 
 from eventkit_cloud.core.models import (
     CachedModelMixin,
@@ -35,6 +37,7 @@ from eventkit_cloud.core.models import (
     GroupPermissionLevel,
     LowerCaseCharField,
 )
+from eventkit_cloud.jobs.enumerations import GeospatialDataType
 from eventkit_cloud.utils.mapproxy import get_mapproxy_metadata_url, get_mapproxy_footprint_url
 
 logger = logging.getLogger(__name__)
@@ -253,13 +256,11 @@ class DataProvider(UIDMixin, TimeStampedModelMixin, CachedModelMixin):
                               requires a layers section, but this isn't used.
                               OSM Services also require a YAML configuration.""",
     )
-    VECTOR = "vector"
-    RASTER = "raster"
-    ELEVATION = "elevation"
+
     DATA_TYPES = [
-        (VECTOR, ("Vector")),
-        (RASTER, ("Raster")),
-        (ELEVATION, ("Elevation")),
+        (GeospatialDataType.VECTOR.value, ("Vector")),
+        (GeospatialDataType.RASTER.value, ("Raster")),
+        (GeospatialDataType.ELEVATION.value, ("Elevation")),
     ]
     data_type = models.CharField(
         choices=DATA_TYPES,
@@ -328,6 +329,31 @@ class DataProvider(UIDMixin, TimeStampedModelMixin, CachedModelMixin):
         url = config.get("sources", {}).get("footprint", {}).get("req", {}).get("url")
         if url:
             return get_mapproxy_footprint_url(self.slug)
+
+    @property
+    def layers(self) -> List[str]:
+        """
+        Used to populate the list of vector layers, typically for contextual or styling information.
+        :return: A list of layer names.
+        """
+        if self.data_type != GeospatialDataType.VECTOR.value:
+            return []
+        if not self.config:
+            # Often layer names are configured using an index number but this number is not very
+            # useful when using the data so fall back to the slug which should be more meaningful.
+            if not self.layer:  # check for NoneType or empty string
+                return [self.slug]
+            try:
+                int(self.layer)
+                return [self.slug]  # self.layer is an integer, so use the slug for better context.
+            except ValueError:
+                return [self.layer]  # If we got here, layer is not None or an integer so use that.
+        config = clean_config(self.config, return_dict=True)
+        # As of EK 1.9.0 only vectors support multiple layers in a single provider
+        if self.export_provider_type.type_name in ["osm", "osm-generic"]:
+            return list(config.keys())
+        else:
+            return [layer.get("name") for layer in config.get("layers", [])]
 
     """
     Max datasize is the size in megabytes.
@@ -661,7 +687,6 @@ class JobPermissionLevel(Enum):
 
 
 class JobPermission(TimeStampedModelMixin):
-
     """
     Model associates users or groups with jobs
     """

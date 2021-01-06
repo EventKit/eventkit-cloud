@@ -9,7 +9,7 @@ from mapproxy.config.config import load_default_config
 from unittest.mock import Mock, patch, MagicMock
 
 from eventkit_cloud.jobs.models import DataProvider
-from eventkit_cloud.tasks.enumerations import TaskStates
+from eventkit_cloud.tasks.enumerations import TaskState
 from eventkit_cloud.utils.mapproxy import (
     MapproxyGeopackage,
     get_conf_dict,
@@ -232,7 +232,7 @@ class TestHelpers(TransactionTestCase):
         mock_exp_backoff.assert_called_once_with(random_arg=random_arg, max_repeat=example_repeat)
 
         with self.assertRaises(Exception):
-            mock_get_cache_value.return_value = TaskStates.CANCELED.value
+            mock_get_cache_value.return_value = TaskState.CANCELED.value
             custom_backoff()
 
 
@@ -251,5 +251,5 @@ class TestLogger(TransactionTestCase):
         mock_update_progress.assert_called_with(test_task_uid, progress=test_progress * 100, eta=custom_logger.eta)
 
         with self.assertRaises(Exception):
-            mock_get_cache_value.return_value = TaskStates.CANCELED.value
+            mock_get_cache_value.return_value = TaskState.CANCELED.value
             custom_logger.log_step(mock_progress)

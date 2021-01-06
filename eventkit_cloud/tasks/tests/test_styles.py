@@ -41,6 +41,7 @@ class TestStyles(TestCase):
             "description": "Test",
             "has_elevation": False,
             "has_raster": True,
+            "has_vector": True,
             "include_files": [
                 "/var/lib/eventkit/exports_stage/7fadf34e-58f9-4bb8-ab57-adc1015c4269/osm/test.gpkg",
                 "/var/lib/eventkit/exports_stage/7fadf34e-58f9-4bb8-ab57-adc1015c4269/osm/osm_selection.geojson",

@@ -23,7 +23,7 @@ from eventkit_cloud.jobs.models import (
     RegionalPolicy,
     RegionalJustification,
 )
-from eventkit_cloud.tasks.enumerations import TaskStates
+from eventkit_cloud.tasks.enumerations import TaskState
 from eventkit_cloud.tasks.models import (
     DataProviderTaskRecord,
     ExportRun,
@@ -112,9 +112,9 @@ class TestExportRun(TestCase):
         job = Job.objects.first()
         run = ExportRun.objects.create(job=job, user=job.user)
         task_uid = str(uuid.uuid4())  # from celery
-        export_provider_task = DataProviderTaskRecord.objects.create(run=run, status=TaskStates.PENDING.value)
+        export_provider_task = DataProviderTaskRecord.objects.create(run=run, status=TaskState.PENDING.value)
         ExportTaskRecord.objects.create(
-            export_provider_task=export_provider_task, uid=task_uid, status=TaskStates.PENDING.value
+            export_provider_task=export_provider_task, uid=task_uid, status=TaskState.PENDING.value
         )
         runs = job.runs.all()
         self.assertEqual(1, runs.count())
@@ -357,7 +357,7 @@ class TestDataProviderTaskRecord(TestCase):
             slug=self.export_provider.slug,
             provider=self.export_provider,
             run=self.run,
-            status=TaskStates.PENDING.value,
+            status=TaskState.PENDING.value,
             display=False,
             estimated_size=100.95,
             estimated_duration=5.5,
@@ -367,7 +367,7 @@ class TestDataProviderTaskRecord(TestCase):
         self.assertEqual(self.export_provider.slug, export_provider_task.slug)
         self.assertEqual(self.export_provider, export_provider_task.provider)
         self.assertEqual(self.run, export_provider_task.run)
-        self.assertEqual(TaskStates.PENDING.value, export_provider_task.status)
+        self.assertEqual(TaskState.PENDING.value, export_provider_task.status)
         self.assertEqual(False, export_provider_task.display)
         self.assertEqual(100.95, export_provider_task.estimated_size)
         self.assertEqual(5.5, export_provider_task.estimated_duration)
@@ -378,13 +378,13 @@ class TestDataProviderTaskRecord(TestCase):
             slug="run",
             provider=self.export_provider,
             run=self.run,
-            status=TaskStates.PENDING.value,
+            status=TaskState.PENDING.value,
         )
         self.assertEqual("run", export_provider_task.slug)
 
     def test_data_provider_task_record_no_slug(self):
         export_provider_task = DataProviderTaskRecord.objects.create(
-            name=self.export_provider.name, provider=self.export_provider, run=self.run, status=TaskStates.PENDING.value
+            name=self.export_provider.name, provider=self.export_provider, run=self.run, status=TaskState.PENDING.value
         )
         self.assertEqual("", export_provider_task.slug)
 
@@ -415,7 +415,7 @@ class TestFileProducingTaskResult(TestCase):
         self.run = ExportRun.objects.create(job=self.job, user=self.job.user)
 
         self.data_provider_task_record = DataProviderTaskRecord.objects.create(
-            run=self.run, name="Shapefile Export", provider=self.provider, status=TaskStates.PENDING.value
+            run=self.run, name="Shapefile Export", provider=self.provider, status=TaskState.PENDING.value
         )
 
         self.task_uid = uuid.uuid4()
@@ -559,7 +559,7 @@ class TestFileProducingTaskResult(TestCase):
         job = Job.objects.first()
         run = ExportRun.objects.create(job=job, user=job.user)
         data_provider_task_record = DataProviderTaskRecord.objects.create(
-            run=run, status=TaskStates.PENDING.value, provider=DataProvider.objects.get(slug="osm-generic")
+            run=run, status=TaskState.PENDING.value, provider=DataProvider.objects.get(slug="osm-generic")
         )
         run.data_provider_task_records.add(data_provider_task_record)
 

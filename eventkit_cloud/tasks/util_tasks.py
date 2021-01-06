@@ -6,7 +6,7 @@ from celery.utils.log import get_task_logger
 
 from eventkit_cloud.celery import app
 from eventkit_cloud.jobs.models import DataProviderTask
-from eventkit_cloud.tasks.enumerations import TaskStates
+from eventkit_cloud.tasks.enumerations import TaskState
 from eventkit_cloud.tasks.helpers import get_message_count
 from eventkit_cloud.tasks.models import ExportRun, DataProviderTaskRecord, ExportTaskRecord
 from eventkit_cloud.utils.pcf import PcfClient
@@ -46,7 +46,7 @@ def pcf_shutdown_celery_workers(self, queue_name, queue_type=None, hostname=None
     running_tasks_by_queue = client.get_running_tasks(app_name, queue_name)
     running_tasks_by_queue_count = running_tasks_by_queue["pagination"]["total_results"]
     export_tasks = ExportTaskRecord.objects.filter(
-        worker=hostname, status__in=[task_state.value for task_state in TaskStates.get_not_finished_states()]
+        worker=hostname, status__in=[task_state.value for task_state in TaskState.get_not_finished_states()]
     )
     if not export_tasks:
         if running_tasks_by_queue_count > messages or (running_tasks_by_queue == 0 and messages == 0):

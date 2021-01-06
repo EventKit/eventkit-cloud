@@ -18,7 +18,8 @@
         "user": null,
         "license": null,
         "zip": false,
-        "display": false
+        "display": false,
+        "data_type": "vector"
     }
 },
 {
@@ -41,6 +42,7 @@
         "user": null,
         "license": null,
         "zip": true,
-        "display": true
+        "display": true,
+        "data_type": "vector"
     }
 }]

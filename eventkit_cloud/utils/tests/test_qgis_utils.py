@@ -15,7 +15,7 @@ from eventkit_cloud.utils.qgis_utils import convert_qgis_gpkg_to_kml
 
 class TestQGIS(TestCase):
     @patch("eventkit_cloud.utils.qgis_utils.gdal")
-    @patch("eventkit_cloud.utils.qgis_utils.QgsProject")
+    @patch("qgis.core.QgsProject")
     @patch("eventkit_cloud.utils.qgis_utils.osgeo")
     def test_convert_qgis_gpkg_to_kml(self, mock_osgeo, mock_qgs_project, mock_gdal):
         # Setup the mocks and expected values.
