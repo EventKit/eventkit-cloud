@@ -352,7 +352,7 @@ class TestExportTasks(ExportTaskBase):
         )
 
         config = f"""
-        layers:
+        vector_layers:
             - name: '{layer_1}'
               url: '{url_1}'
             - name: '{layer_2}'
@@ -404,7 +404,7 @@ class TestExportTasks(ExportTaskBase):
         # test downloads with certs
         mock_download_data.reset_mock()
         config = f"""
-        layers:
+        vector_layers:
             - name: '{layer_1}'
               url: '{url_1}'
         cert_var: "test1"
