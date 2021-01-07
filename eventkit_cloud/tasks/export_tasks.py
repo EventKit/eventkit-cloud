@@ -8,7 +8,7 @@ import shutil
 import socket
 import time
 import traceback
-from typing import List
+from typing import List, Union
 from urllib.parse import urlencode, urljoin
 
 from zipfile import ZipFile, ZIP_DEFLATED
@@ -83,9 +83,9 @@ from eventkit_cloud.tasks.models import (
     RunZipFile,
 )
 from eventkit_cloud.jobs.models import DataProviderTask
-from typing import Union
-import yaml
+from typing import 
 import requests
+from concurrent import futures
 
 BLACKLISTED_ZIP_EXTS = [".ini", ".om5", ".osm", ".lck", ".pyc"]
 
@@ -1057,29 +1057,33 @@ def wfs_export_task(
 
     configuration = load_provider_config(config)
 
-    vector_layer_data = configuration.get("vector_layers", [])
-    if len(vector_layer_data):
-        for layer_properties in vector_layer_data:
-            url = get_wfs_query_url(name, layer_properties.get("url"), layer_properties.get("name"), projection)
-            input_file = download_data(url, gpkg, configuration.get("cert_var"))
+    if "layers" in configuration:
+        layers = download_layers_concurrently(
+            configuration, bbox, stage_dir, 
+            job_name, projection, provider_slug, "gpkg"
+        )
 
+        print('____________________ & MERGING')
+
+        for _layer in layers:
             out = gdalutils.convert(
                 driver="gpkg",
-                input_file=input_file,
+                input_file=_layer.get("path"),
                 output_file=gpkg,
                 task_uid=task_uid,
                 projection=projection,
                 boundary=bbox,
-                layer_name=layer_properties.get("name"),
+                layer_name=_layer.get("name"),
                 access_mode="append",
             )
+
     else:
         url = get_wfs_query_url(name, service_url, layer, projection)
-        input_file = download_data(url, gpkg, configuration.get("cert_var"))
+        download_data(url, gpkg, configuration.get("cert_var"))
 
         out = gdalutils.convert(
             driver="gpkg",
-            input_file=input_file,
+            input_file=gpkg,
             output_file=gpkg,
             task_uid=task_uid,
             projection=projection,
@@ -1227,36 +1231,38 @@ def arcgis_feature_service_export_task(
     provider_slug = export_task_record.export_provider_task.provider.slug
 
     gpkg = get_export_filepath(stage_dir, job_name, projection, provider_slug, "gpkg")
-    esrijson = get_export_filepath(stage_dir, job_name, projection, provider_slug, "json")
 
     if not os.path.exists(os.path.dirname(gpkg)):
         os.makedirs(os.path.dirname(gpkg), 6600)
 
     configuration = load_provider_config(config)
 
-    vector_layer_data = configuration.get("vector_layers", [])
-    if len(vector_layer_data):
-        for layer_properties in vector_layer_data:
-            url = get_arcgis_query_url(layer_properties.get("url"), bbox)
-            input_file = download_data(url, esrijson, configuration.get("cert_var"))
+    if "layers" in configuration:
+        layers = download_layers_concurrently(
+            configuration, bbox, stage_dir, 
+            job_name, projection, provider_slug, "json"
+        )
 
+        for _layer in layers:
             out = gdalutils.convert(
                 driver="gpkg",
-                input_file=input_file,
+                input_file=_layer.get("path"),
                 output_file=gpkg,
                 task_uid=task_uid,
                 boundary=bbox,
                 projection=projection,
-                layer_name=layer_properties.get("name"),
+                layer_name=_layer.get("name"),
                 access_mode="append",
             )
+
     else:
         url = get_arcgis_query_url(service_url, bbox)
-        input_file = download_data(url, esrijson, configuration.get("cert_var"))
+        esrijson = get_export_filepath(stage_dir, job_name, projection, provider_slug, "json")
+        download_data(url, esrijson, configuration.get("cert_var"))
 
         out = gdalutils.convert(
             driver="gpkg",
-            input_file=input_file,
+            input_file=esrijson,
             output_file=gpkg,
             task_uid=task_uid,
             boundary=bbox,
@@ -1269,6 +1275,32 @@ def arcgis_feature_service_export_task(
     result["source"] = out
     return result
 
+def download_layers_concurrently(configuration: dict, bbox, stage_dir: str, job_name: str, projection: int, provider_slug: str, file_extension: str):
+    """ 
+    Function concurrently downloads each layer in a given provider configuration.
+    Returns a list of dictionaries, each containing the layer's name, download path, and url.
+    """
+    layers = []
+
+    for _layer in configuration.get("layers"):
+        name = _layer.get("name")
+        url = get_arcgis_query_url(_layer.get("url"), bbox)
+        path = get_export_filepath(stage_dir, f'{job_name}-{name}', projection, provider_slug, file_extension)
+        layers.append({'name':name, 'url':url, 'path':path})
+
+    try:
+        max_workers = 3 # TODO: what's the key in the provider config for this?
+        executor = futures.ThreadPoolExecutor(max_workers) 
+        futures_list = [executor.submit(download_data, _layer['url'], 
+            _layer['path'], configuration.get("cert_var")) for _layer in layers]
+
+        futures.wait(futures_list)
+
+    # except (futures.BrokenExecutor, futures.BrokenThreadPool, futures.InvalidStateError) as e:
+    except Exception as e:
+        logger.error(f'Unable to execute concurrent downloads: {e}')
+    
+    return layers
 
 def download_data(input_url, out_file, cert_var=None):
     """
@@ -1292,8 +1324,6 @@ def download_data(input_url, out_file, cert_var=None):
 
     if not os.path.isfile(out_file):
         raise Exception("Nothing was returned from the vector feature service.")
-
-    return out_file
 
 
 def get_arcgis_query_url(service_url: str, bbox: list) -> str:
