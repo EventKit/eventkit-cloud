@@ -83,7 +83,7 @@ from eventkit_cloud.tasks.models import (
     RunZipFile,
 )
 from eventkit_cloud.jobs.models import DataProviderTask
-from typing import 
+import yaml
 import requests
 from concurrent import futures
 
@@ -1059,21 +1059,18 @@ def wfs_export_task(
 
     if "layers" in configuration:
         layers = download_layers_concurrently(
-            configuration, bbox, stage_dir, 
-            job_name, projection, provider_slug, "gpkg"
+            configuration, bbox, stage_dir, job_name, projection, provider_slug, "gpkg"
         )
 
-        print('____________________ & MERGING')
-
-        for _layer in layers:
+        for layer in layers:
             out = gdalutils.convert(
                 driver="gpkg",
-                input_file=_layer.get("path"),
+                input_file=layer.get("path"),
                 output_file=gpkg,
                 task_uid=task_uid,
                 projection=projection,
                 boundary=bbox,
-                layer_name=_layer.get("name"),
+                layer_name=layer.get("name"),
                 access_mode="append",
             )
 
@@ -1239,19 +1236,18 @@ def arcgis_feature_service_export_task(
 
     if "layers" in configuration:
         layers = download_layers_concurrently(
-            configuration, bbox, stage_dir, 
-            job_name, projection, provider_slug, "json"
+            configuration, bbox, stage_dir, job_name, projection, provider_slug, "json"
         )
 
-        for _layer in layers:
+        for layer in layers:
             out = gdalutils.convert(
                 driver="gpkg",
-                input_file=_layer.get("path"),
+                input_file=layer.get("path"),
                 output_file=gpkg,
                 task_uid=task_uid,
                 boundary=bbox,
                 projection=projection,
-                layer_name=_layer.get("name"),
+                layer_name=layer.get("name"),
                 access_mode="append",
             )
 
@@ -1275,32 +1271,49 @@ def arcgis_feature_service_export_task(
     result["source"] = out
     return result
 
-def download_layers_concurrently(configuration: dict, bbox, stage_dir: str, job_name: str, projection: int, provider_slug: str, file_extension: str):
-    """ 
+
+def download_layers_concurrently(
+    configuration: dict,
+    bbox: Union[str, dict, list],
+    stage_dir: str,
+    job_name: str,
+    projection: int,
+    provider_slug: str,
+    file_extension: str,
+    name: str = None,
+) -> List[dict]:
+    """
     Function concurrently downloads each layer in a given provider configuration.
     Returns a list of dictionaries, each containing the layer's name, download path, and url.
     """
     layers = []
 
-    for _layer in configuration.get("layers"):
-        name = _layer.get("name")
-        url = get_arcgis_query_url(_layer.get("url"), bbox)
-        path = get_export_filepath(stage_dir, f'{job_name}-{name}', projection, provider_slug, file_extension)
-        layers.append({'name':name, 'url':url, 'path':path})
+    for layer in configuration.get("layers"):
+        layer_name = layer.get("name")
+        path = get_export_filepath(stage_dir, job_name, f"{layer_name}-{projection}", provider_slug, file_extension)
+
+        if file_extension == "json":
+            url = get_arcgis_query_url(layer.get("url"), bbox)
+        else:
+            url = get_wfs_query_url(name, layer.get("url"), layer_name, projection)
+
+        layers.append({"name": layer_name, "url": url, "path": path})
 
     try:
-        max_workers = 3 # TODO: what's the key in the provider config for this?
-        executor = futures.ThreadPoolExecutor(max_workers) 
-        futures_list = [executor.submit(download_data, _layer['url'], 
-            _layer['path'], configuration.get("cert_var")) for _layer in layers]
+        max_workers = 3  # TODO: what's the key in the provider config for this?
+        executor = futures.ThreadPoolExecutor(max_workers)
+        futures_list = [
+            executor.submit(download_data, layer["url"], layer["path"], configuration.get("cert_var"))
+            for layer in layers
+        ]
 
         futures.wait(futures_list)
 
-    # except (futures.BrokenExecutor, futures.BrokenThreadPool, futures.InvalidStateError) as e:
-    except Exception as e:
-        logger.error(f'Unable to execute concurrent downloads: {e}')
-    
+    except (futures.BrokenExecutor, futures.BrokenThreadPool, futures.InvalidStateError) as e:
+        logger.error(f"Unable to execute concurrent downloads: {e}")
+
     return layers
+
 
 def download_data(input_url, out_file, cert_var=None):
     """
