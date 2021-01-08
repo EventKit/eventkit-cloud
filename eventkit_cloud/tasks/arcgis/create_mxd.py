@@ -19,9 +19,11 @@ logger = logging.getLogger("create_mxd")
 
 logger.warning("Creating an MXD file for your data...")
 
-
 if os.getenv("LOG_LEVEL"):
     logger.setLevel(os.getenv("LOG_LEVEL"))
+
+# logger.setLevel("DEBUG")
+
 
 try:
     from django.conf import settings
@@ -30,41 +32,44 @@ try:
 except Exception:
     BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
-SUPPORTED_VERSIONS = ["10.6.1"]
-VERSIONS = ["10.6.1", "10.6", "10.5.1", "10.5", "10.4.1", "10.4"]
-UNSUPPORTED_FILES = [".sqlite", ".zip"]
-
 try:
     import arcpy
 except Exception as e:
     logger.warning(e)
     input(
-        "Could not import ArcPY.  ArcGIS 10.4 or 10.5 is required to run this script. "
+        "Could not import ArcPY.  ArcGIS greater than 10.4 is required to run this script. "
         "Please ensure that it is installed and activated. "
         "If multiple versions of python are installed ensure that you are using python that came bundled with ArcGIS. "
         "Press any key to exit."
     )
     raise
 
-if arcpy.GetInstallInfo().get("Version") not in SUPPORTED_VERSIONS:
+
+CURRENT_VERSION = arcpy.GetInstallInfo().get("Version")
+SUPPORTED_VERSIONS = ["10.8.1"]
+VERSIONS = ["10.8.1", "10.8.0", "10.7.1", "10.7.1", "10.6.1", "10.6", "10.5.1", "10.5", "10.4.1", "10.4"]
+UNSUPPORTED_FILES = [".sqlite", ".zip"]
+
+if CURRENT_VERSION not in SUPPORTED_VERSIONS:
     logger.warning(
         (
-            "This script only supports versions {0}.  "
-            "It might work for {1} but it will likely not support all of the datasets.".format(
-                SUPPORTED_VERSIONS, [version for version in VERSIONS if version not in SUPPORTED_VERSIONS]
+            "This script only supports versions {0}. This version is {1}. "
+            "It might work for {2} but it will likely not support all of the datasets.".format(
+                SUPPORTED_VERSIONS,
+                arcpy.GetInstallInfo().get("Version"),
+                ",".join([version for version in VERSIONS if version not in SUPPORTED_VERSIONS]),
             )
         )
     )
 
 
-def update_mxd_from_metadata(file_name, metadata, verify=False):
+def update_mxd_from_metadata(file_name, metadata, verify=False, version=CURRENT_VERSION):
     """
     :param file_name: A path to the mxd file.
     :param metadata: The metadata providing the names, filepaths, and types to add to the mxd.
     :return: The original file.
     """
     mxd = arcpy.mapping.MapDocument(os.path.abspath(file_name))
-    version = get_version()
     # Order here matters in which shows up on top, alphabetically makes sense, but it likely is more useful to layer
     # vectors over raster and raster over elevation.
     data_types = ["Elevation", "Raster", "Vector"]
@@ -72,7 +77,7 @@ def update_mxd_from_metadata(file_name, metadata, verify=False):
     for data_type in data_types:
         if metadata.get("has_{}".format(data_type.lower())):
             group_layer = add_layer_to_mxd(data_type, get_layer_file("group", version), mxd)
-            data_sources = get_data_source_by_type(data_type.lower(), metadata['data_sources'])
+            data_sources = get_data_source_by_type(data_type.lower(), metadata["data_sources"])
             add_layers_to_group(data_sources, group_layer, mxd, verify=verify)
 
     logger.debug("Getting dataframes...")
@@ -91,16 +96,15 @@ def get_data_source_by_type(data_type, data_sources):
     sources = {}
     for layer_name, layer_info in data_sources.items():
         # A shim while we merge osm and nome into generic data types and come up with a better way to handle styles.
-        layer_type = layer_info['type']
-        if layer_info['type'] in ['osm', 'nome']:
-            layer_type = 'vector'
+        layer_type = layer_info["type"]
+        if layer_info["type"] in ["osm", "nome"]:
+            layer_type = "vector"
         if data_type == layer_type:
             sources[layer_name] = layer_info
     return sources
 
 
-def add_layers_to_group(data_sources, group_layer, mxd, verify=False):
-    version = get_version()
+def add_layers_to_group(data_sources, group_layer, mxd, verify=False, version=CURRENT_VERSION):
     data_frame = mxd.activeDataFrame
 
     for vector_layer_name, layer_info in data_sources.items():
@@ -120,7 +124,7 @@ def add_layers_to_group(data_sources, group_layer, mxd, verify=False):
                 arcpy.CalculateStatistics_management(file_path)
             except Exception as e:
                 logger.warning(e)
-            layer_file = get_layer_file(layer_info["type"], version)
+            layer_file = get_layer_file(layer_info["type"], version, projection=file_info["projection"])
             if not (layer_file or layer_info["type"].lower() == "vector"):
                 logger.warning(
                     (
@@ -134,19 +138,20 @@ def add_layers_to_group(data_sources, group_layer, mxd, verify=False):
                         "However with your version of ArcMap you can still drag and drop this layer onto the Map."
                     )
                 continue
-            vector_layer_name = "{}_{}{}".format(layer_info["name"], file_info["projection"],
-                                                 file_info["file_ext"].replace(".", "_"))
+            vector_layer_name = "{}_{}{}".format(
+                layer_info["name"], file_info["projection"], file_info["file_ext"].replace(".", "_")
+            )
             if file_info["file_ext"] in [".kml", ".kmz"]:
                 # Since this will generate data by converting the KML files, we should store it with the original data.
-                output_folder = os.path.join(os.path.dirname(file_path), 'arcgis')
+                output_folder = os.path.join(os.path.dirname(file_path), "arcgis")
                 kml_layer = os.path.join(output_folder, "{}.lyr".format(vector_layer_name))
                 logger.error("KML LAYER: {}".format(kml_layer))
                 try:
                     logger.error("Converting {} to ArcGIS Layer".format(file_path))
                     arcpy.KMLToLayer_conversion(
                         in_kml_file=file_path,
-                        output_folder=os.path.join(os.path.dirname(file_path), 'arcgis'),
-                        output_data=vector_layer_name
+                        output_folder=os.path.join(os.path.dirname(file_path), "arcgis"),
+                        output_data=vector_layer_name,
                     )
                     logger.error("Successfully converted: " + file_path)
                 except Exception as e:
@@ -170,7 +175,13 @@ def add_layers_to_group(data_sources, group_layer, mxd, verify=False):
                         # Get instance of layer from MXD, not the template file.
                         try:
                             logger.warning(("Updating layer: {0}...".format(arc_layer.name)))
-                            update_layer(arc_layer, file_path, layer_info["type"], verify=verify)
+                            update_layer(
+                                arc_layer,
+                                file_path,
+                                layer_info["type"],
+                                projection=file_info.get("projection"),
+                                verify=verify,
+                            )
                         except Exception as e:
                             logger.error("Could not update layer {0}".format(arc_layer.name))
                             logger.error(e)
@@ -179,11 +190,13 @@ def add_layers_to_group(data_sources, group_layer, mxd, verify=False):
                         logger.warning("Adding {0} layer(s):...".format(layer_info["type"]))
                         vector_layer_group = arc_layer
                         for sublayer in layer_info["layers"]:
-                            sublayer_name = "{}_{}{}".format(sublayer, file_info["projection"],
-                                                                  file_info["file_ext"].replace(".", "_"))
+                            sublayer_name = "{}_{}{}".format(
+                                sublayer, file_info["projection"], file_info["file_ext"].replace(".", "_")
+                            )
                             logger.warning("Creating new layer for {0}...".format(sublayer_name))
-                            arcpy.MakeFeatureLayer_management("{0}/{1}".format(file_path.rstrip('/'), sublayer),
-                                                              sublayer_name)
+                            arcpy.MakeFeatureLayer_management(
+                                "{0}/{1}".format(file_path.rstrip("/"), sublayer), sublayer_name
+                            )
                             arc_layer = arcpy.mapping.Layer(sublayer_name)
                             logger.warning("adding {} to {}".format(arc_layer.name, vector_layer_group.name))
                             # Note ordering is important here since layers are [1,2,3,4] we want to add at bottom.
@@ -217,17 +230,17 @@ def add_layer_to_mxd(layer_name, layer_file, mxd, group_layer=None):
     return layer
 
 
-def get_mxd_template(version):
+def get_mxd_template(version=CURRENT_VERSION):
     """
     :param version: A version for the correct arcgis MapDocument template.
     :return: A file path to the correct arcgis MapDocument template.
     """
-    if "10.6" in version:
-        template_file_name = "template-10-6.mxd"
-    elif "10.5" in version:
+    if "10.5" in version:
         template_file_name = "template-10-5.mxd"
     elif "10.4" in version:
         template_file_name = "template-10-4.mxd"
+    else:
+        template_file_name = "template-10-6.mxd"
     template_file = os.path.abspath(os.path.join(BASE_DIR, "arcgis", "templates", template_file_name))
     if not os.path.isfile(template_file):
         logger.warning("This script requires an mxd template file which was not found.")
@@ -235,17 +248,20 @@ def get_mxd_template(version):
     return template_file
 
 
-def get_layer_file(type, version):
+def get_layer_file(type, version=CURRENT_VERSION, projection="4326"):
     """
 
     :param type: Type of templace (i.e. raster, osm...)
     :param version: arcgis version (i.e. 10.5)
     :return: The file path to the correct layer.
     """
-    # Temporarily patch the version
-    if "10.6" in version:
+    # Use 10.6 templates for versions greater than 10.6.
+    if int(version.split(".")[1]) >= 6:
         version = "10.6"
-    layer_basename = "{0}-{1}.lyr".format(type, version.replace(".", "-"))
+    if type in ["osm", "nome"]:
+        layer_basename = "{0}-{1}-{2}.lyr".format(type, version.replace(".", "-"), projection)
+    else:
+        layer_basename = "{0}-{1}.lyr".format(type, version.replace(".", "-"))
     layer_file = os.path.abspath(os.path.join(BASE_DIR, "arcgis", "templates", layer_basename))
     if os.path.isfile(layer_file):
         logger.warning(("Fetching layer template: {0}".format(layer_file)))
@@ -253,28 +269,7 @@ def get_layer_file(type, version):
     return None
 
 
-def get_version():
-    """
-    :return: Returns the version of arcmap that is installed.
-    """
-
-    try:
-        version = arcpy.GetInstallInfo().get("Version")
-        if version in VERSIONS:
-            return version
-        raise Exception("UNSUPPORTED VERSION")
-    except Exception:
-        logger.warning(
-            (
-                "Unable to determine ArcGIS version.  This script only supports versions {0}".format(
-                    str(SUPPORTED_VERSIONS)
-                )
-            )
-        )
-        raise
-
-
-def update_layer(layer, file_path, type, verify=False):
+def update_layer(layer, file_path, type, projection=None, verify=False):
     """
     :param layer: An Arc Layer object to be updated.
     :param file_path: A new datasource.
@@ -282,33 +277,38 @@ def update_layer(layer, file_path, type, verify=False):
     :return: The updated ext.
     """
     for lyr in arcpy.mapping.ListLayers(layer):
-        if lyr.supports("DATASOURCE"):
-            try:
-                logger.debug("layer: {0}".format(lyr))
-                logger.debug("removing old layer workspacePath: {0}".format(lyr.workspacePath))
-            except Exception:
-                # Skip layers that don't have paths.
-                continue
-            try:
-                # Try to update the extents based on the layers
-                logger.debug("Updating layers from {0} to {1}".format(lyr.workspacePath, file_path))
-                if type == "raster" and os.path.splitext(file_path)[1] != ".gpkg":
-                    logger.debug("Replacing Datasource")
-                    lyr.replaceDataSource(
-                        os.path.dirname(file_path), "RASTER_WORKSPACE", os.path.basename(file_path), verify
-                    )
-                elif type == "elevation":
-                    logger.debug("updating elevation")
-                    lyr.replaceDataSource(os.path.dirname(file_path), "NONE", os.path.basename(file_path), verify)
-                else:
-                    logger.debug("updating raster or vector gpkg")
-                    logger.debug("Replacing WorkSpace Path")
-                    lyr.findAndReplaceWorkspacePath(lyr.workspacePath, file_path, verify)
-                if lyr.isFeatureLayer:
-                    logger.debug(arcpy.RecalculateFeatureClassExtent_management(lyr).getMessages())
-            except Exception as e:
-                logger.error(e)
-                raise
+        try:
+            if lyr.supports("DATASOURCE"):
+                try:
+                    logger.debug("layer: {0}".format(lyr))
+                    logger.debug("removing old layer workspacePath: {0}".format(lyr.workspacePath))
+                except Exception:
+                    # Skip layers that don't have paths.
+                    continue
+                try:
+                    # Try to update the extents based on the layers
+                    logger.debug("Updating layers from {0} to {1}".format(lyr.workspacePath, file_path))
+                    if type == "raster" and os.path.splitext(file_path)[1] != ".gpkg":
+                        logger.debug("Replacing Datasource")
+                        lyr.replaceDataSource(
+                            os.path.dirname(file_path), "RASTER_WORKSPACE", os.path.basename(file_path), verify
+                        )
+                    elif type == "elevation":
+                        logger.debug("updating elevation")
+                        lyr.replaceDataSource(os.path.dirname(file_path), "NONE", os.path.basename(file_path), verify)
+                    else:
+                        logger.debug("updating raster or vector gpkg")
+                        logger.debug("Replacing WorkSpace Path")
+                        lyr.findAndReplaceWorkspacePath(lyr.workspacePath, file_path, verify)
+                    if lyr.isFeatureLayer:
+                        logger.debug(arcpy.RecalculateFeatureClassExtent_management(lyr).getMessages())
+                except Exception as e:
+                    print(arcpy.GetMessages(1))
+                    print(arcpy.GetMessages(2))
+                    logger.error(e)
+                    # raise
+        finally:
+            del lyr
 
 
 def create_mxd(mxd=None, metadata=None, verify=False):
@@ -319,13 +319,12 @@ def create_mxd(mxd=None, metadata=None, verify=False):
     :param verify: Raise an exception if there is an error in the MXD after adding the new gpkg.
     :return: The contents (binary) of the mxd file.
     """
-    template_file = get_mxd_template(get_version())
+    template_file = get_mxd_template(CURRENT_VERSION)
     # with get_temp_mxd(metadata, verify=verify) as temp_mxd_file:
     # copy temp file to permanent file if specified.
     if mxd:
         logger.warning(("writing file to {0}".format(mxd)))
         shutil.copy(template_file, mxd)
-        # return mxd
     update_mxd_from_metadata(mxd, metadata, verify=verify)
     with open(mxd, "rb") as open_mxd_file:
         return open_mxd_file.read()
@@ -349,6 +348,12 @@ def create_mxd_process(mxd=None, metadata=None, verify=False):
 if __name__ == "__main__":
 
     try:
+        if "2." in CURRENT_VERSION:
+            raise Exception(
+                "This version looks like ArcPro and is not currently supported.  "
+                "Try running this script with ArcMap and using the result in ArcPro."
+            )
+
         metadata_file = os.path.join(os.path.dirname(__file__), "metadata.json")
 
         with open(metadata_file, "r") as open_metadata_file:
@@ -358,4 +363,5 @@ if __name__ == "__main__":
         create_mxd(mxd=mxd_output, metadata=metadata, verify=True)
     except Exception as e:
         logger.warning(e)
+
     input("Press enter to exit.")
