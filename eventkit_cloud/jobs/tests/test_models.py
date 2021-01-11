@@ -464,5 +464,5 @@ class TestDataProvider(TestCase):
         expected_layers = ["layer1", "layer2"]
         self.data_provider.export_provider_type.type_name = "wfs"
         self.data_provider.type = GeospatialDataType.VECTOR.value
-        self.data_provider.config = yaml.dump({"layers": [{"name": layer} for layer in expected_layers]})
+        self.data_provider.config = yaml.dump({"vector_layers": [{"name": layer} for layer in expected_layers]})
         self.assertEqual(self.data_provider.layers, expected_layers)

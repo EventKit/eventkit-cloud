@@ -797,7 +797,7 @@ class TestExportTasks(ExportTaskBase):
         layer_name_2 = "bar"
 
         config = f"""
-        layers:
+        vector_layers:
             - name: '{layer_name_1}'
               url: '{url_1}'
             - name: '{layer_name_2}'
@@ -854,7 +854,7 @@ class TestExportTasks(ExportTaskBase):
         mock_download_data.reset_mock()
 
         config = f"""
-        layers:
+        vector_layers:
             - name: '{layer_name_1}'
               url: '{url_1}'
         cert_var: "test1"
